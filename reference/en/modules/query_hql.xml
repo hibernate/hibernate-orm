@@ -539,7 +539,7 @@ from eg.Cat cat where size(cat.kittens) > 0]]></programlisting>
             functions.
         </para>
         
-        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date]]></programlisting>
+        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date
         
 from Order order where maxindex(order.items) > 100
 

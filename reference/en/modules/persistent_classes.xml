@@ -11,8 +11,8 @@
     <para>
         Hibernate works best if these classes follow some simple rules, also known
         as the Plain Old Java Object (POJO) programming model. However, Hibernate3
-        also allows you to express a domain model as nested dynamic <literal>Map</literal>s,
-        if required.
+        allows you to express a domain model in other ways: using trees of 
+	<literal>Map</literal> instances, for example.
     </para>
 
     <sect1 id="persistent-classes-pojo">
@@ -28,13 +28,15 @@ import java.util.Date;
 
 public class Cat {
     private Long id; // identifier
-    private String name;
+
     private Date birthdate;
-    private Cat mate;
-    private Set kittens
     private Color color;
     private char sex;
     private float weight;
+    private int litterId;
+
+    private Cat mother;
+    private Set kittens = new HashSet();
 
     private void setId(Long id) {
         this.id=id;
@@ -43,26 +45,13 @@ public class Cat {
         return id;
     }
 
-    void setName(String name) {
-        this.name = name;
-    }
-    public String getName() {
-        return name;
-    }
-
-    void setMate(Cat mate) {
-        this.mate = mate;
-    }
-    public Cat getMate() {
-        return mate;
-    }
-
     void setBirthdate(Date date) {
         birthdate = date;
     }
     public Date getBirthdate() {
         return birthdate;
     }
+
     void setWeight(float weight) {
         this.weight = weight;
     }
@@ -76,21 +65,39 @@ public class Cat {
     void setColor(Color color) {
         this.color = color;
     }
+
+    void setSex(char sex) {
+        this.sex=sex;
+    }
+    public char getSex() {
+        return sex;
+    }
+
+    void setLitterId(int id) {
+        this.litterId = id;
+    }
+    public int getLitterId() {
+        return litterId;
+    }
+
+    void setMother(Cat mother) {
+        this.mother = mother;
+    }
+    public Cat getMother() {
+        return mother;
+    }
     void setKittens(Set kittens) {
         this.kittens = kittens;
     }
     public Set getKittens() {
         return kittens;
     }
+    
     // addKitten not needed by Hibernate
     public void addKitten(Cat kitten) {
+    	kitten.setMother(this);
+	kitten.setLitterId( kittens.size() ); 
         kittens.add(kitten);
-    }
-    void setSex(char sex) {
-        this.sex=sex;
-    }
-    public char getSex() {
-        return sex;
     }
 }]]></programlisting>
 
@@ -126,8 +133,8 @@ public class Cat {
                 <literal>Cat</literal> has a no-argument constructor. All
                 persistent classes must have a default constructor (which may be non-public) so 
                 Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>.
-                We recommend to give the constructor at least <emphasis>package</emphasis> visibility
-                for runtime proxy generation in Hibernate.
+                We recommend having a constructor with at least <emphasis>package</emphasis> 
+		visibility for runtime proxy generation in Hibernate.
             </para>
         </sect2>
 
@@ -157,7 +164,8 @@ public class Cat {
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        Cascaded updates (see "Lifecycle Objects")
+                        Transitive reattachment for detached objects (cascade update) - 
+			see "Lifecycle Objects"
                     </para>
                 </listitem>
                 <listitem>
@@ -182,8 +190,8 @@ public class Cat {
             </para>
             <para>
                 You can persist <literal>final</literal> classes that do not implement an interface
-                with Hibernate, but you won't be able to use proxies - which will limit your options
-                for performance tuning somewhat.
+                with Hibernate, but you won't be able to use proxies for lazy associationfetching - 
+		which will limit your options for performance tuning.
             </para>
         </sect2>
         
@@ -194,7 +202,7 @@ public class Cat {
 
         <para>
             A subclass must also observe the first and second rules. It inherits its
-            identifier property from <literal>Cat</literal>.
+            identifier property from the superclass, <literal>Cat</literal>.
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -216,20 +224,29 @@ public class DomesticCat extends Cat {
 
         <para>
             You have to override the <literal>equals()</literal> and <literal>hashCode()</literal>
-            methods if you intend to mix objects of persistent classes (e.g. in a <literal>Set</literal>).
-        </para>
-
+            methods if you 
+	</para>
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    intend to put instances of persistent classes in a <literal>Set</literal>
+                    (the recommended way to represent many-valued associations) 
+		    <emphasis>and</emphasis>
+		</para>
+            </listitem>
+            <listitem>
+                <para>
+                    intend to use reattachment of detached instances
+                </para>
+            </listitem>
+        </itemizedlist>
+	
         <para>
-            <emphasis>This only applies if these objects are loaded in two different
-            <literal>Session</literal>s, as Hibernate only guarantees JVM identity (<literal> a == b </literal>,
-            the default implementation of <literal>equals()</literal>) inside a single
-            <literal>Session</literal>!</emphasis>
-        </para>
-
-        <para>
-            Even if both objecs <literal>a</literal> and <literal>b</literal> are the same database row
-            (they have the same primary key value as their identifier), we can't guarantee that they are
-            the same Java instance outside of a particular <literal>Session</literal> context.
+            Hibernate guarantees equivalence of persistent identity (database row) and Java identity
+	    only inside a particular session scope. So as soon as we mix instances retrieved in 
+	    different sessions, we must implement <literal>equals()</literal> and 
+	    <literal>hashCode()</literal> if we wish to have meaningful semantics for
+	    <literal>Set</literal>s.
         </para>
 
         <para>
@@ -237,9 +254,9 @@ public class DomesticCat extends Cat {
             by comparing the identifier value of both objects. If the value is the same, both must
             be the same database row, they are therefore equal (if both are added to a <literal>Set</literal>,
             we will only have one element in the <literal>Set</literal>). Unfortunately, we can't use that
-            approach. Hibernate will only assign identifier values to objects that are persistent,
-            a newly created instance will not have any identifier value! We recommend implementing
-            <literal>equals()</literal> and <literal>hashCode()</literal> using
+            approach with generated identifiers! Hibernate will only assign identifier values to objects 
+	    that are persistent, a newly created instance will not have any identifier value! We recommend 
+	    implementing <literal>equals()</literal> and <literal>hashCode()</literal> using
             <emphasis>Business key equality</emphasis>.
         </para>
 
@@ -254,31 +271,24 @@ public class DomesticCat extends Cat {
     ...
     public boolean equals(Object other) {
         if (this == other) return true;
-        if (!(other instanceof Cat)) return false;
+        if ( !(other instanceof Cat) ) return false;
 
         final Cat cat = (Cat) other;
 
-        if (!getName().equals(cat.getName())) return false;
-        if (!getBirthday().equals(cat.getBirthday())) return false;
+        if ( !cat.getLitterId().equals( getLitterId() ) ) return false;
+        if ( !cat.getMother().equals( getMother() ) ) return false;
 
         return true;
     }
 
     public int hashCode() {
         int result;
-        result = getName().hashCode();
-        result = 29 * result + getBirthday().hashCode();
+        result = getMother().hashCode();
+        result = 29 * result + getLitterId();
         return result;
     }
 
 }]]></programlisting>
-
-        <para>
-            Keep in mind that our candidate key (in this case a composite of name and birthday)
-            has to be only valid for a particular comparison operation (maybe even only in a
-            single use case). We don't need the stability criteria we usually apply to a real
-            primary key!
-        </para>
 
     </sect1>
 
@@ -290,42 +300,62 @@ public class DomesticCat extends Cat {
             <literal>Map</literal>s. With this approach, you don't write persistent classes,
             a Hibernate mapping file for each "entity" is sufficient:
         </para>
+	
+	<!-- TODO: move this somewhere else, we didn't get up to mapings yet!! -->
 
         <programlisting><![CDATA[<hibernate-mapping>
+	
     <dynamic-class entity-name="TestMap">
-        <id name="id" type="long" column="ID">
+    
+        <id name="id"
+	    type="long" 
+	    column="ID">
             <generator class="sequence"/>
         </id>
-        <property name="name" column="NAME" type="string"/>
-        <property name="address" column="ADDRESS" type="string"/>
-        <many-to-one name="parent" column="PARENT_ID" class="TestMap"/>
-        <bag name="children" inverse="true" lazy="false">
+	
+        <property name="name" 
+	    column="NAME" 
+	    type="string"/>
+	    
+        <property name="address" 
+	    column="ADDRESS" 
+	    type="string"/>
+	    
+        <many-to-one name="parent" 
+	    column="PARENT_ID" 
+	    class="TestMap"/>
+	    
+        <bag name="children" 
+	    inverse="true" 
+	    lazy="false"
+	    cascade="all">
             <key column="PARENT_ID"/>
             <one-to-many class="TestMap"/>
         </bag>
+	
     </dynamic-class>
+    
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            At runtime, you only use <literal>Map</literal>s and use the Hibernate entity
-            name to refer to a particular type.
+            At runtime, you just instantiate <literal>HashMap</literal>s and use 
+	    the Hibernate entity name to refer to a particular type.
         </para>
 
         <programlisting><![CDATA[Session s = openSession();
+Transaction t = s.beginTransaction();
 Map parent = new HashMap();
-parent.put("type", "TestMap");
 parent.put("name", "foo");
 parent.put("address", "bar");
 
 Map child = new HashMap();
-child.put("type", "TestMap");
 child.put("name", "fooTwo");
 child.put("address", "barTwo");
 child.put("parent", parent);
 
-s.save(parent);
-s.save(child);
-]]></programlisting>
+s.save("TestMap", parent);
+t.commit();
+s.close();]]></programlisting>
 
         <!-- TODO: Document user-extension framework in the property and proxy package -->
         <para>

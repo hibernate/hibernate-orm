@@ -2,6 +2,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
                       "../support/docbook-dtd/docbookx.dtd"
 [
+<!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
 <!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
 <!ENTITY architecture           SYSTEM "modules/architecture.xml">
 <!ENTITY configuration          SYSTEM "modules/configuration.xml">

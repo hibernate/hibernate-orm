@@ -1457,7 +1457,9 @@
                         <para>
                             <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
                             that this property should be fetched lazily when the instance variable is first 
-                            accessed (requires build-time bytecode instrumentation).
+                            accessed (requires build-time bytecode instrumentation). Note that this does not
+                            influence Hibernate's proxy behavior - like the <literal>lazy</literal> attribute
+                            on class or collection mappings, but uses interception for deferred loading.
                         </para>
                     </callout>
                 </calloutlist>

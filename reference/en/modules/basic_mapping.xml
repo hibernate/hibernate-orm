@@ -225,7 +225,7 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
-                    <area id="class21" coords="23 55"/>
+                    <area id="class22" coords="23 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -488,7 +488,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-id" revision="2">
+        <sect2 id="mapping-declaration-id" revision="3">
             <title>id</title>
 
             <para>
@@ -682,6 +682,15 @@
                         </listitem>
                         </varlistentry>
                         <varlistentry>
+                        <term><literal>select</literal></term>
+                        <listitem>
+                            <para>
+                                retrieves a primary key assigned by a database trigger by selecting
+                                the row by some unique key and retrieving the primary key value.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
                         <term><literal>foreign</literal></term>
                         <listitem>
                             <para>
@@ -696,7 +705,7 @@
             </sect3>
             
             <sect3 id="mapping-declaration-id-hilo">
-                <title>Hi/Lo Algorithm</title>
+                <title>Hi/lo algorithm</title>
                 <para>
                     The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate
                     implementations of the hi/lo algorithm, a favorite approach to identifier generation. The
@@ -729,7 +738,7 @@
             </sect3>
             
             <sect3 id="mapping-declaration-id-uuid">
-                <title>UUID Algorithm</title>
+                <title>UUID algorithm</title>
                 <para>
                     The UUID contains: IP address, startup time of the JVM (accurate to a quarter
                     second), system time and a counter value (unique within the JVM). It's not
@@ -739,7 +748,7 @@
             </sect3>
 
             <sect3 id="mapping-declaration-id-sequences">
-            <title>Identity columns and Sequences</title>
+            <title>Identity columns and sequences</title>
                 <para>
                     For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), you
                     may use <literal>identity</literal> key generation. For databases that support
@@ -748,13 +757,13 @@
                     two SQL queries to insert a new object.
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="uid">
+                <programlisting><![CDATA[<id name="id" type="long" column="person_id">
         <generator class="sequence">
-                <param name="sequence">uid_sequence</param>
+                <param name="sequence">person_id_sequence</param>
         </generator>
 </id>]]></programlisting>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="0">
+                <programlisting><![CDATA[<id name="id" type="long" column="person_id" unsaved-value="0">
         <generator class="identity"/>
 </id>]]></programlisting>
             
@@ -767,13 +776,13 @@
             </sect3>
             
             <sect3 id="mapping-declaration-id-assigned">
-                <title>Assigned Identifiers</title>
+                <title>Assigned identifiers</title>
                 <para>
                     If you want the application to assign identifiers (as opposed to having
                     Hibernate generate them), you may use the <literal>assigned</literal> generator.
                     This special generator will use the identifier value already assigned to the
-                    object's identifier property. Be very careful when using this feature to assign
-                    keys with business meaning (almost always a terrible design decision).
+                    object's identifier property. This generator is used when the primary key
+                    is a natural key instead of a surrogate key.
                 </para>
                 
                 <para>
@@ -783,6 +792,27 @@
                     there is a version or timestampe property, or you define 
                     <literal>Interceptor.isUnsaved()</literal>.
                 </para>
+            </sect3>
+
+            <sect3 id="mapping-declaration-id-select">
+                <title>Primary keys assigned by triggers</title>
+                <para>
+                    For legacy schemas only (Hibernate does not generate DDL with triggers).
+                </para>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="person_id">
+        <generator class="select">
+                <param name="key">socialSecurityNumber</param>
+        </generator>
+</id>]]></programlisting>
+
+                <para>
+                    In the above example, there is a unique valued property named 
+                    <literal>socialSecurityNumber</literal> defined by the class, as a
+                    natural key, and a surrogate key named <literal>person_id</literal>
+                    whose value is generated by a trigger.
+                </para>
+                
             </sect3>
 
         </sect2>

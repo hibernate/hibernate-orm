@@ -735,7 +735,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
 
     </sect1>
 
-   <sect1 id="collections-idbag">
+   <sect1 id="collections-idbag" revision="1">
         <title><literal>Using an &lt;idbag&gt;</literal></title>
 
         <para>
@@ -745,9 +745,8 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             that we've shown so far all map to tables with composite keys! Now, this point
             is quite arguable; a pure association table doesn't seem to benefit much from
             a surrogate key (though a collection of composite values <emphasis>might</emphasis>).
-            Nevertheless, Hibernate provides a (slightly experimental) feature that allows
-            you to map many to many associations and collections of values to a table with
-            a surrogate key.
+            Nevertheless, Hibernate provides a feature that allows you to map many to many
+            associations and collections of values to a table with a surrogate key.
         </para>
 
         <para>
@@ -757,7 +756,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
 
 <programlisting><![CDATA[<idbag name="lovers" table="LOVERS" lazy="true">
     <collection-id column="ID" type="long">
-        <generator class="hilo"/>
+        <generator class="sequence"/>
     </collection-id>
     <key column="PERSON1"/>
     <many-to-many column="PERSON2" class="eg.Person" outer-join="true"/>
@@ -778,7 +777,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         </para>
 
         <para>
-            In the current implementation, the <literal>identity</literal> identifier generation
+            In the current implementation, the <literal>native</literal> identifier generation
             strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers.
         </para>
 

@@ -993,46 +993,34 @@ tx.commit(); // flush occurs]]></programlisting>
         </para>
 
         <para>
-            To save or update all objects in a graph of associated entities, you must either
+            For each basic operation of the Hibernate session - including <literal>create(), merge(),
+            saveOrUpdate(), delete(), lock(), refresh(), evict(), replicate()</literal> - there is a 
+            corresponding cascade style. Respectively, the cascade styles are named <literal>create, 
+            merge, save-update, delete, lock, refresh, evict, replicate</literal>. If you want an 
+            operation to be cascaded along an association, you must indicate that in the mapping
+            document. For example:
         </para>
-
+        
+        <programlisting><![CDATA[<one-to-one name="person" cascade="create"/>]]></programlisting>
+        
         <para>
-            TODO: Document the new cascading styles
+            Cascade styles my be combined:
         </para>
-
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-                    <literal>save()</literal>, <literal>saveOrUpdate()</literal> or
-                    <literal>update()</literal> each individual object OR
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    map associated objects using or <literal>cascade="save-update"</literal>, 
-                    <literal>cascade="all"</literal> or <literal>cascade="all-delete-orphan"</literal>.
-                </para>
-            </listitem>
-        </itemizedlist>
-
+        
+        <programlisting><![CDATA[<one-to-one name="person" cascade="create,delete,lock"/>]]></programlisting>
+        
         <para>
-            Likewise, to delete all objects in a graph, either
+            You may even use <literal>cascade="all"</literal> to specify that <emphasis>all</emphasis>
+            operations should be cascaded along the association. The default <literal>cascade="none"</literal>
+            specifies that no operations are to be cascaded.
+        </para>
+        
+        <para>
+            A special cascade style, <literal>orphan-delete</literal>, applies only to one-to-many
+            associations, and indicates that the <literal>delete()</literal> operation should
+            be applied to any child object that is removed from the association.
         </para>
 
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-                    <literal>delete()</literal> each individual object OR
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    map associated objects using <literal>cascade="all"</literal>,
-                    <literal>cascade="all-delete-orphan"</literal> or
-                    <literal>cascade="delete"</literal>.
-                </para>
-            </listitem>
-        </itemizedlist>
 
         <para>
             Recommendation:
@@ -1043,41 +1031,50 @@ tx.commit(); // flush occurs]]></programlisting>
                 <para>
                     If the child object's lifespan is bounded by the lifespan of the of the parent
                     object make it a <emphasis>lifecycle object</emphasis> by specifying
-                    <literal>cascade="all"</literal>.
+                    <literal>cascade="all,delete-orphan"</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Otherwise, <literal>save()</literal> and <literal>delete()</literal> it
-                    explicitly from application code. If you really want to save yourself some
-                    extra typing, use <literal>cascade="save-update"</literal> and explicit
-                    <literal>delete()</literal>.
+                    Otherwise, you might not need cascade at all. But if you really want to save 
+                    yourself some extra typing, consider using 
+                    <literal>cascade="create,merge,save-update"</literal>.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Mapping an association (many-to-one, or collection) with <literal>cascade="all"</literal>
-            marks the association as a <emphasis>parent/child</emphasis> style relationship where
-            save/update/deletion of the parent results in save/update/deletion of the child(ren).
-            Futhermore, a mere reference to a child from a persistent parent will result in save / update
-            of the child. The metaphor is incomplete, however. A child which becomes unreferenced by its
-            parent is <emphasis>not</emphasis> automatically deleted, except in the case of a
-            <literal>&lt;one-to-many&gt;</literal> association mapped with
-            <literal>cascade="all-delete-orphan"</literal>. The precise semantics of cascading operations
-            are as follows:
+            Mapping an association (either a single valued association, or a collection) with 
+            <literal>cascade="all"</literal> marks the association as a 
+            <emphasis>parent/child</emphasis> style relationship where save/update/delete of the 
+            parent results in save/update/delete of the child or children.
+        </para>
+        <para>
+            Futhermore, a mere reference to a child from a persistent parent will result in 
+            save/update of the child. This metaphor is incomplete, however. A child which becomes 
+            unreferenced by its parent is <emphasis>not</emphasis> automatically deleted, except 
+            in the case of a <literal>&lt;one-to-many&gt;</literal> association mapped with
+            <literal>cascade="delete-orphan"</literal>. The precise semantics of cascading 
+            operations for a parent/child relationship are as follows:
         </para>
 
        <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    If a parent is saved, all children are passed to <literal>saveOrUpdate()</literal>
+                    If a parent is passed to <literal>create()</literal>, all children are passed to 
+                    <literal>create()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    If a parent is passed to <literal>update()</literal> or <literal>saveOrUpdate()</literal>,
-                    all children are passed to <literal>saveOrUpdate()</literal>
+                    If a parent is passed to <literal>merge()</literal>, all children are passed to 
+                    <literal>merge()</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    If a parent is passed to <literal>save()</literal>, <literal>update()</literal> or 
+                    <literal>saveOrUpdate()</literal>, all children are passed to <literal>saveOrUpdate()</literal>
                 </para>
             </listitem>
             <listitem>
@@ -1094,33 +1091,12 @@ tx.commit(); // flush occurs]]></programlisting>
             <listitem>
                 <para>
                     If a child is dereferenced by a persistent parent, <emphasis>nothing
-                    special happens</emphasis> (the application should explicitly delete 
-                    the child if necessary) unless <literal>cascade="all-delete-orphan"</literal>, 
+                    special happens</emphasis> - the application should explicitly delete 
+                    the child if necessary - unless <literal>cascade="delete-orphan"</literal>, 
                     in which case the "orphaned" child is deleted.
                 </para>
             </listitem>
         </itemizedlist>
-
-        <para>
-            Hibernate does, even if you enable all cascading options, not fully implement "persistence
-            by reachability", which would imply (inefficient) persistent garbage collection (i.e.
-            detected references by scanning all tables in the database).
-        </para>
-
-        <para>
-            TODO: The following doesn't make much sense. Better we don't talk about persistence by
-            reachability anymore, its a bad idea from ODBMS vendors anyway...
-        </para>
-
-        <para>
-            However, due to popular demand,
-            Hibernate does support the notion of entities becoming persistent when referenced
-            by another persistent object. Associations marked
-            <literal>cascade="save-update"</literal> behave in this way. If you wish to use this
-            approach throughout your application, its easier to specify the
-            <literal>default-cascade</literal> attribute of the
-            <literal>&lt;hibernate-mapping&gt;</literal> element.
-        </para>
 
     </sect1>
 

@@ -13,8 +13,8 @@
             modification you make to the tree automatically synchronized to the 
             database. You can even take an XML document, parse it using dom4j, and
             write it to the database with any of Hibernate's basic operations: 
-            <literal>create(), saveOrUpdate(), merge(), replicate()</literal> (merge 
-            is not yet supported in Hibernate 3.0rc1).
+            <literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal> 
+            (merge is not yet supported in Hibernate 3.0rc1).
         </para>
         
         <para>

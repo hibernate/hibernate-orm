@@ -92,7 +92,7 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
             is called. If <literal>Cat</literal> has an <literal>assigned</literal>
             identifier, or a composite key, the identifier should be assigned to 
             the <literal>cat</literal> instance before calling <literal>save()</literal>.
-            You may also use <literal>create()</literal> instead of <literal>save()</literal>,
+            You may also use <literal>persist()</literal> instead of <literal>save()</literal>,
             with the semantics defined in the EJB3 early draft.
         </para>
         
@@ -1062,7 +1062,7 @@ tx.commit(); // flush occurs]]></programlisting>
         </para>
 
         <para>
-            For each basic operation of the Hibernate session - including <literal>create(), merge(),
+            For each basic operation of the Hibernate session - including <literal>persist(), merge(),
             saveOrUpdate(), delete(), lock(), refresh(), evict(), replicate()</literal> - there is a 
             corresponding cascade style. Respectively, the cascade styles are named <literal>create, 
             merge, save-update, delete, lock, refresh, evict, replicate</literal>. If you want an 
@@ -1138,8 +1138,8 @@ tx.commit(); // flush occurs]]></programlisting>
        <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    If a parent is passed to <literal>create()</literal>, all children are passed to 
-                    <literal>create()</literal>
+                    If a parent is passed to <literal>persist()</literal>, all children are passed to 
+                    <literal>persist()</literal>
                 </para>
             </listitem>
             <listitem>

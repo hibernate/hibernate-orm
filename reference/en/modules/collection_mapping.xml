@@ -32,7 +32,7 @@
             Notice how we initialized the instance variable with an instance of
             <literal>HashSet</literal>. This is the best way to initialize collection
             valued properties of newly instantiated (non-persistent) instances. When
-            you make the instance persistent - by calling <literal>create()</literal>,
+            you make the instance persistent - by calling <literal>persist()</literal>,
             for example - Hibernate will actually replace the <literal>HashSet</literal>
             with an instance of Hibernate's own implementation of <literal>Set</literal>.
             Watch out for errors like this:
@@ -44,7 +44,7 @@ Cat kitten = new DomesticCat();
 Set kittens = new HashSet();
 kittens.add(kitten);
 cat.setKittens(kittens);
-session.create(cat);
+session.persist(cat);
 kittens = cat.getKittens(); // Okay, kittens collection is a Set
 (HashSet) cat.getKittens(); // Error!]]></programlisting>
 
@@ -779,8 +779,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 category.getItems().add(item);          // The category now "knows" about the relationship
 item.getCategories().add(category);     // The item now "knows" about the relationship
 
-session.create(item);                   // The relationship won't be saved!
-session.create(category);               // The relationship will be saved]]></programlisting>
+session.persist(item);                   // The relationship won't be saved!
+session.persist(category);               // The relationship will be saved]]></programlisting>
 
         <para>
             The non-inverse side is used to save the in-memory representation to the database.

@@ -125,6 +125,7 @@ public class Cat {
                 persist a property with a default, <literal>protected</literal> or <literal>
                 private</literal> get / set pair.
             </para>
+
         </sect2>
 
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
@@ -197,6 +198,10 @@ public class Cat {
                 You can persist <literal>final</literal> classes that do not implement an interface
                 with Hibernate, but you won't be able to use proxies for lazy association fetching -
                 which will limit your options for performance tuning.
+            </para>
+            <para>
+                You should also avoid declaring <literal>public final</literal> methods on the 
+                non-final classes.
             </para>
         </sect2>
         

@@ -1001,192 +1001,10 @@ sess.find("from Cat as cat left outer join cat.kittens kitten");
 ...
 tx.commit(); // flush occurs]]></programlisting>
 
-    </sect1>
-
-    <sect1 id="objectstate-commitexceptions">
-        <title>Committing and exceptions</title>
-        
         <para>
-            Ending a session involves four distinct phases:
-        </para>
-
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-                    flush the session
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    commit the transaction
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    close the session
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    handle exceptions
-                </para>
-            </listitem>
-        </itemizedlist>
-        
-        <para>
-            If you happen to be using the <literal>Transaction</literal> API, you don't
-            need to worry about flushing the session. It will be performed implicitly when the
-            <literal>Transaction</literal> is committed. Otherwise you should call
-            <literal>flush()</literal> to ensure that all changes are synchronized
-            with the database.
-        </para>
-
-        <para>
-            You have several options how you can or have to commmit a database transaction.
-            If you are using the Hibernate <literal>Transaction</literal> API, this
-            looks like:
-        </para>
-
-        <programlisting><![CDATA[tx.commit(); // flush the Session and commit the transaction]]></programlisting>
-
-        <para>
-            If you are managing JDBC transactions yourself you should manually
-            <literal>commit()</literal> the JDBC connection.
-        </para>
-
-        <programlisting><![CDATA[sess.flush();
-sess.connection().commit();  // not necessary for JTA datasource]]></programlisting>
-
-        <para>
-            If you are running your code in an application server and don't want to
-            keep it portable to a non-managed environment (in other words, you don't
-            use the <literal>Transaction</literal> API), you only have to flush the
-            session. The JTA <literal>TransactionManager</literal> will handle the
-            datasource and its transaction commit.
-        </para>
-
-        <programlisting><![CDATA[sess.flush();]]></programlisting>
-
-        <para>
-            If you decide <emphasis>not</emphasis> to commit your changes:
-        </para>
-
-        <programlisting><![CDATA[tx.rollback();  // rollback the transaction]]></programlisting>
-
-        <programlisting><![CDATA[// not necessary for JTA datasource, important otherwise
-sess.connection().rollback();]]></programlisting>
-
-        <para>
-            If you rollback the transaction you should immediately close and discard the current
-            session to ensure that Hibernate's internal state is consistent.
-        </para>
-
-        <para>
-            A call to <literal>Session.close()</literal> marks the end of a session. The main implication
-            of <literal>close()</literal> is that the JDBC connection will be relinquished by the session.
-        </para>
-
-        <programlisting><![CDATA[tx.commit();
-sess.close();]]></programlisting>
-
-            <programlisting><![CDATA[sess.flush();
-sess.connection().commit();  // not necessary for JTA datasource
-sess.close();]]></programlisting>
-
-        <para>
-            If you provided your own connection, <literal>close()</literal> returns a reference
-            to it, so you can manually close it or return it to the pool. Otherwise <literal>close()
-            </literal> returns it to the pool.
-        </para>
-
-        <para>
-            If the <literal>Session</literal> throws an exception (including any
-            <literal>SQLException</literal>), you should immediately rollback the database
-            transaction, call <literal>Session.close()</literal> and discard the
-            <literal>Session</literal> instance. Certain methods of <literal>Session</literal>
-            will <emphasis>not</emphasis> leave the session in a consistent state. No
-            exception thrown by Hibernate can be treaded as recoverable.
-        </para>
-
-        <para>
-            The following exception handling idiom is recommended:
-        </para>
-
-            <programlisting><![CDATA[Session sess = factory.openSession();
-Transaction tx = null;
-try {
-    tx = sess.beginTransaction();
-    // do some work
-    ...
-    tx.commit();
-}
-catch (Exception e) {
-    if (tx!=null) tx.rollback();
-    throw e;
-}
-finally {
-    sess.close();
-}]]></programlisting>
-
-        <para>
-            Or, when manually managing JDBC transactions:
-        </para>
-
-        <programlisting><![CDATA[Session sess = factory.openSession();
-try {
-    // do some work
-    ...
-    sess.flush();
-    sess.connection().commit();
-}
-catch (Exception e) {
-    sess.connection().rollback();
-    throw e;
-}
-finally {
-    sess.close();
-}]]></programlisting>
-
-        <para>
-            Or, when using a datasource enlisted with JTA and bean-managed
-            transaction demarcation:
-        </para>
-
-        <programlisting><![CDATA[UserTransaction ut = .... ;
-Session sess = factory.openSession();
-try {
-    // do some work
-    ...
-    sess.flush();
-}
-catch (Exception e) {
-    ut.setRollbackOnly();
-    throw e;
-}
-finally {
-    sess.close();
-}]]></programlisting>
-
-        <para>
-            With JTA and container-managed transactions, the container will automatically
-            roll back any transaction if an EJB method throws a <literal>RuntimeException</literal>.
-        </para>
-
-        <para>
-            The <literal>HibernateException</literal>, which wraps most of the errors that
-            can occur in a Hibernate persistence layer, is an unchecked exception (it wasn't
-            in older versions of Hibernate). In our opinion, we shouldn't force the application
-            developer to catch an unrecoverable (all <literal>HibernateException</literal>s
-            are fatal, as explained earlire) exception at a low layer. In most systems, unchecked
-            and fatal exceptions are only catched at the highest level of the call stack and an
-            error message is presented to the application user (or some other appropriate action
-            is taken). Note that Hibernate might also throw other unchecked exceptions (e.g.
-            when detecting stale data in version checks) which are not a
-            <literal>HibernateException</literal>.
-        </para>
-
-        <para>
-            TODO: document new SQLException converter
+            During flush, an exception might occur (e.g. if a DML operation violates a constraint).
+            Since handling exceptions involves some understanding of Hibernate's transactional behavior,
+            we discuss it in <xref linkend="transactions"/>.
         </para>
 
     </sect1>
@@ -1195,13 +1013,13 @@ finally {
         <title>Transitive persistence</title>
 
         <para>
-            It is quite cumbersome to save, delete, or reattache individual objects only,
+            It is quite cumbersome to save, delete, or reattach individual objects,
             especially if you deal with a graph of associated objects. A common case is
             a parent/child relationship. Consider the following example:
         </para>
 
         <para>
-            If the children in this relationship would be value typed (e.g. a collection
+            If the children in a parent/child relationship would be value typed (e.g. a collection
             of addresses or strings), their lifecycle would depend on the parent and no
             further action would be required for convenient "cascading" of state changes.
             When the parent is saved, the value-typed child objects are saved as
@@ -1217,7 +1035,7 @@ finally {
             have their own lifecycle, support shared references (so removing an entity from
             the collection does not mean it can be deleted), and there is by default no
             cascading of state from one entity to any other associated entities. Hibernate
-            does not enable <emphasis>persistence by reachability</emphasis> by default.
+            does not implement <emphasis>persistence by reachability</emphasis> by default.
         </para>
 
         <para>

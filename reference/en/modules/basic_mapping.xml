@@ -208,7 +208,7 @@
         </sect2>
 
         <sect2 id="mapping-declaration-class" revision="3">
-            <title>class, dynamic-class</title>
+            <title>class</title>
 
             <para>
                 You may declare a persistent class using the <literal>class</literal> element:
@@ -267,8 +267,9 @@
                 <calloutlist>
                     <callout arearefs="class1">
                         <para>
-                            <literal>name</literal>: The fully qualified Java class name of the persistent class 
-                            (or interface).
+                            <literal>name</literal> (optional): The fully qualified Java class name of the 
+                            persistent class (or interface). If this attribute is missing, it is assumed 
+                            that the mapping is for a non-POJO entity.
                         </para>
                     </callout>
                     <callout arearefs="class2">
@@ -369,12 +370,11 @@
                     </callout>    
                     <callout arearefs="class17">
                         <para>
-                            <literal>entity-name</literal> (optional): Hibernate3 supports class-less persistence:
-                            use the <literal>&lt;dynamic-class&gt;</literal> instead of a <literal>&lt;class&gt;</literal>
-                            mapping and an <literal>entity-name</literal> attribute instead of a class name. This
-                            allows you to implement your domain model using maps of maps or any other dynamic
-                            approach. See <xref linkend="persistent-classes-dynamic"/> for more information.
-
+                            <literal>entity-name</literal> (optional): Hibernate3 allows a class to be mapped 
+                            multiple times (to different tables, potentially), and allows entity mappings that
+                            are represented by Maps or XML at the java level. In these cases, you should
+                            provide an explicit arbitrary name for the entity. See 
+                            <xref linkend="persistent-classes-dynamic"/> for more information.
                         </para>
                     </callout>
                     <callout arearefs="class18">

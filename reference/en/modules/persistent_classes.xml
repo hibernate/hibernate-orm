@@ -319,35 +319,35 @@ public class DomesticCat extends Cat {
 
         <programlisting><![CDATA[<hibernate-mapping>
 
-    <dynamic-class entity-name="TestMap">
+    <class entity-name="TestMap">
 
         <id name="id"
-        type="long"
-        column="ID">
+            type="long"
+            column="ID">
             <generator class="sequence"/>
         </id>
 
         <property name="name"
-        column="NAME"
-        type="string"/>
+            column="NAME"
+            type="string"/>
 
         <property name="address"
-        column="ADDRESS"
-        type="string"/>
+            column="ADDRESS"
+            type="string"/>
 
         <many-to-one name="parent"
-        column="PARENT_ID"
-        class="TestMap"/>
+            column="PARENT_ID"
+            class="TestMap"/>
 
         <bag name="children"
-        inverse="true"
-        lazy="false"
-        cascade="all">
+            inverse="true"
+            lazy="false"
+            cascade="all">
             <key column="PARENT_ID"/>
             <one-to-many class="TestMap"/>
         </bag>
 
-    </dynamic-class>
+    </class>
     
 </hibernate-mapping>]]></programlisting>
 
@@ -382,7 +382,7 @@ s.close();]]></programlisting>
     </sect1>
 
     <para>
-        TODO: Document user-extension framework in the property and proxy package
+        TODO: Document user-extension framework in the property and proxy packages
     </para>
 
 </chapter>

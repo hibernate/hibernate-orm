@@ -208,8 +208,29 @@ END updatePerson;]]></programlisting>
 </class>]]></programlisting>
 
         <para>
-            TODO: Document synchronized mapping element in named queries
+            TODO: Document the following examples for collection loader and query-list
         </para>
+
+        <programlisting><![CDATA[
+        <sql-query name="organizationEmployments">
+            <load-collection alias="empcol" role="Organization.employments"/>
+            SELECT {empcol.*}
+            FROM EMPLOYMENT empcol
+            WHERE EMPLOYER = :id
+            ORDER BY STARTDATE ASC, EMPLOYEE ASC
+        </sql-query>
+
+        <sql-query name="organizationCurrentEmployments">
+            <return alias="emp" class="Employment"/>
+            <synchronize table="EMPLOYMENT"/>
+            SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
+                STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+                REGIONCODE as {emp.regionCode}, ID AS {emp.id}
+            FROM EMPLOYMENT
+            WHERE EMPLOYER = :id AND ENDDATE IS NULL
+            ORDER BY STARTDATE ASC
+        </sql-query>
+        ]]></programlisting>
 
     </sect1>
 

@@ -1,4 +1,4 @@
-<chapter id="best-practices" revision="2">
+<chapter id="best-practices" revision="3">
     <title>Best Practices</title>
 
     <variablelist spacing="compact">
@@ -18,8 +18,9 @@
                 <para>
                     Hibernate makes identifier properties optional. There are all sorts of reasons why
                     you should use them. We recommend that identifiers be 'synthetic' (generated, with
-                    no business meaning) and of a non-primitive type. For maximum flexibility, use
-                    <literal>java.lang.Long</literal> or <literal>java.lang.String</literal>.
+                    no business meaning). It doesn't make a difference if you use <literal>long</literal>
+                    or <literal>java.lang.Long</literal>; primitives might be syntactically easier to handle
+                    though.
                 </para>
             </listitem>
         </varlistentry>

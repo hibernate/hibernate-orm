@@ -362,11 +362,13 @@ alter table line_items
             <title>"Typed" one-to-one association</title>
 <programlisting><![CDATA[<class name="Person">
     <id name="name"/>
-    <one-to-one name="address" cascade="all" constrained="false">
+    <one-to-one name="address" 
+            cascade="all">
         <formula>name</formula>
         <formula>'HOME'</formula>
     </one-to-one>
-    <one-to-one name="mailingAddress" constrained="false">
+    <one-to-one name="mailingAddress" 
+            cascade="all">
         <formula>name</formula>
         <formula>'MAILING'</formula>
     </one-to-one>
@@ -399,8 +401,8 @@ alter table line_items
     <property name="address" not-null="true" length="200"/>
 
     <list name="orders"
-        inverse="true"
-        cascade="save-update">
+            inverse="true"
+            cascade="save-update">
         <key column="customerId"/>
         <index column="orderNumber"/>
         <one-to-many class="Order"/>
@@ -413,14 +415,14 @@ alter table line_items
     <synchronize table="Product"/>
     
     <composite-id name="id" 
-        class="Order$Id">
+            class="Order$Id">
         <key-property name="customerId" length="10"/>
         <key-property name="orderNumber"/>
     </composite-id>
     
     <property name="orderDate" 
-        type="calendar_date"
-        not-null="true"/>
+            type="calendar_date"
+            not-null="true"/>
     
     <property name="total">
         <formula>
@@ -433,15 +435,15 @@ alter table line_items
     </property>
     
     <many-to-one name="customer"
-        column="customerId"
-        insert="false"
-        update="false" 
-        not-null="true"/>
+            column="customerId"
+            insert="false"
+            update="false" 
+            not-null="true"/>
         
     <bag name="lineItems"
-        fetch="join" 
-        inverse="true"
-        cascade="save-update">
+            fetch="join" 
+            inverse="true"
+            cascade="save-update">
         <key>
             <column name="customerId"/>
             <column name="orderNumber"/>
@@ -454,7 +456,7 @@ alter table line_items
 <class name="LineItem">
     
     <composite-id name="id" 
-        class="LineItem$Id">
+            class="LineItem$Id">
         <key-property name="customerId" length="10"/>
         <key-property name="orderNumber"/>
         <key-property name="productId" length="10"/>
@@ -463,18 +465,18 @@ alter table line_items
     <property name="quantity"/>
     
     <many-to-one name="order"
-        insert="false"
-        update="false" 
-        not-null="true">
+            insert="false"
+            update="false" 
+            not-null="true">
         <column name="customerId"/>
         <column name="orderNumber"/>
     </many-to-one>
     
     <many-to-one name="product"
-        insert="false"
-        update="false" 
-        not-null="true"
-        column="productId"/>
+            insert="false"
+            update="false" 
+            not-null="true"
+            column="productId"/>
         
 </class>
 

@@ -2194,9 +2194,14 @@
                     <callout arearefs="join4">
                         <para>
                             <literal>fetch</literal> (optional - defaults to <literal>join</literal>):
-                            If set to <literal>select</literal> for a join defined on a subclass, then rather 
-                            than joining, a sequential select will be issued only if a row turns out to represent 
-                            an instance of the subclass.
+                            If set to <literal>join</literal>, the default, Hibernate will use an inner join 
+                            to retrieve a <literal>&lt;join&gt;</literal> defined by a class or its superclasses 
+                            and an outer join for a <literal>&lt;join&gt;</literal> defined by a subclass.
+                            If set to <literal>select</literal> then Hibernate will use a sequential select for 
+                            a <literal>&lt;join&gt;</literal> defined on a subclass, which will be issued only 
+                            if a row turns out to represent an instance of the subclass. Inner joins will still
+                            be used to retrieve a <literal>&lt;join&gt;</literal> defined by the class and its 
+                            superclasses.
                         </para>
                     </callout>
                     <callout arearefs="join5">
@@ -2210,7 +2215,7 @@
                         <para>
                             <literal>optional</literal> (optional - defaults to <literal>false</literal>):
                             If enabled, Hibernate will insert a row only if the properties defined by this 
-                            join are non-null .
+                            join are non-null and will always use an outer join to retrieve the properties.
                         </para>
                     </callout>
                 </calloutlist>

@@ -16,9 +16,9 @@
 
         <para>
             An instance of <literal>org.hibernate.cfg.Configuration</literal>
-            represents an entire set of mappings of an application's Java types to a
-            SQL database. The <literal>Configuration</literal> is used to build a
-            (immutable)` <literal>SessionFactory</literal>. The mappings are compiled
+            represents an entire set of mappings of an application's Java types to an
+            SQL database. The <literal>Configuration</literal> is used to build an
+            (immutable) <literal>SessionFactory</literal>. The mappings are compiled
             from various XML mapping files.
         </para>
 
@@ -43,8 +43,8 @@
 
         <para>
             Then Hibernate will look for mapping files named
-            <literal>/org/hibernate/autcion/Item.hbm.xml</literal> and
-            <literal>/org/hibernate/autcion/Bid.hbm.xml</literal> in the classpath.
+            <literal>/org/hibernate/auction/Item.hbm.xml</literal> and
+            <literal>/org/hibernate/auction/Bid.hbm.xml</literal> in the classpath.
             This approach eliminates any hardcoded filenames.
         </para>
         
@@ -408,6 +408,19 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
+                            <literal>hibernate.default_catalog</literal>
+                        </entry>
+                        <entry>
+                            Qualify unqualified tablenames with the given catalog
+                            in generated SQL.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>CATALOG_NAME</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
                             <literal>hibernate.session_factory_name</literal>
                         </entry>
                         <entry>
@@ -721,10 +734,21 @@ hibernate.dialect = \
                             <literal>hibernate.generate_statistics</literal>
                         </entry>
                         <entry>
-                            If turned on, several runtime statistics are available by calling
-                            <literal>SessionFactory.getStatistics()</literal>. Also see the
-                            <literal>StatisticsServiceMBean</literal> if you are using a
-                            JMX server, documented on the Hibernate web site.
+                            If enabled, Hibernate will collect statistics useful for
+			    performance tuning.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.use_identifer_rollback</literal>
+                        </entry>
+                        <entry>
+                            If enabled, generated identifier properties will be
+			    reset to default values when objects are deleted.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -843,12 +867,12 @@ hibernate.dialect = \
             <title>Outer Join Fetching</title>
 
             <para>
-                If your database supports ANSI or Oracle style outer joins, <emphasis>outer join
-                fetching</emphasis> might increase performance by limiting the number of round
+                If your database supports ANSI, Oracle or Sybase style outer joins, <emphasis>outer join
+                fetching</emphasis> will often increase performance by limiting the number of round
                 trips to and from the database (at the cost of possibly more work performed by
-                the database itself). Outer join fetching allows a graph of objects connected
-                by many-to-one, one-to-many or one-to-one associations to be retrieved in a single
-                SQL <literal>SELECT</literal>.
+                the database itself). Outer join fetching allows a whole graph of objects connected
+                by many-to-one, one-to-many, many-to-many and one-to-one associations to be retrieved 
+		in a single SQL <literal>SELECT</literal>.
             </para>
 
             <para>
@@ -893,14 +917,12 @@ hibernate.dialect = \
         </sect2>
 
         <sect2 id="configuration-optional-cacheprovider" revision="1">
-            <title>Custom <literal>CacheProvider</literal></title>
+            <title>Second-level and query cache</title>
 
             <para>
-                You may integrate a JVM-level (or clustered) second-level cache system by
-                implementing the interface <literal>org.hibernate.cache.CacheProvider</literal>.
-                You may select the custom implementation by setting
-                <literal>hibernate.cache.provider_class</literal>. See the "Performance" chapter
-                for more details.
+                The properties prefixed by <literal>hibernate.cache</literal>
+		allow you to use a process or cluster scoped second-level cache system 
+		with Hibernate. See the "Performance" chapter for more details.
             </para>
 
         </sect2>
@@ -943,9 +965,9 @@ hibernate.dialect = \
             </para>
 
             <para>
-                If you wish to use JVM-level caching of mutable data in a JTA environment, you must specify
-                a strategy for obtaining the JTA <literal>TransactionManager</literal>, as this is
-                not standardized for J2EE containers:
+                If you wish to use a second-level cache for mutable data in a JTA environment, you must specify
+                a strategy for obtaining the JTA <literal>TransactionManager</literal>, since J2EE does not
+		standardize a single mechanism:
             </para>
 
             <table frame="topbot" id="jtamanagerlookup" revision="1">
@@ -1064,6 +1086,17 @@ hibernate.dialect = \
 
         </sect2>
 
+        <sect2 id="configuration-optional-statistics" revision="1">
+            <title>Hibernate statistics</title>
+
+            <para>
+                If you enable <literal>hibernate.generate_statistics</literal>, Hibernate will 
+		expose a number of metrics that are useful when tuning a running system via
+		<literal>SessionFactory.getStatistics()</literal>. Hibernate can even be configured
+		to expose these statistics via JMX (see the website for details).
+            </para>
+
+        </sect2>
     </sect1>
 
     <sect1 id="configuration-logging">
@@ -1136,7 +1169,7 @@ hibernate.dialect = \
             An alternative approach to configuration is to specify a full configuration in
             a file named <literal>hibernate.cfg.xml</literal>. This file can be used as a
             replacement for the <literal>hibernate.properties</literal> file or, if both
-            are present, override properties.
+            are present, to override properties.
         </para>
 
         <para>

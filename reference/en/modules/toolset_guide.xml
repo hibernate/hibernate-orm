@@ -1,85 +1,71 @@
-<chapter id="toolsetguide">
+<chapter id="toolsetguide" revision="2">
     <title>Toolset Guide</title>
 
     <para>
-        Roundtrip engineering with Hibernate is possible using a set of commandline tools 
-        maintained as part of the Hibernate project, along with Hibernate support built into
-        XDoclet, Middlegen and AndroMDA.
+        Roundtrip engineering with Hibernate is possible using a set of Eclipse plugins,
+        commandline tools, as well as Ant tasks.
     </para>
 
     <para>
-        The Hibernate main package comes bundled with the most important tool (it can even
-        be used from "inside" Hibernate on-the-fly):
+        The <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse
+        IDE as well as Ant tasks for reverse engineering of existing databases:
     </para>
 
     <itemizedlist>
         <listitem><para>
-            DDL schema generation from a mapping file
-            (aka <literal>SchemaExport</literal>, <literal>hbm2ddl</literal>)
+            <emphasis>Mapping Editor:</emphasis> An editor for Hibernate XML mapping files,
+            supporting auto-completion and syntax highlighting. It also supports semantic
+            auto-completion for class names and property/field names, making it much more versatile than a normal XML editor.
         </para></listitem>
+        <listitem><para>
+            <emphasis>Console:</emphasis> The console is a new view in Eclipse. In addition to
+            a tree overview of your console configurations, you also get an interactive view
+            of your persistent classes and their relationships. The console allows you to
+            execute HQL queries against your database and browse the result directly in
+            Eclipse.
+        </para></listitem>
+        <listitem><para>
+            <emphasis>Development Wizards:</emphasis> Several wizards are provided with the
+            Hibernate Eclipse tools; you can use a wizard to quickly generate Hibernate configuration
+            (cfg.xml) files, or you may even completely reverse engineer an existing database schema
+            into POJO source files and Hibernate mapping files. The reverse engineering wizard
+            supports customizable templates.
+        </para></listitem>
+        <listitem><para>
+            <emphasis>Ant Tasks:</emphasis>
+        </para></listitem>
+
     </itemizedlist>
 
     <para>
-        Other tools directly provided by the Hibernate project are delivered with a separate
-        package, <emphasis>Hibernate Extensions</emphasis>. This package includes tools for
-        the following tasks:
-    </para>
-
-    <itemizedlist>
-        <listitem><para>
-            Java source generation from a mapping file (aka <literal>CodeGenerator</literal>,
-            <literal>hbm2java</literal>)
-        </para></listitem>
-        <listitem><para>
-            mapping file generation from compiled Java classes or from
-            Java source with XDoclet markup (aka <literal>MapGenerator</literal>,
-            <literal>class2hbm</literal>)
-        </para></listitem>
-    </itemizedlist>
-
-    <para>
-        There's actually another utility living in Hibernate Extensions: <literal>ddl2hbm</literal>.
-        It is considered deprecated and will no longer be maintained, Middlegen does a better job
-        for the same task.
+        Please refer to the <emphasis>Hibernate Tools</emphasis> package and it's documentation
+        for more information.
     </para>
 
     <para>
-        Third party tools with Hibernate support are:
+        However, the Hibernate main package comes bundled with an integrated tool (it can even
+        be used from "inside" Hibernate on-the-fly): <emphasis>SchemaExport</emphasis> aka
+        <literal>hbm2ddl</literal>.
     </para>
 
-    <itemizedlist>
-        <listitem><para>
-            Middlegen (mapping file generation from an existing database schema)
-        </para></listitem>
-        <listitem><para>
-            AndroMDA (MDA (Model-Driven Architecture) approach generating code for
-            persistent classes from UML diagrams and their XML/XMI representation)
-        </para></listitem>
-    </itemizedlist>
-
-    <para>
-        These 3rd party tools are not documented in this reference. Please refer to the Hibernate
-        website for up-to-date information (a snapshot of the site is included in the Hibernate
-        main package).
-    </para>
-
-    <sect1 id="toolsetguide-s1">
-        <title>Schema Generation</title>
+    <sect1 id="toolsetguide-s1" revision="2">
+        <title>Automatic schema generation</title>
 
         <para>
-            DDL may be generated from your mapping files by a command line utility. A batch file
-            is located in the <literal>hibernate-x.x.x/bin</literal> directory of the core
-            Hibernate package.
-        </para>
-
-        <para>
-            The generated schema include referential integrity constraints (primary and foreign keys) for entity
-            and collection tables. Tables and sequences are also created for mapped identifier generators.
+            DDL may be generated from your mapping files by a Hibernate utility. The generated
+            schema includes referential integrity constraints (primary and foreign keys) for
+            entity and collection tables. Tables and sequences are also created for mapped
+            identifier generators.
         </para>
         
         <para>
             You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via the 
-            <literal>hibernate.dialect</literal> property when using this tool.
+            <literal>hibernate.dialect</literal> property when using this tool, as DDL
+            is highly vendor specific.
+        </para>
+
+        <para>
+            First, customize your mapping files to improve the generated schema.
         </para>
 
         <sect2 id="toolsetguide-s1-2" revision="1">
@@ -445,651 +431,6 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
         </fileset>
     </schemaupdate>
 </target>]]></programlisting>
-
-        </sect2>
-
-    </sect1>
-
-    <sect1 id="toolsetguide-s2">
-        <title>Code Generation</title>
-
-        <para>
-            The Hibernate code generator may be used to generate skeletal Java implementation classes
-            from a Hibernate mapping file. This tool is included in the Hibernate Extensions package
-            (a separate download).
-        </para>
-
-        <para>
-            <literal>hbm2java</literal> parses the mapping files and generates fully working Java
-            source files from these. Thus with <literal>hbm2java</literal> one could "just" provide the
-            <literal>.hbm</literal> files, and then don't worry about hand-writing/coding the Java files.
-        </para>
-
-        <para>
-            <literal>java -cp</literal> <emphasis>hibernate_classpaths</emphasis>
-            <literal>org.hibernate.tool.hbm2java.CodeGenerator</literal> <emphasis> options
-            mapping_files</emphasis>
-        </para>
-
-        <table frame="topbot">
-            <title>Code Generator Command Line Options</title>
-            <tgroup cols="2">
-                <colspec colwidth="1*"/>
-                <colspec colwidth="2*"/>
-                <thead>
-                    <row>
-                        <entry>Option</entry>
-                        <entry>Description</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry><literal>--output=</literal><emphasis>output_dir</emphasis></entry>
-                        <entry>root directory for generated code</entry>
-                    </row>
-                    <row>
-                        <entry><literal>--config=</literal><emphasis>config_file</emphasis></entry>
-                        <entry>optional file for configuring hbm2java</entry>
-                    </row>
-                </tbody>
-            </tgroup>
-        </table>
-
-        <sect2 id="toolsetguide-s2-1" revision="4">
-            <title>The config file (optional)</title>
-
-            <para>
-                The config file provides for a way to specify multiple "renderers" for the source code
-                and to declare <literal>&lt;meta&gt;</literal> attributes that is "global" in scope. See
-                more about this in the <literal>&lt;meta&gt;</literal> attribute section.
-            </para>
-
-            <programlisting><![CDATA[<codegen>
-    <meta attribute="implements">codegen.test.IAuditable</meta>
-    <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
-    <generate
-        package="autofinders.only"
-        suffix="Finder"
-        renderer="org.hibernate.tool.hbm2java.FinderRenderer"/>
-</codegen>]]></programlisting>
-
-            <para>
-                This config file declares a global meta attribute "implements" and specify two renderers, the
-                default one (BasicRenderer) and a renderer that generates Finders (See more in "Basic Finder
-                generation" below).
-            </para>
-
-            <para>
-                The second renderer is provided with a package and suffix attribute.
-            </para>
-
-            <para>
-                The package attribute specifies that the generated source files from this renderer should be
-                placed here instead of the package scope specified in the <literal>.hbm</literal> files.
-            </para>
-
-            <para>
-                The suffix attribute specifies the suffix for generated files. E.g. here a file named
-                <literal>Foo.java</literal> would be <literal>FooFinder.java</literal> instead.
-            </para>
-
-            <para>
-              It is also possible to send down arbitrary parameters to the renders by adding <literal>&lt;param&gt;</literal> attributes
-              to the <literal>&lt;generate&gt;</literal> elements.
-            </para>
-
-            <para>
-              hbm2java currently has support for one such parameter,
-              namely
-              <literal>generate-concrete-empty-classes</literal> which
-              informs the BasicRenderer to only generate empty
-              concrete classes that extends a base class for all your
-              classes. The following config.xml example illustrate
-              this feature
-            </para>
-
-            <programlisting><![CDATA[
-            <codegen>
-              <generate prefix="Base" renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
-              <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer">
-                <param name="generate-concrete-empty-classes">true</param>
-                <param name="baseclass-prefix">Base</param>
-              </generate>
-            </codegen>]]></programlisting>
-
-            <para>
-              Notice that this config.xml configure 2 (two)
-              renderers. One that generates the Base classes, and a
-              second one that just generates empty concrete classes.
-            </para>
-        </sect2>
-
-        <sect2 id="toolsetguide-s2-2">
-            <title>The <literal>meta</literal> attribute</title>
-
-            <para>
-                The <literal>&lt;meta&gt;</literal> tag is a simple way of annotating the <literal>hbm.xml</literal>
-                with information, so tools have a natural place to store/read information that is not directly related
-                to the Hibernate core.
-            </para>
-
-            <para>
-                You can use the <literal>&lt;meta&gt;</literal> tag to tell <literal>hbm2java</literal> to only
-                generate "protected" setters, have classes always implement a certain set of interfaces or
-                even have them extend a certain base class and even more.
-            </para>
-
-            <para>
-                The following example:
-            </para>
-
-            <programlisting><![CDATA[<class name="Person">
-    <meta attribute="class-description">
-        Javadoc for the Person class
-        @author Frodo
-    </meta>
-    <meta attribute="implements">IAuditable</meta>
-    <id name="id" type="long">
-        <meta attribute="scope-set">protected</meta>
-        <generator class="increment"/>
-    </id>
-    <property name="name" type="string">
-        <meta attribute="field-description">The name of the person</meta>
-    </property>
-</class>]]></programlisting>
-
-            <para>
-                will produce something like the following (code shortened for better understanding). Notice the
-                Javadoc comment and the protected set methods:
-            </para>
-
-            <programlisting><![CDATA[// default package
-
-import java.io.Serializable;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
-/** 
- *         Javadoc for the Person class
- *         @author Frodo
- *     
- */
-public class Person implements Serializable, IAuditable {
-
-    /** identifier field */
-    public Long id;
-
-    /** nullable persistent field */
-    public String name;
-
-    /** full constructor */
-    public Person(java.lang.String name) {
-        this.name = name;
-    }
-
-    /** default constructor */
-    public Person() {
-    }
-
-    public java.lang.Long getId() {
-        return this.id;
-    }
-
-    protected void setId(java.lang.Long id) {
-        this.id = id;
-    }
-
-    /** 
-     * The name of the person
-     */
-    public java.lang.String getName() {
-        return this.name;
-    }
-
-    public void setName(java.lang.String name) {
-        this.name = name;
-    }
-
-}]]></programlisting>
-
-            <table frame="topbot">
-                <title>Supported meta tags</title>
-                <tgroup cols="2">
-                    <colspec colwidth="1.5*"/>
-                    <colspec colwidth="2*"/>
-                    <thead>
-                        <row>
-                            <entry>Attribute</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                    <row>
-                        <entry><literal>class-description</literal></entry>
-                        <entry>inserted into the javadoc for classes</entry>
-                    </row>
-                    <row>
-                        <entry><literal>field-description</literal></entry>
-                        <entry>inserted into the javadoc for fields/properties</entry>
-                    </row>
-                    <row> 
-                        <entry><literal>interface</literal></entry>
-                        <entry>If true an interface is generated instead of an class.</entry>
-                   	</row>
-                    <row>
-                        <entry><literal>implements</literal></entry>
-                        <entry>interface the class should implement</entry>
-                    </row>
-                    <row>
-                        <entry><literal>extends</literal></entry>
-                        <entry>class the class should extend (ignored for subclasses)</entry>
-                    </row>
-                    <row>
-                        <entry><literal>generated-class</literal></entry>
-                        <entry>overrule the name of the actual class generated</entry>
-                    </row>
-                    <row>
-                        <entry><literal>scope-class</literal></entry>
-                        <entry>scope for class </entry>
-                    </row>
-                    <row>
-                        <entry><literal>scope-set</literal></entry>
-                        <entry>scope for setter method</entry>
-                    </row>
-                    <row>
-                        <entry><literal>scope-get</literal></entry>
-                        <entry>scope for getter method</entry>
-                    </row>
-                    <row>
-                        <entry><literal>scope-field</literal></entry>
-                        <entry>scope for actual field</entry>
-                    </row>
-                    <row>
-                        <entry><literal>use-in-tostring</literal></entry>
-                        <entry>include this property in the <literal>toString()</literal></entry>
-                    </row>
-                    <row>
-                        <entry><literal>implement-equals</literal></entry>
-                        <entry>include a <literal>equals()</literal> and <literal>hashCode()</literal> method in this class.</entry>
-                    </row>
-                    <row>
-                        <entry><literal>use-in-equals</literal></entry>
-                        <entry>include this property in the <literal>equals()</literal> and <literal>hashCode()</literal> method.</entry>
-                    </row>
-                    <row>
-                        <entry><literal>bound</literal></entry>
-                        <entry>add propertyChangeListener support for a property</entry>
-                    </row>
-                    <row>
-                        <entry><literal>constrained</literal></entry>
-                        <entry>bound + vetoChangeListener support for a property</entry>
-                    </row>
-                    <row>
-                        <entry><literal>gen-property</literal></entry>
-                        <entry>property will not be generated if false (use with care)</entry>
-                    </row>
-                    <row> 
-                        <entry><literal>property-type</literal></entry>
-                        <entry>Overrides the default type of property. Use this with any tag's to specify the concrete type instead of just Object.</entry>
-                   	</row>
-                    <row>
-                        <entry><literal>class-code</literal></entry>
-                        <entry>Extra code that will inserted at the end of the class</entry>
-                    </row>
-                    <row>
-                        <entry><literal>extra-import</literal></entry>
-                        <entry>Extra import that will inserted at the end of all other imports</entry>
-                    </row>
-                    <row>
-                        <entry><literal>finder-method</literal></entry>
-                        <entry>see "Basic finder generator" below</entry>
-                    </row>
-                    <row>
-                        <entry><literal>session-method</literal></entry>
-                        <entry>see "Basic finder generator" below</entry>
-                    </row>
-                    </tbody>
-                </tgroup>
-            </table>
-
-            <para>
-                Attributes declared via the <literal>&lt;meta&gt;</literal> tag are per default
-                "inherited" inside an <literal>hbm.xml</literal> file.
-            </para>
-
-            <para>
-                What does that mean? It means that if you e.g want to have all your classes
-                implement <literal>IAuditable</literal> then you just add an
-                <literal>&lt;meta attribute="implements"&gt;IAuditable&lt;/meta&gt;</literal> in the top of
-                the <literal>hbm.xml</literal> file, just after
-                <literal>&lt;hibernate-mapping&gt;</literal>. Now all classes defined in that
-                <literal>hbm.xml</literal> file will implement <literal>IAuditable</literal>!
-                (Except if a class also has an "implements" meta attribute, because local specified
-                meta tags always overrules/replaces any inherited meta tags).
-            </para>
-
-            <para>
-                Note: This applies to <emphasis>all</emphasis> <literal>&lt;meta&gt;</literal>-tags.
-                Thus it can also e.g. be used to specify that all fields should be declared protected,
-                instead of the default private. This is done by adding <literal>&lt;meta
-                attribute="scope-field"&gt;protected&lt;/meta&gt;</literal> at e.g. just under the
-                <literal>&lt;class&gt;</literal> tag and all fields of that class will be protected.
-            </para>
-
-            <para>
-                To avoid having a <literal>&lt;meta&gt;</literal>-tag inherited then you can simply
-                specify <literal>inherit="false"</literal> for the attribute, e.g.
-                <literal>&lt;meta attribute="scope-class" inherit="false"&gt;public abstract&lt;/meta&gt;</literal>
-                will restrict the "class-scope" to the current class, not the subclasses.
-            </para>
-
-        </sect2>
-
-        <sect2 id="toolsetguide-s2-3">
-            <title>Basic finder generator</title>
-
-            <para>
-                It is now possible to have <literal>hbm2java</literal> generate basic finders for
-                Hibernate properties. This requires two things in the <literal>hbm.xml</literal>
-                files.
-            </para>
-
-            <para>
-                The first is an indication of which fields you want to generate finders for. You indicate
-                that with a meta block inside a property tag such as:
-            </para>
-
-            <programlisting><![CDATA[<property name="name" column="name" type="string">
-     <meta attribute="finder-method">findByName</meta>
-</property>]]></programlisting>
-
-            <para>
-                The finder method name will be the text enclosed in the meta tags.
-            </para>
-
-            <para>
-                The second is to create a config file for hbm2java of the format:
-            </para>
-
-            <programlisting><![CDATA[<codegen>
-    <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
-    <generate suffix="Finder" renderer="org.hibernate.tool.hbm2java.FinderRenderer"/>
-</codegen>]]></programlisting>
-
-            <para>
-                 And then use the param to <literal>hbm2java --config=xxx.xml</literal> where
-                 <literal>xxx.xml</literal> is the config file you just created.
-            </para>
-
-            <para>
-                 An optional parameter is meta tag at the class level of the format:
-            </para>
-
-            <programlisting><![CDATA[<meta attribute="session-method">
-    com.whatever.SessionTable.getSessionTable().getSession();
-</meta>]]></programlisting>
-
-            <para>
-                 Which would be the way in which you get sessions if you use the
-                 <emphasis>Thread Local Session</emphasis> pattern (documented in the Design Patterns
-                 area of the Hibernate website).
-            </para>
-
-        </sect2>
-
-    <sect2 id="toolsetguide-s2-4">
-      <title>Velocity based renderer/generator</title>
-      
-      <para>It is now possible to use velocity as an alternative rendering mechanism.
-      The follwing config.xml shows how to configure hbm2java to use its velocity renderer.
-      </para>
-      
-      	    <programlisting><![CDATA[
-    <codegen>
-     <generate renderer="org.hibernate.tool.hbm2java.VelocityRenderer">
-      <param name="template">pojo.vm</param>
-     </generate>
-    </codegen>]]></programlisting>
-      
-      <para>
-        The parameter named <literal>template</literal> is a resource path to the velocity macro file you want to use.
-        This file must be available via the classpath for hbm2java. Thus remember to add the directory where pojo.vm
-        is located to your ant task or shell script. (The default location is <literal>./tools/src/velocity</literal>)
-      </para>
-      
-      <para>
-        Be aware that the current <literal>pojo.vm</literal> generates only the most basic parts of the java beans.
-        It is not as complete and feature rich as the default renderer - primarily a lot of the <literal>meta</literal> tags
-        are not supported.
-      </para>
-    </sect2>
-    
-    </sect1>
-  
-
-    <sect1 id="toolsetguide-s3" revision="1">
-        <title>Mapping File Generation</title>
-
-        <para>
-            A skeletal mapping file may be generated from compiled persistent classes using
-            a command line utility called <literal>MapGenerator</literal>. This utility is part of 
-            the Hibernate Extensions package.
-        </para>
-
-        <para>
-            The Hibernate mapping generator provides a mechanism to produce mappings from
-            compiled classes. It uses Java reflection to find <emphasis>properties</emphasis>
-            and uses heuristics to guess an appropriate mapping from the property type.
-            The generated mapping is intended to be a starting point only. There is no way to produce
-            a full Hibernate mapping without extra input from the user. However, the tool does
-            take away some of the repetitive "grunt" work involved in producing a mapping.
-        </para>
-
-        <para>
-            Classes are added to the mapping one at a time. The tool will reject
-            classes that it judges are are not <emphasis>Hibernate persistable</emphasis>.
-        </para>
-
-        <para>
-            To be <emphasis>Hibernate persistable</emphasis> a class
-        </para>
-
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>must not be a primitive type</para>
-            </listitem>
-            <listitem>
-                <para>must not be an array</para>
-            </listitem>
-            <listitem>
-                <para>must not be an interface</para>
-            </listitem>
-            <listitem>
-                <para>must not be a nested class</para>
-            </listitem>
-            <listitem>
-                <para>must have a default (zero argument) constructor.</para>
-            </listitem>
-        </itemizedlist>
-
-        <para>
-            Note that interfaces and nested classes actually are persistable by Hibernate, but
-            this would not usually be intended by the user.
-        </para>
-
-        <para>
-            <literal>MapGenerator</literal> will climb the superclass chain of all added classes attempting
-            to add as many Hibernate persistable superclasses as possible to the same database table.
-            The search stops as soon as a property is found that has a name appearing on a list of
-            <emphasis>candidate UID names</emphasis>.
-        </para>
-
-        <para>
-            The default list of candidate UID property names is: <literal>uid</literal>, <literal>UID</literal>,
-            <literal>id</literal>, <literal>ID</literal>, <literal>key</literal>, <literal>KEY</literal>,
-            <literal>pk</literal>, <literal>PK</literal>.
-        </para>
-
-        <para>
-            Properties are discovered when there are two methods in the class, a setter and a getter, where the
-            type of the setter's single argument is the same as the return type of the zero argument getter,
-            and the setter returns <literal>void</literal>. Furthermore, the setter's name must start with the
-            string <literal>set</literal> and either the getter's name starts with <literal>get</literal> or
-            the getter's name starts with <literal>is</literal> and the type of the property is boolean. In
-            either case, the remainder of their names must match. This matching portion is the name of
-            the property, except that the initial character of the property name is made lower case if
-            the second letter is lower case.
-        </para>
-
-        <para>
-            The rules for determining the database type of each property are as follows:
-        </para>
-
-        <orderedlist spacing="compact">
-            <listitem>
-                <para>
-                    If the Java type is <literal>Hibernate.basic()</literal>, then the property is a
-                    simple column of that type.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    For <literal>hibernate.type.Type</literal> custom types a simple column is used as well.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    If the property type is an array, then a Hibernate array is used, and <literal>MapGenerator</literal>
-                    attempts to reflect on the array element type.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    If the property has type <literal>java.util.List</literal>, <literal>java.util.Map</literal>, or
-                    <literal>java.util.Set</literal>, then the corresponding Hibernate types are used, but
-                    <literal>MapGenerator</literal> cannot further process the insides of these types.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    If the property's type is any other class, <literal>MapGenerator</literal> defers the decision
-                    on the database representation until all classes have been processed. At this point, if the
-                    class was discovered through the superclass search described above, then the property is
-                    an <literal>many-to-one</literal> association. If the class has any properties, then it is
-                    a <literal>component</literal>. Otherwise it is serializable, or not persistable.
-                </para>
-            </listitem>
-        </orderedlist>
-
-        <sect2 id="toolsetguide-s3-1">
-            <title>Running the tool</title>
-
-            <para>
-                The tool writes XML mappings to standard out and/or to a file.
-            </para>
-
-            <para>
-                When invoking the tool you must place your compiled classes on the classpath.
-            </para>
-
-            <para>
-                <literal>java -cp </literal><emphasis>hibernate_and_your_class_classpaths</emphasis>
-                <literal>org.hibernate.tool.class2hbm.MapGenerator</literal> <emphasis>options and
-                classnames</emphasis>
-            </para>
-
-            <para>
-                There are two modes of operation: command line or interactive.
-            </para>
-
-            <para>
-                The interactive mode is selected by providing the single command line argument
-                <literal>--interact</literal>. This mode provides a prompt response console. Using it you
-                can set the UID property name for each class using the <literal>uid=XXX</literal> command
-                where <literal>XXX</literal> is the UID property name. Other command alternatives are simply
-                a fully qualified class name, or the command done which emits the XML and terminates.
-            </para>
-
-            <para>
-                In command line mode the arguments are the options below interspersed with fully qualified
-                class names of the classes to be processed. Most of the options are meant to be used
-                multiple times; each use affects subsequently added classes.
-            </para>
-
-            <table frame="topbot">
-                <title>MapGenerator Command Line Options</title>
-                <tgroup cols="2">
-                    <colspec colwidth="1*"/>
-                    <colspec colwidth="2*"/>
-                    <thead>
-                        <row>
-                            <entry>Option</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry><literal>--quiet</literal></entry>
-                            <entry>don't output the O-R Mapping to stdout</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--setUID=uid</literal></entry>
-                            <entry>set the list of candidate UIDs to the singleton uid</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--addUID=uid</literal></entry>
-                            <entry>add uid to the front of the list of candidate UIDs</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--select=</literal><emphasis>mode</emphasis></entry>
-                            <entry>mode use select mode <emphasis>mode</emphasis>(e.g.,
-                            <emphasis>distinct</emphasis> or <emphasis>all</emphasis>) for subsequently
-                            added classes</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--depth=&lt;small-int&gt;</literal></entry>
-                            <entry>limit the depth of component data recursion for subsequently added classes</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--output=my_mapping.xml</literal></entry>
-                            <entry>output the O-R Mapping to a file</entry>
-                        </row>
-                        <row>
-                            <entry><emphasis>full.class.Name</emphasis></entry>
-                            <entry>add the class to the mapping</entry>
-                        </row>
-                        <row>
-                            <entry><literal>--abstract=</literal><emphasis>full.class.Name</emphasis></entry>
-                            <entry>see below</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-
-            <para>
-                The abstract switch directs the map generator tool to ignore specific super classes so
-                that classes with common inheritance are not mapped to one large table. For instance,
-                consider these class hierarchies:
-            </para>
-
-            <para>
-                <literal>Animal-->Mammal-->Human</literal>
-            </para>
-            <para>
-                <literal>Animal-->Mammal-->Marsupial-->Kangaroo</literal>
-            </para>
-
-            <para>
-                If the <literal>--abstract</literal>switch is <emphasis>not</emphasis> used, all classes will
-                be mapped as subclasses of <literal>Animal</literal>, resulting in one large table containing
-                all the properties of all the classes plus a discriminator column to indicate which subclass is
-                actually stored. If <literal>Mammal</literal> is marked as <literal>abstract</literal>,
-                <literal>Human</literal> and <literal>Marsupial</literal> will be mapped to
-                separate <literal>&lt;class&gt;</literal> declarations and stored in separate tables.
-                <literal>Kangaroo</literal> will still be a subclass of <literal>Marsupial</literal>
-                unless <literal>Marsupial</literal> is also marked as <literal>abstract</literal>.
-            </para>
 
         </sect2>
 

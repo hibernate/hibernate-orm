@@ -1117,4 +1117,129 @@ hibernate.cache.use_structured_entries true]]></programlisting>
 
     </sect1>
 
+    <sect1 id="performance-monitoring" revision="1">
+        <title>Monitoring performance</title>
+        <para>Performance and optimization are nothing without monitoring. Without rational and concrete figures,
+        no good optimization is possible. Hibernate provides a full panel of figures related to Hibernate behaviors.
+        Hibernate statistics are related to a particular session factory. This makes perfect sense if we consider
+        the typical application as being build on top of one database / session factory.</para>
+        <sect2 id="performance-monitoring-sf" revision="1">
+            <title>Monitoring a session factory</title>
+            <para>
+                Session factories publish their metrics through 2 basic ways. The first one use direct access to the
+                <literal>SessionFactory</literal> object. The statistics are attached to a session factory through
+                <literal>Statistics</literal> objects and accessed by <literal>sessionFactory.getStatistics()</literal>.
+                The second way, a bit more standard, use JMX to publish them through the <literal>StatisticsService</literal>
+                either one MBean per session factory, either one MBean for all session factories. Here is a minimalistic
+                code showing both ways (you must have a JMX server available).
+            </para>
+            <programlisting><![CDATA[//Register the MBean in your JMX server for a specific session factory
+Hashtable tb = new Hashtable();
+tb.put("type", "statistics");
+tb.put("sessionFactory", "myFinancialApp");
+ObjectName on = new ObjectName("hibernate", tb); //the MBean object name
+StatisticsService stats = new StatisticsService(); //MBean implementation
+stats.setSessionFactory(sessionFactory); //the awaited session factory
+server.registerMBean(stats, on); //we register the MBean
+//And call the MBean the way you want
+
+//or
+
+//Register the MBean in your JMX server with no specific session factory binding
+Hashtable tb = new Hashtable();
+tb.put("type", "statistics");
+tb.put("sessionFactory", "all");
+ObjectName on = new ObjectName("hibernate", tb); //the object name
+StatisticsService stats = new StatisticsService(); //the generic StatisticService
+server.registerMBean(stats, on); //we register the MBean]]></programlisting>
+            <para>
+                In the first case, we retrieve and use the MBean directly. In the second one, we must give the JNDI name
+                in which the session factory is held before using it. Use
+                <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal>
+            </para>
+            <para>
+                A session factory can be monitored or not. You can (de)activate the monitoring
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        at configuration time: <literal>hibernate.generate_statistics</literal>, default to false
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        at runtime time: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal>
+                        or <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>Statistics can be reset programatically using the <literal>clear()</literal> method. A summary
+            can be sent logger (info level) using the <literal>logSummary()</literal> method.</para>
+        </sect2>
+        <sect2 id="performance-monitoring-metrics" revision="1">
+            <title>Metrics</title>
+            <para>
+                Hibernate provides a huge number of metrics, from the very basics to the very specialized ones.
+                All available counters are described in the <literal>Statistics</literal> interface API.
+                They are basically split into 3 categories:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        metrics related to the general session usage (number of session open, session close, connections retrieved, ...),
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        metrics related to the entities, collections, queries, and caches as a whole (aka global metrics),
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        detailed metrics related to a particular entity, collection, query or cache region.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <para>
+                You can find (for example) the cache hit, miss and put ratio of entities, collections
+                and queries, the average time of a query, etc... Beware that the number of milliseconds is subject
+                to approximation in Java. Hibernate is tied to the JVM precision: it might lead to a 10 ms approx depending
+                on your platform.
+            </para>
+            <para>
+                Simple getters are used to access the global metrics (ie not tied to a particular entity, collection,
+                cache region). You access the metrics of a particular entity, collection or cache region through its name,
+                as shown in the above example, and through its HQL or SQL representation for queries. Please refer to the
+                <literal>Statistics</literal>, <literal>EntityStatistics</literal>, <literal>CollectionStatistics</literal>,
+                <literal>SecondLevelCacheStatistics</literal> and <literal>QueryStatistics</literal> API for more informations.
+            </para>
+            <programlisting><![CDATA[Statistics stats = sf.getStatistics();
+double hitRatio = (double) stats.getQueryCacheHitCount() / ( stats.getQueryCacheHitCount() + stats.getQueryCacheMissCount() );
+log.info("Query Hit ratio:" + hitRatio);
+EntityStatistics entityStats = stats.getEntityStatistics( Cat.class.getName() );
+int changes = entityStats.getInsertCount() + entityStats.getUpdateCount() + entityStats.getDeleteCount();
+log.info(Cat.class.getName() + " changes:" + changes);]]></programlisting>
+            <para>
+                In order to work on all detailed entities, collections, queries and region caches statistics, you can retrieve
+                the list of names of entities, collections, queries and region caches names having metrics. Use <literal>getQueries()</literal>,
+                <literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</literal>, or
+                <literal>getSecondLevelCacheRegionNames()</literal>.
+            </para>
+        </sect2>
+        <sect2 id="performance-monitoring-understandingmetrics" revision="1">
+            <title>Understanding metrics</title>
+            <para>
+            You can find interesting informations while looking at metrics. An entity/collection/query with a high cache
+            miss ratio (cache miss superior to cache hit) should not be cached: the benefit of caching is not significant
+            for your application and use case.
+            An entity/collection/query with a cache put way superior to its cache hit should not be cached either: you spend
+            a lot of resources in caching without efficiently use it.
+            A session factory having more open sessions than closed ones shows a session leak which must be addressed.
+            A use case using lots of connections might show a good candidate for a conversion to the session per user
+            transaction pattern.</para>
+        </sect2>
+    </sect1>
+
 </chapter>

@@ -1373,6 +1373,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <entry>Log all JDBC resource acquisition</entry>
                         </row>
                         <row>
+                            <entry><literal>org.hibernate.hql.ast</literal></entry>
+                            <entry>
+                                Log HQL and SQL ASTs and other information about
+                                query parsing
+                            </entry>
+                        </row>
+                        <row>
                             <entry><literal>org.hibernate.secure</literal></entry>
                             <entry>Log all JAAS authorization requests</entry>
                         </row>

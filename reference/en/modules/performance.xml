@@ -354,6 +354,61 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
         
     </sect1>
 
+    <sect1 id="performance-batchfetching">
+        <title>Using batch fetching</title>
+
+        <para>
+            Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized
+            proxies if one proxy is accessed. Batch fetching is an optimization for the lazy loading strategy.
+            There are two ways you can tune batch fetching: on the class and the collection level.
+        </para>
+
+        <para>
+            Batch fetching for classes/entities is easier to understand. Imagine you have the following situation
+            at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each
+            <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>.
+            The <literal>Person</literal> class is mapped with a proxy, <literal>lazy="true"</literal>. If you now
+            iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default
+            execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this
+            behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person" lazy="true" batch-size="10">...</class>]]></programlisting>
+
+        <para>
+            Hibernate will now execute only three queries, the pattern is 10, 10, 5. You can see that batch fetching
+            is a blind guess, as far as performance optimization goes, it depends on the number of unitilized proxies
+            in a particular <literal>Session</literal>.
+        </para>
+
+        <para>
+            You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has
+            a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the
+            <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
+            one for every call to <literal>getCats()</literal>. If you enable batch fetching for the
+            <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch
+            collections:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <set name="cats" lazy="true" batch-size="3">
+        ...
+    </set>
+</class>]]></programlisting>
+
+        <para>
+            With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 collections in 4
+            <literal>SELECT</literal>s. Again, the value of the attribute depends on the expected number of
+            uninitialized collections in a particular <literal>Session</literal>.
+        </para>
+
+        <para>
+            Batch fetching of collections is particularly useful if you have a nested tree of items, ie.
+            the typical bill-of-materials pattern.
+        </para>
+
+    </sect1>
+
     <sect1 id="performance-cache" revision="1">
         <title>The Second Level Cache</title>
 

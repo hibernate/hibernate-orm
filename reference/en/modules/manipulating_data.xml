@@ -348,7 +348,7 @@ List cats = q.list();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="manipulatingdata-scrolling">
+        <sect2 id="manipulatingdata-scrolling" revision="1">
             <title>Scrollable iteration</title>
             <para>
                 If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the <literal>Query</literal>
@@ -376,12 +376,6 @@ if ( cats.first() ) {
     while( ( PAGE_SIZE > i++ ) && cats.next() ) pageOfCats.add( cats.get(1) );
 
 }]]></programlisting>
-    
-            <para>
-                The behaviour of <literal>scroll()</literal> is similar to <literal>iterate()</literal>, except that
-                objects may be initialized selectively by <literal>get(int)</literal>, instead of an entire row being
-                initialized at once.
-            </para>
 
         </sect2>
 

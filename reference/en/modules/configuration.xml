@@ -359,7 +359,7 @@ hibernate.dialect = \
             <literal>Properties</literal> passed to the <literal>Configuration</literal>.
         </para>
 
-        <table frame="topbot" id="configuration-optional-properties" revision="1">
+        <table frame="topbot" id="configuration-optional-properties" revision="3">
             <title>Hibernate Configuration Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -452,8 +452,23 @@ hibernate.dialect = \
                         <entry>
                             A non-zero value enables use of JDBC2 batch updates by Hibernate.
                             <para>
-                                <emphasis role="strong">eg.</emphasis> 
+                                <emphasis role="strong">eg.</emphasis>
                                 recommended values between <literal>5</literal> and <literal>30</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.jdbc.batch_versioned_data</literal>
+                        </entry>
+                        <entry>
+                            Set this property to <literal>true</literal> if your JDBC driver returns
+                            correct row counts from <literal>executeBatch()</literal> (it is usually
+                            safe to turn this option on). Hibernate will then use batched DML for
+                            automatically versioned data. Defaults to <literal>false</literal>.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
                     </row>
@@ -507,8 +522,9 @@ hibernate.dialect = \
                         </entry>
                         <entry>
                             Enables use of CGLIB instead of runtime reflection (System-level
-                            property, default is to use CGLIB where possible). Reflection
-                            can sometimes be useful when troubleshooting.
+                            property). Reflection can sometimes be useful when troubleshooting,
+                            note that Hibernate always requires CGLIB even if you turn off the
+                            optimizer. You can not set this property in <literal>hibernate.cfg.xml</literal>.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -593,6 +609,19 @@ hibernate.dialect = \
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true|false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.cache.query_cache_factory</literal>
+                        </entry>
+                        <entry>
+                            The classname of a custom <literal>QueryCache</literal> interface,
+                            defaults to the built-in <literal>StandardQueryCache</literal>.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>classname.of.QueryCache</literal>
                             </para>
                         </entry>
                     </row>
@@ -707,7 +736,7 @@ hibernate.dialect = \
                 other properties listed above, saving you the effort of specifying them manually.
             </para>
 
-            <table frame="topbot">
+            <table frame="topbot" id="sql-dialects" revision="2">
                 <title>Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)</title>
                 <tgroup cols="2">
                     <colspec colwidth="1*"/>
@@ -723,22 +752,43 @@ hibernate.dialect = \
                             <entry>DB2</entry> <entry><literal>net.sf.hibernate.dialect.DB2Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>MySQL</entry> <entry><literal>net.sf.hibernate.dialect.MySQLDialect</literal></entry>
+                            <entry>DB2 AS/400</entry> <entry><literal>net.sf.hibernate.dialect.DB2400Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>SAP DB</entry> <entry><literal>net.sf.hibernate.dialect.SAPDBDialect</literal></entry>
+                            <entry>DB2 OS390</entry> <entry><literal>net.sf.hibernate.dialect.DB2390Dialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>PostgreSQL</entry> <entry><literal>net.sf.hibernate.dialect.PostgreSQLDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>MySQL</entry> <entry><literal>net.sf.hibernate.dialect.MySQLDialect</literal></entry>
                         </row>
                         <row>
                             <entry>Oracle (any version)</entry> <entry><literal>net.sf.hibernate.dialect.OracleDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle 9</entry> <entry><literal>net.sf.hibernate.dialect.Oracle9Dialect</literal></entry>
+                            <entry>Oracle 9/10g</entry> <entry><literal>net.sf.hibernate.dialect.Oracle9Dialect</literal></entry>
                         </row>
                         <row>
                             <entry>Sybase</entry> <entry><literal>net.sf.hibernate.dialect.SybaseDialect</literal></entry>
                         </row>
                         <row>
                             <entry>Sybase Anywhere</entry> <entry><literal>net.sf.hibernate.dialect.SybaseAnywhereDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Microsoft SQL Server</entry> <entry><literal>net.sf.hibernate.dialect.SQLServerDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>SAP DB</entry> <entry><literal>net.sf.hibernate.dialect.SAPDBDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Informix</entry> <entry><literal>net.sf.hibernate.dialect.InformixDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>HypersonicSQL</entry> <entry><literal>net.sf.hibernate.dialect.HSQLDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Ingres</entry> <entry><literal>net.sf.hibernate.dialect.IngresDialect</literal></entry>
                         </row>
                         <row>
                             <entry>Progress</entry> <entry><literal>net.sf.hibernate.dialect.ProgressDialect</literal></entry>
@@ -753,22 +803,10 @@ hibernate.dialect = \
                             <entry>Pointbase</entry> <entry><literal>net.sf.hibernate.dialect.PointbaseDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>PostgreSQL</entry> <entry><literal>net.sf.hibernate.dialect.PostgreSQLDialect</literal></entry>
-                        </row>
-                        <row>
-                            <entry>HypersonicSQL</entry> <entry><literal>net.sf.hibernate.dialect.HSQLDialect</literal></entry>
-                        </row>
-                        <row>
-                            <entry>Microsoft SQL Server</entry> <entry><literal>net.sf.hibernate.dialect.SQLServerDialect</literal></entry>
-                        </row>
-                        <row>
-                            <entry>Ingres</entry> <entry><literal>net.sf.hibernate.dialect.IngresDialect</literal></entry>
-                        </row>
-                        <row>
-                            <entry>Informix</entry> <entry><literal>net.sf.hibernate.dialect.InformixDialect</literal></entry>
-                        </row>
-                        <row>
                             <entry>FrontBase</entry> <entry><literal>net.sf.hibernate.dialect.FrontbaseDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Firebird</entry> <entry><literal>net.sf.hibernate.dialect.FirebirdDialect</literal></entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -892,39 +930,39 @@ hibernate.dialect = \
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
                             <entry align="center">JBoss</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
                             <entry align="center">Weblogic</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
                             <entry align="center">WebSphere</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
                             <entry align="center">Orion</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
                             <entry align="center">Resin</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
                             <entry align="center">JOTM</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
                             <entry align="center">JOnAS</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
                             <entry align="center">JRun4</entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
+                            <entry><literal>net.sf.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
                             <entry align="center">Borland ES</entry>
                         </row>
                     </tbody>

@@ -54,7 +54,8 @@
         <antcall target="lang.htmlmisc"/>
     </target>
 
-    <target name="lang.docpdf">
+
+    <target name="lang.docpdf.prepare">
 
         <!-- Copy all the images to the output location, will be removed later. -->
         <copy todir="${build.dir}/${lang}/pdf/images">
@@ -74,17 +75,42 @@
             <arg value="${basedir}/${lang}/styles/${db.style.fopdf}"/>
         </java>
 
+        <available property="custom.fop.userconfig.present" file="userconfig.xml" filepath="${basedir}/${lang}/fop"/>
+    </target>
+
+    <target name="lang.docpdf.customized" depends="lang.docpdf.prepare" if="custom.fop.userconfig.present">
+
+        <copy todir="${build.dir}/${lang}/pdf">
+            <fileset dir="${basedir}/${lang}/fop">
+                <include name="*"/>
+            </fileset>
+        </copy>
+
+        <!-- Create a PDF from the XSL/FO, using customized fop userconfig.xml -->
+        <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}">
+            <classpath refid="lib.classpath"/>
+            <arg value="-c"/>
+            <arg value="${basedir}/${lang}/fop/userconfig.xml"/>
+            <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
+            <arg value="${build.dir}/${lang}/pdf/hibernate_reference.pdf"/>
+        </java>
+    </target>
+
+    <target name="lang.docpdf.normal" depends="lang.docpdf.prepare" unless="custom.fop.userconfig.present">
         <!-- Create a PDF from the XSL/FO. -->
         <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}">
             <classpath refid="lib.classpath"/>
             <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
             <arg value="${build.dir}/${lang}/pdf/hibernate_reference.pdf"/>
         </java>
+    </target>
 
-        <!-- Delete temporary files. -->
-        <delete file="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
+    <target name="lang.docpdf" depends="lang.docpdf.normal,lang.docpdf.customized">
+        <!-- House keeping,delete temporary files. -->
+        <delete>
+            <fileset dir="${build.dir}/${lang}/pdf" excludes="**/*.pdf"/>
+        </delete>
         <delete  dir="${build.dir}/${lang}/pdf/images"/>
-
     </target>
 
     <target name="lang.dochtml">

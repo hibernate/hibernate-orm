@@ -1,5 +1,4 @@
-<chapter id="best-practices">
-
+<chapter id="best-practices" revision="2">
     <title>Best Practices</title>
 
     <variablelist spacing="compact">
@@ -121,8 +120,13 @@
             <term>In a two tiered architecture, consider using session disconnection.</term>
             <listitem>
                 <para>
-                    When using a servlet only, you may reuse the same session for multiple client requests. Just
-                    remember to disconnect the session before returning control to the client.
+                    Database Transactions have to be as short as possible for best scalability. However, it is often
+                    neccessary to implement long running Application Transactions, a single unit-of-work from the
+                    point of view of a user. This Application Transaction might span several client requests and
+                    response cycles. Either use Detached Objects or, in two tiered architectures, simply disconnect
+                    the Hibernate Session from the JDBC connection and reconnect it for each subsequent request. Never
+                    use a single Session for more than one Application Transaction usecase, otherwise, you will run
+                    into stale data.
                 </para>
             </listitem>
         </varlistentry>
@@ -134,7 +138,8 @@
                     the <literal>Transaction</literal> and close the <literal>Session</literal>. If you don't, Hibernate
                     can't guarantee that in-memory state accurately represents persistent state. As a special case of this,
                     do not use <literal>Session.load()</literal> to determine if an instance with the given identifier 
-                    exists on the database; use <literal>find()</literal> instead.
+                    exists on the database; use <literal>find()</literal> instead. Some exceptions are recoverable, for
+                    example the <literal>StaleObjectStateException</literal> and <literal>ObjectNotFoundException</literal>.
                 </para>
             </listitem>
         </varlistentry>
@@ -159,6 +164,35 @@
                     handcoded JDBC, associated to Hibernate via a <literal>UserType</literal>. (This advice is 
                     intended for "sufficiently large" applications; it is not appropriate for an application with
                     five tables!)
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Implement <literal>equals()</literal> and <literal>hashCode()</literal> using a unique business key.</term>
+            <listitem>
+                <para>
+                    If you compare objects outside of the Session scope, you have to implement <literal>equals()</literal>
+                    and <literal>hashCode()</literal>. Inside the Session scope, Java object identity is guaranteed. If
+                    you implement these methods, never ever use the database identifier! A transient object doesn't have
+                    an identifier value and Hibernate would assign a value when the object is saved. If the object
+                    is in a Set while being saved, the hash code changes, breaking the contract. To implement
+                    <literal>equals()</literal> and <literal>hashCode()</literal>, use a unique business key, that is,
+                    compare a unique combination of class properties. Remember that this key has to be stable and unique
+                    only while the object is in a Set, not for the whole lifetime (not as stable as a database primary
+                    key). Never use collections in the <literal>equals()</literal> comparison (lazy loading) and be careful
+                    with other associated classes that might be proxied.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Don't use exotic association mappings.</term>
+            <listitem>
+                <para>
+                    Good usecases for a real many-to-many associations are rare. Most of the time you need
+                    additional information stored in the "link table". In this case, it is much better to
+                    use two one-to-many associations to an intermediate link class. In fact, we think that
+                    most associations are one-to-many and many-to-one, you should be careful when using any
+                    other association style and ask yourself if it is really neccessary.
                 </para>
             </listitem>
         </varlistentry>

@@ -28,12 +28,12 @@
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>3.0</releaseinfo>
+        <releaseinfo>3.0alpha</releaseinfo>
     </bookinfo>
 
     <toc/>
 
-    <preface id="preface">
+    <preface id="preface" revision="1">
         <title>Preface</title>
 
         <para>
@@ -83,7 +83,7 @@
                     Have a look at the <literal>eg/</literal> directory in the Hibernate
                     distribution, it contains a simple standalone application. Copy your
                     JDBC driver to the <literal>lib/</literal> directory and edit
-                    <literal>src/hibernate.properties</literal>, specifying correct values for
+                    <literal>etc/hibernate.properties</literal>, specifying correct values for
                     your database. From a command prompt in the distribution directory,
                     type <literal>ant eg</literal> (using Ant), or under Windows, type
                     <literal>build eg</literal>.
@@ -92,19 +92,24 @@
             <listitem>
                 <para>
                     Use this reference documentation as your primary source of information.
+                    Consider reading <emphasis>Hibernate in Action</emphasis>
+                    (http://www.manning.com/bauer) if you need more help with application
+                    design or if you prefer a step-by-step tutorial. Also visit
+                    http://caveatemptor.hibernate.org and download the example application
+                    for Hibernate in Action.
                 </para>
             </listitem>
             <listitem>
-                <para>
-                    FAQs are answered on the Hibernate website.
-                </para>
+				<para>
+					FAQs are answered on the Hibernate website.
+				</para>
             </listitem>
-            <listitem>
-                <para>
-                    Third party demos, examples and tutorials are linked on the Hibernate
-                    website.
-                </para>
-            </listitem>
+			<listitem>
+				<para>
+					Third party demos, examples and tutorials are linked on the Hibernate
+					website.
+				</para>
+			</listitem>
             <listitem>
                 <para>
                     The Community Area on the Hibernate website is a good source for
@@ -115,7 +120,7 @@
             <listitem>
                 <para>
                     An offline version of the Hibernate website is distributed with
-                    Hibernate in the <literal>doc/</literal> subdirectory.
+                    Hibernate in the <literal>doc/wiki/</literal> subdirectory.
                 </para>
             </listitem>
          </orderedlist>
@@ -123,13 +128,15 @@
          <para>
              If you have questions, use the user forum linked on the Hibernate website. We also
              provide a JIRA issue trackings system for bug reports and feature requests. If you
-             are interested in the development of Hibernate, join the developer mailing list.
+             are interested in the development of Hibernate, join the developer mailing list. If
+             you are interested in translating this documentation into your language, contact us
+             on the developer mailing list.
          </para>
 
          <para>
-             Commercial development, production support and training for Hibernate is available
-             through JBoss Inc. (see http://www.hibernate.org/SupportTraining/). Hibernate is a
-             project of the JBoss Professional Open Source product suite.
+             Commercial development support, production support and training for Hibernate is
+             available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/).
+             Hibernate is a project of the JBoss Professional Open Source product suite.
          </para>
 
     </preface>

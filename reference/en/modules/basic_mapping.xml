@@ -739,7 +739,7 @@
             
         </sect2>
         
-        <sect2 id="mapping-declaration-discriminator">
+        <sect2 id="mapping-declaration-discriminator" revision="1">
             <title>discriminator</title>
 
             <para>
@@ -757,11 +757,13 @@
                     <area id="discriminator1" coords="2 40"/>
                     <area id="discriminator2" coords="3 40" />
                     <area id="discriminator3" coords="4 40" />
+                    <area id="discriminator4" coords="5 40" />
                 </areaspec>
                 <programlisting><![CDATA[<discriminator
         column="discriminator_column"
         type="discriminator_type"
         force="true|false"
+        insert="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="discriminator1">
@@ -783,6 +785,13 @@
                             all instances of the root class.
                         </para>
                     </callout>          
+                    <callout arearefs="discriminator4">
+                        <para>
+                            <literal>insert</literal> (optional - defaults to <literal>true</literal>)
+                            set this to <literal>false</literal> if your discriminator column is also part
+                            of a mapped composite identifier.
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -1055,7 +1064,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone">
+        <sect2 id="mapping-declaration-manytoone" revision="1">
             <title>many-to-one</title>
 
             <para>
@@ -1077,6 +1086,7 @@
                     </areaset>
                     <area id="manytoone8" coords="9 60"/>
                     <area id="manytoone9" coords="10 60"/>
+					<area id="manytoone10" coords="11 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1088,6 +1098,7 @@
         insert="true|false"
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
+		unique="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1141,6 +1152,12 @@
                             strategy Hibernate should use for accessing the property value.
                         </para>
                     </callout>
+					<callout arearefs="manytoone10">
+						 <para>
+							 <literal>unique</literal> (optional): Enable the DDL generation of a unique
+							 constraint for the foreign-key column.
+						 </para>
+					 </callout>
                 </calloutlist>
             </programlistingco>
 

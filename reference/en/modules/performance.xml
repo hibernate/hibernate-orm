@@ -643,7 +643,7 @@ while ( cats.hasNext() ) {
         
     </sect1>
     
-    <sect1 id="performance-querycache">
+    <sect1 id="performance-querycache" revision="1">
         <title>The Query Cache</title>
 
         <para>
@@ -678,6 +678,17 @@ while ( cats.hasNext() ) {
     .setCacheable(true)
     .setCacheRegion("frontpages")
     .list();]]></programlisting>
+
+        <para>
+            If the query should force a refresh of its query cache region, you may call
+            <literal>Query.setForceCacheRefresh()</literal> to <literal>true</literal>.
+            This is particularly useful in cases where underlying data may have been updated
+            via a seperate process (i.e., not modified through Hibernate) and allows the
+            application to selectively refresh the query cache regions based on its
+            knowledge of those events. This is an alternative to eviction of a query
+            cache region. If you need fine-grained refresh control for many queries, use
+            this function instead of a new region for each query.
+        </para>
 
     </sect1>
 

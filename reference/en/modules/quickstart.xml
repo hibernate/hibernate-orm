@@ -41,14 +41,14 @@
                 </para>
             </listitem>
             <listitem>
-            <para>
-                Never copy anything else into the global classloader path in Tomcat, or you
-                will get  problems with various tools, including Log4j, commons-logging and
-                others. Always use the context classpath for each web application, that is,
-                copy libraries to <literal>WEB-INF/lib</literal> and your own classes and
-                configuration/property files to <literal>WEB-INF/classes</literal>. Both
-                directories are in the context level classpath by default.
-            </para>
+				<para>
+					Never copy anything else into the global classloader path in Tomcat, or you
+					will get  problems with various tools, including Log4j, commons-logging and
+					others. Always use the context classpath for each web application, that is,
+					copy libraries to <literal>WEB-INF/lib</literal> and your own classes and
+                    configuration/property files to <literal>WEB-INF/classes</literal>. Both
+                    directories are in the context level classpath by default.
+				</para>
             </listitem>
             <listitem>
                 <para>
@@ -163,7 +163,7 @@
             Hibernate. This means Tomcat will provide pooled JDBC connections (using its
             builtin DBCP pooling feature), Hibernate requests theses connections through
             JNDI. Tomcat binds the connection pool to JNDI, we add a resource declaration
-            to Tomcat's main configuration file, <literal>TOMCAT/conf/server.xml</literal>:
+            to Tomcats main configuration file, <literal>TOMCAT/conf/server.xml</literal>:
         </para>
 
         <programlisting><![CDATA[<Context path="/quickstart" docBase="quickstart">
@@ -470,10 +470,10 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
 			A <literal>SessionFactory</literal> is usually only build once,
 			e.g. at startup with a <emphasis>load-on-startup</emphasis> servlet.
             This also means you should not keep it in an instance variable in your
-            servlets, but in some other location. We need some kind of
+            servlets, but in some other location. Furthermore, we need some kind of
             <emphasis>Singleton</emphasis>, so we can access the
-            <literal>SessionFactory</literal> easily. The approach shown next
-            solves both problems: configuration and easy access to a
+            <literal>SessionFactory</literal> easily in application code. The approach
+            shown next solves both problems: configuration and easy access to a
             <literal>SessionFactory</literal>.
 		</para>
 

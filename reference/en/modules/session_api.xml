@@ -943,7 +943,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             is used), flush automatically using the explained routine, or never flush unless
             <literal>flush()</literal> is called explicitly. The last mode is useful for long running
             units of work, where a <literal>Session</literal> is kept open and disconnected for
-            a long time (see <xref linkend="transactions-disconnection"/>).
+            a long time (see <xref linkend="transactions-optimistic-longsession"/>).
         </para>
 
         <programlisting><![CDATA[sess = sf.openSession();

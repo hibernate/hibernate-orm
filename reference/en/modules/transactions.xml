@@ -83,7 +83,7 @@
             </para>
 
             <para>
-                The challenge lies in the implementation:  not only have the <literal>Session</literal>
+                The challenge lies in the implementation:  not only has the <literal>Session</literal>
                 and transaction to be started and ended correctly, but they also have to be accessible for
                 data access operations. The demarcation of a unit of work is ideally implemented using an
                 interceptor that runs when a request hits the server and before the response will be send (i.e.
@@ -93,9 +93,9 @@
                 on the database transaction demarcation mechanism you chose, you might also keep the transaction
                 context in a <literal>ThreadLocal</literal> variable. The implementation patterns for this
                 are known as <emphasis>ThreadLocal Session</emphasis> and <emphasis>Open Session in View</emphasis>.
-                You can easily extend the helper class shown in the first chapter to implement this. Of course,
-                you'd have to find a way to implement an interceptor and set it up in your environment. See
-                the Hibernate website for tips and examples.
+                You can easily extend the <literal>HibernateUtil</literal> helper class shown earlier in this
+                documentation to implement this. Of course, you'd have to find a way to implement an interceptor
+                and set it up in your environment. See the Hibernate website for tips and examples.
              </para>
 
         </sect2>
@@ -153,22 +153,12 @@
                 you use Hibernate's features:
             </para>
 
-            <itemizedlist spacing="compact">
+            <itemizedlist>
                 <listitem>
                     <para>
                         <emphasis>Automatic Versioning</emphasis> - Hibernate can do automatic
                         optimistic concurrency control for you, it can automatically detect
                         if a concurrent modification occured during user think time.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>Long Session</emphasis> - The Hibernate <literal>Session</literal> may
-                        be disconnected from the underlying JDBC connection after the database transaction
-                        has been committed, and reconnected when a new client request arrives. This pattern
-                        is known as <emphasis>session-per-application-transaction</emphasis> and makes
-                        even reattachment unnecessary. Automatic versioning is used to isolate
-                        concurrent modifications.
                     </para>
                 </listitem>
                 <listitem>
@@ -179,6 +169,16 @@
                         reattach the objects and persist the modifications, the pattern is called
                         <emphasis>session-per-request-with-detached-objects</emphasis>. Automatic
                         versioning is used to isolate concurrent modifications.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>Long Session</emphasis> - The Hibernate <literal>Session</literal> may
+                        be disconnected from the underlying JDBC connection after the database transaction
+                        has been committed, and reconnected when a new client request occurs. This pattern
+                        is known as <emphasis>session-per-application-transaction</emphasis> and makes
+                        even reattachment unnecessary. Automatic versioning is used to isolate
+                        concurrent modifications.
                     </para>
                 </listitem>
             </itemizedlist>
@@ -221,33 +221,39 @@
             </variablelist>
 
             <para>
-                Then for objects attached to a <emphasis>particular</emphasis> <literal>Session</literal>,
-                the two notions are equivalent. However, while the application might concurrently access
-                the "same" (persistent identity) business object in two different sessions, the two
-                instances will actually be "different" (JVM identity).
+                Then for objects attached to a <emphasis>particular</emphasis> <literal>Session</literal>
+                (i.e. in the scope of a <literal>Session</literal>) the two notions are equivalent, and
+                JVM identity for database identity is guaranteed by Hibernate. However, while the application
+                might concurrently access the "same" (persistent identity) business object in two different
+                sessions, the two instances will actually be "different" (JVM identity). Conflicts are
+                resolved using (automatic versioning) at flush/commit time, using an optmistic approach.
             </para>
 
             <para>
-                This approach leaves Hibernate and the database to worry about concurrency. The
-                application never needs to synchronize on any business object, as long as it sticks to a
-                single thread per <literal>Session</literal> or object identity. Within a
-                <literal>Session</literal> the  application may safely use <literal>==</literal> to
-                compare objects.
+                This approach leaves Hibernate and the database to worry about concurrency; it also provides
+                the best scalability, since guaranteeing identity in single-threaded units of work only doesn't
+                need expensive locking or other means of synchronization. The application never needs to
+                synchronize on any business object, as long as it sticks to a single thread per
+                <literal>Session</literal>. Within a <literal>Session</literal> the  application may safely use
+                <literal>==</literal> to compare objects.
             </para>
 
             <para>
-                Note that an application that uses <literal>==</literal> outside of a <literal>Session</literal>,
-                might see unexpected results. You have to override the <literal>equals()</literal> and
-                <literal>hashCode()</literal> methods in your persistent classes and implement
-                your own notion of object equality (i.e. if you decide to keep detached instances from two
-                <literal>Session</literal>s in the same <literal>Set</literal>). Never use the database
+                However, an application that uses <literal>==</literal> outside of a <literal>Session</literal>,
+                might see unexpected results. This might occur even in some unexpected places, for example,
+                if you put two detached instances into the same <literal>Set</literal>. Both might have the same
+                database identity (i.e. they represent the same row), but JVM identity is by definition not
+                guaranteed for instances in detached state. The developer has to override the <literal>equals()</literal>
+                and <literal>hashCode()</literal> methods in persistent classes and implement
+                his own notion of object equality. There is one caveat: Never use the database
                 identifier to implement equality, use a business key, a combination of unique, usually
                 immutable, attributes. The database identifier will change if a transient object is made
-                persistent, thus breaking the hashcodes for a <literal>Set</literal>. Attributes for business
-                keys don't have to be as stable as database primary keys, you only have to guarantee stability
-                as long as the objects are in the same <literal>Set</literal>. See the Hibernate website for
-                a more thorough discussion of this issue. Also note that this is not a Hibernate problem, but
-                simply how Java object identity and equality has to be implemented.
+                persistent. If the transient instance (usually together with detached instances) is held in a
+                <literal>Set</literal>, changing the hashcode breaks the contract of the <literal>Set</literal>.
+                Attributes for business keys don't have to be as stable as database primary keys, you only
+                have to guarantee stability as long as the objects are in the same <literal>Set</literal>. See
+                the Hibernate website for a more thorough discussion of this issue. Also note that this is not
+                a Hibernate issue, but simply how Java object identity and equality has to be implemented.
             </para>
 
         </sect2>
@@ -267,8 +273,9 @@
                     <para>
                         A <literal>Session</literal> is not thread-safe. Things which are supposed to work
                         concurrently, like HTTP requests, session beans, or swing workers, will cause race
-                        conditions. If you keep your Hibernate <literal>Session</literal> in your Http user
-                        session, you should consider synchronizing access to your Http session. Otherwise,
+                        conditions if a <literal>Session</literal> instance would be shared. If you keep your
+                        Hibernate <literal>Session</literal> in your <literal>HttpSession</literal> (discussed
+                        later), you should consider synchronizing access to your Http session. Otherwise,
                         a user that clicks reload fast enough may use the same <literal>Session</literal> in
                         two concurrently running threads.
                     </para>
@@ -292,8 +299,9 @@
                         get an OutOfMemoryException, if you keep it open for a long time or simply load too
                         much data. One solution for this is to call <literal>clear()</literal> and <literal>evict()</literal>
                         to manage the <literal>Session</literal> cache, but you most likely should consider a
-                        Stored Procedure if you need mass data operations. Keeping a <literal>Session</literal>
-                        open for the duration of a user session also means a high probability of stale data.
+                        Stored Procedure if you need mass data operations. Some solutions are shown in
+                        <xref linkend="batch"/>. Keeping a <literal>Session</literal> open for the duration
+                        of a user session also means a high probability of stale data.
                     </para>
                 </listitem>
             </itemizedlist>
@@ -309,8 +317,8 @@
             Datatabase (or system) transaction boundaries are always necessary. No communication with
             the database can occur outside of a database transaction (this seems to confuse many developers
             who are used to the auto-commit mode). Always use clear transaction boundaries, even for
-            read-only operations (depending on your isolation level, this might not be required, but there
-            is no downside if you always demarcate transactions explicitly).
+            read-only operations. Depending on your isolation level and database capabilities this might not
+            be required but there is no downside if you always demarcate transactions explicitly.
         </para>
 
         <para>
@@ -381,13 +389,23 @@ try {
     sess.flush();
     sess.connection().commit();
 }
-catch (Exception e) {
+catch (RuntimeException e) {
     sess.connection().rollback();
-    throw e;
+    throw e; // or display error message
 }
 finally {
     sess.close();
 }]]></programlisting>
+
+            <para>
+                Note that you will very likely never see this piece of code in a normal application;
+                fatal (system) exceptions should always be catched at the "top". In other words, the
+                code that executes Hibernate calls (in the persistence layer) and the code that handles
+                <literal>RuntimeException</literal> (and usually can only clean up and exit) are in
+                different layers. This can be a challenge to design yourself and you should use J2EE/EJB
+                container services whenever they are available. Exception handling is discussed later in
+                this chapter.
+            </para>
 
             <para>
                 We recommend, even if persistence layer portability is not your primary concern, the
@@ -404,9 +422,9 @@ try {
 
     tx.commit();
 }
-catch (Exception e) {
+catch (RuntimeException e) {
     if (tx != null) tx.rollback();
-    throw e;
+    throw e; // or display error message
 }
 finally {
     sess.close();
@@ -416,8 +434,9 @@ finally {
                 Note that you don't have to <literal>flush()</literal> the <literal>Session</literal>
                 explicitly, the call to <literal>commit()</literal> automatically triggers the
                 synchronization. This piece of code is now portable and runs in non-managed and JTA
-                environments. See <xref linkend="configuration-optional-transactionstrategy"/> for more
-                information about the <literal>Transaction</literal> API.
+                environments. See <xref linkend="configuration-optional-transactionstrategy"/> for
+                the configuration options of the <literal>Transaction</literal> API and how it can
+                be mapped to the underlying resource transaction system.
             </para>
 
             <para>
@@ -435,10 +454,12 @@ finally {
 
             <para>
                 If your persistence layer runs in an application server (e.g. behind EJB session beans),
-                transactions boundaries are defined in deployment descriptors. Every datasource obtained
-                by Hibernate will automatically be part of a global JTA transaction. Hibernate simply
-                joins this transaction, or if a particular session bean method has no transaction,
-                Hibernate will tell the application server to start and end a transaction directly.
+                transaction boundaries are defined in deployment descriptors. Every datasource connection
+                obtained by Hibernate will automatically be part of a global JTA transaction. Hibernate
+                simply joins this transaction, or if a particular session bean method has no mandatory
+                transaction, Hibernate will tell the application server to start and end a transaction
+                directly. (The latter should be considered a very rare case and is offered for consistency
+                reasons. Note that your container might not allow mixed CMT and BMT behavior.)
             </para>
 
             <para>
@@ -469,9 +490,10 @@ finally {
                 transaction, call <literal>Session.close()</literal> and discard the
                 <literal>Session</literal> instance. Certain methods of <literal>Session</literal>
                 will <emphasis>not</emphasis> leave the session in a consistent state. No
-                exception thrown by Hibernate can be treaded as recoverable.
+                exception thrown by Hibernate can be treaded as recoverable. Ensure that the
+                <literal>Session</literal> will be closed by calling <literal>close()</literal>
+                in a <literal>finally</literal> block.
             </para>
-
 
             <para>
                 The <literal>HibernateException</literal>, which wraps most of the errors that
@@ -482,7 +504,8 @@ finally {
                 error message is presented to the application user (or some other appropriate action
                 is taken). Note that Hibernate might also throw other unchecked exceptions (e.g.
                 when detecting stale data in version checks) which are not a
-                <literal>HibernateException</literal>.
+                <literal>HibernateException</literal>. These are, again, not recoverable and appropriate
+                action should be taken.
             </para>
 
             <para>
@@ -496,48 +519,103 @@ finally {
     <sect1 id="transactions-optimistic">
         <title>Optimistic concurrency control</title>
 
-        <para>TODO: I've deleted my changes to this section, now I've to do it again...</para>
-
         <para>
             The only approach that is consistent with high concurrency and high
-            scalability is optimistic concurrency control with versioning. Hibernate
-            provides for three possible approaches to writing application code that
-            uses optimistic concurrency.
+            scalability is optimistic concurrency control with versioning. Version
+            checking uses version numbers, or timestamps, to detect conflicting updates
+            (and to prevent lost updates). Hibernate provides for three possible approaches
+            to writing application code that uses optimistic concurrency. The use cases
+            we show are in the context of long application transactions but version checking
+            also has the benefit of preventing lost updates in single database transactions.
         </para>
 
-        <sect2 id="transactions-optimistic-longsession">
-            <title>Long session with automatic versioning</title>
+        <sect2 id="transactions-optimistic-manual">
+            <title>Application version checking</title>
 
             <para>
-                A single <literal>Session</literal> instance and its persistent instances are
-                used for the whole application transaction.
+                In an implementation without much help from Hibernate, each interaction with the
+                database occurs in a new <literal>Session</literal> and the developer is responsible
+                for reloading all persistent instances from the database before manipulating them.
+                This approach forces the application to carry out its own version checking to ensure
+                application transaction isolation. This approach is the least efficient in terms of
+                database access. It is the approach most similar to entity EJBs.
             </para>
 
-            <para>
-                The <literal>Session</literal> uses optimistic locking with versioning to
-                ensure that many database transactions appear to the application as a single
-                logical application transaction. The <literal>Session</literal> is disconnected
-                from any underlying JDBC connection when waiting for user interaction. This
-                approach is the most efficient in terms of database access. The application
-                need not concern itself with version checking or with reattaching detached
-                instances.
-            </para>
-
-            <programlisting><![CDATA[// foo is an instance loaded earlier by the Session
-session.reconnect();
+            <programlisting><![CDATA[// foo is an instance loaded by a previous Session
+session = factory.openSession();
+int oldVersion = foo.getVersion();
+session.load( foo, foo.getKey() ); // load the current state
+if ( oldVersion!=foo.getVersion ) throw new StaleObjectStateException();
 foo.setProperty("bar");
 session.flush();
 session.connection().commit();
-session.disconnect();]]></programlisting>
+session.close();]]></programlisting>
 
             <para>
-                The <literal>foo</literal> object still knows which <literal>Session</literal>
-                it was loaded it. As soon as the <literal>Session</literal> has a JDBC connection,
-                we commit the changes to the object.
+                The <literal>version</literal> property is mapped using <literal>&lt;version&gt;</literal>,
+                and Hibernate will automatically increment it during flush if the entity is
+                dirty.
             </para>
 
             <para>
-                This pattern is problematic if our <literal>Session</literal> is too big to
+                Of course, if you are operating in a low-data-concurrency environment and don't
+                require version checking, you may use this approach and just skip the version
+                check. In that case, <emphasis>last commit wins</emphasis> will be the default
+                strategy for your long application transactions. Keep in mind that this might
+                confuse the users of the application, as they might experience lost updates without
+                error messages or a chance to merge conflicting changes.
+            </para>
+
+            <para>
+                Clearly, manual version checking is only feasible in very trivial circumstances
+                and not practical for most applications. Often not only single instances, but
+                complete graphs of modified ojects have to be checked. Hibernate offers automatic
+                version checking with either long <literal>Session</literal> or detached instances
+                as the design paradigm.
+            </para>
+
+        </sect2>
+
+        <sect2 id="transactions-optimistic-longsession">
+            <title>Long session and automatic versioning</title>
+
+            <para>
+                A single <literal>Session</literal> instance and its persistent instances are
+                used for the whole application transaction. Hibernate checks instance versions
+                at flush time, throwing an exception if concurrent modification is detected.
+                It's up to the developer to catch and handle this exception (common options
+                are the opportunity for the user to merge changes or to restart the business
+                process with non-stale data).
+            </para>
+
+            <para>
+                The <literal>Session</literal> is disconnected from any underlying JDBC connection
+                when waiting for user interaction. This approach is the most efficient in terms
+                of database access. The application need not concern itself with version checking or
+                with reattaching detached instances, nor does it have to reload instances in every
+                database transaction.
+            </para>
+
+            <programlisting><![CDATA[// foo is an instance loaded earlier by the Session
+session.reconnect(); // Obtain a new JDBC connection
+foo.setProperty("bar");
+session.flush(); // Do the version check
+session.connection().commit(); // End database transaction
+session.disconnect(); // Return JDBC connection ]]></programlisting>
+
+            <para>
+                The <literal>foo</literal> object still knows which <literal>Session</literal> it was
+                loaded in. <literal>Session.reconnect()</literal> obtains a new connection (or you
+                may supply one) and resumes the session. The method <literal>Session.disconnect()</literal> will disconnect the session from
+                the JDBC connection and return the connection to the pool (unless you provided the
+                connection). After reconnection, to force a version check on data you aren't updating, you
+                may call <literal>Session.lock()</literal> with <literal>LockMode.READ</literal> on any
+                objects that might have been updated by another transaction. You don't need to lock any
+                data that you <emphasis>are</emphasis> updating.
+            </para>
+
+            <para>
+                This pattern is problematic if the <literal>Session</literal> is too big to
                 be stored during user think time, e.g. an <literal>HttpSession</literal> should
                 be kept as small as possible. As the <literal>Session</literal> is also the
                 (mandatory) first-level cache and contains all loaded objects, we can propably
@@ -545,26 +623,38 @@ session.disconnect();]]></programlisting>
                 recommended, as the <literal>Session</literal> will soon also have stale data.
             </para>
 
+            <para>
+                Also note that you should keep the disconnected <literal>Session</literal> close
+                to the persistence layer. In other words, use an EJB stateful session bean to
+                hold the <literal>Session</literal> and don't transfer it to the web layer (or
+                even serialize it to a separate tier) to store it in the <literal>HttpSession</literal>.
+            </para>
+
         </sect2>
 
         <sect2 id="transactions-optimistic-detached">
-            <title>Many sessions with automatic versioning</title>
+            <title>Detached objects and automatic versioning</title>
 
             <para>
                 Each interaction with the persistent store occurs in a new <literal>Session</literal>.
                 However, the same persistent instances are reused for each interaction with the database.
                 The application manipulates the state of detached instances originally loaded in another
-                <literal>Session</literal> and then "reassociates" them using
-                <literal>Session.update()</literal> or <literal>Session.saveOrUpdate()</literal>.
+                <literal>Session</literal> and then reattaches them using <literal>Session.update()</literal>,
+                <literal>Session.saveOrUpdate()</literal>, or <literal>Session.merge()</literal>.
             </para>
 
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
 foo.setProperty("bar");
 session = factory.openSession();
-session.saveOrUpdate(foo);
+session.saveOrUpdate(foo); // Use merge() if "foo" might have been loaded already
 session.flush();
 session.connection().commit();
 session.close();]]></programlisting>
+
+            <para>
+                Again, Hibernate will check instance versions during flush, throwing an
+                exception if conflicting updates occured.
+            </para>
 
             <para>
                 You may also call <literal>lock()</literal> instead of <literal>update()</literal>
@@ -574,137 +664,48 @@ session.close();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="transactions-optimistic-manual">
-            <title>Application version checking</title>
+        <sect2 id="transactions-optimistic-customizing">
+            <title>Customizing automatic versioning</title>
 
             <para>
-                Each interaction with the database occurs in a new <literal>Session</literal>
-                that reloads all persistent instances from the database before manipulating them.
-                This approach forces the application to carry out its own version checking to ensure
-                application transaction isolation. (Of course, Hibernate will still <emphasis>update</emphasis>
-                version numbers for you.) This approach is the least efficient in terms of database access.
-                It is the approach most similar to entity EJBs.
+                It is possible to turn of Hibernates automatic version increment for particular
+                properties and collections by setting the <literal>optmistic-lock</literal> mapping
+                attribute to <literal>false</literal>. Hibernate will then no longer increment
+                versions if this property is dirty.
             </para>
-
-            <programlisting><![CDATA[// foo is an instance loaded by a previous Session
-session = factory.openSession();
-int oldVersion = foo.getVersion();
-session.load( foo, foo.getKey() );
-if ( oldVersion!=foo.getVersion ) throw new StaleObjectStateException();
-foo.setProperty("bar");
-session.flush();
-session.connection().commit();
-session.close();]]></programlisting>
 
             <para>
-                Of course, if you are operating in a low-data-concurrency environment and don't
-                require version checking, you may use this approach and just skip the version
-                check.
+                Legacy database schemas are often static and can't be modified. Or, other applications
+                might also access the same database and don't know how to handle version numbers or
+                even timestamps. In both cases, versioning can't rely on a particular column in a table.
+                To force a version check without a version or timestamp property mapping, with a
+                comparison of the state of all fields in a row, turn on <literal>optmistic-lock="all"</literal>
+                in the <literal>&lt;class&gt;</literal> mapping. Note that this concpetually only works
+                if Hibernate can compare the old and new state, i.e. if you use a single long
+                <literal>Session</literal> and not session-per-request-with-detached-objects.
             </para>
+
+            <para>
+                Sometimes concurrent modification can be permitted as long as the changes that have been
+                made don't overlap. If you set <literal>optimistic-lock="dirty"</literal> when mapping the
+                <literal>&lt;class&gt;</literal>, Hibernate will only compare dirty fields during flush.
+            </para>
+
+            <para>
+                In both cases, with dedicated version/timestamp columns or with full/dirty field
+                comparison, Hibernate uses a single <literal>UPDATE</literal> statement (with an
+                appropriate <literal>WHERE</literal> clause) per entity to execute the version check
+                and update the information. If you use transitive persistence to cascade reattachment
+                to associated entities, Hibernate might execute uneccessary updates. This is usually
+                not a problem, but <emphasis>on update</emphasis> triggers in the database might be
+                executed even when no changes have been made to detached instances. You can customize
+                this behavior by setting  <literal>select-before-update="true"</literal> in the
+                <literal>&lt;class&gt;</literal> mapping, forcing Hibernate to <literal>SELECT</literal>
+                the instance to ensure that changes did actually occur, before updating the row.
+            </para>
+
         </sect2>
 
-    </sect1>
-
-    <sect1 id="transactions-disconnection">
-        <title>Session disconnection</title>
-
-        <para>
-            The first approach described above is to maintain a single <literal>Session</literal>
-            for a whole business process thats spans user think time. (For example, a servlet might
-            keep a <literal>Session</literal> in the user's <literal>HttpSession</literal>.) For
-            performance reasons you should
-        </para>
-
-        <orderedlist spacing="compact">
-            <listitem>
-                <para>
-                    commit the <literal>Transaction</literal> (or JDBC connection) and then
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    disconnect the <literal>Session</literal> from the JDBC connection
-                </para>
-            </listitem>
-        </orderedlist>
-
-        <para>
-            before waiting for user activity. The method <literal>Session.disconnect()</literal>
-            will disconnect the session from the JDBC connection and return the connection to
-            the pool (unless you provided the connection).
-        </para>
-
-        <para>
-            <literal>Session.reconnect()</literal> obtains a new connection (or you may supply one)
-            and restarts the session. After reconnection, to force a version check on data you aren't
-            updating, you may call <literal>Session.lock()</literal> on any objects that might have
-            been updated by another transaction. You don't need to lock any data that you
-            <emphasis>are</emphasis> updating.
-        </para>
-
-        <para>
-            Heres an example:
-        </para>
-
-        <programlisting><![CDATA[SessionFactory sessions;
-List fooList;
-Bar bar;
-....
-Session s = sessions.openSession();
-
-Transaction tx = null;
-try {
-    tx = s.beginTransaction();
-
-    fooList = s.find(
-    	"select foo from eg.Foo foo where foo.Date = current date"
-        // uses db2 date function
-    );
-    bar = (Bar) s.create(Bar.class);
-
-    tx.commit();
-}
-catch (Exception e) {
-    if (tx!=null) tx.rollback();
-    s.close();
-    throw e;
-}
-s.disconnect();]]></programlisting>
-
-        <para>
-            Later on:
-        </para>
-
-        <programlisting><![CDATA[s.reconnect();
-
-try {
-    tx = s.beginTransaction();
-
-    bar.setFooTable( new HashMap() );
-    Iterator iter = fooList.iterator();
-    while ( iter.hasNext() ) {
-        Foo foo = (Foo) iter.next();
-        s.lock(foo, LockMode.READ);    //check that foo isn't stale
-        bar.getFooTable().put( foo.getName(), foo );
-    }
-
-    tx.commit();
-}
-catch (Exception e) {
-    if (tx!=null) tx.rollback();
-    throw e;
-}
-finally {
-    s.close();
-}]]></programlisting>
-
-        <para>
-            You can see from this how the relationship between <literal>Transaction</literal>s and
-            <literal>Session</literal>s is many-to-one, A <literal>Session</literal> represents a
-            conversation between the application and the database. The
-            <literal>Transaction</literal> breaks that conversation up into atomic units of work
-            at the database level.
-        </para>
     </sect1>
 
     <sect1 id="transactions-locking">

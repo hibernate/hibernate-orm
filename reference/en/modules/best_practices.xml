@@ -138,8 +138,7 @@
                     the <literal>Transaction</literal> and close the <literal>Session</literal>. If you don't, Hibernate
                     can't guarantee that in-memory state accurately represents persistent state. As a special case of this,
                     do not use <literal>Session.load()</literal> to determine if an instance with the given identifier 
-                    exists on the database; use <literal>find()</literal> instead. Some exceptions are recoverable, for
-                    example the <literal>StaleObjectStateException</literal> and <literal>ObjectNotFoundException</literal>.
+                    exists on the database; use <literal>find()</literal> instead.
                 </para>
             </listitem>
         </varlistentry>

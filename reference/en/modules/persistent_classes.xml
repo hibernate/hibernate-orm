@@ -1,18 +1,19 @@
-<chapter id="persistent-classes" revision="1">
+<chapter id="persistent-classes" revision="2">
     <title>Persistent Classes</title>
 
     <para>
         Persistent classes are classes in an application that implement the entities
         of the business problem (e.g. Customer and Order in an E-commerce application).
-        Persistent classes have, as the name implies, transient and also persistent
-        instance stored in the database.
+        Not all instances of a persistent class are considered to be in the persistent 
+        state - an instance may instead be transient or detached.
     </para>
 
     <para>
         Hibernate works best if these classes follow some simple rules, also known
-        as the Plain Old Java Object (POJO) programming model. However, Hibernate3
-        allows you to express a domain model in other ways: using trees of 
-        <literal>Map</literal> instances, for example.
+        as the Plain Old Java Object (POJO) programming model. However none of these
+        rules are hard requirements. Indeed, Hibernate3 assumes very little about
+        the nature of your persistent objects. You may express a domain model in other 
+        ways: using trees of <literal>Map</literal> instances, for example.
     </para>
 
     <sect1 id="persistent-classes-pojo">
@@ -138,7 +139,7 @@ public class Cat {
             </para>
         </sect2>
 
-        <sect2 id="persistent-classes-pojo-identifier" revision="1">
+        <sect2 id="persistent-classes-pojo-identifier" revision="2">
             <title>Provide an identifier property (optional)</title>
 
             <para>
@@ -151,26 +152,30 @@ public class Cat {
             </para>
 
             <para>
-                The identifier property is optional. You can leave it off and let Hibernate keep track 
-                of object identifiers internally. However, for many applications it is still
-                a good (and very popular) design decision.
+                The identifier property is strictly optional. You can leave them off and let Hibernate 
+                keep track of object identifiers internally. We do not recommend this, however.
             </para>
 
             <para>
-                What's more, some functionality is available only to classes which declare an
+                In fact, some functionality is available only to classes which declare an
                 identifier property:
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        Transitive reattachment for detached objects (cascade update) - 
-                        see "Lifecycle Objects"
+                        Transitive reattachment for detached objects (cascade update or cascade
+                        merge) - see "Lifecycle Objects"
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>Session.saveOrUpdate()</literal>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>Session.merge()</literal>
                     </para>
                 </listitem>
             </itemizedlist>

@@ -341,8 +341,7 @@ hibernate.transaction.factory_class = \
     org.hibernate.transaction.JTATransactionFactory
 hibernate.transaction.manager_lookup_class = \
     org.hibernate.transaction.JBossTransactionManagerLookup
-hibernate.dialect = \
-    org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
+hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             JDBC connections obtained from a JNDI datasource will automatically participate

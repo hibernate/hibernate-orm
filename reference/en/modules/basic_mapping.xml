@@ -21,62 +21,63 @@
             Lets kick off with an example mapping:
         </para>
 
-        <programlisting><![CDATA[<?xml version="1.0"?>
+        <programlisting id="mapping-declaration-ex1" revision="1"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
-	  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
           "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
 
         <class name="Cat" 
-	        table="cats" 
-		discriminator-value="C">
+            table="cats"
+            discriminator-value="C">
                 
                 <id name="id">
                         <generator class="native"/>
                 </id>
-		
+
                 <discriminator column="subclass" 
                      type="character"/>
-			
+
                 <property name="weight"/>
-		
-                <property name="birthdate" 
+
+                <property name="birthdate"
                     type="date" 
                     not-null="true" 
                     update="false"/>
-			
-                <property name="color" 
+
+                <property name="color"
                     type="eg.types.ColorUserType"
                     not-null="true"
                     update="false"/>
-			
-                <property name="sex" 
+
+                <property name="sex"
                     not-null="true" 
                     update="false"/>
-		
-                <property name="litterId" 
+
+                <property name="litterId"
                     column="litterId"
                     update="false"/>
-		
-                <many-to-one name="mother" 
+
+                <many-to-one name="mother"
                     column="mother_id"
                     update="false"/>
-			
-                <set name="kittens" 
+
+                <set name="kittens"
                     inverse="true"
                     order-by="litter_id">
                         <key column="mother_id"/>
                         <one-to-many class="Cat"/>
                 </set>
-		
-                <subclass name="DomesticCat" 
+
+                <subclass name="DomesticCat"
                     discriminator-value="D">
 
                         <property name="name" 
                             type="string"/>
-				
+
                 </subclass>
+
         </class>
 
         <class name="Dog">
@@ -223,7 +224,7 @@
                     <area id="class18" coords="19 55"/>
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
-		    <area id="class21" coords="22 55"/>
+                    <area id="class21" coords="22 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -258,7 +259,7 @@
                     <callout arearefs="class2">
                         <para>
                             <literal>table</literal> (optional - defaults to the unqualified class name):  The
-			    name of its database table.
+                            name of its database table.
                         </para>
                     </callout>
                     <callout arearefs="class3">
@@ -437,36 +438,36 @@
             </para>
             
             <para>
-            	If you enable <literal>dynamic-update</literal>, you will have a choice of optimistic
-            	locking strategies:
+                If you enable <literal>dynamic-update</literal>, you will have a choice of optimistic
+                locking strategies:
             </para>
             <itemizedlist>
-            	<listitem>
-            		<para>
-            			<literal>version</literal> check the version/timestamp columns
-            		</para>
-            	</listitem>
-            	<listitem>
-            		<para>
-            			<literal>all</literal> check all columns
-            		</para>
-            	</listitem>
-            	<listitem>
-            		<para>
-            			<literal>dirty</literal> check the changed columns
-            		</para>
-            	</listitem>
-            	<listitem>
-            		<para>
-            			<literal>none</literal> do not use optimistic locking
-            		</para>
-            	</listitem>
+                <listitem>
+                    <para>
+                        <literal>version</literal> check the version/timestamp columns
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>all</literal> check all columns
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>dirty</literal> check the changed columns
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>none</literal> do not use optimistic locking
+                    </para>
+                </listitem>
             </itemizedlist>
             <para>
-            	We <emphasis>very</emphasis> strongly recommend that you use version/timestamp
-            	columns for optimistic locking with Hibernate. This is the optimal strategy with
-            	respect to performance and is the only strategy that correctly handles modifications
-            	made to detached instances (ie. when <literal>Session.update()</literal> is used).
+                We <emphasis>very</emphasis> strongly recommend that you use version/timestamp
+                columns for optimistic locking with Hibernate. This is the optimal strategy with
+                respect to performance and is the only strategy that correctly handles modifications
+                made to detached instances (ie. when <literal>Session.update()</literal> is used).
             </para>
 
             <para>
@@ -899,13 +900,13 @@
                             <literal>insert</literal> (optional - defaults to <literal>true</literal>)
                             set this to <literal>false</literal> if your discriminator column is also part
                             of a mapped composite identifier. (Tells Hibernate to not include the column
-			    in SQL <literal>INSERT</literal>s.)
+                            in SQL <literal>INSERT</literal>s.)
                         </para>
                     </callout>
                     <callout arearefs="discriminator5">
                         <para>
                             <literal>formula</literal> (optional) an arbitrary SQL expression that is 
-			    executed when a type has to be evaluated. Allows content-based discrimination.
+                            executed when a type has to be evaluated. Allows content-based discrimination.
                         </para>
                     </callout>
                 </calloutlist>
@@ -998,7 +999,7 @@
             </para>
             
             <para>
-            	A version or timestamp property should never be null for a detached instance, so
+                A version or timestamp property should never be null for a detached instance, so
                 Hibernate will detact any instance with a null version or timestamp as transient,
                 no matter what other <literal>unsaved-value</literal> strategies are specified.
                 <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid 
@@ -1154,24 +1155,25 @@
                             accessed (requires build-time bytecode instrumentation).
                         </para>
                     </callout>
-					<callout arearefs="property9">
+                    <callout arearefs="property9">
                         <para>
                             <literal>unique</literal> (optional): Enable the DDL generation of a unique
                             constraint for the columns. Also, allow this to be the target of 
                             a <literal>property-ref</literal>.
                         </para>
-					 </callout>
-					<callout arearefs="property10">
+                    </callout>
+                    <callout arearefs="property10">
                         <para>
                             <literal>not-null</literal> (optional): Enable the DDL generation of a nullability
                             constraint for the columns.
                         </para>
-					 </callout>
+                    </callout>
                     <callout arearefs="property11">
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-							Specifies that updates to this property do or do not require acquisition of the
-							optimistic lock.
+                            Specifies that updates to this property do or do not require acquisition of the
+                            optimistic lock. In other words, define if a version check should be made if this
+                            property is dirty.
                         </para>
                     </callout>
                 </calloutlist>
@@ -1217,12 +1219,12 @@
             </para>
             
             <para>
-            	The <literal>access</literal> attribute lets you control how Hibernate will access
-            	the property at runtime. By default, Hibernate will call the property get/set pair.
-            	If you specify <literal>access="field"</literal>, Hibernate will bypass the get/set
-            	pair and access the field directly, using reflection. You may specify your own
-            	strategy for property access by naming a class that implements the interface
-            	<literal>org.hibernate.property.PropertyAccessor</literal>.
+                The <literal>access</literal> attribute lets you control how Hibernate will access
+                the property at runtime. By default, Hibernate will call the property get/set pair.
+                If you specify <literal>access="field"</literal>, Hibernate will bypass the get/set
+                pair and access the field directly, using reflection. You may specify your own
+                strategy for property access by naming a class that implements the interface
+                <literal>org.hibernate.property.PropertyAccessor</literal>.
             </para>
 
             <para>
@@ -1253,7 +1255,7 @@
                     </areaset>
                     <area id="manytoone8" coords="9 60"/>
                     <area id="manytoone9" coords="10 60"/>
-					<area id="manytoone10" coords="11 60"/>
+                    <area id="manytoone10" coords="11 60"/>
                     <area id="manytoone11" coords="12 60"/>
                     <area id="manytoone12" coords="13 60"/>
                 </areaspec>
@@ -1325,24 +1327,25 @@
                             strategy Hibernate should use for accessing the property value.
                         </para>
                     </callout>
-					<callout arearefs="manytoone10">
+                    <callout arearefs="manytoone10">
                         <para>
                             <literal>unique</literal> (optional): Enable the DDL generation of a unique
                             constraint for the foreign-key column. Also, allow this to be the target of 
                             a <literal>property-ref</literal>.
                         </para>
-					 </callout>
-					<callout arearefs="manytoone11">
+                    </callout>
+                    <callout arearefs="manytoone11">
                         <para>
                             <literal>not-null</literal> (optional): Enable the DDL generation of a nullability
                             constraint for the foreign key columns.
                         </para>
-					 </callout>
+                    </callout>
                     <callout arearefs="manytoone12">
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-							Specifies that updates to this property do or do not require acquisition of the
-							optimistic lock.
+                            Specifies that updates to this property do or do not require acquisition of the
+                            optimistic lock. In other words, define if a version check should be made if this
+                            property is dirty.
                         </para>
                     </callout>
                 </calloutlist>
@@ -1533,7 +1536,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-component">
+        <sect2 id="mapping-declaration-component" revision="1">
             <title>component, dynamic-component</title>
 
             <para>
@@ -1608,8 +1611,9 @@
                 <callout arearefs="component7">
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-							Specifies that updates to this component do or do not require acquisition of the
-							optimistic lock.
+                            Specifies that updates to this component do or do not require acquisition of the
+                            optimistic lock. In other words, define if a version check should be made if this
+                            property is dirty.
                         </para>
                 </callout>
             </programlistingco>
@@ -2293,7 +2297,7 @@
 
         </sect2>
         
-        <sect2 id="mapping-types-anymapping" revision="1">
+        <sect2 id="mapping-types-anymapping" revision="2">
             <title>Any type mappings</title>
             
             <para>
@@ -2377,8 +2381,9 @@
                     <callout arearefs="any6">
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-							Specifies that updates to this property do or do not require acquisition of the
-							optimistic lock.
+                            Specifies that updates to this property do or do not require acquisition of the
+                            optimistic lock. In other words, define if a version check should be made if this
+                            property is dirty.
                         </para>
                     </callout>
                 </calloutlist>

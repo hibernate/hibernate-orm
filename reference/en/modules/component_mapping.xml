@@ -233,7 +233,7 @@
         </para>
     </sect1>
 
-    <sect1 id="components-compositeid">
+    <sect1 id="components-compositeid" revision="1">
         <title>Components as composite identifiers</title>
 
         <para>
@@ -343,7 +343,7 @@
 
     </sect1>
 
-    <sect1 id="components-dynamic">
+    <sect1 id="components-dynamic" revision="1">
         <title>Dynamic components</title>
 
         <para>

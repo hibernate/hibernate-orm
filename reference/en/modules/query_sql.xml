@@ -138,18 +138,18 @@ List loggedCats = sess.createSQLQuery(sql)
          </para>
          
          <sect2 id="propertyresults">
-             <title>Using property-result to explicitly specify column/alias names</title>
+             <title>Using return-property to explicitly specify column/alias names</title>
              
              <para>
-                 With <literal>&lt;property-result&gt;</literal> you can explicitly tell Hibernate what columns
+                 With <literal>&lt;return-property&gt;</literal> you can explicitly tell Hibernate what columns
                  to use as opposed to use <literal>{}</literal>-syntax to let Hibernate inject its own aliases.                 
              </para>
              
             <programlisting><![CDATA[<sql-query name="mySqlQuery">
     <return alias="person" class="eg.Person">
-      <property-result name="name" column="myName"/>
-      <property-result name="age" column="myAge"/>
-      <property-result name="sex" column="mySex"/>
+      <return-property name="name" column="myName"/>
+      <return-property name="age" column="myAge"/>
+      <return-property name="sex" column="mySex"/>
     </return>
     SELECT person.NAME AS myName,
            person.AGE AS myAge,
@@ -158,16 +158,16 @@ List loggedCats = sess.createSQLQuery(sql)
 </sql-query>
 ]]></programlisting>
              
-             <literal>&lt;property-result&gt;</literal> also works with multiple columns. This solves a limitation with
+             <literal>&lt;return-property&gt;</literal> also works with multiple columns. This solves a limitation with
              the <literal>{}</literal>-syntax which can not allow fine grained control of multi-column properties.
              
              <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
             <return alias="emp" class="Employment">            
-             <property-result name="salary"> 
-               <result-column name="VALUE"/>
-               <result-column name="CURRENCY"/>            
-             </property-result>
-             <property-result name="endDate" column="myEndDate"/>
+             <return-property name="salary"> 
+               <return-column name="VALUE"/>
+               <return-column name="CURRENCY"/>            
+             </return-property>
+             <return-property name="endDate" column="myEndDate"/>
             </return>
             SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
             STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
@@ -178,7 +178,7 @@ List loggedCats = sess.createSQLQuery(sql)
 </sql-query>]]></programlisting>
              
             <para>
-             Notice that in this example we used <literal>&lt;property-result&gt;</literal> in combination
+             Notice that in this example we used <literal>&lt;return-property&gt;</literal> in combination
              with the <literal>{}</literal>-syntax for injection. Allowing users to choose 
              how they want to refer column and properties.
             </para>
@@ -215,16 +215,16 @@ BEGIN
                  
              <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
     <return alias="emp" class="Employment">
-        <property-result name="employee" column="EMPLOYEE"/>
-        <property-result name="employer" column="EMPLOYER"/>            
-        <property-result name="startDate" column="STARTDATE"/>
-        <property-result name="endDate" column="ENDDATE"/>            
-        <property-result name="regionCode" column="REGIONCODE"/>            
-        <property-result name="id" column="EID"/>                        
-        <property-result name="salary"> 
-            <result-column name="VALUE"/>
-            <result-column name="CURRENCY"/>            
-        </property-result>
+        <return-property name="employee" column="EMPLOYEE"/>
+        <return-property name="employer" column="EMPLOYER"/>            
+        <return-property name="startDate" column="STARTDATE"/>
+        <return-property name="endDate" column="ENDDATE"/>            
+        <return-property name="regionCode" column="REGIONCODE"/>            
+        <return-property name="id" column="EID"/>                        
+        <return-property name="salary"> 
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>            
+        </return-property>
     </return>
     { ? = call selectAllEmployments() }
 </sql-query>]]></programlisting>

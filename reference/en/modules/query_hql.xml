@@ -455,14 +455,36 @@ where log.item.class = 'eg.Payment' and log.item.id = payment.id]]></programlist
             </listitem>
             <listitem>
                 <para>
+                    <literal>current_date()</literal>, <literal>current_time()</literal>,
+                    <literal>current_timestamp()</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Any function or operator defined by EJB-QL 3.0
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>case when ... then ... else ... end</literal> 
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     Parentheses <literal>( )</literal> indicate grouping
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>in</literal>,
+                    <literal>not in</literal>,
                     <literal>between</literal>,
                     <literal>is null</literal>
+                    <literal>is not null</literal>
+                    <literal>is empty</literal>
+                    <literal>is not empty</literal>
+                    <literal>member of</literal>
+                    <literal>not member of</literal>
                 </para>
             </listitem>
             <listitem>

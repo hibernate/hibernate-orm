@@ -609,7 +609,7 @@
             </para>
             
             <sect3 id="mapping-declaration-id-generator" revision="2">
-                <title>generator</title>
+                <title>Generator</title>
 
                 <para>
                     The optional <literal>&lt;generator&gt;</literal> child element names a Java class used

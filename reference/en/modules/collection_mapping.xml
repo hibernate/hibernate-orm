@@ -286,14 +286,23 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco>
             <areaspec>
-                <area id="index1" coords="1 45"/>
+                <area id="index1" coords="2 45"/>
+                <area id="index2" coords="3 45"/>
              </areaspec>
-            <programlisting><![CDATA[<list-index column="column_name"/>]]></programlisting>
+            <programlisting><![CDATA[<list-index 
+        column="column_name"
+        base="0|1|..."/>]]></programlisting>
             <calloutlist>
                 <callout arearefs="index1">
                     <para>
                         <literal>column_name</literal> (required): The name of the column holding the
                         collection index values.
+                    </para>
+                </callout>
+                <callout arearefs="index1">
+                    <para>
+                        <literal>base</literal> (optional, defaults to <literal>0</literal>): The value
+                        of the index column that corresponds to the first element of the list or array.
                     </para>
                 </callout>
             </calloutlist>

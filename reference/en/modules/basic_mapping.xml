@@ -1687,7 +1687,7 @@
         name="propertyName" 
         class="className"
         insert="true|false"
-        upate="true|false"
+        update="true|false"
         access="field|property|ClassName"
         lazy="true|false"
         optimistic-lock="true|false"
@@ -1794,7 +1794,7 @@
                 <programlisting><![CDATA[<properties 
         name="logicalName" 
         insert="true|false"
-        upate="true|false"
+        update="true|false"
         optimistic-lock="true|false"
         unique="true|false"
 >

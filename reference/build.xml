@@ -1,4 +1,4 @@
-<project name="HibernateDocumentation" default="all.doc" basedir=".">
+<project name="Hibernate3Documentation" default="all.doc" basedir=".">
 
     <!-- Set build directories for all formats. -->
     <property name="build.dir"             value="${basedir}/build"/>

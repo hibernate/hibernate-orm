@@ -523,19 +523,20 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>order-by</literal> attribute):
         </para>
 
-        <programlisting><![CDATA[<bag name="sizes" table="item_sizes" order-by="size asc">
+        <programlisting><![CDATA[<bag name="sizes" 
+        table="item_sizes" 
+        order-by="size asc">
     <key column="item_id"/>
     <element column="size" type="integer"/>
 </bag>]]></programlisting>
 
         <para>
-            An array of entities - in this case, a many to many association (note that
-            the entities are lifecycle objects, <literal>cascade="all"</literal>):
+            An array of entities - in this case, a many to many association:
         </para>
 
         <programlisting><![CDATA[<array name="addresses" 
         table="PersonAddress" 
-        cascade="all">
+        cascade="create">
     <key column="personId"/>
     <list-index column="sortOrder"/>
     <many-to-many column="addressId" class="Address"/>
@@ -563,9 +564,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     <key column="carId"/>
     <list-index column="sortOrder"/>
     <composite-element class="CarComponent">
-            <property name="price"/>
-            <property name="type"/>
-            <property name="serialNumber" column="serial_no"/>
+        <property name="price"/>
+        <property name="type"/>
+        <property name="serialNumber" column="serialNum"/>
     </composite-element>
 </list>]]></programlisting>
 
@@ -627,12 +628,24 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         <para>
             <emphasis>Very important note:</emphasis> If the foreign key column of a 
             <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, 
-            you must declare the <literal>&lt;key&gt;</literal>  mapping 
+            you must declare the <literal>&lt;key&gt;</literal> mapping 
             <literal>not-null="true"</literal> or <emphasis>use a bidirectional association</emphasis> 
             with the collection mapping marked <literal>inverse="true"</literal>. See the discussion 
             of bidirectional associations later in this chapter.
         </para>
+        
+        <para>
+            This example shows a map of <literal>Part</literal> entities by name (where
+            <literal>partName</literal> is a persistent property of <literal>Part</literal>).
+            Notice the use of a formula-based index.
+        </para>
 
+        <programlisting><![CDATA[<map name="parts"
+        cascade="all">
+    <key column="productId" not-null="true"/>
+    <map-key formula="partName"/>
+    <one-to-many class="Part"/>
+</map>]]></programlisting>
     </sect2>
     
     </sect1>

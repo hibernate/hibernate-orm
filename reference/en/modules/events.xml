@@ -115,7 +115,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
 
     </sect1>
 
-     <sect1 id="objectstate-events">
+     <sect1 id="objectstate-events" revision="2">
         <title>Event system</title>
 
         <para>
@@ -141,12 +141,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
 
         <para>
             The listeners should be considered effectively singletons; meaning, they are shared between
-            requests, and thus should not save any state as instance variables. The event objects
-            themselves, however, do hold a lot of the context needed for processing as they are unique
-            to each request. Custom event listeners may also make use of the event's context for storage
-            of any needed processing variables. The context is a simple map, but the default listeners
-            don't use the context map at all, so don't worry about over-writing internally required
-            context variables.
+            requests, and thus should not save any state as instance variables.
         </para>
 
         <para>

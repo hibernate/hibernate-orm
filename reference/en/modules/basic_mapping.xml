@@ -37,45 +37,44 @@
                 </id>
 		
                 <discriminator column="subclass" 
-		        type="character"/>
+                     type="character"/>
 			
                 <property name="weight"/>
 		
                 <property name="birthdate" 
-		        type="date" 
-			not-null="true" 
-			update="false"/>
+                    type="date" 
+                    not-null="true" 
+                    update="false"/>
 			
                 <property name="color" 
-		        type="eg.types.ColorUserType"
-		        not-null="true"
-			update="false"/>
+                    type="eg.types.ColorUserType"
+                    not-null="true"
+                    update="false"/>
 			
                 <property name="sex" 
-		        not-null="true" 
-			update="false"/>
+                    not-null="true" 
+                    update="false"/>
 		
                 <property name="litterId" 
-		        column="litterId"
-			update="false"/>
+                    column="litterId"
+                    update="false"/>
 		
                 <many-to-one name="mother" 
-			column="mother_id"
-			update="false"/>
+                    column="mother_id"
+                    update="false"/>
 			
                 <set name="kittens" 
-		        inverse="true"
-		        lazy="true"
-			order-by="litter_id">
+                    inverse="true"
+                    order-by="litter_id">
                         <key column="mother_id"/>
                         <one-to-many class="Cat"/>
                 </set>
 		
                 <subclass name="DomesticCat" 
-		        discriminator-value="D">
-			
+                    discriminator-value="D">
+
                         <property name="name" 
-			        type="string"/>
+                            type="string"/>
 				
                 </subclass>
         </class>
@@ -107,15 +106,15 @@
             </para>
         </sect2>
 
-        <sect2 id="mapping-declaration-mapping" revision="1">
+        <sect2 id="mapping-declaration-mapping" revision="2">
             <title>hibernate-mapping</title>
 
             <para>
                 This element has several optional attributes. The <literal>schema</literal> and 
-		<literal>catalog</literal> attributes specify that tables referred to in this mapping 
-		belong to the named schema and/or catalog. If specified, tablenames will be qualified 
-		by the given schema and catalog names. If missing, tablenames will be unqualified. 
-		The <literal>default-cascade</literal> attribute specifies what cascade style
+                <literal>catalog</literal> attributes specify that tables referred to in this mapping 
+                belong to the named schema and/or catalog. If specified, tablenames will be qualified 
+                by the given schema and catalog names. If missing, tablenames will be unqualified. 
+                The <literal>default-cascade</literal> attribute specifies what cascade style
                 should be assumed for properties and collections which do not specify a 
                 <literal>cascade</literal> attribute. The <literal>auto-import</literal> attribute lets us
                 use unqualified class names in the query language, by default.
@@ -128,13 +127,15 @@
                      <area id="hm3" coords="4 55"/>
                      <area id="hm4" coords="5 55"/>
                      <area id="hm5" coords="6 55"/>
-		     <area id="hm6" coords="7 55"/>
+                     <area id="hm6" coords="7 55"/>
+                     <area id="hm7" coords="8 55"/>
                  </areaspec>
                  <programlisting><![CDATA[<hibernate-mapping
          schema="schemaName"
-	 catalog="catalogName"
+         catalog="catalogName"
          default-cascade="none|save-update"
          default-access="field|property|ClassName"
+         default-lazy="true|false"
          auto-import="true|false"
          package="package.name"
  />]]></programlisting>
@@ -164,12 +165,19 @@
                      </callout>
                      <callout arearefs="hm5">
                          <para>
+                             <literal>default-lazy</literal> (optional - defaults to <literal>true</literal>):
+                             The default value for unspecifed <literal>lazy</literal> attributes of class and
+                             collection mappings.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm6">
+                         <para>
                              <literal>auto-import</literal> (optional - defaults to <literal>true</literal>):
                              Specifies whether we can use unqualified class names (of classes in this mapping)
                              in the query language.
                          </para>
                      </callout>
-                     <callout arearefs="hm6">
+                     <callout arearefs="hm7">
                          <para>
                              <literal>package</literal> (optional): Specifies a package prefix to assume for 
                              unqualified class names in the mapping document.
@@ -186,7 +194,7 @@
  
         </sect2>
 
-        <sect2 id="mapping-declaration-class" revision="1">
+        <sect2 id="mapping-declaration-class" revision="2">
             <title>class, dynamic-class</title>
 
             <para>
@@ -223,7 +231,7 @@
         discriminator-value="discriminator_value"
         mutable="true|false"
         schema="owner"
-	catalog="catalog"
+        catalog="catalog"
         proxy="ProxyInterface"
         dynamic-update="true|false"
         dynamic-insert="true|false"
@@ -339,9 +347,8 @@
                     </callout>    
                     <callout arearefs="class16">
                         <para>
-                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
-                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
-                            interface.
+                            <literal>lazy</literal> (optional): Lazy fetching may be completely disabled by setting 
+                            <literal>lazy="false"</literal>.
                         </para>
                     </callout>    
                     <callout arearefs="class17">
@@ -472,7 +479,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-id">
+        <sect2 id="mapping-declaration-id" revision="2">
             <title>id</title>
 
             <para>
@@ -484,17 +491,17 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="id1" coords="2 50"/>
-                    <area id="id2" coords="3 50" />
-                    <area id="id3" coords="4 50"/>
-                    <area id="id4" coords="5 50" />
-                    <area id="id5" coords="6 50" />
+                    <area id="id1" coords="2 65"/>
+                    <area id="id2" coords="3 65" />
+                    <area id="id3" coords="4 65"/>
+                    <area id="id4" coords="5 65" />
+                    <area id="id5" coords="6 65" />
                 </areaspec>
                 <programlisting><![CDATA[<id
         name="propertyName"
         type="typename"
         column="column_name"
-        unsaved-value="any|none|null|id_value"
+        unsaved-value="null|any|none|undefined|id_value"
         access="field|property|ClassName">
 
         <generator class="generatorClass"/>
@@ -518,7 +525,7 @@
                     </callout>
                     <callout arearefs="id4">
                         <para>
-                            <literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): 
+                            <literal>unsaved-value</literal> (optional - defaults to a "sensible" value): 
                             An identifier property value that indicates that an instance is newly instantiated
                             (unsaved), distinguishing it from detached instances that were saved or loaded
                             in a previous session.
@@ -540,7 +547,8 @@
             
             <para>
                 The <literal>unsaved-value</literal> attribute is important! If the identfier property of your 
-                class does not default to <literal>null</literal>, then you should specify the actual default.
+                class does not default to the normal Java default value (null or zero), then you should specify 
+                the actual default.
             </para>
 
              <para>
@@ -548,7 +556,7 @@
                 legacy data with composite keys. We strongly discourage its use for anything else.
             </para>
             
-            <sect3 id="mapping-declaration-id-generator" revision="1">
+            <sect3 id="mapping-declaration-id-generator" revision="2">
                 <title>generator</title>
 
                 <para>
@@ -558,7 +566,7 @@
                     <literal>&lt;param&gt;</literal> element.
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="0">
+                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
         <generator class="org.hibernate.id.TableHiLoGenerator">
                 <param name="table">uid_table</param>
                 <param name="column">next_hi_value_column</param>
@@ -628,7 +636,7 @@
                         </listitem>
                         </varlistentry>
                         <varlistentry>
-                        <term><literal>uuid.hex</literal></term>
+                        <term><literal>uuid</literal></term>
                         <listitem>
                             <para>
                                 uses a 128-bit UUID algorithm to generate identifiers of type string,
@@ -638,19 +646,10 @@
                         </listitem>
                         </varlistentry>
                         <varlistentry>
-                        <term><literal>uuid.string</literal></term>
-                        <listitem>
-                            <para>
-                                uses the same UUID algorithm. The UUID is encoded a string of length 16
-                                consisting of (any) ASCII characters. <emphasis>Do not use with PostgreSQL.</emphasis>
-                            </para>
-                        </listitem>
-                        </varlistentry>
-                        <varlistentry>
                         <term><literal>guid</literal></term>
                         <listitem>
                             <para>
-                                uses the string-based GUID algorithm available in MS SQL Server and MySQL.
+                                uses a database-generated GUID string on MS SQL Server and MySQL.
                             </para>
                         </listitem>
                         </varlistentry>
@@ -723,16 +722,11 @@
             <sect3 id="mapping-declaration-id-uuid">
                 <title>UUID Algorithm</title>
                 <para>
-                    The UUIDs contain: IP address, startup time of the JVM (accurate to a quarter
+                    The UUID contains: IP address, startup time of the JVM (accurate to a quarter
                     second), system time and a counter value (unique within the JVM). It's not
                     possible to obtain a MAC address or memory address from Java code, so this is
                     the best we can do without using JNI.
                 </para>
-
-                <para>
-                    Don't try to use <literal>uuid.string</literal> in PostgreSQL.
-                </para>
-            
             </sect3>
 
             <sect3 id="mapping-declaration-id-sequences">
@@ -772,26 +766,25 @@
                     object's identifier property. Be very careful when using this feature to assign
                     keys with business meaning (almost always a terrible design decision).
                 </para>
-            </sect3>
-            
+                
                 <para>
-                    If an entity uses an assigned identifier or composite identifier (below), Hibernate
-                    cannot use the value of the identifier property to distinguish between transient
-                    and detached instances. In this case, you have three options. Either map a version 
-                    or timestamp property, implement <literal>Interceptor.isUnsaved()</literal> (see 
-                    later), or simply disable cascades and explicitly save and update individual instances 
-                    using <literal>Session.save()</literal> and <literal>Session.update()</literal>
-                    This is a common "gotcha" for new users!
+                    Choosing the <literal>assigned</literal> generator makes Hibernate use 
+                    <literal>unsaved-value="undefined"</literal>, forcing Hibernate to go to
+                    the database to determine if an instance is transient or detached, unless
+                    there is a version or timestampe property, or you define 
+                    <literal>Interceptor.isUnsaved()</literal>.
                 </para>
+            </sect3>
+
         </sect2>
 
-        <sect2 id="mapping-declaration-compositeid">
+        <sect2 id="mapping-declaration-compositeid" revision="2">
             <title>composite-id</title>
 
             <programlisting><![CDATA[<composite-id
         name="propertyName"
         class="ClassName"
-        unsaved-value="any|none"
+        unsaved-value="undefined|any|none"
         access="field|property|ClassName">
 
         <key-property name="propertyName" type="typename" column="column_name"/>
@@ -843,9 +836,10 @@
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>unsaved-value</literal> (optional - defaults to <literal>none</literal>): 
+                        <literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): 
                         Indicates that transient instances should be considered newly instantiated, if set 
-                        to <literal>any</literal>.
+                        to <literal>any</literal>, or detached, if set to <literal>none</literal>. It is best 
+                        to leave the default value in all cases.
                     </para>
                 </listitem>
             </itemizedlist>
@@ -1237,7 +1231,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="1">
+        <sect2 id="mapping-declaration-manytoone" revision="2">
             <title>many-to-one</title>
 
             <para>
@@ -1268,7 +1262,7 @@
         column="column_name"
         class="ClassName"
         cascade="all|none|save-update|delete"
-        outer-join="true|false|auto"
+        fetch="join|select"
         update="true|false"
         insert="true|false"
         property-ref="propertyNameFromAssociatedClass"
@@ -1305,9 +1299,8 @@
                     </callout>
                     <callout arearefs="manytoone5">
                         <para>
-                            <literal>outer-join</literal> (optional - defaults to <literal>auto</literal>): 
-                            enables outer-join fetching for this association when 
-                            <literal>hibernate.use_outer_join</literal> is set.
+                            <literal>join</literal> (optional - defaults to <literal>select</literal>): 
+                            Chooses between outer-join fetching or sequential select fetching.
                         </para>                    
                     </callout>
                     <callout arearefs="manytoone6-7">
@@ -1364,31 +1357,6 @@
             </para>
             
             <para>
-                The <literal>outer-join</literal> attribute accepts three different values:
-            </para>
-            
-            <itemizedlist spacing="compact">
-                <listitem>
-                    <para>
-                        <literal>auto</literal> (default) Fetch the association using an
-                        outerjoin if the associated class has no proxy
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <literal>true</literal> Always fetch the association using an 
-                        outerjoin
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <literal>false</literal> Never fetch the association using an
-                        outerjoin
-                    </para>
-                </listitem>
-            </itemizedlist>
-            
-            <para>
                 A typical <literal>many-to-one</literal> declaration looks as simple as
             </para>
 
@@ -1415,9 +1383,14 @@
                 This is certainly not encouraged, however.
             </para>
             
+            <para>
+                If the referenced unique key comprises multiple properties of the associated entity, you should
+                map the referenced properties inside a named <literal>&lt;properties&gt;</literal> element.
+            </para>
+            
         </sect2>
 
-        <sect2 id="mapping-declaration-onetoone">
+        <sect2 id="mapping-declaration-onetoone" revision="2">
             <title>one-to-one</title>
 
             <para>
@@ -1440,7 +1413,7 @@
         class="ClassName"
         cascade="all|none|save-update|delete"
         constrained="true|false"
-        outer-join="true|false|auto"
+        fetch="join|select"
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
 />]]></programlisting>
@@ -1473,9 +1446,8 @@
                     </callout>
                     <callout arearefs="onetoone5">
                         <para>
-                            <literal>outer-join</literal> (optional - defaults to <literal>auto</literal>): 
-                            Enable outer-join fetching for this association when 
-                            <literal>hibernate.use_outer_join</literal> is set.
+                            <literal>fetch</literal> (optional - defaults to <literal>select</literal>): 
+                            Chooses between outer-join fetching or sequential select fetching.
                         </para>              
                     </callout>
                     <callout arearefs="onetoone6">
@@ -1660,7 +1632,7 @@
             
         </sect2>
 
-        <sect2 id="mapping-declaration-subclass">
+        <sect2 id="mapping-declaration-subclass" revision="2">
             <title>subclass</title>
 
             <para>
@@ -1707,9 +1679,8 @@
                     </callout>
                     <callout arearefs="subclass4">
                         <para>
-                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
-                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
-                            interface.
+                            <literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting 
+                            <literal>lazy="false"</literal> disables the use of lazy fetching.
                         </para>
                     </callout>    
                 </calloutlist>
@@ -1725,7 +1696,7 @@
             
         </sect2>
 
-         <sect2 id="mapping-declaration-joinedsubclass" revision="1">
+         <sect2 id="mapping-declaration-joinedsubclass" revision="2">
             <title>joined-subclass</title>
 
             <para>
@@ -1778,10 +1749,9 @@
                     </callout>
                     <callout arearefs="joinedsubclass4">
                         <para>
-                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
-                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
-                            interface.
-                        </para>
+                             <literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting 
+                            <literal>lazy="false"</literal> disables the use of lazy fetching.
+                         </para>
                     </callout>    
                 </calloutlist>
             </programlistingco>
@@ -1895,10 +1865,9 @@
                     </callout>
                     <callout arearefs="unionsubclass4">
                         <para>
-                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
-                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
-                            interface.
-                        </para>
+                            <literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting 
+                            <literal>lazy="false"</literal> disables the use of lazy fetching.
+                         </para>
                     </callout>    
                 </calloutlist>
             </programlistingco>
@@ -1913,7 +1882,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-join">
+        <sect2 id="mapping-declaration-join" revision="2">
             <title>join</title>
 
             <para>
@@ -1928,13 +1897,15 @@
                     <area id="join3" coords="4 50"/>
                     <area id="join4" coords="5 50"/>
                     <area id="join5" coords="6 50"/>
+                    <area id="join6" coords="7 50"/>
                 </areaspec>
                 <programlisting><![CDATA[<join
         table="tablename"
         schema="owner"
         catalog="catalog"
-        outer-join="true|false"
-        inverse="true|false">
+        fetch="join|select"
+        inverse="true|false"
+        optional="true|false">
         
         <key ... />
         
@@ -1962,9 +1933,10 @@
                     </callout>
                     <callout arearefs="join4">
                         <para>
-                            <literal>outer-join</literal> (optional - defaults to <literal>true</literal>):
-                            If disabled for a join defined on a subclass, then rather than joining, a sequential
-                            select will be issued if a row turns out to represent an instance of the subclass.
+                            <literal>fetch</literal> (optional - defaults to <literal>join</literal>):
+                            If set to <literal>select</literal> for a join defined on a subclass, then rather 
+                            than joining, a sequential select will be issued only if a row turns out to represent 
+                            an instance of the subclass.
                         </para>
                     </callout>
                     <callout arearefs="join5">
@@ -1972,6 +1944,13 @@
                             <literal>inverse</literal> (optional - defaults to <literal>false</literal>):
                             If enabled, Hibernate will not try to insert or update the properties defined
                             by this join.
+                        </para>
+                    </callout>
+                    <callout arearefs="join6">
+                        <para>
+                            <literal>optional</literal> (optional - defaults to <literal>false</literal>):
+                            If enabled, Hibernate will insert a row only if the properties defined by this 
+                            join are non-null .
                         </para>
                     </callout>
                 </calloutlist>
@@ -2529,7 +2508,6 @@ public class Cat {
     }
     /**
      * @hibernate.set
-     *  lazy="true"
      *  inverse="true"
      *  order-by="BIRTH_DATE"
      * @hibernate.collection-key

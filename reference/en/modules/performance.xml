@@ -209,7 +209,7 @@
         achieve much higher performance, where necessary.
     </para>
 
-    <sect1 id="performance-proxies">
+    <sect1 id="performance-proxies" revision="2">
         <title>Proxies for Lazy Initialization</title>
 
         <para>
@@ -218,21 +218,11 @@
         </para>
 
         <para>
-            The mapping file declares a class or interface to use as the proxy interface
-            for that class. The recommended approach is to specify the class itself:
+            The mapping file may declare an interface to use as the proxy interface for that 
+            class. By default, Hibernate uses a subclass of the class itself. (The proxied 
+            class must implement a default constructor with at least package visibility.)
         </para>
-        
-        <programlisting><![CDATA[<class name="Order" proxy="Order">]]></programlisting>
-        
-        <para>or, as a shorthand, just write <literal>lazy="true"</literal>:</para>
-        
-        <programlisting><![CDATA[<class name="Order" lazy="true">]]></programlisting>
-        
-        <para>
-            The runtime type of the proxies will be a subclass of <literal>Order</literal>. Note that
-            the proxied class must implement a default constructor with at least package visibility.
-        </para>
-        
+                
         <para>
             There are some gotchas to be aware of when extending this approach to polymorphic
             classes, eg.
@@ -240,7 +230,7 @@
 
         <programlisting><![CDATA[<class name="Cat" proxy="Cat">
     ......
-    <subclass name="DomesticCat" proxy="DomesticCat">
+    <subclass name="DomesticCat">
         .....
     </subclass>
 </class>]]></programlisting>
@@ -384,7 +374,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
         </para>
 
-        <programlisting><![CDATA[<class name="Person" lazy="true" batch-size="10">...</class>]]></programlisting>
+        <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
 
         <para>
             Hibernate will now execute only three queries, the pattern is 10, 10, 5. You can see that batch fetching
@@ -402,7 +392,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </para>
 
         <programlisting><![CDATA[<class name="Person">
-    <set name="cats" lazy="true" batch-size="3">
+    <set name="cats" batch-size="3">
         ...
     </set>
 </class>]]></programlisting>

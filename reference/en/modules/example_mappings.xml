@@ -153,7 +153,7 @@ create sequence employer_id_seq]]></programlisting>
         <discriminator column="type" type="character"/>
 
         <property name="title"/>
-        <set name="authors" table="author_work" lazy="true">
+        <set name="authors" table="author_work">
             <key>
                 <column name="work_id" not-null="true"/>
             </key>
@@ -183,7 +183,7 @@ create sequence employer_id_seq]]></programlisting>
         <property name="alias"/>
         <one-to-one name="person" constrained="true"/>
 
-        <set name="works" table="author_work" inverse="true" lazy="true">
+        <set name="works" table="author_work" inverse="true">
             <key column="author_id"/>
             <many-to-many class="Work" column="work_id"/>
         </set>
@@ -278,7 +278,7 @@ alter table author_work
             <generator class="native"/>
         </id>
         <property name="name"/>
-        <set name="orders" inverse="true" lazy="true">
+        <set name="orders" inverse="true">
             <key column="customer_id"/>
             <one-to-many class="Order"/>
         </set>
@@ -290,7 +290,7 @@ alter table author_work
         </id>
         <property name="date"/>
         <many-to-one name="customer" column="customer_id"/>
-        <list name="lineItems" table="line_items" lazy="true">
+        <list name="lineItems" table="line_items">
             <key column="order_id"/>
             <index column="line_number"/>
             <composite-element class="LineItem">

@@ -114,7 +114,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-mapping">
+    <sect1 id="collections-mapping" revision="2">
         <title>Mapping a Collection</title>
 
         <para>
@@ -153,7 +153,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
     sort="unsorted|natural|comparatorClass"
     order-by="column_name asc|desc"
     where="arbitrary sql where condition"
-    outer-join="true|false|auto"
+    fetch="join|select"
     batch-size="N"
     access="field|property|ClassName"
 >
@@ -182,8 +182,8 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                 </callout>
                 <callout arearefs="mappingcollection4">
                     <para>
-                        <literal>lazy</literal> (optional - defaults to <literal>false</literal>)
-                        enable lazy initialization (not used for arrays)
+                        <literal>lazy</literal> (optional - defaults to <literal>true</literal>)
+                        enable lazy initialization (not available for arrays)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
@@ -220,9 +220,9 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                 </callout>
                 <callout arearefs="mappingcollection10">
                     <para>
-                        <literal>outer-join</literal> (optional) specify that the collection should be fetched
-                        by outer join, whenever possible. Only one collection may be fetched by outer join per
-                        SQL <literal>SELECT</literal>.
+                        <literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose
+                        between outer-join fetching and fetching by sequential select. Only one collection 
+                        may be fetched by outer join per SQL <literal>SELECT</literal>.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">
@@ -566,7 +566,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-lazy">
+    <sect1 id="collections-lazy" revision="2">
         <title>Lazy Initialization</title>
 
         <para>
@@ -597,10 +597,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         </para>
 
         <para>
-            It's possible to use a non-lazy collection. Since lazy initialization can lead to
-            bugs like that above, non-laziness is the default. However, it is intended that
-            lazy initialization be used for almost all collections, especially for collections 
-            of entities (for reasons of efficiency). If you define too many non-lazy associations
+            It's possible to use a non-lazy collection. However, it is intended that lazy 
+            initialization be used for almost all collections, especially for collections 
+            of entities, and is now the default. If you define too many non-lazy associations
             in your object model, Hibernate will end up needing to fetch the entire database
             into memory in every transaction!
         </para>
@@ -609,15 +608,6 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             Exceptions that occur while lazily initializing a collection are wrapped in a
             <literal>LazyInitializationException</literal>.
         </para>
-
-        <para>
-            Declare a lazy collection using the optional <literal>lazy</literal> attribute:
-        </para>
-
-        <programlisting><![CDATA[<set name="names" table="NAMES" lazy="true">
-    <key column="group_id"/>
-    <element column="NAME" type="string"/>
-</set>]]></programlisting>
 
         <para>
             In some application architectures, particularly where the code that accesses data
@@ -692,7 +682,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     <element column="name" type="string"/>
 </set>
 
-<map name="holidays" sort="my.custom.HolidayComparator" lazy="true">
+<map name="holidays" sort="my.custom.HolidayComparator">
     <key column="year_id"/>
     <index column="hol_name" type="string"/>
     <element column="hol_date" type="date"/>
@@ -723,7 +713,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     <element column="name" type="string"/>
 </set>
 
-<map name="holidays" order-by="hol_date, hol_name" lazy="true">
+<map name="holidays" order-by="hol_date, hol_name">
     <key column="year_id"/>
     <index column="hol_name" type="string"/>
     <element column="hol_date type="date"/>
@@ -762,7 +752,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             (or <literal>Collection</literal>) with bag semantics.
         </para>
 
-<programlisting><![CDATA[<idbag name="lovers" table="LOVERS" lazy="true">
+<programlisting><![CDATA[<idbag name="lovers" table="LOVERS">
     <collection-id column="ID" type="long">
         <generator class="sequence"/>
     </collection-id>
@@ -837,7 +827,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         <programlisting><![CDATA[<class name="org.hibernate.auction.Category">
     <id name="id" column="ID"/>
     ...
-    <bag name="items" table="CATEGORY_ITEM" lazy="true">
+    <bag name="items" table="CATEGORY_ITEM">
         <key column="CATEGORY_ID"/>
         <many-to-many class="org.hibernate.auction.Item" column="ITEM_ID"/>
     </bag>
@@ -848,7 +838,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     ...
 
     <!-- inverse end -->
-    <bag name="categories" table="CATEGORY_ITEM" inverse="true" lazy="true">
+    <bag name="categories" table="CATEGORY_ITEM" inverse="true">
         <key column="ITEM_ID"/>
         <many-to-many class="org.hibernate.auction.Category" column="CATEGORY_ID"/>
     </bag>
@@ -885,7 +875,7 @@ session.update(category);                 // The relationship will be saved]]></
         <programlisting><![CDATA[<class name="eg.Parent">
     <id name="id" column="id"/>
     ....
-    <set name="children" inverse="true" lazy="true">
+    <set name="children" inverse="true">
         <key column="parent_id"/>
         <one-to-many class="eg.Child"/>
     </set>
@@ -913,13 +903,13 @@ session.update(category);                 // The relationship will be saved]]></
             with an association as its index:
         </para>
 
-        <programlisting><![CDATA[<map name="contracts" lazy="true">
+        <programlisting><![CDATA[<map name="contracts">
     <key column="employer_id"/>
     <index-many-to-many column="employee_id" class="Employee"/>
     <one-to-many column="contract_id" class="Contract"/>
 </map>]]></programlisting>
             
-            <programlisting><![CDATA[<map name="connections" lazy="true">
+            <programlisting><![CDATA[<map name="connections">
     <key column="node1_id"/>
     <index-many-to-many column="node2_id" class="Node"/>
     <many-to-many column="connection_id" class="Connection"/>
@@ -981,7 +971,7 @@ public class Parent {
         <id name="id">
             <generator class="sequence"/>
         </id>
-        <set name="children" lazy="true">
+        <set name="children">
             <key column="parent_id"/>
             <one-to-many class="eg.Child"/>
         </set>
@@ -1015,7 +1005,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
         <id name="id">
             <generator class="sequence"/>
         </id>
-        <set name="children" inverse="true" lazy="true">
+        <set name="children" inverse="true">
             <key column="parent_id"/>
             <one-to-many class="eg.Child"/>
         </set>
@@ -1053,7 +1043,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
         <id name="id">
             <generator class="sequence"/>
         </id>
-        <set name="children" lazy="true" table="childset">
+        <set name="children" table="childset">
             <key column="parent_id"/>
             <many-to-many class="eg.Child" column="child_id"/>
         </set>

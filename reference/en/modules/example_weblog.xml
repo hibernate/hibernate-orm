@@ -100,8 +100,7 @@ public class BlogItem {
 
     <class
         name="Blog"
-        table="BLOGS"
-        lazy="true">
+        table="BLOGS">
 
         <id
             name="id"
@@ -120,7 +119,6 @@ public class BlogItem {
         <bag
             name="items"
             inverse="true"
-            lazy="true"
             order-by="DATE_TIME"
             cascade="all">
 

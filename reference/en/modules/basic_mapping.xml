@@ -459,10 +459,7 @@
             	We <emphasis>very</emphasis> strongly recommend that you use version/timestamp
             	columns for optimistic locking with Hibernate. This is the optimal strategy with
             	respect to performance and is the only strategy that correctly handles modifications
-            	made outside of the session (ie. when <literal>Session.update()</literal> is used).
-            	Keep in mind that a version or timestamp property should never be null, no matter
-            	what <literal>unsaved-value</literal> strategy, or an instance will be detected as
-            	transient.
+            	made to detached instances (ie. when <literal>Session.update()</literal> is used).
             </para>
 
             <para>
@@ -471,71 +468,6 @@
 
             <para>
                 TODO: Document subselect and and synchronize for view simulation
-            </para>
-
-        </sect2>
-
-        <sect2 id="mapping-declaration-join">
-            <title>join</title>
-
-            <para>
-                Using the <literal>&lt;join&gt;</literal> element, it is possible to map
-                properties of one class to several tables.
-            </para>
-
-            <programlistingco>
-                <areaspec>
-                    <area id="join1" coords="2 50"/>
-                    <area id="join2" coords="3 50" />
-                    <area id="join3" coords="4 50"/>
-                    <area id="join4" coords="5 50" />
-		    <area id="join5" coords="6 50" />
-                </areaspec>
-                <programlisting><![CDATA[<join
-        table="tablename"
-        schema="owner"
-        catalog="catalog"
-        sequential-select="true|false"
-	inverse="true|false"
-        />]]></programlisting>
-
-                <calloutlist>
-                    <callout arearefs="join1">
-                        <para>
-                            <literal>tabe</literal>: The name of the joined table.
-                        </para>
-                    </callout>
-                    <callout arearefs="join2">
-                        <para>
-                            <literal>schema</literal> (optional): Override the schema name specified by
-                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
-                        </para>
-                    </callout>
-                    <callout arearefs="join3">
-                        <para>
-                            <literal>catalog</literal> (optional): Override the catalog name specified by
-                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
-                        </para>
-                    </callout>
-                    <callout arearefs="join4">
-                        <para>
-                            <literal>sequential-select</literal> (optional - defaults to <literal>false</literal>):
-                            If enabled for a join defined on a subclass, then rather than joining, a sequential
-			    select will be issued if a row turns out to represent an instance of the subclass.
-                        </para>
-                    </callout>
-                    <callout arearefs="join5">
-                        <para>
-                            <literal>inverse</literal> (optional - defaults to <literal>false</literal>):
-                            If enabled, Hibernate will not try to insert or update the properties defined
-			    by this join.
-                        </para>
-                    </callout>
-                </calloutlist>
-            </programlistingco>
-
-            <para>
-                TODO: Document join with an example
             </para>
 
         </sect2>
@@ -840,14 +772,17 @@
                     object's identifier property. Be very careful when using this feature to assign
                     keys with business meaning (almost always a terrible design decision).
                 </para>
-                <para>
-                    Due to its inherent nature, entities that use this generator cannot be saved
-                    via the Session's saveOrUpdate() method. Instead you have to explicitly specify to
-                    Hibernate if the object should be saved or updated by calling either the
-                    <literal>save()</literal> or <literal>update()</literal> method of the Session.
-                </para>
             </sect3>
             
+                <para>
+                    If an entity uses an assigned identifier or composite identifier (below), Hibernate
+                    cannot use the value of the identifier property to distinguish between transient
+                    and detached instances. In this case, you have three options. Either map a version 
+                    or timestamp property, implement <literal>Interceptor.isUnsaved()</literal> (see 
+                    later), or simply disable cascades and explicitly save and update individual instances 
+                    using <literal>Session.save()</literal> and <literal>Session.update()</literal>
+                    This is a common "gotcha" for new users!
+                </para>
         </sect2>
 
         <sect2 id="mapping-declaration-compositeid">
@@ -1067,7 +1002,15 @@
                 Version numbers may be of type <literal>long</literal>, <literal>integer</literal>,
                 <literal>short</literal>, <literal>timestamp</literal> or <literal>calendar</literal>.
             </para>
-
+            
+            <para>
+            	A version or timestamp property should never be null for a detached instance, so
+                Hibernate will detact any instance with a null version or timestamp as transient,
+                no matter what other <literal>unsaved-value</literal> strategies are specified.
+                <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid 
+                any problems with transitive reattachment in Hibernate, especially useful for people 
+                using assigned identiifers or composite keys!</emphasis>
+            </para>
         </sect2>
         
         <sect2 id="mapping-declaration-timestamp">
@@ -1151,7 +1094,9 @@
                     </areaset>
                     <area id="property6" coords="7 45"/>
                     <area id="property7" coords="8 45"/>
-		    <area id="property8" coords="9 45"/>
+                    <area id="property8" coords="9 45"/>
+                    <area id="property9" coords="10 45"/>
+                    <area id="property10" coords="11 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1161,7 +1106,9 @@
         insert="true|false"
         formula="arbitrary SQL expression"
         access="field|property|ClassName"
-	lazy="true|false"
+        lazy="true|false"
+        unique="true|false"
+        not-null="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1173,7 +1120,8 @@
                     <callout arearefs="property2">
                         <para>
                             <literal>column</literal> (optional - defaults to the property name): the name
-                            of the mapped database table column.
+                            of the mapped database table column. This may also be specified by nested 
+                            <literal>&lt;column&gt;</literal> element(s).
                         </para>
                     </callout>
                     <callout arearefs="property3">
@@ -1206,10 +1154,23 @@
                    <callout arearefs="property8">
                         <para>
                             <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
-			    that this property should be fetched lazily when the instance variable is first 
-			    accessed (requires build-time bytecode instrumentation).
+                            that this property should be fetched lazily when the instance variable is first 
+                            accessed (requires build-time bytecode instrumentation).
                         </para>
                     </callout>
+					<callout arearefs="property9">
+                        <para>
+                            <literal>unique</literal> (optional): Enable the DDL generation of a unique
+                            constraint for the columns. Also, allow this to be the target of 
+                            a <literal>property-ref</literal>.
+                        </para>
+					 </callout>
+					<callout arearefs="property10">
+                        <para>
+                            <literal>not-null</literal> (optional): Enable the DDL generation of a nullability
+                            constraint for the columns.
+                        </para>
+					 </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -1290,6 +1251,7 @@
                     <area id="manytoone8" coords="9 60"/>
                     <area id="manytoone9" coords="10 60"/>
 					<area id="manytoone10" coords="11 60"/>
+                    <area id="manytoone11" coords="12 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1301,7 +1263,8 @@
         insert="true|false"
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
-		unique="true|false"
+        unique="true|false"
+        not-null="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1311,7 +1274,10 @@
                     </callout>                   
                     <callout arearefs="manytoone2">
                         <para>
-                            <literal>column</literal> (optional): The name of the column.
+                            <literal>column</literal> (optional): The name of the foreign key column. 
+                            This may also be specified by nested <literal>&lt;column&gt;</literal>
+                            element(s).
+
                         </para>                    
                     </callout>
                     <callout arearefs="manytoone3">
@@ -1356,10 +1322,17 @@
                         </para>
                     </callout>
 					<callout arearefs="manytoone10">
-						 <para>
-							 <literal>unique</literal> (optional): Enable the DDL generation of a unique
-							 constraint for the foreign-key column.
-						 </para>
+                        <para>
+                            <literal>unique</literal> (optional): Enable the DDL generation of a unique
+                            constraint for the foreign-key column. Also, allow this to be the target of 
+                            a <literal>property-ref</literal>.
+                        </para>
+					 </callout>
+					<callout arearefs="manytoone11">
+                        <para>
+                            <literal>not-null</literal> (optional): Enable the DDL generation of a nullability
+                            constraint for the foreign key columns.
+                        </para>
 					 </callout>
                 </calloutlist>
             </programlistingco>
@@ -1587,13 +1560,15 @@
                     <area id="component3" coords="4 45"/>
                     <area id="component4" coords="5 45"/>
                     <area id="component5" coords="6 45"/>
+                    <area id="component6" coords="7 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<component 
         name="propertyName" 
         class="className"
         insert="true|false"
         upate="true|false"
-        access="field|property|ClassName">
+        access="field|property|ClassName"
+        lazy="true|false">
         
         <property ...../>
         <many-to-one .... />
@@ -1627,6 +1602,13 @@
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                             strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                   <callout arearefs="component6">
+                        <para>
+                            <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
+                            that this component should be fetched lazily when the instance variable is first 
+                            accessed (requires build-time bytecode instrumentation).
                         </para>
                     </callout>
                 </calloutlist>
@@ -1719,9 +1701,9 @@
             <title>joined-subclass</title>
 
             <para>
-                Alternatively, a subclass that is persisted to its own table (table-per-subclass 
-                mapping strategy) is declared using a <literal>&lt;joined-subclass&gt;</literal>
-                element.
+                Alternatively, each subclass may be mapped to its own table (table-per-subclass 
+                mapping strategy). Inherited state is retrieved by joining with the table of the 
+                superclass. We use the <literal>&lt;joined-subclass&gt;</literal> element.
             </para>
 
             <programlistingco>
@@ -1729,13 +1711,20 @@
                     <area id="joinedsubclass1" coords="2 45"/>
                     <area id="joinedsubclass2" coords="3 45"/>
                     <area id="joinedsubclass3" coords="4 45"/>
+                    <area id="joinedsubclass4" coords="5 45"/>
                 </areaspec>
                 <programlisting><![CDATA[<joined-subclass
         name="ClassName"
+        table="tablename"
         proxy="ProxyInterface"
         lazy="true|false"
         dynamic-update="true|false"
-        dynamic-insert="true|false">
+        dynamic-insert="true|false"
+        schema="schema"
+        catalog="catalog"
+        extends="SuperclassName"
+        persister="ClassName"
+        subselect="TODO">
 
         <key .... >
 
@@ -1750,11 +1739,16 @@
                     </callout>                   
                     <callout arearefs="joinedsubclass2">
                         <para>
+                            <literal>table</literal>: The name of the subclass table.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="joinedsubclass3">
+                        <para>
                             <literal>proxy</literal> (optional): Specifies a class or interface to use 
                             for lazy initializing proxies.
                         </para>              
                     </callout>
-                    <callout arearefs="joinedsubclass3">
+                    <callout arearefs="joinedsubclass4">
                         <para>
                             <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
                             equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
@@ -1764,6 +1758,10 @@
                 </calloutlist>
             </programlistingco>
 
+            <para>
+                TODO
+            </para>
+            
             <para>
                 No discriminator column is required for this mapping strategy. Each subclass must,
                 however, declare a table column holding the object identifier using the
@@ -1809,14 +1807,207 @@
            <title>union-subclass</title>
 
            <para>
-               Another option is to map only the concrete classes of an inheritance hierarchy
-               (as in table-per-concrete-class) to tables, but not the superclass. This strategy
-               has some problems with polymorphic associations, which can be avoided with a
-               <literal>&lt;union-subclass&gt;</literal> mapping.
+               A third option is to map only the concrete classes of an inheritance hierarchy
+               to tables, (the table-per-concrete-class strategy) where each table defines all 
+               persistent state of the class, including inherited state. In Hibernate, it is
+               not absolutely necessary to explicitly map such inheritance hierarchies. You
+               can simply map each class with a separate <literal>&lt;class&gt;</literal>
+               declaration. However, if you wish use polymorphic associations, you need to
+               use the <literal>&lt;union-subclass&gt;</literal> mapping.
            </para>
 
+            <programlistingco>
+                <areaspec>
+                    <area id="unionsubclass1" coords="2 45"/>
+                    <area id="unionsubclass2" coords="3 45"/>
+                    <area id="unionsubclass3" coords="4 45"/>
+                    <area id="unionsubclass4" coords="5 45"/>
+                    <area id="unionsubclass5" coords="6 45"/>
+                    <area id="unionsubclass6" coords="7 45"/>
+                    <area id="unionsubclass7" coords="8 45"/>
+                    <area id="unionsubclass8" coords="9 45"/>
+                    <area id="unionsubclass9" coords="10 45"/>
+                    <area id="unionsubclass10" coords="11 45"/>
+                    <area id="unionsubclass11" coords="12 45"/>
+                    <area id="unionsubclass12" coords="13 45"/>
+                </areaspec>
+                <programlisting><![CDATA[<union-subclass
+        name="ClassName"
+        table="tablename"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false"
+        schema="schema"
+        catalog="catalog"
+        extends="SuperclassName"
+        abstract="true|false"
+        persister="ClassName"
+        subselect="TODO">
+
+        <property .... />
+        .....
+</union-subclass>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="unionsubclass1">
+                        <para>
+                            <literal>name</literal>: The fully qualified class name of the subclass.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="unionsubclass2">
+                        <para>
+                            <literal>table</literal>: The name of the subclass table.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="unionsubclass3">
+                        <para>
+                            <literal>proxy</literal> (optional): Specifies a class or interface to use 
+                            for lazy initializing proxies.
+                        </para>              
+                    </callout>
+                    <callout arearefs="unionsubclass4">
+                        <para>
+                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
+                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
+                            interface.
+                        </para>
+                    </callout>    
+                </calloutlist>
+            </programlistingco>
+
             <para>
-                See the documentation chapter about Inheritance Mapping for more details.
+                TODO
+            </para>
+
+            <para>
+                No discriminator column or key column is required for this mapping strategy.
+            </para>
+
+        </sect2>
+
+        <sect2 id="mapping-declaration-join">
+            <title>join</title>
+
+            <para>
+                Using the <literal>&lt;join&gt;</literal> element, it is possible to map
+                properties of one class to several tables.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="join1" coords="2 50"/>
+                    <area id="join2" coords="3 50"/>
+                    <area id="join3" coords="4 50"/>
+                    <area id="join4" coords="5 50"/>
+                    <area id="join5" coords="6 50"/>
+                </areaspec>
+                <programlisting><![CDATA[<join
+        table="tablename"
+        schema="owner"
+        catalog="catalog"
+        sequential-select="true|false"
+        inverse="true|false">
+        
+        <key ... />
+        
+        <property ... />
+        ...
+</join>]]></programlisting>
+
+                <calloutlist>
+                    <callout arearefs="join1">
+                        <para>
+                            <literal>tabe</literal>: The name of the joined table.
+                        </para>
+                    </callout>
+                    <callout arearefs="join2">
+                        <para>
+                            <literal>schema</literal> (optional): Override the schema name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
+                        </para>
+                    </callout>
+                    <callout arearefs="join3">
+                        <para>
+                            <literal>catalog</literal> (optional): Override the catalog name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
+                        </para>
+                    </callout>
+                    <callout arearefs="join4">
+                        <para>
+                            <literal>sequential-select</literal> (optional - defaults to <literal>false</literal>):
+                            If enabled for a join defined on a subclass, then rather than joining, a sequential
+                            select will be issued if a row turns out to represent an instance of the subclass.
+                        </para>
+                    </callout>
+                    <callout arearefs="join5">
+                        <para>
+                            <literal>inverse</literal> (optional - defaults to <literal>false</literal>):
+                            If enabled, Hibernate will not try to insert or update the properties defined
+                            by this join.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                TODO: Document join with an example
+            </para>
+
+        </sect2>
+
+        <sect2 id="mapping-declaration-key">
+            <title>key</title>
+
+            <para>
+                We've seen the <literal>&lt;key&gt;</literal> element crop up a few times
+                now. It appears anywhere the parent mapping element defines a join to
+                a new table, and defines the foreign key in the joined table, that references
+                the primary key of the original table.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="key1" coords="2 50"/>
+                    <area id="key2" coords="3 50"/>
+                    <area id="key3" coords="4 50"/>
+                </areaspec>
+                <programlisting><![CDATA[<key
+        column="columnname"
+        on-delete="noaction|cascade"
+        property-ref="propertyName"
+/>]]></programlisting>
+
+                <calloutlist>
+                    <callout arearefs="key1">
+                        <para>
+                            <literal>column</literal> (optional): The name of the foreign key column.
+                            This may also be specified by nested <literal>&lt;column&gt;</literal>
+                            element(s).
+                        </para>
+                    </callout>
+                    <callout arearefs="key2">
+                        <para>
+                            <literal>on-delete</literal> (optional, defaults to <literal>noaction</literal>): 
+                            Specifies whether the foreign key constraint has database-level cascade delete 
+                            enabled.
+                        </para>
+                    </callout>
+                    <callout arearefs="key3">
+                        <para>
+                            <literal>property-ref</literal> (optional): Specifies that the foreign key refers
+                            to columns that are not the primary key of the orginal table. (Provided for 
+                            legacy data.)
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                We recommend that for systems where delete performance is important, all keys should be 
+                defined <literal>on-delete="cascade"</literal>, and Hibernate will use a database-level
+                <literal>ON CASCADE DELETE</literal> constraint, instead of many individual 
+                <literal>DELETE</literal> statements. Be aware that this feature bypasses Hibernate's
+                usual optimistic locking strategy for versioned data.
             </para>
 
         </sect2>
@@ -2108,21 +2299,14 @@
                 user session data, etc).
             </para>
 
-            <programlisting><![CDATA[<any name="anyEntity" id-type="long" meta-type="eg.custom.Class2TablenameType">
-    <column name="table_name"/>
-    <column name="id"/>
-</any>]]></programlisting>
-
             <para>
                  The <literal>meta-type</literal> attribute lets the application specify a custom type that 
                  maps database column values to persistent classes which have identifier properties of the 
-                 type specified by <literal>id-type</literal>. If the meta-type returns instances of 
-                 <literal>java.lang.Class</literal>, nothing else is required. On the other hand, if it is
-                 a basic type like <literal>string</literal> or <literal>character</literal>, you must
-                 specify the mapping from values to classes.
+                 type specified by <literal>id-type</literal>. You must specify the mapping from values of
+                 the meta-type to class names.
             </para>
 
-            <programlisting><![CDATA[<any name="anyEntity" id-type="long" meta-type="string">
+            <programlisting><![CDATA[<any name="being" id-type="long" meta-type="string">
     <meta-value value="TBL_ANIMAL" class="Animal"/>
     <meta-value value="TBL_HUMAN" class="Human"/>
     <meta-value value="TBL_ALIEN" class="Alien"/>
@@ -2165,9 +2349,8 @@
                     </callout>                   
                     <callout arearefs="any3">
                         <para>
-                            <literal>meta-type</literal> (optional - defaults to <literal>class</literal>): 
-                            a type that maps <literal>java.lang.Class</literal> to a single database column
-                            or, alternatively, a type that is allowed for a discriminator mapping.
+                            <literal>meta-type</literal> (optional - defaults to <literal>string</literal>): 
+                            Any type that is allowed for a discriminator mapping.
                         </para>            
                     </callout>                   
                     <callout arearefs="any4">
@@ -2184,11 +2367,6 @@
                     </callout>
                 </calloutlist>
             </programlistingco>
-
-            <para>
-                The old <literal>object</literal> type that filled a similar role in Hibernate 1.2 is still 
-                supported, but is now semi-deprecated.
-            </para>
 
       </sect2>
 
@@ -2231,7 +2409,7 @@
    	</sect1>
 
     <sect1 id="mapping-xdoclet">
-        <title>Using XDOclet markup</title>
+        <title>Using XDoclet markup</title>
 
         <para>
             Many Hibernate users prefer to embed mapping information directly in sourcecode using
@@ -2251,7 +2429,7 @@ import java.util.Date;
 public class Cat {
     private Long id; // identifier
     private Date birthdate;
-    private Cat mate;
+    private Cat mother;
     private Set kittens
     private Color color;
     private char sex;
@@ -2271,13 +2449,13 @@ public class Cat {
 
     /**
      * @hibernate.many-to-one
-     *  column="MATE_ID"
+     *  column="PARENT_ID"
      */
-    public Cat getMate() {
-        return mate;
+    public Cat getMother() {
+        return mother;
     }
-    void setMate(Cat mate) {
-        this.mate = mate;
+    void setMother(Cat mother) {
+        this.mother = mother;
     }
 
     /**
@@ -2315,6 +2493,7 @@ public class Cat {
     /**
      * @hibernate.set
      *  lazy="true"
+     *  inverse="true"
      *  order-by="BIRTH_DATE"
      * @hibernate.collection-key
      *  column="PARENT_ID"

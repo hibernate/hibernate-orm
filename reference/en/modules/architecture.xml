@@ -83,7 +83,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Persistent Objects and Collections</term>
+                    <term>Persistent objects and collections</term>
                     <listitem>
                         <para>
                             Short-lived, single threaded objects containing persistent state and business
@@ -96,7 +96,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Transient Objects and Collections</term>
+                    <term>Transient and detached objects and collections</term>
                     <listitem>
                         <para>
                             Instances of persistent classes that are not currently associated with a
@@ -156,6 +156,55 @@
             <literal>ConnectionProvider</literal> APIs to talk to JTA or JDBC directly.
         </para>
     </sect1>
+
+    <sect1 id="architecture-states" revision="1">
+        <title>Instance states</title>
+        <para>
+            An instance of a persistent classes may be in one of three different states,
+            which are defined with respect to a <emphasis>persistence context</emphasis>.
+            The Hibernate <literal>Session</literal> object is the persistence context:
+        </para>
+        
+       <variablelist spacing="compact">
+            <varlistentry>
+                <term>transient</term>
+                <listitem>
+                    <para>
+                        The instance is not, and has never been associated with
+                        any persistence context. It has no persistent identity
+                        (primary key value).
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>persistent</term>
+                <listitem>
+                    <para>
+                        The instance is currently associated with a persistence 
+                        context. It has a persistent identity (primary key value)
+                        and, perhaps, a corresponding row in the database. For a
+                        particular persistence context, Hibernate 
+                        <emphasis>guarantees</emphasis> that persistent identity
+                        is equivalent to Java identity.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>detached</term>
+                <listitem>
+                    <para>
+                        The instance is was once associated with a persistence 
+                        context, but that context was closed, or the instance
+                        was serialized to another process. It has a persistent 
+                        identity and, perhaps, a corrsponding row in the database.
+                        For detached instances, Hibernate makes no guarantees 
+                        about the relationship between persistent identity and
+                        Java identity.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </sect1>    
 
     <sect1 id="architecture-jmx" revision="1">
         <title>JMX Integration</title>

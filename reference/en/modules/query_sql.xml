@@ -106,21 +106,16 @@ List loggedCats = sess.createSQLQuery(sql, "cat", Cat.class)
 
         <para>
             Using named SQL queries, you may also query for scalar values. To do this, use the type attribute
-            of the return element and specify a Hibernate type there:
+            of the <literal>&lt;scalar-return&gt;</literal> element and specify a type there:
         </para>
         
         <programlisting><![CDATA[<sql-query name="mySqlQuery">
-    <return alias="name" type="string"/>
-    <return alias="age" type="long"/>
-    SELECT p.NAME AS {name},
-           p.AGE AS {age},
+    <scalar-return column="name" type="string"/>
+    <scalar-return column="age" type="long"/>
+    SELECT p.NAME AS name,
+           p.AGE AS age,
     FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
 </sql-query>]]></programlisting>
-
-        <para>
-            You can also use custom types and typedefs you defined in the type attribute (remember that
-            the mapping file containing the typedefs has to be added earlier to the configuration).
-        </para>
 
     </sect1>
 

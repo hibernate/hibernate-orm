@@ -225,7 +225,56 @@
        
     </sect1>
     
-    <para>TODO: doc the EntityMode stuff</para>
+    
+    <sect1 id="xml-mapping" revision="1">
+        <title>Manipulating XML data</title>
+        
+        <para>
+            Now that we have mapped our entities to XML, we want to be able to read and
+            update XML documents in our application. We do this by obtaining a dom4j session:
+        </para>
+        
+       <programlisting><![CDATA[Document doc = ....;
+       
+Session session = factory.openSession();
+Session dom4jSession = session.openSession(EntityMode.DOM4J);
+Transaction tx = session.beginTransaction();
+
+List results = dom4jSession
+    .createQuery("from Customer c left join fetch c.accounts where c.lastName like :lastName")
+    .list();
+for ( int i=0; i<results.size(); i++ ) {
+    //add the customer data to the XML document
+    Element customer = (Element) results.get(i);
+    doc.add(customer);
+}
+
+tx.commit();
+session.close();]]></programlisting>
+       
+       <programlisting><![CDATA[Session session = factory.openSession();
+Session dom4jSession = session.openSession(EntityMode.DOM4J);
+Transaction tx = session.beginTransaction();
+
+Element cust = (Element) dom4jSession.get("Customer", customerId);
+for ( int i=0; i<results.size(); i++ ) {
+    Element customer = (Element) results.get(i);
+    //change the customer name in the XML and database
+    Element name = customer.element("name");
+    name.element("first-name").setText(firstName);
+    name.element("initial").setText(initial);
+    name.element("last-name").setText(lastName);
+}
+
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+            It is extremely useful to combine this feature with Hibernate's <literal>replicate()</literal>
+            operation to implement XML-based data import/export.
+        </para>
+       
+    </sect1>
      
 </chapter>
 

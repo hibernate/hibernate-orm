@@ -3,6 +3,7 @@
                       "../support/docbook-dtd/docbookx.dtd"
 [
 <!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
+<!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
 <!ENTITY architecture           SYSTEM "modules/architecture.xml">
 <!ENTITY configuration          SYSTEM "modules/configuration.xml">
 <!ENTITY persistent-classes     SYSTEM "modules/persistent_classes.xml">
@@ -141,6 +142,8 @@
     </preface>
 
     &quickstart;
+    
+    &tutorial;
 
     &architecture;
 

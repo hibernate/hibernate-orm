@@ -1362,7 +1362,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <entry><literal>org.hibernate</literal></entry>
                             <entry>
                                 Log everything (a lot of information, but very useful for
-                                troubleshooting).
+                                troubleshooting)
                             </entry>
                         </row>
                     </tbody>

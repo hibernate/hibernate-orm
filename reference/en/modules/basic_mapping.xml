@@ -747,7 +747,7 @@
                 </para>
             </sect3>
             
-            <sect3 id="mapping-declaration-id-hilo">
+            <sect3 id="mapping-declaration-id-hilo" revision="1">
                 <title>Hi/lo algorithm</title>
                 <para>
                     The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate
@@ -773,10 +773,9 @@
 
                 <para>
                     Unfortunately, you can't use <literal>hilo</literal> when supplying your own
-                    <literal>Connection</literal>  to Hibernate, or when Hibernate is using an application
-                    server datasource to obtain connections enlisted with JTA. Hibernate must be able to
-                    fetch the "hi" value in a new transaction. A standard approach in an EJB environment is
-                    to implement the hi/lo algorithm using a stateless session bean.
+                    <literal>Connection</literal> to Hibernate. When Hibernate is using an application
+                    server datasource to obtain connections enlisted with JTA, you must properly configure
+                    the <literal>hibernate.transaction.manager_lookup_class</literal>.
                 </para>
             </sect3>
             

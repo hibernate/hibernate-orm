@@ -812,7 +812,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-transaction-properties" revision="7">
+        <table frame="topbot" id="configuration-transaction-properties" revision="8">
             <title>Hibernate Transaction Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -858,7 +858,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             The classname of a <literal>TransactionManagerLookup</literal>
-                            - required when JVM-level caching is enabled in a JTA environment.
+                            - required when JVM-level caching is enabled or when using hilo 
+                            generator in a JTA environment.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>classname.of.TransactionManagerLookup</literal>

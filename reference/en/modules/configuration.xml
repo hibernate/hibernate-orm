@@ -484,6 +484,19 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
+                            <literal>hibernate.jdbc.factory_class</literal>
+                        </entry>
+                        <entry>
+                            Select a custom <literal>Batcher</literal>. Most applications
+                            will not need this configuration property.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>classname.of.Batcher</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
                             <literal>hibernate.jdbc.use_scrollable_resultset</literal>
                         </entry>
                         <entry>
@@ -735,7 +748,7 @@ hibernate.dialect = \
                         </entry>
                         <entry>
                             If enabled, Hibernate will collect statistics useful for
-			    performance tuning.
+                            performance tuning.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -748,7 +761,7 @@ hibernate.dialect = \
                         </entry>
                         <entry>
                             If enabled, generated identifier properties will be
-			    reset to default values when objects are deleted.
+                            reset to default values when objects are deleted.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>

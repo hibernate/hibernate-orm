@@ -318,7 +318,7 @@
                 <entry><emphasis>??</emphasis></entry>
                 <entry><emphasis>&lt;one-to-many&gt; (<literal>inverse="true"</literal> only)</emphasis></entry>
                 <entry><literal>??</literal></entry>
-                <entry><emphasis>s.get(Payment.class, id)</emphasis></entry>
+                <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
                 <entry><emphasis>supported</emphasis></entry>

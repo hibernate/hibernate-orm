@@ -1,5 +1,5 @@
 <chapter id="batch">
-    <title>Batch processing using Hibernate</title>
+    <title>Batch processing</title>
     
     <para>
         A naive approach to inserting 100 000 rows in the database using Hibernate might 

@@ -1,5 +1,5 @@
 <chapter id="filters">
-    <title>Temporal, regional and permissioned data</title>
+    <title>Filtering data</title>
     
     <para>
         Hibernate3 provides an innovative new approach to handling data with "visibility" rules.

@@ -117,12 +117,6 @@
                     Struts, EJB, etc.).
                 </para>
             </listitem>
-            <listitem>
-                <para>
-                    An offline version of the Hibernate website is distributed with
-                    Hibernate in the <literal>doc/wiki/</literal> subdirectory.
-                </para>
-            </listitem>
          </orderedlist>
 
          <para>

@@ -372,9 +372,10 @@
                         <para>
                             <literal>entity-name</literal> (optional): Hibernate3 allows a class to be mapped 
                             multiple times (to different tables, potentially), and allows entity mappings that
-                            are represented by Maps or XML at the java level. In these cases, you should
+                            are represented by Maps or XML at the Java level. In these cases, you should
                             provide an explicit arbitrary name for the entity. See 
-                            <xref linkend="persistent-classes-dynamic"/> for more information.
+                            <xref linkend="persistent-classes-dynamicmodels"/> and <xref linkend="xml"/>
+                            for more information.
                         </para>
                     </callout>
                     <callout arearefs="class18">

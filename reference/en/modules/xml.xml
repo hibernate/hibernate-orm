@@ -1,42 +1,45 @@
 <chapter id="xml">
-
     <title>XML Mapping</title>
+
+    <emphasis>
+        Note that this is an experimental feature in Hibernate 3.0 and is under
+        extremely active development.
+    </emphasis>
 
     <sect1 id="xml-intro" revision="1">
         <title>Working with XML data</title>
+
         <para>
             Hibernate lets you work with persistent XML data in much the same way
             you work with persistent POJOs. A parsed XML tree can be thought of
-            as just another way to represent the relational data at the object level.
+            as just another way to represent the relational data at the object level,
+            instead of POJOs.
+        </para>
+
+        <para>
             Hibernate supports dom4j as API for manipulating XML trees. You can write 
             queries that retrieve dom4j trees from the database and have any 
             modification you make to the tree automatically synchronized to the 
             database. You can even take an XML document, parse it using dom4j, and
             write it to the database with any of Hibernate's basic operations: 
             <literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal> 
-            (merge is not yet supported in Hibernate 3.0rc1).
+            (merging is not yet supported).
         </para>
-        
+
         <para>
             This feature has many applications including data import/export, 
             externalization of entity data via JMS or SOAP and XSLT-based reporting.
         </para>
         
         <para>
-            An single mapping may be used to simultaneously map properties of a class
+            A single mapping may be used to simultaneously map properties of a class
             and nodes of an XML document to the database, or, if there is no class to map, 
             it may be used to map just the XML.
         </para>
         
-        <para>
-        <emphasis>
-            Note that this is an experimental feature in Hibernate 3.0 and is under
-            extremely active development.
-        </emphasis>
-        </para>
-
-        <sect2>
+        <sect2 id="xml-intro-mapping">
             <title>Specifying XML and class mapping together</title>
+
             <para>
                 Here is an example of mapping a POJO and XML simultaneously:
             </para>
@@ -64,7 +67,8 @@
         </sect2>
         
         <sect2>
-            <title>Specifying just an XML mapping</title>
+            <title>Specifying only an XML mapping</title>
+
             <para>
                 Here is an example where there is no POJO class:
             </para>
@@ -94,19 +98,21 @@
 </class>]]></programlisting>
         
             <para>
-                This mapping will let us access the data as a dom4j tree, or as a graph of
+                This mapping allows you to access the data as a dom4j tree, or as a graph of
                 property name/value pairs (java <literal>Map</literal>s). The property names
                 are purely logical constructs that may be referred to in HQL queries.
             </para>
+
         </sect2>
         
      </sect1>
      
     <sect1 id="xml-mapping" revision="1">
         <title>XML mapping metadata</title>
+
         <para>
             Many Hibernate mapping elements accept the <literal>node</literal> attribute.
-            This let's us specify the name of an XML attribute or element that holds the 
+            This let's you specify the name of an XML attribute or element that holds the
             property or entity data. The format of the <literal>node</literal> attribute
             must be one of the following:
         </para>
@@ -141,7 +147,7 @@
         
         <para>
             You should be careful not to leave <literal>embed-xml="true"</literal> for
-            too many associations, since XMl does not deal well with circularity!
+            too many associations, since XML does not deal well with circularity!
         </para>
         
         <programlisting><![CDATA[<class name="Customer" 
@@ -202,7 +208,7 @@
 </customer>]]></programlisting>
 
         <para>
-            If we set <literal>embed-xml="true"</literal> on the <literal>&lt;one-to-many&gt;</literal>
+            If you set <literal>embed-xml="true"</literal> on the <literal>&lt;one-to-many&gt;</literal>
             mapping, the data might look more like this:
         </para>
         
@@ -230,14 +236,14 @@
         <title>Manipulating XML data</title>
         
         <para>
-            Now that we have mapped our entities to XML, we want to be able to read and
-            update XML documents in our application. We do this by obtaining a dom4j session:
+            Let's rearead and update XML documents in the application. We do this by
+            obtaining a dom4j session:
         </para>
         
        <programlisting><![CDATA[Document doc = ....;
        
 Session session = factory.openSession();
-Session dom4jSession = session.openSession(EntityMode.DOM4J);
+Session dom4jSession = session.getSession(EntityMode.DOM4J);
 Transaction tx = session.beginTransaction();
 
 List results = dom4jSession
@@ -253,7 +259,7 @@ tx.commit();
 session.close();]]></programlisting>
        
        <programlisting><![CDATA[Session session = factory.openSession();
-Session dom4jSession = session.openSession(EntityMode.DOM4J);
+Session dom4jSession = session.getSession(EntityMode.DOM4J);
 Transaction tx = session.beginTransaction();
 
 Element cust = (Element) dom4jSession.get("Customer", customerId);

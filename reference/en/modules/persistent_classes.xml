@@ -309,18 +309,38 @@ public class DomesticCat extends Cat {
 
     </sect1>
 
-    <sect1 id="persistent-classes-dynamic" revision="2">
-        <title>Dynamic models</title>
+    <sect1 id="persistent-classes-dynamicmodels">
+        <title>Dynamic modelss</title>
 
         <para>
-            Hibernate also supports dynamic domain models, using <literal>Map</literal>s of
-            <literal>Map</literal>s. With this approach, you don't write persistent classes,
-            a Hibernate mapping file for each "entity" is sufficient:
+            <emphasis>Note that the following features are currently considered
+            experimental and may change in the near future.</emphasis>
+        </para>
+
+        <para>
+            Persistent entities don't necessarily have to be represented as POJO classes
+            or as JavaBean objects at runtime. Hibernate also supports dynamic models
+            (using <literal>Map</literal>s of <literal>Map</literal>s at runtime) and the
+            representation of entities as DOM4J trees. With this approach, you don't
+            write persistent classes, only mapping files.
+        </para>
+
+        <para>
+            By default, Hibernate works in normal POJO mode. You may set a default entity
+            representation mode for a particular <literal>SessionFactory</literal> using the
+            <literal>default_entity_mode</literal> configuration option (see
+            <xref linkend="configuration-optional-properties"/>.
+        </para>
+
+        <para>
+            The following examples demonstrates the representation using <literal>Map</literal>s.
+            First, in the mapping file, an <literal>entity-name</literal> has to be declared
+            instead of (or in addition to) a class name:
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
 
-    <class entity-name="TestMap">
+    <class entity-name="Customer">
 
         <id name="id"
             type="long"
@@ -336,16 +356,16 @@ public class DomesticCat extends Cat {
             column="ADDRESS"
             type="string"/>
 
-        <many-to-one name="parent"
-            column="PARENT_ID"
-            class="TestMap"/>
+        <many-to-one name="organization"
+            column="ORGANIZATION_ID"
+            class="Organization"/>
 
-        <bag name="children"
+        <bag name="orders"
             inverse="true"
             lazy="false"
             cascade="all">
-            <key column="PARENT_ID"/>
-            <one-to-many class="TestMap"/>
+            <key column="CUSTOMER_ID"/>
+            <one-to-many class="Order"/>
         </bag>
 
     </class>
@@ -353,23 +373,38 @@ public class DomesticCat extends Cat {
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            At runtime, you just instantiate <literal>HashMap</literal>s and use 
-            the Hibernate entity name to refer to a particular type:
+
+            Note that even though associations are declared using target class names,
+            the target type of an associations may also be a dynamic entity instead
+            of a POJO.
+        </para>
+
+        <para>
+            After setting the default entity mode to <literal>dynamic-map</literal>
+            for the <literal>SessionFactory</literal>, we can at runtime work with
+            <literal>Map</literal>s of <literal>Map</literal>s:
         </para>
 
         <programlisting><![CDATA[Session s = openSession();
-Transaction t = s.beginTransaction();
-Map parent = new HashMap();
-parent.put("name", "foo");
-parent.put("address", "bar");
+Transaction tx = s.beginTransaction();
+Session s = openSession();
 
-Map child = new HashMap();
-child.put("name", "fooTwo");
-child.put("address", "barTwo");
-child.put("parent", parent);
+// Create a customer
+Map david = new HashMap();
+david.put("name", "David");
 
-s.save("TestMap", parent);
-t.commit();
+// Create an organization
+Map foobar = new HashMap();
+foobar.put("name", "Foobar Inc.");
+
+// Link both
+david.put("organization", foobar);
+
+// Save both
+s.save("Customer", david);
+s.save("Organization", foobar);
+
+tx.commit();
 s.close();]]></programlisting>
 
         <para>
@@ -378,6 +413,40 @@ s.close();]]></programlisting>
             type checking and will very likely deal with many exceptions at runtime. Thanks
             to the Hibernate mapping, the database schema can easily be normalized and sound,
             allowing to add a proper domain model implementation on top later on.
+        </para>
+
+        <para>
+            Entity representation modes can also be set on a per <literal>Session</literal>
+            basis:
+        </para>
+
+        <programlisting><![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
+
+// Create a customer
+Map david = new HashMap();
+david.put("name", "David");
+dynamicSession.save("Customer", david);
+...
+dynamicSession.flush();
+dynamicSession.close()
+...
+// Continue on pojoSession
+]]></programlisting>
+
+
+        <para>
+            Please note that the call to <literal>getSession()</literal> using an
+            <literal>EntityMode</literal> is on the <literal>Session</literal> API, not the
+            <literal>SessionFactory</literal>. That way, the new <literal>Session</literal>
+            shares the underlying JDBC connection, transaction, and other context
+            information. This means you don't have tocall <literal>flush()</literal>
+            and <literal>close()</literal> on the secondary <literal>Session</literal>, and
+            also leave the transaction and connection handling to the primary unit of work.
+        </para>
+
+        <para>
+            More information about the XML representation capabilities can be found
+            in <xref linkend="xml"/>.
         </para>
 
     </sect1>

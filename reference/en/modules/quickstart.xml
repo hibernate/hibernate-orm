@@ -147,10 +147,11 @@
                             Required or not?
                         </entry>
                         <entry>
-                            Have a look at the file <literal>lib/README.txt</literal> in the
+                            Have a look at the file <literal>lib/version.properties</literal> in the
                             Hibernate distribution. This is an up-to-date list of 3rd party
                             libraries distributed with Hibernate. You will find all required
-                            and optional libraries listed there.
+                            and optional libraries listed there (note that "buildtime required"
+                            here means for Hibernate's build, not your application).
                         </entry>
                     </row>
                 </tbody>

@@ -933,7 +933,7 @@ having count(msg) = 0]]></programlisting>
             Properties of a JavaBean can be bound to named query parameters:
         </para>
 
-        <programlisting><![CDATA[Query q = s.createQuery("from foo in class Foo where foo.name=:name and foo.size=:size");
+        <programlisting><![CDATA[Query q = s.createQuery("from foo Foo as foo where foo.name=:name and foo.size=:size");
 q.setProperties(fooBean); // fooBean has getName() and getSize()
 List foos = q.list();]]></programlisting>
 

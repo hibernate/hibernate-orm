@@ -55,7 +55,7 @@
                 the primary key may be efficiently indexed and a particular row may be efficiently
                 located when Hibernate tries to update or delete it.
             </para>
-
+                        
             <para>
                 Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element
                 columns. This may be less efficient for some types of collection element, particularly
@@ -67,6 +67,11 @@
                 as <literal>not-null="true"</literal>.)
             </para>
 
+            <para>
+                <literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they are
+                always very efficient to update. In fact, they are the best case.
+            </para>
+            
             <para>
                 Bags are the worst case. Since a bag permits duplicate element values and has no
                 index column, no primary key may be defined. Hibernate has no way of distinguishing
@@ -85,7 +90,7 @@
         </sect2>
 
         <sect2 id="performance-collections-mostefficientupdate">
-            <title>Lists, maps and sets are the most efficient collections to update</title>
+            <title>Lists, maps, idbags and sets are the most efficient collections to update</title>
 
             <para>
                 From the discussion above, it should be clear that indexed collections
@@ -103,20 +108,18 @@
             </para>
 
             <para>
-                After observing that arrays cannot be lazy, we would conclude that lists, maps and sets
-                are the most performant collection types. (With the caveat that a set might be less
-                efficient for some collections of values.)
+                After observing that arrays cannot be lazy, we would conclude that lists, maps and 
+                idbags are the most performant (non-inverse) collection types, with sets not far 
+                behind. Sets are expected to be the most common kind of collection in Hibernate 
+                applications. This is because the "set" semantics are most natural in the relational
+                model.
             </para>
 
             <para>
-                Sets are expected to be the most common kind of collection in Hibernate applications.
-            </para>
-
-            <para>
-                <emphasis>There is an undocumented feature in this release of Hibernate. The
-                <literal>&lt;idbag&gt;</literal> mapping implements bag semantics for a collection
-                of values or a many to many association and is more efficient that any other
-                style of collection in this case!</emphasis>
+                However, in well-designed Hibernate domain models, we usually see that most collections
+                are in fact one-to-many associations with <literal>inverse="true"</literal>. For these
+                associations, the update is handled by the many-to-one end of the association, and so
+                considerations of collection update performance simply do not apply.
             </para>
 
         </sect2>
@@ -147,7 +150,7 @@
 
             <para>
                 Occasionally, deleting collection elements one by one can be extremely inefficient. Hibernate
-                isn't completly stupid, so it knows not to do that in the case of an newly-empty collection
+                isn't completely stupid, so it knows not to do that in the case of an newly-empty collection
                 (if you called <literal>list.clear()</literal>, for example). In this case, Hibernate will
                 issue a single <literal>DELETE</literal> and we are done!
             </para>
@@ -183,6 +186,10 @@
                 Fortunately, you can force this behaviour (ie. the second strategy) at any time by discarding
                 (ie. dereferencing) the original collection and returning a newly instantiated collection with
                 all the current elements. This can be very useful and powerful from time to time.
+            </para>
+            
+            <para>
+                Of course, one-shot-delete does not apply to collections mapped <literal>inverse="true"</literal>.
             </para>
 
         </sect2>
@@ -464,9 +471,41 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </target>]]></programlisting>
 
         <para>
+            A different (better?) way to avoid unnecessary column reads, at least for 
+            read-only transactons is to use the projection features of HQL. This avoids 
+            the need for buildtime bytecode processing.
+        </para>
+
+        <para>
             TODO: Document issues with lazy property loading
         </para>
 
+    </sect1>
+    
+    <sect1 id="performance-outerjoinfetch" revision="1">
+        <title>Outer join fetching</title>
+        
+        <para>
+            Any kind of lazy fetching is extremely vulnerable to N+1 selects problems. So usually,
+            we choose lazy fetching only as a "default" strategy, and override it for a particular
+            transaction, using the HQL <literal>LEFT JOIN FETCH</literal> clause. This tells Hibernate
+            to fetch the association in the first select, using an outer join. In the 
+            <literal>Criteria</literal> API, you would use <literal>setFetchMode(FetchMode.EAGER)</literal>.
+        </para>
+        
+        <para>
+            You can always force outer join association fetching in the mapping file, by setting
+            <literal>outer-join="true"</literal>. We don't recommend this setting, especially
+            not for collections, since it is incredibly rare to find an entity which is 
+            <emphasis>always</emphasis> used when an associated entity is used, at least in a 
+            sufficiently large system.
+        </para>
+        
+        <para>
+            A completely different way to avoid problems with N+1 selects is to use the second-level 
+            cache.
+        </para>
+        
     </sect1>
 
     <sect1 id="performance-cache" revision="1">

@@ -196,14 +196,23 @@ select cust.name.firstName from Customer as cust]]></programlisting>
 
         <para>
             Queries may return multiple objects and/or properties as an array of type 
-            <literal>Object[]</literal>
+            <literal>Object[]</literal>,
         </para>
 
         <programlisting><![CDATA[select mother, offspr, mate.name 
 from DomesticCat as mother
     inner join mother.mate as mate
     left outer join mother.kittens as offspr]]></programlisting>
+    
+        <para>
+            or as a <literal>List</literal>,
+        </para>
         
+        <programlisting><![CDATA[select new list(mother, offspr, mate.name)
+from DomesticCat as mother
+    inner join mother.mate as mate
+    left outer join mother.kittens as offspr]]></programlisting>
+    
         <para>
             or as an actual typesafe Java object
         </para>
@@ -215,6 +224,24 @@ from DomesticCat as mother
         
         <para>
             assuming that the class <literal>Family</literal> has an appropriate constructor.
+        </para>
+        
+        <para>
+            You may assign aliases to selected expressions using <literal>as</literal>:
+        </para>
+
+        <programlisting><![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n
+from Cat cat]]></programlisting>
+
+        <para>
+            This is most useful when used together with <literal>select new map</literal>:
+        </para>
+            
+        <programlisting><![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )
+from Cat cat]]></programlisting>
+
+        <para>
+            This query returns a <literal>Map</literal> from aliases to selected values.
         </para>
          
     </sect1>
@@ -767,6 +794,15 @@ where not exists (
 where cat.name not in ( 
     select name.nickName from Name as name 
 )]]></programlisting>
+
+        <para>
+            For subqueries with more than one expression in the select list, you can use a "row constructor".
+        <para>
+        
+        <programlisting><![CDATA[from Cat as cat 
+where not ( cat.name, cat.color ) in ( 
+    select cat.name, cat.color from DomesticCat cat 
+)]]></programlisting>     
 
     </sect1>
 

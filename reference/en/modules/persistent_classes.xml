@@ -1,0 +1,512 @@
+<chapter id="persistent-classes">
+    <title>Persistent Classes</title>
+
+    <para>
+        Persistent classes are classes in an application that implement the entities
+        of the business problem (e.g. Customer and Order in an E-commerce application).
+        Persistent classes have, as the name implies, transient and also persistent
+        instance stored in the database.
+    </para>
+
+    <para>
+        Hibernate works best if these classes follow some simple rules, also known
+        as the Plain Old Java Object (POJO) programming model.
+    </para>
+
+    <sect1 id="persistent-classes-pojo">
+        <title>A simple POJO example</title>
+
+        <para>
+            Most Java applications require a persistent class representing felines.
+        </para>
+
+        <programlisting><![CDATA[package eg;
+import java.util.Set;
+import java.util.Date;
+
+public class Cat {
+    private Long id; // identifier
+    private String name;
+    private Date birthdate;
+    private Cat mate;
+    private Set kittens
+    private Color color;
+    private char sex;
+    private float weight;
+
+    private void setId(Long id) {
+        this.id=id;
+    }
+    public Long getId() {
+        return id;
+    }
+
+    void setName(String name) {
+        this.name = name;
+    }
+    public String getName() {
+        return name;
+    }
+
+    void setMate(Cat mate) {
+        this.mate = mate;
+    }
+    public Cat getMate() {
+        return mate;
+    }
+
+    void setBirthdate(Date date) {
+        birthdate = date;
+    }
+    public Date getBirthdate() {
+        return birthdate;
+    }
+    void setWeight(float weight) {
+        this.weight = weight;
+    }
+    public float getWeight() {
+        return weight;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+    void setColor(Color color) {
+        this.color = color;
+    }
+    void setKittens(Set kittens) {
+        this.kittens = kittens;
+    }
+    public Set getKittens() {
+        return kittens;
+    }
+    // addKitten not needed by Hibernate
+    public void addKitten(Cat kitten) {
+        kittens.add(kitten);
+    }
+    void setSex(char sex) {
+        this.sex=sex;
+    }
+    public char getSex() {
+        return sex;
+    }
+}]]></programlisting>
+
+        <para>
+            There are four main rules to follow here:
+        </para>
+
+
+        <sect2 id="persistent-classes-pojo-accessors">
+            <title>Declare accessors and mutators for persistent fields</title>
+
+            <para>
+                <literal>Cat</literal> declares accessor methods for all its persistent fields.
+                Many other ORM tools directly persist instance variables. We believe 
+                it is far better to decouple this implementation detail from the persistence 
+                mechanism. Hibernate persists JavaBeans style properties, and recognizes method 
+                names of the form <literal>getFoo</literal>, <literal>isFoo</literal> and
+                <literal>setFoo</literal>.
+            </para>
+
+            <para>
+                Properties need <emphasis>not</emphasis> be declared public - Hibernate can
+                persist a property with a default, <literal>protected</literal> or <literal>
+                private</literal> get / set pair.
+            </para>
+        </sect2>
+
+        <sect2 id="persistent-classes-pojo-constructor">
+            <title>Implement a default constructor</title>
+
+            <para>
+                <literal>Cat</literal> has an implicit default (no-argument) constructor. All 
+                persistent classes must have a default constructor (which may be non-public) so 
+                Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>.
+            </para>
+        </sect2>
+
+        <sect2 id="persistent-classes-pojo-identifier">
+            <title>Provide an identifier property (optional)</title>
+
+            <para>
+                <literal>Cat</literal> has a property called <literal>id</literal>. This property 
+                holds the primary key column of a database table. The property might have been called 
+                anything, and its type might have been any primitive type, any primitive "wrapper" 
+                type, <literal>java.lang.String</literal> or <literal>java.util.Date</literal>. (If 
+                your legacy database table has composite keys, you can even use a user-defined class 
+                with properties of these types - see the section on composite identifiers below.)
+            </para>
+
+            <para>
+                The identifier property is optional. You can leave it off and let Hibernate keep track 
+                of object identifiers internally. However, for many applications it is still
+                a good (and very popular) design decision.
+            </para>
+
+            <para>
+                What's more, some functionality is available only to classes which declare an
+                identifier property:
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        Cascaded updates (see "Lifecycle Objects")
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>Session.saveOrUpdate()</literal>
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                We recommend you declare consistently-named identifier properties on persistent
+                classes. We further recommend that you use a nullable (ie. non-primitive) type.
+            </para>
+        </sect2>
+
+        <sect2 id="persistent-classes-pojo-final">
+            <title>Prefer non-final classes (optional)</title>
+            <para>
+                A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon the
+                persistent class being either non-final, or the implementation of an interface
+                that declares all public methods.
+            </para>
+            <para>
+                You can persist <literal>final</literal> classes that do not implement an interface
+                with Hibernate, but you won't be able to use proxies - which will limit your options
+                for performance tuning somewhat.
+            </para>
+        </sect2>
+        
+    </sect1>
+
+    <sect1 id="persistent-classes-inheritance">
+        <title>Implementing inheritance</title>
+
+        <para>
+            A subclass must also observe the first and second rules. It inherits its
+            identifier property from <literal>Cat</literal>.
+        </para>
+
+        <programlisting><![CDATA[package eg;
+
+public class DomesticCat extends Cat {
+        private String name;
+
+        public String getName() {
+                return name;
+        }
+        protected void setName(String name) {
+                this.name=name;
+        }
+}]]></programlisting>
+    </sect1>
+
+    <sect1 id="persistent-classes-equalshashcode">
+        <title>Implementing <literal>equals()</literal> and <literal>hashCode()</literal></title>
+
+        <para>
+            You have to override the <literal>equals()</literal> and <literal>hashCode()</literal>
+            methods if you intend to mix objects of persistent classes (e.g. in a <literal>Set</literal>).
+        </para>
+
+        <para>
+            <emphasis>This only applies if these objects are loaded in two different
+            <literal>Session</literal>s, as Hibernate only guarantees JVM identity (<literal> a == b </literal>,
+            the default implementation of <literal>equals()</literal>) inside a single
+            <literal>Session</literal>!</emphasis>
+        </para>
+
+        <para>
+            Even if both objecs <literal>a</literal> and <literal>b</literal> are the same database row
+            (they have the same primary key value as their identifier), we can't guarantee that they are
+            the same Java instance outside of a particular <literal>Session</literal> context.
+        </para>
+
+        <para>
+            The most obvious way is to implement <literal>equals()</literal>/<literal>hashCode()</literal>
+            by comparing the identifier value of both objects. If the value is the same, both must
+            be the same database row, they are therefore equal (if both are added to a <literal>Set</literal>,
+            we will only have one element in the <literal>Set</literal>). Unfortunately, we can't use that
+            approach. Hibernate will only assign identifier values to objects that are persistent,
+            a newly created instance will not have any identifier value! We recommend implementing
+            <literal>equals()</literal> and <literal>hashCode()</literal> using
+            <emphasis>Business key equality</emphasis>.
+        </para>
+
+        <para>
+            Business key equality means that the <literal>equals()</literal>
+            method compares only the properties that form the business key, a key that would
+            identify our instance in the real world (a <emphasis>natural</emphasis> candidate key):
+        </para>
+
+        <programlisting><![CDATA[public class Cat {
+
+    ...
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof Cat)) return false;
+
+        final Cat cat = (Cat) other;
+
+        if (!getName().equals(cat.getName())) return false;
+        if (!getBirthday().equals(cat.getBirthday())) return false;
+
+        return true;
+    }
+
+    public int hashCode() {
+        int result;
+        result = getName().hashCode();
+        result = 29 * result + getBirthday().hashCode();
+        return result;
+    }
+
+}]]></programlisting>
+
+        <para>
+            Keep in mind that our candidate key (in this case a composite of name and birthday)
+            has to be only valid for a particular comparison operation (maybe even only in a
+            single use case). We don't need the stability criteria we usually apply to a real
+            primary key!
+        </para>
+
+    </sect1>
+
+    <sect1 id="persistent-classes-lifecycle">
+        <title>Lifecycle Callbacks</title>
+
+        <para>
+            Optionally, a persistent class might implement the interface 
+            <literal>Lifecycle</literal> which provides some callbacks that allow
+            the persistent object to perform necessary initialization/cleanup after
+            save or load and before deletion or update.
+        </para>
+
+        <para>
+            <!-- TODO: add xref to interceptor -->
+            The Hibernate <literal>Interceptor</literal> offers a less intrusive
+            alternative, however.
+        </para>
+
+        <programlistingco>
+            <areaspec>
+                <area id="lifecycle1" coords="2 70"/>
+                <area id="lifecycle2" coords="3 70" />
+                <area id="lifecycle3" coords="4 70"/>
+                <area id="lifecycle4" coords="5 70" />
+            </areaspec>                        
+            <programlisting><![CDATA[public interface Lifecycle {
+        public boolean onSave(Session s) throws CallbackException;
+        public boolean onUpdate(Session s) throws CallbackException;
+        public boolean onDelete(Session s) throws CallbackException;
+        public void onLoad(Session s, Serializable id);
+}]]></programlisting>
+            <calloutlist>
+                <callout arearefs="lifecycle1">
+                    <para>
+                        <literal>onSave</literal> - called just before the object is saved or
+                        inserted
+                    </para>
+                </callout>
+                <callout arearefs="lifecycle2">
+                    <para>
+                        <literal>onUpdate</literal> - called just before an object is updated 
+                        (when the object is passed to <literal>Session.update()</literal>)
+                    </para>
+                </callout>
+                <callout arearefs="lifecycle3">
+                    <para>
+                        <literal>onDelete</literal> - called just before an object is deleted
+                    </para>
+                </callout>
+                <callout arearefs="lifecycle4">
+                    <para>
+                        <literal>onLoad</literal> - called just after an object is loaded
+                    </para>
+                </callout>                
+            </calloutlist>
+        </programlistingco>
+        
+        <para>
+            <literal>onSave()</literal>, <literal>onDelete()</literal> and
+            <literal>onUpdate()</literal> may be used to cascade saves and
+            deletions of dependent objects. This is an alternative to declaring cascaded
+            operations in the mapping file. <literal>onLoad()</literal> may
+            be used to initialize transient properties of the object from its persistent
+            state. It may not be used to load dependent objects since the
+            <literal>Session</literal> interface may not be invoked from
+            inside this method. A further intended usage of <literal>onLoad()</literal>, 
+            <literal>onSave()</literal> and <literal>onUpdate()</literal> is to store a 
+            reference to the current <literal>Session</literal> for later use.
+        </para>
+        
+        <para>
+            Note that <literal>onUpdate()</literal> is not called every time the object's
+            persistent state is updated. It is called only when a transient object is passed
+            to <literal>Session.update()</literal>.
+        </para>
+
+        <para>
+            If <literal>onSave()</literal>, <literal>onUpdate()</literal> or
+            <literal>onDelete()</literal> return <literal>true</literal>, the operation is 
+            silently vetoed. If a <literal>CallbackException</literal> is thrown, the operation 
+            is vetoed and the exception is passed back to the application.
+        </para>
+
+        <para>
+            Note that <literal>onSave()</literal> is called after an identifier is assigned to 
+            the object, except when native key generation is used.
+        </para>
+    </sect1>
+
+    <sect1 id="persistent-classes-validatable">
+        <title>Validatable callback</title>
+
+        <para>
+            If the persistent class needs to check invariants before its state is
+            persisted, it may implement the following interface:
+        </para>
+
+        <programlisting><![CDATA[public interface Validatable {
+        public void validate() throws ValidationFailure;
+}]]></programlisting>
+
+        <para>
+            The object should throw a <literal>ValidationFailure</literal> if an invariant 
+            was violated. An instance of <literal>Validatable</literal> should not change 
+            its state from inside <literal>validate()</literal>.
+        </para>
+        <para>
+            Unlike the callback methods of the <literal>Lifecycle</literal> interface, 
+            <literal>validate()</literal> might be called at unpredictable times. The
+            application should not rely upon calls to <literal>validate()</literal> for
+            business functionality.
+        </para>
+    </sect1>
+
+    <sect1 id="persistent-classes-xdoclet">
+        <title>Using XDOclet markup</title>
+
+        <para>
+            In the next chapter we will show how Hibernate mappings may be expressed using
+            a simple, readable XML format. Many Hibernate users prefer to embed mapping
+            information directly in sourcecode using XDoclet <literal>@hibernate.tags</literal>.
+            We will not cover this approach in this document, since strictly it is considered
+            part of XDoclet. However, we include the following example of the <literal>Cat</literal>
+            class with XDoclet mappings.
+        </para>
+
+        <programlisting><![CDATA[package eg;
+import java.util.Set;
+import java.util.Date;
+
+/**
+ * @hibernate.class
+ *  table="CATS"
+ */
+public class Cat {
+    private Long id; // identifier
+    private Date birthdate;
+    private Cat mate;
+    private Set kittens
+    private Color color;
+    private char sex;
+    private float weight;
+
+    /**
+     * @hibernate.id
+     *  generator-class="native"
+     *  column="CAT_ID"
+     */
+    public Long getId() {
+        return id;
+    }
+    private void setId(Long id) {
+        this.id=id;
+    }
+
+    /**
+     * @hibernate.many-to-one
+     *  column="MATE_ID"
+     */
+    public Cat getMate() {
+        return mate;
+    }
+    void setMate(Cat mate) {
+        this.mate = mate;
+    }
+
+    /**
+     * @hibernate.property
+     *  column="BIRTH_DATE"
+     */
+    public Date getBirthdate() {
+        return birthdate;
+    }
+    void setBirthdate(Date date) {
+        birthdate = date;
+    }
+    /**
+     * @hibernate.property
+     *  column="WEIGHT"
+     */
+    public float getWeight() {
+        return weight;
+    }
+    void setWeight(float weight) {
+        this.weight = weight;
+    }
+
+    /**
+     * @hibernate.property
+     *  column="COLOR"
+     *  not-null="true"
+     */
+    public Color getColor() {
+        return color;
+    }
+    void setColor(Color color) {
+        this.color = color;
+    }
+    /**
+     * @hibernate.set
+     *  lazy="true"
+     *  order-by="BIRTH_DATE"
+     * @hibernate.collection-key
+     *  column="PARENT_ID"
+     * @hibernate.collection-one-to-many
+     */
+    public Set getKittens() {
+        return kittens;
+    }
+    void setKittens(Set kittens) {
+        this.kittens = kittens;
+    }
+    // addKitten not needed by Hibernate
+    public void addKitten(Cat kitten) {
+        kittens.add(kitten);
+    }
+
+    /**
+     * @hibernate.property
+     *  column="SEX"
+     *  not-null="true"
+     *  update="false"
+     */
+    public char getSex() {
+        return sex;
+    }
+    void setSex(char sex) {
+        this.sex=sex;
+    }
+}]]></programlisting>
+
+    </sect1>
+
+</chapter>
+

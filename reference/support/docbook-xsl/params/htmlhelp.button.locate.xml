@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.locate">
+<refmeta>
+<refentrytitle>htmlhelp.button.locate</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.locate</refname>
+<refpurpose>Should be Locate button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.locate.frag'>
+<xsl:param name="htmlhelp.button.locate" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Locate button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

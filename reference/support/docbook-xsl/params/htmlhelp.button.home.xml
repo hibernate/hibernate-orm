@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.home">
+<refmeta>
+<refentrytitle>htmlhelp.button.home</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.home</refname>
+<refpurpose>Should be Home button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.home.frag'>
+<xsl:param name="htmlhelp.button.home" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Home button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

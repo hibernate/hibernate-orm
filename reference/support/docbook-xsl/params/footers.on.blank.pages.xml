@@ -1,0 +1,22 @@
+<refentry id="footers.on.blank.pages">
+<refmeta>
+<refentrytitle>footers.on.blank.pages</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>footers.on.blank.pages</refname>
+<refpurpose>Put footers on blank pages?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='footers.on.blank.pages.frag'>
+<xsl:param name="footers.on.blank.pages" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, footers will be placed on blank pages.</para>
+
+</refsect1>
+</refentry>

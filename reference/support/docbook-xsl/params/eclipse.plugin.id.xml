@@ -1,0 +1,23 @@
+<refentry id="eclipse.plugin.id">
+<refmeta>
+<refentrytitle>eclipse.plugin.id</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>eclipse.plugin.id</refname>
+<refpurpose>Eclipse Help plugin id</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='eclipse.plugin.id.frag'>
+<xsl:param name="eclipse.plugin.id">com.example.help</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Eclipse Help plugin id. You should change this id to something
+unique for each help.</para>
+
+</refsect1>
+</refentry>

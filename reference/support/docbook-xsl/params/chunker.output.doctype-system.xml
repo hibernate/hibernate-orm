@@ -1,0 +1,28 @@
+<refentry id="chunker.output.doctype-system">
+<refmeta>
+<refentrytitle>chunker.output.doctype-system</refentrytitle>
+<refmiscinfo role="type">uri</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>chunker.output.doctype-system</refname>
+<refpurpose>System identifier to use for the document type in generated pages</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>&lt;xsl:param name="chunker.output.doctype-system" select="''"/>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter specifies the system identifier that should be used by
+the chunking stylesheet in the document type declaration of chunked pages.
+Not all processors support specification of
+this parameter.
+</para>
+
+<note>
+<para>This parameter is documented here, but the declaration is actually
+in the <filename>chunker.xsl</filename> stylesheet module.</para>
+</note>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="footnote.number.format">
+<refmeta>
+<refentrytitle>footnote.number.format</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>footnote.number.format</refname>
+<refpurpose>Identifies the format used for footnote numbers</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='footnote.number.format.frag'>
+<xsl:param name="footnote.number.format" select="'1'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>footnote.number.format</parameter> specifies the format
+to use for footnote numeration (1, i, I, a, or A).</para>
+
+</refsect1>
+</refentry>

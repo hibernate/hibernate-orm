@@ -1,0 +1,27 @@
+<refentry id="table.table.properties">
+<refnamediv>
+<refname>table.table.properties</refname>
+<refpurpose>Properties associated with a table</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.table.properties.frag'>
+<xsl:attribute-set name="table.table.properties">
+  <xsl:attribute name="border-before-width.conditionality">retain</xsl:attribute>
+  <xsl:attribute name="border-collapse">collapse</xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The styling for tables. This parameter should really
+have been called <literal>table.properties</literal>, but that parameter
+name was inadvertantly established for the block-level properties
+of the table as a whole.
+</para>
+
+<para>See also <parameter>table.properties</parameter>.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,22 @@
+<refentry id="xref.with.number.and.title">
+<refmeta>
+<refentrytitle>xref.with.number.and.title</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>xref.with.number.and.title</refname>
+<refpurpose>Use number and title in cross references</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='xref.with.number.and.title.frag'>
+<xsl:param name="xref.with.number.and.title" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

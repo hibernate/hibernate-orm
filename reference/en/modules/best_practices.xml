@@ -1,0 +1,168 @@
+<chapter id="best-practices">
+
+    <title>Best Practices</title>
+
+    <variablelist spacing="compact">
+        <varlistentry>
+            <term>Write fine-grained classes and map them using <literal>&lt;component&gt;</literal>.</term>
+            <listitem>
+                <para>
+                    Use an <literal>Address</literal> class to encapsulate <literal>street</literal>,
+                    <literal>suburb</literal>, <literal>state</literal>, <literal>postcode</literal>.
+                    This encourages code reuse and simplifies refactoring.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Declare identifier properties on persistent classes.</term>
+            <listitem>
+                <para>
+                    Hibernate makes identifier properties optional. There are all sorts of reasons why
+                    you should use them. We recommend that identifiers be 'synthetic' (generated, with
+                    no business meaning) and of a non-primitive type. For maximum flexibility, use
+                    <literal>java.lang.Long</literal> or <literal>java.lang.String</literal>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Place each class mapping in its own file.</term>
+            <listitem>
+                <para>
+                     Don't use a single monolithic mapping document. Map <literal>com.eg.Foo</literal> in 
+                     the file <literal>com/eg/Foo.hbm.xml</literal>. This makes particularly good sense in 
+                     a team environment.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Load mappings as resources.</term>
+            <listitem>
+                <para>
+                    Deploy the mappings along with the classes they map.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Consider externalising query strings.</term>
+            <listitem>
+                <para>
+                    This is a good practice if your queries call non-ANSI-standard SQL functions. 
+                    Externalising the query strings to mapping files will make the application more portable.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Use bind variables.</term>
+            <listitem>
+                <para>
+                     As in JDBC, always replace non-constant values by "?". Never use string manipulation to 
+                     bind a non-constant value in a query! Even better, consider using named parameters in
+                     queries.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Don't manage your own JDBC connections.</term>
+            <listitem>
+                <para>
+                    Hibernate lets the application manage JDBC connections. This approach should be considered 
+                    a last-resort. If you can't use the built-in connections providers, consider providing your 
+                    own implementation of <literal>net.sf.hibernate.connection.ConnectionProvider</literal>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Consider using a custom type.</term>
+            <listitem>
+                <para>
+                    Suppose you have a Java type, say from some library, that needs to be persisted but doesn't 
+                    provide the accessors needed to map it as a component. You should consider implementing
+                    <literal>net.sf.hibernate.UserType</literal>. This approach frees the application
+                    code from implementing transformations to / from a Hibernate type.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Use hand-coded JDBC in bottlenecks.</term>
+            <listitem>
+                <para>
+                    In performance-critical areas of the system, some kinds of operations (eg. mass update /
+                    delete) might benefit from direct JDBC. But please, wait until you <emphasis>know</emphasis> 
+                    something is a bottleneck. And don't assume that direct JDBC is necessarily faster. If need to 
+                    use direct JDBC, it might be worth opening a Hibernate <literal>Session</literal> and using that SQL 
+                    connection. That way you can still use the same transaction strategy and underlying connection 
+                    provider.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Understand <literal>Session</literal> flushing.</term>
+            <listitem>
+                <para>
+                    From time to time the Session synchronizes its persistent state with the database. Performance will
+                    be affected if this process occurs too often. You may sometimes minimize unnecessary flushing by 
+                    disabling automatic flushing or even by changing the order of queries and other operations within a 
+                    particular transaction.      
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>In a three tiered architecture, consider using <literal>saveOrUpdate()</literal>.</term>
+            <listitem>
+                <para>
+                    When using a servlet / session bean architecture, you could pass persistent objects loaded in
+                    the session bean to and from the servlet / JSP layer. Use a new session to service each request. 
+                    Use <literal>Session.update()</literal> or <literal>Session.saveOrUpdate()</literal> to update the 
+                    persistent state of an object.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>In a two tiered architecture, consider using session disconnection.</term>
+            <listitem>
+                <para>
+                    When using a servlet only, you may reuse the same session for multiple client requests. Just
+                    remember to disconnect the session before returning control to the client.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Don't treat exceptions as recoverable.</term>
+            <listitem>
+                <para>
+                    This is more of a necessary practice than a "best" practice. When an exception occurs, roll back
+                    the <literal>Transaction</literal> and close the <literal>Session</literal>. If you don't, Hibernate
+                    can't guarantee that in-memory state accurately represents persistent state. As a special case of this,
+                    do not use <literal>Session.load()</literal> to determine if an instance with the given identifier 
+                    exists on the database; use <literal>find()</literal> instead.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Prefer lazy fetching for associations.</term>
+            <listitem>
+                <para>
+                    Use eager (outer-join) fetching sparingly. Use proxies and/or lazy collections for most associations
+                    to classes that are not cached at the JVM-level. For associations to cached classes, where there is
+                    a high probability of a cache hit, explicitly disable eager fetching using 
+                    <literal>outer-join="false"</literal>. When an outer-join fetch is appropriate to a particular use
+                    case, use a query with a <literal>left join</literal>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Consider abstracting your business logic from Hibernate.</term>
+            <listitem>
+                <para>
+                    Hide (Hibernate) data-access code behind an interface. Combine the <emphasis>DAO</emphasis> and 
+                    <emphasis>Thread Local Session</emphasis> patterns. You can even have some classes persisted by
+                    handcoded JDBC, associated to Hibernate via a <literal>UserType</literal>. (This advice is 
+                    intended for "sufficiently large" applications; it is not appropriate for an application with
+                    five tables!)
+                </para>
+            </listitem>
+        </varlistentry>
+    </variablelist>
+
+</chapter>
+

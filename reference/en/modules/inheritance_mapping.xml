@@ -1,0 +1,335 @@
+<chapter id="inheritance">
+    <title>Inheritance Mapping</title>
+
+    <sect1 id="inheritance-strategies" revision="1">
+        <title>The Three Strategies</title>
+
+        <para>
+            Hibernate supports the three basic inheritance mapping strategies.
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            table per class hierarchy
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            table per subclass
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            table per concrete class (some limitations)
+        </para>
+        </listitem>
+        </itemizedlist>
+
+        <para>
+            It is even possible to use different mapping strategies for different
+            branches of the same inheritance hierarchy, but the same limitations
+            apply as apply to table-per-concrete class mappings. Hibernate does
+            not support mixing <literal>&lt;subclass&gt;</literal> mappings and
+            <literal>&lt;joined-subclass&gt;</literal> mappings inside the same
+            <literal>&lt;class&gt;</literal> element.
+        </para>
+
+        <para>
+            Suppose we have an interface <literal>Payment</literal>, with implementors
+            <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>,
+            <literal>ChequePayment</literal>. The table-per-hierarchy mapping would
+            look like:
+        </para>
+
+        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+    <id name="id" type="long" column="PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <discriminator column="PAYMENT_TYPE" type="string"/>
+    <property name="amount" column="AMOUNT"/>
+    ...
+    <subclass name="CreditCardPayment" discriminator-value="CREDIT">
+        ...
+    </subclass>
+    <subclass name="CashPayment" discriminator-value="CASH">
+        ...
+    </subclass>
+    <subclass name="ChequePayment" discriminator-value="CHEQUE">
+        ...
+    </subclass>
+</class>]]></programlisting>
+
+        <para>
+            Exactly one table is required. There is one big limitation of this
+            mapping strategy: columns declared by the subclasses may not have
+            <literal>NOT NULL</literal> constraints.
+        </para>
+
+        <para>
+            A table-per-subclass mapping would look like:
+        </para>
+
+        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+    <id name="id" type="long" column="PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <property name="amount" column="AMOUNT"/>
+    ...
+    <joined-subclass name="CreditCardPayment" table="CREDIT_PAYMENT">
+        <key column="PAYMENT_ID"/>
+        ...
+    </joined-subclass>
+    <joined-subclass name="CashPayment" table="CASH_PAYMENT">
+        <key column="PAYMENT_ID"/>
+        ...
+    </joined-subclass>
+    <joined-subclass name="ChequePayment" table="CHEQUE_PAYMENT">
+        <key column="PAYMENT_ID"/>
+        ...
+    </joined-subclass>
+</class>]]></programlisting>
+
+        <para>
+            Four tables are required. The three subclass tables have primary
+            key associations to the superclass table (so the relational model
+            is actually a one-to-one association).
+        </para>
+
+        <para>
+            Note that Hibernate's implementation of table-per-subclass requires
+            no discriminator column. Other object/relational mappers use a
+            different implementation of table-per-subclass which requires a type
+            discriminator column in the superclass table. The approach taken by
+            Hibernate is much more difficult to implement but arguably more
+            correct from a relational point of view.
+        </para>
+
+        <para>
+            For either of these two mapping strategies, a polymorphic
+            association to <literal>Payment</literal> is mapped using
+            <literal>&lt;many-to-one&gt;</literal>.
+        </para>
+
+        <programlisting><![CDATA[<many-to-one name="payment"
+    column="PAYMENT"
+    class="Payment"/>]]></programlisting>
+    
+        <para>The table-per-concrete-class strategy is very different.</para>
+
+        <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
+    <id name="id" type="long" column="CREDIT_PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <property name="amount" column="CREDIT_AMOUNT"/>
+    ...
+</class>
+
+<class name="CashPayment" table="CASH_PAYMENT">
+    <id name="id" type="long" column="CASH_PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <property name="amount" column="CASH_AMOUNT"/>
+    ...
+</class>
+
+<class name="ChequePayment" table="CHEQUE_PAYMENT">
+    <id name="id" type="long" column="CHEQUE_PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <property name="amount" column="CHEQUE_AMOUNT"/>
+    ...
+</class>]]></programlisting>
+           
+        <para>
+            Three tables were required. Notice that nowhere do we
+            mention the <literal>Payment</literal> interface explicitly.
+            Instead, we make use of Hibernate's <emphasis>implicit
+            polymorphism</emphasis>. Also notice that properties of
+            <literal>Payment</literal> are mapped in each of the
+            subclasses.
+        </para>
+
+        <para>
+            In this case, a polymorphic association to <literal>Payment</literal>
+            is mapped using <literal>&lt;any&gt;</literal>.
+        </para>
+
+        <programlisting><![CDATA[<any name="payment"
+        meta-type="class"
+        id-type="long">
+    <column name="PAYMENT_CLASS"/>
+    <column name="PAYMENT_ID"/>
+</any>]]></programlisting>
+           
+        <para>
+            It would be better if we defined a <literal>UserType</literal>
+            as the <literal>meta-type</literal>, to handle the mapping from
+            type discriminator strings to <literal>Payment</literal> subclass.
+        </para>
+
+        <programlisting><![CDATA[<any name="payment"
+        meta-type="PaymentMetaType"
+        id-type="long">
+    <column name="PAYMENT_TYPE"/> <!-- CREDIT, CASH or CHEQUE -->
+    <column name="PAYMENT_ID"/>
+</any>]]></programlisting>
+
+        <para>
+            There is one further thing to notice about this mapping.
+            Since the subclasses are each mapped in their own
+            <literal>&lt;class&gt;</literal> element (and since
+            <literal>Payment</literal> is just an interface), each of
+            the subclasses could easily be part of another table-per-class
+            or table-per-subclass inheritance hierarchy! (And you can
+            still use polymorphic queries against the
+            <literal>Payment</literal> interface.)
+       </para>
+
+        <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
+    <id name="id" type="long" column="CREDIT_PAYMENT_ID">
+        <generator class="native"/>
+    </id>
+    <discriminator column="CREDIT_CARD" type="string"/>
+    <property name="amount" column="CREDIT_AMOUNT"/>
+    ...
+    <subclass name="MasterCardPayment" discriminator-value="MDC"/>
+    <subclass name="VisaPayment" discriminator-value="VISA"/>
+</class>
+
+<class name="NonelectronicTransaction" table="NONELECTRONIC_TXN">
+    <id name="id" type="long" column="TXN_ID">
+        <generator class="native"/>
+    </id>
+    ...
+    <joined-subclass name="CashPayment" table="CASH_PAYMENT">
+        <key column="PAYMENT_ID"/>
+        <property name="amount" column="CASH_AMOUNT"/>
+        ...
+    </joined-subclass>
+    <joined-subclass name="ChequePayment" table="CHEQUE_PAYMENT">
+        <key column="PAYMENT_ID"/>
+        <property name="amount" column="CHEQUE_AMOUNT"/>
+        ...
+    </joined-subclass>
+</class>]]></programlisting>
+
+        <para>
+            Once again, we don't mention <literal>Payment</literal> explicitly. If we
+            execute a query against the <literal>Payment</literal> interface - for
+            example, <literal>from Payment</literal> - Hibernate
+            automatically returns instances of <literal>CreditCardPayment</literal>
+            (and its subclasses, since they also implement <literal>Payment</literal>),
+            <literal>CashPayment</literal> and <literal>ChequePayment</literal> but
+            not instances of <literal>NonelectronicTransaction</literal>.
+        </para>
+
+    </sect1>
+
+    <sect1 id="inheritance-limitations">
+        <title>Limitations</title>
+
+        <para>
+            Hibernate assumes that an association maps to exactly one foreign key column.
+            Multiple associations per foreign key are tolerated (you might need to specify
+            <literal>inverse="true"</literal> or <literal>insert="false" update="false"</literal>),
+            but there is no way to map any association to multiple foreign keys. This means that:
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            when an association is modified, it is always the same foreign key that is
+            updated
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            when an association is fetched lazily, a single database query is used
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            when an association is fetched eagerly, it may be fetched using a single
+            outer join
+        </para>
+        </listitem>
+        </itemizedlist>
+
+        <para>
+            In particular, it implies that polymorphic one-to-many associations to
+            classes mapped using the table-per-concrete-class strategy are
+            <emphasis>not supported</emphasis>. (Fetching this association would
+            require multiple queries or multiple joins.)
+        </para>
+
+        <para>
+            The following table shows the limitations of table-per-concrete-class
+            mappings, and of implicit polymorphism, in Hibernate.
+        </para>
+            
+        <table frame="topbot">
+            <title>Features of inheritance mappings</title>
+            <tgroup cols='8' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' colwidth="1*"/>
+            <colspec colname='c2' colwidth="1*"/>
+            <colspec colname='c3' colwidth="1*"/>
+            <colspec colname='c4' colwidth="1*"/>
+            <colspec colname='c5' colwidth="1*"/>
+            <colspec colname='c6' colwidth="1*"/>
+            <colspec colname='c7' colwidth="1*"/>
+            <colspec colname='c8' colwidth="1*"/>
+            <thead>
+            <row>
+              <entry>Inheritance strategy</entry>
+              <entry>Polymorphic many-to-one</entry>
+              <entry>Polymorphic one-to-one</entry>
+              <entry>Polymorphic one-to-many</entry>
+              <entry>Polymorphic many-to-many</entry>
+              <entry>Polymorphic <literal>load()/get()</literal></entry>
+              <entry>Polymorphic queries</entry>
+              <entry>Polymorphic joins</entry>
+              <entry>Outer join fetching</entry>
+            </row>
+            </thead>
+            <tbody>
+            <row>
+                <entry>table-per-class-hierarchy</entry>
+                <entry><literal>&lt;many-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-many&gt;</literal></entry>
+                <entry><literal>&lt;many-to-many&gt;</literal></entry>
+                <entry><literal>s.get(Payment.class, id)</literal></entry>
+                <entry><literal>from Payment p</literal></entry>
+                <entry><literal>from Order o join o.payment p</literal></entry>
+                <entry><emphasis>supported</emphasis></entry>
+            </row>
+            <row>
+                <entry>table-per-subclass</entry>
+                <entry><literal>&lt;many-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-many&gt;</literal></entry>
+                <entry><literal>&lt;many-to-many&gt;</literal></entry>
+                <entry><literal>s.get(Payment.class, id)</literal></entry>
+                <entry><literal>from Payment p</literal></entry>
+                <entry><literal>from Order o join o.payment p</literal></entry>
+                <entry><emphasis>supported</emphasis></entry>
+            </row>
+            <row>
+                <entry>table-per-concrete-class (implicit polymorphism)</entry>
+                <entry><literal>&lt;any&gt;</literal></entry>
+                <entry><emphasis>not supported</emphasis></entry>
+                <entry><emphasis>not supported</emphasis></entry>
+                <entry><literal>&lt;many-to-any&gt;</literal></entry>
+                <entry><emphasis>use a query</emphasis></entry>
+                <entry><literal>from Payment p</literal></entry>
+                <entry><emphasis>not supported</emphasis></entry>
+                <entry><emphasis>not supported</emphasis></entry>
+            </row>
+            </tbody>
+            </tgroup>
+        </table>
+
+    </sect1>
+
+</chapter>

@@ -1,0 +1,172 @@
+<chapter id="architecture">
+
+    <title>Architecture</title>
+
+    <sect1 id="architecture-overview">
+        <title>Overview</title>
+        
+        <para>
+            A (very) high-level view of the Hibernate architecture:
+        </para>
+
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/overview.svg" format="SVG" align="center"/>
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="../shared/images/overview.gif" format="GIF" align="center"/>
+            </imageobject>
+        </mediaobject>
+
+        <para>
+            This diagram shows Hibernate using the database and configuration data to
+            provide persistence services (and persistent objects) to the application.
+        </para>
+
+        <para>
+            We would like to show a more detailed view of the runtime architecture.
+            Unfortunately, Hibernate is flexible and supports several approaches. We will
+            show the two extremes. The "lite" architecture has the application
+            provide its own JDBC connections and manage its own transactions. This approach
+            uses a minimal subset of Hibernate's APIs:
+        </para>
+
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/lite.svg" format="SVG" align="center"/>
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="../shared/images/lite.gif" format="GIF" align="center"/>
+            </imageobject>
+        </mediaobject>
+
+        <para>
+            The "full cream" architecture abstracts the application away from the
+            underlying JDBC/JTA APIs and lets Hibernate take care of the details.
+        </para>
+
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/full_cream.svg" format="SVG" align="center"/>
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="../shared/images/full_cream.gif" format="GIF" align="center"/>
+            </imageobject>
+        </mediaobject>
+
+        <para>
+            Heres some definitions of the objects in the diagrams:
+
+            <variablelist spacing="compact">
+                <varlistentry>
+                    <term>SessionFactory (<literal>net.sf.hibernate.SessionFactory</literal>)</term>
+                    <listitem>
+                        <para>
+                            A threadsafe (immutable) cache of compiled mappings for a single database.
+                            A factory for <literal>Session</literal> and a client of
+                            <literal>ConnectionProvider</literal>. Might hold an optional (second-level)
+                            cache of data that is reusable between transactions, at a
+                            process- or cluster-level.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Session (<literal>net.sf.hibernate.Session</literal>)</term>
+                    <listitem>
+                        <para>
+                            A single-threaded, short-lived object representing a conversation between
+                            the application and the persistent store. Wraps a JDBC connection. Factory
+                            for <literal>Transaction</literal>. Holds a mandatory (first-level) cache
+                            of persistent objects, used when navigating the object graph or looking up
+                            objects by identifier.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Persistent Objects and Collections</term>
+                    <listitem>
+                        <para>
+                            Short-lived, single threaded objects containing persistent state and business
+                            function. These might be ordinary JavaBeans/POJOs, the only special thing about
+                            them is that they are currently associated with (exactly one)
+                            <literal>Session</literal>. As soon as the <literal>Session</literal> is closed,
+                            they will be detached and free to use in any application layer (e.g. directly
+                            as data transfer objects to and from presentation).
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Transient Objects and Collections</term>
+                    <listitem>
+                        <para>
+                            Instances of persistent classes that are not currently associated with a
+                            <literal>Session</literal>. They may have been instantiated by
+                            the application and not (yet) persisted or they may have been instantiated by a
+                            closed <literal>Session</literal>.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Transaction (<literal>net.sf.hibernate.Transaction</literal>)</term>
+                    <listitem>
+                        <para>
+                            (Optional) A single-threaded, short-lived object used by the application to
+                            specify atomic units of work. Abstracts application from underlying JDBC,
+                            JTA or CORBA transaction. A <literal>Session</literal> might span several
+                            <literal>Transaction</literal>s in some cases.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>ConnectionProvider (<literal>net.sf.hibernate.connection.ConnectionProvider</literal>)</term>
+                    <listitem>
+                        <para>
+                            (Optional) A factory for (and pool of) JDBC connections. Abstracts application from
+                            underlying <literal>Datasource</literal> or <literal>DriverManager</literal>.
+                            Not exposed to application, but can be extended/implemented by the developer.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>TransactionFactory (<literal>net.sf.hibernate.TransactionFactory</literal>)</term>
+                    <listitem>
+                        <para>
+                            (Optional) A factory for <literal>Transaction</literal> instances. Not exposed to the
+                            application, but can be extended/implemented by the developer.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </para>
+
+        <para>
+            Given a "lite" architecture, the application bypasses the
+            <literal>Transaction</literal>/<literal>TransactionFactory</literal> and/or
+            <literal>ConnectionProvider</literal> APIs to talk to JTA or JDBC directly.
+        </para>
+    </sect1>
+
+    <sect1 id="architecture-jmx">
+        <title>JMX Integration</title>
+        <para>
+            JMX is the J2EE standard for management of Java components. Hibernate may be managed via
+            a JMX standard MBean but because most application servers do not yet support JMX, Hibernate
+            also affords some non-standard configuration mechanisms.
+        </para>
+        
+        <para>
+            Please see the Hibernate website for more information on how to configure Hibernate to
+            run as a JMX component inside JBoss.
+        </para>
+    </sect1>
+
+    <sect1 id="architecture-jca">
+        <title>JCA Support</title>
+        <para>
+            Hibernate may also be configured as a JCA connector. Please see the website for more
+            details.
+        </para>
+    </sect1>
+
+</chapter>
+

@@ -1,0 +1,26 @@
+<refentry id="default.image.width">
+<refmeta>
+<refentrytitle>default.image.width</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>default.image.width</refname>
+<refpurpose>The default width of images</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='default.image.width.frag'>
+<xsl:param name="default.image.width" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If specified, this value will be used for the
+<sgmltag class="attribute">width</sgmltag> attribute on
+images that do not specify any
+<ulink url="http://docbook.org/tdg/en/html/imagedata.html#viewport.area">viewport
+dimensions</ulink>.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,22 @@
+<refentry id="htmlhelp.button.jump2.title">
+<refmeta>
+<refentrytitle>htmlhelp.button.jump2.title</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.jump2.title</refname>
+<refpurpose>Title of Jump2 button</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.jump2.title.frag'>
+<xsl:param name="htmlhelp.button.jump2.title" select="'User2'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Title of Jump2 button.</para>
+
+</refsect1>
+</refentry>

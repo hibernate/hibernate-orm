@@ -1,0 +1,217 @@
+<chapter id="querycriteria">
+    <title>Criteria Queries</title>
+
+    <para>
+        Hibernate now features an intuitive, extensible criteria query API. For now, this API
+        is less powerful and than the more mature HQL query facilities. In particular, criteria
+        queries do not support projection or aggregation.
+    </para>
+    
+    <sect1 id="querycriteria-creating">
+        <title>Creating a <literal>Criteria</literal> instance</title>
+
+        <para>
+            The interface <literal>net.sf.hibernate.Criteria</literal> represents a query against
+            a particular persistent class. The <literal>Session</literal> is a factory for
+            <literal>Criteria</literal> instances.
+        </para>
+
+        <programlisting><![CDATA[Criteria crit = sess.createCriteria(Cat.class);
+crit.setMaxResults(50);
+List cats = crit.list();]]></programlisting>
+
+    </sect1>
+     
+    <sect1 id="querycriteria-narrowing">
+        <title>Narrowing the result set</title>
+
+        <para>
+            An individual query criterion is an instance of the interface
+            <literal>net.sf.hibernate.expression.Criterion</literal>. The class
+            <literal>net.sf.hibernate.expression.Expression</literal> defines
+            factory methods for obtaining certain built-in
+            <literal>Criterion</literal> types.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.like("name", "Fritz%") )
+    .add( Expression.between("weight", minWeight, maxWeight) )
+    .list();]]></programlisting>
+    
+        <para>
+            Expressions may be grouped logically.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.like("name", "Fritz%") )
+    .add( Expression.or(
+        Expression.eq( "age", new Integer(0) ),
+        Expression.isNull("age")
+    ) )
+    .list();]]></programlisting>
+    
+       <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
+    .add( Expression.disjunction()
+        .add( Expression.isNull("age") )
+    	.add( Expression.eq("age", new Integer(0) ) )
+    	.add( Expression.eq("age", new Integer(1) ) )
+    	.add( Expression.eq("age", new Integer(2) ) )
+    ) )
+    .list();]]></programlisting>
+    
+        <para>
+            There are quite a range of built-in criterion types (<literal>Expression</literal>
+            subclasses), but one that is especially useful lets you specify SQL directly.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.sql("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+    .list();]]></programlisting>
+    
+        <para>
+            The <literal>{alias}</literal> placeholder with be replaced by the row alias
+            of the queried entity.
+        </para>
+    
+    </sect1>
+     
+    <sect1 id="querycriteria-ordering">
+        <title>Ordering the results</title>
+
+        <para>
+            You may order the results using <literal>net.sf.hibernate.expression.Order</literal>.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.like("name", "F%")
+    .addOrder( Order.asc("name") )
+    .addOrder( Order.desc("age") )
+    .setMaxResults(50)
+    .list();]]></programlisting>
+    
+    </sect1>
+    
+    <sect1 id="querycriteria-associations">
+        <title>Associations</title>
+
+        <para>
+            You may easily specify constraints upon related entities by navigating
+            associations using <literal>createCriteria()</literal>.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.like("name", "F%")
+    .createCriteria("kittens")
+        .add( Expression.like("name", "F%")
+    .list();]]></programlisting>
+
+        <para>
+            note that the second <literal>createCriteria()</literal> returns a new
+            instance of <literal>Criteria</literal>, which refers to the elements of
+            the <literal>kittens</literal> collection.
+        </para>
+
+        <para>
+            The following, alternate form is useful in certain circumstances.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .createAlias("kittens", "kt")
+    .createAlias("mate", "mt")
+    .add( Expression.eqProperty("kt.name", "mt.name") )
+    .list();]]></programlisting>
+
+        <para>
+            (<literal>createAlias()</literal> does not create a new instance of
+            <literal>Criteria</literal>.)
+        </para>
+
+        <para>
+            Note that the kittens collections held by the <literal>Cat</literal> instances
+            returned by the previous two queries are <emphasis>not</emphasis> pre-filtered
+            by the criteria! If you wish to retrieve just the kittens that match the
+            criteria, you must use <literal>returnMaps()</literal>.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .createCriteria("kittens", "kt")
+        .add( Expression.eq("name", "F%") )
+    .returnMaps()
+    .list();
+Iterator iter = cats.iterator();
+while ( iter.hasNext() ) {
+    Map map = (Map) iter.next();
+    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);
+    Cat kitten = (Cat) map.get("kt");
+}]]></programlisting>
+
+    </sect1>
+    
+    <sect1 id="querycriteria-dynamicfetching">
+        <title>Dynamic association fetching</title>
+
+        <para>
+            You may specify association fetching semantics at runtime using
+            <literal>setFetchMode()</literal>.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Expression.like("name", "Fritz%") )
+    .setFetchMode("mate", FetchMode.EAGER)
+    .setFetchMode("kittens", FetchMode.EAGER)
+    .list();]]></programlisting>
+    
+        <para>
+            This query will fetch both <literal>mate</literal> and <literal>kittens</literal>
+            by outer join.
+        </para>
+    
+    </sect1>
+     
+    <sect1 id="querycriteria-examples">
+        <title>Example queries</title>
+
+        <para>
+            The class <literal>net.sf.hibernate.expression.Example</literal> allows
+            you to construct a query criterion from a given instance.
+        </para>
+
+        <programlisting><![CDATA[Cat cat = new Cat();
+cat.setSex('F');
+cat.setColor(Color.BLACK);
+List results = session.createCriteria(Cat.class)
+    .add( Example.create(cat) )
+    .list();]]></programlisting>
+    
+        <para>
+           Version properties, identifiers and associations are ignored. By default,
+           null valued properties are excluded.
+        </para>
+
+        <para>
+           You can adjust how the <literal>Example</literal> is applied.
+        </para>
+
+        <programlisting><![CDATA[Example example = Example.create(cat)
+    .excludeZeroes()           //exclude zero valued properties
+    .excludeProperty("color")  //exclude the property named "color"
+    .ignoreCase()              //perform case insensitive string comparisons
+    .enableLike();             //use like for string comparisons
+List results = session.createCriteria(Cat.class)
+    .add(example)
+    .list();]]></programlisting>
+    
+        <para>
+            You can even use examples to place criteria upon associated objects.
+        </para>
+
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .add( Example.create(cat) )
+    .createCriteria("mate")
+        .add( Example.create( cat.getMate() ) )
+    .list();]]></programlisting>
+    
+    </sect1>
+
+</chapter>

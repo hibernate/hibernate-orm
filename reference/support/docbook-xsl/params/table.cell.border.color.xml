@@ -1,0 +1,23 @@
+<refentry id="table.cell.border.color">
+<refmeta>
+<refentrytitle>table.cell.border.color</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.cell.border.color</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.cell.border.color.frag'>
+<xsl:param condition="html" name="table.cell.border.color" select="''"/>
+<xsl:param condition="fo" name="table.cell.border.color" select="'black'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

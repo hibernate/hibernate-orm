@@ -1,0 +1,18 @@
+<refentry id="figure.properties">
+<refnamediv>
+<refname>figure.properties</refname>
+<refpurpose>Properties associated with a figure</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='figure.properties.frag'>
+<xsl:attribute-set name="figure.properties" use-attribute-sets="formal.object.properties"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The styling for figures.</para>
+
+</refsect1>
+</refentry>

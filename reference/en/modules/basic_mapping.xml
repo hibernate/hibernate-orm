@@ -1,0 +1,2039 @@
+<chapter id="mapping">
+    <title>Basic O/R Mapping</title>
+
+    <sect1 id="mapping-declaration">
+        <title>Mapping declaration</title>
+
+        <para>
+            Object/relational mappings are defined in an XML document. The mapping document
+            is designed to be readable and hand-editable. The mapping language is Java-centric,
+            meaning that mappings are constructed around persistent class declarations, not
+            table declarations.
+        </para>
+        
+        <para>
+            Note that, even though many Hibernate users choose to define XML mappings be hand,
+            a number of tools exist to generate the mapping document, including XDoclet,
+            Middlegen and AndroMDA.
+        </para>
+
+        <para>
+            Lets kick off with an example mapping:
+        </para>
+
+        <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+
+<hibernate-mapping package="eg">
+
+        <class name="Cat" table="CATS" discriminator-value="C">
+                <id name="id" column="uid" type="long">
+                        <generator class="hilo"/>
+                </id>
+                <discriminator column="subclass" type="character"/>
+                <property name="birthdate" type="date"/>
+                <property name="color" not-null="true"/>
+                <property name="sex" not-null="true" update="false"/>
+                <property name="weight"/>
+                <many-to-one name="mate" column="mate_id"/>
+                <set name="kittens">
+                        <key column="mother_id"/>
+                        <one-to-many class="Cat"/>
+                </set>
+                <subclass name="DomesticCat" discriminator-value="D">
+                        <property name="name" type="string"/>
+                </subclass>
+        </class>
+
+        <class name="Dog">
+                <!-- mapping for Dog could go here -->
+        </class>
+
+</hibernate-mapping>]]></programlisting>
+
+        <para>
+             We will now discuss the content of the mapping document. We will only describe the 
+             document elements and attributes that are used by Hibernate at runtime. The mapping 
+             document also contains some extra optional attributes and elements that affect the 
+             database schemas exported by the schema export tool. (For example the <literal>
+             not-null</literal> attribute.)
+        </para>
+
+
+
+        <sect2 id="mapping-declaration-doctype">
+            <title>Doctype</title>
+
+            <para>
+                All XML mappings should declare the doctype shown. The actual DTD may be found 
+                at the URL above, in the directory <literal>hibernate-x.x.x/src/net/sf/hibernate
+                </literal> or in <literal>hibernate.jar</literal>. Hibernate will always look for 
+                the DTD in its classpath first.
+            </para>
+        </sect2>
+
+        <sect2 id="mapping-declaration-mapping">
+            <title>hibernate-mapping</title>
+
+            <para>
+                This element has three optional attributes. The <literal>schema</literal> attribute
+                specifies that tables referred to by this mapping belong to the named schema. If specified, 
+                tablenames will be qualified by the given schema name. If missing, tablenames will be 
+                unqualified. The <literal>default-cascade</literal> attribute specifies what cascade style
+                should be assumed for properties and collections which do not specify a 
+                <literal>cascade</literal> attribute. The <literal>auto-import</literal> attribute lets us
+                use unqualified class names in the query language, by default.
+            </para>
+ 
+             <programlistingco>
+                 <areaspec>
+                     <area id="hm1" coords="2 55"/>
+                     <area id="hm2" coords="3 55"/>
+                     <area id="hm3" coords="4 55"/>
+                     <area id="hm4" coords="5 55"/>
+                 </areaspec>   
+                 <programlisting><![CDATA[<hibernate-mapping
+         schema="schemaName"
+         default-cascade="none|save-update"
+         auto-import="true|false"
+         package="package.name"
+ />]]></programlisting>
+                 <calloutlist>
+                     <callout arearefs="hm1">
+                         <para>
+                             <literal>schema</literal> (optional): The name of a database schema.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm2">
+                         <para>
+                             <literal>default-cascade</literal> (optional - defaults to <literal>none</literal>): 
+                             A default cascade style.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm3">
+                         <para>
+                             <literal>auto-import</literal> (optional - defaults to <literal>true</literal>):
+                             Specifies whether we can use unqualified class names (of classes in this mapping)
+                             in the query language.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm4">
+                         <para>
+                             <literal>package</literal> (optional): Specifies a package prefix to assume for 
+                             unqualified class names in the mapping document.
+                         </para>
+                     </callout>
+                 </calloutlist>
+             </programlistingco>
+             
+             <para>
+                 If you have two persistent classes with the same (unqualified) name, you should set 
+                 <literal>auto-import="false"</literal>. Hibernate will throw an exception if you attempt
+                 to assign two classes to the same "imported" name.
+             </para>
+ 
+ </sect2>
+
+        <sect2 id="mapping-declaration-class">
+            <title>class</title>
+
+            <para>
+                You may declare a persistent class using the <literal>class</literal> element:
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="class1" coords="2 55"/>
+                    <area id="class2" coords="3 55" />
+                    <area id="class3" coords="4 55"/>
+                    <area id="class4" coords="5 55" />
+                    <area id="class5" coords="6 55"/>
+                    <area id="class6" coords="7 55" />
+                    <area id="class7" coords="8 55"/>
+                    <area id="class8" coords="9 55" />
+                    <area id="class9" coords="10 55" />
+                    <area id="class10" coords="11 55"/>
+                    <area id="class11" coords="12 55"/>
+                    <area id="class12" coords="13 55"/>
+                    <area id="class13" coords="14 55"/>
+                    <area id="class14" coords="15 55"/>
+                    <area id="class15" coords="16 55"/>
+                </areaspec>   
+                <programlisting><![CDATA[<class
+        name="ClassName"
+        table="tableName"
+        discriminator-value="discriminator_value"
+        mutable="true|false"
+        schema="owner"
+        proxy="ProxyInterface"
+        dynamic-update="true|false"
+        dynamic-insert="true|false"
+        select-before-update="true|false"
+        polymorphism="implicit|explicit"
+        where="arbitrary sql where condition"
+        persister="PersisterClass"
+        batch-size="N"
+        optimistic-lock="none|version|dirty|all"
+        lazy="true|false"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="class1">
+                        <para>
+                            <literal>name</literal>: The fully qualified Java class name of the persistent class 
+                            (or interface).
+                        </para>
+                    </callout>
+                    <callout arearefs="class2">
+                        <para>
+                            <literal>table</literal>: The name of its database table.
+                        </para>
+                    </callout>
+                    <callout arearefs="class3">
+                        <para>
+                            <literal>discriminator-value</literal> (optional - defaults to the class name): A value
+                            that distiguishes individual subclasses, used for polymorphic behaviour. Acceptable
+                            values include <literal>null</literal> and <literal>not null</literal>.
+                        </para>
+                    </callout>
+                    <callout arearefs="class4">
+                        <para>
+                            <literal>mutable</literal> (optional, defaults to <literal>true</literal>): Specifies 
+                            that instances of the class are (not) mutable.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class5">
+                        <para>
+                            <literal>schema</literal> (optional): Override the schema name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
+                        </para>
+                    </callout>                
+                    <callout arearefs="class6">
+                        <para>
+                            <literal>proxy</literal> (optional): Specifies an interface to use for lazy
+                            initializing proxies. You may specify the name of the class itself.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class7">
+                        <para>
+                            <literal>dynamic-update</literal> (optional, defaults to <literal>false</literal>): 
+                            Specifies that <literal>UPDATE</literal> SQL should be generated at runtime and 
+                            contain only those columns whose values have changed.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class8">
+                        <para>
+                            <literal>dynamic-insert</literal> (optional, defaults to <literal>false</literal>): 
+                            Specifies that <literal>INSERT</literal> SQL should be generated at runtime and 
+                            contain only the columns whose values are not null.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class9">
+                        <para>
+                            <literal>select-before-update</literal> (optional, defaults to <literal>false</literal>): 
+                            Specifies that Hibernate should <emphasis>never</emphasis> perform an SQL <literal>UPDATE</literal> 
+                            unless it is certain that an object is actually modified. In certain cases (actually, only
+                            when a transient object has been associated with a new session using <literal>update()</literal>),
+                            this means that Hibernate will perform an extra SQL <literal>SELECT</literal> to determine
+                            if an <literal>UPDATE</literal> is actually required.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class10">
+                        <para>
+                            <literal>polymorphism</literal> (optional, defaults to <literal>implicit</literal>): 
+                            Determines whether implicit or explicit query polymorphism is used.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class11">
+                        <para>
+                            <literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> 
+                            condition to be used when retrieving objects of this class
+                        </para>
+                    </callout>                 
+                    <callout arearefs="class12">
+                        <para>
+                            <literal>persister</literal> (optional): Specifies a custom <literal>ClassPersister</literal>.
+                        </para>
+                    </callout>                 
+                    <callout arearefs="class13">
+                        <para>
+                            <literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a "batch size" 
+                            for fetching instances of this class by identifier.
+                        </para>
+                    </callout>                 
+                   <callout arearefs="class14">
+                        <para>
+                            <literal>optimistic-lock</literal> (optional, defaults to <literal>version</literal>): 
+                            Determines the optimistic locking strategy.
+                        </para>
+                    </callout>    
+                    <callout arearefs="class15">
+                        <para>
+                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
+                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
+                            interface.
+                        </para>
+                    </callout>    
+                </calloutlist>
+            </programlistingco>
+           
+            <para>
+                It is perfectly acceptable for the named persistent class to be an interface. You would then
+                declare implementing classes of that interface using the <literal>&lt;subclass&gt;</literal>
+                element. You may persist any <emphasis>static</emphasis> inner class. You should specify the
+                class name using the standard form ie. <literal>eg.Foo$Bar</literal>.
+            </para>
+
+            <para>
+                Immutable classes, <literal>mutable="false"</literal>, may not be updated or deleted by the 
+                application. This allows Hibernate to make some minor performance optimizations.
+            </para>
+            
+            <para>
+                The optional <literal>proxy</literal> attribute enables lazy initialization of persistent
+                instances of the class. Hibernate will initially return CGLIB proxies which implement 
+                the named interface. The actual persistent object will be loaded when a method of the 
+                proxy is invoked. See "Proxies for Lazy Initialization" below.
+            </para>
+            
+            <para><emphasis>Implicit</emphasis> polymorphism means that instances of the class will be returned
+                by a query that names any superclass or implemented interface or the class and that instances
+                of any subclass of the class will be returned by a query that names the class itself. 
+                <emphasis>Explicit</emphasis> polymorphism means that class instances will be returned only
+                be queries that explicitly name that class and that queries that name the class will return
+                only instances of subclasses mapped inside this <literal>&lt;class&gt;</literal> declaration
+                as a <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal>. For
+                most purposes the default, <literal>polymorphism="implicit"</literal>, is appropriate.
+                Explicit polymorphism is useful when two different classes are mapped to the same table
+                (this allows a "lightweight" class that contains a subset of the table columns).
+            </para>
+            
+            <para>
+                The <literal>persister</literal> attribute lets you customize the persistence strategy used for
+                the class. You may, for example, specify your own subclass of 
+                <literal>net.sf.hibernate.persister.EntityPersister</literal> or you might even provide a
+                completely new implementation of the interface 
+                <literal>net.sf.hibernate.persister.ClassPersister</literal> that implements persistence via,
+                for example, stored procedure calls, serialization to flat files or LDAP. See
+                <literal>net.sf.hibernate.test.CustomPersister</literal> for a simple example (of "persistence"
+                to a <literal>Hashtable</literal>).
+            </para>
+            
+            <para>
+                Note that the <literal>dynamic-update</literal> and <literal>dynamic-insert</literal>
+                settings are not inherited by subclasses and so may also be specified on the
+                <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal> elements. 
+                These settings may increase performance in some cases, but might actually decrease 
+                performance in others. Use judiciously.
+            </para>
+            
+            <para>
+                Use of <literal>select-before-update</literal> will usually decrease performance. It is very
+                useful to prevent a database update trigger being called unnecessarily.
+            </para>
+            
+            <para>
+            	If you enable <literal>dynamic-update</literal>, you will have a choice of optimistic
+            	locking strategies:
+            </para>
+            <itemizedlist>
+            	<listitem>
+            		<para>
+            			<literal>version</literal> check the version/timestamp columns
+            		</para>
+            	</listitem>
+            	<listitem>
+            		<para>
+            			<literal>all</literal> check all columns
+            		</para>
+            	</listitem>
+            	<listitem>
+            		<para>
+            			<literal>dirty</literal> check the changed columns
+            		</para>
+            	</listitem>
+            	<listitem>
+            		<para>
+            			<literal>none</literal> do not use optimistic locking
+            		</para>
+            	</listitem>
+            </itemizedlist>
+            <para>
+            	We <emphasis>very</emphasis> strongly recommend that you use version/timestamp
+            	columns for optimistic locking with Hibernate. This is the optimal strategy with
+            	respect to performance and is the only strategy that correctly handles modifications
+            	made outside of the session (ie. when <literal>Session.update()</literal> is used).
+            	Keep in mind that a version or timestamp property should never be null, no matter
+            	what <literal>unsaved-value</literal> strategy, or an instance will be detected as
+            	transient.
+            </para>
+        </sect2>
+
+        <sect2 id="mapping-declaration-id">
+            <title>id</title>
+
+            <para>
+                Mapped classes <emphasis>must</emphasis> declare the primary key column of the database 
+                table. Most classes will also have a JavaBeans-style property holding the unique identifier 
+                of an instance. The <literal>&lt;id&gt;</literal> element defines the mapping from that
+                property to the primary key column.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="id1" coords="2 50"/>
+                    <area id="id2" coords="3 50" />
+                    <area id="id3" coords="4 50"/>
+                    <area id="id4" coords="5 50" />
+                    <area id="id5" coords="6 50" />
+                </areaspec>
+                <programlisting><![CDATA[<id
+        name="propertyName"
+        type="typename"
+        column="column_name"
+        unsaved-value="any|none|null|id_value"
+        access="field|property|ClassName">
+
+        <generator class="generatorClass"/>
+</id>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="id1">
+                        <para>
+                            <literal>name</literal> (optional): The name of the identifier property.
+                        </para>
+                    </callout>
+                    <callout arearefs="id2">
+                        <para>
+                            <literal>type</literal> (optional): A name that indicates the Hibernate type.
+                        </para>
+                    </callout>
+                    <callout arearefs="id3">
+                        <para>
+                            <literal>column</literal> (optional - defaults to the property name): The
+                            name of the primary key column.
+                        </para>
+                    </callout>
+                    <callout arearefs="id4">
+                        <para>
+                            <literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): 
+                            An identifier property value that indicates that an instance is newly instantiated
+                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            in a previous session.
+                        </para>
+                    </callout>            
+                   <callout arearefs="id5">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+            
+            <para>
+                If the <literal>name</literal> attribute is missing, it is assumed that the class has no 
+                identifier property.
+            </para>
+            
+            <para>
+                The <literal>unsaved-value</literal> attribute is important! If the identfier property of your 
+                class does not default to <literal>null</literal>, then you should specify the actual default.
+            </para>
+
+             <para>
+                There is an alternative <literal>&lt;composite-id&gt;</literal> declaration to allow access to
+                legacy data with composite keys. We strongly discourage its use for anything else.
+            </para>
+            
+            <sect3 id="mapping-declaration-id-generator">
+                <title>generator</title>
+
+                <para>
+                    The required <literal>&lt;generator&gt;</literal> child element names a Java class used
+                    to generate unique identifiers for instances of the persistent class. If any parameters
+                    are required to configure or initialize the generator instance, they are passed using the
+                    <literal>&lt;param&gt;</literal> element.
+                </para>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="0">
+        <generator class="net.sf.hibernate.id.TableHiLoGenerator">
+                <param name="table">uid_table</param>
+                <param name="column">next_hi_value_column</param>
+        </generator>
+</id>]]></programlisting>
+
+                <para>
+                    All generators implement the interface <literal>net.sf.hibernate.id.IdentifierGenerator</literal>.
+                    This is a very simple interface; some applications may choose to provide their own specialized
+                    implementations. However, Hibernate provides a range of built-in implementations. There are shortcut
+                    names for the built-in generators:
+
+                    <variablelist>
+                        <varlistentry>
+                        <term><literal>increment</literal></term>
+                        <listitem>
+                            <para>
+                                generates identifiers of type <literal>long</literal>, <literal>short</literal> or
+                                <literal>int</literal> that are unique only when no other process is inserting data
+                                into the same table.
+                                <emphasis>Do not use in a cluster.</emphasis>
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>identity</literal></term>
+                        <listitem>
+                            <para>
+                                supports identity columns in DB2, MySQL, MS SQL Server, Sybase and
+                                HypersonicSQL. The returned identifier is of type <literal>long</literal>,
+                                <literal>short</literal> or <literal>int</literal>.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>sequence</literal></term>
+                        <listitem>
+                            <para>
+                                uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator
+                                in Interbase. The returned identifier is of type <literal>long</literal>,
+                                <literal>short</literal> or <literal>int</literal>
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>hilo</literal></term>
+                        <listitem>
+                            <para id="mapping-declaration-id-hilodescription" revision="1">
+                                uses a hi/lo algorithm to efficiently generate identifiers of
+                                type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>,
+                                given a table and column (by default <literal>hibernate_unique_key</literal> and
+                                <literal>next_hi</literal> respectively) as a source of hi values. The hi/lo algorithm
+                                generates identifiers that are unique only for a particular database. <emphasis>Do not
+                                use this generator with connections enlisted with JTA or with a user-supplied
+                                connection.</emphasis>
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>seqhilo</literal></term>
+                        <listitem>
+                            <para>
+                                uses a hi/lo algorithm to efficiently generate identifiers of type
+                                <literal>long</literal>, <literal>short</literal> or <literal>int</literal>,
+                                given a named database sequence.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>uuid.hex</literal></term>
+                        <listitem>
+                            <para>
+                                uses a 128-bit UUID algorithm to generate identifiers of type string,
+                                unique within a network (the IP address is used). The UUID is encoded
+                                as a string of hexadecimal digits of length 32.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>uuid.string</literal></term>
+                        <listitem>
+                            <para>
+                                uses the same UUID algorithm. The UUID is encoded a string of length 16
+                                consisting of (any) ASCII characters. <emphasis>Do not use with PostgreSQL.</emphasis>
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>native</literal></term>
+                        <listitem>
+                            <para>
+                                picks <literal>identity</literal>, <literal>sequence</literal> or
+                                <literal>hilo</literal> depending upon the capabilities of the
+                                underlying database.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>assigned</literal></term>
+                        <listitem>
+                            <para>
+                                lets the application to assign an identifier to the object before
+                                <literal>save()</literal> is called.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>foreign</literal></term>
+                        <listitem>
+                            <para>
+                                uses the identifier of another associated object. Usually used in conjunction
+                                with a <literal>&lt;one-to-one&gt;</literal> primary key association.
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                    </variablelist>
+
+                </para>
+            </sect3>
+            
+            <sect3 id="mapping-declaration-id-hilo">
+                <title>Hi/Lo Algorithm</title>
+                <para>
+                    The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate
+                    implementations of the hi/lo algorithm, a favorite approach to identifier generation. The
+                    first implementation requires a "special" database table to hold the next available "hi" value.
+                    The second uses an Oracle-style sequence (where supported).
+                </para>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
+        <generator class="hilo">
+                <param name="table">hi_value</param>
+                <param name="column">next_value</param>
+                <param name="max_lo">100</param>
+        </generator>
+</id>]]></programlisting>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
+        <generator class="seqhilo">
+                <param name="sequence">hi_value</param>
+                <param name="max_lo">100</param>
+        </generator>
+</id>]]></programlisting>
+
+                <para>
+                    Unfortunately, you can't use <literal>hilo</literal> when supplying your own
+                    <literal>Connection</literal>  to Hibernate, or when Hibernate is using an application
+                    server datasource to obtain connections enlisted with JTA. Hibernate must be able to
+                    fetch the "hi" value in a new transaction. A standard approach in an EJB environment is
+                    to implement the hi/lo algorithm using a stateless session bean.
+                </para>
+            </sect3>
+            
+            <sect3 id="mapping-declaration-id-uuid">
+                <title>UUID Algorithm</title>
+                <para>
+                    The UUIDs contain: IP address, startup time of the JVM (accurate to a quarter
+                    second), system time and a counter value (unique within the JVM). It's not
+                    possible to obtain a MAC address or memory address from Java code, so this is
+                    the best we can do without using JNI.
+                </para>
+
+                <para>
+                    Don't try to use <literal>uuid.string</literal> in PostgreSQL.
+                </para>
+            
+            </sect3>
+
+            <sect3 id="mapping-declaration-id-sequences">
+            <title>Identity columns and Sequences</title>
+                <para>
+                    For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), you
+                    may use <literal>identity</literal> key generation. For databases that support
+                    sequences (DB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB) you may use
+                    <literal>sequence</literal> style key generation. Both these strategies require
+                    two SQL queries to insert a new object.
+                </para>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="uid">
+        <generator class="sequence">
+                <param name="sequence">uid_sequence</param>
+        </generator>
+</id>]]></programlisting>
+
+                <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="0">
+        <generator class="identity"/>
+</id>]]></programlisting>
+            
+                <para>
+                    For cross-platform development, the <literal>native</literal> strategy will
+                    choose from the <literal>identity</literal>, <literal>sequence</literal> and
+                    <literal>hilo</literal> strategies, dependant upon the capabilities of the
+                    underlying database.
+                </para>
+            </sect3>
+            
+            <sect3 id="mapping-declaration-id-assigned">
+                <title>Assigned Identifiers</title>
+                <para>
+                    If you want the application to assign identifiers (as opposed to having
+                    Hibernate generate them), you may use the <literal>assigned</literal> generator.
+                    This special generator will use the identifier value already assigned to the
+                    object's identifier property. Be very careful when using this feature to assign
+                    keys with business meaning (almost always a terrible design decision).
+                </para>
+                <para>
+                    Due to its inherent nature, entities that use this generator cannot be saved
+                    via the Session's saveOrUpdate() method. Instead you have to explicitly specify to
+                    Hibernate if the object should be saved or updated by calling either the
+                    <literal>save()</literal> or <literal>update()</literal> method of the Session.
+                </para>
+            </sect3>
+            
+        </sect2>
+
+        <sect2 id="mapping-declaration-compositeid">
+            <title>composite-id</title>
+
+            <programlisting><![CDATA[<composite-id
+        name="propertyName"
+        class="ClassName"
+        unsaved-value="any|none"
+        access="field|property|ClassName">
+
+        <key-property name="propertyName" type="typename" column="column_name"/>
+        <key-many-to-one name="propertyName class="ClassName" column="column_name"/>
+        ......
+</composite-id>]]></programlisting>
+
+            <para>
+                For a table with a composite key, you may map multiple properties of the class
+                as identifier properties. The <literal>&lt;composite-id&gt;</literal> element
+                accepts <literal>&lt;key-property&gt;</literal> property mappings and
+                <literal>&lt;key-many-to-one&gt;</literal> mappings as child elements.
+            </para>
+            
+            <programlisting><![CDATA[<composite-id>
+        <key-property name="medicareNumber"/>
+        <key-property name="dependent"/>
+</composite-id>]]></programlisting>
+
+            <para>
+                Your persistent class <emphasis>must</emphasis> override <literal>equals()</literal>
+                and <literal>hashCode()</literal> to implement composite identifier equality. It must
+                also implements <literal>Serializable</literal>.
+            </para>
+
+            <para>
+                Unfortunately, this approach to composite identifiers means that a persistent object 
+                is its own identifier. There is no convenient "handle" other than the object itself. 
+                You must instantiate an instance of the persistent class itself and populate its 
+                identifier properties before you can <literal>load()</literal> the persistent state
+                associated with a composite key. We will describe a much more
+                convenient approach where the composite identifier is implemented as a seperate class
+                in <xref linkend="components-compositeid"/>. The attributes described below apply only
+                to this alternative approach:
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>name</literal> (optional): A property of component type that holds the
+                        composite identifier (see next section).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>class</literal> (optional - defaults to the property type determined by 
+                        reflection): The component class used as a composite identifier (see next section).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>unsaved-value</literal> (optional - defaults to <literal>none</literal>): 
+                        Indicates that transient instances should be considered newly instantiated, if set 
+                        to <literal>any</literal>.
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+        </sect2>
+        
+        <sect2 id="mapping-declaration-discriminator">
+            <title>discriminator</title>
+
+            <para>
+                The <literal>&lt;discriminator&gt;</literal> element is required for polymorphic persistence 
+                using the table-per-class-hierarchy mapping strategy and declares a discriminator column of the 
+                table. The discriminator column contains marker values that tell the persistence layer what 
+                subclass to instantiate for a particular row. A restricted set of types may be used: 
+                <literal>string</literal>, <literal>character</literal>, <literal>integer</literal>, 
+                <literal>byte</literal>, <literal>short</literal>, <literal>boolean</literal>, 
+                <literal>yes_no</literal>, <literal>true_false</literal>.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="discriminator1" coords="2 40"/>
+                    <area id="discriminator2" coords="3 40" />
+                    <area id="discriminator3" coords="4 40" />
+                </areaspec>
+                <programlisting><![CDATA[<discriminator
+        column="discriminator_column"
+        type="discriminator_type"
+        force="true|false"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="discriminator1">
+                        <para>
+                            <literal>column</literal> (optional - defaults to <literal>class</literal>) the
+                            name of the discriminator column.
+                        </para>
+                    </callout>
+                    <callout arearefs="discriminator2">
+                        <para>
+                            <literal>type</literal> (optional - defaults to <literal>string</literal>) a
+                            name that indicates the Hibernate type
+                        </para>
+                    </callout>          
+                    <callout arearefs="discriminator3">
+                        <para>
+                            <literal>force</literal> (optional - defaults to <literal>false</literal>) 
+                            "force" Hibernate to specify allowed discriminator values even when retrieving 
+                            all instances of the root class.
+                        </para>
+                    </callout>          
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                Actual values of the discriminator column are specified by the
+                <literal>discriminator-value</literal> attribute of the <literal>&lt;class&gt;</literal> and
+                <literal>&lt;subclass&gt;</literal> elements.
+            </para>
+            
+            <para>
+                The <literal>force</literal> attribute is (only) useful if the table contains rows with
+                "extra" discriminator values that are not mapped to a persistent class. This will not
+                usually be the case.
+            </para>
+        </sect2>
+
+        <sect2 id="mapping-declaration-version">
+            <title>version (optional)</title>
+            
+            <para>
+                The <literal>&lt;version&gt;</literal> element is optional and indicates that
+                the table contains versioned data. This is particularly useful if you plan to
+                use <emphasis>long transactions</emphasis> (see below).
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="version1" coords="2 60"/>
+                    <area id="version2" coords="3 60"/>
+                    <area id="version3" coords="4 60"/>
+                    <area id="version4" coords="5 60"/>
+                    <area id="version5" coords="6 60"/>
+                </areaspec>
+                <programlisting><![CDATA[<version
+        column="version_column"
+        name="propertyName"
+        type="typename"
+        access="field|property|ClassName"
+        unsaved-value="null|negative|undefined"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="version1">
+                        <para>
+                            <literal>column</literal> (optional - defaults to the property name): The name
+                            of the column holding the version number.
+                        </para>
+                    </callout>          
+                    <callout arearefs="version2">
+                        <para>
+                            <literal>name</literal>: The name of a property  of the persistent class.
+                        </para>
+                    </callout>
+                    <callout arearefs="version3">
+                        <para>
+                            <literal>type</literal> (optional - defaults to <literal>integer</literal>): 
+                            The type of the version number.
+                        </para>
+                    </callout>          
+                   <callout arearefs="version4">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                   <callout arearefs="version5">
+                        <para>
+                            <literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): 
+                            A version property value that indicates that an instance is newly instantiated
+                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            in a previous session. (<literal>undefined</literal> specifies that the identifier
+                            property value should be used.)
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+            
+            <para>
+                Version numbers may be of type <literal>long</literal>, <literal>integer</literal>,
+                <literal>short</literal>, <literal>timestamp</literal> or <literal>calendar</literal>.
+            </para>
+
+        </sect2>
+        
+        <sect2 id="mapping-declaration-timestamp">
+            <title>timestamp (optional)</title>
+
+            <para>
+                The optional <literal>&lt;timestamp&gt;</literal> element indicates that the table contains 
+                timestamped data. This is intended as an alternative to versioning. Timestamps are by nature
+                a less safe implementation of optimistic locking. However, sometimes the application might
+                use the timestamps in other ways.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="timestamp1" coords="2 45"/>
+                    <area id="timestamp2" coords="3 45" />
+                    <area id="timestamp3" coords="4 45" />
+                    <area id="timestamp4" coords="5 45" />
+                </areaspec>            
+                <programlisting><![CDATA[<timestamp
+        column="timestamp_column"
+        name="propertyName"
+        access="field|property|ClassName"
+        unsaved-value="null|undefined"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="timestamp1">
+                        <para>
+                            <literal>column</literal> (optional - defaults to the property name): The name
+                            of a column holding the timestamp.
+                        </para>
+                    </callout>                   
+                    <callout arearefs="timestamp2">
+                        <para>
+                            <literal>name</literal>: The name of a JavaBeans style property of
+                            Java type <literal>Date</literal> or <literal>Timestamp</literal> of the
+                            persistent class.
+                        </para>
+                    </callout>
+                   <callout arearefs="timestamp3">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                   <callout arearefs="timestamp4">
+                        <para>
+                            <literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): 
+                            A version property value that indicates that an instance is newly instantiated
+                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            in a previous session. (<literal>undefined</literal> specifies that the identifier
+                            property value should be used.)
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+            
+            <para>
+                Note that <literal>&lt;timestamp&gt;</literal> is equivalent to 
+                <literal>&lt;version type="timestamp"&gt;</literal>.
+            </para>
+        </sect2>
+
+
+        <sect2 id="mapping-declaration-property">
+            <title>property</title>
+
+            <para>
+                The <literal>&lt;property&gt;</literal> element declares a persistent, JavaBean style 
+                property of the class.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="property1" coords="2 45"/>
+                    <area id="property2" coords="3 45"/>
+                    <area id="property3" coords="4 45"/>
+                    <areaset id="property4-5" coords="">
+                        <area id="property4" coords='5 45'/>
+                        <area id="property5" coords='6 45'/>
+                    </areaset>
+                    <area id="property6" coords="7 45"/>
+                    <area id="property7" coords="8 45"/>
+                </areaspec>            
+                <programlisting><![CDATA[<property
+        name="propertyName"
+        column="column_name"
+        type="typename"
+        update="true|false"
+        insert="true|false"
+        formula="arbitrary SQL expression"
+        access="field|property|ClassName"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="property1">
+                        <para>
+                            <literal>name</literal>: the name of the property, with an initial lowercase
+                            letter.
+                        </para>
+                    </callout>                   
+                    <callout arearefs="property2">
+                        <para>
+                            <literal>column</literal> (optional - defaults to the property name): the name
+                            of the mapped database table column.
+                        </para>
+                    </callout>
+                    <callout arearefs="property3">
+                        <para>
+                            <literal>type</literal> (optional): a name that indicates the Hibernate type.
+                        </para>
+                    </callout>
+                    <callout arearefs="property4-5">
+                        <para>
+                            <literal>update, insert</literal> (optional - defaults to <literal>true</literal>) :
+                            specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> 
+                            and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal>
+                            allows a pure "derived" property whose value is initialized from some other
+                            property that maps to the same colum(s) or by a trigger or other application.
+                        </para>
+                    </callout>
+                    <callout arearefs="property6">
+                        <para>
+                            <literal>formula</literal> (optional): an SQL expression that defines the value for a
+                            <emphasis>computed</emphasis> property. Computed properties do not have a column
+                            mapping of their own.
+                        </para>
+                    </callout>
+                   <callout arearefs="property7">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                <emphasis>typename</emphasis> could be:
+            </para>
+
+            <orderedlist spacing="compact">
+                <listitem>
+                    <para>
+                        The name of a Hibernate basic type (eg. <literal>integer, string, character,
+                        date, timestamp, float, binary, serializable, object, blob</literal>).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The name of a Java class with a default basic type (eg. <literal>int, float,
+                        char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal>).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The name of a subclass of <literal>PersistentEnum</literal> (eg. <literal>eg.Color</literal>).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The name of a serializable Java class.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The class name of a custom type (eg. <literal>com.illflow.type.MyCustomType</literal>).
+                    </para>
+                </listitem>
+            </orderedlist>
+
+            <para>
+                If you do not specify a type, Hibernate will use reflection upon the named
+                property to take a guess at the correct Hibernate type. Hibernate will try to
+                interpret the name of the return class of the property getter using rules 2, 3,
+                4 in that order. However, this is not always enough.
+                In certain cases you will still need the <literal>type</literal>
+                attribute. (For example, to distinguish between <literal>Hibernate.DATE</literal> and
+                <literal>Hibernate.TIMESTAMP</literal>, or to specify a custom type.)
+            </para>
+            
+            <para>
+            	The <literal>access</literal> attribute lets you control how Hibernate will access
+            	the property at runtime. By default, Hibernate will call the property get/set pair.
+            	If you specify <literal>access="field"</literal>, Hibernate will bypass the get/set
+            	pair and access the field directly, using reflection. You may specify your own
+            	strategy for property access by naming a class that implements the interface
+            	<literal>net.sf.hibernate.property.PropertyAccessor</literal>.
+            </para>
+
+        </sect2>
+
+        <sect2 id="mapping-declaration-manytoone">
+            <title>many-to-one</title>
+
+            <para>
+                An ordinary association to another persistent class is declared using a
+                <literal>many-to-one</literal> element. The relational model is a
+                many-to-one association. (Its really just an object reference.)
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="manytoone1" coords="2 60"/>
+                    <area id="manytoone2" coords="3 60"/>
+                    <area id="manytoone3" coords="4 60"/>
+                    <area id="manytoone4" coords="5 60"/>
+                    <area id="manytoone5" coords="6 60"/>
+                    <areaset id="manytoone6-7" coords="">
+                        <area id="manytoone6" coords='7 60'/>
+                        <area id="manytoone7" coords='8 60'/>
+                    </areaset>
+                    <area id="manytoone8" coords="9 60"/>
+                    <area id="manytoone9" coords="10 60"/>
+                </areaspec>
+                <programlisting><![CDATA[<many-to-one
+        name="propertyName"
+        column="column_name"
+        class="ClassName"
+        cascade="all|none|save-update|delete"
+        outer-join="true|false|auto"
+        update="true|false"
+        insert="true|false"
+        property-ref="propertyNameFromAssociatedClass"
+        access="field|property|ClassName"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="manytoone1">
+                        <para>
+                            <literal>name</literal>: The name of the property.
+                        </para>                    
+                    </callout>                   
+                    <callout arearefs="manytoone2">
+                        <para>
+                            <literal>column</literal> (optional): The name of the column.
+                        </para>                    
+                    </callout>
+                    <callout arearefs="manytoone3">
+                        <para>
+                            <literal>class</literal> (optional - defaults to the property type
+                            determined by reflection): The name of the associated class.
+                        </para>
+                    </callout>
+                    <callout arearefs="manytoone4">
+                        <para>
+                            <literal>cascade</literal> (optional): Specifies which operations should
+                            be cascaded from the parent object to the associated object.
+                        </para>                    
+                    </callout>
+                    <callout arearefs="manytoone5">
+                        <para>
+                            <literal>outer-join</literal> (optional - defaults to <literal>auto</literal>): 
+                            enables outer-join fetching for this association when 
+                            <literal>hibernate.use_outer_join</literal> is set.
+                        </para>                    
+                    </callout>
+                    <callout arearefs="manytoone6-7">
+                        <para>
+                            <literal>update, insert</literal> (optional - defaults to <literal>true</literal>) 
+                            specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> 
+                            and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal>
+                            allows a pure "derived" association whose value is initialized from some other
+                            property that maps to the same colum(s) or by a trigger or other application.
+                        </para>                    
+                    </callout>
+                    <callout arearefs="manytoone8">
+                        <para>
+                            <literal>property-ref</literal>: (optional) The name of a property of the associated 
+                            class that is joined to this foreign key. If not specified, the primary key of
+                            the associated class is used.
+                        </para>                
+                    </callout>                   
+                   <callout arearefs="manytoone9">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                The <literal>cascade</literal> attribute permits the following values: 
+                <literal>all</literal>, <literal>save-update</literal>, <literal>delete</literal>,
+                <literal>none</literal>. Setting a value other than <literal>none</literal>
+                will propagate certain operations to the associated (child) object.
+                See "Lifecycle Objects" below.
+            </para>
+            
+            <para>
+                The <literal>outer-join</literal> attribute accepts three different values:
+            </para>
+            
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>auto</literal> (default) Fetch the association using an
+                        outerjoin if the associated class has no proxy
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>true</literal> Always fetch the association using an 
+                        outerjoin
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>false</literal> Never fetch the association using an
+                        outerjoin
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <para>
+                A typical <literal>many-to-one</literal> declaration looks as simple as
+            </para>
+
+            <programlisting><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
+            
+            <para>
+                The <literal>property-ref</literal> attribute should only be used for mapping legacy
+                data where a foreign key refers to a unique key of the associated table other than
+                the primary key. This is an ugly relational model. For example, suppose the 
+                <literal>Product</literal> class had a unique serial number, that is not the primary 
+                key. (The <literal>unique</literal> attribute controls Hibernate's DDL generation with
+                the SchemaExport tool.)
+            </para>
+            
+            <programlisting><![CDATA[<property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/>]]></programlisting>
+            
+            <para>
+                Then the mapping for <literal>OrderItem</literal> might use:
+            </para>
+            
+            <programlisting><![CDATA[<many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/>]]></programlisting>
+            
+            <para>
+                This is certainly not encouraged, however.
+            </para>
+            
+        </sect2>
+
+        <sect2 id="mapping-declaration-onetoone">
+            <title>one-to-one</title>
+
+            <para>
+                A one-to-one association to another persistent class is declared using a 
+                <literal>one-to-one</literal> element.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="onetoone1" coords="2 60"/>
+                    <area id="onetoone2" coords="3 60"/>
+                    <area id="onetoone3" coords="4 60"/>
+                    <area id="onetoone4" coords="5 60"/>
+                    <area id="onetoone5" coords="6 60"/>
+                    <area id="onetoone6" coords="7 60"/>
+                    <area id="onetoone7" coords="8 60"/>
+                </areaspec>
+                <programlisting><![CDATA[<one-to-one
+        name="propertyName"
+        class="ClassName"
+        cascade="all|none|save-update|delete"
+        constrained="true|false"
+        outer-join="true|false|auto"
+        property-ref="propertyNameFromAssociatedClass"
+        access="field|property|ClassName"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="onetoone1">
+                        <para>
+                            <literal>name</literal>: The name of the property.
+                        </para>                
+                    </callout>                   
+                    <callout arearefs="onetoone2">
+                        <para>
+                            <literal>class</literal> (optional - defaults to the property type
+                            determined by reflection): The name of the associated class.
+                        </para>                   
+                    </callout>
+                    <callout arearefs="onetoone3">
+                        <para>
+                            <literal>cascade</literal> (optional) specifies which operations should
+                            be cascaded from the parent object to the associated object.
+                        </para>
+                    </callout>
+                    <callout arearefs="onetoone4">
+                        <para>
+                            <literal>constrained</literal> (optional) specifies that a foreign key constraint
+                            on the primary key of the mapped table references the table of the associated
+                            class. This option affects the order in which <literal>save()</literal> and
+                            <literal>delete()</literal> are cascaded (and is also used by the schema export
+                            tool).
+                        </para>                  
+                    </callout>
+                    <callout arearefs="onetoone5">
+                        <para>
+                            <literal>outer-join</literal> (optional - defaults to <literal>auto</literal>): 
+                            Enable outer-join fetching for this association when 
+                            <literal>hibernate.use_outer_join</literal> is set.
+                        </para>              
+                    </callout>
+                    <callout arearefs="onetoone6">
+                        <para>
+                            <literal>property-ref</literal>: (optional) The name of a property of the associated class
+                            that is joined to the primary key of this class. If not specified, the primary key of
+                            the associated class is used.
+                        </para>                
+                    </callout>                   
+                    <callout arearefs="onetoone7">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+        
+            <para>
+                There are two varieties of one-to-one association:
+            </para>
+            <itemizedlist>
+            <listitem><para>
+                primary key associations
+            </para></listitem>
+            <listitem><para>
+                unique foreign key associations
+            </para></listitem>
+            </itemizedlist>
+            
+            <para>
+                Primary key associations don't need an extra table column; if two rows are related by
+                the association then the two table rows share the same primary key value. So if you want 
+                two objects to be related by a primary key association, you must make sure that they
+                are assigned the same identifier value!
+            </para>
+            
+            <para>
+                For a primary key association, add the following mappings to <literal>Employee</literal> and 
+                <literal>Person</literal>, respectively.
+            </para>
+
+            <programlisting><![CDATA[<one-to-one name="person" class="Person"/>]]></programlisting>
+            <programlisting><![CDATA[<one-to-one name="employee" class="Employee" constrained="true"/>]]></programlisting>
+
+            <para>
+                Now we must ensure that the primary keys of related rows in the PERSON and
+                EMPLOYEE tables are equal. We use a special Hibernate identifier generation strategy
+                called <literal>foreign</literal>:
+            </para>
+
+            <programlisting><![CDATA[<class name="person" table="PERSON">
+    <id name="id" column="PERSON_ID">
+        <generator class="foreign">
+            <param name="property">employee</param>
+        </generator>
+    </id>
+    ...
+    <one-to-one name="employee"
+        class="Employee"
+        constrained="true"/>
+</class>]]></programlisting>
+
+            <para>
+                A newly saved instance of <literal>Person</literal> is then assigned the same primar
+                key value as the <literal>Employee</literal> instance refered with the <literal>employee</literal>
+                property of that <literal>Person</literal>.
+            </para>
+
+            <para>
+                Alternatively, a foreign key with a unique constraint, from <literal>Employee</literal> to 
+                <literal>Person</literal>, may be expressed as:
+            </para>
+            
+            <programlisting><![CDATA[<many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/>]]></programlisting>
+            
+            <para>
+                And this association may be made bidirectional by adding the following to the 
+                <literal>Person</literal> mapping:
+            </para>
+            
+           <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="mapping-declaration-component">
+            <title>component, dynamic-component</title>
+
+            <para>
+                The <literal>&lt;component&gt;</literal> element maps properties of a
+                child object to columns of the table of a parent class. Components may, in
+                turn, declare their own properties, components or collections. See
+                "Components" below.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="component1" coords="2 45"/>
+                    <area id="component2" coords="3 45"/>
+                    <area id="component3" coords="4 45"/>
+                    <area id="component4" coords="5 45"/>
+                    <area id="component5" coords="6 45"/>
+                </areaspec>            
+                <programlisting><![CDATA[<component 
+        name="propertyName" 
+        class="className"
+        insert="true|false"
+        upate="true|false"
+        access="field|property|ClassName">
+        
+        <property ...../>
+        <many-to-one .... />
+        ........
+</component>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="component1">
+                        <para>
+                            <literal>name</literal>: The name of the property.
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="component2">
+                        <para>
+                            <literal>class</literal> (optional - defaults to the property type
+                            determined by reflection): The name of the component (child) class.
+                        </para>                 
+                    </callout>
+                    <callout arearefs="component3">
+                        <para>
+                            <literal>insert</literal>: Do the mapped columns appear in SQL 
+                            <literal>INSERT</literal>s?
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="component4">
+                        <para>
+                            <literal>update</literal>: Do the mapped columns appear in SQL 
+                            <literal>UPDATE</literal>s?
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="component5">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                The child <literal>&lt;property&gt;</literal> tags map properties of the
+                child class to table columns.
+            </para>
+
+            <para>
+                The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;parent&gt;</literal>
+                subelement that maps a property of the component class as a reference back to the
+                containing entity.
+            </para>
+
+            <para>
+                The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal>
+                to be mapped as a component, where the property names refer to keys of the map.
+            </para>
+            
+        </sect2>
+
+        <sect2 id="mapping-declaration-subclass">
+            <title>subclass</title>
+
+            <para>
+                Finally, polymorphic persistence requires the declaration of each subclass of
+                the root persistent class. For the (recommended) table-per-class-hierarchy
+                mapping strategy, the <literal>&lt;subclass&gt;</literal> declaration is used.
+            </para>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="subclass1" coords="2 55"/>
+                    <area id="subclass2" coords="3 55"/>
+                    <area id="subclass3" coords="4 55"/>
+                    <area id="subclass4" coords="5 55"/>
+                </areaspec>
+                <programlisting><![CDATA[<subclass
+        name="ClassName"
+        discriminator-value="discriminator_value"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false">
+
+        <property .... />
+        .....
+</subclass>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="subclass1">
+                        <para>
+                            <literal>name</literal>: The fully qualified class name of the subclass.
+                        </para>              
+                    </callout>                   
+                    <callout arearefs="subclass2">
+                        <para>
+                            <literal>discriminator-value</literal> (optional - defaults to the class name): A
+                            value that distiguishes individual subclasses.
+                        </para>               
+                    </callout>
+                    <callout arearefs="subclass3">
+                        <para>
+                            <literal>proxy</literal> (optional): Specifies a class or interface to use for 
+                            lazy initializing proxies.
+                        </para>               
+                    </callout>
+                    <callout arearefs="subclass4">
+                        <para>
+                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
+                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
+                            interface.
+                        </para>
+                    </callout>    
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                Each subclass should declare its own persistent properties and subclasses.
+                <literal>&lt;version&gt;</literal> and <literal>&lt;id&gt;</literal> properties
+                are assumed to be inherited from the root class. Each subclass in a heirarchy must
+                define a unique <literal>discriminator-value</literal>. If none is specified, the
+                fully qualified Java class name is used.
+            </para>
+            
+        </sect2>
+
+         <sect2 id="mapping-declaration-joinedsubclass" revision="1">
+            <title>joined-subclass</title>
+
+            <para>
+                Alternatively, a subclass that is persisted to its own table (table-per-subclass 
+                mapping strategy) is declared using a <literal>&lt;joined-subclass&gt;</literal>
+                element.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="joinedsubclass1" coords="2 45"/>
+                    <area id="joinedsubclass2" coords="3 45"/>
+                    <area id="joinedsubclass3" coords="4 45"/>
+                </areaspec>
+                <programlisting><![CDATA[<joined-subclass
+        name="ClassName"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false">
+
+        <key .... >
+
+        <property .... />
+        .....
+</joined-subclass>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="joinedsubclass1">
+                        <para>
+                            <literal>name</literal>: The fully qualified class name of the subclass.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="joinedsubclass2">
+                        <para>
+                            <literal>proxy</literal> (optional): Specifies a class or interface to use 
+                            for lazy initializing proxies.
+                        </para>              
+                    </callout>
+                    <callout arearefs="joinedsubclass3">
+                        <para>
+                            <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
+                            equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
+                            interface.
+                        </para>
+                    </callout>    
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                No discriminator column is required for this mapping strategy. Each subclass must,
+                however, declare a table column holding the object identifier using the
+                <literal>&lt;key&gt;</literal> element. The mapping at the start of the chapter
+                would be re-written as:
+            </para>
+            
+        <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+
+<hibernate-mapping package="eg">
+
+        <class name="Cat" table="CATS">
+                <id name="id" column="uid" type="long">
+                        <generator class="hilo"/>
+                </id>
+                <property name="birthdate" type="date"/>
+                <property name="color" not-null="true"/>
+                <property name="sex" not-null="true"/>
+                <property name="weight"/>
+                <many-to-one name="mate"/>
+                <set name="kittens">
+                        <key column="MOTHER"/>
+                        <one-to-many class="Cat"/>
+                </set>
+                <joined-subclass name="DomesticCat" table="DOMESTIC_CATS">
+                	<key column="CAT"/>
+                        <property name="name" type="string"/>
+                </joined-subclass>
+        </class>
+
+        <class name="eg.Dog">
+                <!-- mapping for Dog could go here -->
+        </class>
+
+</hibernate-mapping>]]></programlisting>
+
+        </sect2>
+
+       <sect2 id="mapping-declaration-collections">
+            <title>map, set, list, bag</title>
+
+            <para>
+                Collections are discussed later.
+            </para>
+        </sect2>
+
+        <sect2 id="mapping-declaration-import">
+            <title>import</title>
+
+            <para>
+                Suppose your application has two persistent classes with the same name, and you don't want to
+                specify the fully qualified (package) name in Hibernate queries. Classes may be "imported" 
+                explicitly, rather than relying upon <literal>auto-import="true"</literal>. You may even import 
+                classes and interfaces that are not explicitly mapped.
+            </para>
+            
+            <programlisting><![CDATA[<import class="java.lang.Object" rename="Universe"/>]]></programlisting>
+            
+            <programlistingco>
+                <areaspec>
+                    <area id="import1" coords="2 40"/>
+                    <area id="import2" coords="3 40"/>
+                </areaspec>
+                <programlisting><![CDATA[<import
+        class="ClassName"
+        rename="ShortName"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="import1">
+                        <para>
+                            <literal>class</literal>: The fully qualified class name of of any Java class.
+                        </para>              
+                    </callout>                   
+                    <callout arearefs="import2">
+                        <para>
+                            <literal>rename</literal> (optional - defaults to the unqualified class name):
+                            A name that may be used in the query language.
+                        </para>               
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+            
+        </sect2>
+    </sect1>
+
+    <sect1 id="mapping-types">
+        <title>Hibernate Types</title>
+
+        <sect2 id="mapping-types-entitiesvalues">
+            <title>Entities and values</title>
+
+            <para>
+                To understand the behaviour of various Java language-level objects with respect
+                to the persistence service, we need to classify them into two groups:
+            </para>
+
+            <para>
+                An <emphasis>entity</emphasis> exists independently of any other objects holding
+                references to the entity. Contrast this with the usual Java model where an
+                unreferenced object is garbage collected. Entities must be explicitly saved and
+                deleted (except that saves and deletions may be <emphasis>cascaded</emphasis>
+                from a parent entity to its children). This is different from the ODMG model of
+                object persistence by reachablity - and corresponds more closely to how
+                application objects are usually used in large systems. Entities support
+                circular and shared references. They may also be versioned.
+            </para>
+
+            <para>
+                An entity's persistent state consists of references to other entities and
+                instances of <emphasis>value</emphasis> types. Values are primitives,
+                collections, components and certain immutable objects. Unlike entities, values
+                (in particular collections and components) <emphasis>are</emphasis>
+                persisted and deleted by reachability. Since value objects (and primitives) are
+                persisted and deleted along with their containing entity they may not be
+                independently versioned. Values have no independent identity, so they cannot be
+                shared by two entities or collections.
+            </para>
+
+            <para>
+                All Hibernate types except collections support null semantics.
+            </para>
+
+            <para>
+                Up until now, we've been using the term "persistent class" to refer to
+                entities. We will continue to do that. Strictly speaking, however, not all
+                user-defined classes with persistent state are entities. A
+                <emphasis>component</emphasis> is a user defined class with value semantics.
+            </para>
+        </sect2>
+
+        <sect2 id="mapping-types-basictypes">
+            <title>Basic value types</title>
+
+            <para>
+                The <emphasis>basic types</emphasis> may be roughly categorized into
+
+                <variablelist>
+                    <varlistentry>
+                        <term><literal>integer, long, short, float, double, character, byte,
+                            boolean, yes_no, true_false</literal></term>
+                        <listitem>
+                            <para>
+                                Type mappings from Java primitives or wrapper classes to appropriate
+                                (vendor-specific) SQL column types. <literal>boolean, yes_no</literal>
+                                and <literal>true_false</literal> are all alternative encodings for
+                                a Java <literal>boolean</literal> or <literal>java.lang.Boolean</literal>.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>string</literal></term>
+                        <listitem>
+                            <para>
+                                A type mapping from <literal>java.lang.String</literal> to
+                                <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>date, time, timestamp</literal></term>
+                        <listitem>
+                            <para>
+                                Type mappings from <literal>java.util.Date</literal> and its subclasses 
+                                to SQL types <literal>DATE</literal>, <literal>TIME</literal> and
+                                <literal>TIMESTAMP</literal> (or equivalent).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>calendar, calendar_date</literal></term>
+                        <listitem>
+                            <para>
+                                Type mappings from <literal>java.util.Calendar</literal> to
+                                SQL types <literal>TIMESTAMP</literal> and <literal>DATE</literal>
+                                (or equivalent).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>big_decimal</literal></term>
+                        <listitem>
+                            <para>
+                                A type mapping from <literal>java.math.BigDecimal</literal> to
+                                <literal>NUMERIC</literal> (or Oracle <literal>NUMBER</literal>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>locale, timezone, currency</literal></term>
+                        <listitem>
+                            <para>
+                                Type mappings from <literal>java.util.Locale</literal>,
+                                <literal>java.util.TimeZone</literal> and 
+                                <literal>java.util.Currency</literal> 
+                                to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>).
+                                Instances of <literal>Locale</literal> and <literal>Currency</literal> are 
+                                mapped to their ISO codes. Instances of <literal>TimeZone</literal> are
+                                mapped to their <literal>ID</literal>. 
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>class</literal></term>
+                        <listitem>
+                            <para>
+                                A type mapping from <literal>java.lang.Class</literal> to
+                                <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>).
+                                A <literal>Class</literal> is mapped to its fully qualified name.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>binary</literal></term>
+                        <listitem>
+                            <para>
+                                Maps byte arrays to an appropriate SQL binary type.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>text</literal></term>
+                        <listitem>
+                            <para>
+                                Maps long Java strings to a SQL <literal>CLOB</literal> or 
+                                <literal>TEXT</literal> type.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>serializable</literal></term>
+                        <listitem>
+                            <para>
+                                Maps serializable Java types to an appropriate SQL binary type. You
+                                may also indicate the Hibernate type <literal>serializable</literal> with
+                                the name of a serializable Java class or interface that does not default 
+                                to a basic type or implement <literal>PersistentEnum</literal>.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>clob, blob</literal></term>
+                        <listitem>
+                            <para>
+                                Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and
+                                <literal>java.sql.Blob</literal>. These types may be inconvenient for some
+                                applications, since the blob or clob object may not be reused outside of
+                                a transaction. (Furthermore, driver support is patchy and inconsistent.)
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            
+            </para>
+
+            <para>
+                Unique identifiers of entities and collections may be of any basic type except
+                <literal>binary</literal>, <literal>blob</literal> and <literal>clob</literal>. 
+                (Composite identifiers are also allowed, see below.)
+            </para>
+            
+            <para>
+                The basic value types have corresponding <literal>Type</literal> constants defined on
+                <literal>net.sf.hibernate.Hibernate</literal>. For example, <literal>Hibernate.STRING</literal>
+                represents the <literal>string</literal> type.
+            </para>
+
+        </sect2>
+
+        <sect2 id="mapping-types-enum">
+            <title>Persistent enum types</title>
+
+            <para>
+                An <emphasis>enumerated</emphasis> type is a common Java idiom where a class has
+                a constant (small) number of immutable instances. You may create a persistent
+                enumerated type by implementing <literal>net.sf.hibernate.PersistentEnum</literal>,
+                defining the operations <literal>toInt()</literal> and <literal>fromInt()</literal>:
+            </para>
+
+            <programlisting><![CDATA[package eg;
+import net.sf.hibernate.PersistentEnum;
+
+public class Color implements PersistentEnum {
+    private final int code;
+    private Color(int code) {
+        this.code = code;
+    }
+    public static final Color TABBY = new Color(0);
+    public static final Color GINGER = new Color(1);
+    public static final Color BLACK = new Color(2);
+
+    public int toInt() { return code; }
+
+    public static Color fromInt(int code) {
+        switch (code) {
+            case 0: return TABBY;
+            case 1: return GINGER;
+            case 2: return BLACK;
+            default: throw new RuntimeException("Unknown color code");
+        }
+    }
+}]]></programlisting>
+
+            <para>
+                The Hibernate type name is simply the name of the enumerated class, in this case
+                <literal>eg.Color</literal>.
+            </para>
+        </sect2>
+
+
+        <sect2 id="mapping-types-custom">
+            <title>Custom value types</title>
+
+            <para>
+                It is relatively easy for developers to create their own value types. For example,
+                you might want to persist properties of type <literal>java.lang.BigInteger</literal>
+                to <literal>VARCHAR</literal> columns. Hibernate does not provide a built-in type 
+                for this. But custom types are not limited to mapping a property (or collection element) 
+                to a single table column. So, for example, you might have a Java property 
+                <literal>getName()</literal>/<literal>setName()</literal> of type
+                <literal>java.lang.String</literal> that is persisted to the columns 
+                <literal>FIRST_NAME</literal>, <literal>INITIAL</literal>, <literal>SURNAME</literal>. 
+            </para>
+            
+            <para>
+                To implement a custom type, implement either <literal>net.sf.hibernate.UserType</literal> 
+                or <literal>net.sf.hibernate.CompositeUserType</literal> and declare properties using the 
+                fully qualified classname of the type. Check out 
+                <literal>net.sf.hibernate.test.DoubleStringType</literal> to see the kind of things that 
+                are possible.
+            </para>
+
+            <programlisting><![CDATA[<property name="twoStrings" type="net.sf.hibernate.test.DoubleStringType">
+    <column name="first_string"/>
+    <column name="second_string"/>
+</property>]]></programlisting>
+
+            <para>
+                Notice the use of <literal>&lt;column&gt;</literal> tags to map a property to multiple
+                columns.
+            </para>
+            <para>
+                Even though Hibernate's rich range of built-in types and support for components means you
+                will very rarely <emphasis>need</emphasis> to use a custom type, it is nevertheless
+                considered good form to use custom types for (non-entity) classes that occur frequently
+                in your application. For example, a <literal>MonetoryAmount</literal> class is a good
+                candidate for a <literal>CompositeUserType</literal>, even though it could easily be mapped 
+                as a component. One motivation for this is abstraction. With a custom type, your mapping 
+                documents would be future-proofed against possible changes in your way of representing 
+                monetory values.
+            </para>
+
+        </sect2>
+        
+        <sect2 id="mapping-types-anymapping">
+            <title>Any type mappings</title>
+            
+            <para>
+                There is one further type of property mapping. The <literal>&lt;any&gt;</literal> mapping element 
+                defines a polymorphic association to classes from multiple tables. This type of mapping always
+                requires more than one column. The first column holds the type of the associated entity. 
+                The remaining columns hold the identifier. It is impossible to specify a foreign key constraint
+                for this kind of association, so this is most certainly not meant as the usual way of mapping 
+                (polymorphic) associations. You should use this only in very special cases (eg. audit logs,
+                user session data, etc).
+            </para>
+
+            <programlisting><![CDATA[<any name="anyEntity" id-type="long" meta-type="eg.custom.Class2TablenameType">
+    <column name="table_name"/>
+    <column name="id"/>
+</any>]]></programlisting>
+
+            <para>
+                 The <literal>meta-type</literal> attribute lets the application specify a custom type that 
+                 maps database column values to persistent classes which have identifier properties of the 
+                 type specified by <literal>id-type</literal>. If the meta-type returns instances of 
+                 <literal>java.lang.Class</literal>, nothing else is required. On the other hand, if it is
+                 a basic type like <literal>string</literal> or <literal>character</literal>, you must
+                 specify the mapping from values to classes.
+            </para>
+
+            <programlisting><![CDATA[<any name="anyEntity" id-type="long" meta-type="string">
+    <meta-value value="TBL_ANIMAL" class="Animal"/>
+    <meta-value value="TBL_HUMAN" class="Human"/>
+    <meta-value value="TBL_ALIEN" class="Alien"/>
+    <column name="table_name"/>
+    <column name="id"/>
+</any>]]></programlisting>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="any1" coords="2 50"/>
+                    <area id="any2" coords="3 50"/>
+                    <area id="any3" coords="4 50"/>
+                    <area id="any4" coords="5 50"/>
+                    <area id="any5" coords="6 50"/>
+                </areaspec>
+                <programlisting><![CDATA[<any
+        name="propertyName"
+        id-type="idtypename"
+        meta-type="metatypename"
+        cascade="none|all|save-update"
+        access="field|property|ClassName"
+>
+        <meta-value ... />
+        <meta-value ... />
+        .....
+        <column .... />
+        <column .... />
+        .....
+</any>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="any1">
+                        <para>
+                            <literal>name</literal>: the property name.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="any2">
+                        <para>
+                            <literal>id-type</literal>: the identifier type.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="any3">
+                        <para>
+                            <literal>meta-type</literal> (optional - defaults to <literal>class</literal>): 
+                            a type that maps <literal>java.lang.Class</literal> to a single database column
+                            or, alternatively, a type that is allowed for a discriminator mapping.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="any4">
+                        <para>
+                            <literal>cascade</literal> (optional- defaults to <literal>none</literal>): 
+                            the cascade style.
+                        </para>            
+                    </callout>                   
+                    <callout arearefs="any5">
+                        <para>
+                            <literal>access</literal> (optional - defaults to <literal>property</literal>): The
+                            strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                The old <literal>object</literal> type that filled a similar role in Hibernate 1.2 is still 
+                supported, but is now semi-deprecated.
+            </para>
+
+      </sect2>
+
+    </sect1>
+    
+    <sect1 id="mapping-quotedidentifiers">
+            <title>SQL quoted identifiers</title>
+            <para>
+                You may force Hibernate to quote an identifier in the generated SQL by enclosing the table or
+                column name in backticks in the mapping document. Hibernate will use the correct quotation
+                style for the SQL <literal>Dialect</literal> (usually double quotes, but brackets for SQL
+                Server and backticks for MySQL).
+            </para>
+
+            <programlisting><![CDATA[<class name="LineItem" table="`Line Item`">
+    <id name="id" column="`Item Id`"/><generator class="assigned"/></id>
+    <property name="itemNumber" column="`Item #`"/>
+    ...
+</class>]]></programlisting>
+
+    </sect1>
+
+   <sect1 id="mapping-modularfiles">
+       <title>Modular mapping files</title>
+       <para>
+            It is possible to define <literal>subclass</literal> and <literal>joined-subclass</literal>
+            mappings in seperate mapping documents, directly beneath <literal>hibernate-mapping</literal>.
+            This allows you to extend a class hierachy just by adding a new mapping file. You must
+            specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously
+            mapped superclass. Use of this feature makes the ordering of the mapping documents important!
+        </para>
+    
+        <programlisting><![CDATA[
+<hibernate-mapping>
+        <subclass name="eg.subclass.DomesticCat" extends="eg.Cat" discriminator-value="D">
+             <property name="name" type="string"/>
+        </subclass>
+</hibernate-mapping>]]></programlisting>
+
+   	</sect1>
+
+</chapter>
+

@@ -1,0 +1,23 @@
+<refentry id="eclipse.autolabel">
+<refmeta>
+<refentrytitle>eclipse.autolabel</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>eclipse.autolabel</refname>
+<refpurpose>Should tree-like ToC use autonumbering feature?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='eclipse.autolabel.frag'>
+<xsl:param name="eclipse.autolabel" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want to include chapter and section numbers into ToC in
+the left panel, set this parameter to 1.</para>
+
+</refsect1>
+</refentry>

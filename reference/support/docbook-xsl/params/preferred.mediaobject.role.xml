@@ -1,0 +1,33 @@
+<refentry id="preferred.mediaobject.role">
+<refmeta>
+<refentrytitle>preferred.mediaobject.role</refentrytitle>
+</refmeta>
+<refnamediv>
+<refname>preferred.mediaobject.role</refname>
+<refpurpose>Select which mediaobject to use based on
+this value of an object's <sgmltag class="attribute">role</sgmltag> attribute.
+</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='preferred.mediaobject.role.frag'>
+<xsl:param name="preferred.mediaobject.role"></xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>A mediaobject may contain several objects such as imageobjects.
+If the parameter <parameter>use.role.for.mediaobject</parameter>
+is non-zero, then the <sgmltag class="attribute">role</sgmltag> attribute on
+<sgmltag>imageobject</sgmltag>s and other objects within a <sgmltag>mediaobject</sgmltag> container will be used to select which object will be
+used.  If one of the objects has a role value that matches the
+preferred.mediaobject.role parameter, then it has first
+priority for selection.  If more than one has such a
+role value, the first one is used.
+</para>
+<para>
+See the <parameter>use.role.for.mediaobject</parameter> parameter
+for the sequence of selection.</para>
+</refsect1>
+</refentry>

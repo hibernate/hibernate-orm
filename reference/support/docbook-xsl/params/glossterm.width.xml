@@ -1,0 +1,23 @@
+<refentry id="glossterm.width">
+<refmeta>
+<refentrytitle>glossterm.width</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>glossterm.width</refname>
+<refpurpose>Width of glossterm in list presentation mode</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='glossterm.width.frag'>
+<xsl:param name="glossterm.width" select="'2in'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter specifies the width reserved for glossary terms when
+a list presentation is used.</para>
+
+</refsect1>
+</refentry>

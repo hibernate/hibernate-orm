@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.prev">
+<refmeta>
+<refentrytitle>htmlhelp.button.prev</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.prev</refname>
+<refpurpose>Should be Prev button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.prev.frag'>
+<xsl:param name="htmlhelp.button.prev" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Prev button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,24 @@
+<refentry id="funcsynopsis.tabular.threshold">
+<refmeta>
+<refentrytitle>funcsynopsis.tabular.threshold</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>funcsynopsis.tabular.threshold</refname>
+<refpurpose>Width beyond which a tabular presentation will be used</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='funcsynopsis.tabular.threshold.frag'>
+<xsl:param name="funcsynopsis.tabular.threshold" select="40"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If <parameter>funcsynopsis.tabular.threshold</parameter> is greater than
+zero then if a <sgmltag>funcprototype</sgmltag> is wider than the threshold
+value, it will be presented in a table.</para>
+
+</refsect1>
+</refentry>

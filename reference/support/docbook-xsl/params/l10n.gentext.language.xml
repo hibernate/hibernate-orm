@@ -1,0 +1,28 @@
+<refentry id="l10n.gentext.language">
+<refmeta>
+<refentrytitle>l10n.gentext.language</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>l10n.gentext.language</refname>
+<refpurpose>Sets the gentext language</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='l10n.gentext.language.frag'>
+<xsl:param name="l10n.gentext.language" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If this parameter is set to any value other than the empty string, its
+value will be used as the value for the language when generating text. Setting
+<parameter>l10n.gentext.language</parameter> overrides any settings within the
+document being formatted.</para>
+
+<para>It's much more likely that you might want to set the
+<parameter>l10n.gentext.default.language</parameter> parameter.</para>
+
+</refsect1>
+</refentry>

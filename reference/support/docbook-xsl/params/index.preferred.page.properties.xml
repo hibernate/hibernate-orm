@@ -1,0 +1,25 @@
+<refentry id="index.preferred.page.properties">
+<refnamediv>
+<refname>index.preferred.page.properties</refname>
+<refpurpose>Properties used to emphasize page number references for
+significant index terms</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='index.preferred.page.properties.frag'>
+<xsl:attribute-set name="index.preferred.page.properties">
+  <xsl:attribute name="font-weight">bold</xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Properties used to emphasize page number references for
+significant index terms (<sgmltag
+class="attribute">significance</sgmltag>=<sgmltag
+class="attvalue">preffered</sgmltag>). Currently works only with
+XEP.</para>
+
+</refsect1>
+</refentry>

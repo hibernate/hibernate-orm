@@ -1,0 +1,48 @@
+<refentry id="l10n.gentext.use.xref.language">
+<refmeta>
+<refentrytitle>l10n.gentext.use.xref.language</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>l10n.gentext.use.xref.language</refname>
+<refpurpose>Use the language of target when generating cross-reference text?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='l10n.gentext.use.xref.language.frag'>
+<xsl:param name="l10n.gentext.use.xref.language" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the language of the target will be used when
+generating cross reference text. Usually, the <quote>current</quote>
+language is used when generating text (that is, the language of the
+element that contains the cross-reference element). But setting this parameter
+allows the language of the element <emphasis>pointed to</emphasis> to control
+the generated text.</para>
+
+<para>Consider the following example:</para>
+
+<informalexample>
+<programlisting><![CDATA[<para lang="en">See also <xref linkend="chap3"/>.</para>]]>
+</programlisting>
+</informalexample>
+
+<para>Suppose that Chapter 3 happens to be written in German.
+If <parameter>l10n.gentext.use.xref.language</parameter> is non-zero, the
+resulting text will be something like this:</para>
+
+<blockquote>
+<para>See also Kapital 3.</para>
+</blockquote>
+
+<para>Where the more traditional rendering would be:</para>
+
+<blockquote>
+<para>See also Chapter 3.</para>
+</blockquote>
+
+</refsect1>
+</refentry>

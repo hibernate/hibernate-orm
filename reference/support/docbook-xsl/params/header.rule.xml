@@ -1,0 +1,22 @@
+<refentry id="header.rule">
+<refmeta>
+<refentrytitle>header.rule</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>header.rule</refname>
+<refpurpose>Rule under headers?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='header.rule.frag'>
+<xsl:param name="header.rule" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, a rule will be drawn below the page headers.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,22 @@
+<refentry id="bibliography.numbered">
+<refmeta>
+<refentrytitle>bibliography.numbered</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>bibliography.numbered</refname>
+<refpurpose>Should bibliography entries be numbered?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='bibliography.numbered.frag'>
+<xsl:param name="bibliography.numbered" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero bibliography entries will be numbered</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,24 @@
+<refentry id="subscript.properties">
+<refmeta>
+<refentrytitle>subscript.properties</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>subscript.properties</refname>
+<refpurpose>Properties associated with subscripts</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='subscript.properties.frag'>
+<xsl:attribute-set name="subscript.properties">
+  <xsl:attribute name="font-size">75%</xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies styling properties for subscripts.</para>
+
+</refsect1>
+</refentry>

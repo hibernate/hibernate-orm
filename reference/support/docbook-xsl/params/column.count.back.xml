@@ -1,0 +1,22 @@
+<refentry id="column.count.back">
+<refmeta>
+<refentrytitle>column.count.back</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.count.back</refname>
+<refpurpose>Number of columns on back matter pages</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.count.back.frag'>
+<xsl:param name="column.count.back" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Number of columns on back matter (appendix, glossary, etc.) pages.</para>
+
+</refsect1>
+</refentry>

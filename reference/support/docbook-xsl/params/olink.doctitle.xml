@@ -1,0 +1,21 @@
+<refentry id="olink.doctitle"> 
+<refmeta> 
+<refentrytitle>olink.doctitle</refentrytitle> 
+<refmiscinfo role="type">boolean</refmiscinfo> 
+</refmeta> 
+<refnamediv> 
+<refname>olink.doctitle</refname> 
+<refpurpose>show the document title for external olinks?</refpurpose>
+
+</refnamediv> 
+<refsynopsisdiv> <src:fragment id="olink.doctitle.frag">
+<xsl:param name="olink.doctitle" select="0"/> </src:fragment> 
+</refsynopsisdiv> 
+<refsect1> 
+<title>Description</title> 
+<para>When olinks between documents are resolved for print output, the generated text may not make it clear that the reference is to another document. It is possible for the stylesheets to append the other document's title to external olinks. For this to happen, two parameters must be set. The <parameter>olink.doctitle</parameter> parameter should be set to nonzero to enable this
+feature. And you should set the <parameter>current.docid</parameter> parameter to the document id for the  document currently
+being processed for output.  If an olink's  <literal>targetdoc</literal>  id differs from the <literal>current.docid</literal>, then the stylesheet can append the target document's
+title to the generated olink text. </para> 
+</refsect1> 
+</refentry> 

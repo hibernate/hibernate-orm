@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.print">
+<refmeta>
+<refentrytitle>htmlhelp.button.print</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.print</refname>
+<refpurpose>Should be Print button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.print.frag'>
+<xsl:param name="htmlhelp.button.print" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Print button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

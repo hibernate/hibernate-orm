@@ -1,0 +1,684 @@
+<chapter id="performance">
+    <title>Improving performance</title>
+
+    <sect1 id="performance-collections">
+        <title>Understanding Collection performance</title>
+
+        <para>
+            We've already spent quite some time talking about collections.
+            In this section we will highlight a couple more issues about
+            how collections behave at runtime.
+        </para>
+
+        <sect2 id="performance-collections-taxonomy">
+            <title>Taxonomy</title>
+
+            <para>Hibernate defines three basic kinds of collections:</para>
+
+            <itemizedlist>
+            <listitem>
+                <para>collections of values</para>
+            </listitem>
+            <listitem>
+                <para>one to many associations</para>
+            </listitem>
+            <listitem>
+                <para>many to many associations</para>
+            </listitem>
+            </itemizedlist>
+
+            <para>
+                This classification distinguishes the various table and foreign key
+                relationships but does not tell us quite everything we need to know
+                about the relational model. To fully understand the relational structure
+                and performance characteristics, we must also consider the structure of
+                the primary key that is used by Hibernate to update or delete collection
+                rows. This suggests the following classification:
+            </para>
+
+            <itemizedlist>
+            <listitem>
+                <para>indexed collections</para>
+            </listitem>
+            <listitem>
+                <para>sets</para>
+            </listitem>
+            <listitem>
+                <para>bags</para>
+            </listitem>
+            </itemizedlist>
+
+            <para>
+                All indexed collections (maps, lists, arrays) have a primary key consisting
+                of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal>
+                columns. In this case collection updates are usually extremely efficient -
+                the primary key may be efficiently indexed and a particular row may be efficiently
+                located when Hibernate tries to update or delete it.
+            </para>
+
+            <para>
+                Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element
+                columns. This may be less efficient for some types of collection element, particularly
+                composite elements or large text or binary fields; the database may not be able to index
+                a complex primary key as efficently.  On the other hand, for one to many or many to many
+                associations, particularly in the case of synthetic identifiers, it is likely to be just
+                as efficient. (Side-note: if you want <literal>SchemaExport</literal> to actually create
+                the primary key of a <literal>&lt;set&gt;</literal> for you, you must declare all columns
+                as <literal>not-null="true"</literal>.)
+            </para>
+
+            <para>
+                Bags are the worst case. Since a bag permits duplicate element values and has no
+                index column, no primary key may be defined. Hibernate has no way of distinguishing
+                between duplicate rows. Hibernate resolves this problem by completely removing
+                (in a single <literal>DELETE</literal>) and recreating the collection whenever it
+                changes. This might be very inefficient.
+            </para>
+
+            <para>
+                Note that for a one-to-many association, the "primary key" may not be the physical
+                primary key of the database table - but even in this case, the above classification
+                is still useful. (It still reflects how Hibernate "locates" individual rows of the
+                collection.)
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-collections-mostefficientupdate">
+            <title>Lists, maps and sets are the most efficient collections to update</title>
+
+            <para>
+                From the discussion above, it should be clear that indexed collections
+                and (usually) sets allow the most efficient operation in terms of adding,
+                removing and updating elements.
+            </para>
+
+            <para>
+                There is, arguably, one more advantage that indexed collections have over sets for
+                many to many associations or collections of values. Because of the structure of a
+                <literal>Set</literal>, Hibernate doesn't ever <literal>UPDATE</literal> a row when
+                an element is "changed". Changes to a <literal>Set</literal> always work via
+                <literal>INSERT</literal> and <literal>DELETE</literal> (of individual rows). Once
+                again, this consideration does not apply to one to many associations.
+            </para>
+
+            <para>
+                After observing that arrays cannot be lazy, we would conclude that lists, maps and sets
+                are the most performant collection types. (With the caveat that a set might be less
+                efficient for some collections of values.)
+            </para>
+
+            <para>
+                Sets are expected to be the most common kind of collection in Hibernate applications.
+            </para>
+
+            <para>
+                <emphasis>There is an undocumented feature in this release of Hibernate. The
+                <literal>&lt;idbag&gt;</literal> mapping implements bag semantics for a collection
+                of values or a many to many association and is more efficient that any other
+                style of collection in this case!</emphasis>
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-collections-mostefficentinverse">
+            <title>Bags and lists are the most efficient inverse collections</title>
+
+            <para>
+                Just before you ditch bags forever, there is a particular case in which bags (and also lists)
+                are much more performant than sets. For a collection with <literal>inverse="true"</literal>
+                (the standard bidirectional one-to-many relationship idiom, for example) we can add elements
+                to a bag or list without needing to initialize (fetch) the bag elements! This is because
+                <literal>Collection.add()</literal> or <literal>Collection.addAll()</literal> must always
+                return true for a bag or <literal>List</literal> (unlike a <literal>Set</literal>). This can
+                make the following common code much faster.
+            </para>
+
+            <programlisting><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
+    Child c = new Child();
+    c.setParent(p);
+    p.getChildren().add(c);  //no need to fetch the collection!
+    sess.flush();]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="performance-collections-oneshotdelete">
+            <title>One shot delete</title>
+
+            <para>
+                Occasionally, deleting collection elements one by one can be extremely inefficient. Hibernate
+                isn't completly stupid, so it knows not to do that in the case of an newly-empty collection
+                (if you called <literal>list.clear()</literal>, for example). In this case, Hibernate will
+                issue a single <literal>DELETE</literal> and we are done!
+            </para>
+
+            <para>
+                Suppose we add a single element to a collection of size twenty and then remove two elements.
+                Hibernate will issue one <literal>INSERT</literal> statement and two <literal>DELETE</literal>
+                statements (unless the collection is a bag). This is certainly desirable.
+            </para>
+
+            <para>
+                However, suppose that we remove eighteen elements, leaving two and then add thee new elements.
+                There are two possible ways to proceed
+            </para>
+
+            <itemizedlist>
+            <listitem>
+                <para>delete eighteen rows one by one and then insert three rows</para>
+            </listitem>
+            <listitem>
+                <para>remove the whole collection (in one SQL <literal>DELETE</literal>) and insert
+                all five current elements (one by one)</para>
+            </listitem>
+            </itemizedlist>
+
+            <para>
+                Hibernate isn't smart enough to know that the second option is probably quicker in this case.
+                (And it would probably be undesirable for Hibernate to be that smart; such behaviour might
+                confuse database triggers, etc.)
+            </para>
+
+            <para>
+                Fortunately, you can force this behaviour (ie. the second strategy) at any time by discarding
+                (ie. dereferencing) the original collection and returning a newly instantiated collection with
+                all the current elements. This can be very useful and powerful from time to time.
+            </para>
+
+        </sect2>
+
+    </sect1>
+
+    <para>
+        We have already shown how you can use lazy initialization for persistent collections
+        in the chapter about collection mappings. A similar effect is achievable for ordinary object
+        references, using CGLIB proxies. We have also mentioned how Hibernate caches persistent
+        objects at the level of a <literal>Session</literal>. More aggressive caching strategies
+        may be configured upon a class-by-class basis.
+    </para>
+    
+    <para>
+        In the next section, we show you how to use these features, which may be used to
+        achieve much higher performance, where necessary.
+    </para>
+
+    <sect1 id="performance-proxies">
+        <title>Proxies for Lazy Initialization</title>
+
+        <para>
+            Hibernate implements lazy initializing proxies for persistent objects using runtime
+            bytecode enhancement (via the excellent CGLIB library).
+        </para>
+
+        <para>
+            The mapping file declares a class or interface to use as the proxy interface
+            for that class. The recommended approach is to specify the class itself:
+        </para>
+        
+        <programlisting><![CDATA[<class name="eg.Order" proxy="eg.Order">]]></programlisting>
+        
+        <para>
+            The runtime type of the proxies will be a subclass of <literal>Order</literal>. Note that
+            the proxied class must implement a default constructor with at least package visibility.
+        </para>
+        
+        <para>
+            There are some gotchas to be aware of when extending this approach to polymorphic
+            classes, eg.
+        </para>
+
+        <programlisting><![CDATA[<class name="eg.Cat" proxy="eg.Cat">
+    ......
+    <subclass name="eg.DomesticCat" proxy="eg.DomesticCat">
+        .....
+    </subclass>
+</class>]]></programlisting>
+
+        <para>
+            Firstly, instances of <literal>Cat</literal> will never be castable to 
+            <literal>DomesticCat</literal>, even if the underlying instance is an
+            instance of <literal>DomesticCat</literal>.
+        </para>
+        
+        <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
+if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
+    DomesticCat dc = (DomesticCat) cat;       // Error!
+    ....
+}]]></programlisting>
+    
+        <para>
+            Secondly, it is possible to break proxy <literal>==</literal>.
+        </para>
+            
+        <programlisting><![CDATA[
+Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
+DomesticCat dc = 
+    (DomesticCat) session.load(DomesticCat.class, id);  // required new DomesticCat proxy!
+System.out.println(cat==dc);                            // false]]></programlisting>
+        
+        <para>
+            However, the situation is not quite as bad as it looks. Even though we now have two references
+            to different proxy objects, the underlying instance will still be the same object:
+        </para>
+    
+        <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
+System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
+
+        <para>
+            Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class
+            with any <literal>final</literal> methods.
+        </para>
+        
+        <para>
+            Finally, if your persistent object acquires any resources upon instantiation (eg. in 
+            initializers or default constructor), then those resources will also be acquired by
+            the proxy. The proxy class is an actual subclass of the persistent class.
+        </para>
+        
+        <para>
+            These problems are all due to fundamental limitations in Java's single inheritence model.
+            If you wish to avoid these problems your persistent classes must each implement an interface 
+            that declares its business methods. You should specify these interfaces in the mapping file. eg.
+        </para>
+
+        <programlisting><![CDATA[<class name="eg.Cat" proxy="eg.ICat">
+    ......
+    <subclass name="eg.DomesticCat" proxy="eg.IDomesticCat">
+        .....
+    </subclass>
+</class>]]></programlisting>
+
+        <para>
+            where <literal>Cat</literal> implements the interface <literal>ICat</literal> and
+            <literal>DomesticCat</literal> implements the interface <literal>IDomesticCat</literal>. Then 
+            proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned 
+            by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>find()</literal> 
+            does not return proxies.)
+        </para>
+
+        <programlisting><![CDATA[ICat cat = (ICat) session.load(Cat.class, catid);
+Iterator iter = session.iterate("from cat in class eg.Cat where cat.name='fritz'");
+ICat fritz = (ICat) iter.next();]]></programlisting>
+        
+        <para>
+            Relationships are also lazily initialized. This means you must declare any properties to be of 
+            type <literal>ICat</literal>, not <literal>Cat</literal>.
+        </para>
+        
+        <para>
+            Certain operations do <emphasis>not</emphasis> require proxy initialization
+        </para>
+        
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>equals()</literal>, if the persistent class does not override
+                    <literal>equals()</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>hashCode()</literal>, if the persistent class does not override
+                    <literal>hashCode()</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    The identifier getter method
+                </para>
+            </listitem>
+        </itemizedlist>
+            
+        <para>
+            Hibernate will detect persistent classes that override <literal>equals()</literal> or
+            <literal>hashCode()</literal>.
+        </para>
+
+        <para>
+            Exceptions that occur while initializing a proxy are wrapped in a
+            <literal>LazyInitializationException</literal>.
+        </para>
+        
+        <para>
+            Sometimes we need to ensure that a proxy or collection is initialized before closing the
+            <literal>Session</literal>. Of course, we can alway force initialization by calling 
+            <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example.
+            But that is confusing to readers of the code and is not convenient for generic code.
+            The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>
+            provide the application with a convenient way of working with lazyily initialized collections or
+            proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy,
+            <literal>cat</literal>, as long as its <literal>Session</literal> is still open.
+            <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection
+            of kittens. 
+        </para>
+        
+    </sect1>
+
+    <sect1 id="performance-cache">
+        <title>The Second Level Cache</title>
+
+        <para>
+            A Hibernate <literal>Session</literal> is a transaction-level cache of persistent data. It is
+            possible to configure a cluster or JVM-level (<literal>SessionFactory</literal>-level) cache on 
+            a class-by-class and collection-by-collection basis. You may even plug in a clustered cache. Be 
+            careful. Caches are never aware of changes made to the persistent store by another application 
+            (though they may be configured to regularly expire cached data).
+        </para>
+        
+        <para>
+            By default, Hibernate uses EHCache for JVM-level caching. (JCS support is now deprecated and will 
+            be removed in a future version of Hibernate.) You may choose a different implementation by 
+            specifying the name of a class that implements <literal>net.sf.hibernate.cache.CacheProvider</literal> 
+            using the property <literal>hibernate.cache.provider_class</literal>.
+        </para>
+
+        <table frame="topbot">
+            <title>Cache Providers</title>
+            <tgroup cols='5' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' colwidth="1*"/>
+            <colspec colname='c2' colwidth="3*"/>
+            <colspec colname='c3' colwidth="1*"/>
+            <colspec colname='c4' colwidth="1*"/>
+            <colspec colname='c5' colwidth="1*"/>
+            <thead>
+            <row>
+              <entry>Cache</entry>
+              <entry>Provider class</entry>
+              <entry>Type</entry>
+              <entry>Cluster Safe</entry>
+              <entry>Query Cache Supported</entry>
+            </row>
+            </thead>
+            <tbody>
+            <row>
+                <entry>Hashtable (not intended for production use)</entry>
+                <entry><literal>net.sf.hibernate.cache.HashtableCacheProvider</literal></entry>
+                <entry>memory</entry>
+                <entry></entry>
+                <entry>yes</entry>
+            </row>
+            <row>
+                <entry>EHCache</entry>
+                <entry><literal>net.sf.ehcache.hibernate.Provider</literal></entry>
+                <entry>memory, disk</entry>
+                <entry></entry>
+                <entry>yes</entry>
+            </row>
+            <row>
+                <entry>OSCache</entry>
+                <entry><literal>net.sf.hibernate.cache.OSCacheProvider</literal></entry>
+                <entry>memory, disk</entry>
+                <entry></entry>
+                <entry>yes</entry>
+            </row>
+            <row>
+                <entry>SwarmCache</entry>
+                <entry><literal>net.sf.hibernate.cache.SwarmCacheProvider</literal></entry>
+                <entry>clustered (ip multicast)</entry>
+                <entry>yes (clustered invalidation)</entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>JBoss TreeCache</entry>
+                <entry><literal>net.sf.hibernate.cache.TreeCacheProvider</literal></entry>
+                <entry>clustered (ip multicast), transactional</entry>
+                <entry>yes (replication)</entry>
+                <entry></entry>
+            </row>
+            </tbody>
+            </tgroup>
+        </table>
+
+        <sect2 id="performance-cache-mapping">
+            <title>Cache mappings</title>
+
+            <para>
+                The <literal>&lt;cache&gt;</literal> element of a class or collection mapping has the
+                following form:
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="cache1" coords="2 70"/>
+                </areaspec>
+                <programlisting><![CDATA[<cache 
+    usage="transactional|read-write|nonstrict-read-write|read-only"
+/>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="cache1">
+                        <para>
+                            <literal>usage</literal> specifies the caching strategy:
+                            <literal>transactional</literal>,
+                            <literal>read-write</literal>,
+                            <literal>nonstrict-read-write</literal> or
+                            <literal>read-only</literal>
+                        </para>
+                    </callout>                   
+                </calloutlist>
+            </programlistingco>
+            
+            <para>
+                Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</literal> and 
+                <literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate.cfg.xml</literal>.
+            </para>
+            
+            <para>
+                The <literal>usage</literal> attribute specifies a <emphasis>cache concurrency strategy</emphasis>.
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-cache-readonly">
+            <title>Strategy: read only</title>
+
+            <para>
+                If your application needs to read but never modify instances of a persistent class, a 
+                <literal>read-only</literal> cache may be used. This is the simplest and best performing
+                strategy. Its even perfectly safe for use in a cluster.
+            </para>
+
+            <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
+    <cache usage="read-only"/>
+    ....
+</class>]]></programlisting>
+
+        </sect2>
+
+
+        <sect2 id="performance-cache-readwrite">
+            <title>Strategy: read/write</title>
+
+            <para>
+                If the application needs to update data, a <literal>read-write</literal> cache might be appropriate. 
+                This cache strategy should never be used if serializable transaction isolation level is required. 
+                If the cache is used in a JTA environment, you must specify the property 
+                <literal>hibernate.transaction.manager_lookup_class</literal>, naming a strategy for obtaining the 
+                JTA <literal>TransactionManager</literal>. In other environments, you should ensure that the transaction 
+                is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called. 
+                If you wish to use this strategy in a cluster, you should ensure that the underlying cache implementation 
+                supports locking. The built-in cache providers do <emphasis>not</emphasis>.
+            </para>
+
+            <programlisting><![CDATA[<class name="eg.Cat" .... >
+    <cache usage="read-write"/>
+    ....
+    <set name="kittens" ... >
+        <cache usage="read-write"/>
+        ....
+    </set>
+</class>]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="performance-cache-nonstrict">
+            <title>Strategy: nonstrict read/write</title>
+
+            <para>
+                If the application only occasionally needs to update data (ie. if it is extremely unlikely that two 
+                transactions would try to update the same item simultaneously) and strict transaction isolation is
+                not required, a <literal>nonstrict-read-write</literal> cache might be appropriate. If the cache is 
+                used in a JTA environment, you must specify <literal>hibernate.transaction.manager_lookup_class</literal>. 
+                In other environments, you should ensure that the transaction is completed when 
+                <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called.
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-cache-transactional">
+            <title>Strategy: transactional</title>
+
+            <para>
+                The <literal>transactional</literal> cache strategy provides support for fully transactional cache
+                providers such as JBoss TreeCache. Such a cache may only be used in a JTA environment and you must 
+                specify <literal>hibernate.transaction.manager_lookup_class</literal>. 
+            </para>
+
+        </sect2>
+        
+        <para>
+            None of the cache providers support all of the cache concurrency strategies. The following table shows
+            which providers are compatible with which concurrency strategies.
+        </para>
+
+        <table frame="topbot">
+            <title>Cache Concurrency Strategy Support</title>
+            <tgroup cols='5' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' colwidth="1*"/>
+            <colspec colname='c2' colwidth="1*"/>
+            <colspec colname='c3' colwidth="1*"/>
+            <colspec colname='c4' colwidth="1*"/>
+            <colspec colname='c5' colwidth="1*"/>
+            <thead>
+            <row>
+              <entry>Cache</entry>
+              <entry>read-only</entry>
+              <entry>nonstrict-read-write</entry>
+              <entry>read-write</entry>
+              <entry>transactional</entry>
+            </row>
+            </thead>
+            <tbody>
+            <row>
+                <entry>Hashtable (not intended for production use)</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>EHCache</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>OSCache</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>SwarmCache</entry>
+                <entry>yes</entry>
+                <entry>yes</entry>
+                <entry></entry>
+                <entry></entry>
+            </row>
+            <row>
+                <entry>JBoss TreeCache</entry>
+                <entry>yes</entry>
+                <entry></entry>
+                <entry></entry>
+                <entry>yes</entry>
+            </row>
+            </tbody>
+            </tgroup>
+        </table>
+
+    </sect1>
+
+    <sect1 id="performance-sessioncache" revision="2">
+        <title>Managing the <literal>Session</literal> Cache</title>
+
+        <para>
+            Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal>
+            or <literal>saveOrUpdate()</literal> and whenever you retrieve an object using 
+            <literal>load()</literal>, <literal>find()</literal>, <literal>iterate()</literal>,
+            or <literal>filter()</literal>, that object is added to the internal cache of the
+            <literal>Session</literal>. When <literal>flush()</literal> is subsequently called,
+            the state of that object will be synchronized with the database. If you do not want
+            this synchronization to occur or if you are processing a huge number of objects and
+            need to manage memory efficiently, the <literal>evict()</literal> method may be
+            used to remove the object and its collections from the cache.
+        </para>
+        
+        <programlisting><![CDATA[Iterator cats = sess.iterate("from eg.Cat as cat"); //a huge result set
+while ( cats.hasNext() ) {
+    Cat cat = (Cat) iter.next();
+    doSomethingWithACat(cat);
+    sess.evict(cat);
+}]]></programlisting>
+
+		<para>
+			Hibernate will evict associated entities automatically if the association is mapped
+			with <literal>cascade="all"</literal> or <literal>cascade="all-delete-orphan"</literal>.
+		</para>
+        
+        <para>
+            The <literal>Session</literal> also provides a <literal>contains()</literal> method
+            to determine if an instance belongs to the session cache.
+        </para>
+        
+        <para>
+            To completely evict all objects from the session cache, call <literal>Session.clear()</literal>
+        </para>
+        
+        <para>
+            For the second-level cache, there are methods defined on <literal>SessionFactory</literal> for 
+            evicting the cached state of an instance, entire class, collection instance or entire collection 
+            role.
+        </para>
+        
+    </sect1>
+    
+    <sect1 id="performance-querycache">
+        <title>The Query Cache</title>
+
+        <para>
+            Query result sets may also be cached. This is only useful for queries that are run
+            frequently with the same parameters. To use the query cache you must first enable it
+            by setting the property <literal>hibernate.cache.use_query_cache=true</literal>. This
+            causes the creation of two cache regions - one holding cached query result sets 
+            (<literal>net.sf.hibernate.cache.QueryCache</literal>), the other holding timestamps 
+            of most recent updates to queried tables 
+            (<literal>net.sf.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
+            cache does not cache the state of any entities in the result set; it caches only 
+            identifier values and results of value type. So the query cache is usually used in
+            conjunction with the second-level cache.
+        </para>
+        
+        <para>
+            Most queries do not benefit from caching, so by default queries are not cached. To
+            enable caching, call <literal>Query.setCacheable(true)</literal>. This call allows
+            the query to look for existing cache results or add its results to the cache when
+            it is executed.
+        </para>
+        
+        <para>
+            If you require fine-grained control over query cache expiration policies, you may
+            specify a named cache region for a particular query by calling 
+            <literal>Query.setCacheRegion()</literal>.
+        </para>
+        
+        <programlisting><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
+    .setEntity("blogger", blogger)
+    .setMaxResults(15)
+    .setCacheable(true)
+    .setCacheRegion("frontpages")
+    .list();]]></programlisting>
+
+    </sect1>
+
+</chapter>

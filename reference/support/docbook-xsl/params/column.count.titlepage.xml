@@ -1,0 +1,22 @@
+<refentry id="column.count.titlepage">
+<refmeta>
+<refentrytitle>column.count.titlepage</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.count.titlepage</refname>
+<refpurpose>Number of columns on a title page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.count.titlepage.frag'>
+<xsl:param name="column.count.titlepage" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Number of columns on a title page</para>
+
+</refsect1>
+</refentry>

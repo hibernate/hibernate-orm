@@ -1,0 +1,363 @@
+2004-01-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, htmltblx.mod: 
+	Changed version number to V4.3CR2
+
+	* dbpoolx.mod, htmltblx.mod: Make sure floatstyle is on table and informaltable
+
+2003-12-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile, freshmeat.xsl: Support freshmeat target
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, htmltblx.mod: 
+	Updated version numbers
+
+	* dbpoolx.mod: Refactor parameter entities for informaltable so that textobject is handled correctly; avoid duplicate ID on caption when HTML tables are allowed.
+
+	* docbookx.dtd: DocBook V4.3CR2 released
+
+2003-12-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: Put HTML attributes on caption of HTML tables are allowed
+
+2003-12-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Add doc target
+
+	* htmltblx.mod: Make sure textobject goes in the DocBook branch of informaltable
+
+2003-12-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, htmltblx.mod: 
+	Updated version number
+
+	* docbookx.dtd: Released 4.3CR1
+
+2003-10-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, htmltblx.mod: 
+	Released 4.3b5
+
+	* dbnotnx.mod: Added SWF notation
+
+	* dbpoolx.mod: Make firstterm isomorphic to glossterm
+
+2003-09-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: RFE #573812: allow blockinfo on blockquote
+
+	* dbpoolx.mod: RFE #564776: added process, service, server, and daemon to the class values of systemitem
+
+	* dbpoolx.mod: RFE #571998: added initializer to paramdef
+
+	* dbpoolx.mod: RFE #518074: added a number of new values to the class attribute of database
+
+	* dbpoolx.mod: RFE #533734: allow void to be optional on {method|constructor|destructor}synopsis
+
+	* dbpoolx.mod: Added StepAlternatives
+
+	* dbpoolx.mod: RFE #507975: revision should allow author or authorinitials
+
+	* dbpoolx.mod: RFE #517604: allow optional title on glosslist
+
+	* dbpoolx.mod: RFE #570068: added emailmessage, webpage, and newsposting as pubwork values for citetitle
+
+	* dbpoolx.mod: RFE #571996: added prefix, namespace, and localname to class for sgmltag
+
+2003-09-25  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, htmltblx.mod: 
+	Changed V4.2b2 to V4.2b3
+
+	* dbhierx.mod: Allow Set to be recursive
+
+	* dbhierx.mod, dbpoolx.mod: Added type attribute to indexterm and index
+
+	* dbpoolx.mod: Added xml:base
+
+	* dbpoolx.mod: Added code
+
+	* dbpoolx.mod: RFE #615473: added floatstyle to (informal)figure, (informal)example, and (informal)equation
+
+	* htmltblx.mod: Fixup some PEs so that we don't get duplicated attribute declarations
+
+	* htmltblx.mod: Put blockinfo and textobject back into the CALS table model
+
+2003-08-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, htmltblx.mod: 
+	Changed 4.2 to 4.3b2
+
+	* calstblx.dtd, dbpoolx.mod, htmltblx.mod, soextblx.dtd: 
+	Allow HTML table models in addition to CALS or SOEx table models (2003 Apr)
+
+	* dbpoolx.mod: Task markup (2003 Jun)
+
+2003-08-11  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbhierx.mod: Related to RFE 514435: allow multiple refnamediv elements in refentry (2003 Jul)
+
+	* dbnotnx.mod: RFE 698844: add PDF notation (2003 May)
+
+	* dbpoolx.mod: RFE 660044: support continuation and startinglinenumber on verbatims (2003 Feb)
+
+	* dbpoolx.mod: Related to RFE 679316: add orgname to inlines (2003 Jul)
+
+	* dbpoolx.mod: RFE 655526: support modifier in funcprototype (2003 Feb)
+
+	* dbpoolx.mod: RFE 573419: add bidirectional text override (2003 Apr)
+
+	* dbpoolx.mod: Added function attribute to keycap for improved semantics (2003 Jul)
+
+	* dbpoolx.mod: RFE 691762: add language attribute to verbatim environments (2003 May)
+
+	* dbpoolx.mod: RFE 705885: add namespace attribute to sgmltag (2003 May)
+
+	* dbpoolx.mod: RFE 565716: support for URI element (2003 Apr)
+
+2003-08-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: RFE 582822: paramdef and varargs on funcprototype (2003 Feb)
+
+	* dbpoolx.mod: RFE 638456: support translators (2003 Feb)
+
+	* dbpoolx.mod: Added xrefstyle (2002 Dec)
+
+	* dbpoolx.mod: RFE 473365: choice attribute for paramdef (2003 Feb)
+
+	* dbpoolx.mod: RFE 570068: new values for pubwork (2003 Jan)
+
+	* docbookx.dtd: Fix SDATA entity for euro
+
+2002-07-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd: 
+	DocBook XML V4.2 released
+
+2002-05-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd: 
+	Updated comments to reflect CR3
+
+2002-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbnotnx.mod: SVG notation accidentally left out of notation.class
+
+	* docbookx.dtd: Fix syntactic error intentionally introduced behind mutually exclusive PEs. Now make the DTD useless, but not syntactically invalid
+
+2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: Add accidentally missing local.info.class to info.class
+
+2002-03-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod: 
+	Prepare for CR1
+
+	* catalog.xml, docbook.cat: Prepare for CR1 and fix search-and-replace typos
+
+	* dbpoolx.mod: Make type other tokens in bibliorelation unique for SGML compatibility
+
+	* dbpoolx.mod: Make spatial/temporal other tokens unique for SGML compatibility
+
+	* dbpoolx.mod: Added bibliosource, bibliorelation, and bibliocoverage
+
+	* dbpoolx.mod: Move bibliorelation type attribute into a PE so that it can be expanded the way we want
+
+	* dbpoolx.mod: Implemented RFE #480957
+
+	* dbpoolx.mod: Revise graphic attributes: add contentwidth, contentdepth, and valign
+
+	* dbpoolx.mod: Add class attribute to orgname
+
+	* dbpoolx.mod: Implemented RFE #480954: add textdata element
+
+	* dbpoolx.mod: Added blockinfo element
+
+	* dbpoolx.mod: RFE #513426: Text alternative for tables
+
+	* dbpoolx.mod: Add consortium to the list of classes on orgname
+
+	* docbookx.dtd: DocBook V4.2 Candidate Release 1 released
+
+2002-02-05  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbhierx.mod: Implemented RFE #501363
+
+	* dbpoolx.mod: Implemented RFE #492099
+
+	* dbpoolx.mod: Implemented RFE #498848
+
+	* dbpoolx.mod: Implemented RFE #480955
+
+2002-01-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbcentx.mod: Added marked sections around character set entity references
+
+2001-11-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd: 
+	DocBook V4.2b1 released
+
+	* dbpoolx.mod: Implemented RFE #482821
+
+2001-11-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbhierx.mod, dbpoolx.mod: Implemented RFE #456460
+
+2001-11-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: RFE #482817: Add errortext element
+
+2001-11-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbpoolx.mod: RFE 482821: Add extension to the list of class values on filename
+
+	* dbpoolx.mod: RFE 482053: Add support for DOI in meta
+
+	* dbpoolx.mod: Removed bogus occurrence indicator in info.class; fixed typo in qandaset PEs
+
+2001-11-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* 40chg.txt, 41chg.txt, LostLog: Removed old files
+
+	* Makefile: Fixed typo
+
+	* Makefile: Makefile
+
+	* README: Removed version information
+
+	* README, readme.txt: Renamed
+
+	* calstblx.dtd, catalog.xml, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd: 
+	Removed 'XML' from public identifiers for files that will now be common to both XML and SGML
+
+	* catalog.xml: Fixed missing end tag
+
+2001-11-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, dbcentx.mod, dbgenent.mod, dbnotnx.mod, readme.txt: 
+	Updated version numbers
+
+	* catalog.xml, docbook.cat: Added XML Catalog; updated public identifiers in catalog
+
+	* dbpoolx.mod: Implemented RFE #480956
+
+	* dbpoolx.mod: Former RFE 133: Added newsgroup class to systemitem
+
+2001-11-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbhierx.mod: Implemented RFE #426382
+
+	* dbhierx.mod: Implemented RFE #417671
+
+	* dbhierx.mod, dbpoolx.mod: Implemented RFE #436072
+
+	* dbhierx.mod, dbpoolx.mod, docbookx.dtd: Changed version number
+
+	* dbnotnx.mod: Implemented RFE #440597
+
+	* dbpoolx.mod: Implemented RFE #435485
+
+	* dbpoolx.mod: Expand the content model of the following elements from smallcptr.char.mix back to cptr.char.mix: interfacename, action, database, filename, hardware, keycap, option, parameter, property, and systemitem (command, interface, and literal were never reduced).
+
+	* dbpoolx.mod: Implemented RFE #431418
+
+	* dbpoolx.mod: Implemented RFE #431419
+
+	* dbpoolx.mod: Implemented RFE #435466
+
+	* dbpoolx.mod: Implemented RFE #439136
+
+	* dbpoolx.mod: Implemented RFE #431415
+
+	* dbpoolx.mod: Implemented RFE #431413
+
+	* dbpoolx.mod: Implemented RFE #434439
+
+2001-11-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* calstblx.dtd, dbcentx.mod, dbhierx.mod, dbpoolx.mod, docbookx.dtd: 
+	Towards a 4.2 release: reparameterize so that the SGML DTD is just a customization of the XML DTD
+
+	* calstblx.dtd, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbookx.dtd: 
+	Whitespace fixes
+
+2001-08-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* dbhierx.mod: RFE 426382: Norm to allow SimpleSect inside Section
+
+	* dbpoolx.mod: RFE 431419: Norm to add markup for FS type and partition
+
+	* dbpoolx.mod: RFE 431418: Norm to add typing to funcdef and paramdef
+
+	* dbpoolx.mod: Fix comments; implement proposal of the TC to expand the content model of selected inlines
+
+	* dbpoolx.mod: RFE 434439: Add language attribute to fieldsynopsis et al.
+
+	* dbpoolx.mod: RFE 431415: Norm to add markup for host identifiers
+
+2001-06-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* 40chg.txt, 41chg.txt, LostLog, Makefile, calstblx.dtd, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.cat, docbookx.dtd, readme.txt: 
+	Additional work on DocBook XML V5.0; I had the wrong CVS repository for a while so there's a bunch of changes lumped together here
+
+	* Makefile: branches:  1.1.2;
+	file Makefile was initially added on branch V50-devel.
+
+2001-03-12  <ndw@users.sourceforge.net>
+
+	* calstblx.dtd, dbcentx.mod, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbookx.dtd, readme.txt: 
+	Updated version numbers
+
+	* dbcentx.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbookx.dtd, soextblx.dtd: 
+	New file.
+
+	* docbook.cat: New file.
+
+	* docbookx.cat: branches:  1.1.2;
+	file docbookx.cat was initially added on branch V50-devel.
+
+	* docbookx.cat: New file.
+
+2001-01-14  <ndw@users.sourceforge.net>
+
+	* dbpoolx.mod: branches:  1.5.2;
+	RFE #140: Allow multiple MsgExplan inside SimpleMsgEntry
+
+2000-11-12  <ndw@users.sourceforge.net>
+
+	* dbhierx.mod: branches:  1.6.2;
+	Add refentry; accidentally left out
+
+	* dbhierx.mod: Allow beginpage to be the first child of toc, lot, appendix, chapter,
+	part, preface, reference, and refentry. (It can't be at the start of
+	bibliography, glossary, index, or setindex because of ambiguity
+	problems.)
+
+2000-09-19  <ndw@users.sourceforge.net>
+
+	* 40chg.txt, calstblx.dtd, dbcentx.mod, dbgenent.ent, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbookx.dtd, readme.txt, soextblx.dtd: 
+	DocBook XML V4.0
+
+	* 40chg.txt, soextblx.dtd: branches:  1.2.2;
+	DocBook XML V4.1
+
+	* 41chg.txt, LostLog, calstblx.dtd, dbcentx.mod, dbgenent.ent, dbgenent.mod, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, readme.txt: 
+	DocBook XML V4.1.1
+
+	* 41chg.txt, LostLog, calstblx.dtd, dbcentx.mod, dbgenent.ent, dbhierx.mod, dbnotnx.mod, dbpoolx.mod, docbook.cat, docbookx.dtd, readme.txt: 
+	DocBook XML V4.1
+
+	* 41chg.txt, LostLog, docbook.cat: branches:  1.3.2;
+	DocBook XML V4.1.2
+
+	* calstblx.dtd, dbcentx.mod, dbnotnx.mod, docbookx.dtd, readme.txt: 
+	branches:  1.4.2;
+	DocBook XML V4.1.2
+
+	* dbgenent.mod: branches:  1.2.2;
+	DocBook XML V4.1.2
+
+	* dbhierx.mod, dbpoolx.mod: DocBook XML V4.1.2
+

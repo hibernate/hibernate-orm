@@ -1,0 +1,146 @@
+<project name="HibernateDocumentation" default="all.doc" basedir=".">
+
+    <!-- Set build directories for all formats. -->
+    <property name="build.dir"             value="${basedir}/build"/>
+
+    <!-- Support files for build process. -->
+    <property name="support.dir"           value="${basedir}/support"/>
+
+    <!-- Set DocBook stylesheets. -->
+    <property name="db.style.fopdf"        value="fopdf.xsl"/>
+    <property name="db.style.html"         value="html_chunk.xsl"/>
+    <property name="db.style.htmlsingle"   value="html.xsl"/>
+
+    <!-- Classpath for the build tools. -->
+    <path id="lib.classpath">
+        <fileset dir="${support.dir}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- ################################################################## -->
+
+    <target name="all.doc"
+            depends="clean"
+            description="Compile documentation for all languages and all formats.">
+
+        <!-- TRANSLATOR: Duplicate this line for your language -->
+        <antcall target="lang.all"><param name="lang" value="en"/></antcall>
+
+    </target>
+
+    <target name="all.revdiff"
+            description="Generates a diff report for all translated versions.">
+
+        <!-- TRANSLATOR: Duplicate this line for your language -->
+        <antcall target="lang.revdiff"><param name="lang" value="de"/></antcall>
+
+    </target>
+
+    <!-- ################################################################## -->
+
+    <target name="clean">
+
+        <!-- Delete build directory. -->
+        <delete dir="${build.dir}"/>
+
+    </target>
+
+    <target name="lang.all">
+        <!-- Compile the documentation for a single language in all formats. -->
+        <antcall target="lang.docpdf"/>
+        <antcall target="lang.dochtml"/>
+        <antcall target="lang.dochtmlsingle"/>
+        <antcall target="lang.htmlmisc"/>
+    </target>
+
+    <target name="lang.docpdf">
+
+        <!-- Copy all the images to the output location, will be removed later. -->
+        <copy todir="${build.dir}/${lang}/pdf/images">
+            <fileset dir="${basedir}/${lang}/images">
+                <include name="**/*.png"/>
+                <include name="**/*.svg"/>
+                <include name="**/*.gif"/>
+            </fileset>
+        </copy>
+
+        <!-- Create the XSL/FO temporary file. -->
+        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${basedir}">
+            <classpath refid="lib.classpath"/>
+            <arg value="-o"/>
+            <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
+            <arg value="${basedir}/${lang}/master.xml"/>
+            <arg value="${basedir}/${lang}/styles/${db.style.fopdf}"/>
+        </java>
+
+        <!-- Create a PDF from the XSL/FO. -->
+        <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}">
+            <classpath refid="lib.classpath"/>
+            <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
+            <arg value="${build.dir}/${lang}/pdf/hibernate_reference.pdf"/>
+        </java>
+
+        <!-- Delete temporary files. -->
+        <delete file="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
+        <delete  dir="${build.dir}/${lang}/pdf/images"/>
+
+    </target>
+
+    <target name="lang.dochtml">
+
+        <mkdir dir="${build.dir}/${lang}/html/"/>
+
+        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${build.dir}/${lang}/html">
+            <classpath refid="lib.classpath"/>
+            <arg value="${basedir}/${lang}/master.xml"/>
+            <arg value="${basedir}/${lang}/styles/${db.style.html}"/>
+        </java>
+    </target>
+
+    <target name="lang.dochtmlsingle">
+
+        <mkdir dir="${build.dir}/${lang}/html_single/"/>
+
+        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${basedir}">
+            <classpath refid="lib.classpath"/>
+            <arg value="-o"/>
+            <arg value="${build.dir}/${lang}/html_single/index.html"/>
+            <arg value="${basedir}/${lang}/master.xml"/>
+            <arg value="${basedir}/${lang}/styles/${db.style.htmlsingle}"/>
+        </java>
+    </target>
+
+    <target name="lang.htmlmisc">
+
+        <!-- Copy images and CSS for HTML documentation, language specific. -->
+        <copy todir="${build.dir}/${lang}/shared/images">
+            <fileset dir="${basedir}/${lang}/images">
+                <include name="**/*.png"/>
+                <include name="**/*.gif"/>
+            </fileset>
+        </copy>
+        <copy todir="${build.dir}/${lang}/shared/css">
+            <fileset dir="${basedir}/${lang}/styles">
+                <include name="**/*.css"/>
+            </fileset>
+        </copy>
+
+    </target>
+
+    <target name="lang.revdiff">
+
+        <taskdef name="revdiff"
+            classname="org.hibernate.docproc.revdiff.RevDiffReportTask"
+            classpathref="lib.classpath">
+
+        </taskdef>
+
+        <revdiff original="${basedir}/en/master.xml"
+                 copy="${basedir}/${lang}/master.xml"
+                 report="${build.dir}/status_${lang}.html"/>
+
+    </target>
+
+
+</project>

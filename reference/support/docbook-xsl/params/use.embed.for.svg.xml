@@ -1,0 +1,28 @@
+<refentry id="use.embed.for.svg">
+<refmeta>
+<refentrytitle>use.embed.for.svg</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.embed.for.svg</refname>
+<refpurpose>Use HTML <sgmltag>embed</sgmltag> for SVG?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.embed.for.svg.frag'>
+<xsl:param name="use.embed.for.svg" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, an <sgmltag>embed</sgmltag> element will be created for
+SVG figures. An <sgmltag>object</sgmltag> is <emphasis>always</emphasis> created,
+this parameter merely controls whether or not an additional <sgmltag>embed</sgmltag>
+is generated inside the <sgmltag>object</sgmltag>.</para>
+
+<para>On the plus side, this may be more portable among browsers and plug-ins.
+On the minus side, it isn't valid HTML.</para>
+
+</refsect1>
+</refentry>

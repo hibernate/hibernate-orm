@@ -484,7 +484,7 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
 
         </sect2>
 
-        <sect2 id="manipulatingdata-updating-detached">
+        <sect2 id="manipulatingdata-updating-detached" revision="1">
             <title>Updating detached objects</title>
 
             <para>
@@ -663,6 +663,17 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
                     </para>
                 </listitem>
             </itemizedlist>
+
+            <para>
+                The last case can be avoided by using <literal>saveOrUpdateCopy(Object o)</literal>. This method
+                copies the state of the given object onto the persistent object with the same identifier. If
+                there is no persistent instance currently associated with the session, it will be loaded.
+                The method return the persistent instance. If the given instance is unsaved or does not
+                exist in the database, Hibernate will save it and return it as a newly persistent instance.
+                Otherwise, the given instance  does not become associated with the session. In most
+                applications with detached objects, you need both methods, <literal>saveOrUpdate()</literal>
+                and <literal>saveOrUpdateCopy()</literal>.
+             </para>
 
         </sect2>
 

@@ -1097,6 +1097,7 @@
                     <area id="property8" coords="9 45"/>
                     <area id="property9" coords="10 45"/>
                     <area id="property10" coords="11 45"/>
+                    <area id="property11" coords="12 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1109,6 +1110,7 @@
         lazy="true|false"
         unique="true|false"
         not-null="true|false"
+        optimistic-lock="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1171,6 +1173,13 @@
                             constraint for the columns.
                         </para>
 					 </callout>
+                    <callout arearefs="property11">
+                        <para>
+                            <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
+							Specifies that updates to this property do or do not require acquisition of the
+							optimistic lock.
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -1252,6 +1261,7 @@
                     <area id="manytoone9" coords="10 60"/>
 					<area id="manytoone10" coords="11 60"/>
                     <area id="manytoone11" coords="12 60"/>
+                    <area id="manytoone12" coords="13 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1265,6 +1275,7 @@
         access="field|property|ClassName"
         unique="true|false"
         not-null="true|false"
+        optimistic-lock="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1334,6 +1345,13 @@
                             constraint for the foreign key columns.
                         </para>
 					 </callout>
+                    <callout arearefs="manytoone12">
+                        <para>
+                            <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
+							Specifies that updates to this property do or do not require acquisition of the
+							optimistic lock.
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -1561,6 +1579,7 @@
                     <area id="component4" coords="5 45"/>
                     <area id="component5" coords="6 45"/>
                     <area id="component6" coords="7 45"/>
+                    <area id="component7" coords="8 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<component 
         name="propertyName" 
@@ -1568,7 +1587,9 @@
         insert="true|false"
         upate="true|false"
         access="field|property|ClassName"
-        lazy="true|false">
+        lazy="true|false"
+        optimistic-lock="true|false"
+>
         
         <property ...../>
         <many-to-one .... />
@@ -1612,6 +1633,13 @@
                         </para>
                     </callout>
                 </calloutlist>
+                <callout arearefs="component7">
+                        <para>
+                            <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
+							Specifies that updates to this component do or do not require acquisition of the
+							optimistic lock.
+                        </para>
+                </callout>
             </programlistingco>
 
             <para>
@@ -2286,7 +2314,7 @@
 
         </sect2>
         
-        <sect2 id="mapping-types-anymapping">
+        <sect2 id="mapping-types-anymapping" revision="1">
             <title>Any type mappings</title>
             
             <para>
@@ -2321,6 +2349,7 @@
                     <area id="any3" coords="4 50"/>
                     <area id="any4" coords="5 50"/>
                     <area id="any5" coords="6 50"/>
+                    <area id="any6" coords="7 50"/>
                 </areaspec>
                 <programlisting><![CDATA[<any
         name="propertyName"
@@ -2328,6 +2357,7 @@
         meta-type="metatypename"
         cascade="none|all|save-update"
         access="field|property|ClassName"
+        optimistic-lock="true|false"
 >
         <meta-value ... />
         <meta-value ... />
@@ -2363,6 +2393,13 @@
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                             strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                    <callout arearefs="any6">
+                        <para>
+                            <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
+							Specifies that updates to this property do or do not require acquisition of the
+							optimistic lock.
                         </para>
                     </callout>
                 </calloutlist>

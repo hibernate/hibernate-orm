@@ -237,9 +237,5 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
        
     </sect1>
 
-    <para>
-        TODO: document statistics
-    </para>
-
 </chapter>
 

@@ -211,16 +211,16 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
-        <para>
-            Collection instances are distinguished in the database by the foreign key of
-            the entity that owns the collection. This foreign key is referred to as the
-            <emphasis>collection key column</emphasis> (or columns) of the collection 
-            table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> 
-            element. 
-        </para>
-        
         <sect2>
-               <title>Collection foreign keys</title>
+           <title>Collection foreign keys</title>
+    
+            <para>
+                Collection instances are distinguished in the database by the foreign key of
+                the entity that owns the collection. This foreign key is referred to as the
+                <emphasis>collection key column</emphasis> (or columns) of the collection 
+                table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> 
+                element. 
+            </para>
     
             <para>
                 There may be a nullability constraint on the foreign key column. For most
@@ -236,6 +236,11 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </para>
     
             <programlisting><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
+            
+            <para>
+                See the previous chapter for a full definition of the <literal>&lt;key&gt;</literal> 
+                element.
+            </para>
             
         </sect2>
         
@@ -385,6 +390,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         length="N"
         precision="N"
         scale="N"
+        not-null="true|false"
         unique="true|false"
 />]]></programlisting>
             <calloutlist>

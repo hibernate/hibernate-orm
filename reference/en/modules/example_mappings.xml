@@ -347,6 +347,270 @@ alter table line_items
     add constraint line_itemsFK1 foreign key (order_id) references orders]]></programlisting>
 
     </sect1>
+    
+    <sect1 id="misc">
+        <title>Miscellaneous example mappings</title>
+        
+        <para>
+            These examples are all taken from the Hibernate test suite. You
+            will find many other useful example mappings there.
+        </para>
+        
+        <para>TODO: put words around this stuff</para>
+        
+        <sect2>
+            <title>"Typed" one-to-one association</title>
+<programlisting><![CDATA[<class name="Person">
+    <id name="name"/>
+    <one-to-one name="address" cascade="all" constrained="false">
+        <formula>name</formula>
+        <formula>'HOME'</formula>
+    </one-to-one>
+    <one-to-one name="mailingAddress" constrained="false">
+        <formula>name</formula>
+        <formula>'MAILING'</formula>
+    </one-to-one>
+</class>
+
+<class name="Address" batch-size="2" 
+        check="addressType in ('MAILING', 'HOME', 'BUSINESS')">
+    <composite-id>
+        <key-many-to-one name="person" 
+                column="personName"/>
+        <key-property name="type" 
+                column="addressType"/>
+    </composite-id>
+    <property name="street" type="text"/>
+    <property name="state"/>
+    <property name="zip"/>
+</class>]]></programlisting>
+        </sect2>
+        
+        <sect2>
+            <title>Composite key example</title>
+<programlisting><![CDATA[<class name="Customer">
+
+    <id name="customerId"
+        length="10">
+        <generator class="assigned"/>
+    </id>
+
+    <property name="name" not-null="true" length="100"/>
+    <property name="address" not-null="true" length="200"/>
+
+    <list name="orders"
+        inverse="true"
+        cascade="save-update">
+        <key column="customerId"/>
+        <index column="orderNumber"/>
+        <one-to-many class="Order"/>
+    </list>
+
+</class>
+
+<class name="Order" table="CustomerOrder" lazy="true">
+    <synchronize table="LineItem"/>
+    <synchronize table="Product"/>
+    
+    <composite-id name="id" 
+        class="Order$Id">
+        <key-property name="customerId" length="10"/>
+        <key-property name="orderNumber"/>
+    </composite-id>
+    
+    <property name="orderDate" 
+        type="calendar_date"
+        not-null="true"/>
+    
+    <property name="total">
+        <formula>
+            ( select sum(li.quantity*p.price) 
+            from LineItem li, Product p 
+            where li.productId = p.productId 
+                and li.customerId = customerId 
+                and li.orderNumber = orderNumber )
+        </formula>
+    </property>
+    
+    <many-to-one name="customer"
+        column="customerId"
+        insert="false"
+        update="false" 
+        not-null="true"/>
+        
+    <bag name="lineItems"
+        fetch="join" 
+        inverse="true"
+        cascade="save-update">
+        <key>
+            <column name="customerId"/>
+            <column name="orderNumber"/>
+        </key>
+        <one-to-many class="LineItem"/>
+    </bag>
+    
+</class>
+    
+<class name="LineItem">
+    
+    <composite-id name="id" 
+        class="LineItem$Id">
+        <key-property name="customerId" length="10"/>
+        <key-property name="orderNumber"/>
+        <key-property name="productId" length="10"/>
+    </composite-id>
+    
+    <property name="quantity"/>
+    
+    <many-to-one name="order"
+        insert="false"
+        update="false" 
+        not-null="true">
+        <column name="customerId"/>
+        <column name="orderNumber"/>
+    </many-to-one>
+    
+    <many-to-one name="product"
+        insert="false"
+        update="false" 
+        not-null="true"
+        column="productId"/>
+        
+</class>
+
+<class name="Product">
+    <synchronize table="LineItem"/>
+
+    <id name="productId"
+        length="10">
+        <generator class="assigned"/>
+    </id>
+    
+    <property name="description" 
+        not-null="true" 
+        length="200"/>
+    <property name="price" length="3"/>
+    <property name="numberAvailable"/>
+    
+    <property name="numberOrdered">
+        <formula>
+            ( select sum(li.quantity) 
+            from LineItem li 
+            where li.productId = productId )
+        </formula>
+    </property>
+    
+</class>]]></programlisting>
+        </sect2>
+        
+        <sect2>
+            <title>Content based discrimination</title>
+<programlisting><![CDATA[<class name="Person"
+    discriminator-value="P">
+    
+    <id name="id" 
+        column="person_id" 
+        unsaved-value="0">
+        <generator class="native"/>
+    </id>
+    
+            
+    <discriminator 
+        type="character">
+        <formula>
+            case 
+                when title is not null then 'E' 
+                when salesperson is not null then 'C' 
+                else 'P' 
+            end
+        </formula>
+    </discriminator>
+
+    <property name="name" 
+        not-null="true"
+        length="80"/>
+        
+    <property name="sex" 
+        not-null="true"
+        update="false"/>
+    
+    <component name="address">
+        <property name="address"/>
+        <property name="zip"/>
+        <property name="country"/>
+    </component>
+    
+    <subclass name="Employee" 
+        discriminator-value="E">
+            <property name="title"
+                length="20"/>
+            <property name="salary"/>
+            <many-to-one name="manager"/>
+    </subclass>
+    
+    <subclass name="Customer" 
+        discriminator-value="C">
+            <property name="comments"/>
+            <many-to-one name="salesperson"/>
+    </subclass>
+    
+</class>]]></programlisting>
+        </sect2>
+
+        <sect2>
+            <title>Associations on alternate keys</title>
+<programlisting><![CDATA[<class name="Person">
+    
+    <id name="id">
+        <generator class="hilo"/>
+    </id>
+    
+    <property name="name" length="100"/>
+    
+    <one-to-one name="address" 
+        property-ref="person"
+        cascade="all"
+        fetch="join"/>
+    
+    <set name="accounts" 
+        inverse="true">
+        <key column="userId"
+            property-ref="userId"/>
+        <one-to-many class="Account"/>
+    </set>
+    
+    <property name="userId" length="8"/>
+
+</class>
+
+<class name="Address">
+
+    <id name="id">
+        <generator class="hilo"/>
+    </id>
+
+    <property name="address" length="300"/>
+    <property name="zip" length="5"/>
+    <property name="country" length="25"/>
+    <many-to-one name="person" unique="true" not-null="true"/>
+
+</class>
+
+<class name="Account">
+    <id name="accountId" length="32">
+        <generator class="uuid.hex"/>
+    </id>
+    
+    <many-to-one name="user"
+        column="userId"
+        property-ref="userId"/>
+    
+    <property name="type" not-null="true"/>
+    
+</class>]]></programlisting>
+        </sect2>
+
+    </sect1>
 
 </chapter>
 

@@ -264,25 +264,21 @@
         <para>
             Since a composite identifier must be assigned to the object before saving it,
             we can't use <literal>unsaved-value</literal> of the identifier to distinguish
-            between newly instantiated instances and instances saved in a previous session.
+            between newly instantiated transient instances and detached instances from a
+            previous session.
         </para>
 
         <para>
-            You may instead implement <literal>Interceptor.isUnsaved()</literal> if
-            you wish to use <literal>saveOrUpdate()</literal> or cascading save / update.
-            As an alternative, you may also set the <literal>unsaved-value</literal>
-            attribute on a <literal>&lt;version&gt;</literal> (or
-            <literal>&lt;timestamp&gt;</literal>) element to specify a
-            value that indicates a new transient instance. In this case, the version
-            of the entity is used instead of the (assigned) identifier and you don't have
-            to implement <literal>Interceptor.isUnsaved()</literal> yourself.
+            So, if you wish to use transitive reattachment (you don't have to), you must
+            either implement <literal>Interceptor.isUnsaved()</literal> or define the 
+            <literal>unsaved-value</literal> of a <literal>&lt;version&gt;</literal> or
+            <literal>&lt;timestamp&gt;</literal> element.
         </para>
 
         <para>
-            Use the <literal>&lt;composite-id&gt;</literal> tag (same attributes and
-            elements as <literal>&lt;component&gt;</literal>) in place of
-            <literal>&lt;id&gt;</literal> for the declaration of a composite identifier
-            class:
+            Use the <literal>&lt;composite-id&gt;</literal> tag (with nested 
+            <literal>&lt;key-property&gt;</literal> elements) in place of the
+            usual <literal>&lt;id&gt;</literal> declaration:
         </para>
 
         <programlisting><![CDATA[<class name="eg.Foo" table"FOOS">
@@ -364,8 +360,9 @@
             The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are identical
             to <literal>&lt;component&gt;</literal>. The advantage of this kind of mapping is 
             the ability to determine the actual properties of the bean at deployment time, just
-            by editing the mapping document. (Runtime manipulation of the mapping document is 
-            also possible, using a DOM parser.)
+            by editing the mapping document. Runtime manipulation of the mapping document is 
+            also possible, using a DOM parser. Even better, you can access (and change) Hibernate's
+            configuration-time metamodel via the <literal>Configuration</literal> object.
         </para>
 
     </sect1>

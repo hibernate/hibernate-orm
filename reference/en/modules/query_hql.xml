@@ -190,9 +190,9 @@ from Cat as cat
         </para>
 
         <programlisting><![CDATA[select cat.name from DomesticCat cat
-where cat.name like 'fri%'
+where cat.name like 'fri%']]></programlisting>
 
-select cust.name.firstName from Customer as cust]]></programlisting>
+        <programlisting><![CDATA[select cust.name.firstName from Customer as cust]]></programlisting>
 
         <para>
             Queries may return multiple objects and/or properties as an array of type 
@@ -797,7 +797,7 @@ where cat.name not in (
 
         <para>
             For subqueries with more than one expression in the select list, you can use a "row constructor".
-        <para>
+        </para>
         
         <programlisting><![CDATA[from Cat as cat 
 where not ( cat.name, cat.color ) in ( 

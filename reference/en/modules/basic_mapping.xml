@@ -12,7 +12,7 @@
         </para>
         
         <para>
-            Note that, even though many Hibernate users choose to define XML mappings be hand,
+            Note that, even though many Hibernate users choose to write the XML by hand,
             a number of tools exist to generate the mapping document, including XDoclet,
             Middlegen and AndroMDA.
         </para>
@@ -23,26 +23,60 @@
 
         <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
+	  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
           "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
 
-        <class name="Cat" table="CATS" discriminator-value="C">
-                <id name="id" column="uid" type="long">
-                        <generator class="hilo"/>
+        <class name="Cat" 
+	        table="cats" 
+		discriminator-value="C">
+                
+                <id name="id">
+                        <generator class="native"/>
                 </id>
-                <discriminator column="subclass" type="character"/>
-                <property name="birthdate" type="date"/>
-                <property name="color" not-null="true"/>
-                <property name="sex" not-null="true" update="false"/>
+		
+                <discriminator column="subclass" 
+		        type="character"/>
+			
                 <property name="weight"/>
-                <many-to-one name="mate" column="mate_id"/>
-                <set name="kittens">
+		
+                <property name="birthdate" 
+		        type="date" 
+			not-null="true" 
+			update="false"/>
+			
+                <property name="color" 
+		        type="eg.types.ColorUserType"
+		        not-null="true"
+			update="false"/>
+			
+                <property name="sex" 
+		        not-null="true" 
+			update="false"/>
+		
+                <property name="litterId" 
+		        column="litterId"
+			update="false"/>
+		
+                <many-to-one name="mother" 
+			column="mother_id"
+			update="false"/>
+			
+                <set name="kittens" 
+		        inverse="true"
+		        lazy="true"
+			order-by="litter_id">
                         <key column="mother_id"/>
                         <one-to-many class="Cat"/>
                 </set>
-                <subclass name="DomesticCat" discriminator-value="D">
-                        <property name="name" type="string"/>
+		
+                <subclass name="DomesticCat" 
+		        discriminator-value="D">
+			
+                        <property name="name" 
+			        type="string"/>
+				
                 </subclass>
         </class>
 
@@ -77,10 +111,11 @@
             <title>hibernate-mapping</title>
 
             <para>
-                This element has several optional attributes. The <literal>schema</literal> attribute
-                specifies that tables referred to by this mapping belong to the named schema. If specified, 
-                tablenames will be qualified by the given schema name. If missing, tablenames will be 
-                unqualified. The <literal>default-cascade</literal> attribute specifies what cascade style
+                This element has several optional attributes. The <literal>schema</literal> and 
+		<literal>catalog</literal> attributes specify that tables referred to in this mapping 
+		belong to the named schema and/or catalog. If specified, tablenames will be qualified 
+		by the given schema and catalog names. If missing, tablenames will be unqualified. 
+		The <literal>default-cascade</literal> attribute specifies what cascade style
                 should be assumed for properties and collections which do not specify a 
                 <literal>cascade</literal> attribute. The <literal>auto-import</literal> attribute lets us
                 use unqualified class names in the query language, by default.
@@ -93,9 +128,11 @@
                      <area id="hm3" coords="4 55"/>
                      <area id="hm4" coords="5 55"/>
                      <area id="hm5" coords="6 55"/>
+		     <area id="hm6" coords="7 55"/>
                  </areaspec>
                  <programlisting><![CDATA[<hibernate-mapping
          schema="schemaName"
+	 catalog="catalogName"
          default-cascade="none|save-update"
          default-access="field|property|ClassName"
          auto-import="true|false"
@@ -109,25 +146,30 @@
                      </callout>
                      <callout arearefs="hm2">
                          <para>
+                             <literal>catalog</literal> (optional): The name of a database catalog.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm3">
+                         <para>
                              <literal>default-cascade</literal> (optional - defaults to <literal>none</literal>): 
                              A default cascade style.
                          </para>
                      </callout>
-                     <callout arearefs="hm3">
+                     <callout arearefs="hm4">
                          <para>
                              <literal>default-access</literal> (optional - defaults to <literal>property</literal>):
                              The strategy Hibernate should use for accessing all properties. Can be a custom
                              implementation of <literal>PropertyAccessor</literal>.
                          </para>
                      </callout>
-                     <callout arearefs="hm4">
+                     <callout arearefs="hm5">
                          <para>
                              <literal>auto-import</literal> (optional - defaults to <literal>true</literal>):
                              Specifies whether we can use unqualified class names (of classes in this mapping)
                              in the query language.
                          </para>
                      </callout>
-                     <callout arearefs="hm5">
+                     <callout arearefs="hm6">
                          <para>
                              <literal>package</literal> (optional): Specifies a package prefix to assume for 
                              unqualified class names in the mapping document.
@@ -173,6 +215,7 @@
                     <area id="class18" coords="19 55"/>
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
+		    <area id="class21" coords="22 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -180,6 +223,7 @@
         discriminator-value="discriminator_value"
         mutable="true|false"
         schema="owner"
+	catalog="catalog"
         proxy="ProxyInterface"
         dynamic-update="true|false"
         dynamic-insert="true|false"
@@ -205,7 +249,8 @@
                     </callout>
                     <callout arearefs="class2">
                         <para>
-                            <literal>table</literal>: The name of its database table.
+                            <literal>table</literal> (optional - defaults to the unqualified class name):  The
+			    name of its database table.
                         </para>
                     </callout>
                     <callout arearefs="class3">
@@ -229,25 +274,31 @@
                     </callout>                
                     <callout arearefs="class6">
                         <para>
+                            <literal>catalog</literal> (optional): Override the catalog name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
+                        </para>
+                    </callout>                
+                    <callout arearefs="class7">
+                        <para>
                             <literal>proxy</literal> (optional): Specifies an interface to use for lazy
                             initializing proxies. You may specify the name of the class itself.
                         </para>
                     </callout>    
-                    <callout arearefs="class7">
+                    <callout arearefs="class8">
                         <para>
                             <literal>dynamic-update</literal> (optional, defaults to <literal>false</literal>): 
                             Specifies that <literal>UPDATE</literal> SQL should be generated at runtime and 
                             contain only those columns whose values have changed.
                         </para>
                     </callout>    
-                    <callout arearefs="class8">
+                    <callout arearefs="class9">
                         <para>
                             <literal>dynamic-insert</literal> (optional, defaults to <literal>false</literal>): 
                             Specifies that <literal>INSERT</literal> SQL should be generated at runtime and 
                             contain only the columns whose values are not null.
                         </para>
                     </callout>    
-                    <callout arearefs="class9">
+                    <callout arearefs="class10">
                         <para>
                             <literal>select-before-update</literal> (optional, defaults to <literal>false</literal>): 
                             Specifies that Hibernate should <emphasis>never</emphasis> perform an SQL <literal>UPDATE</literal> 
@@ -257,65 +308,65 @@
                             if an <literal>UPDATE</literal> is actually required.
                         </para>
                     </callout>    
-                    <callout arearefs="class10">
+                    <callout arearefs="class11">
                         <para>
                             <literal>polymorphism</literal> (optional, defaults to <literal>implicit</literal>): 
                             Determines whether implicit or explicit query polymorphism is used.
                         </para>
                     </callout>    
-                    <callout arearefs="class11">
+                    <callout arearefs="class12">
                         <para>
                             <literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> 
                             condition to be used when retrieving objects of this class
                         </para>
                     </callout>                 
-                    <callout arearefs="class12">
+                    <callout arearefs="class13">
                         <para>
                             <literal>persister</literal> (optional): Specifies a custom <literal>ClassPersister</literal>.
                         </para>
                     </callout>                 
-                    <callout arearefs="class13">
+                    <callout arearefs="class14">
                         <para>
                             <literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a "batch size" 
                             for fetching instances of this class by identifier.
                         </para>
                     </callout>                 
-                   <callout arearefs="class14">
+                   <callout arearefs="class15">
                         <para>
                             <literal>optimistic-lock</literal> (optional, defaults to <literal>version</literal>): 
                             Determines the optimistic locking strategy.
                         </para>
                     </callout>    
-                    <callout arearefs="class15">
+                    <callout arearefs="class16">
                         <para>
                             <literal>lazy</literal> (optional): Setting <literal>lazy="true"</literal> is a shortcut 
                             equalivalent to specifying the name of the class itself as the <literal>proxy</literal>
                             interface.
                         </para>
                     </callout>    
-                    <callout arearefs="class16">
+                    <callout arearefs="class17">
                         <para>
                             <literal>entity-name</literal> (optional): TODO
                         </para>
                     </callout>
-                    <callout arearefs="class17">
+                    <callout arearefs="class18">
                         <para>
                             <literal>catalog</literal> (optional): The name of a database catalog used for this
                             class and its table.
                         </para>
                     </callout>
-                    <callout arearefs="class18">
+                    <callout arearefs="class19">
                         <para>
                             <literal>check</literal> (optional): A SQL expression used to generate a multi-row
                             <emphasis>check</emphasis> constraint for automatic schema generation.
                         </para>
                     </callout>
-                    <callout arearefs="class19">
+                    <callout arearefs="class20">
                         <para>
                             <literal>rowid</literal> (optional): TODO
                         </para>
                     </callout>
-                    <callout arearefs="class19">
+                    <callout arearefs="class21">
                         <para>
                             <literal>subselect</literal> (optional): TODO
                         </para>
@@ -438,12 +489,14 @@
                     <area id="join2" coords="3 50" />
                     <area id="join3" coords="4 50"/>
                     <area id="join4" coords="5 50" />
+		    <area id="join5" coords="6 50" />
                 </areaspec>
                 <programlisting><![CDATA[<join
         table="tablename"
         schema="owner"
         catalog="catalog"
         sequential-select="true|false"
+	inverse="true|false"
         />]]></programlisting>
 
                 <calloutlist>
@@ -460,13 +513,22 @@
                     </callout>
                     <callout arearefs="join3">
                         <para>
-                            <literal>catalog</literal> (optional): Name of the database catalog.
+                            <literal>catalog</literal> (optional): Override the catalog name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
                         </para>
                     </callout>
                     <callout arearefs="join4">
                         <para>
-                            <literal>sequential-select</literal> (optional - defaults to <literal>true</literal>):
-                            TODO: Document join behavior
+                            <literal>sequential-select</literal> (optional - defaults to <literal>false</literal>):
+                            If enabled for a join defined on a subclass, then rather than joining, a sequential
+			    select will be issued if a row turns out to represent an instance of the subclass.
+                        </para>
+                    </callout>
+                    <callout arearefs="join5">
+                        <para>
+                            <literal>inverse</literal> (optional - defaults to <literal>false</literal>):
+                            If enabled, Hibernate will not try to insert or update the properties defined
+			    by this join.
                         </para>
                     </callout>
                 </calloutlist>
@@ -526,7 +588,7 @@
                         <para>
                             <literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): 
                             An identifier property value that indicates that an instance is newly instantiated
-                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            (unsaved), distinguishing it from detached instances that were saved or loaded
                             in a previous session.
                         </para>
                     </callout>            
@@ -870,11 +932,11 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="discriminator1" coords="2 40"/>
-                    <area id="discriminator2" coords="3 40" />
-                    <area id="discriminator3" coords="4 40" />
-                    <area id="discriminator4" coords="5 40" />
-                    <area id="discriminator5" coords="6 40" />
+                    <area id="discriminator1" coords="2 60"/>
+                    <area id="discriminator2" coords="3 60" />
+                    <area id="discriminator3" coords="4 60" />
+                    <area id="discriminator4" coords="5 60" />
+                    <area id="discriminator5" coords="6 60" />
                 </areaspec>
                 <programlisting><![CDATA[<discriminator
         column="discriminator_column"
@@ -907,13 +969,14 @@
                         <para>
                             <literal>insert</literal> (optional - defaults to <literal>true</literal>)
                             set this to <literal>false</literal> if your discriminator column is also part
-                            of a mapped composite identifier.
+                            of a mapped composite identifier. (Tells Hibernate to not include the column
+			    in SQL <literal>INSERT</literal>s.)
                         </para>
                     </callout>
                     <callout arearefs="discriminator5">
                         <para>
-                            <literal>formula</literal> (optional)
-                            an arbitrary SQL expression that is executed when a type has to be evaluated
+                            <literal>formula</literal> (optional) an arbitrary SQL expression that is 
+			    executed when a type has to be evaluated. Allows content-based discrimination.
                         </para>
                     </callout>
                 </calloutlist>
@@ -992,7 +1055,7 @@
                         <para>
                             <literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): 
                             A version property value that indicates that an instance is newly instantiated
-                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            (unsaved), distinguishing it from detached instances that were saved or loaded
                             in a previous session. (<literal>undefined</literal> specifies that the identifier
                             property value should be used.)
                         </para>
@@ -1054,7 +1117,7 @@
                         <para>
                             <literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): 
                             A version property value that indicates that an instance is newly instantiated
-                            (unsaved), distinguishing it from transient instances that were saved or loaded
+                            (unsaved), distinguishing it from detached instances that were saved or loaded
                             in a previous session. (<literal>undefined</literal> specifies that the identifier
                             property value should be used.)
                         </para>
@@ -1088,6 +1151,7 @@
                     </areaset>
                     <area id="property6" coords="7 45"/>
                     <area id="property7" coords="8 45"/>
+		    <area id="property8" coords="9 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1097,6 +1161,7 @@
         insert="true|false"
         formula="arbitrary SQL expression"
         access="field|property|ClassName"
+	lazy="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1136,6 +1201,13 @@
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                             strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                   <callout arearefs="property8">
+                        <para>
+                            <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
+			    that this property should be fetched lazily when the instance variable is first 
+			    accessed (requires build-time bytecode instrumentation).
                         </para>
                     </callout>
                 </calloutlist>

@@ -855,6 +855,70 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
         </para>
 
     </sect1>
+    
+    <sect1 id="objectstate-replicating" revision="1">
+    	<title>Replicating object between two different datastores</title>
+    	
+    	<para>
+    	    It is occasionally useful to be able to take a graph of persistent instances
+    	    and make them persistent in a different datastore, without regenerating identifier
+    	    values.
+    	</para>
+    	
+        <programlisting><![CDATA[//retrieve a cat from one database
+Session session1 = factory1.openSession();
+Transaction tx1 = session1.beginTransaction();
+Cat cat = session1.get(Cat.class, catId);
+tx1.commit();
+session1.close();
+
+//reconcile with a second database
+Session session2 = factory2.openSession();
+Transaction tx2 = session2.beginTransaction();
+session2.replicate(cat, ReplicationMode.LATEST_VERSION);
+tx2.commit();
+session2.close();]]></programlisting>
+
+        <para>
+            The <literal>ReplicationMode</literal> determines how <literal>replicate()</literal>
+            will deal with conflicts with existing rows in the database.
+        </para>
+        
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>ReplicationMode.IGNORE</literal> - ignore the object when there is
+                    an existing database row with the same identifier
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>ReplicationMode.OVERWRITE</literal> - overwrite any existing database 
+                    row with the same identifier
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>ReplicationMode.EXCEPTION</literal> - throw an exception if there is
+                    and existing database row with the same identifier
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>ReplicationMode.LATEST_VERSION</literal> - overwrite the row if its
+                    version number is earlier than the version number of the object, or ignore
+                    the object otherwise
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            Usecases for this feature include reconciling data entered into different database
+            instances, upgrading system configuration information during product upgrades,
+            rolling back changes made during non-ACID transactions and more.
+        </para>
+    	
+    </sect1>
 
     <sect1 id="objectstate-flushing">
         <title>Flushing the Session</title>

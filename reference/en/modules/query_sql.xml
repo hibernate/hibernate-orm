@@ -3,56 +3,65 @@
 
     <para>
         You may also express queries in the native SQL dialect of your database. This is useful if you
-        want to utilize database specific features such as the CONNECT keyword in Oracle.
-        This also allows for a cleaner migration path from a direct SQL/JDBC based application to 
-        Hibernate.
+        want to utilize database specific features such as query hints or the <literal>CONNECT</literal> 
+        keyword in Oracle. It also provides a clean migration path from a direct SQL/JDBC based 
+        application to Hibernate.
     </para>
 
     <para>
-        Hibernate3 also supports native SQL statements for all create, update, delete, and load
+        Hibernate3 allows you to specify handwritten SQL for all create, update, delete, and load
         operations.
     </para>
 
     <sect1 id="querysql-creating">
-        <title>Creating a SQL based <literal>Query</literal></title>
+        <title>Creating a native SQL <literal>Query</literal></title>
 
         <para>
-            SQL queries are exposed through the same <literal>Query</literal> interface, just like ordinary
-            HQL queries. The only difference is the use of <literal>Session.createSQLQuery()</literal>.
+            SQL queries are controlled via the <literal>SQLQuery</literal> interface, which 
+            is obtained by calling <literal>Session.createSQLQuery()</literal>.
         </para>
 
-        <programlisting><![CDATA[Query sqlQuery = sess.createSQLQuery("select {cat.*} from cats {cat}", "cat", Cat.class);
-sqlQuery.setMaxResults(50);
-List cats = sqlQuery.list();]]></programlisting>
+        <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
+        .addEntity("cat", Cat.class);
+        .setMaxResults(50);
+        .list();]]></programlisting>
 
         <para>
-            The three parameters provided to <literal>createSQLQuery()</literal> are:
+            This query specified:
         </para>
 
         <itemizedlist>
         <listitem>
         <para>
-            the SQL query string
+            the SQL query string, with a placeholder for Hibernate to inject the column aliases
         </para>
         </listitem>
         <listitem>
         <para>
-            a table alias name
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            the persistent class returned by the query
+            the entity returned by the query, and its SQL table alias
         </para>
         </listitem>
         </itemizedlist>
     
         <para>
-            The alias name is used inside the sql string to refer to the properties of the mapped class
-            (in this case  <literal>Cat</literal>). You may retrieve multiple objects per row by supplying
-            a <literal>String</literal> array of alias names and a <literal>Class</literal> array of
-            corresponding classes.
+            The <literal>addEntity()</literal> method associates SQL table aliases with entity classes,
+            and determines the shape of the query result set.
         </para>
+        
+        <para>
+            The <literal>addJoin()</literal> method may be used to load associations to other entities
+            and collections. TODO: examples!
+        </para>
+        
+        <para>
+            A native SQL query might return a simple scalar value or a combination of scalars and
+            entities.
+        </para>
+
+        <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
+        .addScalar("maxWeight", Hibernate.DOUBLE);
+        .uniqueResult();]]></programlisting>
+
 
     </sect1>
 
@@ -60,22 +69,24 @@ List cats = sqlQuery.list();]]></programlisting>
         <title>Alias and property references</title>
 
         <para>
-            The <literal>{cat.*}</literal> notation used above is a shorthand for "all properties". You
-            may even list the properties explicity, but you must let Hibernate provide SQL column aliases
-            for each property. The placeholders for these column aliases are the property name qualified by
-            the table alias. In the following example, we retrieve <literal>Cat</literal>s from a different
-            table (<literal>cat_log</literal>) to the one declared in the mapping metadata. Notice that we
-            may even use the property aliases in the where clause.
+            The <literal>{cat.*}</literal> notation used above is a shorthand for "all properties". 
+            Alternatively, you may list the columns explicity, but even then you must let Hibernate 
+            inject the SQL column aliases for each property. The placeholders for a column alias is 
+            just the property name qualified by the table alias. In the following example, we retrieve 
+            <literal>Cat</literal>s from a different table (<literal>cat_log</literal>) to the one 
+            declared in the mapping metadata. Notice that we may even use the property aliases in the 
+            where clause if we like.
         </para>
 
-        <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, "
-    + "  cat.mateid as {cat.mate}, cat.sex as {cat.sex}, "
-    + "  cat.weight*10 as {cat.weight}, cat.name as {cat.name}"
-    + "     from cat_log cat where {cat.mate} = :catId"
-List loggedCats = sess.createSQLQuery(sql, "cat", Cat.class)
+        <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
+    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
+    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
+    "from cat_log cat where {cat.mate} = :catId"
+    
+List loggedCats = sess.createSQLQuery(sql)
+	.addEntity("cat", Cat.class)
     .setLong("catId", catId)
-    .list();
-]]></programlisting>
+    .list();]]></programlisting>
 
         <para>
             <emphasis>Note:</emphasis> if you list each property explicitly, you must include all
@@ -89,38 +100,45 @@ List loggedCats = sess.createSQLQuery(sql, "cat", Cat.class)
 
         <para>
             Named SQL queries may be defined in the mapping document and called in exactly the same way
-            as a named HQL query.
+            as a named HQL query. In this case, we do <emphasis>not</emphasis> need to call
+            <literal>addEntity()</literal>.
         </para>
+
+         <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return alias="person" class="eg.Person"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex}
+    FROM PERSON person WHERE person.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
 
         <programlisting><![CDATA[List people = sess.getNamedQuery("mySqlQuery")
     .setMaxResults(50)
     .list();]]></programlisting>
 
-        <programlisting><![CDATA[<sql-query name="mySqlQuery">
-    <return alias="person" class="eg.Person"/>
-    SELECT {person}.NAME AS {person.name},
-           {person}.AGE AS {person.age},
-           {person}.SEX AS {person.sex}
-    FROM PERSON {person} WHERE {person}.NAME LIKE 'Hiber%'
-</sql-query>]]></programlisting>
-
         <para>
-            Using named SQL queries, you may also query for scalar values. To do this, use the type attribute
-            of the <literal>&lt;scalar-return&gt;</literal> element and specify a type there:
+            A named SQL query may return a scalar value. You must specfy the column alias
+            and Hibernate type using the <literal>&lt;return-scalar&gt;</literal> element:
         </para>
         
         <programlisting><![CDATA[<sql-query name="mySqlQuery">
-    <scalar-return column="name" type="string"/>
-    <scalar-return column="age" type="long"/>
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="age" type="long"/>
     SELECT p.NAME AS name,
            p.AGE AS age,
     FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
 </sql-query>]]></programlisting>
 
+         <para>
+             The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal>
+             elements are used to join associations and define queries which initialize collections,
+             respectively. TODO!
+         </para>
+
     </sect1>
 
     <sect1 id="querysql-cud">
-        <title>Custom SQL for CUD</title>
+        <title>Custom SQL for create, update and delete</title>
 
         <para>
             Hibernate3 can use custom SQL statements for create, update, and delete operations.
@@ -195,8 +213,8 @@ END updatePerson;]]></programlisting>
 </sql-query>]]></programlisting>
 
         <para>
-            This is just a named query declaration, as discussed earlier. You may reference this
-            named query in a class mapping:
+            This is just a named query declaration, as discussed earlier. You may 
+            reference this named query in a class mapping:
         </para>
 
         <programlisting><![CDATA[<class name="Person">
@@ -208,29 +226,27 @@ END updatePerson;]]></programlisting>
 </class>]]></programlisting>
 
         <para>
-            TODO: Document the following examples for collection loader and query-list
+            TODO: Document the following example for collection loader.
         </para>
 
-        <programlisting><![CDATA[
-        <sql-query name="organizationEmployments">
-            <load-collection alias="empcol" role="Organization.employments"/>
-            SELECT {empcol.*}
-            FROM EMPLOYMENT empcol
-            WHERE EMPLOYER = :id
-            ORDER BY STARTDATE ASC, EMPLOYEE ASC
-        </sql-query>
+        <programlisting><![CDATA[<sql-query name="organizationEmployments">
+    <load-collection alias="empcol" role="Organization.employments"/>
+    SELECT {empcol.*}
+    FROM EMPLOYMENT empcol
+    WHERE EMPLOYER = :id
+    ORDER BY STARTDATE ASC, EMPLOYEE ASC
+</sql-query>
 
-        <sql-query name="organizationCurrentEmployments">
-            <return alias="emp" class="Employment"/>
-            <synchronize table="EMPLOYMENT"/>
-            SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
-                STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
-                REGIONCODE as {emp.regionCode}, ID AS {emp.id}
-            FROM EMPLOYMENT
-            WHERE EMPLOYER = :id AND ENDDATE IS NULL
-            ORDER BY STARTDATE ASC
-        </sql-query>
-        ]]></programlisting>
+<sql-query name="organizationCurrentEmployments">
+    <return alias="emp" class="Employment"/>
+    <synchronize table="EMPLOYMENT"/>
+    SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
+        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+        REGIONCODE as {emp.regionCode}, ID AS {emp.id}
+    FROM EMPLOYMENT
+    WHERE EMPLOYER = :id AND ENDDATE IS NULL
+    ORDER BY STARTDATE ASC
+</sql-query>]]></programlisting>
 
     </sect1>
 

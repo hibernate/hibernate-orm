@@ -2,7 +2,7 @@
 
     <title>Working with Persistent Data</title>
 
-    <sect1 id="manipulatingdata-creating">
+    <sect1 id="manipulatingdata-creating" revision="1">
         <title>Creating a persistent object</title>
 
         <para>
@@ -24,6 +24,8 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
             is called. If <literal>Cat</literal> has an <literal>assigned</literal>
             identifier, or a composite key, the identifier should be assigned to 
             the <literal>cat</literal> instance before calling <literal>save()</literal>.
+            You may also use <literal>create()</literal> instead of <literal>save()</literal>,
+            with the semantics defined in the EJB3 early draft.
         </para>
         
         <para>
@@ -105,14 +107,16 @@ return cat;]]></programlisting>
 
         <para>
             You may even load an object using an SQL <literal>SELECT ... FOR UPDATE</literal>. 
-            See the next section for a discussion of Hibernate <literal>LockMode</literal>s.
+            See the next sections for a discussion of Hibernate <literal>LockMode</literal>s.
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]></programlisting>
         
         <para>
             Note that any associated instances or contained collections are 
-            <emphasis>not</emphasis> selected <literal>FOR UPDATE</literal>.
+            <emphasis>not</emphasis> selected <literal>FOR UPDATE</literal>, unless you decide
+            to specify <literal>lock</literal> or <literal>all</literal> as a
+            cascade style for the association.
         </para>
         
         <para>
@@ -124,6 +128,13 @@ return cat;]]></programlisting>
         <programlisting><![CDATA[sess.save(cat);
 sess.flush(); //force the SQL INSERT
 sess.refresh(cat); //re-read the state (after the trigger executes)]]></programlisting>
+
+        <para>
+            An important question usually appears at this point: How much does Hibernate load
+            from the database and how many SQL <literal>SELECT</literal>s will it use? This
+            depends on the <emphasis>fetching strategy</emphasis> and is explained in
+            <xref linkend="performance-fetching"/>.
+        </para>
 
     </sect1>
 

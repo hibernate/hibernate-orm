@@ -148,7 +148,7 @@ while ( iter.hasNext() ) {
 
     </sect1>
     
-    <sect1 id="querycriteria-dynamicfetching">
+    <sect1 id="querycriteria-dynamicfetching" revision="1">
         <title>Dynamic association fetching</title>
 
         <para>
@@ -164,7 +164,7 @@ while ( iter.hasNext() ) {
     
         <para>
             This query will fetch both <literal>mate</literal> and <literal>kittens</literal>
-            by outer join.
+            by outer join. See <xref linkend="performance-fetching"/> for more information.
         </para>
     
     </sect1>

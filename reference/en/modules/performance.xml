@@ -196,238 +196,487 @@
 
     </sect1>
 
-    <para>
-        We have already shown how you can use lazy initialization for persistent collections
-        in the chapter about collection mappings. A similar effect is achievable for ordinary object
-        references, using CGLIB proxies. We have also mentioned how Hibernate caches persistent
-        objects at the level of a <literal>Session</literal>. More aggressive caching strategies
-        may be configured upon a class-by-class basis.
-    </para>
-    
-    <para>
-        In the next section, we show you how to use these features, which may be used to
-        achieve much higher performance, where necessary.
-    </para>
-
-    <sect1 id="performance-proxies" revision="2">
-        <title>Proxies for Lazy Initialization</title>
+    <sect1 id="performance-fetching">
+        <title>Fetching strategies</title>
 
         <para>
-            Hibernate implements lazy initializing proxies for persistent objects using runtime
-            bytecode enhancement (via the excellent CGLIB library).
+            A fetching strategy describes the number of instances, the depth of a
+            subgraph of instances, and SQL <literal>SELECT</literal>s that are used
+            to retrieve these instances. Hibernate supports several strategies and you
+            can configure them on a global level, per entity class, per association, or
+            even for a particular query in HQL and with <literal>Criteria</literal>.
         </para>
 
         <para>
-            The mapping file may declare an interface to use as the proxy interface for that 
-            class. By default, Hibernate uses a subclass of the class itself. (The proxied 
-            class must implement a default constructor with at least package visibility.)
-        </para>
-                
-        <para>
-            There are some gotchas to be aware of when extending this approach to polymorphic
-            classes, eg.
+            Hibernate offers the following fetching strategies:
         </para>
 
-        <programlisting><![CDATA[<class name="Cat" proxy="Cat">
-    ......
-    <subclass name="DomesticCat">
-        .....
-    </subclass>
-</class>]]></programlisting>
-
-        <para>
-            Firstly, instances of <literal>Cat</literal> will never be castable to 
-            <literal>DomesticCat</literal>, even if the underlying instance is an
-            instance of <literal>DomesticCat</literal>.
-        </para>
-        
-        <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
-if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
-    DomesticCat dc = (DomesticCat) cat;       // Error!
-    ....
-}]]></programlisting>
-    
-        <para>
-            Secondly, it is possible to break proxy <literal>==</literal>.
-        </para>
-            
-        <programlisting><![CDATA[
-Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
-DomesticCat dc = 
-    (DomesticCat) session.load(DomesticCat.class, id);  // required new DomesticCat proxy!
-System.out.println(cat==dc);                            // false]]></programlisting>
-        
-        <para>
-            However, the situation is not quite as bad as it looks. Even though we now have two references
-            to different proxy objects, the underlying instance will still be the same object:
-        </para>
-    
-        <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
-System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
-
-        <para>
-            Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class
-            with any <literal>final</literal> methods.
-        </para>
-        
-        <para>
-            Finally, if your persistent object acquires any resources upon instantiation (eg. in 
-            initializers or default constructor), then those resources will also be acquired by
-            the proxy. The proxy class is an actual subclass of the persistent class.
-        </para>
-        
-        <para>
-            These problems are all due to fundamental limitations in Java's single inheritence model.
-            If you wish to avoid these problems your persistent classes must each implement an interface 
-            that declares its business methods. You should specify these interfaces in the mapping file. eg.
-        </para>
-
-        <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
-    ......
-    <subclass name="DomesticCatImpl" proxy="DomesticCat">
-        .....
-    </subclass>
-</class>]]></programlisting>
-
-        <para>
-            where <literal>Cat</literal> implements the interface <literal>ICat</literal> and
-            <literal>DomesticCat</literal> implements the interface <literal>IDomesticCat</literal>. Then 
-            proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned 
-            by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>find()</literal> 
-            does not usually return proxies.)
-        </para>
-
-        <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
-Iterator iter = session.iterate("from cat in class CatImpl where cat.name='fritz'");
-Cat fritz = (Cat) iter.next();]]></programlisting>
-        
-        <para>
-            Relationships are also lazily initialized. This means you must declare any properties to be of 
-            type <literal>Cat</literal>, not <literal>CatImpl</literal>.
-        </para>
-        
-        <para>
-            Certain operations do <emphasis>not</emphasis> require proxy initialization
-        </para>
-        
-        <itemizedlist spacing="compact">
+        <itemizedlist>
             <listitem>
                 <para>
-                    <literal>equals()</literal>, if the persistent class does not override
-                    <literal>equals()</literal>
+                    <emphasis>Lazy fetching</emphasis> - an associated instance (or a
+                    collection) will only be loaded when needed, using an additional
+                    defered <literal>SELECT</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>hashCode()</literal>, if the persistent class does not override
-                    <literal>hashCode()</literal>
+                    <emphasis>Batch fetching</emphasis> - an optimization strategy
+                    for lazy fetching, Hibernate not only retrieves a single instance
+                    (or collection), but several in the same <literal>SELECT</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    The identifier getter method
+                    <emphasis>Eager fetching</emphasis> - Hibernate retrieves the
+                    associated instance (or collection) in the same <literal>SELECT</literal>,
+                    using an <literal>OUTER JOIN</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal>
+                    is used to retrieve the associated instance (or collection), but
+                    it might be executed immediately and not defered until first access
+                    (as with lazy fetching).
                 </para>
             </listitem>
         </itemizedlist>
-            
+
         <para>
-            Hibernate will detect persistent classes that override <literal>equals()</literal> or
-            <literal>hashCode()</literal>.
+            By default, Hibernate3 will only load the given entity using a single
+            <literal>SELECT</literal> statement if you retrieve an object with
+            <literal>load()</literal> or <literal>get()</literal>. This means that
+            all single-ended associations and collections are set for lazy fetching
+            by default. You can change this global default by setting the
+            <literal>default-lazy</literal> attribute on the <literal>hibernate-mapping</literal>
+            element to <literal>false</literal>.
         </para>
 
         <para>
-            Exceptions that occur while initializing a proxy are wrapped in a
-            <literal>LazyInitializationException</literal>.
-        </para>
-        
-        <para>
-            Sometimes we need to ensure that a proxy or collection is initialized before closing the
-            <literal>Session</literal>. Of course, we can alway force initialization by calling 
-            <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example.
-            But that is confusing to readers of the code and is not convenient for generic code.
-            The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>
-            provide the application with a convenient way of working with lazyily initialized collections or
-            proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy,
-            <literal>cat</literal>, as long as its <literal>Session</literal> is still open.
-            <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection
-            of kittens. 
-        </para>
-        
-    </sect1>
-
-    <sect1 id="performance-batchfetching">
-        <title>Using batch fetching</title>
-
-        <para>
-            Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized
-            proxies if one proxy is accessed. Batch fetching is an optimization for the lazy loading strategy.
-            There are two ways you can tune batch fetching: on the class and the collection level.
+            We'll now have a closer look at the individual fetching strategies and how
+            to change them for single-ended associations and collections.
         </para>
 
-        <para>
-            Batch fetching for classes/entities is easier to understand. Imagine you have the following situation
-            at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each
-            <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>.
-            The <literal>Person</literal> class is mapped with a proxy, <literal>lazy="true"</literal>. If you now
-            iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default
-            execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this
-            behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
-        </para>
+        <sect2 id="performance-fetching-collections" revision="3">
+            <title>Collection fetching</title>
 
-        <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
+            <para>
+                Initialization of collections owned by persistent instances happens transparently
+                to the user, so the application would not normally need to worry about this (in
+                fact, transparent lazy initialization is the main reason why Hibernate needs its
+                own collection implementations). However, if the application tries something like
+                this:
+            </para>
 
-        <para>
-            Hibernate will now execute only three queries, the pattern is 10, 10, 5. You can see that batch fetching
-            is a blind guess, as far as performance optimization goes, it depends on the number of unitilized proxies
-            in a particular <literal>Session</literal>.
-        </para>
+            <programlisting><![CDATA[s = sessions.openSession();
+User u = (User) s.find("from User u where u.name=?", userName, Hibernate.STRING).get(0);
+Map permissions = u.getPermissions();
+s.connection().commit();
+s.close();
 
-        <para>
-            You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has
-            a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the
-            <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
-            one for every call to <literal>getCats()</literal>. If you enable batch fetching for the
-            <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch
-            collections:
-        </para>
+Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></programlisting>
 
-        <programlisting><![CDATA[<class name="Person">
+            <para>
+                It could be in for a nasty surprise. Since the permissions collection was not
+                initialized when the <literal>Session</literal> was closed, the collection
+                will not be able to load its state. <emphasis>Hibernate does not support lazy
+                initialization for detached objects</emphasis>. The fix is to move the
+                line that reads from the collection to just before the commit. (There are
+                other more advanced ways to solve this problem, some are discussed later.)
+            </para>
+
+            <para>
+                It's possible to use a non-lazy collection. However, it is intended that lazy
+                initialization be used for almost all collections, especially for collections
+                of entity references (its the default). If you define too many non-lazy associations
+                in your object model, Hibernate will end up needing to fetch the entire database
+                into memory in every transaction! Still, sometimes you want to use an additional
+                <literal>SELECT</literal> for a particular collection right away, not defered
+                until the first access happens:
+            </para>
+
+            <programlisting><![CDATA[<set name="permissions" fetch="select">
+    <key column="USER_ID"/>
+    <one-to-many class="Permission"/>
+</set]]></programlisting>
+
+            <para>
+                Hibernate will now execute an immediate second <literal>SELECT</literal> loading
+                the collection of <literal>Permission</literal> instances, when a particular
+                <literal>User</literal> is retrieved.
+            </para>
+
+            <para>
+                Any kind of lazy fetching (and also Select fetching) is extremely vulnerable to
+                N+1 selects problems. So usually, we choose lazy fetching only as a default
+                strategy, and override it for a particular transaction, using the HQL
+                <literal>LEFT JOIN FETCH</literal> clause. This tells Hibernate to fetch the
+                association eagerly in the first select, using an outer join. In the
+                <literal>Criteria</literal> API, you would use
+                <literal>setFetchMode(FetchMode.EAGER)</literal>.
+            </para>
+
+            <para>
+                You can always force outer join association fetching in the mapping file, by setting
+                <literal>fetch="join"</literal> (or use the old <literal>outer-join="true"</literal>
+                syntax). We don't recommend this setting, especially not for collections, since it is
+                incredibly rare to find an entity which is <emphasis>always</emphasis> used when
+                an associated entity is used, at least in a sufficiently large system.
+            </para>
+
+            <para>
+                Eager fetching for collections has another restriction: you may only set one
+                collection role per persistent class to be fetched per outer join. Hibernate forbids
+                Cartesian products when possible, <literal>SELECT</literal>ing two collections per
+                outer join would create one. This would almost always be slower than two (lazy or
+                non-defered) <literal>SELECT</literal>s. The restriction to a single outer-joined
+                collection applies to both the mapping fetching strategies and to HQL/Criteria queries.
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-fetching-proxies" revision="2">
+            <title>Single-ended association proxies</title>
+
+            <para>
+                Lazy fetching for collections is implemented using Hibernate's own implementation
+                of persistent collections. However, a different mechanism is needed for lazy
+                behavior in single-ended associations. The target entity of the association must
+                be proxied. Hibernate implements lazy initializing proxies for persistent objects
+                using runtime bytecode enhancement (via the excellent CGLIB library).
+            </para>
+
+            <para>
+                By default, Hibernate3 generates proxies (at startup) for all persistent classes
+                and uses them to enable lazy fetching of <literal>many-to-one</literal> and
+                <literal>one-to-one</literal> associations.
+            </para>
+
+            <para>
+                The mapping file may declare an interface to use as the proxy interface for that
+                class, with the <literal>proxy</literal> attribute. By default, Hibernate uses a subclass
+                of the class. <emphasis>Note that the proxied class must implement a default constructor
+                with at least package visibility. We recommend this constructor for all persistent classes!</emphasis>
+            </para>
+
+            <para>
+                There are some gotchas to be aware of when extending this approach to polymorphic
+                classes, eg.
+            </para>
+
+            <programlisting><![CDATA[<class name="Cat" proxy="Cat">
+        ......
+        <subclass name="DomesticCat">
+            .....
+        </subclass>
+    </class>]]></programlisting>
+
+            <para>
+                Firstly, instances of <literal>Cat</literal> will never be castable to
+                <literal>DomesticCat</literal>, even if the underlying instance is an
+                instance of <literal>DomesticCat</literal>:
+            </para>
+
+            <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
+    if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
+        DomesticCat dc = (DomesticCat) cat;       // Error!
+        ....
+    }]]></programlisting>
+
+            <para>
+                Secondly, it is possible to break proxy <literal>==</literal>.
+            </para>
+
+            <programlisting><![CDATA[
+    Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
+    DomesticCat dc =
+        (DomesticCat) session.load(DomesticCat.class, id);  // required new DomesticCat proxy!
+    System.out.println(cat==dc);                            // false]]></programlisting>
+
+            <para>
+                However, the situation is not quite as bad as it looks. Even though we now have two references
+                to different proxy objects, the underlying instance will still be the same object:
+            </para>
+
+            <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
+    System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
+
+            <para>
+                Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class
+                with any <literal>final</literal> methods.
+            </para>
+
+            <para>
+                Finally, if your persistent object acquires any resources upon instantiation (eg. in
+                initializers or default constructor), then those resources will also be acquired by
+                the proxy. The proxy class is an actual subclass of the persistent class.
+            </para>
+
+            <para>
+                These problems are all due to fundamental limitations in Java's single inheritence model.
+                If you wish to avoid these problems your persistent classes must each implement an interface
+                that declares its business methods. You should specify these interfaces in the mapping file. eg.
+            </para>
+
+            <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
+        ......
+        <subclass name="DomesticCatImpl" proxy="DomesticCat">
+            .....
+        </subclass>
+    </class>]]></programlisting>
+
+            <para>
+                where <literal>Cat</literal> implements the interface <literal>ICat</literal> and
+                <literal>DomesticCat</literal> implements the interface <literal>IDomesticCat</literal>. Then
+                proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned
+                by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>find()</literal>
+                does not usually return proxies.)
+            </para>
+
+            <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
+    Iterator iter = session.iterate("from cat in class CatImpl where cat.name='fritz'");
+    Cat fritz = (Cat) iter.next();]]></programlisting>
+
+            <para>
+                Relationships are also lazily initialized. This means you must declare any properties to be of
+                type <literal>Cat</literal>, not <literal>CatImpl</literal>.
+            </para>
+
+            <para>
+                Certain operations do <emphasis>not</emphasis> require proxy initialization
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>equals()</literal>, if the persistent class does not override
+                        <literal>equals()</literal>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>hashCode()</literal>, if the persistent class does not override
+                        <literal>hashCode()</literal>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The identifier getter method
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Hibernate will detect persistent classes that override <literal>equals()</literal> or
+                <literal>hashCode()</literal>.
+            </para>
+
+            <para>
+                You may of course also use Eager or Select fetching strategies for single-ended
+                associations:
+            </para>
+
+            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>
+<many-to-one name="father" class="Cat" fetch="select"/>]]></programlisting>
+
+            <para>
+                The first mapping tells Hibernate to fetch the associated <literal>mother</literal>
+                entity in the same initial <literal>SELECT</literal> using an <literal>OUTER JOIN</literal>.
+                You can set this option on as many *-to-one associations as you like, there is no
+                danger of creating a Cartesian product (opposed to collections). Note that you can
+                set the maximum depth of outer joined tables with the global configuration option
+                <literal>max_fetch_depth</literal> (see <xref linkend="configuration-optional-outerjoin"/>).
+            </para>
+
+            <para>
+                The second mapping enables an additional <literal>SELECT</literal> for the
+                retrieval of the <literal>father</literal>. Note that Hibernate does not guarantee
+                <emphasis>when</emphasis> this query will be executed. If it should be executed
+                immediately (right after the initial <literal>SELECT</literal>), disable proxying
+                on the target of the association by setting it to <literal>lazy="false"</literal>:
+            </para>
+
+            <programlisting><![CDATA[<class name="Cat" lazy="false">...</class>]]></programlisting>
+
+            <para>
+                (Note that this example uses only a single persistent class <literal>Cat</literal>
+                and self-referencing associations. This doesn't change the fetching behavior, as expexted.)
+            </para>
+
+        </sect2>
+
+        <sect2 id="performance-fetching-initialization">
+            <title>Initializing collections and proxies</title>
+
+            <para>
+                An exception (<literal>LazyInitializationException</literal>) will be thrown by
+                Hibernate if an unitialized collection or proxy is accessed outside of the scope
+                of the <literal>Session</literal>, ie. when the entity owning the collection or
+                having the reference to the proxy is in detached state.
+            </para>
+
+            <para>
+                Sometimes we need to ensure that a proxy or collection is initialized before closing the
+                <literal>Session</literal>. Of course, we can alway force initialization by calling
+                <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example.
+                But that is confusing to readers of the code and is not convenient for generic code.
+            </para>
+
+            <para>
+                The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>
+                provide the application with a convenient way of working with lazyily initialized collections or
+                proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy,
+                <literal>cat</literal>, as long as its <literal>Session</literal> is still open.
+                <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection
+                of kittens.
+            </para>
+
+            <para>
+                Another option is to keep the <literal>Session</literal> open until all needed
+                collections and proxies have been loaded. In some application architectures,
+                particularly where the code that accesses data using Hibernate, and the code that
+                uses it are in different application layers, it can be a problem to ensure that the
+                <literal>Session</literal> is open when a collection is initialized. There are
+                two basic ways to deal with this issue:
+            </para>
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        In a web-based application, a servlet filter can be used to close the
+                        <literal>Session</literal> only at the very end of a user request, once
+                        the rendering of the view is complete (the <emphasis>Open Session in
+                        View</emphasis> pattern).  Of course, this places heavy
+                        demands on the correctness of the exception handling of your application
+                        infrastructure. It is vitally important that the <literal>Session</literal>
+                        is closed and the transaction ended before returning to the user, even
+                        when an exception occurs during rendering of the view. The servlet filter
+                        has to be able to access the <literal>Session</literal> for this approach.
+                        We recommend that a <literal>ThreadLocal</literal> variable be used to
+                        hold the current <literal>Session</literal> (see chapter 1,
+                        <xref linkend="quickstart-playingwithcats"/>, for an example implementation).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        In an application with a seperate business tier, the business logic must
+                        "prepare" all collections that will be needed by the web tier before
+                        returning. This means that the business tier should load all the data and
+                        return all the data already initialized to the presentation/web tier that
+                        is required for a particular use case. Usually, the application calls
+                        <literal>Hibernate.initialize()</literal> for each collection that will
+                        be needed in the web tier (this call must occur before the session is closed)
+                        or retrieves the collection eagerly using a Hibernate query with a
+                        <literal>FETCH</literal> clause or a <literal>FetchMode.JOIN</literal> in
+                        <literal>Criteria</literal>. This is usually easier if you adopt the
+                        <emphasis>Command</emphasis> pattern instead of a <emphasis>Session Facade</emphasis>.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        You may also attach a previously loaded object to a new <literal>Session</literal>
+                        with <literal>merge()</literal> or <literal>lock()</literal> before
+                        accessing unitialized collections (or other proxies). Hibernate can not
+                        do this automatically, as it would introduce ad hoc transaction semantics!
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Sometimes you don't want to initialize a large collection, but still need some
+                information about it (like its size) or a subset of the data.
+            </para>
+
+            <para>
+                You can use a collection filter to get the size of a collection without initializing it:
+            </para>
+
+            <programlisting><![CDATA[( (Integer) s.createFilter( collection, "select count(*)" ).list().get(0) ).intValue()]]></programlisting>
+
+            <para>
+                The <literal>createFilter()</literal> method is also used to efficiently retrieve subsets
+                of a collection without needing to initialize the whole collection:
+            </para>
+
+            <programlisting><![CDATA[s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="performance-fetching-batch">
+            <title>Using batch fetching</title>
+
+            <para>
+                Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized
+                proxies if one proxy is accessed (or collections. Batch fetching is an optimization for the lazy
+                loading strategy. There are two ways you can tune batch fetching: on the class and the collection level.
+            </para>
+
+            <para>
+                Batch fetching for classes/entities is easier to understand. Imagine you have the following situation
+                at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each
+                <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>.
+                The <literal>Person</literal> class is mapped with a proxy, <literal>lazy="true"</literal>. If you now
+                iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default
+                execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this
+                behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
+            </para>
+
+            <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
+
+            <para>
+                Hibernate will now execute only three queries, the pattern is 10, 10, 5. You can see that batch fetching
+                is a blind guess, as far as performance optimization goes, it depends on the number of unitilized proxies
+                in a particular <literal>Session</literal>.
+            </para>
+
+            <para>
+                You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has
+                a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the
+                <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
+                one for every call to <literal>getCats()</literal>. If you enable batch fetching for the
+                <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch
+                collections:
+            </para>
+
+            <programlisting><![CDATA[<class name="Person">
     <set name="cats" batch-size="3">
         ...
     </set>
 </class>]]></programlisting>
 
-        <para>
-            With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 collections in 4
-            <literal>SELECT</literal>s. Again, the value of the attribute depends on the expected number of
-            uninitialized collections in a particular <literal>Session</literal>.
-        </para>
+            <para>
+                With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 collections in 4
+                <literal>SELECT</literal>s. Again, the value of the attribute depends on the expected number of
+                uninitialized collections in a particular <literal>Session</literal>.
+            </para>
 
-        <para>
-            Batch fetching of collections is particularly useful if you have a nested tree of items, ie.
-            the typical bill-of-materials pattern.
-        </para>
+            <para>
+                Batch fetching of collections is particularly useful if you have a nested tree of items, ie.
+                the typical bill-of-materials pattern. (Although a <emphasis>nested set</emphasis> or a
+                <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.)
+            </para>
 
-    </sect1>
-    
-    <sect1 id="performance-lazyproperties">
-        <title>Using lazy property fetching</title>
+        </sect2>
 
-        <para>
-            Hibernate3 supports the lazy fetching of individual properties. This optimization technique
-            is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a
-            marketing feature, as in practice, optimizing row reads is much more important than
-            optimization of column reads. However, only loading some properties of a class might
-            be useful in extreme cases, when legacy tables have hundreds of columns and the data model
-            can not be improved.
-        </para>
-        
-        <para>
-            To enable lazy property loading, set the <literal>lazy</literal> attribute on your
-            particular property mappings:
-        </para>
+        <sect2 id="performance-fetching-lazyproperties">
+            <title>Using lazy property fetching</title>
 
-        <programlisting><![CDATA[<class name="Document">
+            <para>
+                Hibernate3 supports the lazy fetching of individual properties. This optimization technique
+                is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a
+                marketing feature, as in practice, optimizing row reads is much more important than
+                optimization of column reads. However, only loading some properties of a class might
+                be useful in extreme cases, when legacy tables have hundreds of columns and the data model
+                can not be improved.
+            </para>
+
+            <para>
+                To enable lazy property loading, set the <literal>lazy</literal> attribute on your
+                particular property mappings:
+            </para>
+
+            <programlisting><![CDATA[<class name="Document">
        <id name="id">
         <generator class="native"/>
     </id>
@@ -436,17 +685,17 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     <property name="text" not-null="true" length="2000" lazy="true"/>
 </class>]]></programlisting>
 
-        <para>
-            Lazy property loading requires buildtime bytecode instrumentation! If your persistent
-            classes are not enhanced, Hibernate will silently ignore lazy property settings and
-            fall back to immediate fetching.
-        </para>
+            <para>
+                Lazy property loading requires buildtime bytecode instrumentation! If your persistent
+                classes are not enhanced, Hibernate will silently ignore lazy property settings and
+                fall back to immediate fetching.
+            </para>
 
-        <para>
-            For bytecode instrumentation, use the following Ant task:
-        </para>
+            <para>
+                For bytecode instrumentation, use the following Ant task:
+            </para>
 
-        <programlisting><![CDATA[<target name="instrument" depends="compile">
+            <programlisting><![CDATA[<target name="instrument" depends="compile">
     <taskdef name="instrument" classname="org.hibernate.tool.instrument.InstrumentTask">
         <classpath path="${jar.path}"/>
         <classpath path="${classes.dir}"/>
@@ -460,42 +709,23 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     </instrument>
 </target>]]></programlisting>
 
-        <para>
-            A different (better?) way to avoid unnecessary column reads, at least for 
-            read-only transactons is to use the projection features of HQL. This avoids 
-            the need for buildtime bytecode processing.
-        </para>
+            <para>
+                A different (better?) way to avoid unnecessary column reads, at least for
+                read-only transactons is to use the projection features of HQL. This avoids
+                the need for buildtime bytecode processing.
+            </para>
+
+            <para>
+                TODO: Document issues with lazy property loading
+            </para>
+
+        </sect2>
 
         <para>
-            TODO: Document issues with lazy property loading
-        </para>
-
-    </sect1>
-    
-    <sect1 id="performance-outerjoinfetch" revision="1">
-        <title>Outer join fetching</title>
-        
-        <para>
-            Any kind of lazy fetching is extremely vulnerable to N+1 selects problems. So usually,
-            we choose lazy fetching only as a "default" strategy, and override it for a particular
-            transaction, using the HQL <literal>LEFT JOIN FETCH</literal> clause. This tells Hibernate
-            to fetch the association in the first select, using an outer join. In the 
-            <literal>Criteria</literal> API, you would use <literal>setFetchMode(FetchMode.EAGER)</literal>.
-        </para>
-        
-        <para>
-            You can always force outer join association fetching in the mapping file, by setting
-            <literal>outer-join="true"</literal>. We don't recommend this setting, especially
-            not for collections, since it is incredibly rare to find an entity which is 
-            <emphasis>always</emphasis> used when an associated entity is used, at least in a 
-            sufficiently large system.
-        </para>
-        
-        <para>
-            A completely different way to avoid problems with N+1 selects is to use the second-level 
+            A completely different way to avoid problems with N+1 selects is to use the second-level
             cache.
         </para>
-        
+
     </sect1>
 
     <sect1 id="performance-cache" revision="1">

@@ -876,7 +876,7 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-outerjoin" revision="1">
+        <sect2 id="configuration-optional-outerjoin" revision="3">
             <title>Outer Join Fetching</title>
 
             <para>
@@ -889,29 +889,19 @@ hibernate.dialect = \
             </para>
 
             <para>
-                By default, the fetched graph when loading an objects ends at leaf objects,
-                collections, objects with proxies, or where circularities occur in the case
-                of *-to-one associations. Hibernate will however execute an immediate additional
-                <literal>SELECT</literal> for any persistent collection (we recommend that you
-                turn on lazy loading for all collection mappings).
-            </para>
-
-            <para>
-                For a <emphasis>particular  association</emphasis>, fetching may be enabled
-                or disabled (and the default behaviour overridden) by setting the
-                <literal>outer-join</literal> attribute in the XML mapping.
-            </para>
-
-            <para>
                 Outer join fetching may be disabled <emphasis>globally</emphasis> by setting
                 the property <literal>hibernate.max_fetch_depth</literal> to <literal>0</literal>.
                 A setting of <literal>1</literal> or higher enables outer join fetching for
-                all one-to-one and many-to-one associations, which are, also by default, set
-                to <literal>auto</literal> outer join. However, one-to-many associations and
-                collections are never fetched with an outer-join, unless explicitly declared
-                for each particular association. This behavior can also be overriden at runtime
-                with Hibernate queries. See the query chapters in the documentation for more
-                details.
+                all one-to-one and many-to-one associations if no other fetching strategy is
+                defined in the mapping <emphasis>and</emphasis> if proxying of the target entity
+                class has been turned off (thus disabling lazy loading). However, one-to-many
+                associations and collections are never fetched with an outer-join, unless
+                explicitly declared for each particular association. This
+                behavior can also be overriden at runtime with Hibernate queries.
+            </para>
+
+            <para>
+                See <xref linkend="performance-fetching"/> for more information.
             </para>
 
         </sect2>

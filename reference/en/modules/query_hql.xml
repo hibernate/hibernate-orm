@@ -72,7 +72,7 @@
         
     </sect1>
 
-    <sect1 id="queryhql-joins">
+    <sect1 id="queryhql-joins" revision="1">
         <title>Associations and joins</title>
 
         <para>
@@ -123,12 +123,13 @@ from Formula form full join form.parameter param]]></programlisting>
         <programlisting><![CDATA[from eg.Cat as cat 
     join cat.mate as mate
     left join cat.kittens as kitten]]></programlisting>
-    
+
         <para>
             In addition, a "fetch" join allows associations or collections of values to be 
             initialized along with their parent objects, using a single select. This is particularly 
             useful in the case of a collection. It effectively overrides the outer join and
-            lazy declarations of the mapping file for associations and collections.
+            lazy declarations of the mapping file for associations and collections. See
+            <xref linkend="performance-fetching"/> for more information.
         </para>
     
         <programlisting><![CDATA[from eg.Cat as cat 

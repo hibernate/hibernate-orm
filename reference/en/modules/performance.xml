@@ -863,7 +863,7 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         <listitem>
         <para>
             <literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from
-            the second-level cache, bypass the effect of <literal>hibernate.use_minimal_puts</literal>, forcing
+            the second-level cache, bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal>, forcing
             a refresh of the second-level cache for all items read from the database
         </para>
         </listitem>

@@ -353,7 +353,8 @@ alter table line_items
         
         <para>
             These examples are all taken from the Hibernate test suite. You
-            will find many other useful example mappings there.
+            will find many other useful example mappings there. Have a look at the
+            <literal>src</literal> folder of the Hibernate distribution.
         </para>
         
         <para>TODO: put words around this stuff</para>

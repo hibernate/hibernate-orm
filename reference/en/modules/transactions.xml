@@ -500,12 +500,12 @@ finally {
                 can occur in a Hibernate persistence layer, is an unchecked exception (it wasn't
                 in older versions of Hibernate). In our opinion, we shouldn't force the application
                 developer to catch an unrecoverable exception at a low layer. In most systems, unchecked
-                and fatal exceptions are only catched at the highest level of the call stack and an
-                error message is presented to the application user (or some other appropriate action
-                is taken). Note that Hibernate might also throw other unchecked exceptions (e.g.
-                when detecting stale data in version checks) which are not a
-                <literal>HibernateException</literal>. These are, again, not recoverable and appropriate
-                action should be taken.
+                and fatal exceptions are only catched in one of the first frames of the method call
+                stack (i.e. in higher layers) and an error message is presented to the application
+                user (or some other appropriate action is taken). Note that Hibernate might also throw
+                other unchecked exceptions (e.g. when detecting stale data in version checks) which are
+                not a <literal>HibernateException</literal>. These are, again, not recoverable and
+                appropriate action should be taken.
             </para>
 
             <para>

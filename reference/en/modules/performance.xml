@@ -513,12 +513,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 A different (better?) way to avoid unnecessary column reads, at least for
-                read-only transactions is to use the projection features of HQL. This avoids
-                the need for buildtime bytecode processing.
-            </para>
-
-            <para>
-                TODO: Document issues with lazy property loading
+                read-only transactions is to use the projection features of HQL or Criteria
+                queries. This avoids the need for buildtime bytecode processing and is
+                certainly a prefered solution.
             </para>
 
         </sect2>
@@ -1163,7 +1160,7 @@ StatisticsService stats = new StatisticsService(); // MBean implementation
 server.registerMBean(stats, on); // Register the MBean on the server]]></programlisting>
 
             <para>
-                TODO: This doesn't make sense. In the first case, we retrieve and use the MBean directly. In the second one, we must give
+                TODO: This doesn't make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give
                 the JNDI name in which the session factory is held before using it. Use
                 <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal>
             </para>

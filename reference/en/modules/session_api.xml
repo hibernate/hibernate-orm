@@ -1195,13 +1195,13 @@ tx.commit(); // flush occurs]]></programlisting>
         </para>
 
         <programlisting><![CDATA[Cat fritz = ......;
-Long id = (Long) catMeta.getIdentifier(fritz);
 ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);
+
 Object[] propertyValues = catMeta.getPropertyValues(fritz);
 String[] propertyNames = catMeta.getPropertyNames();
 Type[] propertyTypes = catMeta.getPropertyTypes();
+
 // get a Map of all properties which are not collections or associations
-// TODO: what about components?
 Map namedValues = new HashMap();
 for ( int i=0; i<propertyNames.length; i++ ) {
     if ( !propertyTypes[i].isEntityType() && !propertyTypes[i].isCollectionType() ) {

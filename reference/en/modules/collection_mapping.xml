@@ -125,7 +125,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     sort="unsorted|natural|comparatorClass"
     order-by="column_name asc|desc"
     where="arbitrary sql where condition"
-    fetch="join|select"
+    fetch="join|select|subselect"
     batch-size="N"
     access="field|property|ClassName"
     optimistic-lock="true|false"
@@ -194,8 +194,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <callout arearefs="mappingcollection10">
                     <para>
                         <literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose
-                        between outer-join fetching and fetching by sequential select. Only one collection 
-                        may be fetched by outer join per SQL <literal>SELECT</literal>.
+                        between outer-join fetching, fetching by sequential select, and fetching by sequential
+                        subselect. Only one collection may be fetched by outer join per SQL 
+                        <literal>SELECT</literal>.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">

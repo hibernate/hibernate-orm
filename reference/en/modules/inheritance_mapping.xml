@@ -288,8 +288,9 @@
             explicitly. Also notice that properties of <literal>Payment</literal> are 
             mapped in each of the subclasses. If you want to avoid duplication, consider
             using XML entities
-            (e.g. <literal>... [ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]&lt;</literal>
-            in the DTD declartion and <literal>&allproperties;</literal> in the mapping).
+            (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
+            in the <literal>DOCTYPE</literal> declartion and 
+            <literal>&amp;allproperties;</literal> in the mapping).
         </para>
         
         <para>

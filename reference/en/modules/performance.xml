@@ -35,6 +35,15 @@
             </listitem>
             <listitem>
                 <para>
+                    <emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal>
+                    is used to retrieve the associated collections for all entities retrieved in a
+                    previous query or fetch. Unless you explicitly disable lazy fetching by specifying 
+                    <literal>lazy="false"</literal>, this second select will only be executed when you 
+                    actually access the association.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     <emphasis>Batch fetching</emphasis> - an optimization strategy
                     for select fetching - Hibernate retrieves a batch of entity instances 
                     or collections in a single <literal>SELECT</literal>, by specifying 
@@ -44,10 +53,15 @@
         </itemizedlist>
 
         <para>
-            By default, Hibernate3 always uses lazy select fetching, which is the best
-            default for most entities and collections in most applications. However,
-            there is one problem to be aware of. Access to a lazy association outside 
-            of the context of an open Hibernate session will result in an exception.
+            By default, Hibernate3 uses lazy select fetching, which is the best choice for most entities 
+            and collections in most applications. If you set 
+            <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the batch fetch 
+            optimization to lazy fetching (this optimization may also be enabled at a more granular level).
+        </para>
+        
+        <para>
+            However, there is one problem to be aware of. Access to a lazy association 
+            outside of the context of an open Hibernate session will result in an exception.
             For example:
         </para>
 
@@ -129,8 +143,8 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         </itemizedlist>
         
         	<para>
-        		<emphasis>The fetch strategy specified in the mapping document does not affect
-        		HQL queries.</emphasis>
+        		<emphasis>Specifying <literal>join</literal> as the fetch strategy in the mapping 
+        		document does not affect HQL queries.</emphasis>
         	</para>
 
             <para>
@@ -165,6 +179,12 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 non-deferred) <literal>SELECT</literal>s. The restriction to a single outer-joined
                 collection applies to both the mapping fetching strategies and to HQL/Criteria 
                 queries.
+            </para>
+            
+            <para>
+                If you run into this limitation, you should use subselect or batch fetching to
+                achieve acceptable performance. This is common when retrieving a tree of
+                collection-valued associations.
             </para>
             
             <para>

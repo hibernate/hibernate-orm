@@ -292,7 +292,7 @@ public class DomesticCat extends Cat {
 
     </sect1>
 
-    <sect1 id="persistent-classes-dynamic">
+    <sect1 id="persistent-classes-dynamic" revision="1">
         <title>Dynamic models</title>
 
         <para>
@@ -300,8 +300,6 @@ public class DomesticCat extends Cat {
             <literal>Map</literal>s. With this approach, you don't write persistent classes,
             a Hibernate mapping file for each "entity" is sufficient:
         </para>
-	
-	<!-- TODO: move this somewhere else, we didn't get up to mapings yet!! -->
 
         <programlisting><![CDATA[<hibernate-mapping>
 	
@@ -357,12 +355,19 @@ s.save("TestMap", parent);
 t.commit();
 s.close();]]></programlisting>
 
-        <!-- TODO: Document user-extension framework in the property and proxy package -->
         <para>
-            TODO: Document user-extension framework in the property and proxy package
+            The advantages of a dynamic mapping are quick turnaround time for prototyping
+            without the need for entity class implementation. However, you lose compile-time
+            type checking and will very likely deal with many exceptions at runtime. Thanks
+            to the Hibernate mapping, the database schema can easily be normalized and sound,
+            allowing to add a proper domain model implementation on top later on.
         </para>
 
     </sect1>
+
+    <para>
+        TODO: Document user-extension framework in the property and proxy package
+    </para>
 
 </chapter>
 

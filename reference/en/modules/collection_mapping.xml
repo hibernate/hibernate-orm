@@ -934,7 +934,7 @@ session.update(category);                 // The relationship will be saved]]></
 
 	</sect1>
 
-    <sect1 id="collections-example">
+    <sect1 id="collections-example" revision="1">
         <title>Collection examples</title>
 
         <para>
@@ -1070,7 +1070,10 @@ create table childset ( parent_id bigint not null,
 alter table childset add constraint childsetfk0 (parent_id) references parent
 alter table childset add constraint childsetfk1 (child_id) references child]]></programlisting>
 
-        <!-- TODO: link to parent/child chapter -->
+        <para>
+            For more examples and a complete walk-through a parent/child relationship mapping,
+            see <xref linkend="example-parentchild"/>.
+        </para>
 
     </sect1>
 

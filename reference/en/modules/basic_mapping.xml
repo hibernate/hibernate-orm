@@ -225,6 +225,7 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
+                    <area id="class21" coords="23 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -248,6 +249,7 @@
         check="arbitrary sql check condition"
         rowid="TODO"
         subselect="TODO"
+        abstract="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="class1">
@@ -377,6 +379,12 @@
                     <callout arearefs="class21">
                         <para>
                             <literal>subselect</literal> (optional): TODO
+                        </para>
+                    </callout>
+                    <callout arearefs="class22">
+                        <para>
+                            <literal>abstract</literal> (optional): Used to mark abstract superclasses in
+                            <literal>&lt;union-subclass&gt;</literal> hierarchies.
                         </para>
                     </callout>
                 </calloutlist>

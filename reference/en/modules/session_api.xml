@@ -615,7 +615,8 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
             by calling <literal>session.connection()</literal>. Furthermore, the notion
             of mass operations conflicts with object/relational mapping for online
             transaction processing-oriented applications. Future versions of Hibernate
-            may however provide special mass operation functions.</emphasis>
+            may however provide special mass operation functions. See <xref linkend="batch"/>
+            for some possible batch operation tricks.</emphasis>
         </para>
 
     </sect1>

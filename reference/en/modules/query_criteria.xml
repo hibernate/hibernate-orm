@@ -213,5 +213,6 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
     </sect1>
-
+ // TODO: Projection API + ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary user objects - similar to setResultClass in JDO2. General use of 
+ResultTransformer could also be explained.
 </chapter>

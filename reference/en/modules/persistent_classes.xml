@@ -310,7 +310,7 @@ public class DomesticCat extends Cat {
     </sect1>
 
     <sect1 id="persistent-classes-dynamicmodels">
-        <title>Dynamic modelss</title>
+        <title>Dynamic models</title>
 
         <para>
             <emphasis>Note that the following features are currently considered

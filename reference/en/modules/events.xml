@@ -211,7 +211,7 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
         
         <para>
             First, you must configure the appropriate event listeners, to enable the use of JAAS
-            authentication.
+            authorization.
         </para>
         
         <programlisting><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.JACCPreDeleteEventListener"/>
@@ -220,14 +220,14 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
 
         <para>
-            Next, still in <literal>hibernate.cfg.xml</literal>, define the permissions:
+            Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:
         </para>
         
         <programlisting><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
 <grant role="su" entity-name="User" actions="*"/>]]></programlisting>
         
         <para>
-            Where the role names are the roles understood by your JACC provider.
+            The role names are the roles understood by your JACC provider.
         </para>
        
     </sect1>

@@ -262,6 +262,7 @@
         rowid="rowid"
         subselect="SQL expression"
         abstract="true|false"
+        entity-name="EntityName"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="class1">
@@ -1375,6 +1376,7 @@
         not-null="true|false"
         optimistic-lock="true|false"
         lazy="true|false"
+        entity-name="EntityName"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1433,7 +1435,8 @@
                         <para>
                             <literal>unique</literal> (optional): Enable the DDL generation of a unique
                             constraint for the foreign-key column. Also, allow this to be the target of 
-                            a <literal>property-ref</literal>.
+                            a <literal>property-ref</literal>. This makes the association multiplicity 
+                            effectively one to one.
                         </para>
                     </callout>
                     <callout arearefs="manytoone11">
@@ -1532,6 +1535,7 @@
         fetch="join|select"
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
+        entity-name="EntityName"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="onetoone1">
@@ -1772,7 +1776,8 @@
         proxy="ProxyInterface"
         lazy="true|false"
         dynamic-update="true|false"
-        dynamic-insert="true|false">
+        dynamic-insert="true|false"
+        entity-name="EntityName">
 
         <property .... />
         .....
@@ -1845,7 +1850,8 @@
         catalog="catalog"
         extends="SuperclassName"
         persister="ClassName"
-        subselect="SQL expression">
+        subselect="SQL expression"
+        entity-name="EntityName">
 
         <key .... >
 
@@ -1956,7 +1962,8 @@
         extends="SuperclassName"
         abstract="true|false"
         persister="ClassName"
-        subselect="SQL expression">
+        subselect="SQL expression"
+        entity-name="EntityName">
 
         <property .... />
         .....
@@ -2115,6 +2122,7 @@
                     <area id="key3" coords="4 50"/>
                     <area id="key4" coords="5 50"/>
                     <area id="key5" coords="6 50"/>
+                    <area id="key6" coords="7 50"/>
                 </areaspec>
                 <programlisting><![CDATA[<key
         column="columnname"
@@ -2122,6 +2130,7 @@
         property-ref="propertyName"
         not-null="true|false"
         update="true|false"
+        unique="true|false"
 />]]></programlisting>
 
                 <calloutlist>
@@ -2158,6 +2167,12 @@
                             <literal>update</literal> (optional): Specifies that the foreign key should never
                             be updated (this is implied whenever the foreign key is also part of the primary 
                             key).
+                        </para>
+                    </callout>
+                    <callout arearefs="key6">
+                        <para>
+                            <literal>unique</literal> (optional): Specifies that the foreign key should have
+                            a unique constraint (this is implied whenever the foreign key is also the primary key).
                         </para>
                     </callout>
                 </calloutlist>

@@ -409,11 +409,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany1" coords="2 60"/>
                 <area id="manytomany2" coords="3 60"/>
                 <area id="manytomany3" coords="4 60"/>
+                <area id="manytomany4" coords="5 60"/>
             </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
         class="ClassName"
         fetch="select|join"
+        unique="true|false"
+        entity-name="EntityName"
     />]]></programlisting>
             <calloutlist>
                 <callout arearefs="manytomany1">
@@ -435,6 +438,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         enable <literal>join</literal> fetching not only of the collection itself,
                         but also with this attribute on the <literal>&lt;many-to-many&gt;</literal>
                         nested element.
+                    </para>
+                <callout arearefs="manytomany4">
+                </callout>
+                    <para>
+                        <literal>unique</literal> (optional): Enable the DDL generation of a unique
+                        constraint for the foreign-key column. This makes the association multiplicity
+                        effectively one to many.
                     </para>
                 </callout>
             </calloutlist>
@@ -542,7 +552,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <areaspec>
                 <area id="onetomany1" coords="1 60"/>
             </areaspec>
-            <programlisting><![CDATA[<one-to-many class="ClassName"/>]]></programlisting>
+            <programlisting><![CDATA[<one-to-many 
+        class="ClassName"
+        entity-name="EntityName"/>]]></programlisting>
             <calloutlist>
                 <callout arearefs="onetomany1">
                     <para>

@@ -543,12 +543,12 @@ finally {
 
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
 session = factory.openSession();
+Transaction t = session.beginTransaction();
 int oldVersion = foo.getVersion();
 session.load( foo, foo.getKey() ); // load the current state
 if ( oldVersion!=foo.getVersion ) throw new StaleObjectStateException();
 foo.setProperty("bar");
-session.flush();
-session.connection().commit();
+t.commit();
 session.close();]]></programlisting>
 
             <para>
@@ -598,9 +598,9 @@ session.close();]]></programlisting>
 
             <programlisting><![CDATA[// foo is an instance loaded earlier by the Session
 session.reconnect(); // Obtain a new JDBC connection
+Transaction t = session.beginTransaction();
 foo.setProperty("bar");
-session.flush(); // Do the version check
-session.connection().commit(); // End database transaction
+t.commit(); // End database transaction, flushing the change and checking the version
 session.disconnect(); // Return JDBC connection ]]></programlisting>
 
             <para>
@@ -646,9 +646,9 @@ session.disconnect(); // Return JDBC connection ]]></programlisting>
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
 foo.setProperty("bar");
 session = factory.openSession();
+Transaction t = session.beginTransaction();
 session.saveOrUpdate(foo); // Use merge() if "foo" might have been loaded already
-session.flush();
-session.connection().commit();
+t.commit();
 session.close();]]></programlisting>
 
             <para>
@@ -668,10 +668,10 @@ session.close();]]></programlisting>
             <title>Customizing automatic versioning</title>
 
             <para>
-                It is possible to turn of Hibernates automatic version increment for particular
-                properties and collections by setting the <literal>optmistic-lock</literal> mapping
-                attribute to <literal>false</literal>. Hibernate will then no longer increment
-                versions if this property is dirty.
+                You may disable Hibernate's automatic version increment for particular properties and 
+                collections by setting the <literal>optmistic-lock</literal> mapping attribute to 
+                <literal>false</literal>. Hibernate will then no longer increment versions if the 
+                property is dirty.
             </para>
 
             <para>

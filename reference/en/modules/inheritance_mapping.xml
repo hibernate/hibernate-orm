@@ -243,41 +243,10 @@
         <title>Limitations</title>
 
         <para>
-            TODO: This section needs to be rewritten, Hibernate3 has almost no limitations on inheritance mappings
-        </para>
-
-        <para>
-            Hibernate assumes that an association maps to exactly one foreign key column.
-            Multiple associations per foreign key are tolerated (you might need to specify
-            <literal>inverse="true"</literal> or <literal>insert="false" update="false"</literal>),
-            but there is no way to map any association to multiple foreign keys. This means that:
-        </para>
-
-        <itemizedlist>
-        <listitem>
-        <para>
-            when an association is modified, it is always the same foreign key that is
-            updated
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            when an association is fetched lazily, a single database query is used
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            when an association is fetched eagerly, it may be fetched using a single
-            outer join
-        </para>
-        </listitem>
-        </itemizedlist>
-
-        <para>
-            In particular, it implies that polymorphic one-to-many associations to
-            classes mapped using the table-per-concrete-class strategy are
-            <emphasis>not supported</emphasis>. (Fetching this association would
-            require multiple queries or multiple joins.)
+            There are certain limitations to the "implicit polymorphism" approach to
+            the table-per-concrete-class mapping strategy. There are somewhat less
+            restrictive limitations to <literal>&lt;union-subclass&gt;</literal>
+            mappings. (TODO)
         </para>
 
         <para>
@@ -342,6 +311,17 @@
                 <entry><literal>from Payment p</literal></entry>
                 <entry><emphasis>not supported</emphasis></entry>
                 <entry><emphasis>not supported</emphasis></entry>
+            </row>
+            <row>
+                <entry>table-per-concrete-class (union-subclass)</entry>
+                <entry><literal>??</literal></entry>
+                <entry><emphasis>??</emphasis></entry>
+                <entry><emphasis>&lt;one-to-many&gt; (<literal>inverse="true"</literal> only)</emphasis></entry>
+                <entry><literal>??</literal></entry>
+                <entry><emphasis>s.get(Payment.class, id)</emphasis></entry>
+                <entry><literal>from Payment p</literal></entry>
+                <entry><literal>from Order o join o.payment p</literal></entry>
+                <entry><emphasis>supported</emphasis></entry>
             </row>
             </tbody>
             </tgroup>

@@ -297,6 +297,23 @@
     <xsl:param name="section.autolabel" select="1"/>
     <xsl:param name="section.label.includes.component.label" select="1"/>
 
+    <!-- Label only Sections up to level 2 -->
+    <xsl:param name="local.l10n.xml" select="document('')"/>
+    <l:i18n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0">
+        <l:l10n language="en">
+            <l:context name="title-numbered">
+                <l:template name="sect3" text="%t"/>
+                <l:template name="sect4" text="%t"/>
+                <l:template name="sect5" text="%t"/>
+            </l:context>
+            <l:context name="section-xref-numbered">
+                <l:template name="sect3" text="the section called %t"/>
+                <l:template name="sect4" text="the section called %t"/>
+                <l:template name="sect5" text="the section called %t"/>
+            </l:context>
+        </l:l10n>
+    </l:i18n>
+    
     <!--###################################################
                              Titles
         ################################################### -->

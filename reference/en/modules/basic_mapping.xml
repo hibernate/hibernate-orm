@@ -1256,8 +1256,8 @@
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
                             Specifies that updates to this property do or do not require acquisition of the
-                            optimistic lock. In other words, define if a version check should be made if this
-                            property is dirty.
+                            optimistic lock. In other words, determines if a version increment should occur when 
+                            this property is dirty.
                         </para>
                     </callout>
                 </calloutlist>
@@ -1449,8 +1449,8 @@
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
                             Specifies that updates to this property do or do not require acquisition of the
-                            optimistic lock. In other words, define if a version check should be made if this
-                            property is dirty.
+                            optimistic lock. In other words, dertermines if a version increment should occur when 
+                            this property is dirty.
                         </para>
                     </callout>
                     <callout arearefs="manytoone13">
@@ -1672,6 +1672,7 @@
                     <area id="component5" coords="6 45"/>
                     <area id="component6" coords="7 45"/>
                     <area id="component7" coords="8 45"/>
+                    <area id="component8" coords="9 45"/>
                 </areaspec>            
                 <programlisting><![CDATA[<component 
         name="propertyName" 
@@ -1681,6 +1682,7 @@
         access="field|property|ClassName"
         lazy="true|false"
         optimistic-lock="true|false"
+        unique="true|false"
 >
         
         <property ...../>
@@ -1728,8 +1730,15 @@
                             <para>
                                 <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>):
                                 Specifies that updates to this component do or do not require acquisition of the
-                                optimistic lock. In other words, define if a version check should be made if this
-                                property is dirty.
+                                optimistic lock. In other words, determines if a version increment should occur when 
+                                this property is dirty.
+                            </para>
+                    </callout>
+                    <callout arearefs="component8">
+                            <para>
+                                <literal>unique</literal> (optional - defaults to <literal>false</literal>):
+                                Specifies that a unique constraint exists upon all mapped columns of the
+                                component.
                             </para>
                     </callout>
                 </calloutlist>
@@ -1750,6 +1759,108 @@
                 The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal>
                 to be mapped as a component, where the property names refer to keys of the map, see
                 <xref linken="components-dynamic"/>.
+            </para>
+            
+        </sect2>
+
+        <sect2 id="mapping-declaration-properties" revision="2">
+            <title>properties</title>
+
+            <para>
+                The <literal>&lt;properties&gt;</literal> element allows the definition of a named,
+                logical grouping of properties of a class. The most important use of the construct
+                is that it allows a combination of properties to be the target of a 
+                <literal>property-ref</literal>. It is also a convenient way to define a multi-column
+                unique constraint.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="properties1" coords="2 45"/>
+                    <area id="properties2" coords="3 45"/>
+                    <area id="properties3" coords="4 45"/>
+                    <area id="properties4" coords="5 45"/>
+                    <area id="properties5" coords="6 45"/>
+                </areaspec>            
+                <programlisting><![CDATA[<properties 
+        name="logicalName" 
+        insert="true|false"
+        upate="true|false"
+        optimistic-lock="true|false"
+        unique="true|false"
+>
+        
+        <property ...../>
+        <many-to-one .... />
+        ........
+</component>]]></programlisting>
+                <calloutlist>
+                    <callout arearefs="properties1">
+                        <para>
+                            <literal>name</literal>: The logical name of the grouping - 
+                            <emphasis>not</emphasis> an actual property name.
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="properties2">
+                        <para>
+                            <literal>insert</literal>: Do the mapped columns appear in SQL 
+                            <literal>INSERT</literal>s?
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="properties3">
+                        <para>
+                            <literal>update</literal>: Do the mapped columns appear in SQL 
+                            <literal>UPDATE</literal>s?
+                        </para>               
+                    </callout>                   
+                    <callout arearefs="properties4">
+                            <para>
+                                <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>):
+                                Specifies that updates to these properties do or do not require acquisition of the
+                                optimistic lock. In other words, determines if a version increment should occur when
+                                these properties are dirty.
+                            </para>
+                    </callout>
+                    <callout arearefs="properties5">
+                            <para>
+                                <literal>unique</literal> (optional - defaults to <literal>false</literal>):
+                                Specifies that a unique constraint exists upon all mapped columns of the
+                                component.
+                            </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+            
+            <para>
+                For example, if we have the following <literal>&lt;properties&gt;</literal> mapping:
+            </para>
+            
+            <programlisting><![CDATA[<class name="Person">
+    <id name="personNumber"/>
+    ...
+    <properties name="name" 
+            unique="true" update="false">
+        <property name="firstName"/>
+        <property name="initial"/>
+        <property name="lastName"/>
+    </properties>
+</class>]]></programlisting>
+
+            <para>
+                Then we might have some legacy data association which refers to this unique key of 
+                the <literal>Person</literal> table, instead of to the primary key:
+            </para>
+
+            <programlisting><![CDATA[<many-to-one name="person" 
+         class="Person" property-ref="name">
+    <column name="firstName"/>
+    <column name="initial"/>
+    <column name="lastName"/>
+</many-to-one>]]></programlisting>
+            
+            <para>
+                We don't recommend the use of this kind of thing outside the context of mapping
+                legacy data.
             </para>
             
         </sect2>
@@ -2372,7 +2483,7 @@
                         <para>
                             <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
                             Specifies that updates to this property do or do not require acquisition of the
-                            optimistic lock. In other words, define if a version check should be made if this
+                            optimistic lock. In other words, define if a version increment should occur if this
                             property is dirty.
                         </para>
                     </callout>

@@ -113,6 +113,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mappingcollection10" coords="11 65"/>
                 <area id="mappingcollection11" coords="12 65"/>
                 <area id="mappingcollection12" coords="13 65"/>
+                <area id="mappingcollection13" coords="14 65"/>
             </areaspec>
             <programlisting><![CDATA[<map
     name="propertyName"
@@ -127,6 +128,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     fetch="join|select"
     batch-size="N"
     access="field|property|ClassName"
+    optimistic-lock="true|false"
 >
 
     <key .... />
@@ -206,6 +208,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                     <para>
                         <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                         strategy Hibernate should use for accessing the property value.
+                    </para>
+                </callout>
+                <callout arearefs="mappingcollection12">
+                    <para>
+                        <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
+                        Species that changes to the state of the collection results in increment of the
+                        owning entity's version. (For one to many associations, it is often reasonable to
+                        disable this setting.)
                     </para>
                 </callout>
             </calloutlist>

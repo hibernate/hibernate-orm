@@ -123,7 +123,7 @@
         <generator class="uuid.hex"/>
     </id>
     <property name="birthday" type="date"/>
-    <component name="Name" class="eg.Name">
+    <component name="Name" class="eg.Name" unique="true">
         <parent name="namedPerson"/> <!-- reference back to the Person -->
         <property name="initial"/>
         <property name="first"/>

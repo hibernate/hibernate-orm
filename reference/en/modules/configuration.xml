@@ -879,7 +879,7 @@ hibernate.dialect = \
                 not standardized for J2EE containers:
             </para>
 
-            <table frame="topbot">
+            <table frame="topbot" id="jtamanagerlookup" revision="1">
                 <title>JTA TransactionManagers</title>
                 <tgroup cols="2">
                     <colspec colwidth="2.5*"/>
@@ -892,36 +892,40 @@ hibernate.dialect = \
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
                             <entry align="center">JBoss</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
                             <entry align="center">Weblogic</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
                             <entry align="center">WebSphere</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
                             <entry align="center">Orion</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
                             <entry align="center">Resin</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
                             <entry align="center">JOTM</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
                             <entry align="center">JOnAS</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
                             <entry align="center">JRun4</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
+                            <entry align="center">Borland ES</entry>
                         </row>
                     </tbody>
                 </tgroup>

@@ -28,7 +28,7 @@
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>3.0 beta2</releaseinfo>
+        <releaseinfo>3.0 beta4</releaseinfo>
     </bookinfo>
 
     <toc/>

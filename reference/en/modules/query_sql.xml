@@ -184,7 +184,8 @@ List loggedCats = sess.createSQLQuery(sql)
             </para>
 
             <para>
-            If your mapping has a discriminator you must use &lt;discriminator-result&gt; to specify the discriminators column.
+             If your mapping has a discriminator you must use &lt;return-discriminator&gt; to specify the 
+             discriminator column.
             </para>
          </sect2>
          

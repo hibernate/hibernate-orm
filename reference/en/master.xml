@@ -19,6 +19,7 @@
 <!ENTITY query-criteria         SYSTEM "modules/query_criteria.xml">
 <!ENTITY query-sql              SYSTEM "modules/query_sql.xml">
 <!ENTITY filters                SYSTEM "modules/filters.xml">
+<!ENTITY xml                    SYSTEM "modules/xml.xml">
 <!ENTITY performance            SYSTEM "modules/performance.xml">
 <!ENTITY toolset-guide          SYSTEM "modules/toolset_guide.xml">
 <!ENTITY example-parentchild    SYSTEM "modules/example_parentchild.xml">
@@ -162,6 +163,7 @@
     &query-criteria;
     &query-sql;
     &filters;
+    &xml;
 
     &performance;
 

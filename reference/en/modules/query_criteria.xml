@@ -71,8 +71,26 @@ List cats = crit.list();]]></programlisting>
             The <literal>{alias}</literal> placeholder with be replaced by the row alias
             of the queried entity.
         </para>
+        
+        <para>
+            An alternative approach to obtaining a criterion is to get it from a 
+            <literal>Property</literal> instance. You can create a <literal>Property</literal>
+            by calling <literal>Property.forName()</literal>.
+        </para>
     
-    </sect1>
+        <programlisting><![CDATA[
+Property age = Property.forName("age");
+List cats = sess.createCriteria(Cat.class)
+    .add( Restrictions.disjunction()
+        .add( age.isNull() )
+    	.add( age.eq( new Integer(0) ) )
+    	.add( age.eq( new Integer(1) ) )
+    	.add( age.eq( new Integer(2) ) )
+    ) )
+    .add( Property.forName("name").in( new String[] { "Fritz", "Izi", "Pk" } ) )
+    .list();]]></programlisting>
+    
+   </sect1>
      
     <sect1 id="querycriteria-ordering">
         <title>Ordering the results</title>
@@ -85,6 +103,13 @@ List cats = crit.list();]]></programlisting>
     .add( Restrictions.like("name", "F%")
     .addOrder( Order.asc("name") )
     .addOrder( Order.desc("age") )
+    .setMaxResults(50)
+    .list();]]></programlisting>
+    
+        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+    .add( Property.forName("name").like("F%") )
+    .addOrder( Property.forName("name").asc() )
+    .addOrder( Property.forName("age").desc() )
     .setMaxResults(50)
     .list();]]></programlisting>
     
@@ -242,20 +267,33 @@ List results = session.createCriteria(Cat.class)
     
         <para>
             An alias may optionally be assigned to a projection, so that the projected value
-            may be referred to in restrictions or orderings.
+            may be referred to in restrictions or orderings. Here are two different ways to
+            do this:
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.alias( Projections.groupProperty("color"), "colr" ) )
-    .add( Restrictions.ne("colr", Color.BLACK) )
+    .addOrder( Order.asc("colr") )
     .list();]]></programlisting>
     
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.groupProperty("color").as("colr") )
+    .addOrder( Order.asc("colr") )
+    .list();]]></programlisting>
+    
+        <para>
+            The <literal>alias()</literal> and <literal>as()</literal> methods simply wrap a
+            projection instance in another, aliased, instance of <literal>Projection</literal>.
+            As a shortcut, you can assign an alias when you add the projection to a 
+            projection list:
+        </para>
+
        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount(), "catCountByColor" )
         .add( Projections.avg("weight"), "avgWeight" )
-        .add( Projections.max("weight") )
-        .add( Projections.groupProperty("color") )
+        .add( Projections.max("weight"), "maxWeight" )
+        .add( Projections.groupProperty("color"), "color" )
     )
     .addOrder( Order.desc("catCountByColor") )
     .addOrder( Order.desc("avgWeight") )
@@ -269,6 +307,26 @@ List results = session.createCriteria(Cat.class)
     )
     .addOrder( Order.asc("catName") )
     .addOrder( Order.asc("kitName") )
+    .list();]]></programlisting>
+    
+        <para>
+            You can also use <literal>Property.forName()</literal> to express projections.
+        </para>
+    
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Property.forName("name") )
+    .add( Property.forName("color").eq(Color.BLACK) )
+    .list();]]></programlisting>
+    
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.projectionList()
+        .add( Projections.rowCount().as("catCountByColor") )
+        .add( Property.forName("weight").avg().as("avgWeight") )
+        .add( Property.forName("weight").max().as("maxWeight") )
+        .add( Property.forName("color").group().as("color" )
+    )
+    .addOrder( Order.desc("catCountByColor") )
+    .addOrder( Order.desc("avgWeight") )
     .list();]]></programlisting>
     
     </sect1>

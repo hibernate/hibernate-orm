@@ -154,12 +154,8 @@ create sequence employer_id_seq]]></programlisting>
 
         <property name="title"/>
         <set name="authors" table="author_work">
-            <key>
-                <column name="work_id" not-null="true"/>
-            </key>
-            <many-to-many class="Author">
-                <column name="author_id" not-null="true"/>
-            </many-to-many>
+            <key column name="work_id"/>
+            <many-to-many class="Author" column name="author_id"/>
         </set>
 
         <subclass name="Book" discriminator-value="B">
@@ -292,7 +288,7 @@ alter table author_work
         <many-to-one name="customer" column="customer_id"/>
         <list name="lineItems" table="line_items">
             <key column="order_id"/>
-            <index column="line_number"/>
+            <list-index column="line_number"/>
             <composite-element class="LineItem">
                 <property name="quantity"/>
                 <many-to-one name="product" column="product_id"/>

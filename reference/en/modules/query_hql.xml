@@ -214,7 +214,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
     
         <para>
-            or as an actual typesafe Java object
+            or as an actual typesafe Java object,
         </para>
         
         <programlisting><![CDATA[select new Family(mother, mate, offspr)

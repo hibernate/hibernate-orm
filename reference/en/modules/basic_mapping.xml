@@ -2291,7 +2291,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-types-custom">
+        <sect2 id="mapping-types-custom" revision="2">
             <title>Custom value types</title>
 
             <para>
@@ -2322,6 +2322,41 @@
                 Notice the use of <literal>&lt;column&gt;</literal> tags to map a property to multiple
                 columns.
             </para>
+            <para>
+                You may also supply parameters to a UserType in the mapping file. To do this, your UserType
+                has to implement the <literal>org.hibernate.usertype.ParameterizedType</literal> interface.
+                To supply parameters to your UserType, you can use the <literal>&lt;type&gt;</literal> element
+                in your mapping files.
+            </para>
+            <programlisting><![CDATA[<property name="primitiveWithNullValues" column="INT_COLUMN">
+    <type name="org.hibernate.test.typeparameters.NullMappingType">
+        <param name="default">1</param>
+    </type>
+</property>]]></programlisting>
+
+            <para>
+                The UserType can now retrieve the value for the parameter named <literal>default</literal>
+                from the Properties object passed to it.
+            </para>
+            <para>
+                If you use a certain UserType very often, it may be useful to define a shorter name for it. 
+                You can do this using the <literal>&lt;typedef&gt;</literal> element in your mapping files.
+                Typedefs contain a UserType and a defined name for it, and may also contain a list of default
+                paramter values if the type defined implements <literal>ParameterizedType</literal>. After 
+                defining the name, it can be used everywhere the original classname can be used.
+            </para>
+            <programlisting><![CDATA[<typedef class="org.hibernate.test.typeparameters.NullMappingType" name="nullMapper">
+    <param name="default">2</param>
+</typedef>
+
+<property name="primitiveWithNullValues" column="INT_COLUMN">
+    <type name="nullMapper"/>
+</property>]]></programlisting>
+            <para>
+                It is also possible to override the parameters supplied in a typedef on a case-by-case basis
+                by using type parameters on the property mapping.
+            </para>
+            
             <para>
                 Even though Hibernate's rich range of built-in types and support for components means you
                 will very rarely <emphasis>need</emphasis> to use a custom type, it is nevertheless

@@ -1351,6 +1351,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <entry>Log all second-level cache activity</entry>
                         </row>
                         <row>
+                            <entry><literal>org.hibernate.transaction</literal></entry>
+                            <entry>Log transaction related activity</entry>
+                        </row>
+                        <row>
                             <entry><literal>org.hibernate.jdbc</literal></entry>
                             <entry>Log all JDBC resource acquisition</entry>
                         </row>

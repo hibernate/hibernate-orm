@@ -321,19 +321,27 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <areaspec>
                 <area id="mapkey1" coords="2 45"/>
                 <area id="mapkey2" coords="3 45"/>
+                <area id="mapkey3" coords="4 45"/>
              </areaspec>
             <programlisting><![CDATA[<map-key 
         column="column_name"
+        formula="any SQL expression"
         type="type_name"
         length="N"/>]]></programlisting>
             <calloutlist>
                 <callout arearefs="mapkey1">
                     <para>
-                        <literal>column</literal> (required): The name of the column holding the
+                        <literal>column</literal> (optional): The name of the column holding the
                         collection index values.
                     </para>
                 </callout>
                 <callout arearefs="mapkey2">
+                    <para>
+                        <literal>formula</literal> (optional): A SQL formula used to evaluate the
+                        key of the map.
+                    </para>
+                </callout>
+                <callout arearefs="mapkey3">
                     <para>
                         <literal>type</literal> (optional, defaults to <literal>integer</literal>):
                         The type of the collection index.
@@ -346,19 +354,27 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <areaspec>
                 <area id="indexmanytomany1" coords="2 45"/>
                 <area id="indexmanytomany2" coords="3 45"/>
+                <area id="indexmanytomany3" coords="3 45"/>
              </areaspec>
             <programlisting><![CDATA[<map-key-many-to-many
         column="column_name"
+        formula="any SQL expression"
         class="ClassName"
 />]]></programlisting>
             <calloutlist>
                 <callout arearefs="indexmanytomany1">
                     <para>
-                        <literal>column</literal> (required): The name of the foreign key
+                        <literal>column</literal> (optional): The name of the foreign key
                         column for the collection index values.
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany2">
+                    <para>
+                        <literal>formula</literal> (optional): A SQL formula used to evaluate the
+                        foreign key of the map key.
+                    </para>
+                </callout>
+                <callout arearefs="indexmanytomany3">
                     <para>
                         <literal>class</literal> (required): The entity class used as the
                         collection index.
@@ -401,9 +417,11 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <areaspec>
                 <area id="element1b" coords="2 45"/>
                 <area id="element2b" coords="3 45"/>
+                <area id="element3b" coords="4 45"/>
              </areaspec>
             <programlisting><![CDATA[<element
         column="column_name"
+        formula="any SQL expression"
         type="typename"
         length="N"
         precision="N"
@@ -414,11 +432,17 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="element1b">
                     <para>
-                        <literal>column</literal> (required): The name of the column holding the
+                        <literal>column</literal> (optional): The name of the column holding the
                         collection element values.
                     </para>
                 </callout>
                 <callout arearefs="element2b">
+                    <para>
+                        <literal>formula</literal> (optional): An SQL formula used to evaluate the
+                        element.
+                    </para>
+                </callout>
+                <callout arearefs="element3b">
                     <para>
                         <literal>type</literal> (required): The type of the collection element.
                     </para>
@@ -437,9 +461,11 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany2" coords="3 60"/>
                 <area id="manytomany3" coords="4 60"/>
                 <area id="manytomany4" coords="5 60"/>
+                <area id="manytomany5" coords="6 60"/>
             </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
+        formula="any SQL expression"
         class="ClassName"
         fetch="select|join"
         unique="true|false"
@@ -448,15 +474,21 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="manytomany1">
                     <para>
-                        <literal>column</literal> (required): The name of the element foreign key column.
+                        <literal>column</literal> (optional): The name of the element foreign key column.
                     </para>
                 </callout>
                 <callout arearefs="manytomany2">
                     <para>
-                        <literal>class</literal> (required): The name of the associated class.
+                        <literal>formula</literal> (optional): An SQL formula used to evaluate the element
+                        foreign key value.
                     </para>
                 </callout>
                 <callout arearefs="manytomany3">
+                    <para>
+                        <literal>class</literal> (required): The name of the associated class.
+                    </para>
+                </callout>
+                <callout arearefs="manytomany4">
                     <para>
                         <literal>fetch</literal> (optional - defaults to <literal>join</literal>):
                         enables outer-join or sequential select fetching for this association. This
@@ -467,7 +499,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         nested element.
                     </para>
                 </callout>
-                <callout arearefs="manytomany4">
+                <callout arearefs="manytomany5">
                     <para>
                         <literal>unique</literal> (optional): Enable the DDL generation of a unique
                         constraint for the foreign-key column. This makes the association multiplicity

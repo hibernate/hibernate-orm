@@ -1,15 +1,15 @@
 <chapter id="manipulatingdata">
 
-    <title>Manipulating Persistent Data</title>
+    <title>Working with Persistent Data</title>
 
     <sect1 id="manipulatingdata-creating">
         <title>Creating a persistent object</title>
 
         <para>
-            An object (entity instance) is either <emphasis>transient</emphasis> or
-            <emphasis>persistent</emphasis> with respect to a particular
-            <literal>Session</literal>. Newly instantiated objects are, of course, transient. 
-            The session offers services for saving (ie. persisting) transient instances:
+            Newly instantiated instances of a a persistent class are considered 
+            <emphasis>transient</emphasis> by Hibernate. We can make a transient 
+            instance <emphasis>persistent</emphasis> by associating it with a 
+            session:
         </para>
 
         <programlisting><![CDATA[DomesticCat fritz = new DomesticCat();
@@ -18,6 +18,19 @@ fritz.setSex('M');
 fritz.setName("Fritz");
 Long generatedId = (Long) sess.save(fritz);]]></programlisting>
 
+        <para>
+            If <literal>Cat</literal> has a generated identifier, the identifier is
+            generated and assigned to the <literal>cat</literal> when <literal>save()</literal> 
+            is called. If <literal>Cat</literal> has an <literal>assigned</literal>
+            identifier, or a composite key, the identifier should be assigned to 
+            the <literal>cat</literal> instance before calling <literal>save()</literal>.
+        </para>
+        
+        <para>
+            Alternatively, you may assign the identifier using an overloaded version
+            of <literal>save()</literal>.
+        </para>
+
 <programlisting><![CDATA[DomesticCat pk = new DomesticCat();
 pk.setColor(Color.TABBY);
 pk.setSex('F');
@@ -25,16 +38,7 @@ pk.setName("PK");
 pk.setKittens( new HashSet() );
 pk.addKitten(fritz);
 sess.save( pk, new Long(1234) );]]></programlisting>
-
-        <para>
-            The single-argument <literal>save()</literal> generates and assigns a unique
-            identifier to <literal>fritz</literal>. The two-argument form attempts to persist
-            <literal>pk</literal> using the given identifier. We generally discourage the use of 
-            the two-argument form since it may be used to create primary keys with business meaning.
-            It is most useful in certain special situations like using Hibernate to persist a BMP 
-            entity bean.
-        </para>
-
+        
         <para>
             Associated objects may be made persistent in any order you like unless you 
             have a <literal>NOT NULL</literal> constraint upon a foreign key column.
@@ -42,6 +46,12 @@ sess.save( pk, new Long(1234) );]]></programlisting>
             might violate a <literal>NOT NULL</literal> constraint if you
             <literal>save()</literal> the objects in the wrong order.
         </para>
+        
+        <para>
+            If you enable cascade save on your associations, even <literal>NOT NULL</literal>
+            constraint violations are impossible - Hibernate will take care of everything.
+        </para>
+        
     </sect1>
 
     <sect1 id="manipulatingdata-loading">
@@ -50,11 +60,8 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         <para>
             The <literal>load()</literal> methods of <literal>Session</literal> give you 
             a way to retrieve a persistent instance if you already know its identifier. 
-            One version takes a class object and will load the state into a newly instantiated 
-            object. The second version allows you to supply an instance into which the state 
-            will be loaded. The form which takes an instance is particularly useful if you plan 
-            to use Hibernate with BMP entity beans and is provided for exactly that purpose.
-            You may discover other uses. (DIY instance pooling etc.)
+            <literal>load()</literal> takes a class object and will load the state into 
+            a newly instantiated instance of that class.
         </para>
 
         <programlisting><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
@@ -63,22 +70,30 @@ sess.save( pk, new Long(1234) );]]></programlisting>
 long pkId = 1234;
 DomesticCat pk = (DomesticCat) sess.load( Cat.class, new Long(pkId) );]]></programlisting>
 
+        <para>
+            Alternatively, you can load state into a given instance:
+        </para>
+
 <programlisting><![CDATA[Cat cat = new DomesticCat();
 // load pk's state into cat
 sess.load( cat, new Long(pkId) );
 Set kittens = cat.getKittens();]]></programlisting>
 
         <para>
-            Note that <literal>load()</literal> will throw an unrecoverable exception if there is no matching 
-            database row. If the class is mapped with a proxy, <literal>load()</literal> returns an object
-            that is an uninitialized proxy and does not actually hit the database until you invoke a method of 
-            the object. This behaviour is very useful if you wish to create an association to an object
-            without actually loading it from the database.
+            Note that <literal>load()</literal> will throw an unrecoverable exception if 
+            there is no matching database row. If the class is mapped with a proxy, 
+            <literal>load()</literal> just returns an uninitialized proxy and does not 
+            actually hit the database until you invoke a method of the proxy. This 
+            behaviour is very useful if you wish to create an association to an object
+            without actually loading it from the database. It also allows multiple
+            instances to be loaded as a batch if <literal>batch-size</literal> is
+            defined for the class mapping.
         </para>
         
         <para>
-            If you are not certain that a matching row exists, you should use the <literal>get()</literal>
-            method, which hits the database immediately and returns null if there is no matching row.
+            If you are not certain that a matching row exists, you should use the 
+            <literal>get()</literal> method, which hits the database immediately and 
+            returns null if there is no matching row.
         </para>
         
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);
@@ -89,15 +104,15 @@ if (cat==null) {
 return cat;]]></programlisting>
 
         <para>
-            You may also load an objects using an SQL <literal>SELECT ... FOR UPDATE</literal>. See the next
-            section for a discussion of Hibernate <literal>LockMode</literal>s.
+            You may even load an object using an SQL <literal>SELECT ... FOR UPDATE</literal>. 
+            See the next section for a discussion of Hibernate <literal>LockMode</literal>s.
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]></programlisting>
         
         <para>
-            Note that any associated instances or contained collections are <emphasis>not</emphasis> selected 
-            <literal>FOR UPDATE</literal>.
+            Note that any associated instances or contained collections are 
+            <emphasis>not</emphasis> selected <literal>FOR UPDATE</literal>.
         </para>
         
         <para>
@@ -116,62 +131,51 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
         <title>Querying</title>
 
         <para>
-            If you don't know the identifier(s) of the object(s) you are looking for, use the <literal>find()
-            </literal> methods of <literal>Session</literal>. Hibernate supports a simple but powerful object 
+            If you don't know the identifiers of the objects you are looking for, 
+            you need a query. Hibernate supports an easy-to-use but powerful object 
             oriented query language.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.find(
-    "from Cat as cat where cat.birthdate = ?",
-    date,
-    Hibernate.DATE
-);
+        <programlisting><![CDATA[List cats = session.createQuery(
+    "from Cat as cat where cat.birthdate < ?")
+    .setDate(0, date)
+    .list();
 
-List mates = sess.find(
-    "select mate from Cat as cat join cat.mate as mate " +
-    "where cat.name = ?",
-    name,
-    Hibernate.STRING
-);
+List mothers = session.createQuery(
+    "select mother from Cat as cat join cat.mother as mother where cat.name = ?")
+    .setString(0, name)
+    .list();
 
-List cats = sess.find( "from Cat as cat where cat.mate.bithdate is null" );
-
-List moreCats = sess.find(
-    "from Cat as cat where " + 
-    "cat.name = 'Fritz' or cat.id = ? or cat.id = ?",
-    new Object[] { id1, id2 },
-    new Type[] { Hibernate.LONG, Hibernate.LONG }
-);
-
-List mates = sess.find(
-    "from Cat as cat where cat.mate = ?",
-    izi,
-    Hibernate.entity(Cat.class)
-);
-
-List problems = sess.find(
-    "from GoldFish as fish " +
-    "where fish.birthday > fish.deceased or fish.birthday is null"
-);]]></programlisting>
-
+List kittens = session.createQuery(
+    "from Cat as cat where cat.mother = ?")
+    .setEntity(0, pk)
+    .list();
+    
+Cat mother = (Cat) session.createQuery(
+    "select cat.mother from Cat as cat where cat = ?")
+    .setEntity(0, izi)
+    .uniqueResult();]]></programlisting>
 
         <para>
-            The second argument to <literal>find()</literal> accepts an object
-            or array of objects. The third argument accepts a Hibernate type or array of
-            Hibernate types. These given types are used to bind the given objects to the
-            <literal>?</literal> query placeholders (which map to IN
-            parameters of a JDBC <literal>PreparedStatement</literal>). Just
-            as in JDBC, you should use this binding mechanism in preference to string
-            manipulation.
+            The call to <literal>createQuery()</literal> returns an instance of
+            <literal>org.hibernate.Query</literal> which may be used to bind arguments 
+            to the <literal>?</literal> parameter placeholders. (which map to IN
+            parameters of a JDBC <literal>PreparedStatement</literal>). Just as 
+            in JDBC, you should always use this binding mechanism in preference 
+            to string manipulation.
         </para>
         
         <para>
+            A query is usually executed by invoking <literal>list()</literal>.
+        </para>
+        
+        <!--
             The <literal>Hibernate</literal> class defines a number of static methods
             and constants, providing access to most of the built-in types, as instances
             of <literal>org.hibernate.type.Type</literal>.
-        </para>
+        -->
 
-        <para>
+        <!--
             If you expect your query to return a very large number of objects, but you 
             don't expect to use them all, you might get better performance from the
             <literal>iterate()</literal> methods, which return a
@@ -191,21 +195,19 @@ while ( iter.hasNext() ) {
         // dont need to process the rest
         break;
     }
-}]]></programlisting>
+}]]></programlisting-->
 
         <para>
-            Unfortunately <literal>java.util.Iterator</literal> does not
-            declare any exceptions, so any SQL or Hibernate exceptions that occur 
-            are wrapped in a <literal>LazyInitializationException</literal> (a
-            subclass of <literal>RuntimeException</literal>).
+            Occasionally, you might be able to achieve better performance by 
+            executing the query using the <literal>iterate()</literal> method. 
+            This will only usually be the case if you expect that the actual 
+            entity instances returned by the query will already be in the session 
+            or second-level cache. If they are not already cached, 
+            <literal>iterate()</literal> will be slower than <literal>find()</literal>
+            and might require many database hits for a simple query.
         </para>
-
-        <para>
-            The <literal>iterate()</literal> method also performs better if
-            you expect that many of the objects are already loaded and cached by 
-            the session, or if the query results contain the same objects many
-            times. (When no data is cached or repeated, <literal>find()</literal> 
-            is almost always faster.) Heres an example of a query that should be
+            
+<!--            Heres an example of a query that should be
             called using <literal>iterate()</literal>:
         </para>
         
@@ -221,20 +223,21 @@ Iterator iter = sess.iterate(
         <para>
             Calling the previous query using <literal>find()</literal> would return a very
             large JDBC <literal>ResultSet</literal> containing the same data many times.
-        </para>
+        </para-->
 
         <para>
             Hibernate queries sometimes return tuples of objects, in which case each tuple
             is returned as an array:
         </para>
 
-        <programlisting><![CDATA[Iterator foosAndBars = sess.iterate(
-    "select foo, bar from Foo foo, Bar bar " +
-    "where bar.date = foo.date"
-);
-while ( foosAndBars.hasNext() ) {
-    Object[] tuple = (Object[]) foosAndBars.next();
-    Foo foo = tuple[0]; Bar bar = tuple[1];
+        <programlisting><![CDATA[Iterator kittensAndMothers = sess.createQuery(
+    "select kitten, mother from Cat kitten join kitten.mother mother")
+    .list()
+    .iterator();
+    
+while ( kittensAndMothers.hasNext() ) {
+    Object[] tuple = (Object[]) kittensAndMothers.next();
+    Cate kittem = tuple[0]; Cat mother = tuple[1];
     ....
 }]]></programlisting>
 
@@ -247,10 +250,12 @@ while ( foosAndBars.hasNext() ) {
                 "scalar" results.
             </para>
 
-            <programlisting><![CDATA[Iterator results = sess.iterate(
-        "select cat.color, min(cat.birthdate), count(cat) from Cat cat " +
-        "group by cat.color"
-);
+            <programlisting><![CDATA[Iterator results = sess.createQuery(
+    "select cat.color, min(cat.birthdate), count(cat) from Cat cat " +
+    "group by cat.color")
+    .list()
+    .iterator();
+
 while ( results.hasNext() ) {
     Object[] row = results.next();
     Color type = (Color) row[0];
@@ -259,13 +264,9 @@ while ( results.hasNext() ) {
     .....
 }]]></programlisting>
 
-            <programlisting><![CDATA[Iterator iter = sess.iterate(
-    "select cat.type, cat.birthdate, cat.name from DomesticCat cat"
-);]]></programlisting>
-
-        <programlisting><![CDATA[List list = sess.find(
-    "select cat, cat.mate.name from DomesticCat cat"
-);]]></programlisting>
+            <programlisting><![CDATA[List results = sess.createQuery(
+    "select cat.type, cat.birthdate, cat.name from DomesticCat cat")
+    .list();]]></programlisting>
 
         </sect2>
 
@@ -275,7 +276,7 @@ while ( results.hasNext() ) {
             <para>
                 If you need to specify bounds upon your result set (the maximum number of rows
                 you want to retrieve and / or the first row you want to retrieve) you should
-                obtain an instance of <literal>org.hibernate.Query</literal>:
+                use methods of the <literal>Query</literal> interface:
             </para>
 
             <programlisting><![CDATA[Query q = sess.createQuery("from DomesticCat cat");
@@ -387,8 +388,11 @@ if ( cats.first() ) {
                 meaning the current collection element.
             </para>
 
-            <programlisting><![CDATA[Collection blackKittens = session.filter(
-    pk.getKittens(), "where this.color = ?", Color.BLACK, Hibernate.enum(Color.class)
+            <programlisting><![CDATA[Collection blackKittens = session.createFilter(
+    pk.getKittens(), 
+    "where this.color = ?")
+    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )
+    .list()
 );]]></programlisting>
         
             <para>
@@ -400,9 +404,10 @@ if ( cats.first() ) {
                 one if required). Filters are not limited to returning the collection elements themselves.
             </para>
 
-            <programlisting><![CDATA[Collection blackKittenMates = session.filter(
-    pk.getKittens(), "select this.mate where this.color = eg.Color.BLACK"
-);]]></programlisting>
+            <programlisting><![CDATA[Collection blackKittenMates = session.createFilter(
+    pk.getKittens(), 
+    "select this.mate where this.color = eg.Color.BLACK.intValue")
+    .list();]]></programlisting>
 
         </sect2>
 
@@ -415,7 +420,7 @@ if ( cats.first() ) {
             </para>
 
             <programlisting><![CDATA[Criteria crit = session.createCriteria(Cat.class);
-crit.add( Expression.eq("color", eg.Color.BLACK) );
+crit.add( Expression.eq( "color", eg.Color.BLACK ) );
 crit.setMaxResults(10);
 List cats = crit.list();]]></programlisting>
     
@@ -492,9 +497,9 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
                 UI layer for manipulation, then save the changes in a new transaction.
                 (Applications  that use this kind of approach in a high-concurrency environment
                 usually use versioned  data to ensure transaction isolation.) This approach
-                requires a slightly different  programming model to the one described in the
-                last section. Hibernate supports this model by providing the
-                method <literal>Session.update()</literal>.
+                requires a slightly different programming model to the one described in the
+                last section. Hibernate supports this model by providing for reattachment of
+                detached instances using the the method <literal>Session.update()</literal>.
             </para>
 
             <programlisting><![CDATA[// in the first session
@@ -516,8 +521,8 @@ secondSession.update(mate); // update mate]]></programlisting>
             </para>
 
             <para>
-                The application should individually <literal>update()</literal> transient instances
-                reachable from the given transient instance if and <emphasis>only</emphasis> if it wants
+                The application should individually <literal>update()</literal> detached instances
+                reachable from the given detached instance if and <emphasis>only</emphasis> if it wants
                 their state also updated. (Except for lifecycle objects, discussed later.)
             </para>
 
@@ -529,12 +534,11 @@ secondSession.update(mate); // update mate]]></programlisting>
             </para>
 
             <para>
-                Hibernate distinguishes "new" (unsaved) instances from "existing" (saved or
-                loaded in a previous session) instances by the value of their identifier
-                (or version, or timestamp) property. The <literal>unsaved-value</literal>
+                Hibernate distinguishes "new" transient instances from detached instances by the
+                value of the identifier (or version, or timestamp) property. The <literal>unsaved-value</literal>
                 attribute of the <literal>&lt;id&gt;</literal> (or <literal>&lt;version&gt;</literal>,
                 or <literal>&lt;timestamp&gt;</literal>) mapping specifies which values should
-                be interpreted as representing a "new" instance.
+                be interpreted as representing a new transient instance.
             </para>
 
             <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="null">
@@ -1013,8 +1017,8 @@ finally {
             </listitem>
             <listitem>
                 <para>
-                    map associated objects using <literal>cascade="all"</literal> or
-                    <literal>cascade="save-update"</literal>.
+                    map associated objects using or <literal>cascade="save-update"</literal>, 
+                    <literal>cascade="all"</literal> or <literal>cascade="all-delete-orphan"</literal>.
                 </para>
             </listitem>
         </itemizedlist>
@@ -1086,8 +1090,8 @@ finally {
             </listitem>
             <listitem>
                 <para>
-                    If a transient child becomes referenced by a persistent parent, it is passed to
-                    <literal>saveOrUpdate()</literal>
+                    If a transient or detached child becomes referenced by a persistent parent, 
+                    it is passed to <literal>saveOrUpdate()</literal>
                 </para>
             </listitem>
             <listitem>
@@ -1097,10 +1101,10 @@ finally {
             </listitem>
             <listitem>
                 <para>
-                    If a transient child is dereferenced by a persistent parent, <emphasis>nothing
-                    special happens</emphasis> (the application should explicitly delete the child if
-                    necessary) unless <literal>cascade="all-delete-orphan"</literal>, in which case the
-                    "orphaned" child is deleted.
+                    If a child is dereferenced by a persistent parent, <emphasis>nothing
+                    special happens</emphasis> (the application should explicitly delete 
+                    the child if necessary) unless <literal>cascade="all-delete-orphan"</literal>, 
+                    in which case the "orphaned" child is deleted.
                 </para>
             </listitem>
         </itemizedlist>

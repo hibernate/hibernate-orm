@@ -195,7 +195,7 @@
  
         </sect2>
 
-        <sect2 id="mapping-declaration-class" revision="2">
+        <sect2 id="mapping-declaration-class" revision="3">
             <title>class, dynamic-class</title>
 
             <para>
@@ -247,8 +247,8 @@
         entity-name="EntityName"
         catalog="catalog"
         check="arbitrary sql check condition"
-        rowid="TODO"
-        subselect="TODO"
+        rowid="rowid"
+        subselect="SQL expression"
         abstract="true|false"
 />]]></programlisting>
                 <calloutlist>
@@ -356,7 +356,12 @@
                     </callout>    
                     <callout arearefs="class17">
                         <para>
-                            <literal>entity-name</literal> (optional): TODO
+                            <literal>entity-name</literal> (optional): Hibernate3 supports class-less persistence:
+                            use the <literal>&lt;dynamic-class&gt;</literal> instead of a <literal>&lt;class&gt;</literal>
+                            mapping and an <literal>entity-name</literal> attribute instead of a class name. This
+                            allows you to implement your domain model using maps of maps or any other dynamic
+                            approach. See <xref linkend="persistent-classes-dynamic"/> for more information.
+
                         </para>
                     </callout>
                     <callout arearefs="class18">
@@ -373,12 +378,17 @@
                     </callout>
                     <callout arearefs="class20">
                         <para>
-                            <literal>rowid</literal> (optional): TODO
+                            <literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on databases
+                            which support. E.g. on Oracle, Hibernate can use the <literal>rowid</literal> extra
+                            column for fast updates if you set this option to <literal>rowid</literal>. A ROWID
+                            is an implementation detail and represents the physical location of a stored tuple.
                         </para>
                     </callout>
                     <callout arearefs="class21">
                         <para>
-                            <literal>subselect</literal> (optional): TODO
+                            <literal>subselect</literal> (optional): Maps an immutable and read-only entity
+                            to a database subselect. Useful if you want to have a view instead of a base table,
+                            but don't. See below for more information.
                         </para>
                     </callout>
                     <callout arearefs="class22">
@@ -442,7 +452,8 @@
             
             <para>
                 Use of <literal>select-before-update</literal> will usually decrease performance. It is very
-                useful to prevent a database update trigger being called unnecessarily.
+                useful to prevent a database update trigger being called unnecessarily if you reattach a
+                graph of detached instances to a <literal>Session</literal>.
             </para>
             
             <para>
@@ -462,7 +473,7 @@
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>dirty</literal> check the changed columns
+                        <literal>dirty</literal> check the changed columns, allowing some concurrent updates
                     </para>
                 </listitem>
                 <listitem>
@@ -475,15 +486,34 @@
                 We <emphasis>very</emphasis> strongly recommend that you use version/timestamp
                 columns for optimistic locking with Hibernate. This is the optimal strategy with
                 respect to performance and is the only strategy that correctly handles modifications
-                made to detached instances (ie. when <literal>Session.update()</literal> is used).
+                made to detached instances (ie. when <literal>Session.merge()</literal> is used).
             </para>
 
             <para>
-                TODO: Document entity name and dynamic class
+                There is no difference between a view and a base table for a Hibernate mapping, as
+                expected this is transparent at the database level (note that some DBMS don't support
+                views properly, especially with updates). Sometimes you want to use a view, but can't
+                create one in the database (ie. with a legacy schema). In this case, you can map an
+                immutable and read-only entity to a given SQL subselect expression:
             </para>
 
+        <programlisting><![CDATA[<class name="Being" mutable="false">
+
+    <subselect>
+        select id, name as ident, address as loc, 'human' as species  from humans
+        union
+        select id, ident, planet as loc, species  from aliens
+    </subselect>
+
+    <synchronize table="humans"/>
+    <synchronize table="aliens"/>
+    ...]]></programlisting>
+
             <para>
-                TODO: Document subselect and and synchronize for view simulation
+                Declare the tables to synchronize this entity, to ensure that auto-flush happens
+                correctly, and that queries against the derived entity do not return stale data.
+                The <literal>&lt;subselect&gt;</literal> is available as both an attribute and
+                a nested mapping element.
             </para>
 
         </sect2>
@@ -1108,7 +1138,7 @@
         </sect2>
 
 
-        <sect2 id="mapping-declaration-property" revision="1">
+        <sect2 id="mapping-declaration-property" revision="2">
             <title>property</title>
 
             <para>
@@ -1266,7 +1296,24 @@
             </para>
 
             <para>
-                TODO: Document the nested column formula="" attribute with an example
+                An especially powerful feature are derived properties. These properties are by
+                definition read-only, the property value is computed at load time. You declare
+                the computation as a SQL expression, this translates to a <literal>SELECT</literal>
+                clause subquery in the SQL query that loads an instance:
+            </para>
+
+        <programlisting><![CDATA[
+<property name="totalPrice"
+    formula="( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product p
+                WHERE li.productId = p.productId
+                AND li.customerId = customerId
+                AND li.orderNumber = orderNumber )"/>]]></programlisting>
+
+            <para>
+                Note that you can reference the entities own table by not declaring an alias on
+                a particular column (<literal>customerId</literal> in the given example). Also note
+                that you can use the nested <literal>&lt;formula&gt;</literal> mapping element
+                if you don't like to use the attribute.
             </para>
 
         </sect2>
@@ -1738,7 +1785,7 @@
             
         </sect2>
 
-         <sect2 id="mapping-declaration-joinedsubclass" revision="2">
+         <sect2 id="mapping-declaration-joinedsubclass" revision="3">
             <title>joined-subclass</title>
 
             <para>
@@ -1765,7 +1812,7 @@
         catalog="catalog"
         extends="SuperclassName"
         persister="ClassName"
-        subselect="TODO">
+        subselect="SQL expression">
 
         <key .... >
 
@@ -1799,10 +1846,6 @@
             </programlistingco>
 
             <para>
-                TODO
-            </para>
-            
-            <para>
                 No discriminator column is required for this mapping strategy. Each subclass must,
                 however, declare a table column holding the object identifier using the
                 <literal>&lt;key&gt;</literal> element. The mapping at the start of the chapter
@@ -1830,8 +1873,8 @@
                         <one-to-many class="Cat"/>
                 </set>
                 <joined-subclass name="DomesticCat" table="DOMESTIC_CATS">
-                	<key column="CAT"/>
-                        <property name="name" type="string"/>
+                    <key column="CAT"/>
+                    <property name="name" type="string"/>
                 </joined-subclass>
         </class>
 
@@ -1843,7 +1886,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-unionsubclass">
+        <sect2 id="mapping-declaration-unionsubclass" revision="1">
            <title>union-subclass</title>
 
            <para>
@@ -1852,7 +1895,8 @@
                persistent state of the class, including inherited state. In Hibernate, it is
                not absolutely necessary to explicitly map such inheritance hierarchies. You
                can simply map each class with a separate <literal>&lt;class&gt;</literal>
-               declaration. However, if you wish use polymorphic associations, you need to
+               declaration. However, if you wish use polymorphic associations (e.g. an association
+               directed at the superclass of your hierarchy), you need to
                use the <literal>&lt;union-subclass&gt;</literal> mapping.
            </para>
 
@@ -1862,14 +1906,6 @@
                     <area id="unionsubclass2" coords="3 45"/>
                     <area id="unionsubclass3" coords="4 45"/>
                     <area id="unionsubclass4" coords="5 45"/>
-                    <area id="unionsubclass5" coords="6 45"/>
-                    <area id="unionsubclass6" coords="7 45"/>
-                    <area id="unionsubclass7" coords="8 45"/>
-                    <area id="unionsubclass8" coords="9 45"/>
-                    <area id="unionsubclass9" coords="10 45"/>
-                    <area id="unionsubclass10" coords="11 45"/>
-                    <area id="unionsubclass11" coords="12 45"/>
-                    <area id="unionsubclass12" coords="13 45"/>
                 </areaspec>
                 <programlisting><![CDATA[<union-subclass
         name="ClassName"
@@ -1883,7 +1919,7 @@
         extends="SuperclassName"
         abstract="true|false"
         persister="ClassName"
-        subselect="TODO">
+        subselect="SQL expression">
 
         <property .... />
         .....
@@ -1910,13 +1946,9 @@
                             <literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting 
                             <literal>lazy="false"</literal> disables the use of lazy fetching.
                          </para>
-                    </callout>    
+                    </callout>
                 </calloutlist>
             </programlistingco>
-
-            <para>
-                TODO
-            </para>
 
             <para>
                 No discriminator column or key column is required for this mapping strategy.
@@ -1924,7 +1956,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-join" revision="2">
+        <sect2 id="mapping-declaration-join" revision="3">
             <title>join</title>
 
             <para>
@@ -1958,7 +1990,7 @@
                 <calloutlist>
                     <callout arearefs="join1">
                         <para>
-                            <literal>tabe</literal>: The name of the joined table.
+                            <literal>table</literal>: The name of the joined table.
                         </para>
                     </callout>
                     <callout arearefs="join2">
@@ -1999,7 +2031,28 @@
             </programlistingco>
 
             <para>
-                TODO: Document join with an example
+                For example, the address information for a person can be mapped to a separate
+                table (while preserving value type semantics for all properties):
+            </para>
+
+            <programlisting><![CDATA[<class name="Person"
+    table="PERSON">
+
+    <id name="id" column="PERSON_ID">...</id>
+
+    <join table="ADDRESS">
+        <key column="ADDRESS_ID"/>
+        <property name="address"/>
+        <property name="zip"/>
+        <property name="country"/>
+    </join>
+    ...]]></programlisting>
+
+            <para>
+                This feature is often only useful for legacy data models, we recommend fewer
+                tables than classes and a fine-grained domain model. However, it is useful
+                for switching between inheritance mapping strategies in a single hierarchy, as
+                explained later.
             </para>
 
         </sect2>
@@ -2483,23 +2536,24 @@
 
     </sect1>
 
-   <sect1 id="mapping-modularfiles" revision="2">
+   <sect1 id="mapping-modularfiles" revision="3">
        <title>Modular mapping files</title>
        <para>
-            It is possible to define <literal>subclass</literal> and <literal>joined-subclass</literal>
-            mappings in seperate mapping documents, directly beneath <literal>hibernate-mapping</literal>.
-            This allows you to extend a class hierachy just by adding a new mapping file. You must
-            specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously
-            mapped superclass. Note: Previously this feature made the ordering of the mapping documents important. Since Hibernate 3, the
-            ordering of mapping files does not matter when using the extends keyword. The ordering inside a single mapping file
-            still needs to be defined as superclasses before subclasses.
+            It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>,
+            and <literal>joined-subclass</literal> mappings in seperate mapping documents, directly beneath
+            <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
+            a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
+            naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
+            documents important. Since Hibernate 3, the ordering of mapping files does not matter when using the
+            extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
+            before subclasses.
         </para>
     
         <programlisting><![CDATA[
 <hibernate-mapping>
-        <subclass name="eg.subclass.DomesticCat" extends="eg.Cat" discriminator-value="D">
-             <property name="name" type="string"/>
-        </subclass>
+    <subclass name="eg.subclass.DomesticCat" extends="eg.Cat" discriminator-value="D">
+         <property name="name" type="string"/>
+    </subclass>
 </hibernate-mapping>]]></programlisting>
 
    	</sect1>
@@ -2621,6 +2675,27 @@ public class Cat {
 
         <para>
             See the Hibernate web site for more examples of XDoclet and Hibernate.
+        </para>
+
+    </sect1>
+
+    <sect1 id="mapping-annotations">
+        <title>Using JDK 5.0 Annotations</title>
+
+        <para>
+            JDK 5.0 introduced XDoclet-style annotations at the language level, type-safe and
+            checked at compile time. This mechnism is more powerful than XDoclet annotations and
+            better supported by tools and IDEs. IntelliJ IDEA, for example, supports auto-completion
+            and syntax highlighting of JDK 5.0 annotations. The new revision of the EJB specification
+            (JSR-220) uses JDK 5.0 annotations as the primary metadata mechanism for entity beans.
+            Hibernate3 implements the <literal>EntityManager</literal> of JSR-220 (the persistence API),
+            support for mapping metadata is available via the <emphasis>Hibernate Annotations</emphasis>
+            package, as a separate download. Both EJB3 (JSR-220) and Hibernate3 metadata is supported.
+        </para>
+
+        <para>
+            Note that support for JDK 5.0 Annotations (and JSR-220) is still work in progress and
+            not completed.
         </para>
 
     </sect1>

@@ -15,8 +15,8 @@
             So <literal>SeLeCT</literal> is the same as
             <literal>sELEct</literal> is the same as
             <literal>SELECT</literal> but
-            <literal>net.sf.hibernate.eg.FOO</literal> is not
-            <literal>net.sf.hibernate.eg.Foo</literal> and
+            <literal>org.hibernate.eg.FOO</literal> is not
+            <literal>org.hibernate.eg.Foo</literal> and
             <literal>foo.barSet</literal> is not
             <literal>foo.BARSET</literal>.
         </para>

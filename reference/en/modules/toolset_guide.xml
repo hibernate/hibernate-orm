@@ -226,7 +226,7 @@
 
             <para>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
-                <literal>net.sf.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options mapping_files</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options mapping_files</emphasis>
             </para>
 
             <table frame="topbot">
@@ -356,7 +356,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
             <programlisting><![CDATA[<target name="schemaexport">
     <taskdef name="schemaexport"
-        classname="net.sf.hibernate.tool.hbm2ddl.SchemaExportTask"
+        classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"
         classpathref="class.path"/>
     
     <schemaexport
@@ -385,7 +385,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
             <para>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
-                <literal>net.sf.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options mapping_files</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options mapping_files</emphasis>
             </para>
 
             <table frame="topbot">
@@ -430,7 +430,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
             <programlisting><![CDATA[<target name="schemaupdate">
     <taskdef name="schemaupdate"
-        classname="net.sf.hibernate.tool.hbm2ddl.SchemaUpdateTask"
+        classname="org.hibernate.tool.hbm2ddl.SchemaUpdateTask"
         classpathref="class.path"/>
     
     <schemaupdate
@@ -463,7 +463,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
         <para>
             <literal>java -cp</literal> <emphasis>hibernate_classpaths</emphasis>
-            <literal>net.sf.hibernate.tool.hbm2java.CodeGenerator</literal> <emphasis> options
+            <literal>org.hibernate.tool.hbm2java.CodeGenerator</literal> <emphasis> options
             mapping_files</emphasis>
         </para>
 
@@ -502,11 +502,11 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
             <programlisting><![CDATA[<codegen>
     <meta attribute="implements">codegen.test.IAuditable</meta>
-    <generate renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer"/>
+    <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
     <generate
         package="autofinders.only"
         suffix="Finder"
-        renderer="net.sf.hibernate.tool.hbm2java.FinderRenderer"/>
+        renderer="org.hibernate.tool.hbm2java.FinderRenderer"/>
 </codegen>]]></programlisting>
 
             <para>
@@ -546,8 +546,8 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
             <programlisting><![CDATA[
             <codegen>
-              <generate prefix="Base" renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer"/> 
-              <generate renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer">
+              <generate prefix="Base" renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
+              <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer">
                 <param name="generate-concrete-empty-classes">true</param>
                 <param name="baseclass-prefix">Base</param>
               </generate>
@@ -809,8 +809,8 @@ public class Person implements Serializable, IAuditable {
             </para>
 
             <programlisting><![CDATA[<codegen>
-    <generate renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer"/>
-    <generate suffix="Finder" renderer="net.sf.hibernate.tool.hbm2java.FinderRenderer"/>
+    <generate renderer="org.hibernate.tool.hbm2java.BasicRenderer"/>
+    <generate suffix="Finder" renderer="org.hibernate.tool.hbm2java.FinderRenderer"/>
 </codegen>]]></programlisting>
 
             <para>
@@ -843,7 +843,7 @@ public class Person implements Serializable, IAuditable {
       
       	    <programlisting><![CDATA[
     <codegen>
-     <generate renderer="net.sf.hibernate.tool.hbm2java.VelocityRenderer">
+     <generate renderer="org.hibernate.tool.hbm2java.VelocityRenderer">
       <param name="template">pojo.vm</param>
      </generate>
     </codegen>]]></programlisting>
@@ -992,7 +992,7 @@ public class Person implements Serializable, IAuditable {
 
             <para>
                 <literal>java -cp </literal><emphasis>hibernate_and_your_class_classpaths</emphasis>
-                <literal>net.sf.hibernate.tool.class2hbm.MapGenerator</literal> <emphasis>options and
+                <literal>org.hibernate.tool.class2hbm.MapGenerator</literal> <emphasis>options and
                 classnames</emphasis>
             </para>
 

@@ -14,7 +14,7 @@
         <title>Programmatic Configuration</title>
 
         <para>
-            An instance of <literal>net.sf.hibernate.cfg.Configuration</literal>
+            An instance of <literal>org.hibernate.cfg.Configuration</literal>
             represents an entire set of mappings of an application's Java types to a
             SQL database. The <literal>Configuration</literal> is used to build a
             (immutable)` <literal>SessionFactory</literal>. The mappings are compiled
@@ -151,7 +151,7 @@ Session session = sessions.openSession(conn);
 
         <para>
             All Hibernate property names and semantics are defined on the class 
-            <literal>net.sf.hibernate.cfg.Environment</literal>. We will now describe the most
+            <literal>org.hibernate.cfg.Environment</literal>. We will now describe the most
             important settings for JDBC connection configuration.
         </para>
 
@@ -250,7 +250,7 @@ hibernate.c3p0.min_size=5
 hibernate.c3p0.max_size=20
 hibernate.c3p0.timeout=1800
 hibernate.c3p0.max_statements=50
-hibernate.dialect = net.sf.hibernate.dialect.PostgreSQLDialect]]></programlisting>
+hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             For use inside an application server, Hibernate may obtain connections from a
@@ -320,11 +320,11 @@ hibernate.dialect = net.sf.hibernate.dialect.PostgreSQLDialect]]></programlistin
 
         <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/MyDB
 hibernate.transaction.factory_class = \
-    net.sf.hibernate.transaction.JTATransactionFactory
+    org.hibernate.transaction.JTATransactionFactory
 hibernate.transaction.manager_lookup_class = \
-    net.sf.hibernate.transaction.JBossTransactionManagerLookup
+    org.hibernate.transaction.JBossTransactionManagerLookup
 hibernate.dialect = \
-    net.sf.hibernate.dialect.PostgreSQLDialect]]></programlisting>
+    org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             JDBC connections obtained from a JNDI datasource will automatically participate
@@ -339,7 +339,7 @@ hibernate.dialect = \
 
         <para>
             You may define your own plugin strategy for obtaining JDBC connections by implementing the
-            interface <literal>net.sf.hibernate.connection.ConnectionProvider</literal>. You may select
+            interface <literal>org.hibernate.connection.ConnectionProvider</literal>. You may select
             a custom implementation by setting <literal>hibernate.connection.provider_class</literal>.
         </para>
 
@@ -728,7 +728,7 @@ hibernate.dialect = \
 
             <para>
                 You should always set the <literal>hibernate.dialect</literal> property to the correct
-                <literal>net.sf.hibernate.dialect.Dialect</literal> subclass for your database. This is not
+                <literal>org.hibernate.dialect.Dialect</literal> subclass for your database. This is not
                 strictly essential unless you wish to use <literal>native</literal> or
                 <literal>sequence</literal> primary key generation or pessimistic locking (with, eg.
                 <literal>Session.lock()</literal> or <literal>Query.setLockMode()</literal>).
@@ -749,64 +749,64 @@ hibernate.dialect = \
                     </thead>
                     <tbody>
                         <row>
-                            <entry>DB2</entry> <entry><literal>net.sf.hibernate.dialect.DB2Dialect</literal></entry>
+                            <entry>DB2</entry> <entry><literal>org.hibernate.dialect.DB2Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>DB2 AS/400</entry> <entry><literal>net.sf.hibernate.dialect.DB2400Dialect</literal></entry>
+                            <entry>DB2 AS/400</entry> <entry><literal>org.hibernate.dialect.DB2400Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>DB2 OS390</entry> <entry><literal>net.sf.hibernate.dialect.DB2390Dialect</literal></entry>
+                            <entry>DB2 OS390</entry> <entry><literal>org.hibernate.dialect.DB2390Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>PostgreSQL</entry> <entry><literal>net.sf.hibernate.dialect.PostgreSQLDialect</literal></entry>
+                            <entry>PostgreSQL</entry> <entry><literal>org.hibernate.dialect.PostgreSQLDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>MySQL</entry> <entry><literal>net.sf.hibernate.dialect.MySQLDialect</literal></entry>
+                            <entry>MySQL</entry> <entry><literal>org.hibernate.dialect.MySQLDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle (any version)</entry> <entry><literal>net.sf.hibernate.dialect.OracleDialect</literal></entry>
+                            <entry>Oracle (any version)</entry> <entry><literal>org.hibernate.dialect.OracleDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle 9/10g</entry> <entry><literal>net.sf.hibernate.dialect.Oracle9Dialect</literal></entry>
+                            <entry>Oracle 9/10g</entry> <entry><literal>org.hibernate.dialect.Oracle9Dialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Sybase</entry> <entry><literal>net.sf.hibernate.dialect.SybaseDialect</literal></entry>
+                            <entry>Sybase</entry> <entry><literal>org.hibernate.dialect.SybaseDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Sybase Anywhere</entry> <entry><literal>net.sf.hibernate.dialect.SybaseAnywhereDialect</literal></entry>
+                            <entry>Sybase Anywhere</entry> <entry><literal>org.hibernate.dialect.SybaseAnywhereDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Microsoft SQL Server</entry> <entry><literal>net.sf.hibernate.dialect.SQLServerDialect</literal></entry>
+                            <entry>Microsoft SQL Server</entry> <entry><literal>org.hibernate.dialect.SQLServerDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>SAP DB</entry> <entry><literal>net.sf.hibernate.dialect.SAPDBDialect</literal></entry>
+                            <entry>SAP DB</entry> <entry><literal>org.hibernate.dialect.SAPDBDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Informix</entry> <entry><literal>net.sf.hibernate.dialect.InformixDialect</literal></entry>
+                            <entry>Informix</entry> <entry><literal>org.hibernate.dialect.InformixDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>HypersonicSQL</entry> <entry><literal>net.sf.hibernate.dialect.HSQLDialect</literal></entry>
+                            <entry>HypersonicSQL</entry> <entry><literal>org.hibernate.dialect.HSQLDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Ingres</entry> <entry><literal>net.sf.hibernate.dialect.IngresDialect</literal></entry>
+                            <entry>Ingres</entry> <entry><literal>org.hibernate.dialect.IngresDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Progress</entry> <entry><literal>net.sf.hibernate.dialect.ProgressDialect</literal></entry>
+                            <entry>Progress</entry> <entry><literal>org.hibernate.dialect.ProgressDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Mckoi SQL</entry> <entry><literal>net.sf.hibernate.dialect.MckoiDialect</literal></entry>
+                            <entry>Mckoi SQL</entry> <entry><literal>org.hibernate.dialect.MckoiDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Interbase</entry> <entry><literal>net.sf.hibernate.dialect.InterbaseDialect</literal></entry>
+                            <entry>Interbase</entry> <entry><literal>org.hibernate.dialect.InterbaseDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Pointbase</entry> <entry><literal>net.sf.hibernate.dialect.PointbaseDialect</literal></entry>
+                            <entry>Pointbase</entry> <entry><literal>org.hibernate.dialect.PointbaseDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>FrontBase</entry> <entry><literal>net.sf.hibernate.dialect.FrontbaseDialect</literal></entry>
+                            <entry>FrontBase</entry> <entry><literal>org.hibernate.dialect.FrontbaseDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Firebird</entry> <entry><literal>net.sf.hibernate.dialect.FirebirdDialect</literal></entry>
+                            <entry>Firebird</entry> <entry><literal>org.hibernate.dialect.FirebirdDialect</literal></entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -868,7 +868,7 @@ hibernate.dialect = \
 
             <para>
                 You may integrate a JVM-level (or clustered) second-level cache system by
-                implementing the interface <literal>net.sf.hibernate.cache.CacheProvider</literal>.
+                implementing the interface <literal>org.hibernate.cache.CacheProvider</literal>.
                 You may select the custom implementation by setting
                 <literal>hibernate.cache.provider_class</literal>.
             </para>
@@ -892,13 +892,13 @@ hibernate.dialect = \
 
             <variablelist spacing="compact">
                 <varlistentry>
-                    <term><literal>net.sf.hibernate.transaction.JDBCTransactionFactory</literal></term>
+                    <term><literal>org.hibernate.transaction.JDBCTransactionFactory</literal></term>
                     <listitem>
                         <para>delegates to database (JDBC) transactions (default)</para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term><literal>net.sf.hibernate.transaction.JTATransactionFactory</literal></term>
+                    <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
                     <listitem>
                         <para>delegates to JTA (if an existing transaction is underway, the <literal>Session</literal>
                         performs its work in that context, otherwise a new transaction is started)</para>
@@ -930,39 +930,39 @@ hibernate.dialect = \
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
                             <entry align="center">JBoss</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
                             <entry align="center">Weblogic</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
                             <entry align="center">WebSphere</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
                             <entry align="center">Orion</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
                             <entry align="center">Resin</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
                             <entry align="center">JOTM</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
                             <entry align="center">JOnAS</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
                             <entry align="center">JRun4</entry>
                         </row>
                         <row>
-                            <entry><literal>net.sf.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
+                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
                             <entry align="center">Borland ES</entry>
                         </row>
                     </tbody>
@@ -1058,7 +1058,7 @@ hibernate.dialect = \
         <title>Implementing a <literal>NamingStrategy</literal></title>
 
         <para>
-            The interface <literal>net.sf.hibernate.cfg.NamingStrategy</literal> allows you
+            The interface <literal>org.hibernate.cfg.NamingStrategy</literal> allows you
             to specify a "naming standard" for database objects and schema elements.
         </para>
 
@@ -1083,7 +1083,7 @@ hibernate.dialect = \
     .buildSessionFactory();]]></programlisting>
     
         <para>
-            <literal>net.sf.hibernate.cfg.ImprovedNamingStrategy</literal> is a built-in
+            <literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> is a built-in
             strategy that might be a useful starting point for some applications.
         </para>
 
@@ -1106,9 +1106,8 @@ hibernate.dialect = \
 
         <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE hibernate-configuration PUBLIC
-        "-//Hibernate/Hibernate Configuration DTD 2.0//EN"
-
- "http://hibernate.sourceforge.net/hibernate-configuration-2.0.dtd">
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 
 <hibernate-configuration>
 
@@ -1118,11 +1117,11 @@ hibernate.dialect = \
 
         <!-- properties -->
         <property name="connection.datasource">my/first/datasource</property>
-        <property name="dialect">net.sf.hibernate.dialect.MySQLDialect</property>
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
         <property name="show_sql">false</property>
         <property name="use_outer_join">true</property>
         <property name="transaction.factory_class">
-            net.sf.hibernate.transaction.JTATransactionFactory
+            org.hibernate.transaction.JTATransactionFactory
         </property>
         <property name="jta.UserTransaction">java:comp/UserTransaction</property>
 

@@ -168,7 +168,7 @@ List problems = sess.find(
         <para>
             The <literal>Hibernate</literal> class defines a number of static methods
             and constants, providing access to most of the built-in types, as instances
-            of <literal>net.sf.hibernate.type.Type</literal>.
+            of <literal>org.hibernate.type.Type</literal>.
         </para>
 
         <para>
@@ -275,7 +275,7 @@ while ( results.hasNext() ) {
             <para>
                 If you need to specify bounds upon your result set (the maximum number of rows
                 you want to retrieve and / or the first row you want to retrieve) you should
-                obtain an instance of <literal>net.sf.hibernate.Query</literal>:
+                obtain an instance of <literal>org.hibernate.Query</literal>:
             </para>
 
             <programlisting><![CDATA[Query q = sess.createQuery("from DomesticCat cat");
@@ -727,7 +727,7 @@ sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    from <literal>net.sf.hibernate.Transaction.commit()</literal>
+                    from <literal>org.hibernate.Transaction.commit()</literal>
                 </para>
             </listitem>
             <listitem>
@@ -1120,14 +1120,14 @@ finally {
             updated.
         </para>
 
-        <programlisting><![CDATA[package net.sf.hibernate.test;
+        <programlisting><![CDATA[package org.hibernate.test;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 
-import net.sf.hibernate.Interceptor;
-import net.sf.hibernate.type.Type;
+import org.hibernate.Interceptor;
+import org.hibernate.type.Type;
 
 public class AuditInterceptor implements Interceptor, Serializable {
 

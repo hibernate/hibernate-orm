@@ -11,7 +11,7 @@
         <title>Creating a <literal>Criteria</literal> instance</title>
 
         <para>
-            The interface <literal>net.sf.hibernate.Criteria</literal> represents a query against
+            The interface <literal>org.hibernate.Criteria</literal> represents a query against
             a particular persistent class. The <literal>Session</literal> is a factory for
             <literal>Criteria</literal> instances.
         </para>
@@ -27,8 +27,8 @@ List cats = crit.list();]]></programlisting>
 
         <para>
             An individual query criterion is an instance of the interface
-            <literal>net.sf.hibernate.expression.Criterion</literal>. The class
-            <literal>net.sf.hibernate.expression.Expression</literal> defines
+            <literal>org.hibernate.expression.Criterion</literal>. The class
+            <literal>org.hibernate.expression.Expression</literal> defines
             factory methods for obtaining certain built-in
             <literal>Criterion</literal> types.
         </para>
@@ -80,7 +80,7 @@ List cats = crit.list();]]></programlisting>
         <title>Ordering the results</title>
 
         <para>
-            You may order the results using <literal>net.sf.hibernate.expression.Order</literal>.
+            You may order the results using <literal>org.hibernate.expression.Order</literal>.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -173,7 +173,7 @@ while ( iter.hasNext() ) {
         <title>Example queries</title>
 
         <para>
-            The class <literal>net.sf.hibernate.expression.Example</literal> allows
+            The class <literal>org.hibernate.expression.Example</literal> allows
             you to construct a query criterion from a given instance.
         </para>
 

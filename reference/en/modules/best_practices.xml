@@ -66,7 +66,7 @@
                 <para>
                     Hibernate lets the application manage JDBC connections. This approach should be considered 
                     a last-resort. If you can't use the built-in connections providers, consider providing your 
-                    own implementation of <literal>net.sf.hibernate.connection.ConnectionProvider</literal>.
+                    own implementation of <literal>org.hibernate.connection.ConnectionProvider</literal>.
                 </para>
             </listitem>
         </varlistentry>
@@ -76,7 +76,7 @@
                 <para>
                     Suppose you have a Java type, say from some library, that needs to be persisted but doesn't 
                     provide the accessors needed to map it as a component. You should consider implementing
-                    <literal>net.sf.hibernate.UserType</literal>. This approach frees the application
+                    <literal>org.hibernate.UserType</literal>. This approach frees the application
                     code from implementing transformations to / from a Hibernate type.
                 </para>
             </listitem>

@@ -93,89 +93,87 @@ public class BlogItem {
         </para>
         
         <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC 
-        "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+<!DOCTYPE hibernate-mapping PUBLIC
+          "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
 
-    <class 
-        name="Blog" 
-        table="BLOGS" 
+    <class
+        name="Blog"
+        table="BLOGS"
         lazy="true">
-        
-        <id 
-            name="id" 
+
+        <id
+            name="id"
             column="BLOG_ID">
-            
+
             <generator class="native"/>
-            
+
         </id>
-        
-        <property 
-            name="name" 
-            column="NAME" 
-            not-null="true" 
+
+        <property
+            name="name"
+            column="NAME"
+            not-null="true"
             unique="true"/>
-            
-        <bag 
-            name="items" 
-            inverse="true" 
+
+        <bag
+            name="items"
+            inverse="true"
             lazy="true"
-            order-by="DATE_TIME" 
+            order-by="DATE_TIME"
             cascade="all">
-            
+
             <key column="BLOG_ID"/>
             <one-to-many class="BlogItem"/>
-            
+
         </bag>
-        
+
     </class>
-    
+
 </hibernate-mapping>]]></programlisting>
 
         <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC 
-        "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+<!DOCTYPE hibernate-mapping PUBLIC
+          "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
-    
-    <class 
-        name="BlogItem" 
-        table="BLOG_ITEMS" 
+
+    <class
+        name="BlogItem"
+        table="BLOG_ITEMS"
         dynamic-update="true">
-        
-        <id 
-            name="id" 
+
+        <id
+            name="id"
             column="BLOG_ITEM_ID">
-            
+
             <generator class="native"/>
-            
+
         </id>
-        
-        <property 
-            name="title" 
-            column="TITLE" 
+
+        <property
+            name="title"
+            column="TITLE"
             not-null="true"/>
-            
-        <property 
-            name="text" 
-            column="TEXT" 
+
+        <property
+            name="text"
+            column="TEXT"
             not-null="true"/>
-            
-        <property 
-            name="datetime" 
-            column="DATE_TIME" 
+
+        <property
+            name="datetime"
+            column="DATE_TIME"
             not-null="true"/>
-            
-        <many-to-one 
-            name="blog" 
-            column="BLOG_ID" 
+
+        <many-to-one
+            name="blog"
+            column="BLOG_ID"
             not-null="true"/>
-            
+
     </class>
-    
+
 </hibernate-mapping>]]></programlisting>
 
     </sect1>
@@ -195,13 +193,13 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sf.hibernate.HibernateException;
-import net.sf.hibernate.Query;
-import net.sf.hibernate.Session;
-import net.sf.hibernate.SessionFactory;
-import net.sf.hibernate.Transaction;
-import net.sf.hibernate.cfg.Configuration;
-import net.sf.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 public class BlogMain {
     

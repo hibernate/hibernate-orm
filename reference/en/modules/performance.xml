@@ -368,7 +368,7 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
         <para>
             By default, Hibernate uses EHCache for JVM-level caching. (JCS support is now deprecated and will 
             be removed in a future version of Hibernate.) You may choose a different implementation by 
-            specifying the name of a class that implements <literal>net.sf.hibernate.cache.CacheProvider</literal> 
+            specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal>
             using the property <literal>hibernate.cache.provider_class</literal>.
         </para>
 
@@ -651,9 +651,9 @@ while ( cats.hasNext() ) {
             frequently with the same parameters. To use the query cache you must first enable it
             by setting the property <literal>hibernate.cache.use_query_cache=true</literal>. This
             causes the creation of two cache regions - one holding cached query result sets 
-            (<literal>net.sf.hibernate.cache.QueryCache</literal>), the other holding timestamps 
+            (<literal>org.hibernate.cache.QueryCache</literal>), the other holding timestamps
             of most recent updates to queried tables 
-            (<literal>net.sf.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
+            (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
             cache does not cache the state of any entities in the result set; it caches only 
             identifier values and results of value type. So the query cache is usually used in
             conjunction with the second-level cache.

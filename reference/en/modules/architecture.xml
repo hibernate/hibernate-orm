@@ -59,7 +59,7 @@
 
             <variablelist spacing="compact">
                 <varlistentry>
-                    <term>SessionFactory (<literal>net.sf.hibernate.SessionFactory</literal>)</term>
+                    <term>SessionFactory (<literal>org.hibernate.SessionFactory</literal>)</term>
                     <listitem>
                         <para>
                             A threadsafe (immutable) cache of compiled mappings for a single database.
@@ -71,7 +71,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Session (<literal>net.sf.hibernate.Session</literal>)</term>
+                    <term>Session (<literal>org.hibernate.Session</literal>)</term>
                     <listitem>
                         <para>
                             A single-threaded, short-lived object representing a conversation between
@@ -107,7 +107,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Transaction (<literal>net.sf.hibernate.Transaction</literal>)</term>
+                    <term>Transaction (<literal>org.hibernate.Transaction</literal>)</term>
                     <listitem>
                         <para>
                             (Optional) A single-threaded, short-lived object used by the application to
@@ -118,7 +118,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>ConnectionProvider (<literal>net.sf.hibernate.connection.ConnectionProvider</literal>)</term>
+                    <term>ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</literal>)</term>
                     <listitem>
                         <para>
                             (Optional) A factory for (and pool of) JDBC connections. Abstracts application from
@@ -128,7 +128,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>TransactionFactory (<literal>net.sf.hibernate.TransactionFactory</literal>)</term>
+                    <term>TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)</term>
                     <listitem>
                         <para>
                             (Optional) A factory for <literal>Transaction</literal> instances. Not exposed to the

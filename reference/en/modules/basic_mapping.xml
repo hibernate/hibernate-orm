@@ -23,8 +23,7 @@
 
         <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+          "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
 
@@ -312,11 +311,11 @@
             <para>
                 The <literal>persister</literal> attribute lets you customize the persistence strategy used for
                 the class. You may, for example, specify your own subclass of 
-                <literal>net.sf.hibernate.persister.EntityPersister</literal> or you might even provide a
+                <literal>org.hibernate.persister.EntityPersister</literal> or you might even provide a
                 completely new implementation of the interface 
-                <literal>net.sf.hibernate.persister.ClassPersister</literal> that implements persistence via,
+                <literal>org.hibernate.persister.ClassPersister</literal> that implements persistence via,
                 for example, stored procedure calls, serialization to flat files or LDAP. See
-                <literal>net.sf.hibernate.test.CustomPersister</literal> for a simple example (of "persistence"
+                <literal>org.hibernate.test.CustomPersister</literal> for a simple example (of "persistence"
                 to a <literal>Hashtable</literal>).
             </para>
             
@@ -457,14 +456,14 @@
                 </para>
 
                 <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="0">
-        <generator class="net.sf.hibernate.id.TableHiLoGenerator">
+        <generator class="org.hibernate.id.TableHiLoGenerator">
                 <param name="table">uid_table</param>
                 <param name="column">next_hi_value_column</param>
         </generator>
 </id>]]></programlisting>
 
                 <para>
-                    All generators implement the interface <literal>net.sf.hibernate.id.IdentifierGenerator</literal>.
+                    All generators implement the interface <literal>org.hibernate.id.IdentifierGenerator</literal>.
                     This is a very simple interface; some applications may choose to provide their own specialized
                     implementations. However, Hibernate provides a range of built-in implementations. There are shortcut
                     names for the built-in generators:
@@ -1059,7 +1058,7 @@
             	If you specify <literal>access="field"</literal>, Hibernate will bypass the get/set
             	pair and access the field directly, using reflection. You may specify your own
             	strategy for property access by naming a class that implements the interface
-            	<literal>net.sf.hibernate.property.PropertyAccessor</literal>.
+            	<literal>org.hibernate.property.PropertyAccessor</literal>.
             </para>
 
         </sect2>
@@ -1571,7 +1570,7 @@
         <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd">
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="eg">
 
@@ -1826,7 +1825,7 @@
             
             <para>
                 The basic value types have corresponding <literal>Type</literal> constants defined on
-                <literal>net.sf.hibernate.Hibernate</literal>. For example, <literal>Hibernate.STRING</literal>
+                <literal>org.hibernate.Hibernate</literal>. For example, <literal>Hibernate.STRING</literal>
                 represents the <literal>string</literal> type.
             </para>
 
@@ -1838,12 +1837,12 @@
             <para>
                 An <emphasis>enumerated</emphasis> type is a common Java idiom where a class has
                 a constant (small) number of immutable instances. You may create a persistent
-                enumerated type by implementing <literal>net.sf.hibernate.PersistentEnum</literal>,
+                enumerated type by implementing <literal>org.hibernate.PersistentEnum</literal>,
                 defining the operations <literal>toInt()</literal> and <literal>fromInt()</literal>:
             </para>
 
             <programlisting><![CDATA[package eg;
-import net.sf.hibernate.PersistentEnum;
+import org.hibernate.PersistentEnum;
 
 public class Color implements PersistentEnum {
     private final int code;
@@ -1888,14 +1887,14 @@ public class Color implements PersistentEnum {
             </para>
             
             <para>
-                To implement a custom type, implement either <literal>net.sf.hibernate.UserType</literal> 
-                or <literal>net.sf.hibernate.CompositeUserType</literal> and declare properties using the 
+                To implement a custom type, implement either <literal>org.hibernate.UserType</literal>
+                or <literal>org.hibernate.CompositeUserType</literal> and declare properties using the
                 fully qualified classname of the type. Check out 
-                <literal>net.sf.hibernate.test.DoubleStringType</literal> to see the kind of things that 
+                <literal>org.hibernate.test.DoubleStringType</literal> to see the kind of things that
                 are possible.
             </para>
 
-            <programlisting><![CDATA[<property name="twoStrings" type="net.sf.hibernate.test.DoubleStringType">
+            <programlisting><![CDATA[<property name="twoStrings" type="org.hibernate.test.DoubleStringType">
     <column name="first_string"/>
     <column name="second_string"/>
 </property>]]></programlisting>

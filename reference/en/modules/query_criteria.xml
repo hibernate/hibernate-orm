@@ -2,9 +2,7 @@
     <title>Criteria Queries</title>
 
     <para>
-        Hibernate now features an intuitive, extensible criteria query API. For now, this API
-        is less powerful and than the more mature HQL query facilities. In particular, criteria
-        queries do not support projection or aggregation.
+        Hibernate features an intuitive, extensible criteria query API.
     </para>
     
     <sect1 id="querycriteria-creating">
@@ -27,8 +25,8 @@ List cats = crit.list();]]></programlisting>
 
         <para>
             An individual query criterion is an instance of the interface
-            <literal>org.hibernate.expression.Criterion</literal>. The class
-            <literal>org.hibernate.expression.Restrictions</literal> defines
+            <literal>org.hibernate.criterion.Criterion</literal>. The class
+            <literal>org.hibernate.criterion.Restrictions</literal> defines
             factory methods for obtaining certain built-in
             <literal>Criterion</literal> types.
         </para>
@@ -80,7 +78,7 @@ List cats = crit.list();]]></programlisting>
         <title>Ordering the results</title>
 
         <para>
-            You may order the results using <literal>org.hibernate.expression.Order</literal>.
+            You may order the results using <literal>org.hibernate.criterion.Order</literal>.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -173,7 +171,7 @@ while ( iter.hasNext() ) {
         <title>Example queries</title>
 
         <para>
-            The class <literal>org.hibernate.expression.Example</literal> allows
+            The class <literal>org.hibernate.criterion.Example</literal> allows
             you to construct a query criterion from a given instance.
         </para>
 
@@ -223,7 +221,12 @@ List results = session.createCriteria(Cat.class)
         </para>
         
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
-    .add( Projections.projectionList()
+    .setProjection( Projections.rowCount() )
+    .add( Restrictions.eq("color", Color.BLACK) )
+    .list();]]></programlisting>
+    
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.projectionList()
         .add( Projections.rowCount() )
         .add( Projections.avg("weight") )
         .add( Projections.max("weight") )
@@ -232,12 +235,18 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            The projection factory methods allow an alias to be assigned to a
-            projection, so that it may be referred to in restrictions or orderings.
+            There is no explicit "group by" necessary in a criteria query. Certain
+            projection types are defined to be <emphasis>grouping projections</emphasis>,
+            which also appear in the SQL <literal>group by</literal> clause.
+        </para>
+    
+        <para>
+            The projection factory methods allow an alias to optionally be assigned 
+            to a projection, so that it may be referred to in restrictions or orderings.
         </para>
 
        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
-    .add( Projections.projectionList()
+    .setProjection( Projections.projectionList()
         .add( Projections.rowCount("catCountByColor") )
         .add( Projections.avg("weight", "avgWeight") )
         .add( Projections.max("weight") )
@@ -245,6 +254,16 @@ List results = session.createCriteria(Cat.class)
     )
     .addOrder( Order.desc("catCountByColor") )
     .addOrder( Order.desc("avgWeight") )
+    .list();]]></programlisting>
+    
+        <programlisting><![CDATA[List results = session.createCriteria(Domestic.class, "cat")
+    .createAlias("kittens", "kit")
+    .setProjection( Projections.projectionList()
+        .add( Projections.property("cat.name", "catName") )
+        .add( Projections.property("kit.name", "kitName") )
+    )
+    .addOrder( Order.asc("catName") )
+    .addOrder( Order.asc("kitName") )
     .list();]]></programlisting>
     
     </sect1>

@@ -354,7 +354,7 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
         
     </sect1>
 
-    <sect1 id="performance-cache">
+    <sect1 id="performance-cache" revision="1">
         <title>The Second Level Cache</title>
 
         <para>
@@ -392,35 +392,35 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
             <tbody>
             <row>
                 <entry>Hashtable (not intended for production use)</entry>
-                <entry><literal>net.sf.hibernate.cache.HashtableCacheProvider</literal></entry>
+                <entry><literal>org.hibernate.cache.HashtableCacheProvider</literal></entry>
                 <entry>memory</entry>
                 <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>EHCache</entry>
-                <entry><literal>net.sf.ehcache.hibernate.Provider</literal></entry>
+                <entry><literal>org.hibernate.cache.EhCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
                 <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>OSCache</entry>
-                <entry><literal>net.sf.hibernate.cache.OSCacheProvider</literal></entry>
+                <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
                 <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>SwarmCache</entry>
-                <entry><literal>net.sf.hibernate.cache.SwarmCacheProvider</literal></entry>
+                <entry><literal>org.hibernate.cache.SwarmCacheProvider</literal></entry>
                 <entry>clustered (ip multicast)</entry>
                 <entry>yes (clustered invalidation)</entry>
                 <entry></entry>
             </row>
             <row>
                 <entry>JBoss TreeCache</entry>
-                <entry><literal>net.sf.hibernate.cache.TreeCacheProvider</literal></entry>
+                <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
                 <entry>clustered (ip multicast), transactional</entry>
                 <entry>yes (replication)</entry>
                 <entry></entry>

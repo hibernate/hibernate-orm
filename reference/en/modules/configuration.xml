@@ -1311,10 +1311,70 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             We strongly recommend that you familiarize yourself with Hibernate's log
             messages. A lot of work has been put into making the Hibernate log as
             detailed as possible, without making it unreadable. It is an essential
-            troubleshooting device. Also don't forget to enable SQL logging as
-            described above (<literal>hibernate.show_sql</literal>), it is your first
-            step when looking for performance problems.
+            troubleshooting device. The most interesting log categories are the
+            following:
         </para>
+        
+            <table frame="topbot" id="log-categories" revision="2">
+                <title>Hibernate Log Categories</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="2.5*"/>
+                    <thead>
+                        <row>
+                            <entry>Category</entry>
+                            <entry>Function</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>org.hibernate.SQL</literal></entry>
+                            <entry>Log all SQL DML statements as they are executed</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.type</literal></entry>
+                            <entry>Log all JDBC parameters</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.tool.hbm2ddl</literal></entry>
+                            <entry>Log all SQL DDL statements as they are executed</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.pretty</literal></entry>
+                            <entry>
+                                Log the state of all entities (max 20 entities) associated
+                                with the session at flush time
+                            </entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.cache</literal></entry>
+                            <entry>Log all second-level cache activity</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.jdbc</literal></entry>
+                            <entry>Log all JDBC resource acquisition</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.secure</literal></entry>
+                            <entry>Log all JAAS authorization requests</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate</literal></entry>
+                            <entry>
+                                Log everything (a lot of information, but very useful for
+                                troubleshooting).
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            
+        <para>
+            When developing applications with Hibernate, you should almost always work with
+            <literal>debug</literal> enabled for the category <literal>org.hibernate.SQL</literal>,
+            or, alternatively, the property <literal>hibernate.show_sql</literal> enabled.
+        </para>
+                       
         
     </sect1>
 

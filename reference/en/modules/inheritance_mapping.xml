@@ -5,6 +5,11 @@
         <title>The Three Strategies</title>
 
         <para>
+            TODO: While this is all still supported, many new features would require
+            a rewrite of this whole chapter
+        </para>
+
+        <para>
             Hibernate supports the three basic inheritance mapping strategies.
         </para>
 

@@ -10,8 +10,8 @@
         <title>Dependent objects</title>
 
         <para>
-            A component is a contained object that is persisted as a value type, not an entity.
-            The term "component" refers to the object-oriented notion of composition
+            A component is a contained object that is persisted as a value type, not an entity
+            reference. The term "component" refers to the object-oriented notion of composition
             (not to architecture-level components). For example, you might model a person like this:
         </para>
 
@@ -97,10 +97,12 @@
         </para>
 
         <para>
-            Like all value types, components do not support shared references. The null
-            value semantics of a component are <emphasis>ad hoc</emphasis>. When reloading the
-            containing object, Hibernate will assume that if all component columns are
-            null, then the entire component is null. This should be okay for most purposes.
+            Like all value types, components do not support shared references. In other words, two
+            persons could have the same name, but the two person objects would contain two independent
+            name ojects, only "the same" by value. The null value semantics of a component are
+            <emphasis>ad hoc</emphasis>. When reloading the containing object, Hibernate will assume
+            that if all component columns are null, then the entire component is null. This should
+            be okay for most purposes.
         </para>
 
         <para>
@@ -131,7 +133,7 @@
 
     </sect1>
 
-    <sect1 id="components-incollections">
+    <sect1 id="components-incollections" revision="1">
         <title>Collections of dependent objects</title>
 
         <para>
@@ -202,6 +204,14 @@
     </set>
 </class>]]></programlisting>
 
+        <para>
+            Of course, there can't be a reference to the purchae on the other side, for
+            bidirectional association navigation. Remember that components are value types and
+            don't allow shared references. A single <literal>Purchase</literal> can be in the
+            set of an <literal>Order</literal>, but it can't be referenced by the <literal>Item</literal>
+            at the same time.
+        </para>
+
         <para>Even ternary (or quaternary, etc) associations are possible:</para>
 
         <programlisting><![CDATA[<class name="eg.Order" .... >
@@ -266,6 +276,10 @@
             we can't use <literal>unsaved-value</literal> of the identifier to distinguish
             between newly instantiated transient instances and detached instances from a
             previous session.
+        </para>
+
+        <para>
+            TODO: document new auto-detect features for assigned IDs in H3
         </para>
 
         <para>

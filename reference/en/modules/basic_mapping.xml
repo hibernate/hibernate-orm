@@ -1361,6 +1361,7 @@
                     <area id="manytoone11" coords="12 60"/>
                     <area id="manytoone12" coords="13 60"/>
                     <area id="manytoone13" coords="14 60"/>
+                    <area id="manytoone14" coords="15 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1376,6 +1377,7 @@
         not-null="true|false"
         optimistic-lock="true|false"
         lazy="true|false"
+        not-found="ignore|exception"
         entity-name="EntityName"
 />]]></programlisting>
                 <calloutlist>
@@ -1460,6 +1462,13 @@
                             accessed (requires build-time bytecode instrumentation). Note that this does not
                             influence Hibernate's proxy behavior - like the <literal>lazy</literal> attribute
                             on class or collection mappings, but uses interception for deferred loading.
+                        </para>
+                    </callout>
+                    <callout arearefs="manytoone14">
+                        <para>
+                            <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): 
+                            Specifies how foreign keys that reference missing rows will be handled: 
+                            <literal>ignore</literal> will treat a missing row as a null association.
                         </para>
                     </callout>
                 </calloutlist>

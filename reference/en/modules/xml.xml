@@ -1,10 +1,10 @@
 <chapter id="xml">
     <title>XML Mapping</title>
 
-    <emphasis>
+    <para><emphasis>
         Note that this is an experimental feature in Hibernate 3.0 and is under
         extremely active development.
-    </emphasis>
+    </emphasis></para>
 
     <sect1 id="xml-intro" revision="1">
         <title>Working with XML data</title>

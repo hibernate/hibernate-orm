@@ -163,22 +163,22 @@
                 </listitem>
                 <listitem>
                     <para>
-                        <emphasis>Detached Objects</emphasis> - If you decide to use the already
-                        discussed <emphasis>session-per-request</emphasis> pattern, all loaded instances
-                        will be in detached state during user think time. Hibernate allows you to
-                        reattach the objects and persist the modifications, the pattern is called
-                        <emphasis>session-per-request-with-detached-objects</emphasis>. Automatic
-                        versioning is used to isolate concurrent modifications.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
                         <emphasis>Long Session</emphasis> - The Hibernate <literal>Session</literal> may
                         be disconnected from the underlying JDBC connection after the database transaction
                         has been committed, and reconnected when a new client request arrives. This pattern
                         is known as <emphasis>session-per-application-transaction</emphasis> and makes
                         even reattachment unnecessary. Automatic versioning is used to isolate
                         concurrent modifications.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>Detached Objects</emphasis> - If you decide to use the already
+                        discussed <emphasis>session-per-request</emphasis> pattern, all loaded instances
+                        will be in detached state during user think time. Hibernate allows you to
+                        reattach the objects and persist the modifications, the pattern is called
+                        <emphasis>session-per-request-with-detached-objects</emphasis>. Automatic
+                        versioning is used to isolate concurrent modifications.
                     </para>
                 </listitem>
             </itemizedlist>

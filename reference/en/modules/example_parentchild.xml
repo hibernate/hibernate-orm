@@ -10,8 +10,8 @@
         <literal>&lt;composite-element&gt;</literal>.) Now, it turns out that default semantics of a one to many 
         association (in Hibernate) are much less close to the usual semantics of a parent / child relationship than 
         those of a composite element mapping. We will explain how to use a <emphasis>bidirectional one to many 
-        association with cascades</emphasis> to model a parent / child relationship efficiently and elegantly. It's 
-        not at all difficult!
+        association with cascades</emphasis> to model a parent / child relationship efficiently and elegantly. 
+        It's not at all difficult!
     </para>
     
     <sect1 id="example-parentchild-collections">
@@ -98,14 +98,23 @@ session.flush();]]></programlisting>
     
         <para>
             This is not only inefficient, but also violates any <literal>NOT NULL</literal> constraint on the
-            <literal>parent_id</literal> column.
+            <literal>parent_id</literal> column. We can fix the nullability constraint violation by specifying
+            <literal>not-null="true"</literal> in the collection mapping:
         </para>
 
+        <programlisting><![CDATA[<set name="children">
+    <key column="parent_id" not-null="true"/>
+    <one-to-many class="Child"/>
+</set>]]></programlisting>
+    
         <para>
-            The underlying cause is that the link (the foreign key <literal>parent_id</literal>) from
-            <literal>p</literal> to <literal>c</literal> is not considered part of the state of the <literal>Child</literal>
-            object and is therefore not created in the <literal>INSERT</literal>. So the solution is to make the link part
-            of the <literal>Child</literal> mapping.
+        	However, this is not the recommended solution.
+       	</para>
+       	<para>
+            The underlying cause of this behaviour is that the link (the foreign key <literal>parent_id</literal>) 
+            from <literal>p</literal> to <literal>c</literal> is not considered part of the state of the 
+            <literal>Child</literal> object and is therefore not created in the <literal>INSERT</literal>. So the 
+            solution is to make the link part of the <literal>Child</literal> mapping.
         </para>
 
         <programlisting><![CDATA[<many-to-one name="parent" column="parent_id" not-null="true"/>]]></programlisting>
@@ -115,8 +124,8 @@ session.flush();]]></programlisting>
         </para>
 
         <para>
-            Now that the <literal>Child</literal> entity is managing the state of the link, we tell the collection not
-            to update the link. We use the <literal>inverse</literal> attribute.
+            Now that the <literal>Child</literal> entity is managing the state of the link, we tell the collection 
+            not to update the link. We use the <literal>inverse</literal> attribute.
         </para>
 
         <programlisting><![CDATA[<set name="children" inverse="true">
@@ -226,35 +235,37 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
          <para>
-             Note: even though the collection mapping specifies <literal>inverse="true"</literal>, cascades are still
-             processed by iterating the collection elements. So if you require that an object be saved, deleted or
-             updated by cascade, you must add it to the collection. It is not enough to simply call
+             Note: even though the collection mapping specifies <literal>inverse="true"</literal>, cascades are 
+             still processed by iterating the collection elements. So if you require that an object be saved, 
+             deleted or updated by cascade, you must add it to the collection. It is not enough to simply call
              <literal>setParent()</literal>.
          </para>
                
      </sect1>
      
      <sect1 id="example-parentchild-update">
-         <title>Using cascading <literal>update()</literal></title>
+         <title>Cascades and <literal>unsaved-value</literal></title>
      
          <para>
-             Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</literal>, made some changes in a UI
-             action and wish to persist these changes in a new Session (by calling <literal>update()</literal>). The
-             <literal>Parent</literal> will contain a collection of childen and, since cascading update is enabled, Hibernate
-             needs to know which children are newly instantiated and which represent existing rows in the database. Lets assume
-             that both <literal>Parent</literal> and <literal>Child</literal> have (synthetic) identifier properties of type
-             <literal>java.lang.Long</literal>. Hibernate will use the identifier property value to determine which of the
-             children are new. (You may also use the version or timestamp property, see
+             Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</literal>, made some changes 
+             in a UI action and wish to persist these changes in a new session by calling <literal>update()</literal>. 
+             The <literal>Parent</literal> will contain a collection of childen and, since cascading update is enabled, 
+             Hibernate needs to know which children are newly instantiated and which represent existing rows in the 
+             database. Lets assume that both <literal>Parent</literal> and <literal>Child</literal> have genenerated
+             identifier properties of type <literal>Long</literal>. Hibernate will use the identifier property 
+             value to determine which of the children are new. (You may also use the version or timestamp property, see
              <xref linkend="objectstate-saveorupdate"/>.)
          </para>
 
          <para>
-             The <literal>unsaved-value</literal> attribute is used to specify the identifier value of a newly instantiated
-             instance. <literal>unsaved-value</literal> defaults to "null", which is perfect for a <literal>Long</literal>
-             identifier type. If we would have used a primitive identitifier property, we would need to specify
+             The <literal>unsaved-value</literal> attribute is used to specify the identifier value of a newly 
+             instantiated instance. <literal>unsaved-value</literal> defaults to <literal>null</literal> for nullable 
+             types (which is perfect for a <literal>Long</literal> identifier type), and to <literal>0</literal> for 
+             numeric primitives. If we would have initialized our identifier property to <literal>-1</literal> in the 
+             object's constructor, we would need to specify
          </para>
 
-         <programlisting><![CDATA[<id name="id" type="long" unsaved-value="0">]]></programlisting>
+         <programlisting><![CDATA[<id name="id" type="long" unsaved-value="-1">]]></programlisting>
 
          <para>
              for the <literal>Child</literal> mapping. (There is also an <literal>unsaved-value</literal> attribute
@@ -262,8 +273,8 @@ session.flush();]]></programlisting>
          </para>
 
          <para>
-             The following code will update <literal>parent</literal> and <literal>child</literal> and insert
-             <literal>newChild</literal>.
+             Now that we have our <literal>unsaved-value</literal> right, the following code will update 
+             <literal>parent</literal> and <literal>child</literal> and insert <literal>newChild</literal>.
          </para>
 
          <programlisting><![CDATA[//parent and child were both loaded in a previous session
@@ -276,40 +287,14 @@ session.flush();]]></programlisting>
          <para>
              Well, thats all very well for the case of a generated identifier, but what about assigned identifiers
              and composite identifiers? This is more difficult, since <literal>unsaved-value</literal> can't
-             distinguish between a newly instantiated object (with an identifier assigned by the user) and an object
-             loaded in a previous session. In these cases, you will probably need to give Hibernate a hint; either
+             distinguish between a newly instantiated object (with an identifier assigned by the user) and an 
+             object loaded in a previous session. In this case, Hibernate will either use the timestamp or version 
+             property, or will actually query the second-level cache database to see if the row exists.
          </para>
-
-         <itemizedlist>
-         <listitem>
-             <para>
-                 define <literal>unsaved-value="null"</literal> or <literal>unsaved-value="negative"</literal>
-                 on a <literal>&lt;version&gt;</literal> or <literal>&lt;timestamp&gt;</literal> property
-                 mapping for the class.
-             </para>
-         </listitem>
-         <listitem>
-             <para>
-                 set <literal>unsaved-value="none"</literal> and explicitly <literal>save()</literal>
-                 newly instantiated children before calling <literal>update(parent)</literal>
-             </para>
-         </listitem>
-         <listitem>
-             <para>
-                 set <literal>unsaved-value="any"</literal> and explicitly <literal>update()</literal>
-                 previously persistent children before calling <literal>update(parent)</literal>
-             </para>
-         </listitem>
-         </itemizedlist>
-
+         
          <para>
-             <literal>none</literal> is the default <literal>unsaved-value</literal> for assigned and composite
-             identifiers.
-         </para>
-
-         <para>
-             There is one further possibility. There is a new <literal>Interceptor</literal> method named
-             <literal>isUnsaved()</literal> which lets the application implement its own strategy for distinguishing
+             There is one further possibility. The <literal>Interceptor</literal> method named 
+             <literal>isUnsaved()</literal> lets the application implement its own strategy for distinguishing
              newly instantiated objects. For example, you could define a base class for your persistent classes.
          </para>
 
@@ -361,6 +346,10 @@ public boolean onSave(Object entity,
     if (entity instanceof Persistent) ( (Persistent) entity ).onSave();
     return false;
 }]]></programlisting>
+
+		<para>
+			Don't worry; in Hibernate3 you don't need to write any of this kind of code if you don't want to.
+		</para>
      
      </sect1>
 
@@ -368,16 +357,15 @@ public boolean onSave(Object entity,
          <title>Conclusion</title>
 
          <para>
-             There is quite a bit to digest here and it might look confusing first time around. However, in practice, it
-             all works out quite nicely. Most Hibernate applications use the parent / child pattern in many places.
+             There is quite a bit to digest here and it might look confusing first time around. However, in practice, 
+             it all works out very nicely. Most Hibernate applications use the parent / child pattern in many places.
          </para>
 
          <para>
              We mentioned an alternative in the first paragraph. None of the above issues exist in the case of
              <literal>&lt;composite-element&gt;</literal> mappings, which have exactly the semantics of a parent / child
-             relationship. Unfortunately, there are two big limitations to composite element classes: composite elements may
-             not own collections, and they should not be the child of any entity other than the unique parent. (However,
-             they <emphasis>may</emphasis> have a surrogate primary key, using an <literal>&lt;idbag&gt;</literal> mapping.)
+             relationship. Unfortunately, there are two big limitations to composite element classes: composite elements 
+             may not own collections, and they should not be the child of any entity other than the unique parent.
          </para>
      
      </sect1>

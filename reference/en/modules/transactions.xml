@@ -496,7 +496,7 @@ finally {
     <sect1 id="transactions-optimistic">
         <title>Optimistic concurrency control</title>
 
-
+        <para>TODO: I've deleted my changes to this section, now I've to do it again...</para>
 
         <para>
             The only approach that is consistent with high concurrency and high

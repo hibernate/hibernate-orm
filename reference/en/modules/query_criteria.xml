@@ -246,8 +246,8 @@ List results = session.createCriteria(Cat.class)
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
-    .setProjection( Projections.alias( Projections.rowCount(), "count" ) )
-    .add( Restrictions.eq("color", Color.BLACK) )
+    .setProjection( Projections.alias( Projections.groupProperty("color"), "colr" ) )
+    .add( Restrictions.ne("colr", Color.BLACK) )
     .list();]]></programlisting>
     
        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)

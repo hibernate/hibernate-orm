@@ -286,7 +286,10 @@
         <para>
             Notice that nowhere do we mention the <literal>Payment</literal> interface 
             explicitly. Also notice that properties of <literal>Payment</literal> are 
-            mapped in each of the subclasses.
+            mapped in each of the subclasses. If you want to avoid duplication, consider
+            using XML entities
+            (e.g. <literal>... [ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]&lt;</literal>
+            in the DTD declartion and <literal>&allproperties;</literal> in the mapping).
         </para>
         
         <para>

@@ -314,10 +314,10 @@
             </row>
             <row>
                 <entry>table-per-concrete-class (union-subclass)</entry>
-                <entry><literal>??</literal></entry>
-                <entry><emphasis>??</emphasis></entry>
-                <entry><emphasis>&lt;one-to-many&gt; (<literal>inverse="true"</literal> only)</emphasis></entry>
-                <entry><literal>??</literal></entry>
+                <entry><literal>&lt;many-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-one&gt;</literal></entry>
+                <entry><literal>&lt;one-to-many&gt;</literal> (for <literal>inverse="true"</literal> only)</entry>
+                <entry><literal>&lt;many-to-many&gt;</literal></entry>
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>

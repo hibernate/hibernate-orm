@@ -287,7 +287,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 
         <programlistingco>
             <areaspec>
-                <area id="key1" coords="1 45"/>
+                <area id="element1" coords="1 45"/>
              </areaspec>
             <programlisting><![CDATA[<key column="column_name"/>]]></programlisting>
             <calloutlist>
@@ -367,21 +367,21 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 
         <programlistingco>
             <areaspec>
-                <area id="element1" coords="2 45"/>
-                <area id="element2" coords="3 45"/>
+                <area id="element1b" coords="2 45"/>
+                <area id="element2b" coords="3 45"/>
              </areaspec>
             <programlisting><![CDATA[<element
         column="column_name"
         type="typename"
 />]]></programlisting>
             <calloutlist>
-                <callout arearefs="element1">
+                <callout arearefs="element1b">
                     <para>
                         <literal>column</literal> (required): The name of the column holding the
                         collection element values.
                     </para>
                 </callout>
-                <callout arearefs="element2">
+                <callout arearefs="element2b">
                     <para>
                         <literal>type</literal> (required): The type of the collection element.
                     </para>

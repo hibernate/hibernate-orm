@@ -1,14 +1,14 @@
 <chapter id="mapping">
     <title>Basic O/R Mapping</title>
 
-    <sect1 id="mapping-declaration">
+    <sect1 id="mapping-declaration" revision="1">
         <title>Mapping declaration</title>
 
         <para>
-            Object/relational mappings are defined in an XML document. The mapping document
-            is designed to be readable and hand-editable. The mapping language is Java-centric,
-            meaning that mappings are constructed around persistent class declarations, not
-            table declarations.
+            Object/relational mappings are usually defined in an XML document. The mapping
+            document is designed to be readable and hand-editable. The mapping language is
+            Java-centric, meaning that mappings are constructed around persistent class
+            declarations, not table declarations.
         </para>
         
         <para>
@@ -96,18 +96,20 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="1">
+        <sect2 id="mapping-declaration-doctype" revision="2">
             <title>Doctype</title>
 
             <para>
                 All XML mappings should declare the doctype shown. The actual DTD may be found 
                 at the URL above, in the directory <literal>hibernate-x.x.x/src/org/hibernate
                 </literal> or in <literal>hibernate3.jar</literal>. Hibernate will always look for
-                the DTD in its classpath first.
+                the DTD in its classpath first. If you experience lookups of the DTD using an
+                Internet connection, check your DTD declaration against the contents of your
+                claspath.
             </para>
         </sect2>
 
-        <sect2 id="mapping-declaration-mapping" revision="2">
+        <sect2 id="mapping-declaration-mapping" revision="3">
             <title>hibernate-mapping</title>
 
             <para>
@@ -191,6 +193,16 @@
                  If you have two persistent classes with the same (unqualified) name, you should set 
                  <literal>auto-import="false"</literal>. Hibernate will throw an exception if you attempt
                  to assign two classes to the same "imported" name.
+             </para>
+
+             <para>
+                 Note that the <literal>hibernate-mapping</literal> element allows you to nest
+                 several persistent <literal>&lt;class&gt;</literal> mappings, as shown above.
+                 It is however good practice (and expected by some tools) to map only a single
+                 persistent class (or a single class hierarchy) in one mapping file and name
+                 it after the persistent superclass, e.g. <literal>Cat.hbm.xml</literal>,
+                 <literal>Dog.hbm.xml</literal>, or if using inheritance,
+                 <literal>Animal.hbm.xml</literal>.
              </para>
  
         </sect2>
@@ -510,9 +522,9 @@
     ...]]></programlisting>
 
             <para>
-                Declare the tables to synchronize this entity, to ensure that auto-flush happens
+                Declare the tables to synchronize this entity with, ensuring that auto-flush happens
                 correctly, and that queries against the derived entity do not return stale data.
-                The <literal>&lt;subselect&gt;</literal> is available as both an attribute and
+                The <literal>&lt;subselect&gt;</literal> is available as both as an attribute and
                 a nested mapping element.
             </para>
 
@@ -915,7 +927,7 @@
             
         </sect2>
         
-        <sect2 id="mapping-declaration-discriminator" revision="2">
+        <sect2 id="mapping-declaration-discriminator" revision="3">
             <title>discriminator</title>
 
             <para>
@@ -997,11 +1009,13 @@
                 that will be used to evaluate the type of a row:
             </para>
 
-            <programlisting><![CDATA[<discriminator formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end" type="integer"/>]]></programlisting>
+            <programlisting><![CDATA[<discriminator
+    formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end"
+    type="integer"/>]]></programlisting>
 
         </sect2>
 
-        <sect2 id="mapping-declaration-version">
+        <sect2 id="mapping-declaration-version" revision="1">
             <title>version (optional)</title>
             
             <para>
@@ -1062,7 +1076,7 @@
             </programlistingco>
             
             <para>
-                Version numbers may be of type <literal>long</literal>, <literal>integer</literal>,
+                Version numbers may be of Hibernate type <literal>long</literal>, <literal>integer</literal>,
                 <literal>short</literal>, <literal>timestamp</literal> or <literal>calendar</literal>.
             </para>
             
@@ -1072,7 +1086,7 @@
                 no matter what other <literal>unsaved-value</literal> strategies are specified.
                 <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid 
                 any problems with transitive reattachment in Hibernate, especially useful for people 
-                using assigned identiifers or composite keys!</emphasis>
+                using assigned identifiers or composite keys!</emphasis>
             </para>
         </sect2>
         
@@ -1318,13 +1332,14 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="2">
+        <sect2 id="mapping-declaration-manytoone" revision="3">
             <title>many-to-one</title>
 
             <para>
                 An ordinary association to another persistent class is declared using a
                 <literal>many-to-one</literal> element. The relational model is a
-                many-to-one association. (Its really just an object reference.)
+                many-to-one association: a foreign key in one table is referencing
+                the primary key column(s) of the target table.
             </para>
 
             <programlistingco>
@@ -1369,8 +1384,7 @@
                             <literal>column</literal> (optional): The name of the foreign key column. 
                             This may also be specified by nested <literal>&lt;column&gt;</literal>
                             element(s).
-
-                        </para>                    
+                        </para>
                     </callout>
                     <callout arearefs="manytoone3">
                         <para>
@@ -1437,11 +1451,10 @@
             </programlistingco>
 
             <para>
-                The <literal>cascade</literal> attribute permits the following values: 
-                <literal>all</literal>, <literal>save-update</literal>, <literal>delete</literal>,
-                <literal>none</literal>. Setting a value other than <literal>none</literal>
-                will propagate certain operations to the associated (child) object.
-                See "Lifecycle Objects" below.
+                Setting a value of the <literal>cascade</literal> attribute to not
+                <literal>none</literal> will propagate certain operations to the
+                associated object (usually in a parent/child fashion). See
+                "Lifecycle Objects" discussed later.
             </para>
             
             <para>
@@ -1621,7 +1634,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-component" revision="1">
+        <sect2 id="mapping-declaration-component" revision="2">
             <title>component, dynamic-component</title>
 
             <para>
@@ -1692,15 +1705,15 @@
                             accessed (requires build-time bytecode instrumentation).
                         </para>
                     </callout>
+                    <callout arearefs="component7">
+                            <para>
+                                <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>):
+                                Specifies that updates to this component do or do not require acquisition of the
+                                optimistic lock. In other words, define if a version check should be made if this
+                                property is dirty.
+                            </para>
+                    </callout>
                 </calloutlist>
-                <callout arearefs="component7">
-                        <para>
-                            <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-                            Specifies that updates to this component do or do not require acquisition of the
-                            optimistic lock. In other words, define if a version check should be made if this
-                            property is dirty.
-                        </para>
-                </callout>
             </programlistingco>
 
             <para>
@@ -1716,17 +1729,18 @@
 
             <para>
                 The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal>
-                to be mapped as a component, where the property names refer to keys of the map.
+                to be mapped as a component, where the property names refer to keys of the map, see
+                <xref linken="components-dynamic"/>.
             </para>
             
         </sect2>
 
-        <sect2 id="mapping-declaration-subclass" revision="2">
+        <sect2 id="mapping-declaration-subclass" revision="3">
             <title>subclass</title>
 
             <para>
                 Finally, polymorphic persistence requires the declaration of each subclass of
-                the root persistent class. For the (recommended) table-per-class-hierarchy
+                the root persistent class. For the table-per-class-hierarchy
                 mapping strategy, the <literal>&lt;subclass&gt;</literal> declaration is used.
             </para>
             
@@ -1783,6 +1797,10 @@
                 fully qualified Java class name is used.
             </para>
             
+            <para>
+                For information about inheritance mappings, see <xref linkend="inheritance"/>.
+            </para>
+
         </sect2>
 
          <sect2 id="mapping-declaration-joinedsubclass" revision="3">
@@ -1884,9 +1902,13 @@
 
 </hibernate-mapping>]]></programlisting>
 
+             <para>
+                 For information about inheritance mappings, see <xref linkend="inheritance"/>.
+             </para>
+
         </sect2>
 
-        <sect2 id="mapping-declaration-unionsubclass" revision="1">
+        <sect2 id="mapping-declaration-unionsubclass" revision="2">
            <title>union-subclass</title>
 
            <para>
@@ -1896,7 +1918,7 @@
                not absolutely necessary to explicitly map such inheritance hierarchies. You
                can simply map each class with a separate <literal>&lt;class&gt;</literal>
                declaration. However, if you wish use polymorphic associations (e.g. an association
-               directed at the superclass of your hierarchy), you need to
+               to the superclass of your hierarchy), you need to
                use the <literal>&lt;union-subclass&gt;</literal> mapping.
            </para>
 
@@ -1952,6 +1974,10 @@
 
             <para>
                 No discriminator column or key column is required for this mapping strategy.
+            </para>
+
+            <para>
+                For information about inheritance mappings, see <xref linkend="inheritance"/>.
             </para>
 
         </sect2>
@@ -2164,7 +2190,7 @@
     <sect1 id="mapping-types">
         <title>Hibernate Types</title>
 
-        <sect2 id="mapping-types-entitiesvalues">
+        <sect2 id="mapping-types-entitiesvalues" revision="1">
             <title>Entities and values</title>
 
             <para>
@@ -2186,16 +2212,12 @@
             <para>
                 An entity's persistent state consists of references to other entities and
                 instances of <emphasis>value</emphasis> types. Values are primitives,
-                collections, components and certain immutable objects. Unlike entities, values
-                (in particular collections and components) <emphasis>are</emphasis>
-                persisted and deleted by reachability. Since value objects (and primitives) are
-                persisted and deleted along with their containing entity they may not be
-                independently versioned. Values have no independent identity, so they cannot be
-                shared by two entities or collections.
-            </para>
-
-            <para>
-                All Hibernate types except collections support null semantics.
+                collections (not whats inside a collection), components and certain immutable
+                objects. Unlike entities, values (in particular collections and components)
+                <emphasis>are</emphasis> persisted and deleted by reachability. Since value
+                objects (and primitives) are persisted and deleted along with their containing
+                entity they may not be independently versioned. Values have no independent
+                identity, so they cannot be shared by two entities or collections.
             </para>
 
             <para>
@@ -2203,14 +2225,43 @@
                 entities. We will continue to do that. Strictly speaking, however, not all
                 user-defined classes with persistent state are entities. A
                 <emphasis>component</emphasis> is a user defined class with value semantics.
+                A Java property of type <literal>java.lang.String</literal> also has value
+                semantics. Given this definition, we can say that all types (classes) provided
+                by the JDK have value type semantics in Java, while user-defined types may
+                be mapped with entity or value type semantics. This decision is up to the
+                application developer. A good hint for an entity class in a domain model are
+                shared references to a single instance of that class, while composition or
+                aggregation usually translates to a value type.
             </para>
+
+            <para>
+                We'll revisit both concepts throughout the documentation.
+            </para>
+
+            <para>
+                The challenge is to map the Java type system (and the developers definition of
+                entities and value types) to the SQL/database type system. The bridge between
+                both systems is provided by Hibernate: for entities we use
+                <literal>&lt;class&gt;</literal>, <literal>&lt;subclass&lt;</literal> and so on.
+                For value types we use <literal>&lt;property&gt;</literal>,
+                <literal>&lt;component&gt;</literal>, etc, usually with a <literal>type</literal>
+                attribute. The value of this attribute is the name of a Hibernate
+                <emphasis>mapping type</emphasis>. Hibernate provides many mappings (for standard
+                JDK value types) out of the box. You can write your own mapping types and implement your
+                custom conversion strategies as well, as you'll see later.
+            </para>
+
+            <para>
+                All built-in Hibernate types except collections support null semantics.
+            </para>
+
         </sect2>
 
-        <sect2 id="mapping-types-basictypes" revision="1">
+        <sect2 id="mapping-types-basictypes" revision="2">
             <title>Basic value types</title>
 
             <para>
-                The <emphasis>basic types</emphasis> may be roughly categorized into
+                The built-in <emphasis>basic mapping types</emphasis> may be roughly categorized into
 
                 <variablelist>
                     <varlistentry>
@@ -2422,6 +2473,10 @@
             </para>
 
         </sect2>
+
+        <para>
+            TODO: document parameterizable usertypes
+        </para>
         
         <sect2 id="mapping-types-anymapping" revision="2">
             <title>Any type mappings</title>
@@ -2544,7 +2599,7 @@
             <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
             a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
             naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
-            documents important. Since Hibernate 3, the ordering of mapping files does not matter when using the
+            documents important. Since Hibernate3, the ordering of mapping files does not matter when using the
             extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
             before subclasses.
         </para>
@@ -2585,7 +2640,7 @@ public class Cat {
     private char sex;
     private float weight;
 
-    /**
+    /*
      * @hibernate.id
      *  generator-class="native"
      *  column="CAT_ID"
@@ -2692,6 +2747,34 @@ public class Cat {
             support for mapping metadata is available via the <emphasis>Hibernate Annotations</emphasis>
             package, as a separate download. Both EJB3 (JSR-220) and Hibernate3 metadata is supported.
         </para>
+
+        <para>
+            This is an example of a POJO class annotated as an EJB entity bean:
+        </para>
+
+        <programlisting><![CDATA[@Entity(access = AccessType.FIELD)
+public class Customer implements Serializable {
+
+    @Id;
+    Long id;
+
+    String firstName;
+    String lastName;
+    Date birthday;
+
+    @Transient
+    Integer age;
+
+    @Dependent
+    private Address homeAddress;
+
+    @OneToMany(cascade=CascadeType.ALL,
+               targetEntity="Order")
+    @JoinColumn(name="CUSTOMER_ID")
+    Set orders;
+
+    // Getter/setter and business methods
+}]]></programlisting>
 
         <para>
             Note that support for JDK 5.0 Annotations (and JSR-220) is still work in progress and

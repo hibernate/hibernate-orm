@@ -12,7 +12,7 @@
         Hibernate works best if these classes follow some simple rules, also known
         as the Plain Old Java Object (POJO) programming model. However, Hibernate3
         allows you to express a domain model in other ways: using trees of 
-	<literal>Map</literal> instances, for example.
+        <literal>Map</literal> instances, for example.
     </para>
 
     <sect1 id="persistent-classes-pojo">
@@ -134,16 +134,16 @@ public class Cat {
                 persistent classes must have a default constructor (which may be non-public) so 
                 Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>.
                 We recommend having a constructor with at least <emphasis>package</emphasis> 
-		visibility for runtime proxy generation in Hibernate.
+                visibility for runtime proxy generation in Hibernate.
             </para>
         </sect2>
 
-        <sect2 id="persistent-classes-pojo-identifier">
+        <sect2 id="persistent-classes-pojo-identifier" revision="1">
             <title>Provide an identifier property (optional)</title>
 
             <para>
                 <literal>Cat</literal> has a property called <literal>id</literal>. This property 
-                holds the primary key column of a database table. The property might have been called 
+                maps to the primary key column of a database table. The property might have been called
                 anything, and its type might have been any primitive type, any primitive "wrapper" 
                 type, <literal>java.lang.String</literal> or <literal>java.util.Date</literal>. (If 
                 your legacy database table has composite keys, you can even use a user-defined class 
@@ -165,7 +165,7 @@ public class Cat {
                 <listitem>
                     <para>
                         Transitive reattachment for detached objects (cascade update) - 
-			see "Lifecycle Objects"
+                        see "Lifecycle Objects"
                     </para>
                 </listitem>
                 <listitem>
@@ -190,8 +190,8 @@ public class Cat {
             </para>
             <para>
                 You can persist <literal>final</literal> classes that do not implement an interface
-                with Hibernate, but you won't be able to use proxies for lazy associationfetching - 
-		which will limit your options for performance tuning.
+                with Hibernate, but you won't be able to use proxies for lazy association fetching -
+                which will limit your options for performance tuning.
             </para>
         </sect2>
         
@@ -219,20 +219,20 @@ public class DomesticCat extends Cat {
 }]]></programlisting>
     </sect1>
 
-    <sect1 id="persistent-classes-equalshashcode">
+    <sect1 id="persistent-classes-equalshashcode" revision="1">
         <title>Implementing <literal>equals()</literal> and <literal>hashCode()</literal></title>
 
         <para>
             You have to override the <literal>equals()</literal> and <literal>hashCode()</literal>
             methods if you 
-	</para>
+        </para>
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
                     intend to put instances of persistent classes in a <literal>Set</literal>
                     (the recommended way to represent many-valued associations) 
-		    <emphasis>and</emphasis>
-		</para>
+                    <emphasis>and</emphasis>
+                </para>
             </listitem>
             <listitem>
                 <para>
@@ -240,13 +240,13 @@ public class DomesticCat extends Cat {
                 </para>
             </listitem>
         </itemizedlist>
-	
+
         <para>
             Hibernate guarantees equivalence of persistent identity (database row) and Java identity
-	    only inside a particular session scope. So as soon as we mix instances retrieved in 
-	    different sessions, we must implement <literal>equals()</literal> and 
-	    <literal>hashCode()</literal> if we wish to have meaningful semantics for
-	    <literal>Set</literal>s.
+            only inside a particular session scope. So as soon as we mix instances retrieved in
+            different sessions, we must implement <literal>equals()</literal> and
+            <literal>hashCode()</literal> if we wish to have meaningful semantics for
+            <literal>Set</literal>s.
         </para>
 
         <para>
@@ -255,15 +255,20 @@ public class DomesticCat extends Cat {
             be the same database row, they are therefore equal (if both are added to a <literal>Set</literal>,
             we will only have one element in the <literal>Set</literal>). Unfortunately, we can't use that
             approach with generated identifiers! Hibernate will only assign identifier values to objects 
-	    that are persistent, a newly created instance will not have any identifier value! We recommend 
-	    implementing <literal>equals()</literal> and <literal>hashCode()</literal> using
-            <emphasis>Business key equality</emphasis>.
+            that are persistent, a newly created instance will not have any identifier value! Furthermore,
+            if an instance is unsaved and currently in a <literal>Set</literal>, saving it will assign
+            an identifier value to the object. If <literal>equals()</literal> and <literal>hashCode()</literal>
+            are based on the identifier value, the hash code would change, breaking the contract of the
+            <literal>Set</literal>. See the Hibernate website for a full discussion of this problem. Note
+            that this is not a Hibernate issue, but normal Java semantics of object identity and equality.
         </para>
 
         <para>
-            Business key equality means that the <literal>equals()</literal>
-            method compares only the properties that form the business key, a key that would
-            identify our instance in the real world (a <emphasis>natural</emphasis> candidate key):
+            We recommend  implementing <literal>equals()</literal> and <literal>hashCode()</literal>
+            using <emphasis>Business key equality</emphasis>. Business key equality means that the
+            <literal>equals()</literal> method compares only the properties that form the business
+            key, a key that would identify our instance in the real world (a
+            <emphasis>natural</emphasis> candidate key):
         </para>
 
         <programlisting><![CDATA[public class Cat {
@@ -290,9 +295,15 @@ public class DomesticCat extends Cat {
 
 }]]></programlisting>
 
+        <para>
+            Note that a business key does not have to be as solid as a database
+            primary key candidate. Immutable or unique properties are usually good
+            candidates for a business key.
+        </para>
+
     </sect1>
 
-    <sect1 id="persistent-classes-dynamic" revision="1">
+    <sect1 id="persistent-classes-dynamic" revision="2">
         <title>Dynamic models</title>
 
         <para>
@@ -302,42 +313,42 @@ public class DomesticCat extends Cat {
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
-	
+
     <dynamic-class entity-name="TestMap">
-    
+
         <id name="id"
-	    type="long" 
-	    column="ID">
+        type="long"
+        column="ID">
             <generator class="sequence"/>
         </id>
-	
-        <property name="name" 
-	    column="NAME" 
-	    type="string"/>
-	    
-        <property name="address" 
-	    column="ADDRESS" 
-	    type="string"/>
-	    
-        <many-to-one name="parent" 
-	    column="PARENT_ID" 
-	    class="TestMap"/>
-	    
-        <bag name="children" 
-	    inverse="true" 
-	    lazy="false"
-	    cascade="all">
+
+        <property name="name"
+        column="NAME"
+        type="string"/>
+
+        <property name="address"
+        column="ADDRESS"
+        type="string"/>
+
+        <many-to-one name="parent"
+        column="PARENT_ID"
+        class="TestMap"/>
+
+        <bag name="children"
+        inverse="true"
+        lazy="false"
+        cascade="all">
             <key column="PARENT_ID"/>
             <one-to-many class="TestMap"/>
         </bag>
-	
+
     </dynamic-class>
     
 </hibernate-mapping>]]></programlisting>
 
         <para>
             At runtime, you just instantiate <literal>HashMap</literal>s and use 
-	    the Hibernate entity name to refer to a particular type.
+            the Hibernate entity name to refer to a particular type:
         </para>
 
         <programlisting><![CDATA[Session s = openSession();

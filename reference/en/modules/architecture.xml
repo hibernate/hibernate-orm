@@ -250,6 +250,11 @@
         <para>
             Consult the JBoss AS user guide for more information about these options.
         </para>
+
+        <para>
+            Another feature available as a JMX service are runtime Hibernate statistics. See
+            <xref linkend="configuration-optional-statistics"/>.
+        </para>
     </sect1>
 
     <sect1 id="architecture-jca" revision="1">

@@ -797,16 +797,13 @@ hibernate.dialect = \
             </tgroup>
         </table>
 
-        <sect2 id="configuration-optional-dialects">
+        <sect2 id="configuration-optional-dialects" revision="1">
             <title>SQL Dialects</title>
 
             <para>
                 You should always set the <literal>hibernate.dialect</literal> property to the correct
-                <literal>org.hibernate.dialect.Dialect</literal> subclass for your database. This is not
-                strictly essential unless you wish to use <literal>native</literal> or
-                <literal>sequence</literal> primary key generation or pessimistic locking (with, eg.
-                <literal>Session.lock()</literal> or <literal>Query.setLockMode()</literal>).
-                However, if you specify a dialect, Hibernate will use sensible defaults for some of the
+                <literal>org.hibernate.dialect.Dialect</literal> subclass for your database. If you
+                specify a dialect, Hibernate will use sensible defaults for some of the
                 other properties listed above, saving you the effort of specifying them manually.
             </para>
 
@@ -931,23 +928,24 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-cacheprovider" revision="1">
+        <sect2 id="configuration-optional-cacheprovider" revision="2">
             <title>Second-level and query cache</title>
 
             <para>
                 The properties prefixed by <literal>hibernate.cache</literal>
                 allow you to use a process or cluster scoped second-level cache system
-                with Hibernate. See the "Performance" chapter for more details.
+                with Hibernate. See the <xref linkend="performance-cache"/> for
+                more details.
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-optional-transactionstrategy" revision="1">
+        <sect2 id="configuration-optional-transactionstrategy" revision="3">
             <title>Transaction strategy configuration</title>
 
             <para>
                 If you wish to use the Hibernate <literal>Transaction</literal> API instead
-                of directly calling a particular transaction API, you must
+                of directly calling a particular system transaction API, you must
                 specify a factory class for <literal>Transaction</literal> instances by
                 setting the property <literal>hibernate.transaction.factory_class</literal>.
                 The <literal>Transaction</literal> API hides the underlying transaction
@@ -980,9 +978,10 @@ hibernate.dialect = \
             </para>
 
             <para>
-                If you wish to use a second-level cache for mutable data in a JTA environment, you must specify
-                a strategy for obtaining the JTA <literal>TransactionManager</literal>, since J2EE does not
-                standardize a single mechanism:
+                Some features in Hibernate (i.e. the second level cache) require access to the
+                JTA <literal>TransactionManager</literal> in a management environment. You have to
+                specify how Hibernate should obtain a reference to the <literal>TransactionManager</literal>,
+                since J2EE does not standardize a single mechanism:
             </para>
 
             <table frame="topbot" id="jtamanagerlookup" revision="1">
@@ -1039,7 +1038,7 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-jndi" revision="1">
+        <sect2 id="configuration-optional-jndi" revision="2">
             <title>JNDI-bound <literal>SessionFactory</literal></title>
 
             <para>
@@ -1066,7 +1065,8 @@ hibernate.dialect = \
             <para>
                 Hibernate will automatically place the <literal>SessionFactory</literal> in JNDI after
                 you call <literal>cfg.buildSessionFactory()</literal>. This means you will at least have
-                this call in some startup code (or utility class) in your application.
+                this call in some startup code (or utility class) in your application, unless you use
+                JMX deployment with the <literal>HibernateService</literal>.
             </para>
 
             <para>
@@ -1101,14 +1101,15 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-statistics" revision="1">
+        <sect2 id="configuration-optional-statistics" revision="2">
             <title>Hibernate statistics</title>
 
             <para>
                 If you enable <literal>hibernate.generate_statistics</literal>, Hibernate will 
                 expose a number of metrics that are useful when tuning a running system via
                 <literal>SessionFactory.getStatistics()</literal>. Hibernate can even be configured
-                to expose these statistics via JMX (see the website for details).
+                to expose these statistics via JMX. Read the Javadoc of the interfaces in
+                <literal>org.hibernate.stats</literal> for more information.
             </para>
 
         </sect2>
@@ -1177,8 +1178,8 @@ hibernate.dialect = \
 
     </sect1>
 
-    <sect1 id="configuration-xmlconfig" revision="1">
-        <title>XML Configuration File</title>
+    <sect1 id="configuration-xmlconfig" revision="2">
+        <title>XML configuration file</title>
 
         <para>
             An alternative approach to configuration is to specify a full configuration in
@@ -1216,6 +1217,11 @@ hibernate.dialect = \
         <mapping resource="org/hibernate/auction/Item.hbm.xml"/>
         <mapping resource="org/hibernate/auction/Bid.hbm.xml"/>
 
+        <!-- cache settings -->
+        <class-cache class="org.hibernate.auction.Item" usage="read-write"/>
+        <class-cache class="org.hibernate.auction.Bid" usage="read-only"/>
+        <collection-cache class="org.hibernate.auction.Item.bids" usage="read-write"/>
+
     </session-factory>
 
 </hibernate-configuration>]]></programlisting>
@@ -1223,11 +1229,14 @@ hibernate.dialect = \
         <para>
             As you can see, the advantage of this approach is the externalization of the
             mapping file names to configuration. The <literal>hibernate.cfg.xml</literal>
-            is also more convenient once you have to tune the Hibernate cache.
+            is also more convenient once you have to tune the Hibernate cache. Note that is
+            your choice to use either <literal>hibernate.properties</literal> or
+            <literal>hibernate.cfg.xml</literal>, both are equivalent, except for the above
+            mentioned benefits of using the XML syntax.
         </para>
 
        <para>
-           Configuring Hibernate is then as simple as
+           With the XML configuration, starting Hibernate is then as simple as
        </para>
 
        <programlisting><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>

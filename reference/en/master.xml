@@ -2,7 +2,6 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
                       "../support/docbook-dtd/docbookx.dtd"
 [
-<!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
 <!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
 <!ENTITY architecture           SYSTEM "modules/architecture.xml">
 <!ENTITY configuration          SYSTEM "modules/configuration.xml">
@@ -119,7 +118,7 @@
             <listitem>
                 <para>
                     The Community Area on the Hibernate website is a good source for
-                    design patterns and various integration solutions (Tomcat, JBoss, Spring,
+                    design patterns and various integration solutions (Tomcat, JBoss,
                     Struts, EJB, etc.).
                 </para>
             </listitem>
@@ -142,9 +141,9 @@
     </preface>
 
     &quickstart;
-    
+<!--
     &tutorial;
-
+-->
     &architecture;
 
     &configuration;

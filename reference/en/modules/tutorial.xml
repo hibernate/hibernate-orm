@@ -1,13 +1,26 @@
 <chapter id="tutorial">
-    <title>A Tutorial Introduction to Hibernate</title>
+    <title>Introduction to Hibernate</title>
     
     <sect1 id="tutorial-intro">
         <title>Preface</title>
         
         <para>
-            This chapter is an introductory tutorial for new users of Hibernate. We start up with a simple command line application using an in-memory database and develop it further in small steps, until we reach a full fledged J2EE-Application using Tomcat and WebWork.
+            This chapter is an introductory tutorial for new users of Hibernate. We start
+            with a simple command line application using an in-memory database and develop
+            it further in small steps, until we reach a full fledged J2EE application using
+            Tomcat and WebWork.
+        </para>
 
-            This tutorial is intended to be for beginning users of Hibernate, but with advanced Java knowledge. It increases slowly in speed, and we hope is as understandable as possible - if you work through it and meet points where you find it difficult to understand, please let us know.
+        <para>
+            This tutorial is intended for new users of Hibernate, but with advanced Java knowledge.
+            It you work on it and find it difficult to understand, please let us know.
+        </para>
+
+        <para>
+            This tutorial was written by Michael Gloegl, he also maintains an online version
+            at http://www.gloegl.de/5.html - please direct comments and corrections to
+            <literal>michael@hibernate.org. If you need assistance with Hibernate, use the
+            Hibernate users forum at http://forum.hibernate.org/</literal>
         </para>
         
     </sect1>
@@ -15,15 +28,21 @@
     <sect1 id="tutorial-firstapp">
         <title>Part 1 - The first Hibernate Application</title>
         <para>
-            For the beginning, we will do a very simple console based Hibernate Application. We will use an in-memory database, so we do not have to install any database server. 
+            First we'll create a simple console-based Hibernate Application. We use an
+            in-memory database (HSQL DB), so we do not have to install any database server.
         </para>
 
         <para>
-            Let's assume we want to have a small application where we can store events we want to attend and who hosts these events.
+            Let's assume we want to have a small application that can store events we want to
+            attend and information about the hosts of these events.
         </para>
             
         <para>
-            So the first thing we will do is set up our development directory and put all the jar-Files we need in it. We have to download the Hibernate distribution from the Hibernate download page. Extract the needed jars from the hibernate archive. We will place them all in a lib directory under the development dir, so your devel directory should now look like this:
+            The first thing we do is set up our development directory and put all the
+            Java libraries we need into it. Download the Hibernate distribution from the
+            Hibernate website's download page. Extract the archive and place all libraries
+            found in /lib/ into into the /lib/ directory of your new development workdir.
+            It should look like this:
         </para>
             
         <programlisting><![CDATA[.
@@ -37,21 +56,33 @@
       dom4j-1.5.2.jar            
       jdbc2_0-stdext.jar  
       log4j-1.2.9.jar ]]></programlisting>
+
+        <para>
+            This is the minimum set of required libraries (note that we also copied
+            hibernate3.jar, the main archive) for Hibernate. See the Readme.txt file
+            in the /lib/ directory of the Hibernate distribution for more information
+            about required and optional third-party libraries.
+        </para>
       
         <sect2 id="tutorial-firstapp-firstclass">
             <title>The first class</title>
             
             <para>
-                So the next thing we will do is create a class which represents the events we want to store. This will be just a simple Java Bean, which contains some properties. Let's look at the code:
+                Next we create a class that represents the events we want to store in
+                the database. This is just a simple JavaBean class with some simple
+                properties. Let's have a look at the code:
             </para>
             <programlisting><![CDATA[package de.gloegl.road2hibernate;
 
 import java.util.Date;
 
 public class Event {
+    private Long id;
+
     private String title;
     private Date date;
-    private Long id;
+
+    Event() {}
 
     public Long getId() {
         return id;
@@ -77,57 +108,99 @@ public class Event {
         this.title = title;
     }
 }]]></programlisting>
+
             <para>
-                Some things are noteworthy here:
+                You can see that this class uses standard JavaBean naming conventions for property
+                getter and setter methods, as well as private visibility for the fields. This is
+                a recommended design - but not required. Hibernate can also access fields directly,
+                the benefit of accessor methods is robustness for application refactorings.
             </para>
 
             <para>
-                The id property is a unique id for the Event - all our persistent objects will need such an id. A good idea when building hibernate applications is to keep such unique ids separate from the application logic. This means we will not manipulate the id anywhere in our code, and leave it to Hibernate to care about it. That's why the setter of the id is private, allowing Hibernate to use them (Hibernate may access property get- and set-Methods of all visibilities), but shielding it from us.
+                The <literal>id</literal> property holds a unique identifier value for a particular.
+                Event instance - all our persistent entity classes (there are less important dependent
+                classes as well) will need such an identifer property if we want to use the full feature
+                set of Hibernate. In fact, most applications (esp. web applications) need to identify
+                particular objects, so you should consider this a feature rather than a limitation.
+                However, we usually don't manipulate the identity of an object, hence the setter method
+                should be private. Only Hibernate will assign identifiers when an object is saved. You
+                can see that Hibernate can access public, private, and protected accessor methods, as
+                well as (public, private, protected) fields directly. The choice is up to you and you
+                can match it to fit your application design.
             </para>
 
             <para>
-                We are also using a true <literal>Long</literal> for the id, not a primitive type <literal>long</literal>. This will save us a lot of hassles later on - so always use Objects for the id property, never primitive types (If it is possible).
+                The no-argument constructor is a requirement for all persistent classes as Hibernate
+                has to instanciate objects for you, using Java Reflection. The constructor can be
+                private, however, package visibility is required for runtime proxy generation and
+                efficient data retrieval.
             </para>
 
             <para>
-                We will place this file in a directory called src in our development folder. The directory should now look like this:
+                We place this Java source file in a directory called <literal>src</literal> in our
+                development folder. The directory should now look like this:
             </para>
-            <programlisting><![CDATA[.
-   +lib
-      <here are the jar files>
+
+            <programlisting><![CDATA[+lib
+      <Hibernate and third-party libraries>
    +src
       +de
          +gloegl
              +road2hibernate
                 Event.java]]></programlisting>
+
+            <para>
+                In the next step, we tell Hibernate about this persisten class.
+            </para>
                 
         </sect2>
+
         <sect2 id="tutorial-firstapp-mapping">
             <title>The mapping file</title>
+
             <para>
-                As we now have our class to store in the database, we must of course tell hibernate how to persist it. This is where the mapping file comes into play. The mapping file tells Hibernate what should stored in the database - and how.
+                Hibernate needs to know how to load and store objects of our entity class.
+                This is where the Hibernate mapping file comes into play. The mapping file
+                tells Hibernate what table in the database it has to access, and what columns
+                in that table it should use.
             </para>
 
             <para>
                 The basic structure of a mapping file looks like this:
             </para>
+
             <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-
+[...]
 </hibernate-mapping>]]></programlisting>
-            <para>
-                Between the two <literal>hibernate-mapping</literal> tags, we will include a <literal>class</literal> element, where we can declare which class this mapping refers to and to which table in our SQL database the class should be mapped. So step 2 of our mapping document looks like this:
-            </para>
-            <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping>
+            <para>
+                Note that the Hibernate DTD is very sophisticated. You can use it for
+                auto-completion of XML mapping elements and attributes in your editor or
+                IDE. You also should open up the DTD file in your text editor - it's the
+                easiest way to get an overview of all elements and attributes and see
+                the defaults, as well as some comments. Also note that Hibernate will not
+                load the DTD file from the web, as the URL might suggest, but first looks
+                into the classpath of your application. The DTD file is included in hibernate3.jar
+                as well as in the <literal>src/</literal> directory of the Hibernate distribution.
+            </para>
+
+            <para>
+                We will ommit the DTD declaration in future examples to shorten the code.
+            </para>
+
+            <para>
+                Between the two <literal>hibernate-mapping</literal> tags, we include a
+                <literal>class</literal> element. All persistent entity classes (again, there
+                might be dependent classes later on, which are not first-class entities) need
+                such a mapping, to a table in our SQL database:
+            </para>
+
+            <programlisting><![CDATA[<hibernate-mapping>
 
         <class name="de.gloegl.road2hibernate.Event" table="EVENTS">
                 
@@ -136,164 +209,236 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                So what we have done so far is telling hibernate to persist our class <literal>Event</literal> to the table <literal>EVENTS</literal>. No we will have to give hibernate the property to use as unique identifier - which is what we have included the id property for. In addition, as we don't want to care about handling this id value, we have to tell hibernate how to generate the ids. Including this, our mapping file looks like this:
+                What we have done so far is telling Hibernate how to persist and load objects
+                of our class <literal>Event</literal> to the table <literal>EVENTS</literal>. Now
+                we continue with a mapping of the unique identifier property. In addition, as we
+                don't want to care about handling this identifier, we configure Hibernate's
+                identifier generation strategy:
             </para>
-            <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping>
+            <programlisting><![CDATA[<hibernate-mapping>
 
         <class name="de.gloegl.road2hibernate.Event" table="EVENTS">
-                <id name="id" column="uid" type="long">
-                        <generator class="increment"/>
+                <id name="id" column="EVENT_ID">
+                    <generator class="increment"/>
                 </id>                
         </class>
 
 </hibernate-mapping>]]></programlisting>
+
             <para>
-                So what does all this mean? The <literal>id</literal> element is the declaration of the id property. <literal>name="id"</literal> is the name of the property - hibernate will use <literal>getId</literal> and <literal>setId</literal> to access it. The column attribute tells hibernate which column of the <literal>EVENT</literal> table will contain the id. The <literal>type</literal> attribute tells hibernate about the property type - in this case a long. For now the <literal>type</literal> attribute is not important to us, if you want to know more about it see <xref linkend="mapping-types"/>
+                The <literal>id</literal> element is the declaration of the identifer property,
+                <literal>name="id"</literal> declares the name of the Java property -
+                Hibernate will use <literal>getId()</literal> and <literal>setId()</literal> to
+                access it. The column attribute tells Hibernate which column of the
+                <literal>EVENTS</literal> table we use for this primary key. The nested
+                <literal>generator</literal> element specifies the identifier generation strategy
+                - in this case we use <literal>increment</literal>, which is a very simple in-memory
+                number generation method useful mostly for testing (and tutorials). Hibernate also
+                supports database generated, globally unique, as well as application assigned
+                identifiers.
             </para>
 
             <para>
-                The <literal>generator</literal> element specifies the id generation technique to use - in this case we will use increment, which is a very simple generation method, but which we will use in our small example as it is sufficient here.
-            </para>
-
-            <para>
-                Finally we have to include declarations for the persistent properties in the mapping file:
+                Finally we have to include declarations for the persistent properties in
+                the mapping file. By default, no properties of the class are considered
+                persistent:
             </para>
             
-            <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-
+            <programlisting><![CDATA[
 <hibernate-mapping>
 
         <class name="de.gloegl.road2hibernate.Event" table="EVENTS">
-                <id name="id" column="uid" type="long">
+                <id name="id" column="EVENT_ID">
                         <generator class="increment"/>
                 </id>
-                <property name="date" type="timestamp"/>
-                <property name="title" column="eventtitle"/>
+                <property name="date" type="timestamp" column="EVENT_DATE/>
+                <property name="title"/>
         </class>
 
 </hibernate-mapping>]]></programlisting>
             
             <para>
-                There are a few things noteworthy here. At first, just as with the <literal>id</literal> element, the <literal>name</literal> attribute of the <literal>property</literal> element tells Hibernate which get- and set-methods to use.
+                Just as with the <literal>id</literal> element, the <literal>name</literal>
+                attribute of the <literal>property</literal> element tells Hibernate which getter
+                and setter methods to use.
             </para>
 
             <para>
-                However, you will notice that the <literal>title</literal> property contains a <literal>column</literal> attribute, however the <literal>date</literal> attribute does not. This is possible because when the column attribute is left out, Hibernate by default uses the property name as column name.
+                Why does the <literal>date</literal> property mapping include the
+                <literal>column</literal> attribute, but the <literal>title</literal>
+                doesn't? When the <literal>column</literal> attribute is ommitted, Hibernate
+                by default uses the property name as the column name. This works fine for
+                <literal>title</literal>. However, <literal>date</literal> is a reserved
+                keyword in most database, so we better map it to a different name.
             </para>
 
             <para>
-                The next interesting thing is that the <literal>title</literal> property lacks a <literal>type</literal> attribute. Again, Hibernate will try to determine the correct type itself if the type attribute is left out. Sometimes however Hibernate just can't do that and we have to specify the type - as it is the case with the date property. Hibernate can't know if the property will map to a date, timestamp or time column in the database, so we have to specify this.
+                The next interesting thing is that the <literal>title</literal> property lacks
+                a <literal>type</literal> attribute. The types we declare and use in the mapping
+                files are not, like you might expect, Java data types. They are also not SQL
+                database types. These types are so called <emphasis>Hibernate mapping types</emphasis>,
+                converters which can translate from Java to SQL data types and vice versa. Again,
+                Hibernate will try to determine the correct conversion and mapping type itself if
+                the mapping attribute is not present. In some cases this automatic detection (using
+                Reflection on the Java class) might not have the default you expect or need.
+                This is the case with the <literal>date</literal> property. Hibernate can't know if
+                the property will map to a SQL <literal>date</literal>, <literal>timestamp</literal>
+                or <literal>time</literal> column. We declare that we want to preserve full date
+                and time information by mapping the property with a <literal>timestamp</literal>.
             </para>
 
             <para>
-                We will place the mapping in a file called <literal>Event.hbm.xml</literal> right in the directory where our <literal>Event</literal> class is located. So your directory structure should now look like this:
+                This mapping file should be saved as <literal>Event.hbm.xml</literal>, right in
+                the directory where our <literal>Event</literal> Java source class is located.
+                The naming of mapping files can be arbitrary, however the <literal>hbm.xml</literal>
+                became convention in the Hibernate developer community. The directory structure
+                should now look like this:
             </para>
 
-            <programlisting><![CDATA[.
-   +lib
-      <here are the jar files>
+            <programlisting><![CDATA[+lib
+      <Hibernate and third-party libraries>
    +src
       +de
          +gloegl
              +road2hibernate
-                Event.java
-                Event.hbm.xml]]></programlisting>    
+             Event.java
+             Event.hbm.xml]]></programlisting>
+
+             <para>
+                 We continue with the main configuration of Hibernate.
+             </para>
+
         </sect2>
+
         <sect2 id="tutorial-firstapp-configuration">
-            <title>Configuration and Database</title>
+            <title>Hibernate configuration</title>
+
             <para>
-                As we now have our persistent class and the mapping file it is time to configure Hibernate. Before we do this, we will need a database however, so we go on and get HSQLDB, a java-based in-memory SQL Database, from the HSQLDB website. What we need is the <literal>hsqldb.jar</literal> from the lib directory of the zip download. We will place it in our lib directory which should now look like this:
+                As we now have the persistent class and the mapping file
+                in place, it is time to configure Hibernate. Before we do this, we will need
+                a database. HSQL DB, a java-based in-memory SQL Database, can be downloaded from
+                the HSQL DB website. Actually, you only need the <literal>hsqldb.jar</literal>
+                from the /lib/ directory of the download. Place this file in the lib directory
+                of the development folder.
             </para>
-            <programlisting><![CDATA[.
-   +lib
-      <hibernate jars>
-      hsqldb.jar
-   +src
-      <source and mapping files are here>]]></programlisting>    
+
             <para>
-                In addition, we will create a directory data right under our development directory, where hsqldb will store its files.
+                Create a directory called <literal>data</literal> in the development
+                directory - this is where HSQL DB will store its data files.
             </para>
+
             <para>
-                Now Hibernate configuration can be done in an xml file, which we will call <literal>hibernate.cfg.xml</literal> and place it directly in the src folder of our development directory. This file looks like this:
+                Hibernate will connect to this database, so it needs connection information. The
+                connections will be made through a JDBC connection pool, which we also have to
+                configure. The Hibernate distribution contains several open source connection pools,
+                but we have decided to use the buil-in connection pool for this tutorial. Note that
+                you have to copy the required library into your classpath and use different
+                connection pooling settings if you want to use a production-quality third party
+                JDBC pooling software.
             </para>
+
+            <para>
+                We can use a simple <literal>hibernate.properties</literal> file, a slightly
+                more sophisticated <literal>hibernate.cfg.xml</literal> file, or even complete
+                programmatic setup to configure Hibernate. Most users prefer the XML configuration
+                file:
+            </para>
+
             <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE hibernate-configuration PUBLIC
         "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-
- "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 
 <hibernate-configuration>
 
     <session-factory>
-        <property name="hibernate.connection.driver_class">org.hsqldb.jdbcDriver</property>
-        <property name="hibernate.connection.url">jdbc:hsqldb:data/test</property>
-        <property name="hibernate.connection.username">sa</property>
-        <property name="hibernate.connection.password"></property>
+
+        <!-- Database connection settings -->
+        <property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
+        <property name="connection.url">jdbc:hsqldb:data/test</property>
+        <property name="connection.username">sa</property>
+        <property name="connection.password"></property>
+
+        <!-- JDBC connection pool (use the built-in) -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- SQL dialect -->
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>
-        <property name="transaction.factory_class">
-             org.hibernate.transaction.JDBCTransactionFactory
-        </property>
-        <property name="hibernate.cache.provider_class">
-             org.hibernate.cache.HashtableCacheProvider
-        </property>
-        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- Drop and re-create the database schema on startup -->
+        <property name="hbm2ddl.auto">create</property>
 
         <mapping resource="de/gloegl/road2hibernate/Event.hbm.xml"/>
 
     </session-factory>
 
-</hibernate-configuration>]]></programlisting>    
+</hibernate-configuration>]]></programlisting>
+
             <para>
-                The first four <literal>property</literal> elements contain the necessary configuration for the JDBC-Connection Hibernate will use. The dialect <literal>property</literal> element specifies the SQLdialect Hibernate shall generate. Next we specify that Hibernate shall delegate transactions to the underlying JDBC connection and specify a simple cache provider (this is without effect because we don't use any caching yet). The next <literal>property</literal> tells hibernate to automatically adjust the tables in the database according to our mappings. Finally we give the path to our mapping file.
+                Note that this XML configuration uses a different DTD. We configure
+                Hibernate's <literal>SessionFactory</literal> - a global factory responsible
+                for a particular database. If you have several databases, use several
+                <literal>&lt;session-factory&gt;</literal> configurations, usually in
+                several configuration files.
+            </para>
+
+            <para>
+                The first four <literal>property</literal> elements contain the necessary
+                configuration for the JDBC connection. The dialect <literal>property</literal>
+                element specifies the particular SQL variant Hibernate generates.
+                The <literal>hbm2ddl.auto</literal> option turns on automatic generation of
+                database schemas - directly into the database. This can of course also be turned
+                off (by removing the config option) or redirected to a file for tuning, through
+                an Ant task. Finally, we point Hibernate to our mapping file(s).
             </para>        
+
         </sect2>
+
         <sect2 id="tutorial-firstapp-building">
             <title>Building</title>
+
             <para>
-                So finally we can start building our first application. For convenience, we create a batch file in our development directory which contains all commands necessary for compilation. Under Windows, this would look like this:
+                For convenience, we create a batch file in our development directory that
+                contains all commands necessary for compilation of the application. Under
+                Windows, this would look like this:
             </para>
-            <programlisting><![CDATA[javac -classpath .\lib\hibernate3.jar -d bin src\de\gloegl\road2hibernate\*.java
-copy /Y src\hibernate.cfg.xml bin
-copy /Y src\de\gloegl\road2hibernate\*.xml bin\de\gloegl\road2hibernate]]></programlisting>
+            <programlisting><![CDATA[javac -classpath .\lib\hibernate3.jar -d build src\de\gloegl\road2hibernate\*.java
+copy /Y src\hibernate.cfg.xml build
+copy /Y src\de\gloegl\road2hibernate\*.xml build\de\gloegl\road2hibernate]]></programlisting>
+
             <para>
-                We place this file called <literal>build.bat</literal> in our development directory. If you are using Linux, you can surely create an equivalent shell script.
+                Place this file called <literal>build.bat</literal> in the development directory
+                and create the <literal>build</literal> subdirectory. If you are using Linux, you
+                can create an equivalent shell script. We'll migrate to an Ant build later.
             </para>
-            <para>
-                Finally we create the bin subdirectory of our development directory to place the compiled classes in.
-            </para>
+
         </sect2>
+
         <sect2 id="tutorial-firstapp-running">
-            <title>Running</title>
+            <title>Setup and helpers</title>
+
             <para>
-                So now we will create a simple class which will start up Hibernate. It looks like this:
+                It's time to load and store some <literal>Event</literal> objects, but first
+                we have to complete the setup with some infrastructure code. We have to startup
+                Hibernate (this means creating a <literal>SessoinFactory</literal> and store it
+                somewhere for easy access) and we will need some convenience methods for accessing
+                Hibernate <literal>Session</literal>'s. A particular <literal>Session</literal>
+                represents a single-threaded unit of work, the <literal>SessionFactory</literal>
+                is a thread-safe global object, instantiated once.
             </para>
-            <programlisting><![CDATA[package de.gloegl.road2hibernate;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
-
-public class EventManager {
-   
-    public static void main(String[] args) {
-        Session s = HibernateUtil.currentSession();
-        HibernateUtil.closeSession();
-        System.exit(0);    
-    }
-
-}]]></programlisting>
             <para>
-                This class just uses a class called <literal>HibernateUtil</literal> to get a <literal>Session</literal> instance. <literal>HibernateUtil</literal> is where all the magic goes on. It uses the so called "ThreadLocal Session Pattern" to keep the current session associated with the current thread. Lets have a look at it:
+                We'll create a <literal>HibernateUtil</literal> helper class that takes care
+                of startup and makes <literal>Session</literal> handling convenient. This helper
+                classes will use the so called <emphasis>ThreadLocal Session</emphasis> pattern to
+                keep the current unit of work associated with the current thread. Let\s have a look
+                at it:
             </para>
+
             <programlisting><![CDATA[package de.gloegl.road2hibernate;
 
 import org.hibernate.*;
@@ -305,7 +450,7 @@ public class HibernateUtil {
 
     static {
         try {
-            // Create the SessionFactory
+            // Create the SessionFactory from hibernate.cfg.xml
             sessionFactory = new Configuration().configure().buildSessionFactory();
         } catch (Throwable ex) {
             // Make sure you log the exception, as it might be swallowed
@@ -318,9 +463,10 @@ public class HibernateUtil {
 
     public static Session currentSession() throws HibernateException {
         Session s = (Session) session.get();
-        // Open a new Session, if this Thread has none yet
+        // Open a new Session, if this thread has none yet
         if (s == null) {
             s = sessionFactory.openSession();
+            // Store it in the ThreadLocal variable
             session.set(s);
         }
         return s;
@@ -328,17 +474,34 @@ public class HibernateUtil {
 
     public static void closeSession() throws HibernateException {
         Session s = (Session) session.get();
-        session.set(null);
         if (s != null)
             s.close();
+        session.set(null);
     }
 }]]></programlisting>
+
             <para>
-                This class does not only create the <literal>SessionFactory</literal> in its static initializer, but also has a <literal>ThreadLocal</literal> variable which holds the <literal>Session</literal> for the current thread. Make sure you understand the Java concept of a thread-local variable before you try to use this helper. A more complex and powerful <literal>HibernateUtil</literal> class can be found in <literal>CaveatEmptor</literal>, http://caveatemptor.hibernate.org/
+                This class does not only produce the global <literal>SessionFactory</literal> in
+                it's static initializer (called once by the JVM when the class is loaded), but also
+                has a <literal>ThreadLocal</literal> variable that holds the
+                <literal>Session</literal> for the current thread. No matter when you call
+                <literal>HibernateUtil.currentSession()</literal>, it will always return the same
+                Hibernate unit of work in the same thread. A call to <literal>HibernateUtil.closeSession()</literal>
+                ends the unit of work currently associated with the thread.
             </para>
+
             <para>
-                Place both the EventManager.java and the HibernateUtil.java in the directory where Event.java already is:
+                Make sure you understand the Java concept of a thread-local variables before you
+                use this helper. A more powerful <literal>HibernateUtil</literal> helper can be found
+                in <literal>CaveatEmptor</literal> on http://caveatemptor.hibernate.org/ - as well as
+                in the book "Hibernate in Action".
             </para>
+
+            <para>
+                Place <literal>HibernateUtil.java</literal> in the development source directory, next
+                to <literal>Event.java</literal>:
+            </para>
+
             <programlisting><![CDATA[.
    +lib
       antlr-2.7.4.jar
@@ -357,56 +520,74 @@ public class HibernateUtil {
              +road2hibernate
                 Event.java
                 Event.hbm.xml
-                EventManager.java
                 HibernateUtil.java
       hibernate.cfg.xml
    +data
    build.bat]]></programlisting>
+
             <para>
-                Now compile everything by starting build.bat in the development directory. Run the application by running this in the development directory (all in one line):
+                Now compile everything by calling <literal>build.bat</literal> in the development
+                directory. Run the application by executin in the development directory (all in one line):
             </para>
+
             <programlisting><![CDATA[java -classpath .\lib\hibernate3.jar;.\lib\log4j-1.2.9.jar;.\lib\jta.jar;
 .\lib\antlr-2.7.4.jar.\lib\commons-logging-1.0.4.jar;.\lib\hsqldb.jar;
 .\lib\cglib-full-2.0.2.jar;.\lib\commons-collections-2.1.1.jar;
 .\lib\dom4j-1.5.2.jar;.\lib\jdbc2_0-stdext.jar;
-.\bin de.gloegl.road2hibernate.EventManager]]></programlisting>
+.\build de.gloegl.road2hibernate.EventManager]]></programlisting>
+
             <para>
                 This should produce the following output:
             </para>            
+
             <programlisting><![CDATA[Initializing Hibernate
 log4j:WARN No appenders could be found for logger (org.hibernate.cfg.Environment).
 log4j:WARN Please initialize the log4j system properly.
 Finished Initializing Hibernate]]></programlisting>
+
             <para>
-                Let's place this line in a batch file too, so we can run it a little more conveniently. Place it in the development directory, called <literal>run.bat</literal> (add %1 %2 %3 %4 %5 at the end of the line).
+                Let's place this line in a batch file, to save time. Put it in the development directory
+                as <literal>run.bat</literal> and add %1 %2 %3 %4 %5 at the end of the line.
             </para>
 
             <para>
-                So we are happy that we don't have any errors so far - but we still want to see what Hibernate is doing during startup and want to get rid of those warnings, so we have to configure log4j. This is done by putting the following file called <literal>log4j.properties</literal> in your src-Directory:
+                We didn't see any errors in the run output but we still want to see what Hibernate is
+                doing during startup and want to get rid of the log4j warnings. We have to configure
+                log4j to solve both issues. Put a file called <literal>log4j.properties</literal> into
+                your <literal>src</literal> directory, next to <literal>hibernate.cfg.xml</literal>:
             </para>
+
             <programlisting><![CDATA[log4j.rootCategory=INFO, A1
 log4j.appender.A1=org.apache.log4j.ConsoleAppender
 log4j.appender.A1.layout=org.apache.log4j.PatternLayout
 log4j.appender.A1.layout.ConversionPattern=%-5p - %m%n]]></programlisting>
+
             <para>
-                In addition, the following line has to be added to the build.bat:
+                In addition, the following line has to be added to build.bat:
             </para>
-            <programlisting><![CDATA[copy /Y src\log4j.properties bin]]></programlisting>
+
+            <programlisting><![CDATA[copy /Y src\log4j.properties build]]></programlisting>
+
             <para>
-                We won't get into what exactly this all is, in effect it tells log4j to write all log output to the console.
+                This configuration tells log4j to write all INFO level log output to the console.
             </para>
+
             <para>
-                Now recompile the application by starting <literal>build.bat</literal> again, and rerun it - now there should be detailed info what hibernate is doing in your output.
+                Recompile the application by calling <literal>build.bat</literal> again, and rerun
+                it - you should now see detailed Hibernate startup info. Have a look and verify that
+                your Hibernate configuration options are all set correctly.
             </para>            
+
         </sect2>
+
         <sect2 id="tutorial-firstapp-workingpersistence">
-            <title>Working with persistence</title>
+            <title>Loading and storing objects</title>
+
             <para>
-                As we now finally have configured hibernate and our mappings, we take advantage of hibernate and persist some objects. We will adjust our <literal>EventManager</literal> class now to do some work with hibernate.
+                Finally, we can use Hibernate to load and store objects. We write an
+                <literal>EventManager</literal> class with a <literal>main()</literal> method:
             </para>
-            <para>
-                At first we modify the <literal>main</literal>-Method:
-            </para>
+
             <programlisting><![CDATA[public static void main(String[] args) throws java.text.ParseException {
     EventManager instance = new EventManager();
     if (args[0].equals("store")) {
@@ -416,26 +597,39 @@ log4j.appender.A1.layout.ConversionPattern=%-5p - %m%n]]></programlisting>
     }
     System.exit(0);    
 }]]></programlisting>
+
             <para>
-                So what we do here is read some arguments from the command line, and if the first argument to our application is store, we take the second argument as the title, create a new <literal>Date</literal> and pass both to the <literal>store</literal> method, where it gets really interesting:
+                We read some arguments from the command line, and if the first argument is
+                "store", we take the second argument as the title of the event, create a new
+                <literal>Date</literal> and pass both to the <literal>store</literal> method:
             </para>
+
             <programlisting><![CDATA[private void store(String title, Date theDate) {
-    Session session = sessionFactory.openSession();
+    Session session = HibernateUtil.currentSession();
     Transaction tx = session.beginTransaction();
-        
+
     Event theEvent = new Event();
     theEvent.setTitle(title);
     theEvent.setDate(theDate);
     
     session.save(theEvent);
-    
+
     tx.commit();
     hsqlCleanup(session);
     session.close();
 }]]></programlisting>
+
             <para>
-                We simply create a new <literal>Event</literal> object, and hand it over to Hibernate. Hibernate now takes care of creating the SQL, and sending it to the database. We can even start and stop transactions, which Hibernate will delegate to the JDBC connection.
+                We create a new <literal>Event</literal> object, and hand it over to Hibernate.
+                Hibernate now takes care of creating the SQL, and sending <literal>INSERT</literal>s
+                to the database. Let's spent a second on the <literal>Session</literal> and
+                <literal>Transaction</literal>-handling code. TODO: continue here
             </para>
+
+            <!-- TODO: continue here -->
+
+
+
             <para>
                 The method <literal>hsqlCleanup</literal> listed below performs some necessary shutdown code telling HsqlDB to remove all its lock-files and flush its logs. This is not a direct hibernate requirement, so this would not be necessary when using a "real" database.
             </para>

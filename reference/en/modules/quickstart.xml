@@ -1,7 +1,7 @@
 <chapter id="quickstart">
     <title>Quickstart with Tomcat</title>
 
-    <sect1 id="quickstart-intro" revision="1">
+    <sect1 id="quickstart-intro" revision="2">
         <title>Getting started with Hibernate</title>
 
         <para>
@@ -10,7 +10,8 @@
             well in a managed environment with all major J2EE application servers, or
             even in standalone Java applications. The database system used in this
             tutorial is PostgreSQL 7.4, support for other database is only a matter
-            of changing the Hibernate SQL dialect configuration.
+            of changing the Hibernate SQL dialect configuration and connection
+            properties.
         </para>
 
         <para>
@@ -80,6 +81,15 @@
                     </row>
                 </thead>
                 <tbody>
+                    <row>
+                        <entry>
+                            antlr (required)
+                        </entry>
+                        <entry>
+                            Hibernate uses ANTLR to produce query parsers, this library is
+                            also needed at runtime.
+                        </entry>
+                    </row>
                     <row>
                         <entry>
                             dom4j (required)
@@ -491,7 +501,7 @@ public class HibernateUtil {
 
     public static final ThreadLocal session = new ThreadLocal();
 
-    public static Session currentSession() throws HibernateException {
+    public static Session currentSession() {
         Session s = (Session) session.get();
         // Open a new Session, if this Thread has none yet
         if (s == null) {
@@ -501,11 +511,11 @@ public class HibernateUtil {
         return s;
     }
 
-    public static void closeSession() throws HibernateException {
+    public static void closeSession() {
         Session s = (Session) session.get();
-        session.set(null);
         if (s != null)
             s.close();
+        session.set(null);
     }
 }]]></programlisting>
 
@@ -522,13 +532,12 @@ public class HibernateUtil {
             A <literal>SessionFactory</literal> is threadsafe, many threads can access
             it concurrently and request <literal>Session</literal>s. A <literal>Session</literal>
             is a non-threadsafe object that represents a single unit-of-work with the database.
-            <literal>Session</literal>s are opened by a <literal>SessionFactory</literal> and
+            <literal>Session</literal>s are opened from a <literal>SessionFactory</literal> and
             are closed when all work is completed. An example in your servlet's
             <literal>process()</literal> method might look like this (sans exception handling):
         </para>
 
         <programlisting><![CDATA[Session session = HibernateUtil.currentSession();
-
 Transaction tx = session.beginTransaction();
 
 Cat princess = new Cat();
@@ -537,8 +546,8 @@ princess.setSex('F');
 princess.setWeight(7.4f);
 
 session.save(princess);
-tx.commit();
 
+tx.commit();
 HibernateUtil.closeSession();]]></programlisting>
 
         <para>
@@ -603,7 +612,8 @@ tx.commit();]]></programlisting>
         </para>
 
         <para>
-            For a more complex application design, see http://caveatemptor.hibernate.org/
+            For a more complex application example, see http://caveatemptor.hibernate.org/ and
+            have a look at other tutorials linked on http://www.hibernate.org/Documentation
         </para>
 
     </sect1>

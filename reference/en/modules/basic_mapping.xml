@@ -136,7 +136,7 @@
                  <programlisting><![CDATA[<hibernate-mapping
          schema="schemaName"
          catalog="catalogName"
-         default-cascade="none|save-update"
+         default-cascade="cascade_style"
          default-access="field|property|ClassName"
          default-lazy="true|false"
          auto-import="true|false"
@@ -1359,12 +1359,13 @@
                     <area id="manytoone10" coords="11 60"/>
                     <area id="manytoone11" coords="12 60"/>
                     <area id="manytoone12" coords="13 60"/>
+                    <area id="manytoone13" coords="14 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
         column="column_name"
         class="ClassName"
-        cascade="all|none|save-update|delete"
+        cascade="cascade_style"
         fetch="join|select"
         update="true|false"
         insert="true|false"
@@ -1373,6 +1374,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
+        lazy="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1448,18 +1450,30 @@
                             property is dirty.
                         </para>
                     </callout>
+                    <callout arearefs="manytoone13">
+                        <para>
+                            <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
+                            that this property should be fetched lazily when the instance variable is first 
+                            accessed (requires build-time bytecode instrumentation).
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                Setting a value of the <literal>cascade</literal> attribute to not
-                <literal>none</literal> will propagate certain operations to the
-                associated object (usually in a parent/child fashion). See
-                "Lifecycle Objects" discussed later.
+                Setting a value of the <literal>cascade</literal> attribute to any meaningful
+                value other than <literal>none</literal> will propagate certain operations to the
+                associated object. The meaningful values are the names of Hibernate's basic 
+                operations, <literal>create, merge, delete, save-update, evict, replicate, lock,
+                refresh</literal>, as well as the special values <literal>delete-orphan</literal> 
+                and <literal>all</literal> and comma-separated combinations of operation
+                names, for example, <literal>cascade="create,merge,evict"</literal> or
+                <literal>cascade="all,delete-orphan"</literal>. See "Lifecycle Objects" for a full 
+                explanation.
             </para>
             
             <para>
-                A typical <literal>many-to-one</literal> declaration looks as simple as
+                A typical <literal>many-to-one</literal> declaration looks as simple as this:
             </para>
 
             <programlisting><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
@@ -1513,7 +1527,7 @@
                 <programlisting><![CDATA[<one-to-one
         name="propertyName"
         class="ClassName"
-        cascade="all|none|save-update|delete"
+        cascade="cascade_style"
         constrained="true|false"
         fetch="join|select"
         property-ref="propertyNameFromAssociatedClass"
@@ -2099,11 +2113,15 @@
                     <area id="key1" coords="2 50"/>
                     <area id="key2" coords="3 50"/>
                     <area id="key3" coords="4 50"/>
+                    <area id="key4" coords="5 50"/>
+                    <area id="key5" coords="6 50"/>
                 </areaspec>
                 <programlisting><![CDATA[<key
         column="columnname"
         on-delete="noaction|cascade"
         property-ref="propertyName"
+        not-null="true|false"
+        update="true|false"
 />]]></programlisting>
 
                 <calloutlist>
@@ -2128,6 +2146,20 @@
                             legacy data.)
                         </para>
                     </callout>
+                    <callout arearefs="key4">
+                        <para>
+                            <literal>not-null</literal> (optional): Specifies that the foreign key columns
+                            are not nullable (this is implied whenever the foreign key is also part of the
+                            primary key).
+                        </para>
+                    </callout>
+                    <callout arearefs="key5">
+                        <para>
+                            <literal>update</literal> (optional): Specifies that the foreign key should never
+                            be updated (this is implied whenever the foreign key is also part of the primary 
+                            key).
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -2137,6 +2169,13 @@
                 <literal>ON CASCADE DELETE</literal> constraint, instead of many individual 
                 <literal>DELETE</literal> statements. Be aware that this feature bypasses Hibernate's
                 usual optimistic locking strategy for versioned data.
+            </para>
+            
+            <para>
+                The <literal>not-null</literal> and <literal>update</literal> attributes are useful when
+                mapping a unidirectional one to many association. If you map a unidirectional one to many
+                to a non-nullable foreign key, you <emphasis>must</emphasis> declare the key column using
+                <literal>&lt;key not-null="true"&gt;</literal>.
             </para>
 
         </sect2>
@@ -2520,7 +2559,7 @@
         name="propertyName"
         id-type="idtypename"
         meta-type="metatypename"
-        cascade="none|all|save-update"
+        cascade="cascade_style"
         access="field|property|ClassName"
         optimistic-lock="true|false"
 >

@@ -1107,7 +1107,7 @@ finally {
 
     </sect1>
 
-    <sect1 id="manipulatingdata-interceptors">
+    <sect1 id="manipulatingdata-interceptors" revision="1">
         <title>Interceptors</title>
         <para>
             The <literal>Interceptor</literal> interface provides callbacks from the session to the 
@@ -1206,7 +1206,13 @@ public class AuditInterceptor implements Interceptor, Serializable {
         </para>
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
+
+        <para>
+            You may also set an interceptor on a global level, using the <literal>Configuration</literal>:
+        </para>
     
+        <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
+
     </sect1>
     
     <sect1 id="manipulatingdata-metadata">

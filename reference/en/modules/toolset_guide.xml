@@ -149,9 +149,10 @@
 </class>]]></programlisting>
             
 
-            <table frame="topbot" id="schemattributes-summary" revision="1">
+            <table frame="topbot" id="schemattributes-summary" revision="2">
                 <title>Summary</title>
-                <tgroup cols="2">
+                <tgroup cols="3">
+                    <colspec colwidth="1*"/>
                     <colspec colwidth="1*"/>
                     <colspec colwidth="2.5*"/>
                     <thead>
@@ -192,7 +193,10 @@
                             <entry><literal>foreign_key_name</literal></entry>
                             <entry>
                                 specifies the name of the foreign key constraint generated
-                                for an association
+                                for an association, use it on &lt;one-to-one>, &lt;many-to-one>,
+                                &lt;key>, and &lt;many-to-many> mapping elements. Note that
+                                <literal>inverse="true"</literal> sides will not be considered
+                                by <literal>SchemaExport</literal>.
                             </entry>
                         </row>
                         <row>

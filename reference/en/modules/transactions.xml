@@ -508,9 +508,57 @@ finally {
                 appropriate action should be taken.
             </para>
 
+	        <para>
+		        A subtype of <literal>HibernateException</literal> is <literal>SQLException</literal>
+		        which indicate a specific set of error conditions occuring while Hibernate
+		        interacts with the database.
+	        </para>
+
             <para>
-                TODO: document new SQLException converter
+                For SQLExceptions thrown while interacting with the database, Hibernate will
+                attempt to convert the error into a subclass of JDBCException.  The underlying
+                SQLException is accessible by calling <literal>JDBCException.getCause()</literal>.
+                Hibernate converts the SQLException into an appropriate JDBCException subclass
+                based on the SQLExceptionConverter attached to the SessionFactory.  By default,
+                the SQLExceptionConverter is defined by the configured dialect; however, it is
+                also possible to plug in a custom implmentation (see the javadocs for the
+                SQLExceptionConverterFactory class for details).  The standard JDBCException
+                subtypes are:
             </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>JDBCConnectionException</literal> - indicates an error
+                        with the underlying JDBC communication.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>SQLGrammarException</literal> - indicates a grammar
+                        or syntax problem with the issued SQL.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>ConstraintViolationException</literal> - indicates some
+                        form of integrity constraint violation.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>LockAcquisitionException</literal> - indicates an error
+                        acquiring a lock level necessary to perform the requested operation.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>GenericJDBCException</literal> - a generic exception
+                        which did not fall into any of the other categories.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
 
         </sect2>
 

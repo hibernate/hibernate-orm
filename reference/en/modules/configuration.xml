@@ -735,7 +735,7 @@ hibernate.dialect = \
                             <literal>SessionFactory</literal> is created. With
                             <literal>create-drop</literal>, the database schema
                             will be dropped when the <literal>SessionFactory</literal>
-                            is closed explicitely.
+                            is closed explicitly.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>
@@ -908,7 +908,7 @@ hibernate.dialect = \
                 A setting of <literal>1</literal> or higher enables outer join fetching for
                 all one-to-one and many-to-one associations, which are, also by default, set
                 to <literal>auto</literal> outer join. However, one-to-many associations and
-                collections are never fetched with an outer-join, unless explicitely declared
+                collections are never fetched with an outer-join, unless explicitly declared
                 for each particular association. This behavior can also be overriden at runtime
                 with Hibernate queries. See the query chapters in the documentation for more
                 details.

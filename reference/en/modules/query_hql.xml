@@ -688,7 +688,7 @@ having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
             SQL functions and aggregate functions are allowed in the <literal>having</literal>
-            and <literal>order by</literal> clauses, if supported by the underlying database (ie.
+            and <literal>order by</literal> clauses, if supported by the underlying database (eg.
             not in MySQL).
         </para>
 

@@ -153,7 +153,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
             A custom listener should implement the appropriate interface for the event it wants to
             process and/or extend one of the convenience base classes (or even the default event
             listeners used by Hibernate out-of-the-box as these are declared non-final for this
-            purpose). Custom listeners can either be registered programatically through the
+            purpose). Custom listeners can either be registered programmatically through the
             <literal>Configuration</literal> object, or specified in the Hibernate configuration
             XML (declarative configuration through the properties file is not supported). Here's an
             example of a custom load event listener:
@@ -183,7 +183,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
 </hibernate-configuration>]]></programlisting>
 
         <para>
-            Instead, you may register it programatically:
+            Instead, you may register it programmatically:
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration();
@@ -192,8 +192,8 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
         <para>
             Listeners registered declaratively cannot share instances. If the same class name is
             used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will
-            result in a seperate instance of that class. If you need the capability to share
-            listener instances between listener types you must use the programatic registration
+            result in a separate instance of that class. If you need the capability to share
+            listener instances between listener types you must use the programmatic registration
             approach.
         </para>
 

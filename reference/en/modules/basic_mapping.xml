@@ -436,7 +436,7 @@
                 by a query that names any superclass or implemented interface or the class and that instances
                 of any subclass of the class will be returned by a query that names the class itself. 
                 <emphasis>Explicit</emphasis> polymorphism means that class instances will be returned only
-                be queries that explicitly name that class and that queries that name the class will return
+                by queries that explicitly name that class and that queries that name the class will return
                 only instances of subclasses mapped inside this <literal>&lt;class&gt;</literal> declaration
                 as a <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal>. For
                 most purposes the default, <literal>polymorphism="implicit"</literal>, is appropriate.
@@ -898,7 +898,7 @@
                 You must instantiate an instance of the persistent class itself and populate its 
                 identifier properties before you can <literal>load()</literal> the persistent state
                 associated with a composite key. We will describe a much more
-                convenient approach where the composite identifier is implemented as a seperate class
+                convenient approach where the composite identifier is implemented as a separate class
                 in <xref linkend="components-compositeid"/>. The attributes described below apply only
                 to this alternative approach:
             </para>
@@ -1404,7 +1404,7 @@
                     </callout>
                     <callout arearefs="manytoone5">
                         <para>
-                            <literal>join</literal> (optional - defaults to <literal>select</literal>): 
+                            <literal>fetch</literal> (optional - defaults to <literal>select</literal>): 
                             Chooses between outer-join fetching or sequential select fetching.
                         </para>                    
                     </callout>
@@ -1641,7 +1641,7 @@
 </class>]]></programlisting>
 
             <para>
-                A newly saved instance of <literal>Person</literal> is then assigned the same primar
+                A newly saved instance of <literal>Person</literal> is then assigned the same primary
                 key value as the <literal>Employee</literal> instance refered with the <literal>employee</literal>
                 property of that <literal>Person</literal>.
             </para>
@@ -1767,7 +1767,7 @@
             <para>
                 The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal>
                 to be mapped as a component, where the property names refer to keys of the map, see
-                <xref linken="components-dynamic"/>.
+                <xref linkend="components-dynamic"/>.
             </para>
             
         </sect2>
@@ -2533,7 +2533,7 @@
             <para>
                 An entity's persistent state consists of references to other entities and
                 instances of <emphasis>value</emphasis> types. Values are primitives,
-                collections (not whats inside a collection), components and certain immutable
+                collections (not what's inside a collection), components and certain immutable
                 objects. Unlike entities, values (in particular collections and components)
                 <emphasis>are</emphasis> persisted and deleted by reachability. Since value
                 objects (and primitives) are persisted and deleted along with their containing
@@ -2560,10 +2560,10 @@
             </para>
 
             <para>
-                The challenge is to map the Java type system (and the developers definition of
+                The challenge is to map the Java type system (and the developers' definition of
                 entities and value types) to the SQL/database type system. The bridge between
                 both systems is provided by Hibernate: for entities we use
-                <literal>&lt;class&gt;</literal>, <literal>&lt;subclass&lt;</literal> and so on.
+                <literal>&lt;class&gt;</literal>, <literal>&lt;subclass&gt;</literal> and so on.
                 For value types we use <literal>&lt;property&gt;</literal>,
                 <literal>&lt;component&gt;</literal>, etc, usually with a <literal>type</literal>
                 attribute. The value of this attribute is the name of a Hibernate
@@ -2750,7 +2750,7 @@
             
             <para>
                 The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</literal>,
-                and <literal>UserCollectionType</literal> and <literal>UserVersionType</literal> 
+                <literal>UserCollectionType</literal>, and <literal>UserVersionType</literal> 
                 interfaces provide support for more specialized uses.
             </para>
             
@@ -2795,11 +2795,11 @@
                 Even though Hibernate's rich range of built-in types and support for components means you
                 will very rarely <emphasis>need</emphasis> to use a custom type, it is nevertheless
                 considered good form to use custom types for (non-entity) classes that occur frequently
-                in your application. For example, a <literal>MonetoryAmount</literal> class is a good
+                in your application. For example, a <literal>MonetaryAmount</literal> class is a good
                 candidate for a <literal>CompositeUserType</literal>, even though it could easily be mapped 
                 as a component. One motivation for this is abstraction. With a custom type, your mapping 
                 documents would be future-proofed against possible changes in your way of representing 
-                monetory values.
+                monetary values.
             </para>
 
         </sect2>

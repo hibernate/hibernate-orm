@@ -8,7 +8,7 @@
             A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will
             use for retrieving associated objects if the application needs to 
             navigate the association. Fetch strategies may be declared in the O/R
-            mapping metadata, or over-ridden by particular HQL or 
+            mapping metadata, or over-ridden by a particular HQL or 
             <literal>Criteria</literal> query.
         </para>
 
@@ -130,7 +130,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         
         	<para>
         		<emphasis>The fetch strategy specified in the mapping document does not affect
-        		HQL queries</emphasis>
+        		HQL queries.</emphasis>
         	</para>
 
             <para>
@@ -162,7 +162,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 role per persistent class or query to be fetched per outer join. Hibernate forbids
                 Cartesian products when possible, <literal>SELECT</literal>ing two collections per
                 outer join would create one. This would almost always be slower than two (lazy or
-                non-defered) <literal>SELECT</literal>s. The restriction to a single outer-joined
+                non-deferred) <literal>SELECT</literal>s. The restriction to a single outer-joined
                 collection applies to both the mapping fetching strategies and to HQL/Criteria 
                 queries.
             </para>
@@ -250,7 +250,7 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
             </para>
 
             <para>
-                These problems are all due to fundamental limitations in Java's single inheritence model.
+                These problems are all due to fundamental limitations in Java's single inheritance model.
                 If you wish to avoid these problems your persistent classes must each implement an interface
                 that declares its business methods. You should specify these interfaces in the mapping file. eg.
             </para>
@@ -263,8 +263,8 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                where <literal>Cat</literal> implements the interface <literal>ICat</literal> and
-                <literal>DomesticCat</literal> implements the interface <literal>IDomesticCat</literal>. Then
+                where <literal>CatImpl</literal> implements the interface <literal>Cat</literal> and
+                <literal>DomesticCatImpl</literal> implements the interface <literal>DomesticCat</literal>. Then
                 proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned
                 by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>list()</literal>
                 does not usually return proxies.)
@@ -314,7 +314,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Initializing collections and proxies</title>
 
             <para>
-                A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an unitialized 
+                A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an uninitialized 
                 collection or proxy is accessed outside of the scope of the <literal>Session</literal>, ie. when 
                 the entity owning the collection or having the reference to the proxy is in the detached state.
             </para>
@@ -328,7 +328,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>
-                provide the application with a convenient way of working with lazyily initialized collections or
+                provide the application with a convenient way of working with lazily initialized collections or
                 proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy,
                 <literal>cat</literal>, as long as its <literal>Session</literal> is still open.
                 <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection
@@ -380,7 +380,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <para>
                         You may also attach a previously loaded object to a new <literal>Session</literal>
                         with <literal>merge()</literal> or <literal>lock()</literal> before
-                        accessing unitialized collections (or other proxies). No, Hibernate does not,
+                        accessing uninitialized collections (or other proxies). No, Hibernate does not,
                         and certainly <emphasis>should</emphasis> not do this automatically, since it 
                         would introduce ad hoc transaction semantics!
                     </para>
@@ -513,7 +513,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 A different (better?) way to avoid unnecessary column reads, at least for
-                read-only transactons is to use the projection features of HQL. This avoids
+                read-only transactions is to use the projection features of HQL. This avoids
                 the need for buildtime bytecode processing.
             </para>
 
@@ -650,7 +650,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 If your application needs to read but never modify instances of a persistent class, a 
                 <literal>read-only</literal> cache may be used. This is the simplest and best performing
-                strategy. Its even perfectly safe for use in a cluster.
+                strategy. It's even perfectly safe for use in a cluster.
             </para>
 
             <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
@@ -914,7 +914,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         <para>
             If the query should force a refresh of its query cache region, you should call
             <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is particularly useful 
-            in cases where underlying data may have been updated via a seperate process (i.e., 
+            in cases where underlying data may have been updated via a separate process (i.e., 
             not modified through Hibernate) and allows the application to selectively refresh 
             particular query result sets. This is a more efficient alternative to eviction of 
             a query cache region via <literal>SessionFactory.evictQueries()</literal>.
@@ -1176,7 +1176,7 @@ server.registerMBean(stats, on); //we register the MBean]]></programlisting>
                 </listitem>
             </itemizedlist>
             <para>Statistics can be reset programatically using the <literal>clear()</literal> method. A summary
-            can be sent logger (info level) using the <literal>logSummary()</literal> method.</para>
+            can be sent to a logger (info level) using the <literal>logSummary()</literal> method.</para>
         </sect2>
         <sect2 id="performance-monitoring-metrics" revision="1">
             <title>Metrics</title>
@@ -1216,10 +1216,12 @@ server.registerMBean(stats, on); //we register the MBean]]></programlisting>
                 <literal>SecondLevelCacheStatistics</literal> and <literal>QueryStatistics</literal> API for more informations.
             </para>
             <programlisting><![CDATA[Statistics stats = sf.getStatistics();
-double hitRatio = (double) stats.getQueryCacheHitCount() / ( stats.getQueryCacheHitCount() + stats.getQueryCacheMissCount() );
+double hitRatio = (double) stats.getQueryCacheHitCount()
+    / ( stats.getQueryCacheHitCount() + stats.getQueryCacheMissCount() );
 log.info("Query Hit ratio:" + hitRatio);
 EntityStatistics entityStats = stats.getEntityStatistics( Cat.class.getName() );
-int changes = entityStats.getInsertCount() + entityStats.getUpdateCount() + entityStats.getDeleteCount();
+int changes = entityStats.getInsertCount()
+    + entityStats.getUpdateCount() + entityStats.getDeleteCount();
 log.info(Cat.class.getName() + " changes:" + changes);]]></programlisting>
             <para>
                 In order to work on all detailed entities, collections, queries and region caches statistics, you can retrieve
@@ -1232,9 +1234,9 @@ log.info(Cat.class.getName() + " changes:" + changes);]]></programlisting>
             <title>Understanding metrics</title>
             <para>
             You can find interesting informations while looking at metrics. An entity/collection/query with a high cache
-            miss ratio (cache miss superior to cache hit) should not be cached: the benefit of caching is not significant
+            miss ratio (cache miss greater than cache hit) should not be cached: the benefit of caching is not significant
             for your application and use case.
-            An entity/collection/query with a cache put way superior to its cache hit should not be cached either: you spend
+            An entity/collection/query with a cache put much greater than its cache hit should not be cached either: you spend
             a lot of resources in caching without efficiently use it.
             A session factory having more open sessions than closed ones shows a session leak which must be addressed.
             A use case using lots of connections might show a good candidate for a conversion to the session per user

@@ -271,7 +271,7 @@ session.update(parent);
 session.flush();]]></programlisting>
      
          <para>
-             Well, thats all very well for the case of a generated identifier, but what about assigned identifiers
+             Well, that's all very well for the case of a generated identifier, but what about assigned identifiers
              and composite identifiers? This is more difficult, since Hibernate can't use the identifier property to
              distinguish between a newly instantiated object (with an identifier assigned by the user) and an 
              object loaded in a previous session. In this case, Hibernate will either use the timestamp or version 

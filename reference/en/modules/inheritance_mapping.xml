@@ -91,7 +91,7 @@
         </sect2>
 
         <sect2>
-        <title>Table per class subclass</title>
+        <title>Table per subclass</title>
 
         <para>
             A table per subclass mapping would look like:

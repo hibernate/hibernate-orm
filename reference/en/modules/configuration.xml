@@ -92,7 +92,7 @@
         </orderedlist>
 
         <para>
-            <literal>hibernate.properties</literal> is the easiest approach is you
+            <literal>hibernate.properties</literal> is the easiest approach if you
             want to get started quickly.
         </para>
 

@@ -302,7 +302,8 @@ public class DomesticCat extends Cat {
 
         <para>
             Note that a business key does not have to be as solid as a database
-            primary key candidate. Immutable or unique properties are usually good
+            primary key candidate (see <xref linkend="transactions-basics-identity"/>).
+            Immutable or unique properties are usually good
             candidates for a business key.
         </para>
 

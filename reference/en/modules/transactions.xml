@@ -226,7 +226,7 @@
                 JVM identity for database identity is guaranteed by Hibernate. However, while the application
                 might concurrently access the "same" (persistent identity) business object in two different
                 sessions, the two instances will actually be "different" (JVM identity). Conflicts are
-                resolved using (automatic versioning) at flush/commit time, using an optmistic approach.
+                resolved using (automatic versioning) at flush/commit time, using an optimistic approach.
             </para>
 
             <para>
@@ -272,7 +272,7 @@
                 <listitem>
                     <para>
                         A <literal>Session</literal> is not thread-safe. Things which are supposed to work
-                        concurrently, like HTTP requests, session beans, or swing workers, will cause race
+                        concurrently, like HTTP requests, session beans, or Swing workers, will cause race
                         conditions if a <literal>Session</literal> instance would be shared. If you keep your
                         Hibernate <literal>Session</literal> in your <literal>HttpSession</literal> (discussed
                         later), you should consider synchronizing access to your Http session. Otherwise,
@@ -332,7 +332,7 @@
         </para>
 
         <para>
-            However, it is often desireable to keep your persistence layer portable. Hibernate offers a wrapper
+            However, it is often desirable to keep your persistence layer portable. Hibernate offers a wrapper
             API called <literal>Transaction</literal> that translates into the native transaction system of
             your deployment environment. This API is optional (using database transactions is not!) and you don't
             have to use it if database portability provided by Hibernate is all you need.
@@ -399,7 +399,7 @@ finally {
 
             <para>
                 Note that you will very likely never see this piece of code in a normal application;
-                fatal (system) exceptions should always be catched at the "top". In other words, the
+                fatal (system) exceptions should always be caught at the "top". In other words, the
                 code that executes Hibernate calls (in the persistence layer) and the code that handles
                 <literal>RuntimeException</literal> (and usually can only clean up and exit) are in
                 different layers. This can be a challenge to design yourself and you should use J2EE/EJB
@@ -490,7 +490,7 @@ finally {
                 transaction, call <literal>Session.close()</literal> and discard the
                 <literal>Session</literal> instance. Certain methods of <literal>Session</literal>
                 will <emphasis>not</emphasis> leave the session in a consistent state. No
-                exception thrown by Hibernate can be treaded as recoverable. Ensure that the
+                exception thrown by Hibernate can be treated as recoverable. Ensure that the
                 <literal>Session</literal> will be closed by calling <literal>close()</literal>
                 in a <literal>finally</literal> block.
             </para>
@@ -618,7 +618,7 @@ session.disconnect(); // Return JDBC connection ]]></programlisting>
                 This pattern is problematic if the <literal>Session</literal> is too big to
                 be stored during user think time, e.g. an <literal>HttpSession</literal> should
                 be kept as small as possible. As the <literal>Session</literal> is also the
-                (mandatory) first-level cache and contains all loaded objects, we can propably
+                (mandatory) first-level cache and contains all loaded objects, we can probably
                 use this strategy only for a few request/response cycles. This is indeed
                 recommended, as the <literal>Session</literal> will soon also have stale data.
             </para>
@@ -669,7 +669,7 @@ session.close();]]></programlisting>
 
             <para>
                 You may disable Hibernate's automatic version increment for particular properties and 
-                collections by setting the <literal>optmistic-lock</literal> mapping attribute to 
+                collections by setting the <literal>optimistic-lock</literal> mapping attribute to 
                 <literal>false</literal>. Hibernate will then no longer increment versions if the 
                 property is dirty.
             </para>
@@ -679,8 +679,8 @@ session.close();]]></programlisting>
                 might also access the same database and don't know how to handle version numbers or
                 even timestamps. In both cases, versioning can't rely on a particular column in a table.
                 To force a version check without a version or timestamp property mapping, with a
-                comparison of the state of all fields in a row, turn on <literal>optmistic-lock="all"</literal>
-                in the <literal>&lt;class&gt;</literal> mapping. Note that this concpetually only works
+                comparison of the state of all fields in a row, turn on <literal>optimistic-lock="all"</literal>
+                in the <literal>&lt;class&gt;</literal> mapping. Note that this concepetually only works
                 if Hibernate can compare the old and new state, i.e. if you use a single long
                 <literal>Session</literal> and not session-per-request-with-detached-objects.
             </para>

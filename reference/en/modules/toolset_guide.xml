@@ -38,7 +38,7 @@
     </itemizedlist>
 
     <para>
-        There's actually another utitily living in Hibernate Extensions: <literal>ddl2hbm</literal>.
+        There's actually another utility living in Hibernate Extensions: <literal>ddl2hbm</literal>.
         It is considered deprecated and will no longer be maintained, Middlegen does a better job
         for the same task.
     </para>
@@ -456,7 +456,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
         <para>
             The Hibernate code generator may be used to generate skeletal Java implementation classes
             from a Hibernate mapping file. This tool is included in the Hibernate Extensions package
-            (a seperate download).
+            (a separate download).
         </para>
 
         <para>
@@ -515,7 +515,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
             <para>
                 This config file declares a global meta attribute "implements" and specify two renderers, the
-                default one (BasicRenderer) and a renderer that generates Finder's (See more in "Basic Finder
+                default one (BasicRenderer) and a renderer that generates Finders (See more in "Basic Finder
                 generation" below).
             </para>
 
@@ -771,7 +771,7 @@ public class Person implements Serializable, IAuditable {
 
             <para>
                 Note: This applies to <emphasis>all</emphasis> <literal>&lt;meta&gt;</literal>-tags.
-                Thus it can also e.g. be used to specify that all fields should be declare protected,
+                Thus it can also e.g. be used to specify that all fields should be declared protected,
                 instead of the default private. This is done by adding <literal>&lt;meta
                 attribute="scope-field"&gt;protected&lt;/meta&gt;</literal> at e.g. just under the
                 <literal>&lt;class&gt;</literal> tag and all fields of that class will be protected.

@@ -12,7 +12,7 @@
             The following model of the relationship between <literal>Employer</literal> and 
             <literal>Employee</literal> uses an actual entity class (<literal>Employment</literal>) 
             to represent the association. This is done because there might be more than one
-            period of employment for the same two parties. Components are used to model monetory 
+            period of employment for the same two parties. Components are used to model monetary 
             values and employee names.
         </para>
 
@@ -50,7 +50,7 @@
         <property name="startDate" column="start_date"/>
         <property name="endDate" column="end_date"/>
 
-        <component name="hourlyRate" class="MonetoryAmount">
+        <component name="hourlyRate" class="MonetaryAmount">
             <property name="amount">
                 <column name="hourly_rate" sql-type="NUMERIC(12, 2)"/>
             </property>

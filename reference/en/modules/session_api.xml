@@ -31,7 +31,7 @@
                     been instantiated using the <literal>new</literal> operator, and it
                     is not associated with a Hibernate <literal>Session</literal>. It has no
                     persistent representation in the database and no identifier value has been
-                    assigned. Transient instances will be destroyed by the garbage collector of
+                    assigned. Transient instances will be destroyed by the garbage collector if
                     the application doesn't hold a reference anymore. Use the Hibernate
                     <literal>Session</literal> to make an object persistent (and let Hibernate
                     take care of the SQL statements that need to be executed for this transition).
@@ -64,7 +64,7 @@
         </itemizedlist>
 
         <para>
-            We'll know discuss the states and state transitions (and the Hibernate methods that
+            We'll now discuss the states and state transitions (and the Hibernate methods that
             trigger a transition) in more detail.
         </para>
 
@@ -111,7 +111,7 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         
         <para>
             If the object you make persistent has associated objects (e.g. the
-            <literal>kittens</literal> collection role) in the previous example),
+            <literal>kittens</literal> collection in the previous example),
             these objects may be made persistent in any order you like unless you
             have a <literal>NOT NULL</literal> constraint upon a foreign key column.
             There is never a risk of violating foreign key constraints. However, you 
@@ -256,7 +256,7 @@ Cat mother = (Cat) session.createQuery(
             <para>
                 A query is usually executed by invoking <literal>list()</literal>, the
                 result of the query will be loaded completely into a collection in memory.
-                Entity instance retrieved by a query are in persistent state. The
+                Entity instances retrieved by a query are in persistent state. The
                 <literal>uniqueResult()</literal> method offers a shortcut if you
                 know your query will only return a single object.
             </para>
@@ -498,7 +498,7 @@ List cats = q.list();]]></programlisting>
 );]]></programlisting>
         
             <para>
-                The returned collection is considered a bag, and its a copy of the given
+                The returned collection is considered a bag, and it's a copy of the given
                 collection. The original collection is not modified (this is contrary to
                 the implication of the name "filter", but consistent with expected behavior).
             </para>
@@ -900,7 +900,7 @@ session2.close();]]></programlisting>
             <listitem>
                 <para>
                     <literal>ReplicationMode.EXCEPTION</literal> - throw an exception if there is
-                    and existing database row with the same identifier
+                    an existing database row with the same identifier
                 </para>
             </listitem>
             <listitem>
@@ -933,7 +933,7 @@ session2.close();]]></programlisting>
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    before from some query executions
+                    before some query executions
                 </para>
             </listitem>
             <listitem>

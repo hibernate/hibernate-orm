@@ -71,7 +71,7 @@
         <para>
             The <literal>{cat.*}</literal> notation used above is a shorthand for "all properties". 
             Alternatively, you may list the columns explicity, but even then you must let Hibernate 
-            inject the SQL column aliases for each property. The placeholders for a column alias is 
+            inject the SQL column aliases for each property. The placeholder for a column alias is 
             just the property name qualified by the table alias. In the following example, we retrieve 
             <literal>Cat</literal>s from a different table (<literal>cat_log</literal>) to the one 
             declared in the mapping metadata. Notice that we may even use the property aliases in the 
@@ -159,12 +159,12 @@ List loggedCats = sess.createSQLQuery(sql)
 </class>]]></programlisting>
 
         <para>
-            The SQL is directly execute in your database, so you are free to use any dialect
+            The SQL is directly executed in your database, so you are free to use any dialect
             you like.
         </para>
 
         <para>
-            Stored procedures are support if the <literal>callable</literal> attribute is set:
+            Stored procedures are supported if the <literal>callable</literal> attribute is set:
         </para>
 
     <programlisting><![CDATA[<class name="Person">

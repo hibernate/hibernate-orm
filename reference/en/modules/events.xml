@@ -1,0 +1,241 @@
+<chapter id="events">
+    <title>Interceptors and events</title>
+
+    <para>
+        It is often useful for the application to react to certain events that occur
+        inside Hibernate. This allows implementation of certain kinds of generic 
+        functionality, and extension of Hibernate functionality.
+    </para>
+
+    <sect1 id="objectstate-interceptors" revision="1">
+        <title>Interceptors</title>
+
+        <para>
+            The <literal>Interceptor</literal> interface provides callbacks from the session to the 
+            application allowing the application to inspect and/or manipulate properties of a
+            persistent object before it is saved, updated, deleted or loaded. One 
+            possible use for this is to track auditing information. For example, the following 
+            <literal>Interceptor</literal> automatically sets the  <literal>createTimestamp</literal> 
+            when an <literal>Auditable</literal> is created and updates the 
+            <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is 
+            updated.
+        </para>
+
+        <programlisting><![CDATA[package org.hibernate.test;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Iterator;
+
+import org.hibernate.Interceptor;
+import org.hibernate.type.Type;
+
+public class AuditInterceptor implements Interceptor, Serializable {
+
+    private int updates;
+    private int creates;
+
+    public void onDelete(Object entity,
+                         Serializable id,
+                         Object[] state,
+                         String[] propertyNames,
+                         Type[] types) {
+        // do nothing
+    }
+
+    public boolean onFlushDirty(Object entity,
+                                Serializable id,
+                                Object[] currentState,
+                                Object[] previousState,
+                                String[] propertyNames,
+                                Type[] types) {
+
+        if ( entity instanceof Auditable ) {
+            updates++;
+            for ( int i=0; i < propertyNames.length; i++ ) {
+                if ( "lastUpdateTimestamp".equals( propertyNames[i] ) ) {
+                    currentState[i] = new Date();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean onLoad(Object entity,
+                          Serializable id,
+                          Object[] state,
+                          String[] propertyNames,
+                          Type[] types) {
+        return false;
+    }
+
+    public boolean onSave(Object entity,
+                          Serializable id,
+                          Object[] state,
+                          String[] propertyNames,
+                          Type[] types) {
+
+        if ( entity instanceof Auditable ) {
+            creates++;
+            for ( int i=0; i<propertyNames.length; i++ ) {
+                if ( "createTimestamp".equals( propertyNames[i] ) ) {
+                    state[i] = new Date();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void postFlush(Iterator entities) {
+        System.out.println("Creations: " + creates + ", Updates: " + updates);
+    }
+
+    public void preFlush(Iterator entities) {
+        updates=0;
+        creates=0;
+    }
+
+    ...
+
+}]]></programlisting>
+
+        <para>
+            The interceptor would be specified when a session is created.
+        </para>
+
+        <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
+
+        <para>
+            You may also set an interceptor on a global level, using the <literal>Configuration</literal>:
+        </para>
+    
+        <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
+
+    </sect1>
+
+     <sect1 id="objectstate-events">
+        <title>Event system</title>
+
+        <para>
+            If you have to react to particular events in your persistence layer, you may
+            also use the Hibernate3 <emphasis>event</emphasis> architecture. The event
+            system can be used in addition or as a replacement for interceptors.
+        </para>
+
+        <para>
+            Essentially all of the methods of the <literal>Session</literal> interface correlate
+            to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc
+            (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal>
+            package for the full list of defined event types). When a request is made of one of
+            these methods, the Hibernate <literal>Session</literal> generates an appropriate
+            event and passes it to the configured event listener for that type. Out-of-the-box,
+            these listeners implement the same processing in which those methods always resulted.
+            However, you are free to implement a customization of one of the listener interfaces
+            (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation
+            of the <literal>LoadEventListener</literal> interface), in which case their
+            implementation would be responsible for processing any <literal>load()</literal> requests
+            made of the <literal>Session</literal>.
+        </para>
+
+        <para>
+            The listeners should be considered effectively singletons; meaning, they are shared between
+            requests, and thus should not save any state as instance variables. The event objects
+            themselves, however, do hold a lot of the context needed for processing as they are unique
+            to each request. Custom event listeners may also make use of the event's context for storage
+            of any needed processing variables. The context is a simple map, but the default listeners
+            don't use the context map at all, so don't worry about over-writing internally required
+            context variables.
+        </para>
+
+        <para>
+            A custom listener should implement the appropriate interface for the event it wants to
+            process and/or extend one of the convenience base classes (or even the default event
+            listeners used by Hibernate out-of-the-box as these are declared non-final for this
+            purpose). Custom listeners can either be registered programatically through the
+            <literal>Configuration</literal> object, or specified in the Hibernate configuration
+            XML (declarative configuration through the properties file is not supported). Here's an
+            example of a custom load event listener:
+        </para>
+
+        <programlisting><![CDATA[public class MyLoadListener extends DefaultLoadEventListener {
+    // this is the single method defined by the LoadEventListener interface
+    public Object onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
+            throws HibernateException {
+        if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
+            throw MySecurityException("Unauthorized access");
+        }
+        return super.onLoad(event, loadType);
+    }
+}]]></programlisting>
+
+        <para>
+            You also need a configuration entry telling Hibernate to use the listener instead
+            of the default listener:
+        </para>
+
+<programlisting><![CDATA[<hibernate-configuration>
+    <session-factory>
+        ...
+        <listener type="load" class="MyLoadListener"/>
+    </session-factory>
+</hibernate-configuration>]]></programlisting>
+
+        <para>
+            Instead, you may register it programatically:
+        </para>
+
+        <programlisting><![CDATA[Configuration cfg = new Configuration();
+cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() );]]></programlisting>
+
+        <para>
+            Listeners registered declaratively cannot share instances. If the same class name is
+            used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will
+            result in a seperate instance of that class. If you need the capability to share
+            listener instances between listener types you must use the programatic registration
+            approach.
+        </para>
+
+        <para>
+            Why implement an interface and define the specific type during configuration? Well, a
+            listener implementation could implement multiple event listener interfaces. Having the
+            type additionally defined during registration makes it easier to turn custom listeners on
+            or off during configuration.
+        </para>
+
+    </sect1>
+    
+    <sect1>
+        <title>Hibernate declarative security</title>
+        <para>
+            Usually, declarative security in Hibernate applications is managed in a session facade
+            layer. Now, Hibernate3 allows certain actions to be permissioned via JACC, and authorized 
+            via JAAS. This is optional functionality built on top of the event architecture.
+        </para>
+        
+        <para>
+            First, you must configure the appropriate event listeners, to enable the use of JAAS
+            authentication.
+        </para>
+        
+        <programlisting><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.JACCPreDeleteEventListener"/>
+<listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
+<listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
+<listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
+
+        <para>
+            Next, still in <literal>hibernate.cfg.xml</literal>, define the permissions:
+        </para>
+        
+        <programlisting><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
+<grant role="su" entity-name="User" actions="*"/>]]></programlisting>
+        
+        <para>
+            Where the role names are the roles understood by your JACC provider.
+        </para>
+       
+    </sect1>
+
+</chapter>
+

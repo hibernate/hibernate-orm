@@ -11,11 +11,13 @@
 <!ENTITY association-mapping    SYSTEM "modules/association_mapping.xml">
 <!ENTITY component-mapping      SYSTEM "modules/component_mapping.xml">
 <!ENTITY inheritance-mapping    SYSTEM "modules/inheritance_mapping.xml">
-<!ENTITY manipulating-data      SYSTEM "modules/manipulating_data.xml">
+<!ENTITY session-api            SYSTEM "modules/session_api.xml">
 <!ENTITY transactions           SYSTEM "modules/transactions.xml">
+<!ENTITY events                 SYSTEM "modules/events.xml">
 <!ENTITY query-hql              SYSTEM "modules/query_hql.xml">
 <!ENTITY query-criteria         SYSTEM "modules/query_criteria.xml">
 <!ENTITY query-sql              SYSTEM "modules/query_sql.xml">
+<!ENTITY filters                SYSTEM "modules/filters.xml">
 <!ENTITY performance            SYSTEM "modules/performance.xml">
 <!ENTITY toolset-guide          SYSTEM "modules/toolset_guide.xml">
 <!ENTITY example-parentchild    SYSTEM "modules/example_parentchild.xml">
@@ -150,12 +152,14 @@
     &component-mapping;
     &inheritance-mapping;
 
-    &manipulating-data;
+    &session-api;
     &transactions;
+    &events;
 
     &query-hql;
     &query-criteria;
     &query-sql;
+    &filters;
 
     &performance;
 

@@ -1,0 +1,98 @@
+<chapter id="batch">
+    <title>Batch processing using Hibernate</title>
+    
+    <para>
+        A naive approach to inserting 100 000 rows in the database using Hibernate might 
+        look like this:
+    </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+for ( int i=0; i<100000; i++ ) {
+    Customer customer = new Customer(.....);
+    session.save(customer);
+}
+tx.commit();
+session.close();]]></programlisting>
+
+    <para>
+        This would fall over with an <literal>OutOfMemoryException</literal> somewhere 
+        around the 50 000th row. That's because Hibernate caches all the newly inserted 
+        <literal>Customer</literal> instances in the session-level cache. 
+    </para>
+
+    <para>
+        In this chapter we'll show you how to avoid this problem. First, however, if you
+        are doing batch processing, it is absolutely critical that you enable the use of
+        JDBC batching, if you intend to achieve reasonable performance. Set the JDBC batch 
+        size to a reasonable number (say, 10-50):
+    </para>
+    
+<programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
+
+    <para>
+        You also might like to do this kind of work in a process where interaction with 
+        the second-level cache is completely disabled:
+    </para>
+
+<programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
+
+    <sect1>
+        <title>Batch inserts</title>
+
+        <para>
+            When making new objects persistent, you must <literal>flush()</literal> and 
+            then <literal>clear()</literal> the session regularly, to control the size of
+            the first-level cache.
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+   
+for ( int i=0; i<100000; i++ ) {
+    Customer customer = new Customer(.....);
+    session.save(customer);
+    if ( i % 20 == 0 ) { //20, same as the JDBC batch size
+        //flush a batch of inserts and release memory:
+        session.flush();
+        session.clear();
+    }
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+    </sect1>
+
+    <sect1>
+        <title>Batch updates</title>
+
+        <para>
+            For retrieving and updating data the same ideas apply. In addition, you need to 
+            use <literal>scroll()</literal> to take advantage of server-side cursors for 
+            queries that return many rows of data.
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+   
+ScrollableResults customers = session.getNamedQuery("GetCustomers")
+    .setCacheMode(CacheMode.IGNORE)
+    .scroll(ScrollMode.FORWARD_ONLY);
+int count=0;
+while ( customers.next() ) {
+    Customer customer = (Customer) customers.get(0);
+    customer.updateStuff(...);
+    if ( ++count % 20 == 0 ) {
+        //flush a batch of updates and release memory:
+        session.flush();
+        session.clear();
+    }
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+    </sect1>
+
+</chapter>

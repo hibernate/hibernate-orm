@@ -14,6 +14,7 @@
 <!ENTITY session-api            SYSTEM "modules/session_api.xml">
 <!ENTITY transactions           SYSTEM "modules/transactions.xml">
 <!ENTITY events                 SYSTEM "modules/events.xml">
+<!ENTITY batch                  SYSTEM "modules/batch.xml">
 <!ENTITY query-hql              SYSTEM "modules/query_hql.xml">
 <!ENTITY query-criteria         SYSTEM "modules/query_criteria.xml">
 <!ENTITY query-sql              SYSTEM "modules/query_sql.xml">
@@ -155,6 +156,7 @@
     &session-api;
     &transactions;
     &events;
+    &batch;
 
     &query-hql;
     &query-criteria;

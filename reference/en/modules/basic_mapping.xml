@@ -511,17 +511,17 @@
             </para>
 
             <programlisting><![CDATA[<class name="Summary">
-         <subselect>
-             select item.name, max(bid.amount), count(*)
-             from item
-             join bid on bid.item_id = item.id
-             group by item.name
-         </subselect>
-         <synchronize table="item"/>
-         <synchronize table="bid"/>
-         <id name="name"/>
-         ...
-     </class>]]></programlisting>
+    <subselect>
+        select item.name, max(bid.amount), count(*)
+        from item
+        join bid on bid.item_id = item.id
+        group by item.name
+    </subselect>
+    <synchronize table="item"/>
+    <synchronize table="bid"/>
+    <id name="name"/>
+    ...
+</class>]]></programlisting>
 
             <para>
                 Declare the tables to synchronize this entity with, ensuring that auto-flush happens
@@ -1526,6 +1526,7 @@
                     <area id="onetoone5" coords="6 60"/>
                     <area id="onetoone6" coords="7 60"/>
                     <area id="onetoone7" coords="8 60"/>
+                    <area id="onetoone8" coords="9 60"/>
                 </areaspec>
                 <programlisting><![CDATA[<one-to-one
         name="propertyName"
@@ -1535,6 +1536,7 @@
         fetch="join|select"
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
+        formula="any SQL expression"
         entity-name="EntityName"
 />]]></programlisting>
                 <calloutlist>
@@ -1560,8 +1562,8 @@
                             <literal>constrained</literal> (optional) specifies that a foreign key constraint
                             on the primary key of the mapped table references the table of the associated
                             class. This option affects the order in which <literal>save()</literal> and
-                            <literal>delete()</literal> are cascaded (and is also used by the schema export
-                            tool).
+                            <literal>delete()</literal> are cascaded, and determines whether the association
+                            may be proxied (it is also used by the schema export tool).
                         </para>                  
                     </callout>
                     <callout arearefs="onetoone5">
@@ -1581,6 +1583,14 @@
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                             strategy Hibernate should use for accessing the property value.
+                        </para>
+                    </callout>
+                    <callout arearefs="onetoone8">
+                        <para>
+                            <literal>formula</literal> (optional): Almost all one to one associations map to the
+                            primary key of the owning entity. In the rare case that this is not the case, you may
+                            specify a some other column, columns or expression to join on using an SQL formula. (See 
+                            <literal>org.hibernate.test.onetooneformula</literal> for an example.)
                         </para>
                     </callout>
                 </calloutlist>

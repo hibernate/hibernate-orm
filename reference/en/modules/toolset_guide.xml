@@ -491,7 +491,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
             </tgroup>
         </table>
 
-        <sect2 id="toolsetguide-s2-1" revision="3">
+        <sect2 id="toolsetguide-s2-1" revision="4">
             <title>The config file (optional)</title>
 
             <para>
@@ -548,7 +548,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
             <codegen>
               <generate prefix="Base" renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer"/> 
               <generate renderer="net.sf.hibernate.tool.hbm2java.BasicRenderer">
-                <param name="generate-empty-concrete-classes">true</param>
+                <param name="generate-concrete-empty-classes">true</param>
                 <param name="baseclass-prefix">Base</param>
               </generate>
             </codegen>]]></programlisting>

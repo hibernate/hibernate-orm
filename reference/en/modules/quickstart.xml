@@ -442,7 +442,7 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
 
     </sect1>
 
-    <sect1 id="quickstart-playingwithcats">
+    <sect1 id="quickstart-playingwithcats" revision="1">
         <title>Playing with cats</title>
 
         <para>
@@ -486,14 +486,17 @@ import net.sf.hibernate.cfg.*;
 
 public class HibernateUtil {
 
+    private static Log log = LogFactory.getLog(HibernateUtil.class);
+
     private static final SessionFactory sessionFactory;
 
     static {
         try {
             // Create the SessionFactory
             sessionFactory = new Configuration().configure().buildSessionFactory();
-        } catch (HibernateException ex) {
-            throw new RuntimeException("Configuration problem: " + ex.getMessage(), ex);
+        } catch (Throwable ex) {
+            log.error("Initial SessionFactory creation failed.", ex);
+            throw new ExceptionInInitializerError(ex);
         }
     }
 

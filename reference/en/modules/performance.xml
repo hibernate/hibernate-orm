@@ -1069,4 +1069,8 @@ while ( cats.hasNext() ) {
 
     </sect1>
 
+    <para>
+        TODO: document statistics
+    </para>
+
 </chapter>

@@ -1802,7 +1802,7 @@
         <property ...../>
         <many-to-one .... />
         ........
-</component>]]></programlisting>
+</properties>]]></programlisting>
                 <calloutlist>
                     <callout arearefs="properties1">
                         <para>

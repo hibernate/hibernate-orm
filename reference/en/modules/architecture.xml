@@ -212,19 +212,43 @@
 
         <para>
             JMX is the J2EE standard for management of Java components. Hibernate may be managed via
-            a JMX standard MBean but because most application servers do not yet support JMX, Hibernate
-            also affords some non-standard configuration mechanisms.
-        </para>
-        
-        <para>
-            Please see the Hibernate website for more information on how to configure Hibernate to
-            run as a JMX component inside JBoss. Integration with other JMX containers is also
-            possible.
+            a JMX standard service. We provide an MBean implementation in the distribution,
+            <literal>org.hibernate.jmx.HibernateService</literal>.
         </para>
 
-        <!-- TODO: More documentation about JMX integration. -->
         <para>
-            TODO: More documentation about JMX integration.
+            For an example how to deploy Hibernate as a JMX service on the JBoss Application Server,
+            please see the JBoss User Guide. On JBoss AS, you also get these benefits if you deploy
+            using JMX:
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <emphasis>Session Management:</emphasis> The Hibernate <literal>Session</literal>'s lifecycle
+                    can be automatically bound to the scope of a JTA transaction. This means you no
+                    longer have to manually open and close the <literal>Session</literal>, this
+                    becomes the job of a JBoss EJB interceptor. You also don't have to worry about
+                    transaction demarcation in your code anymore (unless you'd like to write a portable
+                    persistence layer of course, use the optional Hibernate <literal>Transaction</literal>
+                    API for this). You call the <literal>HibernateContext</literal> to access a
+                    <literal>Session</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>HAR deployment:</emphasis> Usually you deploy the Hibernate JMX service using a JBoss
+                    service deployment descriptor (in an EAR and/or SAR file), it supports all the usual
+                    configuration options of a Hibernate <literal>SessionFactory</literal>. However, you still
+                    have to name all your mapping files in the deployment descriptor. If you decide to use
+                    the optional HAR deployment, JBoss will automatically detect all mapping files in your
+                    HAR file.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            Consult the JBoss AS user guide for more information about these options.
         </para>
     </sect1>
 
@@ -233,11 +257,6 @@
         <para>
             Hibernate may also be configured as a JCA connector. Please see the website for more
             details. Please note that Hibernate JCA support is still considered experimental.
-        </para>
-
-        <!-- TODO: More documentation about JCA integration. -->
-        <para>
-            TODO: More documentation about JCA integration.
         </para>
     </sect1>
 

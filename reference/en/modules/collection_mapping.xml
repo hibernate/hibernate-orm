@@ -290,8 +290,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or 
                 list is always of type <literal>integer</literal> and is mapped using the 
                 <literal>&lt;list-index&gt;</literal> element. The mapped column contains 
-                sequential integers numbered from zero. Make sure that your index really starts 
-                from zero if you have to deal with legacy data.
+                sequential integers (numbered from zero, by default).
             </para>
 
         <programlistingco>
@@ -371,7 +370,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
             <para>
                 If your table doesn't have an index column, and you still wish to use <literal>List</literal> 
-                as the property type, you should map the property as a Hibernate <emphasis>bag</emphasis>.
+                as the property type, you should map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>.
                 A bag does not retain its order when it is retrieved from the database, but it may be 
                 optionally sorted or ordered.
             </para>

@@ -1471,8 +1471,8 @@
                 refresh</literal>, as well as the special values <literal>delete-orphan</literal> 
                 and <literal>all</literal> and comma-separated combinations of operation
                 names, for example, <literal>cascade="create,merge,evict"</literal> or
-                <literal>cascade="all,delete-orphan"</literal>. See "Lifecycle Objects" for a full 
-                explanation.
+                <literal>cascade="all,delete-orphan"</literal>. See <xref linkend="objectstate-transitive"/>
+                for a full explanation.
             </para>
             
             <para>

@@ -165,7 +165,7 @@ public class Cat {
                 <listitem>
                     <para>
                         Transitive reattachment for detached objects (cascade update or cascade
-                        merge) - see "Lifecycle Objects"
+                        merge) - see <xref linkend="objectstate-transitive"/>
                     </para>
                 </listitem>
                 <listitem>

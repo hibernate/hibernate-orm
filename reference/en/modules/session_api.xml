@@ -690,6 +690,10 @@ sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
             the only usecase for <literal>lock()</literal>.
         </para>
 
+        <para>
+            Other models for long units of work are discussed in <xref linkend="transactions-optimistic"/>.
+        </para>
+
     </sect1>
 
     <sect1 id="objectstate-saveorupdate">

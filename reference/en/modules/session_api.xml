@@ -1085,7 +1085,7 @@ tx.commit(); // flush occurs]]></programlisting>
         </para>
         
         <para>
-            A special cascade style, <literal>orphan-delete</literal>, applies only to one-to-many
+            A special cascade style, <literal>delete-orphan</literal>, applies only to one-to-many
             associations, and indicates that the <literal>delete()</literal> operation should
             be applied to any child object that is removed from the association.
         </para>

@@ -38,8 +38,12 @@
         <programlisting><![CDATA[from eg.Cat]]></programlisting>
         
         <para>
-            which simply returns all instances of the class <literal>eg.Cat</literal>. 
+            which simply returns all instances of the class <literal>eg.Cat</literal>.
+            We don't usually need to qualify the class name, since <literal>auto-import</literal>
+            is the default. So we almost always just write:
         </para>
+        
+        <programlisting><![CDATA[from Cat]]></programlisting>
         
         <para>
             Most of the time, you will need to assign an <emphasis>alias</emphasis>, since
@@ -47,7 +51,7 @@
             query.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat]]></programlisting>
+        <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
             This query assigns the alias <literal>cat</literal> to <literal>Cat</literal>
@@ -55,7 +59,7 @@
             keyword is optional; we could also write:
         </para>
         
-        <programlisting><![CDATA[from eg.Cat cat]]></programlisting>
+        <programlisting><![CDATA[from Cat cat]]></programlisting>
         
         <para>
             Multiple classes may appear, resulting in a cartesian product or "cross" join.
@@ -80,13 +84,13 @@
             collection of values, using a <literal>join</literal>.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat 
+        <programlisting><![CDATA[from Cat as cat 
     inner join cat.mate as mate
-    left outer join cat.kittens as kitten
+    left outer join cat.kittens as kitten]]></programlisting>
 
-from eg.Cat as cat left join cat.mate.kittens as kittens
+        <programlisting><![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]></programlisting>
 
-from Formula form full join form.parameter param]]></programlisting>
+        <programlisting><![CDATA[from Formula form full join form.parameter param]]></programlisting>
 
         <para>
             The supported join types are borrowed from ANSI SQL
@@ -120,7 +124,7 @@ from Formula form full join form.parameter param]]></programlisting>
             <literal>right outer join</literal> constructs may be abbreviated.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat 
+        <programlisting><![CDATA[from Cat as cat 
     join cat.mate as mate
     left join cat.kittens as kitten]]></programlisting>
 
@@ -132,7 +136,7 @@ from Formula form full join form.parameter param]]></programlisting>
             <xref linkend="performance-fetching"/> for more information.
         </para>
     
-        <programlisting><![CDATA[from eg.Cat as cat 
+        <programlisting><![CDATA[from Cat as cat 
     inner join fetch cat.mate
     left join fetch cat.kittens]]></programlisting>
     
@@ -162,7 +166,7 @@ from Formula form full join form.parameter param]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select mate 
-from eg.Cat as cat 
+from Cat as cat 
     inner join cat.mate as mate]]></programlisting>
 
         <para>
@@ -170,7 +174,7 @@ from eg.Cat as cat
             Actually, you may express this query more compactly as:
         </para>
 
-        <programlisting><![CDATA[select cat.mate from eg.Cat cat]]></programlisting>
+        <programlisting><![CDATA[select cat.mate from Cat cat]]></programlisting>
 
 
 <!-- NO LONGER SUPPORTED!      
@@ -179,13 +183,13 @@ from eg.Cat as cat
             function. The following query returns all kittens of any cat.
         </para>
         
-        <programlisting><![CDATA[select elements(cat.kittens) from eg.Cat cat]]></programlisting>
+        <programlisting><![CDATA[select elements(cat.kittens) from Cat cat]]></programlisting>
 -->
         <para>
             Queries may return properties of any value type including properties of component type:
         </para>
 
-        <programlisting><![CDATA[select cat.name from eg.DomesticCat cat
+        <programlisting><![CDATA[select cat.name from DomesticCat cat
 where cat.name like 'fri%'
 
 select cust.name.firstName from Customer as cust]]></programlisting>
@@ -196,7 +200,7 @@ select cust.name.firstName from Customer as cust]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select mother, offspr, mate.name 
-from eg.DomesticCat as mother
+from DomesticCat as mother
     inner join mother.mate as mate
     left outer join mother.kittens as offspr]]></programlisting>
         
@@ -205,7 +209,7 @@ from eg.DomesticCat as mother
         </para>
         
         <programlisting><![CDATA[select new Family(mother, mate, offspr)
-from eg.DomesticCat as mother
+from DomesticCat as mother
     join mother.mate as mate
     left join mother.kittens as offspr]]></programlisting>
         
@@ -223,7 +227,7 @@ from eg.DomesticCat as mother
         </para>
 
         <programlisting><![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
-from eg.Cat cat]]></programlisting>
+from Cat cat]]></programlisting>
 
 <!-- NO LONGER SUPPORTED
         <para>
@@ -232,7 +236,7 @@ from eg.Cat cat]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select cat, count( elements(cat.kittens) ) 
-from eg.Cat cat group by cat]]></programlisting>
+from Cat cat group by cat]]></programlisting>
 -->
 
         <para>
@@ -262,9 +266,9 @@ from eg.Cat cat group by cat]]></programlisting>
             the same semantics as in SQL.
         </para>
 
-        <programlisting><![CDATA[select distinct cat.name from eg.Cat cat
+        <programlisting><![CDATA[select distinct cat.name from Cat cat
 
-select count(distinct cat.name), count(cat) from eg.Cat cat]]></programlisting>
+select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
     
     </sect1>
     
@@ -275,7 +279,7 @@ select count(distinct cat.name), count(cat) from eg.Cat cat]]></programlisting>
             A query like:
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat]]></programlisting>
+        <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
             returns instances not only of <literal>Cat</literal>, but also of subclasses like
@@ -292,7 +296,7 @@ select count(distinct cat.name), count(cat) from eg.Cat cat]]></programlisting>
             classes:
         </para>
         
-        <programlisting><![CDATA[from eg.Named n, eg.Named m where n.name = m.name]]></programlisting>
+        <programlisting><![CDATA[from Named n, Named m where n.name = m.name]]></programlisting>
         
         <para>
             Note that these last two queries will require more than one SQL <literal>SELECT</literal>. This
@@ -307,16 +311,23 @@ select count(distinct cat.name), count(cat) from eg.Cat cat]]></programlisting>
 
         <para>
             The <literal>where</literal> clause allows you to narrow the list of instances returned.
+            If no alias exists, you may refer to properties by name:
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat where cat.name='Fritz']]></programlisting>
+        <programlisting><![CDATA[from Cat where name='Fritz']]></programlisting>
+        
+        <para>
+        	If there is an alias, use a qualified property name:
+        </para>
+        
+        <programlisting><![CDATA[from Cat as cat where cat.name='Fritz']]></programlisting>
 
         <para>
             returns instances of <literal>Cat</literal> named 'Fritz'.
         </para>
 
         <programlisting><![CDATA[select foo 
-from eg.Foo foo, eg.Bar bar
+from Foo foo, Bar bar
 where foo.startDate = bar.date]]></programlisting>
 
         <para>
@@ -328,14 +339,14 @@ where foo.startDate = bar.date]]></programlisting>
             <literal>where</literal> clause extremely powerful. Consider:
         </para>
 
-        <programlisting><![CDATA[from eg.Cat cat where cat.mate.name is not null]]></programlisting>
+        <programlisting><![CDATA[from Cat cat where cat.mate.name is not null]]></programlisting>
 
         <para>
             This query translates to an SQL query with a table (inner) join. If you were to write
             something like
         </para>
 
-        <programlisting><![CDATA[from eg.Foo foo  
+        <programlisting><![CDATA[from Foo foo  
 where foo.bar.baz.customer.address.city is not null]]></programlisting>
 
         <para>
@@ -347,10 +358,10 @@ where foo.bar.baz.customer.address.city is not null]]></programlisting>
             instances:
         </para>
 
-        <programlisting><![CDATA[from eg.Cat cat, eg.Cat rival where cat.mate = rival.mate
+        <programlisting><![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]></programlisting>
 
-select cat, mate 
-from eg.Cat cat, eg.Cat mate
+        <programlisting><![CDATA[select cat, mate 
+from Cat cat, Cat mate
 where cat.mate = mate]]></programlisting>
 
         <para>
@@ -358,9 +369,9 @@ where cat.mate = mate]]></programlisting>
             unique identifier of an object. (You may also use its property name.)
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as cat where cat.id = 123
+        <programlisting><![CDATA[from Cat as cat where cat.id = 123
 
-from eg.Cat as cat where cat.mate.id = 69]]></programlisting>
+from Cat as cat where cat.mate.id = 69]]></programlisting>
 
         <para>
             The second query is efficient. No table join is required!
@@ -374,9 +385,9 @@ from eg.Cat as cat where cat.mate.id = 69]]></programlisting>
 
         <programlisting><![CDATA[from bank.Person person
 where person.id.country = 'AU' 
-    and person.id.medicareNumber = 123456
+    and person.id.medicareNumber = 123456]]></programlisting>
 
-from bank.Account account
+        <programlisting><![CDATA[from bank.Account account
 where account.owner.id.country = 'AU' 
     and account.owner.id.medicareNumber = 123456]]></programlisting>
 
@@ -390,7 +401,7 @@ where account.owner.id.country = 'AU'
             where clause will be translated to its discriminator value.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat cat where cat.class = eg.DomesticCat]]></programlisting>
+        <programlisting><![CDATA[from Cat cat where cat.class = DomesticCat]]></programlisting>
         
         <para>
             You may also specify properties of components or composite user types (and of components 
@@ -408,8 +419,8 @@ store.owner.address         // error!]]></programlisting>
             is a property mapped with <literal>&lt;any&gt;</literal>).
         </para>
        
-        <programlisting><![CDATA[from eg.AuditLog log, eg.Payment payment 
-where log.item.class = 'eg.Payment' and log.item.id = payment.id]]></programlisting>
+        <programlisting><![CDATA[from AuditLog log, Payment payment 
+where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting>
     
         <para>
             Notice that <literal>log.item.class</literal> and <literal>payment.class</literal>
@@ -513,17 +524,17 @@ where log.item.class = 'eg.Payment' and log.item.id = payment.id]]></programlist
             <literal>in</literal> and <literal>between</literal> may be used as follows:
         </para>
 
-        <programlisting><![CDATA[from eg.DomesticCat cat where cat.name between 'A' and 'B'
+        <programlisting><![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]></programlisting>
 
-from eg.DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
+        <programlisting><![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
             and the negated forms may be written
         </para>
 
-        <programlisting><![CDATA[from eg.DomesticCat cat where cat.name not between 'A' and 'B'
+        <programlisting><![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]></programlisting>
 
-from eg.DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
+        <programlisting><![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
             Likewise, <literal>is null</literal> and <literal>is not null</literal> may be used to test 
@@ -542,16 +553,16 @@ from eg.DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></progra
             literals <literal>1</literal> and <literal>0</literal> in the translated SQL from this HQL:
         </para>
 
-        <programlisting><![CDATA[from eg.Cat cat where cat.alive = true]]></programlisting>
+        <programlisting><![CDATA[from Cat cat where cat.alive = true]]></programlisting>
 
         <para>
             You may test the size of a collection with the special property <literal>size</literal>, or
             the special <literal>size()</literal> function.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat cat where cat.kittens.size > 0
+        <programlisting><![CDATA[from Cat cat where cat.kittens.size > 0]]></programlisting>
 
-from eg.Cat cat where size(cat.kittens) > 0]]></programlisting>
+        <programlisting><![CDATA[from Cat cat where size(cat.kittens) > 0]]></programlisting>
 
         <para>
             For indexed collections, you may refer to the minimum and maximum indices using
@@ -561,11 +572,11 @@ from eg.Cat cat where size(cat.kittens) > 0]]></programlisting>
             functions.
         </para>
         
-        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date
+        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date]]></programlisting>
         
-from Order order where maxindex(order.items) > 100
+        <programlisting><![CDATA[from Order order where maxindex(order.items) > 100]]></programlisting>
 
-from Order order where minelement(order.items) > 10000]]></programlisting>
+        <programlisting><![CDATA[from Order order where minelement(order.items) > 10000]]></programlisting>
         
         <para>
             The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element 
@@ -573,17 +584,17 @@ from Order order where minelement(order.items) > 10000]]></programlisting>
             or the result of a subquery (see below).
         </para>
 
-        <programlisting><![CDATA[select mother from eg.Cat as mother, eg.Cat as kit
-where kit in elements(foo.kittens)
+        <programlisting><![CDATA[select mother from Cat as mother, Cat as kit
+where kit in elements(foo.kittens)]]></programlisting>
 
-select p from eg.NameList list, eg.Person p
-where p.name = some elements(list.names)
+        <programlisting><![CDATA[select p from NameList list, Person p
+where p.name = some elements(list.names)]]></programlisting>
 
-from eg.Cat cat where exists elements(cat.kittens)
+        <programlisting><![CDATA[from Cat cat where exists elements(cat.kittens)]]></programlisting>
 
-from eg.Player p where 3 > all elements(p.scores)
+        <programlisting><![CDATA[from Player p where 3 > all elements(p.scores)]]></programlisting>
 
-from eg.Show show where 'fizard' in indices(show.acts)]]></programlisting>
+        <programlisting><![CDATA[from Show show where 'fizard' in indices(show.acts)]]></programlisting>
 
         <para>
             Note that these constructs - <literal>size</literal>, <literal>elements</literal>,
@@ -597,16 +608,16 @@ from eg.Show show where 'fizard' in indices(show.acts)]]></programlisting>
             index (in a where clause only):
         </para>
         
-        <programlisting><![CDATA[from Order order where order.items[0].id = 1234
+        <programlisting><![CDATA[from Order order where order.items[0].id = 1234]]></programlisting>
 
-select person from Person person, Calendar calendar
+        <programlisting><![CDATA[select person from Person person, Calendar calendar
 where calendar.holidays['national day'] = person.birthDay
-    and person.nationality.calendar = calendar
+    and person.nationality.calendar = calendar]]></programlisting>
 
-select item from Item item, Order order
-where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11
+        <programlisting><![CDATA[select item from Item item, Order order
+where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]></programlisting>
 
-select item from Item item, Order order
+        <programlisting><![CDATA[select item from Item item, Order order
 where order.items[ maxindex(order.items) ] = item and order.id = 11]]></programlisting>
 
         <para>
@@ -629,7 +640,7 @@ where index(item) < 5]]></programlisting>
             Scalar SQL functions supported by the underlying database may be used
         </para>
 
-        <programlisting><![CDATA[from eg.DomesticCat cat where upper(cat.name) like 'FRI%']]></programlisting>
+        <programlisting><![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]></programlisting>
 
         <para>
             If you are not yet convinced by all this, think how much longer and less readable the 
@@ -675,7 +686,7 @@ WHERE prod.name = 'widget'
             The list returned by a query may be ordered by any property of a returned class or components:
         </para>
 
-        <programlisting><![CDATA[from eg.DomesticCat cat
+        <programlisting><![CDATA[from DomesticCat cat
 order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
 
         <para>
@@ -692,11 +703,11 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat) 
-from eg.Cat cat
-group by cat.color
+from Cat cat
+group by cat.color]]></programlisting>
 
-select foo.id, avg(name), max(name) 
-from eg.Foo foo join foo.names name
+        <programlisting><![CDATA[select foo.id, avg(name), max(name) 
+from Foo foo join foo.names name
 group by foo.id]]></programlisting>
 
         <para>
@@ -704,18 +715,18 @@ group by foo.id]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat) 
-from eg.Cat cat
+from Cat cat
 group by cat.color 
 having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
             SQL functions and aggregate functions are allowed in the <literal>having</literal>
-            and <literal>order by</literal> clauses, if supported by the underlying database (eg.
-            not in MySQL).
+            and <literal>order by</literal> clauses, if supported by the underlying database 
+            (eg. not in MySQL).
         </para>
 
         <programlisting><![CDATA[select cat
-from eg.Cat cat
+from Cat cat
     join cat.kittens kitten
 group by cat
 having avg(kitten.weight) > 100
@@ -737,24 +748,24 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
             (subqueries that refer to an alias in the outer query) are allowed.
         </para>
 
-        <programlisting><![CDATA[from eg.Cat as fatcat 
+        <programlisting><![CDATA[from Cat as fatcat 
 where fatcat.weight > ( 
-    select avg(cat.weight) from eg.DomesticCat cat 
-)
+    select avg(cat.weight) from DomesticCat cat 
+)]]></programlisting>
 
-from eg.DomesticCat as cat 
+        <programlisting><![CDATA[from DomesticCat as cat 
 where cat.name = some ( 
-    select name.nickName from eg.Name as name 
-)
+    select name.nickName from Name as name 
+)]]></programlisting>
     
-from eg.Cat as cat 
+        <programlisting><![CDATA[from Cat as cat 
 where not exists ( 
-    from eg.Cat as mate where mate.mate = cat 
-)
+    from Cat as mate where mate.mate = cat 
+)]]></programlisting>
 
-from eg.DomesticCat as cat 
+        <programlisting><![CDATA[from DomesticCat as cat 
 where cat.name not in ( 
-    select name.nickName from eg.Name as name 
+    select name.nickName from Name as name 
 )]]></programlisting>
 
     </sect1>

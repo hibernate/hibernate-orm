@@ -13,7 +13,7 @@
         </para>
 
         <para>
-            Hibernate offers the following fetching strategies:
+            Hibernate3 defines the following fetching strategies:
         </para>
 
         <itemizedlist>
@@ -103,6 +103,8 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     <one-to-many class="Permission"/>
 </set]]></programlisting>
 
+           <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
+
             <para>
                 The fetch strategy defined in the mapping document affects:
             </para>
@@ -164,6 +166,10 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 collection applies to both the mapping fetching strategies and to HQL/Criteria 
                 queries.
             </para>
+            
+            <para>
+                There are no restrictions to join fetching of single-ended associations.
+            </para>
 
         </sect2>
 
@@ -197,11 +203,11 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
 
             <programlisting><![CDATA[<class name="Cat" proxy="Cat">
-        ......
-        <subclass name="DomesticCat">
-            .....
-        </subclass>
-    </class>]]></programlisting>
+    ......
+    <subclass name="DomesticCat">
+        .....
+    </subclass>
+</class>]]></programlisting>
 
             <para>
                 Firstly, instances of <literal>Cat</literal> will never be castable to
@@ -210,20 +216,19 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
-    if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
-        DomesticCat dc = (DomesticCat) cat;       // Error!
-        ....
-    }]]></programlisting>
+if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
+    DomesticCat dc = (DomesticCat) cat;       // Error!
+    ....
+}]]></programlisting>
 
             <para>
                 Secondly, it is possible to break proxy <literal>==</literal>.
             </para>
 
-            <programlisting><![CDATA[
-    Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
-    DomesticCat dc =
-        (DomesticCat) session.load(DomesticCat.class, id);  // required new DomesticCat proxy!
-    System.out.println(cat==dc);                            // false]]></programlisting>
+            <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
+DomesticCat dc = 
+        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new DomesticCat proxy!
+System.out.println(cat==dc);                            // false]]></programlisting>
 
             <para>
                 However, the situation is not quite as bad as it looks. Even though we now have two references
@@ -231,7 +236,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
 
             <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
-    System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
+System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 
             <para>
                 Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class
@@ -251,11 +256,11 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
 
             <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
-        ......
-        <subclass name="DomesticCatImpl" proxy="DomesticCat">
-            .....
-        </subclass>
-    </class>]]></programlisting>
+    ......
+    <subclass name="DomesticCatImpl" proxy="DomesticCat">
+        .....
+    </subclass>
+</class>]]></programlisting>
 
             <para>
                 where <literal>Cat</literal> implements the interface <literal>ICat</literal> and
@@ -266,8 +271,8 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
-    Iterator iter = session.iterate("from cat in class CatImpl where cat.name='fritz'");
-    Cat fritz = (Cat) iter.next();]]></programlisting>
+Iterator iter = session.iterate("from cat in class CatImpl where cat.name='fritz'");
+Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 Relationships are also lazily initialized. This means you must declare any properties to be of
@@ -303,48 +308,15 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 <literal>hashCode()</literal>.
             </para>
 
-            <para>
-                You may of course also use Eager or Select fetching strategies for single-ended
-                associations:
-            </para>
-
-            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>
-<many-to-one name="father" class="Cat" fetch="select"/>]]></programlisting>
-
-            <para>
-                The first mapping tells Hibernate to fetch the associated <literal>mother</literal>
-                entity in the same initial <literal>SELECT</literal> using an <literal>OUTER JOIN</literal>.
-                You can set this option on as many *-to-one associations as you like, there is no
-                danger of creating a Cartesian product (opposed to collections). Note that you can
-                set the maximum depth of outer joined tables with the global configuration option
-                <literal>max_fetch_depth</literal> (see <xref linkend="configuration-optional-outerjoin"/>).
-            </para>
-
-            <para>
-                The second mapping enables an additional <literal>SELECT</literal> for the
-                retrieval of the <literal>father</literal>. Note that Hibernate does not guarantee
-                <emphasis>when</emphasis> this query will be executed. If it should be executed
-                immediately (right after the initial <literal>SELECT</literal>), disable proxying
-                on the target of the association by setting it to <literal>lazy="false"</literal>:
-            </para>
-
-            <programlisting><![CDATA[<class name="Cat" lazy="false">...</class>]]></programlisting>
-
-            <para>
-                (Note that this example uses only a single persistent class <literal>Cat</literal>
-                and self-referencing associations. This doesn't change the fetching behavior, as expexted.)
-            </para>
-
         </sect2>
 
         <sect2 id="performance-fetching-initialization">
             <title>Initializing collections and proxies</title>
 
             <para>
-                An exception (<literal>LazyInitializationException</literal>) will be thrown by
-                Hibernate if an unitialized collection or proxy is accessed outside of the scope
-                of the <literal>Session</literal>, ie. when the entity owning the collection or
-                having the reference to the proxy is in detached state.
+                A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an unitialized 
+                collection or proxy is accessed outside of the scope of the <literal>Session</literal>, ie. when 
+                the entity owning the collection or having the reference to the proxy is in the detached state.
             </para>
 
             <para>
@@ -367,9 +339,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 Another option is to keep the <literal>Session</literal> open until all needed
                 collections and proxies have been loaded. In some application architectures,
                 particularly where the code that accesses data using Hibernate, and the code that
-                uses it are in different application layers, it can be a problem to ensure that the
-                <literal>Session</literal> is open when a collection is initialized. There are
-                two basic ways to deal with this issue:
+                uses it are in different application layers or different physical processes, it 
+                can be a problem to ensure that the <literal>Session</literal> is open when a 
+                collection is initialized. There are two basic ways to deal with this issue:
             </para>
 
             <itemizedlist>
@@ -378,20 +350,20 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                         In a web-based application, a servlet filter can be used to close the
                         <literal>Session</literal> only at the very end of a user request, once
                         the rendering of the view is complete (the <emphasis>Open Session in
-                        View</emphasis> pattern).  Of course, this places heavy
-                        demands on the correctness of the exception handling of your application
-                        infrastructure. It is vitally important that the <literal>Session</literal>
-                        is closed and the transaction ended before returning to the user, even
-                        when an exception occurs during rendering of the view. The servlet filter
-                        has to be able to access the <literal>Session</literal> for this approach.
-                        We recommend that a <literal>ThreadLocal</literal> variable be used to
-                        hold the current <literal>Session</literal> (see chapter 1,
+                        View</emphasis> pattern).  Of course, this places heavy demands on the 
+                        correctness of the exception handling of your application infrastructure. 
+                        It is vitally important that the <literal>Session</literal> is closed and the 
+                        transaction ended before returning to the user, even when an exception occurs 
+                        during rendering of the view. The servlet filter has to be able to access the 
+                        <literal>Session</literal> for this approach. We recommend that a 
+                        <literal>ThreadLocal</literal> variable be used to hold the current 
+                        <literal>Session</literal> (see chapter 1, 
                         <xref linkend="quickstart-playingwithcats"/>, for an example implementation).
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        In an application with a seperate business tier, the business logic must
+                        In an application with a separate business tier, the business logic must
                         "prepare" all collections that will be needed by the web tier before
                         returning. This means that the business tier should load all the data and
                         return all the data already initialized to the presentation/web tier that
@@ -408,8 +380,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                     <para>
                         You may also attach a previously loaded object to a new <literal>Session</literal>
                         with <literal>merge()</literal> or <literal>lock()</literal> before
-                        accessing unitialized collections (or other proxies). Hibernate can not
-                        do this automatically, as it would introduce ad hoc transaction semantics!
+                        accessing unitialized collections (or other proxies). No, Hibernate does not,
+                        and certainly <emphasis>should</emphasis> not do this automatically, since it 
+                        would introduce ad hoc transaction semantics!
                     </para>
                 </listitem>
             </itemizedlist>
@@ -803,7 +776,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     </sect1>
 
     <sect1 id="performance-sessioncache" revision="2">
-        <title>Managing the <literal>Session</literal> Cache</title>
+        <title>Managing the caches</title>
 
         <para>
             Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal>
@@ -813,28 +786,23 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             to the internal cache of the <literal>Session</literal>. 
         </para>
         <para>
-            When <literal>flush()</literal> is subsequently called,
-            the state of that object will be synchronized with the database. If you do not want
-            this synchronization to occur or if you are processing a huge number of objects and
-            need to manage memory efficiently, the <literal>evict()</literal> method may be
-            used to remove the object and its collections from the cache.
+            When <literal>flush()</literal> is subsequently called, the state of that object will 
+            be synchronized with the database. If you do not want this synchronization to occur or 
+            if you are processing a huge number of objects and need to manage memory efficiently, 
+            the <literal>evict()</literal> method may be used to remove the object and its collections 
+            from the first-level cache.
         </para>
         
-        <programlisting><![CDATA[Iterator cats = sess.iterate("from eg.Cat as cat"); //a huge result set
-while ( cats.hasNext() ) {
-    Cat cat = (Cat) iter.next();
+        <programlisting><![CDATA[ScrollableResult cats = sess.createQuery("from Cat as cat").scroll(); //a huge result set
+while ( cats.next() ) {
+    Cat cat = (Cat) cats.get(0);
     doSomethingWithACat(cat);
     sess.evict(cat);
 }]]></programlisting>
-
-		<para>
-			Hibernate will evict associated entities automatically if the association is mapped
-			with <literal>cascade="all"</literal> or <literal>cascade="all-delete-orphan"</literal>.
-		</para>
         
         <para>
-            The <literal>Session</literal> also provides a <literal>contains()</literal> method
-            to determine if an instance belongs to the session cache.
+            The <literal>Session</literal> also provides a <literal>contains()</literal> method to determine 
+            if an instance belongs to the session cache.
         </para>
         
         <para>
@@ -847,6 +815,60 @@ while ( cats.hasNext() ) {
             role.
         </para>
         
+        <programlisting><![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat
+sessionFactory.evict(Cat.class);  //evict all Cats
+sessionFactory.evictCollection("Cat.kittens", catId); //evict a particular collection of kittens
+sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]></programlisting>
+
+        <para>
+            The <literal>CacheMode</literal> controls how a particular session interacts with the second-level
+            cache.
+        </para>
+        
+        <itemizedlist>
+        <listitem>
+        <para>
+            <literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to
+            the second-level cache except when updating data
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <literal>CacheMode.PUT</literal> - write items to the second-level cache, but don't read from
+            the second-level cache
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from
+            the second-level cache, bypass the effect of <literal>hibernate.use_minimal_puts</literal>, forcing
+            a refresh of the second-level cache for all items read from the database
+        </para>
+        </listitem>
+        </itemizedlist>
+        
+        <para>
+            To browse the contents of a second-level or query cache region, use the <literal>Statistics</literal>
+            API:
+        </para>
+        
+        <programlisting><![CDATA[Map cacheEntries = sessionFactory.getStatistics()
+        .getSecondLevelCacheStatistics(regionName)
+        .getEntries();]]></programlisting>
+        
+        <para>
+            You'll need to enable statistics, and, optionally, force Hibernate to keep the cache entries in a
+            more human-understandable format:
+        </para>
+        
+        <programlisting><![CDATA[hibernate.generate_statistics true
+hibernate.cache.use_structured_entries true]]></programlisting>       
+                
     </sect1>
     
     <sect1 id="performance-querycache" revision="1">
@@ -854,15 +876,19 @@ while ( cats.hasNext() ) {
 
         <para>
             Query result sets may also be cached. This is only useful for queries that are run
-            frequently with the same parameters. To use the query cache you must first enable it
-            by setting the property <literal>hibernate.cache.use_query_cache=true</literal>. This
-            causes the creation of two cache regions - one holding cached query result sets 
-            (<literal>org.hibernate.cache.QueryCache</literal>), the other holding timestamps
-            of most recent updates to queried tables 
+            frequently with the same parameters. To use the query cache you must first enable it:
+        </para>
+
+        <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>       
+        
+        <para>
+            This setting causes the creation of two new cache regions - one holding cached query 
+            result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other 
+            holding timestamps of the most recent updates to queryable tables 
             (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
-            cache does not cache the state of any entities in the result set; it caches only 
-            identifier values and results of value type. So the query cache is usually used in
-            conjunction with the second-level cache.
+            cache does not cache the state of the actual entities in the result set; it caches 
+            only identifier values and results of value type. So the query cache should always be
+            used in conjunction with the second-level cache.
         </para>
         
         <para>
@@ -886,14 +912,12 @@ while ( cats.hasNext() ) {
     .list();]]></programlisting>
 
         <para>
-            If the query should force a refresh of its query cache region, you may call
-            <literal>Query.setForceCacheRefresh()</literal> to <literal>true</literal>.
-            This is particularly useful in cases where underlying data may have been updated
-            via a seperate process (i.e., not modified through Hibernate) and allows the
-            application to selectively refresh the query cache regions based on its
-            knowledge of those events. This is an alternative to eviction of a query
-            cache region. If you need fine-grained refresh control for many queries, use
-            this function instead of a new region for each query.
+            If the query should force a refresh of its query cache region, you should call
+            <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is particularly useful 
+            in cases where underlying data may have been updated via a seperate process (i.e., 
+            not modified through Hibernate) and allows the application to selectively refresh 
+            particular query result sets. This is a more efficient alternative to eviction of 
+            a query cache region via <literal>SessionFactory.evictQueries()</literal>.
         </para>
 
     </sect1>
@@ -1092,9 +1116,5 @@ while ( cats.hasNext() ) {
         </sect2>
 
     </sect1>
-
-    <para>
-        TODO: document statistics
-    </para>
 
 </chapter>

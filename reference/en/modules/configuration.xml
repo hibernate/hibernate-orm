@@ -735,7 +735,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Optimize second-level cache operation to minimize writes, at the
-                            cost of more frequent reads (useful for clustered caches).
+                            cost of more frequent reads. This setting is most useful for 
+                            clustered caches and, in Hibernate3, is enabled by default for
+                            clustered cache implementations.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true|false</literal>
@@ -756,7 +758,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.cache.use_second_level_cacge</literal>
+                            <literal>hibernate.cache.use_second_level_cache</literal>
                         </entry>
                         <entry>
                             May be used to completely disable the second level cache, which is enabled

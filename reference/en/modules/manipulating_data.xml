@@ -33,7 +33,7 @@
                     persistent representation in the database and no identifier value has been
                     assigned. Transient instances will be destroyed by the garbage collector of
                     the application doesn't hold a reference anymore. Use the Hibernate
-                    <literal>Session</literal> to make an object persisent (and let Hibernate
+                    <literal>Session</literal> to make an object persistent (and let Hibernate
                     take care of the SQL statements that need to be executed for this transition).
                 </para>
             </listitem>
@@ -120,10 +120,10 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         </para>
         
         <para>
-            Usually you don't bother with this detail, as you'd very likely use Hibernate's
+            Usually you don't bother with this detail, as you'll very likely use Hibernate's
             <emphasis>transitive persistence</emphasis> feature to save the associated
-            objects automatically. Then, <literal>NOT NULL</literal>
-            constraint violations are impossible - Hibernate will take care of everything.
+            objects automatically. Then, even <literal>NOT NULL</literal>
+            constraint violations don't occur - Hibernate will take care of everything.
             Transitive persistence is discussed later in this chapter.
         </para>
         
@@ -288,6 +288,10 @@ while ( iter.hasNext() ) {
         break;
     }
 }]]></programlisting>
+            </sect3>
+            
+            <sect3 id="objectstate-querying-executing-tuples">
+                <title>Queries that return tuples</title>
 
                 <para>
                     Hibernate queries sometimes return tuples of objects, in which case each tuple
@@ -338,10 +342,10 @@ while ( results.hasNext() ) {
 
                 <para>
                     Methods on <literal>Query</literal> are provided for binding values to
-                    named parameters or JDBC-style <literal>?</literal> parameters. Named parameters
-                    are identifiers of the form <literal>:name</literal> in the query string.
+                    named parameters or JDBC-style <literal>?</literal> parameters. 
                     <emphasis>Contrary to JDBC, Hibernate numbers parameters from zero.</emphasis>
-                    The advantages of named parameters are:
+                    Named parameters are identifiers of the form <literal>:name</literal> in 
+                    the query string. The advantages of named parameters are:
                 </para>
 
                 <itemizedlist spacing="compact">
@@ -691,60 +695,11 @@ sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
         <title>Automatic state detection</title>
 
         <para>
-            TODO: discuss new unsaved check defaults, the rest of this section is probably obsolete
-        </para>
-
-        <para>
             Hibernate users have requested a general purpose method that either saves a
             transient instance by generating a new identifier or updates/reattaches
             the detached instances associated with its current identifier.
             The <literal>saveOrUpdate()</literal> method implements this functionality.
         </para>
-
-        <para>
-            Hibernate distinguishes "new" transient instances from detached instances by the
-            value of the identifier (or version, or timestamp) property. The <literal>unsaved-value</literal>
-            attribute of the <literal>&lt;id&gt;</literal> (or <literal>&lt;version&gt;</literal>,
-            or <literal>&lt;timestamp&gt;</literal>) mapping specifies which values should
-            be interpreted as representing a new transient instance.
-        </para>
-
-        <programlisting><![CDATA[<id name="id" type="long" column="uid" unsaved-value="null">
-    <generator class="hilo"/>
-</id>]]></programlisting>
-
-        <para>
-            The allowed values of <literal>unsaved-value</literal> are:
-        </para>
-
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-                <literal>any</literal> - always save
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                <literal>none</literal> - always update
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                <literal>null</literal> - save when identifier is null (this is the default)
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                valid identifier value - save when identifier is null or the given value
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                <literal>undefined</literal> - the default for <literal>version</literal> or
-                    <literal>timestamp</literal>, then identifier check is used
-                </para>
-            </listitem>
-        </itemizedlist>
 
         <programlisting><![CDATA[// in the first session
 Cat cat = (Cat) firstSession.load(Cat.class, catID);
@@ -811,27 +766,32 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             </listitem>
             <listitem>
                 <para>
+                    if another object associated with the session has the same identifier, 
+                    throw an exception
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     if the object has no identifier property, <literal>save()</literal> it
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    if the object's identifier matches the criteria specified by
-                    <literal>unsaved-value</literal>, <literal>save()</literal> it
+                    if the object's identifier has the value assigned to a newly instantiated
+                    object, <literal>save()</literal> it
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    if the object is versioned (<literal>version</literal> or
-                    <literal>timestamp</literal>), then the version will take precedence
-                    to identifier check, unless the versions
-                    <literal>unsaved-value="undefined"</literal> (default value)
+                    if the object is versioned (by a <literal>&lt;version&gt;</literal> or
+                    <literal>&lt;timestamp&gt;</literal>), and the version property value
+                    is the same value assigned to a newly instantiated object, 
+                    <literal>save()</literal> it
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    if another object associated with the session has the same
-                    identifier, throw an exception
+                    otherwise <literal>update()</literal> the object
                 </para>
             </listitem>
         </itemizedlist>
@@ -843,25 +803,26 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    copies the state of the given object onto the already persistent
-                    object with the same identifier
+                    if there is a persistent instance with the same identifier currently 
+                    associated with the session, copy the state of the given object onto 
+                    the persistent instance
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    if there is no persistent instance currently associated with
-                    the session, it will be loaded
+                    if there is no persistent instance currently associated with the session, 
+                    try to load it from the database, or create a new persistent instance
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    returns the persistent instance
+                    the persistent instance is returned
                 </para>
             </listitem>
             <listitem>
                 <para>
                     the given instance does not become associated with the session, it
-                    stays detached
+                    remains detached
                 </para>
             </listitem>
         </itemizedlist>
@@ -881,15 +842,8 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
         <programlisting><![CDATA[sess.delete(cat);]]></programlisting>
 
         <para>
-            You may also delete many objects at once by passing a Hibernate query string to
-            <literal>delete()</literal>. Note that Hibernate will always load the objects
-            before deletion, to execute lifecycle and any kind of user-defined interception
-            on them (use direct JDBC for mass operations).
-        </para>
-
-        <para>
             You may delete objects in any order you like, without risk of foreign key
-            constraint violations. Of course, it is still possible to violate a <literal>NOT
+            constraint violations. It is still possible to violate a <literal>NOT
             NULL</literal> constraint on a foreign key column by deleting objects in
             the wrong order, e.g. if you delete the parent, but forget to delete the
             children.
@@ -910,7 +864,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    from some invocations of <literal>find()</literal> or <literal>iterate()</literal>
+                    before from some query executions
                 </para>
             </listitem>
             <listitem>
@@ -973,8 +927,8 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             Except when you explicity <literal>flush()</literal>, there are absolutely no 
             guarantees about <emphasis>when</emphasis> the <literal>Session</literal> executes 
             the JDBC calls, only the <emphasis>order</emphasis> in which they are executed.
-            However, Hibernate does guarantee that the <literal>Session.find(..)</literal> 
-            methods will never return stale data; nor will they return the wrong data.
+            However, Hibernate does guarantee that the <literal>Query.list(..)</literal> 
+            will never return stale data; nor will they return the wrong data.
         </para>
 
         <para>
@@ -982,7 +936,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             The <literal>FlushMode</literal> class defines three different modes: only flush
             at commit time (and only when the Hibernate <literal>Transaction</literal> API
             is used), flush automatically using the explained routine, or never flush unless
-            <literal>flush()</literal> is called explicitely. The last mode is useful for long running
+            <literal>flush()</literal> is called explicitly. The last mode is useful for long running
             units of work, where a <literal>Session</literal> is kept open and disconnected for
             a long time (see <xref linkend="transactions-disconnection"/>).
         </para>
@@ -1003,8 +957,8 @@ tx.commit(); // flush occurs]]></programlisting>
 
         <para>
             During flush, an exception might occur (e.g. if a DML operation violates a constraint).
-            Since handling exceptions involves some understanding of Hibernate's transactional behavior,
-            we discuss it in <xref linkend="transactions"/>.
+            Since handling exceptions involves some understanding of Hibernate's transactional 
+            behavior, we discuss it in <xref linkend="transactions"/>.
         </para>
 
     </sect1>

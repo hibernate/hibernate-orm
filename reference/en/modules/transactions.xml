@@ -310,7 +310,7 @@
             the database can occur outside of a database transaction (this seems to confuse many developers
             who are used to the auto-commit mode). Always use clear transaction boundaries, even for
             read-only operations (depending on your isolation level, this might not be required, but there
-            is no downside if you always demarcate transactions explicitely).
+            is no downside if you always demarcate transactions explicitly).
         </para>
 
         <para>
@@ -414,7 +414,7 @@ finally {
 
             <para>
                 Note that you don't have to <literal>flush()</literal> the <literal>Session</literal>
-                explicitely, the call to <literal>commit()</literal> automatically triggers the
+                explicitly, the call to <literal>commit()</literal> automatically triggers the
                 synchronization. This piece of code is now portable and runs in non-managed and JTA
                 environments. See <xref linkend="configuration-optional-transactionstrategy"/> for more
                 information about the <literal>Transaction</literal> API.

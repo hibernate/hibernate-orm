@@ -252,29 +252,15 @@ session.flush();]]></programlisting>
              The <literal>Parent</literal> will contain a collection of childen and, since cascading update is enabled, 
              Hibernate needs to know which children are newly instantiated and which represent existing rows in the 
              database. Lets assume that both <literal>Parent</literal> and <literal>Child</literal> have genenerated
-             identifier properties of type <literal>Long</literal>. Hibernate will use the identifier property 
-             value to determine which of the children are new. (You may also use the version or timestamp property, see
-             <xref linkend="objectstate-saveorupdate"/>.)
+             identifier properties of type <literal>Long</literal>. Hibernate will use the identifier and 
+             version/timestamp property value to determine which of the children are new. (See
+             <xref linkend="objectstate-saveorupdate"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify
+             an <literal>unsaved-value</literal> explicitly.</emphasis>
          </para>
 
          <para>
-             The <literal>unsaved-value</literal> attribute is used to specify the identifier value of a newly 
-             instantiated instance. <literal>unsaved-value</literal> defaults to <literal>null</literal> for nullable 
-             types (which is perfect for a <literal>Long</literal> identifier type), and to <literal>0</literal> for 
-             numeric primitives. If we would have initialized our identifier property to <literal>-1</literal> in the 
-             object's constructor, we would need to specify
-         </para>
-
-         <programlisting><![CDATA[<id name="id" type="long" unsaved-value="-1">]]></programlisting>
-
-         <para>
-             for the <literal>Child</literal> mapping. (There is also an <literal>unsaved-value</literal> attribute
-             for version and timestamp property mappings.)
-         </para>
-
-         <para>
-             Now that we have our <literal>unsaved-value</literal> right, the following code will update 
-             <literal>parent</literal> and <literal>child</literal> and insert <literal>newChild</literal>.
+             The following code will update <literal>parent</literal> and <literal>child</literal> and insert 
+             <literal>newChild</literal>.
          </para>
 
          <programlisting><![CDATA[//parent and child were both loaded in a previous session
@@ -286,12 +272,14 @@ session.flush();]]></programlisting>
      
          <para>
              Well, thats all very well for the case of a generated identifier, but what about assigned identifiers
-             and composite identifiers? This is more difficult, since <literal>unsaved-value</literal> can't
+             and composite identifiers? This is more difficult, since Hibernate can't use the identifier property to
              distinguish between a newly instantiated object (with an identifier assigned by the user) and an 
              object loaded in a previous session. In this case, Hibernate will either use the timestamp or version 
-             property, or will actually query the second-level cache database to see if the row exists.
+             property, or will actually query the second-level cache or, worst case, the database, to see if the 
+             row exists.
          </para>
          
+         <!-- undocumenting
          <para>
              There is one further possibility. The <literal>Interceptor</literal> method named 
              <literal>isUnsaved()</literal> lets the application implement its own strategy for distinguishing
@@ -350,7 +338,7 @@ public boolean onSave(Object entity,
 		<para>
 			Don't worry; in Hibernate3 you don't need to write any of this kind of code if you don't want to.
 		</para>
-     
+     -->
      </sect1>
 
      <sect1 id="example-parentchild-conclusion">

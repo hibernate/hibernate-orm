@@ -229,7 +229,7 @@ public class BlogMain {
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
-            session.save(blog);
+            session.create(blog);
             tx.commit();
         }
         catch (HibernateException he) {
@@ -380,7 +380,7 @@ public class BlogMain {
                 "where blog.id = :blogid"
             );
             q.setParameter("blogid", blogid);
-            blog  = (Blog) q.list().get(0);
+            blog  = (Blog) q.uniqueResult();
             tx.commit();
         }
         catch (HibernateException he) {

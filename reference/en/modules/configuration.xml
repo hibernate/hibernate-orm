@@ -368,7 +368,7 @@ hibernate.dialect = \
             are also not available in the <literal>hibernate.cfg.xml</literal> file, discusse later.
         </para>
 
-        <table frame="topbot" id="configuration-optional-properties" revision="6">
+        <table frame="topbot" id="configuration-optional-properties" revision="7">
             <title>Hibernate Configuration Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -657,6 +657,18 @@ hibernate.dialect = \
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>prefix</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.cache.use_structured_entries</literal>
+                        </entry>
+                        <entry>
+                            TODO
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true|false</literal>
                             </para>
                         </entry>
                     </row>

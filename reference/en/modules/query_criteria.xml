@@ -28,45 +28,45 @@ List cats = crit.list();]]></programlisting>
         <para>
             An individual query criterion is an instance of the interface
             <literal>org.hibernate.expression.Criterion</literal>. The class
-            <literal>org.hibernate.expression.Expression</literal> defines
+            <literal>org.hibernate.expression.Restrictions</literal> defines
             factory methods for obtaining certain built-in
             <literal>Criterion</literal> types.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.like("name", "Fritz%") )
-    .add( Expression.between("weight", minWeight, maxWeight) )
+    .add( Restrictions.like("name", "Fritz%") )
+    .add( Restrictions.between("weight", minWeight, maxWeight) )
     .list();]]></programlisting>
     
         <para>
-            Expressions may be grouped logically.
+            Restrictions may be grouped logically.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.like("name", "Fritz%") )
-    .add( Expression.or(
-        Expression.eq( "age", new Integer(0) ),
-        Expression.isNull("age")
+    .add( Restrictions.like("name", "Fritz%") )
+    .add( Restrictions.or(
+        Restrictions.eq( "age", new Integer(0) ),
+        Restrictions.isNull("age")
     ) )
     .list();]]></programlisting>
     
        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
-    .add( Expression.disjunction()
-        .add( Expression.isNull("age") )
-    	.add( Expression.eq("age", new Integer(0) ) )
-    	.add( Expression.eq("age", new Integer(1) ) )
-    	.add( Expression.eq("age", new Integer(2) ) )
+    .add( Restrictions.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
+    .add( Restrictions.disjunction()
+        .add( Restrictions.isNull("age") )
+    	.add( Restrictions.eq("age", new Integer(0) ) )
+    	.add( Restrictions.eq("age", new Integer(1) ) )
+    	.add( Restrictions.eq("age", new Integer(2) ) )
     ) )
     .list();]]></programlisting>
     
         <para>
-            There are quite a range of built-in criterion types (<literal>Expression</literal>
+            There are quite a range of built-in criterion types (<literal>Restrictions</literal>
             subclasses), but one that is especially useful lets you specify SQL directly.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.sql("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+    .add( Restrictions.sql("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
     .list();]]></programlisting>
     
         <para>
@@ -84,7 +84,7 @@ List cats = crit.list();]]></programlisting>
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.like("name", "F%")
+    .add( Restrictions.like("name", "F%")
     .addOrder( Order.asc("name") )
     .addOrder( Order.desc("age") )
     .setMaxResults(50)
@@ -101,9 +101,9 @@ List cats = crit.list();]]></programlisting>
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.like("name", "F%")
+    .add( Restrictions.like("name", "F%")
     .createCriteria("kittens")
-        .add( Expression.like("name", "F%")
+        .add( Restrictions.like("name", "F%")
     .list();]]></programlisting>
 
         <para>
@@ -119,7 +119,7 @@ List cats = crit.list();]]></programlisting>
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createAlias("kittens", "kt")
     .createAlias("mate", "mt")
-    .add( Expression.eqProperty("kt.name", "mt.name") )
+    .add( Restrictions.eqProperty("kt.name", "mt.name") )
     .list();]]></programlisting>
 
         <para>
@@ -136,7 +136,7 @@ List cats = crit.list();]]></programlisting>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createCriteria("kittens", "kt")
-        .add( Expression.eq("name", "F%") )
+        .add( Restrictions.eq("name", "F%") )
     .returnMaps()
     .list();
 Iterator iter = cats.iterator();
@@ -157,7 +157,7 @@ while ( iter.hasNext() ) {
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Expression.like("name", "Fritz%") )
+    .add( Restrictions.like("name", "Fritz%") )
     .setFetchMode("mate", FetchMode.EAGER)
     .setFetchMode("kittens", FetchMode.EAGER)
     .list();]]></programlisting>
@@ -213,6 +213,42 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
     </sect1>
- // TODO: Projection API + ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary user objects - similar to setResultClass in JDO2. General use of 
-ResultTransformer could also be explained.
+    
+    <sect1 id="querycriteria-projection">
+        <title>Projections, aggregation and grouping</title>
+        <para>
+            The class <literal>org.hibernate.criterion.Projections</literal> is a
+            factory for <literal>Projection</literal> instances. We apply a
+            projection to a query by calling <literal>setProjection()</literal>.
+        </para>
+        
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .add( Projections.projectionList()
+        .add( Projections.rowCount() )
+        .add( Projections.avg("weight") )
+        .add( Projections.max("weight") )
+        .add( Projections.groupProperty("color") )
+    )
+    .list();]]></programlisting>
+    
+        <para>
+            The projection factory methods allow an alias to be assigned to a
+            projection, so that it may be referred to in restrictions or orderings.
+        </para>
+
+       <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .add( Projections.projectionList()
+        .add( Projections.rowCount("catCountByColor") )
+        .add( Projections.avg("weight", "avgWeight") )
+        .add( Projections.max("weight") )
+        .add( Projections.groupProperty("color") )
+    )
+    .addOrder( Order.desc("catCountByColor") )
+    .addOrder( Order.desc("avgWeight") )
+    .list();]]></programlisting>
+    
+    </sect1>
+        
+ <!--TODO: Projection API + ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary user objects - similar to setResultClass in JDO2. General use of 
+ResultTransformer could also be explained.-->
 </chapter>

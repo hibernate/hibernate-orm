@@ -215,7 +215,11 @@
             for that class. The recommended approach is to specify the class itself:
         </para>
         
-        <programlisting><![CDATA[<class name="eg.Order" proxy="eg.Order">]]></programlisting>
+        <programlisting><![CDATA[<class name="Order" proxy="Order">]]></programlisting>
+        
+        <para>or, as a shorthand, just write <literal>lazy="true"</literal>:</para>
+        
+        <programlisting><![CDATA[<class name="Order" lazy="true">]]></programlisting>
         
         <para>
             The runtime type of the proxies will be a subclass of <literal>Order</literal>. Note that
@@ -227,9 +231,9 @@
             classes, eg.
         </para>
 
-        <programlisting><![CDATA[<class name="eg.Cat" proxy="eg.Cat">
+        <programlisting><![CDATA[<class name="Cat" proxy="Cat">
     ......
-    <subclass name="eg.DomesticCat" proxy="eg.DomesticCat">
+    <subclass name="DomesticCat" proxy="DomesticCat">
         .....
     </subclass>
 </class>]]></programlisting>
@@ -281,9 +285,9 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
             that declares its business methods. You should specify these interfaces in the mapping file. eg.
         </para>
 
-        <programlisting><![CDATA[<class name="eg.Cat" proxy="eg.ICat">
+        <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
     ......
-    <subclass name="eg.DomesticCat" proxy="eg.IDomesticCat">
+    <subclass name="DomesticCatImpl" proxy="DomesticCat">
         .....
     </subclass>
 </class>]]></programlisting>
@@ -293,16 +297,16 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
             <literal>DomesticCat</literal> implements the interface <literal>IDomesticCat</literal>. Then 
             proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned 
             by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>find()</literal> 
-            does not return proxies.)
+            does not usually return proxies.)
         </para>
 
-        <programlisting><![CDATA[ICat cat = (ICat) session.load(Cat.class, catid);
-Iterator iter = session.iterate("from cat in class eg.Cat where cat.name='fritz'");
-ICat fritz = (ICat) iter.next();]]></programlisting>
+        <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
+Iterator iter = session.iterate("from cat in class CatImpl where cat.name='fritz'");
+Cat fritz = (Cat) iter.next();]]></programlisting>
         
         <para>
             Relationships are also lazily initialized. This means you must declare any properties to be of 
-            type <literal>ICat</literal>, not <literal>Cat</literal>.
+            type <literal>Cat</literal>, not <literal>CatImpl</literal>.
         </para>
         
         <para>
@@ -534,7 +538,7 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
                 <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
                 <entry>clustered (ip multicast), transactional</entry>
                 <entry>yes (replication)</entry>
-                <entry></entry>
+                <entry>yes</entry>
             </row>
             </tbody>
             </tgroup>
@@ -716,9 +720,12 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
         <para>
             Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal>
             or <literal>saveOrUpdate()</literal> and whenever you retrieve an object using 
-            <literal>load()</literal>, <literal>find()</literal>, <literal>iterate()</literal>,
-            or <literal>filter()</literal>, that object is added to the internal cache of the
-            <literal>Session</literal>. When <literal>flush()</literal> is subsequently called,
+            <literal>load()</literal>, <literal>get()</literal>, <literal>list()</literal>, 
+            <literal>iterate()</literal> or <literal>scroll()</literal>, that object is added 
+            to the internal cache of the <literal>Session</literal>. 
+        </para>
+        <para>
+            When <literal>flush()</literal> is subsequently called,
             the state of that object will be synchronized with the database. If you do not want
             this synchronization to occur or if you are processing a huge number of objects and
             need to manage memory efficiently, the <literal>evict()</literal> method may be

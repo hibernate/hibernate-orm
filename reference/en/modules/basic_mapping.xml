@@ -1905,7 +1905,7 @@
         table="tablename"
         schema="owner"
         catalog="catalog"
-        sequential-select="true|false"
+        outer-join="true|false"
         inverse="true|false">
         
         <key ... />
@@ -1934,8 +1934,8 @@
                     </callout>
                     <callout arearefs="join4">
                         <para>
-                            <literal>sequential-select</literal> (optional - defaults to <literal>false</literal>):
-                            If enabled for a join defined on a subclass, then rather than joining, a sequential
+                            <literal>outer-join</literal> (optional - defaults to <literal>true</literal>):
+                            If disabled for a join defined on a subclass, then rather than joining, a sequential
                             select will be issued if a row turns out to represent an instance of the subclass.
                         </para>
                     </callout>

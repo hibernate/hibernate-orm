@@ -234,6 +234,31 @@ BEGIN
          	Notice stored procedures currently only return scalars and entities. <literal>&gt;return-join&lt;</literal> and
          	<literal>&gt;load-collection&lt;</literal> is not supported.
          	</para>
+         	
+         	<para> 
+         	TODO: make the "rules" visually nicer and understandable ,)
+         	</para>
+         	
+         	<sect3>
+         	  <title>Rules/Limitations for using stored procedures</title>
+         	  
+         	  <para>
+         	  	To use stored procedures with Hibernate the procedures have to follow some rules. If they do not follow those
+         	  	rules they are not usable with Hibernate. If you still want to use these procedures you have to execute them via <literal>session.connection()</literal>.
+         	  	
+         	  	The rules are different per database since database vendors have different stored procedure semantics/syntax.
+         	  	
+         	  	For Oracle the following rules applies:
+         	  	
+         	  	1. It must return a result set. (This is done by returning a SYS_REFCURSOR in Oracle 9 & 10, in Oracle you need to define a REF CURSOR type)
+         	  	2. It should be on the form <literal>{ ? = call procName(<parameters>) }</literal> or <literal>{ ? = call procName}</literal> (this is more a Oracle rule than a Hibernate rule)
+         	  	
+         	  	For Sybase & MS SQL server the following rules applies:
+         	  	
+         	  	It must return a result set. Note that since these servers can/will return multiple result sets and update count Hibernate will iterate the results and take the first result that is a result set as its return value. Everything else will be discarded.
+         	  	If you can enable SET NOCOUNT ON in your procedure it will probably be the most efficient, but it is not an requirement.         	  	
+         	  </para>
+         	</sect3>
          </sect2>
 
     </sect1>

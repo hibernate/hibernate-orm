@@ -245,7 +245,7 @@ session.flush();]]></programlisting>
              that both <literal>Parent</literal> and <literal>Child</literal> have (synthetic) identifier properties of type
              <literal>java.lang.Long</literal>. Hibernate will use the identifier property value to determine which of the
              children are new. (You may also use the version or timestamp property, see
-             <xref linkend="manipulatingdata-updating-detached"/>.)
+             <xref linkend="objectstate-saveorupdate"/>.)
          </para>
 
          <para>

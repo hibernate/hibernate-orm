@@ -223,7 +223,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             optional support from Hibernate for result set conversion into objects.
         </para>
 
-        <sect2 id="manipulatingdata-querying-executing">
+        <sect2 id="objectstate-querying-executing">
             <title>Executing queries</title>
 
             <para>
@@ -261,7 +261,7 @@ Cat mother = (Cat) session.createQuery(
                 know your query will only return a single object.
             </para>
 
-            <sect3 id="manipulatingdata-querying-executing-iterate">
+            <sect3 id="objectstate-querying-executing-iterate">
                 <title>Iterating results</title>
 
                 <para>
@@ -308,7 +308,7 @@ while ( kittensAndMothers.hasNext() ) {
 
             </sect3>
 
-            <sect3 id="manipulatingdata-querying-executing-scalar">
+            <sect3 id="objectstate-querying-executing-scalar">
                 <title>Scalar results</title>
 
                 <para>
@@ -333,7 +333,7 @@ while ( results.hasNext() ) {
 
             </sect3>
 
-            <sect3 id="manipulatingdata-querying-executing-parameters">
+            <sect3 id="objectstate-querying-executing-parameters">
                 <title>Bind parameters</title>
 
                 <para>
@@ -383,7 +383,7 @@ List cats = q.list();]]></programlisting>
 
             </sect3>
 
-            <sect3 id="manipulatingdata-querying-executing-pagination">
+            <sect3 id="objectstate-querying-executing-pagination">
                 <title>Pagination</title>
 
                 <para>
@@ -404,7 +404,7 @@ List cats = q.list();]]></programlisting>
 
             </sect3>
 
-            <sect3 id="manipulatingdata-querying-executing-scrolling">
+            <sect3 id="objectstate-querying-executing-scrolling">
                 <title>Scrollable iteration</title>
 
                 <para>
@@ -444,7 +444,7 @@ cats.close()]]></programlisting>
 
             </sect3>
 
-            <sect3 id="manipulatingdata-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named">
                 <title>Externalizing named queries</title>
 
                 <para>
@@ -478,7 +478,7 @@ List cats = q.list();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="manipulatingdata-filtering" revision="1">
+        <sect2 id="objectstate-filtering" revision="1">
             <title>Filtering collections</title>
             <para>
                 A collection <emphasis>filter</emphasis> is a special type of query that may be applied to
@@ -521,7 +521,7 @@ List cats = q.list();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="manipulatingdata-criteria" revision="1">
+        <sect2 id="objecstate-querying-criteria" revision="1">
            <title>Criteria queries</title>
 
             <para>
@@ -542,7 +542,7 @@ List cats = crit.list();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="manipulatingdata-nativesql" revision="2">
+        <sect2 id="objectstate-querying-nativesql" revision="2">
             <title>Queries in native SQL</title>
 
             <para>
@@ -663,7 +663,7 @@ secondSession.update(mate); // update mate]]></programlisting>
             The application should individually <literal>update()</literal> detached instances
             reachable from the given detached instance if and <emphasis>only</emphasis> if it wants
             their state also updated. This can be automated of course, using <emphasis>transitive
-            persistence</emphasis>, see <xref linkend="transitive"/>.
+            persistence</emphasis>, see <xref linkend="objectstate-transitive"/>.
         </para>
 
         <para>
@@ -868,7 +868,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
 
     </sect1>
 
-    <sect1 id="manipulatingdata-deleting" revision="1">
+    <sect1 id="objectstate-deleting" revision="1">
         <title>Deleting persistent objects</title>
 
         <para>
@@ -897,7 +897,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
 
     </sect1>
 
-    <sect1 id="manipulatingdata-flushing">
+    <sect1 id="objectstate-flushing">
         <title>Flushing the Session</title>
 
         <para>
@@ -1003,8 +1003,8 @@ tx.commit(); // flush occurs]]></programlisting>
 
     </sect1>
 
-    <sect1 id="manipulatingdata-endingsession">
-        <title>Committing and exception handling</title>
+    <sect1 id="objectstate-commitexceptions">
+        <title>Committing and exceptions</title>
         
         <para>
             Ending a session involves four distinct phases:
@@ -1353,7 +1353,7 @@ finally {
     </sect1>
 
     <sect1 id="objectstate-filters">
-        <title>Parameterized application views with filters</title>
+        <title>Application filters</title>
 
         <para>
             Hibernate3 adds the ability to pre-define filter criteria and attach those filters at both
@@ -1470,11 +1470,12 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
 
     </sect1>
 
-    <sect1 id="manipulatingdata-interceptors" revision="1">
+    <sect1 id="objectstate-interceptors" revision="1">
         <title>Interceptors</title>
+
         <para>
             The <literal>Interceptor</literal> interface provides callbacks from the session to the 
-            application allowing the application to inspect and / or manipulate properties of a 
+            application allowing the application to inspect and/or manipulate properties of a
             persistent object before it is saved, updated, deleted or loaded. One 
             possible use for this is to track auditing information. For example, the following 
             <literal>Interceptor</literal> automatically sets the  <literal>createTimestamp</literal> 
@@ -1505,8 +1506,8 @@ public class AuditInterceptor implements Interceptor, Serializable {
         // do nothing
     }
 
-    public boolean onFlushDirty(Object entity, 
-                                Serializable id, 
+    public boolean onFlushDirty(Object entity,
+                                Serializable id,
                                 Object[] currentState,
                                 Object[] previousState,
                                 String[] propertyNames,
@@ -1524,7 +1525,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
         return false;
     }
 
-    public boolean onLoad(Object entity, 
+    public boolean onLoad(Object entity,
                           Serializable id,
                           Object[] state,
                           String[] propertyNames,
@@ -1537,7 +1538,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
                           Object[] state,
                           String[] propertyNames,
                           Type[] types) {
-        
+
         if ( entity instanceof Auditable ) {
             creates++;
             for ( int i=0; i<propertyNames.length; i++ ) {
@@ -1558,10 +1559,9 @@ public class AuditInterceptor implements Interceptor, Serializable {
         updates=0;
         creates=0;
     }
-    
-    ......
-    ......
-    
+
+    ...
+
 }]]></programlisting>
 
         <para>
@@ -1578,7 +1578,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
 
     </sect1>
 
-     <sect1 id="manipulatingdata-events">
+     <sect1 id="objectstate-events">
         <title>Event system</title>
 
         <para>
@@ -1626,7 +1626,7 @@ public class AuditInterceptor implements Interceptor, Serializable {
     // this is the single method defined by the LoadEventListener interface
     public Object onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
             throws HibernateException {
-        if ( !MySecurity.isAuthorized( event.getEntityName(), event.getEntityId() ) ) {
+        if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
             throw MySecurityException("Unauthorized access");
         }
         return super.onLoad(event, loadType);
@@ -1669,8 +1669,9 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 
     </sect1>
 
-    <sect1 id="manipulatingdata-metadata">
-        <title>Metadata API</title>
+    <sect1 id="objectstate-metadata">
+        <title>Using metadata</title>
+
         <para>
             Hibernate requires a very rich meta-level model of all entity and value types. From time
             to time, this model is very useful to the application itself. For example, the application

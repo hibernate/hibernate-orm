@@ -241,14 +241,19 @@ List results = session.createCriteria(Cat.class)
         </para>
     
         <para>
-            The projection factory methods allow an alias to optionally be assigned 
-            to a projection, so that it may be referred to in restrictions or orderings.
+            An alias to optionally be assigned to a projection, so that it may be 
+            referred to in restrictions or orderings.
         </para>
 
+        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+    .setProjection( Projections.alias( Projections.rowCount(), "count" ) )
+    .add( Restrictions.eq("color", Color.BLACK) )
+    .list();]]></programlisting>
+    
        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.projectionList()
-        .add( Projections.rowCount("catCountByColor") )
-        .add( Projections.avg("weight", "avgWeight") )
+        .add( Projections.rowCount(), "catCountByColor" )
+        .add( Projections.avg("weight"), "avgWeight" )
         .add( Projections.max("weight") )
         .add( Projections.groupProperty("color") )
     )
@@ -259,8 +264,8 @@ List results = session.createCriteria(Cat.class)
         <programlisting><![CDATA[List results = session.createCriteria(Domestic.class, "cat")
     .createAlias("kittens", "kit")
     .setProjection( Projections.projectionList()
-        .add( Projections.property("cat.name", "catName") )
-        .add( Projections.property("kit.name", "kitName") )
+        .add( Projections.property("cat.name"), "catName" )
+        .add( Projections.property("kit.name"), "kitName" )
     )
     .addOrder( Order.asc("catName") )
     .addOrder( Order.asc("kitName") )

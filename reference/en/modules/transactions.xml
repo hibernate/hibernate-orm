@@ -493,8 +493,6 @@ finally {
 
     </sect1>
 
-<!--
-
     <sect1 id="transactions-optimistic">
         <title>Optimistic concurrency control</title>
 
@@ -810,6 +808,6 @@ finally {
         </para>
 
     </sect1>
--->
+
 </chapter>
 

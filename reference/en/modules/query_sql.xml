@@ -1,11 +1,16 @@
-<chapter id="querysql">
-    <title>Native SQL Queries</title>
+<chapter id="querysql" revision="1">
+    <title>Native SQL</title>
 
     <para>
         You may also express queries in the native SQL dialect of your database. This is useful if you
         want to utilize database specific features such as the CONNECT keyword in Oracle.
         This also allows for a cleaner migration path from a direct SQL/JDBC based application to 
         Hibernate.
+    </para>
+
+    <para>
+        Hibernate3 also supports native SQL statements for all create, update, delete, and load
+        operations.
     </para>
 
     <sect1 id="querysql-creating">
@@ -98,6 +103,100 @@ List loggedCats = sess.createSQLQuery(sql, "cat", Cat.class)
            {person}.SEX AS {person.sex}
     FROM PERSON {person} WHERE {person}.NAME LIKE 'Hiber%'
 </sql-query>]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="querysql-cud">
+        <title>Custom SQL for CUD</title>
+
+        <para>
+            Hibernate3 can use custom SQL statements for create, update, and delete operations.
+            The class and collection persisters in Hibernate already contain a set of configuration
+            time generated strings (insertsql, deletesql, updatesql etc.). The mapping tags
+            <literal>&lt;sql-insert&gt;</literal>, <literal>&lt;sql-delete&gt;</literal>, and
+            <literal>&lt;sql-update&gt;</literal> override these strings:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
+    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
+    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
+</class>]]></programlisting>
+
+        <para>
+            The SQL is directly execute in your database, so you are free to use any dialect
+            you like.
+        </para>
+
+        <para>
+            Stored procedures are support if the <literal>callable</literal> attribute is set:
+        </para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert callable="true">{call createPerson (?, ?)}</sql-insert>
+    <sql-delete callable="true">{? = call deletePerson (?)}</sql-delete>
+    <sql-update callable="true">{? = call updatePerson (?, ?)}</sql-update>
+</class>]]></programlisting>
+
+        <para>
+            The stored procedures are in most cases (read: better do it than not) required to
+            return the number of rows inserted/updated/deleted, as Hibernate has some runtime
+            checks for the success of the statement. Hibernate always registers the first statement
+            parameter as a numeric output parameter for the CUD operations:
+        </para>
+
+        <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
+    RETURN NUMBER IS
+BEGIN
+
+    update PERSON
+    set
+        NAME = uname,
+    where
+        ID = uid;
+
+    return SQL%ROWCOUNT;
+
+END updatePerson;]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="querysql-load">
+        <title>Custom SQL for loading</title>
+
+        <para>
+            You may also declare your own SQL (or HQL) queries for entity loading:
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="person">
+    <return alias="p" class="Person" lock-mode="upgrade"/>
+    SELECT NAME AS {p.name}, ID AS {p.id} FROM PERSON WHERE ID=? FOR UPDATE
+</sql-query>]]></programlisting>
+
+        <para>
+            This is just a named query declaration, as discussed earlier. You may reference this
+            named query in a class mapping:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <loader query-ref="person"/>
+</class>]]></programlisting>
+
+        <para>
+            TODO: Document synchronized mapping element in named queries
+        </para>
 
     </sect1>
 

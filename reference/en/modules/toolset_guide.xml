@@ -868,7 +868,7 @@ public class Person implements Serializable, IAuditable {
     </sect1>
   
 
-    <sect1 id="toolsetguide-s3">
+    <sect1 id="toolsetguide-s3" revision="1">
         <title>Mapping File Generation</title>
 
         <para>
@@ -955,8 +955,7 @@ public class Person implements Serializable, IAuditable {
             </listitem>
             <listitem>
                 <para>
-                    For <literal>hibernate.type.Type</literal> custom types and <literal>PersistentEnum</literal>
-                    a simple column is used as well.
+                    For <literal>hibernate.type.Type</literal> custom types a simple column is used as well.
                 </para>
             </listitem>
             <listitem>

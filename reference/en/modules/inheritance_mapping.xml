@@ -1,7 +1,7 @@
 <chapter id="inheritance">
     <title>Inheritance Mapping</title>
 
-    <sect1 id="inheritance-strategies" revision="1">
+    <sect1 id="inheritance-strategies" revision="2">
         <title>The Three Strategies</title>
 
         <para>
@@ -32,7 +32,8 @@
             apply as apply to table-per-concrete class mappings. Hibernate does
             not support mixing <literal>&lt;subclass&gt;</literal> mappings and
             <literal>&lt;joined-subclass&gt;</literal> mappings inside the same
-            <literal>&lt;class&gt;</literal> element.
+            <literal>&lt;class&gt;</literal> element. However, it is possible to
+            use a <literal>&lt;join&gt;</literal> element to map this.
         </para>
 
         <para>
@@ -103,6 +104,14 @@
             discriminator column in the superclass table. The approach taken by
             Hibernate is much more difficult to implement but arguably more
             correct from a relational point of view.
+        </para>
+
+        <para>
+            TODO: document usage of join for discriminators in table-per-subclass
+        </para>
+
+        <para>
+            TODO: document usage of join for mixing inheritance mapping strategies
         </para>
 
         <para>
@@ -224,10 +233,18 @@
             not instances of <literal>NonelectronicTransaction</literal>.
         </para>
 
+        <para>
+            TODO: Document union-subclass for polymorphic-table-per-concrete-class mappings
+        </para>
+
     </sect1>
 
     <sect1 id="inheritance-limitations">
         <title>Limitations</title>
+
+        <para>
+            TODO: This section needs to be rewritten, Hibernate3 has almost no limitations on inheritance mappings
+        </para>
 
         <para>
             Hibernate assumes that an association maps to exactly one foreign key column.

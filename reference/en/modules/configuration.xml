@@ -368,7 +368,7 @@ hibernate.dialect = \
             are also not available in the <literal>hibernate.cfg.xml</literal> file, discusse later.
         </para>
 
-        <table frame="topbot" id="configuration-optional-properties" revision="4">
+        <table frame="topbot" id="configuration-optional-properties" revision="5">
             <title>Hibernate Configuration Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -731,7 +731,19 @@ hibernate.dialect = \
                             </para>
                         </entry>
                     </row>
-
+                    <row>
+                        <entry>
+                            <literal>hibernate.use_sql_comments</literal>
+                        </entry>
+                        <entry>
+                            If turned on, Hibernate will generate comments inside the SQL, for
+                            easier debugging, defaults to <literal>false</literal>.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

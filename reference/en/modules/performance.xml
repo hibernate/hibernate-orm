@@ -408,6 +408,62 @@ ICat fritz = (ICat) iter.next();]]></programlisting>
         </para>
 
     </sect1>
+    
+    <sect1 id="performance-lazyproperties">
+        <title>Using lazy property fetching</title>
+
+        <para>
+            Hibernate3 supports the lazy fetching of individual properties. This optimization technique
+            is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a
+            marketing feature, as in practice, optimizing row reads is much more important than
+            optimization of column reads. However, only loading some properties of a class might
+            be useful in extreme cases, when legacy tables have hundreds of columns and the data model
+            can not be improved.
+        </para>
+        
+        <para>
+            To enable lazy property loading, set the <literal>lazy</literal> attribute on your
+            particular property mappings:
+        </para>
+
+        <programlisting><![CDATA[<class name="Document">
+       <id name="id">
+        <generator class="native"/>
+    </id>
+    <property name="name" not-null="true" length="50"/>
+    <property name="summary" not-null="true" length="200" lazy="true"/>
+    <property name="text" not-null="true" length="2000" lazy="true"/>
+</class>]]></programlisting>
+
+        <para>
+            Lazy property loading requires buildtime bytecode instrumentation! If your persistent
+            classes are not enhanced, Hibernate will silently ignore lazy property settings and
+            fall back to immediate fetching.
+        </para>
+
+        <para>
+            For bytecode instrumentation, use the following Ant task:
+        </para>
+
+        <programlisting><![CDATA[<target name="instrument" depends="compile">
+    <taskdef name="instrument" classname="org.hibernate.tool.instrument.InstrumentTask">
+        <classpath path="${jar.path}"/>
+        <classpath path="${classes.dir}"/>
+        <classpath refid="lib.class.path"/>
+    </taskdef>
+
+    <instrument verbose="true">
+        <fileset dir="${testclasses.dir}/org/hibernate/auction/model">
+            <include name="*.class"/>
+        </fileset>
+    </instrument>
+</target>]]></programlisting>
+
+        <para>
+            TODO: Document issues with lazy property loading
+        </para>
+
+    </sect1>
 
     <sect1 id="performance-cache" revision="1">
         <title>The Second Level Cache</title>

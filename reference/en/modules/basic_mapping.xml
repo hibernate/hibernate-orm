@@ -62,22 +62,22 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype">
+        <sect2 id="mapping-declaration-doctype" revision="1">
             <title>Doctype</title>
 
             <para>
                 All XML mappings should declare the doctype shown. The actual DTD may be found 
-                at the URL above, in the directory <literal>hibernate-x.x.x/src/net/sf/hibernate
-                </literal> or in <literal>hibernate.jar</literal>. Hibernate will always look for 
+                at the URL above, in the directory <literal>hibernate-x.x.x/src/org/hibernate
+                </literal> or in <literal>hibernate3.jar</literal>. Hibernate will always look for
                 the DTD in its classpath first.
             </para>
         </sect2>
 
-        <sect2 id="mapping-declaration-mapping">
+        <sect2 id="mapping-declaration-mapping" revision="1">
             <title>hibernate-mapping</title>
 
             <para>
-                This element has three optional attributes. The <literal>schema</literal> attribute
+                This element has several optional attributes. The <literal>schema</literal> attribute
                 specifies that tables referred to by this mapping belong to the named schema. If specified, 
                 tablenames will be qualified by the given schema name. If missing, tablenames will be 
                 unqualified. The <literal>default-cascade</literal> attribute specifies what cascade style
@@ -92,10 +92,12 @@
                      <area id="hm2" coords="3 55"/>
                      <area id="hm3" coords="4 55"/>
                      <area id="hm4" coords="5 55"/>
-                 </areaspec>   
+                     <area id="hm5" coords="6 55"/>
+                 </areaspec>
                  <programlisting><![CDATA[<hibernate-mapping
          schema="schemaName"
          default-cascade="none|save-update"
+         default-access="field|property|ClassName"
          auto-import="true|false"
          package="package.name"
  />]]></programlisting>
@@ -113,12 +115,19 @@
                      </callout>
                      <callout arearefs="hm3">
                          <para>
+                             <literal>default-access</literal> (optional - defaults to <literal>property</literal>):
+                             The strategy Hibernate should use for accessing all properties. Can be a custom
+                             implementation of <literal>PropertyAccessor</literal>.
+                         </para>
+                     </callout>
+                     <callout arearefs="hm4">
+                         <para>
                              <literal>auto-import</literal> (optional - defaults to <literal>true</literal>):
                              Specifies whether we can use unqualified class names (of classes in this mapping)
                              in the query language.
                          </para>
                      </callout>
-                     <callout arearefs="hm4">
+                     <callout arearefs="hm5">
                          <para>
                              <literal>package</literal> (optional): Specifies a package prefix to assume for 
                              unqualified class names in the mapping document.
@@ -133,10 +142,10 @@
                  to assign two classes to the same "imported" name.
              </para>
  
- </sect2>
+        </sect2>
 
-        <sect2 id="mapping-declaration-class">
-            <title>class</title>
+        <sect2 id="mapping-declaration-class" revision="1">
+            <title>class, dynamic-class</title>
 
             <para>
                 You may declare a persistent class using the <literal>class</literal> element:
@@ -159,7 +168,12 @@
                     <area id="class13" coords="14 55"/>
                     <area id="class14" coords="15 55"/>
                     <area id="class15" coords="16 55"/>
-                </areaspec>   
+                    <area id="class16" coords="17 55"/>
+                    <area id="class17" coords="18 55"/>
+                    <area id="class18" coords="19 55"/>
+                    <area id="class19" coords="20 55"/>
+                    <area id="class20" coords="21 55"/>
+                </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
         table="tableName"
@@ -176,6 +190,11 @@
         batch-size="N"
         optimistic-lock="none|version|dirty|all"
         lazy="true|false"
+        entity-name="EntityName"
+        catalog="catalog"
+        check="arbitrary sql check condition"
+        rowid="TODO"
+        subselect="TODO"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="class1">
@@ -274,6 +293,33 @@
                             interface.
                         </para>
                     </callout>    
+                    <callout arearefs="class16">
+                        <para>
+                            <literal>entity-name</literal> (optional): TODO
+                        </para>
+                    </callout>
+                    <callout arearefs="class17">
+                        <para>
+                            <literal>catalog</literal> (optional): The name of a database catalog used for this
+                            class and its table.
+                        </para>
+                    </callout>
+                    <callout arearefs="class18">
+                        <para>
+                            <literal>check</literal> (optional): A SQL expression used to generate a multi-row
+                            <emphasis>check</emphasis> constraint for automatic schema generation.
+                        </para>
+                    </callout>
+                    <callout arearefs="class19">
+                        <para>
+                            <literal>rowid</literal> (optional): TODO
+                        </para>
+                    </callout>
+                    <callout arearefs="class19">
+                        <para>
+                            <literal>subselect</literal> (optional): TODO
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
            
@@ -367,6 +413,69 @@
             	what <literal>unsaved-value</literal> strategy, or an instance will be detected as
             	transient.
             </para>
+
+            <para>
+                TODO: Document entity name and dynamic class
+            </para>
+
+            <para>
+                TODO: Document subselect and and synchronize for view simulation
+            </para>
+
+        </sect2>
+
+        <sect2 id="mapping-declaration-join">
+            <title>join</title>
+
+            <para>
+                Using the <literal>&lt;join&gt;</literal> element, it is possible to map
+                properties of one class to several tables.
+            </para>
+
+            <programlistingco>
+                <areaspec>
+                    <area id="join1" coords="2 50"/>
+                    <area id="join2" coords="3 50" />
+                    <area id="join3" coords="4 50"/>
+                    <area id="join4" coords="5 50" />
+                </areaspec>
+                <programlisting><![CDATA[<join
+        table="tablename"
+        schema="owner"
+        catalog="catalog"
+        sequential-select="true|false"
+        />]]></programlisting>
+
+                <calloutlist>
+                    <callout arearefs="join1">
+                        <para>
+                            <literal>tabe</literal>: The name of the joined table.
+                        </para>
+                    </callout>
+                    <callout arearefs="join2">
+                        <para>
+                            <literal>schema</literal> (optional): Override the schema name specified by
+                            the root <literal>&lt;hibernate-mapping&gt;</literal> element.
+                        </para>
+                    </callout>
+                    <callout arearefs="join3">
+                        <para>
+                            <literal>catalog</literal> (optional): Name of the database catalog.
+                        </para>
+                    </callout>
+                    <callout arearefs="join4">
+                        <para>
+                            <literal>sequential-select</literal> (optional - defaults to <literal>true</literal>):
+                            TODO: Document join behavior
+                        </para>
+                    </callout>
+                </calloutlist>
+            </programlistingco>
+
+            <para>
+                TODO: Document join with an example
+            </para>
+
         </sect2>
 
         <sect2 id="mapping-declaration-id">
@@ -445,7 +554,7 @@
                 legacy data with composite keys. We strongly discourage its use for anything else.
             </para>
             
-            <sect3 id="mapping-declaration-id-generator">
+            <sect3 id="mapping-declaration-id-generator" revision="1">
                 <title>generator</title>
 
                 <para>
@@ -540,6 +649,14 @@
                             <para>
                                 uses the same UUID algorithm. The UUID is encoded a string of length 16
                                 consisting of (any) ASCII characters. <emphasis>Do not use with PostgreSQL.</emphasis>
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                        <term><literal>guid</literal></term>
+                        <listitem>
+                            <para>
+                                uses the string-based GUID algorithm available in MS SQL Server and MySQL.
                             </para>
                         </listitem>
                         </varlistentry>
@@ -738,7 +855,7 @@
             
         </sect2>
         
-        <sect2 id="mapping-declaration-discriminator" revision="1">
+        <sect2 id="mapping-declaration-discriminator" revision="2">
             <title>discriminator</title>
 
             <para>
@@ -757,12 +874,14 @@
                     <area id="discriminator2" coords="3 40" />
                     <area id="discriminator3" coords="4 40" />
                     <area id="discriminator4" coords="5 40" />
+                    <area id="discriminator5" coords="6 40" />
                 </areaspec>
                 <programlisting><![CDATA[<discriminator
         column="discriminator_column"
         type="discriminator_type"
         force="true|false"
         insert="true|false"
+        formula="arbitrary sql expression"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="discriminator1">
@@ -791,6 +910,12 @@
                             of a mapped composite identifier.
                         </para>
                     </callout>
+                    <callout arearefs="discriminator5">
+                        <para>
+                            <literal>formula</literal> (optional)
+                            an arbitrary SQL expression that is executed when a type has to be evaluated
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
 
@@ -805,6 +930,14 @@
                 "extra" discriminator values that are not mapped to a persistent class. This will not
                 usually be the case.
             </para>
+
+            <para>
+                Using the <literal>formula</literal> attribute you can declare an arbitrary SQL expression
+                that will be used to evaluate the type of a row:
+            </para>
+
+            <programlisting><![CDATA[<discriminator formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end" type="integer"/>]]></programlisting>
+
         </sect2>
 
         <sect2 id="mapping-declaration-version">
@@ -936,7 +1069,7 @@
         </sect2>
 
 
-        <sect2 id="mapping-declaration-property">
+        <sect2 id="mapping-declaration-property" revision="1">
             <title>property</title>
 
             <para>
@@ -1027,11 +1160,6 @@
                 </listitem>
                 <listitem>
                     <para>
-                        The name of a subclass of <literal>PersistentEnum</literal> (eg. <literal>eg.Color</literal>).
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
                         The name of a serializable Java class.
                     </para>
                 </listitem>
@@ -1059,6 +1187,10 @@
             	pair and access the field directly, using reflection. You may specify your own
             	strategy for property access by naming a class that implements the interface
             	<literal>org.hibernate.property.PropertyAccessor</literal>.
+            </para>
+
+            <para>
+                TODO: Document the nested column formula="" attribute with an example
             </para>
 
         </sect2>
@@ -1601,6 +1733,22 @@
 
         </sect2>
 
+        <sect2 id="mapping-declaration-unionsubclass">
+           <title>union-subclass</title>
+
+           <para>
+               Another option is to map only the concrete classes of an inheritance hierarchy
+               (as in table-per-concrete-class) to tables, but not the superclass. This strategy
+               has some problems with polymorphic associations, which can be avoided with a
+               <literal>&lt;union-subclass&gt;</literal> mapping.
+           </para>
+
+            <para>
+                See the documentation chapter about Inheritance Mapping for more details.
+            </para>
+
+        </sect2>
+
        <sect2 id="mapping-declaration-collections">
             <title>map, set, list, bag</title>
 
@@ -1693,7 +1841,7 @@
             </para>
         </sect2>
 
-        <sect2 id="mapping-types-basictypes">
+        <sect2 id="mapping-types-basictypes" revision="1">
             <title>Basic value types</title>
 
             <para>
@@ -1798,7 +1946,7 @@
                                 Maps serializable Java types to an appropriate SQL binary type. You
                                 may also indicate the Hibernate type <literal>serializable</literal> with
                                 the name of a serializable Java class or interface that does not default 
-                                to a basic type or implement <literal>PersistentEnum</literal>.
+                                to a basic type.
                             </para>
                         </listitem>
                     </varlistentry>
@@ -1830,47 +1978,6 @@
             </para>
 
         </sect2>
-
-        <sect2 id="mapping-types-enum">
-            <title>Persistent enum types</title>
-
-            <para>
-                An <emphasis>enumerated</emphasis> type is a common Java idiom where a class has
-                a constant (small) number of immutable instances. You may create a persistent
-                enumerated type by implementing <literal>org.hibernate.PersistentEnum</literal>,
-                defining the operations <literal>toInt()</literal> and <literal>fromInt()</literal>:
-            </para>
-
-            <programlisting><![CDATA[package eg;
-import org.hibernate.PersistentEnum;
-
-public class Color implements PersistentEnum {
-    private final int code;
-    private Color(int code) {
-        this.code = code;
-    }
-    public static final Color TABBY = new Color(0);
-    public static final Color GINGER = new Color(1);
-    public static final Color BLACK = new Color(2);
-
-    public int toInt() { return code; }
-
-    public static Color fromInt(int code) {
-        switch (code) {
-            case 0: return TABBY;
-            case 1: return GINGER;
-            case 2: return BLACK;
-            default: throw new RuntimeException("Unknown color code");
-        }
-    }
-}]]></programlisting>
-
-            <para>
-                The Hibernate type name is simply the name of the enumerated class, in this case
-                <literal>eg.Color</literal>.
-            </para>
-        </sect2>
-
 
         <sect2 id="mapping-types-custom">
             <title>Custom value types</title>
@@ -2050,6 +2157,127 @@ public class Color implements PersistentEnum {
 </hibernate-mapping>]]></programlisting>
 
    	</sect1>
+
+    <sect1 id="mapping-xdoclet">
+        <title>Using XDOclet markup</title>
+
+        <para>
+            Many Hibernate users prefer to embed mapping information directly in sourcecode using
+            XDoclet <literal>@hibernate.tags</literal>. We will not cover this approach in this
+            document, since strictly it is considered part of XDoclet. However, we include the
+            following example of the <literal>Cat</literal> class with XDoclet mappings.
+        </para>
+
+        <programlisting><![CDATA[package eg;
+import java.util.Set;
+import java.util.Date;
+
+/**
+ * @hibernate.class
+ *  table="CATS"
+ */
+public class Cat {
+    private Long id; // identifier
+    private Date birthdate;
+    private Cat mate;
+    private Set kittens
+    private Color color;
+    private char sex;
+    private float weight;
+
+    /**
+     * @hibernate.id
+     *  generator-class="native"
+     *  column="CAT_ID"
+     */
+    public Long getId() {
+        return id;
+    }
+    private void setId(Long id) {
+        this.id=id;
+    }
+
+    /**
+     * @hibernate.many-to-one
+     *  column="MATE_ID"
+     */
+    public Cat getMate() {
+        return mate;
+    }
+    void setMate(Cat mate) {
+        this.mate = mate;
+    }
+
+    /**
+     * @hibernate.property
+     *  column="BIRTH_DATE"
+     */
+    public Date getBirthdate() {
+        return birthdate;
+    }
+    void setBirthdate(Date date) {
+        birthdate = date;
+    }
+    /**
+     * @hibernate.property
+     *  column="WEIGHT"
+     */
+    public float getWeight() {
+        return weight;
+    }
+    void setWeight(float weight) {
+        this.weight = weight;
+    }
+
+    /**
+     * @hibernate.property
+     *  column="COLOR"
+     *  not-null="true"
+     */
+    public Color getColor() {
+        return color;
+    }
+    void setColor(Color color) {
+        this.color = color;
+    }
+    /**
+     * @hibernate.set
+     *  lazy="true"
+     *  order-by="BIRTH_DATE"
+     * @hibernate.collection-key
+     *  column="PARENT_ID"
+     * @hibernate.collection-one-to-many
+     */
+    public Set getKittens() {
+        return kittens;
+    }
+    void setKittens(Set kittens) {
+        this.kittens = kittens;
+    }
+    // addKitten not needed by Hibernate
+    public void addKitten(Cat kitten) {
+        kittens.add(kitten);
+    }
+
+    /**
+     * @hibernate.property
+     *  column="SEX"
+     *  not-null="true"
+     *  update="false"
+     */
+    public char getSex() {
+        return sex;
+    }
+    void setSex(char sex) {
+        this.sex=sex;
+    }
+}]]></programlisting>
+
+        <para>
+            See the Hibernate web site for more examples of XDoclet and Hibernate.
+        </para>
+
+    </sect1>
 
 </chapter>
 

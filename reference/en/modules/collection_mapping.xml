@@ -1,7 +1,7 @@
 <chapter id="collections">
     <title>Collection Mapping</title>
 
-    <sect1 id="collections-persistent">
+    <sect1 id="collections-persistent" revision="1">
         <title>Persistent Collections</title>
 
         <para>
@@ -74,8 +74,13 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
             Collection instances are distinguished in the database by a foreign key to
             the owning entity. This foreign key is referred to as the
             <emphasis>collection key </emphasis>. The collection key is mapped by
-            the <literal>&lt;key&gt;</literal> element.
+            the <literal>&lt;key&gt;</literal> element. If you have a foreign-key constraint
+            set in the database, and have chosen the <literal>ON DELETE CASCADE</literal>
+            option, always use the <literal>on-delete</literal> attribute on your
+            <literal>&lt;key&gt;</literal> mappings:
         </para>
+
+        <programlisting><![CDATA[<key column="CHILD_ID" on-delete="cascade"/>]]></programlisting>
 
         <para>
             Collections may contain almost any other Hibernate type, including all basic types,

@@ -76,8 +76,8 @@
         <title>Associations and joins</title>
 
         <para>
-            We may also assign aliases to associated entities, or even to elements of a collection of
-            values, using a <literal>join</literal>.
+            We may also assign aliases to associated entities, or even to elements of a 
+            collection of values, using a <literal>join</literal>.
         </para>
 
         <programlisting><![CDATA[from eg.Cat as cat 
@@ -171,14 +171,16 @@ from eg.Cat as cat
         </para>
 
         <programlisting><![CDATA[select cat.mate from eg.Cat cat]]></programlisting>
-        
+
+
+<!-- NO LONGER SUPPORTED!      
         <para>
             You may even select collection elements, using the special <literal>elements</literal>
             function. The following query returns all kittens of any cat.
         </para>
         
         <programlisting><![CDATA[select elements(cat.kittens) from eg.Cat cat]]></programlisting>
-
+-->
         <para>
             Queries may return properties of any value type including properties of component type:
         </para>
@@ -223,6 +225,7 @@ from eg.DomesticCat as mother
         <programlisting><![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
 from eg.Cat cat]]></programlisting>
 
+<!-- NO LONGER SUPPORTED
         <para>
             Collections may also appear inside aggregate functions in the <literal>select</literal> 
             clause.
@@ -230,6 +233,7 @@ from eg.Cat cat]]></programlisting>
 
         <programlisting><![CDATA[select cat, count( elements(cat.kittens) ) 
 from eg.Cat cat group by cat]]></programlisting>
+-->
 
         <para>
             The supported aggregate functions are
@@ -529,18 +533,15 @@ from eg.Cat cat where size(cat.kittens) > 0]]></programlisting>
 
         <para>
             For indexed collections, you may refer to the minimum and maximum indices using
-            <literal>minIndex</literal> and <literal>maxIndex</literal>. Similarly, you may refer to the
-            minimum and maximum elements of a collection of basic type using <literal>minElement</literal> 
-            and <literal>maxElement</literal>.
+            <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly, 
+            you may refer to the minimum and maximum elements of a collection of basic type 
+            using the <literal>minelement</literal> and <literal>maxelement</literal>
+            functions.
         </para>
         
-        <programlisting><![CDATA[from Calendar cal where cal.holidays.maxElement > current date]]></programlisting>
+        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date]]></programlisting>
         
-        <para>
-            There are also functional forms (which, unlike the constructs above, are not case sensitive):
-        </para>
-        
-        <programlisting><![CDATA[from Order order where maxindex(order.items) > 100
+from Order order where maxindex(order.items) > 100
 
 from Order order where minelement(order.items) > 10000]]></programlisting>
         
@@ -564,24 +565,10 @@ from eg.Show show where 'fizard' in indices(show.acts)]]></programlisting>
 
         <para>
             Note that these constructs - <literal>size</literal>, <literal>elements</literal>,
-            <literal>indices</literal>, <literal>minIndex</literal>, <literal>maxIndex</literal>,
-            <literal>minElement</literal>, <literal>maxElement</literal> - have certain usage 
-            restrictions:
+            <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>,
+            <literal>minelement</literal>, <literal>maxelement</literal> - may only be used in
+            the where clause in Hibernate3.
         </para>
-        
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-                    in a <literal>where</literal> clause: only for databases with subselects
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    in a <literal>select</literal> clause: only <literal>elements</literal> and 
-                    <literal>indices</literal> make sense
-                </para>
-            </listitem>
-        </itemizedlist>
         
         <para>
             Elements of indexed collections (arrays, lists, maps) may be referred to by
@@ -608,8 +595,8 @@ where order.items[ maxindex(order.items) ] = item and order.id = 11]]></programl
 where order.items[ size(order.items) - 1 ] = item]]></programlisting>
         
         <para>
-            HQL also provides the built-in <literal>index()</literal> function, for elements of
-            a one-to-many association or collection of values.
+            HQL also provides the built-in <literal>index()</literal> function, for elements 
+            of a one-to-many association or collection of values.
         </para>
 
         <programlisting><![CDATA[select item, index(item) from Order order 
@@ -686,14 +673,9 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
 from eg.Cat cat
 group by cat.color
 
-select foo.id, avg( elements(foo.names) ), max( indices(foo.names) ) 
-from eg.Foo foo
+select foo.id, avg(name), max(name) 
+from eg.Foo foo join foo.names name
 group by foo.id]]></programlisting>
-
-        <para>
-            Note: You may use the <literal>elements</literal> and <literal>indices</literal> constructs
-            inside a select clause, even on databases with no subselects.
-        </para>
 
         <para>
             A <literal>having</literal> clause is also allowed.

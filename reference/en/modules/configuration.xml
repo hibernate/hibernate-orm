@@ -7,8 +7,7 @@
         are a large number of configuration parameters. Fortunately, most have sensible
         default values and Hibernate is distributed with an example 
         <literal>hibernate.properties</literal> file in <literal>etc/</literal> that shows
-        the various options. You usually only have to put that file in your classpath
-        and customize it.
+        the various options. Just put the example file in your classpath and customize it.
     </para>
 
     <sect1 id="configuration-programmatic" revision="1">
@@ -23,18 +22,18 @@
         </para>
 
         <para>
-            You may obtain a <literal>Configuration</literal> instance by
-            instantiating it directly. Heres an example of setting up a datastore from 
-            mappings defined in two XML mapping files (in the classpath):
+            You may obtain a <literal>Configuration</literal> instance by instantiating 
+            it directly and specifying XML mapping documents. If the mapping files are
+            in the classpath, use <literal>addResource()</literal>:
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
-    .addFile("Item.hbm.xml")
-    .addFile("Bid.hbm.xml");]]></programlisting>
+    .addResource("Item.hbm.xml")
+    .addResource("Bid.hbm.xml");]]></programlisting>
 
         <para>
-            An alternative (sometimes better) way is to let Hibernate load a mapping file
-            using <literal>getResourceAsStream()</literal>:
+            An alternative (sometimes better) way is to specify the mapped class, and
+            let Hibernate find the mapping document for you:
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -49,25 +48,57 @@
         </para>
         
         <para>
-            A <literal>Configuration</literal> also specifies various optional properties:
+            A <literal>Configuration</literal> also allows you to specify configuration
+            properties:
         </para>
 
-        <programlisting><![CDATA[Properties props = new Properties();
-...
-Configuration cfg = new Configuration()
+        <programlisting><![CDATA[Configuration cfg = new Configuration()
     .addClass(org.hibernate.auction.Item.class)
     .addClass(org.hibernate.auction.Bid.class)
-    .setProperties(props);]]></programlisting>
+    .setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLInnoDBDialect")
+    .setProperty("hibernate.connection.datasource", "java:comp/env/jdbc/test")
+    .setProperty("hibernate.order_updates", "true");]]></programlisting>
+    
+        <para>
+            This is not the only way to pass configuration properties to Hibernate. 
+            The various options include:
+        </para>
+
+        <orderedlist spacing="compact">
+            <listitem>
+                <para>
+                    Pass an instance of <literal>java.util.Properties</literal> to
+                    <literal>Configuration.setProperties()</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Place <literal>hibernate.properties</literal> in a root directory 
+                    of the classpath.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Set <literal>System</literal> properties using
+                    <literal>java -Dproperty=value</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Include <literal>&lt;property&gt;</literal> elements in
+                    <literal>hibernate.cfg.xml</literal> (discussed later).
+                </para>
+            </listitem>
+        </orderedlist>
 
         <para>
-            A <literal>Configuration</literal> is intended as a startup-time object, to be
-            discarded once a <literal>SessionFactory</literal> is built.
+            <literal>hibernate.properties</literal> is the easiest approach is you
+            want to get started quickly.
         </para>
 
         <para>
-            Instead of adding mapping files and setting properties programatially, you may
-            also place Hibernate configuration files in your classpath, as you will see
-            later.
+            The <literal>Configuration</literal> is intended as a startup-time object, 
+            to be discarded once a <literal>SessionFactory</literal> is created.
         </para>
 
     </sect1>
@@ -76,20 +107,22 @@ Configuration cfg = new Configuration()
         <title>Obtaining a SessionFactory</title>
 
         <para>
-            When all mappings have been parsed by the <literal>Configuration</literal>, the application
-            must obtain a factory for <literal>Session</literal> instances. This factory is intended
-            to be shared by all application threads:
+            When all mappings have been parsed by the <literal>Configuration</literal>, 
+            the application must obtain a factory for <literal>Session</literal> instances. 
+            This factory is intended to be shared by all application threads:
         </para>
 
         <programlisting><![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]></programlisting>
 
         <para>
-            However, Hibernate does allow your application to instantiate more than one
-            <literal>SessionFactory</literal>. This is useful if you are using more than one database.
+            Hibernate does allow your application to instantiate more than one
+            <literal>SessionFactory</literal>. This is useful if you are using more than 
+            one database.
         </para>
 
     </sect1>
 
+<!-- Lets undocument this stuff, its evil for most people
     <sect1 id="configuration-userjdbc" revision="1">
         <title>User provided JDBC connection</title>
 
@@ -111,58 +144,31 @@ Session session = sessions.openSession(conn);
 
         <para>
             We don't recommend user-provided JDBC connections, as Hibernate will disable
-            caching (it doesn't know what else you might have executed on the given connection)
-            and one of the following options is usually more appropriate.
+            caching (it doesn't know what else you might have executed on the given 
+            connection) and one of the following options is usually more appropriate.
         </para>
 
     </sect1>
-
+-->
 
     <sect1 id="configuration-hibernatejdbc" revision="1">
-        <title>Hibernate provided JDBC connection</title>
+        <title>JDBC connections</title>
 
         <para>
-            Alternatively, you can have the <literal>SessionFactory</literal>
-            open connections for you. The <literal>SessionFactory</literal>
-            must be provided with JDBC connection properties in one of the
-            following ways:
+            Usually, you want to have the <literal>SessionFactory</literal> create and pool JDBC 
+            connections for you. If you take this approach, opening a <literal>Session</literal> 
+            is as simple as:
         </para>
 
-        <orderedlist spacing="compact">
-            <listitem>
-                <para>
-                    Pass an instance of <literal>java.util.Properties</literal> to
-                    <literal>Configuration.setProperties()</literal>.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Place <literal>hibernate.properties</literal> in a root directory of
-                    the classpath.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Set <literal>System</literal> properties using
-                    <literal>java -Dproperty=value</literal>.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Include <literal>&lt;property&gt;</literal> elements in
-                    <literal>hibernate.cfg.xml</literal> (discussed later).
-                </para>
-            </listitem>
-        </orderedlist>
-
+        <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
+        
         <para>
-            If you take this approach, opening a <literal>Session</literal> is as simple as:
+            As soon as you do something that requires access to the database, a JDBC connection
+            will be obtained from the pool.
         </para>
 
-        <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session
-// do some data access work, a JDBC connection will be used on demand]]></programlisting>
-
         <para>
+            For this to work, we need to pass some JDBC connection properties to Hibernate.
             All Hibernate property names and semantics are defined on the class 
             <literal>org.hibernate.cfg.Environment</literal>. We will now describe the most
             important settings for JDBC connection configuration.
@@ -230,11 +236,13 @@ Session session = sessions.openSession(conn);
         </table>
 
         <para>
-            Hibernate's own connection pooling algorithm is however quite rudimentary. It is intended
-            to help you get started and is <emphasis>not intended for use in a production system</emphasis> 
-            or even for performance testing. Use a third party pool for best performance and stability,
-            i.e., replace the <literal>hibernate.connection.pool_size</literal> property with
-            connection pool specific settings. This will turn off Hibernate's internal pool.
+            Hibernate's own connection pooling algorithm is however quite rudimentary. 
+            It is intended to help you get started and is <emphasis>not intended for use 
+            in a production system</emphasis> or even for performance testing. You should
+            use a third party pool for best performance and stability. Just replace the 
+            <literal>hibernate.connection.pool_size</literal> property with connection 
+            pool specific settings. This will turn off Hibernate's internal pool. For
+            example, you might like to use C3P0.
         </para>
 
         <para>
@@ -247,7 +255,7 @@ Session session = sessions.openSession(conn);
         </para>
 
         <para>
-            This is an example using C3P0:
+            Here is an example <literal>hibernate.properties</literal> file for C3P0:
         </para>
 
         <programlisting id="c3p0-configuration" revision="1"><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
@@ -261,9 +269,10 @@ hibernate.c3p0.max_statements=50
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            For use inside an application server, Hibernate may obtain connections from a
-            <literal>javax.sql.Datasource</literal> registered in JNDI. Set the following 
-            properties:
+            For use inside an application server, you should almost always configure 
+            Hibernate to obtain connections from an application server  
+            <literal>Datasource</literal> registered in JNDI. You'll need to set at
+            least one of the following properties:
         </para>
 
         <table frame="topbot">
@@ -323,10 +332,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <para>
-            This is an example using an application server provided JNDI datasource:
+            Here's an example <literal>hibernate.properties</literal> file for an
+            application server provided JNDI datasource:
         </para>
 
-        <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/MyDB
+        <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test
 hibernate.transaction.factory_class = \
     org.hibernate.transaction.JTATransactionFactory
 hibernate.transaction.manager_lookup_class = \
@@ -342,7 +352,7 @@ hibernate.dialect = \
         <para>
             Arbitrary connection properties may be given by prepending
             "<literal>hibernate.connnection</literal>" to the property name. For example, you
-            may specify a <literal>charSet</literal> using <literal>hibernate.connnection.charSet</literal>.
+            may specify a <literal>charSet</literal> using <literal>hibernate.connection.charSet</literal>.
         </para>
 
         <para>
@@ -362,10 +372,10 @@ hibernate.dialect = \
         </para>
 
         <para>
-            System-level properties can only be set via <literal>java -Dproperty=value</literal> or
-            be defined in <literal>hibernate.properties</literal> and not with an instance of
-            <literal>Properties</literal> passed to the <literal>Configuration</literal>. They
-            are also not available in the <literal>hibernate.cfg.xml</literal> file, discusse later.
+        	<emphasis>Warning: some of these properties are "system-level" only.</emphasis>
+            System-level properties can be set only via <literal>java -Dproperty=value</literal> or
+            <literal>hibernate.properties</literal>. They may <emphasis>not</emphasis> be set by
+            the other techniques described above.
         </para>
 
         <table frame="topbot" id="configuration-optional-properties" revision="7">
@@ -385,11 +395,24 @@ hibernate.dialect = \
                             <literal>hibernate.dialect</literal>
                         </entry>
                         <entry>
-                            The classname of a Hibernate <literal>Dialect</literal> - enables
-                            certain platform dependent features.
+                            The classname of a Hibernate <literal>Dialect</literal> which 
+                            allows Hibernate to generate SQL optimized for a particular
+                            relational database.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>full.classname.of.Dialect</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.show_sql</literal>
+                        </entry>
+                        <entry>
+                            Write all SQL statements to console.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
                     </row>
@@ -442,10 +465,93 @@ hibernate.dialect = \
                             A <literal>0</literal> disables default outer join fetching.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
-                                recommended values between <literal>0</literal> and <literal>3</literal>
+                                recommended values between <literal>0</literal> and 
+                                <literal>3</literal>
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.default_batch_fetch_size</literal>
+                        </entry>
+                        <entry>
+                            Set a default size for Hibernate batch fetching of associations.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                recommended values <literal>4</literal>, <literal>8</literal>, 
+                                <literal>16</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.order_updates</literal>
+                        </entry>
+                        <entry>
+                            Force Hibernate to order SQL updates by the primary key value
+                            of the items being updates. This will result in fewer transaction
+                            deadlocks in highly concurrent systems.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.generate_statistics</literal>
+                        </entry>
+                        <entry>
+                            If enabled, Hibernate will collect statistics useful for
+                            performance tuning.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.use_identifer_rollback</literal>
+                        </entry>
+                        <entry>
+                            If enabled, generated identifier properties will be
+                            reset to default values when objects are deleted.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.use_sql_comments</literal>
+                        </entry>
+                        <entry>
+                            If turned on, Hibernate will generate comments inside the SQL, for
+                            easier debugging, defaults to <literal>false</literal>.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="topbot" id="configuration-jdbc-properties" revision="7">
+            <title>Hibernate JDBC and Connection Properties</title>
+            <tgroup cols="2">
+                <colspec colname="c1" colwidth="1*"/>
+                <colspec colname="c2" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>Property name</entry>
+                        <entry>Purpose</entry>
+                    </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <literal>hibernate.jdbc.fetch_size</literal>
@@ -541,26 +647,15 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.cglib.use_reflection_optimizer</literal>
+                            <literal>hibernate.connection.provider_class</literal>
                         </entry>
                         <entry>
-                            Enables use of CGLIB instead of runtime reflection (System-level
-                            property). Reflection can sometimes be useful when troubleshooting,
-                            note that Hibernate always requires CGLIB even if you turn off the
-                            optimizer. You can not set this property in <literal>hibernate.cfg.xml</literal>.
+                            The classname of a custom <literal>ConnectionProvider</literal> which provides
+                            JDBC connections to Hibernate.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
-                                <literal>true</literal> | <literal>false</literal>
+                                <literal>classname.of.ConnectionProvider</literal>
                             </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
-                        </entry>
-                        <entry>
-                            Pass the property <literal>propertyName</literal> to
-                            the JNDI <literal>InitialContextFactory</literal>.
                         </entry>
                     </row>
                     <row>
@@ -578,6 +673,18 @@ hibernate.dialect = \
                     </entry>
                     </row>
                     <row>
+                        <entry>
+                            <literal>hibernate.connection.autocommit</literal>
+                        </entry>
+                        <entry>
+                            Enables autocommit for JDBC pooled connections (not recommended).
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                     <entry>
                         <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                     </entry>
@@ -588,17 +695,30 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.connection.provider_class</literal>
+                            <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                         </entry>
                         <entry>
-                            The classname of a custom <literal>ConnectionProvider</literal>.
-                            <para>
-                                <emphasis role="strong">eg.</emphasis> 
-                                <literal>classname.of.ConnectionProvider</literal>
-                            </para>
+                            Pass the property <literal>propertyName</literal> to
+                            the JNDI <literal>InitialContextFactory</literal>.
                         </entry>
                     </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="topbot" id="configuration-cache-properties" revision="7">
+            <title>Hibernate Cache Properties</title>
+            <tgroup cols="2">
+                <colspec colname="c1" colwidth="1*"/>
+                <colspec colname="c2" colwidth="1*"/>
+                <thead>
                     <row>
+                        <entry>Property name</entry>
+                        <entry>Purpose</entry>
+                    </row>
+                </thead>
+                <tbody>
+                     <row>
                         <entry>
                             <literal>hibernate.cache.provider_class</literal>
                         </entry>
@@ -637,6 +757,20 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
+                            <literal>hibernate.cache.use_second_level_cacge</literal>
+                        </entry>
+                        <entry>
+                            May be used to completely disable the second level cache, which is enabled
+                            by default for classes which specify a <literal>&lt;cache&gt;</literal>
+                            mapping.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true|false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
                             <literal>hibernate.cache.query_cache_factory</literal>
                         </entry>
                         <entry>
@@ -665,13 +799,30 @@ hibernate.dialect = \
                             <literal>hibernate.cache.use_structured_entries</literal>
                         </entry>
                         <entry>
-                            TODO
+                            Forces Hibernate to store data in the second-level cache
+                            in a more human-friendly format.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true|false</literal>
                             </para>
                         </entry>
                     </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="topbot" id="configuration-transaction-properties" revision="7">
+            <title>Hibernate Transaction Properties</title>
+            <tgroup cols="2">
+                <colspec colname="c1" colwidth="1*"/>
+                <colspec colname="c2" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>Property name</entry>
+                        <entry>Purpose</entry>
+                    </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <literal>hibernate.transaction.factory_class</literal>
@@ -715,6 +866,63 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
+                            <literal>hibernate.transaction.flush_before_completion</literal>
+                        </entry>
+                        <entry>
+                            If enabled, the session will be automatically flushed during the
+                            before completion phase of the transaction. (Very useful when
+                            using Hibernate with CMT.)
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.transaction.auto_close_session</literal>
+                        </entry>
+                        <entry>
+                            If enabled, the session will be automatically closed during the
+                            before completion phase of the transaction. (Very useful when
+                            using Hibernate with CMT.)
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="topbot" id="configuration-misc-properties" revision="7">
+            <title>Miscellaneous Properties</title>
+            <tgroup cols="2">
+                <colspec colname="c1" colwidth="1*"/>
+                <colspec colname="c2" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>Property name</entry>
+                        <entry>Purpose</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <literal>hibernate.query.factory_class</literal>
+                        </entry>
+                        <entry>
+                            Chooses the HQL parser implementation.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> or
+                                <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
                             <literal>hibernate.query.substitutions</literal>
                         </entry>
                         <entry>
@@ -723,18 +931,6 @@ hibernate.dialect = \
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <literal>hibernate.show_sql</literal>
-                        </entry>
-                        <entry>
-                            Write all SQL statements to console.
-                            <para>
-                                <emphasis role="strong">eg.</emphasis> 
-                                <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
                     </row>
@@ -756,39 +952,15 @@ hibernate.dialect = \
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.generate_statistics</literal>
+                            <literal>hibernate.cglib.use_reflection_optimizer</literal>
                         </entry>
                         <entry>
-                            If enabled, Hibernate will collect statistics useful for
-                            performance tuning.
+                            Enables use of CGLIB instead of runtime reflection (System-level
+                            property). Reflection can sometimes be useful when troubleshooting,
+                            note that Hibernate always requires CGLIB even if you turn off the
+                            optimizer. You can not set this property in <literal>hibernate.cfg.xml</literal>.
                             <para>
-                                <emphasis role="strong">eg.</emphasis>
-                                <literal>true</literal> | <literal>false</literal>
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <literal>hibernate.use_identifer_rollback</literal>
-                        </entry>
-                        <entry>
-                            If enabled, generated identifier properties will be
-                            reset to default values when objects are deleted.
-                            <para>
-                                <emphasis role="strong">eg.</emphasis>
-                                <literal>true</literal> | <literal>false</literal>
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <literal>hibernate.use_sql_comments</literal>
-                        </entry>
-                        <entry>
-                            If turned on, Hibernate will generate comments inside the SQL, for
-                            easier debugging, defaults to <literal>false</literal>.
-                            <para>
-                                <emphasis role="strong">eg.</emphasis>
+                                <emphasis role="strong">eg.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -835,10 +1007,16 @@ hibernate.dialect = \
                             <entry>MySQL</entry> <entry><literal>org.hibernate.dialect.MySQLDialect</literal></entry>
                         </row>
                         <row>
+                            <entry>MySQL with InnoDB</entry> <entry><literal>org.hibernate.dialect.MySQLInnoDBDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>MySQL with MyISAM</entry> <entry><literal>org.hibernate.dialect.MySQLMyISAMDialect</literal></entry>
+                        </row>
+                        <row>
                             <entry>Oracle (any version)</entry> <entry><literal>org.hibernate.dialect.OracleDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle 9/10g</entry> <entry><literal>org.hibernate.dialect.Oracle9Dialect</literal></entry>
+                            <entry>Oracle 9i/10g</entry> <entry><literal>org.hibernate.dialect.Oracle9Dialect</literal></entry>
                         </row>
                         <row>
                             <entry>Sybase</entry> <entry><literal>org.hibernate.dialect.SybaseDialect</literal></entry>
@@ -885,7 +1063,7 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-outerjoin" revision="3">
+        <sect2 id="configuration-optional-outerjoin" revision="4">
             <title>Outer Join Fetching</title>
 
             <para>
@@ -901,12 +1079,8 @@ hibernate.dialect = \
                 Outer join fetching may be disabled <emphasis>globally</emphasis> by setting
                 the property <literal>hibernate.max_fetch_depth</literal> to <literal>0</literal>.
                 A setting of <literal>1</literal> or higher enables outer join fetching for
-                all one-to-one and many-to-one associations if no other fetching strategy is
-                defined in the mapping <emphasis>and</emphasis> if proxying of the target entity
-                class has been turned off (thus disabling lazy loading). However, one-to-many
-                associations and collections are never fetched with an outer-join, unless
-                explicitly declared for each particular association. This
-                behavior can also be overriden at runtime with Hibernate queries.
+                one-to-one and many-to-one associations which have been mapped with 
+                <literal>fetch="join"</literal>.
             </para>
 
             <para>

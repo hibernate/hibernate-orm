@@ -331,7 +331,7 @@ List results = session.createCriteria(Cat.class)
     
     </sect1>
     
-    <sect1>
+    <sect1 id="querycriteria-detachedqueries">
     	<title>Detached queries and subqueries</title>
     	<para>
     		The <literal>DetachedCriteria</literal> class lets you create a query outside the scope 

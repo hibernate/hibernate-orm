@@ -222,7 +222,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
-        <sect2>
+        <sect2 id="collections-foreignkeys" >
            <title>Collection foreign keys</title>
     
             <para>
@@ -255,7 +255,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             
         </sect2>
         
-        <sect2>
+        <sect2 id="collections-elements" >
             <title>Collection elements</title>
     
             <para>
@@ -278,7 +278,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             
         </sect2>
         
-        <sect2>
+        <sect2 id="collections-indexed">
             <title>Indexed collections</title>
     
             <para>
@@ -651,7 +651,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     
     </sect1>
 
-    <sect1>
+    <sect1 id="collections-advancedmappings">
         <title>Advanced collection mappings</title>
 
     <sect2 id="collections-sorted" revision="2">

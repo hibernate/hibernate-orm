@@ -359,7 +359,7 @@ alter table line_items
         
         <para>TODO: put words around this stuff</para>
         
-        <sect2>
+        <sect2 id="example-mappings-typed-onetone">
             <title>"Typed" one-to-one association</title>
 <programlisting><![CDATA[<class name="Person">
     <id name="name"/>
@@ -389,7 +389,7 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
         
-        <sect2>
+        <sect2 id="example-mappings-composite-key">
             <title>Composite key example</title>
 <programlisting><![CDATA[<class name="Customer">
 
@@ -506,7 +506,7 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
         
-        <sect2>
+        <sect2 id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
 <programlisting><![CDATA[<class name="Person"
     discriminator-value="P">
@@ -560,7 +560,7 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
 
-        <sect2>
+        <sect2 id="example-mappings-association-alternatekeys" >
             <title>Associations on alternate keys</title>
 <programlisting><![CDATA[<class name="Person">
     

@@ -241,7 +241,7 @@ BEGIN
                 TODO: make the "rules" visually nicer and understandable ,)
              </para>
              
-             <sect3>
+             <sect3 id="querysql-limits-storedprocedures">
                <title>Rules/Limitations for using stored procedures</title>
                
                <para>

@@ -168,5 +168,12 @@
 
     </target>
 
+    <target name="lang.section-check">
+        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${build.dir}/${lang}/html">
+            <classpath refid="lib.classpath"/>
+            <arg value="${basedir}/${lang}/master.xml"/>
+            <arg value="${support.dir}/section-check.xsl"/>
+        </java>
+    </target>
 
 </project>

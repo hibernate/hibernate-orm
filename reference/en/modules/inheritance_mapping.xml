@@ -53,7 +53,7 @@
             elements (see below).
         </para>
         
-        <sect2>
+        <sect2 id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 
         <para>
@@ -90,7 +90,7 @@
         
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritance-tablepersubclass">
         <title>Table per subclass</title>
 
         <para>
@@ -126,7 +126,7 @@
 
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritance-tablepersubclass-discriminator">
         <title>Table per subclass, using a discriminator</title>
 
         <para>
@@ -174,7 +174,7 @@
 
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritance-mixing-tableperclass-tablepersubclass">
         <title>Mixing table per class hierarchy with table per subclass</title>
 
         <para>
@@ -213,7 +213,7 @@
     
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritance-tableperconcrete">
         <title>Table per concrete class</title>
 
         <para>
@@ -252,7 +252,7 @@
         
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritance-tableperconcreate-polymorphism">
         <title>Table per concrete class, using implicit polymorphism</title>
 
         <para>
@@ -313,7 +313,7 @@
            
         </sect2>
 
-        <sect2>
+        <sect2 id="inheritace-mixingpolymorphism">
         <title>Mixing implicit polymorphism with other inheritance mappings</title>
 
         <para>

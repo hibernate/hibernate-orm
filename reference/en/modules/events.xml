@@ -206,7 +206,7 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 
     </sect1>
     
-    <sect1>
+    <sect1 id="objectstate-decl-security">
         <title>Hibernate declarative security</title>
         <para>
             Usually, declarative security in Hibernate applications is managed in a session facade

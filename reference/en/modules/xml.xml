@@ -66,7 +66,7 @@
 </class>]]></programlisting>
         </sect2>
         
-        <sect2>
+        <sect2 id="xml-onlyxml">
             <title>Specifying only an XML mapping</title>
 
             <para>

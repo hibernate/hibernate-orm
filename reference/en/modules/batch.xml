@@ -37,7 +37,7 @@ session.close();]]></programlisting>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
 
-    <sect1>
+    <sect1 id="batch-inserts">
         <title>Batch inserts</title>
 
         <para>
@@ -64,7 +64,7 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1>
+    <sect1 id="batch-update" >
         <title>Batch updates</title>
 
         <para>

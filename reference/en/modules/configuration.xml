@@ -1,17 +1,18 @@
-<chapter id="session-configuration">
+<chapter id="session-configuration" revision="1">
 
-    <title>SessionFactory Configuration</title>
+    <title>Configuration</title>
     
     <para>
         Because Hibernate is designed to operate in many different environments, there
         are a large number of configuration parameters. Fortunately, most have sensible
         default values and Hibernate is distributed with an example 
-        <literal>hibernate.properties</literal> file that shows the various options.
-        You usually only have to put that file in your classpath and customize it.
+        <literal>hibernate.properties</literal> file in <literal>etc/</literal> that shows
+        the various options. You usually only have to put that file in your classpath
+        and customize it.
     </para>
 
-    <sect1 id="configuration-programmatic">
-        <title>Programmatic Configuration</title>
+    <sect1 id="configuration-programmatic" revision="1">
+        <title>Programmatic configuration</title>
 
         <para>
             An instance of <literal>org.hibernate.cfg.Configuration</literal>
@@ -24,7 +25,7 @@
         <para>
             You may obtain a <literal>Configuration</literal> instance by
             instantiating it directly. Heres an example of setting up a datastore from 
-            mappings defined in two XML configuration files (in the classpath):
+            mappings defined in two XML mapping files (in the classpath):
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -59,8 +60,14 @@ Configuration cfg = new Configuration()
     .setProperties(props);]]></programlisting>
 
         <para>
-            A <literal>Configuration</literal> is intended as a configuration-time object, to be
+            A <literal>Configuration</literal> is intended as a startup-time object, to be
             discarded once a <literal>SessionFactory</literal> is built.
+        </para>
+
+        <para>
+            Instead of adding mapping files and setting properties programatially, you may
+            also place Hibernate configuration files in your classpath, as you will see
+            later.
         </para>
 
     </sect1>
@@ -83,7 +90,7 @@ Configuration cfg = new Configuration()
 
     </sect1>
 
-    <sect1 id="configuration-userjdbc">
+    <sect1 id="configuration-userjdbc" revision="1">
         <title>User provided JDBC connection</title>
 
         <para>
@@ -102,10 +109,16 @@ Session session = sessions.openSession(conn);
             <literal>Session</literal>s on the same JDBC connection!
         </para>
 
+        <para>
+            We don't recommend user-provided JDBC connections, as Hibernate will disable
+            caching (it doesn't know what else you might have executed on the given connection)
+            and one of the following options is usually more appropriate.
+        </para>
+
     </sect1>
 
 
-    <sect1 id="configuration-hibernatejdbc">
+    <sect1 id="configuration-hibernatejdbc" revision="1">
         <title>Hibernate provided JDBC connection</title>
 
         <para>
@@ -217,25 +230,20 @@ Session session = sessions.openSession(conn);
         </table>
 
         <para>
-            Hibernate's own connection pooling algorithm is quite rudimentary. It is intended
+            Hibernate's own connection pooling algorithm is however quite rudimentary. It is intended
             to help you get started and is <emphasis>not intended for use in a production system</emphasis> 
             or even for performance testing. Use a third party pool for best performance and stability,
             i.e., replace the <literal>hibernate.connection.pool_size</literal> property with
-            connection pool specific settings.
+            connection pool specific settings. This will turn off Hibernate's internal pool.
         </para>
 
         <para>
             C3P0 is an open source JDBC connection pool distributed along with 
-            Hibernate in the <literal>lib</literal> directory. Hibernate will use the built-in 
+            Hibernate in the <literal>lib</literal> directory. Hibernate will use its
             <literal>C3P0ConnectionProvider</literal> for connection pooling if you set 
-            the <literal>hibernate.c3p0.*</literal> properties.
-            There is also built-in support for Apache DBCP and for Proxool. You must set the
-            properties <literal>hibernate.dbcp.*</literal> (DBCP connection pool properties) 
-            to enable the <literal>DBCPConnectionProvider</literal>. Prepared statement caching is
-            enabled (highly recommend) if <literal>hibernate.dbcp.ps.*</literal>
-            (DBCP statement cache properties) are set. Please refer the the Apache commons-pool 
-            documentation for the interpretation of these properties.  You should set the 
-            <literal>hibernate.proxool.*</literal> properties if you wish to use Proxool.
+            <literal>hibernate.c3p0.*</literal> properties. If you'd like to use Proxool
+            refer to the packaged <literal>hibernate.properties</literal> and the Hibernate
+            web site for more information.
         </para>
 
         <para>
@@ -345,7 +353,7 @@ hibernate.dialect = \
 
     </sect1>
 
-    <sect1 id="configuration-optional">
+    <sect1 id="configuration-optional" revision="1">
         <title>Optional configuration properties</title>
         
         <para>
@@ -356,10 +364,11 @@ hibernate.dialect = \
         <para>
             System-level properties can only be set via <literal>java -Dproperty=value</literal> or
             be defined in <literal>hibernate.properties</literal> and not with an instance of
-            <literal>Properties</literal> passed to the <literal>Configuration</literal>.
+            <literal>Properties</literal> passed to the <literal>Configuration</literal>. They
+            are also not available in the <literal>hibernate.cfg.xml</literal> file, discusse later.
         </para>
 
-        <table frame="topbot" id="configuration-optional-properties" revision="3">
+        <table frame="topbot" id="configuration-optional-properties" revision="4">
             <title>Hibernate Configuration Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -407,18 +416,6 @@ hibernate.dialect = \
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>jndi/composite/name</literal>
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <literal>hibernate.use_outer_join</literal>
-                        </entry>
-                        <entry>
-                            Enables outer join fetching. Deprecated, use <literal>max_fetch_depth</literal>.
-                            <para>
-                                <emphasis role="strong">eg.</emphasis> 
-                                <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
                     </row>
@@ -719,6 +716,22 @@ hibernate.dialect = \
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.generate_statistics</literal>
+                        </entry>
+                        <entry>
+                            If turned on, several runtime statistics are available by calling
+                            <literal>SessionFactory.getStatistics()</literal>. Also see the
+                            <literal>StatisticsServiceMBean</literal> if you are using a
+                            JMX server, documented on the Hibernate web site.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+
                 </tbody>
             </tgroup>
         </table>
@@ -814,7 +827,7 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-outerjoin">
+        <sect2 id="configuration-optional-outerjoin" revision="1">
             <title>Outer Join Fetching</title>
 
             <para>
@@ -828,7 +841,10 @@ hibernate.dialect = \
 
             <para>
                 By default, the fetched graph when loading an objects ends at leaf objects,
-                collections, objects with proxies, or where circularities occur.
+                collections, objects with proxies, or where circularities occur in the case
+                of *-to-one associations. Hibernate will however execute an immediate additional
+                <literal>SELECT</literal> for any persistent collection (we recommend that you
+                turn on lazy loading for all collection mappings).
             </para>
 
             <para>
@@ -845,12 +861,13 @@ hibernate.dialect = \
                 to <literal>auto</literal> outer join. However, one-to-many associations and
                 collections are never fetched with an outer-join, unless explicitely declared
                 for each particular association. This behavior can also be overriden at runtime
-                with Hibernate queries.
+                with Hibernate queries. See the query chapters in the documentation for more
+                details.
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-optional-binarystreams">
+        <sect2 id="configuration-optional-binarystreams" revision="1">
             <title>Binary Streams</title>
 
             <para>
@@ -858,28 +875,30 @@ hibernate.dialect = \
                 be passed to/from its JDBC driver. If you wish to use large instances of
                 <literal>binary</literal> or <literal>serializable</literal> type, you should
                 enable <literal>hibernate.jdbc.use_streams_for_binary</literal>.
-                <emphasis>This is a JVM-level setting only.</emphasis>
+                <emphasis>This is a system-level setting only.</emphasis>
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-optional-cacheprovider">
+        <sect2 id="configuration-optional-cacheprovider" revision="1">
             <title>Custom <literal>CacheProvider</literal></title>
 
             <para>
                 You may integrate a JVM-level (or clustered) second-level cache system by
                 implementing the interface <literal>org.hibernate.cache.CacheProvider</literal>.
                 You may select the custom implementation by setting
-                <literal>hibernate.cache.provider_class</literal>.
+                <literal>hibernate.cache.provider_class</literal>. See the "Performance" chapter
+                for more details.
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-optional-transactionstrategy">
+        <sect2 id="configuration-optional-transactionstrategy" revision="1">
             <title>Transaction strategy configuration</title>
 
             <para>
-                If you wish to use the Hibernate <literal>Transaction</literal> API, you must
+                If you wish to use the Hibernate <literal>Transaction</literal> API instead
+                of directly calling a particular transaction API, you must
                 specify a factory class for <literal>Transaction</literal> instances by
                 setting the property <literal>hibernate.transaction.factory_class</literal>.
                 The <literal>Transaction</literal> API hides the underlying transaction
@@ -971,17 +990,18 @@ hibernate.dialect = \
 
         </sect2>
 
-        <sect2 id="configuration-optional-jndi">
+        <sect2 id="configuration-optional-jndi" revision="1">
             <title>JNDI-bound <literal>SessionFactory</literal></title>
 
             <para>
                 A JNDI bound Hibernate <literal>SessionFactory</literal> can simplify the lookup
-                of the factory and the creation of new <literal>Session</literal>s.
+                of the factory and the creation of new <literal>Session</literal>s. Note that this
+                is not related to a JNDI bound <literal>Datasource</literal> in a managed environment.
             </para>
 
             <para>
                 If you wish to have the <literal>SessionFactory</literal> bound to a JNDI namespace, specify
-                a name (eg. <literal>java:comp/env/hibernate/SessionFactory</literal>) using the property
+                a name (eg. <literal>java:hibernate/SessionFactory</literal>) using the property
                 <literal>hibernate.session_factory_name</literal>. If this property is omitted, the 
                 <literal>SessionFactory</literal> will not be bound to JNDI. (This is especially useful in 
                 environments with a read-only JNDI default implementation, eg. Tomcat.)
@@ -995,8 +1015,16 @@ hibernate.dialect = \
             </para>
 
             <para>
-                If you do choose to use JNDI, an EJB or other utility class may obtain the 
-                <literal>SessionFactory</literal> using a JNDI lookup.
+                Hibernate will automatically place the <literal>SessionFactory</literal> in JNDI after
+                you call <literal>cfg.buildSessionFactory()</literal>. This means you will at least have
+                this call in some startup code (or utility class) in your application.
+            </para>
+
+            <para>
+                If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may
+                obtain the  <literal>SessionFactory</literal> using a JNDI lookup. Note that this
+                setup is not neccessary if you use the <literal>HibernateUtil</literal> helper class
+                introduced in chapter 1, which acts as a Singleton registry.
             </para>
 
         </sect2>
@@ -1089,14 +1117,14 @@ hibernate.dialect = \
 
     </sect1>
 
-    <sect1 id="configuration-xmlconfig">
+    <sect1 id="configuration-xmlconfig" revision="1">
         <title>XML Configuration File</title>
 
         <para>
-            An alternative approach is to specify a full configuration in a file named
-            <literal>hibernate.cfg.xml</literal>. This file can be used as a replacement
-            for the <literal>hibernate.properties</literal> file or, if both are present,
-            override properties.
+            An alternative approach to configuration is to specify a full configuration in
+            a file named <literal>hibernate.cfg.xml</literal>. This file can be used as a
+            replacement for the <literal>hibernate.properties</literal> file or, if both
+            are present, override properties.
         </para>
 
         <para>
@@ -1113,13 +1141,12 @@ hibernate.dialect = \
 
     <!-- a SessionFactory instance listed as /jndi/name -->
     <session-factory
-        name="java:comp/env/hibernate/SessionFactory">
+        name="java:hibernate/SessionFactory">
 
         <!-- properties -->
-        <property name="connection.datasource">my/first/datasource</property>
+        <property name="connection.datasource">java:/comp/env/jdbc/MyDB</property>
         <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
         <property name="show_sql">false</property>
-        <property name="use_outer_join">true</property>
         <property name="transaction.factory_class">
             org.hibernate.transaction.JTATransactionFactory
         </property>
@@ -1132,6 +1159,12 @@ hibernate.dialect = \
     </session-factory>
 
 </hibernate-configuration>]]></programlisting>
+
+        <para>
+            As you can see, the advantage of this approach is the externalization of the
+            mapping file names to configuration. The <literal>hibernate.cfg.xml</literal>
+            is also more convenient once you have to tune the Hibernate cache.
+        </para>
 
        <para>
            Configuring Hibernate is then as simple as

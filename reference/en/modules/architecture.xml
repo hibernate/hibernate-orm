@@ -2,7 +2,7 @@
 
     <title>Architecture</title>
 
-    <sect1 id="architecture-overview">
+    <sect1 id="architecture-overview" revision="1">
         <title>Overview</title>
         
         <para>
@@ -113,7 +113,9 @@
                             (Optional) A single-threaded, short-lived object used by the application to
                             specify atomic units of work. Abstracts application from underlying JDBC,
                             JTA or CORBA transaction. A <literal>Session</literal> might span several
-                            <literal>Transaction</literal>s in some cases.
+                            <literal>Transaction</literal>s in some cases. However, transaction demarcation,
+                            either using the underlying API or <literal>Transaction</literal>, is never
+                            optional!
                         </para>
                     </listitem>
                 </varlistentry>
@@ -136,6 +138,15 @@
                         </para>
                     </listitem>
                 </varlistentry>
+                <varlistentry>
+                    <term><emphasis>Extension Interfaces</emphasis></term>
+                    <listitem>
+                        <para>
+                            Hibernate offers many optional extension interfaces you can implement to customize
+                            the behavior of your persistence layer. See the API documentation for details.
+                        </para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </para>
 
@@ -146,8 +157,9 @@
         </para>
     </sect1>
 
-    <sect1 id="architecture-jmx">
+    <sect1 id="architecture-jmx" revision="1">
         <title>JMX Integration</title>
+
         <para>
             JMX is the J2EE standard for management of Java components. Hibernate may be managed via
             a JMX standard MBean but because most application servers do not yet support JMX, Hibernate
@@ -156,7 +168,13 @@
         
         <para>
             Please see the Hibernate website for more information on how to configure Hibernate to
-            run as a JMX component inside JBoss.
+            run as a JMX component inside JBoss. Integration with other JMX containers is also
+            possible.
+        </para>
+
+        <!-- TODO: More documentation about JMX integration. -->
+        <para>
+            TODO: More documentation about JMX integration.
         </para>
     </sect1>
 
@@ -165,6 +183,11 @@
         <para>
             Hibernate may also be configured as a JCA connector. Please see the website for more
             details.
+        </para>
+
+        <!-- TODO: More documentation about JCA integration. -->
+        <para>
+            TODO: More documentation about JCA integration.
         </para>
     </sect1>
 

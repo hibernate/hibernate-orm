@@ -1,15 +1,15 @@
 <chapter id="quickstart">
     <title>Quickstart with Tomcat</title>
 
-    <sect1 id="quickstart-intro">
+    <sect1 id="quickstart-intro" revision="1">
         <title>Getting started with Hibernate</title>
 
         <para>
-            This tutorial explains a setup of Hibernate 2.1 with the Apache Tomcat
+            This tutorial explains a setup of Hibernate 3.0 with the Apache Tomcat
             servlet container for a web-based application. Hibernate works
             well in a managed environment with all major J2EE application servers, or
             even in standalone Java applications. The database system used in this
-            tutorial is PostgreSQL 7.3, support for other database is only a matter
+            tutorial is PostgreSQL 7.4, support for other database is only a matter
             of changing the Hibernate SQL dialect configuration.
         </para>
 
@@ -35,7 +35,7 @@
                     Hibernate uses JDBC connections to execute SQL on the database, so you
                     either have to provide pooled JDBC connections or configure Hibernate to
                     use one of the directly supported pools (C3P0, Proxool). For this tutorial,
-                    copy the <literal>pg73jdbc3.jar</literal> library (for PostgreSQL 7.3 and JDK 1.4)
+                    copy the <literal>pg74jdbc3.jar</literal> library (for PostgreSQL 7.4 and JDK 1.4)
                     to the global classloaders path. If you'd like to use a different database, simply
                     copy its appropriate JDBC driver.
                 </para>
@@ -52,7 +52,7 @@
             </listitem>
             <listitem>
                 <para>
-                    Hibernate is packaged as a JAR library. The <literal>hibernate2.jar</literal>
+                    Hibernate is packaged as a JAR library. The <literal>hibernate3.jar</literal>
                     file should be copied in the context classpath together with other classes of
                     the application. Hibernate requires some 3rd party libraries at runtime, these
                     come bundled with the Hibernate distribution in the <literal>lib/</literal>
@@ -105,17 +105,6 @@
                         <entry>
                             Hibernate uses various utility libraries from the Apache Jakarta
                             Commons project.
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>
-                            ODMG4 (required)
-                        </entry>
-                        <entry>
-                            Hibernate provides an optional ODMG compliant persistence manager
-                            interface. It is required if you like to map collections, even
-                            if you don't intend to use the ODMG API. We don't map collections
-                            in this tutorial, but it's a good idea to copy the JAR anyway.
                         </entry>
                     </row>
                     <row>
@@ -213,12 +202,11 @@
 			any servlets, call the path <literal>http://localhost:8080/quickstart</literal>
 			in your browser (of course, adding the name of the servlet as mapped in your
 			<literal>web.xml</literal>). You may also go ahead and create a simple servlet
-			now that has an empty <literal>process()</literal>
+			now that has an empty <literal>process()</literal> method.
 		</para>
 
         <para>
-            Tomcat uses the DBCP connection pool with this configuration and provides pooled
-            JDBC <literal>Connection</literal>s through JNDI at
+            Tomcat provides connections now through JNDI at
             <literal>java:comp/env/jdbc/quickstart</literal>. If you have trouble getting the
             connection pool running, refer to the Tomcat documentation. If you get JDBC driver
             exception messages, try to setup JDBC connection pool without Hibernate first.
@@ -226,11 +214,11 @@
         </para>
 
         <para>
-            The next step is to configure Hibernate, using the connections from the JNDI bound pool.
-            We use Hibernates XML based configuration. The basic approach, using properties, is
-            equivalent in features, but doesn't offer any advantages. We use the XML configuration
-            because it is usually more convenient. The XML configuration file is placed in the
-            context classpath (<literal>WEB-INF/classes</literal>), as
+            Your next step is to configure Hibernate. Hibernate has to know how it should obtain
+            JDBC connections We use Hibernates XML-based configuration. The other approach, using
+            a properties file, is equivalent in features, but doesn't offer any advantages. We use
+            the XML configuration because it is usually more convenient. The XML configuration file
+            is placed in the context classpath (<literal>WEB-INF/classes</literal>), as
             <literal>hibernate.cfg.xml</literal>:
         </para>
 
@@ -257,7 +245,7 @@
         <para>
             We turn logging of SQL commands off and tell Hibernate what database SQL
             dialect is used and where to get the JDBC connections (by declaring the JNDI
-            address of the Tomcat bound datasource pool). The dialect is a required setting,
+            address of the Tomcat bound pool). The dialect is a required setting,
             databases differ in their interpretation of the SQL "standard". Hibernate will take
             care of the differences and comes bundled with dialects for all major
             commercial and open source databases.
@@ -274,14 +262,14 @@
             The last element of the <literal>hibernate.cfg.xml</literal> declares
             <literal>Cat.hbm.xml</literal> as the name of a Hibernate XML mapping
             file for the persistent class <literal>Cat</literal>. This file contains
-            the metadata for the mapping of the POJO class to a datbase table (or multiple
-            tables). We'll come back to that file soon. Let's write the POJO class first
-            and then declare the mapping metadata for it.
+            the metadata for the mapping of the POJO class <literal>Cat</literal> to
+            a datbase table (or tables). We'll come back to that file soon. Let's write
+            the POJO class first and then declare the mapping metadata for it.
         </para>
 
     </sect1>
 
-    <sect1 id="quickstart-persistentclass">
+    <sect1 id="quickstart-persistentclass" revision="1">
         <title>First persistent class</title>
 
         <para>
@@ -289,7 +277,7 @@
             called Plain Ordinary Java Objects) programming model for persistent classes.
             A POJO is much like a JavaBean, with properties of the class accessible via getter
             and setter methods, shielding the internal representation from the publicly
-            visible interface:
+            visible interface (Hibernate can also access fields directly, if needed):
         </para>
 
         <programlisting><![CDATA[package org.hibernate.examples.quickstart;
@@ -351,16 +339,16 @@ public class Cat {
         </para>
 
         <para>
-            No special interface has to be implemented for persistent classes nor do we have
-            to subclass from a special root persistent class. Hibernate also doesn't use any
-            build time processing, such as byte-code manipulation, it relies solely on
+            No special interface has to be implemented for persistent classes nor do you have
+            to subclass from a special root persistent class. Hibernate also doesn't require
+            any build time processing, such as byte-code manipulation, it relies solely on
             Java reflection and runtime class enhancement (through CGLIB). So, without any
-            dependency in the POJO class on Hibernate, we can map it to a database table.
+            dependency of the POJO class on Hibernate, we can map it to a database table.
         </para>
 
     </sect1>
 
-    <sect1 id="quickstart-mapping">
+    <sect1 id="quickstart-mapping" revision="1">
         <title>Mapping the cat</title>
 
         <para>
@@ -400,7 +388,7 @@ public class Cat {
 
         <para>
             Every persistent class should have an identifer attribute (actually, only
-            classes representing entities, not dependent value objects, which
+            classes representing entities, not dependent value-typed classes, which
             are mapped as components of an entity). This property is used to distinguish
             persistent objects: Two cats are equal if
             <literal>catA.getId().equals(catB.getId())</literal> is true, this concept is
@@ -435,29 +423,29 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
     	<para>
 			You should now create this table in your database manually, and later read
 			<xref linkend="toolsetguide"/> if you want to automate this step with the
-			SchemaExport tool. This tool can create a full SQL DDL, including table
-			definition, custom column type constraints, unique constraints and indexes.
+			<literal>hbm2ddl</literal> tool. This tool can create a full SQL DDL, including
+            table definition, custom column type constraints, unique constraints and indexes.
     	</para>
 
     </sect1>
 
-    <sect1 id="quickstart-playingwithcats" revision="1">
+    <sect1 id="quickstart-playingwithcats" revision="2">
         <title>Playing with cats</title>
 
         <para>
             We're now ready to start Hibernate's <literal>Session</literal>. It is the
-            <emphasis>persistence manager</emphasis>interface, we use it
-            to store and retrieve <literal>Cat</literal>s to and from the database.
-            But first, we've to get a <literal>Session</literal> (Hibernate's unit-of-work)
-            from the <literal>SessionFactory</literal>:
+            <emphasis>persistence manager</emphasis>, we use it to store and retrieve
+            <literal>Cat</literal>s to and from the database. But first, we've to get a
+            <literal>Session</literal> (Hibernate's unit-of-work) from the
+            <literal>SessionFactory</literal>:
         </para>
 
         <programlisting><![CDATA[SessionFactory sessionFactory =
             new Configuration().configure().buildSessionFactory();]]></programlisting>
 
-		<para>
-			A <literal>SessionFactory</literal> is responsible for one database and
-			may only use one XML configuration file (<literal>hibernate.cfg.xml</literal>).
+        <para>
+            The call to <literal>configure()</literal> loads the <literal>hibernate.cfg.xml</literal>
+            configuration file and initializes the <literal>Configuration</literal> instance.
 			You can set other properties (and even change the mapping metadata) by
 			accessing the <literal>Configuration</literal> <emphasis>before</emphasis>
 			you build the <literal>SessionFactory</literal> (it is immutable). Where
@@ -472,7 +460,7 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
             servlets, but in some other location. Furthermore, we need some kind of
             <emphasis>Singleton</emphasis>, so we can access the
             <literal>SessionFactory</literal> easily in application code. The approach
-            shown next solves both problems: configuration and easy access to a
+            shown next solves both problems: startup configuration and easy access to a
             <literal>SessionFactory</literal>.
 		</para>
 
@@ -494,6 +482,7 @@ public class HibernateUtil {
             // Create the SessionFactory
             sessionFactory = new Configuration().configure().buildSessionFactory();
         } catch (Throwable ex) {
+            // Make sure you log the exception, as it might be swallowed
             log.error("Initial SessionFactory creation failed.", ex);
             throw new ExceptionInInitializerError(ex);
         }
@@ -521,10 +510,11 @@ public class HibernateUtil {
 
 		<para>
 			This class does not only take care of the <literal>SessionFactory</literal>
-			with its static attribute, but also has a <literal>ThreadLocal</literal> to
-			hold the <literal>Session</literal> for the current executing thread. Make
-			sure you understand the Java concept of a thread-local variable before you
-			try to use this helper.
+			with its static initializer, but also has a <literal>ThreadLocal</literal>
+            variable which holds the <literal>Session</literal> for the current thread.
+            Make sure you understand the Java concept of a thread-local variable before you
+			try to use this helper. A more complex and powerful <literal>HibernateUtil</literal>
+            class can be found in <literal>CaveatEmptor</literal>, http://caveatemptor.hibernate.org/
 		</para>
 
         <para>
@@ -532,12 +522,13 @@ public class HibernateUtil {
             it concurrently and request <literal>Session</literal>s. A <literal>Session</literal>
             is a non-threadsafe object that represents a single unit-of-work with the database.
             <literal>Session</literal>s are opened by a <literal>SessionFactory</literal> and
-            are closed when all work is completed:
+            are closed when all work is completed. An example in your servlet's
+            <literal>process()</literal> method might look like this (sans exception handling):
         </para>
 
         <programlisting><![CDATA[Session session = HibernateUtil.currentSession();
 
-Transaction tx= session.beginTransaction();
+Transaction tx = session.beginTransaction();
 
 Cat princess = new Cat();
 princess.setName("Princess");
@@ -555,17 +546,17 @@ HibernateUtil.closeSession();]]></programlisting>
             We use Hibernates <literal>Transaction</literal> API to abstract from the underlying
             transaction strategy (in our case, JDBC transactions). This allows our code
             to be deployed with container-managed transactions (using JTA) without any changes.
-            Please note that the example above does not handle any exceptions.
         </para>
 
         <para>
-			Also note that you may call <literal>HibernateUtil.currentSession();</literal>
+			Note that you may call <literal>HibernateUtil.currentSession();</literal>
 			as many times as you like, you will always get the current <literal>Session</literal>
 			of this thread. You have to make sure the <literal>Session</literal> is closed
 			after your unit-of-work completes, either in your servlet code or in a servlet filter
-			before the HTTP response is send. The nice side effect of the latter is easy
+			before the HTTP response is send. The nice side effect of the second option is easy
 			lazy initialization: the <literal>Session</literal> is still open when the view is
-			rendered, so Hibernate can load unitialized objects while you navigate the graph.
+			rendered, so Hibernate can load unitialized objects while you navigate the current
+            object graph.
         </para>
 
         <para>
@@ -595,7 +586,7 @@ tx.commit();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="quickstart-summary">
+    <sect1 id="quickstart-summary" revision="1">
         <title>Finally</title>
 
         <para>
@@ -608,6 +599,10 @@ tx.commit();]]></programlisting>
 			Keep in mind that Hibernate, as a data access layer, is tightly integrated into
 			your application. Usually, all other layers depent on the persistence mechanism.
 			Make sure you understand the implications of this design.
+        </para>
+
+        <para>
+            For a more complex application design, see http://caveatemptor.hibernate.org/
         </para>
 
     </sect1>

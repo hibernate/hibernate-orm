@@ -310,7 +310,7 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            You can also use <literal>Property.forName()</literal> to express projections.
+            You can also use <literal>Property.forName()</literal> to express projections:
         </para>
     
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -330,7 +330,55 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
     </sect1>
+    
+    <sect1>
+    	<title>Detached queries and subqueries</title>
+    	<para>
+    		The <literal>DetachedCriteria</literal> class lets you create a query outside the scope 
+    		of a session, and then later execute it using some arbitrary <literal>Session</literal>.
+    	</para>
+    	
+    	<programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
+    .add( Property.forName("sex").eq('F') );
+    
+Session session = ....;
+Transaction txn = session.beginTransaction();
+List results = query.getExecutableCriteria(session).setMaxResults(100).list();
+txn.commit();
+session.close();]]></programlisting>
+
+		<para>
+			A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion
+			instances involving subqueries may be obtained via <literal>Subqueries</literal> or
+			<literal>Property</literal>.			
+		</para>
+		
+		<programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
+	.setProjection( Property.forName("weight").avg() );
+session.createCriteria(Cat.class)
+	.add( Property.forName("weight).gt(avgWeight) )
+	.list();]]></programlisting>
+	
+		<programlisting><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
+	.setProjection( Property.forName("weight") );
+session.createCriteria(Cat.class)
+	.add( Subqueries.geAll("weight", weights) )
+	.list();]]></programlisting>
+	
+		<para>
+			Even correlated subqueries are possible:
+		</para>
         
- <!--TODO: Projection API + ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary user objects - similar to setResultClass in JDO2. General use of 
-ResultTransformer could also be explained.-->
+		<programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
+	.setProjection( Property.forName("weight").avg() )
+	.add( Property.forName("cat2.sex").eqProperty("cat.sex") );
+session.createCriteria(Cat.class, "cat")
+	.add( Property.forName("weight).gt(avgWeightForSex) )
+	.list();]]></programlisting>
+	
+	</sect1>
+	
+		<!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
+		          user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
+		          could also be explained. -->
 </chapter>

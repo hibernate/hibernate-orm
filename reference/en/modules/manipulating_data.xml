@@ -1023,10 +1023,18 @@ tx.commit(); // flush occurs]]></programlisting>
 
 
         <para>
-            Recommendation:
+            Recommendations:
         </para>
 
        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    It doesn't usually make sense to enable cascade on a <literal>&lt;many-to-one&gt;</literal>
+                    or <literal>&lt;many-to-many&gt;</literal> association. Cascade is often useful for 
+                    <literal>&lt;one-to-one&gt;</literal> and <literal>&lt;one-to-many&gt;</literal>
+                    associations.
+                </para>
+            </listitem>
             <listitem>
                 <para>
                     If the child object's lifespan is bounded by the lifespan of the of the parent
@@ -1036,9 +1044,9 @@ tx.commit(); // flush occurs]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    Otherwise, you might not need cascade at all. But if you really want to save 
-                    yourself some extra typing, consider using 
-                    <literal>cascade="create,merge,save-update"</literal>.
+                    Otherwise, you might not need cascade at all. But if you think that you will often be
+                    working with the parent and children together in the same transaction, and you want to save 
+                    yourself some typing, consider using <literal>cascade="create,merge,save-update"</literal>.
                 </para>
             </listitem>
         </itemizedlist>

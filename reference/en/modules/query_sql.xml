@@ -237,19 +237,15 @@ BEGIN
                are not supported.
              </para>
              
-             <para> 
-                TODO: make the "rules" visually nicer and understandable ,)
-             </para>
-             
              <sect3 id="querysql-limits-storedprocedures">
-               <title>Rules/Limitations for using stored procedures</title>
+               <title>Rules/limitations for using stored procedures</title>
                
                <para>
                    To use stored procedures with Hibernate the procedures have to follow some rules. 
                    If they do not follow those rules they are not usable with Hibernate. If you still 
                    want to use these procedures you have to execute them via <literal>session.connection()</literal>.
-                   The rules are different per database since database vendors have different stored procedure 
-                   semantics/syntax.
+                   The rules are different for each database, since database vendors have different stored
+                   procedure semantics/syntax.
                </para>
                
                <para>
@@ -259,13 +255,13 @@ BEGIN
                <itemizedlist spacing="compact">
                <listitem>
                <para>    
-                   It must return a result set. This is done by returning a SYS_REFCURSOR in Oracle 9 or 10.
-                   In Oracle you need to define a REF CURSOR type.
+                   The procedure must return a result set. This is done by returning a SYS_REFCURSOR in Oracle 9
+                   or 10. In Oracle you need to define a <literal>REF CURSOR</literal> type.
                </para>
                </listitem>    
                <listitem>
                <para>    
-                   It should be on the form <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> or 
+                   Recommended form is <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> or
                    <literal>{ ? = call procName }</literal> (This is more an Oracle rule than a Hibernate rule.)
                </para>
                </listitem>    
@@ -278,15 +274,15 @@ BEGIN
                <itemizedlist spacing="compact">
                <listitem>
                <para>    
-                   It must return a result set. Note that since these servers can/will return multiple result 
-                   sets and update count Hibernate will iterate the results and take the first result that is 
-                   a result set as its return value. Everything else will be discarded.
+                   The procedure must return a result set. Note that since these servers can/will return multiple
+                   result sets and update counts, Hibernate will iterate the results and take the first result that
+                   is a result set as its return value. Everything else will be discarded.
                </para>
                </listitem>    
                <listitem>
                <para>    
-                   If you can enable SET NOCOUNT ON in your procedure it will probably be the most efficient, but 
-                   it is not a requirement.                   
+                   If you can enable <literal>SET NOCOUNT ON</literal> in your procedure it will probably be
+                   more efficient, but this is not a requirement.
                </para>
                </listitem>    
               </itemizedlist>

@@ -2448,14 +2448,16 @@
 
     </sect1>
 
-   <sect1 id="mapping-modularfiles">
+   <sect1 id="mapping-modularfiles" revision="2">
        <title>Modular mapping files</title>
        <para>
             It is possible to define <literal>subclass</literal> and <literal>joined-subclass</literal>
             mappings in seperate mapping documents, directly beneath <literal>hibernate-mapping</literal>.
             This allows you to extend a class hierachy just by adding a new mapping file. You must
             specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously
-            mapped superclass. Use of this feature makes the ordering of the mapping documents important!
+            mapped superclass. Note: Previously this feature made the ordering of the mapping documents important. Since Hibernate 3, the
+            ordering of mapping files does not matter when using the extends keyword. The ordering inside a single mapping file
+            still needs to be defined as superclasses before subclasses.
         </para>
     
         <programlisting><![CDATA[

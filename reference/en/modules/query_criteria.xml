@@ -241,8 +241,8 @@ List results = session.createCriteria(Cat.class)
         </para>
     
         <para>
-            An alias to optionally be assigned to a projection, so that it may be 
-            referred to in restrictions or orderings.
+            An alias may optionally be assigned to a projection, so that the projected value
+            may be referred to in restrictions or orderings.
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)

@@ -150,7 +150,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             <para>
                 Usually, we don't use the mapping document to customize fetching. Instead, we
                 keep the default behavior, and override it for a particular transaction, using 
-                the HQL <literal>LEFT JOIN FETCH</literal> clause. This tells Hibernate to fetch 
+                <literal>left join fetch</literal> in HQL. This tells Hibernate to fetch 
                 the association eagerly in the first select, using an outer join. In the
                 <literal>Criteria</literal> query API, you would use
                 <literal>setFetchMode(FetchMode.JOIN)</literal>.
@@ -189,6 +189,11 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             
             <para>
                 There are no restrictions to join fetching of single-ended associations.
+            </para>
+
+            <para>
+                A completely different way to avoid problems with N+1 selects is to use the 
+                second-level cache.
             </para>
 
         </sect2>
@@ -481,6 +486,11 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         </sect2>
 
+        <sect2 id="performance-fetching-batch">
+            <title>Using subselect fetching</title>
+            <para>TODO</para>
+        </sect2>
+        
         <sect2 id="performance-fetching-lazyproperties">
             <title>Using lazy property fetching</title>
 
@@ -537,13 +547,13 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 queries. This avoids the need for buildtime bytecode processing and is
                 certainly a prefered solution.
             </para>
+            
+            <para>
+                You may force the usual eager fetching of properties using <literal>fetch all
+                properties</literal> in HQL.
+            </para>
 
         </sect2>
-
-        <para>
-            A completely different way to avoid problems with N+1 selects is to use the second-level
-            cache.
-        </para>
 
     </sect1>
 

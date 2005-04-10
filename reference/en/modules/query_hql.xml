@@ -806,14 +806,33 @@ where cat.name not in (
 )]]></programlisting>
 
         <para>
-            For subqueries with more than one expression in the select list, you can use a "row constructor".
+            For subqueries with more than one expression in the select list, you can use a tuple constructor:
         </para>
         
         <programlisting><![CDATA[from Cat as cat 
 where not ( cat.name, cat.color ) in ( 
     select cat.name, cat.color from DomesticCat cat 
-)]]></programlisting>     
+)]]></programlisting>
 
+        <para>
+            Note that on some databases (but not Oracle or HSQL), you can use tuple constructors in other
+            contexts, for example when querying components or composite user types:
+        </para>
+
+        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
+        
+        <para>
+            Which is equivalent to the more verbose:
+        </para>
+        
+        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
+
+        <para>
+            There are two good reasons you might not want to do this kind of thing: first, it is not 
+            completely portable between database platforms; second, the query is now dependent upon
+            the ordering of properties in the mapping document.
+        </para>
+        
     </sect1>
 
     <sect1 id="queryhql-examples">

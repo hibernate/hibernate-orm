@@ -2639,11 +2639,12 @@
                         </listitem>
                     </varlistentry>
                     <varlistentry>
-                        <term><literal>big_decimal</literal></term>
+                        <term><literal>big_decimal, big_integer</literal></term>
                         <listitem>
                             <para>
-                                A type mapping from <literal>java.math.BigDecimal</literal> to
-                                <literal>NUMERIC</literal> (or Oracle <literal>NUMBER</literal>).
+                                Type mappings from <literal>java.math.BigDecimal</literal> and
+                                <literal>java.math.BigInteger</literal> to <literal>NUMERIC</literal> 
+                                (or Oracle <literal>NUMBER</literal>).
                             </para>
                         </listitem>
                     </varlistentry>

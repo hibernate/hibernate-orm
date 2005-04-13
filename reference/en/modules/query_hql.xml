@@ -504,7 +504,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    string concatenation <literal>...||...</literal> or <literal>concat(...||...)</literal>
+                    string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>
                 </para>
             </listitem>
             <listitem>

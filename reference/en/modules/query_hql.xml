@@ -299,14 +299,26 @@ from Cat cat group by cat]]></programlisting>
         </itemizedlist>
     
         <para>
-            The <literal>distinct</literal> and <literal>all</literal> keywords may be used and have
-            the same semantics as in SQL.
+            You may use arithmetic operators, concatenation, and recognized SQL functions
+            in the select clause:
+        </para>
+        
+        <programlisting><![CDATA[select cat.weight + sum(kitten.weight) 
+from Cat cat 
+    join cat.kittens kitten
+group by cat.id, cat.weight]]></programlisting>
+    
+        <programlisting><![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]></programlisting>
+    
+        <para>
+            The <literal>distinct</literal> and <literal>all</literal> keywords may be used and 
+            have the same semantics as in SQL.
         </para>
 
         <programlisting><![CDATA[select distinct cat.name from Cat cat
 
 select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
-    
+
     </sect1>
     
     <sect1 id="queryhql-polymorphism">
@@ -492,13 +504,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    string concatenation ||
+                    string concatenation <literal>...||...</literal> or <literal>concat(...||...)</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    SQL scalar functions like <literal>upper()</literal> and
-                    <literal>lower()</literal>
+                    SQL scalar functions like <literal>upper()</literal>, <literal>lower()</literal>, 
+                    <literal>abs()</literal>
                 </para>
             </listitem>
             <listitem>

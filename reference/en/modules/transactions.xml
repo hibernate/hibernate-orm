@@ -334,8 +334,8 @@
         <para>
             However, it is often desirable to keep your persistence layer portable. Hibernate offers a wrapper
             API called <literal>Transaction</literal> that translates into the native transaction system of
-            your deployment environment. This API is optional (using database transactions is not!) and you don't
-            have to use it if database portability provided by Hibernate is all you need.
+            your deployment environment. This API is actually optional, but we strongly encourage its use
+            unless you are in a CMT session bean.
         </para>
 
         <para>
@@ -376,43 +376,12 @@
 
             <para>
                 If a Hibernate persistence layer runs in a non-managed environment, database connections
-                are either handled by Hibernate's pooling mechanism or provided by the developer (this
-                case has other implications, esp. with regard to caching):
+                are usually handled by Hibernate's pooling mechanism. The session/transaction handling
+                idiom looks like this:
             </para>
 
-            <programlisting><![CDATA[// Session sess = factory.openSession(myConnection);
+            <programlisting><![CDATA[//Non-managed environment idiom
 Session sess = factory.openSession();
-
-try {
-    // do some work
-    ...
-    sess.flush();
-    sess.connection().commit();
-}
-catch (RuntimeException e) {
-    sess.connection().rollback();
-    throw e; // or display error message
-}
-finally {
-    sess.close();
-}]]></programlisting>
-
-            <para>
-                Note that you will very likely never see this piece of code in a normal application;
-                fatal (system) exceptions should always be caught at the "top". In other words, the
-                code that executes Hibernate calls (in the persistence layer) and the code that handles
-                <literal>RuntimeException</literal> (and usually can only clean up and exit) are in
-                different layers. This can be a challenge to design yourself and you should use J2EE/EJB
-                container services whenever they are available. Exception handling is discussed later in
-                this chapter.
-            </para>
-
-            <para>
-                We recommend, even if persistence layer portability is not your primary concern, the
-                <literal>Transaction</literal> API:
-            </para>
-
-            <programlisting><![CDATA[Session sess = factory.openSession();
 Transaction tx = null;
 try {
     tx = sess.beginTransaction();
@@ -431,22 +400,34 @@ finally {
 }]]></programlisting>
 
             <para>
-                Note that you don't have to <literal>flush()</literal> the <literal>Session</literal>
-                explicitly, the call to <literal>commit()</literal> automatically triggers the
-                synchronization. This piece of code is now portable and runs in non-managed and JTA
-                environments. See <xref linkend="configuration-optional-transactionstrategy"/> for
-                the configuration options of the <literal>Transaction</literal> API and how it can
-                be mapped to the underlying resource transaction system.
+                You don't have to <literal>flush()</literal> the <literal>Session</literal> explicitly - 
+                the call to <literal>commit()</literal> automatically triggers the synchronization.
             </para>
 
             <para>
                 A call to <literal>close()</literal> marks the end of a session. The main implication
-                of <literal>close()</literal> is that the JDBC connection will be relinquished by the session.
-                If you provided your own connection, <literal>close()</literal> returns a reference
-                to it, so you can manually close it or return it to the pool. Otherwise <literal>close()
-                </literal> returns it to the pool.
+                of <literal>close()</literal> is that the JDBC connection will be relinquished by the 
+                session.
             </para>
 
+            <para>
+                This Java code is portable and runs in both non-managed and JTA environments.
+            </para>
+
+            <para>
+                You will very likely never see this idiom in business code in a normal application;
+                fatal (system) exceptions should always be caught at the "top". In other words, the
+                code that executes Hibernate calls (in the persistence layer) and the code that handles
+                <literal>RuntimeException</literal> (and usually can only clean up and exit) are in
+                different layers. This can be a challenge to design yourself and you should use J2EE/EJB
+                container services whenever they are available. Exception handling is discussed later in
+                this chapter.
+            </para>
+
+           <para>
+                Note that you should choose <literal>org.hibernate.transaction.JDBCTransaction</literal>.
+            </para>
+            
         </sect2>
 
         <sect2 id="transactions-demarcation-jta">
@@ -455,28 +436,72 @@ finally {
             <para>
                 If your persistence layer runs in an application server (e.g. behind EJB session beans),
                 transaction boundaries are defined in deployment descriptors. Every datasource connection
-                obtained by Hibernate will automatically be part of a global JTA transaction. Hibernate
+                obtained by Hibernate will automatically be part of the global JTA transaction. Hibernate
                 simply joins this transaction, or if a particular session bean method has no mandatory
-                transaction, Hibernate will tell the application server to start and end a transaction
-                directly. (The latter should be considered a very rare case and is offered for consistency
-                reasons. Note that your container might not allow mixed CMT and BMT behavior.)
+                transaction, Hibernate will tell the application server to start and end a BMT transaction
+                directly. So, for BMT, the session handling idiom is identical to case of a non-managed
+                environment:
+            </para>
+            
+           <programlisting><![CDATA[//BMT idiom
+Session sess = factory.openSession();
+Transaction tx = null;
+try {
+    tx = sess.beginTransaction();
+
+    // do some work
+    ...
+
+    tx.commit();
+}
+catch (RuntimeException e) {
+    if (tx != null) tx.rollback();
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+            <para>
+                Note that you should choose <literal>org.hibernate.transaction.JTATransaction</literal>
+                in a BMT session bean, and <literal>org.hibernate.transaction.CMTTransaction</literal>
+                in a CMT session bean.
             </para>
 
             <para>
                 If you set the properties <literal>hibernate.transaction.flush_before_completion</literal>
                 and <literal>hibernate.transaction.auto_close_session</literal> to <literal>true</literal>,
-                Hibernate wil also automatically flush and close the <literal>Session</literal> for you.
-                The only thing left is exception handling and rollback of the database transaction.
-                Fortunately, even this happens automatically, since an unhandled <literal>RuntimeException</literal>
+                Hibernate will automatically flush and close the <literal>Session</literal> for you.
+                The only thing left to rollback the transaction when an exception occurs. Fortunately, in
+                a CMT bean, even this happens automatically, since an unhandled <literal>RuntimeException</literal>
                 thrown by a session bean method tells the container to set the global transaction to
-                rollback.
+                rollback. <emphasis>This means you do not need to use the Hibernate 
+                <literal>Transaction</literal> API at all in CMT.
+            </para>
+            
+            <para>
+                If you don't want to bother passing your <literal>Session</literal> instance around, the
+                <literal>SessionFactory</literal> provides the <literal>getCurrentSession()</literal>
+                method, which returns a session that is bound to the JTA transaction context. This is the
+                easiest way to integrate Hibernate into an application! The "current" session always has
+                auto-flush and auto-close enabled (regardless of the above property settings). Our
+                session/transaction management idiom is reduced to this:
             </para>
 
+           <programlisting><![CDATA[//CMT idiom
+Session sess = factory.getCurrentSession();
+
+// do some work
+...
+
+]]></programlisting>
+
             <para>
-                In other words, all you have to do in a managed environment is to get a <literal>Session</literal>
-                from the <literal>SessionFactory</literal> (usually bound to JNDI), do your data access
-                work, and leave the rest to the container. Transaction boundaries are set declaratively in
-                the deployment descriptors of your session bean.
+                In other words, all you have to do in a managed environment is call 
+                <literal>SessionFactory.getCurrentSession()</literal>, do your data access work, and leave 
+                the rest to the container. Transaction boundaries are set declaratively in the deployment 
+                descriptors of your session bean. The lifecycle of the session is completely managed by
+                Hibernate.
             </para>
 
         </sect2>

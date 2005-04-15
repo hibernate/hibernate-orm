@@ -1155,8 +1155,17 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
                     <listitem>
-                        <para>delegates to JTA (if an existing transaction is underway, the <literal>Session</literal>
-                        performs its work in that context, otherwise a new transaction is started)</para>
+                        <para>
+                            delegates to JTA (if an existing transaction is underway, the 
+                            <literal>Session</literal> performs its work in that context, otherwise 
+                            a new transaction is started)
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>org.hibernate.transaction.CMTTransactionFactory</literal></term>
+                    <listitem>
+                        <para>delegates to a container managed JTA transaction</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

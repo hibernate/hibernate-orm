@@ -1142,7 +1142,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                There are two standard (built-in) choices:
+                There are three standard (built-in) choices:
             </para>
 
             <variablelist spacing="compact">

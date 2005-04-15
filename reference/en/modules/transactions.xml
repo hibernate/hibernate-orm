@@ -476,7 +476,7 @@ finally {
                 a CMT bean, even this happens automatically, since an unhandled <literal>RuntimeException</literal>
                 thrown by a session bean method tells the container to set the global transaction to
                 rollback. <emphasis>This means you do not need to use the Hibernate 
-                <literal>Transaction</literal> API at all in CMT.
+                <literal>Transaction</literal> API at all in CMT.</emphasis>
             </para>
             
             <para>

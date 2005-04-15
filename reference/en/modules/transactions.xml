@@ -527,30 +527,25 @@ Session sess = factory.getCurrentSession();
                 can occur in a Hibernate persistence layer, is an unchecked exception (it wasn't
                 in older versions of Hibernate). In our opinion, we shouldn't force the application
                 developer to catch an unrecoverable exception at a low layer. In most systems, unchecked
-                and fatal exceptions are only catched in one of the first frames of the method call
+                and fatal exceptions are handled in one of the first frames of the method call
                 stack (i.e. in higher layers) and an error message is presented to the application
                 user (or some other appropriate action is taken). Note that Hibernate might also throw
-                other unchecked exceptions (e.g. when detecting stale data in version checks) which are
-                not a <literal>HibernateException</literal>. These are, again, not recoverable and
-                appropriate action should be taken.
+                other unchecked exceptions which are not a <literal>HibernateException</literal>. These 
+                are, again, not recoverable and appropriate action should be taken.
             </para>
 
-	        <para>
-		        A subtype of <literal>HibernateException</literal> is <literal>SQLException</literal>
-		        which indicate a specific set of error conditions occuring while Hibernate
-		        interacts with the database.
-	        </para>
-
             <para>
-                For SQLExceptions thrown while interacting with the database, Hibernate will
-                attempt to convert the error into a subclass of JDBCException.  The underlying
-                SQLException is accessible by calling <literal>JDBCException.getCause()</literal>.
-                Hibernate converts the SQLException into an appropriate JDBCException subclass
-                based on the SQLExceptionConverter attached to the SessionFactory.  By default,
-                the SQLExceptionConverter is defined by the configured dialect; however, it is
-                also possible to plug in a custom implmentation (see the javadocs for the
-                SQLExceptionConverterFactory class for details).  The standard JDBCException
-                subtypes are:
+                Hibernate wraps <literal>SQLException</literal>s thrown while interacting with the database
+                in a <literal>JDBCException</literal>. In fact, Hibernate will attempt to convert the eexception
+                into a more meningful subclass of <literal>JDBCException</literal>.  The underlying
+                <literal>SQLException</literal> is always available via <literal>JDBCException.getCause()</literal>.
+                Hibernate converts the <literal>SQLException</literal> into an appropriate 
+                <literal>JDBCException</literal> subclass using the <literal>SQLExceptionConverter</literal> 
+                attached to the <literal>SessionFactory</literal>. By default, the 
+                <literal>SQLExceptionConverter</literal> is defined by the configured dialect; however, it is
+                also possible to plug in a custom implementation (see the javadocs for the
+                <literal>SQLExceptionConverterFactory</literal> class for details).  The standard 
+                <literal>JDBCException</literal> subtypes are:
             </para>
 
             <itemizedlist spacing="compact">

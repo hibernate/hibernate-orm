@@ -1207,6 +1207,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <entry align="center">WebSphere</entry>
                         </row>
                         <row>
+                            <entry><literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</literal></entry>
+                            <entry align="center">WebSphere 6</entry>
+                        </row>
+                        <row>
                             <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
                             <entry align="center">Orion</entry>
                         </row>

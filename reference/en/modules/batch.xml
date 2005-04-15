@@ -95,4 +95,98 @@ session.close();]]></programlisting>
 
     </sect1>
 
+    <sect1 id="batch-direct">
+        <title>Bulk update/delete</title>
+
+        <para>
+            As already discussed, automatic and transparent object/relational mapping is concerned
+            with the management of object state. This implies that the object state is available
+            in memory, hence updating or deleting (using SQL <literal>UPDATE</literal> and
+            <literal>DELETE</literal>) data directly in the database will not affect in-memory
+            state. However, Hibernate provides methods for bulk SQL-style <literal>UPDATE</literal>
+            and <literal>DELETE</literal> statement execution which are performed through the
+            Hibernate Query Language (<xref linkend="queryhql">HQL</xref>).
+        </para>
+
+	    <para>
+            The psuedo-syntax for <literal>UPDATE</literal> and <literal>DELETE</literal> statements
+            is: <literal>( UPDATE | DELETE ) FROM? ClassName (WHERE WHERE_CONDITIONS)?</literal>.  Some
+            points to note:
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    In the from-clause, the FROM keyword is optional
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    There can only be a single class named in the from-clause, and it <emphasis>cannot</emphasis>
+                    have an alias.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    No joins (either implicit or explicit) can be specified in a bulk HQL query.  Sub-queries
+                    may be used in the where-clause.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    The where-clause is also optional.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            As an example, to execute an HQL <literal>UPDATE</literal>, use the
+            <literal>Query.executeUpdate()</literal> method:
+        </para>
+
+        <programlisting><![CDATA[Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+
+        String hqlUpdate = "update Customer set name = :newName where name = :oldName";
+        int updatedEntities = s.createQuery( hqlUpdate )
+                            .setString( "newName", newName )
+                            .setString( "oldName", oldName )
+                            .executeUpdate();
+        tx.commit();
+        session.close();]]></programlisting>
+
+        <para>
+            To execute an HQL <literal>DELETE</literal>, use the same <literal>Query.executeUpdate()</literal>
+            method (the method is named for those familiar with JDBC's
+            <literal>PreparedStatement.executeUpdate()</literal>):
+        </para>
+
+        <programlisting><![CDATA[Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+
+        String hqlDelete = "delete Customer where name = :oldName";
+        int deletedEntities = s.createQuery( hqlDelete )
+                            .setString( "oldName", oldName )
+                            .executeUpdate();
+        tx.commit();
+        session.close();]]></programlisting>
+
+        <para>
+            The <literal>int</literal> value returned by the <literal>Query.executeUpdate()</literal>
+            method indicate the number of entities effected by the operation.  Consider this may or may not
+            correlate to the number of rows effected in the database.  An HQL bulk operation might result in
+            multiple actual SQL statements being executed, for joined-subclass, for example.  The returned
+            number indicates the number of actual entities affected by the statement.  Going back to the
+            example of joined-subclass, a delete against one of the subclasses may actually result
+            in deletes against not just the table to which that subclass is mapped, but also the "root"
+            table and potentially joined-subclass tables further down the inheritence hierarchy.
+        </para>
+
+        <para>
+            Note that there are currently a few limitations with the bulk HQL operations which
+            will be addressed in future releases; consult the JIRA roadmap for details.
+        </para>
+
+    </sect1>
+
 </chapter>

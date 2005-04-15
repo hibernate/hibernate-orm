@@ -425,7 +425,8 @@ finally {
             </para>
 
            <para>
-                Note that you should choose <literal>org.hibernate.transaction.JDBCTransaction</literal>.
+                Note that you should select <literal>org.hibernate.transaction.JDBCTransactionFactory</literal>
+                (which is the default).
             </para>
             
         </sect2>
@@ -463,9 +464,10 @@ finally {
 }]]></programlisting>
 
             <para>
-                Note that you should choose <literal>org.hibernate.transaction.JTATransaction</literal>
-                in a BMT session bean, and <literal>org.hibernate.transaction.CMTTransaction</literal>
-                in a CMT session bean.
+                Note that you should choose <literal>org.hibernate.transaction.JTATransactionFactory</literal>
+                in a BMT session bean, and <literal>org.hibernate.transaction.CMTTransactionFactory</literal>
+                in a CMT session bean. Remember to also set 
+                <literal>org.hibernate.transaction.manager_lookup_class</literal>.
             </para>
 
             <para>

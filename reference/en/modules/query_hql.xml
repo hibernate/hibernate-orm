@@ -186,15 +186,6 @@ from Cat as cat
 
         <programlisting><![CDATA[select cat.mate from Cat cat]]></programlisting>
 
-
-<!-- NO LONGER SUPPORTED!      
-        <para>
-            You may even select collection elements, using the special <literal>elements</literal>
-            function. The following query returns all kittens of any cat.
-        </para>
-        
-        <programlisting><![CDATA[select elements(cat.kittens) from Cat cat]]></programlisting>
--->
         <para>
             Queries may return properties of any value type including properties of component type:
         </para>

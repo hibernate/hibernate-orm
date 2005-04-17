@@ -6,7 +6,8 @@
 
         <para>
             This tutorial explains a setup of Hibernate 3.0 with the Apache Tomcat
-            servlet container for a web-based application. Hibernate works
+            servlet container (we used version 4.1, the differences to 5.0 should be
+            minimal) for a web-based application. Hibernate works
             well in a managed environment with all major J2EE application servers, or
             even in standalone Java applications. The database system used in this
             tutorial is PostgreSQL 7.4, support for other database is only a matter
@@ -42,14 +43,14 @@
                 </para>
             </listitem>
             <listitem>
-				<para>
-					Never copy anything else into the global classloader path in Tomcat, or you
-					will get  problems with various tools, including Log4j, commons-logging and
-					others. Always use the context classpath for each web application, that is,
-					copy libraries to <literal>WEB-INF/lib</literal> and your own classes and
+                <para>
+                    Never copy anything else into the global classloader path in Tomcat, or you
+                    will get  problems with various tools, including Log4j, commons-logging and
+                    others. Always use the context classpath for each web application, that is,
+                    copy libraries to <literal>WEB-INF/lib</literal> and your own classes and
                     configuration/property files to <literal>WEB-INF/classes</literal>. Both
                     directories are in the context level classpath by default.
-				</para>
+                </para>
             </listitem>
             <listitem>
                 <para>
@@ -101,7 +102,7 @@
                     </row>
                     <row>
                         <entry>
-                            CGLIB (required)
+                            CGLIB, asm (required)
                         </entry>
                         <entry>
                             Hibernate uses the code generation library to enhance classes
@@ -162,7 +163,8 @@
             We now set up the database connection pooling and sharing in both Tomcat and
             Hibernate. This means Tomcat will provide pooled JDBC connections (using its
             builtin DBCP pooling feature), Hibernate requests theses connections through
-            JNDI. Tomcat binds the connection pool to JNDI, we add a resource declaration
+            JNDI. Alternatively, you can let Hibernate manage the connection pool. Tomcat
+            binds its connection pool to JNDI; we add a resource declaration
             to Tomcats main configuration file, <literal>TOMCAT/conf/server.xml</literal>:
         </para>
 
@@ -207,14 +209,14 @@
     </ResourceParams>
 </Context>]]></programlisting>
 
-		<para>
-			The context we configure in this example is named <literal>quickstart</literal>,
-			its base is the <literal>TOMCAT/webapp/quickstart</literal> directory. To access
-			any servlets, call the path <literal>http://localhost:8080/quickstart</literal>
-			in your browser (of course, adding the name of the servlet as mapped in your
-			<literal>web.xml</literal>). You may also go ahead and create a simple servlet
-			now that has an empty <literal>process()</literal> method.
-		</para>
+        <para>
+            The context we configure in this example is named <literal>quickstart</literal>,
+            its base is the <literal>TOMCAT/webapp/quickstart</literal> directory. To access
+            any servlets, call the path <literal>http://localhost:8080/quickstart</literal>
+            in your browser (of course, adding the name of the servlet as mapped in your
+            <literal>web.xml</literal>). You may also go ahead and create a simple servlet
+            now that has an empty <literal>process()</literal> method.
+        </para>
 
         <para>
             Tomcat provides connections now through JNDI at
@@ -226,11 +228,10 @@
 
         <para>
             Your next step is to configure Hibernate. Hibernate has to know how it should obtain
-            JDBC connections We use Hibernates XML-based configuration. The other approach, using
-            a properties file, is equivalent in features, but doesn't offer any advantages. We use
-            the XML configuration because it is usually more convenient. The XML configuration file
-            is placed in the context classpath (<literal>WEB-INF/classes</literal>), as
-            <literal>hibernate.cfg.xml</literal>:
+            JDBC connections. We use Hibernate's XML-based configuration. The other approach, using
+            a properties file, is almost equivalent but misses a few features the XML syntax allows.
+            The XML configuration file is placed in the context classpath (<literal>WEB-INF/classes</literal>),
+            as <literal>hibernate.cfg.xml</literal>:
         </para>
 
         <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
@@ -432,12 +433,12 @@ public class Cat {
  weight | real                  |
 Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
 
-    	<para>
-			You should now create this table in your database manually, and later read
-			<xref linkend="toolsetguide"/> if you want to automate this step with the
-			<literal>hbm2ddl</literal> tool. This tool can create a full SQL DDL, including
+        <para>
+            You should now create this table in your database manually, and later read
+            <xref linkend="toolsetguide"/> if you want to automate this step with the
+            <literal>hbm2ddl</literal> tool. This tool can create a full SQL DDL, including
             table definition, custom column type constraints, unique constraints and indexes.
-    	</para>
+        </para>
 
     </sect1>
 
@@ -520,14 +521,14 @@ public class HibernateUtil {
     }
 }]]></programlisting>
 
-		<para>
-			This class does not only take care of the <literal>SessionFactory</literal>
-			with its static initializer, but also has a <literal>ThreadLocal</literal>
+        <para>
+            This class does not only take care of the <literal>SessionFactory</literal>
+            with its static initializer, but also has a <literal>ThreadLocal</literal>
             variable which holds the <literal>Session</literal> for the current thread.
             Make sure you understand the Java concept of a thread-local variable before you
-			try to use this helper. A more complex and powerful <literal>HibernateUtil</literal>
+            try to use this helper. A more complex and powerful <literal>HibernateUtil</literal>
             class can be found in <literal>CaveatEmptor</literal>, http://caveatemptor.hibernate.org/
-		</para>
+        </para>
 
         <para>
             A <literal>SessionFactory</literal> is threadsafe, many threads can access
@@ -560,13 +561,13 @@ HibernateUtil.closeSession();]]></programlisting>
         </para>
 
         <para>
-			Note that you may call <literal>HibernateUtil.currentSession();</literal>
-			as many times as you like, you will always get the current <literal>Session</literal>
-			of this thread. You have to make sure the <literal>Session</literal> is closed
-			after your unit-of-work completes, either in your servlet code or in a servlet filter
-			before the HTTP response is send. The nice side effect of the second option is easy
-			lazy initialization: the <literal>Session</literal> is still open when the view is
-			rendered, so Hibernate can load unitialized objects while you navigate the current
+            Note that you may call <literal>HibernateUtil.currentSession();</literal>
+            as many times as you like, you will always get the current <literal>Session</literal>
+            of this thread. You have to make sure the <literal>Session</literal> is closed
+            after your unit-of-work completes, either in your servlet code or in a servlet filter
+            before the HTTP response is send. The nice side effect of the second option is easy
+            lazy initialization: the <literal>Session</literal> is still open when the view is
+            rendered, so Hibernate can load unitialized objects while you navigate the current
             object graph.
         </para>
 
@@ -607,9 +608,9 @@ tx.commit();]]></programlisting>
         </para>
 
         <para>
-			Keep in mind that Hibernate, as a data access layer, is tightly integrated into
-			your application. Usually, all other layers depent on the persistence mechanism.
-			Make sure you understand the implications of this design.
+            Keep in mind that Hibernate, as a data access layer, is tightly integrated into
+            your application. Usually, all other layers depent on the persistence mechanism.
+            Make sure you understand the implications of this design.
         </para>
 
         <para>

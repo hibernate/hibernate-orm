@@ -486,7 +486,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="performance-fetching-batch">
+        <sect2 id="performance-fetching-subselect">
             <title>Using subselect fetching</title>
             <para>TODO</para>
         </sect2>

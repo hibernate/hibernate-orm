@@ -1612,6 +1612,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <programlisting><![CDATA[<?xml version="1.0"?>
 <server>
+
 <mbean code="org.hibernate.jmx.HibernateService"
     name="jboss.jca:service=HibernateFactory,name=HibernateFactory">
 
@@ -1658,7 +1659,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 to package Hibernate, its required third-party libraries, your compiled persistent classes,
                 as well as your mapping files in the same archive. Your enterprise beans (usually session
                 beans) may be kept in their own JAR file, but you may include this EJB JAR file in the
-                your main service archive to get a single (hot-)deployable unit. Consult the JBoss AS
+                main service archive to get a single (hot-)deployable unit. Consult the JBoss AS
                 documentation for more information about JMX service and EJB deployment.
             </para>
 

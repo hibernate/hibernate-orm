@@ -122,35 +122,6 @@
 
     </sect1>
 
-<!-- Lets undocument this stuff, its evil for most people
-    <sect1 id="configuration-userjdbc" revision="1">
-        <title>User provided JDBC connection</title>
-
-        <para>
-            A <literal>SessionFactory</literal> may open a <literal>Session</literal> on 
-            a user-provided JDBC connection. This design choice frees the application to 
-            obtain JDBC connections wherever it pleases:
-        </para>
-
-        <programlisting><![CDATA[java.sql.Connection conn = datasource.getConnection();
-Session session = sessions.openSession(conn);
-
-// do some data access work]]></programlisting>
-
-        <para>
-            The application must be careful not to open two concurrent
-            <literal>Session</literal>s on the same JDBC connection!
-        </para>
-
-        <para>
-            We don't recommend user-provided JDBC connections, as Hibernate will disable
-            caching (it doesn't know what else you might have executed on the given 
-            connection) and one of the following options is usually more appropriate.
-        </para>
-
-    </sect1>
--->
-
     <sect1 id="configuration-hibernatejdbc" revision="1">
         <title>JDBC connections</title>
 
@@ -1129,157 +1100,6 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-optional-transactionstrategy" revision="3">
-            <title>Transaction strategy configuration</title>
-
-            <para>
-                If you wish to use the Hibernate <literal>Transaction</literal> API instead
-                of directly calling a particular system transaction API, you must
-                specify a factory class for <literal>Transaction</literal> instances by
-                setting the property <literal>hibernate.transaction.factory_class</literal>.
-                The <literal>Transaction</literal> API hides the underlying transaction
-                mechanism and allows Hibernate code to run in managed and non-managed environments.
-            </para>
-
-            <para>
-                There are three standard (built-in) choices:
-            </para>
-
-            <variablelist spacing="compact">
-                <varlistentry>
-                    <term><literal>org.hibernate.transaction.JDBCTransactionFactory</literal></term>
-                    <listitem>
-                        <para>delegates to database (JDBC) transactions (default)</para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
-                    <listitem>
-                        <para>
-                            delegates to JTA (if an existing transaction is underway, the 
-                            <literal>Session</literal> performs its work in that context, otherwise 
-                            a new transaction is started)
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term><literal>org.hibernate.transaction.CMTTransactionFactory</literal></term>
-                    <listitem>
-                        <para>delegates to a container managed JTA transaction</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-
-            <para>
-                You may also define your own transaction strategies (for a CORBA transaction service,
-                for example).
-            </para>
-
-            <para>
-                Some features in Hibernate (i.e. the second level cache) require access to the
-                JTA <literal>TransactionManager</literal> in a management environment. You have to
-                specify how Hibernate should obtain a reference to the <literal>TransactionManager</literal>,
-                since J2EE does not standardize a single mechanism:
-            </para>
-
-            <table frame="topbot" id="jtamanagerlookup" revision="1">
-                <title>JTA TransactionManagers</title>
-                <tgroup cols="2">
-                    <colspec colwidth="2.5*"/>
-                    <colspec colwidth="1*"/>
-                    <thead>
-                        <row>
-                            <entry>Transaction Factory</entry>
-                            <entry align="center">Application Server</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
-                            <entry align="center">JBoss</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
-                            <entry align="center">Weblogic</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
-                            <entry align="center">WebSphere</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</literal></entry>
-                            <entry align="center">WebSphere 6</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
-                            <entry align="center">Orion</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
-                            <entry align="center">Resin</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
-                            <entry align="center">JOTM</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
-                            <entry align="center">JOnAS</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
-                            <entry align="center">JRun4</entry>
-                        </row>
-                        <row>
-                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
-                            <entry align="center">Borland ES</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-
-        </sect2>
-
-        <sect2 id="configuration-optional-jndi" revision="2">
-            <title>JNDI-bound <literal>SessionFactory</literal></title>
-
-            <para>
-                A JNDI bound Hibernate <literal>SessionFactory</literal> can simplify the lookup
-                of the factory and the creation of new <literal>Session</literal>s. Note that this
-                is not related to a JNDI bound <literal>Datasource</literal> in a managed environment.
-            </para>
-
-            <para>
-                If you wish to have the <literal>SessionFactory</literal> bound to a JNDI namespace, specify
-                a name (eg. <literal>java:hibernate/SessionFactory</literal>) using the property
-                <literal>hibernate.session_factory_name</literal>. If this property is omitted, the 
-                <literal>SessionFactory</literal> will not be bound to JNDI. (This is especially useful in 
-                environments with a read-only JNDI default implementation, eg. Tomcat.)
-            </para>
-
-            <para>
-                When binding the <literal>SessionFactory</literal> to JNDI, Hibernate will use the values of
-                <literal>hibernate.jndi.url</literal>, <literal>hibernate.jndi.class</literal> to instantiate 
-                an initial context. If they are not specified, the default <literal>InitialContext</literal>
-                will be used.
-            </para>
-
-            <para>
-                Hibernate will automatically place the <literal>SessionFactory</literal> in JNDI after
-                you call <literal>cfg.buildSessionFactory()</literal>. This means you will at least have
-                this call in some startup code (or utility class) in your application, unless you use
-                JMX deployment with the <literal>HibernateService</literal>.
-            </para>
-
-            <para>
-                If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may
-                obtain the  <literal>SessionFactory</literal> using a JNDI lookup. Note that this
-                setup is not neccessary if you use the <literal>HibernateUtil</literal> helper class
-                introduced in chapter 1, which acts as a Singleton registry.
-            </para>
-
-        </sect2>
-
         <sect2 id="configuration-optional-querysubstitution">
             <title>Query Language Substitution</title>
 
@@ -1521,6 +1341,328 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
        <programlisting><![CDATA[SessionFactory sf = new Configuration()
     .configure("catdb.cfg.xml")
     .buildSessionFactory();]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="configuration-j2ee" revision="1">
+        <title>J2EE Application Server integration</title>
+
+        <para>
+            Hibernate has the following integration points for J2EE infrastructure:
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                <emphasis>Container-managed datasources</emphasis>: Hibernate can use
+                JDBC connections managed by the container and provided through JNDI. Usually,
+                a JTA compatible <literal>TransactionManager</literal> and a
+                <literal>ResourceManager</literal> take care of transaction management (CMT),
+                esp. distributed transaction handling across several datasources. You may
+                of course also demarcate transaction boundaries programatically (BMT) or
+                you might want to use the optional Hibernate <literal>Transaction</literal>
+                API for this to keep your code portable.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                <emphasis>Automatic JNDI binding</emphasis>: Hibernate can bind its
+                <literal>SessionFactory</literal> to JNDI after startup.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                <emphasis>JTA Session binding:</emphasis> The Hibernate <literal>Session</literal>
+                may be automatically bound to the scope of JTA transactions if you use EJBs. Simply
+                lookup the <literal>SessionFactory</literal> from JNDI and get the current
+                <literal>Session</literal>. Let Hibernate take care of flushing and closing the
+                <literal>Session</literal> when your JTA transaction completes. Transaction
+                demarcation is declarative, in EJB deployment descriptors.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                <emphasis>JMX deployment:</emphasis> If you have a JMX capable application server
+                (e.g. JBoss AS), you can chose to deploy Hibernate as a managed MBean. This saves
+                you the one line startup code to build your <literal>SessionFactory</literal> from
+                a <literal>Configuration</literal>. The container will startup your
+                <literal>HibernateService</literal>, and ideally also take care of service
+                dependencies (Datasource has to be available before Hibernate starts, etc).
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <sect2 id="configuration-optional-transactionstrategy" revision="3">
+            <title>Transaction strategy configuration</title>
+
+            <para>
+                The Hibernate <literal>Session</literal> API is independent of any transaction
+                demarcation system in your architecture. If you let Hibernate use JDBC directly,
+                through a connection pool, you may begin and end your transactions by calling
+                the JDBC API. If you run in a J2EE application server, you might want to use bean-managed
+                transactions and call the JTA API and <literal>UserTransaction</literal> when needed.
+            </para>
+
+            <para>
+                To keep your code portable between these two (and other) environments we recommend the optional
+                Hibernate <literal>Transaction</literal> API, which wraps and hides the underlying system.
+                You have to specify a factory class for <literal>Transaction</literal> instances by setting the
+                Hibernate configuration property <literal>hibernate.transaction.factory_class</literal>.
+            </para>
+
+            <para>
+                There are three standard (built-in) choices:
+            </para>
+
+            <variablelist spacing="compact">
+                <varlistentry>
+                    <term><literal>org.hibernate.transaction.JDBCTransactionFactory</literal></term>
+                    <listitem>
+                        <para>delegates to database (JDBC) transactions (default)</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
+                    <listitem>
+                        <para>
+                            delegates to container-managed transaction if an existing transaction is
+                            underway in this context (e.g. EJB session bean method), otherwise
+                            a new transaction is started and bean-managed transaction are used.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>org.hibernate.transaction.CMTTransactionFactory</literal></term>
+                    <listitem>
+                        <para>delegates to container-managed JTA transactions</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+
+            <para>
+                You may also define your own transaction strategies (for a CORBA transaction service,
+                for example).
+            </para>
+
+            <para>
+                Some features in Hibernate (i.e. the second level cache, automatic JTA and Session binding, etc.)
+                require access to the JTA <literal>TransactionManager</literal> in a managed environment.
+                In an application server you have to specify how Hibernate should obtain a reference to the
+                <literal>TransactionManager</literal>, since J2EE does not standardize a single mechanism:
+            </para>
+
+            <table frame="topbot" id="jtamanagerlookup" revision="1">
+                <title>JTA TransactionManagers</title>
+                <tgroup cols="2">
+                    <colspec colwidth="2.5*"/>
+                    <colspec colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Transaction Factory</entry>
+                            <entry align="center">Application Server</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
+                            <entry align="center">JBoss</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
+                            <entry align="center">Weblogic</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
+                            <entry align="center">WebSphere</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</literal></entry>
+                            <entry align="center">WebSphere 6</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
+                            <entry align="center">Orion</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
+                            <entry align="center">Resin</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
+                            <entry align="center">JOTM</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
+                            <entry align="center">JOnAS</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
+                            <entry align="center">JRun4</entry>
+                        </row>
+                        <row>
+                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
+                            <entry align="center">Borland ES</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+
+        </sect2>
+
+        <sect2 id="configuration-optional-jndi" revision="2">
+            <title>JNDI-bound <literal>SessionFactory</literal></title>
+
+            <para>
+                A JNDI bound Hibernate <literal>SessionFactory</literal> can simplify the lookup
+                of the factory and the creation of new <literal>Session</literal>s. Note that this
+                is not related to a JNDI bound <literal>Datasource</literal>, both simply use the
+                same registry!
+            </para>
+
+            <para>
+                If you wish to have the <literal>SessionFactory</literal> bound to a JNDI namespace, specify
+                a name (eg. <literal>java:hibernate/SessionFactory</literal>) using the property
+                <literal>hibernate.session_factory_name</literal>. If this property is omitted, the
+                <literal>SessionFactory</literal> will not be bound to JNDI. (This is especially useful in
+                environments with a read-only JNDI default implementation, e.g. Tomcat.)
+            </para>
+
+            <para>
+                When binding the <literal>SessionFactory</literal> to JNDI, Hibernate will use the values of
+                <literal>hibernate.jndi.url</literal>, <literal>hibernate.jndi.class</literal> to instantiate
+                an initial context. If they are not specified, the default <literal>InitialContext</literal>
+                will be used.
+            </para>
+
+            <para>
+                Hibernate will automatically place the <literal>SessionFactory</literal> in JNDI after
+                you call <literal>cfg.buildSessionFactory()</literal>. This means you will at least have
+                this call in some startup code (or utility class) in your application, unless you use
+                JMX deployment with the <literal>HibernateService</literal> (discussed later).
+            </para>
+
+            <para>
+                If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may
+                obtain the  <literal>SessionFactory</literal> using a JNDI lookup. Note that this
+                setup is not neccessary if you use the <literal>HibernateUtil</literal> helper class
+                introduced in chapter one, which acts as a Singleton registry. However,
+                <literal>HibernateUtil</literal> is more common in a non-managed environment.
+            </para>
+
+        </sect2>
+
+        <sect2 id="configuration-j2ee-currentsession" revision="1">
+            <title>Automatic JTA and Session binding</title>
+
+            <para>
+                For non-managed environments we suggested <literal>HibernateUtil</literal> with
+                a static <literal>SessionFactory</literal>, and <literal>ThreadLocal</literal>
+                management of the Hibernate <literal>Session</literal>. This approach isn't easy
+                to use in an EJB environment, as several EJB's may execute inside the same
+                transaction but not the same thread. We recommend that you bind the
+                <literal>SessionFactory</literal> to JNDI in a managend environment.
+            </para>
+
+            <para>
+                Instead of rolling your own <literal>ThreadLocal</literal> utility, use the
+                <literal>getCurrentSession()</literal> method on the <literal>SessionFactory</literal>
+                to obtain a Hibernate <literal>Session</literal>. If there is no Hibernate
+                <literal>Session</literal> in current JTA transaction, one will be started and
+                assigned. If you have set both the <literal>hibernate.transaction.flush_before_completion</literal>
+                and <literal>hibernate.transaction.auto_close_session</literal> configuration options,
+                the <literal>Session</literal> will also be flushed and closed automatically
+                when the container ends the JTA transactions.
+            </para>
+
+            <para>
+                If you, for example, use the DAO design pattern to write your persistence layer,
+                all DAO's lookup the <literal>SessionFactory</literal> when needed and open the
+                "current" Session. There is no need to pass instances of <literal>SessionFactory</literal>
+                or <literal>Session</literal> around between controlling code and DAO code.
+            </para>
+
+        </sect2>
+
+        <sect2 id="configuration-j2ee-jmx" revision="1">
+            <title>JMX deployment</title>
+
+            <para>
+                The line <literal>cfg.buildSessionFactory()</literal> still has to be executed
+                somewhere to get a <literal>SessionFactory</literal> into JNDI. You can do this
+                either in a <literal>static</literal> initializer block (like the one in
+                <literal>HibernateUtil</literal>) or you deploy Hibernate as a <emphasis>managed
+                service</emphasis>.
+            </para>
+
+            <para>
+                Hibernate is distributed with <literal>org.hibernate.jmx.HibernateService</literal>
+                for deployment on an application server with JMX capabilities, such as JBoss AS.
+                The actual deployment and configuration is vendor specific. Here is an example
+                <literal>jboss-service.xml</literal> for JBoss 4.0.x:
+            </para>
+
+            <programlisting><![CDATA[<?xml version="1.0"?>
+<server>
+<mbean code="org.hibernate.jmx.HibernateService"
+    name="jboss.jca:service=HibernateFactory,name=HibernateFactory">
+
+    <!-- Required services -->
+    <depends>jboss.jca:service=RARDeployer</depends>
+    <depends>jboss.jca:service=LocalTxCM,name=HsqlDS</depends>
+
+    <!-- Bind the Hibernate service to JNDI -->
+    <attribute name="JndiName">java:/hibernate/SessionFactory</attribute>
+
+    <!-- Datasource settings -->
+    <attribute name="Datasource">java:HsqlDS</attribute>
+    <attribute name="Dialect">org.hibernate.dialect.HSQLDialect</attribute>
+
+    <!-- Transaction integration -->
+    <attribute name="TransactionStrategy">
+        org.hibernate.transaction.JTATransactionFactory</attribute>
+    <attribute name="TransactionManagerLookupStrategy">
+        org.hibernate.transaction.JBossTransactionManagerLookup</attribute>
+    <attribute name="FlushBeforeCompletionEnabled">true</attribute>
+    <attribute name="AutoCloseSessionEnabled">true</attribute>
+
+    <!-- Fetching options -->
+    <attribute name="MaximumFetchDepth">5</attribute>
+
+    <!-- Second-level caching -->
+    <attribute name="SecondLevelCacheEnabled">true</attribute>
+    <attribute name="CacheProviderClass">org.hibernate.cache.EhCacheProvider</attribute>
+    <attribute name="QueryCacheEnabled">true</attribute>
+
+    <!-- Logging -->
+    <attribute name="ShowSqlEnabled">true</attribute>
+
+    <!-- Mapping files -->
+    <attribute name="MapResources">auction/Item.hbm.xml,auction/Category.hbm.xml</attribute>
+
+</mbean>
+
+</server>]]></programlisting>
+
+            <para>
+                This file is deployed in a directory called <literal>META-INF</literal> and packaged
+                in a JAR file with the extension <literal>.sar</literal> (service archive). You also need
+                to package Hibernate, its required third-party libraries, your compiled persistent classes,
+                as well as your mapping files in the same archive. Your enterprise beans (usually session
+                beans) may be kept in their own JAR file, but you may include this EJB JAR file in the
+                your main service archive to get a single (hot-)deployable unit. Consult the JBoss AS
+                documentation for more information about JMX service and EJB deployment.
+            </para>
+
+        </sect2>
 
     </sect1>
 

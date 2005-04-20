@@ -1577,10 +1577,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <literal>getCurrentSession()</literal> method on the <literal>SessionFactory</literal>
                 to obtain a Hibernate <literal>Session</literal>. If there is no Hibernate
                 <literal>Session</literal> in current JTA transaction, one will be started and
-                assigned. If you have set both the <literal>hibernate.transaction.flush_before_completion</literal>
-                and <literal>hibernate.transaction.auto_close_session</literal> configuration options,
-                the <literal>Session</literal> will also be flushed and closed automatically
-                when the container ends the JTA transactions.
+                assigned. Both the <literal>hibernate.transaction.flush_before_completion</literal>
+                and <literal>hibernate.transaction.auto_close_session</literal> configuration option,
+                will be set automatically for every <literal>Session</literal> you retrieve with
+                <literal>getCurrentSession()</literal>, so they will also be flushed and closed
+                automatically when the container ends the JTA transactions.
             </para>
 
             <para>

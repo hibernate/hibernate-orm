@@ -436,15 +436,17 @@ finally {
 
             <para>
                 If your persistence layer runs in an application server (e.g. behind EJB session beans),
-                transaction boundaries are defined in deployment descriptors. Every datasource connection
-                obtained by Hibernate will automatically be part of the global JTA transaction. Hibernate
-                simply joins this transaction, or if a particular session bean method has no mandatory
-                transaction, Hibernate will tell the application server to start and end a BMT transaction
-                directly. So, for BMT, the session handling idiom is identical to case of a non-managed
-                environment:
+                every datasource connection obtained by Hibernate will automatically be part of the global
+                JTA transaction. Hibernate offers two strategies for this integration.
+            </para>
+
+            <para>
+                If you use bean-managed transactions (BMT) Hibernate will tell the application server to start
+                and end a BMT transaction if you use the <literal>Transaction</literal> API. So, the
+                transaction management code is identical to the non-managed environment.
             </para>
             
-           <programlisting><![CDATA[//BMT idiom
+           <programlisting><![CDATA[// BMT idiom
 Session sess = factory.openSession();
 Transaction tx = null;
 try {
@@ -464,24 +466,29 @@ finally {
 }]]></programlisting>
 
             <para>
+                With CMT, transaction demarcation is done in session bean deployment descriptors, not programatically.
+                You still have to flush and close the <literal>Session</literal> yourself, unless you set the properties
+                <literal>hibernate.transaction.flush_before_completion</literal> and
+                <literal>hibernate.transaction.auto_close_session</literal> to <literal>true</literal>. Hibernate will
+                then automatically flush and close the <literal>Session</literal> for you. The only thing left to rollback
+                the transaction when an exception occurs. Fortunately, in a CMT bean, even this happens automatically,
+                since an unhandled <literal>RuntimeException</literal> thrown by a session bean method tells the container
+                to set the global transaction to rollback. <emphasis>This means you do not need to use the Hibernate
+                <literal>Transaction</literal> API at all in CMT.</emphasis>
+            </para>
+
+            <para>
                 Note that you should choose <literal>org.hibernate.transaction.JTATransactionFactory</literal>
                 in a BMT session bean, and <literal>org.hibernate.transaction.CMTTransactionFactory</literal>
-                in a CMT session bean. Remember to also set 
+                in a CMT session bean, when you configure Hibernate's transaction factory. Remember to also set
                 <literal>org.hibernate.transaction.manager_lookup_class</literal>.
             </para>
 
             <para>
-                If you set the properties <literal>hibernate.transaction.flush_before_completion</literal>
-                and <literal>hibernate.transaction.auto_close_session</literal> to <literal>true</literal>,
-                Hibernate will automatically flush and close the <literal>Session</literal> for you.
-                The only thing left to rollback the transaction when an exception occurs. Fortunately, in
-                a CMT bean, even this happens automatically, since an unhandled <literal>RuntimeException</literal>
-                thrown by a session bean method tells the container to set the global transaction to
-                rollback. <emphasis>This means you do not need to use the Hibernate 
-                <literal>Transaction</literal> API at all in CMT.</emphasis>
-            </para>
-            
-            <para>
+                If you work in a CMT environment, and use automatic flushing and closing of the session, you
+                might also want to use the same session in different parts of your code. Typically, in a non-managed
+                environment you would use a <literal>ThreadLocal</literal> variable to hold the session, but a
+                single EJB method might execute in different threads (e.g. session bean calling another session bean).
                 If you don't want to bother passing your <literal>Session</literal> instance around, the
                 <literal>SessionFactory</literal> provides the <literal>getCurrentSession()</literal>
                 method, which returns a session that is bound to the JTA transaction context. This is the
@@ -490,7 +497,7 @@ finally {
                 session/transaction management idiom is reduced to this:
             </para>
 
-           <programlisting><![CDATA[//CMT idiom
+           <programlisting><![CDATA[// CMT idiom
 Session sess = factory.getCurrentSession();
 
 // do some work

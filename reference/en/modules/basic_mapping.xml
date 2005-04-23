@@ -237,7 +237,6 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
-                    <area id="class22" coords="23 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -257,7 +256,6 @@
         optimistic-lock="none|version|dirty|all"
         lazy="true|false"
         entity-name="EntityName"
-        catalog="catalog"
         check="arbitrary sql check condition"
         rowid="rowid"
         subselect="SQL expression"
@@ -380,17 +378,11 @@
                     </callout>
                     <callout arearefs="class18">
                         <para>
-                            <literal>catalog</literal> (optional): The name of a database catalog used for this
-                            class and its table.
-                        </para>
-                    </callout>
-                    <callout arearefs="class19">
-                        <para>
                             <literal>check</literal> (optional): A SQL expression used to generate a multi-row
                             <emphasis>check</emphasis> constraint for automatic schema generation.
                         </para>
                     </callout>
-                    <callout arearefs="class20">
+                    <callout arearefs="class19">
                         <para>
                             <literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on databases
                             which support. E.g. on Oracle, Hibernate can use the <literal>rowid</literal> extra
@@ -398,14 +390,14 @@
                             is an implementation detail and represents the physical location of a stored tuple.
                         </para>
                     </callout>
-                    <callout arearefs="class21">
+                    <callout arearefs="class20">
                         <para>
                             <literal>subselect</literal> (optional): Maps an immutable and read-only entity
                             to a database subselect. Useful if you want to have a view instead of a base table,
                             but don't. See below for more information.
                         </para>
                     </callout>
-                    <callout arearefs="class22">
+                    <callout arearefs="class21">
                         <para>
                             <literal>abstract</literal> (optional): Used to mark abstract superclasses in
                             <literal>&lt;union-subclass&gt;</literal> hierarchies.

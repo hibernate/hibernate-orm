@@ -512,6 +512,17 @@ Session sess = factory.getCurrentSession();
                 descriptors of your session bean. The lifecycle of the session is completely managed by
                 Hibernate.
             </para>
+            
+            <para>
+                There is one caveat to the use of <literal>auto_close_session</literal>. Due to a limitation 
+                of the JTA spec, it is not possible for Hibernate to automatically clean up any unclosed 
+                <literal>ScrollableResults</literal> or <literal>Iterator</literal> instances returned by 
+                <literal>scroll()</literal> or <literal>iterate()</literal>. You <emphasis>must</emphasis>
+                release the underlying database cursor by calling <literal>ScrollableResults.close()</literal>
+                or <literal>Hibernate.close(Iterator)</literal> explicity from a <literal>finally</literal> 
+                block. (Of course, most applications can easily avoid using <literal>scroll()</literal> or 
+                <literal>iterate()</literal> at all from the CMT code.)
+            </para>
 
         </sect2>
 

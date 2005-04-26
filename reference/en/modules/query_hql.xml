@@ -517,6 +517,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                	<literal>case ... when ... then ... else ... end</literal> and
                     <literal>case when ... then ... else ... end</literal> 
                 </para>
             </listitem>

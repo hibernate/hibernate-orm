@@ -495,13 +495,31 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>
+                    Parentheses <literal>( )</literal>, indicating grouping
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    SQL scalar functions like <literal>upper()</literal>, <literal>lower()</literal>, 
-                    <literal>abs()</literal>
+                    <literal>in</literal>,
+                    <literal>not in</literal>,
+                    <literal>between</literal>,
+                    <literal>is null</literal>,
+                    <literal>is not null</literal>,
+                    <literal>is empty</literal>,
+                    <literal>is not empty</literal>,
+                    <literal>member of</literal> and 
+                    <literal>not member of</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                	"Simple" case, <literal>case ... when ... then ... else ... end</literal>, and
+                    "searched" case, <literal>case when ... then ... else ... end</literal> 
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>
                 </para>
             </listitem>
             <listitem>
@@ -512,31 +530,20 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    Any function or operator defined by EJB-QL 3.0
+                    Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(),
+                    lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                	<literal>case ... when ... then ... else ... end</literal> and
-                    <literal>case when ... then ... else ... end</literal> 
+                    <literal>coalesce()</literal> and <literal>nullif()</literal>, if supported by
+                    the underlying database
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Parentheses <literal>( )</literal> indicate grouping
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <literal>in</literal>,
-                    <literal>not in</literal>,
-                    <literal>between</literal>,
-                    <literal>is null</literal>
-                    <literal>is not null</literal>
-                    <literal>is empty</literal>
-                    <literal>is not empty</literal>
-                    <literal>member of</literal>
-                    <literal>not member of</literal>
+                    Any database-supported SQL scalar function like <literal>sign()</literal>, 
+                    <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>
                 </para>
             </listitem>
             <listitem>

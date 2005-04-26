@@ -668,6 +668,18 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
+                        <entry>
+                            <literal>hibernate.connection.aggressive_release</literal>
+                        </entry>
+                        <entry>
+                            Enables Hibernate to aggressively release JDBC Connections, provided this behaviour is
+                            supported by the configured <literal>ConnectionProvider</literal>.  The default Hibernate
+                            behaviour is to cache a Connection for the entire lifespan (excluding disconnect/reconnect
+                            calls) of the Session; this does not play well with certain usage scenarios inside managed
+                            environments implementing Connection "containment" checks.
+                        </entry>
+                    </row>
+                    <row>
                     <entry>
                         <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                     </entry>

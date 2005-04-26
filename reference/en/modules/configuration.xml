@@ -672,12 +672,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.aggressive_release</literal>
                         </entry>
                         <entry>
-                            Enables Hibernate to aggressively release JDBC Connections, provided this behavior is
-                            supported by the configured <literal>ConnectionProvider</literal>.  The default Hibernate
-                            behavior is to cache a Connection for the entire lifespan (excluding disconnect/reconnect
-                            calls) of the Session; this does not play well inside managed environments implementing
-                            Connection "containment" checks.  Thus, setting this to true is recommended in managed
-                            environments.
+                            Enables Hibernate to aggressively release JDBC Connections, if supported
+                            supported by the <literal>ConnectionProvider</literal>. By default a JDBC
+                            connection is held for the lifespan (excluding disconnected state) of the Session;
+                            this does not play well inside managed environments implementing connection
+                            "containment" checks. Recommended in managed environments.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
                         </entry>
                     </row>
                     <row>
@@ -1413,6 +1416,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 </para>
             </listitem>
         </itemizedlist>
+
+        <para>
+            Depending on your environment, you might have to set the configuration option
+            <literal>hibernate.connection.aggressive_release</literal> to true if your
+            application server shows "connection containment" exceptions.
+        </para>
 
         <sect2 id="configuration-optional-transactionstrategy" revision="3">
             <title>Transaction strategy configuration</title>

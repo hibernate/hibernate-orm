@@ -542,6 +542,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                    <literal>cast(... as ...)</literal> where the second argument is the name of
+                    a Hibernate type, if ANSI <literal>cast()</literal> is supported by the underlying 
+                    database
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     Any database-supported SQL scalar function like <literal>sign()</literal>, 
                     <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>
                 </para>

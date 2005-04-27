@@ -543,8 +543,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    <literal>coalesce()</literal> and <literal>nullif()</literal>, if supported by
-                    the underlying database
+                    <literal>coalesce()</literal> and <literal>nullif()</literal>
                 </para>
             </listitem>
             <listitem>

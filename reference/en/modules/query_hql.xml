@@ -530,6 +530,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+					<literal>second(...)</literal>, <literal>minute(...)</literal>, 
+					<literal>hour(...)</literal>, <literal>day(...)</literal>, 
+					<literal>month(...)</literal>, <literal>year(...)</literal>,
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(),
                     lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>
                 </para>
@@ -542,9 +549,10 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    <literal>cast(... as ...)</literal> where the second argument is the name of
-                    a Hibernate type, if ANSI <literal>cast()</literal> is supported by the underlying 
-                    database
+                    <literal>cast(... as ...)</literal>, where the second argument is the name of
+                    a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI 
+                    <literal>cast()</literal> and <literal>extract()</literal> is supported by 
+                    the underlying database
                 </para>
             </listitem>
             <listitem>

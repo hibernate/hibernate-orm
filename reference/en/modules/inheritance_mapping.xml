@@ -213,7 +213,7 @@
     
         </sect2>
 
-        <sect2 id="inheritance-tableperconcrete">
+        <sect2 id="inheritance-tableperconcrete" revision="1">
         <title>Table per concrete class</title>
 
         <para>
@@ -223,7 +223,7 @@
 
         <programlisting><![CDATA[<class name="Payment">
     <id name="id" type="long" column="PAYMENT_ID">
-        <generator class="native"/>
+        <generator class="sequence"/>
     </id>
     <property name="amount" column="AMOUNT"/>
     ...
@@ -247,7 +247,10 @@
         <para>
             The limitation of this approach is that if a property is mapped on the 
             superclass, the column name must be the same on all subclass tables.
-            (We might relax this in a future release of Hibernate.)
+            (We might relax this in a future release of Hibernate.) The identity
+			generator strategy is not allowed in union subclass inheritance, indeed
+			the primary key seed has to be shared accross all unioned subclasses
+			of a hierarchy.
         </para>
         
         </sect2>

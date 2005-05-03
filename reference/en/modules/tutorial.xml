@@ -752,4 +752,430 @@ else if (args[0].equals("list")) {
 
     </sect1>
 
+    <sect1 id="tutorial-associations">
+        <title>Part 2 - Mapping associations</title>
+
+        <para>
+            We mapped a persistent entity class to a table. Let's build on this and add some class associations.
+            First we'll add people to our application, and store a list of events they participate in.
+        </para>
+
+        <sect2 id="tutorial-associations-mappinguser">
+            <title>Mapping the Person class</title>
+
+            <para>
+                The first cut of the <literal>Person</literal> class is simple:
+            </para>
+
+            <programlisting><![CDATA[public class Person {
+
+    private Long id;
+    private int age;
+    private String firstname;
+    private String lastname;
+
+    Person() {}
+
+    // Accessor methods for all properties, private setter for 'id'
+
+}]]></programlisting>
+
+            <para>
+                Create a new mapping file called <literal>Person.hbm.xml</literal>:
+            </para>
+
+            <programlisting><![CDATA[<hibernate-mapping>
+
+    <class name="Person" table="PERSON">
+        <id name="id" column="PERSON_ID">
+            <generator class="increment"/>
+        </id>
+        <property name="age"/>
+        <property name="firstname"/>
+        <property name="lastname"/>
+    </class>
+
+</hibernate-mapping>]]></programlisting>
+
+            <para>
+                Finally, add the new mapping to Hibernate's configuration:
+            </para>
+
+            <programlisting><![CDATA[        <mapping resource="Event.hbm.xml"/>
+        <mapping resource="Person.hbm.xml"/>
+]]></programlisting>
+
+            <para>
+                We'll now create an association between these two entities. Obviously, persons
+                can participate in events, and events have participants. The design questions
+                we have to deal with are: directionality, multiplicity, and collection
+                behavior.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-unidirset">
+            <title>A unidirectional Set-based association</title>
+
+            <para>
+                We'll add a collection of events to the <literal>Person</literal> class. That way we can
+                easily navigate to the events for a particular person, without executing an explicit query -
+                jyst by calling <literal>aPerson.getEvents()</literal>. We use a Java collection, a <literal>Set</literal>,
+                because the collection will not contain duplicate elements and the ordering is not relevant for us.
+            </para>
+
+            <para>
+                So far we designed a unidirectional, many-valued associations, implemented with a <literal>Set</literal>.
+                Let's write the code for this in the Java classes and then map it:
+            </para>
+
+            <programlisting><![CDATA[public class Person {
+
+    private Set events = new HashSet();
+
+    public Set getEvents() {
+        return events;
+    }
+
+    public void setEvents(Set events) {
+        this.events = events;
+    }
+}]]></programlisting>
+
+            <para>
+                Before we map this association, think about the other side. Clearly, we could just keep this
+                unidirectional. Or, we could create another collection on the <literal>Event</literal>, if we
+                want to be able to navigate it bi-directional, i.e. <literal>anEvent.getParticipants()</literal>.
+                This is a design choice left to you, but what is clear from this discussion is the multiplicity
+                of the association: "many" valued on both sides, we call this a <emphasis>many-to-many</emphasis>
+                association. Hence, we use Hibernate's many-to-many mapping:
+            </para>
+
+            <programlisting><![CDATA[<class name="Person" table="PERSON">
+    <id name="id" column="PERSON_ID">
+        <generator class="increment"/>
+    </id>
+    <property name="age"/>
+    <property name="firstname"/>
+    <property name="lastname"/>
+
+    <set name="events" table="PERSON_EVENT">
+        <key column="PERSON_ID"/>
+        <many-to-many column="EVENT_ID" class="Event"/>
+    </set>
+
+</class>]]></programlisting>
+
+            <para>
+                Hibernate supports all kinds of collection mappings, a <literal>&lt;set&gt;</literal> being most
+                common. For a many-to-many association (or <emphasis>n:m</emphasis> entity relationship), an
+                association table is needed. Each row in this table represents a link between a person and an event.
+                The table name is configured with the <literal>table</literal> attribute of the <literal>set</literal>
+                element. The identifier column name in the association, for the person's side, is defined with the
+                <literal>&lt;key&gt;</literal> element, the column name for the event's side with the
+                <literal>column</literal> attribute of the <literal>&lt;many-to-many&gt;</literal>. You also
+                have to tell Hibernate the class of the objects in your collection (correct: the class on the
+                other side of the collection of references).
+            </para>
+
+            <para>
+                The database schema for this mapping is therefore:
+            </para>
+
+            <programlisting><![CDATA[
+    _____________        __________________
+   |             |      |                  |       _____________
+   |   EVENTS    |      |   PERSON_EVENT   |      |             |
+   |_____________|      |__________________|      |    PERSON   |
+   |             |      |                  |      |_____________|
+   | *EVENT_ID   | <--> | *EVENT_ID        |      |             |
+   |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  |
+   |  TITLE      |      |__________________|      |  AGE        |
+   |_____________|                                |  FIRSTNAME  |
+                                                  |  LASTNAME   |
+                                                  |_____________|
+ ]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-working">
+            <title>Working the association</title>
+
+            <para>
+                Let's bring some people and events together in a new method in <literal>EventManager</literal>:
+            </para>
+
+            <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
+    Session session = HibernateUtil.currentSession();
+    Transaction tx = session.beginTransaction();
+
+    Person aPerson = (Person) session.load(Person.class, personId);
+    Event anEvent = (Event) session.load(Event.class, eventId);
+
+    aPerson.getEvents().add(anEvent);
+
+    tx.commit();
+    HibernateUtil.closeSession();
+}]]></programlisting>
+
+            <para>
+                After loading a <literal>Person</literal> and an <literal>Event</literal>, simply
+                modify the collection using the normal collection methods. As you can see, there is no explicit call
+                to <literal>update()</literal> or <literal>save()</literal>, Hibernate automatically
+                detects the collection has been modified and needs to be saved. This is called <emphasis>automatic
+                dirty checking</emphasis>, and you can also try it by modifying the name or the date property of
+                any of your objects. As long as they are in <emphasis>persistent</emphasis> state, that is, bound
+                to a particular Hibernate <literal>Session</literal> (i.e. they have been just loaded or saved in
+                a unit of work), Hibernate monitors any changes and executes SQL in a write-behind fashion. The
+                process of synchronizing the memory state with the database, usually only at the end of a unit of
+                work, is called <emphasis>flushing</emphasis>.
+            </para>
+
+            <para>
+                You might of course load person and event in different units of work. Or you modify an object
+                outside of a <literal>Session</literal>, when it is not in persistent state (if it was persistent
+                before, we call this state <emphasis>detached</emphasis>). In (not very realistic) code, this might
+                look as follows:
+            </para>
+
+            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+
+        Session session = HibernateUtil.currentSession();
+        Transaction tx = session.beginTransaction();
+
+        Person aPerson = (Person) session.load(Person.class, personId);
+        Event anEvent = (Event) session.load(Event.class, eventId);
+
+        tx.commit();
+        HibernateUtil.closeSession();
+
+        aPerson.getEvents().add(anEvent); // aPerson is detached
+
+        Session session2 = HibernateUtil.currentSession();
+        Transaction tx2 = session.beginTransaction();
+
+        session2.update(aPerson); // Reattachment of aPerson
+
+        tx2.commit();
+        HibernateUtil.closeSession();
+    }
+]]></programlisting>
+
+            <para>
+                The call to <literal>update</literal> makes a detached object persistent again, you could
+                say it binds it to a new unit of work, so any modifications you made to it while detached
+                can be saved to the database.
+            </para>
+
+            <para>
+                Well, this is not much use in our current situation, but it's an important concept you can
+                design into your own application. For now, complete this exercise by adding a new action
+                to the <literal>EventManager</literal>'s main method and call it from the command line. If
+                you need the identifiers of a person and an event - the <literal>save()</literal> method
+                returns it.
+            </para>
+
+            <para>
+                This was an example of an association between two equally important classes, two entities.
+                As mentioned earlier, there are other classes and types in a typical model, usually "less
+                important". Some you have already seen, like an <literal>int</literal> or a <literal>String</literal>.
+                We call these classes <emphasis>value types</emphasis>, and their instances <emphasis>depend</emphasis>
+                on a particular entity. Instances of these types don't have their own identity, nor are they
+                shared between entities (two persons don't reference the same <literal>firstname</literal>
+                object, even if they have the same first name). Of course, value types can not only be found in
+                the JDK (in fact, in a Hibernate application all JDK classes are considered value types), but
+                you can also write dependent classes yourself, <literal>Address</literal> or <literal>MonetaryAmount</literal>,
+                for example.
+            </para>
+
+            <para>
+                You can also design a collection of value types. This is conceptually very different from a
+                collection of references to other entities, but looks almost the same in Java.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-valuecollections">
+            <title>Collection of values</title>
+
+            <para>
+                We add a collection of value typed objects to the <literal>Person</literal> entity. We want to
+                store email addresses, so the type we use is <literal>String</literal>, and the collection is
+                again a <literal>Set</literal>:
+            </para>
+            <programlisting><![CDATA[private Set emailAddresses = new HashSet();
+
+public Set getEmailAddresses() {
+    return emailAddresses;
+}
+
+public void setEmailAddresses(Set emailAddresses) {
+    this.emailAddresses = emailAddresses;
+}]]></programlisting>
+
+            <para>
+                The mapping of this <literal>Set</literal>:
+            </para>
+
+            <programlisting><![CDATA[<set name="emailAddresses" table="PERSON_EMAIL_ADDR">
+    <key column="PERSON_ID"/>
+    <element type="string" column="EMAIL_ADDR"/>
+</set>]]></programlisting>
+
+            <para>
+                The difference compared with the earlier mapping is the <literal>element</literal> part, which tells Hibernate that the collection
+                does not contain references to another entity, but a collection of elements of type
+                <literal>String</literal> (the lowercase name tells you it's a Hibernate mapping type/converter).
+                Once again, the <literal>table</literal> attribute of the <literal>set</literal> element determines
+                the table name for the collection. The <literal>key</literal> element defines the foreign-key column
+                name in the collection table. The <literal>column</literal> attribute in the <literal>element</literal>
+                element defines the column name where the <literal>String</literal> values will actually be stored.
+            </para>
+
+            <para>
+                Have a look at the updated schema:
+            </para>
+
+            <programlisting><![CDATA[
+  _____________        __________________
+ |             |      |                  |       _____________
+ |   EVENTS    |      |   PERSON_EVENT   |      |             |       ___________________
+ |_____________|      |__________________|      |    PERSON   |      |                   |
+ |             |      |                  |      |_____________|      | PERSON_EMAIL_ADDR |
+ | *EVENT_ID   | <--> | *EVENT_ID        |      |             |      |___________________|
+ |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  | <--> |  *PERSON_ID       |
+ |  TITLE      |      |__________________|      |  AGE        |      |  *EMAIL_ADDR      |
+ |_____________|                                |  FIRSTNAME  |      |___________________|
+                                                |  LASTNAME   |
+                                                |_____________|
+ ]]></programlisting>
+
+            <para>
+                You can see that the primary key of the collection table is in fact a composite key,
+                using both columns. This also implies that there can't be duplicate email addresses
+                per person, which is exactly the semantics we need for a set in Java.
+            </para>
+
+            <para>
+                You can now try and add elements to this collection, just like we did before by
+                linking persons and events. It's the same code in Java.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-bidirectional">
+            <title>Bi-directional associations</title>
+
+            <para>
+                Next we are going to map a bi-directional association - making the association between
+                person and event work from both sides in Java. Of course, the database schema doesn't
+                change, we still have many-to-many multiplicity. A relational database is more flexible
+                than a network programming language, so it doesn't need anything like a navigation
+                direction - data can be viewed and retrieved in any possible way.
+            </para>
+
+            <para>
+                First, add a collection of participants to the <literal>Event</literal> Event class:
+            </para>
+
+            <programlisting><![CDATA[private Set participants = new HashSet();
+
+public Set getParticipants() {
+    return participants;
+}
+
+public void setParticipants(Set participants) {
+    this.participants = participants;
+}]]></programlisting>
+
+            <para>
+                Now map this side of the association too, in <literal>Event.hbm.xml</literal>.
+            </para>
+
+            <programlisting><![CDATA[<set name="participants" table="PERSON_EVENT" inverse="true">
+    <key column="EVENT_ID"/>
+    <many-to-many column="PERSON_ID" class="Person"/>
+</set>]]></programlisting>
+
+            <para>
+                As you see, these are normal <literal>set</literal> mappings in both mapping documents.
+                Notice that the column names in <literal>key</literal> and <literal>many-to-many</literal> are
+                swapped in both mapping documents. The most important addition here is the
+                <literal>inverse="true"</literal> attribute in the <literal>set</literal> element of the
+                <literal>Event</literal>'s collection mapping.
+            </para>
+
+            <para>
+                What this means is that Hibernate should take the other side - the <literal>Person</literal> class -
+                when it needs to find out information about the link between the two. This will be a lot easier to
+                understand once you see how the bi-directional link between our two entities is created .
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-usingbidir">
+            <title>Working bi-directional links</title>
+
+            <para>
+                First, keep in mind that Hibernate does not affect normal Java semantics. How did we create a
+                link between a <literal>Person</literal> and an <literal>Event</literal> in the unidirectional
+                example? We added an instance of <literal>Event</literal> to the collection of event references,
+                of an instance of <literal>Person</literal>. So, obviously, if we want to make this link working
+                bi-directional, we have to do the same on the other side - adding a <literal>Person</literal>
+                reference to the collection in an <literal>Event</literal>. This "setting the link on both sides"
+                is absolutely necessary and you should never forget doing it.
+            </para>
+
+            <para>
+                Many developers program defensive and create a link management methods to
+                correctly set both sides, e.g. in <literal>Person</literal>:
+            </para>
+
+            <programlisting><![CDATA[protected Set getEvents() {
+    return events;
+}
+
+protected void setEvents(Set events) {
+    this.events = events;
+}
+
+public void addToEvent(Event event) {
+    this.getEvents().add(event);
+    event.getParticipants().add(this);
+}
+
+public void removeFromEvent(Event event) {
+    this.getEvents().remove(event);
+    event.getParticipants().remove(this);
+}]]></programlisting>
+
+            <para>
+                Notice that the get and set methods for the collection are now protected - this allows classes in the
+                same package and subclasses to still access the methods, but prevents everybody else from messing
+                with the collections directly (well, almost). You should probably do the same with the collection
+                on the other side.
+            </para>
+
+            <para>
+                What about the <literal>inverse</literal> mapping attribute? For you, and for Java, a bi-directional
+                link is simply a matter of setting the references on both sides correctly. Hibernate however doesn't
+                have enough information to correctly arrange SQL <literal>INSERT</literal> and <literal>UPDATE</literal>
+                statements (to avoid constraint violations), and needs some help to handle bi-directional associations
+                properly. Making one side of the association <literal>inverse</literal> tells Hibernate to basically
+                ignore it, to consider it a <emphasis>mirror</emphasis> of the other side. That's all that is necessary
+                for Hibernate to work out all of the issues when transformation a directional navigation model to
+                a SQL database schema. The rules you have to remember are straightforward: All bi-directional associations
+                need one side as <literal>inverse</literal>. In a one-to-many association it has to be the many-side,
+                in many-to-many association you can pick either side, there is no difference.
+            </para>
+
+            <para>
+                In the next section we integrate Hibernate with Tomcat and WebWork - the <literal>EventManager</literal>
+                doesn't scale anymore with our growing application.
+            </para>
+
+        </sect2>
+    </sect1>
+
+
 </chapter>

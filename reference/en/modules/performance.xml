@@ -5,11 +5,10 @@
         <title>Fetching strategies</title>
 
         <para>
-            A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will
-            use for retrieving associated objects if the application needs to 
-            navigate the association. Fetch strategies may be declared in the O/R
-            mapping metadata, or over-ridden by a particular HQL or 
-            <literal>Criteria</literal> query.
+            A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use for 
+            retrieving associated objects if the application needs to navigate the association. 
+            Fetch strategies may be declared in the O/R mapping metadata, or over-ridden by a 
+            particular HQL or <literal>Criteria</literal> query.
         </para>
 
         <para>
@@ -51,25 +50,77 @@
                 </para>
             </listitem>
         </itemizedlist>
-
-        <para>
-            By default, Hibernate3 uses lazy select fetching, which is the best choice for most entities 
-            and collections in most applications. If you set 
-            <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the batch fetch 
-            optimization to lazy fetching (this optimization may also be enabled at a more granular level).
-        </para>
         
         <para>
-            However, there is one problem to be aware of. Access to a lazy association 
-            outside of the context of an open Hibernate session will result in an exception.
-            For example:
+            Hibernate also distinguishes between:
         </para>
 
+        <itemizedlist>
+             <listitem>
+                <para>
+                    <emphasis>Immediate fetching</emphasis> - an association, collection or
+                    attribute is fetched immediately, when the owner is loaded.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Lazy collection fetching</emphasis> - a collection is fetched 
+                    when the application invokes an operation upon that collection. (This
+                    is the default for collections.)
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Proxy fetching</emphasis> - a single-valued association is 
+                    fetched when a method other than the identifier getter is invoked
+                    upon the associated object.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Lazy attribute fetching</emphasis> - an attribute or single
+                    valued association is fetched when the instance variable is accessed
+                    (required buildtime bytecode instrumentation). This approach is
+                    rarely necessary.
+                </para>
+            </listitem>
+        </itemizedlist>
+        
+        <para>
+            We have two orthogonal notions here: <emphasis>when</emphasis> is the association
+            fetched, and <emphasis>how</emphasis> is it fetched (what SQL is used). Don't
+            confuse them! We use <literal>fetch</literal> to tune performance. We may use 
+            <literal>lazy</literal> to define a contract for what data is always available 
+            in any detached instance of a particular class.
+        </para>
+ 
+        <sect2 id="performance-fetching-lazy">
+            <title>Working with lazy associations</title>
+            
+            <para>
+                By default, Hibernate3 uses lazy select fetching for collections and lazy proxy
+                fetching for single-valued associations. These defaults make sense for almost
+                all associations in almost all applications. 
+            </para>
+            
+            <para>
+                <emphasis>Note:</emphasis> if you set 
+                <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the 
+                batch fetch optimization for lazy fetching (this optimization may also be enabled 
+                at a more granular level).
+            </para>
+            
+            <para>
+                However, lazy fetching poses one problem that you must be aware of. Access to a 
+                lazy association outside of the context of an open Hibernate session will result 
+                in an exception. For example:
+            </para>
+        
             <programlisting><![CDATA[s = sessions.openSession();
 Transaction tx = s.beginTransaction();
             
 User u = (User) s.createQuery("from User u where u.name=:userName")
-	.setString("userName", userName).uniqueResult();
+    .setString("userName", userName).uniqueResult();
 Map permissions = u.getPermissions();
 
 tx.commit();
@@ -77,40 +128,41 @@ s.close();
 
 Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></programlisting>
 
-        <para>
-            Since the permissions collection was not
-            initialized when the <literal>Session</literal> was closed, the collection
-            will not be able to load its state. <emphasis>Hibernate does not support lazy
-            initialization for detached objects</emphasis>. The fix is to move the
-            code that reads from the collection to just before the commit. (There are
-            other more advanced ways to solve this problem, some are discussed later.)
-        </para>
-
-        <para>
-            It is also possible to use a non-lazy collection or join fetching, which is
-            non-lazy by nature. However, it is intended that lazy initialization be used 
-            for almost all collections, especially for collections of entity references. 
-            If you define too many non-lazy associations in your object model, Hibernate 
-            will end up needing to fetch the entire database into memory in every 
-            transaction!
-        </para>
-
-        <para>
-            On the other hand, we often want to choose join fetching (which is non-lazy by 
-            nature) instead of select fetching in a particular transaction. We'll now see
-            how to customize the fetching strategy. In Hibernate3, the mechanisms for
-            choosing a fetch strategy are identical for single-valued associations and
-            collections.
-        </para>
-
+            <para>
+                Since the permissions collection was not initialized when the 
+                <literal>Session</literal> was closed, the collection will not be able to 
+                load its state. <emphasis>Hibernate does not support lazy initialization 
+                for detached objects</emphasis>. The fix is to move the code that reads 
+                from the collection to just before the transaction is committed.
+            </para>
+    
+            <para>
+                Alternatively, we could use a non-lazy collection or association, 
+                by specifying <literal>lazy="false"</literal> for the association mapping.
+                However, it is intended that lazy initialization be used for almost all 
+                collections and associations. If you define too many non-lazy associations 
+                in your object model, Hibernate will end up needing to fetch the entire 
+                database into memory in every transaction!
+            </para>
+    
+            <para>
+                On the other hand, we often want to choose join fetching (which is non-lazy by 
+                nature) instead of select fetching in a particular transaction. We'll now see
+                how to customize the fetching strategy. In Hibernate3, the mechanisms for
+                choosing a fetch strategy are identical for single-valued associations and
+                collections.
+            </para>
+        
+        </sect2>
+        
         <sect2 id="performance-fetching-custom" revision="3">
             <title>Tuning fetch strategies</title>
-			
-			<para>
-				Select fetching (the default) is extremely vulnerable to N+1 selects problems, 
-				so we might want to enable join fetching in the mapping document:
-			</para>
-			
+            
+            <para>
+                Select fetching (the default) is extremely vulnerable to N+1 selects problems, 
+                so we might want to enable join fetching in the mapping document:
+            </para>
+            
             <programlisting><![CDATA[<set name="permissions" 
             fetch="join">
     <key column="userId"/>
@@ -142,10 +194,10 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </listitem>
         </itemizedlist>
         
-        	<para>
-        		<emphasis>Specifying <literal>join</literal> as the fetch strategy in the mapping 
-        		document does not affect HQL queries.</emphasis>
-        	</para>
+            <para>
+                <emphasis>Specifying <literal>join</literal> as the fetch strategy in the mapping 
+                document does not affect HQL queries.</emphasis>
+            </para>
 
             <para>
                 Usually, we don't use the mapping document to customize fetching. Instead, we
@@ -157,16 +209,16 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
             
             <para>
-            	If you ever feel like you wish you could change the fetching strategy used by
-            	<literal>get()</literal> or <literal>load()</literal>, simply use a 
-            	<literal>Criteria</literal> query, for example:
+                If you ever feel like you wish you could change the fetching strategy used by
+                <literal>get()</literal> or <literal>load()</literal>, simply use a 
+                <literal>Criteria</literal> query, for example:
             </para>
             
             <programlisting><![CDATA[User user = (User) session.createCriteria(User.class)
-            	.setFetchMode("permissions", FetchMode.JOIN)
-            	.add( Restrictions.idEq(userId) )
-            	.uniqueResult();]]></programlisting>
-            	
+                .setFetchMode("permissions", FetchMode.JOIN)
+                .add( Restrictions.idEq(userId) )
+                .uniqueResult();]]></programlisting>
+                
             <para>
                 (This is Hibernate's equivalent of what some ORM solutions call a "fetch plan".)
             </para>

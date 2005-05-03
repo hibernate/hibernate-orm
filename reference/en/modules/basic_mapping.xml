@@ -237,6 +237,8 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
+                    <area id="class22" coords="23 55"/>
+                    <area id="class23" coords="24 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -261,6 +263,7 @@
         subselect="SQL expression"
         abstract="true|false"
         entity-name="EntityName"
+        node="element-name"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="class1">
@@ -403,6 +406,12 @@
                             <literal>&lt;union-subclass&gt;</literal> hierarchies.
                         </para>
                     </callout>
+                    <callout arearefs="class22">
+                        <para>
+                            <literal>entity-name</literal> (optional, defaults to the class name): Explicitly 
+                            specify an entity name.
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
            
@@ -537,11 +546,11 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="id1" coords="2 65"/>
-                    <area id="id2" coords="3 65" />
-                    <area id="id3" coords="4 65"/>
-                    <area id="id4" coords="5 65" />
-                    <area id="id5" coords="6 65" />
+                    <area id="id1" coords="2 70"/>
+                    <area id="id2" coords="3 70" />
+                    <area id="id3" coords="4 70"/>
+                    <area id="id4" coords="5 70" />
+                    <area id="id5" coords="6 70" />
                 </areaspec>
                 <programlisting><![CDATA[<id
         name="propertyName"
@@ -549,6 +558,7 @@
         column="column_name"
         unsaved-value="null|any|none|undefined|id_value"
         access="field|property|ClassName">
+        node="element-name|@attribute-name|element/@attribute|."
 
         <generator class="generatorClass"/>
 </id>]]></programlisting>
@@ -861,6 +871,7 @@
         class="ClassName"
         unsaved-value="undefined|any|none"
         access="field|property|ClassName">
+        node="element-name|."
 
         <key-property name="propertyName" type="typename" column="column_name"/>
         <key-many-to-one name="propertyName class="ClassName" column="column_name"/>
@@ -1020,11 +1031,11 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="version1" coords="2 60"/>
-                    <area id="version2" coords="3 60"/>
-                    <area id="version3" coords="4 60"/>
-                    <area id="version4" coords="5 60"/>
-                    <area id="version5" coords="6 60"/>
+                    <area id="version1" coords="2 70"/>
+                    <area id="version2" coords="3 70"/>
+                    <area id="version3" coords="4 70"/>
+                    <area id="version4" coords="5 70"/>
+                    <area id="version5" coords="6 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<version
         column="version_column"
@@ -1032,6 +1043,7 @@
         type="typename"
         access="field|property|ClassName"
         unsaved-value="null|negative|undefined"
+        node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="version1">
@@ -1096,16 +1108,17 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="timestamp1" coords="2 45"/>
-                    <area id="timestamp2" coords="3 45" />
-                    <area id="timestamp3" coords="4 45" />
-                    <area id="timestamp4" coords="5 45" />
+                    <area id="timestamp1" coords="2 70"/>
+                    <area id="timestamp2" coords="3 70" />
+                    <area id="timestamp3" coords="4 70" />
+                    <area id="timestamp4" coords="5 70" />
                 </areaspec>            
                 <programlisting><![CDATA[<timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
         unsaved-value="null|undefined"
+        node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="timestamp1">
@@ -1156,19 +1169,19 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="property1" coords="2 45"/>
-                    <area id="property2" coords="3 45"/>
-                    <area id="property3" coords="4 45"/>
+                    <area id="property1" coords="2 70"/>
+                    <area id="property2" coords="3 70"/>
+                    <area id="property3" coords="4 70"/>
                     <areaset id="property4-5" coords="">
-                        <area id="property4" coords='5 45'/>
-                        <area id="property5" coords='6 45'/>
+                        <area id="property4" coords='5 70'/>
+                        <area id="property5" coords='6 70'/>
                     </areaset>
-                    <area id="property6" coords="7 45"/>
-                    <area id="property7" coords="8 45"/>
-                    <area id="property8" coords="9 45"/>
-                    <area id="property9" coords="10 45"/>
-                    <area id="property10" coords="11 45"/>
-                    <area id="property11" coords="12 45"/>
+                    <area id="property6" coords="7 70"/>
+                    <area id="property7" coords="8 70"/>
+                    <area id="property8" coords="9 70"/>
+                    <area id="property9" coords="10 70"/>
+                    <area id="property10" coords="11 70"/>
+                    <area id="property11" coords="12 70"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1182,6 +1195,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
+        node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1338,22 +1352,23 @@
 
             <programlistingco>
                 <areaspec>
-                    <area id="manytoone1" coords="2 60"/>
-                    <area id="manytoone2" coords="3 60"/>
-                    <area id="manytoone3" coords="4 60"/>
-                    <area id="manytoone4" coords="5 60"/>
-                    <area id="manytoone5" coords="6 60"/>
+                    <area id="manytoone1" coords="2 70"/>
+                    <area id="manytoone2" coords="3 70"/>
+                    <area id="manytoone3" coords="4 70"/>
+                    <area id="manytoone4" coords="5 70"/>
+                    <area id="manytoone5" coords="6 70"/>
                     <areaset id="manytoone6-7" coords="">
-                        <area id="manytoone6" coords='7 60'/>
-                        <area id="manytoone7" coords='8 60'/>
+                        <area id="manytoone6" coords='7 70'/>
+                        <area id="manytoone7" coords='8 70'/>
                     </areaset>
-                    <area id="manytoone8" coords="9 60"/>
-                    <area id="manytoone9" coords="10 60"/>
-                    <area id="manytoone10" coords="11 60"/>
-                    <area id="manytoone11" coords="12 60"/>
-                    <area id="manytoone12" coords="13 60"/>
-                    <area id="manytoone13" coords="14 60"/>
-                    <area id="manytoone14" coords="15 60"/>
+                    <area id="manytoone8" coords="9 70"/>
+                    <area id="manytoone9" coords="10 70"/>
+                    <area id="manytoone10" coords="11 70"/>
+                    <area id="manytoone11" coords="12 70"/>
+                    <area id="manytoone12" coords="13 70"/>
+                    <area id="manytoone13" coords="14 70"/>
+                    <area id="manytoone14" coords="15 70"/>
+                    <area id="manytoone15" coords="16 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1368,9 +1383,11 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
-        lazy="true|false"
+        lazy="true|proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        node="element-name|@attribute-name|element/@attribute|."
+        embed-xml="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1449,11 +1466,12 @@
                     </callout>
                     <callout arearefs="manytoone13">
                         <para>
-                            <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
-                            that this property should be fetched lazily when the instance variable is first 
-                            accessed (requires build-time bytecode instrumentation). Note that this does not
-                            influence Hibernate's proxy behavior - like the <literal>lazy</literal> attribute
-                            on class or collection mappings, but uses interception for deferred loading.
+                            <literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): 
+                            By default, single point associations are proxied. <literal>lazy="true"</literal>
+                            specifies that the property should be fetched lazily when the instance variable 
+                            is first accessed (requires build-time bytecode instrumentation). 
+                            <literal>lazy="false"</literal> specifies that the association will always
+                            be eagerly fetched.
                         </para>
                     </callout>
                     <callout arearefs="manytoone14">
@@ -1462,6 +1480,11 @@
                             Specifies how foreign keys that reference missing rows will be handled: 
                             <literal>ignore</literal> will treat a missing row as a null association.
                         </para>
+                    </callout>
+                    <callout arearefs="manytoone15">
+                        <para>
+                            <literal>entity-name</literal> (optional): The entity name of the associated class.
+                        </para>                   
                     </callout>
                 </calloutlist>
             </programlistingco>
@@ -1522,14 +1545,16 @@
             
             <programlistingco>
                 <areaspec>
-                    <area id="onetoone1" coords="2 60"/>
-                    <area id="onetoone2" coords="3 60"/>
-                    <area id="onetoone3" coords="4 60"/>
-                    <area id="onetoone4" coords="5 60"/>
-                    <area id="onetoone5" coords="6 60"/>
-                    <area id="onetoone6" coords="7 60"/>
-                    <area id="onetoone7" coords="8 60"/>
-                    <area id="onetoone8" coords="9 60"/>
+                    <area id="onetoone1" coords="2 70"/>
+                    <area id="onetoone2" coords="3 70"/>
+                    <area id="onetoone3" coords="4 70"/>
+                    <area id="onetoone4" coords="5 70"/>
+                    <area id="onetoone5" coords="6 70"/>
+                    <area id="onetoone6" coords="7 70"/>
+                    <area id="onetoone7" coords="8 70"/>
+                    <area id="onetoone8" coords="9 70"/>
+                    <area id="onetoone9" coords="10 70"/>
+                    <area id="onetoone10" coords="11 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<one-to-one
         name="propertyName"
@@ -1540,7 +1565,10 @@
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
         formula="any SQL expression"
+        lazy="true|proxy|false"
         entity-name="EntityName"
+        node="element-name|@attribute-name|element/@attribute|."
+        embed-xml="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="onetoone1">
@@ -1595,6 +1623,22 @@
                             specify a some other column, columns or expression to join on using an SQL formula. (See 
                             <literal>org.hibernate.test.onetooneformula</literal> for an example.)
                         </para>
+                    </callout>
+                    <callout arearefs="onetoone9">
+                        <para>
+                            <literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): 
+                            By default, single point associations are proxied. <literal>lazy="true"</literal>
+                            specifies that the property should be fetched lazily when the instance variable 
+                            is first accessed (requires build-time bytecode instrumentation). 
+                            <literal>lazy="false"</literal> specifies that the association will always
+                            be eagerly fetched. <emphasis>Note that if <literal>constrained="false"</literal>,
+                            proxying is impossible and Hibernate will eager fetch the association!</emphasis>
+                        </para>
+                    </callout>
+                    <callout arearefs="onetoone10">
+                        <para>
+                            <literal>entity-name</literal> (optional): The entity name of the associated class.
+                        </para>                   
                     </callout>
                 </calloutlist>
             </programlistingco>
@@ -1696,6 +1740,7 @@
         lazy="true|false"
         optimistic-lock="true|false"
         unique="true|false"
+        node="element-name|."
 >
         
         <property ...../>
@@ -1901,7 +1946,8 @@
         lazy="true|false"
         dynamic-update="true|false"
         dynamic-insert="true|false"
-        entity-name="EntityName">
+        entity-name="EntityName"
+        node="element-name">
 
         <property .... />
         .....
@@ -1993,7 +2039,8 @@
         extends="SuperclassName"
         persister="ClassName"
         subselect="SQL expression"
-        entity-name="EntityName">
+        entity-name="EntityName"
+        node="element-name">
 
         <key .... >
 
@@ -2105,7 +2152,8 @@
         abstract="true|false"
         persister="ClassName"
         subselect="SQL expression"
-        entity-name="EntityName">
+        entity-name="EntityName"
+        node="element-name">
 
         <property .... />
         .....

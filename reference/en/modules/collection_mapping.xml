@@ -129,6 +129,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     batch-size="N"
     access="field|property|ClassName"
     optimistic-lock="true|false"
+    node="element-name|."
+    embed-xml="true|false"
 >
 
     <key .... />
@@ -156,7 +158,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <callout arearefs="mappingcollection4">
                     <para>
                         <literal>lazy</literal> (optional - defaults to <literal>true</literal>)
-                        enable lazy initialization (not available for arrays)
+                        may be used to disable lazy fetching and specify that the association is 
+                        always eagerly fetched (not available for arrays)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
@@ -328,6 +331,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         column="column_name"
         formula="any SQL expression"
         type="type_name"
+        node="@attribute-name"
         length="N"/>]]></programlisting>
             <calloutlist>
                 <callout arearefs="mapkey1">
@@ -464,6 +468,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany4" coords="5 60"/>
                 <area id="manytomany5" coords="6 60"/>
                 <area id="manytomany6" coords="7 60"/>
+                <area id="manytomany7" coords="8 60"/>
             </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
@@ -473,6 +478,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         unique="true|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        node="element-name|element/@attribute"
+        embed-xml="true|false"
     />]]></programlisting>
             <calloutlist>
                 <callout arearefs="manytomany1">
@@ -516,6 +523,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 	                    <literal>ignore</literal> will treat a missing row as a null association.
 	                </para>
 	            </callout>
+                <callout arearefs="manytomany7">
+                    <para>
+                        <literal>entity-name</literal> (optional): The entity name of the associated class,
+                        as an alternative to <literal>class</literal>.
+                    </para>
+                </callout>
             </calloutlist>
         </programlistingco>
 
@@ -617,11 +630,15 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <areaspec>
                 <area id="onetomany1" coords="2 60"/>
                 <area id="onetomany2" coords="3 60"/>
+                <area id="onetomany3" coords="4 60"/>
             </areaspec>
             <programlisting><![CDATA[<one-to-many 
         class="ClassName"
         not-found="ignore|exception"
-        entity-name="EntityName"/>]]></programlisting>
+        entity-name="EntityName"
+        node="element-name|element/@attribute"
+        embed-xml="true|false"
+    />]]></programlisting>
             <calloutlist>
                 <callout arearefs="onetomany1">
                     <para>
@@ -635,6 +652,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 		                <literal>ignore</literal> will treat a missing row as a null association.
 		            </para>
 		        </callout>
+                <callout arearefs="onetomany3">
+                    <para>
+                        <literal>entity-name</literal> (optional): The entity name of the associated class,
+                        as an alternative to <literal>class</literal>.
+                    </para>
+                </callout>
             </calloutlist>
        </programlistingco>
   

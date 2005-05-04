@@ -168,7 +168,7 @@
                 type="string"/>
         <one-to-many entity-name="Account"
                 embed-xml="false" 
-                node="account/@id"/>
+                node="account"/>
     </map>
     
     <component name="name" 
@@ -197,8 +197,8 @@
         </para>
         
         <programlisting><![CDATA[<customer id="123456789">
-    <account id="987632567" short-desc="Savings"/>
-    <account id="985612323" short-desc="Credit Card"/>
+    <account short-desc="Savings">987632567</account>
+    <account short-desc="Credit Card">985612323</account>
     <name>
         <first-name>Gavin</first-name>
         <initial>A</initial>

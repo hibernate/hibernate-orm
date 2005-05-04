@@ -420,9 +420,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco>
             <areaspec>
-                <area id="element1b" coords="2 45"/>
-                <area id="element2b" coords="3 45"/>
-                <area id="element3b" coords="4 45"/>
+                <area id="element1b" coords="2 50"/>
+                <area id="element2b" coords="3 50"/>
+                <area id="element3b" coords="4 50"/>
              </areaspec>
             <programlisting><![CDATA[<element
         column="column_name"
@@ -433,6 +433,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         scale="N"
         not-null="true|false"
         unique="true|false"
+        node="element-name"
 />]]></programlisting>
             <calloutlist>
                 <callout arearefs="element1b">
@@ -478,7 +479,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         unique="true|false"
         not-found="ignore|exception"
         entity-name="EntityName"
-        node="element-name|element/@attribute"
+        node="element-name"
         embed-xml="true|false"
     />]]></programlisting>
             <calloutlist>
@@ -636,7 +637,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         class="ClassName"
         not-found="ignore|exception"
         entity-name="EntityName"
-        node="element-name|element/@attribute"
+        node="element-name"
         embed-xml="true|false"
     />]]></programlisting>
             <calloutlist>

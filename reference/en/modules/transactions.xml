@@ -467,14 +467,15 @@ finally {
 
             <para>
                 With CMT, transaction demarcation is done in session bean deployment descriptors, not programatically.
-                You still have to flush and close the <literal>Session</literal> yourself, unless you set the properties
-                <literal>hibernate.transaction.flush_before_completion</literal> and
-                <literal>hibernate.transaction.auto_close_session</literal> to <literal>true</literal>. Hibernate will
-                then automatically flush and close the <literal>Session</literal> for you. The only thing left to rollback
-                the transaction when an exception occurs. Fortunately, in a CMT bean, even this happens automatically,
-                since an unhandled <literal>RuntimeException</literal> thrown by a session bean method tells the container
-                to set the global transaction to rollback. <emphasis>This means you do not need to use the Hibernate
-                <literal>Transaction</literal> API at all in CMT.</emphasis>
+                If you don't want to manually flush and close the <literal>Session</literal> yourself, just set 
+                <literal>hibernate.transaction.flush_before_completion</literal> to <literal>true</literal>, 
+                <literal>hibernate.connection.release_mode</literal> to <literal>after_statement</literal> or 
+                <literal>auto</literal> and <literal>hibernate.transaction.auto_close_session</literal> to 
+                <literal>true</literal>. Hibernate will then automatically flush and close the <literal>Session</literal> 
+                for you. The only thing left is to rollback the transaction when an exception occurs. Fortunately, in a 
+                CMT bean, even this happens automatically, since an unhandled <literal>RuntimeException</literal> thrown 
+                by a session bean method tells the container to set the global transaction to rollback. <emphasis>This 
+                means you do not need to use the Hibernate <literal>Transaction</literal> API at all in CMT.</emphasis>
             </para>
 
             <para>
@@ -488,13 +489,13 @@ finally {
                 If you work in a CMT environment, and use automatic flushing and closing of the session, you
                 might also want to use the same session in different parts of your code. Typically, in a non-managed
                 environment you would use a <literal>ThreadLocal</literal> variable to hold the session, but a
-                single EJB method might execute in different threads (e.g. session bean calling another session bean).
+                single EJB request might execute in different threads (e.g. session bean calling another session bean).
                 If you don't want to bother passing your <literal>Session</literal> instance around, the
                 <literal>SessionFactory</literal> provides the <literal>getCurrentSession()</literal>
                 method, which returns a session that is bound to the JTA transaction context. This is the
                 easiest way to integrate Hibernate into an application! The "current" session always has
-                auto-flush and auto-close enabled (regardless of the above property settings). Our
-                session/transaction management idiom is reduced to this:
+                auto-flush, auto-close and auto-connection-release enabled (regardless of the above property 
+                settings). Our session/transaction management idiom is reduced to this:
             </para>
 
            <programlisting><![CDATA[// CMT idiom
@@ -514,12 +515,13 @@ Session sess = factory.getCurrentSession();
             </para>
             
             <para>
-                There is one caveat to the use of <literal>auto_close_session</literal>. Due to a limitation 
-                of the JTA spec, it is not possible for Hibernate to automatically clean up any unclosed 
-                <literal>ScrollableResults</literal> or <literal>Iterator</literal> instances returned by 
-                <literal>scroll()</literal> or <literal>iterate()</literal>. You <emphasis>must</emphasis>
-                release the underlying database cursor by calling <literal>ScrollableResults.close()</literal>
-                or <literal>Hibernate.close(Iterator)</literal> explicity from a <literal>finally</literal> 
+                There is one caveat to the use of <literal>after_statement</literal> connection release
+                mode. Due to a silly limitation of the JTA spec, it is not possible for Hibernate to 
+                automatically clean up any unclosed <literal>ScrollableResults</literal> or 
+                <literal>Iterator</literal> instances returned by <literal>scroll()</literal> or 
+                <literal>iterate()</literal>. You <emphasis>must</emphasis> release the underlying database 
+                cursor by calling <literal>ScrollableResults.close()</literal> or 
+                <literal>Hibernate.close(Iterator)</literal> explicity from a <literal>finally</literal> 
                 block. (Of course, most applications can easily avoid using <literal>scroll()</literal> or 
                 <literal>iterate()</literal> at all from the CMT code.)
             </para>
@@ -694,12 +696,17 @@ session.disconnect(); // Return JDBC connection ]]></programlisting>
             <para>
                 The <literal>foo</literal> object still knows which <literal>Session</literal> it was
                 loaded in. <literal>Session.reconnect()</literal> obtains a new connection (or you
-                may supply one) and resumes the session. The method <literal>Session.disconnect()</literal> will disconnect the session from
-                the JDBC connection and return the connection to the pool (unless you provided the
-                connection). After reconnection, to force a version check on data you aren't updating, you
-                may call <literal>Session.lock()</literal> with <literal>LockMode.READ</literal> on any
-                objects that might have been updated by another transaction. You don't need to lock any
-                data that you <emphasis>are</emphasis> updating.
+                may supply one) and resumes the session. The method <literal>Session.disconnect()</literal>
+                will disconnect the session from the JDBC connection and return the connection to the pool 
+                (unless you provided the connection). After reconnection, to force a version check on data 
+                you aren't updating, you may call <literal>Session.lock()</literal> with 
+                <literal>LockMode.READ</literal> on any objects that might have been updated by another 
+                transaction. You don't need to lock any data that you <emphasis>are</emphasis> updating.
+            </para>
+            
+            <para>
+                If the explicit calls to <literal>disconnect()</literal> and <literal>reconnect()</literal>
+                are too onerous, you may instead use <literal>hibernate.connection.release_mode</literal>.
             </para>
 
             <para>

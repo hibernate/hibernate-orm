@@ -892,7 +892,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             If enabled, the session will be automatically closed during the
-                            before completion phase of the transaction. (Very useful when
+                            after completion phase of the transaction. (Very useful when
                             using Hibernate with CMT.)
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 

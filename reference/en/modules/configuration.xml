@@ -669,17 +669,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.connection.aggressive_release</literal>
+                            <literal>hibernate.connection.release_mode</literal>
                         </entry>
                         <entry>
-                            Enables Hibernate to aggressively release JDBC Connections, if supported
-                            supported by the <literal>ConnectionProvider</literal>. By default a JDBC
-                            connection is held for the lifespan (excluding disconnected state) of the Session;
-                            this does not play well inside managed environments implementing connection
-                            "containment" checks. Recommended in managed environments.
+                            Specify when Hibernate should release JDBC connections. By default, 
+                            a JDBC connection is held until the session is explicitly closed or
+                            disconnected. For an application server JTA datasource, you should use
+                            <literal>after_statement</literal>, to aggressively release connections
+                            after every JDBC call. For a non-JTA connection, it often makes sense to
+                            release the connection at the end of each transaction, by using
+                            <literal>after_transaction</literal>. <literal>auto</literal> will
+                            choose <literal>after_statement</literal> for the JTA and CMT transaction
+                            strategies and <literal>after_transaction</literal> for the JDBC 
+                            transaction strategy.
                             <para>
-                                <emphasis role="strong">eg.</emphasis>
-                                <literal>true</literal> | <literal>false</literal>
+                                <literal>on_close</literal> | <literal>after_transaction</literal> | 
+                                <literal>after_statement</literal> | <literal>auto</literal>
                             </para>
                         </entry>
                     </row>

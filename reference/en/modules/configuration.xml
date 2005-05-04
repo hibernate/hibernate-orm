@@ -675,7 +675,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             Specify when Hibernate should release JDBC connections. By default, 
                             a JDBC connection is held until the session is explicitly closed or
                             disconnected. For an application server JTA datasource, you should use
-                            <literal>after_statement</literal>, to aggressively release connections
+                            <literal>after_statement</literal> to aggressively release connections
                             after every JDBC call. For a non-JTA connection, it often makes sense to
                             release the connection at the end of each transaction, by using
                             <literal>after_transaction</literal>. <literal>auto</literal> will
@@ -683,6 +683,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             strategies and <literal>after_transaction</literal> for the JDBC 
                             transaction strategy.
                             <para>
+                                <emphasis role="strong">eg.</emphasis> 
                                 <literal>on_close</literal> | <literal>after_transaction</literal> | 
                                 <literal>after_statement</literal> | <literal>auto</literal>
                             </para>

@@ -34,12 +34,12 @@
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>3.0.2</releaseinfo>
+        <releaseinfo>3.0.3</releaseinfo>
     </bookinfo>
 
     <toc/>
 
-    <preface id="preface" revision="1">
+    <preface id="preface" revision="2">
         <title>Preface</title>
 
         <para>
@@ -75,7 +75,13 @@
         <orderedlist>
             <listitem>
                 <para>
-                    Read <xref linkend="quickstart"/> for a 30 minute tutorial, using Tomcat.
+                    Read <xref linkend="quickstart"/> for a 30 minute quickstart, using Tomcat.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Read <xref linkend="tutorial"/> for a longer tutorial with more step-by-step
+                    instructions.
                 </para>
             </listitem>
             <listitem>
@@ -112,14 +118,14 @@
             </listitem>
 			<listitem>
 				<para>
-					Third party demos, examples and tutorials are linked on the Hibernate
+					Third party demos, examples, and tutorials are linked on the Hibernate
 					website.
 				</para>
 			</listitem>
             <listitem>
                 <para>
-                    The Community Area on the Hibernate website is a good source for
-                    design patterns and various integration solutions (Tomcat, JBoss,
+                    The Community Area on the Hibernate website is a good resource for
+                    design patterns and various integration solutions (Tomcat, JBoss AS,
                     Struts, EJB, etc.).
                 </para>
             </listitem>
@@ -134,17 +140,18 @@
          </para>
 
          <para>
-             Commercial development support, production support and training for Hibernate is
+             Commercial development support, production support, and training for Hibernate is
              available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/).
-             Hibernate is a project of the JBoss Professional Open Source product suite.
+             Hibernate is a Professional Open Source project and a critical component of the
+             JBoss Enterprise Middleware System (JEMS) suite of products.
          </para>
 
     </preface>
 
     &quickstart;
-<!--
+
     &tutorial;
--->
+
     &architecture;
 
     &configuration;

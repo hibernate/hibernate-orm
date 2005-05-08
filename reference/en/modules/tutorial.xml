@@ -7,7 +7,7 @@
         <para>
             This chapter is an introductory tutorial for new users of Hibernate. We start
             with a simple command line application using an in-memory database and develop
-            it in small steps to a full fledged J2EE application using Tomcat and WebWork.
+            it in easy to understand steps.
         </para>
 
         <para>
@@ -115,8 +115,8 @@ public class Event {
             <para>
                 The <literal>id</literal> property holds a unique identifier value for a particular event.
                 All persistent entity classes (there are less important dependent classes as well) will need
-                such an identifer property if we want to use the full feature set of Hibernate. In fact,
-                most applications (esp. web applications) need to distinquish objects by identifier, so you
+                such an identifier property if we want to use the full feature set of Hibernate. In fact,
+                most applications (esp. web applications) need to distinguish objects by identifier, so you
                 should consider this a feature rather than a limitation. However, we usually don't manipulate
                 the identity of an object, hence the setter method should be private. Only Hibernate will assign
                 identifiers when an object is saved. You can see that Hibernate can access public, private,
@@ -183,7 +183,7 @@ public class Event {
             </para>
 
             <para>
-                We will ommit the DTD declaration in future examples to shorten the code. It is
+                We will omit the DTD declaration in future examples to shorten the code. It is
                 of course not optional.
             </para>
 
@@ -261,7 +261,7 @@ public class Event {
             <para>
                 Why does the <literal>date</literal> property mapping include the
                 <literal>column</literal> attribute, but the <literal>title</literal>
-                doesn't? When the <literal>column</literal> attribute is ommitted, Hibernate
+                doesn't? Without the <literal>column</literal> attribute Hibernate
                 by default uses the property name as the column name. This works fine for
                 <literal>title</literal>. However, <literal>date</literal> is a reserved
                 keyword in most database, so we better map it to a different name.
@@ -576,7 +576,7 @@ build.xml]]></programlisting>
             <para>
                 This should again compile without problems. We finally need to configure a logging
                 system - Hibernate uses commons logging and leaves you the choice between Log4j and
-                JDK 1.4 logging. Most developers prefer Lo4j: copy <literal>log4j.properties</literal>
+                JDK 1.4 logging. Most developers prefer Log4j: copy <literal>log4j.properties</literal>
                 from the Hibernate distribution (it's in the <literal>etc/</literal> directory) to
                 your <literal>src</literal> directory, next to <literal>hibernate.cfg.xml</literal>.
                 Have a look at the example configuration and change the settings if you like to have
@@ -648,7 +648,7 @@ public class EventManager {
                 have an additional API, <literal>Transaction</literal>. This implies that a unit of work
                 can be "longer" than a single database transaction - imagine a unit of work that spans
                 several Http request/response cycles (e.g. a wizard dialog) in a web application.
-                Seperating database transactions from "unit of work from the application
+                Separating database transactions from "unit of work from the application
                 user's point of view" is one of Hibernates basic design concepts. We call a long
                 unit of work <emphasis>Application Transaction</emphasis>, usually encapsulating
                 several short database transactions. For now we'll keep things simple and assume a
@@ -820,7 +820,7 @@ else if (args[0].equals("list")) {
             <para>
                 We'll add a collection of events to the <literal>Person</literal> class. That way we can
                 easily navigate to the events for a particular person, without executing an explicit query -
-                jyst by calling <literal>aPerson.getEvents()</literal>. We use a Java collection, a <literal>Set</literal>,
+                by calling <literal>aPerson.getEvents()</literal>. We use a Java collection, a <literal>Set</literal>,
                 because the collection will not contain duplicate elements and the ordering is not relevant for us.
             </para>
 
@@ -1168,14 +1168,34 @@ public void removeFromEvent(Event event) {
                 need one side as <literal>inverse</literal>. In a one-to-many association it has to be the many-side,
                 in many-to-many association you can pick either side, there is no difference.
             </para>
-
+<!--
             <para>
                 In the next section we integrate Hibernate with Tomcat and WebWork - the <literal>EventManager</literal>
                 doesn't scale anymore with our growing application.
             </para>
-
+-->
         </sect2>
     </sect1>
 
+    <sect1 id="tutorial-summary">
+        <title>Summary</title>
+
+        <para>
+            This tutorial covered the basics of writing a simple standalone Hibernate application.
+        </para>
+
+        <para>
+            If you already feel confident with Hibernate, continue browsing through the reference
+            documentation table of contents for topics you find interesting - most asked are
+            transactional processing (<xref linkend="transactions"/>), fetch
+            performance (<xref linkend="performance"/>), or the usage of the API (<xref linkend="objectstate"/>)
+            and the query features (<xref linkend="objectstate-querying"/>).
+        </para>
+
+        <para>
+            Don't forget to check the Hibernate website for more (specialized) tutorials.
+        </para>
+
+    </sect1>
 
 </chapter>

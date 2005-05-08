@@ -684,7 +684,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             transaction strategy.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
-                                <literal>on_close</literal> | <literal>after_transaction</literal> | 
+                                <literal>on_close</literal> (default) | <literal>after_transaction</literal> |
                                 <literal>after_statement</literal> | <literal>auto</literal>
                             </para>
                         </entry>

@@ -193,11 +193,6 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 </para>
             </listitem>
         </itemizedlist>
-        
-            <para>
-                <emphasis>Specifying <literal>join</literal> as the fetch strategy in the mapping 
-                document does not affect HQL queries.</emphasis>
-            </para>
 
             <para>
                 Usually, we don't use the mapping document to customize fetching. Instead, we

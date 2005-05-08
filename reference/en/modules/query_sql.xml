@@ -247,8 +247,12 @@ BEGIN
                    The rules are different for each database, since database vendors have different stored
                    procedure semantics/syntax.
                </para>
-               
+
                <para>
+                   Stored procedure queries can't be paged with <literal>setFirstResult()/setMaxResults()</literal>.
+               </para>
+
+                 <para>
                    For Oracle the following rules apply:
                </para>
                

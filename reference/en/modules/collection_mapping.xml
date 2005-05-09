@@ -560,7 +560,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlisting><![CDATA[<array name="addresses" 
         table="PersonAddress" 
-        cascade="create">
+        cascade="persist">
     <key column="personId"/>
     <list-index column="sortOrder"/>
     <many-to-many column="addressId" class="Address"/>

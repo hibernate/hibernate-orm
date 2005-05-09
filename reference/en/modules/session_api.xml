@@ -1070,13 +1070,13 @@ tx.commit(); // flush occurs]]></programlisting>
             document. For example:
         </para>
         
-        <programlisting><![CDATA[<one-to-one name="person" cascade="create"/>]]></programlisting>
+        <programlisting><![CDATA[<one-to-one name="person" cascade="persist"/>]]></programlisting>
         
         <para>
             Cascade styles my be combined:
         </para>
         
-        <programlisting><![CDATA[<one-to-one name="person" cascade="create,delete,lock"/>]]></programlisting>
+        <programlisting><![CDATA[<one-to-one name="person" cascade="persist,delete,lock"/>]]></programlisting>
         
         <para>
             You may even use <literal>cascade="all"</literal> to specify that <emphasis>all</emphasis>
@@ -1115,7 +1115,7 @@ tx.commit(); // flush occurs]]></programlisting>
                 <para>
                     Otherwise, you might not need cascade at all. But if you think that you will often be
                     working with the parent and children together in the same transaction, and you want to save 
-                    yourself some typing, consider using <literal>cascade="create,merge,save-update"</literal>.
+                    yourself some typing, consider using <literal>cascade="persist,merge,save-update"</literal>.
                 </para>
             </listitem>
         </itemizedlist>

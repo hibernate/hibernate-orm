@@ -1493,10 +1493,10 @@
                 Setting a value of the <literal>cascade</literal> attribute to any meaningful
                 value other than <literal>none</literal> will propagate certain operations to the
                 associated object. The meaningful values are the names of Hibernate's basic 
-                operations, <literal>create, merge, delete, save-update, evict, replicate, lock,
+                operations, <literal>persist, merge, delete, save-update, evict, replicate, lock,
                 refresh</literal>, as well as the special values <literal>delete-orphan</literal> 
                 and <literal>all</literal> and comma-separated combinations of operation
-                names, for example, <literal>cascade="create,merge,evict"</literal> or
+                names, for example, <literal>cascade="persist,merge,evict"</literal> or
                 <literal>cascade="all,delete-orphan"</literal>. See <xref linkend="objectstate-transitive"/>
                 for a full explanation.
             </para>

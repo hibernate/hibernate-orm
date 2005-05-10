@@ -47,6 +47,7 @@
   asm-attrs.jars
   commons-collections.jar
   commons-logging.jar
+  ehcache.jar
   hibernate3.jar
   jta.jar
   dom4j.jar

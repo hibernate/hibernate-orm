@@ -535,7 +535,15 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         <sect2 id="performance-fetching-subselect">
             <title>Using subselect fetching</title>
-            <para>TODO</para>
+
+            <para>
+                If one lazy collection or single-valued proxy has to be fetched, Hibernate loads all of
+                them, re-running the original query in a subselect. This works in the same way as
+                batch-fetching, without the piecemeal loading.
+            </para>
+            
+            <!-- TODO: Write more about this -->
+
         </sect2>
         
         <sect2 id="performance-fetching-lazyproperties">

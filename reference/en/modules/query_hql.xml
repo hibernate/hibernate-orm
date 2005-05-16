@@ -148,9 +148,7 @@
         </para>
         
         <para>
-            Note that, in the current implementation, only one collection role may be join fetched
-            in a query (more than one role will usually result in a cartesian product). Note also 
-            that the <literal>fetch</literal> construct may not be used in queries called using
+            Note that the <literal>fetch</literal> construct may not be used in queries called using
             <literal>scroll()</literal> or <literal>iterate()</literal>. Finally, note that
             <literal>full join fetch</literal> and <literal>right join fetch</literal> are not 
             meaningful.

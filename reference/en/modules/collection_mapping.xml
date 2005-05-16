@@ -198,8 +198,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                     <para>
                         <literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose
                         between outer-join fetching, fetching by sequential select, and fetching by sequential
-                        subselect. Only one collection may be fetched by outer join per SQL 
-                        <literal>SELECT</literal>.
+                        subselect.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">

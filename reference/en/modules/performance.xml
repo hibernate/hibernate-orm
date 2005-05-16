@@ -217,26 +217,6 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             <para>
                 (This is Hibernate's equivalent of what some ORM solutions call a "fetch plan".)
             </para>
-   
-            <para>
-                Join fetching for collections has one limitation: you may only set one collection 
-                role per persistent class or query to be fetched per outer join. Hibernate forbids
-                Cartesian products when possible, <literal>SELECT</literal>ing two collections per
-                outer join would create one. This would almost always be slower than two (lazy or
-                non-deferred) <literal>SELECT</literal>s. The restriction to a single outer-joined
-                collection applies to both the mapping fetching strategies and to HQL/Criteria 
-                queries.
-            </para>
-            
-            <para>
-                If you run into this limitation, you should use subselect or batch fetching to
-                achieve acceptable performance. This is common when retrieving a tree of
-                collection-valued associations.
-            </para>
-            
-            <para>
-                There are no restrictions to join fetching of single-ended associations.
-            </para>
 
             <para>
                 A completely different way to avoid problems with N+1 selects is to use the 

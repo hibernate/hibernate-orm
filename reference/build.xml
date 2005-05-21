@@ -26,6 +26,7 @@
 
         <!-- TRANSLATOR: Duplicate this line for your language -->
         <antcall target="lang.all"><param name="lang" value="en"/></antcall>
+        <antcall target="lang.all"><param name="lang" value="zh-cn"/></antcall>
 
     </target>
 
@@ -34,6 +35,7 @@
 
         <!-- TRANSLATOR: Duplicate this line for your language -->
         <antcall target="lang.revdiff"><param name="lang" value="de"/></antcall>
+        <antcall target="lang.revdiff"><param name="lang" value="zh-cn"/></antcall>
 
     </target>
 
@@ -67,7 +69,7 @@
         </copy>
 
         <!-- Create the XSL/FO temporary file. -->
-        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${basedir}">
+        <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${basedir}" maxmemory="128m" >
             <classpath refid="lib.classpath"/>
             <arg value="-o"/>
             <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
@@ -87,7 +89,7 @@
         </copy>
 
         <!-- Create a PDF from the XSL/FO, using customized fop userconfig.xml -->
-        <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}">
+        <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}" maxmemory="128m" >
             <classpath refid="lib.classpath"/>
             <arg value="-c"/>
             <arg value="${basedir}/${lang}/fop/userconfig.xml"/>

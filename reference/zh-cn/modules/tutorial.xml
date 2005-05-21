@@ -1,0 +1,1130 @@
+﻿<chapter id="tutorial">
+    <title>
+	Hibernate入门
+	</title>
+    <sect1 id="tutorial-intro">
+        <title>
+		前言
+	</title>
+        
+        <para>
+	     本章是面向Hibernate初学者的一个介绍教程。我们将使用容易理解的方式，开发一个使用驻留内存式(in-memory)数据库的简单命令行程序。
+
+        </para>
+
+        <para>
+		本教程是面向Hibernate初学者，但是需要一定的Java和SQL知识。
+		它在Michael Goegl所写的一个教程的基础上完成的。我们使用的第三方库文件是支持JDK 1.4和5.0。如果你要使用JDK1.3，可能会需要其它的库。
+        </para>
+
+    </sect1>
+    
+    <sect1 id="tutorial-firstapp">
+        <title>
+		第一部分 － 第一个Hibernate程序
+		</title>
+        <para>
+		首先我们将创建一个简单的控制台(console-based)Hibernate程序。我们使用内置数据库(in-memory database)
+		(HSQL DB)，所以我们不必安装任何数据库服务器。
+        </para>
+
+        <para>
+		让我们假设我们希望有一个小程序可以保存我们希望关注的事件（Event）和这些事件的信息。
+		（译者注：在本教程的后面部分，我们将直接使用Event而不是它的中文翻译“事件”，以免混淆。）
+        </para>
+            
+        <para>
+		我们做的第一件事是建立我们的开发目录，并把所有需要用到的Java库文件放进去。
+		从Hibernate网站的下载页面下载Hibernate分发版本。
+		解压缩包并把<literal>/lib</literal>下面的所有库文件放到我们新的开发目录下面的<literal>/lib</literal>目录下面。
+		看起来就像这样：
+        </para>
+            
+        <programlisting><![CDATA[.
++lib
+  antlr.jar
+  cglib-full.jar
+  asm.jar
+  asm-attrs.jars
+  commons-collections.jar
+  commons-logging.jar
+  ehcache.jar
+  hibernate3.jar
+  jta.jar
+  dom4j.jar
+  log4j.jar ]]></programlisting>
+
+        <para>
+            This is the minimum set of required libraries (note that we also copied
+            hibernate3.jar, the main archive) for Hibernate. See the <literal>README.txt</literal> file
+            in the <literal>lib/</literal> directory of the Hibernate distribution for more information
+            about required and optional third-party libraries. (Actually, Log4j is not
+            required but preferred by many developers.)
+		这个是Hibernate运行所需要的最小库文件集合（注意我们也拷贝了Hibernate3.jar，这个是最重要的库）。
+		可以在Hibernate分发版本的<literal>lib/</literal>目录下查看<literal>README.txt</literal>，以获取更多关于所需和可选的第三方库文件信息
+		（事实上，Log4j并不是必须的库文件但是许多开发者都喜欢用它）。
+
+        </para>
+
+        <para>
+		接下来我们创建一个类，用来代表那些我们希望储存在数据库里面的event.
+        </para>
+      
+        <sect2 id="tutorial-firstapp-firstclass">
+            <title>
+		第一个class
+		</title>
+            
+            <para>
+		我们的第一个持久化类是	一个简单的JavaBean class，带有一些简单的属性（property）。
+		让我们来看一下代码：
+
+            </para>
+
+            <programlisting><![CDATA[import java.util.Date;
+
+public class Event {
+    private Long id;
+
+    private String title;
+    private Date date;
+
+    Event() {}
+
+    public Long getId() {
+        return id;
+    }
+
+    private void setId(Long id) {
+        this.id = id;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+}]]></programlisting>
+
+            <para>
+		你可以看到这个class对属性（property）的存取方法（getter and setter method）
+		使用标准的JavaBean命名约定，同时把内部字段（field）隐藏起来（private visibility）。
+		这个是个受推荐的设计方式，但并不是必须这样做。
+		Hibernate也可以直接访问这些字段（field），而使用访问方法（accessor method）的好处是提供了程序重构的时候健壮性（robustness）。
+
+            </para>
+
+            <para>
+                <literal>id</literal> 属性（property） 为一个Event实例提供标识属性（identifier property）的值－
+                如果我们希望使用Hibernate的所有特性，那么我们所有的持久性实体类（persistent entity class）(这里也包括一些次要依赖类) 
+		  都需要一个标识属性（identifier property）。而事实上，大多数应用程序（特别是web应用程序）都需要识别特定的对象，所以你应该
+		  考虑使用标识属性而不是把它当作一种限制。然而，我们通常不会直接操作一个对象的标识符（identifier），
+ 		因此标识符的setter方法应该被声明为私有的（private）。这样当一个对象被保存的时候，只有Hibernate可以为它分配标识符。
+		你会发现Hibernate可以直接访问被声明为public，private和protected等不同级别访问控制的方法（accessor method）和字段（field）。
+		所以选择哪种方式来访问属性是完全取决于你，你可以使你的选择与你的程序设计相吻合。
+            </para>
+
+            <para>
+		所有的持久类（persistent classes）都要求有无参的构造器（no-argument constructor）；
+		因为Hibernate必须要使用Java反射机制（Reflection）来实例化对象。构造器（constructor）的访问控制可以是私有的（private），
+		然而当生成运行时代理（runtime proxy）的时候将要求使用至少是package级别的访问控制，这样在没有字节码编入
+		（bytecode instrumentation）的情况下，从持久化类里获取数据会更有效率一些。
+
+            </para>
+
+            <para>
+		  我们把这个Java源代码文件放到我们的开发目录下面一个叫做<literal>src</literal>的目录里。
+		  这个目录现在应该看起来像这样：
+            </para>
+
+            <programlisting><![CDATA[.
++lib
+  <Hibernate and third-party libraries>
++src
+  Event.java]]></programlisting>
+
+            <para>
+		  在下一步里，我们将把这个持久类（persisten class）的信息通知Hibernate
+            </para>
+                
+        </sect2>
+
+        <sect2 id="tutorial-firstapp-mapping">
+            <title>
+		映射文件
+		</title>
+
+            <para>
+		  Hibernate需要知道怎样去加载（load）和存储（store）我们的持久化类的对象。这里正是Hibernate映射文件（mapping file）发挥作用的地方。
+		  映射文件告诉Hibernate它应该访问数据库里面的哪个表（table）和应该使用表里面的哪些字段（column）。
+
+            </para>
+
+            <para>
+		一个映射文件的基本结构看起来像这样：
+            </para>
+
+            <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+[...]
+</hibernate-mapping>]]></programlisting>
+
+            <para>
+		  注意Hibernate的DTD是非常复杂的。
+  		你可以在你的编辑器或者IDE里面使用它来自动提示并完成（auto-completion）那些用来映射的XML元素（element）和属性（attribute）。
+		  你也可以用你的文本编辑器打开DTD－这是最简单的方式来浏览所有元素和参数，查看它们的缺省值以及它们的注释，以得到一个整体的概观。
+		同时也要注意Hibernate不会从web上面获取DTD文件，虽然XML里面的URL也许会建议它这样做，但是Hibernate会首先查看你的程序的classpath。
+		DTD文件被包括在<literal>hibernate3.jar</literal>，同时也在Hibernate分发版的<literal>src/</literal>路径下。
+            </para>
+
+            <para>
+		   在以后的例子里面，我们将通过省略DTD的声明来缩短代码长度。但是显然，在实际的程序中，DTD声明是必须的。
+            </para>
+
+            <para>
+                在两个<literal>hibernate-mapping</literal>标签（tag）中间, 我们包含了一个
+                <literal>class</literal>元素（element)。所有的持久性实体类（persistent entity classes）(再次声明，
+		这里也包括那些依赖类，就是那些次要的实体)都需要一个这样的映射，来映射到我们的SQL database。
+
+            </para>
+
+            <programlisting><![CDATA[<hibernate-mapping>
+
+    <class name="Event" table="EVENTS">
+
+    </class>
+
+</hibernate-mapping>]]></programlisting>
+
+            <para>
+		 我们到现在为止做的一切是告诉Hibernate怎样从数据库表（table）<literal>EVENTS</literal>里持久化和
+		加载<literal>Event</literal>类的对象，每个实例对应数据库里面的一行。现在我们将继续讨论有关唯一标识属性（unique identifier property）的映射。
+		另外，我们不希望去考虑怎样产生这个标识属性，我们将配置Hibernate的标识符生成策略（identifier generation strategy）来产生代用主键。
+
+            </para>
+
+            <programlisting><![CDATA[<hibernate-mapping>
+
+    <class name="Event" table="EVENTS">
+        <id name="id" column="EVENT_ID">
+            <generator class="increment"/>
+        </id>
+    </class>
+
+</hibernate-mapping>]]></programlisting>
+
+            <para>
+                <literal>id</literal>元素是标识属性（identifer property）的声明，
+                <literal>name="id"</literal> 声明了Java属性（property）的名字 － 
+                Hibernate将使用<literal>getId()</literal>和<literal>setId()</literal>来访问它。
+		  字段参数（column attribute）则告诉Hibernate我们使用<literal>EVENTS</literal>表的哪个字段作为主键。
+		 嵌套的<literal>generator</literal>元素指定了标识符的生成策略
+                － 在这里我们使用<literal>increment</literal>，这个是非常简单的在内存中直接生成数字的方法，多数用于测试（或教程）中。
+		Hibernate同时也支持使用数据库生成（database generated），全局唯一性（globally unique）和应用程序指定（application assigned）
+		（或者你自己为任何已有策略所写的扩展）
+		这些方式来生成标识符。
+            </para>
+
+            <para>
+		最后我们还必须在映射文件里面包括需要持久化属性的声明。缺省的情况下，类里面的属性都被视为非持久化的：
+
+            </para>
+            
+            <programlisting><![CDATA[
+<hibernate-mapping>
+
+    <class name="Event" table="EVENTS">
+        <id name="id" column="EVENT_ID">
+            <generator class="increment"/>
+        </id>
+        <property name="date" type="timestamp" column="EVENT_DATE"/>
+        <property name="title"/>
+    </class>
+
+</hibernate-mapping>]]></programlisting>
+            
+            <para>
+		和<literal>id</literal>元素类似，<literal>property</literal>元素的<literal>name</literal>参数
+             	告诉Hibernate使用哪个getter和setter方法。
+
+            </para>
+
+            <para>
+		  为什么<literal>date</literal>属性的映射包括<literal>column</literal>参数，但是<literal>title</literal>却没有？
+		 当没有设定<literal>column</literal>参数的时候，Hibernate缺省使用属性名作为字段（column）名。对于<literal>title</literal>，这样工作得很好。
+		然而，<literal>date</literal>在多数的数据库里，是一个保留关键字，所以我们最好把它映射成另外一个名字。
+
+            </para>
+
+            <para>
+		  下一件有趣的事情是<literal>title</literal>属性缺少一个<literal>type</literal>参数。
+		  我们声明并使用在映射文件里面的type，并不像我们假想的那样，是Java data type，
+		  同时也不是SQL database type。这些类型被称作<emphasis>Hibernate mapping types</emphasis>，
+		  它们把数据类型从Java转换到SQL data types。如果映射的参数没有设置的话，Hibernate也将尝试去确定正确的类型转换和它的映射类型。
+		  在某些情况下这个自动检测（在Java class上使用反射机制）不会产生你所期待或者
+		需要的缺省值。这里有个例子是关于<literal>date</literal>属性。Hibernate无法知道这个属性应该被映射成下面这些类型中的哪一个：
+		SQL <literal>date</literal>，<literal>timestamp</literal>，<literal>time</literal>。
+		我们通过声明属性映射<literal>timestamp</literal>来表示我们希望保存所有的关于日期和时间的信息。
+            </para>
+
+            <para>
+		 这个映射文件（mapping file）应该被保存为<literal>Event.hbm.xml</literal>，和我们的<literal>Event</literal>Java
+		源文件放在同一个目录下。映射文件的名字可以是任意的，然而<literal>hbm.xml</literal>已经成为Hibernate开发者社区的习惯性约定。
+		现在目录应该看起来像这样：
+            </para>
+
+            <programlisting><![CDATA[.
++lib
+  <Hibernate and third-party libraries>
++src
+  Event.java
+  Event.hbm.xml]]></programlisting>
+
+             <para>
+			我们继续进行Hibernate的主要配置。
+             </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-firstapp-configuration">
+            <title>
+		Hibernate配置
+		</title>
+
+            <para>
+		  我们现在已经有了一个持久化类和它的映射文件，是时候配置Hibernate了。在我们做这个之前，我们需要一个数据库。
+		  HSQL DB，一个java-based内嵌式SQL数据库（in-memory SQL Database），可以从HSQL DB的网站上下载。
+		实际上，你仅仅需要下载/lib/目录中的<literal>hsqldb.jar</literal>。把这个文件放在开发文件夹的<literal>lib/</literal>目录里面。
+		
+            </para>
+
+            <para>
+		在开发目录下面创建一个叫做<literal>data</literal>的目录 － 这个是HSQL DB存储它的数据文件的地方。
+
+            </para>
+
+            <para>
+		   Hibernate是你的程序里连接数据库的那个应用层，所以它需要连接用的信息。连接（connection）是通过一个也由我们配置的JDBC连接池（connection pool）。
+		   Hibernate的分发版里面包括了一些open source的连接池，但是我们已经决定在这个教程里面使用内嵌式连接池。
+		如果你希望使用一个产品级的第三方连接池软件，你必须拷贝所需的库文件去你的classpath并使用不同的连接池设置。
+            </para>
+
+            <para>
+		为了配置Hibernate，我们可以使用一个简单的<literal>hibernate.properties</literal>文件，
+		或者一个稍微复杂的<literal>hibernate.cfg.xml</literal>，甚至可以完全使用程序来配置Hibernate。
+		多数用户喜欢使用XML配置文件：
+            </para>
+
+            <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+    <session-factory>
+
+        <!-- Database connection settings -->
+        <property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
+        <property name="connection.url">jdbc:hsqldb:data/tutorial</property>
+        <property name="connection.username">sa</property>
+        <property name="connection.password"></property>
+
+        <!-- JDBC connection pool (use the built-in) -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="show_sql">true</property>
+
+        <!-- Drop and re-create the database schema on startup -->
+        <property name="hbm2ddl.auto">create</property>
+
+        <mapping resource="Event.hbm.xml"/>
+
+    </session-factory>
+
+</hibernate-configuration>]]></programlisting>
+
+            <para>
+		注意这个XML配置使用了一个不同的DTD。我们配置Hibernate的<literal>SessionFactory</literal>－
+		一个关联于特定数据库全局性的工厂（factory）。如果你要使用多个数据库，通常应该在多个配置文件中使用多个<literal>&lt;session-factory&gt;</literal>
+		进行配置（在更早的启动步骤中进行）。
+            </para>
+
+            <para>
+		 最开始的4个<literal>property</literal>元素包含必要的JDBC连接信息。dialect<literal>property</literal>
+		表明Hibernate应该产生针对特定数据库语法的SQL语句。<literal>hbm2ddl.auto</literal>选项将自动生成数据库表定义（schema）－
+		直接插入数据库中。当然这个选项也可以被关闭（通过去除这个选项）或者通过Ant任务<literal>SchemaExport</literal>来把数据库表定义导入一个文件中进行优化。
+		最后，为持久化类加入映射文件。
+            </para>
+
+            <para>
+		把这个文件拷贝到源代码目录下面，这样它就位于classpath的root路径上。Hibernate在启动时会自动
+		在它的根目录开始寻找名为<literal>hibernate.cfg.xml</literal>的配置文件。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-firstapp-ant">
+            <title>
+		用Ant编译
+		</title>
+
+            <para>
+		在这个教程里面，我们将用Ant来编译程序。你必须先安装Ant－可以从<ulink url="http://ant.apache.org/bindownload.cgi">Ant download page</ulink>
+		下载它。怎样安装Ant不是这个教程的内容，请参考<ulink url="http://ant.apache.org/manual/index.html">Ant manual</ulink>。
+		当你安装完了Ant，我们就可以开始创建编译脚本，它的文件名是<literal>build.xml</literal>，把它直接放在开发目录下面。
+            </para>
+
+            <note>
+                <title>
+			完善Ant
+		</title>
+                <para>
+			注意Ant的分发版通常功能都是不完整的（就像Ant FAQ里面说得那样），所以你常常不得不需要自己动手来完善Ant。
+			例如：如果你希望在你的build文件里面使用JUnit功能。为了让JUnit任务被激活（这个教程里面我们并不需要这个任务），
+			你必须拷贝junit.jar到<literal>ANT_HOME/lib</literal>目录下或者删除<literal>ANT_HOME/lib/ant-junit.jar</literal>这个插件。
+                </para>
+            </note>
+
+            <para>
+		一个基本的build文件看起来像这样
+            </para>
+
+            <programlisting><![CDATA[<project name="hibernate-tutorial" default="compile">
+
+    <property name="sourcedir" value="${basedir}/src"/>
+    <property name="targetdir" value="${basedir}/bin"/>
+    <property name="librarydir" value="${basedir}/lib"/>
+
+    <path id="libraries">
+        <fileset dir="${librarydir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${targetdir}"/>
+        <mkdir dir="${targetdir}"/>
+    </target>
+
+    <target name="compile" depends="clean, copy-resources">
+      <javac srcdir="${sourcedir}"
+             destdir="${targetdir}"
+             classpathref="libraries"/>
+    </target>
+
+    <target name="copy-resources">
+        <copy todir="${targetdir}">
+            <fileset dir="${sourcedir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+</project>]]></programlisting>
+
+            <para>
+		这个将告诉Ant把所有在lib目录下以<literal>.jar</literal>结尾的文件加入classpath中用来进行编译。
+		它也将把所有的非Java源代码文件，例如配置和Hibernate映射文件，拷贝到目标目录下。如果你现在运行Ant，
+		你将得到以下输出：
+            </para>
+
+            <programlisting><![CDATA[C:\hibernateTutorial\>ant
+Buildfile: build.xml
+
+copy-resources:
+     [copy] Copying 2 files to C:\hibernateTutorial\bin
+
+compile:
+    [javac] Compiling 1 source file to C:\hibernateTutorial\bin
+
+BUILD SUCCESSFUL
+Total time: 1 second ]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="tutorial-firstapp-helpers">
+            <title>
+		安装和帮助
+		</title>
+
+
+            <para>
+		是时候来加载和储存一些<literal>Event</literal>对象了，但是首先我们不得不完成一些基础的代码。
+		我们必须启动Hibernate。这个启动过程包括创建一个全局性的<literal>SessoinFactory</literal>并把它储存在一个应用程序容易访问的地方。
+		<literal>SessionFactory</literal>可以创建并打开新的<literal>Session</literal>。
+		一个<literal>Session</literal>代表一个单线程的单元操作，<literal>SessionFactory</literal>则是一个线程安全的全局对象，只需要创建一次。
+            </para>
+
+            <para>
+		我们将创建一个<literal>HibernateUtil</literal>帮助类（helper class）来负责启动Hibernate并使
+		操作<literal>Session</literal>变得容易。这个帮助类将使用被称为<emphasis>ThreadLocal Session</emphasis>
+		的模式来保证当前的单元操作和当前线程相关联。让我们来看一眼它的实现：
+            </para>
+
+            <programlisting><![CDATA[import org.hibernate.*;
+import org.hibernate.cfg.*;
+
+public class HibernateUtil {
+
+    public static final SessionFactory sessionFactory;
+
+    static {
+        try {
+            // Create the SessionFactory from hibernate.cfg.xml
+            sessionFactory = new Configuration().configure().buildSessionFactory();
+        } catch (Throwable ex) {
+            // Make sure you log the exception, as it might be swallowed
+            System.err.println("Initial SessionFactory creation failed." + ex);
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
+
+    public static final ThreadLocal session = new ThreadLocal();
+
+    public static Session currentSession() throws HibernateException {
+        Session s = (Session) session.get();
+        // Open a new Session, if this thread has none yet
+        if (s == null) {
+            s = sessionFactory.openSession();
+            // Store it in the ThreadLocal variable
+            session.set(s);
+        }
+        return s;
+    }
+
+    public static void closeSession() throws HibernateException {
+        Session s = (Session) session.get();
+        if (s != null)
+            s.close();
+        session.set(null);
+    }
+}]]></programlisting>
+
+            <para>
+		这个类不仅仅在它的静态初始化过程（仅当加载这个类的时候被JVM执行一次）中产生全局<literal>SessionFactory</literal>，
+		同时也有一个<literal>ThreadLocal</literal>变量来为当前线程保存<literal>Session</literal>。不论你何时
+		调用<literal>HibernateUtil.currentSession()</literal>，它总是返回同一个线程中的同一个Hibernate单元操作。
+		而一个<literal>HibernateUtil.closeSession()</literal>调用将终止当前线程相联系的那个单元操作。
+            </para>
+
+            <para>
+		在你使用这个帮助类之前，确定你明白Java关于本地线程变量（thread-local variable）的概念。一个功能更加强大的
+		<literal>HibernateUtil</literal>帮助类可以在<literal>CaveatEmptor</literal>http://caveatemptor.hibernate.org/找到
+		－它同时也出现在书：《Hibernate in Action》中。注意当你把Hibernate部署在一个J2EE应用服务器上的时候，这个类不是必须的：
+		一个<literal>Session</literal>会自动绑定到当前的JTA事物上，你可以通过JNDI来查找<literal>SessionFactory</literal>。
+		如果你使用JBoss AS，Hibernate可以被部署成一个受管理的系统服务（system service）并自动绑定<literal>SessionFactory</literal>到JNDI上。
+            </para>
+
+            <para>
+                把<literal>HibernateUtil.java</literal>放在开发目录的源代码路径下面，与
+                <literal>Event.java</literal>放在一起：
+            </para>
+
+            <programlisting><![CDATA[.
++lib
+  <Hibernate and third-party libraries>
++src
+  Event.java
+  Event.hbm.xml
+  HibernateUtil.java
+  hibernate.cfg.xml
++data
+build.xml]]></programlisting>
+
+            <para>
+		再次编译这个程序不应该有问题。最后我们需要配置一个日志系统 － Hibernate使用通用日志接口，这允许你在Log4j和
+		JDK 1.4 logging之间进行选择。多数开发者喜欢Log4j：从Hibernate的分发版（它在<literal>etc/</literal>目录下）拷贝
+		<literal>log4j.properties</literal>到你的<literal>src</literal>目录，与<literal>hibernate.cfg.xml</literal>.放在一起。
+		看一眼配置示例，你可以修改配置如果你希望看到更多的输出信息。缺省情况下，只有Hibernate的启动信息会显示在标准输出上。
+            </para>
+
+            <para>
+		教程的基本框架完成了 － 现在我们可以用Hibernate来做些真正的工作。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-firstapp-workingpersistence">
+            <title>
+		加载并存储对象
+		</title>
+
+            <para>
+		终于，我们可以使用Hibernate来加载和存储对象了。我们编写一个带有<literal>main()</literal>方法
+		的<literal>EventManager</literal>类：
+
+            </para>
+
+            <programlisting><![CDATA[import org.hibernate.Transaction;
+import org.hibernate.Session;
+
+import java.util.Date;
+
+public class EventManager {
+
+    public static void main(String[] args) {
+        EventManager mgr = new EventManager();
+
+        if (args[0].equals("store")) {
+            mgr.createAndStoreEvent("My Event", new Date());
+        }
+
+        HibernateUtil.sessionFactory.close();
+    }
+
+}]]></programlisting>
+
+            <para>
+		我们从命令行读入一些参数，如果第一个参数是"store"，我们创建并储存一个新的Event：
+            </para>
+
+            <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
+    Session session = HibernateUtil.currentSession();
+    Transaction tx = session.beginTransaction();
+
+    Event theEvent = new Event();
+    theEvent.setTitle(title);
+    theEvent.setDate(theDate);
+
+    session.save(theEvent);
+
+    tx.commit();
+    HibernateUtil.closeSession();
+}]]></programlisting>
+
+            <para>
+		我们创建一个新的<literal>Event</literal>对象并把它传递给Hibernate。Hibernate现在负责创建SQL并把
+		<literal>INSERT</literal>命令传给数据库。在运行它之前，让我们花一点时间在<literal>Session</literal>和<literal>Transaction</literal>的处理代码上。
+		
+            </para>
+
+            <para>
+		每个<literal>Session</literal>是一个独立的单元操作。你会对我们有另外一个API：<literal>Transaction</literal>而感到惊奇。
+		这暗示一个单元操作可以拥有比一个单独的数据库事务更长的生命周期 － 想像在web应用程序中，一个单元操作跨越多个Http request/response循环
+		（例如一个创建对话框）。根据“应用程序用户眼中的单元操作”来切割事务是Hibernate的基本设计思想之一。我们调用
+		一个长生命期的单元操作<emphasis>Application Transaction</emphasis>时，通常包装几个更生命期较短的数据库事务。
+		为了简化问题，在这个教程里我们使用<literal>Session</literal>和<literal>Transaction</literal>之间是1对1关系的粒度（one-to-one granularity）。
+            </para>
+
+            <para>
+                <literal>Transaction.begin()</literal>和<literal>commit()</literal>都做些什么？<literal>rollback()</literal>在哪些情况下会产生错误？
+                Hibernate的<literal>Transaction</literal> API 实际上是可选的, 但是我们通常会为了便利性和可移植性而使用它。
+		  如果你宁可自己处理数据库事务（例如，调用<literal>session.connection.commit()</literal>)，通过直接和无管理的JDBC，这样将把代码绑定到一个特定的部署环境中去。
+		  通过在Hibernate配置中设置<literal>Transaction</literal>工厂，你可以把你的持久化层部署在任何地方。
+                查看<xref linkend="transactions"/>了解更多关于事务处理和划分的信息。在这个例子中我们也忽略任何异常处理和事务回滚。
+            </para>
+
+            <para>
+		为了第一次运行我们的应用程序，我们必须增加一个可以调用的target到Ant的build文件中。
+            </para>
+
+            <programlisting><![CDATA[<target name="run" depends="compile">
+     <java fork="true" classname="EventManager" classpathref="libraries">
+        <classpath path="${targetdir}"/>
+        <arg value="${action}"/>
+    </java>
+</target>]]></programlisting>
+
+            <para>
+                <literal>action</literal>参数的值是在通过命令行调用这个target的时候设置的:
+            </para>
+
+            <programlisting><![CDATA[C:\hibernateTutorial\>ant run -Daction=store]]></programlisting>
+
+            <para>
+		你应该会看到，编译结束以后，Hibernate根据你的配置启动，并产生一大堆的输出日志。在日志最后你会看到下面这行：
+            </para>
+
+            <programlisting><![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) values (?, ?, ?)]]></programlisting>
+
+            <para>
+		这是Hibernate执行的<literal>INSERT</literal>命令，问号代表JDBC的待绑定参数。如果想要看到绑定参数的值或者减少日志的长度，
+		检查你在<literal>log4j.properties</literal>文件里的设置。
+            </para>
+
+            <para>
+		现在我们想要列出所有已经被存储的event，所以我们增加一个条件分支选项到main方法中去。
+            </para>
+
+            <programlisting><![CDATA[if (args[0].equals("store")) {
+    mgr.createAndStoreEvent("My Event", new Date());
+}
+else if (args[0].equals("list")) {
+    List events = mgr.listEvents();
+    for (int i = 0; i < events.size(); i++) {
+        Event theEvent = (Event) events.get(i);
+        System.out.println("Event: " + theEvent.getTitle() +
+                           " Time: " + theEvent.getDate());
+    }
+}]]></programlisting>
+
+            <para>
+		我们也增加一个新的<literal>listEvents()</literal>方法:
+            </para>
+
+            <programlisting><![CDATA[private List listEvents() {
+    Session session = HibernateUtil.currentSession();
+    Transaction tx = session.beginTransaction();
+
+    List result = session.createQuery("from Event").list();
+
+    tx.commit();
+    session.close();
+
+    return result;
+}]]></programlisting>
+
+            <para>
+		我们在这里是用一个HQL（Hibernate Query Language－Hibernate查询语言）查询语句来从数据库中
+		加载所有存在的<literal>Event</literal>。Hibernate会生成正确的SQL，发送到数据库并使用查询到的数据来生成<literal>Event</literal>对象。
+		当然你也可以使用HQL来创建更加复杂的查询。
+            </para>
+
+            <para>
+		如果你现在使用命令行参数<literal>-Daction=list</literal>来运行Ant，你会看到那些至今为止我们储存的Event。
+		如果你是一直一步步的跟随这个教程进行的，你也许会吃惊这个并不能工作 － 结果永远为空。原因是<literal>hbm2ddl.auto</literal>
+		打开了一个Hibernate的配置选项：这使得Hibernate会在每次运行的时候重新创建数据库。通过从配置里删除这个选项来禁止它。
+		运行了几次<literal>store</literal>之后，再运行<literal>list</literal>，你会看到结果出现在列表里。
+		另外，自动生成数据库表并导出在单元测试中是非常有用的。
+            </para>
+
+        </sect2>
+
+    </sect1>
+    <sect1 id="tutorial-associations">
+        <title>
+		第二部分 － 关联映射
+	</title>
+
+        <para>
+		我们已经映射了一个持久化实体类到一个表上。让我们在这个基础上增加一些类之间的关联性。
+		首先我们往我们程序里面增加人（people）的概念，并存储他们所参与的一个Event列表。
+		（译者注：与Event一样，我们在后面的教程中将直接使用person来表示“人”而不是它的中文翻译）
+        </para>
+
+        <sect2 id="tutorial-associations-mappinguser">
+            <title>
+		映射Person类
+		</title>
+
+            <para>
+		最初的<literal>Person</literal>类是简单的：
+            </para>
+
+            <programlisting><![CDATA[public class Person {
+
+    private Long id;
+    private int age;
+    private String firstname;
+    private String lastname;
+
+    Person() {}
+
+    // Accessor methods for all properties, private setter for 'id'
+
+}]]></programlisting>
+
+            <para>
+                Create a new mapping file called <literal>Person.hbm.xml</literal>:
+            </para>
+
+            <programlisting><![CDATA[<hibernate-mapping>
+
+    <class name="Person" table="PERSON">
+        <id name="id" column="PERSON_ID">
+            <generator class="increment"/>
+        </id>
+        <property name="age"/>
+        <property name="firstname"/>
+        <property name="lastname"/>
+    </class>
+
+</hibernate-mapping>]]></programlisting>
+
+            <para>
+                Finally, add the new mapping to Hibernate's configuration:
+            </para>
+
+            <programlisting><![CDATA[        <mapping resource="Event.hbm.xml"/>
+        <mapping resource="Person.hbm.xml"/>
+]]></programlisting>
+
+            <para>
+		我们现在将在这两个实体类之间创建一个关联。显然，person可以参与一系列Event，而Event也有不同的参加者（person）。
+		设计上面我们需要考虑的问题是关联的方向（directionality），阶数（multiplicity）和集合（collection）的行为。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-unidirset">
+            <title>
+		一个单向的Set-based关联
+		</title>
+
+            <para>
+		我们将向<literal>Person</literal>类增加一组Event。这样我们可以轻松的通过调用<literal>aPerson.getEvents()</literal>
+		得到一个Person所参与的Event列表，而不必执行一个显式的查询。我们使用一个Java的集合类：一个<literal>Set</literal>，因为Set
+		不允许包括重复的元素而且排序和我们无关。
+            </para>
+
+            <para>
+		 目前为止我们设计了一个单向的，在一端有许多值与之对应的关联，通过<literal>Set</literal>来实现。
+		让我们为这个在Java类里编码并映射这个关联：
+            </para>
+
+            <programlisting><![CDATA[public class Person {
+
+    private Set events = new HashSet();
+
+    public Set getEvents() {
+        return events;
+    }
+
+    public void setEvents(Set events) {
+        this.events = events;
+    }
+}]]></programlisting>
+
+            <para>
+		在我们映射这个关联之前，先考虑这个关联另外一端。很显然的，我们可以保持这个关联是单向的。如果我们希望这个关联是双向的，
+		我们可以在<literal>Event</literal>里创建另外一个集合，例如：<literal>anEvent.getParticipants()</literal>。
+		这是留给你的一个设计选项，但是从这个讨论中我们可以很清楚的了解什么是关联的阶数（multiplicity）：在这个关联的两端都是“多”。
+		我们叫这个为：<emphasis>多对多（many-to-many）</emphasis>关联。因此，我们使用Hibernate的many-to-many映射：
+            </para>
+
+            <programlisting><![CDATA[<class name="Person" table="PERSON">
+    <id name="id" column="PERSON_ID">
+        <generator class="increment"/>
+    </id>
+    <property name="age"/>
+    <property name="firstname"/>
+    <property name="lastname"/>
+
+    <set name="events" table="PERSON_EVENT">
+        <key column="PERSON_ID"/>
+        <many-to-many column="EVENT_ID" class="Event"/>
+    </set>
+
+</class>]]></programlisting>
+
+            <para>
+		 Hibernate支持所有种类的集合映射，<literal>&lt;set&gt;</literal>是最普遍被使用的。对于多对多（many-to-many）关联(或者叫<emphasis>n:m</emphasis>实体关系), 
+		需要一个用来储存关联的表（association table）。<literal>表</literal>里面的每一行代表从一个person到一个event的一个关联。
+		表名是由<literal>set</literal>元素的<literal>table</literal>属性值配置的。关联里面的标识字段名，person的一端，是
+		由<literal>&lt;key&gt;</literal>元素定义，event一端的字段名是由<literal>&lt;many-to-many&gt;</literal>元素的
+		<literal>column</literal>属性定义的。你也必须告诉Hibernate集合中对象的类（也就是位于这个集合所代表的关联另外一端的类）。
+            </para>
+
+            <para>
+		 这个映射的数据库表定义如下：
+            </para>
+
+            <programlisting><![CDATA[
+    _____________        __________________
+   |             |      |                  |       _____________
+   |   EVENTS    |      |   PERSON_EVENT   |      |             |
+   |_____________|      |__________________|      |    PERSON   |
+   |             |      |                  |      |_____________|
+   | *EVENT_ID   | <--> | *EVENT_ID        |      |             |
+   |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  |
+   |  TITLE      |      |__________________|      |  AGE        |
+   |_____________|                                |  FIRSTNAME  |
+                                                  |  LASTNAME   |
+                                                  |_____________|
+ ]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-working">
+            <title>
+		使关联工作
+		</title>
+
+            <para>
+		让我们把一些people和event放到<literal>EventManager</literal>的一个新方法中：
+            </para>
+
+            <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
+    Session session = HibernateUtil.currentSession();
+    Transaction tx = session.beginTransaction();
+
+    Person aPerson = (Person) session.load(Person.class, personId);
+    Event anEvent = (Event) session.load(Event.class, eventId);
+
+    aPerson.getEvents().add(anEvent);
+
+    tx.commit();
+    HibernateUtil.closeSession();
+}]]></programlisting>
+
+            <para>
+		在加载一个<literal>Person</literal>和一个<literal>Event</literal>之后，简单的使用普通的方法修改集合。
+		如你所见，没有显式的<literal>update()</literal>或者<literal>save()</literal>, Hibernate自动检测到集合已经被修改
+		并需要保存。这个叫做<emphasis>automatic dirty checking</emphasis>，你也可以尝试修改任何对象的name或者date的参数。
+		只要他们处于<emphasis>persistent</emphasis>状态，也就是被绑定在某个Hibernate <literal>Session</literal>上（例如：他们
+		刚刚在一个单元操作从被加载或者保存），Hibernate监视任何改变并在后台隐式执行SQL。同步内存状态和数据库的过程，通常只在
+		一个单元操作结束的时候发生，这个过程被叫做<emphasis>flushing</emphasis>。
+            </para>
+
+            <para>
+		你当然也可以在不同的单元操作里面加载person和event。或者在一个<literal>Session</literal>以外修改一个
+		不是处在持久化（persistent）状态下的对象（如果该对象以前曾经被持久化，我们称这个状态为<emphasis>脱管（detached）</emphasis>）。
+		在程序里，看起来像下面这样：
+            </para>
+
+            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+
+        Session session = HibernateUtil.currentSession();
+        Transaction tx = session.beginTransaction();
+
+        Person aPerson = (Person) session.load(Person.class, personId);
+        Event anEvent = (Event) session.load(Event.class, eventId);
+
+        tx.commit();
+        HibernateUtil.closeSession();
+
+        aPerson.getEvents().add(anEvent); // aPerson is detached
+
+        Session session2 = HibernateUtil.currentSession();
+        Transaction tx2 = session.beginTransaction();
+
+        session2.update(aPerson); // Reattachment of aPerson
+
+        tx2.commit();
+        HibernateUtil.closeSession();
+    }
+]]></programlisting>
+
+            <para>
+		对<literal>update</literal>的调用使一个脱管对象（detached object）重新持久化，你可以说它被绑定到
+		一个新的单元操作上，所以任何你对它在脱管（detached）状态下所做的修改都会被保存到数据库里。
+            </para>
+
+            <para>
+		这个对我们当前的情形不是很有用，但是它是非常重要的概念，你可以把它设计进你自己的程序中。现在，加进一个新的
+		选项到<literal>EventManager</literal>的main方法中，并从命令行运行它来完成这个练习。如果你需要一个person和
+		一个event的标识符 － <literal>save()</literal>返回它。*******这最后一句看不明白
+            </para>
+
+            <para>
+		上面是一个关于两个同等地位的类间关联的例子，这是在两个实体之间。像前面所提到的那样，也存在其它的特别的类和类型，这些类和类型通常是“次要的”。
+		其中一些你已经看到过，好像<literal>int</literal>或者<literal>String</literal>。我们称呼这些类为<emphasis>值类型（value type）</emphasis>, 
+		它们的实例<emphasis>依赖（depend）</emphasis>在某个特定的实体上。这些类型的实例没有自己的身份（identity），也不能在实体间共享
+		（比如两个person不能引用同一个<literal>firstname</literal>对象，即使他们有相同的名字）。当然，value types并不仅仅在JDK中存在
+		（事实上，在一个Hibernate程序中，所有的JDK类都被视为值类型），你也可以写你自己的依赖类，例如<literal>Address</literal>，
+		<literal>MonetaryAmount</literal>。
+            </para>
+
+            <para>
+		你也可以设计一个值类型的集合（collection of value types），这个在概念上与实体的集合有很大的不同，但是在Java里面看起来几乎是一样的。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-valuecollections">
+            <title>
+		值类型的集合
+		</title>
+
+            <para>
+		我们把一个值类型对象的集合加入<literal>Person</literal>。我们希望保存email地址，所以我们使用<literal>String</literal>，
+		而这次的集合类型又是<literal>Set</literal>：
+            </para>
+            <programlisting><![CDATA[private Set emailAddresses = new HashSet();
+
+public Set getEmailAddresses() {
+    return emailAddresses;
+}
+
+public void setEmailAddresses(Set emailAddresses) {
+    this.emailAddresses = emailAddresses;
+}]]></programlisting>
+
+            <para>
+		<literal>Set</literal>的映射
+            </para>
+
+            <programlisting><![CDATA[<set name="emailAddresses" table="PERSON_EMAIL_ADDR">
+    <key column="PERSON_ID"/>
+    <element type="string" column="EMAIL_ADDR"/>
+</set>]]></programlisting>
+
+            <para>
+		比较这次和较早先的映射，差别主要在<literal>element</literal>部分这次并没有包括对其它实体类型的引用，而是使用一个元素类型是
+		<literal>String</literal>的集合（这里使用小写的名字是向你表明它是一个Hibernate的映射类型或者类型转换器）。
+		和以前一样，<literal>set</literal>的<literal>table</literal>参数决定用于集合的数据库表名。<literal>key</literal>元素
+		定义了在集合表中使用的外键。<literal>element</literal>元素的<literal>column</literal>参数定义实际保存<literal>String</literal>值
+		的字段名。
+            </para>
+
+            <para>
+		看一下修改后的数据库表定义。
+            </para>
+
+            <programlisting><![CDATA[
+  _____________        __________________
+ |             |      |                  |       _____________
+ |   EVENTS    |      |   PERSON_EVENT   |      |             |       ___________________
+ |_____________|      |__________________|      |    PERSON   |      |                   |
+ |             |      |                  |      |_____________|      | PERSON_EMAIL_ADDR |
+ | *EVENT_ID   | <--> | *EVENT_ID        |      |             |      |___________________|
+ |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  | <--> |  *PERSON_ID       |
+ |  TITLE      |      |__________________|      |  AGE        |      |  *EMAIL_ADDR      |
+ |_____________|                                |  FIRSTNAME  |      |___________________|
+                                                |  LASTNAME   |
+                                                |_____________|
+ ]]></programlisting>
+
+            <para>
+		你可以看到集合表（collection table）的主键实际上是个复合主键，同时使用了2个字段。这也暗示了对于同一个
+		person不能有重复的email地址，这正是Java里面使用Set时候所需要的语义（Set里元素不能重复）。
+            </para>
+
+            <para>
+		  你现在可以试着把元素加入这个集合，就像我们在之前关联person和event的那样。Java里面的代码是相同的。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-bidirectional">
+            <title>
+		双向关联
+		</title>
+
+            <para>
+		下面我们将映射一个双向关联（bi-directional association）－ 在Java里面让person和event可以从关联的
+		任何一端访问另一端。当然，数据库表定义没有改变，我们仍然需要多对多（many-to-many）的阶数（multiplicity）。一个关系型数据库要比网络编程语言
+		更加灵活，所以它并不需要任何像导航方向（navigation direction）的东西 － 数据可以用任何可能的方式进行查看和获取。
+            </para>
+
+            <para>
+		首先，把一个参与者（person）的集合加入<literal>Event</literal>类中：
+            </para>
+
+            <programlisting><![CDATA[private Set participants = new HashSet();
+
+public Set getParticipants() {
+    return participants;
+}
+
+public void setParticipants(Set participants) {
+    this.participants = participants;
+}]]></programlisting>
+
+            <para>
+		在<literal>Event.hbm.xml</literal>里面也映射这个关联。
+            </para>
+
+            <programlisting><![CDATA[<set name="participants" table="PERSON_EVENT" inverse="true">
+    <key column="EVENT_ID"/>
+    <many-to-many column="PERSON_ID" class="Person"/>
+</set>]]></programlisting>
+
+            <para>
+		如你所见，2个映射文件里都有通常的<literal>set</literal>映射。注意<literal>key</literal>和<literal>many-to-many</literal>
+		里面的字段名在两个映射文件中是交换的。这里最重要的不同是<literal>Event</literal>映射文件里<literal>set</literal>元素的
+		<literal>inverse="true"</literal>参数。
+            </para>
+
+            <para>
+		这个表示Hibernate需要在两个实体间查找关联信息的时候，应该使用关联的另外一端 － <literal>Person</literal>类。
+		这将会极大的帮助你理解双向关联是如何在我们的两个实体间创建的。
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-associations-usingbidir">
+            <title>
+		使双向关联工作
+		</title>
+
+            <para>
+		首先，请牢记在心，Hibernate并不影响通常的Java语义。
+		在单向关联中，我们是怎样在一个<literal>Person</literal>和一个<literal>Event</literal>之间创建联系的？
+		我们把一个<literal>Event</literal>的实例加到一个<literal>Person</literal>类内的Event集合里。所以，显然如果我们要让这个关联可以双向工作，
+		我们需要在另外一端做同样的事情 － 把<literal>Person</literal>加到一个<literal>Event</literal>类内的Person集合中。
+		这“在关联的两端设置联系”是绝对必要的而且你永远不应该忘记做它。
+            </para>
+
+            <para>
+		许多开发者通过创建管理关联的方法来保证正确的设置了关联的两端，比如在<literal>Person</literal>里：
+            </para>
+
+            <programlisting><![CDATA[protected Set getEvents() {
+    return events;
+}
+
+protected void setEvents(Set events) {
+    this.events = events;
+}
+
+public void addToEvent(Event event) {
+    this.getEvents().add(event);
+    event.getParticipants().add(this);
+}
+
+public void removeFromEvent(Event event) {
+    this.getEvents().remove(event);
+    event.getParticipants().remove(this);
+}]]></programlisting>
+
+            <para>
+		注意现在对于集合的get和set方法的访问控制级别是protected - 这允许在位于同一个包（package）中的类以及继承自这个类的子类
+		可以访问这些方法，但是禁止其它的直接外部访问，避免了集合的内容出现混乱。你应该尽可能的在集合所对应的另外一端也这样做。
+            </para>
+
+            <para>
+		<literal>inverse</literal>映射参数究竟表示什么呢？对于你和对于Java来说，一个双向关联仅仅是在两端简单的设置引用。然而仅仅这样
+		Hibernate并没有足够的信息去正确的产生<literal>INSERT</literal>和<literal>UPDATE</literal>语句（以避免违反数据库约束），
+		所以Hibernate需要一些帮助来正确的处理双向关联。把关联的一端设置为<literal>inverse</literal>将告诉Hibernate忽略关联的
+		这一端，把这端看成是另外一端的一个<emphasis>镜子（mirror）</emphasis>。这就是Hibernate所需的信息，Hibernate用它来处理如何把把
+		一个数据导航模型映射到关系数据库表定义。
+		你仅仅需要记住下面这个直观的规则：所有的双向关联需要有一端被设置为<literal>inverse</literal>。在一个一对多（one-to-many）关联中
+		它必须是代表多（many）的那端。而在多对多（many-to-many）关联中，你可以任意选取一端，两端之间并没有差别。
+            </para>
+<!--
+            <para>
+		在下一部分，我们把Hibernate与Tomcat和WebWork集成 － <literal>EventManager</literal> 将不再需要。
+            </para>
+-->
+        </sect2>
+    </sect1>
+	     <sect1 id="tutorial-summary">
+  	         <title>
+  	         总结
+  	         </title>
+  	 
+  	         <para>
+  	            这个教程覆盖了关于开发一个简单的Hibernate应用程序的几个基础方面。
+  	         </para>
+  	 
+  	         <para>
+  	             如果你已经对Hibernate感到自信，继续浏览开发指南里你感兴趣的内容－那些会被问到的问题大多是事务处理 (<xref linkend="transactions"/>)，
+  	             抓取（fetch）的效率 (<xref linkend="performance"/>)，或者API的使用 (<xref linkend="objectstate"/>)和查询的特性(<xref linkend="objectstate-querying"/>)。
+  	         </para>
+  	 
+  	         <para>
+  	          不要忘记去Hibernate的网站查看更多（有针对性的）教程。
+  	         </para>
+  	 
+  	     </sect1>    
+</chapter>

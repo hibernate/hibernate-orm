@@ -1,0 +1,176 @@
+<chapter id="batch">
+    <title>批量处理（Batch processing）</title>
+    <para>
+        使用Hibernate将 100 000 条记录插入到数据库的一个很自然的做法可能是这样的
+    </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+for ( int i=0; i<100000; i++ ) {
+    Customer customer = new Customer(.....);
+    session.save(customer);
+}
+tx.commit();
+session.close();]]></programlisting>
+
+    <para>
+        这段程序大概运行到 50 000 条记录左右会失败并抛出 <literal>内存溢出异常（OutOfMemoryException）</literal> 。
+        这是因为 Hibernate 把所有新插入的 <literal>客户（Customer）</literal>实例在 session级别的缓存区进行了缓存的缘故。
+    </para>
+
+    <para>
+        我们会在本章告诉你如何避免此类问题。首先，如果你要执行批量处理并且想要达到一个理想的性能，
+        那么使用JDBC的批量（batching）功能是至关重要。将JDBC的批量抓取数量（batch size）参数设置到一个合适值
+        （比如，10-50之间）：
+    </para>
+    
+<programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
+
+    <para>
+        你也可能想在执行批量处理时关闭二级缓存：
+    </para>
+
+<programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
+
+    <sect1 id="batch-inserts">
+        <title>批量插入（Batch inserts）</title>
+
+        <para>
+            如果要将很多对象持久化，你必须通过经常的调用 <literal>flush()</literal> 以及稍后调用 
+            <literal>clear()</literal> 来控制第一级缓存的大小。
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+   
+for ( int i=0; i<100000; i++ ) {
+    Customer customer = new Customer(.....);
+    session.save(customer);
+    if ( i % 20 == 0 ) { //20, same as the JDBC batch size //20,与JDBC批量设置相同
+        //flush a batch of inserts and release memory:
+        //将本批插入的对象立即写入数据库并释放内存
+        session.flush();
+        session.clear();
+    }
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="batch-update" >
+        <title>批量更新（Batch updates）</title>
+
+        <para>
+            此方法同样适用于检索和更新数据。此外，在进行会返回很多行数据的查询时，
+            你需要使用 <literal>scroll()</literal> 方法以便充分利用服务器端游标所带来的好处。
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+   
+ScrollableResults customers = session.getNamedQuery("GetCustomers")
+    .setCacheMode(CacheMode.IGNORE)
+    .scroll(ScrollMode.FORWARD_ONLY);
+int count=0;
+while ( customers.next() ) {
+    Customer customer = (Customer) customers.get(0);
+    customer.updateStuff(...);
+    if ( ++count % 20 == 0 ) {
+        //flush a batch of updates and release memory:
+        session.flush();
+        session.clear();
+    }
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="batch-direct">
+        <title>大批量更新/删除（Bulk update/delete）</title>
+
+        <para>
+            就像已经讨论的那样，自动和透明的 对象/关系 映射（object/relational mapping）关注于管理对象的状态。
+            这就意味着对象的状态存在于内存，因此直接更新或者删除 (使用 SQL 语句 <literal>UPDATE</literal> 和
+            <literal>DELETE</literal>) 数据库中的数据将不会影响内存中的对象状态和对象数据。
+            不过，Hibernate提供通过Hibernate查询语言（<xref linkend="queryhql">HQL</xref>）来执行大批
+            量SQL风格的（<literal>UPDATE</literal>）和（<literal>DELETE</literal>） 语句的方法。
+        </para>
+
+	    <para>
+            <literal>UPDATE</literal> 和 <literal>DELETE</literal>语句的语法为：
+            <literal>( UPDATE | DELETE ) FROM? ClassName (WHERE WHERE_CONDITIONS)?</literal>。
+            有几点说明：
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    在FROM子句（from-clause）中，FROM关键字是可选的
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    在FROM子句（from-clause）中只能有一个类名，并且它<emphasis>不能</emphasis>有别名
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    不能在大批量HQL语句中使用连接（显式或者隐式的都不行）。不过在WHERE子句中可以使用子查询。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                       整个WHERE子句是可选的。
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            举个例子，使用<literal>Query.executeUpdate()</literal>方法执行一个HQL
+            <literal>UPDATE</literal>语句：
+        </para>
+
+        <programlisting><![CDATA[Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+
+        String hqlUpdate = "update Customer set name = :newName where name = :oldName";
+        int updatedEntities = s.createQuery( hqlUpdate )
+                            .setString( "newName", newName )
+                            .setString( "oldName", oldName )
+                            .executeUpdate();
+        tx.commit();
+        session.close();]]></programlisting>
+
+        <para>
+            执行一个HQL <literal>DELETE</literal>，同样使用 <literal>Query.executeUpdate()</literal> 方法
+            （此方法是为 那些熟悉JDBC <literal>PreparedStatement.executeUpdate()</literal> 的人们而设定的）
+        </para>
+
+        <programlisting><![CDATA[Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+
+        String hqlDelete = "delete Customer where name = :oldName";
+        int deletedEntities = s.createQuery( hqlDelete )
+                            .setString( "oldName", oldName )
+                            .executeUpdate();
+        tx.commit();
+        session.close();]]></programlisting>
+
+        <para>
+            由<literal>Query.executeUpdate()</literal>方法返回的<literal>整型</literal>值表明了受此操作影响的记录数量。
+            注意这个数值可能与数据库中被（最后一条SQL语句）影响了的“行”数有关，也可能没有。一个大批量HQL操作可能导致多条实际的SQL语句被执行，
+            举个例子，对joined-subclass映射方式的类进行的此类操作。这个返回值代表了实际被语句影响了的记录数量。在那个joined-subclass的例子中，
+            对一个子类的删除实际上可能不仅仅会删除子类映射到的表而且会影响“根”表，还有可能影响与之有继承关系的joined-subclass映射方式的子类的表。
+        </para>
+
+        <para>
+            注意，上述大批量HQL操作的少数限制会在新版本中得到改进；进一步详细信息请参考JIRA里的路线图(roadmap)。
+        </para>
+
+    </sect1>
+
+</chapter>

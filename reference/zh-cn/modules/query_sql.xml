@@ -1,0 +1,397 @@
+﻿<chapter id="querysql" revision="2">
+    <title>Native SQL查询<!--Native SQL--></title>
+    <para>
+		你也可以使用你的数据库的Native SQL语言来查询数据。这对你在要使用数据库的某些特性的时候(比如说在查询提示或者Oracle中的
+		<literal>CONNECT</literal>关键字)，这是非常有用的。这就能够扫清你把原来直接使用SQL/JDBC 的程序迁移到基于
+		Hibernate应用的道路上的障碍。
+    </para>
+
+    <para>
+		Hibernate3允许你使用手写的sql来完成所有的create,update,delete,和load操作（包括存储过程）
+    </para>
+
+    <sect1 id="querysql-creating">
+        <title>创建一个基于SQL的<literal>Query</literal></title>
+
+        <para>
+			SQL查询是通过<literal>SQLQuery</literal>接口来控制的，它是通过调用Session.createSQLQuery()方法来获得
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
+        .addEntity("cat", Cat.class);
+        .setMaxResults(50);
+        .list();]]></programlisting>
+
+        <para>
+			这个查询指定了:
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+			SQL查询语句，它带一个占位符，可以让Hibernate使用字段的别名.
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+			查询返回的实体，和它的SQL表的别名.
+        </para>
+        </listitem>
+        </itemizedlist>
+    
+        <para>
+			<literal>addEntity()</literal>方法将SQL表的别名和实体类联系起来，并且确定查询结果集的形态。
+        </para>
+        
+        <para>
+			<literal>addJoin()</literal>方法可以被用于载入其他的实体和集合的关联，TODO:examples!
+        </para>
+        
+        <para>
+			原生的SQL查询可能返回一个简单的标量值或者一个标量和实体的结合体。
+        </para>
+
+        <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
+        .addScalar("maxWeight", Hibernate.DOUBLE);
+        .uniqueResult();]]></programlisting>
+
+
+    </sect1>
+
+    <sect1 id="querysql-aliasreferences">
+        <title>别名和属性引用</title>
+
+        <para>
+			上面使用的<literal>{cat.*}</literal>标记是 "所有属性" 的简写.你可以显式地列出需要的字段,但是你必须让Hibernate
+			为每一个属性注入字段的别名.这些字段的站位符是以字段别名为前导,再加上属性名.在下面的例子里,我们从一个其他的表(<literal>cat_log</literal>)
+			中获取<literal>Cat</literal>对象,而非Cat对象原本在映射元数据中声明的表.注意我们甚至在where子句中也可以使用属性别名.
+            对于命名查询,{}语法并不是必需的.你可以在<xref linkend="querysql-namedqueries"/>得到更多的细节.
+        </para>
+
+        <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
+    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
+    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
+    "from cat_log cat where {cat.mate} = :catId"
+    
+List loggedCats = sess.createSQLQuery(sql)
+    .addEntity("cat", Cat.class)
+    .setLong("catId", catId)
+    .list();]]></programlisting>
+
+        <para>
+            <emphasis>注意:</emphasis>如果你明确地列出了每个属性,你必须包含这个类<emphasis>和它的子类的属性</emphasis>! <emphasis>and its subclasses</emphasis>!
+        </para>
+
+    </sect1>
+    
+    <sect1 id="querysql-namedqueries" revision="2">
+        <title>命名SQL查询</title>
+
+        <para>
+			可以在映射文档中定义查询的名字,然后就可以象调用一个命名的HQL查询一样直接调用命名SQL查询.在这种情况下,我们<emphasis>不</emphasis>
+			需要调用<literal>addEntity()</literal>方法.
+        </para>
+
+         <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return alias="person" class="eg.Person"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex}
+    FROM PERSON person WHERE person.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
+
+        <programlisting><![CDATA[List people = sess.getNamedQuery("mySqlQuery")
+    .setMaxResults(50)
+    .list();]]></programlisting>
+
+        <para>
+			一个命名查询可能会返回一个标量值.你必须使用<literal>&lt;return-scalar&gt;</literal>元素来指定字段的别名和
+			Hibernate类型
+        </para>
+        
+        <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="age" type="long"/>
+    SELECT p.NAME AS name,
+           p.AGE AS age,
+    FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
+
+         <para>
+			 <literal>&lt;return-join&gt;</literal>和<literal>&lt;load-collection&gt;</literal>元素分别用作
+			 外连接和定义那些初始化集合的查询
+         </para>
+         
+         <sect2 id="propertyresults">
+             <title>使用return-property来明确地指定字段/别名</title>
+             
+             <para>
+				使用<literal>&lt;return-property&gt;</literal>你可以明确的告诉Hibernate使用哪些字段,这和使用<literal>{}</literal>-语法
+				来让Hibernate注入它自己的别名是相反的.
+             </para>
+             
+            <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return alias="person" class="eg.Person">
+      <return-property name="name" column="myName"/>
+      <return-property name="age" column="myAge"/>
+      <return-property name="sex" column="mySex"/>
+    </return>
+    SELECT person.NAME AS myName,
+           person.AGE AS myAge,
+           person.SEX AS mySex,
+    FROM PERSON person WHERE person.NAME LIKE :name
+</sql-query>
+]]></programlisting>
+             <literal>&lt;return-property&gt;</literal>也可用于多个字段,它解决了使用<literal>{}</literal>-语法不能细粒度控制多个字段的限制
+             <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
+            <return alias="emp" class="Employment">            
+             <return-property name="salary"> 
+               <return-column name="VALUE"/>
+               <return-column name="CURRENCY"/>            
+             </return-property>
+             <return-property name="endDate" column="myEndDate"/>
+            </return>
+            SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+            STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+            REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
+            FROM EMPLOYMENT
+            WHERE EMPLOYER = :id AND ENDDATE IS NULL
+            ORDER BY STARTDATE ASC
+</sql-query>]]></programlisting>
+             
+            <para>
+				注意在这个例子中,我们使用了<literal>&lt;return-property&gt;</literal>结合<literal>{}</literal>的注入语法.
+				允许用户来选择如何引用字段以及属性.
+            </para>
+
+            <para>
+			 如果你映射一个识别器(discriminator),你必须使用&lt;return-discriminator&gt;来指定识别器字段
+            </para>
+         </sect2>
+         
+         <sect2 id="sp_query">
+             <title>使用存储过程来查询</title>
+             
+             <para>
+				 Hibernate 3引入了对存储过程查询的支持.
+				 
+				 存储过程必须返回一个结果集,作为Hibernate能够使用的第一个外部参数.
+				 
+				 下面是一个Oracle9和更高版本的存储过程例子.
+                 
+                 <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments 
+    RETURN SYS_REFCURSOR 
+AS 
+    st_cursor SYS_REFCURSOR; 
+BEGIN 
+    OPEN st_cursor FOR 
+ SELECT EMPLOYEE, EMPLOYER, 
+ STARTDATE, ENDDATE, 
+ REGIONCODE, EID, VALUE, CURRENCY 
+ FROM EMPLOYMENT; 
+      RETURN  st_cursor; 
+ END;]]></programlisting>
+                 
+				 在Hibernate里要要使用这个查询,你需要通过命名查询来映射它.
+                 
+             <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
+    <return alias="emp" class="Employment">
+        <return-property name="employee" column="EMPLOYEE"/>
+        <return-property name="employer" column="EMPLOYER"/>            
+        <return-property name="startDate" column="STARTDATE"/>
+        <return-property name="endDate" column="ENDDATE"/>            
+        <return-property name="regionCode" column="REGIONCODE"/>            
+        <return-property name="id" column="EID"/>                        
+        <return-property name="salary"> 
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>            
+        </return-property>
+    </return>
+    { ? = call selectAllEmployments() }
+</sql-query>]]></programlisting>
+             </para>
+             
+             <para>
+			  注意存储过程当前仅仅返回标量和实体.现在不支持<literal>&lt;return-join&gt;</literal>和<literal>&lt;load-collection&gt;</literal>
+			  
+             </para>
+             
+             <sect3 id="querysql-limits-storedprocedures">
+               <title>使用存储过程的规则和限制</title>
+               
+               <para>
+				   为了在Hibernate中使用存储过程,你必须遵循一些规则.不遵循这些规则的存储过程将不可用.如果你仍然想要使用他们,
+				   你必须通过<literal>session.connection()</literal>来执行他们.这些规则针对于不同的数据库.因为数据库
+				   提供商有各种不同的存储过程语法和语义.
+               </para>
+               
+               <para>
+                   对存储过程进行的查询无法使用<literal>setFirstResult()/setMaxResults()</literal>进行分页。
+               </para>
+               
+               <para>
+				   对于Oracle有如下规则:
+               </para>
+               
+               <itemizedlist spacing="compact">
+               <listitem>
+               <para>    
+				   存储过程必须返回一个结果集.它通过返回SYS_REFCURSOR实现(在Oracle9或10),在Oracle里你需要定义一个<literal>REF CURSOR</literal>
+				   类型
+               </para>
+               </listitem>    
+               <listitem>
+               <para>
+				   推荐的格式是 <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> 或
+                   <literal>{ ? = call procName }</literal>(这更像是Oracle规则而不是Hibernate规则)
+               </para>
+               </listitem>    
+              </itemizedlist>
+                           
+              <para>                   
+				   对于Sybase或者MS SQL server有如下规则:
+               </para>
+                   
+               <itemizedlist spacing="compact">
+               <listitem>
+               <para>    
+				   存储过程必须返回一个结果集。.注意这些servers可能返回多个结果集以及更新的数目.Hibernate将取出第一条结果集作为它的返回值，
+				   其他将被丢弃。
+               </para>
+               </listitem>    
+               <listitem>
+               <para>    
+				   如果你能够在存储过程里设定<literal>SET NOCOUNT ON</literal>，这可能会效率更高，但这不是必需的。
+               </para>
+               </listitem>    
+              </itemizedlist>
+              </sect3>
+         </sect2>
+
+    </sect1>
+
+    <sect1 id="querysql-cud">
+        <title>定制SQL用来create，update和delete</title>
+
+        <para>
+			Hibernate3能够使用定制的SQL语句来执行create,update和delete操作。在Hibernate中，持久化的类和集合已经
+			包含了一套配置期产生的语句(insertsql, deletesql, updatesql等等)，这些映射标记 <literal>&lt;sql-insert&gt;</literal>, 
+			<literal>&lt;sql-delete&gt;</literal>, and <literal>&lt;sql-update&gt;</literal>重载了
+			这些语句。
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
+    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
+    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
+</class>]]></programlisting>
+
+        <para>
+			这些SQL直接在你的数据库里执行，所以你可以自由的使用你喜欢的任意语法。但如果你使用数据库特定的语法，
+			这当然会降低你映射的可移植性。
+        </para>
+
+        <para>
+			如果设定<literal>callable</literal>，则能够支持存储过程了。
+        </para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert callable="true">{call createPerson (?, ?)}</sql-insert>
+    <sql-delete callable="true">{? = call deletePerson (?)}</sql-delete>
+    <sql-update callable="true">{? = call updatePerson (?, ?)}</sql-update>
+</class>]]></programlisting>
+
+        <para>
+		  参数的位置顺序是非常重要的，他们必须和Hibernate所期待的顺序相同。
+        </para>
+        
+        <para>
+		  你能够通过设定日志调试级别为<literal>org.hiberante.persister.entity</literal>,来查看Hibernate所期待的顺序。在这个级别下，
+		  Hibernate将会打印出create,update和delete实体的静态SQL。如果想看到预想中的顺序。记得不要将定制SQL包含在映射文件里，
+		  因为他们会重载Hibernate生成的静态SQL。
+        </para>
+
+        <para>
+			在大多数情况下(最好这么做)，存储过程需要返回插入/更新/删除的行数，因为Hibernate对语句的成功执行有些运行时的检查。
+			Hibernate常会把进行CUD操作的语句的第一个参数注册为一个数值型输出参数。
+        </para>
+
+        <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
+    RETURN NUMBER IS
+BEGIN
+
+    update PERSON
+    set
+        NAME = uname,
+    where
+        ID = uid;
+
+    return SQL%ROWCOUNT;
+
+END updatePerson;]]></programlisting>
+
+        
+    </sect1>
+
+    <sect1 id="querysql-load">
+        <title>定制装载SQL</title>
+
+        <para>
+			你可能需要声明你自己的SQL(或HQL)来装载实体
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="person">
+    <return alias="p" class="Person" lock-mode="upgrade"/>
+    SELECT NAME AS {p.name}, ID AS {p.id} FROM PERSON WHERE ID=? FOR UPDATE
+</sql-query>]]></programlisting>
+
+        <para>
+			这只是一个前面讨论过的命名查询声明，你可以在类映射里引用这个命名查询。
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <loader query-ref="person"/>
+</class>]]></programlisting>
+    
+        <para>
+		    这也可以用于存储过程
+        </para>
+
+        <para>
+			TODO: 未完成的例子
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="organizationEmployments">
+    <load-collection alias="empcol" role="Organization.employments"/>
+    SELECT {empcol.*}
+    FROM EMPLOYMENT empcol
+    WHERE EMPLOYER = :id
+    ORDER BY STARTDATE ASC, EMPLOYEE ASC
+</sql-query>
+
+<sql-query name="organizationCurrentEmployments">
+    <return alias="emp" class="Employment"/>
+    <synchronize table="EMPLOYMENT"/>
+    SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
+        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+        REGIONCODE as {emp.regionCode}, ID AS {emp.id}
+    FROM EMPLOYMENT
+    WHERE EMPLOYER = :id AND ENDDATE IS NULL
+    ORDER BY STARTDATE ASC
+</sql-query>]]></programlisting>
+
+    </sect1>
+
+</chapter>

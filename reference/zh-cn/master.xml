@@ -54,7 +54,7 @@
         </para>
 
         <para>
-            Translator(s): RedSaga Translate Team &lt;caoxg@yahoo.com&gt; 
+            Translator(s): RedSaga Translate Team 满江红翻译团队  &lt;caoxg@yahoo.com&gt; 
         </para>
 
         <para>
@@ -117,8 +117,7 @@
          </orderedlist>
 
          <para>
-             如果你有问题，请使用Hibernate网站上链接的用户论坛。我们也提供一个JIRA问题追踪系统，来搜集bug报告和新功能请求。如果你对开发Hibernate有兴趣，请加入开发者的邮件列表。
-             （Hibernate网站上的用户论坛有一个中文版面，您可以在那里交流问题与经验。）
+             如果你有问题，请使用Hibernate网站上链接的用户论坛。我们也提供一个JIRA问题追踪系统，来搜集bug报告和新功能请求。如果你对开发Hibernate有兴趣，请加入开发者的邮件列表。（Hibernate网站上的用户论坛有一个中文版面，JavaEye也有Hibernate中文版面,您可以在那里交流问题与经验。）
          </para>
 
          <para>
@@ -162,16 +161,16 @@
                             翻译
                         </entry>
                         <entry align="center">
-                            一审
+                            审校
                         </entry>
                     </row>
                 </thead>
                 <tbody>
                     <row>
                         <entry>#1</entry>
-                        <entry>Quickstart with Tomcat(*)</entry>
+                        <entry>Quickstart with Tomcat</entry>
                         <entry>在Tomcat中快速上手</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>zoujm</entry>
                     </row>
                     <row>
@@ -190,9 +189,9 @@
                     </row>
                     <row>
                         <entry>#4</entry>
-                        <entry>Persistent Classes(*)</entry>
+                        <entry>Persistent Classes</entry>
                         <entry>持久化类</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>mochow</entry>
                     </row>
                     <row>
@@ -211,9 +210,9 @@
                     </row>
                     <row>
                         <entry>#6</entry>
-                        <entry>Collection Mapping(*)</entry>
+                        <entry>Collection Mapping</entry>
                         <entry>集合类映射</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>robbin</entry>
                     </row>
                     <row>
@@ -225,9 +224,9 @@
                     </row>
                     <row>
                         <entry>#8</entry>
-                        <entry>Component Mapping(*)</entry>
+                        <entry>Component Mapping</entry>
                         <entry>组件映射</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>Robbin</entry>
                     </row>
                     <row>
@@ -309,23 +308,23 @@
                     </row>
                     <row>
                         <entry>#20</entry>
-                        <entry>Toolset Guide(*)</entry>
+                        <entry>Toolset Guide</entry>
                         <entry>工具箱指南</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>Robbin</entry>
                     </row>
                     <row>
                         <entry>#21</entry>
-                        <entry>Example: Parent/Child(*)</entry>
+                        <entry>Example: Parent/Child</entry>
                         <entry>示例：父子关系</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>devils.advocate</entry>
                     </row>
                     <row>
                         <entry>#22</entry>
-                        <entry>Example: Weblog Application(*)</entry>
+                        <entry>Example: Weblog Application</entry>
                         <entry>示例：Weblog 应用程序</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>devils.advocate</entry>
                     </row>
                     <row>
@@ -337,9 +336,9 @@
                     </row>
                     <row>
                         <entry>#24</entry>
-                        <entry>Best Practices(*)</entry>
+                        <entry>Best Practices</entry>
                         <entry>最佳实践</entry>
-                        <entry>caoxiaogang</entry>
+                        <entry>曹晓钢</entry>
                         <entry>冰云</entry>
                     </row>
                 </tbody>
@@ -356,7 +355,7 @@
                     <term>满江红.开源, http://www.redsaga.com</term>
                     <listitem>
                         <para>
-                        致力于Java开放源代码在中国的传播与发展。目前有两个团队，“OpenDoc团队”与“翻译团队”。OpenDoc团队已经推出包括Hibernate、iBatis、Spring、WebWork的多份开放文档，并于2005年5月在Hibernate开放文档基础上扩充成书，出版了原创书籍：《深入浅出Hibernate》，本书400余页，适合各个层次的Hibernate用户。(http://www.redsaga.com/hibernate_book.html)敬请支持。
+                        从成立之初就致力于Java开放源代码在中国的传播与发展,与国内多个Java团体及出版社有深入交流。坚持少说多做的原则，目前有两个团队，“OpenDoc团队”与“翻译团队”，本翻译文档即为翻译团队作品。OpenDoc团队已经推出包括Hibernate、iBatis、Spring、WebWork的多份开放文档，并于2005年5月在Hibernate开放文档基础上扩充成书，出版了原创书籍：《深入浅出Hibernate》，本书400余页，适合各个层次的Hibernate用户。(http://www.redsaga.com/hibernate_book.html)敬请支持。
                         </para>
                     </listitem>
                 </varlistentry>
@@ -364,7 +363,7 @@
                     <term>北京Java用户组, http://www.bjug.org</term>
                     <listitem>
                         <para>
-                        Beiing Java User Group(http://www.bjug.org)，民间技术交流组织，成立于2004年6月。以交流与共享为宗旨，每两周举行一次技术聚会活动。BJUG的目标是，通过小部分人的努力，形成一个技术社群，创建良好的交流氛围，并将新的技术和思想推广到整个IT界，让我们共同进步。
+                        Beiing Java User Group，民间技术交流组织，成立于2004年6月。以交流与共享为宗旨，每两周举行一次技术聚会活动。BJUG的目标是，通过小部分人的努力，形成一个技术社群，创建良好的交流氛围，并将新的技术和思想推广到整个IT界，让我们共同进步。
 
                         </para>
                     </listitem>
@@ -373,7 +372,8 @@
                     <term>Java视线, http://www.javaeye.com</term>
                     <listitem>
                         <para>
-                        前身为Hibernate中文论坛，现在已发展为包括Java,.NET，python等各种技术的高质量论坛。Java视线论坛注重质量更甚于注重人气。
+                        Java视线在是Hibernate中文论坛（http://www.hibernate.org.cn，Hibernate中文论坛是中国最早的Hibernate专业用户论坛，为Hibernate在中国的推广做出了巨大的贡献）基础上发展起来的Java深度技术网站，目标是成为一个高品质的，有思想深度的、原创精神的Java技术交流网站，为软件从业人员提供一个自由的交流技术，交流思想和交流信息的平台。
+
                         </para>
                     </listitem>
                 </varlistentry>

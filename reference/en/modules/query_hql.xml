@@ -144,14 +144,24 @@
             A fetch join does not usually need to assign an alias, because the associated objects 
             should not be used in the <literal>where</literal> clause (or any other clause). Also, 
             the associated objects are not returned directly in the query results. Instead, they may 
-            be accessed via the parent object.
+            be accessed via the parent object. The only reason we might need an alias is if we are
+            recursively join fetching a further collection:
         </para>
         
+        <programlisting><![CDATA[from Cat as cat 
+    inner join fetch cat.mate
+    left join fetch cat.kittens child
+    left join fetch child.kittens]]></programlisting>
+    
         <para>
             Note that the <literal>fetch</literal> construct may not be used in queries called using
-            <literal>scroll()</literal> or <literal>iterate()</literal>. Finally, note that
-            <literal>full join fetch</literal> and <literal>right join fetch</literal> are not 
-            meaningful.
+            <literal>scroll()</literal> or <literal>iterate()</literal>. Nor should <literal>fetch</literal>
+            be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal>.
+            It is possible to create a cartesian product by join fetching more than one collection in a
+            query, so take care in this case. Join fetching multiple collection roles also sometimes gives 
+            unexpected results for bag mappings, so be careful about how you formulate your queries in this 
+            case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal> 
+            are not meaningful.
         </para>
         
         <para>

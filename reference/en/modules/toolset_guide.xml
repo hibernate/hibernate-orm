@@ -108,9 +108,9 @@
 
             <programlisting><![CDATA[<property name="foo" type="string">
     <column name="foo" length="64" not-null="true" sql-type="text"/>
-</property>
+</property>]]></programlisting>
 
-<property name="bar" type="my.customtypes.MultiColumnType"/>
+            <programlisting><![CDATA[<property name="bar" type="my.customtypes.MultiColumnType"/>
     <column name="fee" not-null="true" index="bar_idx"/>
     <column name="fi" not-null="true" index="bar_idx"/>
     <column name="fo" not-null="true" index="bar_idx"/>
@@ -127,9 +127,9 @@
             
             <programlisting><![CDATA[<property name="foo" type="integer">
     <column name="foo" check="foo > 10"/>
-</property>
+</property>]]></programlisting>
 
-<class name="Foo" table="foos" check="bar < 100.0">
+            <programlisting><![CDATA[<class name="Foo" table="foos" check="bar < 100.0">
     ...
     <property name="bar" type="float"/>
 </class>]]></programlisting>
@@ -203,6 +203,28 @@
                    </tbody>
                 </tgroup>
             </table>
+            
+            <para>
+                The <literal>&lt;comment&gt;</literal> element allows you to specify a comments
+                for the generated schema.
+            </para>
+            
+            <programlisting><![CDATA[<class name="Customer" table="CurCust">
+    <comment>Current customers only</comment>
+    ...
+</class>]]></programlisting>
+
+            <programlisting><![CDATA[<property name="balance">
+    <column name="bal">
+        <comment>Balance in USD</comment>
+    </column>
+</property>]]></programlisting>
+            
+            <para>
+                This results in a <literal>comment on table</literal> or 
+                <literal>comment on column</literal> statement in the generated
+                DDL (where supported).
+            </para>
 
         </sect2>
 

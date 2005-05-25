@@ -237,8 +237,6 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
-                    <area id="class22" coords="23 55"/>
-                    <area id="class23" coords="24 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -370,10 +368,10 @@
                     </callout>    
                     <callout arearefs="class17">
                         <para>
-                            <literal>entity-name</literal> (optional): Hibernate3 allows a class to be mapped 
-                            multiple times (to different tables, potentially), and allows entity mappings that
-                            are represented by Maps or XML at the Java level. In these cases, you should
-                            provide an explicit arbitrary name for the entity. See 
+                            <literal>entity-name</literal> (optional, defaults to the class name): Hibernate3 
+                            allows a class to be mapped multiple times (to different tables, potentially), 
+                            and allows entity mappings that are represented by Maps or XML at the Java level. 
+                            In these cases, you should provide an explicit arbitrary name for the entity. See 
                             <xref linkend="persistent-classes-dynamicmodels"/> and <xref linkend="xml"/>
                             for more information.
                         </para>
@@ -403,12 +401,6 @@
                         <para>
                             <literal>abstract</literal> (optional): Used to mark abstract superclasses in
                             <literal>&lt;union-subclass&gt;</literal> hierarchies.
-                        </para>
-                    </callout>
-                    <callout arearefs="class22">
-                        <para>
-                            <literal>entity-name</literal> (optional, defaults to the class name): Explicitly 
-                            specify an entity name.
                         </para>
                     </callout>
                 </calloutlist>

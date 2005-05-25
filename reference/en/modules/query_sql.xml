@@ -22,9 +22,9 @@
         </para>
 
         <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
-        .addEntity("cat", Cat.class);
-        .setMaxResults(50);
-        .list();]]></programlisting>
+    .addEntity("cat", Cat.class)
+    .setMaxResults(50)
+    .list();]]></programlisting>
 
         <para>
             This query specified:
@@ -50,9 +50,16 @@
         
         <para>
             The <literal>addJoin()</literal> method may be used to load associations to other entities
-            and collections. TODO: examples!
+            and collections.
         </para>
         
+        <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .addEntity("cat", Cat.class)
+    .addJoin("kitten", "cat.kittens")
+    .list();]]></programlisting>
+    
         <para>
             A native SQL query might return a simple scalar value or a combination of scalars and
             entities.
@@ -70,14 +77,16 @@
 
         <para>
             The <literal>{cat.*}</literal> notation used above is a shorthand for "all properties". 
-            Alternatively, you may list the columns explicity, but even then you must let Hibernate 
+            Alternatively, you may list the columns explicity, but even this case we let Hibernate 
             inject the SQL column aliases for each property. The placeholder for a column alias is 
             just the property name qualified by the table alias. In the following example, we retrieve 
             <literal>Cat</literal>s from a different table (<literal>cat_log</literal>) to the one 
             declared in the mapping metadata. Notice that we may even use the property aliases in the 
             where clause if we like.
-            
-            The <literal>{}</literal>-syntax is not required for named queries. See more in <xref linkend="querysql-namedqueries"/>
+        </para>
+        <para>
+            The <literal>{}</literal>-syntax is <emphasis>not</emphasis> required for named queries. 
+            See <xref linkend="querysql-namedqueries"/>
         </para>
 
         <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
@@ -101,22 +110,46 @@ List loggedCats = sess.createSQLQuery(sql)
         <title>Named SQL queries</title>
 
         <para>
-            Named SQL queries may be defined in the mapping document and called in exactly the same way
-            as a named HQL query. In this case, we do <emphasis>not</emphasis> need to call
-            <literal>addEntity()</literal>.
+            Named SQL queries may be defined in the mapping document and called in exactly the 
+            same way as a named HQL query. In this case, we do <emphasis>not</emphasis> need 
+            to call <literal>addEntity()</literal>.
         </para>
 
-         <programlisting><![CDATA[<sql-query name="mySqlQuery">
+         <programlisting><![CDATA[<sql-query name="persons">
     <return alias="person" class="eg.Person"/>
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex}
-    FROM PERSON person WHERE person.NAME LIKE 'Hiber%'
+    FROM PERSON person 
+    WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
-        <programlisting><![CDATA[List people = sess.getNamedQuery("mySqlQuery")
+        <programlisting><![CDATA[List people = sess.getNamedQuery("persons")
+    .setString("namePattern", namePattern)
     .setMaxResults(50)
     .list();]]></programlisting>
+
+         <para>
+             The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal>
+             elements are used to join associations and define queries which initialize collections,
+             respectively.
+         </para>
+         
+         <programlisting><![CDATA[<sql-query name="personsWith">
+    <return alias="person" class="eg.Person"/>
+    <return-join alias="address" property="person.mailingAddress"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex},
+           adddress.STREET AS {address.street},
+           adddress.CITY AS {address.city},
+           adddress.STATE AS {address.state},
+           adddress.ZIP AS {address.zip}
+    FROM PERSON person 
+    JOIN ADDRESS adddress
+    	ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
 
         <para>
             A named SQL query may return a scalar value. You must specfy the column alias
@@ -131,25 +164,20 @@ List loggedCats = sess.createSQLQuery(sql)
     FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
 </sql-query>]]></programlisting>
 
-         <para>
-             The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal>
-             elements are used to join associations and define queries which initialize collections,
-             respectively. TODO!
-         </para>
-         
          <sect2 id="propertyresults">
              <title>Using return-property to explicitly specify column/alias names</title>
              
              <para>
-                 With <literal>&lt;return-property&gt;</literal> you can explicitly tell Hibernate what columns
-                 to use as opposed to use <literal>{}</literal>-syntax to let Hibernate inject its own aliases.                 
+                 With <literal>&lt;return-property&gt;</literal> you can explicitly tell Hibernate what column
+                 aliases to use, instead of using the <literal>{}</literal>-syntax to let Hibernate inject its 
+                 own aliases.                 
              </para>
              
             <programlisting><![CDATA[<sql-query name="mySqlQuery">
     <return alias="person" class="eg.Person">
-      <return-property name="name" column="myName"/>
-      <return-property name="age" column="myAge"/>
-      <return-property name="sex" column="mySex"/>
+        <return-property name="name" column="myName"/>
+        <return-property name="age" column="myAge"/>
+        <return-property name="sex" column="mySex"/>
     </return>
     SELECT person.NAME AS myName,
            person.AGE AS myAge,
@@ -158,34 +186,37 @@ List loggedCats = sess.createSQLQuery(sql)
 </sql-query>
 ]]></programlisting>
              
-             <literal>&lt;return-property&gt;</literal> also works with multiple columns. This solves a limitation with
-             the <literal>{}</literal>-syntax which can not allow fine grained control of multi-column properties.
+             <para>
+                 <literal>&lt;return-property&gt;</literal> also works with multiple columns. This solves a 
+                 limitation with the <literal>{}</literal>-syntax which can not allow fine grained control 
+                 of multi-column properties.
+             </para>
              
              <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
-            <return alias="emp" class="Employment">            
-             <return-property name="salary"> 
-               <return-column name="VALUE"/>
-               <return-column name="CURRENCY"/>            
-             </return-property>
-             <return-property name="endDate" column="myEndDate"/>
-            </return>
-            SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
-            STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
-            REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
-            FROM EMPLOYMENT
-            WHERE EMPLOYER = :id AND ENDDATE IS NULL
-            ORDER BY STARTDATE ASC
+    <return alias="emp" class="Employment">            
+        <return-property name="salary"> 
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>            
+        </return-property>
+        <return-property name="endDate" column="myEndDate"/>
+    </return>
+        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
+        FROM EMPLOYMENT
+        WHERE EMPLOYER = :id AND ENDDATE IS NULL
+        ORDER BY STARTDATE ASC
 </sql-query>]]></programlisting>
              
             <para>
-             Notice that in this example we used <literal>&lt;return-property&gt;</literal> in combination
-             with the <literal>{}</literal>-syntax for injection. Allowing users to choose 
-             how they want to refer column and properties.
+                Notice that in this example we used <literal>&lt;return-property&gt;</literal> in combination
+                with the <literal>{}</literal>-syntax for injection. Allowing users to choose 
+                how they want to refer column and properties.
             </para>
 
             <para>
-             If your mapping has a discriminator you must use &lt;return-discriminator&gt; to specify the 
-             discriminator column.
+                If your mapping has a discriminator you must use <literal>&lt;return-discriminator&gt;</literal> 
+                to specify the discriminator column.
             </para>
          </sect2>
          
@@ -193,11 +224,10 @@ List loggedCats = sess.createSQLQuery(sql)
              <title>Using stored procedures for querying</title>
              
              <para>
-                 Hibernate 3 introduces support for queries via stored procedures. 
-                 
-                 The stored procedures must return a resultset as the first out-parameter to be able to work with Hibernate. 
-                 
-                 An example of such a stored procedure in Oracle 9 and higher is as follows:
+                 Hibernate 3 introduces support for queries via stored procedures. The stored procedures must 
+                 return a resultset as the first out-parameter to be able to work with Hibernate. An example 
+                 of such a stored procedure in Oracle 9 and higher is as follows:
+             </para>
                  
                  <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments 
     RETURN SYS_REFCURSOR 
@@ -212,7 +242,9 @@ BEGIN
       RETURN  st_cursor; 
  END;]]></programlisting>
                  
+             <para>
                  To use this query in Hibernate you need to map it via a named query.
+             </para>
                  
              <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
     <return alias="emp" class="Employment">
@@ -229,7 +261,6 @@ BEGIN
     </return>
     { ? = call selectAllEmployments() }
 </sql-query>]]></programlisting>
-             </para>
              
              <para>
                Notice stored procedures currently only return scalars and entities. 
@@ -259,14 +290,16 @@ BEGIN
                <itemizedlist spacing="compact">
                <listitem>
                <para>    
-                   The procedure must return a result set. This is done by returning a SYS_REFCURSOR in Oracle 9
-                   or 10. In Oracle you need to define a <literal>REF CURSOR</literal> type.
+                   The procedure must return a result set. This is done by returning a 
+                   <literal>SYS_REFCURSOR</literal> in Oracle 9 or 10. In Oracle you 
+                   need to define a <literal>REF CURSOR</literal> type.
                </para>
                </listitem>    
                <listitem>
                <para>    
-                   Recommended form is <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> or
-                   <literal>{ ? = call procName }</literal> (This is more an Oracle rule than a Hibernate rule.)
+                   Recommended form is <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> 
+                   or <literal>{ ? = call procName }</literal> (this is more an Oracle rule than a 
+                   Hibernate rule).
                </para>
                </listitem>    
               </itemizedlist>
@@ -342,9 +375,11 @@ BEGIN
         </para>
         
         <para>
-          You can see the expected order by enabling debug logging for the <literal>org.hiberante.persister.entity</literal>
-          level. With this level enabled Hibernate will print out the static SQL that is used to create, update, delete etc. entities.
-          To see the expected sequence, remember to not include your custom SQL in the mapping files as that will override the Hibernate generated static sql.          
+          You can see the expected order by enabling debug logging for the 
+          <literal>org.hibernate.persister.entity</literal> level. With this level enabled 
+          Hibernate will print out the static SQL that is used to create, update, delete etc. 
+          entities. (To see the expected sequence, remember to not include your custom SQL in 
+          the mapping files as that will override the Hibernate generated static sql.)
         </para>
 
         <para>
@@ -379,8 +414,11 @@ END updatePerson;]]></programlisting>
         </para>
 
         <programlisting><![CDATA[<sql-query name="person">
-    <return alias="p" class="Person" lock-mode="upgrade"/>
-    SELECT NAME AS {p.name}, ID AS {p.id} FROM PERSON WHERE ID=? FOR UPDATE
+    <return alias="pers" class="Person" lock-mode="upgrade"/>
+    SELECT NAME AS {pers.name}, ID AS {pers.id} 
+    FROM PERSON 
+    WHERE ID=? 
+    FOR UPDATE
 </sql-query>]]></programlisting>
 
         <para>
@@ -397,30 +435,40 @@ END updatePerson;]]></programlisting>
 </class>]]></programlisting>
     
         <para>
-            And this also works with stored procedures.
+            This even works with stored procedures.
         </para>
 
         <para>
-            TODO: Document the following example for collection loader.
+            You may even define a query for collection loading:
         </para>
 
-        <programlisting><![CDATA[<sql-query name="organizationEmployments">
-    <load-collection alias="empcol" role="Organization.employments"/>
-    SELECT {empcol.*}
-    FROM EMPLOYMENT empcol
+<programlisting><![CDATA[<set name="employments" inverse="true">
+    <key/>
+    <one-to-many class="Employment"/>
+    <loader query-ref="employments"/>
+</set>]]></programlisting>
+		
+        <programlisting><![CDATA[<sql-query name="employments">
+    <load-collection alias="emp" role="Person.employments"/>
+    SELECT {emp.*}
+    FROM EMPLOYMENT emp
     WHERE EMPLOYER = :id
     ORDER BY STARTDATE ASC, EMPLOYEE ASC
-</sql-query>
+</sql-query>]]></programlisting>
 
-<sql-query name="organizationCurrentEmployments">
-    <return alias="emp" class="Employment"/>
-    <synchronize table="EMPLOYMENT"/>
-    SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
-        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
-        REGIONCODE as {emp.regionCode}, ID AS {emp.id}
-    FROM EMPLOYMENT
-    WHERE EMPLOYER = :id AND ENDDATE IS NULL
-    ORDER BY STARTDATE ASC
+        <para>
+            You could even define an entity loader that loads a collection by
+            join fetching:
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="person">
+    <return alias="pers" class="Person"/>
+    <return-join alias="emp" property="pers.employments"/> 
+    SELECT NAME AS {pers.*}, {emp.*}
+    FROM PERSON pers
+    LEFT OUTER JOIN EMPLOYMENT emp 
+        ON pers.ID = emp.PERSON_ID
+    WHERE ID=?
 </sql-query>]]></programlisting>
 
     </sect1>

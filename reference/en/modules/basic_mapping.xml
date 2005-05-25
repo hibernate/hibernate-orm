@@ -262,7 +262,6 @@
         rowid="rowid"
         subselect="SQL expression"
         abstract="true|false"
-        entity-name="EntityName"
         node="element-name"
 />]]></programlisting>
                 <calloutlist>

@@ -52,9 +52,9 @@ List cats = crit.list();]]></programlisting>
     .add( Restrictions.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
     .add( Restrictions.disjunction()
         .add( Restrictions.isNull("age") )
-    	.add( Restrictions.eq("age", new Integer(0) ) )
-    	.add( Restrictions.eq("age", new Integer(1) ) )
-    	.add( Restrictions.eq("age", new Integer(2) ) )
+        .add( Restrictions.eq("age", new Integer(0) ) )
+        .add( Restrictions.eq("age", new Integer(1) ) )
+        .add( Restrictions.eq("age", new Integer(2) ) )
     ) )
     .list();]]></programlisting>
     
@@ -83,9 +83,9 @@ Property age = Property.forName("age");
 List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.disjunction()
         .add( age.isNull() )
-    	.add( age.eq( new Integer(0) ) )
-    	.add( age.eq( new Integer(1) ) )
-    	.add( age.eq( new Integer(2) ) )
+        .add( age.eq( new Integer(0) ) )
+        .add( age.eq( new Integer(1) ) )
+        .add( age.eq( new Integer(2) ) )
     ) )
     .add( Property.forName("name").in( new String[] { "Fritz", "Izi", "Pk" } ) )
     .list();]]></programlisting>
@@ -332,13 +332,13 @@ List results = session.createCriteria(Cat.class)
     </sect1>
     
     <sect1 id="querycriteria-detachedqueries">
-    	<title>Detached queries and subqueries</title>
-    	<para>
-    		The <literal>DetachedCriteria</literal> class lets you create a query outside the scope 
-    		of a session, and then later execute it using some arbitrary <literal>Session</literal>.
-    	</para>
-    	
-    	<programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
+        <title>Detached queries and subqueries</title>
+        <para>
+            The <literal>DetachedCriteria</literal> class lets you create a query outside the scope 
+            of a session, and then later execute it using some arbitrary <literal>Session</literal>.
+        </para>
+        
+        <programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
     .add( Property.forName("sex").eq('F') );
     
 Session session = ....;
@@ -347,38 +347,90 @@ List results = query.getExecutableCriteria(session).setMaxResults(100).list();
 txn.commit();
 session.close();]]></programlisting>
 
-		<para>
-			A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion
-			instances involving subqueries may be obtained via <literal>Subqueries</literal> or
-			<literal>Property</literal>.			
-		</para>
-		
-		<programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
-	.setProjection( Property.forName("weight").avg() );
-session.createCriteria(Cat.class)
-	.add( Property.forName("weight).gt(avgWeight) )
-	.list();]]></programlisting>
-	
-		<programlisting><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
-	.setProjection( Property.forName("weight") );
-session.createCriteria(Cat.class)
-	.add( Subqueries.geAll("weight", weights) )
-	.list();]]></programlisting>
-	
-		<para>
-			Even correlated subqueries are possible:
-		</para>
+        <para>
+            A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion
+            instances involving subqueries may be obtained via <literal>Subqueries</literal> or
+            <literal>Property</literal>.            
+        </para>
         
-		<programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
-	.setProjection( Property.forName("weight").avg() )
-	.add( Property.forName("cat2.sex").eqProperty("cat.sex") );
+        <programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
+    .setProjection( Property.forName("weight").avg() );
+session.createCriteria(Cat.class)
+    .add( Property.forName("weight).gt(avgWeight) )
+    .list();]]></programlisting>
+    
+        <programlisting><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
+    .setProjection( Property.forName("weight") );
+session.createCriteria(Cat.class)
+    .add( Subqueries.geAll("weight", weights) )
+    .list();]]></programlisting>
+    
+        <para>
+            Even correlated subqueries are possible:
+        </para>
+        
+        <programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
+    .setProjection( Property.forName("weight").avg() )
+    .add( Property.forName("cat2.sex").eqProperty("cat.sex") );
 session.createCriteria(Cat.class, "cat")
-	.add( Property.forName("weight).gt(avgWeightForSex) )
-	.list();]]></programlisting>
-	
-	</sect1>
-	
-		<!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
-		          user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
-		          could also be explained. -->
+    .add( Property.forName("weight).gt(avgWeightForSex) )
+    .list();]]></programlisting>
+
+    </sect1>
+
+        <!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
+                  user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
+                  could also be explained. -->
+               
+    <sect1 id="query-criteria-naturalid">
+        <title>Queries by natural identifier</title>
+        
+        <para>
+            For most queries, including criteria queries, the query cache is not very efficient,
+            because query cache invalidation occurs too frequently. However, there is one special
+            kind of query where we can optimize the cache invalidation algorithm: lookups by a 
+            constant natural key. In some applications, this kind of query occurs frequently.
+            The criteria API provides special provision for this use case.
+        </para>
+        
+        <para>
+            First, you should map the natural key of your entity using 
+            <literal>&lt;natural-id&gt;</literal>, and enable use of the second-level cache.
+        </para>
+
+        <programlisting><![CDATA[<class name="User">
+    <cache usage="read-write"/>
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <natural-id>
+        <property name="name"/>
+        <property name="org"/>
+    </natural-id>
+    <property name="password"/>
+</class>]]></programlisting>
+    
+        <para>
+            Note that this functionality is not intended for use with entities with 
+            <emphasis>mutable</emphasis> natural keys.
+        </para>
+        
+        <para>
+            Next, enable the Hibernate query cache.
+        </para>
+        
+        <para>
+            Now, <literal>Restrictions.naturalId()</literal> allows us to make use of
+            the more efficient cache algorithm.
+        </para>
+       
+        <programlisting><![CDATA[session.createCriteria(User.class)
+    .add( Restrictions.naturalId()
+        .set("name", "gavin")
+        .set("org", "hb") 
+    ).setCacheable(true)
+    .uniqueResult();]]></programlisting>
+            
+    </sect1>
+    
 </chapter>

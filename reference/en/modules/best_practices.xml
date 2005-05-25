@@ -18,9 +18,17 @@
                 <para>
                     Hibernate makes identifier properties optional. There are all sorts of reasons why
                     you should use them. We recommend that identifiers be 'synthetic' (generated, with
-                    no business meaning). It doesn't make a difference if you use <literal>long</literal>
-                    or <literal>java.lang.Long</literal>; primitives might be syntactically easier to handle
-                    though.
+                    no business meaning).
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Identify natural keys.</term>
+            <listitem>
+                <para>
+                    Identify natural keys for all entities, and map them using 
+                    <literal>&lt;natural-id&gt;</literal>. Implement <literal>equals()</literal> and 
+                    <literal>hashCode()</literal> to compare the properties that make up the natural key.
                 </para>
             </listitem>
         </varlistentry>
@@ -47,7 +55,8 @@
             <listitem>
                 <para>
                     This is a good practice if your queries call non-ANSI-standard SQL functions. 
-                    Externalising the query strings to mapping files will make the application more portable.
+                    Externalising the query strings to mapping files will make the application more 
+                    portable.
                 </para>
             </listitem>
         </varlistentry>
@@ -86,12 +95,11 @@
             <term>Use hand-coded JDBC in bottlenecks.</term>
             <listitem>
                 <para>
-                    In performance-critical areas of the system, some kinds of operations (eg. mass update /
-                    delete) might benefit from direct JDBC. But please, wait until you <emphasis>know</emphasis> 
-                    something is a bottleneck. And don't assume that direct JDBC is necessarily faster. If need to 
-                    use direct JDBC, it might be worth opening a Hibernate <literal>Session</literal> and using that SQL 
-                    connection. That way you can still use the same transaction strategy and underlying connection 
-                    provider.
+                    In performance-critical areas of the system, some kinds of operations might benefit from 
+                    direct JDBC. But please, wait until you <emphasis>know</emphasis> something is a bottleneck. 
+                    And don't assume that direct JDBC is necessarily faster. If you need to use direct JDBC, it might 
+                    be worth opening a Hibernate <literal>Session</literal> and using that JDBC connection. That 
+                    way you can still use the same transaction strategy and underlying connection provider.
                 </para>
             </listitem>
         </varlistentry>
@@ -107,27 +115,29 @@
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>In a three tiered architecture, consider using <literal>saveOrUpdate()</literal>.</term>
+            <term>In a three tiered architecture, consider using detached objects.</term>
             <listitem>
                 <para>
                     When using a servlet / session bean architecture, you could pass persistent objects loaded in
                     the session bean to and from the servlet / JSP layer. Use a new session to service each request. 
-                    Use <literal>Session.update()</literal> or <literal>Session.saveOrUpdate()</literal> to update the 
-                    persistent state of an object.
+                    Use <literal>Session.merge()</literal> or <literal>Session.saveOrUpdate()</literal> to 
+                    synchronize objects with the database.
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>In a two tiered architecture, consider using session disconnection.</term>
+            <term>In a two tiered architecture, consider using long persistence contexts.</term>
             <listitem>
                 <para>
                     Database Transactions have to be as short as possible for best scalability. However, it is often
-                    neccessary to implement long running Application Transactions, a single unit-of-work from the
-                    point of view of a user. This Application Transaction might span several client requests and
-                    response cycles. Either use Detached Objects or, in two tiered architectures, simply disconnect
-                    the Hibernate Session from the JDBC connection and reconnect it for each subsequent request. Never
-                    use a single Session for more than one Application Transaction usecase, otherwise, you will run
-                    into stale data.
+                    neccessary to implement long running <emphasis>application transactions</emphasis>, a single 
+                    unit-of-work from the point of view of a user. An application transaction might span several 
+                    client request/response cycles. It is common to use detached objects to implement application
+                    transactions. An alternative, extremely appropriate in two tiered architecture, is to maintain
+                    a single open persistence contact (session) for the whole lifecycle of the application transaction 
+                    and simply disconnect from the JDBC connection at the end of each request and reconnect at the 
+                    beginning of the subsequent request. Never share a single session across more than one application 
+                    transaction, or you will be working with stale data.
                 </para>
             </listitem>
         </varlistentry>
@@ -139,7 +149,7 @@
                     the <literal>Transaction</literal> and close the <literal>Session</literal>. If you don't, Hibernate
                     can't guarantee that in-memory state accurately represents persistent state. As a special case of this,
                     do not use <literal>Session.load()</literal> to determine if an instance with the given identifier 
-                    exists on the database; use <literal>find()</literal> instead.
+                    exists on the database; use <literal>Session.get()</literal> or a query instead.
                 </para>
             </listitem>
         </varlistentry>
@@ -147,11 +157,30 @@
             <term>Prefer lazy fetching for associations.</term>
             <listitem>
                 <para>
-                    Use eager (outer-join) fetching sparingly. Use proxies and/or lazy collections for most associations
-                    to classes that are not cached at the JVM-level. For associations to cached classes, where there is
-                    a high probability of a cache hit, explicitly disable eager fetching using 
-                    <literal>outer-join="false"</literal>. When an outer-join fetch is appropriate to a particular use
-                    case, use a query with a <literal>left join</literal>.
+                    Use eager fetching sparingly. Use proxies and lazy collections for most associations to classes that 
+                    are not likely to be completely held in the second-level cache. For associations to cached classes, 
+                    where there is an a extremely high probability of a cache hit, explicitly disable eager fetching using 
+                    <literal>lazy="false"</literal>. When an join fetching is appropriate to a particular use
+                    case, use a query with a <literal>left join fetch</literal>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                Use the <emphasis>open session in view</emphasis> pattern, or a disciplined 
+                <emphasis>assembly phase</emphasis> to avoid problems with unfetched data.
+            </term>
+            <listitem>
+                <para>
+                    Hibernate frees the developer from writing tedious <emphasis>Data Transfer Objects</emphasis> (DTO). 
+                    In a traditional EJB architecture, DTOs serve dual purposes: first, they work around the problem
+                    that entity beans are not serializable; second, they implicitly define an assembly phase where
+                    all data to be used by the view is fetched and marshalled into the DTOs before returning control 
+                    to the presentation tier. Hibernate eliminates the first purpose. However, you will still need
+                    an assembly phase (think of your business methods as having a strict contract with the presentation
+                    tier about what data is available in the detached objects) unless you are prepared to hold the
+                    persistence context (the session) open across the view rendering process. This is not a limitation
+                    of Hibernate! It is a fundamental requirement of safe transactional data access.
                 </para>
             </listitem>
         </varlistentry>
@@ -168,23 +197,6 @@
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>Implement <literal>equals()</literal> and <literal>hashCode()</literal> using a unique business key.</term>
-            <listitem>
-                <para>
-                    If you compare objects outside of the Session scope, you have to implement <literal>equals()</literal>
-                    and <literal>hashCode()</literal>. Inside the Session scope, Java object identity is guaranteed. If
-                    you implement these methods, never ever use the database identifier! A transient object doesn't have
-                    an identifier value and Hibernate would assign a value when the object is saved. If the object
-                    is in a Set while being saved, the hash code changes, breaking the contract. To implement
-                    <literal>equals()</literal> and <literal>hashCode()</literal>, use a unique business key, that is,
-                    compare a unique combination of class properties. Remember that this key has to be stable and unique
-                    only while the object is in a Set, not for the whole lifetime (not as stable as a database primary
-                    key). Never use collections in the <literal>equals()</literal> comparison (lazy loading) and be careful
-                    with other associated classes that might be proxied.
-                </para>
-            </listitem>
-        </varlistentry>
-        <varlistentry>
             <term>Don't use exotic association mappings.</term>
             <listitem>
                 <para>
@@ -193,6 +205,15 @@
                     use two one-to-many associations to an intermediate link class. In fact, we think that
                     most associations are one-to-many and many-to-one, you should be careful when using any
                     other association style and ask yourself if it is really neccessary.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>Prefer bidirectional associations.</term>
+            <listitem>
+                <para>
+                    Unidirectional associations are more difficult to query. In a large application, almost
+                    all associations must be navigable in both directions in queries.
                 </para>
             </listitem>
         </varlistentry>

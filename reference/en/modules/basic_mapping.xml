@@ -1710,6 +1710,44 @@
 
         </sect2>
 
+        <sect2 id="mapping-declaration-naturalid">
+            <title>natural-id</title>
+
+            <programlisting><![CDATA[<natural-id mutable="true|false"/>
+        <property ... />
+        <many-to-one ... />
+        ......
+</natural-id>]]></programlisting>
+
+            <para>
+                Even though we recommend the use of surrogate keys as primary keys, you should still try
+                to identify natural keys for all entities. A natural key is a property or combination of
+                properties that is unique and non-null. If it is also immutable, even better. Map the
+                properties of the natural key inside the <literal>&lt;natural-id&gt;</literal> element.
+                Hibernate will generate the necessary unique key and nullability constraints, and your
+                mapping will be more self-documenting.
+            </para>
+            
+            <para>
+                We strongly recommend that you implement <literal>equals()</literal> and 
+                <literal>hashCode()</literal> to compare the natural key properties of the entity.
+            </para>
+
+            <para>
+                This mapping is not intended for use with entities with natural primary keys.
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>mutable</literal> (optional, defaults to <literal>false</literal>): 
+                        By default, natural identifier properties as assumed to be immutable (constant).
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+        </sect2>
+        
         <sect2 id="mapping-declaration-component" revision="2">
             <title>component, dynamic-component</title>
 

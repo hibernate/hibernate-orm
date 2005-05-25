@@ -1196,6 +1196,11 @@
         not-null="true|false"
         optimistic-lock="true|false"
         node="element-name|@attribute-name|element/@attribute|."
+        index="index_name"
+        unique_key="unique_key_id"
+        length="L"
+        precision="P"
+        precision="S"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1232,13 +1237,13 @@
                             mapping of their own.
                         </para>
                     </callout>
-                   <callout arearefs="property7">
+                    <callout arearefs="property7">
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): The
                             strategy Hibernate should use for accessing the property value.
                         </para>
                     </callout>
-                   <callout arearefs="property8">
+                    <callout arearefs="property8">
                         <para>
                             <literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies
                             that this property should be fetched lazily when the instance variable is first 
@@ -1369,6 +1374,7 @@
                     <area id="manytoone13" coords="14 70"/>
                     <area id="manytoone14" coords="15 70"/>
                     <area id="manytoone15" coords="16 70"/>
+                    <area id="manytoone16" coords="17 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1386,8 +1392,12 @@
         lazy="true|proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        formul="arbitrary SQL expression"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"
+        index="index_name"
+        unique_key="unique_key_id"
+        foreign-key="foreign_key_name"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="manytoone1">
@@ -1487,6 +1497,12 @@
                         </para>                   
                     </callout>
                 </calloutlist>
+                    <callout arearefs="manytoone16">
+                        <para>
+                            <literal>formula</literal> (optional): an SQL expression that defines the value for a
+                            <emphasis>computed</emphasis> foreign key.
+                        </para>
+                    </callout>
             </programlistingco>
 
             <para>
@@ -1569,6 +1585,7 @@
         entity-name="EntityName"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"
+        foreign-key="foreign_key_name"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="onetoone1">

@@ -126,7 +126,7 @@
 
         </sect2>
 
-        <sect2 id="inheritance-tablepersubclass-discriminator">
+        <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
         <title>Table per subclass, using a discriminator</title>
 
         <para>
@@ -150,17 +150,20 @@
     ...
     <subclass name="CreditCardPayment" discriminator-value="CREDIT">
         <join table="CREDIT_PAYMENT">
+            <key column="PAYMENT_ID"/>
             <property name="creditCardType" column="CCTYPE"/>
             ...
         </join>
     </subclass>
     <subclass name="CashPayment" discriminator-value="CASH">
         <join table="CASH_PAYMENT">
+            <key column="PAYMENT_ID"/>
             ...
         </join>
     </subclass>
     <subclass name="ChequePayment" discriminator-value="CHEQUE">
         <join table="CHEQUE_PAYMENT" fetch="select">
+            <key column="PAYMENT_ID"/>
             ...
         </join>
     </subclass>

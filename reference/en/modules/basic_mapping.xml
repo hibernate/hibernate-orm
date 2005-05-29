@@ -3051,7 +3051,7 @@ public class Cat {
 
     </sect2>
 
-    <sect2 id="mapping-annotations">
+    <sect2 id="mapping-annotations" revision="2">
         <title>Using JDK 5.0 Annotations</title>
 
         <para>
@@ -3082,20 +3082,19 @@ public class Customer implements Serializable {
     @Transient
     Integer age;
 
-    @Dependent
+    @Embedded
     private Address homeAddress;
 
-    @OneToMany(cascade=CascadeType.ALL,
-               targetEntity="Order")
+    @OneToMany(cascade=CascadeType.ALL)
     @JoinColumn(name="CUSTOMER_ID")
-    Set orders;
+    Set<Order> orders;
 
     // Getter/setter and business methods
 }]]></programlisting>
 
         <para>
             Note that support for JDK 5.0 Annotations (and JSR-220) is still work in progress and
-            not completed.
+            not completed. Please refer to the Hibernate Annotations module for more details.
         </para>
     
     </sect2>

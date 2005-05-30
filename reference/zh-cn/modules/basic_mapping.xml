@@ -597,7 +597,7 @@
 
                 <para>
                     
-                    所有的生成器都实现<literal>net.sf.hibernate.id.IdentifierGenerator</literal>接口。
+                    所有的生成器都实现<literal>org.hibernate.id.IdentifierGenerator</literal>接口。
                     这是一个非常简单的接口；某些应用程序可以选择提供他们自己特定的实现。当然，
                     Hibernate提供了很多内置的实现。下面是一些内置生成器的快捷名字：
 

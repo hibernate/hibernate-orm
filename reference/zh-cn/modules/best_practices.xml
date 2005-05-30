@@ -64,7 +64,7 @@
             <term>考虑使用用户自定义类型(custom type)</term>
             <listitem>
                 <para>
-                    假设你有一个Java类型，来自某些类库，需要被持久化，但是该类没有提供映射操作需要的存取方法。那么你应该考虑实现<literal>net.sf.hibernate.UserType</literal>接口。这种办法使程序代码写起来更加自如，不再需要考虑类与Hibernate type之间的相互转换。
+                    假设你有一个Java类型，来自某些类库，需要被持久化，但是该类没有提供映射操作需要的存取方法。那么你应该考虑实现<literal>org.hibernate.UserType</literal>接口。这种办法使程序代码写起来更加自如，不再需要考虑类与Hibernate type之间的相互转换。
                 </para>
             </listitem>
         </varlistentry>

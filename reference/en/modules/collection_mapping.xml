@@ -347,8 +347,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 </callout>
                 <callout arearefs="mapkey3">
                     <para>
-                        <literal>type</literal> (optional, defaults to <literal>integer</literal>):
-                        The type of the collection index.
+                        <literal>type</literal> (reguired): The type of the map keys.
                     </para>
                 </callout>
             </calloutlist>
@@ -380,8 +379,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 </callout>
                 <callout arearefs="indexmanytomany3">
                     <para>
-                        <literal>class</literal> (required): The entity class used as the
-                        collection index.
+                        <literal>class</literal> (required): The entity class used as the map key.
                     </para>
                 </callout>
             </calloutlist>

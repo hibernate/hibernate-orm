@@ -10,7 +10,7 @@
 
     <para>
         Hibernate works best if these classes follow some simple rules, also known
-        as the Plain Old Java Object (POJO) programming model. However none of these
+        as the Plain Old Java Object (POJO) programming model. However, none of these
         rules are hard requirements. Indeed, Hibernate3 assumes very little about
         the nature of your persistent objects. You may express a domain model in other 
         ways: using trees of <literal>Map</literal> instances, for example.
@@ -107,36 +107,15 @@ public class Cat {
         </para>
 
 
-        <sect2 id="persistent-classes-pojo-accessors" revision="1">
-            <title>Declare accessors and mutators for persistent fields</title>
-
-            <para>
-                <literal>Cat</literal> declares accessor methods for all its persistent fields.
-                Many other ORM tools directly persist instance variables. We believe 
-                it is far better to decouple this implementation detail from the persistence 
-                mechanism. Hibernate persists JavaBeans style properties, and recognizes method 
-                names of the form <literal>getFoo</literal>, <literal>isFoo</literal> and
-                <literal>setFoo</literal>. You may however switch to direct field access for
-                particular properties, if needed.
-            </para>
-
-            <para>
-                Properties need <emphasis>not</emphasis> be declared public - Hibernate can
-                persist a property with a default, <literal>protected</literal> or <literal>
-                private</literal> get / set pair.
-            </para>
-
-        </sect2>
-
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
             <title>Implement a no-argument constructor</title>
 
             <para>
-                <literal>Cat</literal> has a no-argument constructor. All
-                persistent classes must have a default constructor (which may be non-public) so 
-                Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>.
-                We recommend having a constructor with at least <emphasis>package</emphasis> 
-                visibility for runtime proxy generation in Hibernate.
+                <literal>Cat</literal> has a no-argument constructor. All persistent classes must 
+                have a default constructor (which may be non-public) so that Hibernate can instantiate 
+                them using <literal>Constructor.newInstance()</literal>. We strongly recommend having a 
+                default constructor with at least <emphasis>package</emphasis> visibility for runtime proxy 
+                generation in Hibernate.
             </para>
         </sect2>
 
@@ -206,6 +185,27 @@ public class Cat {
             </para>
         </sect2>
         
+        <sect2 id="persistent-classes-pojo-accessors" revision="2">
+            <title>Declare accessors and mutators for persistent fields (optional)</title>
+
+            <para>
+                <literal>Cat</literal> declares accessor methods for all its persistent fields.
+                Many other ORM tools directly persist instance variables. We believe it is 
+                better to provide an indirection between the relational schema and internal
+                data structures of the class. By default, Hibernate persists JavaBeans style 
+                properties, and recognizes method names of the form <literal>getFoo</literal>, 
+                <literal>isFoo</literal> and <literal>setFoo</literal>. You may switch to direct 
+                field access for particular properties, if needed.
+            </para>
+
+            <para>
+                Properties need <emphasis>not</emphasis> be declared public - Hibernate can
+                persist a property with a default, <literal>protected</literal> or 
+                <literal>private</literal> get / set pair.
+            </para>
+
+        </sect2>
+
     </sect1>
 
     <sect1 id="persistent-classes-inheritance">

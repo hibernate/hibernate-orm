@@ -2509,7 +2509,7 @@
             </programlistingco>
             
         </sect2>
-
+        
         <sect2 id="mapping-types-anymapping" revision="2">
             <title>any</title>
             
@@ -2903,6 +2903,41 @@
 
         </sect2>
         
+    </sect1>
+
+    <sect1 id="mapping-entityname">
+        <title>Mapping a class more than once</title>
+        <para>
+            It is possible to provide more than one mapping for a particular persistent class. In this
+            case you must specify an <emphasis>entity name</emphasis> do disambiguate between instances
+            of the two mapped entities. (By default, the entity name is the same as the class name.)
+            Hibernate lets you specify the entity name when working with persistent objects, when writing
+            queries, or when mapping associations to the named entity.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Contract" table="Contracts" 
+        entity-name="CurrentContract">
+    ...
+    <set name="history" inverse="true" 
+            order-by="effectiveEndDate desc">
+        <key column="currentContractId"/>
+        <one-to-many entity-name="HistoricalContract"/>
+    </set>
+</class>
+
+<class name="Contract" table="ContractHistory" 
+        entity-name="HistoricalContract">
+    ...
+    <many-to-one name="currentContract" 
+            column="currentContractId" 
+            entity-name="CurrentContract"/>
+</class>]]></programlisting>
+
+        <para>
+            Notice how associations are now specified using <literal>entity-name</literal> instead of
+            <literal>class</literal>.
+        </para>
+
     </sect1>
 
     <sect1 id="mapping-quotedidentifiers">

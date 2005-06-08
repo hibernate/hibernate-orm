@@ -353,8 +353,8 @@ alter table line_items
         
         <para>
             These examples are all taken from the Hibernate test suite. You
-            will find many other useful example mappings there. Have a look at the
-            <literal>src</literal> folder of the Hibernate distribution.
+            will find many other useful example mappings there. Look in the
+            <literal>test</literal> folder of the Hibernate distribution.
         </para>
         
         <para>TODO: put words around this stuff</para>
@@ -506,6 +506,45 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
         
+        <sect2 id="example-mappings-composite-key-manytomany">
+            <title>Many-to-many with shared composite key attribute</title>
+<programlisting><![CDATA[<class name="User" table="`User`">
+    <composite-id>
+        <key-property name="name"/>
+        <key-property name="org"/>
+    </composite-id>
+    <set name="groups" table="UserGroup">
+        <key>
+            <column name="userName"/>
+            <column name="org"/>
+        </key>
+        <many-to-many class="Group">
+            <column name="groupName"/>
+            <formula>org</formula>
+        </many-to-many>
+    </set>
+</class>
+    
+<class name="Group" table="`Group`">
+    <composite-id>
+        <key-property name="name"/>
+        <key-property name="org"/>
+    </composite-id>
+    <property name="description"/>
+    <set name="users" table="UserGroup" inverse="true">
+        <key>
+            <column name="groupName"/>
+            <column name="org"/>
+        </key>
+        <many-to-many class="User">
+            <column name="userName"/>
+            <formula>org</formula>
+        </many-to-many>
+    </set>
+</class>
+]]></programlisting>
+        </sect2>
+
         <sect2 id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
 <programlisting><![CDATA[<class name="Person"

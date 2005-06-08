@@ -546,12 +546,18 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             <listitem>
                 <para>
                     Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(),
-                    lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>
+                    lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>coalesce()</literal> and <literal>nullif()</literal>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>str()</literal> for converting numeric or temporal values to a
+                    readable string 
                 </para>
             </listitem>
             <listitem>

@@ -568,7 +568,9 @@ create table Address ( addressId bigint not null primary key )
         group by orgId 
         having startDate = max(startDate)
     </subselect>
-    <many-to-one name="mostRecentEmployer" class="Organization" column="orgId"/>
+    <many-to-one name="mostRecentEmployer" 
+            class="Organization" 
+            column="orgId"/>
 </join>]]></programlisting>
 
         <para>

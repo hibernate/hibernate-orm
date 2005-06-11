@@ -519,6 +519,64 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
         
     </sect1>
+    
+    <sect1>
+        <title>More complex association mappings</title>
+        
+        <para>
+            More complex association joins are <emphasis>extremely</emphasis> rare. 
+            Hibernate makes it possible to handle more complex situations using
+            SQL fragments embedded in the mapping document. For example, if a table
+            with historical account information data defines 
+            <literal>accountNumber</literal>, <literal>effectiveEndDate</literal> 
+            and <literal>effectiveStartDate</literal>columns, mapped as follows:
+        </para>
+        
+        <programlisting><![CDATA[<properties name="currentAccountKey">
+    <property name="accountNumber" type="string" not-null="true"/>
+    <property name="currentAccount" type="boolean">
+        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>
+    </property>
+</properties>
+<property name="effectiveEndDate" type="date"/>
+<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+
+        <para>
+            Then we can map an association to the <emphasis>current</emphasis> instance 
+            (the one with null <literal>effectiveEndDate</literal>) using:
+        </para>
+        
+        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" property-ref="currentAccountKey"
+        class="AccountInfo">
+    <column name="accountNumber"/>
+    <formula>'1'</formula>
+</many-to-one>]]></programlisting>
+
+        <para>
+            In a more complex example, imagine that the association between 
+            <literal>Employee</literal> and <literal>Organization</literal> is maintained
+            in an <literal>Employment</literal> table full of historical employment data.
+            Then an association to the employee's <emphasis>most recent</emphasis> employer
+            (the one with the most recent <literal>startDate</literal>) might be mapped this way:
+        </para>
+        
+        <programlisting><![CDATA[<join>
+    <key column="employeeId"/>
+    <subselect>
+        select employeeId, orgId 
+        from Employments 
+        group by orgId 
+        having startDate = max(startDate)
+    </subselect>
+    <many-to-one name="mostRecentEmployer" class="Organization" column="orgId"/>
+</join>]]></programlisting>
+
+        <para>
+            You can get quite creative with this functionality, but it is usually more practical 
+            to handle these kinds of cases using HQL or a criteria query.
+        </para>
+
+    </sect1>
 
 
 </chapter>

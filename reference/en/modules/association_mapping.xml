@@ -546,7 +546,8 @@ create table Address ( addressId bigint not null primary key )
             (the one with null <literal>effectiveEndDate</literal>) using:
         </para>
         
-        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" property-ref="currentAccountKey"
+        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
+        property-ref="currentAccountKey"
         class="AccountInfo">
     <column name="accountNumber"/>
     <formula>'1'</formula>

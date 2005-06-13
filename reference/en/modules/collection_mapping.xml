@@ -854,8 +854,8 @@ session.persist(category);               // The relationship will be saved]]></p
     </set>
 </class>
 
-<class name="eg.Child">
-    <id name="id" column="id"/>
+<class name="Child">
+    <id name="id" column="child_id"/>
     ....
     <many-to-one name="parent" 
         class="Parent" 
@@ -870,6 +870,74 @@ session.persist(category);               // The relationship will be saved]]></p
 
     </sect2>
 
+    <sect2 id="collections-indexedbidirectional">
+        <title>Bidirectional associations with indexed collections</title>
+        <para>
+            A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal>
+            or <literal>&lt;map&gt;</literal> requires special consideration. If there is a property of
+            the child class which maps to the index column, no problem, we can continue using 
+            <literal>inverse="true"</literal> on the collection mapping:
+        </para>
+        
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children" inverse="true">
+        <key column="parent_id"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <property name="name" 
+        not-null="true"/>
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        not-null="true"/>
+</class>]]></programlisting>
+
+        <para>
+            But, if there is no such property on the child class, we can't think of the association as
+            truly bidirectional (there is information available at one end of the association that is
+            not available at the other end). In this case, we can't map the collection 
+            <literal>inverse="true"</literal>. Instead, we could use the following mapping:
+        </para>
+
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children">
+        <key column="parent_id"
+            not-null="true"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        insert="false"
+        update="false"
+        not-null="true"/>
+</class>]]></programlisting>
+
+       <para>
+           Note that in this mapping, the collection-valued end of the association is responsible for 
+           updates to the foreign key.
+       </para>
+
+    </sect2>
+    
     <sect2 id="collections-ternary">
         <title>Ternary associations</title>
 

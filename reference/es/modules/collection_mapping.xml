@@ -898,6 +898,74 @@ session.persist(category);               // The relationship will be saved]]></p
 
     </sect2>
 
+    <sect2 id="collections-indexedbidirectional">
+        <title>Asociaciones bidireccionales con colecciones indexadas</title>
+        <para>
+            Requiere especial consideraci&#x00f3;n una asociaci&#x00f3;n bidireccional donde un extremo est&#x00e9; representado
+            como una <literal>&lt;list&gt;</literal> o <literal>&lt;map&gt;</literal>. Si hay una propiedad
+            de la clase hija que mapee a la columna &#x00ed;ndice, no hay problema, podemos seguir usando
+            <literal>inverse="true"</literal> en el mapeo de la colecci&#x00f3;n:
+        </para>
+        
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children" inverse="true">
+        <key column="parent_id"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <property name="name" 
+        not-null="true"/>
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        not-null="true"/>
+</class>]]></programlisting>
+
+        <para>
+            Pero, si no existe tal proiedad en la clase hija, no podemos pensar en la asociaci&#x00f3;n como
+            verdaderamente bidireccional (hay informaci&#x00f3;n en un extremo de la asociaci&#x00f3;n que no est&#x00e1;
+            disponible en el otro extremo). En este caso, no podemos mapear la colecci&#x00f3;n con
+            <literal>inverse="true"</literal>. En cambio, podr&#x00ed;amos usar el siguiente mapeo:
+        </para>
+
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children">
+        <key column="parent_id"
+            not-null="true"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        insert="false"
+        update="false"
+        not-null="true"/>
+</class>]]></programlisting>
+
+       <para>
+           Nota que, en este mapeo, el extremo de la asociaci&#x00f3;n valuado en colecci&#x00f3;n es responsable de las
+           actualizaciones a la clave for&#x00e1;nea.
+       </para>
+
+    </sect2>
+
     <sect2 id="collections-ternary">
         <title>Asociaciones ternarias</title>
 

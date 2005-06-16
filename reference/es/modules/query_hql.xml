@@ -124,6 +124,14 @@
         <programlisting><![CDATA[from Cat as cat 
     join cat.mate as mate
     left join cat.kittens as kitten]]></programlisting>
+    
+        <para>
+            Puedes proveer condiciones de uni&#x00f3;n extra usando la palabra clave <literal>with</literal> de HQL.
+        </para>
+
+        <programlisting><![CDATA[from Cat as cat 
+    left join cat.kittens as kitten 
+        with kitten.bodyWeight > 10.0]]></programlisting>
 
         <para>
             En adici&#x00f3;n, un "fetch" join permite a las asociaciones o colecciones de valores ser inicializadas
@@ -153,7 +161,8 @@
         <para>
             Nota que la construcci&#x00f3;n <literal>fetch</literal> no puede usarse en consultas llamadas usando
             <literal>scroll()</literal> o <literal>iterate()</literal>. Ni debe usarse <literal>fetch</literal>
-            junto con <literal>setMaxResults()</literal> o <literal>setFirstResult()</literal>. Es posible crear
+            junto con <literal>setMaxResults()</literal> o <literal>setFirstResult()</literal>. Tampoco puede usarse
+            <literal>fetch</literal> junto a una condici&#x00f3;n <literal>with</literal> ad hoc. Es posible crear
             un producto cartesiano trayendo por join m&#x00e1;s de una colecci&#x00f3;n en una colecci&#x00f3;n, as&#x00ed; que ten cuidado en
             este caso. Traer por join m&#x00fa;ltiples roles de colecci&#x00f3;n tambi&#x00e9;n da a veces resultados inesperados para mapeos
             de bag, as&#x00ed; que s&#x00e9; cuidadoso sobre c&#x00f3;mo formular tus consultas en este caso. Finalmente, nota que

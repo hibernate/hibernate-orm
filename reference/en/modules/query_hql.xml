@@ -589,7 +589,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                     HQL functions that take collection-valued path expressions: <literal>size(), 
                     minelement(), maxelement(), minindex(), maxindex()</literal>, along with the 
                     special <literal>elements()</literal> and <literal>indices</literal> functions
-                    which may be quantified using <literal>some, all, exists, any</literal>.
+                    which may be quantified using <literal>some, all, exists, any, in</literal>.
                 </para>
             </listitem>
             <listitem>

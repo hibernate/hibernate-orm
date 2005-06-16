@@ -580,13 +580,27 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                    the HQL <literal>index()</literal> function, that applies to aliases of
+                    a joined indexed collection
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    HQL functions that take collection-valued path expressions: <literal>size(), 
+                    minelement(), maxelement(), minindex(), maxindex()</literal>, along with the 
+                    special <literal>elements()</literal> and <literal>indices</literal> functions
+                    which may be quantified using <literal>some, all, exists, any</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     Any database-supported SQL scalar function like <literal>sign()</literal>, 
                     <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    JDBC IN parameters <literal>?</literal>
+                    JDBC-style positional parameters <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
@@ -596,7 +610,8 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
+                    SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>,
+                    <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>
             <listitem>

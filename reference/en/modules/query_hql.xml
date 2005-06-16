@@ -127,6 +127,15 @@
         <programlisting><![CDATA[from Cat as cat 
     join cat.mate as mate
     left join cat.kittens as kitten]]></programlisting>
+    
+        <para>
+            You may supply extra join conditions using the HQL <literal>with</literal>
+            keyword.
+        </para>
+
+        <programlisting><![CDATA[from Cat as cat 
+    left join cat.kittens as kitten 
+        with kitten.bodyWeight > 10.0]]></programlisting>
 
         <para>
             In addition, a "fetch" join allows associations or collections of values to be 
@@ -157,6 +166,7 @@
             Note that the <literal>fetch</literal> construct may not be used in queries called using
             <literal>scroll()</literal> or <literal>iterate()</literal>. Nor should <literal>fetch</literal>
             be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal>.
+            Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition.
             It is possible to create a cartesian product by join fetching more than one collection in a
             query, so take care in this case. Join fetching multiple collection roles also sometimes gives 
             unexpected results for bag mappings, so be careful about how you formulate your queries in this 

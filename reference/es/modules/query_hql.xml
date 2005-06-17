@@ -578,7 +578,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                     funciones de HQL que tomen expresiones de ruta valuadas en colecciones: <literal>size(), 
                     minelement(), maxelement(), minindex(), maxindex()</literal>, junto a las funciones especiales
                     <literal>elements()</literal> and <literal>indices</literal> que pueden ser cuantificadas usando
-                    <literal>some, all, exists, any</literal>.
+                    <literal>some, all, exists, any, in</literal>.
                 </para>
             </listitem>
 

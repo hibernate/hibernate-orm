@@ -565,6 +565,23 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                     <literal>extract()</literal> fuesen soportados por la base de datos subyacente.
                 </para>
             </listitem>
+
+
+            <listitem>
+                <para>
+                    la funci&#x00f3;n <literal>index()</literal> de HQL, que se aplica a alias de una colecci&#x00f3;n
+                    indexada unida.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    funciones de HQL que tomen expresiones de ruta valuadas en colecciones: <literal>size(), 
+                    minelement(), maxelement(), minindex(), maxindex()</literal>, junto a las funciones especiales
+                    <literal>elements()</literal> and <literal>indices</literal> que pueden ser cuantificadas usando
+                    <literal>some, all, exists, any</literal>.
+                </para>
+            </listitem>
+
             <listitem>
                 <para>
                     Cualquier funci&#x00f3;n escalar SQL soportada por la base de datos como <literal>sign()</literal>, 
@@ -573,7 +590,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    par&#x00e1;metros JDBC IN <literal>?</literal>
+                    par&#x00e1;metros posicionales JDBC <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
@@ -583,7 +600,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    literales SQL <literal>'foo'</literal>, <literal>69</literal>,
+                    literales SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>,
                     <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>

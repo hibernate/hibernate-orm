@@ -517,6 +517,65 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
         
     </sect1>
+    
+    <sect1>
+        <title>보다 복잡한  연관 매핑들</title>
+        
+        <para>
+                        보다 복잡한 연관 조인들은 <emphasis>극기</emphasis> 드물다. 
+            Hibernate는 매핑 문서들 내에 삽입된 SQL 조각들을 사용하여 보다 복잡한 상황을 처리하는 것을 
+                        가능하도록 해준다. 예를 들어, 만일  계좌 내역 정보 데이터를 가진 하나이 테이블이   
+            <literal>accountNumber</literal>, <literal>effectiveEndDate</literal> 
+                        그리고 <literal>effectiveStartDate</literal> 컬럼들을 정의할 경우, 다음과 같이 매핑된다:
+        </para>
+        
+        <programlisting><![CDATA[<properties name="currentAccountKey">
+    <property name="accountNumber" type="string" not-null="true"/>
+    <property name="currentAccount" type="boolean">
+        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>
+    </property>
+</properties>
+<property name="effectiveEndDate" type="date"/>
+<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+
+        <para>
+                        그때 우리는 다음을 사용하여 하나의 연관을 <emphasis>현재</emphasis> 인스턴스
+            (null <literal>effectiveEndDate</literal>을 가진 인스턴스)로 매핑시킬 수 있다:
+        </para>
+        
+        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
+        property-ref="currentAccountKey"
+        class="AccountInfo">
+    <column name="accountNumber"/>
+    <formula>'1'</formula>
+</many-to-one>]]></programlisting>
+
+        <para>
+                        보다 복잡한 예제에서, <literal>Employee</literal>와 <literal>Organization</literal> 사이의 
+                        연관이 전체 고용 내역 데이터를 가진 <literal>Employment</literal> 테이블 내에 유지된다고 가정하자. 
+                        그때 종업원의 <emphasis>가장 최근의</emphasis> 고용주에 대한 하나의 연관(가장 최근의 
+            <literal>startDate</literal>를 갖고 있는 것)이 다음 방법으로 매핑될 수 있다:
+        </para>
+        
+        <programlisting><![CDATA[<join>
+    <key column="employeeId"/>
+    <subselect>
+        select employeeId, orgId 
+        from Employments 
+        group by orgId 
+        having startDate = max(startDate)
+    </subselect>
+    <many-to-one name="mostRecentEmployer" 
+            class="Organization" 
+            column="orgId"/>
+</join>]]></programlisting>
+
+        <para>
+                        당신은 이 기능으로 아주 생산성을 얻을 수 있지만, 그것은 대개 HQL 또는 criteria 질의를 사용하여 이들 종류의 경우들을 
+                        처리하는 것이 보다 실용적이다.
+        </para>
+
+    </sect1>
 
 
 </chapter>

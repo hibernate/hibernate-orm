@@ -28,6 +28,7 @@
         <antcall target="lang.all"><param name="lang" value="en"/></antcall>
         <antcall target="lang.all"><param name="lang" value="zh-cn"/></antcall>
         <antcall target="lang.all"><param name="lang" value="es"/></antcall>
+    	<antcall target="lang.all"><param name="lang" value="ko"/></antcall>
 
     </target>
 
@@ -37,6 +38,7 @@
         <!-- TRANSLATOR: Duplicate this line for your language -->
         <antcall target="lang.revdiff"><param name="lang" value="zh-cn"/></antcall>
         <antcall target="lang.revdiff"><param name="lang" value="es"/></antcall>
+    	<antcall target="lang.revdiff"><param name="lang" value="ko"/></antcall>
 
     </target>
 

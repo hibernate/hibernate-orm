@@ -1,0 +1,523 @@
+<chapter id="associations">
+
+    <title>연관 매핑들</title>
+
+    <sect1 id="assoc-intro" revision="1">
+        <title>개요</title>
+        
+        <para>
+                        연관 매핑들은 올바른 것을 얻기가 종종 가장 어려운 것이다. 이 절에서 우리는 단방향 매핑들에서 시작하고, 그런 다음 양방향 경우들을 
+                        검토함으로써, 하나씩 표준적인 경우들을 상세히 논의할 것이다. 우리는 모든 예제들에서 <literal>Person</literal>과 
+            <literal>Address</literal>를 사용할 것이다.
+        </para>
+        
+        <para>
+        	우리는 연관들을 중재하는 join 테이블로 매핑시킬 것인지 여부에 따라, 그리고 multiplicity(다중성)에 따라 연관들을 분류할 것이다.
+        </para>
+        
+        <para>
+        	null 허용 가능한 foreign 키들은 전통적인 데이터 모델링에서 좋은 실례로 간주되지 않아서, 모든 우리의 예제들은 not null 
+            foreign 키들을 사용한다. 이것은 Hibernate에서 필수가 아니고, 당신이 null 허용 가능 컨스트레인트들을 드롭시킬 경우 매핑들은  
+                        모두 동작할 것이다.
+        </para>
+        
+    </sect1>
+
+    <sect1 id="assoc-unidirectional" revision="1">
+        <title>단방향 연관들</title>
+        
+        <sect2 id="assoc-unidirectional-m21">
+        <title>many to one</title>
+        
+        <para>
+            <emphasis>단방향 many-to-one 연관</emphasis>은 가장 공통적인 종류의 단방향 연관이다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, 
+                      addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-121">
+        <title>one to one</title>
+        
+        <para>
+            <emphasis>foreign 키에 대한 단방향 one-to-one 연관은 대개 아주 동일하다.</emphasis> 유일한 차이점은 
+                        컬럼 유일(unique) 컨스트레인트이다.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId" 
+        unique="true"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, 
+                      addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        <para>
+            <emphasis>하나의 프라이머리 키에 대한 단방향 one-to-one 연관</emphasis>은 대개 특별한 id 생성기를 사용한다. 
+            (이 예제에서 연관의 방향이 역전되었음을 주목하라.)
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+</class>
+
+<class name="Address">
+    <id name="id" column="personId">
+        <generator class="foreign">
+            <param name="property">person</param>
+        </generator>
+    </id>
+    <one-to-one name="person" constrained="true"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( personId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+        <sect2 id="assoc-unidirectional-12m">
+        <title>one to many</title>
+        
+        <para>
+            <emphasis>하나의 foreign 키에 대한 단방향 one-to-many 연관</emphasis>은 매우 색다른 경우이고, 실제로 권장되지 않는다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses">
+        <key column="personId" 
+            not-null="true"/>
+        <one-to-many class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( addressId bigint not null primary key, 
+                       personId bigint not null )
+        ]]></programlisting>
+        
+        <para>
+                        우리는 이런 종류의 연관에 대해 하나의 join 테이블을 사용하는 것이 더 좋다고 생각한다.
+        </para>
+        
+        </sect2>
+    
+    </sect1>
+
+    <sect1 id="assoc-unidirectional-join" revision="1">
+        <title>join 테이블들에 대한 단방향 연관들</title>
+        
+        <sect2 id="assoc-unidirectional-join-12m">
+        <title>one to many</title>
+        
+        <para>
+            <emphasis>하나의 join 테이블에 대한 단방향 one-to-many 연관</emphasis>이 보다 더 선호된다. <literal>unique="true"</literal>를 
+                        지정함으로써 우리는 many-to-many에서 one-to-many로 아중성(multiplicity)를 변경시켰음을 주목하라.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            unique="true"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId not null, 
+                             addressId bigint not null primary key )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-m21">
+        <title>many to one</title>
+        
+        <para>
+            <emphasis>하나의 join 테이블에 대한 단방향 many-to-one 연관</emphasis>은 그 연관이 선택적일 때 매우 공통적이다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, 
+                             addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-121">
+        <title>one to one</title>
+        
+        <para>
+            <emphasis>하나의 join 테이블에 대한 단방향 one-to-one 연관</emphasis>은 극히 통상적이지 않지만 가능하다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" 
+            unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, 
+                             addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-m2m">
+        <title>many to many</title>
+        
+        <para>
+                        마지막으로, 우리는 <emphasis>단방향 many-to-many 연관</emphasis>을  갖는다. 
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, 
+                             addressId bigint not null, 
+                             primary key (personId, addressId) )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+    </sect1>
+
+    <sect1 id="assoc-bidirectional" revision="1">
+        <title>양방향 연관들</title>
+        
+        <sect2 id="assoc-bidirectional-m21">
+        <title>one to many / many to one</title>
+        
+        <para>
+            <emphasis>양방향 many-to-one 연관</emphasis>은 가장 공통된 종류의 연관이다.(이것은 표준 부모/자식 관계이다. )
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <set name="people" inverse="true">
+        <key column="addressId"/>
+        <one-to-many class="Person"/>
+    </set>
+</class>]]></programlisting>
+
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, 
+                      addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+        <sect2 id="assoc-bidirectional-121">
+        <title>one to one</title>
+        
+        <para>
+            <emphasis>foreign에 대한 양방향 one-to-one 연관</emphasis>은 꽤 공통적이다.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId" 
+        unique="true"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+   <one-to-one name="person" 
+        property-ref="address"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, 
+                      addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        <para>
+            <emphasis>하나의 프라이머리 키에 대한 양방향 one-to-one 연관</emphasis>은 특별한 id 생성기를 사용한다.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <one-to-one name="address"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="personId">
+        <generator class="foreign">
+            <param name="property">person</param>
+        </generator>
+    </id>
+    <one-to-one name="person" 
+        constrained="true"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( personId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+    </sect1>
+
+    <sect1 id="assoc-bidirectional-join" revision="1">
+        <title>join 테이블들에 대한 양방향 연관들</title>
+        
+        <sect2 id="assoc-bidirectional-join-12m">
+        <title>one to many / many to one</title>
+        
+        <para>
+            <emphasis>하나의 join 테이블에 대한 양방향 one-to-many 연관</emphasis>. <literal>inverse="true"</literal>는 
+                        연관의 어느 쪽 끝이든 콜렉션 측으로 또는 join 측으로 갈 수 있다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" 
+        table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            unique="true"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        inverse="true" 
+        optional="true">
+        <key column="addressId"/>
+        <many-to-one name="person"
+            column="personId"
+            not-null="true"/>
+    </join>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, 
+                             addressId bigint not null primary key )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+         <sect2 id="assoc-bidirectional-join-121">
+        <title>one to one</title>
+        
+        <para>
+            <emphasis>하나의 join 테이블에 대한 양방향 one-to-one 연관</emphasis>은 극히 통상적이지 않지만, 가능하다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" 
+            unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true"
+        inverse="true">
+        <key column="addressId" 
+            unique="true"/>
+        <many-to-one name="address"
+            column="personId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, 
+                             addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+
+        </sect2>
+        
+        <sect2 id="assoc-bidirectional-join-m2m">
+        <title>many to many</title>
+        
+        <para>
+                        마지막으로, 우리는 하나의 <emphasis>양방향 many-to-many 연관</emphasis>을 갖는다.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <set name="people" inverse="true">
+        <key column="addressId"/>
+        <many-to-many column="personId"
+            class="Person"/>
+    </set>
+</class>]]></programlisting>
+
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, 
+                             addressId bigint not null, 
+                             primary key (personId, addressId) )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+    </sect1>
+
+
+</chapter>
+

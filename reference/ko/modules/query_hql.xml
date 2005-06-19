@@ -118,7 +118,15 @@
         <programlisting><![CDATA[from Cat as cat 
     join cat.mate as mate
     left join cat.kittens as kitten]]></programlisting>
+    
+        <para>
+                        당신은 HQL <literal>with</literal> 키워드를 사용하여 특별한 조인 조건들을 제공할 수 있다.
+        </para>
 
+        <programlisting><![CDATA[from Cat as cat 
+    left join cat.kittens as kitten 
+        with kitten.bodyWeight > 10.0]]></programlisting>
+                  
         <para>
                         게다가, "fetch" join은 값들을 가진 콜렉션들이나 연관관계들이 한 개의 select를 사용하여, 그것들의 부모 객체들에 따라 초기화 되는 
                         것을 허용해준다. 이것은 콜렉션의 경우에 특히 유용하다. 그것은 연관관계들과 콜렉션들에 대한 매핑 파일의 outer join과 lazy 선언들을 
@@ -144,11 +152,13 @@
                         현재의 구현에서는 오직 한 개의 콜렉션 role 만이 질의 속에서 join 페치될 수 있음을 노트하라(하나 이상의 role은 대개 한 개의 
             cartesian product(카티젼 곱)으로 귀결될 것이다). 또한 <literal>fetch</literal> 구조체는 <literal>scroll()</literal> 
                         또는 <literal>iterate()</literal>를 사용하여 호출된 질의들 속에서 사용될 수 없음을 노트하라. 마지막으로 
-            <literal>full join fetch</literal>와 <literal>right join fetch</literal>는 무의미함을 노트하라.
-            
+            <literal>full join fetch</literal>와 <literal>right join fetch</literal>는 무의미함을 노트하라.  
+            <literal>fetch</literal>는 특별한 <literal>with</literal> 조건과  함께 사용될 수도 없다.
             <literal>fetch</literal> 구조체는 <literal>scroll()</literal> 또는 <literal>iterate()</literal>를 사용하여 
                         호출된 질의들 속에서 사용될 수 없음을 노트하라. 또한 <literal>fetch</literal>는 <literal>setMaxResults()</literal> 
-                        또는 <literal>setFirstResult()</literal>와 함께 사용될 수도 없다. 한 개의 질의 내에 하나 이상의 콜렉션을 조인 페칭시켜서
+                        또는 <literal>setFirstResult()</literal>와 함께 사용될 수도 없다. 
+                        
+                        한 개의 질의 내에 하나 이상의 콜렉션을 조인 페칭시켜서
                         카티젼 곱을 생성시키는 것이 가능하다. 다중 콜렉션 role들을 조인 페칭시키는 것은 때때로 bag 매핑들에 대해 예기치 않은 결과들을 
                         초래하므로, 당신이 이 경우에 당신의 질의들을 처방하는 방법에 대해 주의하라. 마지막으로 <literal>full join fetch</literal>와 
             <literal>right join fetch</literal>는 의미가 없다.
@@ -539,6 +549,18 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                                        조인된 인덱싱된 콜렉션의 alias들에 적용되는, HQL <literal>index()</literal> 함수 
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                                        콜렉션 값을 가진 경로 표현식들을 취하는 HQL 함수들 : <literal>some, all, exists, any, in</literal>을
+                                         사용하여 정량화 될 수 있는 특별한 <literal>elements()</literal>와 <literal>indices</literal> 
+                                        함수들과 함께 <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     <literal>cast(... as ...)</literal>, 여기서 두번 째 아규먼트는 Hibernate 타입의 이름이고, 
                     ANSI <literal>cast()</literal>와 <literal>extract()</literal>가 기본 데이터베이스에 의해 지원될 경우에는
                     <literal>extract(... from ...)</literal>
@@ -552,7 +574,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    JDBC IN 파라미터들 <literal>?</literal>
+                    JDBC-스타일 위치 파라미터들 <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
@@ -562,7 +584,8 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    SQL 리터럴들 <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
+                    SQL 리터럴들 <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>,
+                    <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>
             <listitem>

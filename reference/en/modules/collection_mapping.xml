@@ -993,7 +993,7 @@ session.persist(category);               // The relationship will be saved]]></p
         <generator class="sequence"/>
     </collection-id>
     <key column="PERSON1"/>
-    <many-to-many column="PERSON2" class="eg.Person" outer-join="true"/>
+    <many-to-many column="PERSON2" class="Person" fetch="join"/>
 </idbag>]]></programlisting>
 
         <para>

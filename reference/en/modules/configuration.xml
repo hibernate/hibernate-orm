@@ -472,7 +472,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Force Hibernate to order SQL updates by the primary key value
-                            of the items being updates. This will result in fewer transaction
+                            of the items being updated. This will result in fewer transaction
                             deadlocks in highly concurrent systems.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
@@ -1334,7 +1334,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <!-- cache settings -->
         <class-cache class="org.hibernate.auction.Item" usage="read-write"/>
         <class-cache class="org.hibernate.auction.Bid" usage="read-only"/>
-        <collection-cache class="org.hibernate.auction.Item.bids" usage="read-write"/>
+        <collection-cache collection="org.hibernate.auction.Item.bids" usage="read-write"/>
 
     </session-factory>
 

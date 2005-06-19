@@ -1379,7 +1379,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <!-- cache settings -->
         <class-cache class="org.hibernate.auction.Item" usage="read-write"/>
         <class-cache class="org.hibernate.auction.Bid" usage="read-only"/>
-        <collection-cache class="org.hibernate.auction.Item.bids" usage="read-write"/>
+        <collection-cache collection="org.hibernate.auction.Item.bids" usage="read-write"/>
 
     </session-factory>
 

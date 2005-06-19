@@ -74,7 +74,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-mapping" revision="2">
+    <sect1 id="collections-mapping" revision="3">
         <title>Collection mappings</title>
 
         <para>
@@ -114,6 +114,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mappingcollection11" coords="12 65"/>
                 <area id="mappingcollection12" coords="13 65"/>
                 <area id="mappingcollection13" coords="14 65"/>
+                <area id="mappingcollection14" coords="15 65"/>
             </areaspec>
             <programlisting><![CDATA[<map
     name="propertyName"
@@ -129,6 +130,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     batch-size="N"
     access="field|property|ClassName"
     optimistic-lock="true|false"
+    mutable="true|false"
     node="element-name|."
     embed-xml="true|false"
 >
@@ -210,7 +212,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <callout arearefs="mappingcollection12">
                     <para>
                         <literal>access</literal> (optional - defaults to <literal>property</literal>): The
-                        strategy Hibernate should use for accessing the property value.
+                        strategy Hibernate should use for accessing the collection property value.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection12">
@@ -219,6 +221,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         Species that changes to the state of the collection results in increment of the
                         owning entity's version. (For one to many associations, it is often reasonable to
                         disable this setting.)
+                    </para>
+                </callout>
+                <callout arearefs="mappingcollection13">
+                    <para>
+                        <literal>mutable</literal> (optional - defaults to <literal>true</literal>): 
+                        A value of <literal>false</literal> specifies that the elements of the 
+                        collection never change (a minor performance optimization in some cases).
                     </para>
                 </callout>
             </calloutlist>

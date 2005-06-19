@@ -800,8 +800,8 @@ session.persist(category);               // The relationship will be saved]]></p
     </set>
 </class>
 
-<class name="eg.Child">
-    <id name="id" column="id"/>
+<class name="Child">
+    <id name="id" column="child_id"/>
     ....
     <many-to-one name="parent" 
         class="Parent" 
@@ -815,7 +815,72 @@ session.persist(category);               // The relationship will be saved]]></p
         </para>
 
     </sect2>
+    
+    <sect2 id="collections-indexedbidirectional">
+        <title>인덱싱된 콜렉션들을 가진 양방향 연관들</title>
+        <para>
+                        한쪽 끝이 하나의 <literal>&lt;list&gt;</literal> 또는 <literal>&lt;map&gt;</literal>으로서 표현되는 양방향  
+                        연관은 특별한 검토를 필요로 한다. 만일 인덱스 컬럼으로 매핑되는 child 클래스의 프로퍼티가 하나 존재한다면 문제가 없고, 
+                        우리는 콜렉션 매핑 상에 <literal>inverse="true"</literal>를 사용하여 계속할 수 있다:
+        </para>
+        
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children" inverse="true">
+        <key column="parent_id"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
 
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <property name="name" 
+        not-null="true"/>
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        not-null="true"/>
+</class>]]></programlisting>
+
+        <para>
+                        그러나 만일 child 클래스 상에 그런 프로퍼티가 존재하지 않을 경우, 우리는 그 연관을 진정하게 양방향으로 간주할 수 없다
+            (다른 쪽 끝에서 이용가능하지 않은 그 연관의 끝에서 이용 가능한 정보가 존재한다). 이 경우에 우리는 그 콜렉션을 
+            <literal>inverse="true"</literal>로 매핑시킬 수 없다. 대신에 우리는 다음 매핑을 사용할 수 있다:
+        </para>
+
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children">
+        <key column="parent_id"
+            not-null="true"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        insert="false"
+        update="false"
+        not-null="true"/>
+</class>]]></programlisting>
+
+       <para>
+                      이 매핑에서 그 연관의 콜렉션 값을 가진 끝이 foreign 키에 대한 업데이트 책임이 있음을 노트하라.
+       </para>
+
+    </sect2>
+    
     <sect2 id="collections-ternary">
         <title>Ternary associations(세겹 연관들)</title>
 

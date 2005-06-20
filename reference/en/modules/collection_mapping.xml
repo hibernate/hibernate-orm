@@ -215,7 +215,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         strategy Hibernate should use for accessing the collection property value.
                     </para>
                 </callout>
-                <callout arearefs="mappingcollection12">
+                <callout arearefs="mappingcollection13">
                     <para>
                         <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
                         Species that changes to the state of the collection results in increment of the
@@ -223,7 +223,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         disable this setting.)
                     </para>
                 </callout>
-                <callout arearefs="mappingcollection13">
+                <callout arearefs="mappingcollection14">
                     <para>
                         <literal>mutable</literal> (optional - defaults to <literal>true</literal>): 
                         A value of <literal>false</literal> specifies that the elements of the 

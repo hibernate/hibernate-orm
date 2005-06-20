@@ -2676,7 +2676,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-types-basictypes" revision="2">
+        <sect2 id="mapping-types-basictypes" revision="3">
             <title>Basic value types</title>
 
             <para>
@@ -2794,6 +2794,23 @@
                                 <literal>java.sql.Blob</literal>. These types may be inconvenient for some
                                 applications, since the blob or clob object may not be reused outside of
                                 a transaction. (Furthermore, driver support is patchy and inconsistent.)
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <literal>imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date,
+                            imm_serializable, imm_binary</literal>
+                        </term>
+                        <listitem>
+                            <para>
+                                Type mappings for what are usually considered mutable Java types, where
+                                Hibernate makes certain optimizations appropriate only for immutable
+                                Java types, and the application treats the object as immutable. For
+                                example, you should not call <literal>Date.setTime()</literal> for an
+                                instance mapped as <literal>imm_timestamp</literal>. To change the
+                                value of the property, and have that change made persistent, the 
+                                application must assign a new (nonidentical) object to the property.
                             </para>
                         </listitem>
                     </varlistentry>

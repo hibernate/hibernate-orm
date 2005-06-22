@@ -2518,7 +2518,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-types-basictypes" revision="2">
+        <sect2 id="mapping-types-basictypes" revision="3">
             <title>기본 value 타입들</title>
 
             <para>
@@ -2630,6 +2630,20 @@
                                 <literal>java.sql.Clob</literal>와 <literal>java.sql.Blob</literal> JDBC 클래스들에 대한 타입 매핑들. 
                                                                 이들 타입들은 몇몇 어플리케이션들에서는 불편하다. 왜냐하면 blob 또는 clob 객체는 트랜잭션 외부에서 재사용될 수 없기
                                                                  때문이다.(게다가 드라이버 지원이 비일관적이고 페치되어야 한다)
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <literal>imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date,
+                            imm_serializable, imm_binary</literal>
+                        </term>
+                        <listitem>
+                            <para>
+                                                                대개 가변적인 Java 타입들로 간주되는 것에 대한 타입 매핑들. 여기서 Hibernate는 불변적인 Java 타입들에 대해서만 적절한 
+                                                                어떤 최적화를 행하고, 어플리케이션 그 객체를 변할 수 없는 것으로 취급한다. 예를 들어, 당신은 <literal>imm_timestamp</literal>로서 
+                                                                매핑된 인스턴스에 대해 <literal>Date.setTime()</literal>을 호출하지 않을 것이다. 프로퍼티의 값을 변경시키고, 
+                                                                그 변경을 영속화 시키기 위해서, 어플리케이션은 하나의 새로운 (동일하지 않은) 객체를 그 프로퍼티에 할당해야 한다.
                             </para>
                         </listitem>
                     </varlistentry>

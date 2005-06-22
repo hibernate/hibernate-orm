@@ -942,7 +942,7 @@ session.persist(category);               // The relationship will be saved]]></p
 
        <para>
            Note that in this mapping, the collection-valued end of the association is responsible for 
-           updates to the foreign key.
+           updates to the foreign key. TODO: Does this really result in some unnecessary update statements?
        </para>
 
     </sect2>

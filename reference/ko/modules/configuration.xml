@@ -438,7 +438,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.order_updates</literal>
                         </entry>
                         <entry>
-                                                        업데이트 중인 항목들의 프라이머리 키 값에 의해 SQL 업데이트들이 순서(ordering) 지워지도록 Hibernate에게 
+                                                        업데이트 중인 항목들의 프라이머리 키 값에 의해 SQL 업데이트들이 순서(ordering)지워지도록 Hibernate에게 
                                                         강제시킨다. 이것은 고도의 동시성 시스템들에서 더 적은 트랜잭션 데드락(deadlock)들로 귀결될 것이다
                             <para>
                                 <emphasis role="strong">예.</emphasis> 
@@ -1257,7 +1257,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <!-- cache settings -->
         <class-cache class="org.hibernate.auction.Item" usage="read-write"/>
         <class-cache class="org.hibernate.auction.Bid" usage="read-only"/>
-        <collection-cache class="org.hibernate.auction.Item.bids" usage="read-write"/>
+        <collection-cache collection="org.hibernate.auction.Item.bids" usage="read-write"/>
 
     </session-factory>
 

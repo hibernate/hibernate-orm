@@ -62,7 +62,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-mapping" revision="2">
+    <sect1 id="collections-mapping" revision="3">
         <title>콜렉션 매핑들</title>
 
         <para>
@@ -99,6 +99,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mappingcollection11" coords="12 65"/>
                 <area id="mappingcollection12" coords="13 65"/>
                 <area id="mappingcollection13" coords="14 65"/>
+                <area id="mappingcollection14" coords="15 65"/>
             </areaspec>
             <programlisting><![CDATA[<map
     name="propertyName"
@@ -114,6 +115,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     batch-size="N"
     access="field|property|ClassName"
     optimistic-lock="true|false"
+    mutable="true|false"
     node="element-name|."
     embed-xml="true|false"
 >
@@ -194,14 +196,21 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <callout arearefs="mappingcollection12">
                     <para>
                         <literal>access</literal> (옵션 - 디폴트는 <literal>property</literal>): 
-                        Hibernate가 프로퍼티 값에 접근하는데 사용할 방도.
+                        Hibernate가 콜렉션 프로퍼티 값에 접근하는데 사용할 방도.
                     </para>
                 </callout>
-                <callout arearefs="mappingcollection12">
+                <callout arearefs="mappingcollection13">
                     <para>
                         <literal>optimistic-lock</literal> (옵션 - 디폴트는 <literal>true</literal>): 
                                                 콜렉션의 상태에 대한 변경들이 소유하는 엔티티의 버전의 증가로 귀결될 것인지를 지정한다. 
                         (one to many 연관들에 대해, 이 설정을 사용 불가능하게 하는 것이 종종 합당하다.) 
+                    </para>
+                </callout>
+                <callout arearefs="mappingcollection14">
+                    <para>
+                        <literal>mutable</literal> (옵션 - 디폴트는 <literal>true</literal>): 
+                        <literal>false</literal> 값은 콜렉션의 요소들이 결코 변경되지 않음을 지정한다.
+                        (몇몇 경우들에서 마이너 퍼포먼스 최적화).
                     </para>
                 </callout>
             </calloutlist>
@@ -933,7 +942,7 @@ session.persist(category);               // The relationship will be saved]]></p
         <generator class="sequence"/>
     </collection-id>
     <key column="PERSON1"/>
-    <many-to-many column="PERSON2" class="eg.Person" outer-join="true"/>
+    <many-to-many column="PERSON2" class="Person" fetch="join"/>
 </idbag>]]></programlisting>
 
         <para>

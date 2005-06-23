@@ -15,7 +15,7 @@
 -->
 
 <!DOCTYPE xsl:stylesheet [
-    <!ENTITY db_xsl_path        "../../support/docbook-xsl/">
+    <!ENTITY db_xsl_path        "../../../../../../Hibernate3/doc/reference/support/docbook-xsl/">
 ]>
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"

@@ -1,10 +1,15 @@
-<project name="Hibernate3Documentation" default="all.doc" basedir=".">
+<project name="ReferenceDocumentation" default="all.doc" basedir=".">
+    <!-- Allow this to be overriden by others importing this project. -->
+    <dirname property="imported.basedir" file="${ant.file.ReferenceDocumentation}"/>
 
     <!-- Set build directories for all formats. -->
     <property name="build.dir"             value="${basedir}/build"/>
 
     <!-- Support files for build process. -->
-    <property name="support.dir"           value="${basedir}/support"/>
+    <property name="support.dir"           value="${imported.basedir}/support"/>
+
+    <!-- Base name for documentation artifacts. -->
+    <property name="docname"               value="hibernate_reference"/>
 
     <!-- Set DocBook stylesheets. -->
     <property name="db.style.fopdf"        value="fopdf.xsl"/>
@@ -97,7 +102,7 @@
             <arg value="-c"/>
             <arg value="${basedir}/${lang}/fop/userconfig.xml"/>
             <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
-            <arg value="${build.dir}/${lang}/pdf/hibernate_reference.pdf"/>
+            <arg value="${build.dir}/${lang}/pdf/${docname}.pdf"/>
         </java>
     </target>
 
@@ -106,7 +111,7 @@
         <java classname="org.apache.fop.apps.Fop" fork="true" dir="${basedir}">
             <classpath refid="lib.classpath"/>
             <arg value="${build.dir}/${lang}/pdf/docbook_fop.tmp"/>
-            <arg value="${build.dir}/${lang}/pdf/hibernate_reference.pdf"/>
+            <arg value="${build.dir}/${lang}/pdf/${docname}.pdf"/>
         </java>
     </target>
 

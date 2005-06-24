@@ -43,9 +43,6 @@
                             <fo:block>
                                 <fo:external-graphic src="file:images/hibernate_logo_a.png"/>
                             </fo:block>
-                            <fo:block font-family="Helvetica" font-size="22pt" padding-before="10mm">
-                                <xsl:value-of select="bookinfo/title"/>
-                            </fo:block>
                             <fo:block font-family="Helvetica" font-size="18pt" padding-before="10mm">
                                 <xsl:value-of select="bookinfo/subtitle"/>
                             </fo:block>

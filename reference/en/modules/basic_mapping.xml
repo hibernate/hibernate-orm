@@ -950,6 +950,12 @@
                 </listitem>
                 <listitem>
                     <para>
+                        <literal>access</literal> (optional - defaults to <literal>property</literal>): 
+                        The strategy Hibernate should use for accessing the property value.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <literal>class</literal> (optional - defaults to the property type determined by 
                         reflection): The component class used as a composite identifier (see next section).
                     </para>

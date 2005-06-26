@@ -525,7 +525,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-id" revision="3">
+        <sect2 id="mapping-declaration-id" revision="4">
             <title>id</title>
 
             <para>
@@ -593,9 +593,7 @@
             </para>
             
             <para>
-                The <literal>unsaved-value</literal> attribute is important! If the identfier property of your 
-                class does not default to the normal Java default value (null or zero), then you should specify 
-                the actual default.
+                The <literal>unsaved-value</literal> attribute is almost never needed in Hibernate3.
             </para>
 
              <para>
@@ -854,13 +852,13 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-compositeid" revision="2">
+        <sect2 id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 
             <programlisting><![CDATA[<composite-id
         name="propertyName"
         class="ClassName"
-        unsaved-value="undefined|any|none"
+        mapped="true|false"
         access="field|property|ClassName">
         node="element-name|."
 
@@ -892,17 +890,62 @@
                 is its own identifier. There is no convenient "handle" other than the object itself. 
                 You must instantiate an instance of the persistent class itself and populate its 
                 identifier properties before you can <literal>load()</literal> the persistent state
-                associated with a composite key. We will describe a much more
-                convenient approach where the composite identifier is implemented as a separate class
-                in <xref linkend="components-compositeid"/>. The attributes described below apply only
-                to this alternative approach:
+                associated with a composite key. We call this approach an <emphasis>embedded</emphasis>
+                composite identifier, and discourage it for serious applications.
+            </para>
+            
+            <para>
+                A second approach is what we call a <emphasis>mapped</emphasis> composite identifier,
+                where the identifier properties named inside the <literal>&lt;composite-id&gt;</literal> 
+                element are duplicated on both the persistent class and a separate identifier class.
+            </para>
+                
+            <programlisting><![CDATA[<composite-id class="MedicareId" mapped="true">
+        <key-property name="medicareNumber"/>
+        <key-property name="dependent"/>
+</composite-id>]]></programlisting>
+
+            <para>
+                In this example, both the composite identifier class, <literal>MedicareId</literal>,
+                and the entity class itself have properties named <literal>medicareNumber</literal>
+                and <literal>dependent</literal>. The identifier class must override 
+                <literal>equals()</literal> and <literal>hashCode()</literal> and implement. 
+                <literal>Serializable</literal>. The disadvantage of this approach is quite
+                obvious&mdash;code duplication.
+            </para>
+            
+            <para>
+                The following attributes are used to specify a mapped composite identifier:
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>name</literal> (optional): A property of component type that holds the
-                        composite identifier (see next section).
+                        <literal>mapped</literal> (optional, defaults to <literal>false</literal>):
+                        indicates that a mapped composite identifier is used, and that the contained
+                        property mappings refer to both the entity class and the composite identifier
+                        class.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>class</literal> (optional, but required for a mapped composite identifier): 
+                        The class used as a composite identifier.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                We will describe a third, even more convenient approach where the composite identifier 
+                is implemented as a component class in <xref linkend="components-compositeid"/>. The 
+                attributes described below apply only to this alternative approach:
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>name</literal> (optional, required for this approach): A property of 
+                        component type that holds the composite identifier (see chapter 9).
                     </para>
                 </listitem>
                 <listitem>
@@ -911,15 +954,12 @@
                         reflection): The component class used as a composite identifier (see next section).
                     </para>
                 </listitem>
-                <listitem>
-                    <para>
-                        <literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): 
-                        Indicates that transient instances should be considered newly instantiated, if set 
-                        to <literal>any</literal>, or detached, if set to <literal>none</literal>. It is best 
-                        to leave the default value in all cases.
-                    </para>
-                </listitem>
             </itemizedlist>
+            
+            <para>
+                This third approach, an <emphasis>identifier component</emphasis> is the one we recommend
+                for almost all applications.
+            </para>
             
         </sect2>
         

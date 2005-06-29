@@ -95,22 +95,22 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct">
-        <title>Bulk update/delete</title>
+    <sect1 id="batch-direct" revision="1">
+        <title>DML-style operations</title>
 
         <para>
             As already discussed, automatic and transparent object/relational mapping is concerned
             with the management of object state. This implies that the object state is available
-            in memory, hence updating or deleting (using SQL <literal>UPDATE</literal> and
-            <literal>DELETE</literal>) data directly in the database will not affect in-memory
-            state. However, Hibernate provides methods for bulk SQL-style <literal>UPDATE</literal>
-            and <literal>DELETE</literal> statement execution which are performed through the
+            in memory, hence manipulating (using the SQL <literal>Data Manipulation Language</literal>
+            (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>)
+            data directly in the database will not affect in-memory state. However, Hibernate provides methods
+            for bulk SQL-style DML statement execution which are performed through the
             Hibernate Query Language (<xref linkend="queryhql">HQL</xref>).
         </para>
 
 	    <para>
             The psuedo-syntax for <literal>UPDATE</literal> and <literal>DELETE</literal> statements
-            is: <literal>( UPDATE | DELETE ) FROM? ClassName (WHERE WHERE_CONDITIONS)?</literal>.  Some
+            is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>.  Some
             points to note:
         </para>
 
@@ -122,14 +122,16 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    There can only be a single class named in the from-clause, and it <emphasis>cannot</emphasis>
-                    have an alias.
+                    There can only be a single entity named in the from-clause; it can optionally be
+                    aliased.  If the entity name is aliased, then any property references must
+                    be qualified using that alias; if the entity name is not aliased, then it is
+                    illegal for any property references to be qualified.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     No joins (either implicit or explicit) can be specified in a bulk HQL query.  Sub-queries
-                    may be used in the where-clause.
+                    may be used in the where-clause; the subqueries, themselves, can contain joins.
                 </para>
             </listitem>
             <listitem>
@@ -141,35 +143,37 @@ session.close();]]></programlisting>
 
         <para>
             As an example, to execute an HQL <literal>UPDATE</literal>, use the
-            <literal>Query.executeUpdate()</literal> method:
+            <literal>Query.executeUpdate()</literal> method (the method is named for
+            those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</literal>):
         </para>
 
-        <programlisting><![CDATA[Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
 
-        String hqlUpdate = "update Customer set name = :newName where name = :oldName";
-        int updatedEntities = s.createQuery( hqlUpdate )
-                            .setString( "newName", newName )
-                            .setString( "oldName", oldName )
-                            .executeUpdate();
-        tx.commit();
-        session.close();]]></programlisting>
+String hqlUpdate = "update Customer c set c.name = :newName where c.name = :oldName";
+// or String hqlUpdate = "update Customer set name = :newName where name = :oldName";
+int updatedEntities = s.createQuery( hqlUpdate )
+        .setString( "newName", newName )
+        .setString( "oldName", oldName )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
 
         <para>
             To execute an HQL <literal>DELETE</literal>, use the same <literal>Query.executeUpdate()</literal>
-            method (the method is named for those familiar with JDBC's
-            <literal>PreparedStatement.executeUpdate()</literal>):
+            method:
         </para>
 
-        <programlisting><![CDATA[Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
 
-        String hqlDelete = "delete Customer where name = :oldName";
-        int deletedEntities = s.createQuery( hqlDelete )
-                            .setString( "oldName", oldName )
-                            .executeUpdate();
-        tx.commit();
-        session.close();]]></programlisting>
+String hqlDelete = "delete Customer c where c.name = :oldName";
+// or String hqlDelete = "delete Customer where name = :oldName";
+int deletedEntities = s.createQuery( hqlDelete )
+        .setString( "oldName", oldName )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
 
         <para>
             The <literal>int</literal> value returned by the <literal>Query.executeUpdate()</literal>
@@ -183,9 +187,54 @@ session.close();]]></programlisting>
         </para>
 
         <para>
-            Note that there are currently a few limitations with the bulk HQL operations which
-            will be addressed in future releases; consult the JIRA roadmap for details.
+            The psuedo-syntax for <literal>INSERT</literal> statements is:
+            <literal>INSERT INTO EntityName (properties_list)? select_statement</literal>.  Some
+            points to note:
         </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    Only the INSERT INTO ... SELECT ... form is supported; not the INSERT INTO ... VALUES ... form.
+                </para>
+                <para>
+                    The properties_list is optional.  It is analogous to the <literal>column speficiation</literal>
+                    in the SQL <literal>INSERT</literal> statement.  If omitted, all "eligible" (see next) properties are
+                    automatically included.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    For entities involved in mapped inheritence, only properties directly defined on that
+                    given class-level can be used in the properties_list.  Superclass properties are not
+                    allowed; and subclass properties do not make sense.  In other words, <literal>INSERT</literal>
+                    statements are inherently non-polymorphic.
+                </para>
+                <para>
+                    select_statement can be any valid HQL select query, with the caveat that the return types
+                    must match the types expected by the insert.  Currently, this is checked during query
+                    compilation rather than allowing the check to relegate to the database.  Note however
+                    that this might cause problems between Hibernate <literal>Type</literal>s which are
+                    <emphasis>equivalent</emphasis> as opposed to <emphasis>equal</emphasis>.  This might cause
+                    issues with mismatches between a property defined as a <literal>org.hibernate.type.DateType</literal>
+                    and a property defined as a <literal>org.hibernate.type.TimestampType</literal>, even though the
+                    database might not make a distinction or might be able to handle the conversion.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            An example HQL <literal>INSERT</literal> statement execution:
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+String hqlInsert = "insert into DelinquentAccount (id, name) select c.id, c.name from Customer c where ...";
+int createdEntities = s.createQuery( hqlInsert )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
 
     </sect1>
 

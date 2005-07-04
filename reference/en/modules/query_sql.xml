@@ -13,17 +13,45 @@
         all create, update, delete, and load operations. 
     </para>
 
-    <sect1 id="querysql-creating">
-        <title>Creating a native SQL <literal>Query</literal></title>
+    <sect1 id="querysql-creating" revision="2">
+        <title>Using a <literal>SQLQuery</literal></title>
 
         <para>
-            SQL queries are controlled via the <literal>SQLQuery</literal> interface, which 
-            is obtained by calling <literal>Session.createSQLQuery()</literal>.
+            Execution of native SQL queries is controlled via the <literal>SQLQuery</literal> interface, 
+            which is obtained by calling <literal>Session.createSQLQuery()</literal>. In extremely
+            simple cases, we can use the following form:
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createSQLQuery("select * from cats")
+    .addEntity(Cat.class)
+    .list();]]></programlisting>
+    
+        <para>
+            This query specified:
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            the SQL query string
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            the entity returned by the query
+        </para>
+        </listitem>
+        </itemizedlist>
+
+        <para>
+            Here, the result set column names are assumed to be the same as the column names
+            specified in the mapping document. This can be problematic for SQL queries which
+            join multiple tables, since the same column names may appear in more than one
+            table. The following form is not vulnerable to column name duplication:
         </para>
 
         <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
     .addEntity("cat", Cat.class)
-    .setMaxResults(50)
     .list();]]></programlisting>
 
         <para>
@@ -44,8 +72,8 @@
         </itemizedlist>
     
         <para>
-            The <literal>addEntity()</literal> method associates SQL table aliases with entity classes,
-            and determines the shape of the query result set.
+            The <literal>addEntity()</literal> method associates the SQL table alias with the returned 
+            entity class, and determines the shape of the query result set.
         </para>
         
         <para>

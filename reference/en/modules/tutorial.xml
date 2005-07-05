@@ -747,7 +747,9 @@ else if (args[0].equals("list")) {
                 this is the <literal>hbm2ddl.auto</literal> switch in the Hibernate configuration: Hibernate
                 will re-create the database on every run. Disable it by removing the option, and you will
                 see results in your list after you called the <literal>store</literal> action a few
-                times. Automatic schema generation and export is mostly useful in unit testing.
+                times. Of course the first <literal>store</literal> you do has to have the option turned on,
+                so you get the initial tables created. Automatic schema generation and export is mostly useful
+                in unit testing.
             </para>
 
         </sect2>

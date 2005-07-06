@@ -1237,7 +1237,7 @@
         unique_key="unique_key_id"
         length="L"
         precision="P"
-        precision="S"
+        scale="S"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">

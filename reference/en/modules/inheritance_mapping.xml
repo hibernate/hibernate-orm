@@ -216,7 +216,7 @@
     
         </sect2>
 
-        <sect2 id="inheritance-tableperconcrete" revision="1">
+        <sect2 id="inheritance-tableperconcrete" revision="2">
         <title>Table per concrete class</title>
 
         <para>
@@ -243,8 +243,8 @@
 </class>]]></programlisting>
 
         <para>
-            Three tables are involved. Each table defines columns for all properties
-            of the class, including inherited properties. 
+            Three tables are involved for the subclasses. Each table defines columns for
+            all properties of the class, including inherited properties.
         </para>
         
         <para>
@@ -255,7 +255,14 @@
 			the primary key seed has to be shared accross all unioned subclasses
 			of a hierarchy.
         </para>
-        
+
+        <para>
+            If your superclass is abstract, map it with <literal>abstract="true"</literal>.
+            Of course, if it is not abstract, an additional table (defaults to
+            <literal>PAYMENT</literal> in the example above) is needed to hold instances
+            of the superclass.
+        </para>
+
         </sect2>
 
         <sect2 id="inheritance-tableperconcreate-polymorphism">

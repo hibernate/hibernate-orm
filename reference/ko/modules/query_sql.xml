@@ -12,17 +12,44 @@
                 지정하는 것을 당신에게 허용해준다. 
     </para>
 
-    <sect1 id="querysql-creating">
-        <title>native SQL <literal>Query</literal> 생성시키기</title>
+    <sect1 id="querysql-creating" revision="2">
+        <title><literal>SQLQuery</literal> 사용하기</title>
 
         <para>
-            SQL 질의들은 <literal>SQLQuery</literal> 인터페이스를 통해 제어되고, 그것은 
-            <literal>Session.createSQLQuery()</literal>를 호출하여 얻어진다.
+            native SQL 질의들의 실행은 <literal>SQLQuery</literal> 인터페이스를 통해 제어되며, 그것은 
+            <literal>Session.createSQLQuery()</literal>을 호출하여 획득된다. 극히 간단한 경우들에서 ,
+                        우리는 다음 형식을 사용할 수 있다:
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createSQLQuery("select * from cats")
+    .addEntity(Cat.class)
+    .list();]]></programlisting>
+    
+        <para>
+                        이 질의는 다음을 지정했다:
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            SQL 질의 문자열
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+                        그 질의에 의해 반환되는 엔티티
+        </para>
+        </listitem>
+        </itemizedlist>
+
+        <para>
+                        여기서, 결과 셋 컬럼 이름들은 매핑 문서 내에 지정된 컬럼 이름들과 동일한 것으로 가정된다. 이것은 조인 다중 테이블들을 가진 
+            SQL 질의들에 대해 문제가 될 수 있다. 왜냐하면 동일한 컬럼 이름들이 하나 이상의 테이블 들 내에 나타날 수도 있기 때문이다. 
+                       다음 형식은 컬럼 이름 중복에 대해 취약하지 않다:
         </para>
 
         <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
     .addEntity("cat", Cat.class)
-    .setMaxResults(50)
     .list();]]></programlisting>
 
         <para>
@@ -43,7 +70,8 @@
         </itemizedlist>
     
         <para>
-            <literal>addEntity()</literal> 메소드는 SQL 테이블 alias들을 엔티티 클래스들과 연관지우고, 질의 결과 셋의 형태를 결정한다.
+            <literal>addEntity()</literal> 메소드는 SQL 테이블 alias를 반환된 엔티티 클래스와 연관지우고, 
+                       질의 결과 셋의 형태를 결정한다.
         </para>
         
         <para>

@@ -200,7 +200,7 @@
     
         </sect2>
 
-        <sect2 id="inheritance-tableperconcrete" revision="1">
+        <sect2 id="inheritance-tableperconcrete" revision="2">
         <title>Table per concrete class</title>
 
         <para>
@@ -227,13 +227,19 @@
 </class>]]></programlisting>
 
         <para>
-                        세 개의 테이블들이 수반된다. 각각의 테이블은 상속된 프로퍼티들을 포함하여, 그 클래스의 모든 프로퍼티들에 대한 컬럼들을 정의한다. 
+                        세 개의 테이블들이 슈퍼클래스들에 대해 수반된다. 각각의 테이블은 상속된 프로퍼티들을 포함하여, 그 클래스의 모든 프로퍼티들에 대한 컬럼들을 정의한다. 
         </para>
         
         <para>
                         이 접근법의 제약은 만일 하나의 프로퍼티가 슈퍼클래스 상으로 매핑될 경우, 그 컬럼 이름이 모든 서브클래스 테이블들 상에서 같아야 한다는 
                         점이다.(장래의 Hibernate 배포본에서 우리는 이 제약을 풀 수도 있다.) identity 생성기 방도는 union 서브클래스 상속에서 허용되지 
                         않으며, 진정 프라이머리 키 시드는 하나의 계층구조의 모든 unioned 서브클래스들을 가로질러 공유되어야 한다. 
+        </para>
+        
+        <para>
+                        만일 당신의 슈퍼클래스가 abstract일 경우에, 그것을 <literal>abstract="true"</literal>로 매핑하라. 
+                        물론 만일 그것이 abstract가 아닐 경우, 추가적인 테이블(위의 예제에서는 디폴트로 <literal>PAYMENT</literal>)이 
+                        슈퍼클래스의 인스턴스들을 소유하는데 필요하다.
         </para>
         
         </sect2>

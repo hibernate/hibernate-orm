@@ -90,7 +90,7 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct" revision="1">
+    <sect1 id="batch-direct" revision="2">
         <title>DML-스타일 연산들</title>
 
         <para>
@@ -177,7 +177,7 @@ session.close();]]></programlisting>
         <para>
                         장래의 배포본들에서 전달될 대량 HQL 오퍼레이션들에 대한 몇 가지 제한들이 현재 존재함을 노트하라; 상세한 것은 JIRA 로드맵을 참조하라.
             <literal>INSERT</literal> 문장들을 위한 유사-구문은 다음과 같다: 
-            <literal>INSERT INTO EntityName (properties_list)? select_statement</literal>.  노트할 몇 가지:
+            <literal>INSERT INTO EntityName properties_list select_statement</literal>.  노트할 몇 가지:
         </para>
 
         <itemizedlist spacing="compact">
@@ -186,16 +186,13 @@ session.close();]]></programlisting>
                                         오직 INSERT INTO ... SELECT ... 형식 만일 지원된다; INSERT INTO ... VALUES ... 형식은 지원되지 않는다.
                 </para>
                 <para>
-                    properties_list는 옵션이다. 그것은 SQL <literal>INSERT</literal> 문장에서 <literal>column speficiation</literal>와 
-                                         유사하다. 만일 생략될 경우, 모든 "적당한"(다음을 보라) 프로퍼티들이 자동적으로 포함된다.
+                    properties_list는 SQL <literal>INSERT</literal> 내에서 <literal>column speficiation</literal>과 유사하다.
+                                        매핑된 상속에 참여하는 엔티티들의 경우, 그 주어진 클래스-레벨 상에 직접 정의된 프로퍼티들 만이 properties_list에 사용될 수 있다. 
+                                        슈퍼클래스 프로퍼티들은 허용되지 않는다; 그리고 서브클래스 프로퍼티들은 의미가 없다. 달리 말해 <literal>INSERT</literal> 문장들은  
+                                        본래적으로 다형적이지 않다.
                 </para>
             </listitem>
             <listitem>
-                <para>
-                                        매핑된 상속에 참여하는 모든 엔티티들에 대해, 그 주어진 클래스-레벨에 직접 정의된 프로퍼티들 만이 properties_list에 
-                                        사용될 수 있다. 슈퍼클래스 프로퍼티들은 허용되지 않는다; 그리고 서브클래스 프로퍼티들은 의미가 없다. 달리 말해, 
-                    <literal>INSERT</literal> 문장들은 본래 다형적이지 않다.
-                </para>
                 <para>
                     select_statement는 반환 타입들이 insert에 의해 기대되는 타입들과 일치해야 한다는 단서 하에 임의의 유효한 HQL select 질의일 수 
                                         있다. 현재 이것은 체크를  데이터베이스로 이관시키는 것을 허용하기 보다는 질의 컴파일 동안에 체크된다. 하지만 이것은 
@@ -203,6 +200,27 @@ session.close();]]></programlisting>
                                         사이에서 문제점들을 일으킬 수도 있음을 노트하라. 비록 데이터베이스가 구별짓지 않을 수 있거나 변환을 처리할 수 있을 지라도, 이것은 
                     <literal>org.hibernate.type.DateType</literal>로서 정의된 프로퍼티와 <literal>org.hibernate.type.TimestampType</literal>으로 
                                         정의된 프로퍼티 사이에 불일치 쟁점들을 일으킨다.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    id 프로퍼티의 경우, insert 문장은 당신에게 두 개의 옵션을 준다. 당신은 properties_list 내에 id 프로퍼티를 명시적으로 
+                                        지정할 수 있거나(그것의 값이 대응하는 select 표현식으로부터 얻어진 경우) 또는 properties_list에서 그것을 생략할 수도 있다
+                    (산출된 값이 사용되는 경우). 이 후자의 옵션은 데이터베이스 내에서 연산되는 id 연산자들을 사용할 때에만 이용 가능하다; 
+                                        임의의 "메모리 내" 타입 연산자들과 함께 이 옵션을 사용하려고 시도하는 것은 파싱 동안에 예외상황을 일으킬 것이다. 이 논의의 
+                                        목적 상, 데이터베이스 내 산출자(generator)들은 <literal>org.hibernate.id.SequenceGenerator</literal> 
+                    (그리고 그것의 서브클래스들) 그리고 임의의 <literal>org.hibernate.id.PostInsertIdentifierGenerator</literal>의 
+                                        구현자들이라고 간주됨을 노트하라. 여기서 가장 주목할 만한 예외상황은 그것이 그것의 값들을 얻기 위한 select 가능한 방법을 
+                                        노출시키지 않기 때문ㅇ에 사용될 수 없는 <literal>org.hibernate.id.TableHiLoGenerator</literal>이다.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>version</literal> 또는 <literal>timestamp</literal>로서 매핑된 프로퍼티들의 경우에, 
+                    insert 문장은 당신에게 두 개의 옵션들을 준다. 당신은 properties_list 내에 그 프로퍼티를 지정할 수 있거나
+                    (그 것의 값이 대응하는 select 표현식으로부터 얻어진 경우) 또는 properties_list에서 그것을 생략할 수 있다
+                    (<literal>org.hibernate.type.VersionType</literal>에 의해 정의된 <literal>seed value</literal> 
+                                        값이 사용되는 경우).
                 </para>
             </listitem>
         </itemizedlist>

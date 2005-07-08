@@ -67,6 +67,7 @@
         <listitem>
         <para>
             the entity returned by the query, and its SQL table alias
+            
         </para>
         </listitem>
         </itemizedlist>
@@ -132,7 +133,81 @@ List loggedCats = sess.createSQLQuery(sql)
             properties of the class <emphasis>and its subclasses</emphasis>!
         </para>
 
+	<para>
+	The following table shows the different possibilities of using the alias injection. Note: the alias names in the result
+	are examples, each alias will have a unique and probably different name when used.
+	</para>
+
+             <table frame="topbot" id="aliasinjection-summary">
+                <title>Alias injection names</title>
+                <tgroup cols="3">
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="2.5*"/>
+                    <thead>
+                        <row>
+                            <entry>Description</entry>
+                            <entry>Syntax</entry>
+                            <entry>Result</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>A simple property</entry>
+                            <entry><literal>A_NAME as {item.name}</literal></entry>
+                            <entry>ANAME as name0_0_</entry>
+                        </row>
+                        <row>
+                            <entry>A multi-column property</entry>
+                            <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
+                            <entry>CURRENCY as curr0_0_, VALUE as curr1_0_</entry>
+                        </row>
+                        <row>
+                            <entry>All properties of an entity</entry>
+                            <entry><literal>{item.*}</literal></entry>
+                            <entry>ANAME as name0_0_, CURRENCY as curr0_0_, VALUE as curr1_0_</entry>
+                        </row>
+                        <row>
+                            <entry>A collection key</entry>
+                            <entry><literal>{coll.key}</literal></entry>
+                            <entry></entry>
+                        </row>                      
+                        <row>
+                            <entry>The id of an collection</entry>
+                            <entry><literal>{coll.id}</literal></entry>
+                            <entry>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>The element of an collection</entry>
+                            <entry><literal>{coll.element}</literal></entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>Property of the element in the collection</entry>
+                            <entry><literal>{coll.element.name}</literal></entry>
+                            <entry>
+                            </entry>
+                        </row>
+                        
+                        <row>
+                            <entry>All properties of the element in the collection</entry>
+                            <entry><literal>{coll.element.*}</literal></entry>
+                            <entry>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>All properties of the the collection</entry>
+                            <entry><literal>{coll.*}</literal></entry>
+                            <entry>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+
     </sect1>
+    
     
     <sect1 id="querysql-namedqueries" revision="2">
         <title>Named SQL queries</title>

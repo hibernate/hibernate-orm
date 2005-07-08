@@ -148,64 +148,61 @@ List loggedCats = sess.createSQLQuery(sql)
                         <row>
                             <entry>Description</entry>
                             <entry>Syntax</entry>
-                            <entry>Result</entry>
+                            <entry>Example</entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
                             <entry>A simple property</entry>
-                            <entry><literal>A_NAME as {item.name}</literal></entry>
-                            <entry>ANAME as name0_0_</entry>
+                            <entry><literal>{[aliasname].[propertyname]</literal></entry>
+                            <entry><literal>A_NAME as {item.name}</literal></entry>                            
                         </row>
                         <row>
-                            <entry>A multi-column property</entry>
+                            <entry>A composite property</entry>
+                            <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
                             <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
-                            <entry>CURRENCY as curr0_0_, VALUE as curr1_0_</entry>
                         </row>
 						<row>
                             <entry>Discriminator of an entity</entry>
-                            <entry><literal>DISC as {item.class}</entry>
-                            <entry></entry>
+                            <entry><literal>{[aliasname].class}</literal></entry>
+                            <entry><literal>DISC as {item.class}</literal></entry>
                         </row>                        
                         <row>
                             <entry>All properties of an entity</entry>
+                            <entry><literal>{[aliasname].*}</literal></entry>
                             <entry><literal>{item.*}</literal></entry>
-                            <entry>ANAME as name0_0_, CURRENCY as curr0_0_, VALUE as curr1_0_</entry>
                         </row>
                         <row>
                             <entry>A collection key</entry>
-                            <entry><literal>{coll.key}</literal></entry>
-                            <entry></entry>
+                            <entry><literal>{[aliasname].key}</literal></entry>
+                            <entry><literal>ORGID as {coll.key}</literal></entry>
                         </row>                      
                         <row>
                             <entry>The id of an collection</entry>
-                            <entry><literal>{coll.id}</literal></entry>
-                            <entry>
-                            </entry>
+                            <entry><literal>{[aliasname].id}</literal></entry>
+                            <entry><literal>EMPID as {coll.id}</literal></entry>
                         </row>
                         <row>
                             <entry>The element of an collection</entry>
-                            <entry><literal>{coll.element}</literal></entry>
+                            <entry><literal>{[aliasname].element}</literal></entry>
+                            <entry><literal>XID as {coll.element}</literal></entry>
                             <entry></entry>
                         </row>
                         <row>
                             <entry>Property of the element in the collection</entry>
-                            <entry><literal>{coll.element.name}</literal></entry>
-                            <entry>
-                            </entry>
+                            <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
+                            <entry><literal>NAME as {coll.element.name}</literal></entry>
                         </row>
                         
                         <row>
                             <entry>All properties of the element in the collection</entry>
+                            <entry><literal>{[aliasname].element.*}</literal></entry>
                             <entry><literal>{coll.element.*}</literal></entry>
-                            <entry>
-                            </entry>
                         </row>
                         <row>
                             <entry>All properties of the the collection</entry>
+                            <entry><literal>{[aliasname].*}</literal></entry>
                             <entry><literal>{coll.*}</literal></entry>
-                            <entry>
-                            </entry>
                         </row>
                     </tbody>
                 </tgroup>

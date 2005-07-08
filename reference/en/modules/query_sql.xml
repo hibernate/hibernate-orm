@@ -162,6 +162,11 @@ List loggedCats = sess.createSQLQuery(sql)
                             <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
                             <entry>CURRENCY as curr0_0_, VALUE as curr1_0_</entry>
                         </row>
+						<row>
+                            <entry>Discriminator of an entity</entry>
+                            <entry><literal>DISC as {item.class}</entry>
+                            <entry></entry>
+                        </row>                        
                         <row>
                             <entry>All properties of an entity</entry>
                             <entry><literal>{item.*}</literal></entry>

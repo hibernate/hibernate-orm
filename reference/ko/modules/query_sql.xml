@@ -90,8 +90,7 @@
             native SQL 질의는 간단한 스칼라 값을 반환하거나 스칼라들과 엔티티들의 조합을 반환할 수도 있다.
         </para>
 
-        <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight 
-                                                                            from cats cat")
+        <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
         .addScalar("maxWeight", Hibernate.DOUBLE);
         .uniqueResult();]]></programlisting>
 
@@ -127,6 +126,80 @@ List loggedCats = sess.createSQLQuery(sql)
             <emphasis>노트:</emphasis> 만일 당신이 각각의 프로퍼티를 명시적으로 리스트할 경우, 당신은 그 클래스와 
             <emphasis>그것의 서브클래스들</emphasis>의 모든 프로퍼티들을 포함해야 한다!
         </para>
+    <para>
+        다음 테이블은 alias injection을 사용하는 다른 가능성들을 보여준다. 노트 : 결과 내에서 alias 이름들이 예제들이며, 각각의 alias는 
+        사용될 시에 하나의 유일한 그리고 가능한 다른 이름을 가질 것이다.
+    </para>
+
+             <table frame="topbot" id="aliasinjection-summary">
+                <title>Alias injection 이름들</title>
+                <tgroup cols="3">
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="1*"/>
+                    <colspec colwidth="2.5*"/>
+                    <thead>
+                        <row>
+                            <entry>설명</entry>
+                            <entry>구문</entry>
+                            <entry>예제</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>간단한 프로퍼티</entry>
+                            <entry><literal>{[aliasname].[propertyname]</literal></entry>
+                            <entry><literal>A_NAME as {item.name}</literal></entry>                            
+                        </row>
+                        <row>
+                            <entry>composite 프로퍼티</entry>
+                            <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
+                            <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
+                        </row>
+                        <row>
+                            <entry>엔티티의 판별자(Discriminator)</entry>
+                            <entry><literal>{[aliasname].class}</literal></entry>
+                            <entry><literal>DISC as {item.class}</literal></entry>
+                        </row>                        
+                        <row>
+                            <entry>엔티티의 모든 프로퍼티들</entry>
+                            <entry><literal>{[aliasname].*}</literal></entry>
+                            <entry><literal>{item.*}</literal></entry>
+                        </row>
+                        <row>
+                            <entry>콜렉션 키</entry>
+                            <entry><literal>{[aliasname].key}</literal></entry>
+                            <entry><literal>ORGID as {coll.key}</literal></entry>
+                        </row>                      
+                        <row>
+                            <entry>콜렉션의 id</entry>
+                            <entry><literal>{[aliasname].id}</literal></entry>
+                            <entry><literal>EMPID as {coll.id}</literal></entry>
+                        </row>
+                        <row>
+                            <entry>콜렉션의 요소</entry>
+                            <entry><literal>{[aliasname].element}</literal></entry>
+                            <entry><literal>XID as {coll.element}</literal></entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>콜렉션 내에 있는 요소의 프로퍼티</entry>
+                            <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
+                            <entry><literal>NAME as {coll.element.name}</literal></entry>
+                        </row>
+                        
+                        <row>
+                            <entry>콜렉션 내에 있는 요소의 모든 프로퍼티들</entry>
+                            <entry><literal>{[aliasname].element.*}</literal></entry>
+                            <entry><literal>{coll.element.*}</literal></entry>
+                        </row>
+                        <row>
+                            <entry>콜렉션의 모든 프로퍼티들</entry>
+                            <entry><literal>{[aliasname].*}</literal></entry>
+                            <entry><literal>{coll.*}</literal></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
 
     </sect1>
     
@@ -172,7 +245,6 @@ List loggedCats = sess.createSQLQuery(sql)
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
-
 
         <para>
                         명명된 SQL 질의는 스칼라 값을 반환할수도 있다. 당신은 <literal>&lt;return-scalar&gt;</literal> 요소를 사용하여 

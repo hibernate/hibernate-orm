@@ -499,7 +499,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-id" revision="3">
+        <sect2 id="mapping-declaration-id" revision="4">
             <title>id</title>
 
             <para>
@@ -562,8 +562,7 @@
             </para>
             
             <para>
-                <literal>unsaved-value</literal> 속성은 중요하다! 만일 당신의 클래스의 식별자 프로퍼티가 디폴트로 통상의 Java 
-                                디폴트 값(null 또는 0)에 대해 디폴트가 아닐 경우, 당신은 실제 디폴트를 지정해야 할 것이다.
+                <literal>unsaved-value</literal> 속성은 Hibernate3에서는 거의 필요하지 않다.
             </para>
 
              <para>
@@ -800,13 +799,13 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-compositeid" revision="2">
+        <sect2 id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 
             <programlisting><![CDATA[<composite-id
         name="propertyName"
         class="ClassName"
-        unsaved-value="undefined|any|none"
+        mapped="true|false"
         access="field|property|ClassName">
         node="element-name|."
 
@@ -834,34 +833,78 @@
 
             <para>
                                 불행히도, composite 식별자들에 대한 이 접근법은 영속 객체가 그것 자신의 식별자라는 점을 의미한다. 객체 
-                                자신 외의 다른 "핸들"이 존재하지 않는다. 당신은 당신이 composite key에 연관된 영속 상태를 <literal>load()</literal> 
+                                자신 외의 다른 "핸들"이 존재하지 않는다. 당신은 당신이 composite key로 연관된 영속 상태를 <literal>load()</literal> 
                                 할 수 있기 이전에 영속 클래스 그 자체의 인스턴스를 초기화 하고 그것의 식별자 프로퍼티들을 군집화 시켜야 한다. 우리는 
-                <xref linkend="components-compositeid"/>에서 composite 식별자가 한 개의 별도의 클래스로서 구현되는 훨씬 
-                                더 편리한 접근법을 설명할 것이다. 아래에 설명된 속성들은 이 대체 접근법에만 적용된다:
+                                이 접근법을 <emphasis>embedded</emphasis> composite 식별자로 부르고, 중대한 어플리케이션들에 대해 그것을 억제시킨다.
+            </para>
+            
+            <para>
+                                두 번째 접근법은 우리가 <emphasis>mapped</emphasis> composite 식별자라고 부르는 것인데, 여기서 
+                <literal>&lt;composite-id&gt;</literal> 요소 내에 명명된 여기서 식별자 프로퍼티들은 영속 클래스와 별도의 식별자 클래스 
+                                양자 상에 중복된다.
+            </para>
+                
+            <programlisting><![CDATA[<composite-id class="MedicareId" mapped="true">
+        <key-property name="medicareNumber"/>
+        <key-property name="dependent"/>
+</composite-id>]]></programlisting>
+
+            <para>
+                                이 예제에서, composite 식별자 클래스인 <literal>MedicareId</literal>와 엔티티 크래스 그 자체 양자는 
+                <literal>medicareNumber</literal>와  <literal>dependent</literal>로 명명된 프로퍼티들을 갖는다. 식별자 클래스는 
+                <literal>equals()</literal>와 <literal>hashCode()</literal>를 오버라이드 시켜고 <literal>Serializable</literal>을 
+                                구현해야 한다. 이 접근법의 단점은 아주 명백한&mdash;코드 중복이다.
+            </para>
+            
+            <para>
+                                다음 속성들은 매핑된 composite 식별자를 지정하는데 사용된다:
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para> 
+                        <literal>mapped</literal> (옵션, 디폴트는 <literal>false</literal>):
+                                                하나의 매핑된 composite 식별자가 사용됨을, 그리고 포함된 프로퍼티 매핑들이 엔티티 클래스와 
+                        composite 식별자 클래스 양자를 참조함을 나타낸다.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>class</literal> (옵션, 하지만 하나의 매핑된 commposite 식별자에 대해서는 필수적임): 
+                                                하나의 composite 식별자로서 사용되는 클래스.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                                우리는 <xref linkend="components-compositeid"/>에서 composite 식별자가 하나의 component 클래스로서 구현되는 
+                                보다 편리한 접근법인 세번째 방도를 설명할 것이다. 아래에 설명되어 있는 속성들은 이 대체적인 접근법에만 적용된다:
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>name</literal> (옵션): composite 식별자를 갖고 있는 컴포넌트 타입의 프로퍼티(다음 절을 보라). 
+                        <literal>name</literal> (옵션, 이 접근법의 경우에는 필수임): 하나의 component 
+                                                식별자를 소유하는 컴포넌트 타입의 프로퍼티(9장을 보라).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>access</literal> (옵션 - 디폴트는 <literal>property</literal>): 
+                        Hibernate가 프로퍼티 값에 접근하는데 사용할 방도.
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>class</literal> (옵션 - 디폴트는 reflection에 의해 결정된 프로퍼티 타입): 
-                        composite 식별자로서 사용된 컴포넌트 클래스(다음 절을 보라).
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <literal>unsaved-value</literal> (옵션 - 디폴트는 <literal>undefined</literal>): 
-                        <literal>any</literal>로 설정될 경우에 transient 인스턴스들이 새로이 초기화 된 것으로 간주되고 
-                                                또는<literal>none</literal>으로 설정된 경우, transient 인스턴스들이 detached 된 것으로 간주될 것임을 나타낸다. 
-                                                모든 클래스에서 디폴트 값으로 남겨두는 것이 최상이다.
+                                                하나의 composite 식별자로서 사용되는 컴포넌트 클래스(다음 절을 보라).
                     </para>
                 </listitem>
             </itemizedlist>
             
+            <para>
+                                이 세번째 접근법, <emphasis>identifier component</emphasis>은 거의 모든 어플리케이션들에 대해 우리가 권장하는 것이다.
+            </para>
         </sect2>
         
         <sect2 id="mapping-declaration-discriminator" revision="3">
@@ -2112,7 +2155,7 @@
 
         </sect2>
 
-   	<sect2 id="mapping-declaration-join" revision="3">
+    <sect2 id="mapping-declaration-join" revision="3">
             <title>join</title>
 
             <para>
@@ -2331,7 +2374,7 @@
 </many-to-one>]]></programlisting>
 
     </sect2>  
-   	
+    
         <sect2 id="mapping-declaration-import">
             <title>import</title>
 
@@ -2796,13 +2839,13 @@
 
     </sect1>
 
-  	
-   	<sect1 id="mapping-alternatives">
-   	<title>Metadata 대안들</title>
-   	
-   	<para>
-   	    XML은 모든 사람들을 위한 것이 아니지만, Hibernate에서 O/R 매핑 메타데이터를 정의하는 몇몇 대안적인 방법들이 존재한다.
-   	</para>
+    
+    <sect1 id="mapping-alternatives">
+    <title>Metadata 대안들</title>
+    
+    <para>
+        XML은 모든 사람들을 위한 것이 아니지만, Hibernate에서 O/R 매핑 메타데이터를 정의하는 몇몇 대안적인 방법들이 존재한다.
+    </para>
 
     <sect2 id="mapping-xdoclet">
         <title>XDoclet 마크업 사용하기</title>

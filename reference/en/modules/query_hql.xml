@@ -840,7 +840,7 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
     </sect1>
     
-    <sect1 id="queryhql-subqueries">
+    <sect1 id="queryhql-subqueries" revision="2">
         <title>Subqueries</title>
         
         <para>
@@ -868,6 +868,13 @@ where not exists (
 where cat.name not in ( 
     select name.nickName from Name as name 
 )]]></programlisting>
+
+        <programlisting><![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit) 
+from Cat as cat]]></programlisting>
+
+        <para>
+            Note that HQL subqueries may occur only in the select or where clauses.
+        </para>
 
         <para>
             For subqueries with more than one expression in the select list, you can use a tuple constructor:
@@ -1022,12 +1029,13 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
 
    </sect1>
 
-    <sect1 id="queryhql-bulk">
-        <title>Bulk UPDATE &amp; DELETE Statements</title>
+    <sect1 id="queryhql-bulk" revision="2">
+        <title>Bulk update and delete</title>
 
         <para>
-            HQL now supports UPDATE and DELETE statements in HQL.  See
-            <xref linkend="batch-direct"/> for details.
+            HQL now supports <literal>update</literal>, <literal>delete</literal> and
+            <literal>insert ... select ...</literal> statements.
+            See <xref linkend="batch-direct"/> for details.
         </para>
     </sect1>
 

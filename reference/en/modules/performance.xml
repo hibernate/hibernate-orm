@@ -155,7 +155,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         
         </sect2>
         
-        <sect2 id="performance-fetching-custom" revision="3">
+        <sect2 id="performance-fetching-custom" revision="4">
             <title>Tuning fetch strategies</title>
             
             <para>
@@ -172,7 +172,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
-                The fetch strategy defined in the mapping document affects:
+                The <literal>fetch</literal> strategy defined in the mapping document affects:
             </para>
             
         <itemizedlist>
@@ -184,7 +184,6 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             <listitem>
                 <para>
                     retrieval that happens implicitly when an association is navigated
-                    (lazy fetching)
                 </para>
             </listitem>
             <listitem>
@@ -192,7 +191,18 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                     <literal>Criteria</literal> queries
                 </para>
             </listitem>
+            <listitem>
+                <para>
+                    HQL queries if <literal>subselect</literal> fetching is used
+                </para>
+            </listitem>
         </itemizedlist>
+
+            <para>
+                No matter what fetching strategy you use, the defined non-lazy graph is guaranteed
+                to be loaded into memory. Note that this might result in several immediate selects
+                being used to execute a particular HQL query.
+            </para>
 
             <para>
                 Usually, we don't use the mapping document to customize fetching. Instead, we

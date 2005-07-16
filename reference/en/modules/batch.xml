@@ -109,7 +109,7 @@ session.close();]]></programlisting>
         </para>
 
 	    <para>
-            The psuedo-syntax for <literal>UPDATE</literal> and <literal>DELETE</literal> statements
+            The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</literal> statements
             is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>.  Some
             points to note:
         </para>
@@ -187,7 +187,7 @@ session.close();]]></programlisting>
         </para>
 
         <para>
-            The psuedo-syntax for <literal>INSERT</literal> statements is:
+            The pseudo-syntax for <literal>INSERT</literal> statements is:
             <literal>INSERT INTO EntityName properties_list select_statement</literal>.  Some
             points to note:
         </para>

@@ -432,6 +432,69 @@ dynamicSession.close()
 
     </sect1>
 
+    <sect1 id="persistent-classes-tuplizers" revision="0">
+        <title>Tuplizer들</title>
+
+        <para>
+            <literal>org.hibernate.tuple.Tuplizer</literal>, 그리고 그것의 서브-인터페이스들은 데이터의 조각에 대한 
+                        특별한 표현의 <literal>org.hibernate.EntityMode</literal>가 주어지면 그 표현을 관리하는 책임이 있다. 만일 
+                        주어진 데이터 조각이 하나의 데이터 구조로 간주될 경우, 그때 하나의 tuplizer는 그런 데이터 구조를 생성시키는 방법과 
+                        그런 데이터 구조로부터 값들을 추출시키는 방법 그리고 그런 데이터구조 속으로 값들을 삽입시키는 방법을 알고 있는 것이다. 
+                        예를 들어, POJO 엔티티 모드의 경우, 대응하는 tuplizer는 그것의 생성자를 통해 POJO를 생성시키는 방법, 그리고 정의된
+                        프로퍼티 접근자들을 사용하여 POJO 프로퍼티들에 접근하는 방법을 안다. 
+            <literal>org.hibernate.tuple.EntityTuplizer</literal> 인터페이스와 
+            <literal>org.hibernate.tuple.ComponentTuplizer</literal> 인터페이스에 의해 표현되는 두 가지 고급 유형의 
+            Tuplizer들이 존재한다. <literal>EntityTuplizer</literal>들은 엔티티들에 관해서는 위에 언급된 계약들을 매핑할 
+                        책임이 있는 반면에, <literal>ComponentTuplizer</literal>들은 컴포넌트들에 대해서도 동일한 것을 행한다.
+        </para>
+
+        <para>
+                        사용자들은 또한 그들 자신의 tuplizer들을 플러그 시킬 수 있다. 아마 당신은 dynamic-map entity-mode 동안에 사용되는 
+            <literal>java.util.HashMap</literal> 대신에 하나의 <literal>java.util.Map</literal> 구현을 필요로 한다;
+                        또는 아마 당신은 디폴트로 사용되는 방도 보다는 하나의 다른 다른 프릭시 산출 방도를 필요로 한다. 둘다 하나의 맞춤형 tuplizer를 
+                        정의함으로써 성취될 것이다. Tuplizer들 정의들은 그것들이 관리할 수단인 엔티티 매핑 또는 컴포넌트 매핑에 첨부된다. 우리의 
+                        고객 엔티티에 대한 예제로 되돌아가면:
+        </para>
+
+        <programlisting><![CDATA[<hibernate-mapping>
+    <class entity-name="Customer">
+        <!--
+            Override the dynamic-map entity-mode
+            tuplizer for the customer entity
+        -->
+        <tuplizer entity-mode="dynamic-map"
+                class="CustomMapTuplizerImpl"/>
+
+        <id name="id" type="long" column="ID">
+            <generator class="sequence"/>
+        </id>
+
+        <!-- other properties -->
+        ...
+    </class>
+</hibernate-mapping>
+
+
+public class CustomMapTuplizerImpl
+        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+    // override the buildInstantiator() method to plug in our custom map...
+    protected final Instantiator buildInstantiator(
+            org.hibernate.mapping.PersistentClass mappingInfo) {
+        return new CustomMapInstantiator( mappingInfo );
+    }
+
+    private static final class CustomMapInstantiator
+            extends org.hibernate.tuple.DynamicMapInstantitor {
+        // override the generateMap() method to return our custom map...
+        protected final Map generateMap() {
+            return new CustomMap();
+        }
+    }
+}]]></programlisting>
+
+
+    </sect1>
+
     <para>
         TODO: property 패키지와 proxy 패키지 내에 user-extension 프레임웍을 문서화 할 것.
     </para>

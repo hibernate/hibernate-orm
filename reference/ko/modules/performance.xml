@@ -134,7 +134,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         
         </sect2>
         
-        <sect2 id="performance-fetching-custom" revision="3">
+        <sect2 id="performance-fetching-custom" revision="4">
             <title>페치 방도들을 튜닝하기</title>
             
             <para>
@@ -151,7 +151,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
-                                매핑 문서 내에 정의된 페치 방도는 다음에 영향을 준다:
+                                매핑 문서 내에 정의된 <literal>fetch</literal> 방도는 다음에 영향을 준다:
             </para>
             
         <itemizedlist>
@@ -162,7 +162,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </listitem>
             <listitem>
                 <para>
-                                        연관이 네비게이트될 때 함축적으로 발생하는 검색(lazy 페칭)
+                                        연관이 네비게이트될 때 함축적으로 발생하는 검색
                 </para>
             </listitem>
             <listitem>
@@ -170,9 +170,19 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                     <literal>Criteria</literal> 질의들
                 </para>
             </listitem>
+            <listitem>
+                <para>
+                    <literal>subselect</literal> 페칭이 사용될 경우에 HQL 질의들
+                </para>
+            </listitem>
         </itemizedlist>
 
             <para>
+                                당신이 사용하는 페칭 방도가 무엇인가에 상관없이, 정의된 비-lazy 그래프가 메모리 내로 로드되는 것이 보장된다. 
+                                이것은 하나의 특별한 HQL 질의를 실행시키는데 사용되는 몇몇 즉시적인 select들로 귀결될 수 있음을 노트하라.
+            </para>
+
+            <para>            
                                 대개, 우리는 페칭을 맞춤화 시키는데 매핑 문서를 사용하지 않는다. 대신에, 우리는 디폴트 특징을 유지하고, HQL에서 
                 <literal>left join fetch</literal>를 사용하여, 특정 트랜잭션에 대해 그것을 오버라이드 시킨다. 이것은 
                 outer join을 사용하여 첫 번째 select에서 초기에 그 연관을 eagerly 페치시킬 것을 Hibernate에게 알려준다. 

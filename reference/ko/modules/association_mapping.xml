@@ -462,7 +462,7 @@ create table Address ( addressId bigint not null primary key )
         inverse="true">
         <key column="addressId" 
             unique="true"/>
-        <many-to-one name="address"
+        <many-to-one name="person"
             column="personId" 
             not-null="true"
             unique="true"/>

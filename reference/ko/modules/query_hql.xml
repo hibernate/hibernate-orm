@@ -810,7 +810,7 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
     </sect1>
     
-    <sect1 id="queryhql-subqueries">
+    <sect1 id="queryhql-subqueries" revision="2">
         <title>서브질의들</title>
         
         <para>
@@ -838,6 +838,9 @@ where cat.name not in (
     select name.nickName from Name as name 
 )]]></programlisting>
 
+        <programlisting><![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit) 
+from Cat as cat]]></programlisting>
+
         <para>
             select 리스트 내에 있는 하나 이상의 표현식을 가진 서브질의들의 경우에 당신은 tuple 생성자를 사용할 수 있다:
         </para>
@@ -846,6 +849,10 @@ where cat.name not in (
 where not ( cat.name, cat.color ) in ( 
     select cat.name, cat.color from DomesticCat cat 
 )]]></programlisting>
+
+        <para>
+            HQL 서브질의들이 select 절 또는 where 절 내에서만 일어날 수 있음을 노트하라.
+        </para>
 
         <para>
             (Oracle 또는 HSQL이 아닌) 몇몇 데이터베이스들 상에서, 당신은 다른 컨텍스트들 내에서, 예를 들면 component들이나 composite 
@@ -987,11 +994,13 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
 
    </sect1>
 
-    <sect1 id="queryhql-bulk">
-        <title>대량 UPDATE &amp; DELETE 문장들</title>
+    <sect1 id="queryhql-bulk" revision="2">
+        <title>대량 update와 delete</title>
 
         <para>
-            HQL은 이제 HQL에서 UPDATE 및 DELETE 문장들을 지원한다. 상세한 것은 <xref linkend="batch-direct"/>를 보라.
+            HQL은 이제 <literal>update</literal>, <literal>delete</literal> 그리고 
+            <literal>insert ... select ...</literal> 문장들을 지원한다.
+                        상세한 것은 <xref linkend="batch-direct"/>를 보라.
         </para>
     </sect1>
 

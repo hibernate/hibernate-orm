@@ -94,6 +94,44 @@ tx.commit();
 session.close();]]></programlisting>
 
     </sect1>
+    
+    <sect1 id="batch-statelesssession">
+        <title>The StatelessSession interface</title>
+        <para>
+            Alternatively, Hibernate provides a command-oriented API that may be used for 
+            streaming data to and from the database in the form of detached objects. A 
+            <literal>StatelessSession</literal> has no persistence context associated
+            with it, and does not provide many of the higher-level ORM semantics.
+            In particular, a stateless session does not implement a first-level cache nor
+            interact with any second-level or query cache, nor does it implement 
+            transactional write-behind or automatic dirty checking. Operations performed
+            using a stateless session do not ever cascade to associated instances. Collections 
+            are ignored by a stateless session. Operations performed via a stateless session 
+            bypass Hibernate's event model and interceptors. Stateless sessions are vulnerable 
+            to data aliasing effects, due to the lack of a first-level cache.
+        </para>
+        
+<programlisting><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
+Transaction tx = session.beginTransaction();
+   
+ScrollableResults customers = session.getNamedQuery("GetCustomers")
+    .scroll(ScrollMode.FORWARD_ONLY);
+while ( customers.next() ) {
+    Customer customer = (Customer) customers.get(0);
+    customer.updateStuff(...);
+    session.update(customer);
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+            Note that in this code example, the <literal>Customer</literal> instances returned
+            by the query are immediately detached. They are never associated with any persistence
+            context.
+        </para>
+
+    </sect1>
 
     <sect1 id="batch-direct" revision="2">
         <title>DML-style operations</title>

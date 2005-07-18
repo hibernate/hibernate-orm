@@ -101,14 +101,15 @@ session.close();]]></programlisting>
             Alternatively, Hibernate provides a command-oriented API that may be used for 
             streaming data to and from the database in the form of detached objects. A 
             <literal>StatelessSession</literal> has no persistence context associated
-            with it, and does not provide many of the higher-level ORM semantics.
+            with it and does not provide many of the higher-level lifecycle semantics.
             In particular, a stateless session does not implement a first-level cache nor
-            interact with any second-level or query cache, nor does it implement 
+            interact with any second-level or query cache. It does not implement 
             transactional write-behind or automatic dirty checking. Operations performed
             using a stateless session do not ever cascade to associated instances. Collections 
             are ignored by a stateless session. Operations performed via a stateless session 
             bypass Hibernate's event model and interceptors. Stateless sessions are vulnerable 
-            to data aliasing effects, due to the lack of a first-level cache.
+            to data aliasing effects, due to the lack of a first-level cache. A stateless
+            session is a lower-level abstraction, much closer to the underlying JDBC.
         </para>
         
 <programlisting><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
@@ -129,6 +130,16 @@ session.close();]]></programlisting>
             Note that in this code example, the <literal>Customer</literal> instances returned
             by the query are immediately detached. They are never associated with any persistence
             context.
+        </para>
+        
+        <para>
+            The <literal>insert(), update()</literal> and <literal>delete()</literal> operations
+            defined by the <literal>StatelessSession</literal> interface are considered to be
+            direct database row-level operations, which result in immediate execution of a SQL
+            <literal>INSERT, UPDATE</literal> or <literal>DELETE</literal> respectively. Thus,
+            they have very different semantics to the <literal>save(), saveOrUpdate()</literal> 
+            and <literal>delete()</literal> operations defined by the <literal>Session</literal> 
+            interface.
         </para>
 
     </sect1>

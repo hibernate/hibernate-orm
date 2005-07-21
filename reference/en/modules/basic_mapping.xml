@@ -1382,7 +1382,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="3">
+        <sect2 id="mapping-declaration-manytoone" revision="4">
             <title>many-to-one</title>
 
             <para>
@@ -1551,7 +1551,8 @@
                 and <literal>all</literal> and comma-separated combinations of operation
                 names, for example, <literal>cascade="persist,merge,evict"</literal> or
                 <literal>cascade="all,delete-orphan"</literal>. See <xref linkend="objectstate-transitive"/>
-                for a full explanation.
+                for a full explanation. Note that single valued associations (many-to-one and 
+                one-to-one associations) do not support orphan delete.
             </para>
             
             <para>
@@ -1585,6 +1586,12 @@
                 If the referenced unique key comprises multiple properties of the associated entity, you should
                 map the referenced properties inside a named <literal>&lt;properties&gt;</literal> element.
             </para>
+            
+            <para>
+            	If the referenced unique key is the property of a component, you may specify a property path:
+            </para>
+            
+           <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>           
             
         </sect2>
 

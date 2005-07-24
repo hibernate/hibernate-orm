@@ -599,7 +599,7 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
 
-        <sect2 id="example-mappings-association-alternatekeys" >
+        <sect2 id="example-mappings-association-alternatekeys" revision="2">
             <title>Associations on alternate keys</title>
 <programlisting><![CDATA[<class name="Person">
     
@@ -640,7 +640,7 @@ alter table line_items
 
 <class name="Account">
     <id name="accountId" length="32">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     
     <many-to-one name="user"

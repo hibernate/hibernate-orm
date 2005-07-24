@@ -6,7 +6,7 @@
         for different purposes, throughout Hibernate.
     </para>
 
-    <sect1 id="components-dependentobjects">
+    <sect1 id="components-dependentobjects" revision="2" >
         <title>Dependent objects</title>
 
         <para>
@@ -78,7 +78,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name"> <!-- class attribute optional -->
@@ -120,7 +120,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name" unique="true">

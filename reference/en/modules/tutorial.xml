@@ -741,15 +741,31 @@ else if (args[0].equals("list")) {
             </para>
 
             <para>
+                Now, to execute and test all of this, follow these steps:
+            </para>
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Run <literal>ant run -Daction=store</literal> to store something into the database
+                        and, of course, to generate the database schema before through hbm2ddl.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Now disable hbm2ddl by commenting out the property in your <literal>hibernate.cfg.xml</literal>
+                        file. Usually you only leave it turned on in continous unit testing, but another
+                        run of hbm2ddl would <emphasis>drop</emphasis> everything you have stored - the
+                        <literal>create</literal> configuration setting actually translates into "drop all
+                        tables from the schema, then re-create all tables, when the SessionFactory is build".
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
                 If you now call Ant with <literal>-Daction=list</literal>, you should see the events
-                you have stored so far. You might be surprised that this doesn't work, at least if you
-                followed this tutorial step by step - the result will always be empty. The reason for
-                this is the <literal>hbm2ddl.auto</literal> switch in the Hibernate configuration: Hibernate
-                will re-create the database on every run. Disable it by removing the option, and you will
-                see results in your list after you called the <literal>store</literal> action a few
-                times. Of course the first <literal>store</literal> you do has to have the option turned on,
-                so you get the initial tables created. Automatic schema generation and export is mostly useful
-                in unit testing.
+                you have stored so far. You can of course also call the <literal>store</literal> action a few
+                times more.
             </para>
 
         </sect2>

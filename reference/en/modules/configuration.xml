@@ -379,7 +379,21 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.show_sql</literal>
                         </entry>
                         <entry>
-                            Write all SQL statements to console.
+                            Write all SQL statements to console. This is an alternative
+                            to setting the log category <literal>org.hibernate.SQL</literal>
+                            to <literal>debug</literal>.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.format_sql</literal>
+                        </entry>
+                        <entry>
+                            Pretty print the SQL in the log and console.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>

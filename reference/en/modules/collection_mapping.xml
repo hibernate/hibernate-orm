@@ -410,7 +410,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             to get a feeling for how various mapping declarations translate to database tables.
         </para>
 
-    <sect2 id="collections-ofvalues" revision="1">
+    <sect2 id="collections-ofvalues" revision="2">
         <title>Collections of values and many-to-many associations</title>
 
         <para>
@@ -476,6 +476,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany5" coords="6 60"/>
                 <area id="manytomany6" coords="7 60"/>
                 <area id="manytomany7" coords="8 60"/>
+                <area id="manytomany8" coords="9 60"/>
             </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
@@ -485,6 +486,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         unique="true|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        property-ref="propertyNameFromAssociatedClass"
         node="element-name"
         embed-xml="true|false"
     />]]></programlisting>
@@ -536,6 +538,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         as an alternative to <literal>class</literal>.
                     </para>
                 </callout>
+                <callout arearefs="manytomany8">
+                    <para>
+                        <literal>property-ref</literal>: (optional) The name of a property of the associated 
+                        class that is joined to this foreign key. If not specified, the primary key of
+                        the associated class is used.
+                    </para>                
+                </callout>                   
             </calloutlist>
         </programlistingco>
 

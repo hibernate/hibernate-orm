@@ -1514,7 +1514,7 @@
                     <callout arearefs="manytoone13">
                         <para>
                             <literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): 
-                            By default, single point associations are proxied. <literal>lazy="true"</literal>
+                            By default, single point associations are proxied. <literal>lazy="no-proxy"</literal>
                             specifies that the property should be fetched lazily when the instance variable 
                             is first accessed (requires build-time bytecode instrumentation). 
                             <literal>lazy="false"</literal> specifies that the association will always
@@ -1688,7 +1688,7 @@
                     <callout arearefs="onetoone9">
                         <para>
                             <literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): 
-                            By default, single point associations are proxied. <literal>lazy="true"</literal>
+                            By default, single point associations are proxied. <literal>lazy="no-proxy"</literal>
                             specifies that the property should be fetched lazily when the instance variable 
                             is first accessed (requires build-time bytecode instrumentation). 
                             <literal>lazy="false"</literal> specifies that the association will always

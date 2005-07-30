@@ -387,6 +387,13 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 Hibernate will detect persistent classes that override <literal>equals()</literal> or
                 <literal>hashCode()</literal>.
             </para>
+            
+            <para>
+                By choosing <literal>lazy="no-proxy"</literal> instead of the default 
+                <literal>lazy="proxy"</literal>, we can avoid the problems associated with typecasting.
+                However, we will require buildtime bytecode instrumentation, and all operations
+                will result in immediate proxy initialization.
+            </para>
 
         </sect2>
 

@@ -74,7 +74,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-mapping" revision="3">
+    <sect1 id="collections-mapping" revision="4">
         <title>Collection mappings</title>
 
         <para>
@@ -120,7 +120,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     name="propertyName"
     table="table_name"
     schema="schema_name"
-    lazy="true|false"
+    lazy="true|extra|false"
     inverse="true|false"
     cascade="all|none|save-update|delete|all-delete-orphan"
     sort="unsorted|natural|comparatorClass"
@@ -161,7 +161,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                     <para>
                         <literal>lazy</literal> (optional - defaults to <literal>true</literal>)
                         may be used to disable lazy fetching and specify that the association is 
-                        always eagerly fetched (not available for arrays)
+                        always eagerly fetched, or to enable "extra-lazy" fetching where most 
+                        operations do not initialize the collection (suitable for very large 
+                        collections)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">

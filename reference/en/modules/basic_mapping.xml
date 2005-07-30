@@ -1382,7 +1382,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="4">
+        <sect2 id="mapping-declaration-manytoone" revision="5">
             <title>many-to-one</title>
 
             <para>
@@ -1426,7 +1426,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
         formul="arbitrary SQL expression"
@@ -1595,7 +1595,7 @@
             
         </sect2>
 
-        <sect2 id="mapping-declaration-onetoone" revision="2">
+        <sect2 id="mapping-declaration-onetoone" revision="3">
             <title>one-to-one</title>
 
             <para>
@@ -1625,7 +1625,7 @@
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
         formula="any SQL expression"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         entity-name="EntityName"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"

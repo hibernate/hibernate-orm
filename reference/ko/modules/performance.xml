@@ -1,7 +1,7 @@
 <chapter id="performance">
     <title>퍼포먼스 개선하기</title>
 
-    <sect1 id="performance-fetching">
+    <sect1 id="performance-fetching" revision="2">
         <title>페칭 방도들</title>
 
         <para>
@@ -63,14 +63,29 @@
             </listitem>
             <listitem>
                 <para>
+                    <emphasis>"Extra-lazy" 콜렉션 페칭</emphasis> - 콜렉션의 개별 요소들은 필요할 때 
+                                        데이터베이스로부터 접근된다. Hibernate는 절대적으로 필요하지 않은 한 전체 콜렉션을 메모리 내로 
+                                        페치하려고 시도하지 않는다(매우 큰 콜렉션에 적합함)
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     <emphasis>프락시 페칭</emphasis> - 식별자 getter가 아닌 다른 메소드가 연관된 객체에 대해 호출될 때 
                                         단일 값 연관이 페치된다.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Lazy 속성 페칭</emphasis> - 인스턴스 변수가 접근될 때 속성 또는 단일 값 연관이 페치된다(빌드 시 바이트코드
-                                        수단을 필요로 한다 ). 이 접근법은 좀처럼 필요하지 않는다.
+                    <emphasis>"No-proxy" 페칭</emphasis> - 인스턴스 변수가 접근될 때 단일 값 연관이 페치된다.
+                                        프락시 페칭과 비교할 때, 이 접근법은 다소 덜 lazy하지만(그 연관은 심지어 유일하게 식별자가 접근될 때에도 
+                                        페치된다)보다 투명하다. 왜냐하면 프락시는 어플리케이션에 가시적이지 않기 때문이다. 이 접근법은 빌드 시 
+                                        바이트코드 수단을 필요로 하며 드물게 필요하다.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Lazy 속성 페칭</emphasis> - 인스턴스 변수가 접근될 때 속성 또는 단일 값 연관이 페치된다
+                    이 접근법은 빌드시 바이트코드 수단을 필요로 하며 드물게 필요하다.
                 </para>
             </listitem>
         </itemizedlist>
@@ -334,6 +349,12 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 Hibernate는 <literal>equals()</literal> 또는 <literal>hashCode()</literal>를 오버라이드 시키는 영속 클래스들을 
                                 검출할 것이다.
+            </para>
+            
+            <para>
+                                디폴트 <literal>lazy="proxy"</literal> 대신에 <literal>lazy="no-proxy"</literal>를 선택하여,
+                                우리는 타입캐스팅과 연관된 문제점들을 피할 수 있다. 하지만 우리는 빌드 시 바이트코드 수단을 필요로 할 것이고, 
+                                모든 연산들은 즉각적인 프락시 초기화로 귀결될 것이다.
             </para>
 
         </sect2>

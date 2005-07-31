@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <chapter id="querysql" revision="2">
     <title>Native SQL</title>
 
@@ -12,7 +13,7 @@
                 지정하는 것을 당신에게 허용해준다. 
     </para>
 
-    <sect1 id="querysql-creating" revision="2">
+    <sect1 id="querysql-creating" revision="3">
         <title><literal>SQLQuery</literal> 사용하기</title>
 
         <para>
@@ -25,9 +26,7 @@
     .addEntity(Cat.class)
     .list();]]></programlisting>
     
-        <para>
-                        이 질의는 다음을 지정했다:
-        </para>
+        <para>이 질의는 다음을 지정했다:</para>
 
         <itemizedlist>
         <listitem>
@@ -52,9 +51,7 @@
     .addEntity("cat", Cat.class)
     .list();]]></programlisting>
 
-        <para>
-                        이 질의는 다음을 지정했다:
-        </para>
+        <para>이 질의는 다음을 지정했다:</para>
 
         <itemizedlist>
         <listitem>
@@ -93,7 +90,15 @@
         <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
         .addScalar("maxWeight", Hibernate.DOUBLE);
         .uniqueResult();]]></programlisting>
+        
+        <para>당신은 당신의 hbm 파일들 내에 결과셋 매핑 정보를 대안저긍로 설명활 수 있고 당신의 질의들을 위해 그것들을 
+                사용할 수 있다.</para>
 
+    <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .setResultSetMapping("catAndKitten")
+    .list();]]></programlisting>
 
     </sect1>
 
@@ -257,6 +262,28 @@ List loggedCats = sess.createSQLQuery(sql)
     SELECT p.NAME AS name,
            p.AGE AS age,
     FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
+
+        <para>당신은 여러 개의 명명된 질의들을 가로질러 재사용하거나 <literal>setResultSetMapping()</literal> API를 통해 결과셋 
+                매핑정보들을 재사용하기 위해 <literal>&lt;resultset&gt;</literal> 요소 속에 결과셋 매핑 정보들을 구체화 시킬 수 있다.</para>
+
+    <programlisting><![CDATA[<resultset name="personAddress">
+    <return alias="person" class="eg.Person"/>
+    <return-join alias="address" property="person.mailingAddress"/>
+</resultset>
+
+<sql-query name="personsWith" resultset-ref="personAddress">
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex},
+           adddress.STREET AS {address.street},
+           adddress.CITY AS {address.city},
+           adddress.STATE AS {address.state},
+           adddress.ZIP AS {address.zip}
+    FROM PERSON person 
+    JOIN ADDRESS adddress
+        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
+    WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
          <sect2 id="propertyresults">

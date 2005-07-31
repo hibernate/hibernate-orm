@@ -90,6 +90,51 @@ session.close();]]></programlisting>
 
     </sect1>
 
+    
+    <sect1 id="batch-statelesssession">
+        <title>StatelessSession 인터페이스</title>
+        <para>
+                        다른 방법으로 Hibernate는 분리된(detached) 객체들의 형식으로 데이터베이스로 그리고 데이터베이스로부터 
+                        데이터를 스트리밍하는데 사용될 수 있는 하나의 명령 지향 API를 제공한다. <literal>StatelessSession</literal>은 
+                        그것과 연관된 영속 컨텍스트를 갖지 않고 많은 보다 높은 레벨의 생명 주기 의미를 제공하지 않는다. 
+                        특히 하나의 상태 없는 세션은 첫 번째 레벨 캐시를 구현하지 않거나 임의의 두 번째 레벨 캐시 또는 질의 캐시와 
+                        상호작용하지 않는다. 그것은 전통적인 쓰기-이면(write-behind)의 체킹이나 자동적인 dirty 체킹을 구현하지 않는다.
+                        하나의 상태 없는 세션을 사용하여 수행된 연산들은 연관된 인스턴스들에 대해 케스케이드 되지 않는다. 콜렉션들은
+                        상태 없는 세션에 의해 무시된다. 상태없는 세션을 통해 수행된 연산들은 Hibernate의 이벤트 모형과 인터셉터들을 
+                        우회한다. 상태없는 세션들은 첫번째-레벨의 캐시의 부족으로 인해 데이터 alias 효과들에 취약하다. 상태없는 세션은 
+                        기본 JDBC에 훨씬 더 가까운 하나의 보다 낮은 레벨의 추상화(abstraction)이다.
+        </para>
+        
+<programlisting><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
+Transaction tx = session.beginTransaction();
+   
+ScrollableResults customers = session.getNamedQuery("GetCustomers")
+    .scroll(ScrollMode.FORWARD_ONLY);
+while ( customers.next() ) {
+    Customer customer = (Customer) customers.get(0);
+    customer.updateStuff(...);
+    session.update(customer);
+}
+   
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+                        이 코드 예제에서, 질의에 의해 반환된 <literal>Customer</literal> 인스턴스들은 곧바고 분리된다(detached). 
+                        그것들은 임의의 영속 컨텍스트와 결코 연관되지 않는다.
+        </para>
+        
+        <para>
+            <literal>StatelessSession</literal> 인터페이스에 의해 정의된 
+            <literal>insert(), update()</literal> 그리고 <literal>delete()</literal> 연산들은 직접적인 
+                        데이터베이스 저급 연산들로 갖주되고, 그것은 각각 하나의 SQL <literal>INSERT, UPDATE</literal> 또는 
+            <literal>DELETE</literal>의 즉각적인 실행으로 귀결된다. 따라서 그것들은 <literal>Session</literal>
+                        인터페이스에 의해 정의된 <literal>save(), saveOrUpdate()</literal>와 <literal>delete()</literal>
+                        연산들과는 매우 다른 의미들을 갖는다.
+        </para>
+
+    </sect1>
+
     <sect1 id="batch-direct" revision="2">
         <title>DML-스타일 연산들</title>
 
@@ -101,7 +146,7 @@ session.close();]]></programlisting>
             (<xref linkend="queryhql">HQL</xref>)를 통해 실행되는 대량 SQL-스타일의 DML 문장 실행을 위한 메소드들을 제공한다.
         </para>
 
-	    <para>
+        <para>
              <literal>UPDATE</literal>와 <literal>DELETE</literal> 문장들의 유사-구문은 다음과 같다: 
              <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>. 노트할 몇 가지 :
         </para>

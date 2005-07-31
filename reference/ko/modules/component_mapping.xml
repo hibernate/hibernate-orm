@@ -5,7 +5,7 @@
         <emphasis>component</emphasis>의 개념은 Hibernate에서 다른 용도로 몇몇 다른 컨텍스트들 내에서 재사용된다.
     </para>
 
-    <sect1 id="components-dependentobjects">
+    <sect1 id="components-dependentobjects" revision="2" >
         <title>종속 객체들</title>
 
         <para>
@@ -76,7 +76,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name"> <!-- class attribute optional -->
@@ -115,7 +115,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name" unique="true">

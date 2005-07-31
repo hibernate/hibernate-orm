@@ -349,7 +349,20 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.show_sql</literal>
                         </entry>
                         <entry>
-                                                        모든 SQL 문장들을 콘솔에 기록한다. 
+                                                        모든 SQL 문장들을 콘솔에 기록한다. 이것은 로그 카테고리 <literal>org.hibernate.SQL</literal>를 
+                            <literal>debug</literal>로 설정하는 것에 대한 하나의 다른 방법이다.
+                            <para>
+                                <emphasis role="strong">예.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.format_sql</literal>
+                        </entry>
+                        <entry>
+                                                        로그와 콘솔 속에 SQL을 깔끔하게 프린트한다.
                             <para>
                                 <emphasis role="strong">예.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>

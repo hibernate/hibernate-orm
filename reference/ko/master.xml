@@ -34,7 +34,7 @@
     <bookinfo lang="ko">
         <title>HIBERNATE - 개성있는 자바를 위한 관계 영속</title>
         <subtitle>하이버네이트 참조 문서</subtitle>
-        <releaseinfo lang="ko">3.1 beta 1</releaseinfo>
+        <releaseinfo lang="ko">3.1 beta 2</releaseinfo>
     </bookinfo>
 
     <toc lang="ko" />

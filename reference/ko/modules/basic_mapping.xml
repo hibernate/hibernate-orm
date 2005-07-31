@@ -1301,7 +1301,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="3">
+        <sect2 id="mapping-declaration-manytoone" revision="5">
             <title>many-to-one</title>
 
             <para>
@@ -1343,7 +1343,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
         formul="arbitrary SQL expression"
@@ -1427,7 +1427,7 @@
                     <callout arearefs="manytoone13">
                         <para>
                             <literal>lazy</literal> (옵션 - 디폴트는 <literal>proxy</literal>): 
-                                                        디폴트로, 단일 포인트 연관들이 프락시된다. <literal>lazy="true"</literal>는 인스턴스 변수가 처음으로 접근될 때 
+                                                        디폴트로, 단일 포인트 연관들이 프락시된다. <literal>lazy="no-proxy"</literal>는 인스턴스 변수가 처음으로 접근될 때 
                                                         그 프로퍼티가 lazily 페치될 것임을 지정한다(빌드-시 바이트코드 수단을 필요로 한다). <literal>lazy="false"</literal>는 
                                                         그 연관이 항상 eagerly 페치될 것임을 지정한다.
                         </para>
@@ -1459,7 +1459,8 @@
                                 뿐만 아니라 특별한 값들, 즉 <literal>delete-orphan</literal>과 <literal>all</literal> 그리고 오퍼레이션 이름들의 
                                 쉼표 분리된 조합들, 예를 들면 <literal>cascade="persist,merge,evict"</literal> 또는 
                 <literal>cascade="all,delete-orphan"</literal>이다. 전체 설명은 
-                <xref linkend="objectstate-transitive"/>를 보라.
+                <xref linkend="objectstate-transitive"/>를 보라. 단일값 연관들(many-to-one 연관과 
+                one-to-one 연관)은 orphan delete를 지원하지 않음을 노트하라.
             </para>
             
             <para>
@@ -1492,9 +1493,15 @@
                                 요소 내부에 참조된 프로퍼티들을 매핑할 것이다.
             </para>
             
+            <para>
+                                만일 참조된 유일키가 컴포넌트의 프로퍼티일 경우, 당신은 하나의 프로퍼티 경로를 지정할 수 있다:
+            </para>
+            
+           <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>           
+            
         </sect2>
 
-        <sect2 id="mapping-declaration-onetoone" revision="2">
+        <sect2 id="mapping-declaration-onetoone" revision="3">
             <title>one-to-one</title>
 
             <para>
@@ -1523,7 +1530,7 @@
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
         formula="any SQL expression"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         entity-name="EntityName"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"
@@ -1584,7 +1591,7 @@
                     <callout arearefs="onetoone9">
                         <para>
                             <literal>lazy</literal> (옵션 - 디폴트는 <literal>proxy</literal>): 
-                                                        디폴트로 한쪽 끝 연관들이 프락시 된다. <literal>lazy="true"</literal>는 인스턴스 변수가 처음 접근될 때 
+                                                        디폴트로 한쪽 끝 연관들이 프락시 된다. <literal>lazy="no-proxy"</literal>는 인스턴스 변수가 처음 접근될 때 
                                                         그 프로퍼티가 lazily 페치될 것임을 지정한다(빌드-시 바이트코드 수단을 필요로 한다).
                             <literal>lazy="false"</literal>는 그 연관들이 항상 eagerly 페치될 것임을 지정한다. <emphasis>만일 
                             <literal>constrained="false"</literal>인 경우에, 프락싱은 불가능하고 Hibernate는 그 연관을 eager 페치시킬 것이다!</emphasis>

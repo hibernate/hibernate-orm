@@ -701,13 +701,30 @@ else if (args[0].equals("list")) {
             </para>
 
             <para>
-                                만일 당신이 이제 <literal>-Daction=list</literal> 옵션으로 Ant를 호출할 경우, 당신은 당신이 지금까지 
-                                저장시켰던 이벤트들을 보게 될 것이다. 당신은 이것이 동작하지 않아서 놀랄 수도 있고, 어쨌든 만일 당신이 이 튜토리얼을 
-                                단계적으로 따랐다면 - 그 결과는 항상 공백일 것이다. 이 이유는 Hibernate에서 <literal>hbm2ddl.auto</literal> 
-                                바꿈 때문이다 : Hibernate는 매번 실행 시에 데이터베이스를 다시 생성시킬 것이다. 그 옵션을 제거하여 그것을 
-                                사용하지 않도록 하면, 당신이 몇 번의 <literal>store</literal> 액션을 호출한 후에 당신은 당신의 목록 속에서 
-                                결과들을 보게 될 것이다. 물론 당신이 행하는 첫 번째 <literal>저장(store)</literal>은 결정되는 옵션을 가져야 하므로, 
-                                당신은 생성된 초기 테이블들을 얻는다. 자동적인 스키마 생성과 내보내기(export)는 대개 단위 테스팅에서 유용하다. 
+                                이제 이 모든 것을 실행하고 테스트하기 위해, 다음 단계들을 따르라:
+            </para>
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                                                데이터베이스 속으로 어떤 것을 저장하고 물론 앞서 hbm2ddl을 통해 데이터베이스 스키마를 산출시키기 위해 
+                        <literal>ant run -Daction=store</literal>를 실행하라.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                                                이제 당신의 <literal>hibernate.cfg.xml</literal> 파일 속에서 프로퍼티를 주석처리함으로써 hbm2ddl을 
+                                                사용불가능하게 하라. 대개 당신은 지속되는 단위 테스팅에서 그것을 사용 가능하게 내버려두어도 되지만, 또 다른 
+                        hbm2ddl의 실행은 당신이 저장했던 모든 것을 <emphasis>드롭</emphasis>시킬 것이다 - <literal>create</literal>
+                                                구성 설정은 실제로 "스키마로부터 모든 테이블들을 드롭시키고 나서, SessionFactory가 빌드될 때 모든 테이블들을 
+                                                다시 생성시키는 것"으로 변환된다.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                                만일 당신이 지금 <literal>-Daction=list</literal>로 Ant를 호출할 경우, 당신은 당신이 지금까지 저장했던 이벤트들을 
+                                보게 될 것이다. 물론 당신은 또한 여러 번 <literal>store</literal> 액션을 호출할 수 있다.
             </para>
 
         </sect2>

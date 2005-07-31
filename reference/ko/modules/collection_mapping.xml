@@ -62,7 +62,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
     </sect1>
 
-    <sect1 id="collections-mapping" revision="3">
+    <sect1 id="collections-mapping" revision="4">
         <title>콜렉션 매핑들</title>
 
         <para>
@@ -105,7 +105,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     name="propertyName"
     table="table_name"
     schema="schema_name"
-    lazy="true|false"
+    lazy="true|extra|false"
     inverse="true|false"
     cascade="all|none|save-update|delete|all-delete-orphan"
     sort="unsorted|natural|comparatorClass"
@@ -145,8 +145,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <callout arearefs="mappingcollection4">
                     <para>
                         <literal>lazy</literal> (옵션 - 디폴트는 <literal>true</literal>)
-                        lazy 페칭을 사용 불가능하도록 하고 그 연관이 항상 eagerly 페치됨을 지정하는데 사용될 수 있다
-                        (배열들에 대해서는 이용 불가능함)
+                        lazy 페칭을 사용 불가능하도록 하고 그 연관이 항상 eagerly 페치됨을 지정하는데 , 또는 대부분의 
+                                                연산들이 콜렉션을 초기화시키지 않는 "extra-lazy" 페칭을 이용 가능하도록 하는데(매우 큰 콜렉션들에 
+                                                적당함) 사용될 수 있다
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
@@ -382,7 +383,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         테이블들로 변환되는 방법을 당신이 느끼려면 스키마 생성 도구로 실험할 것을 우리는 제안한다.
         </para>
 
-    <sect2 id="collections-ofvalues" revision="1">
+    <sect2 id="collections-ofvalues" revision="2">
         <title>값들을 가진 콜렉션들과 many-to-many 연관들</title>
 
         <para>
@@ -444,6 +445,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany5" coords="6 60"/>
                 <area id="manytomany6" coords="7 60"/>
                 <area id="manytomany7" coords="8 60"/>
+                <area id="manytomany8" coords="9 60"/>
             </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
@@ -453,6 +455,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         unique="true|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        property-ref="propertyNameFromAssociatedClass"
         node="element-name"
         embed-xml="true|false"
     />]]></programlisting>
@@ -501,6 +504,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                                                 연관된 클래스의 엔티티 이름.
                     </para>
                 </callout>
+                <callout arearefs="manytomany8">
+                    <para>
+                        <literal>property-ref</literal>: (옵션) 이 foreign 키에 조인된 연관 클래스의 프로퍼티의 이름. 
+                                                지정되지 않을 경우, 연관 클래스의 프라이머리 키가 사용된다.
+                    </para>                
+                </callout>    
             </calloutlist>
         </programlistingco>
 

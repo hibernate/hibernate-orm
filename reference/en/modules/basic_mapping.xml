@@ -1157,7 +1157,7 @@
         access="field|property|ClassName"
         unsaved-value="null|undefined"
         node="element-name|@attribute-name|element/@attribute|."
-        use-db="true|false"
+        source="vm|db"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="timestamp1">
@@ -1190,14 +1190,14 @@
                     </callout>
                    <callout arearefs="timestamp5">
                         <para>
-                            <literal>use-db</literal> (optional - defaults to <literal>false</literal>):
-                            Should Hibernate use JVM-based timestamp values, or database-based
-                            timestamp values?  Database-based timestamps incur an overhead because
+                            <literal>source</literal> (optional - defaults to <literal>vm</literal>):
+                            Where should Hibernate retrieve the timestamp value?  From the database.
+                            or from the current JVM?  Database-based timestamps incur an overhead because
                             Hibernate must hit the database in order to determine the "next value",
                             but will be safer for use in clustered environments.  Note also, that not
                             all <literal>Dialect</literal>s are known to support retreiving of the
                             database's current timestamp, while others might be unsafe for usage
-                            due to lack of precision (Oracle 8 for example).
+                            in locking due to lack of precision (Oracle 8 for example).
                         </para>
                     </callout>
                 </calloutlist>

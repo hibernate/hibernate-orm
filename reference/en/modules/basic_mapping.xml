@@ -1133,7 +1133,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp">
+        <sect2 id="mapping-declaration-timestamp" revision="1" >
             <title>timestamp (optional)</title>
 
             <para>
@@ -1149,6 +1149,7 @@
                     <area id="timestamp2" coords="3 70" />
                     <area id="timestamp3" coords="4 70" />
                     <area id="timestamp4" coords="5 70" />
+                    <area id="timestamp5" coords="6 70" />
                 </areaspec>            
                 <programlisting><![CDATA[<timestamp
         column="timestamp_column"
@@ -1156,6 +1157,7 @@
         access="field|property|ClassName"
         unsaved-value="null|undefined"
         node="element-name|@attribute-name|element/@attribute|."
+        use-db="true|false"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="timestamp1">
@@ -1186,12 +1188,26 @@
                             property value should be used.)
                         </para>
                     </callout>
+                   <callout arearefs="timestamp5">
+                        <para>
+                            <literal>use-db</literal> (optional - defaults to <literal>false</literal>):
+                            Should Hibernate use JVM-based timestamp values, or database-based
+                            timestamp values?  Database-based timestamps incur an overhead because
+                            Hibernate must hit the database in order to determine the "next value",
+                            but will be safer for use in clustered environments.  Note also, that not
+                            all <literal>Dialect</literal>s are known to support retreiving of the
+                            database's current timestamp, while others might be unsafe for usage
+                            due to lack of precision (Oracle 8 for example).
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
                 Note that <literal>&lt;timestamp&gt;</literal> is equivalent to 
-                <literal>&lt;version type="timestamp"&gt;</literal>.
+                <literal>&lt;version type="timestamp"&gt;</literal>.  And
+                 <literal>&lt;timestamp use-db="true"&gt;</literal> is equivalent to
+                <literal>&lt;version type="dbtimestamp"&gt;</literal>
             </para>
         </sect2>
 

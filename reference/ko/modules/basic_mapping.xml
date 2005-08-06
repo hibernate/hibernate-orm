@@ -1063,7 +1063,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp">
+        <sect2 id="mapping-declaration-timestamp" revision="1" >
             <title>timestamp (옵션)</title>
 
             <para>
@@ -1078,6 +1078,7 @@
                     <area id="timestamp2" coords="3 70" />
                     <area id="timestamp3" coords="4 70" />
                     <area id="timestamp4" coords="5 70" />
+                    <area id="timestamp5" coords="6 70" />
                 </areaspec>            
                 <programlisting><![CDATA[<timestamp
         column="timestamp_column"
@@ -1085,6 +1086,7 @@
         access="field|property|ClassName"
         unsaved-value="null|undefined"
         node="element-name|@attribute-name|element/@attribute|."
+        source="vm|db"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="timestamp1">
@@ -1114,12 +1116,24 @@
                                                         프로퍼티 값이 사용될 것임을 지정한다.)
                         </para>
                     </callout>
+                    <callout arearefs="timestamp5">
+                        <para>
+                            <literal>source</literal> (옵션 - 디폴트는 <literal>vm</literal>):
+                            Hibernate는 어느 곳에서 timestamp 값을 검색할 것인가? 데이터베이스로부터인가 현재의 JVM으로부터인가?
+                            Hibernate가 "다음 값"을 결정하기 위해 데이터베이스에 접속해야 하기 때문에 데이터베이스 기반의 
+                            timestamp들은 오버헤드를 초래하지만, 클러스터링된 환경들의 용도로 더 안전할 것이다. 또한 모든 
+                            <literal>Dialect</literal>들이 데이터베이스의 현재의 timestamp에 대한 검색을 지원하는 것으로 알려져 
+                                                        있는 반면에, 다른 <literal>Dialect</literal>들은 정밀도 결핍 때문에 잠금에 있어 사용에 대해 안전하지 않을 
+                                                        수 있음을 노트하라(예를 들면 오라클 8).
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
                 <literal>&lt;timestamp&gt;</literal>는 <literal>&lt;version type="timestamp"&gt;</literal>과 
-                                같음을 노트하라.
+                                같음을 노트하라. 그리고 <literal>&lt;timestamp use-db="true"&gt;</literal>는 
+                <literal>&lt;version type="dbtimestamp"&gt;</literal>과  같다
             </para>
         </sect2>
 

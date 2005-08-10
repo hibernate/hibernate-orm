@@ -1022,7 +1022,8 @@ sess.find("from Cat as cat left outer join cat.kittens kitten");
 
 // change to izi is not flushed!
 ...
-tx.commit(); // flush occurs]]></programlisting>
+tx.commit(); // flush occurs
+sess.close();]]></programlisting>
 
         <para>
             During flush, an exception might occur (e.g. if a DML operation violates a constraint).

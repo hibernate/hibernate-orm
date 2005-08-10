@@ -380,7 +380,7 @@
                 idiom looks like this:
             </para>
 
-            <programlisting><![CDATA[//Non-managed environment idiom
+            <programlisting><![CDATA[// Non-managed environment idiom
 Session sess = factory.openSession();
 Transaction tx = null;
 try {
@@ -393,6 +393,30 @@ try {
 }
 catch (RuntimeException e) {
     if (tx != null) tx.rollback();
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+           <para>
+                Or even like this:
+            </para>
+
+            <programlisting><![CDATA[// Non-managed environment idiom
+Session sess = factory.openSession();
+try {
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
     throw e; // or display error message
 }
 finally {
@@ -459,6 +483,30 @@ try {
 }
 catch (RuntimeException e) {
     if (tx != null) tx.rollback();
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+           <para>
+                Or:
+            </para>
+
+            <programlisting><![CDATA[// BMT idiom
+Session sess = factory.openSession();
+try {
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
     throw e; // or display error message
 }
 finally {
@@ -601,9 +649,53 @@ Session sess = factory.getCurrentSession();
                 </listitem>
             </itemizedlist>
 
-
         </sect2>
 
+        <sect2 id="transactions-demarcation-timeout">
+            <title>Transaction timeout</title>
+
+            <para>
+                One extremely important feature provided by a managed environment like EJB
+                that is never provided for non-managed code is transaction timeout. Transaction
+                timeouts ensure that no misbehaving transaction can indefinitely tie up 
+                resources while returning no response to the user. Outside a managed (JTA)
+                environment, Hibernate cannot fully provide this functionality. However,
+                Hibernate can at least control data access operations, ensuring that database
+                level deadlocks and queries with huge result sets are limited by a defined
+                timeout. In a managed environment, Hibernate can delegate transaction timeout
+                to JTA. This functioanlity is abstracted by the Hibernate 
+                <literal>Transaction</literal> object.
+            </para>
+            
+            <programlisting><![CDATA[
+Session sess = factory.openSession();
+try {
+    //set transaction timeout to 3 seconds
+    sess.getTransaction().setTimeout(3);
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+            <para>
+                Note that <literal>setTimeout()</literal> may not be called in a CMT bean,
+                where transaction timeouts must be defined declaratively.
+            </para>
+            
+        </sect2>
+        
     </sect1>
 
     <sect1 id="transactions-optimistic">

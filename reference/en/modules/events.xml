@@ -7,7 +7,7 @@
         functionality, and extension of Hibernate functionality.
     </para>
 
-    <sect1 id="objectstate-interceptors" revision="1">
+    <sect1 id="objectstate-interceptors" revision="2">
         <title>Interceptors</title>
 
         <para>
@@ -20,6 +20,11 @@
             <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is 
             updated.
         </para>
+        
+        <para>
+            You may either implement <literal>Interceptor</literal> directly or (better) extend
+            <literal>EmptyInterceptor</literal>.
+        </para>
 
         <programlisting><![CDATA[package org.hibernate.test;
 
@@ -27,13 +32,15 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.hibernate.Interceptor;
+import org.hibernate.EmptyInterceptor;
+import org.hibernate.Transaction;
 import org.hibernate.type.Type;
 
-public class AuditInterceptor implements Interceptor, Serializable {
+public class AuditInterceptor extends EmptyInterceptor {
 
     private int updates;
     private int creates;
+    private int loads;
 
     public void onDelete(Object entity,
                          Serializable id,
@@ -67,6 +74,9 @@ public class AuditInterceptor implements Interceptor, Serializable {
                           Object[] state,
                           String[] propertyNames,
                           Type[] types) {
+        if ( entity instanceof Auditable ) {
+            loads++;
+        }
         return false;
     }
 
@@ -88,16 +98,14 @@ public class AuditInterceptor implements Interceptor, Serializable {
         return false;
     }
 
-    public void postFlush(Iterator entities) {
-        System.out.println("Creations: " + creates + ", Updates: " + updates);
-    }
-
-    public void preFlush(Iterator entities) {
+    public void afterTransactionCompletion(Transaction tx) {
+        if ( tx.wasCommitted() ) {
+            System.out.println("Creations: " + creates + ", Updates: " + updates, "Loads: " + loads);
+        }
         updates=0;
         creates=0;
+        loads=0;
     }
-
-    ...
 
 }]]></programlisting>
 
@@ -108,14 +116,15 @@ public class AuditInterceptor implements Interceptor, Serializable {
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
-            You may also set an interceptor on a global level, using the <literal>Configuration</literal>:
+            You may also set an interceptor on a global level, using the <literal>Configuration</literal>. 
+            In this case, the interceptor must be threadsafe.
         </para>
     
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
     </sect1>
 
-     <sect1 id="objectstate-events" revision="2">
+     <sect1 id="objectstate-events" revision="3">
         <title>Event system</title>
 
         <para>
@@ -154,26 +163,28 @@ public class AuditInterceptor implements Interceptor, Serializable {
             example of a custom load event listener:
         </para>
 
-        <programlisting><![CDATA[public class MyLoadListener extends DefaultLoadEventListener {
+        <programlisting><![CDATA[public class MyLoadListener implements LoadEventListener {
     // this is the single method defined by the LoadEventListener interface
-    public Object onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
+    public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
             throws HibernateException {
         if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
             throw MySecurityException("Unauthorized access");
         }
-        return super.onLoad(event, loadType);
     }
 }]]></programlisting>
 
         <para>
-            You also need a configuration entry telling Hibernate to use the listener instead
-            of the default listener:
+            You also need a configuration entry telling Hibernate to use the listener in addition
+            to the default listener:
         </para>
 
 <programlisting><![CDATA[<hibernate-configuration>
     <session-factory>
         ...
-        <listener type="load" class="MyLoadListener"/>
+        <event type="load">
+            <listener class="com.eg.MyLoadListener"/>
+            <listener class="org.hibernate.event.def.DefaultLoadEventListener"/>
+        </event>
     </session-factory>
 </hibernate-configuration>]]></programlisting>
 
@@ -182,7 +193,8 @@ public class AuditInterceptor implements Interceptor, Serializable {
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration();
-cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() );]]></programlisting>
+LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };
+cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
 
         <para>
             Listeners registered declaratively cannot share instances. If the same class name is
@@ -201,7 +213,7 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 
     </sect1>
     
-    <sect1 id="objectstate-decl-security">
+    <sect1 id="objectstate-decl-security" revision="2">
         <title>Hibernate declarative security</title>
         <para>
             Usually, declarative security in Hibernate applications is managed in a session facade
@@ -218,6 +230,12 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 <listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
 <listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
+
+        <para>
+            Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is just a shorthand
+            for <literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>
+            when there is exactly one listener for a particular event type.
+        </para>
 
         <para>
             Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:

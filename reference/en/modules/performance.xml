@@ -702,7 +702,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </tgroup>
         </table>
 
-        <sect2 id="performance-cache-mapping">
+        <sect2 id="performance-cache-mapping" revision="2">
             <title>Cache mappings</title>
 
             <para>
@@ -713,18 +713,37 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <programlistingco>
                 <areaspec>
                     <area id="cache1" coords="2 70"/>
+                    <area id="cache2" coords="3 70"/>
+                    <area id="cache3" coords="4 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<cache 
     usage="transactional|read-write|nonstrict-read-write|read-only"
+    region="RegionName"
+    include="all|non-lazy"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="cache1">
                         <para>
-                            <literal>usage</literal> specifies the caching strategy:
+                            <literal>usage</literal> (required) specifies the caching strategy:
                             <literal>transactional</literal>,
                             <literal>read-write</literal>,
                             <literal>nonstrict-read-write</literal> or
                             <literal>read-only</literal>
+                        </para>
+                    </callout>                   
+                    <callout arearefs="cache2">
+                        <para>
+                            <literal>region</literal> (optional, defaults to the class or
+                            collection role name) specifies the name of the second level cache 
+                            region
+                        </para>
+                    </callout>                   
+                    <callout arearefs="cache3">
+                        <para>
+                            <literal>include</literal> (optional, defaults to <literal>all</literal>) 
+                            <literal>non-lazy</literal> specifies that properties of the entity mapped
+                            with <literal>lazy="true"</literal> may not be cached when attribute-level
+                            lazy fetching is enabled
                         </para>
                     </callout>                   
                 </calloutlist>
@@ -1156,10 +1175,10 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             </para>
 
             <programlisting><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
-    Child c = new Child();
-    c.setParent(p);
-    p.getChildren().add(c);  //no need to fetch the collection!
-    sess.flush();]]></programlisting>
+Child c = new Child();
+c.setParent(p);
+p.getChildren().add(c);  //no need to fetch the collection!
+sess.flush();]]></programlisting>
 
         </sect2>
 

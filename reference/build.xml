@@ -1,3 +1,8 @@
+<!--
+   To build the reference docs for a particular language only, use -Dlang="en", for
+   example, and call either lang.all, lang.docpdf, lang.dochtml, or lang.dochtmlsingle
+   for the target of your choice.
+-->
 <project name="ReferenceDocumentation" default="all.doc" basedir=".">
     <!-- Allow this to be overriden by others importing this project. -->
     <dirname property="imported.basedir" file="${ant.file.ReferenceDocumentation}"/>

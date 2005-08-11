@@ -918,7 +918,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="7">
+        <table frame="topbot" id="configuration-misc-properties" revision="8">
             <title>Miscellaneous Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -961,14 +961,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            Automatically export schema DDL to the database when the
-                            <literal>SessionFactory</literal> is created. With
-                            <literal>create-drop</literal>, the database schema
-                            will be dropped when the <literal>SessionFactory</literal>
-                            is closed explicitly.
+                            Automatically validate or export schema DDL to the database 
+                            when the <literal>SessionFactory</literal> is created. With
+                            <literal>create-drop</literal>, the database schema will be 
+                            dropped when the <literal>SessionFactory</literal> is closed 
+                            explicitly.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
-                                <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>
+                                <literal>validate</literal> | <literal>update</literal> | 
+                                <literal>create</literal> | <literal>create-drop</literal>
                             </para>
                         </entry>
                     </row>

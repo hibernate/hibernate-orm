@@ -228,7 +228,7 @@
 
         </sect2>
 
-        <sect2 id="toolsetguide-s1-3">
+        <sect2 id="toolsetguide-s1-3" revision="2">
             <title>Running the tool</title>
 
             <para>
@@ -262,6 +262,10 @@
                             <entry>only drop the tables</entry>
                         </row>
                         <row>
+                            <entry><literal>--create</literal></entry>
+                            <entry>only create the tables</entry>
+                        </row>
+                        <row>
                             <entry><literal>--text</literal></entry>
                             <entry>don't export to the database</entry>
                         </row>
@@ -270,6 +274,10 @@
                             <entry>output the ddl script to a file</entry>
                         </row>
                         <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <tt>NamingStrategy</tt></entry>
+                        </row>
+                         <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
                             <entry>read Hibernate configuration from an XML file</entry>
                         </row>
@@ -282,7 +290,7 @@
                             <entry>format the generated SQL nicely in the script</entry>
                         </row>
                         <row>
-                            <entry><literal>--delimiter=x</literal></entry>
+                            <entry><literal>--delimiter=;</literal></entry>
                             <entry>set an end of line delimiter for the script</entry>
                         </row>
                     </tbody>
@@ -386,7 +394,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </sect2>
 
-        <sect2 id="toolsetguide-s1-6">
+        <sect2 id="toolsetguide-s1-6" revision="2">
             <title>Incremental schema updates</title>
 
             <para>
@@ -417,8 +425,20 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                             <entry>don't output the script to stdout</entry>
                         </row>
                         <row>
+                            <entry><literal>--text</literal></entry>
+                            <entry>don't export the script to the database</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <tt>NamingStrategy</tt></entry>
+                        </row>
+                        <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>read database properties from a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
                         </row>
                      </tbody>
                 </tgroup>
@@ -448,6 +468,79 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
     <schemaupdate
         properties="hibernate.properties"
         quiet="no">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemaupdate>
+</target>]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="toolsetguide-s1-7" revision="1">
+            <title>Schema validation</title>
+
+            <para>
+                The <literal>SchemaValidator</literal> tool will validate that the existing database schema "matches"
+                your mapping documents. Note that <literal>SchemaValidator</literal> depends heavily upon the JDBC 
+                metadata API, so it will not work with all JDBC drivers. This tool is extremely useful for testing.
+            </para>
+
+            <para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+
+            <table frame="topbot">
+                <title><literal>SchemaValidator</literal> Command Line Options</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>Option</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>select a <tt>NamingStrategy</tt></entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>read database properties from a file</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
+                        </row>
+                     </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+                You may embed <literal>SchemaValidator</literal> in your application:
+            </para>
+
+            <programlisting><![CDATA[Configuration cfg = ....;
+new SchemaValidator(cfg).validate();]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="toolsetguide-s1-7">
+            <title>Using Ant for schema validation</title>
+
+            <para>
+                You can call <literal>SchemaValidator</literal> from the Ant script:
+            </para>
+
+            <programlisting><![CDATA[<target name="schemavalidate">
+    <taskdef name="schemavalidator"
+        classname="org.hibernate.tool.hbm2ddl.SchemaValidatorTask"
+        classpathref="class.path"/>
+    
+    <schemavalidator
+        properties="hibernate.properties">
         <fileset dir="src">
             <include name="**/*.hbm.xml"/>
         </fileset>

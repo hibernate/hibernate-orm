@@ -3268,5 +3268,51 @@ public class Customer implements Serializable {
         </para>
     </sect1>
 
+    <sect1 id="mapping-database-object">
+        <title>Auxiliary Database Objects</title>
+        <para>
+            Allows CREATE and DROP of arbitrary database objects, in conjunction with
+            Hibernate's schema evolution tools, to provide the ability to fully define
+            a user schema within the Hibernate mapping files.  Although designed specifically
+            for creating and dropping things like triggers or stored procedures, really any
+            SQL command that can be run via a <literal>java.sql.Statement.execute()</literal>
+            method is valid here (ALTERs, INSERTS, etc).  There are essentially two modes for
+            defining auxiliary database objects...
+        </para>
+        <para>
+            The first mode is to explicitly list the CREATE and DROP commands out in the mapping
+            file:
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <create>CREATE TRIGGER my_trigger ...</create>
+        <drop>DROP TRIGGER my_trigger</drop>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+            The second mode is to supply a custom class which knows how to construct the
+            CREATE and DROP commands.  This custom class must implement the
+            <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> interface.
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+            Additionally, these database objects can be optionally scoped such that they only
+            apply when certain dialects are used.
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+    </sect1>
 </chapter>
 

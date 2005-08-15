@@ -42,6 +42,13 @@
 
     </target>
 
+    <target name="single.lang"
+            depends="clean"
+            description="Compile documentation for a language and all formats.">
+        <property name="language" value="en"/>
+        <antcall target="lang.all"><param name="lang" value="${language}"/></antcall>
+    </target>
+
     <target name="all.revdiff"
             description="Generates a diff report for all translated versions.">
 

@@ -1,5 +1,5 @@
 <!--
-   To build the reference docs for a particular language only, use -Dlang="en", for
+   To build the reference docs for a particular language only, use "ant -Dlang=en", for
    example, and call either lang.all, lang.docpdf, lang.dochtml, or lang.dochtmlsingle
    for the target of your choice.
 -->
@@ -40,13 +40,6 @@
         <antcall target="lang.all"><param name="lang" value="es"/></antcall>
     	<antcall target="lang.all"><param name="lang" value="ko"/></antcall>
 
-    </target>
-
-    <target name="single.lang"
-            depends="clean"
-            description="Compile documentation for a language and all formats.">
-        <property name="language" value="en"/>
-        <antcall target="lang.all"><param name="lang" value="${language}"/></antcall>
     </target>
 
     <target name="all.revdiff"

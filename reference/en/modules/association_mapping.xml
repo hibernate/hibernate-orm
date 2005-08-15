@@ -520,7 +520,7 @@ create table Address ( addressId bigint not null primary key )
         
     </sect1>
     
-    <sect1>
+    <sect1 id="assoc-complex">
         <title>More complex association mappings</title>
         
         <para>

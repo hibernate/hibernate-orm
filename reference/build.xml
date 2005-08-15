@@ -2,6 +2,10 @@
    To build the reference docs for a particular language only, use "ant -Dlang=en", for
    example, and call either lang.all, lang.docpdf, lang.dochtml, or lang.dochtmlsingle
    for the target of your choice.
+
+   You can also call lang.section-check to track down missing identifiers in a particular
+   language, or you can call lang.revdiff to get a difference report for a particular
+   language, compared with the English reference.
 -->
 <project name="ReferenceDocumentation" default="all.doc" basedir=".">
     <!-- Allow this to be overriden by others importing this project. -->
@@ -120,7 +124,8 @@
         </java>
     </target>
 
-    <target name="lang.docpdf" depends="lang.docpdf.normal,lang.docpdf.customized">
+    <target name="lang.docpdf" depends="lang.docpdf.normal,lang.docpdf.customized"
+            description="Generates the PDF documentation only for a language (set lang)">
         <!-- House keeping,delete temporary files. -->
         <delete>
             <fileset dir="${build.dir}/${lang}/pdf" excludes="**/*.pdf"/>
@@ -128,7 +133,8 @@
         <delete  dir="${build.dir}/${lang}/pdf/images"/>
     </target>
 
-    <target name="lang.dochtml">
+    <target name="lang.dochtml"
+            description="Generates the HTML documentation only for a language (set lang)">
 
         <mkdir dir="${build.dir}/${lang}/html/"/>
 
@@ -139,7 +145,8 @@
         </java>
     </target>
 
-    <target name="lang.dochtmlsingle">
+    <target name="lang.dochtmlsingle"
+        description="Generates the single-page HTML documentation only for a language (set lang)">
 
         <mkdir dir="${build.dir}/${lang}/html_single/"/>
 
@@ -169,7 +176,8 @@
 
     </target>
 
-    <target name="lang.revdiff">
+    <target name="lang.revdiff"
+            description="Reports difference between English and translation (set lang)">
 
         <taskdef name="revdiff"
             classname="org.hibernate.docproc.revdiff.RevDiffReportTask"
@@ -183,7 +191,8 @@
 
     </target>
 
-    <target name="lang.section-check">
+    <target name="lang.section-check" depends="lang.dochtml"
+            description="Reports missing unique chapter/section identifiers (set lang)">
         <java classname="com.icl.saxon.StyleSheet" fork="true" dir="${build.dir}/${lang}/html">
             <classpath refid="lib.classpath"/>
             <arg value="${basedir}/${lang}/master.xml"/>

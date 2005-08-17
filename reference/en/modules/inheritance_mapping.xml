@@ -1,7 +1,7 @@
 <chapter id="inheritance">
     <title>Inheritance Mapping</title>
 
-    <sect1 id="inheritance-strategies" revision="2">
+    <sect1 id="inheritance-strategies" revision="3">
         <title>The Three Strategies</title>
 
         <para>
@@ -52,7 +52,26 @@
             <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal>
             elements (see below).
         </para>
-        
+
+        <para>
+             It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>,
+             and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath
+             <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
+             a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
+             naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
+             documents important. Since Hibernate3, the ordering of mapping files does not matter when using the
+             extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
+             before subclasses.
+         </para>
+
+         <programlisting><![CDATA[
+ <hibernate-mapping>
+     <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
+          <property name="name" type="string"/>
+     </subclass>
+ </hibernate-mapping>]]></programlisting>
+
+
         <sect2 id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 

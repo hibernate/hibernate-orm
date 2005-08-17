@@ -2075,7 +2075,7 @@
             
         </sect2>
 
-        <sect2 id="mapping-declaration-subclass" revision="3">
+        <sect2 id="mapping-declaration-subclass" revision="4">
             <title>subclass</title>
 
             <para>
@@ -2099,7 +2099,8 @@
         dynamic-update="true|false"
         dynamic-insert="true|false"
         entity-name="EntityName"
-        node="element-name">
+        node="element-name"
+        extends="SuperclassName">
 
         <property .... />
         .....
@@ -2139,24 +2140,6 @@
                 fully qualified Java class name is used.
             </para>
             
-       <para>
-            It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>,
-            and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath
-            <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
-            a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
-            naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
-            documents important. Since Hibernate3, the ordering of mapping files does not matter when using the
-            extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
-            before subclasses.
-        </para>
-    
-        <programlisting><![CDATA[
-<hibernate-mapping>
-    <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
-         <property name="name" type="string"/>
-    </subclass>
-</hibernate-mapping>]]></programlisting>
-
             <para>
                 For information about inheritance mappings, see <xref linkend="inheritance"/>.
             </para>

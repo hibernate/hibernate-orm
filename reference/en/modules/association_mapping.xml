@@ -481,7 +481,7 @@ create table Address ( addressId bigint not null primary key )
 
         </sect2>
         
-        <sect2 id="assoc-bidirectional-join-m2m">
+        <sect2 id="assoc-bidirectional-join-m2m" revision="1">
         <title>many to many</title>
         
         <para>
@@ -492,7 +492,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
-    <set name="addresses">
+    <set name="addresses" table="PersonAddress">
         <key column="personId"/>
         <many-to-many column="addressId"
             class="Address"/>
@@ -503,7 +503,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="addressId">
         <generator class="native"/>
     </id>
-    <set name="people" inverse="true">
+    <set name="people" inverse="true" table="PersonAddress">
         <key column="addressId"/>
         <many-to-many column="personId"
             class="Person"/>

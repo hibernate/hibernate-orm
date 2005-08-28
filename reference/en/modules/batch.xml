@@ -37,6 +37,11 @@ session.close();]]></programlisting>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
 
+    <para>
+        However, this is not absolutely necessary, since we can explicitly set the
+        <literal>CacheMode</literal> to disable interaction with the second-level cache.
+    </para>
+
     <sect1 id="batch-inserts">
         <title>Batch inserts</title>
 

@@ -1482,7 +1482,7 @@
         lazy="proxy|no-proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
-        formul="arbitrary SQL expression"
+        formula="arbitrary SQL expression"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"
         index="index_name"

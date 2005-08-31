@@ -312,7 +312,7 @@ while ( kittensAndMothers.hasNext() ) {
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-scalar">
+            <sect3 id="objectstate-querying-executing-scalar" revision="1">
                 <title>Scalar results</title>
 
                 <para>
@@ -328,7 +328,7 @@ while ( kittensAndMothers.hasNext() ) {
         .iterator();
 
 while ( results.hasNext() ) {
-    Object[] row = results.next();
+    Object[] row = (Object[]) results.next();
     Color type = (Color) row[0];
     Date oldest = (Date) row[1];
     Integer count = (Integer) row[2];

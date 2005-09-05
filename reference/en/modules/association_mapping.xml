@@ -294,7 +294,7 @@ create table Address ( addressId bigint not null primary key )
     <sect1 id="assoc-bidirectional" revision="1">
         <title>Bidirectional associations</title>
         
-        <sect2 id="assoc-bidirectional-m21">
+        <sect2 id="assoc-bidirectional-m21" revision="1">
         <title>one to many / many to one</title>
         
         <para>
@@ -326,7 +326,35 @@ create table Address ( addressId bigint not null primary key )
 create table Person ( personId bigint not null primary key, addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
-        
+
+        <para>
+            If you use a <literal>List</literal> (or other indexed collection) you need
+            to set the <literal>key</literal> column of the foreign key to <literal>not null</literal>,
+            and let Hibernate manage the association from the collections side to maintain the index
+            of each element (making the other side virtually inverse by setting
+            <literal>update="false"</literal> and <literal>insert="false"</literal>):
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+   <id name="id"/>
+   ...
+   <many-to-one name="address"
+      column="addressId"
+      not-null="true"
+      insert="false"
+      update="false"/>
+</class>
+
+<class name="Address">
+   <id name="id"/>
+   ...
+   <list name="people">
+      <key column="addressId" not-null="true"/>
+      <list-index column="peopleIdx"/>
+      <one-to-many class="Person"/>
+   </list>
+</class>]]></programlisting>
+
         </sect2>
         
         <sect2 id="assoc-bidirectional-121">

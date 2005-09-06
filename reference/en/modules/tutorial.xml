@@ -592,7 +592,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="1">
             <title>Loading and storing objects</title>
 
             <para>
@@ -766,6 +766,14 @@ else if (args[0].equals("list")) {
                 If you now call Ant with <literal>-Daction=list</literal>, you should see the events
                 you have stored so far. You can of course also call the <literal>store</literal> action a few
                 times more.
+            </para>
+
+            <para>
+                Note: Most new Hibernate users fail at this point and we see questions about
+                <emphasis>Table not found</emphasis> error messages regularly. However, if you follow the
+                steps outlined above you will not have this problem, as hbm2ddl creates the database
+                schema on the first run, and subsequent application restarts will use this schema. If
+                you change the mapping and/or database schema, you have to re-enable hbm2ddl once again.
             </para>
 
         </sect2>

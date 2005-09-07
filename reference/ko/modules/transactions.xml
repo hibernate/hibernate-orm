@@ -336,10 +336,10 @@
 
             <para>
                                 만일 Hibernate 영속 계층이 관리되지 않는(non-managed) 환경에서 실행될 경우, 데이터베이스 커넥션들은 대개 Hibernate의 
-                                풀링 메커니즘에 의해 처리된다. session/transaction 처리 관용구는 다음과 같이 보여진다:
+                                풀링 메커니즘에 의해 처리된다. session/transaction 처리 관용구는 다음과 같다:
             </para>
 
-            <programlisting><![CDATA[//Non-managed environment idiom
+            <programlisting><![CDATA[// Non-managed environment idiom
 Session sess = factory.openSession();
 Transaction tx = null;
 try {
@@ -352,6 +352,30 @@ try {
 }
 catch (RuntimeException e) {
     if (tx != null) tx.rollback();
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+           <para>
+                                또는 다음과 같을 수 있다:
+            </para>
+
+            <programlisting><![CDATA[// Non-managed environment idiom
+Session sess = factory.openSession();
+try {
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
     throw e; // or display error message
 }
 finally {
@@ -420,6 +444,30 @@ finally {
     sess.close();
 }]]></programlisting>
 
+            <para>
+                                또는:
+            </para>
+
+            <programlisting><![CDATA[// BMT idiom
+Session sess = factory.openSession();
+try {
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+            
             <para>
                 CMT의 경우, 트랜잭션 관할[경계 설정]은 프로그램 상이 아닌, session bean 배치 디스크립터들 속에서 행해진다. 당신이 스스로 
                 <literal>Session</literal>을 수작업으로 flush 시키고 닫고자 원하지 않을 경우, 단지 
@@ -539,9 +587,51 @@ Session sess = factory.getCurrentSession();
                 </listitem>
             </itemizedlist>
 
-
         </sect2>
 
+        <sect2 id="transactions-demarcation-timeout">
+            <title>트랜잭션 타임아웃</title>
+
+            <para>
+                                관리되지 않는 코드에 대해서는 결코 제공되지 않는 EJB와 같이 관리되는 환경에 의해 제공되는 한 가지 극히 
+                                중요한 특징은 트랜잭션 타임아웃이다. 트랜잭션 타임아웃은 사용자에게 응답을 반환하지 않는 동안에 
+                                무례한 행동을 행하는 트랜잭션이 자원들을 무한정 묶어둘 수 없음을 보증해준다. 관리되는 (JTA) 환경 
+                                외부에서, Hibernate는 이 기능을 온전하게 제공할 수 없다. 하지만 Hibernate는 데이터베이스 
+                                레벨 데드락들과 거대한 결과 셋들을 가진 질의들이 정의된 타임아웃에 의해 제약되는 것을 보장함으로써 
+                                최소한 데이터 접근 오퍼레이션들을 제어할 수 있다. 관리되는 환경에서, Hibernate는 트랜잭션 타임아웃을 
+                JTA에게 위임시킬 수 있다. 이 기능은 Hibernate <literal>Transaction</literal> 객체에 의해 
+                                추상화 된다.
+            </para>
+            
+            <programlisting><![CDATA[
+Session sess = factory.openSession();
+try {
+    //set transaction timeout to 3 seconds
+    sess.getTransaction().setTimeout(3);
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    if ( sess.getTransaction().isActive() ) {
+        sess.getTransaction().rollback();
+    }
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+            <para>
+                <literal>setTimeout()</literal>은  CMT bean 내에서 호출도리 수 없음을 노트하라. 
+                                여기서 트랜잭션 타임아웃들은 선언적으로 정의되어야 한다.
+            </para>
+            
+        </sect2>
+        
     </sect1>
 
     <sect1 id="transactions-optimistic">

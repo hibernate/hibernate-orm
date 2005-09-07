@@ -34,6 +34,11 @@ session.close();]]></programlisting>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
 
+    <para>
+                하지만 이것은 절대적으로 필요하지 않다. 왜냐하면 우리는 second-level 캐시와의 상호작용을 불가능하도록 하기 위해
+                명시적으로 <literal>CacheMode</literal>를 설정할 수 있기 때문이다.
+    </para>
+
     <sect1 id="batch-inserts">
         <title>Batch inserts</title>
 

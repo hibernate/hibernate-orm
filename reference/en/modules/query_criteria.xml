@@ -115,7 +115,7 @@ List cats = sess.createCriteria(Cat.class)
     
     </sect1>
     
-    <sect1 id="querycriteria-associations">
+    <sect1 id="querycriteria-associations" revision="2">
         <title>Associations</title>
 
         <para>
@@ -154,13 +154,13 @@ List cats = sess.createCriteria(Cat.class)
             Note that the kittens collections held by the <literal>Cat</literal> instances
             returned by the previous two queries are <emphasis>not</emphasis> pre-filtered
             by the criteria! If you wish to retrieve just the kittens that match the
-            criteria, you must use <literal>returnMaps()</literal>.
+            criteria, you must use a <literal>ResultTransformer</literal>.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createCriteria("kittens", "kt")
         .add( Restrictions.eq("name", "F%") )
-    .returnMaps()
+    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
     .list();
 Iterator iter = cats.iterator();
 while ( iter.hasNext() ) {

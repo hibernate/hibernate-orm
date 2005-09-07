@@ -58,55 +58,88 @@
                         먼저 생성된 스키마를 개선시키기 위해 당신의 매핑 파일들을 맞춤화 시켜라.
         </para>
 
-        <sect2 id="toolsetguide-s1-2" revision="1">
+        <sect2 id="toolsetguide-s1-2" revision="3">
             <title>스키마 맞춤화 시키기</title>
 
             <para>
                                 많은 Hibernate 매핑 요소들은 <literal>length</literal>로 명명된 옵션 속성을 정의한다. 당신은 이 속성으로 컬럼의 길이를 
                                 설정할 수 있다.(또는 numeric/decimal 데이터 타입들, 배정도에 대해 ).
+                                많은 Hibernate 매칭 요소들은 <literal>length</literal>, <literal>precision</literal> 그리고 
+                <literal>scale</literal>로 명명된 옵션 속성들을 정의하고 있다. 당신은 이 속성으로서 컬럼이 길이, 정밀도, 크기를 설정할 수 있다.
+ 
             </para>
+            
+            <programlisting><![CDATA[<property name="zip" length="5"/>]]></programlisting>
+            <programlisting><![CDATA[<property name="balance" precision="12" scale="2"/>]]></programlisting>
 
             <para>
                                 몇몇 태그들은 또한 (테이블 컬럼들에 대한 <literal>NOT NULL</literal> 컨스트레인트를 생성시키는) <literal>not-null</literal> 
                                 속성과 (테이블 컬럼들에 대한 <literal>UNIQUE</literal> 컨스트레인트를 생성시키는) <literal>unique</literal> 속성을 수용한다.
             </para>
+            
+            <programlisting><![CDATA[<many-to-one name="bar" column="barId" not-null="true"/>]]></programlisting>
+
+            <programlisting><![CDATA[<element column="serialNumber" type="long" not-null="true" unique="true"/>]]></programlisting>
 
             <para>
-                                몇몇 태그들은 그 컬럼에 대한 인덱스의 이름을 지정하는 <literal>index</literal> 속성을 허용한다. <literal>unique-key</literal> 
-                                속성은 하나의 단위 키 컨스트레인트로 컬럼들을 그룹지우는데 사용될 수 있다. 현재 <literal>unique-key</literal> 속성의 
-                                지정된 값은 컨스트레인트를 명명하는데 사용되지 <emphasis>않고</emphasis>, 오직 매핑 파일 내에서 컬럼들을 그룹 지우는데 
-                                사용된다.
+                <literal>unique-key</literal> 속성은 하나의 유일 키 컨스트레인트로 컬럼들을 그룹지우는데 사용될 수도 있다. 현재 
+                <literal>unique-key</literal> 속성의 지정된 값은 산출된 DDL내에서 컨스트레인트를 명명하는데 사용되지 <emphasis>않고</emphasis>, 
+                                오직 매핑 파일 내에서 컬럼들을 그룹 지우는데 사용된다.
             </para>
             
+            <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
+<property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
+            
+            
             <para>
-                                예제들:
+                <literal>index</literal> 속성은 매핑된 컬럼 또는 컬럼들을 사용하여 생성될 인덱스의 이름을 지정한다. 간단하게 
+                                동일한 인덱스 이름을 지정함으로써 여러 컬럼들이 동일한 인덱스 내로 그룹지워질 수도 있다.
             </para>
 
-            <programlisting><![CDATA[<property name="foo" type="string" length="64" not-null="true"/>
+            <programlisting><![CDATA[<property name="lastName" index="CustName"/>
+<property name="firstName" index="CustName"/>]]></programlisting>
 
-<many-to-one name="bar" foreign-key="fk_foo_bar" not-null="true"/>
+            <para>
+                <literal>foreign-key</literal> 속성은 임의의 산출된 foreign 키 컨스트레인트의 이름을 
+                                오버라이드 시키는데 사용될 수 도 있다.
+            </para>
+            
+            <programlisting><![CDATA[<many-to-one name="bar" column="barId" foreign-key="FKFooBar"/>]]></programlisting>
 
-<element column="serial_number" type="long" not-null="true" unique="true"/>]]></programlisting>
+            <para>
+                                많은 매핑 요소들은 또한 하나의 자식 <literal>&lt;column&gt;</literal> 요소를 허용한다.
+                                이것은 특히 다중 컬럼 타입들을 매핑하는데 유용하다:
+            </para>
+
+            <programlisting><![CDATA[<property name="name" type="my.customtypes.Name"/>
+    <column name="last" not-null="true" index="bar_idx" length="30"/>
+    <column name="first" not-null="true" index="bar_idx" length="20"/>
+    <column name="initial"/>
+</property>]]></programlisting>
 
             <para>
                                 다른 방법으로, 이들 요소들은 또한 자식 <literal>&lt;column&gt;</literal> 요소를 수용한다. 이것은 다중 컬럼 타입들에 
                                 특히 유용하다:
+                <literal>default</literal> 속성은 당신으로 하여금 하나의 컬럼에 대한 디폴트 값을 설정하도록 한다(당신은 매핑된 
+                                클래스의 새로운 인스턴스를 저장하기 전에 매핑된 프로퍼티에 동일한 값을 할당하게 될 것이다).
             </para>
 
-            <programlisting><![CDATA[<property name="foo" type="string">
-    <column name="foo" length="64" not-null="true" sql-type="text"/>
+            <programlisting><![CDATA[<property name="credits" type="integer" insert="false">
+    <column name="credits" default="10"/>
 </property>]]></programlisting>
 
-            <programlisting><![CDATA[<property name="bar" type="my.customtypes.MultiColumnType"/>
-    <column name="fee" not-null="true" index="bar_idx"/>
-    <column name="fi" not-null="true" index="bar_idx"/>
-    <column name="fo" not-null="true" index="bar_idx"/>
+            <programlisting><![CDATA[<version name="version" type="integer" insert="false">
+    <column name="version" default="0"/>
 </property>]]></programlisting>
 
             <para>
                 <literal>sql-type</literal> 속성은 SQL 데이터타입에 대한 Hibernate 타입의 디폴트 매핑을 오버라이드 시키는 것을 
                                 사용자에게 허용해준다.
             </para>
+            
+            <programlisting><![CDATA[<property name="balance" type="float">
+    <column name="balance" sql-type="decimal(13,3)"/>
+</property>]]></programlisting>
             
             <para>
                 <literal>check</literal> 속성은 check 컨스트레인트를 지정하는 것을 당신에게 허용해준다.
@@ -139,7 +172,17 @@
                         <row>
                             <entry><literal>length</literal></entry>
                             <entry>number</entry>
-                            <entry>컬럼 길이/decimal 배정도</entry>
+                            <entry>컬럼 길이</entry>
+                        </row>
+                        <row>
+                            <entry><literal>precision</literal></entry>
+                            <entry>number</entry>
+                            <entry>컬럼 decimal 정밀도</entry>
+                        </row>
+                        <row>
+                            <entry><literal>scale</literal></entry>
+                            <entry>number</entry>
+                            <entry>컬럼 decimal 크기</entry>
                         </row>
                         <row>
                             <entry><literal>not-null</literal></entry>
@@ -165,18 +208,26 @@
                             <entry><literal>foreign-key</literal></entry>
                             <entry><literal>foreign_key_name</literal></entry>
                             <entry>
-                                                                하나의 연관에 대해 생성된 foreign key 컨스트레인트의 이름을 지정하고, 
-                                &lt;one-to-one>, &lt;many-to-one>, &lt;key>, and &lt;many-to-many> 
-                                                                매핑 요소들 상에 그것을 사용한다. <literal>inverse="true"</literal> 측들은 
-                                <literal>SchemaExport</literal>에 의해 고려되지 않을 것임을 노트하라.
+                                                                하나의 연관에 대해, <literal>&lt;one-to-one&gt;</literal>, 
+                                <literal>&lt;many-to-one&gt;</literal>,
+                                <literal>&lt;key&gt;</literal>, 또는 <literal>&lt;many-to-many&gt;</literal> 
+                                                                매핑 요소에 대해 foreign key 컨스트레인트의 이름을 지정한다.<literal>inverse="true"</literal> 
+                                                                측들은 <literal>SchemaExport</literal>에 의해 고려되지 않을 것임을 노트하라.
                             </entry>
                         </row>
                         <row>
                             <entry><literal>sql-type</literal></entry>
-                            <entry><literal>column_type</literal></entry>
+                            <entry><literal>SQL column type</literal></entry>
                             <entry>
                                                                 디폴트 컬럼 타입을 오버라이드 시킨다
                                 (<literal>&lt;column&gt;</literal> 요소의 속성에만)
+                            </entry>
+                       </row>
+                       <row>
+                            <entry><literal>default</literal></entry>
+                            <entry>SQL expression</entry>
+                            <entry>
+                                                                컬럼에 대한 디폴트 값을 지정한다
                             </entry>
                        </row>
                        <row>
@@ -212,7 +263,7 @@
 
         </sect2>
 
-        <sect2 id="toolsetguide-s1-3">
+        <sect2 id="toolsetguide-s1-3" revision="2">
             <title>도구 실행하기</title>
 
             <para>
@@ -245,6 +296,10 @@
                             <entry>오직 테이블들을 드롭시킨다</entry>
                         </row>
                         <row>
+                            <entry><literal>--create</literal></entry>
+                            <entry>오직 테이블들을 생성시킨다</entry>
+                        </row>
+                        <row>
                             <entry><literal>--text</literal></entry>
                             <entry>데이터베이스로 내보내기 하지 않는다</entry>
                         </row>
@@ -253,6 +308,10 @@
                             <entry>ddl 스크립트를 파일로 출력한다</entry>
                         </row>
                         <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>하나의 <literal>NamingStrategy</literal>를 선택한다</entry>
+                        </row>
+                         <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
                             <entry>XML 파일로부터 Hibernate 구성을 읽어들인다</entry>
                         </row>
@@ -265,7 +324,7 @@
                             <entry>생성된 SQL을 스크립트 내에 좋게 형식지운다</entry>
                         </row>
                         <row>
-                            <entry><literal>--delimiter=x</literal></entry>
+                            <entry><literal>--delimiter=;</literal></entry>
                             <entry>스크립트를 위한 라인 경계의 끝을 설정한다 </entry>
                         </row>
                     </tbody>
@@ -369,7 +428,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </sect2>
 
-        <sect2 id="toolsetguide-s1-6">
+        <sect2 id="toolsetguide-s1-6" revision="2">
             <title>점증하는 스키마 업데이트들</title>
 
             <para>
@@ -399,8 +458,20 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                             <entry>스크립트를 표준출력으로 출력하지 않는다</entry>
                         </row>
                         <row>
+                            <entry><literal>--text</literal></entry>
+                            <entry>스크립트를 데이터베이스로 내보내기 하지 않는다</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>하나의 <literal>NamingStrategy</literal>를 선택한다</entry>
+                        </row>
+                        <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>파일로부터 데이터베이스 프로퍼티들을 읽어 들인다</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry><literal>.cfg.xml</literal> 파일을 지정한다</entry>
                         </row>
                      </tbody>
                 </tgroup>
@@ -430,6 +501,79 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
     <schemaupdate
         properties="hibernate.properties"
         quiet="no">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemaupdate>
+</target>]]></programlisting>
+
+        </sect2>
+        
+                <sect2 id="toolsetguide-s1-8" revision="1">
+            <title>스키마 유효성 검사</title>
+
+            <para>
+                <literal>SchemaValidator</literal> 도구는 기존의 데이터베이스 스키마가 당신의 매핑 문서들과 "일치하는지"를 유효성 
+                                검사할 것이다. <literal>SchemaValidator</literal>가 JDBC 메타데이터 API에 무겁게 의존하므로 그것은 모든 
+                JDBC 드라이버들에 대해 동작하지 않을 것이다. 이 도구는 테스팅에 극히 유용하다.
+            </para>
+
+            <para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+
+            <table frame="topbot">
+                <title><literal>SchemaValidator</literal> 명령 라인 옵션들</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>옵션</entry>
+                            <entry>설명</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>하나의 <literal>NamingStrategy</literal>를 선택한다</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>파일로부터 데이터베이스 프로퍼티들을 읽어들인다</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry><literal>.cfg.xml</literal> 파일을 지정한다</entry>
+                        </row>
+                     </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+                                당신은 당신의 어플리케이션 내에 <literal>SchemaValidator</literal>을 삽입시킬 수 도 있다:
+            </para>
+
+            <programlisting><![CDATA[Configuration cfg = ....;
+new SchemaValidator(cfg).validate();]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="toolsetguide-s1-9">
+            <title>스키마 유효성 검사를 위해 Ant 사용하기</title>
+
+            <para>
+                                당신은 Ant 스크립트에서 <literal>SchemaValidator</literal>를 호출할 수 있다:
+            </para>
+
+            <programlisting><![CDATA[<target name="schemavalidate">
+    <taskdef name="schemavalidator"
+        classname="org.hibernate.tool.hbm2ddl.SchemaValidatorTask"
+        classpathref="class.path"/>
+    
+    <schemavalidator
+        properties="hibernate.properties">
         <fileset dir="src">
             <include name="**/*.hbm.xml"/>
         </fileset>

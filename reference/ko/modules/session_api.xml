@@ -277,7 +277,7 @@ while ( kittensAndMothers.hasNext() ) {
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-scalar">
+            <sect3 id="objectstate-querying-executing-scalar" revision="1">
                 <title>스칼라 결과들</title>
 
                 <para>
@@ -293,7 +293,7 @@ while ( kittensAndMothers.hasNext() ) {
         .iterator();
 
 while ( results.hasNext() ) {
-    Object[] row = results.next();
+    Object[] row = (Object[]) results.next();
     Color type = (Color) row[0];
     Date oldest = (Date) row[1];
     Integer count = (Integer) row[2];
@@ -940,7 +940,8 @@ sess.find("from Cat as cat left outer join cat.kittens kitten");
 
 // change to izi is not flushed!
 ...
-tx.commit(); // flush occurs]]></programlisting>
+tx.commit(); // flush occurs
+sess.close();]]></programlisting>
 
         <para>
             flush 동안에, 하나의 예외상황이 발생할 수도 있다(예를 들면. 만일 DML 오퍼레이션이 컨스트레인트를 위반할 경우). 예외상황들을 

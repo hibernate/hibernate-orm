@@ -990,7 +990,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-version" revision="1">
+        <sect2 id="mapping-declaration-version" revision="3">
             <title>version (옵션)</title>
             
             <para>
@@ -1006,6 +1006,8 @@
                     <area id="version3" coords="4 70"/>
                     <area id="version4" coords="5 70"/>
                     <area id="version5" coords="6 70"/>
+                    <area id="version6" coords="7 70"/>
+                    <area id="version7" coords="8 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<version
         column="version_column"
@@ -1013,6 +1015,8 @@
         type="typename"
         access="field|property|ClassName"
         unsaved-value="null|negative|undefined"
+        generated="true|false"
+        insert="true|false"
         node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
@@ -1046,6 +1050,21 @@
                                                         나타내는 version 프로퍼티 값.(<literal>undefined</literal>는 식별자 프로퍼티 값이 사용될 것임을 지정한다.)
                         </para>
                     </callout>
+                    <callout arearefs="version6">
+                        <para>
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                                                        이 version 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다. 
+                            <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 관한 논의를 보라.
+                        </para>
+                    </callout>
+                    <callout arearefs="version7">
+                        <para>
+                            <literal>insert</literal> (옵션 - 디폴트는 <literal>true</literal>):
+                            version 컬럼이 SQL insert 문장들 속에 포함될 것인지 여부를 지정한다.
+                                                       데이터베이스 컬럼이 디폴트 값 <literal>0</literal>으로 정의되는 경우에만 <literal>false</literal>로 
+                                                        설정될 수 있다.
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
             
@@ -1063,7 +1082,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp" revision="1" >
+        <sect2 id="mapping-declaration-timestamp" revision="2" >
             <title>timestamp (옵션)</title>
 
             <para>
@@ -1079,14 +1098,16 @@
                     <area id="timestamp3" coords="4 70" />
                     <area id="timestamp4" coords="5 70" />
                     <area id="timestamp5" coords="6 70" />
+                    <area id="timestamp6" coords="7 70" />
                 </areaspec>            
                 <programlisting><![CDATA[<timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
         unsaved-value="null|undefined"
-        node="element-name|@attribute-name|element/@attribute|."
         source="vm|db"
+        generated="true|false"
+        node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="timestamp1">
@@ -1119,12 +1140,19 @@
                     <callout arearefs="timestamp5">
                         <para>
                             <literal>source</literal> (옵션 - 디폴트는 <literal>vm</literal>):
-                            Hibernate는 어느 곳에서 timestamp 값을 검색할 것인가? 데이터베이스로부터인가 현재의 JVM으로부터인가?
+                            Hibernate는 어느 장소로부터 timestamp 값을 검색할 것인가? 데이터베이스로부터인가 현재의 JVM으로부터인가?
                             Hibernate가 "다음 값"을 결정하기 위해 데이터베이스에 접속해야 하기 때문에 데이터베이스 기반의 
                             timestamp들은 오버헤드를 초래하지만, 클러스터링된 환경들의 용도로 더 안전할 것이다. 또한 모든 
                             <literal>Dialect</literal>들이 데이터베이스의 현재의 timestamp에 대한 검색을 지원하는 것으로 알려져 
                                                         있는 반면에, 다른 <literal>Dialect</literal>들은 정밀도 결핍 때문에 잠금에 있어 사용에 대해 안전하지 않을 
                                                         수 있음을 노트하라(예를 들면 오라클 8).
+                        </para>
+                    </callout>
+                    <callout arearefs="timestamp6">
+                        <para>
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                                                        이 timestamp 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다.
+                            <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 대한 논의들 보라.
                         </para>
                     </callout>
                 </calloutlist>
@@ -1138,7 +1166,7 @@
         </sect2>
 
 
-        <sect2 id="mapping-declaration-property" revision="2">
+        <sect2 id="mapping-declaration-property" revision="3">
             <title>프로퍼티</title>
 
             <para>
@@ -1160,6 +1188,7 @@
                     <area id="property9" coords="10 70"/>
                     <area id="property10" coords="11 70"/>
                     <area id="property11" coords="12 70"/>
+                    <area id="property12" coords="13 70"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1173,6 +1202,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
+        generated="true|false"
         node="element-name|@attribute-name|element/@attribute|."
         index="index_name"
         unique_key="unique_key_id"
@@ -1244,6 +1274,13 @@
                             <literal>optimistic-lock</literal> (옵션 - 디폴트는 <literal>true</literal>): 
                                                         이 프로퍼티에 대한 업데이트들이 optimistic 잠금을 획득하는 것을 필요로 하거나 필요로 하지 않음을 지정한다. 
                                                         달리말해, 이 프로퍼티가 dirty일 때 버전 증가가 발생할 경우인지를 결정한다.
+                        </para>
+                    </callout>
+                    <callout arearefs="property12">
+                        <para>
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                                                        이 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다. 
+                            <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 대한 논의를 보라.
                         </para>
                     </callout>
                 </calloutlist>
@@ -1360,7 +1397,7 @@
         lazy="proxy|no-proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
-        formul="arbitrary SQL expression"
+        formula="arbitrary SQL expression"
         node="element-name|@attribute-name|element/@attribute|."
         embed-xml="true|false"
         index="index_name"
@@ -1917,7 +1954,7 @@
             
         </sect2>
 
-        <sect2 id="mapping-declaration-subclass" revision="3">
+        <sect2 id="mapping-declaration-subclass" revision="4">
             <title>subclass</title>
 
             <para>
@@ -1941,7 +1978,8 @@
         dynamic-update="true|false"
         dynamic-insert="true|false"
         entity-name="EntityName"
-        node="element-name">
+        node="element-name"
+        extends="SuperclassName">
 
         <property .... />
         .....
@@ -1979,22 +2017,6 @@
                                 붙은 자바 클래스 이름이 사용된다.
             </para>
             
-       <para>
-                        별도의 매핑 문서들 내에서 바로 <literal>hibernate-mapping</literal> 밑에 <literal>subclass</literal>, 
-            <literal>union-subclass</literal>, <literal>joined-subclass</literal> 매핑들을 정의하는 것이 가능하다. 
-                        이것은 단지 새로운 매핑 파일을 추가함으로써 클래스 계층구조를 확장하는 것을 당신에게 허용해준다. 당신은 서브클래스 매핑에서 이전에 
-                        매핑된 슈퍼클래스를 명명하여 <literal>extends</literal> 속성을 지정해야 한다. 노트 : 이전 버전에서 이 특징은 매핑 문서들의 
-                        순서를 중요하게 만들었다. Hibernate3에서, extends 키워드를 사용할 때 매핑 파일들의 순서는 관계 없다. 하나의 매핑 파일들 내의 
-                        순서는 여전히 서브클래스들 앞에 슈퍼클래스들로서 정의될 필요가 있다.
-        </para>
-    
-        <programlisting><![CDATA[
-<hibernate-mapping>
-    <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
-         <property name="name" type="string"/>
-    </subclass>
-</hibernate-mapping>]]></programlisting>
-
             <para>
                                 상속 매핑들에 대한 정보는 <xref linkend="inheritance"/>을 보라.
             </para>
@@ -2362,7 +2384,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-column" revision="3">
+        <sect2 id="mapping-column" revision="4">
            <title>column 요소와 formula 요소</title>
            <para>
                column 속성을 허용하는 임의의 매핑 요소는 대안적으로 하나의 <literal>&lt;column&gt;</literal> 서브요소를 수용할 것이다. 
@@ -2379,7 +2401,8 @@
         unique-key="multicolumn_unique_key_name"
         index="index_name"
         sql-type="sql_type_name"
-        check="SQL expression"/>]]></programlisting>
+        check="SQL expression"
+        default="SQL expression"/>]]></programlisting>
 
             <programlisting><![CDATA[<formula>SQL expression</formula>]]></programlisting>
         
@@ -3035,6 +3058,70 @@ public class Customer implements Serializable {
     
     </sect2>
     </sect1>
+    
+        <sect1 id="mapping-generated">
+        <title>산출되는 프로퍼티들</title>
+        <para>
+                        산출되는 프로퍼티들은 데이터베이스에 의해 산출되는 그것들의 값들을 갖는 프로퍼티들이다. 전형적으로, 
+            Hibernate 어플리케이션들은 데이터베이스가 값들을 생성시켰던 임의의 프로퍼티들을 포함하는 객체들을 
+            <literal>갱신</literal>시킬 필요가 있었다.하지만 generated로 마크된 프로퍼티들은 어플리케이션으로 
+                        하여금 이 책임을 Hibernate에게 위임시키도록 한다. 본질적으로 Hibernate가 산출되는 프로퍼티들을 정의했던 엔티티에 
+                        대해 SQL INSERT 또는 UPDATE 명령을 내릴 때마다 바로 직후에 산출되는 값들을 검색하기 위해 하나의 select 명령을 
+                        내린다.
+        </para>
+        <para>
+            generated로 마크된 프로퍼티들은 부가적으로 inser 가능하지 않아야 하고 update 불가능해야 한다. 오직 
+            Properties marked as generated must additionally be non-insertable and non-updateable.
+            <xref linkend="mapping-declaration-version">versions</xref>,
+            <xref linkend="mapping-declaration-timestamp">timestamps</xref>, 그리고
+            <xref linkend="mapping-declaration-property">단순 프로퍼티들</xref> 만이 generated로 
+                        마크될 수 있다.
+        </para>
+    </sect1>
 
+    <sect1 id="mapping-database-object">
+        <title>보조 데이터베이스 객체들</title>
+        <para>
+            Hibernate 매핑 파일들 내에 사용자 스키마를 완전하게 정의하기 위한 능력을 제공하기 위해서, 
+            Hibernate의 스키마 방출 도구들과 함께 임의적인 데이터베이스 객체들에 대한 CREATE와 DROP을 허용해준다.
+                        비록 트리거들 또는 내장 프로시저들과 같은 것들을 생성시키고 드롭시키기 이해 특별히 고안되었을지라도
+                        하나의 <literal>java.sql.Statement.execute()</literal> 메소드를 통해 실행될 수 있는 SQL 명령이 
+                        여기서 유효하다(ALTERs, INSERTS, 기타). 보조 데0이터베이스 객체들을 정의하는 두 가지 모드들이 본질적으로 
+                        존재한다...
+        </para>
+        <para>
+                        첫 번째 모드는 매핑 파일 바깥에서 CREATE 및 DROP 명령들을 명시적으로 나열하는 것이다:
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <create>CREATE TRIGGER my_trigger ...</create>
+        <drop>DROP TRIGGER my_trigger</drop>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+                        두번째 모드는 CREATE 및 DROP 명령들을 생성시키는 방법을 알고 있는 하나의 맞춤 클래스를 제공하는 것이다.
+                        이 맞춤 클래스는 <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> 
+                        인터페이스를 구현해야 한다.
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+                        덧붙여 이들 데이터베이스 객체들은 어떤 dialect들이 사용될 때 그것들이 단지 적용될 수 있도록 선택적으로 
+                        변동될 수 있다.
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+    </sect1>
 </chapter>
 

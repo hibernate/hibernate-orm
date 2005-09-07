@@ -558,7 +558,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="1">
             <title>객체 로딩과 객체 저장</title>
 
             <para>
@@ -725,6 +725,13 @@ else if (args[0].equals("list")) {
             <para>
                                 만일 당신이 지금 <literal>-Daction=list</literal>로 Ant를 호출할 경우, 당신은 당신이 지금까지 저장했던 이벤트들을 
                                 보게 될 것이다. 물론 당신은 또한 여러 번 <literal>store</literal> 액션을 호출할 수 있다.
+            </para>
+            
+            <para>
+                                노트 : 대부분의 Hibernate 사용자들은 이 지점에서 실패하고 우리는 정기적으로 <emphasis>Table not found</emphasis>
+                                오류 메시지들에 관한 질문을 받는다. 하지만 만일 당신이 위에 조명된 단게들을 따를 경우 당신은 이 문제를 겪지 않을 것이고, 
+                hbm2ddl이 처음 실행 시에 데이터베이스 스키마를 생성시키므로, 차후의 어플리케이션 재시작은 이 스키마를 사용할 것이다.
+                                만일 당신이 매핑 그리고/또는 데이터베이스 스키마를 변경할 경우에, 당신은 다시 한번 더 hbm2ddl을 이용 가능하도록 해야 한다.
             </para>
 
         </sect2>

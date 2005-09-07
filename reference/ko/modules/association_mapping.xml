@@ -292,7 +292,7 @@ create table Address ( addressId bigint not null primary key )
     <sect1 id="assoc-bidirectional" revision="1">
         <title>양방향 연관들</title>
         
-        <sect2 id="assoc-bidirectional-m21">
+        <sect2 id="assoc-bidirectional-m21" revision="1">
         <title>one to many / many to one</title>
         
         <para>
@@ -323,6 +323,34 @@ create table Person ( personId bigint not null primary key,
                       addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
+
+        <para>
+                        만일 당신이 <literal>List</literal>(또는 다른 인덱싱 된 콜렉션)을 사용할 경우 당신은 foreign key의 
+            <literal>key</literal> 컬럼을 <literal>not null</literal>로 설정하고, Hibernate로 하여금 
+                        각각의 요소의 인덱스를 유지관리하기 위해 (<literal>update="false"</literal>와 
+            <literal>insert="false"</literal>를 설정함으로써 다른 측을 가상적으로 inverse로 만들어) 
+                        그 콜렉션들 측으로부터  연관을 관리하도록 할 필요가 있다:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+   <id name="id"/>
+   ...
+   <many-to-one name="address"
+      column="addressId"
+      not-null="true"
+      insert="false"
+      update="false"/>
+</class>
+
+<class name="Address">
+   <id name="id"/>
+   ...
+   <list name="people">
+      <key column="addressId" not-null="true"/>
+      <list-index column="peopleIdx"/>
+      <one-to-many class="Person"/>
+   </list>
+</class>]]></programlisting>
         
         </sect2>
         
@@ -477,7 +505,7 @@ create table Address ( addressId bigint not null primary key )
 
         </sect2>
         
-        <sect2 id="assoc-bidirectional-join-m2m">
+        <sect2 id="assoc-bidirectional-join-m2m" revision="1">
         <title>many to many</title>
         
         <para>
@@ -488,7 +516,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
-    <set name="addresses">
+    <set name="addresses" table="PersonAddress">
         <key column="personId"/>
         <many-to-many column="addressId"
             class="Address"/>
@@ -499,7 +527,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="addressId">
         <generator class="native"/>
     </id>
-    <set name="people" inverse="true">
+    <set name="people" inverse="true" table="PersonAddress">
         <key column="addressId"/>
         <many-to-many column="personId"
             class="Person"/>
@@ -518,7 +546,7 @@ create table Address ( addressId bigint not null primary key )
         
     </sect1>
     
-    <sect1>
+    <sect1 id="assoc-complex">
         <title>보다 복잡한  연관 매핑들</title>
         
         <para>

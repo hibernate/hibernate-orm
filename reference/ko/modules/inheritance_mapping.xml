@@ -1,7 +1,7 @@
 <chapter id="inheritance">
     <title>상속 매핑</title>
 
-    <sect1 id="inheritance-strategies" revision="2">
+    <sect1 id="inheritance-strategies" revision="3">
         <title>세 가지 방도들</title>
 
         <para>
@@ -46,7 +46,23 @@
                         요소 하에서 <literal>&lt;subclass&gt;</literal> 요소와 <literal>&lt;join&gt;</literal> 요소를 결합시킴으로써 
             table per hierarchy 방도와 table per subclass 방도를 함께 혼합시키는 것이 가능하다(아래를 보라). 
         </para>
-        
+
+        <para>
+                          별도의 매핑 문서 내에, <literal>hibernate-mapping</literal> 바로 밑에 <literal>subclass</literal>, 
+             <literal>union-subclass</literal>, 그리고 <literal>joined-subclass</literal> 매핑들을 정의하는 것이 
+                         가능하다. 이것은 단지 하나의 새로운 매핑 파일을 추가시켜서 하나의 class 계층구조를 확장하는 것을 당신에게 허용해준다. 
+                         당신은 subclass 매핑 내에 앞서 매핑된 슈퍼클래스를 명명하여 <literal>extends</literal> 속성을 지정해야 한다. 
+                         노트 : 명백하게 이 특징은 매핑 문서들의 순서를 중요하게끔 만들었다. Hibernate3 이후로, 매핑 파일들의 순서는 extends 키워드를 
+                         사용할 때 상관없다. 하나의 매핑 파일 내의 순서는 여전히 서브클래스들에 앞서 슈퍼클래스들을 정의하는데 여전히 필요하다.
+         </para>
+
+         <programlisting><![CDATA[
+ <hibernate-mapping>
+     <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
+          <property name="name" type="string"/>
+     </subclass>
+ </hibernate-mapping>]]></programlisting>
+
         <sect2 id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 

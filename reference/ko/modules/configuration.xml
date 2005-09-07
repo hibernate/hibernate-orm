@@ -863,7 +863,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="7">
+        <table frame="topbot" id="configuration-misc-properties" revision="8">
             <title>여러가지 프로퍼티들</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -905,11 +905,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            <literal>SessionFactory</literal>가 생성될 때 스키마 DDL을 데이터베이스로 자동적으로 내보낸다. <literal>create-drop</literal>의 경우, 
+                            <literal>SessionFactory</literal>가 생성될 때 스키마 DDL을 데이터베이스로 자동적으로 유효성 검사하거나 내보내기 한다. <literal>create-drop</literal>의 경우, 
                             <literal>SessionFactory</literal>가 명시적으로 닫혀질 때,, 데이터베이스 스키마가 드롭될 것이다. 
                             <para>
                                 <emphasis role="strong">예.</emphasis> 
-                                <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>
+                                <literal>validate</literal> | <literal>update</literal> | 
+                                <literal>create</literal> | <literal>create-drop</literal>
                             </para>
                         </entry>
                     </row>

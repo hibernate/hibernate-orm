@@ -649,7 +649,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             <literal>maxelement</literal> 함수를 사용하여 기본 타입을 가진 콜렉션의 최소 요소 및 최대 요소를 참조할 수 있다.
         </para>
         
-        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date]]></programlisting>
+        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]></programlisting>
         
         <programlisting><![CDATA[from Order order where maxindex(order.items) > 100]]></programlisting>
 

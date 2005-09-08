@@ -605,7 +605,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
 
         </para>
         
-        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current date]]></programlisting>
+        <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]></programlisting>
         
         <programlisting><![CDATA[from Order order where maxindex(order.items) > 100]]></programlisting>
 

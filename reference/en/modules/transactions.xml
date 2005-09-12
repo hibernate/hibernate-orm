@@ -56,7 +56,7 @@
             database transaction boundaries?
         </para>
 
-        <sect2 id="transactions-basics-uow">
+        <sect2 id="transactions-basics-uow" revision="1">
             <title>Unit of work</title>
 
             <para>
@@ -92,10 +92,9 @@
                 easy access (like accessing a static variable) in all code that runs in this thread. Depending
                 on the database transaction demarcation mechanism you chose, you might also keep the transaction
                 context in a <literal>ThreadLocal</literal> variable. The implementation patterns for this
-                are known as <emphasis>ThreadLocal Session</emphasis> and <emphasis>Open Session in View</emphasis>.
-                You can easily extend the <literal>HibernateUtil</literal> helper class shown earlier in this
-                documentation to implement this. Of course, you'd have to find a way to implement an interceptor
-                and set it up in your environment. See the Hibernate website for tips and examples.
+                are known as <emphasis>ThreadLocal Session</emphasis> and <emphasis>Open Session in View</emphasis>
+                and can be found on the Hibernate Wiki. Of course, you'd have to find a way to implement an
+                interceptor and set it up in your environment. See the Hibernate website for tips and examples.
              </para>
 
         </sect2>

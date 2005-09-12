@@ -1602,16 +1602,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="1">
+        <sect2 id="configuration-j2ee-currentsession" revision="2">
             <title>Automatic JTA and Session binding</title>
 
             <para>
-                For non-managed environments we suggested <literal>HibernateUtil</literal> with
-                a static <literal>SessionFactory</literal>, and <literal>ThreadLocal</literal>
-                management of the Hibernate <literal>Session</literal>. This approach isn't easy
-                to use in an EJB environment, as several EJB's may execute inside the same
-                transaction but not the same thread. We recommend that you bind the
-                <literal>SessionFactory</literal> to JNDI in a managend environment.
+                We recommend that you bind the <literal>SessionFactory</literal> to JNDI in
+                a managend environment. For transaction and <literal>Session</literal> handling,
+                you could use the already introduced <literal>HibernateUtil</literal> helper class.
+                However, EJBs might not execute in the same thread, which makes <literal>ThreadLocal</literal>
+                handling not always appropriate (e.g. when two session beans call each other).
             </para>
 
             <para>
@@ -1623,7 +1622,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 and <literal>hibernate.transaction.auto_close_session</literal> configuration option,
                 will be set automatically for every <literal>Session</literal> you retrieve with
                 <literal>getCurrentSession()</literal>, so they will also be flushed and closed
-                automatically when the container ends the JTA transactions.
+                automatically when the container ends the JTA transactions. This is an alternative
+                to <literal>ThreadLocal</literal> management. The <literal>HibernateUtil</literal>
+                class you can find with the <emphasis>CaveatEmptor</emphasis> application can
+                actually switch between both strategies automatically, hence, keeps your code
+                portable between transaction-local, BMT, and CMT environments.
             </para>
 
             <para>

@@ -478,7 +478,7 @@ Total time: 1 second ]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-helpers">
+        <sect2 id="tutorial-firstapp-helpers" revision="1">
             <title>Startup and helpers</title>
 
             <para>
@@ -518,7 +518,7 @@ public class HibernateUtil {
 
     public static final ThreadLocal session = new ThreadLocal();
 
-    public static Session currentSession() throws HibernateException {
+    public static Session getCurrentSession() throws HibernateException {
         Session s = (Session) session.get();
         // Open a new Session, if this thread has none yet
         if (s == null) {
@@ -542,7 +542,7 @@ public class HibernateUtil {
                 its static initializer (called once by the JVM when the class is loaded), but also
                 has a <literal>ThreadLocal</literal> variable to hold the
                 <literal>Session</literal> for the current thread. No matter when you call
-                <literal>HibernateUtil.currentSession()</literal>, it will always return the same
+                <literal>HibernateUtil.getCurrentSession()</literal>, it will always return the same
                 Hibernate unit of work in the same thread. A call to <literal>HibernateUtil.closeSession()</literal>
                 ends the unit of work currently associated with the thread.
             </para>
@@ -592,7 +592,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="1">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="2">
             <title>Loading and storing objects</title>
 
             <para>
@@ -625,7 +625,7 @@ public class EventManager {
             </para>
 
             <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     Event theEvent = new Event();
@@ -722,7 +722,7 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     List result = session.createQuery("from Event").list();
@@ -926,7 +926,7 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working">
+        <sect2 id="tutorial-associations-working" revision="1">
             <title>Working the association</title>
 
             <para>
@@ -934,7 +934,7 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     Person aPerson = (Person) session.load(Person.class, personId);
@@ -968,7 +968,7 @@ else if (args[0].equals("list")) {
 
             <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
 
-        Session session = HibernateUtil.currentSession();
+        Session session = HibernateUtil.getCurrentSession();
         Transaction tx = session.beginTransaction();
 
         Person aPerson = (Person) session.load(Person.class, personId);
@@ -979,7 +979,7 @@ else if (args[0].equals("list")) {
 
         aPerson.getEvents().add(anEvent); // aPerson is detached
 
-        Session session2 = HibernateUtil.currentSession();
+        Session session2 = HibernateUtil.getCurrentSession();
         Transaction tx2 = session.beginTransaction();
 
         session2.update(aPerson); // Reattachment of aPerson

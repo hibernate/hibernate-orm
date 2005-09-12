@@ -442,7 +442,7 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
 
     </sect1>
 
-    <sect1 id="quickstart-playingwithcats" revision="2">
+    <sect1 id="quickstart-playingwithcats" revision="3">
         <title>Playing with cats</title>
 
         <para>
@@ -503,7 +503,7 @@ public class HibernateUtil {
 
     public static final ThreadLocal session = new ThreadLocal();
 
-    public static Session currentSession() {
+    public static Session getCurrentSession() {
         Session s = (Session) session.get();
         // Open a new Session, if this Thread has none yet
         if (s == null) {
@@ -539,7 +539,7 @@ public class HibernateUtil {
             <literal>process()</literal> method might look like this (sans exception handling):
         </para>
 
-        <programlisting><![CDATA[Session session = HibernateUtil.currentSession();
+        <programlisting><![CDATA[Session session = HibernateUtil.getCurrentSession();
 Transaction tx = session.beginTransaction();
 
 Cat princess = new Cat();
@@ -561,7 +561,7 @@ HibernateUtil.closeSession();]]></programlisting>
         </para>
 
         <para>
-            Note that you may call <literal>HibernateUtil.currentSession();</literal>
+            Note that you may call <literal>HibernateUtil.getCurrentSession();</literal>
             as many times as you like, you will always get the current <literal>Session</literal>
             of this thread. You have to make sure the <literal>Session</literal> is closed
             after your unit-of-work completes, either in your servlet code or in a servlet filter

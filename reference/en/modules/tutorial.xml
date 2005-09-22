@@ -355,6 +355,9 @@ public class Event {
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">1</property>
 
+        <!-- For a HSQL 1.8 in-memory database, this is required -->
+        <property name="connection.shutdown">true</property>
+
         <!-- SQL dialect -->
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
 

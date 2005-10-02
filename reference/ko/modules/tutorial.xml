@@ -333,6 +333,9 @@ public class Event {
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">1</property>
 
+        <!-- For a HSQL 1.8 in-memory database, this is required -->
+        <property name="connection.shutdown">true</property>
+
         <!-- SQL dialect -->
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
 
@@ -451,7 +454,7 @@ Total time: 1 second ]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-helpers">
+        <sect2 id="tutorial-firstapp-helpers" revision="1">
             <title>시작과 helper들</title>
 
             <para>
@@ -489,7 +492,7 @@ public class HibernateUtil {
 
     public static final ThreadLocal session = new ThreadLocal();
 
-    public static Session currentSession() throws HibernateException {
+    public static Session getCurrentSession() throws HibernateException {
         Session s = (Session) session.get();
         // Open a new Session, if this thread has none yet
         if (s == null) {
@@ -511,7 +514,7 @@ public class HibernateUtil {
             <para>
                                 이 클래스는 (클래스가 로드될 때 JVM에 의해 한번 호출되는) 그것의 static 초기자 내에 전역 <literal>SessionFactory</literal>를 
                                 산출할 뿐만 아니라 또한 현재 쓰레드에 대한 <literal>Session</literal>을 소유하는 <literal>ThreadLocal</literal> 변수를 
-                                갖는다. 당신이 <literal>HibernateUtil.currentSession()</literal>을 호출하는 시점에는 문제가 없으며, 
+                                갖는다. 당신이 <literal>HibernateUtil.getCurrentSession()</literal>을 호출하는 시점에는 문제가 없으며, 
                                 그것은 항상 동일 쓰레드 내에 동일한 Hibernate 작업 단위를 반환할 것이다. <literal>HibernateUtil.closeSession()</literal>에
                                 대한 호출은 쓰레드와 현재 연관되어 있는 작업 단위를 종료시킨다.
             </para>
@@ -558,7 +561,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="1">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="2">
             <title>객체 로딩과 객체 저장</title>
 
             <para>
@@ -591,7 +594,7 @@ public class EventManager {
             </para>
 
             <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     Event theEvent = new Event();
@@ -682,7 +685,7 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     List result = session.createQuery("from Event").list();
@@ -881,7 +884,7 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working">
+        <sect2 id="tutorial-associations-working" revision="1">
             <title>연관들에 작업하기</title>
 
             <para>
@@ -889,7 +892,7 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
-    Session session = HibernateUtil.currentSession();
+    Session session = HibernateUtil.getCurrentSession();
     Transaction tx = session.beginTransaction();
 
     Person aPerson = (Person) session.load(Person.class, personId);
@@ -920,7 +923,7 @@ else if (args[0].equals("list")) {
 
             <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
 
-        Session session = HibernateUtil.currentSession();
+        Session session = HibernateUtil.getCurrentSession();
         Transaction tx = session.beginTransaction();
 
         Person aPerson = (Person) session.load(Person.class, personId);
@@ -931,7 +934,7 @@ else if (args[0].equals("list")) {
 
         aPerson.getEvents().add(anEvent); // aPerson is detached
 
-        Session session2 = HibernateUtil.currentSession();
+        Session session2 = HibernateUtil.getCurrentSession();
         Transaction tx2 = session.beginTransaction();
 
         session2.update(aPerson); // Reattachment of aPerson

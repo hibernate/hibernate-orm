@@ -110,7 +110,7 @@ List cats = sess.createCriteria(Cat.class)
     
     </sect1>
     
-    <sect1 id="querycriteria-associations">
+    <sect1 id="querycriteria-associations" revision="2">
         <title>연관들</title>
 
         <para>
@@ -146,13 +146,13 @@ List cats = sess.createCriteria(Cat.class)
         <para>
                         앞의 두 개의 질의들에 의해 반환된 <literal>Cat</literal> 인스턴스들에 의해 보관된  kittens 콜렉션들은 criteria에 의해 
                         사전-필터링되지 <emphasis>않는다</emphasis>는 점을 노트하라! 만일 당신이 criteria(기준)과 일치하는 고양이 새끼들을 
-                        단지 검색하고자 원할 경우, 당신은 <literal>returnMaps()</literal>를 사용해야 한다.
+                        단지 검색하고자 원할 경우, 당신은 하나의 <literal>ResultTransformer</literal>를 사용해야 한다.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createCriteria("kittens", "kt")
         .add( Restrictions.eq("name", "F%") )
-    .returnMaps()
+    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
     .list();
 Iterator iter = cats.iterator();
 while ( iter.hasNext() ) {

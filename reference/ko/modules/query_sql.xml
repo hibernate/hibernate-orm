@@ -76,8 +76,7 @@
         </para>
         
         <programlisting><![CDATA[List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten 
-                                    where kitten.mother = cat.id"
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
     )
     .addEntity("cat", Cat.class)
     .addJoin("kitten", "cat.kittens")
@@ -121,7 +120,7 @@
     "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
     "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
     "from cat_log cat where {cat.mate} = :catId"
-    
+
 List loggedCats = sess.createSQLQuery(sql)
     .addEntity("cat", Cat.class)
     .setLong("catId", catId)
@@ -138,10 +137,14 @@ List loggedCats = sess.createSQLQuery(sql)
 
              <table frame="topbot" id="aliasinjection-summary">
                 <title>Alias injection 이름들</title>
-                <tgroup cols="3">
+                
+                <tgroup cols="4">
                     <colspec colwidth="1*"/>
+                    
                     <colspec colwidth="1*"/>
+                    
                     <colspec colwidth="2.5*"/>
+                    
                     <thead>
                         <row>
                             <entry>설명</entry>
@@ -208,7 +211,7 @@ List loggedCats = sess.createSQLQuery(sql)
 
     </sect1>
     
-    <sect1 id="querysql-namedqueries" revision="2">
+    <sect1 id="querysql-namedqueries" revision="3">
         <title>명명된 SQL 질의들</title>
 
         <para>
@@ -221,7 +224,7 @@ List loggedCats = sess.createSQLQuery(sql)
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex}
-    FROM PERSON person 
+    FROM PERSON person
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
@@ -230,9 +233,8 @@ List loggedCats = sess.createSQLQuery(sql)
     .setMaxResults(50)
     .list();]]></programlisting>
          <para>
-             The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal>
-             elements are used to join associations and define queries which initialize collections,
-             respectively.
+             The <literal>&lt;return-join&gt;</literal> 요소와 <literal>&lt;load-collection&gt;</literal>
+                          요소는 연관들을 조인시키고 콜렉션들을 각각 초기화 시키는 질의들을 정의하는데 사용된다.
          </para>
          
          <programlisting><![CDATA[<sql-query name="personsWith">
@@ -245,7 +247,7 @@ List loggedCats = sess.createSQLQuery(sql)
            adddress.CITY AS {address.city},
            adddress.STATE AS {address.state},
            adddress.ZIP AS {address.zip}
-    FROM PERSON person 
+    FROM PERSON person
     JOIN ADDRESS adddress
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
@@ -253,7 +255,7 @@ List loggedCats = sess.createSQLQuery(sql)
 
         <para>
                         명명된 SQL 질의는 스칼라 값을 반환할수도 있다. 당신은 <literal>&lt;return-scalar&gt;</literal> 요소를 사용하여 
-                        컬럼 alias와 Hibernate 타입을 지정해야 한다:
+                        컬럼 alias와 Hibernate 타입을 선언해야 한다:
         </para>
         
         <programlisting><![CDATA[<sql-query name="mySqlQuery">
@@ -280,7 +282,7 @@ List loggedCats = sess.createSQLQuery(sql)
            adddress.CITY AS {address.city},
            adddress.STATE AS {address.state},
            adddress.ZIP AS {address.zip}
-    FROM PERSON person 
+    FROM PERSON person
     JOIN ADDRESS adddress
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
@@ -314,14 +316,14 @@ List loggedCats = sess.createSQLQuery(sql)
              </para>
              
              <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
-    <return alias="emp" class="Employment">            
-        <return-property name="salary"> 
+    <return alias="emp" class="Employment">
+        <return-property name="salary">
             <return-column name="VALUE"/>
-            <return-column name="CURRENCY"/>            
+            <return-column name="CURRENCY"/>
         </return-property>
         <return-property name="endDate" column="myEndDate"/>
     </return>
-        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
         STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
         REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
         FROM EMPLOYMENT
@@ -348,17 +350,17 @@ List loggedCats = sess.createSQLQuery(sql)
                                   가능하도록 첫 번째 출력-파라미터로서 한 개의 결과셋을 반환해야 한다. Oracle9 이상의 버전에서 그런 내장 프로시저에 
                                   대한 예제는 다음과 같다:
              </para>
-                 <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments 
-    RETURN SYS_REFCURSOR 
-AS 
-    st_cursor SYS_REFCURSOR; 
-BEGIN 
-    OPEN st_cursor FOR 
- SELECT EMPLOYEE, EMPLOYER, 
- STARTDATE, ENDDATE, 
- REGIONCODE, EID, VALUE, CURRENCY 
- FROM EMPLOYMENT; 
-      RETURN  st_cursor; 
+                 <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
+    RETURN SYS_REFCURSOR
+AS
+    st_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN st_cursor FOR
+ SELECT EMPLOYEE, EMPLOYER,
+ STARTDATE, ENDDATE,
+ REGIONCODE, EID, VALUE, CURRENCY
+ FROM EMPLOYMENT;
+      RETURN  st_cursor;
  END;]]></programlisting>
  
              <para>
@@ -368,14 +370,14 @@ BEGIN
              <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
     <return alias="emp" class="Employment">
         <return-property name="employee" column="EMPLOYEE"/>
-        <return-property name="employer" column="EMPLOYER"/>            
+        <return-property name="employer" column="EMPLOYER"/>
         <return-property name="startDate" column="STARTDATE"/>
-        <return-property name="endDate" column="ENDDATE"/>            
-        <return-property name="regionCode" column="REGIONCODE"/>            
-        <return-property name="id" column="EID"/>                        
-        <return-property name="salary"> 
+        <return-property name="endDate" column="ENDDATE"/>
+        <return-property name="regionCode" column="REGIONCODE"/>
+        <return-property name="id" column="EID"/>
+        <return-property name="salary">
             <return-column name="VALUE"/>
-            <return-column name="CURRENCY"/>            
+            <return-column name="CURRENCY"/>
         </return-property>
     </return>
     { ? = call selectAllEmployments() }
@@ -525,9 +527,9 @@ END updatePerson;]]></programlisting>
 
         <programlisting><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person" lock-mode="upgrade"/>
-    SELECT NAME AS {pers.name}, ID AS {pers.id} 
-    FROM PERSON 
-    WHERE ID=? 
+    SELECT NAME AS {pers.name}, ID AS {pers.id}
+    FROM PERSON
+    WHERE ID=?
     FOR UPDATE
 </sql-query>]]></programlisting>
 
@@ -551,13 +553,13 @@ END updatePerson;]]></programlisting>
                         당신은 콜렉션 로딩을 위한 한 개의 질의를 정의할 수도 있다:
         </para>
 
-<programlisting><![CDATA[<set name="employments" inverse="true">
+    <programlisting><![CDATA[<set name="employments" inverse="true">
     <key/>
     <one-to-many class="Employment"/>
     <loader query-ref="employments"/>
 </set>]]></programlisting>
         
-        <programlisting><![CDATA[<sql-query name="employments">
+    <programlisting><![CDATA[<sql-query name="employments">
     <load-collection alias="emp" role="Person.employments"/>
     SELECT {emp.*}
     FROM EMPLOYMENT emp
@@ -569,12 +571,12 @@ END updatePerson;]]></programlisting>
                         당신은 심지어 조인 페칭에 의해 하나의 콜렉션을 로드시키는 하나의 엔티티를 정의할 수 있다:
         </para>
 
-        <programlisting><![CDATA[<sql-query name="person">
+    <programlisting><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person"/>
-    <return-join alias="emp" property="pers.employments"/> 
+    <return-join alias="emp" property="pers.employments"/>
     SELECT NAME AS {pers.*}, {emp.*}
     FROM PERSON pers
-    LEFT OUTER JOIN EMPLOYMENT emp 
+    LEFT OUTER JOIN EMPLOYMENT emp
         ON pers.ID = emp.PERSON_ID
     WHERE ID=?
 </sql-query>]]></programlisting>

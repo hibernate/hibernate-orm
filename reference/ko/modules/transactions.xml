@@ -48,7 +48,7 @@
                         그리고 당신은 데이터베이스 트랜잭션 경계들을 어떻게 한정하는가?
         </para>
 
-        <sect2 id="transactions-basics-uow">
+        <sect2 id="transactions-basics-uow" revision="1">
             <title>작업 단위</title>
 
             <para>
@@ -77,10 +77,9 @@
                                 우리는 하나의 <literal>ThreadLocal</literal> 변수를 사용하여 그 <literal>Session</literal>을 요청에 서비스하는 
                                 쓰레드에 바인드 시킬 것을 권장한다. 이것은 이 쓰레드 내에서 실행되는 모든 코드에서 (static 변수에 접근하는 것처럼) 쉽게 
                                 접근을 허용해준다. 당신이 선택하는 데이터베이스 트랜잭션 경계 구분 메커니즘에 따라, 당신은 또한 <literal>ThreadLocal</literal> 
-                                변수 내에 트랜잭션 컨텍스트를 유지할 수도 있다. 이것을 위한 구현 패턴들은<emphasis>ThreadLocal Session</emphasis> 
-                                및 <emphasis> 뷰 내의 Open Session</emphasis>으로 알려져 있다. 당신은 이것을 구현하기 위해 이 문서의 앞 쪽에 보였던 
-                <literal>HibernateUtil</literal> helper 클래스를 쉽게 확장할 수 있다. 물론 당신은 당신의 환경에서 인터셉터를 구현하고 그것을 
-                                설정하는 방법을 찾아야 한다. 팁들과 예제들은 Hibernate 웹 사이트를 보라.
+                                변수 내에 트랜잭션 컨텍스트를 유지할 수도 있다. 이를 위한 구현 패턴들은 <emphasis>ThreadLocal Session</emphasis> 및 
+                <emphasis>Open Session in View</emphasis>으로 알려져 있고 Hibernate Wiki 상에서 찾을 수 있다. 물론 당신은 
+                               하나의 인터셉터를 구현하고 그것을 당신의 환경에 설정하는 방법을 찾아야 한다. 팁들과 예제들은 Hibernate 웹 사이트를 보라.
              </para>
 
         </sect2>

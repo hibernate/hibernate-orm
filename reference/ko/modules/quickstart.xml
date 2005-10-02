@@ -406,7 +406,7 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
 
     </sect1>
 
-    <sect1 id="quickstart-playingwithcats" revision="2">
+    <sect1 id="quickstart-playingwithcats" revision="3">
         <title>cat들에 작업하기</title>
 
         <para>
@@ -461,7 +461,7 @@ public class HibernateUtil {
 
     public static final ThreadLocal session = new ThreadLocal();
 
-    public static Session currentSession() {
+    public static Session getCurrentSession() {
         Session s = (Session) session.get();
         // Open a new Session, if this Thread has none yet
         if (s == null) {
@@ -494,7 +494,7 @@ public class HibernateUtil {
                         예제는 다음과 같을 수 있다(예외상황 처리 없이): 
         </para>
 
-        <programlisting><![CDATA[Session session = HibernateUtil.currentSession();
+        <programlisting><![CDATA[Session session = HibernateUtil.getCurrentSession();
 Transaction tx = session.beginTransaction();
 
 Cat princess = new Cat();
@@ -515,7 +515,7 @@ HibernateUtil.closeSession();]]></programlisting>
         </para>
 
         <para>
-                        당신이 원하는 만큼 당신이 <literal>HibernateUtil.currentSession();</literal>을 호출할 수 있고, 당신은 
+                        당신이 원하는 만큼 당신이 <literal>HibernateUtil.getCurrentSession();</literal>을 호출할 수 있고, 당신은 
                         이 쓰레드의 현재 <literal>Session</literal>을 항상 얻을 것임을 노트하라. 당신은 서블릿 코드 내에서든 또는 서블릿 필터 
                         내에서든 HTTP response가 전송되기 전에, 당신의 단위 작업이 완료된 후에 <literal>Session</literal>이 확실히 
                         닫혀지도록 해야 한다. 두 번째 옵션의 좋은 측면은 쉬운 lazy 초기화이다: 뷰가 렌더링 될 때 <literal>Session</literal>이 

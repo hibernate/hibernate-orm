@@ -1508,14 +1508,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="1">
+        <sect2 id="configuration-j2ee-currentsession" revision="2">
             <title>자동적인 JTA 및 Session 바인딩</title>
 
             <para>
-                                관리되지 않는 환경들에서 우리는 static <literal>SessionFactory</literal>를 가진 <literal>HibernateUtil</literal>, 
-                                그리고 Hibernate <literal>Session</literal>에 대한 <literal>ThreadLocal</literal> 관리를 제안했다. 몇몇 EJB들이 
-                                동일 트랜잭션 내에서 실행되지만 동일 쓰레드 내에서 실행되지 않을 수 있으므로, 이 접근법은 EJB 환경에서 사용하기가 쉽지 않다. 우리는 
-                                당신이 관리되는 환경에서 <literal>SessionFactory</literal>를 JNDI에 바인드 시키는 것을 권장한다.
+                                관리되는 환경들에서 우리는 <literal>SessionFactory</literal>를 JNDI에 바인드 시키는 것을 권장한다. 트랜잭션과 
+                <literal>Session</literal> 핸들링을 위해, 당신은 이미 소개된 <literal>HibernateUtil</literal> helper 
+                                클래스를 사용할 수 있다. 하지만 EJB들은 동일한 쓰레드에서 실행되지 않을 수도 있는데, 그것은  항상 적절하게 
+                <literal>ThreadLocal</literal> 핸들링을 행하지 않는다(예를 들면 두 개의 세션이 서로를 호출할 때).
             </para>
 
             <para>
@@ -1525,7 +1525,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <literal>hibernate.transaction.flush_before_completion</literal>과 
                 <literal>hibernate.transaction.auto_close_session</literal> 구성 옵션 둘 다 당신이 
                 <literal>getCurrentSession()</literal>으로 검색하는 모든 <literal>Session</literal>에 대해 자동적으로 설정될 
-                                것이고, 따라서 세션들은 또한 컨테이너가 JTA 트랜잭션들을 끝낼 때 자동적으로 flush되고 닫혀질 것이다.
+                                것이고, 따라서 세션들은 또한 컨테이너가 JTA 트랜잭션들을 끝낼 때 자동적으로 flush되고 닫혀질 것이다. 이것은 
+                <literal>ThreadLocal</literal> 관리에 대한 대안이다. 당신이 <emphasis>CaveatEmptor</emphasis> 어플리케이션에서 
+                                찾을 수 있는 <literal>HibernateUtil</literal> 클래스는 실제로 두 개의 방도들 사이를 자동적으로 전환할 수 있으므로, 
+                transaction-local, BMT, 그리고 CMT 환경들 사이에서 당신의 코드를 이식가능하게 유지할 수 있다.
             </para>
 
             <para>

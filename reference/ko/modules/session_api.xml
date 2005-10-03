@@ -123,8 +123,8 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         <programlisting><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
 
 <programlisting><![CDATA[// you need to wrap primitive identifiers
-long pkId = 1234;
-DomesticCat pk = (DomesticCat) sess.load( Cat.class, new Long(pkId) );]]></programlisting>
+long id = 1234;
+DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );]]></programlisting>
 
         <para>
                         다른 방법으로 당신은 주어진 인스턴스 속으로 상태를 로드시킬 수 있다:

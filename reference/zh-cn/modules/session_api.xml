@@ -123,8 +123,8 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         <programlisting><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
 
 <programlisting><![CDATA[// you need to wrap primitive identifiers
-long pkId = 1234;
-DomesticCat pk = (DomesticCat) sess.load( Cat.class, new Long(pkId) );]]></programlisting>
+long id = 1234;
+DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );]]></programlisting>
 
         <para>
             此外, 你可以把数据(state)加载到指定的对象实例上（覆盖掉该实例原来的数据）。

@@ -454,7 +454,7 @@ finally {
             
         </sect2>
 
-        <sect2 id="transactions-demarcation-jta">
+        <sect2 id="transactions-demarcation-jta" revision="1">
             <title>Using JTA</title>
 
             <para>
@@ -533,13 +533,14 @@ finally {
             </para>
 
             <para>
-                If you work in a CMT environment, and use automatic flushing and closing of the session, you
+                If you work in a JTA environment, and use automatic flushing and closing of the session, you
                 might also want to use the same session in different parts of your code. Typically, in a non-managed
                 environment you would use a <literal>ThreadLocal</literal> variable to hold the session, but a
                 single EJB request might execute in different threads (e.g. session bean calling another session bean).
                 If you don't want to bother passing your <literal>Session</literal> instance around, the
                 <literal>SessionFactory</literal> provides the <literal>getCurrentSession()</literal>
-                method, which returns a session that is bound to the JTA transaction context. This is the
+                method, which returns a session that is bound to the JTA transaction context (see discussion of
+	            <xref linkend="architecture-current-session">current sessions</xref>). This is the
                 easiest way to integrate Hibernate into an application! The "current" session always has
                 auto-flush, auto-close and auto-connection-release enabled (regardless of the above property 
                 settings). Our session/transaction management idiom is reduced to this:

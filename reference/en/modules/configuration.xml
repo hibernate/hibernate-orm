@@ -1602,7 +1602,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="2">
+        <sect2 id="configuration-j2ee-currentsession" revision="3">
             <title>Automatic JTA and Session binding</title>
 
             <para>
@@ -1614,24 +1614,24 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                Instead of rolling your own <literal>ThreadLocal</literal> utility, use the
-                <literal>getCurrentSession()</literal> method on the <literal>SessionFactory</literal>
-                to obtain a Hibernate <literal>Session</literal>. If there is no Hibernate
-                <literal>Session</literal> in current JTA transaction, one will be started and
-                assigned. Both the <literal>hibernate.transaction.flush_before_completion</literal>
-                and <literal>hibernate.transaction.auto_close_session</literal> configuration option,
-                will be set automatically for every <literal>Session</literal> you retrieve with
-                <literal>getCurrentSession()</literal>, so they will also be flushed and closed
-                automatically when the container ends the JTA transactions. This is an alternative
-                to <literal>ThreadLocal</literal> management. The <literal>HibernateUtil</literal>
-                class you can find with the <emphasis>CaveatEmptor</emphasis> application can
-                actually switch between both strategies automatically, hence, keeps your code
-                portable between transaction-local, BMT, and CMT environments.
+                Instead of rolling your own <literal>ThreadLocal</literal> utility, we also recommend
+	            use of the <literal>getCurrentSession()</literal> method on <literal>SessionFactory</literal>
+                to obtain a Hibernate <literal>Session</literal>. See the discussion of
+	            <xref linkend="architecture-current-session">current sessions</xref>.  Using the
+	            <literal>"jta"</literal> session context, if there is no Hibernate
+                <literal>Session</literal> associated with the current JTA transaction, one will
+	            be started and associated with that JTA transaction. The <literal>Session</literal>s
+	            retrieved via <literal>getCurrentSession()</literal> in <literal>"jta"</literal> context
+	            will be set to automatically flush before the transaction completes, close
+	            after the transaction completes, and aggressively release JDBC connections
+	            after each statement.  This allows the <literal>Session</literal>s to
+	            be managed by the lifecycle of the JTA transaction to which it is associated,
+	            keeping user code clean of such management concerns.
             </para>
 
             <para>
                 If you, for example, use the DAO design pattern to write your persistence layer,
-                all DAO's lookup the <literal>SessionFactory</literal> when needed and open the
+                all DAO's lookup the <literal>SessionFactory</literal> when needed and retrieve the
                 "current" Session. There is no need to pass instances of <literal>SessionFactory</literal>
                 or <literal>Session</literal> around between controlling code and DAO code.
             </para>

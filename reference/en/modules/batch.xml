@@ -184,8 +184,9 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    No joins (either implicit or explicit) can be specified in a bulk HQL query.  Sub-queries
-                    may be used in the where-clause; the subqueries, themselves, can contain joins.
+                    No <xref linkend="queryhql-joins-forms">joins</xref> (either implicit or explicit)
+	                can be specified in a bulk HQL query.  Sub-queries may be used in the where-clause;
+	                the subqueries, themselves, may contain joins.
                 </para>
             </listitem>
             <listitem>

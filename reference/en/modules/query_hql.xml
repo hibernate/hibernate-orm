@@ -182,8 +182,30 @@
         
         <programlisting><![CDATA[from Document fetch all properties order by name]]></programlisting>
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
-            
+
     </sect1>
+
+    <sect1 id="queryhql-joins-forms">
+        <title>Forms of join syntax</title>
+
+	    <para>
+		    HQL supports two forms of association joining: <literal>implicit</literal> and <literal>explicit</literal>.
+		</para>
+
+	    <para>
+		    The queries shown in the previous section all use the <literal>explicit</literal> form where
+		    the join keyword is explicitly used in the from clause.  This is the recommended form.
+	    </para>
+
+	    <para>
+		    The <literal>implicit</literal> form does not use the join keyword.  Instead, the
+		    associations are "dereferenced" using dot-notation.  <literal>implicit</literal> joins
+		    can appear in any of the HQL clauses.  <literal>implicit</literal> join result
+		    in inner joins in the resulting SQL statement.
+	    </para>
+
+        <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
+	</sect1>
 
     <sect1 id="queryhql-select">
         <title>The select clause</title>

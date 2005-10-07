@@ -2,7 +2,6 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
                       "../support/docbook-dtd/docbookx.dtd"
 [
-<!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
 <!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
 <!ENTITY architecture           SYSTEM "modules/architecture.xml">
 <!ENTITY configuration          SYSTEM "modules/configuration.xml">
@@ -75,12 +74,7 @@
         <orderedlist>
             <listitem>
                 <para>
-                    Read <xref linkend="quickstart"/> for a 30 minute quickstart, using Tomcat.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Read <xref linkend="tutorial"/> for a longer tutorial with more step-by-step
+                    Read <xref linkend="tutorial"/> for a tutorial with step-by-step
                     instructions.
                 </para>
             </listitem>
@@ -147,8 +141,6 @@
          </para>
 
     </preface>
-
-    &quickstart;
 
     &tutorial;
 

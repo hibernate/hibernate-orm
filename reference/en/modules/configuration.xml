@@ -832,7 +832,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-transaction-properties" revision="8">
+        <table frame="topbot" id="configuration-transaction-properties" revision="9">
             <title>Hibernate Transaction Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -892,8 +892,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             If enabled, the session will be automatically flushed during the
-                            before completion phase of the transaction. (Very useful when
-                            using Hibernate with CMT.)
+                            before completion phase of the transaction. Built-in and
+                            automatic session context management is preferred, see
+                            <xref linkend="architecture-current-session"/>.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -906,8 +907,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             If enabled, the session will be automatically closed during the
-                            after completion phase of the transaction. (Very useful when
-                            using Hibernate with CMT.)
+                            after completion phase of the transaction. Built-in and
+                            utomatic session context management is preferred, see
+                            <xref linkend="architecture-current-session"/>.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -918,7 +920,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="8">
+        <table frame="topbot" id="configuration-misc-properties" revision="9">
             <title>Miscellaneous Properties</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -930,6 +932,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                 </thead>
                 <tbody>
+                    <row>
+                        <entry>
+                            <literal>hibernate.current_session_context_class</literal>
+                        </entry>
+                        <entry>
+                            Supply a (custom) strategy for the scoping of the "current"
+                            <literal>Session</literal>. See
+                            <xref linkend="architecture-current-session"/> for more
+                            information about the built-in strategies.
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>jta</literal> | <literal>thread</literal> |
+                                <literal>custom.Class</literal>
+                            </para>
+                        </entry>
+                    </row>
                     <row>
                         <entry>
                             <literal>hibernate.query.factory_class</literal>
@@ -1415,11 +1433,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <listitem>
                 <para>
                 <emphasis>JTA Session binding:</emphasis> The Hibernate <literal>Session</literal>
-                may be automatically bound to the scope of JTA transactions if you use EJBs. Simply
+                may be automatically bound to the scope of JTA transactions. Simply
                 lookup the <literal>SessionFactory</literal> from JNDI and get the current
                 <literal>Session</literal>. Let Hibernate take care of flushing and closing the
                 <literal>Session</literal> when your JTA transaction completes. Transaction
-                demarcation is declarative, in EJB deployment descriptors.
+                demarcation is either declarative (CMT) or programmatic (BMT/UserTransaction).
                 </para>
             </listitem>
         </itemizedlist>
@@ -1496,7 +1514,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                Some features in Hibernate (i.e. the second level cache, automatic JTA and Session binding, etc.)
+                Some features in Hibernate (i.e. the second level cache, Contextual Sessions with JTA, etc.)
                 require access to the JTA <literal>TransactionManager</literal> in a managed environment.
                 In an application server you have to specify how Hibernate should obtain a reference to the
                 <literal>TransactionManager</literal>, since J2EE does not standardize a single mechanism:
@@ -1560,7 +1578,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-optional-jndi" revision="2">
+        <sect2 id="configuration-optional-jndi" revision="3">
             <title>JNDI-bound <literal>SessionFactory</literal></title>
 
             <para>
@@ -1594,46 +1612,41 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <para>
                 If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may
-                obtain the  <literal>SessionFactory</literal> using a JNDI lookup. Note that this
-                setup is not neccessary if you use the <literal>HibernateUtil</literal> helper class
-                introduced in chapter one, which acts as a Singleton registry. However,
-                <literal>HibernateUtil</literal> is more common in a non-managed environment.
+                obtain the  <literal>SessionFactory</literal> using a JNDI lookup.
+            </para>
+
+            <para>
+                We recommend that you bind the <literal>SessionFactory</literal> to JNDI in
+                a managend environment and use a <literal>static</literal> singleton otherwise.
+                To shield your application code from these details, we also recommend to hide the
+                actual lookup code for a <literal>SessionFactory</literal> in a helper class,
+                such as <literal>HibernateUtil.getSessionFactory()</literal>. Note that such a
+                class is also a convenient way to startup Hibernate&mdash;see chapter 1.
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="3">
-            <title>Automatic JTA and Session binding</title>
+        <sect2 id="configuration-j2ee-currentsession" revision="4">
+            <title>Current Session context management with JTA</title>
 
             <para>
-                We recommend that you bind the <literal>SessionFactory</literal> to JNDI in
-                a managend environment. For transaction and <literal>Session</literal> handling,
-                you could use the already introduced <literal>HibernateUtil</literal> helper class.
-                However, EJBs might not execute in the same thread, which makes <literal>ThreadLocal</literal>
-                handling not always appropriate (e.g. when two session beans call each other).
-            </para>
-
-            <para>
-                Instead of rolling your own <literal>ThreadLocal</literal> utility, we also recommend
-	            use of the <literal>getCurrentSession()</literal> method on <literal>SessionFactory</literal>
-                to obtain a Hibernate <literal>Session</literal>. See the discussion of
-	            <xref linkend="architecture-current-session">current sessions</xref>.  Using the
-	            <literal>"jta"</literal> session context, if there is no Hibernate
+                The easiest way to handle <literal>Session</literal>s and transactions is
+                Hibernates automatic "current" <literal>Session</literal> management.
+                See the discussion of <xref linkend="architecture-current-session">current sessions</xref>.
+                Using the <literal>"jta"</literal> session context, if there is no Hibernate
                 <literal>Session</literal> associated with the current JTA transaction, one will
-	            be started and associated with that JTA transaction. The <literal>Session</literal>s
+	            be started and associated with that JTA transaction the first time you call
+	            <literal>sessionFactory.getCurrentSession()</literal>. The <literal>Session</literal>s
 	            retrieved via <literal>getCurrentSession()</literal> in <literal>"jta"</literal> context
 	            will be set to automatically flush before the transaction completes, close
 	            after the transaction completes, and aggressively release JDBC connections
 	            after each statement.  This allows the <literal>Session</literal>s to
 	            be managed by the lifecycle of the JTA transaction to which it is associated,
-	            keeping user code clean of such management concerns.
-            </para>
-
-            <para>
-                If you, for example, use the DAO design pattern to write your persistence layer,
-                all DAO's lookup the <literal>SessionFactory</literal> when needed and retrieve the
-                "current" Session. There is no need to pass instances of <literal>SessionFactory</literal>
-                or <literal>Session</literal> around between controlling code and DAO code.
+	            keeping user code clean of such management concerns. Your code can either use
+	            JTA programmatically through <literal>UserTransaction</literal>, or (recommended
+	            for portable code) use the Hibernate <literal>Transaction</literal> API to set
+	            transaction boundaries. If you run in an EJB container, declarative transaction
+	            demarcation with CMT is preferred.
             </para>
 
         </sect2>

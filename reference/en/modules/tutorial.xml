@@ -305,7 +305,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-configuration">
+        <sect2 id="tutorial-firstapp-configuration" revision="1">
             <title>Hibernate configuration</title>
 
             <para>
@@ -355,8 +355,8 @@ public class Event {
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">1</property>
 
-        <!-- For a HSQL 1.8 in-memory database, this is required -->
-        <property name="connection.shutdown">true</property>
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="current_session_context_class">thread</property>
 
         <!-- SQL dialect -->
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
@@ -385,6 +385,8 @@ public class Event {
                 The first four <literal>property</literal> elements contain the necessary
                 configuration for the JDBC connection. The dialect <literal>property</literal>
                 element specifies the particular SQL variant Hibernate generates.
+                Hibernate's automatic session management for persistence contexts will
+                come in handy as you will soon see.
                 The <literal>hbm2ddl.auto</literal> option turns on automatic generation of
                 database schemas - directly into the database. This can of course also be turned
                 off (by removing the config option) or redirected to a file with the help of
@@ -481,7 +483,7 @@ Total time: 1 second ]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-helpers" revision="1">
+        <sect2 id="tutorial-firstapp-helpers" revision="2">
             <title>Startup and helpers</title>
 
             <para>
@@ -496,9 +498,8 @@ Total time: 1 second ]]></programlisting>
 
             <para>
                 We'll create a <literal>HibernateUtil</literal> helper class which takes care
-                of startup and makes <literal>Session</literal> handling convenient. The so called
-                <emphasis>ThreadLocal Session</emphasis> pattern is useful here, we keep the current
-                unit of work associated with the current thread. Let's have a look at the implementation:
+                of startup and makes accessing a <literal>SessionFactory</literal> convenient.
+                Let's have a look at the implementation:
             </para>
 
             <programlisting><![CDATA[import org.hibernate.*;
@@ -506,7 +507,7 @@ import org.hibernate.cfg.*;
 
 public class HibernateUtil {
 
-    public static final SessionFactory sessionFactory;
+    private static final SessionFactory sessionFactory;
 
     static {
         try {
@@ -519,47 +520,26 @@ public class HibernateUtil {
         }
     }
 
-    public static final ThreadLocal session = new ThreadLocal();
-
-    public static Session getCurrentSession() throws HibernateException {
-        Session s = (Session) session.get();
-        // Open a new Session, if this thread has none yet
-        if (s == null) {
-            s = sessionFactory.openSession();
-            // Store it in the ThreadLocal variable
-            session.set(s);
-        }
-        return s;
+    public static SessionFactory getSessionFactory() {
+        return sessionFactory;
     }
 
-    public static void closeSession() throws HibernateException {
-        Session s = (Session) session.get();
-        if (s != null)
-            s.close();
-        session.set(null);
-    }
 }]]></programlisting>
 
             <para>
                 This class does not only produce the global <literal>SessionFactory</literal> in
                 its static initializer (called once by the JVM when the class is loaded), but also
-                has a <literal>ThreadLocal</literal> variable to hold the
-                <literal>Session</literal> for the current thread. No matter when you call
-                <literal>HibernateUtil.getCurrentSession()</literal>, it will always return the same
-                Hibernate unit of work in the same thread. A call to <literal>HibernateUtil.closeSession()</literal>
-                ends the unit of work currently associated with the thread.
+                hides the fact that it uses a static singleton. It might as well lookup the
+                <literal>SessionFactory</literal> from JNDI in an application server.
             </para>
 
             <para>
-                Make sure you understand the Java concept of a thread-local variables before you
-                use this helper. A more powerful <literal>HibernateUtil</literal> helper can be found
-                in <literal>CaveatEmptor</literal> on http://caveatemptor.hibernate.org/ - as well as
-                in the book "Hibernate in Action". Note that this class is not necessary if you deploy
-                Hibernate in a J2EE application server: a <literal>Session</literal> will be
-                automatically bound to the current JTA transaction and you can look up the
-                <literal>SessionFactory</literal> through JNDI. If you use JBoss AS, Hibernate can
-                be deployed as a managed system service and will automatically bind the
-                <literal>SessionFactory</literal> to a JNDI name.
+                If you give the <literal>SessionFactory</literal> a name in your configuration
+                file, Hibernate will in fact try to bind it to JNDI after it has been built.
+                To avoid this code completely you could also use JMX deployment and let the
+                JMX-capable container instantiate and bind a <literal>HibernateService</literal>
+                to JNDI. These advanced options are discussed in the Hibernate reference
+                documentation.
             </para>
 
             <para>
@@ -595,7 +575,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="2">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="3">
             <title>Loading and storing objects</title>
 
             <para>
@@ -617,7 +597,7 @@ public class EventManager {
             mgr.createAndStoreEvent("My Event", new Date());
         }
 
-        HibernateUtil.sessionFactory.close();
+        HibernateUtil.getSessionFactory().close();
     }
 
 }]]></programlisting>
@@ -628,17 +608,19 @@ public class EventManager {
             </para>
 
             <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .beginTransaction();
 
     Event theEvent = new Event();
     theEvent.setTitle(title);
     theEvent.setDate(theDate);
 
-    session.save(theEvent);
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .save(theEvent);
 
-    tx.commit();
-    HibernateUtil.closeSession();
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .getTransaction.commit();
 }]]></programlisting>
 
             <para>
@@ -649,28 +631,40 @@ public class EventManager {
             </para>
 
             <para>
-                A <literal>Session</literal> is a single unit of work. You might be surprised that we
-                have an additional API, <literal>Transaction</literal>. This implies that a unit of work
-                can be "longer" than a single database transaction - imagine a unit of work that spans
-                several Http request/response cycles (e.g. a wizard dialog) in a web application.
-                Separating database transactions from "unit of work from the application
-                user's point of view" is one of Hibernates basic design concepts. We call a long
-                unit of work <emphasis>Application Transaction</emphasis>, usually encapsulating
-                several short database transactions. For now we'll keep things simple and assume a
-                one-to-one granularity between a <literal>Session</literal> and <literal>Transaction</literal>.
+                A <literal>Session</literal> is a single unit of work. For now we'll keep things
+                simple and assume a one-to-one granularity between a Hibernate <literal>Session</literal>
+                and a database transaction. To shield our code from the actual underlying transaction
+                system (in this case plain JDBC, but it could also run with JTA) we use the
+                <literal>Transaction</literal> API that is available on the Hibernate <literal>Session</literal>.
             </para>
 
             <para>
-                What does <literal>Transaction.begin()</literal> and <literal>commit()</literal> do? Where
-                is the <literal>rollback()</literal> in case something goes wrong? The Hibernate
-                <literal>Transaction</literal> API is actually optional, but we use it for convenience
-                and portability. If you'd handle the database transaction yourself (e.g. by calling
-                <literal>session.connection.commit()</literal>), you'd bind the code to a particular
-                deployment environment, in this direct unmanaged JDBC. By setting the factory for
-                <literal>Transaction</literal> in your Hibernate configuration you can deploy your
-                persistence layer anywhere. Have a look at <xref linkend="transactions"/> for more information
+                What does <literal>getCurrentSession()</literal> do and why is it repeated so
+                often? First, it is repeated in the code example to explain its usage in a real
+                application: you can call it as many times and anywhere you like, once you get
+                hold of your <literal>SessionFactory</literal> (easy thanks to <literal>HibernateUtil</literal>).
+                The <literal>getCurrentSession()</literal> method always returns the "current"
+                unit of work. Remember that we switched the configuration option for this mechanism
+                to "thread"? Hence, the scope of the current unit of work is the current Java
+                thread that executes our application. A <literal>Session</literal> begins when it is
+                first needed, when the first call to <literal>getCurrentSession()</literal> is made.
+                It is then bound by Hibernate to the current thread. When the transaction ends,
+                either committed or rolled back, Hibernate also unbinds the <literal>Session</literal>
+                from the thread and closes it for you.
+            </para>
+
+            <para>
+                You could implement your own <literal>Session</literal> management, and open and
+                close it yourself. Or you could even extend the "current session" mechanism with
+                your own implementation. However, most Hibernate applications should use the
+                built-in context handlers, either for thread-bound <literal>Session</literal>s
+                or, in a managend environment (application server), bound to the JTA transaction.
+            </para>
+
+            <para>
+                Have a look at <xref linkend="transactions"/> for more information
                 about transaction handling and demarcation. We also skipped any error handling and
-                rollback in this example.
+                rollback in the previous example.
             </para>
 
             <para>
@@ -725,13 +719,14 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .beginTransaction();
 
-    List result = session.createQuery("from Event").list();
+    List result = HibernateUtil.getSessionFactory().getCurrentSession()
+                    .createQuery("from Event").list();
 
-    tx.commit();
-    session.close();
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .getTransaction().commit();
 
     return result;
 }]]></programlisting>
@@ -845,7 +840,7 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-unidirset">
+        <sect2 id="tutorial-associations-unidirset" revision="1">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -937,16 +932,17 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .beginTransaction();
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
     Person aPerson = (Person) session.load(Person.class, personId);
     Event anEvent = (Event) session.load(Event.class, eventId);
 
     aPerson.getEvents().add(anEvent);
 
-    tx.commit();
-    HibernateUtil.closeSession();
+    HibernateUtil.getSessionFactory().getCurrentSession()
+        .getTransaction().commit();
 }]]></programlisting>
 
             <para>
@@ -971,24 +967,30 @@ else if (args[0].equals("list")) {
 
             <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
 
-        Session session = HibernateUtil.getCurrentSession();
-        Transaction tx = session.beginTransaction();
+        HibernateUtil.getSessionFactory().getCurrentSession()
+            .beginTransaction();
+        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
         Person aPerson = (Person) session.load(Person.class, personId);
         Event anEvent = (Event) session.load(Event.class, eventId);
 
-        tx.commit();
-        HibernateUtil.closeSession();
+        HibernateUtil.getSessionFactory().getCurrentSession()
+            .getTransaction().commit();
+
+        // End of first unit of work
 
         aPerson.getEvents().add(anEvent); // aPerson is detached
 
-        Session session2 = HibernateUtil.getCurrentSession();
-        Transaction tx2 = session.beginTransaction();
+        // Begin second unit of work
+
+        HibernateUtil.getSessionFactory().getCurrentSession()
+            .beginTransaction();
+        Session session2 = HibernateUtil.getSessionFactory().getCurrentSession();
 
         session2.update(aPerson); // Reattachment of aPerson
 
-        tx2.commit();
-        HibernateUtil.closeSession();
+        HibernateUtil.getSessionFactory().getCurrentSession()
+            .getTransaction().commit();
     }
 ]]></programlisting>
 

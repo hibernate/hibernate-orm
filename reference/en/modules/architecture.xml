@@ -265,76 +265,82 @@
         </para>
     </sect1>
 
-    <sect1 id="architecture-current-session">
+    <sect1 id="architecture-current-session" revision="1">
         <title>Contextual Sessions</title>
         <para>
-	        Most applications using Hibernate need some form of "contextual" sessions, where a given
-	        session is in effect throughout the scope of a given context.  However, across applications
-	        the definition of what constitutes a context is typically different; and different contexts
-	        define different scopes to the notion of current.  Applications using Hibernate prior
-	        to version 3.0 tended to utilize either home-grown <literal>ThreadLocal</literal>-based
-	        contextual sessions, or utilized third-party frameworks (such as Spring or Pico) which
-	        provided proxy/interception-based contextual sessions.
+            Most applications using Hibernate need some form of "contextual" sessions, where a given
+            session is in effect throughout the scope of a given context. However, across applications
+            the definition of what constitutes a context is typically different; and different contexts
+            define different scopes to the notion of current. Applications using Hibernate prior
+            to version 3.0 tended to utilize either home-grown <literal>ThreadLocal</literal>-based
+            contextual sessions, helper classes such as <literal>HibernateUtil</literal>, or utilized
+            third-party frameworks (such as Spring or Pico) which provided proxy/interception-based contextual sessions.
         </para>
-	    <para>
-		    Starting with version 3.0.1, Hibernate added the <literal>SessionFactory.getCurrentSession()</literal>
-		    method.  Initially, this assumed usage of <literal>JTA</literal> transactions, where the
-		    <literal>JTA</literal> transaction defined both the scope and context of a current session.
-		    The Hibernate team maintains that, given the maturity of the numerous stand-alone
-		    <literal>JTA TransactionManager</literal> implementations out there, most (if not all)
-		    applications should be using <literal>JTA</literal> transaction management whether or not
-		    they are deployed into a <literal>J2EE</literal> container.  Based on that, the
-		    <literal>JTA</literal>-based contextual sessions is all you should ever need to use.
-	    </para>
-	    <para>
-		    However, we recognize that with the large amounts of FUD out there regarding
-		    <literal>JTA</literal>, such a shift in thinking may be a long time coming to
-		    fruition.  Thus, as of version 3.1, the processing behind
-		    <literal>SessionFactory.getCurrentSession()</literal> is now pluggable.  To that
-		    end, a new extension interface (<literal>org.hibernate.context.CurrentSessionContext</literal>)
-		    and a new configuration parameter (<literal>hibernate.current_session_context_class</literal>)
-		    have been added to allow pluggability of the scope and context of defining current sessions.
-	    </para>
-	    <para>
-		    See the javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal>
-		    interface for a detailed discussion of its contract.  It defines a single method,
-		    <literal>currentSession()</literal>, by which the implementation is responsible for
-		    tracking the current contextual session.  Out-of-the-box, Hibernate comes with two
-		    implementations of this interface.
-	    </para>
-		<itemizedlist>
-			<listitem>
-				<para>
-					<literal>org.hibernate.context.JTASessionContext</literal> - current sessions
-					are tracked and scoped by a <literal>JTA</literal> transaction.  The processing
-					here is exactly the same as in the older JTA-only approach.  See the javadocs
-					for details.
-				</para>
-			</listitem>
-			<listitem>
-				<para>
-					<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - current
-					sessions are tracked by thread of execution.  Again, see the javadocs for details.
-					However, it is important to point out that when using threads as the context
-					mechanism, there is no clearly defined notion of scoping.  Threads, unlike
-					<literal>JTA</literal> transactions, do not emit completion notifications; and
-					even worse is the fact that many, many environments actually pool and re-use
-					threads.  Thus user of the <literal>ThreadLocalSessionContext</literal> are
-					expected to manually call the static bind and unbind methods to manually
-					demarcate context boundaries.
-				</para>
-			</listitem>
-		</itemizedlist>
-	    <para>
-		    The <literal>hibernate.current_session_context_class</literal> configuration parameter
-		    defines which <literal>org.hibernate.context.CurrentSessionContext</literal> implementation
-		    should be used.  Note that for backwards compatibility, if this config param is not set
-		    but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
-		    Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>.
-		    Typically, the value of this parameter would just name the implementation class to
-		    use; for the two out-of-the-box implementations, however, there are two corresponding
-		    short names, "jta" and "thread".
-	    </para>
+        <para>
+            Starting with version 3.0.1, Hibernate added the <literal>SessionFactory.getCurrentSession()</literal>
+            method.  Initially, this assumed usage of <literal>JTA</literal> transactions, where the
+            <literal>JTA</literal> transaction defined both the scope and context of a current session.
+            The Hibernate team maintains that, given the maturity of the numerous stand-alone
+            <literal>JTA TransactionManager</literal> implementations out there, most (if not all)
+            applications should be using <literal>JTA</literal> transaction management whether or not
+            they are deployed into a <literal>J2EE</literal> container.  Based on that, the
+            <literal>JTA</literal>-based contextual sessions is all you should ever need to use.
+        </para>
+        <para>
+            However, as of version 3.1, the processing behind
+            <literal>SessionFactory.getCurrentSession()</literal> is now pluggable.  To that
+            end, a new extension interface (<literal>org.hibernate.context.CurrentSessionContext</literal>)
+            and a new configuration parameter (<literal>hibernate.current_session_context_class</literal>)
+            have been added to allow pluggability of the scope and context of defining current sessions.
+        </para>
+        <para>
+            See the Javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal>
+            interface for a detailed discussion of its contract.  It defines a single method,
+            <literal>currentSession()</literal>, by which the implementation is responsible for
+            tracking the current contextual session.  Out-of-the-box, Hibernate comes with two
+            implementations of this interface.
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.JTASessionContext</literal> - current sessions
+                    are tracked and scoped by a <literal>JTA</literal> transaction.  The processing
+                    here is exactly the same as in the older JTA-only approach.  See the Javadocs
+                    for details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.ThreadLocalSessionContext</literal> - current
+                    sessions are tracked by thread of execution. Again, see the Javadocs for details.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            Both implementations provide a "one session - one database transaction" programming
+            model, also known and used as <emphasis>session-per-request</emphasis>. The beginning
+            and end of a Hibernate session is defined by the duration of a database transaction.
+            If you use programatic transaction demarcation (e.g. in pure J2SE or with
+            JTA/UserTransaction/BMT), you are adviced to use the Hibernate <literal>Transaction</literal>
+            API to hide the underlying transaction system from your code. If you execute in
+            an EJB container that supports CMT, transaction boundaries are defined declaratively
+            and you don't need any transaction or session demarcation operations in your code.
+            Refer to <xref linkend="transactions"/> for more information and code examples.
+        </para>
+
+        <para>
+            The <literal>hibernate.current_session_context_class</literal> configuration parameter
+            defines which <literal>org.hibernate.context.CurrentSessionContext</literal> implementation
+            should be used.  Note that for backwards compatibility, if this config param is not set
+            but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
+            Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>.
+            Typically, the value of this parameter would just name the implementation class to
+            use; for the two out-of-the-box implementations, however, there are two corresponding
+            short names, "jta" and "thread".
+        </para>
+        
     </sect1>
 
 </chapter>

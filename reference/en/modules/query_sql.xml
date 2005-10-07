@@ -333,12 +333,13 @@ List loggedCats = sess.createSQLQuery(sql)
 
     </sect2>
 
-    <sect2 id="sp_query">
+    <sect2 id="sp_query" revision="1">
       <title>Using stored procedures for querying</title>
 
-      <para>Hibernate 3 introduces support for queries via stored procedures.
-      The stored procedures must return a resultset as the first out-parameter
-      to be able to work with Hibernate. An example of such a stored procedure
+      <para>Hibernate 3 introduces support for queries via stored procedures
+      and functions. Most of the following documentation is equivalent for both.
+      The stored procedure/function must return a resultset as the first out-parameter
+      to be able to work with Hibernate. An example of such a stored function
       in Oracle 9 and higher is as follows:</para>
 
       <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
@@ -377,10 +378,10 @@ BEGIN
       entities. <literal>&lt;return-join&gt;</literal> and
       <literal>&lt;load-collection&gt;</literal> are not supported.</para>
 
-      <sect3 id="querysql-limits-storedprocedures">
+      <sect3 id="querysql-limits-storedprocedures" revision="1">
         <title>Rules/limitations for using stored procedures</title>
 
-        <para>To use stored procedures with Hibernate the procedures have to
+        <para>To use stored procedures with Hibernate the procedures/functions have to
         follow some rules. If they do not follow those rules they are not
         usable with Hibernate. If you still want to use these procedures you
         have to execute them via <literal>session.connection()</literal>. The
@@ -390,21 +391,22 @@ BEGIN
         <para>Stored procedure queries can't be paged with
         <literal>setFirstResult()/setMaxResults()</literal>.</para>
 
+        <para>Recommended call form is standard SQL92: <literal>{ ? = call
+        functionName(&lt;parameters&gt;) }</literal> or <literal>{ ? = call
+        procedureName(&lt;parameters&gt;}</literal>. Native call syntax is
+        not supported.</para>
+        
+      </listitem>
+
         <para>For Oracle the following rules apply:</para>
 
         <itemizedlist spacing="compact">
           <listitem>
-            <para>The procedure must return a result set. This is done by
-            returning a <literal>SYS_REFCURSOR</literal> in Oracle 9 or 10. In
-            Oracle you need to define a <literal>REF CURSOR</literal>
-            type.</para>
-          </listitem>
-
-          <listitem>
-            <para>Recommended form is <literal>{ ? = call
-            procName(&lt;parameters&gt;) }</literal> or <literal>{ ? = call
-            procName }</literal> (this is more an Oracle rule than a Hibernate
-            rule).</para>
+            <para>A function must return a result set. The first parameter of
+            a procedure must be an <literal>OUT</literal> that returns a result
+            set. This is done by using a <literal>SYS_REFCURSOR</literal> type
+            in Oracle 9 or 10. In Oracle you need to define a
+            <literal>REF CURSOR</literal> type, see Oracle literature.</para>
           </listitem>
         </itemizedlist>
 

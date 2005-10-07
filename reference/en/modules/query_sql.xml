@@ -395,8 +395,6 @@ BEGIN
         functionName(&lt;parameters&gt;) }</literal> or <literal>{ ? = call
         procedureName(&lt;parameters&gt;}</literal>. Native call syntax is
         not supported.</para>
-        
-      </listitem>
 
         <para>For Oracle the following rules apply:</para>
 

@@ -406,13 +406,14 @@
         </para>
 
 
-        <sect2 id="transactions-demarcation-nonmanaged" revision="1">
+        <sect2 id="transactions-demarcation-nonmanaged" revision="2">
             <title>Non-managed environment</title>
 
             <para>
                 If a Hibernate persistence layer runs in a non-managed environment, database connections
-                are usually handled by Hibernate's pooling mechanism. The session/transaction handling
-                idiom looks like this:
+                are usually handled by simple (i.e. non-DataSource) connection pools from which
+	            Hibernate obtains connections as needed. The session/transaction handling idiom looks
+	            like this:
             </para>
 
             <programlisting><![CDATA[// Non-managed environment idiom
@@ -436,7 +437,8 @@ finally {
 
             <para>
                 You don't have to <literal>flush()</literal> the <literal>Session</literal> explicitly -
-                the call to <literal>commit()</literal> automatically triggers the synchronization.
+                the call to <literal>commit()</literal> automatically triggers the synchronization (depending
+	            upon the <xref linkend="objectstate-flushing">FlushMode</xref> for the session.
                 A call to <literal>close()</literal> marks the end of a session. The main implication
                 of <literal>close()</literal> is that the JDBC connection will be relinquished by the
                 session. This Java code is portable and runs in both non-managed and JTA environments.
@@ -1007,6 +1009,91 @@ session.close();]]></programlisting>
             alternate mode (instead of throwing an exception). This ensures that applications will
             be portable.
         </para>
+
+    </sect1>
+
+    <sect1 id="transactions-connection-release">
+        <title>Connection Release Modes</title>
+
+        <para>
+            The legacy (2.x) behavior of Hibernate in regards to JDBC connection management
+            was that a <literal>Session</literal> would obtain a connection when it was first
+            needed and then hold unto that connection until the session was closed.
+            Hibernate 3.x introduced the notion of connection release modes to tell a session
+            how to handle its JDBC connections.  Note that the following discussion is pertinent
+            only to connections provided through a configured <literal>ConnectionProvider</literal>;
+            user-supplied connections are outside the breadth of this discussion.  The different
+            release modes are identified by the enumerated values of
+            <literal>org.hibernate.ConnectionReleaseMode</literal>:
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>ON_CLOSE</literal> - is essentially the legacy behavior described above. The
+                    Hibernate session obatins a connection when it first needs to perform some JDBC access
+                    and holds unto that connection until the session is closed.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>AFTER_TRANSACTION</literal> - says to release connections after a
+                    <literal>org.hibernate.Transaction</literal> has completed.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>AFTER_STATEMENT</literal> (also referred to as aggressive release) - says to
+                    release connections after each and every statement execution. This aggressive releasing
+                    is skipped if that statement leaves open resources associated with the given session;
+                    currently the only situation where this occurs is through the use of
+                    <literal>org.hibernate.ScrollableResults</literal>.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            The configuration parameter <literal>hibernate.connection.release_mode</literal> is used
+            to specify which release mode to use.  The possible values:
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>auto</literal> (the default) - this choice delegates to the release mode
+                    returned by the <literal>org.hibernate.transaction.TransactionFactory.getDefaultReleaseMode()</literal>
+                    method.  For JTATransactionFactory, this returns ConnectionReleaseMode.AFTER_STATEMENT; for
+                    JDBCTransactionFactory, this returns ConnectionReleaseMode.AFTER_TRANSACTION.  It is rarely
+                    a good idea to change this default behavior as failures due to the value of this setting
+                    tend to indicate bugs and/or invalid assumptions in user code.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>on_close</literal> - says to use ConnectionReleaseMode.ON_CLOSE.  This setting
+                    is left for backwards compatibility, but its use is highly discouraged.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>after_transaction</literal> - says to use ConnectionReleaseMode.AFTER_TRANSACTION.
+                    This setting should not be used in JTA environments.  Also note that with
+                    ConnectionReleaseMode.AFTER_TRANSACTION, if a session is considered to be in auto-commit
+                    mode connections will be released as if the release mode were AFTER_STATEMENT.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>after_statement</literal> - says to use ConnectionReleaseMode.AFTER_STATEMENT.  Additionally,
+                    the configured <literal>ConnectionProvider</literal> is consulted to see if it supports this
+                    setting (<literal>supportsAggressiveRelease()</literal>).  If not, the release mode is reset
+                    to ConnectionReleaseMode.AFTER_TRANSACTION.  This setting is only safe in environments where
+                    we can either re-acquire the same underlying JDBC connection each time we make a call into
+                    <literal>ConnectionProvider.getConnection()</literal> or in auto-commit environments where
+                    it does not matter whether we get back the same connection.
+                </para>
+            </listitem>
+        </itemizedlist>
 
     </sect1>
 

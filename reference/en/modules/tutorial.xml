@@ -620,7 +620,7 @@ public class EventManager {
         .save(theEvent);
 
     HibernateUtil.getSessionFactory().getCurrentSession()
-        .getTransaction.commit();
+        .getTransaction().commit();
 }]]></programlisting>
 
             <para>

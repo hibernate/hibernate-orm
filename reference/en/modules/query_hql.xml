@@ -2,7 +2,7 @@
     <title>HQL: The Hibernate Query Language</title>
     
     <para>
-        Hibernate is equiped with an extremely powerful query language that (quite intentionally)
+        Hibernate is equipped with an extremely powerful query language that (quite intentionally)
         looks very much like SQL. But don't be fooled by the syntax; HQL is fully object-oriented,
         understanding notions like inheritence, polymorphism and association.
     </para>

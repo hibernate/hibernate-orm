@@ -124,9 +124,9 @@ List cats = sess.createCriteria(Cat.class)
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "F%")
+    .add( Restrictions.like("name", "F%") )
     .createCriteria("kittens")
-        .add( Restrictions.like("name", "F%")
+        .add( Restrictions.like("name", "F%") )
     .list();]]></programlisting>
 
         <para>

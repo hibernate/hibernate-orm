@@ -328,8 +328,8 @@
         </para>
 
     <programlisting><![CDATA[<dynamic-component name="userAttributes">
-    <property name="foo" column="FOO"/>
-    <property name="bar" column="BAR"/>
+    <property name="foo" column="FOO" type="string"/>
+    <property name="bar" column="BAR" type="integer"/>
     <many-to-one name="baz" class="Baz" column="BAZ_ID"/>
 </dynamic-component>]]></programlisting>
 

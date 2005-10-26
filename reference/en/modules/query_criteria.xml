@@ -64,7 +64,7 @@ List cats = crit.list();]]></programlisting>
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.sql("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+    .add( Restrictions.sqlRestriction("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
     .list();]]></programlisting>
     
         <para>

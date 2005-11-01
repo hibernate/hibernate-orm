@@ -18,12 +18,12 @@
 
     </sect1>
     
-    <sect1 id="tutorial-firstapp">
+    <sect1 id="tutorial-firstapp" revision="1">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
             First, we'll create a simple console-based Hibernate application. We use an
-            in-memory database (HSQL DB), so we do not have to install any database server.
+            Java database (HSQL DB), so we do not have to install any database server.
         </para>
 
         <para>
@@ -42,12 +42,11 @@
         <programlisting><![CDATA[.
 +lib
   antlr.jar
-  cglib-full.jar
+  cglib.jar
   asm.jar
   asm-attrs.jars
   commons-collections.jar
   commons-logging.jar
-  ehcache.jar
   hibernate3.jar
   jta.jar
   dom4j.jar
@@ -65,14 +64,16 @@
             Next we create a class that represents the event we want to store in database.
         </para>
       
-        <sect2 id="tutorial-firstapp-firstclass">
+        <sect2 id="tutorial-firstapp-firstclass" revision="1">
             <title>The first class</title>
             
             <para>
                 Our first persistent class is a simple JavaBean class with some properties:
             </para>
 
-            <programlisting><![CDATA[import java.util.Date;
+            <programlisting><![CDATA[package events;
+
+import java.util.Date;
 
 public class Event {
     private Long id;
@@ -80,7 +81,7 @@ public class Event {
     private String title;
     private Date date;
 
-    Event() {}
+    public Event() {}
 
     public Long getId() {
         return id;
@@ -111,7 +112,8 @@ public class Event {
                 You can see that this class uses standard JavaBean naming conventions for property
                 getter and setter methods, as well as private visibility for the fields. This is
                 a recommended design - but not required. Hibernate can also access fields directly,
-                the benefit of accessor methods is robustness for refactoring.
+                the benefit of accessor methods is robustness for refactoring. The no-argument
+                constructor is required to instantiate an object of this class through reflection.
             </para>
 
             <para>
@@ -135,14 +137,15 @@ public class Event {
 
             <para>
                 Place this Java source file in a directory called <literal>src</literal> in the
-                development folder. The directory should now look like this:
+                development folder, and in its correct package. The directory should now look like this:
             </para>
 
             <programlisting><![CDATA[.
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java]]></programlisting>
+  +events
+    Event.java]]></programlisting>
 
             <para>
                 In the next step, we tell Hibernate about this persistent class.
@@ -150,7 +153,7 @@ public class Event {
                 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-mapping">
+        <sect2 id="tutorial-firstapp-mapping" revision="1">
             <title>The mapping file</title>
 
             <para>
@@ -198,7 +201,7 @@ public class Event {
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
 
     </class>
 
@@ -214,9 +217,9 @@ public class Event {
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
         <id name="id" column="EVENT_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
     </class>
 
@@ -229,10 +232,10 @@ public class Event {
                 The column attribute tells Hibernate which column of the
                 <literal>EVENTS</literal> table we use for this primary key. The nested
                 <literal>generator</literal> element specifies the identifier generation strategy,
-                in this case we used <literal>increment</literal>, which is a very simple in-memory
-                number increment method useful mostly for testing (and tutorials). Hibernate also
-                supports database generated, globally unique, as well as application assigned
-                identifiers (or any strategy you have written an extension for).
+                in this case we used <literal>native</literal>, which picks the best strategy depending
+                on the configured database (dialect). Hibernate supports database generated, globally
+                unique, as well as application assigned identifiers (or any strategy you have written
+                an extension for).
             </para>
 
             <para>
@@ -244,9 +247,9 @@ public class Event {
             <programlisting><![CDATA[
 <hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
         <id name="id" column="EVENT_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
         <property name="date" type="timestamp" column="EVENT_DATE"/>
         <property name="title"/>
@@ -257,7 +260,8 @@ public class Event {
             <para>
                 Just as with the <literal>id</literal> element, the <literal>name</literal>
                 attribute of the <literal>property</literal> element tells Hibernate which getter
-                and setter methods to use.
+                and setter methods to use. So, in this case, Hibernate will look for
+                <literal>getDate()/setDate()</literal>, as well as <literal>getTitle()/setTitle()</literal>.
             </para>
 
             <para>
@@ -279,16 +283,17 @@ public class Event {
                 the <literal>type</literal> attribute is not present in the mapping. In some cases this
                 automatic detection (using Reflection on the Java class) might not have the default you
                 expect or need. This is the case with the <literal>date</literal> property. Hibernate can't
-                know if the property will map to a SQL <literal>date</literal>, <literal>timestamp</literal>
-                or <literal>time</literal> column. We declare that we want to preserve full date
-                and time information by mapping the property with a <literal>timestamp</literal>.
+                know if the property (which is of <literal>java.util.Date</literal>) should map to a
+                SQL <literal>date</literal>, <literal>timestamp</literal>, or <literal>time</literal> column.
+                We preserve full date and time information by mapping the property with a
+                <literal>timestamp</literal> converter.
             </para>
 
             <para>
                 This mapping file should be saved as <literal>Event.hbm.xml</literal>, right in
                 the directory next to the <literal>Event</literal> Java class source file.
                 The naming of mapping files can be arbitrary, however the <literal>hbm.xml</literal>
-                suffix  became convention in the Hibernate developer community. The directory structure
+                suffix  is a convention in the Hibernate developer community. The directory structure
                 should now look like this:
             </para>
 
@@ -296,8 +301,9 @@ public class Event {
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java
-  Event.hbm.xml]]></programlisting>
+  +events
+    Event.java
+    Event.hbm.xml]]></programlisting>
 
              <para>
                  We continue with the main configuration of Hibernate.
@@ -310,7 +316,7 @@ public class Event {
 
             <para>
                 We now have a persistent class and its mapping file in place. It is time to configure
-                Hibernate. Before we do this, we will need a database. HSQL DB, a java-based in-memory SQL DBMS,
+                Hibernate. Before we do this, we will need a database. HSQL DB, a java-based SQL DBMS,
                 can be downloaded from the HSQL DB website. Actually, you only need the <literal>hsqldb.jar</literal>
                 from this download. Place this file in the <literal>lib/</literal> directory of the
                 development folder.
@@ -318,7 +324,12 @@ public class Event {
 
             <para>
                 Create a directory called <literal>data</literal> in the root of the development directory -
-                this is where HSQL DB will store its data files.
+                this is where HSQL DB will store its data files. Now start the database by running
+                <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> in your work directory.
+                You can see it start up and bind to a TCP/IP socket, this is where our application
+                will connect later. If you want to start with a fresh database during this tutorial,
+                shutdown HSQL DB (press <literal>CTRL + C</literal> in the window), delete the
+                <literal>data/</literal> directory, and start HSQL DB again.
             </para>
 
             <para>
@@ -348,18 +359,21 @@ public class Event {
 
         <!-- Database connection settings -->
         <property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
-        <property name="connection.url">jdbc:hsqldb:data/tutorial</property>
+        <property name="connection.url">jdbc:hsqldb:hsql://localhost</property>
         <property name="connection.username">sa</property>
         <property name="connection.password"></property>
 
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">1</property>
 
+        <!-- SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+
         <!-- Enable Hibernate's automatic session context management -->
         <property name="current_session_context_class">thread</property>
 
-        <!-- SQL dialect -->
-        <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+        <!-- Disable the second-level cache  -->
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
 
         <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>
@@ -367,7 +381,7 @@ public class Event {
         <!-- Drop and re-create the database schema on startup -->
         <property name="hbm2ddl.auto">create</property>
 
-        <mapping resource="Event.hbm.xml"/>
+        <mapping resource="events/Event.hbm.xml"/>
 
     </session-factory>
 
@@ -391,7 +405,7 @@ public class Event {
                 database schemas - directly into the database. This can of course also be turned
                 off (by removing the config option) or redirected to a file with the help of
                 the <literal>SchemaExport</literal> Ant task. Finally, we add the mapping file(s)
-                for persistent classes.
+                for persistent classes to the configuration.
             </para>
 
             <para>
@@ -402,7 +416,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-ant">
+        <sect2 id="tutorial-firstapp-ant" revision="1">
             <title>Building with Ant</title>
 
             <para>
@@ -413,17 +427,6 @@ public class Event {
                 have installed Ant, we can start to create the buildfile. It will be called
                 <literal>build.xml</literal> and placed directly in the development directory.
             </para>
-
-            <note>
-                <title>Fixing Ant</title>
-                <para>
-                    Note that the Ant distribution is by default broken (as described in the Ant FAQ) and
-                    has to be fixed by you, for example, if you'd like to use JUnit from inside your
-                    build file. To make the JUnit task work (we won't need it in this tutorial), either copy
-                    junit.jar to <literal>ANT_HOME/lib</literal> or remove the
-                    <literal>ANT_HOME/lib/ant-junit.jar</literal> plugin stub.
-                </para>
-            </note>
 
             <para>
                 A basic build file looks like this:
@@ -483,7 +486,7 @@ Total time: 1 second ]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-helpers" revision="2">
+        <sect2 id="tutorial-firstapp-helpers" revision="3">
             <title>Startup and helpers</title>
 
             <para>
@@ -502,7 +505,9 @@ Total time: 1 second ]]></programlisting>
                 Let's have a look at the implementation:
             </para>
 
-            <programlisting><![CDATA[import org.hibernate.*;
+            <programlisting><![CDATA[package util;
+
+import org.hibernate.*;
 import org.hibernate.cfg.*;
 
 public class HibernateUtil {
@@ -543,17 +548,19 @@ public class HibernateUtil {
             </para>
 
             <para>
-                Place <literal>HibernateUtil.java</literal> in the development source directory, next
-                to <literal>Event.java</literal>:
+                Place <literal>HibernateUtil.java</literal> in the development source directory, in
+                a package next to <literal>events</literal>:
             </para>
 
             <programlisting><![CDATA[.
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java
-  Event.hbm.xml
-  HibernateUtil.java
+  +events
+    Event.java
+    Event.hbm.xml
+  +util
+    HibernateUtil.java
   hibernate.cfg.xml
 +data
 build.xml]]></programlisting>
@@ -575,7 +582,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="3">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="4">
             <title>Loading and storing objects</title>
 
             <para>
@@ -583,10 +590,12 @@ build.xml]]></programlisting>
                 <literal>EventManager</literal> class with a <literal>main()</literal> method:
             </para>
 
-            <programlisting><![CDATA[import org.hibernate.Transaction;
+            <programlisting><![CDATA[package events;
 import org.hibernate.Session;
 
 import java.util.Date;
+
+import util.HibernateUtil;
 
 public class EventManager {
 
@@ -600,27 +609,21 @@ public class EventManager {
         HibernateUtil.getSessionFactory().close();
     }
 
-}]]></programlisting>
+    private void createAndStoreEvent(String title, Date theDate) {
 
-            <para>
-                We read some arguments from the command line, and if the first argument is
-                "store", we create and store a new Event:
-            </para>
+        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
-            <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
+        session.beginTransaction();
 
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .beginTransaction();
+        Event theEvent = new Event();
+        theEvent.setTitle(title);
+        theEvent.setDate(theDate);
 
-    Event theEvent = new Event();
-    theEvent.setTitle(title);
-    theEvent.setDate(theDate);
+        session.save(theEvent);
 
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .save(theEvent);
+        session.getTransaction().commit();
+    }
 
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .getTransaction().commit();
 }]]></programlisting>
 
             <para>
@@ -639,26 +642,20 @@ public class EventManager {
             </para>
 
             <para>
-                What does <literal>getCurrentSession()</literal> do and why is it repeated so
-                often? First, it is repeated in the code example to explain its usage in a real
-                application: you can call it as many times and anywhere you like, once you get
-                hold of your <literal>SessionFactory</literal> (easy thanks to <literal>HibernateUtil</literal>).
-                The <literal>getCurrentSession()</literal> method always returns the "current"
-                unit of work. Remember that we switched the configuration option for this mechanism
-                to "thread"? Hence, the scope of the current unit of work is the current Java
-                thread that executes our application. A <literal>Session</literal> begins when it is
+                What does <literal>sessionFactory.getCurrentSession()</literal> do? First, you can call it
+                as many times and anywhere you like, once you get hold of your <literal>SessionFactory</literal>
+                (easy thanks to <literal>HibernateUtil</literal>). The <literal>getCurrentSession()</literal>
+                method always returns the "current" unit of work. Remember that we switched the configuration
+                option for this mechanism to "thread" in <literal>hibernate.cfg.xml</literal>? Hence, the scope
+                of the current unit of work is the current Java thread that executes our application. However, this
+                is not the full truth. A <literal>Session</literal> begins when it is
                 first needed, when the first call to <literal>getCurrentSession()</literal> is made.
                 It is then bound by Hibernate to the current thread. When the transaction ends,
                 either committed or rolled back, Hibernate also unbinds the <literal>Session</literal>
-                from the thread and closes it for you.
-            </para>
-
-            <para>
-                You could implement your own <literal>Session</literal> management, and open and
-                close it yourself. Or you could even extend the "current session" mechanism with
-                your own implementation. However, most Hibernate applications should use the
-                built-in context handlers, either for thread-bound <literal>Session</literal>s
-                or, in a managend environment (application server), bound to the JTA transaction.
+                from the thread and closes it for you. If you call <literal>getCurrentSession()</literal>
+                again, you get a new <literal>Session</literal> and can start a new unit of work. This
+                <emphasis>thread-bound</emphasis> programming model is the most popular way of using
+                Hibernate.
             </para>
 
             <para>
@@ -672,7 +669,7 @@ public class EventManager {
             </para>
 
             <programlisting><![CDATA[<target name="run" depends="compile">
-    <java fork="true" classname="EventManager" classpathref="libraries">
+    <java fork="true" classname="events.EventManager" classpathref="libraries">
         <classpath path="${targetdir}"/>
         <arg value="${action}"/>
     </java>
@@ -719,14 +716,14 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .beginTransaction();
 
-    List result = HibernateUtil.getSessionFactory().getCurrentSession()
-                    .createQuery("from Event").list();
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .getTransaction().commit();
+    session.beginTransaction();
+
+    List result = session.createQuery("from Event").list();
+
+    session.getTransaction().commit();
 
     return result;
 }]]></programlisting>
@@ -786,35 +783,38 @@ else if (args[0].equals("list")) {
             First we'll add people to our application, and store a list of events they participate in.
         </para>
 
-        <sect2 id="tutorial-associations-mappinguser">
+        <sect2 id="tutorial-associations-mappinguser" revision="1">
             <title>Mapping the Person class</title>
 
             <para>
                 The first cut of the <literal>Person</literal> class is simple:
             </para>
 
-            <programlisting><![CDATA[public class Person {
+            <programlisting><![CDATA[package events;
+
+public class Person {
 
     private Long id;
     private int age;
     private String firstname;
     private String lastname;
 
-    Person() {}
+    public Person() {}
 
     // Accessor methods for all properties, private setter for 'id'
 
 }]]></programlisting>
 
             <para>
-                Create a new mapping file called <literal>Person.hbm.xml</literal>:
+                Create a new mapping file called <literal>Person.hbm.xml</literal> (don't forget the
+                DTD reference at the top):
             </para>
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Person" table="PERSON">
+    <class name="events.Person" table="PERSON">
         <id name="id" column="PERSON_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
         <property name="age"/>
         <property name="firstname"/>
@@ -827,9 +827,8 @@ else if (args[0].equals("list")) {
                 Finally, add the new mapping to Hibernate's configuration:
             </para>
 
-            <programlisting><![CDATA[        <mapping resource="Event.hbm.xml"/>
-        <mapping resource="Person.hbm.xml"/>
-]]></programlisting>
+            <programlisting><![CDATA[<mapping resource="events/Event.hbm.xml"/>
+<mapping resource="events/Person.hbm.xml"/>]]></programlisting>
 
             <para>
                 We'll now create an association between these two entities. Obviously, persons
@@ -840,7 +839,7 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-unidirset" revision="1">
+        <sect2 id="tutorial-associations-unidirset" revision="2">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -851,7 +850,7 @@ else if (args[0].equals("list")) {
             </para>
 
             <para>
-                So far we designed a unidirectional, many-valued associations, implemented with a <literal>Set</literal>.
+                We need a unidirectional, many-valued associations, implemented with a <literal>Set</literal>.
                 Let's write the code for this in the Java classes and then map it:
             </para>
 
@@ -872,14 +871,16 @@ else if (args[0].equals("list")) {
                 Before we map this association, think about the other side. Clearly, we could just keep this
                 unidirectional. Or, we could create another collection on the <literal>Event</literal>, if we
                 want to be able to navigate it bi-directional, i.e. <literal>anEvent.getParticipants()</literal>.
-                This is a design choice left to you, but what is clear from this discussion is the multiplicity
-                of the association: "many" valued on both sides, we call this a <emphasis>many-to-many</emphasis>
-                association. Hence, we use Hibernate's many-to-many mapping:
+                This is not necessary, from a functional perspective. You could always execute an explicit query
+                to retrieve the participants for a particular event. This is a design choice left to you, but what
+                is clear from this discussion is the multiplicity of the association: "many" valued on both sides,
+                we call this a <emphasis>many-to-many</emphasis> association. Hence, we use Hibernate's
+                many-to-many mapping:
             </para>
 
-            <programlisting><![CDATA[<class name="Person" table="PERSON">
+            <programlisting><![CDATA[<class name="events.Person" table="PERSON">
     <id name="id" column="PERSON_ID">
-        <generator class="increment"/>
+        <generator class="native"/>
     </id>
     <property name="age"/>
     <property name="firstname"/>
@@ -932,72 +933,73 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .beginTransaction();
+
     Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
 
     Person aPerson = (Person) session.load(Person.class, personId);
     Event anEvent = (Event) session.load(Event.class, eventId);
 
     aPerson.getEvents().add(anEvent);
 
-    HibernateUtil.getSessionFactory().getCurrentSession()
-        .getTransaction().commit();
+    session.getTransaction().commit();
 }]]></programlisting>
 
             <para>
                 After loading a <literal>Person</literal> and an <literal>Event</literal>, simply
                 modify the collection using the normal collection methods. As you can see, there is no explicit call
                 to <literal>update()</literal> or <literal>save()</literal>, Hibernate automatically
-                detects the collection has been modified and needs to be saved. This is called <emphasis>automatic
+                detects that the collection has been modified and needs to be updated. This is called <emphasis>automatic
                 dirty checking</emphasis>, and you can also try it by modifying the name or the date property of
                 any of your objects. As long as they are in <emphasis>persistent</emphasis> state, that is, bound
                 to a particular Hibernate <literal>Session</literal> (i.e. they have been just loaded or saved in
                 a unit of work), Hibernate monitors any changes and executes SQL in a write-behind fashion. The
                 process of synchronizing the memory state with the database, usually only at the end of a unit of
-                work, is called <emphasis>flushing</emphasis>.
+                work, is called <emphasis>flushing</emphasis>. In our code, the unit of work ends with a commit
+                (or rollback) of the database transaction - as defined by the <literal>thread</literal> configuration
+                option for the <literal>CurrentSessionContext</literal> class.
             </para>
 
             <para>
                 You might of course load person and event in different units of work. Or you modify an object
                 outside of a <literal>Session</literal>, when it is not in persistent state (if it was persistent
-                before, we call this state <emphasis>detached</emphasis>). In (not very realistic) code, this might
-                look as follows:
+                before, we call this state <emphasis>detached</emphasis>). You can even modify a collection when
+                it is detached:
             </para>
 
-            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+            <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
 
-        HibernateUtil.getSessionFactory().getCurrentSession()
-            .beginTransaction();
-        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
 
-        Person aPerson = (Person) session.load(Person.class, personId);
-        Event anEvent = (Event) session.load(Event.class, eventId);
+    Person aPerson = (Person) session
+            .createQuery("select p from Person p left join fetch p.events where p.id = :pid")
+            .setParameter("pid", personId)
+            .uniqueResult(); // Eager fetch the collection so we can use it detached
 
-        HibernateUtil.getSessionFactory().getCurrentSession()
-            .getTransaction().commit();
+    Event anEvent = (Event) session.load(Event.class, eventId);
 
-        // End of first unit of work
+    session.getTransaction().commit();
 
-        aPerson.getEvents().add(anEvent); // aPerson is detached
+    // End of first unit of work
 
-        // Begin second unit of work
+    aPerson.getEvents().add(anEvent); // aPerson (and its collection) is detached
 
-        HibernateUtil.getSessionFactory().getCurrentSession()
-            .beginTransaction();
-        Session session2 = HibernateUtil.getSessionFactory().getCurrentSession();
+    // Begin second unit of work
 
-        session2.update(aPerson); // Reattachment of aPerson
+    Session session2 = HibernateUtil.getSessionFactory().getCurrentSession();
+    session2.beginTransaction();
 
-        HibernateUtil.getSessionFactory().getCurrentSession()
-            .getTransaction().commit();
-    }
-]]></programlisting>
+    session2.update(aPerson); // Reattachment of aPerson
+
+    session2.getTransaction().commit();
+}]]></programlisting>
 
             <para>
                 The call to <literal>update</literal> makes a detached object persistent again, you could
                 say it binds it to a new unit of work, so any modifications you made to it while detached
-                can be saved to the database.
+                can be saved to the database. This includes any modifications (additions/deletions) you
+                made to a collection of that entity object.
             </para>
 
             <para>
@@ -1005,8 +1007,14 @@ else if (args[0].equals("list")) {
                 design into your own application. For now, complete this exercise by adding a new action
                 to the <literal>EventManager</literal>'s main method and call it from the command line. If
                 you need the identifiers of a person and an event - the <literal>save()</literal> method
-                returns it.
+                returns it (you might have to modify some of the previous methods to return that identifier):
             </para>
+
+            <programlisting><![CDATA[else if (args[0].equals("addpersontoevent")) {
+    Long eventId = mgr.createAndStoreEvent("My Event", new Date());
+    Long personId = mgr.createAndStorePerson("Foo", "Bar");
+    mgr.addPersonToEvent(personId, eventId);
+    System.out.println("Added person " + personId + " to event " + eventId);]]></programlisting>
 
             <para>
                 This was an example of an association between two equally important classes, two entities.
@@ -1091,12 +1099,32 @@ public void setEmailAddresses(Set emailAddresses) {
 
             <para>
                 You can now try and add elements to this collection, just like we did before by
-                linking persons and events. It's the same code in Java.
+                linking persons and events. It's the same code in Java:
+            </para>
+
+            <programlisting><![CDATA[private void addEmailToPerson(Long personId, String emailAddress) {
+
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
+
+    Person aPerson = (Person) session.load(Person.class, personId);
+
+    // The getEmailAddresses() might trigger a lazy load of the collection
+    aPerson.getEmailAddresses().add(emailAddress);
+
+    session.getTransaction().commit();
+}]]></programlisting>
+
+            <para>
+                This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the collection.
+                Hence, the call to its getter method will trigger an additional select to initialize
+                it, so we can add an element to it. Monitor the SQL log and try to optimize this with
+                an eager fetch.
             </para>
 
         </sect2>
 
-        <sect2 id="tutorial-associations-bidirectional">
+        <sect2 id="tutorial-associations-bidirectional" revision="1">
             <title>Bi-directional associations</title>
 
             <para>
@@ -1127,7 +1155,7 @@ public void setParticipants(Set participants) {
 
             <programlisting><![CDATA[<set name="participants" table="PERSON_EVENT" inverse="true">
     <key column="EVENT_ID"/>
-    <many-to-many column="PERSON_ID" class="Person"/>
+    <many-to-many column="PERSON_ID" class="events.Person"/>
 </set>]]></programlisting>
 
             <para>

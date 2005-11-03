@@ -75,7 +75,9 @@
             <listitem>
                 <para>
                     Read <xref linkend="tutorial"/> for a tutorial with step-by-step
-                    instructions.
+                    instructions. The source code for the tutorial is included in the
+                    distribution in the <literal>doc/reference/tutorial/</literal>
+                    directory.
                 </para>
             </listitem>
             <listitem>

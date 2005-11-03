@@ -1,7 +1,7 @@
 <chapter id="tutorial">
     <title>Introduction to Hibernate</title>
     
-    <sect1 id="tutorial-intro">
+    <sect1 id="tutorial-intro" revision="1">
         <title>Preface</title>
         
         <para>
@@ -14,6 +14,11 @@
             This tutorial is intended for new users of Hibernate but requires Java and
             SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-party
             libraries we name are for JDK 1.4 and 5.0. You might need others for JDK 1.3.
+        </para>
+
+        <para>
+            The source code for the tutorial is included in the distribution in the
+            <literal>doc/reference/tutorial/</literal> directory.
         </para>
 
     </sect1>

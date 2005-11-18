@@ -397,7 +397,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="performance-fetching-initialization">
+        <sect2 id="performance-fetching-initialization" revision="1">
             <title>Initializing collections and proxies</title>
 
             <para>
@@ -441,11 +441,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                         correctness of the exception handling of your application infrastructure. 
                         It is vitally important that the <literal>Session</literal> is closed and the 
                         transaction ended before returning to the user, even when an exception occurs 
-                        during rendering of the view. The servlet filter has to be able to access the 
-                        <literal>Session</literal> for this approach. We recommend that a 
-                        <literal>ThreadLocal</literal> variable be used to hold the current 
-                        <literal>Session</literal> (see chapter 1, 
-                        <xref linkend="quickstart-playingwithcats"/>, for an example implementation).
+                        during rendering of the view. See the Hibernate Wiki for examples of this
+                        "Open Session in View" pattern.
                     </para>
                 </listitem>
                 <listitem>

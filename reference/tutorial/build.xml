@@ -35,5 +35,15 @@
             <arg value="${action}"/>
         </java>
     </target>
+    
+    <target name="war" depends="compile">
+        <war destfile="hibernate-tutorial.war" webxml="web.xml">
+            <lib dir="${librarydir}">
+              <exclude name="jsdk*.jar"/>
+            </lib>
+
+            <classes dir="${targetdir}"/>
+        </war>
+    </target>
 
 </project>

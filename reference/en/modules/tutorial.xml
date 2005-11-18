@@ -1303,7 +1303,9 @@ public class EventManagerServlet extends HttpServlet {
         HibernateUtil.getSessionFactory()
                 .getCurrentSession().getTransaction().rollback();
         throw new ServletException(ex);
-    }}]]></programlisting>
+    }
+
+}]]></programlisting>
 
             <para>
                 The pattern we are applying here is called <emphasis>session-per-request</emphasis>.
@@ -1367,8 +1369,8 @@ out.flush();
 out.close();]]></programlisting>
 
             <para>
-                Granted, this coding style with a mix of Java and HTMl would not scale
-                in a bigger application&mdash;keep in mind that we are only illustrating
+                Granted, this coding style with a mix of Java and HTML would not scale
+                in a more complex application&mdash;keep in mind that we are only illustrating
                 basic Hibernate concepts in this tutorial. The code prints an HTML
                 header and a footer. Inside this page, an HTML form for event entry and
                 a list of all events in the database are printed. The first method is

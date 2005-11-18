@@ -6,8 +6,8 @@ fi
 if test -d data
 then
         echo Removing database files...
-        rm -r database/test.*
+        rm -r data/test.*
 fi
 echo Starting database engine...
 cd data/
-java -classpath ../lib/hsqldb.jar org.hsqldb.Server
+java -classpath lib/hsqldb.jar org.hsqldb.Server

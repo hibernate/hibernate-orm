@@ -10,4 +10,4 @@ then
 fi
 echo Starting database engine...
 cd data/
-java -classpath lib/hsqldb.jar org.hsqldb.Server
+java -classpath ../lib/hsqldb.jar org.hsqldb.Server

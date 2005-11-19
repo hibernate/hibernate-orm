@@ -294,7 +294,7 @@ create table Address ( addressId bigint not null primary key )
     <sect1 id="assoc-bidirectional" revision="1">
         <title>Bidirectional associations</title>
         
-        <sect2 id="assoc-bidirectional-m21" revision="1">
+        <sect2 id="assoc-bidirectional-m21" revision="2">
         <title>one to many / many to one</title>
         
         <para>
@@ -354,6 +354,15 @@ create table Address ( addressId bigint not null primary key )
       <one-to-many class="Person"/>
    </list>
 </class>]]></programlisting>
+
+            <para>
+                It is important that you define <literal>not-null="true"</literal> on the
+                <literal>&lt;key&gt;</literal> element of the collection mapping if the
+                underlying foreign key column is <literal>NOT NULL</literal>. Don't only
+                declare <literal>not-null="true"</literal> on a possible nested
+                <literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</literal>
+                element.
+            </para>
 
         </sect2>
         

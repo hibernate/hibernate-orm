@@ -1033,7 +1033,7 @@ sess.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="objectstate-transitive">
+    <sect1 id="objectstate-transitive" revision="1">
         <title>Transitive persistence</title>
 
         <para>
@@ -1175,6 +1175,15 @@ sess.close();]]></programlisting>
                 </para>
             </listitem>
         </itemizedlist>
+
+        <para>
+            Finally, note that cascading of operations can be applied to an object graph at
+            <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All operations,
+            if enabled, are cascaded to associated entities reachable when the operation is
+            executed. However, <literal>save-upate</literal> and <literal>delete-orphan</literal>
+            are transitive for all associated entities reachable during flush of the
+            <literal>Session</literal>.
+        </para>
 
     </sect1>
 

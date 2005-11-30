@@ -35,12 +35,12 @@
     <sect1 id="assoc-unidirectional" revision="1">
         <title>Association unidirectionnelle</title>
         
-        <sect2 id="assoc-unidirectional-m21" revision="2">
+        <sect2 id="assoc-unidirectional-m21" >
         <title>plusieurs à un</title>
         
         <para>
             Une <emphasis>association plusieurs-à-un (many-to-one) unidirectionnelle </emphasis> 
-            est le type que l'on rencontre le plus souvent dans les associations unidirectionnelle.
+            est le type que l'on rencontre le plus souvent dans les associations unidirectionnelles.
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -61,14 +61,7 @@
 create table Person ( personId bigint not null primary key, addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
-        
-            <para>
-                Il est important que vous définissiez <literal>not-null="true"</literal> sur l'élément
-                <literal>&lt;key&gt;</literal> du mapping de la collection if
-                la colonne foreign key est <literal>NOT NULL</literal>. Ne déclarez pas
-                uniquement <literal>not-null="true"</literal> sur un probable élément imbriqué
-                <literal>&lt;column&gt;</literal>, mais bien sur l'élément <literal>&lt;key&gt;</literal>.
-            </para>
+
         
         </sect2>
 

@@ -6,15 +6,15 @@
         Les classes persistantes sont les classes d'une application qui implémentent
         les entités d'un problème métier (ex. Client et Commande dans une application
         de commerce électronique).
-        Toutes les instances d'une classe persistante ne sont pas considérées être 
-        dans l'état persistant - une instance peut au lieu de ça être éphémères ou détachées.
+        Toutes les instances d'une classe persistante ne sont pas forcément 
+        dans l'état persistant - au lieu de cela, une instance peut être éphémère (NdT : transient) ou détachée.
     </para>
 
     <para>
         Hibernate fonctionne de manière optimale lorsque ces classes suivent quelques règles
         simples, aussi connues comme le modèle de programmation Plain Old Java Object
-        (POJO). Cependant, aucune de ces règles ne sont des besoins absolus. En effet, Hibernate3 suppose très peu de chose à propos
-        de la nature de vos objets persistants. Vous pouvez exprimez un modèle de domaine par d'autres moyens : utiliser des arbres
+        (POJO). Cependant, aucune de ces règles ne sont des besoins absolus. En effet, Hibernate3 suppose très peu de choses à propos
+        de la nature de vos objets persistants. Vous pouvez exprimer un modèle de domaine par d'autres moyens : utiliser des arbres
         d'instances de <literal>Map</literal>, par exemple.
     </para>
 
@@ -115,7 +115,7 @@ public class Cat {
 
             <para>
                 <literal>Cat</literal> a un constructeur sans argument. Toutes les classes persistantes doivent avoir un
-                constructeur par défaut (lequel peut ne pas être publique) pour qu'Hibernate puissent les instancier en utilisant
+                constructeur par défaut (lequel peut ne pas être public) pour qu'Hibernate puissent les instancier en utilisant
                 <literal>Constructor.newInstance()</literal>. Nous recommandons fortement d'avoir un constructeur par défaut avec 
                 au moins une visibilité <emphasis>paquet</emphasis> pour la génération du proxy à l'exécution dans Hibernate.
             </para>
@@ -136,8 +136,8 @@ public class Cat {
             </para>
 
             <para>
-                La propriété d'identifiant est strictment optionnelle. Vous pouver l'oublier et laisser Hibernate
-                s'occuper des identifiants de l'objet en interne. Cependant, nous ne recommandons pas cela.
+                La propriété d'identifiant est strictement optionnelle. Vous pouver l'oublier et laisser Hibernate
+                s'occuper des identifiants de l'objet en interne. Toutefois, nous ne le recommandons pas.
             </para>
 
             <para>
@@ -174,17 +174,17 @@ public class Cat {
         <sect2 id="persistent-classes-pojo-final">
             <title>Favoriser les classes non finales (optionnel)</title>
             <para>
-                Une fonctionalité clef d'Hibernate, les <emphasis>proxies</emphasis>, nécessitent
+                Une fonctionnalité clef d'Hibernate, les <emphasis>proxies</emphasis>, nécessitent
                 que la classe persistente soit non finale ou qu'elle soit l'implémentation d'une
                 interface qui déclare toutes les méthodes publiques.
             </para>
             <para>
                 Vous pouvez persister, grâce à Hibernate, les classes <literal>final</literal>
-                qui n'implémentent pas d'interface, mais vous ne pourrez pas utiliser les proxies pour les chargements d'associations retardées
+                qui n'implémentent pas d'interface, mais vous ne pourrez pas utiliser les proxies pour les chargements d'associations paresseuses
                 - ce qui limitera vos possibilités d'ajustement des performances.
             </para>
             <para>
-                Vous devriez aussi éviter de déclarer des méthodes <literal>public final</literal>sur des classes
+                Vous devriez aussi éviter de déclarer des méthodes <literal>public final</literal> sur des classes
                 non-finales. Si vous voulez utiliser une classe avec une méthode <literal>public final</literal>, vous devez
                 explicitement désactiver les proxies en paramétrant
                 <literal>lazy="false"</literal>.
@@ -192,10 +192,10 @@ public class Cat {
         </sect2>
 
         <sect2 id="persistent-classes-pojo-accessors" revision="2">
-            <title>Déclarer les accesseurs et modifieurs des attributs persistants (optionnel)</title>
+            <title>Déclarer les accesseurs et mutateurs des attributs persistants (optionnel)</title>
 
             <para>
-                <literal>Cat</literal> déclare des modifieurs pour toutes ses champs persistants. Beaucoup d'autres
+                <literal>Cat</literal> déclare des mutateurs pour toutes ses champs persistants. Beaucoup d'autres
                 solutions de mapping Objet/relationnel persistent directement les variables d'instance. Nous pensons
                 qu'il est bien mieux de fournir une indirection entre le schéma relationnel et les structures de données internes de la classe.
                 Par défaut, Hibernate persiste les propriétés suivant le style JavaBean, et reconnaît les noms de méthodes de la forme <literal>
@@ -259,7 +259,7 @@ public class DomesticCat extends Cat {
         </itemizedlist>
 
         <para>
-            Hibernate garantit l'équivalance de l'identité persistante (ligne de base de données) et l'identité Java seulement
+            Hibernate garantit l'équivalence de l'identité persistante (ligne de base de données) et l'identité Java seulement
             à l'intérieur de la portée d'une session particulière. Donc dès que nous mélangeons des instances venant de différentes
             sessions, nous devons implémenter <literal>equals()</literal> et
             <literal>hashCode()</literal> si nous souhaitons avoir une sémantique correcte pour les <literal>Set</literal>s.
@@ -267,10 +267,10 @@ public class DomesticCat extends Cat {
 
         <para>
             La manière la plus évidente est d'implémenter <literal>equals()</literal>/<literal>hashCode()</literal>
-            en comparant la valeur de l'identifiant des deux objets.Si cette valeur est identique, les deux
+            en comparant la valeur de l'identifiant des deux objets. Si cette valeur est identique, les deux
             doivent représenter la même ligne de base de données, ils sont donc égaux (si les deux sont
-            ajoutés à un <literal>Set</literal>, nous n'auront qu'un seul élément dans le
-            <literal>Set</literal>).Malheureusement, nous ne pouvons pas utiliser cette approche avec 
+            ajoutés à un <literal>Set</literal>, nous n'aurons qu'un seul élément dans le
+            <literal>Set</literal>). Malheureusement, nous ne pouvons pas utiliser cette approche avec 
             des identifiants générés ! Hibernate n'assignera de
             valeur d'identifiant qu'aux objets qui sont persistants, une instance nouvellement créée n'aura
             donc pas de valeur d'identifiant ! De plus, si une instance est non sauvegardée et actuellement dans un <literal>Set</literal>,
@@ -485,7 +485,7 @@ dynamicSession.close()
             soit utilisée dans le mode d'entité dynamic-map ; ou peut-être avez-vous besoin de définir une
             statégie de génération de proxy différente de celle utilisée par défaut. Les deux devraient être
             effectuées en définissant une implémentation de tuplizer utilisateur. Les définitions de tuplizers
-            sont attachées au mapping de l'entité ou du composant qu'ils sont sensés gérer. Retour à l'exemple de
+            sont attachées au mapping de l'entité ou du composant qu'ils sont censés gérer. Retour à l'exemple de
             notre entité utilisateur :
         </para>
 

@@ -15,7 +15,7 @@
         <para>
             Ce didacticiel est destiné aux nouveaux utilisateurs d'Hibernate mais requiert
             des connaissances Java et SQL. Il est basé sur un didacticiel de Michael Gloegl,
-            les bibliothèques tierses que nous nommons sont pour les JDK 1.4 et 5.0. Vous
+            les bibliothèques tierces que nous nommons sont pour les JDK 1.4 et 5.0. Vous
             pourriez avoir besoin d'autres bibliothèques pour le JDK 1.3.
         </para>
         
@@ -37,7 +37,7 @@
 
         <para>
             Supposons que nous ayons besoin d'une petite application de base de données qui
-            puisse stocker des événements que nous voulons suivre, et des inforomations à propos
+            puisse stocker des événements que nous voulons suivre, et des informations à propos
             des hôtes de ces événements.
         </para>
 
@@ -68,7 +68,7 @@
             Ceci est l'ensemble minimum de bibliothèques requises (notez que nous avons aussi
             copié hibernate3.jar, l'archive principale) pour Hibernate. Lisez le fichier
             <literal>README.txt</literal> dans le répertoire <literal>lib/</literal> de la
-            distribution Hibernate pour plus d'informations à propos des biliothèques tierses
+            distribution Hibernate pour plus d'informations à propos des biliothèques tierces
             requises et optionnelles. (En fait, log4j n'est pas requis mais préféré par beaucoup
             de développeurs.)
         </para>
@@ -162,7 +162,7 @@ public class Event {
 
             <programlisting><![CDATA[.
 +lib
-  <Hibernate et bibliothèques tierses>
+  <Hibernate et bibliothèques tierces>
 +src
   +events
     Event.java]]></programlisting>
@@ -200,7 +200,7 @@ public class Event {
             <para>
                 Notez que la DTD Hibernate est très sophistiquée. Vous pouvez l'utiliser
                 pour l'auto-complétement des éléments et des attributs de mapping XML dans
-                votre éditeur ou votre IDE. You devriez aussi ouvrir le fichier DTD dans
+                votre éditeur ou votre IDE. Vous devriez aussi ouvrir le fichier DTD dans
                 votre éditeur de texte - c'est le moyen le plus facile d'obtenir une vue
                 d'ensemble de tous les éléments et attributs, et de voir les valeurs par
                 défaut, ainsi que quelques commentaires. Notez qu'Hibernate ne chargera
@@ -328,7 +328,7 @@ public class Event {
 
             <programlisting><![CDATA[.
 +lib
-  <Hibernate et bibliothèques tierses>
+  <Hibernate et bibliothèques tierces>
 +src
   Event.java
   Event.hbm.xml]]></programlisting>
@@ -343,7 +343,7 @@ public class Event {
             <title>Configuration d'Hibernate</title>
 
             <para>
-                Nous avons maintenant une classe persistante et son fichier de mapping. Il les temps de
+                Nous avons maintenant une classe persistante et son fichier de mapping. Il est temps de
                 configurer Hibernate. Avant ça, nous avons besoin d'une base de données. HSQL DB, un
                 SGBD SQL basé sur Java et travaillant en mémoire, peut être téléchargé à partir du site
                 web de HSQL. En fait, vous avez seulement besoin de <literal>hsqldb.jar</literal>. Placez
@@ -354,7 +354,7 @@ public class Event {
                 Créez un répertoire appelé <literal>data</literal> à la racine du répertoire de développement - 
                 c'est là que HSQL DB stockera ses fichiers de données. Démarrez maintenant votre base de données
                 en exécutant <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> dans votre répertoire de travail.
-                Vous observez qu'elle démarre et ouvre un socket TCP/IP, c'est là que notre application
+                Vous observez qu'elle démarre et ouvre une socket TCP/IP, c'est là que notre application
                 se connectera plus tard. Si vous souhaitez démarrez à partir d'une nouvelle base de données
                 pour ce tutoriel (faites <literal>CTRL + C</literal> dans la fenêtre the window), effacez
                 le répertoire <literal>data/</literal> et redémarrez HSQL DB à nouveau.
@@ -453,7 +453,7 @@ public class Event {
                 d'installé - récupérez-le à partir de <ulink url="http://ant.apache.org/bindownload.cgi"> la page
                 de téléchargement de Ant</ulink>. Comment installer Ant ne sera pas couvert ici. Référez-vous
                 au <ulink url="http://ant.apache.org/manual/index.html">manuel d'Ant</ulink>. Après que
-                vous aurez installé Ant, nous pouvons commencer à créer le fichier de construction. Il
+                vous aurez installé Ant, nous pourrons commencer à créer le fichier de construction. Il
                 s'appellera <literal>build.xml</literal> et sera placé directement dans le répertoire de
                 développement.
             </para>
@@ -523,7 +523,7 @@ Total time: 1 second ]]></programlisting>
             <para>
                 Il est temps de charger et de stocker quelques objets <literal>Event</literal>,
                 mais d'abord nous devons compléter la configuration avec du code
-                d'infrastructure. Nous devons démarrer Hibernate. Ce démarrage inclus la construction
+                d'infrastructure. Nous devons démarrer Hibernate. Ce démarrage inclut la construction
                 d'un objet <literal>SessionFactory</literal> global et le stocker quelque part
                 facile d'accès dans le code de l'application. Une <literal>SessionFactory</literal>
                 peut ouvrir des nouvelles <literal>Session</literal>s. Une <literal>Session</literal>
@@ -862,7 +862,7 @@ public class Person {
             <para>
                 Nous allons maintenant créer une association entre ces deux entités. Évidemment,
                 des personnes peuvent participer aux événements, et des événements ont des participants.
-                Les question de conception que nous devons traiter sont : directivité, pluralité et comportement
+                Les questions de conception que nous devons traiter sont : direction, cardinalité et comportement
                 de la collection.
             </para>
 
@@ -991,8 +991,8 @@ public class Person {
                 Hibernate surveille les changements et exécute le SQL correspondant. Le processus de
                 synchronisation de l'état de la mémoire avec la base de données, généralement seulement à la fin
                 d'une unité de travail, est appelé <emphasis>flushing</emphasis>. Dans notre code, l'unité de travail
-                s'achève par un commit (ou rollback) de la transaction avec la base de données - comme définit 
-                par notre option <literal>thread</literal> de configuration pour la calsse <literal>CurrentSessionContext</literal>.
+                s'achève par un commit (ou rollback) de la transaction avec la base de données - comme défini 
+                par notre option <literal>thread</literal> de configuration pour la classe <literal>CurrentSessionContext</literal>.
             </para>
 
             <para>
@@ -1032,7 +1032,7 @@ public class Person {
 
             <para>
                 L'appel à <literal>update</literal> rend un objet détaché à nouveau persistant, vous pourriez
-                dire qu'il le lie à une unité de travail, ainsi toutes les modifications (ajout.suppression) que vous avez faites
+                dire qu'il le lie à une unité de travail, ainsi toutes les modifications (ajout, suppression) que vous avez faites
                 pendant qu'il était détaché peuvent être sauvegardées dans la base de données
                 (il se peut que vous ayez besoin de modifier quelques unes des méthodes précédentes
                 pour retourner cet identifiant).
@@ -1078,7 +1078,7 @@ public class Person {
             <title>Collection de valeurs</title>
 
             <para>
-                Nous ajoutons une collection de d'objets de type de valeur à l'entité <literal>Person</literal>.
+                Nous ajoutons une collection d'objets de type de valeur à l'entité <literal>Person</literal>.
                 Nous voulons stocker des adresses email, donc le type que nous utilisons est <literal>String</literal>,
                 et la collection est encore un <literal>Set</literal> :
             </para>
@@ -1107,7 +1107,7 @@ public void setEmailAddresses(Set emailAddresses) {
                 mais une collection d'éléments de type <literal>String</literal> (le nom en minuscule vous
                 indique que c'est un type/convertisseur du mapping Hibernate). Une fois encore, l'attribut
                 <literal>table</literal> de l'élément <literal>set</literal> détermine le nom de la table pour la
-                collection. L'élément <literal>key</literal> définit la nom de la colonne de la clef étrangère
+                collection. L'élément <literal>key</literal> définit le nom de la colonne de la clef étrangère
                 dans la table de la collection. L'attribut <literal>column</literal> dans l'élément
                 <literal>element</literal> définit le nom de la colonne où les valeurs de <literal>String</literal>
                 seront réellement stockées.
@@ -1158,7 +1158,7 @@ public void setEmailAddresses(Set emailAddresses) {
 }]]></programlisting>
 
             <para>
-                Cette fois ci, nous n'avons pas utilisé une requête de chargement aggressif (<emphasis>fetch</emphasis>)
+                Cette fois ci, nous n'avons pas utilisé une requête de chargement agressif (<emphasis>fetch</emphasis>)
                 pour initialiser la collection. Par conséquent, l'invocation du getter déclenchera un
                 select supplémentaire pour l'initialiser. Traquez les logs SQL et tentez d'optimiser
                 ce cas avec un chargement aggressif.
@@ -1171,7 +1171,7 @@ public void setEmailAddresses(Set emailAddresses) {
 
             <para>
                 Ensuite nous allons mapper une association bidirectionnelle - faire fonctionner
-                l'association entre une personne et et un événement à partir des deux côtés en Java.
+                l'association entre une personne et un événement à partir des deux côtés en Java.
                 Bien sûr, le schéma de la base de données ne change pas, nous avons toujours une pluralité
                 many-to-many. Une base de données relationnelle est plus flexible qu'un langage de
                 programmation réseau, donc elle n'a pas besoin de direction de navigation - les données
@@ -1212,7 +1212,7 @@ public void setParticipants(Set participants) {
             <para>
                 Ce que signifie qu'Hibernate devrait prendre l'autre côté - la classe <literal>Person</literal> -
                 s'il a besoin de renseigner des informations à propos du lien entre les deux. Ce sera
-                beaucoup plus facile à comprendre une fois que vous verrez comment la lien bidirectionnel
+                beaucoup plus facile à comprendre une fois que vous verrez comment le lien bidirectionnel
                 entre les deux entités est créé.
             </para>
 
@@ -1222,8 +1222,8 @@ public void setParticipants(Set participants) {
             <title>Travailler avec des liens bidirectionnels</title>
 
             <para>
-                Premièrement, gardez à l'esprit qu'Hibernate n'affecte pas la sémantique normal de Java.
-                Comment avons-nous créer un lien entre une <literal>Person</literal> et un <literal>Event</literal>
+                Premièrement, gardez à l'esprit qu'Hibernate n'affecte pas la sémantique normale de Java.
+                Comment avons-nous créé un lien entre une <literal>Person</literal> et un <literal>Event</literal>
                 dans l'exemple unidirectionnel ? Nous avons ajouté une instance de <literal>Event</literal>
                 à la collection des références d'événement d'une instance de <literal>Person</literal>. Donc,
                 évidemment, si vous voulons rendre ce lien bidirectionnel, nous devons faire la même chose de
@@ -1285,12 +1285,277 @@ public void removeFromEvent(Event event) {
 -->
         </sect2>
     </sect1>
+    
+    <sect1 id="tutorial-webapp">
+        <title>Part 3 - L'application web EventManager</title>
 
-    <sect1 id="tutorial-summary">
+        <para>
+            Une application web Hibernate utilise la <literal>Session</literal> et <literal>Transaction</literal>
+            comme une application standalone. Cependant, quelques patterns sont utiles. Nous allons coder une
+            <literal>EventManagerServlet</literal>. Cette servlet peut lister tous les évènements stockés dans
+            la base de données, et fournir une formulaire HTML pour saisir d'autres évènements.
+        </para>
+
+        <sect2 id="tutorial-webapp-servlet">
+            <title>Ecrire la servlet de base</title>
+
+            <para>
+                Créons une nouvelle classe dans notre répertoire source, dans le package <literal>events</literal>:
+            </para>
+
+            <programlisting><![CDATA[package events;
+
+// Imports
+
+public class EventManagerServlet extends HttpServlet {
+
+    private final SimpleDateFormat dateFormatter =
+                            new SimpleDateFormat("dd.MM.yyyy");
+
+    // Servlet code
+}]]></programlisting>
+
+            <para>
+                Le <literal>dateFormatter</literal> est un outil que nous utiliserons plus tard pour convertir les objets
+                <literal>Date</literal> depuis et vers des chaines de caractères. Il est propice de n'avoir qu'un
+                formatter comme membre de la servlet.
+            </para>
+
+            <para>
+                La servlet n'accepte que les requêtes HTTP <literal>GET</literal>, la méthode à implémenter est donc
+				<literal>doGet()</literal>:
+            </para>
+
+            <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
+                     HttpServletResponse response)
+        throws ServletException, IOException {
+
+    try {
+        // Begin unit of work
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().beginTransaction();
+
+        // Process request and render page...
+
+        // End unit of work
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().getTransaction().commit();
+
+    } catch (Exception ex) {
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().getTransaction().rollback();
+        throw new ServletException(ex);
+    }
+
+}]]></programlisting>
+
+            <para>
+                La pattern que nous utilisons ici est appelé <emphasis>session-per-request</emphasis>.
+                Lorsqu'une requête touche la servlet, une nouvelle <literal>Session</literal> hibernate est
+                ouverte à l'invocationde <literal>getCurrentSession()</literal> sur la
+                <literal>SessionFactory</literal>. Ensuite, une transaction avec la base de données est démarrée&mdash;
+                tous les accès à la base de données interviennent au sein de la transactiton, peu importe que les données
+                soient lues ou écrites (nous n'utilisons pas le mode auto-commit dans les applications).
+            </para>
+
+            <para>
+                Ensuite, les actions possibles de la requêtes sont exécutées et la réponse HTML
+                est rendue. Nous en parlerons plus tard.
+            </para>
+
+            <para>
+                Enfin, l'unité de travail s'achève lorsque l'exécution et le rendu sont achevés.
+                Si un problème survient lors de ces deux phases, une exception est soulevée et la
+                transaction avec la base de données subit un rollback. Voila pour le pattern
+                <literal>session-per-request</literal>. Au lieu d'un code de démarcation de transaction
+                au sein de chaque servlet, vous pouvez écrire un filtre de servlet.
+                Voir le site Hibernate et le Wiki pour plus d'information sur ce pattern, appelé
+				<emphasis>Open Session in View</emphasis>&mdash; vous en aurez besoin dès que vous
+				utiliserez des JSPs et non plus des servlets pour le rendu de vos vues.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-webapp-processing">
+            <title>Procéder et rendre</title>
+
+            <para>
+                Implémentons l'exécution de la requête et le rendu de la page.                
+            </para>
+
+<programlisting><![CDATA[// Write HTML header
+PrintWriter out = response.getWriter();
+out.println("<html><head><title>Event Manager</title></head><body>");
+
+// Handle actions
+if ( "store".equals(request.getParameter("action")) ) {
+
+    String eventTitle = request.getParameter("eventTitle");
+    String eventDate = request.getParameter("eventDate");
+
+    if ( "".equals(eventTitle) || "".equals(eventDate) ) {
+        out.println("<b><i>Please enter event title and date.</i></b>");
+    } else {
+        createAndStoreEvent(eventTitle, dateFormatter.parse(eventDate));
+        out.println("<b><i>Added event.</i></b>");
+    }
+}
+
+// Print page
+printEventForm(out);
+listEvents(out);
+
+// Write HTML footer
+out.println("</body></html>");
+out.flush();
+out.close();]]></programlisting>
+
+            <para>
+                Ce style de code avec un mix de Java et d'HTML ne serait pas scalable 
+                dans une application plus complexe&mdash;gardez à l'esprit que nous ne faisons qu'illustrer
+                les concepts basiques d'Hibernate dans ce tutoriel. Ce code affiche une en tête et un pied de page
+                HTML. Dans cette page, sont affichés un formulaire pour la saisie d'évènements ainsi
+                qu'une liste de tous les évènements de la base de données. La première méthode
+                est triviale est ne fait que sortir de l'HTML:
+            </para>
+
+            <programlisting><![CDATA[private void printEventForm(PrintWriter out) {
+    out.println("<h2>Add new event:</h2>");
+    out.println("<form>");
+    out.println("Title: <input name='eventTitle' length='50'/><br/>");
+    out.println("Date (e.g. 24.12.2009): <input name='eventDate' length='10'/><br/>");
+    out.println("<input type='submit' name='action' value='store'/>");
+    out.println("</form>");
+}]]></programlisting>
+
+            <para>
+                La méthode <literal>listEvents()</literal> utilise la
+                <literal>Session</literal> Hibernate liée au thread courant pour exécuter la
+                requête:
+            </para>
+
+            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+    List result = HibernateUtil.getSessionFactory()
+                    .getCurrentSession().createCriteria(Event.class).list();
+    if (result.size() > 0) {
+        out.println("<h2>Events in database:</h2>");
+        out.println("<table border='1'>");
+        out.println("<tr>");
+        out.println("<th>Event title</th>");
+        out.println("<th>Event date</th>");
+        out.println("</tr>");
+        for (Iterator it = result.iterator(); it.hasNext();) {
+            Event event = (Event) it.next();
+            out.println("<tr>");
+            out.println("<td>" + event.getTitle() + "</td>");
+            out.println("<td>" + dateFormatter.format(event.getDate()) + "</td>");
+            out.println("</tr>");
+        }
+        out.println("</table>");
+    }
+}]]></programlisting>
+
+            <para>
+                FEnfin, l'action <literal>store</literal> renvoie à la méthode
+                <literal>createAndStoreEvent()</literal>, qui utilise aussi la
+                <literal>Session</literal> du thread courant:
+            </para>
+
+            <programlisting><![CDATA[protected void createAndStoreEvent(String title, Date theDate) {
+    Event theEvent = new Event();
+    theEvent.setTitle(title);
+    theEvent.setDate(theDate);
+
+    HibernateUtil.getSessionFactory()
+                    .getCurrentSession().save(theEvent);
+}]]></programlisting>
+
+            <para>
+                La servlet est faite. Une requête à la servlet sera exécutée par une seule
+                <literal>Session</literal> et <literal>Transaction</literal>. Comme pour une application
+                standalone, Hibernate peut automatiquement lier ces objets au thread courant d'exécution.
+                Cela vous laisse la liberté de séparer votre code en couches et d'accéder à la
+				<literal>SessionFactory</literal> par le moyen que vous voulez.
+				Généralement, vous utiliserez des conceptions plus sophistiquées et déplacerez
+				le code d'accès aux données dans une couche DAO. Voir le wiki Hibernate pour plus
+				d'exemples.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-webapp-deploy">
+            <title>Déployer et tester</title>
+
+            <para>
+                Pour déployer cette application, vous devez créer une archive Web, un War. Ajoutez
+                la cible Ant suivante dans votre <literal>build.xml</literal>:
+            </para>
+
+<programlisting><![CDATA[<target name="war" depends="compile">
+    <war destfile="hibernate-tutorial.war" webxml="web.xml">
+        <lib dir="${librarydir}">
+          <exclude name="jsdk*.jar"/>
+        </lib>
+
+        <classes dir="${targetdir}"/>
+    </war>
+</target>]]></programlisting>
+
+            <para>
+                Cette cible créé un fichier nommé <literal>hibernate-tutorial.war</literal>
+                dans le répertoire de votre projet. Elle package les bibliothèques et le descripteur <literal>web.xml</literal>
+                qui est attendu dans le répertoire racine de votre projet:
+            </para>
+
+            <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4"
+    xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <servlet>
+        <servlet-name>Event Manager</servlet-name>
+        <servlet-class>events.EventManagerServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Event Manager</servlet-name>
+        <url-pattern>/eventmanager</url-pattern>
+    </servlet-mapping>
+</web-app>]]></programlisting>
+
+            <para>
+                Avant de compiler et déployer l'application web, notez qu'une bibliothèque supplémentaire
+                est requise: <literal>jsdk.jar</literal>. C'est le kit de développement de Servlet Java,
+                si vous ne disposez pas de cette bibliothèque, prenez la sur le site de Sun et copiez la
+                dans votre répertoire des bibliothèques. Cependant, elle ne sera utilisée uniquement pour la
+                compilation et sera exclue du paackage WAR.
+            </para>
+
+            <para>
+                Pour construire et déployer, appelez <literal>ant war</literal> dans votre projet et
+                copier le fichier <literal>hibernate-tutorial.war</literal> dans le répertoire <literal>webapp</literal> de tomcat
+                Si vous n'avez pas installé Tomcat, téléchargez le et suivez la notice d'installation. 
+                Vous n'avez pas à modifier la configuration Tomcat pour déployer cette application.
+            </para>
+
+            <para>
+                Une fois l'application déployée et Tomcat lancé, accédez à l'application via
+                <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>. 
+                Assurez vous de consulter les traces tomcat pour observer l'initialisation
+                d'Hibernate à la première requête touchant votre servlet (l'initialisation statique dans <literal>HibernateUtil</literal>
+                est invoquée) et pour vérifier qu'aucune exception ne survienne.
+            </para>
+
+        </sect2>
+
+    </sect1>
+
+    <sect1 id="tutorial-summary"  revision="1">
         <title>Résumé</title>
 
         <para>
-            Ce didacticiel a couvert les bases de l'écriture d'une simple application Hibernate autonome.
+            Ce didacticiel a couvert les bases de l'écriture d'une simple application Hibernate ainsi qu'une petite application web.
         </para>
 
         <para>

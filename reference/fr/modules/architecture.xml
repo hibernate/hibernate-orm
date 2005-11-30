@@ -68,7 +68,7 @@
                             de données. Une factory (fabrique) de <literal>Session</literal> et un client
                             de <literal>ConnectionProvider</literal>. Peut contenir un cache optionnel de
                             données (de second niveau) qui est réutilisable entre les différentes transactions
-                            que cela soit au sein du même processus (JVLM) ou par plusieurs noeuds d'un cluster.
+                            que cela soit au sein du même processus (JVLM) ou par plusieurs n½uds d'un cluster.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -93,7 +93,7 @@
                             et la fonction métier. Ceux-ci sont en général les objets de type JavaBean
                             (ou POJOs) ; la seule particularité est qu'ils sont associés avec une (et
                             une seule) <literal>Session</literal>. Dès que la <literal>Session</literal>
-                            est fermée, ils seront détachés et libre d'être utilisés par n'importe laquelle
+                            est fermée, ils seront détachés et libres d'être utilisés par n'importe laquelle
                             des couches de l'application (ie. de et vers la présentation en tant que Data 
                             Transfer Objects - DTO : objet de transfert de données).
                         </para>
@@ -118,7 +118,7 @@
                             pour définir une unité de travail atomique. Abstrait l'application des
                             transactions sous-jacentes qu'elles soient JDBC, JTA ou CORBA. Une
                             <literal>Session</literal> peut fournir plusieurs <literal>Transaction</literal>s
-                            dans certain cas. Toutefois, la délimitation des transactions, via l'API d'Hibernate
+                            dans certains cas. Toutefois, la délimitation des transactions, via l'API d'Hibernate
                             ou par la <literal>Transaction</literal> sous-jacente, n'est jamais optionnelle!
                         </para>
                     </listitem>
@@ -147,7 +147,7 @@
                     <listitem>
                         <para>
                             Hibernate fournit de nombreuses interfaces d'extensions optionnelles que 
-                            vous pouvez implémenter pour personnaliser le comportement de votre couche de persistence.
+                            vous pouvez implémenter pour personnaliser le comportement de votre couche de persistance.
                             Reportez vous à la documentation de l'API pour plus de détails.
                         </para>
                     </listitem>
@@ -166,8 +166,8 @@
     <sect1 id="architecture-states" revision="1">
         <title>Etats des instances</title>
         <para>
-            Une instance d'une classe persistante être dans l'un des trois états suivants,
-            définit par rapport à un <emphasis>contexte de persistance</emphasis>.
+            Une instance d'une classe persistante peut être dans l'un des trois états suivants,
+            définis par rapport à un <emphasis>contexte de persistance</emphasis>.
             L'objet <literal>Session</literal> d'hibernate correspond à ce concept de 
             contexte de persistance :
         </para>
@@ -274,36 +274,36 @@
         <title>Sessions Contextuelles</title>
         <para>
             Certaines applications utilisant Hibernate ont besoin d'une sorte de session "contextuelle", où
-            une session est liée au scope d'un context particulier. Cependant, les applications ne définissent
-            pas toutes la notion de context de la même manière, et différents contexts définissent différents
-            scopes à la notion de "courant". Les applications à base d'Hibernate, versions précédentes à la 3.0
+            une session est liée à la portée d'un contexte particulier. Cependant, les applications ne définissent
+            pas toutes la notion de contexte de la même manière, et différents contextes définissent différentes
+            portées à la notion de "courant". Les applications à base d'Hibernate, versions précédentes à la 3.0
             utilisaient généralement un principe maison de sessions contextuelles basées sur le <literal>ThreadLocal</literal>,
-            ainsi que sur des classes helper comme <literal>HibernateUtil</literal>, ou utilisaient des
+            ainsi que sur des classes utilitaires comme <literal>HibernateUtil</literal>, ou utilisaient des
             framework tiers (comme Spring ou Pico) qui fournissaient des sessions contextuelles basées sur 
-            proxy/interception-based.
+            l'utilisation de proxy/interception.
         </para>
         <para>
         	A partir de la version 3.0.1, Hibernate a ajouté la méthode <literal>SessionFactory.getCurrentSession()</literal>.
-        	Initiallement, cela demandait l'usage de transactions <literal>JTA</literal>, où la
-        	transaction <literal>JTA</literal> définissait et le scope et le context de la session courante.
+        	Initialement, cela demandait l'usage de transactions <literal>JTA</literal>, où la
+        	transaction <literal>JTA</literal> définissait la portée et le contexte de la session courante.
         	L'équipe Hibernate pense que, étant donnée la maturité des implémentations de <literal>JTA TransactionManager</literal> ,
         	la plupart (sinon toutes) des applications devraient utiliser la gestion des transactions par <literal>JTA</literal> 
-        	qu'elles soient ou non déployées dans un conteneur <literal>J2EE</literal> container. Par conséquent,
-        	vous devriez toujours conextualiser vos sessions, si vous en avez besoin, via la méthode basée sur JTA.
+        	qu'elles soient ou non déployées dans un conteneur <literal>J2EE</literal>. Par conséquent,
+        	vous devriez toujours contextualiser vos sessions, si vous en avez besoin, via la méthode basée sur JTA.
         </para>
         <para>
             Cependant, depuis la version 3.1, la logique derrière
-            <literal>SessionFactory.getCurrentSession()</literal> est désormais pluggable.  
+            <literal>SessionFactory.getCurrentSession()</literal> est désormais branchable.  
             A cette fin, une nouvelle interface d'extension (<literal>org.hibernate.context.CurrentSessionContext</literal>)
             et un nouveau paramètre de configuration (<literal>hibernate.current_session_context_class</literal>)
-            ont été ajoutés pour permettre de configurer d'autres moyens de définir le scope et le context des
+            ont été ajoutés pour permettre de configurer d'autres moyens de définir la portée et le contexte des
             sessions courantes.
         </para>
         <para>
             Allez voir les Javadocs de l'interface <literal>org.hibernate.context.CurrentSessionContext</literal>
-            pour une discussion détaillée de son contrat. Elle définit une seule méthode,
+            pour une description détaillée de son contrat. Elle définit une seule méthode,
             <literal>currentSession()</literal>, depuis laquelle l'implémentation est responsable
-            de traquer la session courante du context. Hibernate fournit deux implémentation 
+            de traquer la session courante du contexte. Hibernate fournit deux implémentation 
             de cette interface.
         </para>
 
@@ -331,17 +331,17 @@
             nous vous conseillons d'utiliser l'API Hibernate <literal>Transaction</literal> pour masquer le système
             de transaction utilisé. Si vous exécutez sous un conteneur EJB qui supporte CMT, vous n'avez besoin d'aucune
             opérations de démarcations de session ou transaction dans votre code puisque tout
-            est géré de manière déclarative. Réferrez vous à <xref linkend="transactions"/> pour plus d'informations
+            est géré de manière déclarative. Référez vous à <xref linkend="transactions"/> pour plus d'informations
             et des exemples de code.
         </para>
 
         <para>
             Le paramètre de configuration <literal>hibernate.current_session_context_class</literal> 
-            définit qu'elle implémentation de <literal>org.hibernate.context.CurrentSessionContext</literal> 
-            doit être utilisé. Notez que pour assurer la compatibilité avec les versions précédentes, si
+            définit quelle implémentation de <literal>org.hibernate.context.CurrentSessionContext</literal> 
+            doit être utilisée. Notez que pour assurer la compatibilité avec les versions précédentes, si
             ce paramètre n'est pas défini mais qu'un <literal>org.hibernate.transaction.TransactionManagerLookup</literal> 
             est configuré, Hibernate utilisera le <literal>org.hibernate.context.JTASessionContext</literal>.
-            La valeur de ce paramètre devrait juste nomer la classe d'implémentation a utiliser, 
+            La valeur de ce paramètre devrait juste nommer la classe d'implémentation à utiliser, 
             pour les deux implémentations fournies, il y a cependant deux alias correspondant: "jta" et "thread".
         </para>
         

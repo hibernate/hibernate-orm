@@ -203,7 +203,7 @@
 </class>]]></programlisting>
 
         <para>
-            Bien sÃ»r, il ne peut pas y avoir de référence à l'achat (purchase) depuis l'article (item), pour 
+            Bien sûr, il ne peut pas y avoir de référence à l'achat (purchase) depuis l'article (item), pour 
             pouvoir naviguer de façon bidirectionnelle dans l'association. N'oubliez pas que les composants 
             sont de type valeurs et n'autorise pas les références partagées. 
         </para>
@@ -222,7 +222,7 @@
 </class>]]></programlisting>
 
         <para>
-            Les éléments composites peuvent apparaÃ®tre dans les requêtes en utilisant
+            Les éléments composites peuvent apparaître dans les requêtes en utilisant
             la même syntaxe que associations
         </para>
 
@@ -267,7 +267,7 @@
         <para>
             <emphasis>
             Remarque: avec hibernate3, la seconde règle n'est plus absolument 
-            necessaire mais faÃ®tes le quand même.</emphasis>
+            necessaire mais faîtes le quand même.</emphasis>
         </para>
 
         <para>

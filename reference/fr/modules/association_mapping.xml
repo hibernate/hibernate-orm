@@ -561,7 +561,7 @@ create table Address ( addressId bigint not null primary key )
         <title>Des mappings plus complexes</title>
         
         <para>
-            Des associations encore plus complexes sont <emphasis>extrêmement</emphasis> rare. 
+            Des associations encore plus complexes sont <emphasis>extrêmement</emphasis> rares. 
             Hibernate permet de gérer des situations plus complexes en utilisant des
             parties SQL dans les fichiers de mapping. Par exemple, si une table
             avec l'historiques des informations d'un compte définit les colonnes

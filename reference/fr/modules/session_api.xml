@@ -10,7 +10,7 @@
         applications Java.
     </para>
 
-    <para>
+	<para>
         En d'autres mots, les développeurs d'applications Hibernate devrait toujours
         réfléchir à <emphasis>l'état</emphasis> de leurs objets, et pas nécessairement à
         l'exécution des expressions SQL. Cette part est prise en charge pas Hibernate et
@@ -1034,12 +1034,12 @@ tx.commit(); // le flush se produit]]></programlisting>
 
     </sect1>
 
-    <sect1 id="objectstate-transitive">
+    <sect1 id="objectstate-transitive" revision="1">
         <title>Persistance transitive</title>
 
         <para>
-            Il est assez embarrassant de sauvegarder, supprimer, ou réattacher des objets
-            individuels, surtout si vous traitez un graphe d'objets associés. Un cas habituel
+            Il est assez pénible de sauvegarder, supprimer, ou réattacher des objets
+            un par un, surtout si vous traitez un graphe d'objets associés. Un cas habituel
             est une relation parent/enfant. Considérez l'exemple suivant :
         </para>
 
@@ -1178,6 +1178,16 @@ tx.commit(); // le flush se produit]]></programlisting>
                 </para>
             </listitem>
         </itemizedlist>
+		
+		<para>
+            Enfin, la cascade des opérations peut être effectuée sur un graphe donné lors
+			de l'<emphasis>appel de l'opération</emphasis> or lors du <emphasis>flush</emphasis>
+			suivant. Toutes les opérations, lorsque cascadées, le sont sur toutes les entités
+			associées atteignables lorsque l'opétation est exécutée. Cependant 
+			<literal>save-upate</literal> et <literal>delete-orphan</literal> sont cascadées
+            à toutes les entités associées atteignables lors du flush de la 
+            <literal>Session</literal>.
+        </para>
 
     </sect1>
 

@@ -33,7 +33,7 @@
     <bookinfo>
         <title>HIBERNATE - Persistance relationnelle en Java standard</title>
         <subtitle>Documentation de référence d'Hibernate</subtitle>
-        <releaseinfo>3.1rc1</releaseinfo>
+        <releaseinfo>3.1final</releaseinfo>
     </bookinfo>
 
     <toc/>
@@ -41,7 +41,7 @@
     <preface id="preface" revision="2">
         <title>Préface</title>
         <para>
-            Traducteur(s): Vincent Ricard, Sebastien Cesbron, Michael Courcy, Vincent Giguère, Emmanuel Bernard, Anthony Patricio
+            Traducteur(s): Vincent Ricard, Sebastien Cesbron, Michael Courcy, Vincent Giguère, Baptiste Mathus, Emmanuel Bernard, Anthony Patricio
         </para>
         <para>
             Travailler dans les deux univers que sont l'orienté objet et la base de données

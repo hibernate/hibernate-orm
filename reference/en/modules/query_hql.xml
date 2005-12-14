@@ -76,7 +76,7 @@
         
     </sect1>
 
-    <sect1 id="queryhql-joins" revision="1">
+    <sect1 id="queryhql-joins" revision="2">
         <title>Associations and joins</title>
 
         <para>
@@ -164,8 +164,11 @@
     
         <para>
             Note that the <literal>fetch</literal> construct may not be used in queries called using
-            <literal>scroll()</literal> or <literal>iterate()</literal>. Nor should <literal>fetch</literal>
-            be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal>.
+            <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). Nor should
+            <literal>fetch</literal> be used together with <literal>setMaxResults()</literal> or
+            <literal>setFirstResult()</literal> as these operations are based on the result rows, which
+            usually contain duplicates for eager collection fetching, hence, the number of rows is not what
+            you'd expect.
             Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition.
             It is possible to create a cartesian product by join fetching more than one collection in a
             query, so take care in this case. Join fetching multiple collection roles also sometimes gives 

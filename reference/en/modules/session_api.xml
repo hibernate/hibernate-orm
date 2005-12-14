@@ -223,7 +223,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             optional support from Hibernate for result set conversion into objects.
         </para>
 
-        <sect2 id="objectstate-querying-executing">
+        <sect2 id="objectstate-querying-executing" revision="1">
             <title>Executing queries</title>
 
             <para>
@@ -251,14 +251,21 @@ List kittens = session.createQuery(
 Cat mother = (Cat) session.createQuery(
     "select cat.mother from Cat as cat where cat = ?")
     .setEntity(0, izi)
-    .uniqueResult();]]></programlisting>
+    .uniqueResult();]]
+
+Query mothersWithKittens = (Cat) session.createQuery(
+    "select mother from Cat as mother left join fetch mother.kittens");
+Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
 
             <para>
                 A query is usually executed by invoking <literal>list()</literal>, the
                 result of the query will be loaded completely into a collection in memory.
                 Entity instances retrieved by a query are in persistent state. The
                 <literal>uniqueResult()</literal> method offers a shortcut if you
-                know your query will only return a single object.
+                know your query will only return a single object. Note that queries that
+                make use of eager fetching of collections usually return duplicates of
+                the root objects (but with their collections initialized). You can filter
+                these duplicates simply through a <literal>Set</literal>.
             </para>
 
             <sect3 id="objectstate-querying-executing-iterate">

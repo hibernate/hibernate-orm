@@ -844,7 +844,7 @@ public class Person {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-unidirset" revision="2">
+        <sect2 id="tutorial-associations-unidirset" revision="3">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -893,7 +893,7 @@ public class Person {
 
     <set name="events" table="PERSON_EVENT">
         <key column="PERSON_ID"/>
-        <many-to-many column="EVENT_ID" class="Event"/>
+        <many-to-many column="EVENT_ID" class="events.Event"/>
     </set>
 
 </class>]]></programlisting>

@@ -316,7 +316,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-configuration" revision="1">
+        <sect2 id="tutorial-firstapp-configuration" revision="2">
             <title>Hibernate configuration</title>
 
             <para>
@@ -330,10 +330,10 @@ public class Event {
             <para>
                 Create a directory called <literal>data</literal> in the root of the development directory -
                 this is where HSQL DB will store its data files. Now start the database by running
-                <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> in your work directory.
+                <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> in this data directory.
                 You can see it start up and bind to a TCP/IP socket, this is where our application
                 will connect later. If you want to start with a fresh database during this tutorial,
-                shutdown HSQL DB (press <literal>CTRL + C</literal> in the window), delete the
+                shutdown HSQL DB (press <literal>CTRL + C</literal> in the window), delete all files in the
                 <literal>data/</literal> directory, and start HSQL DB again.
             </para>
 

@@ -481,13 +481,14 @@ catch (RuntimeException e) {
             
         </sect2>
 
-        <sect2 id="transactions-demarcation-jta" revision="2">
+        <sect2 id="transactions-demarcation-jta" revision="3">
             <title>Using JTA</title>
 
             <para>
                 If your persistence layer runs in an application server (e.g. behind EJB session beans),
                 every datasource connection obtained by Hibernate will automatically be part of the global
-                JTA transaction. Hibernate offers two strategies for this integration.
+                JTA transaction. You can also install a standalone JTA implementation and use it without
+                EJB. Hibernate offers two strategies for JTA integration.
             </para>
 
             <para>
@@ -516,20 +517,26 @@ finally {
 }]]></programlisting>
 
            <para>
-                Or with automatic session context management:
+                If you want to use a transaction-bound <literal>Session</literal>, that is, the
+               <literal>getCurrentSession()</literal> functionality for easy context propagation,
+               you will have to use the JTA <literal>UserTransaction</literal> API directly:
             </para>
 
             <programlisting><![CDATA[// BMT idiom with getCurrentSession()
 try {
-    factory.getCurrentSession().beginTransaction();
+    UserTransaction tx = (UserTransaction)new InitialContext()
+                            .lookup("java:comp/UserTransaction");
 
-    // do some work
-    ...
+    tx.begin();
 
-    factory.getCurrentSession().getTransaction().commit();
+    // Do some work on Session bound to transaction
+    factory.getCurrentSession().load(...);
+    factory.getCurrentSession().persist(...);
+
+    tx.commit();
 }
 catch (RuntimeException e) {
-    factory.getCurrentSession().getTransaction().rollback();
+    tx.rollback();
     throw e; // or display error message
 }]]></programlisting>
 
@@ -546,15 +553,16 @@ catch (RuntimeException e) {
 ]]></programlisting>
 
             <para>
-                In a CMT?EJB even rollback happens automatically, since an unhandled <literal>RuntimeException</literal>
+                In a CMT/EJB even rollback happens automatically, since an unhandled <literal>RuntimeException</literal>
                 thrown  by a session bean method tells the container to set the global transaction to rollback.
                 <emphasis>This means you do not need to use the Hibernate <literal>Transaction</literal> API at
-                all in CMT.</emphasis>
+                all with BMT or CMT, and you get automatic propagation of the "current" Session bound to the
+                transaction.</emphasis>
             </para>
 
             <para>
                 Note that you should choose <literal>org.hibernate.transaction.JTATransactionFactory</literal>
-                in a BMT session bean, and <literal>org.hibernate.transaction.CMTTransactionFactory</literal>
+                if you use JTA directly (BMT), and <literal>org.hibernate.transaction.CMTTransactionFactory</literal>
                 in a CMT session bean, when you configure Hibernate's transaction factory. Remember to also set
                 <literal>hibernate.transaction.manager_lookup_class</literal>. Furthermore, make sure
                 that your <literal>hibernate.current_session_context_class</literal> is either unset (backwards
@@ -571,7 +579,7 @@ catch (RuntimeException e) {
                 cursor by calling <literal>ScrollableResults.close()</literal> or 
                 <literal>Hibernate.close(Iterator)</literal> explicity from a <literal>finally</literal> 
                 block. (Of course, most applications can easily avoid using <literal>scroll()</literal> or 
-                <literal>iterate()</literal> at all from the CMT code.)
+                <literal>iterate()</literal> at all from the JTA or CMT code.)
             </para>
 
         </sect2>

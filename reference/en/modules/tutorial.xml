@@ -23,7 +23,7 @@
 
     </sect1>
     
-    <sect1 id="tutorial-firstapp" revision="1">
+    <sect1 id="tutorial-firstapp" revision="2">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
@@ -59,10 +59,11 @@
 
         <para>
             This is the minimum set of required libraries (note that we also copied
-            hibernate3.jar, the main archive) for Hibernate. See the <literal>README.txt</literal> file
-            in the <literal>lib/</literal> directory of the Hibernate distribution for more information
-            about required and optional third-party libraries. (Actually, Log4j is not
-            required but preferred by many developers.)
+            hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of writing</emphasis>.
+            The Hibernate release you are using might require more or less libraries. See the
+            <literal>README.txt</literal> file in the <literal>lib/</literal> directory of the
+            Hibernate distribution for more information about required and optional third-party
+            libraries. (Actually, Log4j is not required but preferred by many developers.)
         </para>
 
         <para>

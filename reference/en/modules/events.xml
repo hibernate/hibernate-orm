@@ -7,7 +7,7 @@
         functionality, and extension of Hibernate functionality.
     </para>
 
-    <sect1 id="objectstate-interceptors" revision="2">
+    <sect1 id="objectstate-interceptors" revision="3">
         <title>Interceptors</title>
 
         <para>
@@ -20,7 +20,7 @@
             <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is 
             updated.
         </para>
-        
+
         <para>
             You may either implement <literal>Interceptor</literal> directly or (better) extend
             <literal>EmptyInterceptor</literal>.
@@ -110,21 +110,32 @@ public class AuditInterceptor extends EmptyInterceptor {
 }]]></programlisting>
 
         <para>
-            The interceptor would be specified when a session is created.
+            Interceptors come in two flavors: <literal>Session</literal>-scoped and
+            <literal>SessionFactory</literal>-scoped.
+        </para>
+
+        <para>
+            A <literal>Session</literal>-scoped interceptor is specified
+            when a session is opened using one of the overloaded SessionFactory.openSession()
+            methods accepting an <literal>Interceptor</literal>.
         </para>
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
-            You may also set an interceptor on a global level, using the <literal>Configuration</literal>. 
-            In this case, the interceptor must be threadsafe.
+            A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>
+            object prior to building the <literal>SessionFactory</literal>.  In this case, the supplied interceptor
+            will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless
+            a session is opened explicitly specifying the interceptor to use.  <literal>SessionFactory</literal>-scoped
+            interceptors must be thread safe, taking care to not store session-specific state since multiple
+            sessions will use this interceptor (potentially) concurrently.
         </para>
     
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
     </sect1>
 
-     <sect1 id="objectstate-events" revision="3">
+     <sect1 id="objectstate-events" revision="4">
         <title>Event system</title>
 
         <para>
@@ -139,7 +150,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal>
             package for the full list of defined event types). When a request is made of one of
             these methods, the Hibernate <literal>Session</literal> generates an appropriate
-            event and passes it to the configured event listener for that type. Out-of-the-box,
+            event and passes it to the configured event listeners for that type. Out-of-the-box,
             these listeners implement the same processing in which those methods always resulted.
             However, you are free to implement a customization of one of the listener interfaces
             (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation

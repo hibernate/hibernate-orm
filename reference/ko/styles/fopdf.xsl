@@ -72,7 +72,7 @@
     <!-- More space in the center header for long text -->
     <xsl:attribute-set name="header.content.properties">
         <xsl:attribute name="font-family">
-            <xsl:value-of select="$title.font.family"/>
+            <xsl:value-of select="$body.font.family"/>
         </xsl:attribute>
         <xsl:attribute name="margin-left">-5em</xsl:attribute>
         <xsl:attribute name="margin-right">-5em</xsl:attribute>

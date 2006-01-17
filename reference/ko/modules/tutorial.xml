@@ -17,7 +17,7 @@
 
     </sect1>
     
-    <sect1 id="tutorial-firstapp">
+    <sect1 id="tutorial-firstapp" revision="2">
         <title>파트 1 - 첫 번째  Hibernate 어플리케이션</title>
 
         <para>
@@ -26,7 +26,7 @@
         </para>
 
         <para>
-                        우리가 우리가 출석을 원하는 이벤트들을 저장할 수 있는 작은 데이터베이스 어플리케이션과 이들 
+                        우리가 우리가 수반하고자 원하는 이벤트들을 저장할 수 있는 작은 데이터베이스 어플리케이션과 이들 
                         이벤트들의 호스트들에 대한 정보를 필요로 한다고 가정하자.
         </para>
             
@@ -40,7 +40,7 @@
         <programlisting><![CDATA[.
 +lib
   antlr.jar
-  cglib-full.jar
+  cglib.jar
   asm.jar
   asm-attrs.jars
   commons-collections.jar
@@ -51,10 +51,11 @@
   log4j.jar ]]></programlisting>
 
         <para>
-                        이것은 Hibernate에 필요한 최소한의 세트이다(우리는 또한 메인 아카이브인 hibernate3.jar를 
-                        복사했음을 노트하라). 필수적인 제 3의 라이브러리와 선택적인 제 3의 라이브러리들에 대한 추가 정보는 
-            Hibernate 배포본의 <literal>lib/</literal> 디렉토리 속에 있는 <literal>README.txt</literal> 파일을 보라.
-            (실제로, Log4j는 필수적이지는 않지만 많은 개발자들에 의해 선호된다.)
+                        이것은 <emphasis>글의 작성 시점에서</emphasis> Hibernate에 필수적인 최소한의 세트이다(우리는 
+                        또한 메인 아카이브인 hibernate3.jar를 복사했음을 노트하라). 당신이 사용 중인 Hibernate 배포본이 
+                        더 많거나 보다 적은 라이브러리들을 필요로 할 수도 있다. 필수 라이브러리들과  선택적인 제3의 라이브러리들에 대한  
+                        추가 정보는 Hibernate 배포본의 <literal>lib/</literal> 디렉토리 내에 있는 <literal>README.txt</literal>
+                        파일을 보라. (실제로, Log4j는 필수는 아니지만 많은 개발자들에 의해 선호된다.)
         </para>
 
         <para>
@@ -285,7 +286,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-configuration">
+        <sect2 id="tutorial-firstapp-configuration" revision="2">
             <title>Hibernate 구성</title>
 
             <para>
@@ -297,7 +298,12 @@ public class Event {
 
             <para>
                                 개발 디렉토리의 루트에 <literal>data</literal>로 명명된 디렉토리를 생성시켜라 - 이  디렉토리는 
-                HSQL DB가 그것의 데이터 파일들을 저장하게 될 장소이다. 
+                HSQL DB가 그것의 데이터 파일들을 저장하게 될 장소이다. 이제 이 데이터 디렉토리에서 
+                <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal>를 실행시켜서 
+                                데이터베이스를 시작시켜라. 당신은 그것이 시작되고 이것은 우리의 어플리케이션이 나중에 연결하게 될 장소인, 
+                                하나의 TCP/IP 소켓에 바인드 되는 것을 볼 수 있다. 만일 이 튜토리얼 동안에 당신이 새 데이터베이스로 
+                                시작하고자 원할 경우, HSQL DB를 셧다운시키고(왼도우에서 <literal>CTRL + C</literal>를 눌러라), 
+                <literal>data/</literal> 디렉토리 내에 있는 모든 파일들을 삭제하고 다시 HSQL DB를 시작하라.
             </para>
 
             <para>
@@ -802,19 +808,19 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-unidirset">
+        <sect2 id="tutorial-associations-unidirset" revision="3">
             <title>단방향 Set-기반의 연관</title>
 
             <para>
                                 우리는 <literal>Person</literal> 클래스에 이벤트들을 가진 한 개의 콜렉션을 추가할 것이다. 그 방법으로 우리는 
-                                명시적인 질의를 실행시키지 않고서 -<literal>aPerson.getEvents()</literal>를 호출하여- 특정 개인에 대한 
-                                이벤트들을 쉽게 네비게이트할 수 있다. 우리는 하나의 Java 콜렉션, <literal>Set</literal>를 사용한다. 왜냐하면 
-                                그 콜렉션은 중복 요소들을 포함하기 않을 것이고 그 순서가 우리와 관련되어 있지 않기 때문이다. 
+                                명시적인 질의-<literal>aPerson.getEvents()</literal>를 호출함으로써-를 실행시키지 않고서  특정 개인에 대한 
+                                이벤트들을 쉽게 네비게이트할 수 있다. 우리는 하나의 Java 콜렉션, 하나의 <literal>Set</literal>를 사용한다. 왜냐하면 
+                                그 콜렉션은 중복 요소들을 포함하기 않을 것이고 그 순서가 우리와 관련되어 있지 않기 때문이다.
             </para>
 
             <para>
-                                지금까지 우리는 <literal>Set</literal>으로 구현된 단방향이고 다중 값을 가진 연관들을 설계했다. 
-                Java 클래스들 속에 이를 위한 코드를 작성하고 그런 다음 그것을  매핑시키자: 
+                                우리는 하나의 <literal>Set</literal>으로 구현된, 하나의 단방향, 다중값 연관들을 필요로 한다. Java 클래스들 내에 
+                                이를 위한 코드를 작성하고 그런 다음 그것을  매핑시키자:
             </para>
 
             <programlisting><![CDATA[public class Person {
@@ -839,9 +845,32 @@ else if (args[0].equals("list")) {
                                 사용한다: 
             </para>
 
-            <programlisting><![CDATA[<class name="Person" table="PERSON">
+            <programlisting><![CDATA[public class Person {
+
+    private Set events = new HashSet();
+
+    public Set getEvents() {
+        return events;
+    }
+
+    public void setEvents(Set events) {
+        this.events = events;
+    }
+}]]></programlisting>
+
+            <para>
+                                이 연관을 매핑시키기 전에, 다른 측에 대해 생각해보자. 명료하게 우리는 이것을 단방향으로 유지시킬 수 있다. 또는 
+                                만일 우리가 양방향으로 네비게이트하는 것을 가능하도록 하고자 원할 경우에, 우리는 <literal>Event</literal> 상의 
+                                또 다른 콜렉션을 생성시킬 수 있다. 예를 들면.<literal>anEvent.getParticipants()</literal>. 이것은 
+                                기능적인 관점에서 필수적이지 않다. 당신은 특정 이벤트에 대한 참여자들을 검색하기 위해 하나의 명시적인 질의를 항상 
+                                실행시킬 수 있다. 이것은 당신에게 설계상의 선택으로 남겨두지만, 이 논의에서 명료해지는 것은 그 연관의 다중성이다: 
+                                양 측들이 "many" 값을 가질 경우, 우리는 이것을 <emphasis>many-to-many</emphasis> 연관이라 명명한다. 그러므로,
+                                우리는 Hibernate의 many-to-many 매핑을 사용한다:
+            </para>
+
+            <programlisting><![CDATA[<class name="events.Person" table="PERSON">
     <id name="id" column="PERSON_ID">
-        <generator class="increment"/>
+        <generator class="native"/>
     </id>
     <property name="age"/>
     <property name="firstname"/>
@@ -849,19 +878,18 @@ else if (args[0].equals("list")) {
 
     <set name="events" table="PERSON_EVENT">
         <key column="PERSON_ID"/>
-        <many-to-many column="EVENT_ID" class="Event"/>
+        <many-to-many column="EVENT_ID" class="events.Event"/>
     </set>
 
 </class>]]></programlisting>
-
             <para>
                 Hibernate는 모든 종류의 콜렉션 매핑들, 가장 공통적인 <literal>&lt;set&gt;</literal>을 지원한다. many-to-many 
-                                연관 (또는 <emphasis>n:m</emphasis> 엔티티 관계)의 경우, 한 개의 연관 테이블이 필요하다. 이 테이블 속에 있는 각각의 
+                                연관 (또는 <emphasis>n:m</emphasis> 엔티티 관계)의 경우, 한 개의 연관 테이블이 필요하다. 이 테이블 내에 있는 각각의 
                                 행은 한 명의 개인과 한 개의 이벤트 사이의 링크를 표현한다. 테이블 이름은 <literal>set</literal> 요소의 <literal>table</literal> 
                                 속성으로 구성된다. 연관 내의 식별자 컬럼 이름은 개인 측에 대해 <literal>&lt;key&gt;</literal> 요소로 정의되고 
                                 이벤트 측에 대한 컬럼 이름은 <literal>&lt;many-to-many&gt;</literal>의 <literal>column</literal> 속성으로 
                                 정의된다. 당신은 또한 당신의 콜렉션 내에 있는 객체들의 클래스(정확하게 : 참조들을 가진 콜렉션의 다른 측 상에 있는 클래스)를 
-                Hibernate에게 알려주어야 한다
+                Hibernate에게 알려주어야 한다.
             </para>
 
             <para>
@@ -1136,20 +1164,273 @@ public void removeFromEvent(Event event) {
                                 모든 양방향 연관들은 한 쪽이  <literal>inverse</literal>일 필요가 있다. one-to-many 연관에서 그것은 many-측이어야 하고, 
                 many-to-many 연관에서 당신은 어느 측이든 선택할 수 있으며 차이점은 없다.
             </para>
-<!--
+
+        </sect2>
+
+        <para>
+            Let's turn this into a small web application.
+        </para>
+
+    </sect1>
+
+    <sect1 id="tutorial-webapp">
+        <title>파트 3 - EventManager 웹 어플리케이션</title>
+
+        <para>
+            Hibernate 웹 어플리케이션은 대부분의 스탠드얼론 어플리케이션과 같이 <literal>Session</literal>과 
+            <literal>Transaction</literal>을 사용한다. 하지만 몇몇 공통 패턴들이 유용하다. 우리는 이제 
+            <literal>EventManagerServlet</literal>를 작성한다. 이 서블릿은 데이터베이스 내에 저장된 모든 이벤트들을 나열할 수 있고, 
+                        그것은 새로운 이벤트들을 입력하기 위한 HTML form을 제공한다.
+        </para>
+
+        <sect2 id="tutorial-webapp-servlet">
+            <title>기본 서블릿 작성하기</title>
+
             <para>
                                 다음 장에서 우리는 Hibernate를 Tomcat 및 WebWork와 통합시킨다. <literal>EventManager</literal>는 우리의 성장하는 
                                 어플리케이션을 더이상 감당하지 못한다. 
+                                당신의 소스 디렉토리에서 <literal>events</literal> 패키지 내에 새로운 클래스를 생성시켜라: 
             </para>
--->
+
+            <programlisting><![CDATA[package events;
+
+// Imports
+
+public class EventManagerServlet extends HttpServlet {
+
+    private final SimpleDateFormat dateFormatter =
+                            new SimpleDateFormat("dd.MM.yyyy");
+
+    // Servlet code
+}]]></programlisting>
+
+            <para>
+                <literal>dateFormatter</literal>는 나중에 문자열들로부터 그리고 문자열로 <literal>Date</literal> 객체들을 
+                                변환하는데 나중에 사용하게 될 도구이다. 서블릿의 멤버로서 오직 한 개의 formatter를 갖는 것이 도리에 맞다.
+            </para>
+
+            <para>
+                                서블릿은 HTTP <literal>GET</literal> 요청들 만을 처리하므로, 우리가 구현하는 메소드는 <literal>doGet()</literal>이다:
+            </para>
+
+            <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
+                     HttpServletResponse response)
+        throws ServletException, IOException {
+
+    try {
+        // Begin unit of work
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().beginTransaction();
+
+        // Process request and render page...
+
+        // End unit of work
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().getTransaction().commit();
+
+    } catch (Exception ex) {
+        HibernateUtil.getSessionFactory()
+                .getCurrentSession().getTransaction().rollback();
+        throw new ServletException(ex);
+    }
+
+}]]></programlisting>
+
+            <para>
+                                우리가 여기서 적용하는 패턴은 <emphasis>session-per-request</emphasis>이다. 하나의 요청이 
+                                서블릿에 도달할 때, 하나의 새로운 Hibernate <literal>Session</literal>이 
+                <literal>SessionFactory</literal> 상의 <literal>getCurrentSession()</literal>에 대한 
+                                첫번째 호출을 통해 열린다. 그때 하나의 데이터베이스 트랜잭션이 시작되고, 모든 데이터 접근이 하나의 트랜잭션 
+                                내에서 발생하는 한, 데이터가 읽혀지거나 기록되는데 문제가 없다(우리는 어플리케이션들 내에서 auto-commit 모드를 
+                                사용하지 않는다).
+            </para>
+
+            <para>
+                                다음으로, 요청의 가능한 액션들이 처리되고 응답 HTML이 렌더링된다. 우리는 곧장 그부분으로 갈 것이다.
+            </para>
+
+            <para>
+                                마지막으로, 프로세싱과 렌더링이 완료될 때 작업 단위가 종료된다. 만일 어떤 문제가 프로세싱과 렌더링 동안에 발생될 경우, 
+                                하나의 예외상황이 던져질 것이고 데이터베이스 트랜잭션은 롤백될 것이다. 이것은 <literal>session-per-request</literal>을 
+                                완료시킨다. 모든 서블릿 내에 있는 트랜잭션 구획 코드 대신에 당신은 또한 서블릿 필터를 사용할 수 있다. 
+                <emphasis>Open Session in View</emphasis>로 명명되는 이 패턴에 대한 추가 정보는 Hibernate 웹 사이트와 위키를 보라.
+                                당신은 서블릿 내에서가 아닌 JSP 내에 당신의 뷰를 렌더링하는 것을 고려할 때 그것을 필요로 할 것이다.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-webapp-processing">
+            <title>프로세싱과 렌더링</title>
+
+            <para>
+                                요청의 처리와 페이지의 렌더링을 구현하자.
+            </para>
+
+<programlisting><![CDATA[// Write HTML header
+PrintWriter out = response.getWriter();
+out.println("<html><head><title>Event Manager</title></head><body>");
+
+// Handle actions
+if ( "store".equals(request.getParameter("action")) ) {
+
+    String eventTitle = request.getParameter("eventTitle");
+    String eventDate = request.getParameter("eventDate");
+
+    if ( "".equals(eventTitle) || "".equals(eventDate) ) {
+        out.println("<b><i>Please enter event title and date.</i></b>");
+    } else {
+        createAndStoreEvent(eventTitle, dateFormatter.parse(eventDate));
+        out.println("<b><i>Added event.</i></b>");
+    }
+}
+
+// Print page
+printEventForm(out);
+listEvents(out);
+
+// Write HTML footer
+out.println("</body></html>");
+out.flush();
+out.close();]]></programlisting>
+
+            <para>
+                Java와 HTML이 혼합된 이 코딩이 보다 복잡한 어플리케이션에서 기준이 될 수 없다 할지라도, 우리는 
+                                단지 이 튜토리얼 내에서 기본 Hibernate 개념들을 설명하고 있음을 염두에 두라. 코드는 
+                                하나의 HTML 헤더와 하나의 footer를 프린트한다. 이 페이지 내에 이벤트 엔트리를 위한 
+                                하나의 HTML form과 데이터베이스 내에 있는 모든 이벤트들의 목록이 프린트된다. 첫 번째 메소드는 
+                                시행적이고 오직 HTML을 출력한다:
+            </para>
+
+            <programlisting><![CDATA[private void printEventForm(PrintWriter out) {
+    out.println("<h2>Add new event:</h2>");
+    out.println("<form>");
+    out.println("Title: <input name='eventTitle' length='50'/><br/>");
+    out.println("Date (e.g. 24.12.2009): <input name='eventDate' length='10'/><br/>");
+    out.println("<input type='submit' name='action' value='store'/>");
+    out.println("</form>");
+}]]></programlisting>
+
+            <para>
+                <literal>listEvents()</literal> 메소드는 하나의 질의를 실행하기 위해서 현재의 
+                                쓰레드에 결합된 Hibernate <literal>Session</literal>을 사용한다:
+            </para>
+
+            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+    List result = HibernateUtil.getSessionFactory()
+                    .getCurrentSession().createCriteria(Event.class).list();
+    if (result.size() > 0) {
+        out.println("<h2>Events in database:</h2>");
+        out.println("<table border='1'>");
+        out.println("<tr>");
+        out.println("<th>Event title</th>");
+        out.println("<th>Event date</th>");
+        out.println("</tr>");
+        for (Iterator it = result.iterator(); it.hasNext();) {
+            Event event = (Event) it.next();
+            out.println("<tr>");
+            out.println("<td>" + event.getTitle() + "</td>");
+            out.println("<td>" + dateFormatter.format(event.getDate()) + "</td>");
+            out.println("</tr>");
+        }
+        out.println("</table>");
+    }
+}]]></programlisting>
+
+            <para>
+                                마지막으로, <literal>store</literal> 액션은 <literal>createAndStoreEvent()</literal>
+                                메소드로 디스패치된다. 그것은 현재 쓰레드의 <literal>Session</literal>을 사용한다:
+            </para>
+
+            <programlisting><![CDATA[protected void createAndStoreEvent(String title, Date theDate) {
+    Event theEvent = new Event();
+    theEvent.setTitle(title);
+    theEvent.setDate(theDate);
+
+    HibernateUtil.getSessionFactory()
+                    .getCurrentSession().save(theEvent);
+}]]></programlisting>
+
+            <para>
+                                즉 서블릿이 완성된다. 서블릿에 대한 요청은 하나의 단일 <literal>Session</literal>과 
+                <literal>Transaction</literal> 내에서 처리될 것이다. 이전처럼 스탠드얼론 어플리케이션에서, 
+                Hibernate는 이들 객체들을 실행 중인 현재 쓰레드에 자동적으로 바인드시킬 수 있다. 이것은 당신의 코드를 
+                                계층화 시키고 당신이 좋아하는 임의의 방법으로 <literal>SessionFactory</literal>에 접근하는 자유를 
+                                당신에게 부여한다. 대개 당신은 보다 세련된 설계를 사용할 것이고 데이터 접근 코드를 데이터 접근 객체들 내로 
+                                이동시킬 것이다(DAO 패턴). 추가 예제들은 Hibernate 위키를 보라.
+            </para>
+
+        </sect2>
+
+        <sect2 id="tutorial-webapp-deploy">
+            <title>배치하기 그리고 테스트하기</title>
+
+            <para>
+                                이 어플리케이션을 배치하기 위해서 당신은 하나의 웹 아카이브, WAR를 생성시켜야 한다. 다음 Ant target을 
+                                당신의 <literal>build.xml</literal> 내에 추가하라:
+            </para>
+
+<programlisting><![CDATA[<target name="war" depends="compile">
+    <war destfile="hibernate-tutorial.war" webxml="web.xml">
+        <lib dir="${librarydir}">
+          <exclude name="jsdk*.jar"/>
+        </lib>
+
+        <classes dir="${targetdir}"/>
+    </war>
+</target>]]></programlisting>
+
+            <para>
+                                이 target은 당신의 프로젝트 디렉토리 내에 <literal>hibernate-tutorial.war</literal>로 명명된 
+                                하나의 파일을 생성시킨다. 그것은 당신의 프로젝트의 기본 디렉토리 내에 기대되는 모든 라이브러리들과 
+                <literal>web.xml</literal> 디스크립터를 패키징한다: 
+            </para>
+
+            <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4"
+    xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <servlet>
+        <servlet-name>Event Manager</servlet-name>
+        <servlet-class>events.EventManagerServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Event Manager</servlet-name>
+        <url-pattern>/eventmanager</url-pattern>
+    </servlet-mapping>
+</web-app>]]></programlisting>
+
+            <para>
+                                당신이 웹 어플리케이션을 컴파일하고 배치하기 전에, 하나의 부가적인 라이브러리가 필요함을 노트하라: 
+                <literal>jsdk.jar</literal>. 당신이 이미 이 라이브러리를 갖고 있지 않을 경우, 이것은 Java servlet 
+                development kit이며, Sun 웹 사이트로부터 그것을 얻어서 그것을 당신의 라이브러리 디렉토리에 복사하라.
+                                하지만 그것은 오직 컴파일 시에만 사용될 것이고 WAR 패키지에서는 제외된다.
+            </para>
+
+            <para>
+                                빌드하고 배치하기 위해 당신의 프로젝트 디렉토리 내에서 <literal>ant war</literal>를 호출하고 
+                <literal>hibernate-tutorial.war</literal> 파일을 당신의 Tomcat <literal>webapp</literal> 
+                                디렉토리로 복사하라. 만일 당신이 Tomcat을 설치하지 않았다면, 그것을 내려받아 설치 지침들을 따르라. 당신은 
+                                이 어플리케이션을 배치하기 위해 임의의 Tomcat 구성을 변경하지 않아야 한다.
+            </para>
+
+            <para>
+                                일단 배치했고 Tomcat이 실행중이면, <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>로 
+                                어플리케이션에 접근하라. 첫 번째 요청이 당신의 서블릿에 도달할 때 Hibernate가 초기화(<literal>HibernateUtil</literal>
+                                내에 있는 static initializer가 호출된다) 되는 것을 보기 위해 그리고 만일 어떤 예외상황들이 발생할 경우 
+                                상세한 출력을 얻기 위해서  Tomcat 로그를 지켜보도록 하라.
+            </para>
+
         </sect2>
     </sect1>
 
-    <sect1 id="tutorial-summary">
+    <sect1 id="tutorial-summary" revision="1">
         <title>요약</title>
 
         <para>
-                        이 튜토리얼은 간단한 스탠드얼론 Hibernate 어플리케이션을 작성하는 기초를 다루었다.
+                        이 튜토리얼은 간단한 스탠드얼론 Hibernate 어플리케이션과 하나의 작은 웹 어플리케이션을 작성하는 기초를 다루었다.
         </para>
 
         <para>

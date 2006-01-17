@@ -359,7 +359,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         </sect2>
 
-        <sect2 id="performance-fetching-initialization">
+        <sect2 id="performance-fetching-initialization" revision="1">
             <title>콜렉션들과 프락시들을 초기화 시키기</title>
 
             <para>
@@ -393,11 +393,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <para>
                                                 웹 기반 어플리케이션에서, 서블릿 필터는 뷰 렌더링이 완료되는, 사용자 요청의 바로 끝에서만 <literal>Session</literal>을 
                                                 닫는데 사용될 수 있다(<emphasis>Open Session in View</emphasis> 패턴). 물론 이것은 당신의 어플리케이션 
-                                                인프라스트럭처의 예외상황 처리의 정정에 관한 무거운 요구를 부과한다. 사용자에게 반환하기 전에, 심지어 예외상황이 
-                                                뷰의 렌더링 동안 발생할 때, <literal>Session</literal>이 닫혀지고 트랜잭션이 종료되는 것은 지극히 중요하다. 
-                                                서블릿 필터는 이 접근법으로 <literal>Session</literal>에 접근하는 것이 가능해야 한다. 우리는 
-                        <literal>ThreadLocal</literal> 변수가 현재의 <literal>Session</literal>을 보관하는데 사용되는 것을 
-                                                권장한다(예제 구현에 대해서는 1장, <xref linkend="quickstart-playingwithcats"/>를 보라).
+                                                인프라스트럭처의 예외상황 처리의 정정에 관한 무거운 요구를 부과한다. 
+                                                뷰 렌더링 동안에 하나의 예외상황이 발생할때에도 사용자에게 반환되기 전에 <literal>Session</literal>이 닫혀지고 
+                                                트랜잭션이 종료되는 것은 지극히 중요하다. 이 "Open Session in View" 패턴에 관한 예제들은 Hibernate 위키를 보라.
                     </para>
                 </listitem>
                 <listitem>

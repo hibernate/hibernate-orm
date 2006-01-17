@@ -67,7 +67,7 @@
         
     </sect1>
 
-    <sect1 id="queryhql-joins" revision="1">
+    <sect1 id="queryhql-joins" revision="2">
         <title>연관들과 조인들</title>
 
         <para>
@@ -149,9 +149,11 @@
     left join fetch child.kittens]]></programlisting>
             
         <para>
-            <literal>fetch</literal> 구조체는 <literal>scroll()</literal> 
-                        또는 <literal>iterate()</literal>를 사용하여 호출된 질의들 내에 사용될 수 없음을 노트하라. <literal>fetch</literal>는 
-            <literal>setMaxResults()</literal> 또는 <literal>setFirstResult()</literal>와 함께 사용될 수도 없을 것이다. 
+            (비록 <literal>scroll()</literal>이 사용될 수 있을지라도) <literal>fetch</literal> 구조체는 
+            <literal>iterate()</literal>를 사용하여 호출되는 질의들 내에 사용될 수 없음을 노트하라. 이들 오퍼레이션들이 결과 행들에 
+                        기초하고 있기 때문에 <literal>fetch</literal>는 <literal>setMaxResults()</literal> 또는 
+            <literal>setFirstResult()</literal>과 함께 사용되지 말아야 하며, 그것들(결과 행들)은 대개 각각의 eager 콜렉션 페칭에 대해 
+                        중복들을 포함하므로 많은 행들이 당신이 기대하는 것이 아니다.
             <literal>fetch</literal>는 특별한 용도의 <literal>with</literal> 조건과도 함께 사용될 수 없다.한 개의 질의 내에 하나 
                         이상의 콜렉션을 조인 페칭시켜 카티젼 곱을 생성시키는 것이 가능한데, 이 경우에 주의하라. 다중 콜렉션 role들을 조인 페칭시키는 것은 
                         또한 때때로 bag 매핑들에 대해 예기치 않은 결과들을 가져다주기 때문에, 당신이 이 경우에 당신의 질의들을 처방하는 방법에 대해 주의하라. 
@@ -167,6 +169,27 @@
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
             
     </sect1>
+    
+    <sect1 id="queryhql-joins-forms">
+        <title>join 구문의 형식들</title>
+
+	    <para>
+		    HQL은 두 가지 형식의 연관 조인을 지원한다: <literal>암묵적</literal> 그리고 <literal>명시적</literal>.
+		</para>
+
+	    <para>
+		        앞의 절에서 보여진 질의들은 모두 join 키워드가 from 절 내에 명시적으로 사용되는 <literal>명시적인</literal> 형식을 
+		        사용한다. 이것은 권장되는 형식이다.
+	    </para>
+
+	    <para>
+		    <literal>함축적인</literal> 형식은 join 키워드를 사용하지 않는다. 대신에, 연관들은  dot(.) 표기를 
+		        사용하여 "dot-참조된다(dereferenced)".  <literal>함축적인</literal> 조인들은 임의의 HQL 절들내에 
+		        나타날 수 있다. <literal>함축적인</literal> join은 결과되는 SQL 문장에서 inner join으로 귀결된다.
+	    </para>
+
+        <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
+	</sect1>
 
     <sect1 id="queryhql-select">
         <title>select 절</title>

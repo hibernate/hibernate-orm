@@ -195,7 +195,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             native SQL 속에 당신의 질의를 표현할 수도 있다.
         </para>
 
-        <sect2 id="objectstate-querying-executing">
+        <sect2 id="objectstate-querying-executing" revision="1">
             <title>질의들을 실행하기</title>
 
             <para>
@@ -222,12 +222,18 @@ List kittens = session.createQuery(
 Cat mother = (Cat) session.createQuery(
     "select cat.mother from Cat as cat where cat = ?")
     .setEntity(0, izi)
-    .uniqueResult();]]></programlisting>
+    .uniqueResult();]]
+
+Query mothersWithKittens = (Cat) session.createQuery(
+    "select mother from Cat as mother left join fetch mother.kittens");
+Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
 
             <para>
                                 하나의 질의는 대개 <literal>list()</literal>를 호출하여 실행되고, 질의의 결과는 메모리 내에서 하나의 콜렉션 속으로 
                                 전체적으로 로드될 것이다. 하나의 질의에 의해 검색된 엔티티 인스턴스들은 영속(persistent) 상태에 있다. 당신의 질의가 
-                                하나의 객체를 오직 반환할 것임을 당신이 알고 있을 경우에 <literal>uniqueResult()</literal> 메소드는 단축을 제공한다. 
+                                하나의 객체를 오직 반환할 것임을 당신이 알고 있을 경우에 <literal>uniqueResult()</literal> 메소드는 단축을 제공한다.
+                                콜렉션들에 대해  eager 페칭을 사용하는 질의들은 대개 (그것들의 초기화된 콜렉션들을 가진) 루트 객체들에 대한 중복들을 대개 
+                                반환한다. 당신은 <literal>Set</literal>을 통해 이들 중복들을 간단하게 필터링할 수 있다.
             </para>
 
             <sect3 id="objectstate-querying-executing-iterate">
@@ -951,7 +957,7 @@ sess.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="objectstate-transitive">
+    <sect1 id="objectstate-transitive" revision="1">
         <title>Transitive persistence(전이 영속)</title>
 
         <para>
@@ -1079,6 +1085,13 @@ sess.close();]]></programlisting>
         </itemizedlist>
 
     </sect1>
+
+        <para>
+                        마지막으로 오퍼레이션들의 케스케이딩이 <emphasis>호출 시점</emphasis>에서 또는 <emphasis>flush 시점</emphasis>에서 
+                        객체 그래프에 적용될 수 있음을 노트하라. 이용 가능할 경우에 모든 오퍼레이션들은 그 오퍼레이션이 실행될 때 도달 가능한 연관된 
+                        엔티티들에 대해 케스케이드 된다. 하지만 <literal>save-upate</literal>와 <literal>delete-orphan</literal>은 
+            <literal>Session</literal>의 flush 동안에 도달 가능한 모든 연관된 엔티티들에 대해 이행적(transitive)이다.
+        </para>
 
     <sect1 id="objectstate-metadata">
         <title>메타데이터 사용하기</title>

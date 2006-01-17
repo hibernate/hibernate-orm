@@ -171,7 +171,8 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    join들은 (함축적이든 명시적이든) 대량 HQL 질의 속에 지정될 수 없다. 서브-질의들이 where-절에 사용될 수 있다;
+                    <xref linkend="queryhql-joins-forms">join들</xref>은 (함축적이든 명시적이든) 
+                                        대량 HQL 질의 속에 지정될 수 없다. 서브-질의들이 where-절에 사용될 수 있다;
                                         서브질의들 그 자신들은 조인들을 포함할 수 있다.
                 </para>
             </listitem>

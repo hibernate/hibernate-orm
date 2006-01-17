@@ -990,7 +990,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-version" revision="3">
+        <sect2 id="mapping-declaration-version" revision="4">
             <title>version (옵션)</title>
             
             <para>
@@ -1015,7 +1015,7 @@
         type="typename"
         access="field|property|ClassName"
         unsaved-value="null|negative|undefined"
-        generated="true|false"
+        generated="never|always"
         insert="true|false"
         node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
@@ -1052,7 +1052,7 @@
                     </callout>
                     <callout arearefs="version6">
                         <para>
-                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>never</literal>):
                                                         이 version 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다. 
                             <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 관한 논의를 보라.
                         </para>
@@ -1082,7 +1082,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp" revision="2" >
+        <sect2 id="mapping-declaration-timestamp" revision="3" >
             <title>timestamp (옵션)</title>
 
             <para>
@@ -1106,7 +1106,7 @@
         access="field|property|ClassName"
         unsaved-value="null|undefined"
         source="vm|db"
-        generated="true|false"
+        generated="never|always"
         node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
@@ -1150,7 +1150,7 @@
                     </callout>
                     <callout arearefs="timestamp6">
                         <para>
-                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>never</literal>):
                                                         이 timestamp 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다.
                             <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 대한 논의들 보라.
                         </para>
@@ -1166,7 +1166,7 @@
         </sect2>
 
 
-        <sect2 id="mapping-declaration-property" revision="3">
+        <sect2 id="mapping-declaration-property" revision="4">
             <title>프로퍼티</title>
 
             <para>
@@ -1202,7 +1202,7 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
-        generated="true|false"
+        generated="never|insert|always"
         node="element-name|@attribute-name|element/@attribute|."
         index="index_name"
         unique_key="unique_key_id"
@@ -1278,7 +1278,7 @@
                     </callout>
                     <callout arearefs="property12">
                         <para>
-                            <literal>generated</literal> (옵션 - 디폴트는 <literal>false</literal>):
+                            <literal>generated</literal> (옵션 - 디폴트는 <literal>never</literal>):
                                                         이 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다. 
                             <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 대한 논의를 보라.
                         </para>
@@ -3059,7 +3059,7 @@ public class Customer implements Serializable {
     </sect2>
     </sect1>
     
-        <sect1 id="mapping-generated">
+        <sect1 id="mapping-generated" revision="1">
         <title>산출되는 프로퍼티들</title>
         <para>
                         산출되는 프로퍼티들은 데이터베이스에 의해 산출되는 그것들의 값들을 갖는 프로퍼티들이다. 전형적으로, 
@@ -3077,6 +3077,19 @@ public class Customer implements Serializable {
             <xref linkend="mapping-declaration-property">단순 프로퍼티들</xref> 만이 generated로 
                         마크될 수 있다.
         </para>
+        <para>
+		    <literal>never</literal> (디폴트) - 는 주어진 프로퍼티 값이 데이터베이스 내에 생성되지 않을 것임을 의미한다.
+	    </para>
+	    <para>
+		    <literal>insert</literal> - 는 주어진 프로퍼티 값이 insert 시에 생성되지만, 차후의 업데이트들에서 다시 
+		        생성되지 않을 것임을 기술한다. 생성-날짜와 같은 것들이 이 카테고리 내로 포함될 것이다. 비록 
+		    <xref linkend="mapping-declaration-version">version</xref>과 
+		    <xref linkend="mapping-declaration-timestamp">timestamp</xref> 프로퍼티들이 생성되는 것으로서 
+		        마크될 수 있을 지라도, 이 옵션은 거기서 이용 불가능함을 노트하라...
+	    </para>
+	    <para>
+		    <literal>always</literal> - 는 프로퍼티 값이 insert 시와 update 시 모두에 생성됨을 기술한다.
+	    </para>
     </sect1>
 
     <sect1 id="mapping-database-object">

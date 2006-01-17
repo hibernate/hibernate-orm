@@ -144,9 +144,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 </callout>
                 <callout arearefs="mappingcollection4">
                     <para>
-                        <literal>lazy</literal> (옵션 - 디폴트는 <literal>true</literal>)
+                        <literal>lazy</literal> (옵션 - 디폴트는 <literal>true</literal>)는
                         lazy 페칭을 사용 불가능하도록 하고 그 연관이 항상 eagerly 페치됨을 지정하는데 , 또는 대부분의 
-                                                연산들이 콜렉션을 초기화시키지 않는 "extra-lazy" 페칭을 이용 가능하도록 하는데(매우 큰 콜렉션들에 
+                                                연산들이 콜렉션을 초기화시키지 않는 곳에서 "extra-lazy" 페칭을 이용 가능하도록 하는데(매우 큰 콜렉션들에 
                                                 적당함) 사용될 수 있다
                     </para>
                 </callout>

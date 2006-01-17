@@ -236,5 +236,73 @@
         </para>
     </sect1>
 
+    <sect1 id="architecture-current-session" revision="1">
+        <title>컨텍스트 상의 세션들</title>
+        <para>
+	        Hibernate를 사용하는 대부분의 어플리케이션들은 어떤 양식의 "컨텍스트상의(contextual)" 세션들을 필요로 한다. 여기서 
+	                주어진 세션은 주어진 컨텍스트의 영역에 걸쳐 활동을 한다. 하지만 어플리케이션들을 가로질러 컨텍스트를 구성하는 것에 대한 정의는 
+	                일반적으로 다르다; 그리고 다른 컨텍스트들은 현재라고 하는 개념에 대해 다른 영역들을 정의한다. 버전 3.0 전의 Hibernate를 
+	                사용하는 어플리케이션들은 자가생산된 <literal>ThreadLocal</literal>-기반의 컨텍스상의 세션들, 
+	        <literal>HibernateUtil</literal>과 같은 helper 클래스들을 활용했거나  
+	                프락시/인터셉션 기반의 컨텍스트상의 세션들을 제공해주었던 (Spring 또는 Pico와 같은 )제 3의 프레임웍들을 활용하는 경향이 있었다.
+        </para>
+	    <para>
+		        버전 3.0.1에서부터 시작하여, Hibernate는 <literal>SessionFactory.getCurrentSession()</literal> 메소드를 
+		        추가했다. 초기에 이것은 <literal>JTA</literal> 트랜잭션들을 사용하는 것을 전제했다. 여기서 <literal>JTA</literal>
+		        트랜잭션은 현재 세션의 영역과 컨텍스트를 정의했다. Hibernate 팀은 성숙된 다수의 스탠드얼론 <literal>JTA TransactionManager</literal>
+		        구현들이 발표되면, (전부는 아니겠지만) 대부분의 어플리케이션들이 그것들이 <literal>J2EE</literal> 컨테이너 내로 배치되든 
+		        그렇지 않든 간에 <literal>JTA</literal> 트랜잭션 관리를 사용하게 될 것이라고 주장한다. 그것에 기초하여, <literal>JTA</literal>에 기반한 
+		        컨텍스트상의 세션들은 언젠가 당신이 사용을 필요로 하게 될 전부다.
+	    </para>
+	    <para>
+		        하지만 버전 3.1 이후로 <literal>SessionFactory.getCurrentSession()</literal> 이면의 처리과정은
+		        이제 플러그 가능하다. 그것을 끝내기 위해, 하나의 새로운 확장 인터페이스
+		    (<literal>org.hibernate.context.CurrentSessionContext</literal>)와 
+		        하나의 새로운 구성 파라미터(<literal>hibernate.current_session_context_class</literal>)가 현재 세션들을 
+		        정의하는 영역과 컨텍스트의 플러그 가능성을 허용하기 위해 추가되었다.
+	    </para>
+	    <para>
+		        그것의 계약에 대한 상세한 논의는 <literal>org.hibernate.context.CurrentSessionContext</literal> 인터페이스에 
+		        관한 javadocs를 보라. 그것은 하나의 메소드, <literal>currentSession()</literal>를 정의하며, 그 구현은 
+		        현재의 컨텍스트 상의 세션을 추적할 책임이 있다. 비공식적으로, Hibernate는 이 인터페이스에 대한 구 개의 구현들을 부수적으로 
+		        포함하고 있다.
+	    </para>
+	    
+		<itemizedlist>
+			<listitem>
+				<para>
+					<literal>org.hibernate.context.JTASessionContext</literal> - 현재의 세션들은 하나의 
+					<literal>JTA</literal>에 의해 추적되고 영역화 된다. 여기서 처리과정은 이전의 JTA-전용 접근과 정확하게 
+					동일하다. 상세한 것은 javadocs를 보라.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - 현재의 세션들은 
+					실행 쓰레드에 의해 추적된다. 상세한 것은 다시 javadocs를 보라.
+				</para>
+			</listitem>
+		</itemizedlist>
+	    <para>
+                        두 구현들은 <emphasis>session-per-request</emphasis>로 알려지고 사용되고 있는 
+            "하나의 세션 - 하나의 데이터베이스 트랜잭션" 프로그래밍 모형을 제공한다. 하나의 Hibernate 세션의 시작과 끝은 
+                        데이터베이스 트랜잭션의 존속 기간에 의해 정의된다. 만일 (예를 들면 순수 J2SE에서 또는 JTA/UserTransaction/BMT의 경우에)
+                        당신이 프로그램 상의 트랜잭션 경계구분을 사용할 경우, 당신은 당신의 코드로부터 기본 트랜잭션 시스템을 은폐시키는데 
+            Hibernate <literal>Transaction</literal> API를 사용하는 것이 권장된다. 만일 당신이 CMT를 지원하는 
+                        하나의 EJB 컨테이너에서 실행할 경우, 트랜잭션 경계들이 선언적으로 정의되고 당신은 당신의 코드 내에 어떤 트랜잭션도 
+                        세션 경계구분 오퍼레이션들을 필요로 하지 않는다. 추가 정보와 코드 예제들은 <xref linkend="transactions"/>를 참조하라.
+	    </para>
+	    
+	    <para>
+		    <literal>hibernate.current_session_context_class</literal> 구성 파라미터는 
+		    <literal>org.hibernate.context.CurrentSessionContext</literal> 구현이 사용될 것임을 정의한다. 역호환을 위해. 
+		        만일 이 구성 파라미터가 설정되지 않았지만 하나의 <literal>org.hibernate.transaction.TransactionManagerLookup</literal>이 
+		        구성되어 있을 경우, Hibernate는 <literal>org.hibernate.context.JTASessionContext</literal>를 사용할 것임을 
+		        노트하라. 일반적으로, 이 파라미터의 값은 단지 사용할 구현 클래스를 명명할 것이다; 하지만 두 가지 비공식적인 구현들로서 두 개의 
+		        대응하는 짧은 이름들 "jta"와 "thread"이 존재한다.
+		</para>
+		
+    </sect1>
+
 </chapter>
 

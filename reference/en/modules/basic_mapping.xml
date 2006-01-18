@@ -1152,7 +1152,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp" revision="3" >
+        <sect2 id="mapping-declaration-timestamp" revision="4" >
             <title>timestamp (optional)</title>
 
             <para>
@@ -1234,7 +1234,7 @@
             <para>
                 Note that <literal>&lt;timestamp&gt;</literal> is equivalent to 
                 <literal>&lt;version type="timestamp"&gt;</literal>.  And
-                 <literal>&lt;timestamp use-db="true"&gt;</literal> is equivalent to
+                 <literal>&lt;timestamp source="db"&gt;</literal> is equivalent to
                 <literal>&lt;version type="dbtimestamp"&gt;</literal>
             </para>
         </sect2>

@@ -107,24 +107,6 @@ public class Cat {
             这里要遵循四条主要的规则：
         </para>
 
-        <sect2 id="persistent-classes-pojo-accessors" revision="1">
-						<title>为持久化字段声明访问器(accessors)和是否可变的标志(mutators)</title>
-
-            <para>
-                <literal>Cat</literal>为它的所有持久化字段声明了访问方法。很多其他ORM工具直接对
-                实例变量进行持久化。我们相信从持久化机制中分离这种实现细节要好得多。
-                Hibernate持久化JavaBeans风格的属性，认可如下形式的方法名：
-                <literal>getFoo</literal>, <literal>isFoo</literal> 和 <literal>setFoo</literal>。
-                如果需要，你总是可以切换特定的属性的指示字段的访问方法。
-            </para>
-
-
-            <para>
-                属性<emphasis>不需要</emphasis>要声明为public的。Hibernate默认使用
-                <literal>protected</literal>或<literal>private</literal>的get/set方法对，
-                对属性进行持久化。
-            </para>
-        </sect2>
 
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
             <title>实现一个默认的（即无参数的）构造方法（constructor）</title>
@@ -210,6 +192,23 @@ public class Cat {
 						</para>
         </sect2>
         
+        <sect2 id="persistent-classes-pojo-accessors" revision="2">
+						<title>为持久化字段声明访问器(accessors)和是否可变的标志(mutators)(可选)</title>
+
+            <para>
+                <literal>Cat</literal>为它的所有持久化字段声明了访问方法。很多其他ORM工具直接对
+                实例变量进行持久化。我们相信,在关系数据库schema和类的内部数据之间引入间接层(原文为"非直接"，indirection)会好一些。默认情况下Hibernate持久化JavaBeans风格的属性，认可如下形式的方法名：
+                <literal>getFoo</literal>, <literal>isFoo</literal> 和 <literal>setFoo</literal>。
+                如果需要，你总是可以切换特定的属性的指示字段的访问方法。
+            </para>
+
+
+            <para>
+                属性<emphasis>不需要</emphasis>要声明为public的。Hibernate默认使用
+                <literal>protected</literal>或<literal>private</literal>的get/set方法对，
+                对属性进行持久化。
+            </para>
+        </sect2>
     </sect1>
 
     <sect1 id="persistent-classes-inheritance">
@@ -437,6 +436,55 @@ dynamicSession.close()
 				</para>
     </sect1>
 
+    <sect1 id="persistent-classes-tuplizers" revision="0">
+        <title>元组片断映射(Tuplizers)</title>
+
+        <para>
+            <literal>org.hibernate.tuple.Tuplizer</literal>, 以及其子接口，负责根据给定的<literal>org.hibernate.EntityMode</literal>,来复现片断数据。对于给定的片断数据来说，可以认为其是一种数据结构， "tuplizer"就是一种映射器，它知道如何创建这样的数据结构，以及如何给这个数据结构赋值。比如说，对于POJO这种Entity Mode，对应的tuplizer知道通过其构造器来创建一个POJO，再通过其属性访问器来访问POJO属性。有两大类Tuplizer，分别是<literal>org.hibernate.tuple.EntityTuplizer</literal> 和<literal>org.hibernate.tuple.ComponentTuplizer</literal>接口。如前所示，<literal>EntityTuplizer</literal>负责管理实体，而<literal>ComponentTuplizer</literal>则是针对组件。
+        </para>
+
+        <para>
+            用户也可以插入其自定义的tuplizer。或许您需要一种特别的<literal>java.util.Map</literal>实现，它不是在dynamic-map entity-mode时使用的 <literal>java.util.HashMap</literal> ；或许您需要与众不同的特别代理生成策略(proxy generation strategy)。通过自定义tuplizer实现，这两个目标您都可以达到。Tuplizer定义被附加到它们期望管理的entity或者component映射。回到我们的customer entity例子:
+        </para>
+
+        <programlisting><![CDATA[<hibernate-mapping>
+    <class entity-name="Customer">
+        <!--
+            Override the dynamic-map entity-mode
+            tuplizer for the customer entity
+        -->
+        <tuplizer entity-mode="dynamic-map"
+                class="CustomMapTuplizerImpl"/>
+
+        <id name="id" type="long" column="ID">
+            <generator class="sequence"/>
+        </id>
+
+        <!-- other properties -->
+        ...
+    </class>
+</hibernate-mapping>
+
+
+public class CustomMapTuplizerImpl
+        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+    // override the buildInstantiator() method to plug in our custom map...
+    protected final Instantiator buildInstantiator(
+            org.hibernate.mapping.PersistentClass mappingInfo) {
+        return new CustomMapInstantiator( mappingInfo );
+    }
+
+    private static final class CustomMapInstantiator
+            extends org.hibernate.tuple.DynamicMapInstantitor {
+        // override the generateMap() method to return our custom map...
+	    protected final Map generateMap() {
+		    return new CustomMap();
+	    }
+    }
+}]]></programlisting>
+
+
+    </sect1>
     
     <para>
     		TODO：在property和proxy的包里，用户扩展文件框架。

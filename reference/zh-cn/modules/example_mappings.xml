@@ -346,7 +346,7 @@ alter table line_items
         
         <para>
             这些例子全部来自于Hibernate的test suite，同时你也可以找到其他有用的例子。
-            可以参考Hibernate的<literal>src</literal>目录。
+            可以参考Hibernate的<literal>test</literal>目录。
         </para>
         
         <para>TODO: put words around this stuff</para>
@@ -497,6 +497,46 @@ alter table line_items
     
 </class>]]></programlisting>
         </sect2>
+
+        <sect2 id="example-mappings-composite-key-manytomany">
+            <title>共有组合键属性的多对多(Many-to-many with shared composite key attribute)</title>
+            
+<programlisting><![CDATA[<class name="User" table="`User`">
+    <composite-id>
+        <key-property name="name"/>
+        <key-property name="org"/>
+    </composite-id>
+    <set name="groups" table="UserGroup">
+        <key>
+            <column name="userName"/>
+            <column name="org"/>
+        </key>
+        <many-to-many class="Group">
+            <column name="groupName"/>
+            <formula>org</formula>
+        </many-to-many>
+    </set>
+</class>
+    
+<class name="Group" table="`Group`">
+    <composite-id>
+        <key-property name="name"/>
+        <key-property name="org"/>
+    </composite-id>
+    <property name="description"/>
+    <set name="users" table="UserGroup" inverse="true">
+        <key>
+            <column name="groupName"/>
+            <column name="org"/>
+        </key>
+        <many-to-many class="User">
+            <column name="userName"/>
+            <formula>org</formula>
+        </many-to-many>
+    </set>
+</class>
+]]></programlisting>
+        </sect2>
         
         <sect2 id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
@@ -552,7 +592,7 @@ alter table line_items
 </class>]]></programlisting>
         </sect2>
 
-        <sect2 id="example-mappings-association-alternatekeys" >
+        <sect2 id="example-mappings-association-alternatekeys"  revision="2">
             <title>Associations on alternate keys</title>
 <programlisting><![CDATA[<class name="Person">
     
@@ -593,7 +633,7 @@ alter table line_items
 
 <class name="Account">
     <id name="accountId" length="32">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     
     <many-to-one name="user"

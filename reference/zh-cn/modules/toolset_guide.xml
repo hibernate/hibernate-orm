@@ -51,48 +51,72 @@
             首先，要定制你的映射文件，来改善生成的schema。
         </para>
 
-        <sect2 id="toolsetguide-s1-2" revision="1">
+        <sect2 id="toolsetguide-s1-2" revision="3">
             <title>对schema定制化(Customizing the schema)</title>
 
             <para>
-                很多Hibernate映射元素定义了一个可选的<literal>length</literal>属性。你可以通过这个属性设置字段的长度。 (如果是Or, for numeric/decimal data types, the precision.)
+                很多Hibernate映射元素定义了可选的<literal>length</literal>、<literal>precision</literal> 或者 <literal>scale</literal>属性。你可以通过这个属性设置字段的长度、精度、小数点位数。 
             </para>
 
-            <para>
-                有些tag接受<literal>not-null</literal>属性（用来在表字段上生成<literal>NOT NULL</literal>约束）和<literal>unique</literal>属性（用来在表字段上生成<literal>UNIQUE</literal>约束）。
-            </para>
+            <programlisting><![CDATA[<property name="zip" length="5"/>]]></programlisting>
+            <programlisting><![CDATA[<property name="balance" precision="12" scale="2"/>]]></programlisting>
 
             <para>
-                有些tag接受<literal>index</literal>属性，用来指定字段的index名字。<literal>unique-key</literal>属性可以对成组的字段指定一个组合键约束(unit key constraint)。目前，<literal>unique-key</literal>属性指定的值<emphasis>并不会</emphasis>被当作这个约束的名字，它们只是在用来在映射文件内部用作区分的。
+                有些tag还接受<literal>not-null</literal>属性（用来在表字段上生成<literal>NOT NULL</literal>约束）和<literal>unique</literal>属性（用来在表字段上生成<literal>UNIQUE</literal>约束）。
             </para>
+
+            <programlisting><![CDATA[<many-to-one name="bar" column="barId" not-null="true"/>]]></programlisting>
+            <programlisting><![CDATA[<element column="serialNumber" type="long" not-null="true" unique="true"/>]]></programlisting>
+
+            <para>
+                <literal>unique-key</literal>属性可以对成组的字段指定一个唯一键约束(unique key constraint)。目前，<literal>unique-key</literal>属性指定的值在生成DDL时<emphasis>并不会</emphasis>被当作这个约束的名字，它们只是在用来在映射文件内部用作区分的。
+            </para>
+
+            <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
+<property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
             
             <para>
-                示例：
+                <literal>index</literal>属性会用对应的字段（一个或多个）生成一个index,它指出了这个index的名字。如果多个字段对应的index名字相同，就会生成包含这些字段的index。
             </para>
 
-            <programlisting><![CDATA[<property name="foo" type="string" length="64" not-null="true"/>
-
-<many-to-one name="bar" foreign-key="fk_foo_bar" not-null="true"/>
-
-<element column="serial_number" type="long" not-null="true" unique="true"/>]]></programlisting>
+            <programlisting><![CDATA[<property name="lastName" index="CustName"/>
+<property name="firstName" index="CustName"/>]]></programlisting>
 
             <para>
-                另外，这些元素还接受<literal>&lt;column&gt;</literal>子元素。在定义跨越多字段的类型时特别有用。
+                <literal>foreign-key</literal>属性可以用来覆盖任何生成的外键约束的名字。
             </para>
 
-            <programlisting><![CDATA[<property name="foo" type="string">
-    <column name="foo" length="64" not-null="true" sql-type="text"/>
-</property>
+            <programlisting><![CDATA[<many-to-one name="bar" column="barId" foreign-key="FKFooBar"/>]]></programlisting>
 
-<property name="bar" type="my.customtypes.MultiColumnType"/>
-    <column name="fee" not-null="true" index="bar_idx"/>
-    <column name="fi" not-null="true" index="bar_idx"/>
-    <column name="fo" not-null="true" index="bar_idx"/>
+            <para>
+                很多映射元素还接受<literal>&lt;column&gt;</literal>子元素。这在定义跨越多字段的类型时特别有用。
+            </para>
+
+            <programlisting><![CDATA[<property name="name" type="my.customtypes.Name"/>
+    <column name="last" not-null="true" index="bar_idx" length="30"/>
+    <column name="first" not-null="true" index="bar_idx" length="20"/>
+    <column name="initial"/>
+</property>]]></programlisting>
+
+            <para>
+                <literal>default</literal>属性为字段指定一个默认值 (在保存被映射的类的新实例之前，你应该将同样的值赋于对应的属性)。
+            </para>
+
+            <programlisting><![CDATA[<property name="credits" type="integer" insert="false">
+    <column name="credits" default="10"/>
+</property>]]></programlisting>
+
+            <programlisting><![CDATA[<version name="version" type="integer" insert="false">
+    <column name="version" default="0"/>
 </property>]]></programlisting>
 
             <para>
                 <literal>sql-type</literal>属性允许用户覆盖默认的Hibernate类型到SQL数据类型的映射。
-            </para>
+            </para>	
+            
+            <programlisting><![CDATA[<property name="balance" type="float">
+    <column name="balance" sql-type="decimal(13,3)"/>
+</property>]]></programlisting>
             
             <para>
                 <literal>check</literal>属性允许用户指定一个约束检查。
@@ -100,9 +124,9 @@
             
             <programlisting><![CDATA[<property name="foo" type="integer">
     <column name="foo" check="foo > 10"/>
-</property>
+</property>]]></programlisting>
 
-<class name="Foo" table="foos" check="bar < 100.0">
+		<programlisting><![CDATA[<class name="Foo" table="foos" check="bar < 100.0">
     ...
     <property name="bar" type="float"/>
 </class>]]></programlisting>
@@ -124,8 +148,18 @@
                         <row>
                             <entry><literal>length</literal></entry>
                             <entry>数字</entry>
-                            <entry>字段长度/小数点精度</entry>
+                            <entry>字段长度</entry>
                             
+                        </row>
+                        <row>
+                            <entry><literal>precision</literal></entry>
+                            <entry>数字</entry>
+                            <entry>精度(decimal precision)</entry>
+                        </row>
+                        <row>
+                            <entry><literal>scale</literal></entry>
+                            <entry>数字</entry>
+                            <entry>小数点位数(decimal scale)</entry>
                         </row>
                         <row>
                             <entry><literal>not-null</literal></entry>
@@ -151,14 +185,28 @@
                             <entry><literal>foreign-key</literal></entry>
                             <entry><literal>foreign_key_name</literal></entry>
                             <entry>
-                                指明一个外键的名字，它是为关联生成的。
+                                                                specifies the name of the foreign key constraint generated
+                                for an association, for a <literal>&lt;one-to-one&gt;</literal>, 
+                                <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
+                                or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that
+                                <literal>inverse="true"</literal> sides will not be considered
+                                by <literal>SchemaExport</literal>.
+                                指明一个外键的名字，它是为关联生成的，或者<literal>&lt;one-to-one&gt;</literal>，<literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 或者<literal>&lt;many-to-many&gt;</literal>映射元素。注意<literal>inverse="true"</literal>在<literal>SchemaExport</literal>时会被忽略。
+
                             </entry>
                         </row>
                         <row>
                             <entry><literal>sql-type</literal></entry>
-                            <entry><literal>column_type</literal></entry>
+                            <entry><literal>SQL 字段类型</literal></entry>
                             <entry>
                                 覆盖默认的字段类型(只能用于<literal>&lt;column&gt;</literal>属性）
+                            </entry>
+                       </row>
+                       <row>
+                            <entry><literal>default</literal></entry>
+                            <entry>SQL表达式</entry>
+                            <entry>
+                                为字段指定默认值
                             </entry>
                        </row>
                        <row>
@@ -173,9 +221,29 @@
                 </tgroup>
             </table>
 
+            <para>
+                <literal>&lt;comment&gt;</literal>元素可以让你在生成的schema中加入注释。
+            </para>
+            
+            <programlisting><![CDATA[<class name="Customer" table="CurCust">
+    <comment>Current customers only</comment>
+    ...
+</class>]]></programlisting>
+
+            <programlisting><![CDATA[<property name="balance">
+    <column name="bal">
+        <comment>Balance in USD</comment>
+    </column>
+</property>]]></programlisting>
+            
+            <para>
+                结果是在生成的DDL中包含<literal>comment on table</literal> 或者
+                <literal>comment on column</literal>语句(假若支持的话)。
+            </para>
+
         </sect2>
 
-        <sect2 id="toolsetguide-s1-3">
+        <sect2 id="toolsetguide-s1-3"  revision="2">
             <title>运行该工具</title>
 
             <para>
@@ -208,12 +276,20 @@
                             <entry>只进行drop tables的步骤</entry>
                         </row>
                         <row>
+                            <entry><literal>--create</literal></entry>
+                            <entry>只创建表</entry>
+                        </row>
+                        <row>
                             <entry><literal>--text</literal></entry>
                             <entry>不执行在数据库中运行的步骤</entry>
                         </row>
                         <row>
                             <entry><literal>--output=my_schema.ddl</literal></entry>
                             <entry>把输出的ddl脚本输出到一个文件</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>选择一个命名策略(<literal>NamingStrategy</literal>)</entry>
                         </row>
                         <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
@@ -228,7 +304,7 @@
                             <entry>把脚本中的SQL语句对齐和美化</entry>
                         </row>
                         <row>
-                            <entry><literal>--delimiter=x</literal></entry>
+                            <entry><literal>--delimiter=;</literal></entry>
                             <entry>为脚本设置行结束符</entry>
                         </row>
                     </tbody>
@@ -332,7 +408,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </sect2>
 
-        <sect2 id="toolsetguide-s1-6">
+        <sect2 id="toolsetguide-s1-6"  revision="2">
             <title>对schema的增量更新(Incremental schema updates)</title>
 
             <para>
@@ -361,8 +437,20 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                             <entry>不要把脚本输出到stdout</entry>
                         </row>
                         <row>
+                            <entry><literal>--text</literal></entry>
+                            <entry>不把脚本输出到数据库</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>选择一个命名策略 (<literal>NamingStrategy</literal>)</entry>
+                        </row>
+                        <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>从指定文件读入数据库属性</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>指定一个 <literal>.cfg.xml</literal>文件</entry>
                         </row>
                      </tbody>
                 </tgroup>
@@ -400,6 +488,76 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
         </sect2>
 
+        <sect2 id="toolsetguide-s1-8" revision="1">
+            <title>Schema 校验</title>
+
+            <para>
+                <literal>SchemaValidator</literal>工具会比较数据库现状是否与映射文档“匹配”。注意，<literal>SchemaValidator</literal> 严重依赖于JDBC的metadata API，因此不是对所有的JDBC驱动都适用。这一工具在测试的时候特别有用。
+            </para>
+
+            <para>
+                <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
+            </para>
+
+            <table frame="topbot">
+                <title><literal>SchemaValidator</literal>命令行参数</title>
+                <tgroup cols="2">
+                    <colspec colwidth="1.5*"/>
+                    <colspec colwidth="2*"/>
+                    <thead>
+                        <row>
+                            <entry>选项</entry>
+                            <entry>描述</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
+                            <entry>选择一个命名策略 (<literal>NamingStrategy</literal>)</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--properties=hibernate.properties</literal></entry>
+                            <entry>从文件中读取数据库属性</entry>
+                        </row>
+                        <row>
+                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+                            <entry>指定一个<literal>.cfg.xml</literal>文件</entry>
+                        </row>
+                     </tbody>
+                </tgroup>
+            </table>
+
+            <para>
+               你可以在你的应用程序中嵌入<literal>SchemaValidator</literal>：
+            </para>
+
+            <programlisting><![CDATA[Configuration cfg = ....;
+new SchemaValidator(cfg).validate();]]></programlisting>
+
+        </sect2>
+
+        <sect2 id="toolsetguide-s1-9">
+            <title>使用Ant进行schema校验</title>
+
+            <para>
+                你可以在Ant脚本中调用<literal>SchemaValidator</literal>:
+            </para>
+
+            <programlisting><![CDATA[<target name="schemavalidate">
+    <taskdef name="schemavalidator"
+        classname="org.hibernate.tool.hbm2ddl.SchemaValidatorTask"
+        classpathref="class.path"/>
+    
+    <schemavalidator
+        properties="hibernate.properties">
+        <fileset dir="src">
+            <include name="**/*.hbm.xml"/>
+        </fileset>
+    </schemaupdate>
+</target>]]></programlisting>
+
+        </sect2>
     </sect1>
 
 </chapter>

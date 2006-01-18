@@ -13,13 +13,23 @@
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>对持久类声明标识符属性。</term>
+            <term>对持久类声明标识符属性( identifier properties)。</term>
             <listitem>
                 <para>
-                    Hibernate中标识符属性是可选的，不过有很多原因来说明你应该使用标识符属性。我们建议标识符应该是“人造”的(自动生成，不涉及业务含义)。虽然原生类型从语法上可能更易于使用，但使用<literal>long</literal>或<literal>java.lang.Long</literal>没有任何区别，。
+                    Hibernate中标识符属性是可选的，不过有很多原因来说明你应该使用标识符属性。我们建议标识符应该是“人造”的(自动生成，不涉及业务含义)。
                 </para>
             </listitem>
         </varlistentry>
+        <varlistentry>
+            <term>使用自然键(natural keys)标识</term>
+            <listitem>
+                <para>
+                    对所有的实体都标识出自然键，用<literal>&lt;natural-id&gt;</literal>进行映射。实现<literal>equals()</literal>和<literal>hashCode()</literal>，在其中用组成自然键的属性进行比较。
+                </para>
+            </listitem>
+            Y00008051221000980   2.7，89，100万
+        </varlistentry>
+        
         <varlistentry> 
             <term>为每个持久类写一个映射文件</term>
             <listitem>
@@ -72,7 +82,13 @@
             <term>在性能瓶颈的地方使用硬编码的JDBC</term>
             <listitem>
                 <para>
-                    在对性能要求很严格的一些系统中，一些操作(例如批量更新和批量删除)也许直接使用JDBC会更好，但是请先<emphasis>搞清楚</emphasis>这是否是一个瓶颈，并且不要想当然认为JDBC一定会更快。如果确实需要直接使用JDBC，那么最好打开一个
+                    In performance-critical areas of the system, some kinds of operations might benefit from 
+                    direct JDBC. But please, wait until you <emphasis>know</emphasis> something is a bottleneck. 
+                    And don't assume that direct JDBC is necessarily faster. If you need to use direct JDBC, it might 
+                    be worth opening a Hibernate <literal>Session</literal> and using that JDBC connection. That 
+                    way you can still use the same transaction strategy and underlying connection provider.
+
+                    在系统中对性能要求很严格的一些部分，某些操作也许直接使用JDBC会更好。但是请先<emphasis>确认</emphasis>这的确是一个瓶颈，并且不要想当然认为JDBC一定会更快。如果确实需要直接使用JDBC，那么最好打开一个
 Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得connection，按照这种办法你仍然可以使用同样的transaction策略和底层的connection provider。
                 </para>
             </listitem>
@@ -86,18 +102,18 @@ Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得c
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>在三层结构中，考虑使用 <literal>saveOrUpdate()</literal></term>
+            <term>在三层结构中，考虑使用托管对象（detached object）</term>
             <listitem>
                 <para>
-                    当使用一个servlet / session bean 类型的架构的时候, 你可以把已加载的持久对象在session bean层和servlet / JSP 层之间来回传递。使用新的session来为每个请求服务，使用 <literal>Session.update()</literal> 或者<literal>Session.saveOrUpdate()</literal>来更新对象的持久状态。
+                    当使用一个servlet / session bean 类型的架构的时候, 你可以把已加载的持久对象在session bean层和servlet / JSP 层之间来回传递。使用新的session来为每个请求服务，使用 <literal>Session.merge()</literal> 或者<literal>Session.saveOrUpdate()</literal>来与数据库同步。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>在两层结构中，考虑断开session.</term>
+            <term>在两层结构中，考虑使用长持久上下文(long persistence contexts).</term>
             <listitem>
                 <para>
-                    为了得到最佳的可伸缩性，数据库事务(Database Transaction)应该尽可能的短。但是，程序常常需要实现长时间运行的“应用程序事务(Application Transaction)”，包含一个从用户的观点来看的原子操作。这个应用程序事务可能跨越多次从用户请求到得到反馈的循环。请使用脱管对象(与session脱离的对象)，或者在两层结构中，把Hibernate Session从JDBC连接中脱离开，下次需要用的时候再连接上。绝不要把一个Session用在多个应用程序事务(Application Transaction)中，否则你的数据可能会过期失效。
+                    为了得到最佳的可伸缩性，数据库事务(Database Transaction)应该尽可能的短。但是，程序常常需要实现长时间运行的<emphasis>“应用程序事务(Application Transaction)”</emphasis>，包含一个从用户的观点来看的原子操作。这个应用程序事务可能跨越多次从用户请求到得到反馈的循环。用脱管对象(与session脱离的对象)来实现应用程序事务是常见的。或者，尤其在两层结构中，把Hibernate Session从JDBC连接中脱离开，下次需要用的时候再连接上。绝不要把一个Session用在多个应用程序事务(Application Transaction)中，否则你的数据可能会过期失效。
                 </para>
                 
             </listitem>
@@ -106,7 +122,7 @@ Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得c
             <term>不要把异常看成可恢复的</term>
             <listitem>
                 <para>
-                    这一点甚至比“最佳实践”还要重要，这是“必备常识”。当异常发生的时候，必须要回滚 <literal>Transaction</literal> ，关闭<literal>Session</literal>。如果你不这样做的话，Hibernate无法保证内存状态精确的反应持久状态。尤其不要使用<literal>Session.load()</literal>来判断一个给定标识符的对象实例在数据库中是否存在，应该使用<literal>find()</literal>。
+                    这一点甚至比“最佳实践”还要重要，这是“必备常识”。当异常发生的时候，必须要回滚 <literal>Transaction</literal> ，关闭<literal>Session</literal>。如果你不这样做的话，Hibernate无法保证内存状态精确的反应持久状态。尤其不要使用<literal>Session.load()</literal>来判断一个给定标识符的对象实例在数据库中是否存在，应该使用<literal>Session.get()</literal>或者进行一次查询.
                 </para>
             </listitem>
         </varlistentry>
@@ -114,7 +130,18 @@ Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得c
             <term>对于关联优先考虑lazy fetching </term>
             <listitem>
                 <para>
-                    谨慎的使用主动外连接抓取(eager (outer-join) fetching)。对于大多数没有JVM级别缓存的持久对象的关联，应该使用代理(proxies)或者具有延迟加载属性的集合(lazy collections)。对于被缓存的对象的关联，尤其是缓存的命中率非常高的情况下，应该使用<literal>outer-join="false"</literal>，显式的禁止掉eager fetching。如果那些特殊的确实适合使用outer-join fetch 的场合，请在查询中使用<literal>left join</literal>。
+                    谨慎的使用主动抓取(eager fetching)。对于关联来说，若其目标是无法在第二级缓存中完全缓存所有实例的类，应该使用代理(proxies)与/或具有延迟加载属性的集合(lazy collections)。若目标是可以被缓存的，尤其是缓存的命中率非常高的情况下，应该使用<literal>lazy="false"</literal>，明确的禁止掉eager fetching。如果那些特殊的确实适合使用join fetch 的场合，请在查询中使用<literal>left join fetch</literal>。
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                使用<emphasis>open session in view</emphasis>模式，或者执行严格的<emphasis>装配期(assembly phase)</emphasis>策略来避免再次抓取数据带来的问题
+            </term>
+            <listitem>
+                <para>
+                    
+                    Hibernate让开发者们摆脱了繁琐的<emphasis>Data Transfer Objects</emphasis> (DTO)。在传统的EJB结构中，DTO有双重作用：首先，他们解决了entity bean无法序列化的问题；其次，他们隐含地定义了一个装配期，在此期间，所有在view层需要用到的数据，都被抓取、集中到了DTO中，然后控制才被装到表示层。Hibernate终结了第一个作用。然而，除非你做好了在整个渲染过程中都维护一个打开的持久化上下文(session)的准备，你仍然需要一个装配期（想象一下，你的业务方法与你的表示层有严格的契约，数据总是被放置到托管对象中）。这并非是Hibernate的限制！这是实现安全的事务化数据访问的基本需求。
                 </para>
             </listitem>
         </varlistentry>
@@ -127,18 +154,18 @@ Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得c
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>使用与业务有关的键值来实现<literal>equals()</literal>和 <literal>hashCode()</literal> .</term>
-            <listitem>
-                <para>
-                    如果你在Session外比较对象,你必须要实现<literal>equals()</literal>和 <literal>hashCode()</literal>。在Session内部，Java的对象识别机制是可以保证的。如果你实现了这些方法，不要再使用数据库(主键)辨识！瞬时对象不具有(数据库)标识值，Hibernate会在对象被保存的时候赋予它一个值。如果对象在被保存的时候位于Set内，hash code就会变化，要约就被违背。为了实现用与业务有关的键值编写<literal>equals()</literal>和 <literal>hashCode()</literal>，你应该使用类属性的唯一组合。记住，这个键值只是当对象位于Set内部时才需要保证稳定且唯一，并不是在其整个生命周期中都需要（不需要达到数据库主键这样的稳定性）。绝不要在<literal>equals()</literal>中比较集合（要考虑延迟装载），并且小心对待其他可能被代理过的类。
-                </para>
-            </listitem>
-        </varlistentry>
-        <varlistentry>
             <term>不要用怪异的连接映射</term>
             <listitem>
                 <para>
                     多对多连接用得好的例子实际上相当少见。大多数时候你在“连接表”中需要保存额外的信息。这种情况下，用两个指向中介类的一对多的连接比较好。实际上，我们认为绝大多数的连接是一对多和多对一的，你应该谨慎使用其它连接风格，用之前问自己一句，是否真的必须这么做。
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>偏爱双向关联</term>
+            <listitem>
+                <para>
+                    单向关联更加难于查询。在大型应用中，几乎所有的关联必须在查询中可以双向导航。
                 </para>
             </listitem>
         </varlistentry>

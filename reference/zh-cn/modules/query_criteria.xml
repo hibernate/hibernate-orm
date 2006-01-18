@@ -62,7 +62,7 @@ List cats = crit.list();]]></programlisting>
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.sql("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+    .add( Restrictions.sqlRestriction("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
     .list();]]></programlisting>
     
         <para>
@@ -113,7 +113,7 @@ List cats = sess.createCriteria(Cat.class)
     
     </sect1>
     
-    <sect1 id="querycriteria-associations">
+    <sect1 id="querycriteria-associations"  revision="2">
         <title>关联</title>
 
         <para>
@@ -122,9 +122,9 @@ List cats = sess.createCriteria(Cat.class)
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "F%")
+    .add( Restrictions.like("name", "F%") )
     .createCriteria("kittens")
-        .add( Restrictions.like("name", "F%")
+        .add( Restrictions.like("name", "F%") )
     .list();]]></programlisting>
 
         <para>
@@ -151,14 +151,14 @@ List cats = sess.createCriteria(Cat.class)
         <para>
             <literal>Cat</literal>实例所保存的之前两次查询所返回的kittens集合是
             <emphasis>没有</emphasis>被条件预过滤的。如果你希望只获得符合条件的kittens，
-            你必须使用<literal>returnMaps()</literal>。
+            你必须使用<literal>ResultTransformer</literal>。
             
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createCriteria("kittens", "kt")
         .add( Restrictions.eq("name", "F%") )
-    .returnMaps()
+    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
     .list();
 Iterator iter = cats.iterator();
 while ( iter.hasNext() ) {
@@ -368,9 +368,57 @@ session.createCriteria(Cat.class, "cat")
 	.list();]]></programlisting>
 	
 	</sect1>
+
 	
 		<!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
 		          user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
 		          could also be explained. -->
+		          
+    <sect1 id="query-criteria-naturalid">
+        <title>根据自然标识查询(Queries by natural identifier)</title>
+        
+        
+        <para>
+            对大多数查询，包括条件查询而言，因为查询缓存的失效(invalidation)发生得太频繁，查询缓存不是非常高效。然而，有一种特别的查询，可以通过不变的自然键优化缓存的失效算法。在某些应用中，这种类型的查询比较常见。条件查询API对这种用例提供了特别规约。
+        </para>
+        
+        <para>
+            首先，你应该对你的entity使用<literal>&lt;natural-id&gt;</literal>来映射自然键，然后打开第二级缓存。
+        </para>
+
+        <programlisting><![CDATA[<class name="User">
+    <cache usage="read-write"/>
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <natural-id>
+        <property name="name"/>
+        <property name="org"/>
+    </natural-id>
+    <property name="password"/>
+</class>]]></programlisting>
+    
+        <para>
+            注意,此功能对具有<emphasis>mutable</emphasis>自然键的entity并不适用。
+        </para>
+        
+        <para>
+            然后，打开Hibernate 查询缓存。
+        </para>
+        
+        <para>
+            现在，我们可以用<literal>Restrictions.naturalId()</literal>来使用更加高效的缓存算法。
+        </para>
+       
+        <programlisting><![CDATA[session.createCriteria(User.class)
+    .add( Restrictions.naturalId()
+        .set("name", "gavin")
+        .set("org", "hb") 
+    ).setCacheable(true)
+    .uniqueResult();]]></programlisting>
+            
+    </sect1>
+    
+		          
 </chapter>
 

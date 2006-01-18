@@ -229,8 +229,6 @@
                     <area id="class19" coords="20 55"/>
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
-                    <area id="class22" coords="23 55"/>
-                    <area id="class23" coords="24 55"/>
                 </areaspec>
                 <programlisting><![CDATA[<class
         name="ClassName"
@@ -254,7 +252,6 @@
         rowid="rowid"
         subselect="SQL expression"
         abstract="true|false"
-        entity-name="EntityName"
         node="element-name"
 />]]></programlisting>
                 <calloutlist>
@@ -359,7 +356,7 @@
                     </callout>    
                     <callout arearefs="class17">
                         <para>
-                            <literal>entity-name</literal> (可选): Hibernate3允许一个类进行多次映射（
+                            <literal>entity-name</literal> (可选，默认为类名): Hibernate3允许一个类进行多次映射（
                             默认情况是映射到不同的表），并且允许使用Maps或XML代替Java层次的实体映射
                             （也就是实现动态领域模型，不用写持久化类－译注）。
                             更多信息请看<xref linkend="persistent-classes-dynamicmodels"/> and <xref linkend="xml"/>。
@@ -389,11 +386,6 @@
                         <para>
                             <literal>abstract</literal> (可选): 用于在<literal>&lt;union-subclass&gt;</literal>的继承结构
                             （hierarchies）中标识抽象超类。
-                        </para>
-                    </callout>
-                    <callout arearefs="class22">
-                        <para>
-                            <literal>entity-name</literal> (可选, 默认为类名): 显式指定实体名
                         </para>
                     </callout>
                 </calloutlist>
@@ -506,7 +498,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-id" revision="3">
+        <sect2 id="mapping-declaration-id" revision="4">
             <title>id</title>
 
             <para>
@@ -570,8 +562,7 @@
             </para>
             
             <para>
-                <literal>unsaved-value</literal> 属性很重要！如果你的类的标识属性不是默认为
-                正常的Java默认值（null或零），你应该指定正确的默认值。
+                <literal>unsaved-value</literal> 属性在Hibernate3中几乎不再需要。
             </para>
 
             <para>
@@ -808,13 +799,13 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-compositeid" revision="2">
+        <sect2 id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 
             <programlisting><![CDATA[<composite-id
         name="propertyName"
         class="ClassName"
-        unsaved-value="undefined|any|none"
+        mapped="true|false"
         access="field|property|ClassName"
         node="element-name|."
         >
@@ -824,12 +815,6 @@
         ......
 </composite-id>]]></programlisting>
 
-            <para>
-                For a table with a composite key, you may map multiple properties of the class
-                as identifier properties. The <literal>&lt;composite-id&gt;</literal> element
-                accepts <literal>&lt;key-property&gt;</literal> property mappings and
-                <literal>&lt;key-many-to-one&gt;</literal> mappings as child elements.
-            </para>
             <para>
                 如果表使用联合主键，你可以映射类的多个属性为标识符属性。
                 <literal>&lt;composite-id&gt;</literal>元素接受<literal>&lt;key-property&gt;</literal>
@@ -849,31 +834,71 @@
 
             <para>
                 不幸的是，这种组合关键字的方法意味着一个持久化类是它自己的标识。除了对象自己之外，
-                没有什么方便的“把手”可用。你必须自己初始化持久化类的实例，在使用组合关键字<literal>load()</literal>
-                持久化状态之前，必须填充他的联合属性。我们会在<xref linkend="components-compositeid"/>章中说明一种
-                更加便捷的方法，把联合标识实现为一个独立的类，下面描述的属性只对这种备用方法有效:
+                没有什么方便的“把手”可用。你必须初始化持久化类的实例，填充它的标识符属性，再<literal>load()</literal>
+                组合关键字关联的持久状态。我们把这种方法称为<emphasis>embedded（嵌入式）</emphasis>的组合标识符，在重要的应用中不鼓励使用这种用法。
+            </para>
+
+            <para>
+                第二种方法我们称为<emphasis>mapped(映射式)</emphasis>组合标识符 (mapped composite identifier),<literal>&lt;composite-id&gt;</literal>元素中列出的标识属性不但在持久化类出现，还形成一个独立的标识符类。
+            </para>
+             
+            <programlisting><![CDATA[<composite-id class="MedicareId" mapped="true">
+        <key-property name="medicareNumber"/>
+        <key-property name="dependent"/>
+</composite-id>]]></programlisting>
+
+            <para>
+                在这个例子中，组合标识符类<literal>MedicareId</literal>和实体类都含有<literal>medicareNumber</literal>和<literal>dependent</literal>属性。标识符类必须重载<literal>equals()</literal>和<literal>hashCode()</literal>并且实现<literal>Serializable</literal>接口。这种方法的缺点是出现了明显的代码重复。
+            </para>
+            
+            <para>
+                下面列出的属性是用来指定一个映射式组合标识符的：
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>name</literal> (可选）：一个组件类型，持有复合标识（参见下一节）。
+                        <literal>mapped</literal> (可选, 默认为<literal>false</literal>):
+                        指明使用一个映射式组合标识符，其包含的属性映射同时在实体类和组合标识符类中出现。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>class</literal> (可选 - 默认为通过反射(reflection)得到的属性类型) :
-                         作为联合标识的组件类名(参见下一节)。
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <literal>unsaved-value</literal> (可选 - 默认为 <literal>undefined</literal>): 
-                        如果设置为<literal>any</literal>，就表示瞬时（transient）实例应该被重新初始化，或者如果
-                        设置为<literal>none</literal>，则表示该实例是脱管对象。最好在所有的情况下都保持默认的值。
+                        <literal>class</literal> (可选,但对映射式组合标识符必须指定): 
+                        作为组合标识符类使用的类名.
                     </para>
                 </listitem>
             </itemizedlist>
+
+            <para>
+                在<xref linkend="components-compositeid"/>一节中,我们会描述第三种方式,那就是把组合标识符实现为一个组件(component)类,这是更方便的方法。下面的属性仅对这第三种方法有效：
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>name</literal> (可选,但对这种方法而言必须): 包含此组件标识符的组件类型的名字 (参阅第9章).
+                        
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>access</literal> (可选 - 默认为<literal>property</literal>): 
+                        Hibernate应该使用的访问此属性值的策略
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>class</literal> (可选 - 默认会用反射来自动判定属性类型
+                        ): 用来作为组合标识符的组件类的类名（参阅下一节）
+                        
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+            <para>
+                这第三种方式，被称为<emphasis>identifier component(标识符组件)</emphasis>是我们对几乎所有应用都推荐使用的方式。
+            </para>
             
         </sect2>
         
@@ -958,7 +983,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-version" revision="1">
+        <sect2 id="mapping-declaration-version" revision="4">
             <title>版本（version）(可选)</title>
             
             <para>
@@ -973,6 +998,8 @@
                     <area id="version3" coords="4 70"/>
                     <area id="version4" coords="5 70"/>
                     <area id="version5" coords="6 70"/>
+                    <area id="version6" coords="7 70"/>
+                    <area id="version7" coords="8 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<version
         column="version_column"
@@ -980,6 +1007,8 @@
         type="typename"
         access="field|property|ClassName"
         unsaved-value="null|negative|undefined"
+        generated="never|always"
+        insert="true|false"
         node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
@@ -1012,6 +1041,18 @@
                             （<literal>undefined</literal>指明使用标识属性值进行判断。）
                         </para>
                     </callout>
+                    <callout arearefs="version6">
+                        <para>
+                            <literal>generated</literal> (可选 - 默认是 <literal>never</literal>):
+                            表明此版本属性值是否实际上是由数据库生成的。请参阅<xref linkend="mapping-generated">generated properties</xref>部分的讨论。
+                        </para>
+                    </callout>
+                    <callout arearefs="version7">
+                        <para>
+                            <literal>insert</literal> (可选 - 默认是 <literal>true</literal>):
+                            表明此版本列应该包含在SQL插入语句中。只有当数据库字段有默认值<literal>0</literal>的时候，才可以设置为<literal>false</literal>。
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
             
@@ -1030,7 +1071,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp">
+        <sect2 id="mapping-declaration-timestamp" revision="3">
             <title>timestamp (optional)</title>
 
             <para>
@@ -1045,12 +1086,16 @@
                     <area id="timestamp2" coords="3 70" />
                     <area id="timestamp3" coords="4 70" />
                     <area id="timestamp4" coords="5 70" />
+                    <area id="timestamp5" coords="6 70" />
+                    <area id="timestamp6" coords="7 70" />
                 </areaspec>            
                 <programlisting><![CDATA[<timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
         unsaved-value="null|undefined"
+        source="vm|db"
+        generated="never|always"
         node="element-name|@attribute-name|element/@attribute|."
 />]]></programlisting>
                 <calloutlist>
@@ -1079,16 +1124,28 @@
                             指明使用标识属性值进行这种判断。）
                         </para>
                     </callout>
+                   <callout arearefs="timestamp5">
+                        <para>
+                            <literal>source</literal> (可选 - 默认是 <literal>vm</literal>):
+                            Hibernate如何才能获取到时间戳的值呢？从数据库，还是当前JVM？从数据库获取会带来一些负担，因为Hibernate必须访问数据库来获得“下一个值”，但是在集群环境中会更安全些。还要注意，并不是所有的<literal>Dialect（方言）</literal>都支持获得数据库的当前时间戳的，而支持的数据库中又有一部分因为精度不足,用于锁定是不安全的（例如Oracle 8）。
+                        </para>
+                    </callout>
+                    <callout arearefs="timestamp6">
+                        <para>
+                            <literal>generated</literal> (可选 - 默认是 <literal>never</literal>):
+                            指出时间戳值是否实际上是由数据库生成的.请参阅<xref linkend="mapping-generated">generated properties</xref>的讨论。
+                        </para>
+                    </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
-                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。
+                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。并且<literal>&lt;timestamp use-db="true"&gt;</literal>和<literal>&lt;version type="dbtimestamp"&gt;</literal>是等价的。
             </para>
         </sect2>
 
 
-        <sect2 id="mapping-declaration-property" revision="2">
+        <sect2 id="mapping-declaration-property" revision="4">
             <title>property</title>
 
             <para>
@@ -1101,8 +1158,8 @@
                     <area id="property2" coords="3 70"/>
                     <area id="property3" coords="4 70"/>
                     <areaset id="property4-5" coords="">
-                        <area id="property4" coords='5 70'/>
-                        <area id="property5" coords='6 70'/>
+	                    <area id="property4" coords='5 70'/>
+    	                <area id="property5" coords='6 70'/>
                     </areaset>
                     <area id="property6" coords="7 70"/>
                     <area id="property7" coords="8 70"/>
@@ -1110,6 +1167,7 @@
                     <area id="property9" coords="10 70"/>
                     <area id="property10" coords="11 70"/>
                     <area id="property11" coords="12 70"/>
+                    <area id="property12" coords="13 70"/>
                 </areaspec>            
                 <programlisting><![CDATA[<property
         name="propertyName"
@@ -1123,7 +1181,14 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
+        generated="never|insert|always"
         node="element-name|@attribute-name|element/@attribute|."
+
+        index="index_name"
+        unique_key="unique_key_id"
+        length="L"
+        precision="P"
+        scale="S"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="property1">
@@ -1186,6 +1251,12 @@
                             <literal>optimistic-lock</literal> (可选 - 默认为 <literal>true</literal>): 
                             指定这个属性在做更新时是否需要获得乐观锁定（optimistic lock）。
                             换句话说，它决定这个属性发生脏数据时版本（version）的值是否增长。
+                        </para>
+                    </callout>
+                    <callout arearefs="property12">
+                        <para>
+                            <literal>generated</literal> (可选 - 默认为 <literal>never</literal>):
+                            表明此属性值是否实际上是由数据库生成的。请参阅<xref linkend="mapping-generated">generated properties</xref>的讨论。
                         </para>
                     </callout>
                 </calloutlist>
@@ -1257,7 +1328,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-declaration-manytoone" revision="3">
+        <sect2 id="mapping-declaration-manytoone" revision="5">
             <title>多对一（many-to-one）</title>
 
             <para>
@@ -1285,6 +1356,7 @@
                     <area id="manytoone13" coords="14 70"/>
                     <area id="manytoone14" coords="15 70"/>
                     <area id="manytoone15" coords="16 70"/>
+                    <area id="manytoone16" coords="17 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<many-to-one
         name="propertyName"
@@ -1299,11 +1371,16 @@
         unique="true|false"
         not-null="true|false"
         optimistic-lock="true|false"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        formula="arbitrary SQL expression"
         node="element-name|@attribute-name|element/@attribute|."
+
         embed-xml="true|false"
+        index="index_name"
+        unique_key="unique_key_id"
+        foreign-key="foreign_key_name"
         
 />]]></programlisting>
                 <calloutlist>
@@ -1377,7 +1454,7 @@
                     <callout arearefs="manytoone13">
                         <para>
                             <literal>lazy</literal> (可选 - 默认为 <literal>proxy</literal>): 
-                            默认情况下，单点关联是经过代理的。<literal>lazy="true"</literal>指定此属性应该在实例变量第一次被访问时应该延迟抓取（fetche lazily）（需要运行时字节码的增强）。
+                            默认情况下，单点关联是经过代理的。<literal>lazy="no-proxy"</literal>指定此属性应该在实例变量第一次被访问时应该延迟抓取（fetche lazily）（需要运行时字节码的增强）。
                             <literal>lazy="false"</literal>指定此关联总是被预先抓取。
                         </para>
                     </callout>
@@ -1390,9 +1467,16 @@
                     </callout>
                     <callout arearefs="manytoone15">
                         <para>
-                            <literal>entity-name</literal> (optional): 被关联的类的实体名。
+                            <literal>entity-name</literal> (可选): 被关联的类的实体名。
                         </para>                   
                     </callout>
+                    <callout arearefs="manytoone16">
+                        <para>
+                            <literal>formula</literal> (可选): 
+                            SQL表达式，用于定义<emphasis>computed（计算出的）</emphasis>外键值。
+                        </para>
+                    </callout>
+                    
                 </calloutlist>
             </programlistingco>
 
@@ -1403,7 +1487,8 @@
                 <literal>persist, merge, delete, save-update, evict, replicate, lock, refresh</literal>，
                 以及特别的值<literal>delete-orphan</literal>和<literal>all</literal>，并且可以用逗号分隔符
                 来合并这些操作，例如，<literal>cascade="persist,merge,evict"</literal>或
-                <literal>cascade="all,delete-orphan"</literal>。更全面的解释请参考<xref linkend="objectstate-transitive"/>.
+                <literal>cascade="all,delete-orphan"</literal>。更全面的解释请参考<xref linkend="objectstate-transitive"/>. 注意，单值关联 (many-to-one 和 
+                one-to-one associations) 不支持删除孤儿（orphan delete，删除不再被引用的值）.
                 
                 
             </para>
@@ -1439,9 +1524,16 @@
                 如果被引用的唯一主键由关联实体的多个属性组成，你应该在名称为<literal>&lt;properties&gt;</literal>的元素
                 里面映射所有关联的属性。
             </para>
+            
+            <para>
+            	假若被引用的唯一主键是组件的属性，你可以指定属性路径：
+            </para>
+            
+           <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>           
+
         </sect2>
 
-<sect2 id="mapping-declaration-onetoone" revision="2">
+<sect2 id="mapping-declaration-onetoone" revision="3">
             <title>一对一</title>
 
             <para>
@@ -1470,10 +1562,12 @@
         property-ref="propertyNameFromAssociatedClass"
         access="field|property|ClassName"
         formula="any SQL expression"
-        lazy="true|proxy|false"
+        lazy="proxy|no-proxy|false"
         entity-name="EntityName"
         node="element-name|@attribute-name|element/@attribute|."
+
         embed-xml="true|false"
+        foreign-key="foreign_key_name"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="onetoone1">
@@ -1523,7 +1617,7 @@
                     <callout arearefs="onetoone9">
                         <para>
                             <literal>lazy</literal> (可选 - 默认为 <literal>proxy</literal>): 
-                            默认情况下，单点关联是经过代理的。<literal>lazy="true"</literal>指定此属性应该在实例变量第一次被访问时应该延迟抓取（fetche lazily）（需要运行时字节码的增强）。
+                            默认情况下，单点关联是经过代理的。<literal>lazy="no-proxy"</literal>指定此属性应该在实例变量第一次被访问时应该延迟抓取（fetche lazily）（需要运行时字节码的增强）。
                             <literal>lazy="false"</literal>指定此关联总是被预先抓取。<emphasis>注意，如果<literal>constrained="false"</literal>,
                             不可能使用代理，Hibernate会采取预先抓取！</emphasis>
                         </para>
@@ -1595,6 +1689,39 @@
            <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
 
         </sect2>
+
+        <sect2 id="mapping-declaration-naturalid">
+            <title>自然ID(natural-id)</title>
+
+            <programlisting><![CDATA[<natural-id mutable="true|false"/>
+        <property ... />
+        <many-to-one ... />
+        ......
+</natural-id>]]></programlisting>
+
+            <para>
+                我们建议使用代用键（键值不具备实际意义）作为主键，我们仍然应该尝试为所有的实体采用自然的键值作为（附加——译者注）标示。自然键（natural key）是一个或多个属性，他们必须唯一且非空。如果它还是不可变的那就更理想了。在<literal>&lt;natural-id&gt;</literal>元素中列出自然键的属性。Hibernate会帮你生成必须的唯一键值和非空约束，你的映射会更加的明显易懂（原文是self-documenting，自我注解）。
+            </para>
+            
+            <para>
+                我们强烈建议你实现<literal>equals()</literal> 和<literal>hashCode()</literal>方法,来比较实体的自然键属性。
+            </para>
+
+            <para>
+                这一映射不是为了把自然键作为主键而准备的。
+            </para>
+
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        <literal>mutable</literal> (可选, 默认为<literal>false</literal>): 
+                        默认情况下，自然标识属性被假定为时不可变的。
+                    </para>
+                </listitem>
+            </itemizedlist>
+            
+        </sect2>
+        
 
         <sect2 id="mapping-declaration-component" revision="2">
             <title>组件(component), 动态组件(dynamic-component)</title>
@@ -1782,7 +1909,7 @@
             
         </sect2>
 
-        <sect2 id="mapping-declaration-subclass" revision="3">
+        <sect2 id="mapping-declaration-subclass" revision="4">
             <title>子类(subclass)</title>
 
              <para>
@@ -1804,7 +1931,9 @@
         dynamic-update="true|false"
         dynamic-insert="true|false"
         entity-name="EntityName"
-        node="element-name">
+        node="element-name"
+        extends="SuperclassName">
+
         <property .... />
         .....
 </subclass>]]></programlisting>
@@ -1838,16 +1967,6 @@
                 <literal>&lt;version&gt;</literal> 和<literal>&lt;id&gt;</literal> 属性可以从根父类继承下来。在一棵继承树上的每个子类都必须定义一个唯一的<literal>discriminator-value</literal>。如果没有指定，就会使用Java类的全限定名。
             </para>
             
-       <para>
-            可以在单独的映射文件中，直接在<literal>hibernate-mapping</literal>下定义<literal>subclass</literal>，<literal>union-subclass</literal>和<literal>joined-subclass</literal>映射。这样你只要增加一个新的映射文件就可以继承一棵类继承树。你必须在子类的映射中指定<literal>extends</literal> 属性来指定已映射的超类。注意：以前，这个特性使得映射文件的顺序变得很重要。从Hibernate3开始，当使用extends关键字的时候，映射文件的次序便不重要了。而在单一映射文件中，依旧需要保持将超类定义在子类之前这样的次序。
-        </para>
-    
-        <programlisting><![CDATA[
-<hibernate-mapping>
-    <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
-         <property name="name" type="string"/>
-    </subclass>
-</hibernate-mapping>]]></programlisting>
 
             <para>
                 更多关于继承映射的信息, 参考 <xref linkend="inheritance"/>章节.
@@ -2175,7 +2294,7 @@
             </para>
         </sect2>
 
-        <sect2 id="mapping-column" revision="3">
+        <sect2 id="mapping-column" revision="4">
            <title>字段和规则元素（column and formula elements）</title>
            <para>
                任何接受<literal>column</literal>属性的映射元素都可以选择接受<literal>&lt;column&gt;</literal> 子元素。同样的，<literal>formula</literal>也可以替换<literal>&lt;formula&gt;</literal>属性。
@@ -2190,7 +2309,8 @@
         unique-key="multicolumn_unique_key_name"
         index="index_name"
         sql-type="sql_type_name"
-        check="SQL expression"/>]]></programlisting>
+        check="SQL expression"
+        default="SQL expression"/>]]></programlisting>
 
             <programlisting><![CDATA[<formula>SQL expression</formula>]]></programlisting>
             <para>
@@ -2354,7 +2474,7 @@
             </para>
         </sect2>
 
-        <sect2 id="mapping-types-basictypes" revision="2">
+        <sect2 id="mapping-types-basictypes" revision="3">
             <title>基本值类型</title>
 
             <para>
@@ -2453,6 +2573,18 @@
                             </para>
                         </listitem>
                     </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <literal>imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date,
+                            imm_serializable, imm_binary</literal>
+                        </term>
+                        <listitem>
+                            <para>
+                                一般来说，映射类型被假定为是可变的Java类型，只有对不可变Java类型，Hibernate会采取特定的优化措施，应用程序会把这些对象作为不可变对象处理。比如，你不应该对作为<literal>imm_timestamp</literal>映射的Date执行<literal>Date.setTime()</literal>。要改变属性的值，并且保存这一改变，应用程序必须对这一属性重新设置一个新的（不一样的）对象。
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    
                 </variablelist>
             
             </para>
@@ -2520,6 +2652,37 @@
             </para>
         </sect2>
         
+    </sect1>
+
+    <sect1 id="mapping-entityname">
+        <title>多次映射同一个类</title>
+        <para>
+            对特定的持久花类，映射多次是允许的。这种情形下，你必须指定<emphasis>entity name</emphasis>来区别不同映射实体的对象实例。（默认情况下，实体名字和类名是相同的。）
+            Hibernate在操作持久化对象、编写查询条件，或者把关联映射到指定实体时，允许你指定这个entity name（实体名字）。
+        </para>
+        
+        <programlisting><![CDATA[<class name="Contract" table="Contracts" 
+        entity-name="CurrentContract">
+    ...
+    <set name="history" inverse="true" 
+            order-by="effectiveEndDate desc">
+        <key column="currentContractId"/>
+        <one-to-many entity-name="HistoricalContract"/>
+    </set>
+</class>
+
+<class name="Contract" table="ContractHistory" 
+        entity-name="HistoricalContract">
+    ...
+    <many-to-one name="currentContract" 
+            column="currentContractId" 
+            entity-name="CurrentContract"/>
+</class>]]></programlisting>
+
+        <para>
+            注意这里关联是如何用<literal>entity-name</literal>来代替<literal>class</literal>的。
+        </para>
+
     </sect1>
 
     <sect1 id="mapping-quotedidentifiers">
@@ -2660,7 +2823,7 @@ public class Cat {
         </para>
     </sect2>
 
-    <sect2 id="mapping-annotations">
+    <sect2 id="mapping-annotations" revision="2">
         <title>使用 JDK 5.0 的注解(Annotation)</title>
 
         <para>
@@ -2682,21 +2845,82 @@ public class Customer implements Serializable {
     @Transient
     Integer age;
 
-    @Dependent
+    @Embedded
     private Address homeAddress;
 
-    @OneToMany(cascade=CascadeType.ALL,
-               targetEntity="Order")
+    @OneToMany(cascade=CascadeType.ALL)
     @JoinColumn(name="CUSTOMER_ID")
-    Set orders;
+    Set<Order> orders;
 
     // Getter/setter and business methods
 }]]></programlisting>
 
         <para>
-            注意：对 JDK 5.0 注解 (和 JSR-220)支持的工作仍然在进行中,并未完成。
+            注意：对 JDK 5.0 注解 (和 JSR-220)支持的工作仍然在进行中,并未完成。更多细节请参阅Hibernate Annotations 模块。
         </para>
     </sect2>
+    </sect1>
+    <sect1 id="mapping-generated" revision="1">
+        <title>数据库生成属性（Generated Properties）</title>
+        <para>
+            Generated properties指的是其值由数据库生成的属性。一般来说，如果对象有任何属性由数据库生成值，Hibernate应用程序需要进行<literal>刷新(refresh)</literal>。但如果把属性标明为generated，就可以转由Hibernate来负责这个动作。实际上。对定义了generated properties的实体,每当Hibernate执行一条SQL INSERT或者UPDATE语句，会立刻执行一条select来获得生成的值。
+        </para>
+        <para>
+            被标明为generated的属性还必须是 non-insertable和 non-updateable的。只有<xref linkend="mapping-declaration-version">versions</xref>，<xref linkend="mapping-declaration-timestamp">timestamps</xref>和<xref linkend="mapping-declaration-property">简单属性（simple properties）</xref>可以被标明为generated。
+        </para>
+	    <para>
+		    <literal>never</literal> (默认) 标明此属性值不是从数据库中生成。
+	    </para>
+	    <para>
+		    <literal>insert</literal> - 标明此属性值在insert的时候生成，但是不会在随后的update时重新生成。比如说创建日期就归属于这类。注意虽然<xref linkend="mapping-declaration-version">version</xref>和<xref linkend="mapping-declaration-timestamp">timestamp</xref>属性可以被标注为generated，但是不适用这个选项...
+	    </para>
+	    <para>
+		    <literal>always</literal> - 标明此属性值在insert和update时都会被生成。
+	    </para>
+    </sect1>
+
+    <sect1 id="mapping-database-object">
+        <title>辅助数据库对象(Auxiliary Database Objects)</title>
+        <para>
+            Allows CREATE and DROP of arbitrary database objects, in conjunction with
+            Hibernate's schema evolution tools, to provide the ability to fully define
+            a user schema within the Hibernate mapping files.  Although designed specifically
+            for creating and dropping things like triggers or stored procedures, really any
+            SQL command that can be run via a <literal>java.sql.Statement.execute()</literal>
+            method is valid here (ALTERs, INSERTS, etc).  There are essentially two modes for
+            defining auxiliary database objects...
+            帮助CREATE和DROP任意数据库对象，和Hibernate的schema交互工具组合起来，可以提供在Hibernate映射文件中完全定义用户schema的能力。虽然这是为创建和销毁trigger(触发器）或stored procedure(存储过程）等特别设计的，实际上任何可以在<literal>java.sql.Statement.execute()</literal>方法中执行的SQL命令都可以在此使用（比如ALTER, INSERT，等等）。本质上有两种模式来定义辅助数据库对象...
+        </para>
+        <para>
+            第一种模式是在映射文件中显式声明CREATE和DROP命令：
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <create>CREATE TRIGGER my_trigger ...</create>
+        <drop>DROP TRIGGER my_trigger</drop>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+            第二种模式是提供一个类，这个类知道如何组织CREATE和DROP命令。这个特别类必须实现<literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal>接口。
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
+        <para>
+            还有，这些数据库对象可以特别指定，仅在特定的方言中才使用。
+        </para>
+        <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <database-object>
+        <definition class="MyTriggerDefinition"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+</hibernate-mapping>]]></programlisting>
     </sect1>
 
 </chapter>

@@ -1,9 +1,8 @@
 ﻿<chapter id="performance">
     <title>提升性能
 	</title>
-    <sect1 id="performance-fetching">
+    <sect1 id="performance-fetching" revision="2">
         <title>
-	
 			抓取策略(Fetching strategies)
 		</title>		
 
@@ -68,12 +67,22 @@
             </listitem>
             <listitem>
                 <para>
+                    <emphasis>"Extra-lazy" collection fetching,"Extra-lazy"集合抓取</emphasis> -对集合类中的每个元素而言，都是直到需要时才去访问数据库。除非绝对必要，Hibernate不会试图去把整个集合都抓取到内存里来（适用于非常大的集合）。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                     <emphasis>Proxy fetching，代理抓取</emphasis>  - 对返回单值的关联而言，当其某个方法被调用，而非对其关键字进行get操作时才抓取。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Lazy attribute fetching，属性延迟加载</emphasis> - 对属性或返回单值的关联而言，当其实例变量被访问的时候进行抓取（需要运行时字节码强化）。这一方法很少是必要的。
+                    <emphasis>"No-proxy" fetching,非代理抓取</emphasis> -  对返回单值的关联而言，当实例变量被访问的时候进行抓取。与上面的代理抓取相比，这种方法没有那么“延迟”得厉害(就算只访问标识符，也会导致关联抓取)但是更加透明，因为对应用程序来说，不再看到proxy。这种方法需要在编译期间进行字节码增强操作，因此很少需要用到。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Lazy attribute fetching，属性延迟加载</emphasis> - 对属性或返回单值的关联而言，当其实例变量被访问的时候进行抓取。需要编译期字节码强化，因此这一方法很少是必要的。
                 </para>
             </listitem>
         </itemizedlist>
@@ -129,7 +138,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     	        </sect2>
         
 
-        <sect2 id="performance-fetching-custom" revision="3">
+        <sect2 id="performance-fetching-custom" revision="4">
             <title>
 			
 				调整抓取策略（Tuning fetch strategies）
@@ -148,7 +157,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
-			    在映射文档中定义的抓取策略将会有产生以下影响：
+			    在映射文档中定义的<literal>抓取</literal>策略将会对以下列表条目产生影响：
             </para>
 						
         <itemizedlist>
@@ -160,7 +169,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
 			</listitem>
             <listitem>
                 <para>
-				    只有在关联之间进行导航时，才会隐式的取得数据(延迟抓取)。
+				    只有在关联之间进行导航时，才会隐式的取得数据。
                 </para>
             </listitem>
             <listitem>
@@ -168,8 +177,16 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
 					<literal>条件查询</literal>
                 </para>
             </listitem>
+            <listitem>
+                <para>
+                    使用了<literal>subselect</literal>抓取的HQL查询
+                </para>
+            </listitem>
         </itemizedlist>
         
+            <para>
+                不管你使用哪种抓取策略，定义为非延迟的类图会被保证一定装载入内存。注意这可能意味着在一条HQL查询后紧跟着一系列的查询。
+            </para>
 
             <para>
 			    通常情况下，我们并不使用映射文档进行抓取策略的定制。更多的是，保持其默认值，然后在特定的事务中，
@@ -327,10 +344,14 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
 				Hibernate将会识别出那些重载了<literal>equals()</literal>、或<literal>hashCode()</literal>方法的持久化类。
             </para>
+            <para>
+                若选择<literal>lazy="no-proxy"</literal>而非默认的<literal>lazy="proxy"</literal>，我们可以避免类型转换带来的问题。然而，这样我们就需要编译期字节码增强，并且所有的操作都会导致立刻进行代理初始化。
+                
+            </para>
 
         </sect2>
 
-        <sect2 id="performance-fetching-initialization">
+        <sect2 id="performance-fetching-initialization" revision="1">
             <title>实例化集合和代理（Initializing collections and proxies）
 			</title>
 
@@ -368,9 +389,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 						结束时关闭<literal>Session</literal>（这里使用了<emphasis>在展示层保持打开Session模式（Open Session in View）</emphasis>），
 						当然，这将依赖于应用框架中异常需要被正确的处理。在返回界面给用户之前，乃至在生成界面过程中发生异常的情况下，
 						正确关闭<literal>Session</literal>和结束事务将是非常重要的，
-						Servlet过滤器必须如此访问<literal>Session</literal>，才能保证正确使用Session。
-						我们推荐使用<literal>ThreadLocal</literal>	变量保存当前的<literal>Session</literal>
-						（可以参考<xref linkend="quickstart-playingwithcats"/>的例子实现）。						
+                        请参见Hibernate wiki上的"Open Session in View"模式，你可以找到示例。
                     </para>
                 </listitem>
                 <listitem>
@@ -610,7 +629,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </tgroup>
         </table>
 
-        <sect2 id="performance-cache-mapping">
+        <sect2 id="performance-cache-mapping" revision="2">
             <title>缓存映射（Cache mappings）
 			</title>
 
@@ -621,19 +640,37 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <programlistingco>
                 <areaspec>
                     <area id="cache1" coords="2 70"/>
+                    <area id="cache2" coords="3 70"/>
+                    <area id="cache3" coords="4 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<cache 
     usage="transactional|read-write|nonstrict-read-write|read-only"
+    region="RegionName"
+    include="all|non-lazy"
 />]]></programlisting>
                 <calloutlist>
                     <callout arearefs="cache1">
                         <para>
 						   
-						    <literal>usage</literal>说明了缓存的策略:
+						    <literal>usage</literal>(必须)说明了缓存的策略:
                             <literal>transactional</literal>、
                             <literal>read-write</literal>、
                             <literal>nonstrict-read-write</literal>或 
                             <literal>read-only</literal>。
+                        </para>
+                    </callout>                   
+                    <callout arearefs="cache2">
+                        <para>
+                            <literal>region</literal> (可选, 默认为类或者集合的名字(class or
+                            collection role name)) 指定第二级缓存的区域名(name of the second level cache 
+                            region)
+                            
+                        </para>
+                    </callout>                   
+                    <callout arearefs="cache3">
+                        <para>
+                            <literal>include</literal> (可选,默认为 <literal>all</literal>) 
+                            <literal>non-lazy</literal> 当属性级延迟抓取打开时, 标记为<literal>lazy="true"</literal>的实体的属性可能无法被缓存
                         </para>
                     </callout>                   
                 </calloutlist>

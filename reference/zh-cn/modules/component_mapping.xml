@@ -5,7 +5,7 @@
 		<emphasis>Component</emphasis>这个概念在Hibernate中几处不同的地方为了不同的目的被重复使用.
     </para>
 
-    <sect1 id="components-dependentobjects">
+    <sect1 id="components-dependentobjects" revision="2" >
         <title>依赖对象（Dependent objects）</title>
 
         <para>
@@ -73,7 +73,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name"> <!-- class attribute optional -->
@@ -111,7 +111,7 @@
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
-        <generator class="uuid.hex"/>
+        <generator class="uuid"/>
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name" unique="true">>

@@ -2,7 +2,6 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
                       "../support/docbook-dtd/docbookx.dtd"
 [
-<!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
 <!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
 <!ENTITY architecture           SYSTEM "modules/architecture.xml">
 <!ENTITY configuration          SYSTEM "modules/configuration.xml">
@@ -36,7 +35,7 @@
         <title>HIBERNATE - 符合Java习惯的关系数据库持久化</title>
         
         <subtitle>Hibernate参考文档</subtitle>
-        <releaseinfo>3.0.4</releaseinfo>
+        <releaseinfo>3.1.1</releaseinfo>
     </bookinfo>
 
     <toc/>
@@ -76,13 +75,7 @@
         <orderedlist>
             <listitem>
                 <para>
-                    阅读这个30分钟就可以结束的<xref linkend="quickstart"/>，它使用Tomcat。
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    阅读<xref linkend="tutorial"/>，这是一篇较长的指南，包含详细的逐步指导。		
-                 </para>
+                    阅读<xref linkend="tutorial"/>，这是一篇包含详细的逐步指导的指南。本指南的源代码包含在发行包中，你可以在<literal>doc/reference/tutorial/</literal>目录下找到。                 </para>
             </listitem>     
             <listitem>
                 <para>
@@ -169,7 +162,7 @@
                     <row>
                         <entry>#1</entry>
                         <entry>Quickstart with Tomcat</entry>
-                        <entry>在Tomcat中快速上手</entry>
+                        <entry>在Tomcat中快速上手(3.1版本中取消）</entry>
                         <entry>曹晓钢</entry>
                         <entry>zoujm</entry>
                     </row>
@@ -384,6 +377,13 @@
                         </para>
                     </listitem>
                 </varlistentry>
+                <varlistentry>
+                    <term>致谢</term>
+                    <listitem>
+                        <para>还有一些朋友给我们发来了勘误，在此致谢：Kurapica 。
+                        </para>
+                    </listitem>
+                </varlistentry>
              </variablelist>
 
 		</sect1>
@@ -401,8 +401,6 @@
          </sect1>
 
     </preface>
-
-    &quickstart;
 
     &tutorial;
 

@@ -384,6 +384,19 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             输出所有SQL语句到控制台.
+							有一个另外的选择是把<literal>org.hibernate.SQL</literal>这个log category设为<literal>debug</literal>。
+                            <para>
+                                <emphasis role="strong">eg.</emphasis> 
+                                <literal>true</literal> | <literal>false</literal>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <literal>hibernate.format_sql</literal>
+                        </entry>
+                        <entry>
+                            在log和console中打印出更漂亮的SQL。
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -804,7 +817,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-transaction-properties" revision="8">
+        <table frame="topbot" id="configuration-transaction-properties" revision="9">
             <title>
                 Hibernate事务属性
             </title>
@@ -865,7 +878,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.flush_before_completion</literal>
                         </entry>
                         <entry>
-                            如果开启, session在事务完成后将被自动清洗(flush). (在Hibernate和CMT一起使用时很有用.)
+                            如果开启, session在事务完成后将被自动清洗(flush)。 现在更好的方法是使用自动session上下文管理。请参见<xref linkend="architecture-current-session"/>。
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -877,7 +890,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.auto_close_session</literal>
                         </entry>
                         <entry>
-                            如果开启, session在事务完成后将被自动关闭. (在Hibernate和CMT一起使用时很有用.)
+                            如果开启, session在事务完成后将被自动关闭。 现在更好的方法是使用自动session上下文管理。请参见<xref linkend="architecture-current-session"/>。
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -888,7 +901,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="7">
+        <table frame="topbot" id="configuration-misc-properties" revision="9">
             <title>
                 其他属性
             </title>
@@ -907,6 +920,20 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                 </thead>
                 <tbody>
+                    <row>
+                        <entry>
+                            <literal>hibernate.current_session_context_class</literal>
+                        </entry>
+                        <entry>
+                            为界定"当前"
+                            <literal>Session</literal>指定一个策略。关于内置策略的详情，请参见<xref linkend="architecture-current-session"/> 。
+                            <para>
+                                <emphasis role="strong">eg.</emphasis>
+                                <literal>jta</literal> | <literal>thread</literal> |
+                                <literal>custom.Class</literal>
+                            </para>
+                        </entry>
+                    </row>
                     <row>
                         <entry>
                             <literal>hibernate.query.factory_class</literal>
@@ -938,11 +965,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            在<literal>SessionFactory</literal>创建时，自动将数据库schema的DDL导出到数据库. 使用
+                            在<literal>SessionFactory</literal>创建时，自动检查数据库机构，或者将数据库schema的DDL导出到数据库. 使用
                             <literal>create-drop</literal>时,在显式关闭<literal>SessionFactory</literal>时，将drop掉数据库schema.
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
-                                <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>
+                                <literal>validate</literal> | <literal>update</literal> | 
+                                <literal>create</literal> | <literal>create-drop</literal>
                             </para>
                         </entry>
                     </row>
@@ -1232,9 +1260,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             </entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.hql.ast</literal></entry>
+                            <entry><literal>org.hibernate.hql.AST</literal></entry>
                             <entry>
-                                为HQL和SQL的自动状态转换和其他关于查询解析的信息记录日志
+                                在解析查询的时候,记录HQL和SQL的AST分析日志
                             </entry>
                         </row>
                         <row>
@@ -1399,10 +1427,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>JTA Session绑定:</emphasis> 如果使用EJB, Hibernate <literal>Session</literal>
+                <emphasis>JTA Session绑定:</emphasis> Hibernate <literal>Session</literal>
                 可以自动绑定到JTA事务作用的范围. 只需简单地从JNDI查找<literal>SessionFactory</literal>并获得当前的
                 <literal>Session</literal>. 当JTA事务完成时, 让Hibernate来处理
-                <literal>Session</literal>的清洗(flush)与关闭. 在EJB的部署描述符中事务边界是声明式的.
+                <literal>Session</literal>的清洗(flush)与关闭. 在EJB的部署描述符中事务边界是声明式的(CMT),或者自行编程(BMT/UserTransaction).
                 </para>
             </listitem>
         </itemizedlist>
@@ -1474,7 +1502,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                Hibernate的一些特性 (即二级缓存, JTA与Session的自动绑定等等)需要访问在托管环境中的JTA <literal>TransactionManager</literal>. 
+                Hibernate的一些特性 (比如二级缓存, Contextual Sessions with JTA等等)需要访问在托管环境中的JTA <literal>TransactionManager</literal>. 
                 由于J2EE没有标准化一个单一的机制,Hibernate在应用程序服务器中，你必须指定Hibernate如何获得<literal>TransactionManager</literal>的引用:
             </para>
 
@@ -1540,7 +1568,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         </sect2>
 
-        <sect2 id="configuration-optional-jndi" revision="2">
+        <sect2 id="configuration-optional-jndi" revision="3">
             <title>
                 JNDI绑定的<literal>SessionFactory</literal>
             </title>
@@ -1569,42 +1597,23 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                如果你使用与JNDI绑定的<literal>SessionFactory</literal>, EJB或任何其他类可以通过一个JNDI查询来获得这个<literal>SessionFactory</literal>.
-                请注意, 如果你使用第一章中介绍的帮助类<literal>HibernateUtil</literal> - 类似Singleton(单实例)注册表, 那么这里的启动代码不是必要的.
-                但<literal>HibernateUtil</literal>更多被使用在非托管环境中.
+                假若你使用JNDI <literal>SessionFactory</literal>,EJB或者任何其它类都可以从JNDI中找到此<literal>SessionFactory</literal>。
+            </para>
+
+            <para>
+                我们建议，在受管理的环境中，把<literal>SessionFactory</literal>绑定到JNDI，在其它情况下，使用一个<literal>static(静态的)</literal>singleton。为了在你的应用程序代码中隐藏这些细节，我们还建议你用一个helper类把实际查找<literal>SessionFactory</literal>的代码隐藏起来,比如<literal>HibernateUtil.getSessionFactory()</literal>。注意，这个类也就可以方便地启动Hibernate，参见第一章。
             </para>
 
         </sect2>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="1">
-            <title>
-                JTA和Session的自动绑定
-            </title>
+        <sect2 id="configuration-j2ee-currentsession" revision="4">
+            <title>在JTA环境下使用Current Session context (当前session上下文)管理</title>
 
             <para>
-                在非托管环境中，我们建议：<literal>HibernateUtil</literal>和静态<literal>SessionFactory</literal>一起工作，
-                由<literal>ThreadLocal</literal>管理Hibernate <literal>Session</literal>。
-                由于一些EJB可能会运行在同一个事务但不同线程的环境中, 所以这个方法不能照搬到EJB环境中. 
-                我们建议在托管环境中，将<literal>SessionFactory</literal>绑定到JNDI上.
+	            在Hibernate中，管理<literal>Session</literal>和transaction最好的方法是自动的"当前"<literal>Session</literal>管理。请参见<xref linkend="architecture-current-session">current sessions</xref>一节的讨论。使用<literal>"jta"</literal>session上下文，假若在当前JTA事务中还没有Hibernate<literal>Session</literal>关联，第一次<literal>sessionFactory.getCurrentSession()</literal>调用会启动一个Session,并关联到当前的JTA事务。在<literal>"jta"</literal>上下文中用<literal>getCurrentSession()</literal>获得的<literal>Session</literal>，会被设置为在transaction关闭的时候自动flush（清洗）、在transaction关闭之后自动关闭，每句与句之后主动释放JDBC连接。这就可以根据JTA事务的生命周期来管理与之关联的<literal>Session</literal>，用户代码中就可以不再考虑这些管理。你的代码可以通过<literal>UserTransaction</literal>用编程方式使用JTA，或者(我们建议，为了便于移植代码）使用Hibernate的<literal>Transaction</literal> API来设置transaction边界。如果你的代码运行于EJB容器中，建议对CMT使用声明式事务声明。
+	            
             </para>
-
-            <para>
-                请使用<literal>SessionFactory</literal>的<literal>getCurrentSession()</literal>方法来代替
-                直接使用<literal>ThreadLocal</literal>去获得Hibernate <literal>Session</literal>. 
-                如果在当前JTA事务中没有Hibernate <literal>Session</literal>, 将会启动一个并将它关联到事务中. 
-                对于使用<literal>getCurrentSession()</literal>获得的每个<literal>Session</literal>而言，
-                <literal>hibernate.transaction.flush_before_completion</literal>
-                和<literal>hibernate.transaction.auto_close_session</literal>这两个配置选项会自动设置, 
-                因此在容器结束JTA事务时，这些<literal>Session</literal>会被自动清洗(flush)并关闭.
-            </para>
-
-            <para>
-                例如，如果你使用DAO模式来编写你的持久层, 那么在需要时，所有DAO将查找<literal>SessionFactory</literal>并打开"当前"Session. 
-                没有必要在控制代码和DAO代码间传递<literal>SessionFactory</literal>或<literal>Session</literal>的实例.
-            </para>
-
         </sect2>
-
         <sect2 id="configuration-j2ee-jmx" revision="1">
             <title>
                 JMX部署

@@ -277,7 +277,7 @@ create table Address ( addressId bigint not null primary key )
     <sect1 id="assoc-bidirectional" revision="1">
         <title>双向关联（Bidirectional associations）</title>
         
-        <sect2 id="assoc-bidirectional-m21">
+        <sect2 id="assoc-bidirectional-m21" revision="2">
         <title>一对多（one to many) / 多对一（many to one）</title>
         
          <para>
@@ -308,6 +308,34 @@ create table Person ( personId bigint not null primary key, addressId bigint not
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
+                <para>
+            如果你使用<literal>List</literal>(或者其他有序集合类)，你需要设置外键对应的<literal>key</literal>列为 <literal>not null</literal>,让Hibernate来从集合端管理关联，维护每个元素的索引（通过设置<literal>update="false"</literal> and <literal>insert="false"</literal>来对另一端反向操作）。
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+   <id name="id"/>
+   ...
+   <many-to-one name="address"
+      column="addressId"
+      not-null="true"
+      insert="false"
+      update="false"/>
+</class>
+
+<class name="Address">
+   <id name="id"/>
+   ...
+   <list name="people">
+      <key column="addressId" not-null="true"/>
+      <list-index column="peopleIdx"/>
+      <one-to-many class="Person"/>
+   </list>
+</class>]]></programlisting>
+
+            <para>
+                假若集合映射的<literal>&lt;key&gt;</literal>元素对应的底层外键字段是<literal>NOT NULL</literal>的，那么为这一key元素定义<literal>not-null="true"</literal>是很重要的。不要仅仅为可能的嵌套<literal>&lt;column&gt;</literal>元素定义<literal>not-null="true"</literal>，<literal>&lt;key&gt;</literal>元素也是需要的。
+            </para>
+
         </sect2>
         
         <sect2 id="assoc-bidirectional-121">
@@ -443,7 +471,7 @@ create table Address ( addressId bigint not null primary key )
         inverse="true">
         <key column="addressId" 
             unique="true"/>
-        <many-to-one name="address"
+        <many-to-one name="person"
             column="personId" 
             not-null="true"
             unique="true"/>
@@ -457,7 +485,7 @@ create table Address ( addressId bigint not null primary key )
 
         </sect2>
         
-        <sect2 id="assoc-bidirectional-join-m2m">
+        <sect2 id="assoc-bidirectional-join-m2m" revision="1">
         <title>多对多（many to many）</title>
         
         <para>
@@ -468,7 +496,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
-    <set name="addresses">
+    <set name="addresses"  table="PersonAddress">
         <key column="personId"/>
         <many-to-many column="addressId"
             class="Address"/>
@@ -479,7 +507,7 @@ create table Address ( addressId bigint not null primary key )
     <id name="id" column="addressId">
         <generator class="native"/>
     </id>
-    <set name="people" inverse="true">
+    <set name="people" inverse="true"  table="PersonAddress">
         <key column="addressId"/>
         <many-to-many column="personId"
             class="Person"/>
@@ -494,6 +522,56 @@ create table Address ( addressId bigint not null primary key )
         
         </sect2>
         
+    </sect1>
+    <sect1 id="assoc-complex">
+        <title>更复杂的关联映射</title>
+        
+        <para>
+            更复杂的关联连接<emphasis>极为</emphasis>罕见。 
+            通过在映射文档中嵌入SQL片断，Hibernate也可以处理更为复杂的情况。比如，假若包含历史帐户数据的表定义了<literal>accountNumber</literal>, <literal>effectiveEndDate</literal> 和<literal>effectiveStartDate</literal>字段，按照下面映射：
+        </para>
+        
+        <programlisting><![CDATA[<properties name="currentAccountKey">
+    <property name="accountNumber" type="string" not-null="true"/>
+    <property name="currentAccount" type="boolean">
+        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>
+    </property>
+</properties>
+<property name="effectiveEndDate" type="date"/>
+<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+
+        <para>
+        那么我们可以对<emphasis>目前(current)</emphasis>实例(其<literal>effectiveEndDate</literal>为null)使用这样的关联映射:
+        </para>
+        
+        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
+        property-ref="currentAccountKey"
+        class="AccountInfo">
+    <column name="accountNumber"/>
+    <formula>'1'</formula>
+</many-to-one>]]></programlisting>
+
+        <para>
+            更复杂的例子,假想<literal>Employee</literal>和<literal>Organization</literal>之间的关联是通过一个<literal>Employment</literal>中间表维护的,而中间表中填充了很多历史雇员数据。那“雇员的<emphasis>最新</emphasis>雇主”这个关联（最新雇主就是<literal>startDate</literal>最后的那个）可以这样映射：
+        </para>
+        
+        <programlisting><![CDATA[<join>
+    <key column="employeeId"/>
+    <subselect>
+        select employeeId, orgId 
+        from Employments 
+        group by orgId 
+        having startDate = max(startDate)
+    </subselect>
+    <many-to-one name="mostRecentEmployer" 
+            class="Organization" 
+            column="orgId"/>
+</join>]]></programlisting>
+
+        <para>
+        使用这一功能时可以充满创意，但通常更加实用的是用HQL或条件查询来处理这些情形。
+        </para>
+
     </sect1>
 
 

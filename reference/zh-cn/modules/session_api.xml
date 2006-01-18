@@ -194,7 +194,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
 			你也可以用原生SQL(native SQL)描述查询，Hibernate提供了将结果集(result set)转化为对象的部分支持。
         </para>        
 
-        <sect2 id="objectstate-querying-executing">
+        <sect2 id="objectstate-querying-executing"  revision="1">
             <title>执行查询</title>
             
             <para>
@@ -221,12 +221,17 @@ List kittens = session.createQuery(
 Cat mother = (Cat) session.createQuery(
     "select cat.mother from Cat as cat where cat = ?")
     .setEntity(0, izi)
-    .uniqueResult();]]></programlisting>
+    .uniqueResult();]]
+
+Query mothersWithKittens = (Cat) session.createQuery(
+    "select mother from Cat as mother left join fetch mother.kittens");
+Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
 
             
             <para>
             	一个查询通常在调用<literal>list()</literal>时被执行，执行结果会完全装载进内存中的一个集合(collection)。
             	查询返回的对象处于持久(persistent)状态。如果你知道的查询只会返回一个对象，可使用<literal>list()</literal>的快捷方式<literal>uniqueResult()</literal>。
+            	注意，使用集合预先抓取的查询往往会返回多次根对象（他们的集合类都被初始化了）。你可以通过一个集合来过滤这些重复对象。    	
             </para>            
 
             <sect3 id="objectstate-querying-executing-iterate">
@@ -276,7 +281,7 @@ while ( kittensAndMothers.hasNext() ) {
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-scalar">
+            <sect3 id="objectstate-querying-executing-scalar" revision="1">
                 <title>标量(Scalar)结果</title>
 
                 <para>
@@ -289,9 +294,9 @@ while ( kittensAndMothers.hasNext() ) {
         "group by cat.color")
         .list()
         .iterator();
-
+        
 while ( results.hasNext() ) {
-    Object[] row = results.next();
+    Object[] row = (Object[]) results.next();
     Color type = (Color) row[0];
     Date oldest = (Date) row[1];
     Integer count = (Integer) row[2];
@@ -932,7 +937,9 @@ sess.find("from Cat as cat left outer join cat.kittens kitten");
 
 // change to izi is not flushed!
 ...
-tx.commit(); // flush occurs]]></programlisting>
+tx.commit(); // flush occurs
+sess.close();]]></programlisting>
+
 
         <para>
         	刷出(flush)期间，可能会抛出异常。（例如一个DML操作违反了约束）
@@ -941,7 +948,7 @@ tx.commit(); // flush occurs]]></programlisting>
         
     </sect1>
 
-    <sect1 id="objectstate-transitive">
+    <sect1 id="objectstate-transitive"  revision="1">
         <title>传播性持久化(transitive persistence)</title>
 
         <para>
@@ -1064,6 +1071,16 @@ tx.commit(); // flush occurs]]></programlisting>
                 </para>                
             </listitem>
         </itemizedlist>
+        <para>
+            Finally, note that cascading of operations can be applied to an object graph at
+            <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All operations,
+            if enabled, are cascaded to associated entities reachable when the operation is
+            executed. However, <literal>save-upate</literal> and <literal>delete-orphan</literal>
+            are transitive for all associated entities reachable during flush of the
+            <literal>Session</literal>.
+            最后，注意操作的级联可能是在<emphasis>调用期(call time)</emphasis>或者<emphasis>写入期(flush time)</emphasis>作用到对象图上的。所有的操作，假若允许，都在操作被执行的时候级联到可触及的关联实体上。然而，<literal>save-upate</literal>和<literal>delete-orphan</literal>是在<literal>Session</literal> flush的时候才作用到所有可触及的被关联对象上的。
+        </para>
+
 
     </sect1>
 

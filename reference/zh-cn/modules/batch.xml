@@ -31,6 +31,10 @@ session.close();]]></programlisting>
     </para>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
+    <para>
+        但是，这不是绝对必须的，因为我们可以显式设置<literal>CacheMode</literal>来关闭与二级缓存的交互。
+    </para>
+
 
     <sect1 id="batch-inserts">
         <title>批量插入（Batch inserts）</title>
@@ -89,20 +93,57 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct">
-        <title>大批量更新/删除（Bulk update/delete）</title>
+    <sect1 id="batch-statelesssession">
+        <title>StatelessSession (无状态session)接口</title>
+        <para>
+            作为选择，Hibernate提供了基于命令的API，可以用detached object的形式把数据以流的方法加入到数据库，或从数据库输出。<literal>StatelessSession</literal>没有持久化上下文，也不提供多少高层的生命周期语义。特别是，无状态session不实现第一级cache,也不和第二级缓存，或者查询缓存交互。它不实现事务化写，也不实现脏数据检查。用stateless session进行的操作甚至不级联到关联实例。stateless session忽略集合类(Collections)。通过stateless session进行的操作不触发Hibernate的事件模型和拦截器。无状态session对数据的混淆现象免疫，因为它没有第一级缓存。无状态session是低层的抽象，和低层JDBC相当接近。
+        </para>
+        
+<programlisting><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
+Transaction tx = session.beginTransaction();
+   
+ScrollableResults customers = session.getNamedQuery("GetCustomers")
+    .scroll(ScrollMode.FORWARD_ONLY);
+while ( customers.next() ) {
+    Customer customer = (Customer) customers.get(0);
+    customer.updateStuff(...);
+    session.update(customer);
+}
+   
+tx.commit();
+session.close();]]></programlisting>
 
         <para>
+            注意在上面的例子中，查询返回的<literal>Customer</literal>实例立即被脱管(detach)。它们与任何持久化上下文都没有关系。
+        </para>
+        
+        <para>
+            <literal>StatelessSession</literal> 接口定义的<literal>insert(), update()</literal> 和 <literal>delete()</literal>操作是直接的数据库行级别操作，其结果是立刻执行一条<literal>INSERT, UPDATE</literal> 或 <literal>DELETE</literal> 语句。因此，它们的语义和<literal>Session</literal> 接口定义的<literal>save(), saveOrUpdate()</literal> 和<literal>delete()</literal> 操作有很大的不同。
+        </para>
+
+    </sect1>
+
+    <sect1 id="batch-direct" revision="2">
+        <title>DML(数据操作语言)风格的操作(DML-style operations)</title>
+
+        <para>
+        hence manipulating (using the SQL <literal>Data Manipulation Language</literal>
+            (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>)
+            data directly in the database will not affect in-memory state. However, Hibernate provides methods
+            for bulk SQL-style DML statement execution which are performed through the
+            Hibernate Query Language (<xref linkend="queryhql">HQL</xref>).
+            
+            
             就像已经讨论的那样，自动和透明的 对象/关系 映射（object/relational mapping）关注于管理对象的状态。
-            这就意味着对象的状态存在于内存，因此直接更新或者删除 (使用 SQL 语句 <literal>UPDATE</literal> 和
+            这就意味着对象的状态存在于内存，因此直接操作 (使用 SQL <literal>Data Manipulation Language</literal>(DML,数据操作语言）语句 ：<literal>INSERT</literal> ,<literal>UPDATE</literal> 和
             <literal>DELETE</literal>) 数据库中的数据将不会影响内存中的对象状态和对象数据。
             不过，Hibernate提供通过Hibernate查询语言（<xref linkend="queryhql">HQL</xref>）来执行大批
-            量SQL风格的（<literal>UPDATE</literal>）和（<literal>DELETE</literal>） 语句的方法。
+            量SQL风格的DML语句的方法。
         </para>
 
 	    <para>
             <literal>UPDATE</literal> 和 <literal>DELETE</literal>语句的语法为：
-            <literal>( UPDATE | DELETE ) FROM? ClassName (WHERE WHERE_CONDITIONS)?</literal>。
+            <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>
             有几点说明：
         </para>
 
@@ -114,12 +155,13 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    在FROM子句（from-clause）中只能有一个类名，并且它<emphasis>不能</emphasis>有别名
+                    在FROM子句（from-clause）中只能有一个实体名，它可以是别名。如果实体名是别名，那么任何被引用的属性都必须加上此别名的前缀；如果不是别名，那么任何有前缀的属性引用都是非法的。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    不能在大批量HQL语句中使用连接（显式或者隐式的都不行）。不过在WHERE子句中可以使用子查询。
+                    不能在大批量HQL语句中使用<xref linkend="queryhql-joins-forms">连接(join)</xref>（显式或者隐式的都不行）。不过在WHERE子句中可以使用子查询。可以在where子句中使用子查询，子查询本身可以包含join。
+
                 </para>
             </listitem>
             <listitem>
@@ -131,34 +173,36 @@ session.close();]]></programlisting>
 
         <para>
             举个例子，使用<literal>Query.executeUpdate()</literal>方法执行一个HQL
-            <literal>UPDATE</literal>语句：
+            <literal>UPDATE</literal>语句(：
+             (方法命名是来源于JDBC's <literal>PreparedStatement.executeUpdate()</literal>):
         </para>
 
-        <programlisting><![CDATA[Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+		<programlisting><![CDATA[Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
 
-        String hqlUpdate = "update Customer set name = :newName where name = :oldName";
-        int updatedEntities = s.createQuery( hqlUpdate )
-                            .setString( "newName", newName )
-                            .setString( "oldName", oldName )
-                            .executeUpdate();
-        tx.commit();
-        session.close();]]></programlisting>
+		String hqlUpdate = "update Customer c set c.name = :newName where c.name = :oldName";
+		// or String hqlUpdate = "update Customer set name = :newName where name = :oldName";
+		int updatedEntities = s.createQuery( hqlUpdate )
+		        .setString( "newName", newName )
+		        .setString( "oldName", oldName )
+		        .executeUpdate();
+		tx.commit();
+		session.close();]]></programlisting>
 
         <para>
-            执行一个HQL <literal>DELETE</literal>，同样使用 <literal>Query.executeUpdate()</literal> 方法
-            （此方法是为 那些熟悉JDBC <literal>PreparedStatement.executeUpdate()</literal> 的人们而设定的）
+            执行一个HQL <literal>DELETE</literal>，同样使用 <literal>Query.executeUpdate()</literal> 方法:
         </para>
 
-        <programlisting><![CDATA[Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+		<programlisting><![CDATA[Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
 
-        String hqlDelete = "delete Customer where name = :oldName";
-        int deletedEntities = s.createQuery( hqlDelete )
-                            .setString( "oldName", oldName )
-                            .executeUpdate();
-        tx.commit();
-        session.close();]]></programlisting>
+		String hqlDelete = "delete Customer c where c.name = :oldName";
+		// or String hqlDelete = "delete Customer where name = :oldName";
+		int deletedEntities = s.createQuery( hqlDelete )
+		        .setString( "oldName", oldName )
+		        .executeUpdate();
+		tx.commit();
+		session.close();]]></programlisting>
 
         <para>
             由<literal>Query.executeUpdate()</literal>方法返回的<literal>整型</literal>值表明了受此操作影响的记录数量。
@@ -168,8 +212,49 @@ session.close();]]></programlisting>
         </para>
 
         <para>
-            注意，上述大批量HQL操作的少数限制会在新版本中得到改进；进一步详细信息请参考JIRA里的路线图(roadmap)。
+            <literal>INSERT</literal>语句的伪码是:
+            <literal>INSERT INTO EntityName properties_list select_statement</literal>.  
+            要注意的是:
         </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    只支持INSERT INTO ... SELECT ...形式,不支持INSERT INTO ... VALUES ...形式.
+                </para>
+                <para>
+                    properties_list和SQL <literal>INSERT</literal>语句中的<literal>字段定义(column speficiation)</literal>类似。对参与继承树映射的实体而言，只有直接定义在给定的类级别的属性才能直接在properties_list中使用。超类的属性不被支持；子类的属性无意义。换句话说，<literal>INSERT</literal>天生不支持多态。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    select_statement可以是任何合法的HQL选择查询，不过要保证返回类型必须和要插入的类型完全匹配。目前，这一检查是在查询编译的时候进行的，而不是把它交给数据库。注意，在Hibernate<literal>Type</literal>间如果只是<emphasis>等价（equivalent）</emphasis>而非<emphasis>相等(equal)</emphasis>，会导致问题。定义为<literal>org.hibernate.type.DateType</literal>和<literal>org.hibernate.type.TimestampType</literal>的两个属性可能会产生类型不匹配错误，虽然数据库级可能不加区分或者可以处理这种转换。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    对id属性来说,insert语句给你两个选择。你可以明确地在properties_list表中指定id属性（这样它的值是从对应的select表达式中获得），或者在properties_list中省略它（此时使用生成指）。后一种选择只有当使用在数据库中生成值的id产生器时才能使用；如果是“内存”中计算的类型生成器，在解析时会抛出一个异常。注意，为了说明这一问题，数据库产生值的生成器是<literal>org.hibernate.id.SequenceGenerator</literal>（和它的子类），以及任何<literal>org.hibernate.id.PostInsertIdentifierGenerator</literal>接口的实现。这儿最值得注意的意外是<literal>org.hibernate.id.TableHiLoGenerator</literal>，它不能在此使用，因为它没有得到其值的途径。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    对映射为<literal>version</literal> 或 <literal>timestamp</literal>的属性来说，insert语句也给你两个选择，你可以在properties_list表中指定（此时其值从对应的select表达式中获得），或者在properties_list中省略它（此时，使用在<literal>org.hibernate.type.VersionType</literal> 中定义的<literal>seed value(种子值)</literal>）。
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            执行HQL <literal>INSERT</literal>语句的例子如下：
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+
+String hqlInsert = "insert into DelinquentAccount (id, name) select c.id, c.name from Customer c where ...";
+int createdEntities = s.createQuery( hqlInsert )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
 
     </sect1>
 

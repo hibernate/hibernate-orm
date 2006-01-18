@@ -1,7 +1,7 @@
 ﻿    <chapter id="inheritance">
         <title>继承映射(Inheritance Mappings)</title>
 
-	    <sect1 id="inheritance-strategies" revision="2">
+	    <sect1 id="inheritance-strategies" revision="3">
             <title> 三种策略</title>
 
 
@@ -49,6 +49,18 @@
 									<literal>&lt;join&gt;</literal>来实现的（见后）。
 									
             </para>
+
+        <para>
+             在不同的映射文件中定义 <literal>subclass</literal>, <literal>union-subclass</literal>,
+             和 <literal>joined-subclass</literal>是被允许的，只需直接定义在<literal>hibernate-mapping</literal>之下 。也就是说，你可以仅加入一个新的映射文件就扩展类层次。你必须在subclass的映射中指明<literal>extends</literal>属性，给出一个之前定义的超类的名字。注意，以前，这一功能对映射文件的顺序有严格的要求。自从Hibernate 3开始，当使用extends关键字的时候，映射文件的顺序不再有影响。但在每个映射文件本身之中，顺序还是必须超类在前，子类在后。
+         </para>
+
+         <programlisting><![CDATA[
+ <hibernate-mapping>
+     <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
+          <property name="name" type="string"/>
+     </subclass>
+ </hibernate-mapping>]]></programlisting>
 
             <sect2 id="inheritance-tableperclass" >
             <title>每个类分层结构一张表(Table per class hierarchy)</title>
@@ -122,7 +134,7 @@
 
             </sect2>
 
-            <sect2 id="inheritance-tablepersubclass-discriminator">
+            <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
         		
             <title>每个子类一张表(Table per subclass)，使用辨别标志(Discriminator)</title>
 
@@ -144,21 +156,25 @@
     ...
     <subclass name="CreditCardPayment" discriminator-value="CREDIT">
         <join table="CREDIT_PAYMENT">
+            <key column="PAYMENT_ID"/>
             <property name="creditCardType" column="CCTYPE"/>
             ...
         </join>
     </subclass>
     <subclass name="CashPayment" discriminator-value="CASH">
         <join table="CASH_PAYMENT">
+            <key column="PAYMENT_ID"/>
             ...
         </join>
     </subclass>
     <subclass name="ChequePayment" discriminator-value="CHEQUE">
         <join table="CHEQUE_PAYMENT" fetch="select">
+            <key column="PAYMENT_ID"/>
             ...
         </join>
     </subclass>
 </class>]]></programlisting>
+
 
             <para>
                 可选的声明<literal>fetch="select"</literal>，是用来告诉Hibernate，在查询超类时，
@@ -204,7 +220,7 @@
 
             </sect2>
         
-            <sect2 id="inheritance-tableperconcrete" revision="1">
+            <sect2 id="inheritance-tableperconcrete" revision="2">
             <title>每个具体类一张表(Table per concrete class)</title>
 
             <para>
@@ -231,7 +247,7 @@
 </class>]]></programlisting>
 
             <para>
-                这里涉及三张表。每张表为对应类的所有属性（包括从超类继承的属性）定义相应字段。
+                这里涉及三张与子类相关的表。每张表为对应类的所有属性（包括从超类继承的属性）定义相应字段。
             </para>
 
             <para>
@@ -240,6 +256,10 @@
                 不允许在联合子类(union subclass)的继承层次中使用标识生成器策略(identity generator strategy), 
                 实际上, 主键的种子(primary key seed)不得不为同一继承层次中的全部被联合子类所共用.
             </para>
+
+        <para>
+            假若超类是抽象类，请使用<literal>abstract="true"</literal>。当然，假若它不是抽象的，需要一个额外的表（上面的例子中，默认是<literal>PAYMENT</literal>），来保存超类的实例。
+        </para>
         
             </sect2>
 

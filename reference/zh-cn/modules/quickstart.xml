@@ -338,7 +338,7 @@ Indexes: cat_pkey primary key btree (cat_id)]]></programlisting>
             new Configuration().configure().buildSessionFactory();]]></programlisting>
 
 		<para>
-		通过对<literal>configure()</literal>的调用来装载<literal>hibernate.cfg.xml</literal>配置文件,并初始化成一个<literal>Configuration</literal>实例。			
+		通过对<literal>configure()</literal>的调用来装载<literal>hibernate.cfg.xml</literal>配置文件,并初始化这个<literal>Configuration</literal>实例。			
 			在创建 <literal>SessionFactory</literal><emphasis>之前</emphasis>（它是不可变的），你可以访问<literal>Configuration</literal>来设置其他属性（甚至修改映射的元数据）。我们应该在哪儿创建<literal>SessionFactory</literal>，在我们的程序中又如何访问它呢？
 			<literal>SessionFactory</literal>通常只是被初始化一次，比如说通过一个<emphasis>load-on-startup</emphasis> servlet的来初始化。这意味着你不应该在serlvet中把它作为一个实例变量来持有，而应该放在其他地方。进一步的说，我们需要使用<emphasis>单例（Singleton）</emphasis>模式，我们才能更容易的在程序中访问<literal>SessionFactory</literal>。下面的方法就同时解决了两个问题：对<literal>SessionFactory</literal>的初始配置与便捷使用。
 		</para>

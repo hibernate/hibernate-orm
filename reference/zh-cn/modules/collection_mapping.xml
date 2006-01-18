@@ -63,7 +63,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 
     </sect1>
 
-        <sect1 id="collections-mapping" revision="2">
+        <sect1 id="collections-mapping" revision="4">
             <title>集合映射（ Collection mappings ）</title>
 
         <para>
@@ -98,16 +98,17 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                     <area id="mappingcollection10" coords="11 65"/>
                     <area id="mappingcollection11" coords="12 65"/>
                     <area id="mappingcollection12" coords="13 65"/>
-                <area id="mappingcollection13" coords="14 65"/>
+	                <area id="mappingcollection13" coords="14 65"/>
+    	            <area id="mappingcollection14" coords="15 65"/>
                     
                 </areaspec>
                 <programlisting><![CDATA[<map
     name="propertyName"
     table="table_name"
     schema="schema_name"
-    lazy="true|false"
+    lazy="true|extra|false"
     inverse="true|false"
-    cascade="all|none|save-update|delete|all-delete-orphan"
+    cascade="all|none|save-update|delete|all-delete-orphan|delete-orphan"
     sort="unsorted|natural|comparatorClass"
     order-by="column_name asc|desc"
     where="arbitrary sql where condition"
@@ -115,6 +116,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
     batch-size="N"
     access="field|property|ClassName"
     optimistic-lock="true|false"
+    mutable="true|false"
     node="element-name|."
     embed-xml="true|false"
 >
@@ -141,7 +143,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                     </callout>                   
                     <callout arearefs="mappingcollection4">
                         <para>
-                            <literal>lazy</literal> (可选--默认为true) 可以用来关闭延迟加载，指定一直使用预先抓取（对数组不适用）
+                            <literal>lazy</literal> (可选--默认为true) 可以用来关闭延迟加载(false)，指定一直使用预先抓取,或者打开"extra-lazy" 抓取，此时大多数操作不会初始化集合类(适用于非常大的集合)
                         </para>
                     </callout>                   
                     <callout arearefs="mappingcollection5">
@@ -185,13 +187,19 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                     </callout>                 
                     <callout arearefs="mappingcollection12">
                         <para>
-                            <literal>access</literal>(可选-默认为属性property):Hibernate取得属性值时使用的策略
+                            <literal>access</literal>(可选-默认为属性property):Hibernate取得集合属性值时使用的策略
                         </para>
                     </callout>
-                <callout arearefs="mappingcollection12">
+                <callout arearefs="mappingcollection13">
                     <para>
                         <literal>乐观锁</literal> (可选 - 默认为 <literal>true</literal>): 
                         对集合的状态的改变会是否导致其所属的实体的版本增长。 (对一对多关联来说，关闭这个属性常常是有理的)
+                    </para>
+                </callout>
+                <callout arearefs="mappingcollection14">
+                    <para>
+                        <literal>mutable(可变）</literal> (可选 - 默认为<literal>true</literal>): 
+                        若值为<literal>false</literal>,表明集合中的元素不会改变（在某些情况下可以进行一些小的性能优化）。
                     </para>
                 </callout>
                     
@@ -272,7 +280,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                     
                     <callout arearefs="mapkey3">
                         <para>
-                            <literal>type</literal> (可选,默认为整型<literal>integer</literal>):集合索引的类型。
+                            <literal>type</literal> (必须):映射键(map key)的类型。
                         </para>
                     </callout>          
                 </calloutlist>
@@ -302,7 +310,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                 </callout>
                     <callout arearefs="indexmanytomany3">
                         <para>
-                            <literal>class</literal> (必需):集合的索引使用的实体类。
+                            <literal>class</literal> (必需):映射的键(map key)使用的实体类。
                         </para>
                     </callout>          
                 </calloutlist>
@@ -319,7 +327,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
         从集合类可以产生很大一部分映射，覆盖了很多常见的关系模型。我们建议你试验schema生成工具，来体会一下不同的映射声明是如何被翻译为数据库表的。
         </para>
 
-    <sect2 id="collections-ofvalues" revision="1">
+    <sect2 id="collections-ofvalues" revision="2">
         <title>值集合于多对多关联(Collections of values and many-to-many associations)</title>
 
         
@@ -342,9 +350,9 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
         column="column_name"
         formula="any SQL expression"
         type="typename"
-        length="N"
-        precision="N"
-        scale="N"
+        length="L"
+        precision="P"
+        scale="S"
         not-null="true|false"
         unique="true|false"
         node="element-name"
@@ -382,6 +390,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                 <area id="manytomany5" coords="6 60"/>
                 <area id="manytomany6" coords="7 60"/>
                 <area id="manytomany7" coords="8 60"/>
+                <area id="manytomany8" coords="9 60"/>
                 </areaspec>
             <programlisting><![CDATA[<many-to-many
         column="column_name"
@@ -391,6 +400,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
         unique="true|false"
         not-found="ignore|exception"
         entity-name="EntityName"
+        property-ref="propertyNameFromAssociatedClass"
         node="element-name"
         embed-xml="true|false"
     />]]></programlisting>
@@ -439,6 +449,11 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
                         <literal>entity-name</literal> (可选): 被关联的类的实体名，作为<literal>class</literal>的替代。
                     </para>
                 </callout>
+                <callout arearefs="manytomany8">
+                    <para>
+                        <literal>property-ref</literal>: (可选) 被关联到此外键(foreign key)的类中的对应属性的名字。若未指定，使用被关联类的主键。
+                    </para>                
+                </callout>                   
                 </calloutlist>
             </programlistingco>
 
@@ -747,8 +762,8 @@ session.persist(category);               // The relationship will be saved]]></p
     </set>
 </class>
 
-<class name="eg.Child">
-    <id name="id" column="id"/>
+<class name="Child">
+    <id name="id" column="child_id"/>
     ....
     <many-to-one name="parent" 
         class="Parent" 
@@ -763,6 +778,67 @@ session.persist(category);               // The relationship will be saved]]></p
             </para>
 
         </sect2>
+
+    <sect2 id="collections-indexedbidirectional">
+        <title>双向关联，涉及有序集合类</title>
+        <para>
+            对于有一端是<literal>&lt;list&gt;</literal>或者<literal>&lt;map&gt;</literal>的双向关联，需要加以特别考虑。假若子类中的一个属性映射到索引字段，没问题，我们仍然可以在集合类映射上使用<literal>inverse="true"</literal>：
+        </para>
+        
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children" inverse="true">
+        <key column="parent_id"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <property name="name" 
+        not-null="true"/>
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        not-null="true"/>
+</class>]]></programlisting>
+
+        <para>
+            但是，假若子类中没有这样的属性存在，我们不能认为这个关联是真正的双向关联（信息不对称，在关联的一端有一些另外一端没有的信息）。在这种情况下，我们不能使用<literal>inverse="true"</literal>。我们需要这样用：
+        </para>
+
+        <programlisting><![CDATA[<class name="Parent">
+    <id name="id" column="parent_id"/>
+    ....
+    <map name="children">
+        <key column="parent_id"
+            not-null="true"/>
+        <map-key column="name" 
+            type="string"/>
+        <one-to-many class="Child"/>
+    </map>
+</class>
+
+<class name="Child">
+    <id name="id" column="child_id"/>
+    ....
+    <many-to-one name="parent" 
+        class="Parent" 
+        column="parent_id"
+        insert="false"
+        update="false"
+        not-null="true"/>
+</class>]]></programlisting>
+
+       <para>
+           注意在这个映射中，关联中集合类"值"一端负责来更新外键.TODO: Does this really result in some unnecessary update statements?
+       </para>
+
+    </sect2>
 
 
         <sect2 id="collections-ternary">

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <chapter id="queryhql">
     <title>HQL: Hibernate查询语言</title>
     <para>
@@ -75,7 +74,7 @@
         
     </sect1>
 
-    <sect1 id="queryhql-joins" revision="1">
+    <sect1 id="queryhql-joins" revision="2">
         <title>关联(Association)与连接(Join)</title>
 
         <para>
@@ -127,6 +126,14 @@
     left join cat.kittens as kitten]]></programlisting>
 
         <para>
+            通过HQL的<literal>with</literal>关键字，你可以提供额外的join条件。
+        </para>
+
+        <programlisting><![CDATA[from Cat as cat 
+    left join cat.kittens as kitten 
+        with kitten.bodyWeight > 10.0]]></programlisting>
+
+        <para>
             还有，一个"fetch"连接允许仅仅使用一个选择语句就将相关联的对象或一组值的集合随着他们的父对象的初始化而被初始化，这种方法在使用到集合的情况下尤其有用，对于关联和集合来说，它有效的代替了映射文件中的外联接
             与延迟声明（lazy declarations）. 查看
             <xref linkend="performance-fetching"/> 以获得等多的信息。
@@ -142,11 +149,16 @@
             并不在查询的结果中直接返回，但可以通过他们的父对象来访问到他们。
         </para>
         
-        <para>
-            注意<literal>fetch</literal>构造变量在使用了<literal>scroll()</literal> 或 <literal>iterate()</literal>函数
-            的查询中是不能使用的。最后注意，使用<literal>full join fetch</literal> 与 <literal>right join fetch</literal>是没有意义的。
+        <programlisting><![CDATA[from Cat as cat 
+    inner join fetch cat.mate
+    left join fetch cat.kittens child
+    left join fetch child.kittens]]></programlisting>
+    
+
+            <para>
+            假若使用<literal>iterate()</literal>来调用查询，请注意<literal>fetch</literal>构造是不能使用的(<literal>scroll()</literal> 可以使用)。<literal>fetch</literal>也不应该与<literal>setMaxResults()</literal> 或<literal>setFirstResult()</literal>共用，这是因为这些操作是基于结果集的，而在预先抓取集合类时可能包含重复的数据，也就是说无法预先知道精确的行数。<literal>fetch</literal>还不能与独立的 <literal>with</literal>条件一起使用。通过在一次查询中fetch多个集合，可以制造出笛卡尔积，因此请多加注意。对bag映射来说，同时join fetch多个集合角色可能在某些情况下给出并非预期的结果，也请小心。最后注意，使用<literal>full join fetch</literal> 与 <literal>right join fetch</literal>是没有意义的。
         </para>
-        
+
         <para>
             如果你使用属性级别的延迟获取（lazy fetching）（这是通过重新编写字节码实现的），可以使用 <literal>fetch  
 all properties</literal> 
@@ -158,6 +170,24 @@ all properties</literal>
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
             
     </sect1>
+
+    <sect1 id="queryhql-joins-forms">
+        <title>join 语法的形式</title>
+
+	    <para>
+		    HQL支持两种关联join的形式：<literal>implicit(隐式)</literal> 与<literal>explicit（显式）</literal>。
+		</para>
+
+	    <para>
+		    上一节中给出的查询都是使用<literal>explicit(显式)</literal>形式的，其中form子句中明确给出了join关键字。这是建议使用的方式。
+	    </para>
+
+	    <para>
+		    <literal>implicit（隐式）</literal>形式不使用join关键字。关联使用"点号"来进行“引用”。<literal>implicit</literal> join可以在任何HQL子句中出现.<literal>implicit</literal> join在最终的SQL语句中以inner join的方式出现。
+	    </para>
+
+        <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
+	</sect1>
 
     <sect1 id="queryhql-select">
         <title>select子句</title>
@@ -512,7 +542,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             <listitem>
                 <para>
                     EJB-QL 3.0定义的任何函数或操作：<literal>substring(), trim(),
-                    lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>
+                    lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()， mod()</literal>
                 </para>
             </listitem>
             <listitem>
@@ -522,8 +552,26 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                    <literal>str()</literal> 把数字或者时间值转换为可读的字符串
+                </para>
+            </listitem>
+            
+            <listitem>
+                <para>
                     <literal>cast(... as ...)</literal>, 其第二个参数是某Hibernate类型的名字，以及<literal>extract(... from ...)</literal>，只要ANSI 
                     <literal>cast()</literal> 和 <literal>extract()</literal> 被底层数据库支持
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    HQL <literal>index()</literal> 函数，作用于join的有序集合的别名。
+                    
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    HQL函数，把集合作为参数:<literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>,还有特别的<literal>elements()</literal> 和<literal>indices</literal>函数，可以与数量词加以限定：<literal>some, all, exists, any, in</literal>。
+                    
                 </para>
             </listitem>
             <listitem>
@@ -534,7 +582,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    JDBC参数传入 <literal>?</literal>
+                    JDBC风格的参数传入 <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
@@ -544,7 +592,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    SQL 直接常量 <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
+                    SQL 直接常量 <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>
             <listitem>
@@ -768,7 +816,7 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
     </sect1>
 
     
-    <sect1 id="queryhql-subqueries">
+    <sect1 id="queryhql-subqueries"  revision="2">
         <title>子查询</title>
         
         <para>
@@ -795,6 +843,13 @@ where not exists (
 where cat.name not in ( 
     select name.nickName from Name as name 
 )]]></programlisting>
+
+        <programlisting><![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit) 
+from Cat as cat]]></programlisting>
+
+        <para>
+            注意，HQL自查询只可以在select或者where子句中出现。
+        </para>
 
         <para>
             在select列表中包含一个表达式以上的子查询，你可以使用一个元组构造符（tuple constructors）： 
@@ -940,11 +995,12 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
 
    </sect1>
 
-    <sect1 id="queryhql-bulk">
-        <title>批量的UPDATE &amp; DELETE语句</title>
+    <sect1 id="queryhql-bulk"  revision="2">
+        <title>批量的UPDATE和DELETE</title>
 
         <para>
-            HQL现在支持UPDATE与DELETE语句.  查阅
+            HQL现在支持 <literal>update</literal>, <literal>delete</literal> 和
+            <literal>insert ... select ...</literal>语句.  查阅
             <xref linkend="batch-direct"/> 以获得更多信息。
         </para>
     </sect1>

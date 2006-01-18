@@ -8,7 +8,7 @@
 		以及允许对Hibernate功能进行扩展。
     </para>
 
-    <sect1 id="objectstate-interceptors" revision="1">
+    <sect1 id="objectstate-interceptors" revision="3">
         <title>
 		拦截器(Interceptors)
 		</title>
@@ -21,19 +21,25 @@
 			<literal>Auditable</literal>接口的对象被更新时，同步更新<literal>lastUpdateTimestamp</literal>属性。
         </para>
 
+        <para>
+            你可以直接实现<literal>Interceptor</literal>接口，也可以（最好）继承自<literal>EmptyInterceptor</literal>。
+        </para>
+
         <programlisting><![CDATA[package org.hibernate.test;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.hibernate.Interceptor;
+import org.hibernate.EmptyInterceptor;
+import org.hibernate.Transaction;
 import org.hibernate.type.Type;
 
-public class AuditInterceptor implements Interceptor, Serializable {
+public class AuditInterceptor extends EmptyInterceptor {
 
     private int updates;
     private int creates;
+    private int loads;
 
     public void onDelete(Object entity,
                          Serializable id,
@@ -67,6 +73,9 @@ public class AuditInterceptor implements Interceptor, Serializable {
                           Object[] state,
                           String[] propertyNames,
                           Type[] types) {
+        if ( entity instanceof Auditable ) {
+            loads++;
+        }
         return false;
     }
 
@@ -88,34 +97,38 @@ public class AuditInterceptor implements Interceptor, Serializable {
         return false;
     }
 
-    public void postFlush(Iterator entities) {
-        System.out.println("Creations: " + creates + ", Updates: " + updates);
-    }
-
-    public void preFlush(Iterator entities) {
+    public void afterTransactionCompletion(Transaction tx) {
+        if ( tx.wasCommitted() ) {
+            System.out.println("Creations: " + creates + ", Updates: " + updates, "Loads: " + loads);
+        }
         updates=0;
         creates=0;
+        loads=0;
     }
-
-    ...
 
 }]]></programlisting>
 
+
         <para>
-		    创建会话(session)的时候可以指定拦截器。
+            拦截器可以有两种:<literal>Session</literal>范围内的，和<literal>SessionFactory</literal>范围内的。
+        </para>
+
+        <para>
+		    当使用某个重载的SessionFactory.openSession()使用<literal>Interceptor</literal>作为参数调用打开一个session的时候，就指定了<literal>Session</literal>范围内的拦截器。
+		    
         </para>
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
-		    你也可以使用<literal>Configuration</literal>来设置一个全局范围的拦截器。
+		    <literal>SessionFactory</literal>范围内的拦截器要通过<literal>Configuration</literal>中注册，而这必须在创建<literal>SessionFactory</literal>之前。在这种情况下，给出的拦截器会被这个<literal>SessionFactory</literal>所打开的所有session使用了；除非session打开时明确指明了使用的拦截器。<literal>SessionFactory</literal>范围内的拦截器，必须是线程安全的，因为多个session可能并发使用这个拦截器，要因此小心不要保存与session相关的状态。
         </para>
     
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
     </sect1>
 
-     <sect1 id="objectstate-events" revision="2">
+     <sect1 id="objectstate-events" revision="4">
         <title>
 		事件系统(Event system)
 		</title>
@@ -149,25 +162,27 @@ public class AuditInterceptor implements Interceptor, Serializable {
                         下面是一个用户定制的加载事件(load event)的监听器：
         </para>
 
-        <programlisting><![CDATA[public class MyLoadListener extends DefaultLoadEventListener {
+        <programlisting><![CDATA[public class MyLoadListener implements LoadEventListener {
     // this is the single method defined by the LoadEventListener interface
-    public Object onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
+    public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
             throws HibernateException {
         if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
             throw MySecurityException("Unauthorized access");
         }
-        return super.onLoad(event, loadType);
     }
 }]]></programlisting>
 
         <para>
-		    你还需要修改一处配置，来告诉Hibernate以使用选定的监听器来替代默认的监听器。
+		    你还需要修改一处配置，来告诉Hibernate，除了默认的监听器，还要附加选定的监听器。
         </para>
 
 <programlisting><![CDATA[<hibernate-configuration>
     <session-factory>
         ...
-        <listener type="load" class="MyLoadListener"/>
+        <event type="load">
+            <listener class="com.eg.MyLoadListener"/>
+            <listener class="org.hibernate.event.def.DefaultLoadEventListener"/>
+        </event>
     </session-factory>
 </hibernate-configuration>]]></programlisting>
 
@@ -176,7 +191,8 @@ public class AuditInterceptor implements Interceptor, Serializable {
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration();
-cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() );]]></programlisting>
+LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };
+cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
 
         <para>
 		    通过在XML配置文件声明而注册的监听器不能共享实例。如果在多个<literal>&lt;listener/&gt;</literal>节点中使用
@@ -191,7 +207,7 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 
     </sect1>
     
-    <sect1 id="objectstate-decl-security">
+    <sect1 id="objectstate-decl-security"  revision="2">
         <title>
 		Hibernate的声明式安全机制
 		</title>
@@ -209,6 +225,10 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 <listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
 <listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
+
+        <para>
+            注意，<literal>&lt;listener type="..." class="..."/&gt;</literal>只是<literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>的简写，对每一个事件类型都必须严格的有一个监听器与之对应。
+        </para>
 
         <para>
 		    接下来，仍然在<literal>hibernate.cfg.xml</literal>文件中，绑定角色的权限：

@@ -235,6 +235,44 @@
             请注意，Hibernate对JCA的支持，仍处于实验性质。
         </para>
     </sect1>
+    <sect1 id="architecture-current-session" revision="1">
+        <title>上下文范围内相关的Session</title>
+        <para>
+           	使用Hibernate的大多数应用需要某种形式的“上下文范围内有效的”session,特定的session仅在特定的上下文中生效，并且自始至终一直生效。然而，对不同类型的应用程序而言，要为这种“上下文”下一个定义通常是困难的；不同的上下文对“当前”这个概念的定义范围也有所不同。在3.0之前，使用Hibernate的程序要么采用自行编写的基于<literal>ThreadLocal</literal>的上下文session,要么采用<literal>HibernateUtil</literal>这样的辅助类，要么采用第三方框架（比如Spring或Pico)，它们提供基于代理(proxy)或者拦截器(interception)的上下文session。
+        </para>
+        <para>
+            从3.0.1开始，Hibernate增加了<literal>SessionFactory.getCurrentSession()</literal>方法。一开始，它假定是和<literal>JTA</literal>事务联用的，<literal>JTA</literal>事务定义了当前session的范围和上下文(scope and context)。Hibernate开发团队理解到，因为有好几个独立的<literal>JTA TransactionManager</literal>实现稳定可用，不论是否被部署到一个<literal>J2EE</literal>容器中，大多数(假若不是所有的）应用程序都应该采用<literal>JTA</literal>事务管理。基于这一点，采用<literal>JTA</literal>的上下文相关session可以满足你一切需要。
+        </para>
+        <para>
+            更好的是，从3.1开始，<literal>SessionFactory.getCurrentSession()</literal>的后台实现是可拔插的。因此，我们引入了新的扩展接口(<literal>org.hibernate.context.CurrentSessionContext</literal>)和新的配置参数(<literal>hibernate.current_session_context_class</literal>)，以便对什么是“当前session”的范围和上下文(scope and context)的定义进行拔插。
+        </para>
+        <para>
+            请参阅<literal>org.hibernate.context.CurrentSessionContext</literal>接口的Javadoc,那里有关于它的契约的详细讨论。它定义了一个方法，<literal>currentSession()</literal>，特定的实现用它来负责跟踪当前的上下文session。Hibernate内置了此接口的两种实现。
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.JTASessionContext</literal> - 当前session根据<literal>JTA</literal>来跟踪和界定。这和以前的仅支持JTA的方法是完全一样的。详情请参阅Javadoc。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.ThreadLocalSessionContext</literal> - 当前session通过当前执行的线程来跟踪和界定。详情也请参阅Javadoc。
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            这两种实现都提供了“每数据库事务对应一个session”的编程模型，也称作<emphasis>每次请求一个session</emphasis>。Hibernate session的起始和终结由数据库事务的生存来控制。假若你采用自行编写代码来管理事务（比如，在纯粹的J2SE,或者JTA/UserTransaction/BMT），建议使用Hibernate <literal>Transaction</literal> API来把底层事务实现从你的代码中隐藏掉。如果你在支持CMT的EJB容器中执行，事务边界是声明式定义的，你不需要在代码中进行任何事务或session管理操作。请参阅<xref linkend="transactions"/>一节来阅读更多的内容和示例代码。
+        </para>
+
+        <para>
+            <literal>hibernate.current_session_context_class</literal>配置参数定义了应该采用哪个<literal>org.hibernate.context.CurrentSessionContext</literal>实现。注意，为了向下兼容，如果未配置此参数，但是存在<literal>org.hibernate.transaction.TransactionManagerLookup</literal>的配置，Hibernate会采用<literal>org.hibernate.context.JTASessionContext</literal>。一般而言，此参数的值是要使用的实现类的全名，但那两个内置的实现可以使用简写值，它们是"jta"和"thread"。
+            
+        </para>
+        
+    </sect1>
 
 </chapter>
 

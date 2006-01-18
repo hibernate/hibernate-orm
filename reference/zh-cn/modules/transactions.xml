@@ -1,82 +1,81 @@
-﻿<chapter id="transactions" revision="1">
+﻿<chapter id="transactions" revision="2">
 	<title>事务和并发</title>
 	<para>
 			Hibernate的事务和并发控制很容易掌握。Hibernate直接使用JDBC连接和JTA资源，不添加任何附加锁定
 			行为。我们强烈推荐你花点时间了解JDBC编程，ANSI SQL查询语言和你使用
-			的数据库系统的事务隔离规范。Hibernate只添加自动版本管理，而不会锁
-			定内存中的对象，也不会改变数据库事务的隔离级别。基本上，使用
-			Hibernate就好像直接使用JDBC(或者JTA/CMT)来访问你的数据库资源。
+			的数据库系统的事务隔离规范。
 	</para>
+
+    <para>
+        Hibernate不锁定内存中的对象。你的应用程序会按照你的数据库事务的隔离级别规定的那样运作。幸亏有了<literal>Session</literal>，使得Hibernate通过标识符查找，和实体查询（不是返回标量值的报表查询）提供了可重复的读取（Repeatable reads）功能，<literal>Session</literal>同时也是事务范围内的缓存（cache）。
+    </para>
+	
 		<para>
-				除了自动版本管理，针对行级悲观锁定，Hibernate也提供了辅助的API，它使用了
-				<literal>SELECT FOR UPDATE</literal>的SQL语法。本章后面会讨论这个API。
+				除了对自动乐观并发控制提供版本管理，针对行级悲观锁定，Hibernate也提供了辅助的（较小的)API，它使用了
+				<literal>SELECT FOR UPDATE</literal>的SQL语法。本章后面会讨论乐观并发控制和这个API。
 		</para>
 		<para>
 					我们从<literal>Configuration</literal>层、<literal>SessionFactory</literal>层, 和
       		<literal>Session</literal>层开始讨论Hibernate的并行控制、数据库事务和应用
         	程序的长事务。
 	</para>
-    <sect1 id="transactions-basics">
-	   <title>Session和事务范围(transaction scopes)</title>
+    <sect1 id="transactions-basics" revision="1">
+	   <title>Session和事务范围(transaction scope)</title>
 				<para>
-						一个<literal>SessionFactory</literal>对象的创建代价很昂贵，它是线程安全的对象，它被设计成可以
-						为所有的应用程序线程所共享。它只创建一次，通常是在应用程序启动的时候，由一个
-						<literal>Configuraion</literal>的实例来创建。				
+						<literal>SessionFactory</literal>对象的创建代价很昂贵，它是线程安全的对象，它为所有的应用程序线程所共享。它只创建一次，通常是在应用程序启动的时候，由一个<literal>Configuraion</literal>的实例来创建。				
 				</para>
 				<para>
-						一个<literal>Session</literal>的对象是轻型的，非线程安全的，对于单个业务进程，单个的
-						工作单元而言，它只被使用一次，然后就丢弃。只有在需要的时候，<literal>Session</literal>
+						<literal>Session</literal>对象的创建代价比较小，是非线程安全的，对于单个请求，单个会话、单个的
+						工作单元而言，它只被使用一次，然后就丢弃。只有在需要的时候，一个<literal>Session</literal>对象
 						才会获取一个JDBC的<literal>Connection</literal>（或一个<literal>Datasource</literal>）
-						对象。所以你可以放心的打开和关闭<literal>Session</literal>，甚至当你并不确定一个特定的请
-						求是否需要数据访问时，你也可以这样做。(一旦你实现下面提到的使用了请求拦截的模式，这就
-						变得很重要了。
+						对象，因此假若不使用的时候它不消费任何资源。
 				</para>
 				<para>
-					此外我们还要考虑数据库事务。数据库事务应该尽可能的短，降低数据库锁定造成的资源争用。
-					数据库长事务会导致你的应用程序无法扩展到高的并发负载。
+					此外我们还要考虑数据库事务。数据库事务应该尽可能的短，降低数据库中的锁争用。
+					数据库长事务会阻止你的应用程序扩展到高的并发负载。因此，假若在用户思考期间让数据库事务开着，直到整个工作单元完成才关闭这个事务，这绝不是一个好的设计。
 				</para>
 		<para>
 				一个操作单元(Unit of work)的范围是多大？单个的Hibernate <literal>Session</literal>能跨越多个
 				数据库事务吗？还是一个<literal>Session</literal>的作用范围对应一个数据库事务的范围？应该何时打开
 				<literal>Session</literal>，何时关闭<literal>Session</literal>？，你又如何划分数据库事务的边界呢？
 		</para>
-        <sect2 id="transactions-basics-uow">
+        <sect2 id="transactions-basics-uow"  revision="1">
 						<title>操作单元(Unit of work)</title>
 		<para>
-				首先，别再用<emphasis>session-per-operation</emphasis>这种反模式了，也就是说，在单个线程中，
+				首先，别用<emphasis>session-per-operation</emphasis>这种反模式了，也就是说，在单个线程中，
 				不要因为一次简单的数据库调用，就打开和关闭一次<literal>Session</literal>！数据库事务也是如此。
 				应用程序中的数据库调用是按照计划好的次序，分组为原子的操作单元。（注意，这也意味着，应用程
 				序中，在单个的SQL语句发送之后，自动事务提交(auto-commit)模式失效了。这种模式专门为SQL控制台操作设计的。
-				Hibernate禁止立即自动事务提交模式，或者期望应用服务器禁止立即自动事务提交模式。）
+				Hibernate禁止立即自动事务提交模式，或者期望应用服务器禁止立即自动事务提交模式。）数据库事务绝不是可有可无的，任何与数据库之间的通讯都必须在某个事务中进行，不管你是在读还是在写数据。对读数据而言，应该避免auto-commit行为，因为很多小的事务比一个清晰定义的工作单元性能差。后者也更容易维护和扩展。
 		</para>
 		<para>
 				在多用户的client/server应用程序中，最常用的模式是 <emphasis>每个请求一个会话(session-per-request)</emphasis>。
 				在这种模式下，来自客户端的请求被发送到服务器端（即Hibernate持久化层运行的地方），一
 				个新的Hibernate <literal>Session</literal>被打开，并且执行这个操作单元中所有的数据库操作。
-				一旦操作完成（同时发送到客户端的响应也准备就绪），session被同步，然后关闭。你也可以使用单
+				一旦操作完成（同时对客户端的响应也准备就绪），session被同步，然后关闭。你也可以使用单
 				个数据库事务来处理客户端请求，在你打开<literal>Session</literal>之后启动事务，在你关闭
 				<literal>Session</literal>之前提交事务。会话和请求之间的关系是一对一的关系，这种模式对
 				于大多数应用程序来说是很棒的。
 		</para>
-			<para>
-					真正的挑战在于如何去实现这种模式：不仅<literal>Session</literal>和事务必须被正确的开始和结束，
-					而且他们也必须能被数据访问操作访问。用拦截器来实现操作单元的划分，该拦截器在客户端请求达到服
-					务器端的时候开始，在服务器端发送响应（即，<literal>ServletFilter</literal>）之前结束。我们推荐
-					使用一个<literal>ThreadLocal</literal> 变量，把 <literal>Session</literal>绑定到处理客户端请求的线
-					程上去。这种方式可以让运行在该线程上的所有程序代码轻松的访问<literal>Session</literal>（就像访问一
-					个静态变量那样）。你也可以在一个<literal>ThreadLocal</literal> 变量中保持事务上下文环境，不过这依赖
-					于你所选择的数据库事务划分机制。这种实现模式被称之为 <emphasis>ThreadLocal Session</emphasis>和
-					<emphasis>Open Session in View</emphasis>。你可以很容易的扩展本文前面章节展示的 
-					<literal>HibernateUtil</literal> 辅助类来实现这种模式。当然，你必须找到一种实现拦截器的方法，并
-					且可以把拦截器集成到你的应用环境中。请参考Hibernate网站上面的提示和例子。
-			</para>
+		<para>
+                实现才是真正的挑战。Hibernate内置了对"当前session(current session)" 的管理，用于简化此模式。你要做的一切就是在服务器端要处理请求的时候，开启事务，在响应发送给客户之前结束事务。你可以用任何方式来完成这一操作，通常的方案有<literal>ServletFilter</literal>，在service方法中进行pointcut的AOP拦截器，或者proxy/interception容器。EJB容器是实现横切诸如EJB session bean上的事务分界，用CMT对事务进行声明等方面的标准手段。假若你决定使用编程式的事务分界，请参考本章后面讲到的Hibernate <literal>Transaction</literal> API，这对易用性和代码可移植性都有好处。
+            </para>
+
+            <para>
+                在任何时间，任何地方，你的应用代码可以通过简单的调用<literal>sessionFactory.getCurrentSession()</literal>来访问"当前session"，用于处理请求。你总是会得到当前数据库事务范围内的<literal>Session</literal>。在使用本地资源或JTA环境时，必须配置它，请参见<xref linkend="architecture-current-session"/>。
+            </para>
+
+            <para>
+                有时，将<literal>Session</literal>和数据库事务的边界延伸到"展示层被渲染后"会带来便利。有些serlvet应用程序在对请求进行处理后，有个单独的渲染期，这种延伸对这种程序特别有用。假若你实现你自己的拦截器，把事务边界延伸到展示层渲染结束后非常容易。然而，假若你依赖有容器管理事务的EJB，这就不太容易了，因为事务会在EJB方法返回后结束，而那是在任何展示层渲染开始之前。请访问Hibernate网站和论坛，你可以找到<emphasis>Open Session in View</emphasis>这一模式的提示和示例。
+             </para>
+
         </sect2>
 
-        <sect2 id="transactions-basics-apptx">
-						<title>应用程序事务(Application transactions)</title>
+        <sect2 id="transactions-basics-apptx"  revision="1">
+						<title>长对话</title>
 						<para>
-							session-per-request模式不仅仅是一个可以用来设计操作单元的有用概念。很多业务处理流程都需
-							要一系列完整的和用户之间的交互，即用户对数据库的交叉访问。在基于web的应用和企业
+							session-per-request模式不仅仅是一个可以用来设计操作单元的有用概念。很多业务处理都需
+							要一系列完整的与用户之间的交互，而这些用户是指对数据库有交叉访问的用户。在基于web的应用和企业
 							应用中，跨用户交互的数据库事务是无法接受的。考虑下面的例子：
 						</para>
             <itemizedlist>
@@ -95,17 +94,17 @@
             </itemizedlist>
 
 		<para>
-				从用户的角度来看，我们把这个操作单元称为<emphasis>应用程序长事务</emphasis>（application transaction）。
+				从用户的角度来看，我们把这个操作单元称为长时间运行的<emphasis>对话</emphasis>（conversation）,或者(or <emphasis>应用事务</emphasis>,application transaction)。
 				在你的应用程序中，可以有很多种方法来实现它。
 		</para>
 		<para>
 				头一个幼稚的做法是，在用户思考的过程中，保持<literal>Session</literal>和数据库事务是打开的，
 				保持数据库锁定，以阻止并发修改，从而保证数据库事务隔离级别和原子操作。这种方式当然是一个反模式，
-				因为数据库锁定的维持会导致应用程序无法扩展并发用户的数目。
+				因为锁争用会导致应用程序无法扩展并发用户的数目。
 		 </para>
 		<para>
-				很明显，我们必须使用多个数据库事务来实现一个应用程序事务。在这个例子中，维护业务处理流程的
-				事务隔离变成了应用程序层的部分责任。单个应用程序事务通常跨越多个数据库事务。如果仅仅只有一
+				很明显，我们必须使用多个数据库事务来实现这个对话。在这个例子中，维护业务处理的
+				事务隔离变成了应用程序层的部分责任。一个对话通常跨越多个数据库事务。如果仅仅只有一
 				个数据库事务（最后的那个事务）保存更新过的数据，而所有其他事务只是单纯的读取数据（例如在一
 				个跨越多个请求/响应周期的向导风格的对话框中），那么应用程序事务将保证其原子性。这种方式比听
 				起来还要容易实现，特别是当你使用了Hibernate的下述特性的时候：
@@ -115,7 +114,7 @@
                 <listitem>
 										<para>
 										<emphasis>自动版本化</emphasis> - Hibernate能够自动进行乐观并发控制 ，如果在用户思考
-										的过程中发生并发修改冲突，Hibernate能够自动检测到。
+										的过程中发生并发修改，Hibernate能够自动检测到。一般我们只在对话结束时才检查。
 				</para>
                 </listitem>
                 <listitem>
@@ -129,17 +128,17 @@
                 </listitem>
                 <listitem>
 				<para>
-						<emphasis>长生命周期的Session</emphasis> （Long Session）- Hibernate 的<literal>Session</literal>
+						<emphasis>Extended (or Long) Session</emphasis> - Hibernate 的<literal>Session</literal>
 						可以在数据库事务提交之后和底层的JDBC连接断开，当一个新的客户端请求到来的时候，它又重新连接上底层的
-						JDBC连接。这种模式被称之为<emphasis>session-per-application-transaction</emphasis>，这种情况可
-						能会造成不必要的Session和JDBC连接的重新关联。自动版本化被用来隔离并发修改。
+						JDBC连接。这种模式被称之为<emphasis>session-per-conversation</emphasis>，这种情况可
+						能会造成不必要的Session和JDBC连接的重新关联。自动版本化被用来隔离并发修改, <literal>Session</literal>通常不允许自动flush,而是明确flush。
 				</para>
                 </listitem>
             </itemizedlist>
 
 		<para>
 			 <emphasis>session-per-request-with-detached-objects</emphasis> 和
-			 <emphasis>session-per-application-transaction</emphasis> 各有优缺点，我们在本章后面乐观并发
+			 <emphasis>session-per-conversation</emphasis> 各有优缺点，我们在本章后面乐观并发
 			 控制那部分再进行讨论。
 		</para>
         </sect2>
@@ -212,7 +211,7 @@
             <itemizedlist>
                 <listitem>
                     <para>
-                        <literal>Session</literal> 是一个非线程安全的类。如果一个<literal>Session</literal>
+                        <literal>Session</literal> 对象是非线程安全的。如果一个<literal>Session</literal>
                         实例允许共享的话，那些支持并发运行的东东，例如HTTP request，session beans,或者是
                         Swing workers，将会导致出现资源争用（race condition）。如果在<literal>HttpSession</literal>中有
                         Hibernate 的<literal>Session</literal>的话（稍后讨论），你应该考虑同步访问你的Http session。
@@ -251,18 +250,18 @@
         <para>
 						数据库（或者系统）事务的声明总是必须的。在数据库事务之外，就无法和数据库通讯（这可能会让那些习惯于
 						自动提交事务模式的开发人员感到迷惑）。永远使用清晰的事务声明，即使只读操作也是如此。进行
-						显式的事务声明并不总是需要的，这取决于你的事务隔离级别和数据库的能力，但不管怎么说，声明事务总归有益无害。
+						显式的事务声明并不总是需要的，这取决于你的事务隔离级别和数据库的能力，但不管怎么说，声明事务总归有益无害。当然，一个单独的数据库事务总是比很多琐碎的事务性能更好，即时对读数据而言也是一样。
         </para>
         <para>
 						一个Hibernate应用程序可以运行在非托管环境中（也就是独立运行的应用程序，简单Web应用程序，
 						或者Swing图形桌面应用程序），也可以运行在托管的J2EE环境中。在一个非托管环境中，Hibernate
 						通常自己负责管理数据库连接池。应用程序开发人员必须手工设置事务声明，换句话说，就是手工启
-						动，提交，或者回滚数据库事务。一个托管的环境通常提供了容器管理事务，例如事务装配通过可声
+						动，提交，或者回滚数据库事务。一个托管的环境通常提供了容器管理事务(CMT)，例如事务装配通过可声
 						明的方式定义在EJB session beans的部署描述符中。可编程式事务声明不再需要，即使是
 						<literal>Session</literal> 的同步也可以自动完成。
         </para>
         <para>
-						让持久层具备可移植性是人们的理想。Hibernate提供了一套称为<literal>Transaction</literal>的封装API，
+						让持久层具备可移植性是人们的理想,这种移植发生在非托管的本地资源环境，与依赖JTA但是使用BMT而非CMT的系统之间。在两种情况下你都可以使用编程式的事务管理。Hibernate提供了一套称为<literal>Transaction</literal>的封装API，
 						用来把你的部署环境中的本地事务管理系统转换到Hibernate事务上。这个API是可选的，但是我们强烈
 						推荐你使用，除非你用CMT session bean。
         </para>
@@ -297,10 +296,10 @@
 						session的同步(flush,刷出）前面已经讨论过了，我们现在进一步考察在托管和非托管环境下的事务声明和异常处理。
         </para>
 
-        <sect2 id="transactions-demarcation-nonmanaged">
+        <sect2 id="transactions-demarcation-nonmanaged"  revision="2">
             <title>非托管环境</title>
             <para>
-                如果Hibernat持久层运行在一个非托管环境中，数据库连接通常由Hibernate的连接池机制
+                如果Hibernat持久层运行在一个非托管环境中，数据库连接通常由Hibernate的简单（即非DataSource)连接池机制
                 来处理。session/transaction处理方式如下所示：
             </para>
             <programlisting><![CDATA[//Non-managed environment idiom
@@ -323,38 +322,47 @@ finally {
 }]]></programlisting>
             <para>
                 你不需要显式<literal>flush()</literal>  <literal>Session</literal>  -  
-                对<literal>commit()</literal>的调用会自动触发session的同步。
+                对<literal>commit()</literal>的调用会自动触发session的同步(取决于session的<xref linkend="objectstate-flushing">FlushMode</xref>)。调用 <literal>close()</literal> 标志session的结束。<literal>close()</literal>方法重要的暗示是，<literal>session</literal>释放了JDBC连接。这段Java代码在非托管环境下和JTA环境下都可以运行。
             </para>
 
             <para>
-                调用 <literal>close()</literal> 标志session的结束。
-                <literal>close()</literal>方法重要的暗示是，<literal>session</literal>释放了JDBC连接。
+                更加灵活的方案是Hibernate内置的"current session"上下文管理，前文已经讲过：
             </para>
 
-            <para>
-                这段Java代码是可移植的，可以在非托管环境和JTA环境中运行。
-            </para>
+            <programlisting><![CDATA[// Non-managed environment idiom with getCurrentSession()
+try {
+    factory.getCurrentSession().beginTransaction();
+
+    // do some work
+    ...
+
+    factory.getCurrentSession().getTransaction().commit();
+}
+catch (RuntimeException e) {
+    factory.getCurrentSession().getTransaction().rollback();
+    throw e; // or display error message
+}]]></programlisting>
 
             <para>
-                你很可能从未在一个标准的应用程序的业务代码中见过这样的用法；致命的（系统）异常应该总是
+                你很可能从未在一个通常的应用程序的业务代码中见过这样的代码片断：致命的（系统）异常应该总是
                 在应用程序“顶层”被捕获。换句话说，执行Hibernate调用的代码（在持久层）和处理
                 <literal>RuntimeException</literal>异常的代码（通常只能清理和退出应用程序）应该在不同
-                的应用程序逻辑层。这对于你设计自己的软件系统来说是一个挑战，只要有可能，你就应该使用
-                J2EE/EJB容器服务。异常处理将在本章稍后进行讨论。
+                的应用程序逻辑层。Hibernate的当前上下文管理可以极大地简化这一设计，你所有的一切就是<literal>SessionFactory</literal>。              异常处理将在本章稍后进行讨论。
             </para>
 
            <para>
                 请注意，你应该选择 <literal>org.hibernate.transaction.JDBCTransactionFactory</literal>
-                (这是默认选项).
+                (这是默认选项)，对第二个例子来说，<literal>hibernate.current_session_context_class</literal>应该是<literal>"thread"</literal>
             </para>
 
         </sect2>
 
-        <sect2 id="transactions-demarcation-jta">
+        <sect2 id="transactions-demarcation-jta"  revision="3">
             <title>使用JTA</title>
             <para>
                	如果你的持久层运行在一个应用服务器中（例如，在EJB session beans的后面），Hibernate获取
-               	的每个数据源连接将自动成为全局JTA事务的一部分。Hibernate提供了两种策略进行JTA集成。
+               	的每个数据源连接将自动成为全局JTA事务的一部分。
+                你可以安装一个独立的JTA实现，使用它而不使用EJB。Hibernate提供了两种策略进行JTA集成。
             </para>
 
              <para>
@@ -381,36 +389,34 @@ finally {
     sess.close();
 }]]></programlisting>
 
+           <para>
+               如果你希望使用与事务绑定的<literal>Session</literal>，也就是使用<literal>getCurrentSession()</literal>来简化上下文管理，你将不得不直接使用JTA <literal>UserTransaction</literal>API。
+            </para>
+
+            <programlisting><![CDATA[// BMT idiom with getCurrentSession()
+try {
+    UserTransaction tx = (UserTransaction)new InitialContext()
+                            .lookup("java:comp/UserTransaction");
+
+    tx.begin();
+
+    // Do some work on Session bound to transaction
+    factory.getCurrentSession().load(...);
+    factory.getCurrentSession().persist(...);
+
+    tx.commit();
+}
+catch (RuntimeException e) {
+    tx.rollback();
+    throw e; // or display error message
+}]]></programlisting>
+
+
             <para>
                在CMT方式下，事务声明是在session bean的部署描述符中，而不需要编程。
-               除非你设置了属性<literal>hibernate.transaction.flush_before_completion</literal>和
-               <literal>hibernate.transaction.auto_close_session</literal>为<literal>true</literal>，
-               否则你必须自己同步和关闭<literal>Session</literal>。Hibernate可以为你自动同步和关闭
-               <literal>Session</literal>。你唯一要做的就是当发生异常时进行事务回滚。幸运的是，
-               在一个CMT bean中，事务回滚甚至可以由容器自动进行，因为由session bean方法抛出的未处理的
-               <literal>RuntimeException</literal>异常可以通知容器设置全局事务回滚。<emphasis>这意味着
-               在CMT中，你完全无需使用Hibernate的<literal>Transaction</literal> API 。</emphasis>
-            </para>
-
-            <para>
-                请注意，当你配置Hibernate事务工厂的时候，在一个BMT session bean中，你应该选择
-                <literal>org.hibernate.transaction.JTATransactionFactory</literal>，在一个
-                CMT session bean中选择<literal>org.hibernate.transaction.CMTTransactionFactory</literal>。
-                记住，同时也要设置<literal>org.hibernate.transaction.manager_lookup_class</literal>。
-            </para>
-
-            <para>
-								如果你使用CMT环境，并且让容器自动同步和关闭session，你可能也希望在你代码的不同部分使用
-								同一个session。一般来说，在一个非托管环境中，你可以使用一个<literal>ThreadLocal</literal>
-								变量来持有这个session，但是单个EJB方法调用可能会在不同的线程中执行（举例来说，一个session 
-								bean调用另一个session bean）。如果你不想在应用代码中被传递<literal>Session</literal>对
-								象实例的问题困扰的话，那么<literal>SessionFactory</literal> 提供的
-								<literal>getCurrentSession()</literal>方法就很适合你，该方法返回一个绑定到JTA事务
-								上下文环境中的session实例。这也是把Hibernate集成到一个应用程序中的最简单的方法！这个“当
-								前的”session总是可以自动同步和自动关闭（不考虑上述的属性设置）。我们的session/transaction
-								管理代码减少到如下所示：
-            </para>
-
+               因此，代码被简化为:
+			</para>
+			
            <programlisting><![CDATA[// CMT idiom
 Session sess = factory.getCurrentSession();
 
@@ -420,18 +426,22 @@ Session sess = factory.getCurrentSession();
 ]]></programlisting>
 
             <para>
-                换句话来说，在一个托管环境下，你要做的所有的事情就是调用
-                <literal>SessionFactory.getCurrentSession()</literal>，然后进行你的数据访问，把其余的工作
-                交给容器来做。事务在你的session bean的部署描述符中以可声明的方式来设置。session的生命周期完全
-                由Hibernate来管理。
+                在CMT/EJB中甚至会自动rollback，因为假若有未捕获的<literal>RuntimeException</literal>从session bean方法中抛出，这就会通知容器把全局事务回滚。<emphasis>这就意味着，在BMT或者CMT中，你根本就不需要使用Hibernate <literal>Transaction</literal> API ，你自动得到了绑定到事务的“当前”Session。
+                </emphasis>
             </para>
-            
+
             <para>
-                对<literal>after_statement</literal>连接释放方式有一个警告。因为JTA规范的一个很愚蠢的限制，Hibernate不可能自动清理任何未关闭的<literal>ScrollableResults</literal> 或者<literal>Iterator</literal>，它们是由<literal>scroll()</literal>或<literal>iterate()</literal>产生的。你<emphasis>must</emphasis>通过在<literal>finally</literal>块中，显式调用<literal>ScrollableResults.close()</literal>或者<literal>Hibernate.close(Iterator)</literal>方法来释放底层数据库游标。(当然，大部分程序完全可以很容易的避免在CMT代码中出现<literal>scroll()</literal>或<literal>iterate()</literal>。)
+                注意，当你配置Hibernate的transaction factory的时候，在直接使用JTA的时候（BMT），你应该选择<literal>org.hibernate.transaction.JTATransactionFactory</literal>,在CMT session bean中选择<literal>org.hibernate.transaction.CMTTransactionFactory</literal>。记得也要设置<literal>hibernate.transaction.manager_lookup_class</literal>。还有，确认你的<literal>hibernate.current_session_context_class</literal>未设置（为了向下兼容），或者设置为<literal>"jta"</literal>。
+            </para>
+
+            <para>
+                <literal>getCurrentSession()</literal>在JTA环境中有一个弊端。对<literal>after_statement</literal>连接释放方式有一个警告，这是被默认使用的。因为JTA规范的一个很愚蠢的限制，Hibernate不可能自动清理任何未关闭的<literal>ScrollableResults</literal> 或者<literal>Iterator</literal>，它们是由<literal>scroll()</literal>或<literal>iterate()</literal>产生的。你<emphasis>must</emphasis>通过在<literal>finally</literal>块中，显式调用<literal>ScrollableResults.close()</literal>或者<literal>Hibernate.close(Iterator)</literal>方法来释放底层数据库游标。(当然，大部分程序完全可以很容易的避免在JTA或CMT代码中出现<literal>scroll()</literal>或<literal>iterate()</literal>。)
             </para>
 
 
         </sect2>
+
+
 
         <sect2 id="transactions-demarcation-exceptions">
             <title>异常处理</title>
@@ -497,6 +507,38 @@ Session sess = factory.getCurrentSession();
 
         </sect2>
 
+        <sect2 id="transactions-demarcation-timeout">
+            <title>事务超时</title>
+
+            <para>
+                EJB这样的托管环境有一项极为重要的特性，而它从未在非托管环境中提供过，那就是事务超时。在出现错误的事务行为的时候，超时可以确保不会无限挂起资源、对用户没有交代。在托管(JTA)环境之外，Hibernate无法完全提供这一功能。但是，Hiberante至少可以控制数据访问，确保数据库级别的死锁，和返回巨大结果集的查询被限定在一个规定的时间内。在托管环境中，Hibernate会把事务超时转交给JTA。这一功能通过Hibernate <literal>Transaction</literal>对象进行抽象。
+            </para>
+            
+            <programlisting><![CDATA[
+Session sess = factory.openSession();
+try {
+    //set transaction timeout to 3 seconds
+    sess.getTransaction().setTimeout(3);
+    sess.getTransaction().begin();
+
+    // do some work
+    ...
+
+    sess.getTransaction().commit()
+}
+catch (RuntimeException e) {
+    sess.getTransaction().rollback();
+    throw e; // or display error message
+}
+finally {
+    sess.close();
+}]]></programlisting>
+
+            <para>
+                注意<literal>setTimeout()</literal>不应该在CMT bean中调用，此时事务超时值应该是被声明式定义的。
+            </para>
+
+		</sect2>
     </sect1>
 
     <sect1 id="transactions-optimistic">
@@ -504,7 +546,7 @@ Session sess = factory.getCurrentSession();
         <para>
             唯一能够同时保持高并发和高可伸缩性的方法就是使用带版本化的乐观并发控制。版本检查使用版本号、
             或者时间戳来检测更新冲突（并且防止更新丢失）。Hibernate为使用乐观并发控制的代码提供了三种可
-            能的方法，应用程序在编写这些代码时，可以采用它们。我们已经在前面应用程序长事务那部分展示了
+            能的方法，应用程序在编写这些代码时，可以采用它们。我们已经在前面应用程序对话那部分展示了
             乐观并发控制的应用场景，此外，在单个数据库事务范围内，版本检查也提供了防止更新丢失的好处。
         </para>
 
@@ -514,17 +556,19 @@ Session sess = factory.getCurrentSession();
 								 未能充分利用Hibernate功能的实现代码中，每次和数据库交互都需要一个新的
 								 <literal>Session</literal>，而且开发人员必须在显示数据之前从数据库中重
 								 新载入所有的持久化对象实例。这种方式迫使应用程序自己实现版本检查来确保
-								 应用程序事务的隔离，从数据访问的角度来说是最低效的。这种使用方式和
+								 对话事务的隔离，从数据访问的角度来说是最低效的。这种使用方式和
 								 entity EJB最相似。
             </para>
 
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
 session = factory.openSession();
 Transaction t = session.beginTransaction();
+
 int oldVersion = foo.getVersion();
 session.load( foo, foo.getKey() ); // load the current state
 if ( oldVersion!=foo.getVersion ) throw new StaleObjectStateException();
 foo.setProperty("bar");
+
 t.commit();
 session.close();]]></programlisting>
 
@@ -536,7 +580,7 @@ session.close();]]></programlisting>
             <para>
 								当然，如果你的应用是在一个低数据并发环境下，并不需要版本检查的话，你照样可以使用
 								这种方式，只不过跳过版本检查就是了。在这种情况下，<emphasis>最晚提交生效</emphasis>
-								（<emphasis>last commit wins</emphasis>）就是你的应用程序长事务的默认处理策略。
+								（<emphasis>last commit wins</emphasis>）就是你的长对话的默认处理策略。
 								请记住这种策略可能会让应用软件的用户感到困惑，因为他们有可能会碰上更新丢失掉却没
 								有出错信息，或者需要合并更改冲突的情况。
             </para>
@@ -544,19 +588,19 @@ session.close();]]></programlisting>
             <para>
                 很明显，手工进行版本检查只适合于某些软件规模非常小的应用场景，对于大多数软件应用场景
                 来说并不现实。通常情况下，不仅是单个对象实例需要进行版本检查，整个被修改过的关
-                联对象图也都需要进行版本检查。作为标准设计范例，Hibernate使用长生命周期
+                联对象图也都需要进行版本检查。作为标准设计范例，Hibernate使用扩展周期的
                 <literal>Session</literal>的方式，或者脱管对象实例的方式来提供自动版本检查。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-optimistic-longsession">
-            <title>长生命周期session和自动版本化</title>
+            <title>扩展周期的session和自动版本化</title>
             <para>
                单个 <literal>Session</literal>实例和它所关联的所有持久化对象实例都被用于整个
-               应用程序事务。Hibernate在同步的时候进行对象实例的版本检查，如果检测到并发修
+               对话，这被称为<emphasis>session-per-conversation</emphasis>。Hibernate在同步的时候进行对象实例的版本检查，如果检测到并发修
                改则抛出异常。由开发人员来决定是否需要捕获和处理这个异常（通常的抉择是给用户
-               提供一个合并更改，或者在无脏数据情况下重新进行业务操作的机会）。
+               提供一个合并更改，或者在无脏数据情况下重新进行业务对话的机会）。
             </para>
             <para>
                在等待用户交互的时候， <literal>Session</literal> 断开底层的JDBC连接。这种方式
@@ -564,41 +608,41 @@ session.close();]]></programlisting>
                的重新关联，在每个数据库事务中，应用程序也不需要载入读取对象实例。
             </para>
 
-            <programlisting><![CDATA[// foo is an instance loaded earlier by the Session
-session.reconnect(); // Obtain a new JDBC connection
-Transaction t = session.beginTransaction();
+            <programlisting><![CDATA[// foo is an instance loaded earlier by the old session
+Transaction t = session.beginTransaction(); // Obtain a new JDBC connection, start transaction
+
 foo.setProperty("bar");
-t.commit(); // End database transaction, flushing the change and checking the version
-session.disconnect(); // Return JDBC connection ]]></programlisting>
+
+session.flush();    // Only for last transaction in conversation
+t.commit();         // Also return JDBC connection
+session.close();    // Only for last transaction in conversation]]></programlisting>
 
             <para>
-								<literal>foo</literal> 对象始终和载入它的<literal>Session</literal>相关联。
-								<literal>Session.reconnect()</literal>获取一个新的数据库连接（或者
-								你可以提供一个），并且继续当前的session。<literal>Session.disconnect()</literal>
-								方法把session与JDBC连接断开，把数据库连接返回到连接池（除非是你自己提供的数据
-								库连接）。在Session重新连接上数据库连接之后，你可以对任何可能被其他事务更新过
-								的对象调用<literal>Session.lock()</literal>，设置<literal>LockMode.READ</literal>
-								 锁定模式，这样你就可以对那些你不准备更新的数据进行强制版本检查。此外，你并不需要
-								 锁定那些你<emphasis>准备</emphasis>更新的数据。
-            </para>
-
-            <para>
-                假若对<literal>disconnect()</literal>和<literal>reconnect()</literal>的显式调用发生得太频繁了，你可以使用<literal>hibernate.connection.release_mode</literal>来代替。
+                <literal>foo</literal>对象知道它是在哪个<literal>Session</literal>中被装入的。在一个旧session中开启一个新的数据库事务，会导致session获取一个新的连接，并恢复session的功能。将数据库事务提交，使得session从JDBC连接断开，并将此连接交还给连接池。在重新连接之后，要强制对你没有更新的数据进行一次版本检查，你可以对所有可能被其他事务修改过的对象，使用参数<literal>LockMode.READ</literal>来调用<literal>Session.lock()</literal>。你不用lock任何你<emphasis>正在</emphasis>更新的数据。一般你会在扩展的<literal>Session</literal>上设置<literal>FlushMode.NEVER</literal>，因此只有最后一个数据库事务循环才会真正的吧整个对话中发生的修改发送到数据库。因此，只有这最后一次数据库事务才会包含<literal>flush()</literal>操作，然后在整个对话结束后，还要<literal>close()</literal>这个session。
             </para>
 
             <para>
                 如果在用户思考的过程中，<literal>Session</literal>因为太大了而不能保存，那么这种模式是有
                 问题的。举例来说，一个<literal>HttpSession</literal>应该尽可能的小。由于
                 <literal>Session</literal>是一级缓存，并且保持了所有被载入过的对象，因此
-                我们只应该在那些少量的request/response情况下使用这种策略。而且在这种情况下，
-                <literal>Session</literal> 里面很快就会有脏数据出现，因此请牢牢记住这一建议。
+                我们只应该在那些少量的request/response情况下使用这种策略。你应该只把一个<literal>Session</literal>用于单个对话，因为它很快就会出现脏数据。
             </para>
 
             <para>
+                （注意，早期的Hibernate版本需要明确的对<literal>Session</literal>进行disconnec和reconnect。这些方法现在已经过时了，打开事务和关闭事务会起到同样的效果。）
+            </para>
+
+
+            <para>
                 此外，也请注意，你应该让与数据库连接断开的<literal>Session</literal>对持久层保持
-                关闭状态。换句话说，使用有状态的EJB session bean来持有<literal>Session</literal>，
+                关闭状态。换句话说，在三层环境中，使用有状态的EJB session bean来持有<literal>Session</literal>，
                 而不要把它传递到web层（甚至把它序列化到一个单独的层），保存在<literal>HttpSession</literal>中。
             </para>
+
+            <para>
+                扩展session模式，或者被称为<emphasis>每次对话一个session(session-per-conversation)</emphasis>, 在与自动管理当前session上下文联用的时候会更困难。你需要提供你自己的<literal>CurrentSessionContext</literal>实现。请参阅Hibernate Wiki以获得示例。
+            </para>
+
 
         </sect2>
 
@@ -765,6 +809,61 @@ session.close();]]></programlisting>
            如果数据库不支持用户设置的锁定模式，Hibernate将使用适当的替代模式（而不是扔出异常）。
            这一点可以确保应用程序的可移植性。
         </para>
+    </sect1>
+    <sect1 id="transactions-connection-release">
+        <title>连接释放模式(Connection Release Modes)</title>
+
+        <para>
+            Hibernate关于JDBC连接管理的旧(2.x)行为是，<literal>Session</literal>在第一次需要的时候获取一个连接，在session关闭之前一直会持有这个连接。Hibernate引入了连接释放的概念，来告诉session如何处理它的JDBC连接。注意，下面的讨论只适用于采用配置<literal>ConnectionProvider</literal>来提供连接的情况，用户自己提供的连接与这里的讨论无关。通过<literal>org.hibernate.ConnectionReleaseMode</literal>的不同枚举值来使用不用的释放模式:
+            
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>ON_CLOSE</literal> - 基本上就是上面提到的老式行为。Hibernate session在第一次需要进行JDBC操作的时候获取连接，然后持有它，直到session关闭。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>AFTER_TRANSACTION</literal> - 在<literal>org.hibernate.Transaction</literal>结束后释放连接。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>AFTER_STATEMENT</literal> (也被称做积极释放) - 在每一条语句被执行后就释放连接。但假若语句留下了与session相关的资源，那就不会被释放。目前唯一的这种情形就是使用<literal>org.hibernate.ScrollableResults</literal>。
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            <literal>hibernate.connection.release_mode</literal>配置参数用来指定使用哪一种释放模式。可能的值有：
+        </para>
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>auto</literal>(默认) - 这一选择把释放模式委派给<literal>org.hibernate.transaction.TransactionFactory.getDefaultReleaseMode()</literal>方法。对JTATransactionFactory来说，它会返回ConnectionReleaseMode.AFTER_STATEMENT;对JDBCTransactionFactory来说，则是ConnectionReleaseMode.AFTER_TRANSACTION。很少需要修改这一默认行为，因为假若设置不当，就会带来bug，或者给用户代码带来误导。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>on_close</literal> - 使用 ConnectionReleaseMode.ON_CLOSE.  这种方式是为了向下兼容的,但是已经完全不被鼓励使用了。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>after_transaction</literal> - 使用ConnectionReleaseMode.AFTER_TRANSACTION。这一设置不应该在JTA环境下使用。也要注意，使用ConnectionReleaseMode.AFTER_TRANSACTION的时候，假若session 处于auto-commit状态，连接会像AFTER_STATEMENT那样被释放。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>after_statement</literal> - 使用ConnectionReleaseMode.AFTER_STATEMENT。除此之外，会查询配置的<literal>ConnectionProvider</literal>，是否它支持这一设置（(<literal>supportsAggressiveRelease()</literal>)）。假若不支持，释放模式会被设置为ConnectionReleaseMode.AFTER_TRANSACTION。只有在你每次调用<literal>ConnectionProvider.getConnection()</literal>获取底层JDBC连接的时候，都可以确信获得同一个连接的时候，这一设置才是安全的；或者在auto-commit环境中，你可以不管是否每次都获得同一个连接的时候，这才是安全的。
+                    
+                </para>
+            </listitem>
+        </itemizedlist>
+
     </sect1>
 
 </chapter>

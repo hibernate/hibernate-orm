@@ -18,11 +18,11 @@
         </mediaobject>
 
         <para>
-            从这个图可以看出，Hibernater使用数据库和配置信息来为应用程序提供持久化服务（以及持久的对象）。
+            从这个图可以看出，Hibernate使用数据库和配置信息来为应用程序提供持久化服务（以及持久的对象）。
         </para>
 
         <para>
-            我们来更详细地看一下Hibernate运行时体系结构。由于Hibernate非常灵活，且支持数种应用方案，
+            我们来更详细地看一下Hibernate运行时体系结构。由于Hibernate非常灵活，且支持多种应用方案，
             所以我们这只描述一下两种极端的情况。“轻型”的体系结构方案，要求应用程序提供自己的JDBC
             连接并管理自己的事务。这种方案使用了Hibernate API的最小子集：
         </para>
@@ -57,7 +57,7 @@
                     <term>SessionFactory (<literal>org.hibernate.SessionFactory</literal>)</term>
                     <listitem>
                         <para>
-                            针对单个数据库映射关系经过编译后的内存镜像，它也是线程安全的（不可变）。
+                            针对单个数据库映射关系经过编译后的内存镜像，是线程安全的（不可变）。
                             它是生成<literal>Session</literal>的工厂，本身要用到<literal>ConnectionProvider</literal>。
                             该对象可以在进程或集群的级别上，为那些事务之间可以重用的数据提供可选的二级缓存。
                         </para>
@@ -78,17 +78,17 @@
                     <listitem>
                         <para>
                             带有持久化状态的、具有业务功能的单线程对象，此对象生存期很短。
-                            这些对象可以是普通的JavaBeans/POJO，唯一特殊的是他们正与（仅仅一个）<literal>Session</literal>相关联。
-                            这个<literal>Session</literal>被关闭的同时，这些对象也会脱离持久化状态，可以被应用程序的任何层自由使用。
-                           （例如，用作跟表示层打交道的数据传输对象data transfer object。）
+                            这些对象可能是普通的JavaBeans/POJO，唯一特殊的是他们正与（仅仅一个）<literal>Session</literal>相关联。
+                            一旦这个<literal>Session</literal>被关闭，这些对象就会脱离持久化状态，这样就可被应用程序的任何层自由使用。
+                           （例如，用作跟表示层打交道的数据传输对象。）
                         </para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>瞬态(transient)以及脱管(detached)的对象及其集合</term>
+                    <term>瞬态(transient)和脱管(detached)的对象及其集合</term>
                     <listitem>
                         <para>
-                            持久类的没有与<literal>Session</literal>相关联的实例。
+                            那些目前没有与session关联的持久化类实例。
                             他们可能是在被应用程序实例化后，尚未进行持久化的对象。
                             也可能是因为实例化他们的<literal>Session</literal>已经被关闭而脱离持久化的对象。
                         </para>
@@ -98,10 +98,10 @@
                     <term>事务Transaction (<literal>org.hibernate.Transaction</literal>)</term>
                     <listitem>
                         <para>
-                            （可选的）应用程序用来指定原子操作单元范围的对象，它是单线程的，生存期很短。
+                            （可选的）应用程序用来指定原子操作单元范围的对象，它是单线程的，生命周期很短。
                             它通过抽象将应用从底层具体的JDBC、JTA以及CORBA事务隔离开。
                             某些情况下，一个<literal>Session</literal>之内可能包含多个<literal>Transaction</literal>对象。
-                            尽管是否使用该对象是可选的，但是事务边界的开启与关闭（无论是使用底层的API还是使用<literal>Transaction</literal>对象）是必不可少的。
+                            尽管是否使用该对象是可选的，但无论是使用底层的API还是使用<literal>Transaction</literal>对象，事务边界的开启与关闭是必不可少的。
                         </para>
                     </listitem>
                 </varlistentry>
@@ -137,7 +137,7 @@
         </para>
 
         <para>
-            在一个“轻型”的体系结构中，应用程序可能绕过
+            在特定“轻型”的体系结构中，应用程序可能绕过
             <literal>Transaction</literal>/<literal>TransactionFactory</literal> 以及
             <literal>ConnectionProvider</literal> 等API直接跟JTA或JDBC打交道。
         </para>
@@ -156,16 +156,16 @@
                 <term>瞬态（transient）</term>
                 <listitem>
                     <para>
-                        该实例从未与任何持久化上下文关联过。它没有持久化标识（相当于主键）。
+                        该实例从未与任何持久化上下文关联过。它没有持久化标识（相当于主键值）。
                     </para>
                 </listitem>
             </varlistentry>
             <varlistentry>
-                <term>持久(persistent)</term>
+                <term>持久化(persistent)</term>
                 <listitem>
                     <para>
                         实例目前与某个持久化上下文有关联。
-                        它拥有持久化标识（相当于主键），并且可能在数据库中有一个对应的行。
+                        它拥有持久化标识（相当于主键值），并且可能在数据库中有一个对应的行。
                         对于某一个特定的持久化上下文，Hibernate<emphasis>保证</emphasis>持久化标识与Java标识（其值代表对象在内存中的位置）等价。
                     </para>
                 </listitem>
@@ -175,7 +175,7 @@
                 <listitem>
                     <para>
                         实例曾经与某个持久化上下文发生过关联，不过那个上下文被关闭了，
-                        或者这个实例是被序列化(serialize)到这个进程来的。
+                        或者这个实例是被序列化(serialize)到另外的进程。
                         它拥有持久化标识，并且在数据库中可能存在一个对应的行。
                         对于脱管状态的实例，Hibernate不保证任何持久化标识和Java标识的关系。
                     </para>
@@ -188,7 +188,7 @@
         <title>JMX整合</title>
 
         <para>
-            JMX是管理Java组件(Java components)的J2EE规范。 Hibernate 可以通过一个JMX标准服务来管理。
+            JMX是管理Java组件(Java components)的J2EE标准。 Hibernate 可以通过一个JMX标准服务来管理。
             在这个发行版本中，我们提供了一个MBean接口的实现,即
             <literal>org.hibernate.jmx.HibernateService</literal>。
         </para>
@@ -203,16 +203,16 @@
                 <para>
                     <emphasis>Session管理：</emphasis> Hibernate的<literal>Session</literal>对象的生命周期可以
                     自动跟一个JTA事务边界绑定。这意味着你无需手工开关<literal>Session</literal>了, 这项
-                    工作会由JBoss EJB 拦截器来完成。你再也不用担心你的代码中的事务边界了(除非你想利用Hibernate提供 
+                    工作会由JBoss EJB 拦截器来完成。你再也不用担心你的代码中的事务边界了(除非你想利用Hibernate提供可选
                     的<literal>Transaction</literal> API来自己写一个便于移植的的持久层)。 
-                    你现在要通过 <literal>HibernateContext</literal>来操作<literal>Session</literal>了。
+                    你通过调用<literal>HibernateContext</literal>来访问<literal>Session</literal>。
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>HAR 部署:</emphasis> 通常情况下，你会使用JBoss的服务部署描述符（在EAR或/和SAR文件中）来部署Hibernate JMX服务。
                     这种部署方式支持所有常见的Hibernate <literal>SessionFactory</literal>的配置选项。
-                    不过，你需在部署描述符中，列出你所有的映射文件的名字。如果你使用HAR部署方式, JBoss 
+                    不过，你仍需在部署描述符中，列出你所有的映射文件的名字。如果你使用HAR部署方式, JBoss 
                     会自动探测出你的HAR文件中所有的映射文件。
                 </para>
             </listitem>
@@ -232,22 +232,22 @@
         <title>对JCA的支持</title>
         <para>
             Hibernate也可以被配置为一个JCA连接器（JCA connector）。更多信息请参看网站。
-            请注意，Hibernate对JCA的支持，仍处于实验性质。
+            请注意，Hibernate对JCA的支持，仍处于实验性阶段。
         </para>
     </sect1>
     <sect1 id="architecture-current-session" revision="1">
-        <title>上下文范围内相关的Session</title>
+        <title>上下文相关的（Contextual）Session</title>
         <para>
-           	使用Hibernate的大多数应用需要某种形式的“上下文范围内有效的”session,特定的session仅在特定的上下文中生效，并且自始至终一直生效。然而，对不同类型的应用程序而言，要为这种“上下文”下一个定义通常是困难的；不同的上下文对“当前”这个概念的定义范围也有所不同。在3.0之前，使用Hibernate的程序要么采用自行编写的基于<literal>ThreadLocal</literal>的上下文session,要么采用<literal>HibernateUtil</literal>这样的辅助类，要么采用第三方框架（比如Spring或Pico)，它们提供基于代理(proxy)或者拦截器(interception)的上下文session。
+           	使用Hibernate的大多数应用程序需要某种形式的“上下文相关的” session，特定的session在整个特定的上下文范围内始终有效。然而，对不同类型的应用程序而言，要为什么是组成这种“上下文”下一个定义通常是困难的；不同的上下文对“当前”这个概念定义了不同的范围。在3.0版本之前，使用Hibernate的程序要么采用自行编写的基于<literal>ThreadLocal</literal>的上下文session，要么采用<literal>HibernateUtil</literal>这样的辅助类，要么采用第三方框架（比如Spring或Pico)，它们提供了基于代理(proxy)或者基于拦截器(interception)的上下文相关session。
         </para>
         <para>
-            从3.0.1开始，Hibernate增加了<literal>SessionFactory.getCurrentSession()</literal>方法。一开始，它假定是和<literal>JTA</literal>事务联用的，<literal>JTA</literal>事务定义了当前session的范围和上下文(scope and context)。Hibernate开发团队理解到，因为有好几个独立的<literal>JTA TransactionManager</literal>实现稳定可用，不论是否被部署到一个<literal>J2EE</literal>容器中，大多数(假若不是所有的）应用程序都应该采用<literal>JTA</literal>事务管理。基于这一点，采用<literal>JTA</literal>的上下文相关session可以满足你一切需要。
+            从3.0.1版本开始，Hibernate增加了<literal>SessionFactory.getCurrentSession()</literal>方法。一开始，它假定了采用<literal>JTA</literal>事务，<literal>JTA</literal>事务定义了当前session的范围和上下文(scope and context)。Hibernate开发团队坚信，因为有好几个独立的<literal>JTA TransactionManager</literal>实现稳定可用，不论是否被部署到一个<literal>J2EE</literal>容器中，大多数(假若不是所有的）应用程序都应该采用<literal>JTA</literal>事务管理。基于这一点，采用<literal>JTA</literal>的上下文相关session可以满足你一切需要。
         </para>
         <para>
             更好的是，从3.1开始，<literal>SessionFactory.getCurrentSession()</literal>的后台实现是可拔插的。因此，我们引入了新的扩展接口(<literal>org.hibernate.context.CurrentSessionContext</literal>)和新的配置参数(<literal>hibernate.current_session_context_class</literal>)，以便对什么是“当前session”的范围和上下文(scope and context)的定义进行拔插。
         </para>
         <para>
-            请参阅<literal>org.hibernate.context.CurrentSessionContext</literal>接口的Javadoc,那里有关于它的契约的详细讨论。它定义了一个方法，<literal>currentSession()</literal>，特定的实现用它来负责跟踪当前的上下文session。Hibernate内置了此接口的两种实现。
+            请参阅<literal>org.hibernate.context.CurrentSessionContext</literal>接口的Javadoc,那里有关于它的契约的详细讨论。它定义了单一的方法，<literal>currentSession()</literal>，特定的实现用它来负责跟踪当前的上下文session。Hibernate内置了此接口的两种实现。
         </para>
 
         <itemizedlist>
@@ -264,15 +264,16 @@
         </itemizedlist>
 
         <para>
-            这两种实现都提供了“每数据库事务对应一个session”的编程模型，也称作<emphasis>每次请求一个session</emphasis>。Hibernate session的起始和终结由数据库事务的生存来控制。假若你采用自行编写代码来管理事务（比如，在纯粹的J2SE,或者JTA/UserTransaction/BMT），建议使用Hibernate <literal>Transaction</literal> API来把底层事务实现从你的代码中隐藏掉。如果你在支持CMT的EJB容器中执行，事务边界是声明式定义的，你不需要在代码中进行任何事务或session管理操作。请参阅<xref linkend="transactions"/>一节来阅读更多的内容和示例代码。
+            这两种实现都提供了“每数据库事务对应一个session”的编程模型，也称作<emphasis>每次请求一个session</emphasis>。Hibernate session的起始和终结由数据库事务的生存来控制。假若你采用自行编写代码来管理事务（比如，在纯粹的J2SE,或者JTA/UserTransaction/BMT），建议你使用Hibernate <literal>Transaction</literal> API来把底层事务实现从你的代码中隐藏掉。如果你在支持CMT的EJB容器中执行，事务边界是声明式定义的，你不需要在代码中进行任何事务或session管理操作。请参阅<xref linkend="transactions"/>一节来阅读更多的内容和示例代码。
         </para>
 
         <para>
-            <literal>hibernate.current_session_context_class</literal>配置参数定义了应该采用哪个<literal>org.hibernate.context.CurrentSessionContext</literal>实现。注意，为了向下兼容，如果未配置此参数，但是存在<literal>org.hibernate.transaction.TransactionManagerLookup</literal>的配置，Hibernate会采用<literal>org.hibernate.context.JTASessionContext</literal>。一般而言，此参数的值是要使用的实现类的全名，但那两个内置的实现可以使用简写值，它们是"jta"和"thread"。
+            <literal>hibernate.current_session_context_class</literal>配置参数定义了应该采用哪个<literal>org.hibernate.context.CurrentSessionContext</literal>实现。注意，为了向下兼容，如果未配置此参数，但是存在<literal>org.hibernate.transaction.TransactionManagerLookup</literal>的配置，Hibernate会采用<literal>org.hibernate.context.JTASessionContext</literal>。一般而言，此参数的值指明了要使用的实现类的全名，但那两个内置的实现可以使用简写，即"jta"和"thread"。
             
         </para>
         
     </sect1>
 
 </chapter>
+
 

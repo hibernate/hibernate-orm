@@ -10,8 +10,8 @@
 
 
     <para>
-        如果这些持久化类遵循一些简单的规则，Hibernate能够工作得最好，这些规则被称作，
-        简单传统Java对象(POJO:Plain Old Java Object)编程模型。但是这些规则没有一个是必需的。
+        如果这些持久化类遵循一些简单的规则，Hibernate能够工作得更好，这些规则也被称作
+        简单传统Java对象(POJO:Plain Old Java Object)编程模型。但是这些规则并不是必需的。
         实际上，Hibernate3对于你的持久化类几乎不做任何设想。你可以用其他的方法来表达领域模型：
         比如，使用<literal>Map</literal>实例的树型结构。
     </para>
@@ -115,7 +115,7 @@ public class Cat {
                 <literal>Cat</literal>有一个无参数的构造方法。所有的持久化类都必须有一个
                 默认的构造方法（可以不是public的），这样的话Hibernate就可以使用
                 <literal>Constructor.newInstance()</literal>来实例化它们。
-                我们建议，在Hibernate中，为了运行期代理的生成，构造方法至少是
+                我们强烈建议，在Hibernate中，为了运行期代理的生成，构造方法至少是
                 <emphasis>包(package)</emphasis>内可见的。
             </para>            
             
@@ -128,14 +128,14 @@ public class Cat {
                 <literal>Cat</literal>有一个属性叫做<literal>id</literal>。这个属性映射数据库表的主
                 键字段。这个属性可以叫任何名字，其类型可以是任何的原始类型、原始类型的包装类型、
                 <literal>java.lang.String</literal> 或者是 <literal>java.util.Date</literal>。
-                （如果你的老式数据库表有联合主键，你甚至可以用一个用户自定义的类，该类拥有这些类型
+                （如果你的遗留数据库表有联合主键，你甚至可以用一个用户自定义的类，该类拥有这些类型
                 的属性。参见后面的关于联合标识符的章节。）
             </para>
 
 
             <para>
                 标识符属性是可选的。可以不用管它，让Hibernate内部来追踪对象的识别。
-                不推荐使用这个属性。
+                但是我们并不推荐这样做。
             </para>
 
             <para>
@@ -146,7 +146,7 @@ public class Cat {
                 <listitem>
 
                    <para>
-                        托管对象的传播性重新（和session）关联（级联更新或级联合并）
+                        托管对象的传播性再连接（级联更新或级联合并）
                         ——参阅 <xref linkend="objectstate-transitive"/>
                     </para>
                       
@@ -165,8 +165,8 @@ public class Cat {
 
 
             <para>
-								我们建议你对持久化类声明命名一致的标识属性。我们还建议你使用一
-								个可以为空（也就是说，不是原始类型）的类型。
+            	我们建议你对持久化类声明命名一致的标识属性。我们还建议你使用一
+            	个可以为空（也就是说，不是原始类型）的类型。
             </para>
             
         </sect2>
@@ -185,28 +185,28 @@ public class Cat {
             </para>
 
 
-						<para> 
-								你也应该避免在非final类中声明 <literal>public final</literal>的方法。如果你想使用一
-								个有<literal>public final</literal>方法的类，你必须通过设置<literal>lazy="false"</literal>
-								来明确的禁用代理。
-						</para>
+            <para> 
+            	你也应该避免在非final类中声明 <literal>public final</literal>的方法。如果你想使用一
+            	个有<literal>public final</literal>方法的类，你必须通过设置<literal>lazy="false"</literal>
+            	来明确地禁用代理。
+            </para>
         </sect2>
         
         <sect2 id="persistent-classes-pojo-accessors" revision="2">
-						<title>为持久化字段声明访问器(accessors)和是否可变的标志(mutators)(可选)</title>
+		<title>为持久化字段声明访问器(accessors)和是否可变的标志(mutators)(可选)</title>
 
             <para>
                 <literal>Cat</literal>为它的所有持久化字段声明了访问方法。很多其他ORM工具直接对
-                实例变量进行持久化。我们相信,在关系数据库schema和类的内部数据之间引入间接层(原文为"非直接"，indirection)会好一些。默认情况下Hibernate持久化JavaBeans风格的属性，认可如下形式的方法名：
-                <literal>getFoo</literal>, <literal>isFoo</literal> 和 <literal>setFoo</literal>。
-                如果需要，你总是可以切换特定的属性的指示字段的访问方法。
+                实例变量进行持久化。我们相信，在关系数据库schema和类的内部数据结构之间引入间接层(原文为"非直接"，indirection)会好一些。默认情况下Hibernate持久化JavaBeans风格的属性，认可
+                <literal>getFoo</literal>，<literal>isFoo</literal> 和 <literal>setFoo</literal>这种形式的方法名。
+                如果需要，你可以对某些特定属性实行直接字段访问。
             </para>
 
 
             <para>
-                属性<emphasis>不需要</emphasis>要声明为public的。Hibernate默认使用
-                <literal>protected</literal>或<literal>private</literal>的get/set方法对，
-                对属性进行持久化。
+                属性<emphasis>不需要</emphasis>要声明为public的。Hibernate可以持久化一个有
+                <literal>default</literal>、<literal>protected</literal>或<literal>private</literal>的get/set方法对
+                的属性进行持久化。
             </para>
         </sect2>
     </sect1>
@@ -254,8 +254,8 @@ public class DomesticCat extends Cat {
         </itemizedlist>
   
 				<para>
-						Hibernate保证，持久化标识（数据库的行）和仅在特定会话范围内的Java标识是等值的。因此，一旦
-						我们混合了从不同会话中获取的实例，如果我们希望<literal>Set</literal>有明确的语义，我们必
+						Hibernate保证，仅在特定会话范围内，持久化标识（数据库的行）和Java标识是等价的。因此，一旦
+						我们混合了从不同会话中获取的实例，如果希望<literal>Set</literal>有明确的语义，就必
 						须实现<literal>equals()</literal> 和<literal>hashCode()</literal>。
 				</para>
 
@@ -264,16 +264,15 @@ public class DomesticCat extends Cat {
 						标识符的值。如果值相同，则两个对象对应于数据库的同一行，因此它们是相等的（如果都被添加到
 						<literal>Set</literal>，则在<literal>Set</literal>中只有一个元素）。不幸的是，对生成的标识不能
 						使用这种方法。Hibernate仅对那些持久化对象赋标识值，一个新创建的实例将不会有任何标识值。此外，
-						如果一个实例没有被保存(unsaved)，并且在一个<literal>Set</literal>中，保存它将会给这个对象
+						如果一个实例没有被保存(unsaved)，并且它当前正在一个<literal>Set</literal>中，保存它将会给这个对象
 						赋一个标识值。如果<literal>equals()</literal> 和 <literal>hashCode()</literal>是基于标识值
-						实现的，则其哈希码将会改变，违反<literal>Set</literal>的契约。建议去Hibernate的站点看关于这个
-						问题的全部讨论。注意，这不是一个Hibernate问题，而是一般的Java对象标识和相等的语义问题。
+						实现的，则其哈希码将会改变，这违反了<literal>Set</literal>的契约。建议去Hibernate的站点阅读关于这个
+						问题的全部讨论。注意，这不是Hibernate的问题，而是一般的Java对象标识和Java对象等价的语义问题。
 				</para>
 				<para>
 						我们建议使用<emphasis>业务键值相等(Business key equality)</emphasis>来实现<literal>equals()</literal>
 						和 <literal>hashCode()</literal>。业务键值相等的意思是，<literal>equals()</literal>方法
-						仅仅比较来自业务键的属性，一个业务键将标识在真实世界里（一个<emphasis>天生的</emphasis>候选键）
-						的实例。
+						仅仅比较形成业务键的属性，它能在现实世界里标识我们的实例（是一个<emphasis>自然的</emphasis>候选码）。
 				</para>
         <programlisting><![CDATA[public class Cat {
 
@@ -300,8 +299,8 @@ public class DomesticCat extends Cat {
 }]]></programlisting>
 
 				<para>
-						注意，业务键不必是象数据库的主键那样是固定不变的（参见<xref linkend="transactions-basics-identity"/>）。
-						对业务键而言，不可变或唯一的属性是好的候选。
+						注意，业务键不必像数据库的主键那样固定不变（参见<xref linkend="transactions-basics-identity"/>）。
+						对业务键而言，不可变或唯一的属性是不错的选择。
 				</para>
 
     </sect1>
@@ -309,11 +308,11 @@ public class DomesticCat extends Cat {
     <sect1 id="persistent-classes-dynamicmodels">
 				<title>动态模型(Dynamic models)</title>
 				<para>
-						<emphasis>注意，以下特性在当前是基于实验考虑的，可能会在将来改变。</emphasis>
+						<emphasis>注意，以下特性在当前处于试验阶段，将来可能会有变化。</emphasis>
 				</para>
 
 				<para>
-						运行期的持久化实体没有必要象POJO类或JavaBean对象一样表示。Hibernate也支持动态模型
+						运行期的持久化实体没有必要一定表示为像POJO类或JavaBean对象那样的形式。Hibernate也支持动态模型
 						（在运行期使用<literal>Map</literal>的<literal>Map</literal>）和象DOM4J的树模型那
 						样的实体表示。使用这种方法，你不用写持久化类，只写映射文件就行了。
 				</para>
@@ -327,7 +326,7 @@ public class DomesticCat extends Cat {
 
 				<para>
 						下面是用<literal>Map</literal>来表示的例子。首先，在映射文件中，要声明
-						<literal>entity-name</literal>来代替（或外加）一个类名。
+						<literal>entity-name</literal>来代替一个类名（或作为一种附属）。
 				</para>
         <programlisting><![CDATA[<hibernate-mapping>
 
@@ -397,9 +396,9 @@ tx.commit();
 s.close();]]></programlisting>
 
 				<para>
-						动态映射的好处是，使原型在不需要实体类实现的情况下，快速转变时间。然而，你无法进行
+						动态映射的好处是，变化所需要的时间少了，因为原型不需要实现实体类。然而，你无法进行
 						编译期的类型检查，并可能由此会处理很多的运行期异常。幸亏有了Hibernate映射，它使得数
-						据库的schema能容易的规格化和合理化，并允许稍后添加正确的领域模型的最新实现。
+						据库的schema能容易的规格化和合理化，并允许稍后在此之上添加合适的领域模型实现。
 				</para>
 
 
@@ -440,11 +439,11 @@ dynamicSession.close()
         <title>元组片断映射(Tuplizers)</title>
 
         <para>
-            <literal>org.hibernate.tuple.Tuplizer</literal>, 以及其子接口，负责根据给定的<literal>org.hibernate.EntityMode</literal>,来复现片断数据。对于给定的片断数据来说，可以认为其是一种数据结构， "tuplizer"就是一种映射器，它知道如何创建这样的数据结构，以及如何给这个数据结构赋值。比如说，对于POJO这种Entity Mode，对应的tuplizer知道通过其构造器来创建一个POJO，再通过其属性访问器来访问POJO属性。有两大类Tuplizer，分别是<literal>org.hibernate.tuple.EntityTuplizer</literal> 和<literal>org.hibernate.tuple.ComponentTuplizer</literal>接口。如前所示，<literal>EntityTuplizer</literal>负责管理实体，而<literal>ComponentTuplizer</literal>则是针对组件。
+            <literal>org.hibernate.tuple.Tuplizer</literal>，以及其子接口，负责根据给定的<literal>org.hibernate.EntityMode</literal>，来复现片断数据。如果给定的片断数据被认为其是一种数据结构，"tuplizer"就是一个知道如何创建这样的数据结构，以及如何给这个数据结构赋值的东西。比如说，对于POJO这种Entity Mode，对应的tuplizer知道通过其构造方法来创建一个POJO，再通过其属性访问器来访问POJO属性。有两大类高层Tuplizer，分别是<literal>org.hibernate.tuple.EntityTuplizer</literal> 和<literal>org.hibernate.tuple.ComponentTuplizer</literal>接口。<literal>EntityTuplizer</literal>负责管理上面提到的实体的契约，而<literal>ComponentTuplizer</literal>则是针对组件的。
         </para>
 
         <para>
-            用户也可以插入其自定义的tuplizer。或许您需要一种特别的<literal>java.util.Map</literal>实现，它不是在dynamic-map entity-mode时使用的 <literal>java.util.HashMap</literal> ；或许您需要与众不同的特别代理生成策略(proxy generation strategy)。通过自定义tuplizer实现，这两个目标您都可以达到。Tuplizer定义被附加到它们期望管理的entity或者component映射。回到我们的customer entity例子:
+            用户也可以插入其自定义的tuplizer。或许您需要一种不同于dynamic-map entity-mode中使用的<literal>java.util.HashMap</literal>的<literal>java.util.Map</literal>实现；或许您需要与默认策略不同的代理生成策略(proxy generation strategy)。通过自定义tuplizer实现，这两个目标您都可以达到。Tuplizer定义被附加到它们期望管理的entity或者component映射中。回到我们的customer entity例子：
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -487,7 +486,7 @@ public class CustomMapTuplizerImpl
     </sect1>
     
     <para>
-    		TODO：在property和proxy的包里，用户扩展文件框架。
+    		TODO：property和proxy包里的用户扩展框架文档。
     </para>
 
 </chapter>

@@ -51,9 +51,8 @@
             </para>
 
         <para>
-             在不同的映射文件中定义 <literal>subclass</literal>, <literal>union-subclass</literal>,
-             和 <literal>joined-subclass</literal>是被允许的，只需直接定义在<literal>hibernate-mapping</literal>之下 。也就是说，你可以仅加入一个新的映射文件就扩展类层次。你必须在subclass的映射中指明<literal>extends</literal>属性，给出一个之前定义的超类的名字。注意，以前，这一功能对映射文件的顺序有严格的要求。自从Hibernate 3开始，当使用extends关键字的时候，映射文件的顺序不再有影响。但在每个映射文件本身之中，顺序还是必须超类在前，子类在后。
-         </para>
+			在多个映射文件中，可以直接在<literal>hibernate-mapping</literal>根下定义<literal>subclass</literal>，<literal>union-subclass</literal>和<literal>joined-subclass</literal>。也就是说，你可以仅加入一个新的映射文件来扩展类层次。你必须在subclass的映射中指明<literal>extends</literal>属性，给出一个之前定义的超类的名字。注意，在以前，这一功能对映射文件的顺序有严格的要求，从Hibernate 3开始，使用extends关键字的时侯，对映射文件的顺序不再有要求；但在每个映射文件里，超类必须在子类之前定义。
+		</para>
 
          <programlisting><![CDATA[
  <hibernate-mapping>
@@ -142,7 +141,7 @@
                 注意，对“每个子类一张表”的映射策略，Hibernate的实现不需要辨别字段，而其他
                 的对象/关系映射工具使用了一种不同于Hibernate的实现方法，该方法要求在超类
                 表中有一个类型辨别字段(type discriminator column)。Hibernate采用的方法更
-                难实现，但从关系（数据库）这点上来看，按理说它更正确。若你愿意使用带有辨别字
+                难实现，但从关系（数据库）的角度来看，按理说它更正确。若你愿意使用带有辨别字
                 段的“每个子类一张表”的策略，你可以结合使用<literal>&lt;subclass&gt;</literal>
                 与<literal>&lt;join&gt;</literal>，如下所示：
             </para>
@@ -408,7 +407,7 @@
 			  <entry>多态 <literal>load()/get()</literal></entry>
 			  <entry>多态查询</entry>
 			  <entry>多态连接(join)</entry>
-			  <entry>外连接(Outer join)抓取</entry>
+			  <entry>外连接(Outer join)读取</entry>
 			</row>
 			</thead>
 			<tbody>

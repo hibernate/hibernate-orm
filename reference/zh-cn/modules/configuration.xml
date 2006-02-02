@@ -8,7 +8,7 @@
         由于Hibernate是为了能在各种不同环境下工作而设计的, 因此存在着大量的配置参数. 幸运的是多数配置参数都
         有比较直观的默认值, 并有随Hibernate一同分发的配置样例<literal>hibernate.properties</literal>
         (位于<literal>etc/</literal>)来展示各种配置选项. 所需做的仅仅是将这个样例文件复制到类路径
-        (classpath)下做一些自定义的修改.
+        (classpath)下并做一些自定义的修改.
     </para>
 
     <sect1 id="configuration-programmatic" revision="1">
@@ -90,11 +90,11 @@
         </orderedlist>
 
         <para>
-            如果想尽快体验Hbernate, <literal>hibernate.properties</literal>是最简单的方式.
+            如果想尽快体验Hibernate, <literal>hibernate.properties</literal>是最简单的方式.
         </para>
 
         <para>
-            <literal>Configuration</literal>实例是一个启动期间（startup-time）的对象, 
+            <literal>Configuration</literal>实例被设计成启动期间（startup-time）对象, 
             一旦<literal>SessionFactory</literal>创建完成它就被丢弃了.
         </para>
 
@@ -211,9 +211,9 @@
 
         <para>
             但Hibernate自带的连接池算法相当不成熟. 
-            它只是为了让你快些上手<emphasis>，不适合用于产品系统</emphasis>或性能测试中。
-            出于最佳性能和稳定性考虑你应该使用第三方的连接池。只需要连接池的特定设置替换
-            <literal>hibernate.connection.pool_size</literal>。这将关闭Hibernate自带的连接池.
+            它只是为了让你快些上手<emphasis>，并不适合用于产品系统</emphasis>或性能测试中。
+            出于最佳性能和稳定性考虑你应该使用第三方的连接池。只需要用特定连接池的设置替换
+            <literal>hibernate.connection.pool_size</literal>即可。这将关闭Hibernate自带的连接池.
             例如, 你可能会想用C3P0.
         </para>
 
@@ -239,8 +239,8 @@ hibernate.c3p0.max_statements=50
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            为了能在应用程序服务器(application server)中使用Hibernate, 你应当总是将Hibernate
-            配置成注册在JNDI中的<literal>Datasource</literal>处获得连接，你至少需要设置下列属性中的一个:
+            为了能在应用程序服务器(application server)中使用Hibernate, 应当总是将Hibernate
+            配置成从注册在JNDI中的<literal>Datasource</literal>处获得连接，你至少需要设置下列属性中的一个:
         </para>
 
         <table frame="topbot">
@@ -306,7 +306,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <para>
-            这里有一个使用应用程序服务器JNDI数据源的<literal>hibernate.properties</literal>样例文件:
+            这是一个使用应用程序服务器提供的JNDI数据源的<literal>hibernate.properties</literal>样例文件:
         </para>
 
         <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test
@@ -317,12 +317,12 @@ hibernate.transaction.manager_lookup_class = \
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            从JNDI数据源获得的JDBC连接将自动参与应用程序服务器中容器管理的事务(container-managed transactions)中去.
+            从JNDI数据源获得的JDBC连接将自动参与到应用程序服务器中容器管理的事务(container-managed transactions)中去.
         </para>
 
         <para>
-            任何连接(connection)配置属性的属性名要以"<literal>hibernate.connnection</literal>"前缀开头. 
-            例如, 你可能会使用<literal>hibernate.connection.charSet</literal>来指定<literal>charSet</literal>.
+            任何连接(connection)属性的属性名都要以"<literal>hibernate.connnection</literal>"开头. 
+            例如, 你可能会使用<literal>hibernate.connection.charSet</literal>来指定字符集<literal>charSet</literal>.
         </para>
 
         <para>
@@ -344,7 +344,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             <emphasis>警告: 其中一些属性是"系统级(system-level)的".</emphasis>
-            系统级属性可以通过<literal>java -Dproperty=value</literal>或
+            系统级属性只能通过<literal>java -Dproperty=value</literal>或
             <literal>hibernate.properties</literal>来设置, 而<emphasis>不能</emphasis>用上面描述的其他方法来设置.
         </para>
 
@@ -375,7 +375,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
                                 <literal>full.classname.of.Dialect</literal>
-                            </para>
+               
+             </para>
                         </entry>
                     </row>
                     <row>
@@ -420,7 +421,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_catalog</literal>
                         </entry>
                         <entry>
-                            在生成的SQL中, 将给定的catalog附加于没全限定名的表名上.
+                            在生成的SQL中, 将给定的catalog附加于非全限定名的表名上.
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
                                 <literal>CATALOG_NAME</literal>
@@ -781,7 +782,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.query_cache_factory</literal>
                         </entry>
                         <entry>
-                            自定义的实现<literal>QueryCache</literal>接口的类名,
+                            自定义实现<literal>QueryCache</literal>接口的类名,
                             默认为内建的<literal>StandardQueryCache</literal>.
                             <para>
                                 <emphasis role="strong">取值</emphasis>
@@ -925,8 +926,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.current_session_context_class</literal>
                         </entry>
                         <entry>
-                            为界定"当前"
-                            <literal>Session</literal>指定一个策略。关于内置策略的详情，请参见<xref linkend="architecture-current-session"/> 。
+                            为"当前"
+                            <literal>Session</literal>指定一个(自定义的)策略。关于内置策略的详情，请参见<xref linkend="architecture-current-session"/> 。
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
@@ -965,7 +966,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            在<literal>SessionFactory</literal>创建时，自动检查数据库机构，或者将数据库schema的DDL导出到数据库. 使用
+                            在<literal>SessionFactory</literal>创建时，自动检查数据库结构，或者将数据库schema的DDL导出到数据库. 使用
                             <literal>create-drop</literal>时,在显式关闭<literal>SessionFactory</literal>时，将drop掉数据库schema.
                             <para>
                                 <emphasis role="strong">取值</emphasis> 
@@ -997,7 +998,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </title>
 
             <para>
-                你应当总是为你的数据库属性<literal>hibernate.dialect</literal>设置正确的
+                你应当总是为你的数据库将<literal>hibernate.dialect</literal>属性设置成正确的
                 <literal>org.hibernate.dialect.Dialect</literal>子类. 如果你指定一种方言, 
                 Hibernate将为上面列出的一些属性使用合理的默认值, 为你省去了手工指定它们的功夫.
             </para>
@@ -1096,8 +1097,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </title>
 
             <para>
-                如果你的数据库支持ANSI, Oracle或Sybase风格的外连接, <emphasis>外连接抓取</emphasis>常能通过限制往返数据库次数
-                (更多的工作交由数据库自己来完成)来提高效率. 外连接允许在单个<literal>SELECT</literal>SQL语句中，
+                如果你的数据库支持ANSI, Oracle或Sybase风格的外连接, <emphasis>外连接抓取</emphasis>通常能通过限制往返数据库次数
+                (更多的工作交由数据库自己来完成)来提高效率. 外连接抓取允许在单个<literal>SELECT</literal>SQL语句中，
                 通过many-to-one, one-to-many, many-to-many和one-to-one关联获取连接对象的整个对象图.
             </para>
 
@@ -1283,7 +1284,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             
         <para>
             在使用Hibernate开发应用程序时, 你应当总是为<literal>org.hibernate.SQL</literal>
-            开启<literal>debug</literal>级别的日志记录,或者开启<literal>hibernate.show_sql</literal>属性来代替它。.
+            开启<literal>debug</literal>级别的日志记录,或者开启<literal>hibernate.show_sql</literal>属性。
         </para>        
         
     </sect1>
@@ -1328,7 +1329,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             另一个配置方法是在<literal>hibernate.cfg.xml</literal>文件中指定一套完整的配置. 
-            这个文件可以当成<literal>hibernate.properties</literal>的替代。 若两个文件同时存在，它将重载前者的属性.
+            这个文件可以当成<literal>hibernate.properties</literal>的替代。 若两个文件同时存在，它将覆盖前者的属性.
         </para>
 
         <para>
@@ -1406,7 +1407,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <listitem>
                 <para>
                 <emphasis>容器管理的数据源(Container-managed datasources)</emphasis>: 
-                Hibernate能通过容器管理由JNDI提供的JDBC连接. 通常, 特别是当处理多个数据源的分布式事务的时候, 
+                Hibernate能使用通过容器管理，并由JNDI提供的JDBC连接. 通常, 特别是当处理多个数据源的分布式事务的时候, 
                 由一个JTA兼容的<literal>TransactionManager</literal>和一个
                 <literal>ResourceManager</literal>来处理事务管理(CMT, 容器管理的事务). 当然你可以通过
                 编程方式来划分事务边界(BMT, Bean管理的事务). 或者为了代码的可移植性，你也也许会想使用可选的
@@ -1430,7 +1431,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <emphasis>JTA Session绑定:</emphasis> Hibernate <literal>Session</literal>
                 可以自动绑定到JTA事务作用的范围. 只需简单地从JNDI查找<literal>SessionFactory</literal>并获得当前的
                 <literal>Session</literal>. 当JTA事务完成时, 让Hibernate来处理
-                <literal>Session</literal>的清洗(flush)与关闭. 在EJB的部署描述符中事务边界是声明式的(CMT),或者自行编程(BMT/UserTransaction).
+                <literal>Session</literal>的清洗(flush)与关闭. 事务的划分可以是声明式的(CMT),也可以是编程式的(BMT/UserTransaction).
                 </para>
             </listitem>
         </itemizedlist>
@@ -1440,7 +1441,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <para>
                 <emphasis>JMX部署:</emphasis> 如果你使用支持JMX应用程序服务器(如, JBoss AS), 那么你可以选择将Hibernate部署成托管MBean. 
                 这将为你省去一行从<literal>Configuration</literal>构建<literal>SessionFactory</literal>的启动代码. 
-                容器将启动你的<literal>HibernateService</literal>, 并完美地处理好服务间的依赖关系 (在Hibernate启动前，数据源必须是可用的等等).
+                容器将启动你的<literal>HibernateService</literal>, 并完美地处理好服务间的依赖关系 (在Hibernate启动前，数据源必须是可用的，等等).
                 </para>
             </listitem>
         </itemizedlist>
@@ -1466,7 +1467,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                存在着三个标准(内建)的选择:
+                有三个标准(内建)的选择:
             </para>
 
             <variablelist spacing="compact">
@@ -1610,7 +1611,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <title>在JTA环境下使用Current Session context (当前session上下文)管理</title>
 
             <para>
-	            在Hibernate中，管理<literal>Session</literal>和transaction最好的方法是自动的"当前"<literal>Session</literal>管理。请参见<xref linkend="architecture-current-session">current sessions</xref>一节的讨论。使用<literal>"jta"</literal>session上下文，假若在当前JTA事务中还没有Hibernate<literal>Session</literal>关联，第一次<literal>sessionFactory.getCurrentSession()</literal>调用会启动一个Session,并关联到当前的JTA事务。在<literal>"jta"</literal>上下文中用<literal>getCurrentSession()</literal>获得的<literal>Session</literal>，会被设置为在transaction关闭的时候自动flush（清洗）、在transaction关闭之后自动关闭，每句与句之后主动释放JDBC连接。这就可以根据JTA事务的生命周期来管理与之关联的<literal>Session</literal>，用户代码中就可以不再考虑这些管理。你的代码可以通过<literal>UserTransaction</literal>用编程方式使用JTA，或者(我们建议，为了便于移植代码）使用Hibernate的<literal>Transaction</literal> API来设置transaction边界。如果你的代码运行于EJB容器中，建议对CMT使用声明式事务声明。
+	            在Hibernate中，管理<literal>Session</literal>和transaction最好的方法是自动的"当前"<literal>Session</literal>管理。请参见<xref linkend="architecture-current-session">contextual sessions</xref>一节的讨论。使用<literal>"jta"</literal>session上下文，假若在当前JTA事务中还没有Hibernate<literal>Session</literal>关联，第一次<literal>sessionFactory.getCurrentSession()</literal>调用会启动一个Session,并关联到当前的JTA事务。在<literal>"jta"</literal>上下文中调用<literal>getCurrentSession()</literal>获得的<literal>Session</literal>，会被设置为在transaction关闭的时候自动flush（清洗）、在transaction关闭之后自动关闭，每句语句之后主动释放JDBC连接。这就可以根据JTA事务的生命周期来管理与之关联的<literal>Session</literal>，用户代码中就可以不再考虑这些管理。你的代码也可以通过<literal>UserTransaction</literal>用编程方式使用JTA，或者(我们建议，为了便于移植代码）使用Hibernate的<literal>Transaction</literal> API来设置transaction边界。如果你的代码运行在EJB容器中，建议对CMT使用声明式事务声明。
 	            
             </para>
         </sect2>
@@ -1620,7 +1621,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </title>
 
             <para>
-                为了将<literal>SessionFactory</literal>注册到JNDI中<literal>cfg.buildSessionFactory()</literal>这行代码仍需在某处被执行.
+                为了将<literal>SessionFactory</literal>注册到JNDI中，<literal>cfg.buildSessionFactory()</literal>这行代码仍需在某处被执行.
                 你可在一个<literal>static</literal>初始化块(像<literal>HibernateUtil</literal>中的那样)中执行它或将Hibernate部署为一个<emphasis>托管的服务</emphasis>.
             </para>
 
@@ -1675,9 +1676,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <para>
                 这个文件是部署在<literal>META-INF</literal>目录下的, 并会被打包到以<literal>.sar</literal> (service archive)为扩展名的JAR文件中.
-                同时，你需要打包Hibernate, 它所需要的第三方库, 你编译好的持久化类及你的映射定义文件打包进同一个文档. 
+                同时，你需要将Hibernate、它所需要的第三方库、你编译好的持久化类以及你的映射定义文件打包进同一个文档. 
                 你的企业Bean(一般为会话Bean)可能会被打包成它们自己的JAR文件, 但你也许会将EJB JAR文件一同包含进能独立(热)部署的主服务文档.
-                咨询JBoss AS文档以了解更多的JMX服务与EJB部署的信息.
+                参考JBoss AS文档以了解更多的JMX服务与EJB部署的信息.
             </para>
 
         </sect2>

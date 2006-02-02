@@ -1,18 +1,18 @@
 ﻿<chapter id="components">
-    <title>组件（Component）映射</title>
+  <title>组件（Component）映射</title>
+
+  <para>
+      <emphasis>组件</emphasis>(Component)这个概念在Hibernate中几处不同的地方为了不同的目的被重复使用.
+  </para>
+
+  <sect1 id="components-dependentobjects" revision="2">
+    <title>依赖对象（Dependent objects）</title>
 
     <para>
-		<emphasis>Component</emphasis>这个概念在Hibernate中几处不同的地方为了不同的目的被重复使用.
+        组件(Component)是一个被包含的对象，在持久化的过程中，它被当作值类型，而并非一个实体的引用。在这篇文档中，组件这一术语指的是面向对象的合成概念（而并不是系统构架层次上的组件的概念）。举个例子, 你对人(Person)这个概念可以像下面这样来建模：
     </para>
 
-    <sect1 id="components-dependentobjects" revision="2" >
-        <title>依赖对象（Dependent objects）</title>
-
-        <para>
-			Component是一个被包含的对象,它作为值类型被持久化，而非一个被引用的实体。“component(组件)”这一术语指的是面向对象的合成概念（而并不是系统构架层次上的组件的概念）举个例子, 你可以对人（Person)如以下这样来建模：
-        </para>
-
-        <programlisting><![CDATA[public class Person {
+    <programlisting><![CDATA[public class Person {
     private java.util.Date birthday;
     private Name name;
     private String key;
@@ -38,7 +38,7 @@
     ......
 }]]></programlisting>
 
-<programlisting><![CDATA[public class Name {
+    <programlisting><![CDATA[public class Name {
     char initial;
     String first;
     String last;
@@ -63,12 +63,11 @@
 }]]></programlisting>
 
         <para>
-			现在,<literal>姓名(Name)</literal>是作为<literal>人(Person)</literal>的一个组成部分。需要注意的是:需要对<literal>姓名</literal>
-			的持久化属性定义getter和setter方法,但是不需要实现任何的接口或申明标识符字段。
+            在持久化的过程中,<literal>姓名(Name)</literal>可以作为<literal>人(Person)</literal>的一个组件。需要注意的是:你应该为<literal>姓名</literal>的持久化属性定义getter和setter方法,但是你不需要实现任何的接口或申明标识符字段。
         </para>
 
         <para>
-			以下是这个例子的Hibernate映射文件:
+            以下是这个例子的Hibernate映射文件:
         </para>
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
@@ -83,80 +82,82 @@
     </component>
 </class>]]></programlisting>
 
-        <para>
-			人员(Person)表中将包括<literal>pid</literal>,
-			<literal>birthday</literal>,
-            <literal>initial</literal>,
-            <literal>first</literal>和
-            <literal>last</literal>等字段。
-        </para>
+    <para>
+        人员(Person)表中将包括<literal>pid</literal>,
+        <literal>birthday</literal>,
+        <literal>initial</literal>,
+        <literal>first</literal>和
+        <literal>last</literal>等字段。</para>
 
-        <para>
-			就像所有的值类型一样, Component不支持共享引用。
-            换句话说，两个人可能重名，但是两个person对象应该包含两个独立的name对象，只不过是具有“同样”的值。
-			Component的值为空从语义学上来讲是<emphasis>专有的(ad hoc)</emphasis>。 每当
-			重新加载一个包含组件的对象,如果component的所有字段为空，那么将Hibernate将假定整个component为
-			空。对于绝大多数目的,这样假定是没有问题的。
-        </para>
+    <para>
+        就像所有的值类型一样, 组件不支持共享引用。
+        换句话说，两个人可能重名，但是两个Person对象应该包含两个独立的Name对象，只不过这两个Name对象具有“同样”的值。
+        组件的值可以为空，其定义如下。
+        每当Hibernate重新加载一个包含组件的对象,如果该组件的所有字段为空，Hibernate将假定整个组件为空。
+        在大多数情况下,这样假定应该是没有问题的。
+    </para>
 
-        <para>
-            Component的属性可以是Hibernate类型（包括Collections, many-to-one 关联， 以及其它Component
-            等等）。嵌套Component不应该作为特殊的应用被考虑(Nested components should not be considered 
-            an exotic usage)。 Hibernate趋向于支持设计细致(fine-grained)的对象模型。
-        </para>
+    <para>
+        组件的属性可以是任意一种Hibernate类型（包括集合, 多对多关联，
+        以及其它组件等等）。嵌套组件不应该被当作一种特殊的应用(Nested components should not be considered an
+        exotic usage)。 Hibernate倾向于支持细致的(fine-grained)对象模型。
+    </para>
+    
+    <para>
+        <literal>&lt;component&gt;</literal> 元素还允许有 <literal>&lt;parent&gt;</literal>子元素，用来表明component类中的一个属性是指向包含它的实体的引用。
+    </para>
 
-        <para>
-            <literal>&lt;component&gt;</literal> 元素还允许有 <literal>&lt;parent&gt;</literal>子元素 ，用来表明component类中的一个属性返回包含它的实体的引用。
-        </para>
-
-        <programlisting><![CDATA[<class name="eg.Person" table="person">
+    <programlisting><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
         <generator class="uuid"/>
     </id>
-    <property name="birthday" type="date"/>
-    <component name="Name" class="eg.Name" unique="true">>
+    <property name="birthday" type="date">
+    <component name="Name" class="eg.Name" unique="true">
         <parent name="namedPerson"/> <!-- reference back to the Person -->
         <property name="initial"/>
         <property name="first"/>
         <property name="last"/>
-    </component>
+    </component&gt;
 </class>]]></programlisting>
 
-    </sect1>
+  </sect1>
 
-    <sect1 id="components-incollections" revision="1">
-        <title>在集合中出现的依赖对象</title>
+  <sect1 id="components-incollections" revision="1">
+    <title>在集合中出现的依赖对象 (Collections of dependent objects)</title>
 
-        <para>
-			Hibernate支持component的集合(例如: 一个元素是“姓名”这种类型的数组)。 你可以使用<literal>&lt;composite-element&gt;</literal>标签替代<literal>&lt;element&gt;</literal>标签来定义你的component集合。
-        </para>
+    <para>
+        Hibernate支持组件的集合(例如: 一个元素是姓名(Name)这种类型的数组)。
+        你可以使用<literal>&lt;composite-element&gt;</literal>标签替代<literal>&lt;element&gt;</literal>标签来定义你的组件集合。
+    </para>
 
-        <programlisting><![CDATA[<set name="someNames" table="some_names" lazy="true">
-    <key column="id"/>
+    <programlisting><![CDATA[<set name="someNames" table="some_names" lazy="true">
+    <key column="id"/&gt;
     <composite-element class="eg.Name"> <!-- class attribute required -->
         <property name="initial"/>
         <property name="first"/>
-        <property name="last"/>
+        <property name="last"/>;
     </composite-element>
 </set>]]></programlisting>
 
-        <para>
-            注意，如果你决定定义一个元素是联合元素的<literal>Set</literal>，正确地实现<literal>equals()</literal>和<literal>hashCode()</literal>是非常重要的。
-        </para>
+    <para>
+        注意，如果你定义的Set包含组合元素(composite-element)，正确地实现<literal>equals()</literal>和<literal>hashCode()</literal>是非常重要的。
+    </para>
 
-        <para>
-			组合元素可以包含component但是不能包含集合。如果你的组合元素自身包含component, 必须使用<literal>&lt;nested-composite-element&gt;</literal>标签。这是一个相当特殊的案例 - 组合元素的集合自身可以包含component。 这个时候你就应该考虑一下使用one-to-many关联是否会更恰当。 尝试对这个组合元素重新建模为一个实体－但是需要注意的是，虽然Java模型和重新建模前 是一样的，关系模型和持久性语义上仍然存在轻微的区别。
-        </para>
+    <para>
+        组合元素可以包含组件，但是不能包含集合。如果你的组合元素自身包含组件, 你必须使用<literal>&lt;nested-composite-element&gt;</literal>标签。这是一个相当特殊的案例 - 在一个组件的集合里，那些组件本身又可以包含其他的组件。这个时候你就应该考虑一下使用one-to-many关联是否会更恰当。
+		尝试对这个组合元素重新建模为一个实体－但是需要注意的是，虽然Java模型和重新建模前是一样的，关系模型和持久性语义会有细微的变化。
+    </para>
 
-        <para>
-			请注意如果你使用<literal>&lt;set&gt;</literal>标签,一个组合元素的映射不支持可能为空的属性. 当删除对象时, Hibernate必须使用每一个字段的来确定一条记录(在组合元素表中，没有单个的关键字段), 如果有为null的字段，这样做就不可能了。你必须作出一个选择，要么在组合元素中使用不能为空的属性， 要么选择使用<literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>,<literal>&lt;bag&gt;</literal> 或者 <literal>&lt;idbag&gt;</literal>而不是 <literal>&lt;set&gt;</literal>。
-        </para>
+    <para>
+        请注意如果你使用<literal>&lt;set&gt;</literal>标签,一个组合元素的映射不支持可能为空的属性. 当删除对象时， Hibernate必须使用每一个字段的值来确定一条记录(在组合元素表中，没有单独的关键字段)，
+		如果有为null的字段，这样做就不可能了。你必须作出一个选择，要么在组合元素中使用不能为空的属性，要么选择使用<literal>&lt;list&gt;</literal>,<literal>&lt;map&gt;</literal>,<literal>&lt;bag&gt;</literal> 或者 <literal>&lt;idbag&gt;</literal>而不是 <literal>&lt;set&gt;</literal>。
+    </para>
 
-        <para>
-			组合元素有个特别的案例，是组合元素可以包含一个<literal>&lt;many-to-one&gt;</literal> 元素。类似这样的映射允许你映射一个many-to-mang关联表作为组合元素额外的字段。(A mapping like this allows you to map extra columns of a many-to-many association table to the composite element class.) 接下来的的例子是从<literal>Order</literal>到<literal>Item</literal>的一个多对多的关联关系,而	<literal>purchaseDate</literal>, <literal>price</literal> 和 <literal>quantity</literal> 是<literal>Item</literal>的关联属性。
-        </para>
+    <para>
+        组合元素有个特别的用法是它可以包含一个<literal>&lt;many-to-one&gt;</literal>元素。类似这样的映射允许你将一个many-to-many关联表映射为组合元素的集合。(A mapping like this allows you to map extra columns of a many-to-many association table to the composite element class.) 接下来的的例子是从<literal>Order</literal>到<literal>Item</literal>的一个多对多的关联关系, 关联属性是 <literal>purchaseDate</literal>, <literal>price</literal> 和 <literal>quantity</literal> 。
+    </para>
 
-        <programlisting><![CDATA[<class name="eg.Order" .... >
+    <programlisting><![CDATA[<class name="eg.Order" .... >
     ....
     <set name="purchasedItems" table="purchase_items" lazy="true">
         <key column="order_id">
@@ -168,14 +169,13 @@
         </composite-element>
     </set>
 </class>]]></programlisting>
-        <para>
-        当然，在另一方面，无法存在指向purchase的关联，因此不能实现双向关联查询。记住组建是值类型，并且不允许共享关联。单个<literal>Purchase</literal> 可以放在包含<literal>Order</literal>的集合中，但它不能同时被<literal>Item</literal>所关联。
-        </para>
+    <para>
+        当然，当你定义Item时，你无法引用这些purchase，因此你无法实现双向关联查询。记住组件是值类型，并且不允许共享引用。某一个特定的<literal>Purchase</literal> 可以放在<literal>Order</literal>的集合中，但它不能同时被<literal>Item</literal>所引用。
+    </para>
 
+    <para>其实组合元素的这个用法可以扩展到三重或多重关联:</para>
 
-        <para>即使三重或多重管理都是可能的:</para>
-		
-        <programlisting><![CDATA[<class name="eg.Order" .... >
+    <programlisting><![CDATA[<class name="eg.Order" .... >
     ....
     <set name="purchasedItems" table="purchase_items" lazy="true">
         <key column="order_id">
@@ -186,52 +186,51 @@
     </set>
 </class>]]></programlisting>
 
+    <para>
+        在查询中，表达组合元素的语法和关联到其他实体的语法是一样的。
+     </para>
+     
+  </sect1>
+
+  <sect1 id="components-asmapindex">
+    <title>组件作为Map的索引（Components as Map indices ）</title>
+
+    <para>
+        <literal>&lt;composite-map-key&gt;</literal>元素允许你映射一个组件类作为一个<literal>Map</literal>的key，前提是你必须正确的在这个类中重写了<literal>hashCode()</literal> 和 <literal>equals()</literal>方法。
+    </para>
+  </sect1>
+
+  <sect1 id="components-compositeid" revision="1">
+    <title>组件作为联合标识符(Components as composite identifiers)</title>
+
+    <para>
+       你可以使用一个组件作为一个实体类的标识符。 你的组件类必须满足以下要求：
+    </para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
         <para>
-            在查询中，组合元素使用的语法是和关联到其他实体的语法一样的。
+            它必须实现<literal>java.io.Serializable</literal>接口
         </para>
-
-    </sect1>
-
-    <sect1 id="components-asmapindex">
-        <title>组件作为Map的索引（Components as Map indices ）</title>
-
+      </listitem>
+      <listitem>
         <para>
-			<literal>&lt;composite-map-key&gt;</literal>元素允许你映射一个Component类作为<literal>Map</literal>的key， 但是你必须确定你正确的在这个类中重写了<literal>hashCode()</literal> 和 <literal>equals()</literal>方法。
+            它必须重新实现<literal>equals()</literal>和<literal>hashCode()</literal>方法, 始终和组合关键字在数据库中的概念保持一致
         </para>
-    </sect1>
+      </listitem>
+    </itemizedlist>
 
-    <sect1 id="components-compositeid" revision="1">
-        <title>组件作为联合标识符(Components as composite identifiers)</title>
+    <para>
+        <emphasis>注意：在Hibernate3中，第二个要求并非是Hibernate强制必须的。但最好这样做。</emphasis>
+    </para>
 
-        <para>
-			你可以使用一个component作为一个实体类的标识符。 你的component类必须满足以下要求：
-        </para>
+    <para>
+        你不能使用一个<literal>IdentifierGenerator</literal>产生组合关键字。一个应用程序必须分配它自己的标识符。
+    </para>
 
-        <itemizedlist spacing="compact">
-            <listitem>
-                <para>
-					它必须实现<literal>java.io.Serializable</literal>接口
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-					它必须重新实现<literal>equals()</literal>和<literal>hashCode()</literal>方法, 始终和组合关键字在数据库中的概念保持一致
-                </para>
-            </listitem>
-        </itemizedlist>
-
-        <para>
-            <emphasis>注意：在Hibernate3中，第二种要求并非是Hibernate强制必须的。但最好这样做。</emphasis>
-		</para>
-		
-		<para>
-			你不能使用一个<literal>IdentifierGenerator</literal>产生组合关键字。作为替代应用程序必须分配它自己的标识符。
-        </para>
-
-        <para>
-使用<literal>&lt;composite-id&gt;</literal> 标签(并且内嵌<literal>&lt;key-property&gt;</literal>元素)代替通常的<literal>&lt;id&gt;</literal>标签。 比如,<literal>OrderLine</literal>类具有一个依赖<literal>Order</literal>的(联合)主键的主键。
-
-        </para>
+    <para>
+        使用<literal>&lt;composite-id&gt;</literal> 标签(并且内嵌<literal>&lt;key-property&gt;</literal>元素)代替通常的<literal>&lt;id&gt;</literal>标签。比如,<literal>OrderLine</literal>类具有一个主键，这个主键依赖于<literal>Order</literal>的(联合)主键。
+    </para>
 
         <programlisting><![CDATA[<class name="OrderLine">
     
@@ -252,10 +251,9 @@
     
 </class>]]></programlisting>
 
-        <para>
-            
-            现在，任何关联到<literal>OrderLine</literal> 的外键都是复合的。在你的映射文件中，必须为其他类也这样声明。指向<literal>OrderLine</literal>的关联可能被这样映射：
-        </para>
+    <para>
+        现在，任何指向<literal>OrderLine</literal>的外键都是复合的。在你的映射文件中，必须为其他类也这样声明。例如，一个指向<literal>OrderLine</literal>的关联可能被这样映射：
+    </para>
 
         <programlisting><![CDATA[<many-to-one name="orderLine" class="OrderLine">
 <!-- the "class" attribute is optional, as usual -->
@@ -264,16 +262,14 @@
     <column name="customerId"/>
 </many-to-one>]]></programlisting>
 
-        <para>
-           
-            （注意在各个地方<literal>&lt;column&gt;</literal>标签都是<literal>column</literal>属性的替代写法。）
-        </para>
-        
-        <para>
-            指向<literal>OrderLine</literal>的<literal>多对多</literal>关联也使用联合外键:
-            
-        </para>
-    
+    <para>
+        （注意在各个地方<literal>&lt;column&gt;</literal>标签都是<literal>column</literal>属性的替代写法。）
+    </para>
+
+    <para>
+        指向<literal>OrderLine</literal>的<literal>多对多</literal>关联也使用联合外键:
+    </para>
+
     <programlisting><![CDATA[<set name="undeliveredOrderLines">
     <key column name="warehouseId"/>
     <many-to-many class="OrderLine">
@@ -283,9 +279,9 @@
     </many-to-many>
 </set>]]></programlisting>
 
-        <para>
-            在<literal>Order</literal>中, <literal>OrderLine</literal>的集合则是这样:
-        </para>
+    <para>
+        在<literal>Order</literal>中,<literal>OrderLine</literal>的集合则是这样:
+    </para>
 
     <programlisting><![CDATA[<set name="orderLines" inverse="true">
     <key>
@@ -295,13 +291,13 @@
     <one-to-many class="OrderLine"/>
 </set>]]></programlisting>
 
-        <para>
-            (与通常一样,<literal>&lt;one-to-many&gt;</literal>元素不声明任何列.)
-        </para>
-        
-        <para>
-            假若<literal>OrderLine</literal>本身拥有一个集合,它也具有组合外键。
-        </para>
+    <para>
+        (与通常一样,<literal>&lt;one-to-many&gt;</literal>元素不声明任何列.)
+    </para>
+
+    <para>
+        假若<literal>OrderLine</literal>本身拥有一个集合,它也具有组合外键。
+    </para>
 
         <programlisting><![CDATA[<class name="OrderLine">
     ....
@@ -319,13 +315,14 @@
     </set>
 </class>]]></programlisting>
 
-    </sect1>
+  </sect1>
 
-    <sect1 id="components-dynamic"  revision="1">
-        <title>动态组件 （Dynamic components）</title>
-        <para>
-			你甚至可以映射<literal>Map</literal>类型的属性：
-        </para>
+  <sect1 id="components-dynamic" revision="1">
+    <title>动态组件 （Dynamic components）</title>
+
+    <para>
+        你甚至可以映射<literal>Map</literal>类型的属性：
+    </para>
 
     <programlisting><![CDATA[<dynamic-component name="userAttributes">
     <property name="foo" column="FOO" type="string"/>
@@ -333,11 +330,10 @@
     <many-to-one name="baz" class="Baz" column="BAZ_ID"/>
 </dynamic-component>]]></programlisting>
 
-        <para>
-		从<literal>&lt;dynamic-component&gt;</literal>映射的语义上来讲，它和<literal>&lt;component&gt;</literal>是相同的。
-		这种映射类型的优点在于通过修改映射文件，就可以具有在部署时检测真实属性的能力.利用一个DOM解析器，是有可能在运行时刻操作映射文件的。 
-		更好的是，你可以通过<literal>Configuration</literal>对象来访问（或者修改）Hibernate的运行时元模型。
-        </para>
-    </sect1>
-
+    <para>
+        从<literal>&lt;dynamic-component&gt;</literal>映射的语义上来讲，它和<literal>&lt;component&gt;</literal>是相同的。
+        这种映射类型的优点在于通过修改映射文件，就可以具有在部署时检测真实属性的能力。利用一个DOM解析器，也可以在程序运行时操作映射文件。
+        更好的是，你可以通过<literal>Configuration</literal>对象来访问（或者修改）Hibernate的运行时元模型。
+     </para>
+  </sect1>
 </chapter>

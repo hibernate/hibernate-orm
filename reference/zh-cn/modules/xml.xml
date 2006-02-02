@@ -9,11 +9,11 @@
 
         <para>
             Hibernate使得你可以用XML数据来进行工作，恰如你用持久化的POJO进行工作那样。解析过的XML树
-            可以被认为是另外一种在对象层面上代替POJO来表示关系型数据的途径.
+            可以被认为是代替POJO的另外一种在对象层面上表示关系型数据的途径.
         </para>
 
         <para>
-            Hibernate支持采用dom4j作为操作XML树的API。你可以写一个查询从数据库中检索出
+            Hibernate支持采用dom4j作为操作XML树的API。你可以写一些查询从数据库中检索出
             dom4j树，随后你对这颗树做的任何修改都将自动同步回数据库。你甚至可以用dom4j解析
             一篇XML文档，然后使用Hibernate的任一基本操作将它写入数据库：
             <literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal> 
@@ -21,7 +21,7 @@
         </para>
 
         <para>
-            这一特性可以应用在很多场合，包括数据导入导出，通过JMS或SOAP表现实体数据以及
+            这一特性可以应用在很多场合，包括数据导入导出，通过JMS或SOAP具体化实体数据以及
             基于XSLT的报表。
         </para>
         
@@ -92,7 +92,7 @@
         
             <para>
                 这个映射使得你既可以把数据作为一棵dom4j树那样访问，又可以作为由属性键值对(java <literal>Map</literal>s)
-                组成的图那样访问。属性名字是纯粹逻辑上的结构，你可以在HQL查询中引用它。
+                组成的图那样访问。属性名字纯粹是逻辑上的结构，你可以在HQL查询中引用它。
             </para>
 
         </sect2>
@@ -262,7 +262,7 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            将这一特色与Hibernate的<literal>replicate()</literal>操作结合起来而实现的基于XML的数据导入/导出将非常有用.
+            将这一特色与Hibernate的<literal>replicate()</literal>操作结合起来对于实现的基于XML的数据导入/导出将非常有用.
         </para>
        
     </sect1>

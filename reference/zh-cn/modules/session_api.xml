@@ -28,7 +28,7 @@
 				<para>
                     <emphasis>瞬时(Transient)</emphasis> - 由<literal>new</literal>操作符创建，且尚未与Hibernate <literal>Session</literal>
 					关联的对象被认定为瞬时(Transient)的。瞬时(Transient)对象不会被持久化到数据库中，也不会被赋予持久化标识(identifier)。
-					如果程序中没有保持对瞬时(Transient)对象的引用，它会被垃圾回收器(garbage collector)销毁。
+					如果瞬时(Transient)对象在程序中没有被引用，它会被垃圾回收器(garbage collector)销毁。
 					使用Hibernate <literal>Session</literal>可以将其变为持久(Persistent)状态。(Hibernate会自动执行必要的SQL语句)
                 </para>
                 
@@ -37,7 +37,7 @@
 
                 <para>
                     <emphasis>持久(Persistent)</emphasis> - 持久(Persistent)的实例在数据库中有对应的记录，并拥有一个持久化标识(identifier)。
-					持久(Persistent)的实例可能是刚被保存的，或刚被加载的，无论哪一种，按定义对象都仅在相关联的<literal>Session</literal>生命周期内的保持这种状态。
+					持久(Persistent)的实例可能是刚被保存的，或刚被加载的，无论哪一种，按定义，它存在于相关联的<literal>Session</literal>作用范围内。
 					Hibernate会检测到处于持久(Persistent)状态的对象的任何改动，在当前操作单元(unit of work)执行完毕时将对象数据(state)与数据库同步(synchronize)。
 					开发者不需要手动执行<literal>UPDATE</literal>。将对象从持久(Persistent)状态变成瞬时(Transient)状态同样也不需要手动执行<literal>DELETE</literal>语句。
                 </para>                
@@ -46,7 +46,7 @@
                 <para>
                     <emphasis>脱管(Detached)</emphasis> - 与持久(Persistent)对象关联的<literal>Session</literal>被关闭后，对象就变为脱管(Detached)的。
 					对脱管(Detached)对象的引用依然有效，对象可继续被修改。脱管(Detached)对象如果重新关联到某个新的<literal>Session</literal>上，
-					会再次转变为持久(Persistent)的(Detached其间的改动将被持久化到数据库)。
+					会再次转变为持久(Persistent)的(在Detached其间的改动将被持久化到数据库)。
                 	这个功能使得一种编程模型，即中间会给用户思考时间(user think-time)的长时间运行的操作单元(unit of work)的编程模型成为可能。
                 	我们称之为<emphasis>应用程序事务</emphasis>，即从用户观点看是一个操作单元(unit of work)。
                 </para>
@@ -65,7 +65,7 @@
                         
         <para>
 			Hibernate认为持久化类(persistent class)新实例化的对象是<emphasis>瞬时(Transient)</emphasis>的。
-			我们可将瞬时(Transient)对象与session关联而变为<emphasis>持久(Persistent)</emphasis>的。
+			我们可通过将瞬时(Transient)对象与session关联而把它变为<emphasis>持久(Persistent)</emphasis>的。
         </para>        
         
         <programlisting><![CDATA[DomesticCat fritz = new DomesticCat();
@@ -100,13 +100,13 @@ sess.save( pk, new Long(1234) );]]></programlisting>
 			如果你持久化的对象有关联的对象(associated objects)（例如上例中的<literal>kittens</literal>集合）
   			那么对这些对象（译注：pk和kittens）进行持久化的顺序是任意的（也就是说可以先对kittens进行持久化也可以先对pk进行持久化），
   			除非你在外键列上有<literal>NOT NULL</literal>约束。
-            Hibernate不会违反外键约束，但是如果你用错误的顺序持久化对象（译注：在pk持久之前持久kitten），那么可能会违反<literal>NOT NULL</literal>约束。
+            Hibernate不会违反外键约束，但是如果你用错误的顺序持久化对象（译注：在pk持久化之前持久化kitten），那么可能会违反<literal>NOT NULL</literal>约束。
         </para>
         
         <para>
 			通常你不会为这些细节烦心，因为你很可能会使用Hibernate的
 			<emphasis>传播性持久化(transitive persistence)</emphasis>功能自动保存相关联那些对象。
-			这样连违反<literal>NOT NULL</literal>约束情况都不会出现了 - Hibernate会管好所有的事情。
+			这样连违反<literal>NOT NULL</literal>约束的情况都不会出现了 - Hibernate会管好所有的事情。
 			传播性持久化(transitive persistence)将在本章稍后讨论。
         </para>        
         
@@ -146,7 +146,7 @@ Set kittens = cat.getKittens();]]></programlisting>
         
 
         <para>
-       		如果你不确定是否有匹配的行存在，应该使用<literal>get()</literal>方法，它会立刻访问数据库，如果没有对应的行，会返回null。
+       		如果你不确定是否有匹配的行存在，应该使用<literal>get()</literal>方法，它会立刻访问数据库，如果没有对应的记录，会返回null。
         </para>
         
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);
@@ -191,7 +191,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
         <para>
 			如果不知道所要寻找的对象的持久化标识，那么你需要使用查询。Hibernate支持强大且易于使用的面向对象查询语言(HQL)。
 			如果希望通过编程的方式创建查询，Hibernate提供了完善的按条件(Query By Criteria, QBC)以及按样例(Query By Example, QBE)进行查询的功能。
-			你也可以用原生SQL(native SQL)描述查询，Hibernate提供了将结果集(result set)转化为对象的部分支持。
+			你也可以用原生SQL(native SQL)描述查询，Hibernate额外提供了将结果集(result set)转化为对象的支持。
         </para>        
 
         <sect2 id="objectstate-querying-executing"  revision="1">
@@ -507,7 +507,7 @@ List cats = crit.list();]]></programlisting>
 
             
             <para>
-				你可以使用<literal>createSQLQuery()</literal>方法，用SQL来描述查询，并由Hibernate处理将结果集转换成对象的工作。
+				你可以使用<literal>createSQLQuery()</literal>方法，用SQL来描述查询，并由Hibernate将结果集转换成对象。
 				请注意，你可以在任何时候调用<literal>session.connection()</literal>来获得并使用JDBC <literal>Connection</literal>对象。
 				如果你选择使用Hibernate的API, 你必须把SQL别名用大括号包围起来:
             </para>            
@@ -577,7 +577,7 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
         </para>
 
         <para>
-        	Hibernate通过提供使用<literal>Session.update()</literal>或<literal>Session.merge()</literal>方法
+        	Hibernate通过提供<literal>Session.update()</literal>或<literal>Session.merge()</literal>
         	重新关联脱管实例的办法来支持这种模型。
         </para>        
 
@@ -608,8 +608,8 @@ secondSession.update(mate); // update mate]]></programlisting>
 
         
         <para>
-		    希望相关联的脱管对象（通过引用“可到达”的脱管对象）的数据也要更新到数据库时（并且也<emphasis>仅仅</emphasis>在这种情况），
-		    应用程序需要对该相关联的脱管对象单独调用<literal>update()</literal>
+		    如果希望相关联的脱管对象（通过引用“可到达”的脱管对象）的数据也要更新到数据库时（并且也<emphasis>仅仅</emphasis>在这种情况），
+		    可以对该相关联的脱管对象单独调用<literal>update()</literal>
 			当然这些可以自动完成，即通过使用<emphasis>传播性持久化(transitive persistence)</emphasis>，请看<xref linkend="objectstate-transitive"/>。
         </para>        
 
@@ -661,7 +661,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
 
         <para>
             <literal>saveOrUpdate()</literal>用途和语义可能会使新用户感到迷惑。
-			首先，只要你没有尝试在某个session中使用来自另一session的实例，你应该就不需要使用<literal>update()</literal>，
+			首先，只要你没有尝试在某个session中使用来自另一session的实例，你就应该不需要使用<literal>update()</literal>，
             <literal>saveOrUpdate()</literal>，或<literal>merge()</literal>。有些程序从来不用这些方法。
         </para>
 
@@ -808,7 +808,7 @@ session2.close();]]></programlisting>
 
         
         <para>
-            <literal>ReplicationMode</literal>决定数据库中已存在相同行时，<literal>replicate()</literal>如何处理。
+            <literal>ReplicationMode</literal>决定在和数据库中已存在记录由冲突时，<literal>replicate()</literal>如何处理。
         </para>        
         
         <itemizedlist spacing="compact">
@@ -1072,13 +1072,7 @@ sess.close();]]></programlisting>
             </listitem>
         </itemizedlist>
         <para>
-            Finally, note that cascading of operations can be applied to an object graph at
-            <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All operations,
-            if enabled, are cascaded to associated entities reachable when the operation is
-            executed. However, <literal>save-upate</literal> and <literal>delete-orphan</literal>
-            are transitive for all associated entities reachable during flush of the
-            <literal>Session</literal>.
-            最后，注意操作的级联可能是在<emphasis>调用期(call time)</emphasis>或者<emphasis>写入期(flush time)</emphasis>作用到对象图上的。所有的操作，假若允许，都在操作被执行的时候级联到可触及的关联实体上。然而，<literal>save-upate</literal>和<literal>delete-orphan</literal>是在<literal>Session</literal> flush的时候才作用到所有可触及的被关联对象上的。
+            最后，注意操作的级联可能是在<emphasis>调用期(call time)</emphasis>或者<emphasis>写入期(flush time)</emphasis>作用到对象图上的。所有的操作，如果允许，都在操作被执行的时候级联到可触及的关联实体上。然而，<literal>save-upate</literal>和<literal>delete-orphan</literal>是在<literal>Session</literal> flush的时候才作用到所有可触及的被关联对象上的。
         </para>
 
 

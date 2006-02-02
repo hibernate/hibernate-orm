@@ -123,7 +123,7 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct" revision="2">
+    <sect1 id="batch-direct" revision="3">
         <title>DML(数据操作语言)风格的操作(DML-style operations)</title>
 
         <para>
@@ -188,6 +188,23 @@ session.close();]]></programlisting>
 		        .executeUpdate();
 		tx.commit();
 		session.close();]]></programlisting>
+
+        <para>
+            HQL <literal>UPDATE</literal>语句，默认不会影响更新实体的<xref linkend="mapping-declaration-version">version</xref>或者<xref linkend="mapping-declaration-timestamp">timestamp</xref>属性值。这和EJB3规范是一致的。但是，通过使用<literal>versioned update</literal>，你可以强制Hibernate正确的重置<literal>version</literal>或者<literal>timestamp</literal>属性值。这通过在<literal>UPDATE</literal>关键字后面增加<literal>VERSIONED</literal>关键字来实现的。
+        </para>
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+String hqlVersionedUpdate = "update versioned Customer set name = :newName where name = :oldName";
+int updatedEntities = s.createQuery( hqlUpdate )
+        .setString( "newName", newName )
+        .setString( "oldName", oldName )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+            注意，自定义的版本类型(<literal>org.hibernate.usertype.UserVersionType</literal>)不允许和<literal>update versioned</literal>语句联用。
+        </para>
 
         <para>
             执行一个HQL <literal>DELETE</literal>，同样使用 <literal>Query.executeUpdate()</literal> 方法:

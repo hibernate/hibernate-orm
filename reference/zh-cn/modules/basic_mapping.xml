@@ -1071,7 +1071,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp" revision="3">
+        <sect2 id="mapping-declaration-timestamp" revision="4">
             <title>timestamp (optional)</title>
 
             <para>
@@ -1140,7 +1140,7 @@
             </programlistingco>
             
             <para>
-                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。并且<literal>&lt;timestamp use-db="true"&gt;</literal>和<literal>&lt;version type="dbtimestamp"&gt;</literal>是等价的。
+                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。并且<literal>&lt;timestamp source="true"&gt;</literal>和<literal>&lt;version type="dbtimestamp"&gt;</literal>是等价的。
             </para>
         </sect2>
 

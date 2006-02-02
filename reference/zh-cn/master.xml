@@ -35,7 +35,7 @@
         <title>HIBERNATE - 符合Java习惯的关系数据库持久化</title>
         
         <subtitle>Hibernate参考文档</subtitle>
-        <releaseinfo>3.1.1</releaseinfo>
+        <releaseinfo>3.1.2</releaseinfo>
     </bookinfo>
 
     <toc/>

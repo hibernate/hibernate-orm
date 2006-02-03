@@ -1,4 +1,4 @@
-﻿<chapter id="mapping">
+<chapter id="mapping">
     <title>对象/关系数据库映射基础(Basic O/R Mapping)</title>
 
     <sect1 id="mapping-declaration" revision="1">
@@ -98,7 +98,7 @@
 
             <para>
                 所有的XML映射都需要定义如上所示的doctype。DTD可以从上述URL中获取，
-                从<literal>hibernate-x.x.x/src/net/sf/hibernate</literal>目录中、
+                也可以从<literal>hibernate-x.x.x/src/net/sf/hibernate</literal>目录中、
                 或<literal>hibernate.jar</literal>文件中找到。Hibernate总是会首先在它的classptah中搜索DTD文件。
                 如果你发现它是通过连接Internet查找DTD文件，就对照你的classpath目录检查XML文件里的DTD声明。
             </para>
@@ -156,7 +156,7 @@
                      <callout arearefs="hm4">
                          <para>
                              <literal>default-access</literal> (可选 - 默认为 <literal>property</literal>):
-                             Hibernate用来访问属性的策略。可以通过实现<literal>PropertyAccessor</literal>接口
+                             Hibernate用来访问所有属性的策略。可以通过实现<literal>PropertyAccessor</literal>接口
                              自定义。
                          </para>
                      </callout>
@@ -184,7 +184,7 @@
              
              <para>
                  假若你有两个持久化类，它们的非全限定名是一样的（就是两个类的名字一样，所在的包不一样--译者注），
-                 你应该设置<literal>auto-import="false"</literal>。假若说你把一个“import过”的名字同时对应两个类，
+                 你应该设置<literal>auto-import="false"</literal>。如果你把一个“import过”的名字同时对应两个类，
                   Hibernate会抛出一个异常。
              </para>
 
@@ -276,7 +276,7 @@
                     <callout arearefs="class4">
                         <para>
                             <literal>mutable</literal> (可选，默认值为<literal>true</literal>):
-                            表明该类的实例是可变的或者可变的。
+                            表明该类的实例是可变的或者不可变的。
                         </para>
                     </callout>    
                     <callout arearefs="class5">
@@ -350,14 +350,14 @@
                     </callout>    
                     <callout arearefs="class16">
                         <para>
-                            <literal>lazy</literal> (optional): 通过设置<literal>lazy="false"</literal>，
-                            所有的延迟加载（Lazy fetching）功能将未被激活（disabled）。
+                            <literal>lazy</literal> (可选): 通过设置<literal>lazy="false"</literal>，
+                            所有的延迟加载（Lazy fetching）功能将被全部禁用（disabled）。
                         </para>
                     </callout>    
                     <callout arearefs="class17">
                         <para>
                             <literal>entity-name</literal> (可选，默认为类名): Hibernate3允许一个类进行多次映射（
-                            默认情况是映射到不同的表），并且允许使用Maps或XML代替Java层次的实体映射
+                            前提是映射到不同的表），并且允许使用Maps或XML代替Java层次的实体映射
                             （也就是实现动态领域模型，不用写持久化类－译注）。
                             更多信息请看<xref linkend="persistent-classes-dynamicmodels"/> and <xref linkend="xml"/>。
                         </para>
@@ -379,7 +379,7 @@
                     <callout arearefs="class20">
                         <para>
                             <literal>subselect</literal> (可选): 它将一个不可变（immutable）并且只读的实体映射到一个数据库的
-                            子查询中。它用于实现一个视图代替一张基本表，但是最好不要这样做。更多的介绍请看下面内容。
+                            子查询中。当你想用视图代替一张基本表的时候，这是有用的，但最好不要这样做。更多的介绍请看下面内容。
                         </para>
                     </callout>
                     <callout arearefs="class21">
@@ -393,7 +393,7 @@
            
 			<para>
                 若指明的持久化类实际上是一个接口，这也是完全可以接受的。
-                之后你可以用<literal>&lt;subclass&gt;</literal>来指定该接口的实际实现类。
+                之后你可以用元素<literal>&lt;subclass&gt;</literal>来指定该接口的实际实现类。
                 你可以持久化任何<emphasis>static</emphasis>（静态的）内部类。
                 你应该使用标准的类名格式来指定类名，<literal>比如：Foo$Bar</literal>。
             </para>
@@ -542,7 +542,7 @@
                     </callout>
                     <callout arearefs="id4">
                         <para>
-                            <literal>unsaved-value</literal> (可选 - 默认为一个字段判断（sensible）的值): 
+                            <literal>unsaved-value</literal> (可选 - 默认为一个切合实际（sensible）的值): 
                             一个特定的标识属性值，用来标志该实例是刚刚创建的，尚未保存。
                             这可以把这种实例和从以前的session中装载过（可能又做过修改--译者注）
                             但未再次持久化的实例区分开来。
@@ -627,7 +627,7 @@
                         <listitem>
                             <para id="mapping-declaration-id-hilodescription" revision="1">
                                 使用一个高/低位算法高效的生成<literal>long</literal>, <literal>short</literal>
-                                或者 <literal>int</literal>类型的标识符。给定一个表和字段（默认分别是是
+                                或者 <literal>int</literal>类型的标识符。给定一个表和字段（默认分别是
                                 <literal>hibernate_unique_key</literal> 和<literal>next_hi</literal>）作为高位值的来源。
                                 高/低位算法生成的标识符只在一个特定的数据库中是唯一的。
                             </para>
@@ -766,7 +766,7 @@
                 如果你需要应用程序分配一个标示符（而非Hibernate来生成），你可以使用<literal>assigned</literal>
                 生成器。这种特殊的生成器会使用已经分配给对象的标识符属性的标识符值。
                 这个生成器使用一个自然键（natural key，有商业意义的列－译注）作为主键，而不是使用一个代理键（
-                surrogate key，没有商业意义的列－译注）。
+                surrogate key，没有商业意义的列－译注）。这是没有指定<literal>&lt;generator&gt;</literal>元素时的默认行为
             </para>
                 
                 <para>
@@ -871,7 +871,7 @@
             </itemizedlist>
 
             <para>
-                在<xref linkend="components-compositeid"/>一节中,我们会描述第三种方式,那就是把组合标识符实现为一个组件(component)类,这是更方便的方法。下面的属性仅对这第三种方法有效：
+                在<xref linkend="components-compositeid"/>一节中,我们会描述第三种方式,那就是把组合标识符实现为一个组件(component)类,这是更方便的方法。下面的属性仅对第三种方法有效：
             </para>
 
             <itemizedlist spacing="compact">
@@ -897,7 +897,7 @@
             </itemizedlist>
             
             <para>
-                这第三种方式，被称为<emphasis>identifier component(标识符组件)</emphasis>是我们对几乎所有应用都推荐使用的方式。
+                第三种方式，被称为<emphasis>identifier component(标识符组件)</emphasis>是我们对几乎所有应用都推荐使用的方式。
             </para>
             
         </sect2>
@@ -943,7 +943,7 @@
                     <callout arearefs="discriminator3">
                         <para>
                             <literal>force(强制)</literal> (可选 - 默认为 <literal>false</literal>) 
-                            "强制"Hibernate指定允许的鉴别器值,就算取得的所有实例都是根类的。
+                            "强制"Hibernate指定允许的鉴别器值,即使当取得的所有实例都是根类的。
                         </para>
                     </callout>          
                     <callout arearefs="discriminator4">
@@ -969,7 +969,7 @@
             </para>
             
             <para>
-                <literal>force</literal>属性仅仅是在表包含一些未指定应该映射到哪个持久化类的时候才是有用的。
+                <literal>force</literal>属性仅仅在这种情况下有用的：表中包含没有被映射到持久化类的附加辨别器值。
                 这种情况不会经常遇到。          
             </para>
 
@@ -1038,7 +1038,7 @@
                             <literal>unsaved-value</literal> (可选 - 默认是<literal>undefined</literal>): 
                             用于标明某个实例时刚刚被实例化的（尚未保存）版本属性值，依靠这个值就可以把这种情况
                             和已经在先前的session中保存或装载的脱管（detached）实例区分开来。
-                            （<literal>undefined</literal>指明使用标识属性值进行判断。）
+                            （<literal>undefined</literal>指明应被使用的标识属性值。）
                         </para>
                     </callout>
                     <callout arearefs="version6">
@@ -1062,9 +1062,9 @@
             </para>
             
             <para>
-                一个脱管（detached）实例的version或timestamp不能为空（null），因为Hibernate不管
-                <literal>unsaved-value</literal>指定为何种策略，它将分离任何属性为空的version或timestamp
-                实例为瞬时（transient）实例。
+                一个脱管（detached）实例的version或timestamp属性不能为空（null），因为Hibernate不管
+                <literal>unsaved-value</literal>被指定为何种策略，它将任何属性为空的version或timestamp
+                实例看作为瞬时（transient）实例。
                 <emphasis>避免Hibernate中的传递重附（transitive reattachment）问题的一个简单方法是
               	定义一个不能为空的version或timestamp属性，特别是在人们使用程序分配的标识符（assigned identifiers）
               	或复合主键时非常有用！</emphasis>
@@ -1072,7 +1072,7 @@
         </sect2>
         
         <sect2 id="mapping-declaration-timestamp" revision="4">
-            <title>timestamp (optional)</title>
+            <title>timestamp (可选)</title>
 
             <para>
                 可选的<literal>&lt;timestamp&gt;</literal>元素指明了表中包含时间戳数据。
@@ -1140,7 +1140,7 @@
             </programlistingco>
             
             <para>
-                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。并且<literal>&lt;timestamp source="true"&gt;</literal>和<literal>&lt;version type="dbtimestamp"&gt;</literal>是等价的。
+                注意，<literal>&lt;timestamp&gt;</literal> 和<literal>&lt;version type="timestamp"&gt;</literal>是等价的。并且<literal>&lt;timestamp source="db"&gt;</literal>和<literal>&lt;version type="dbtimestamp"&gt;</literal>是等价的。
             </para>
         </sect2>
 
@@ -1213,7 +1213,7 @@
                             表明用于<literal>UPDATE</literal> 和/或 <literal>INSERT</literal>
                             的SQL语句中是否包含这个被映射了的字段。这二者如果都设置为<literal>false</literal>
                             则表明这是一个“外源性（derived）”的属性，它的值来源于映射到同一个（或多个）
-                            字段的某些其他属性，或者通过一个trigger(触发器）或其他程序。
+                            字段的某些其他属性，或者通过一个trigger(触发器）或其他程序生成。
                         </para>
                     </callout>
                     <callout arearefs="property6">
@@ -1238,7 +1238,7 @@
                     <callout arearefs="property9">
                         <para>
                             <literal>unique</literal> (可选): 使用DDL为该字段添加唯一的约束。
-                            此外，这也可以用作<literal>property-ref</literal>的目标属性。
+                            同样，允许它作为<literal>property-ref</literal>引用的目标。
                         </para>
                     </callout>
                     <callout arearefs="property10">
@@ -1269,7 +1269,7 @@
             <orderedlist spacing="compact">
                 <listitem>
                     <para>
-                        Hibernate基础类型之一（比如：<literal>integer, string, character,date, timestamp,
+                        Hibernate基本类型名（比如：<literal>integer, string, character,date, timestamp,
                          float, binary, serializable, object, blob</literal>）。
                     </para>
                 </listitem>
@@ -1411,66 +1411,66 @@
 			    在外连接抓取（outer-join fetching）和序列选择抓取（sequential select fetching）两者中选择其一。 
                         </para>                
                     </callout>
-                    <callout arearefs="manytoone6-7">
+                    <callout arearefs="manytoone6">
                         <para>
-                            <literal>update, insert</literal> (可选 - defaults to <literal>true</literal>) 
+                            <literal>update, insert</literal> (可选 - 默认为 <literal>true</literal>) 
                             指定对应的字段是否包含在用于<literal>UPDATE</literal> 和/或 <literal>INSERT</literal>
                             的SQL语句中。如果二者都是<literal>false</literal>,则这是一个纯粹的
                             “外源性（derived）”关联，它的值是通过映射到同一个（或多个）字段的某些其他属性得到
-                            或者通过trigger(触发器）、或其他程序。
+                            或者通过trigger(触发器）、或其他程序生成。
                         </para>                    
                     </callout>
-                    <callout arearefs="manytoone8">
+                    <callout arearefs="manytoone7">
                         <para>
                             <literal>property-ref</literal>: (可选) 指定关联类的一个属性，这个属性将会和本外键相对应。
                             如果没有指定，会使用对方关联类的主键。
                         </para>              
                     </callout>                   
-                   <callout arearefs="manytoone9">
+                   <callout arearefs="manytoone8">
                         <para>
                             <literal>access</literal> (可选 - 默认是 <literal>property</literal>): 
                             Hibernate用来访问属性的策略。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone10">
+                    <callout arearefs="manytoone9">
                         <para>
                             <literal>unique</literal> (可选): 使用DDL为外键字段生成一个唯一约束。此外，
                             这也可以用作<literal>property-ref</literal>的目标属性。这使关联同时具有
                             一对一的效果。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone11">
+                    <callout arearefs="manytoone10">
                         <para>
                             <literal>not-null</literal> (可选): 使用DDL为外键字段生成一个非空约束。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone12">
+                    <callout arearefs="manytoone11">
                         <para>
                             <literal>optimistic-lock</literal> (可选 - 默认为 <literal>true</literal>): 
                             指定这个属性在做更新时是否需要获得乐观锁定（optimistic lock）。
                             换句话说，它决定这个属性发生脏数据时版本（version）的值是否增长。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone13">
+                    <callout arearefs="manytoone12">
                         <para>
                             <literal>lazy</literal> (可选 - 默认为 <literal>proxy</literal>): 
                             默认情况下，单点关联是经过代理的。<literal>lazy="no-proxy"</literal>指定此属性应该在实例变量第一次被访问时应该延迟抓取（fetche lazily）（需要运行时字节码的增强）。
                             <literal>lazy="false"</literal>指定此关联总是被预先抓取。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone14">
+                    <callout arearefs="manytoone13">
                         <para>
                             <literal>not-found</literal> (可选 - 默认为 <literal>exception</literal>): 
                             指定外键引用的数据不存在时如何处理：
-                            <literal>ignore</literal>会将数据不存在作为关联到一个空对象（null）处理。
+                            <literal>ignore</literal>会将行数据不存在视为一个空（null）关联。
                         </para>
                     </callout>
-                    <callout arearefs="manytoone15">
+                    <callout arearefs="manytoone14">
                         <para>
                             <literal>entity-name</literal> (可选): 被关联的类的实体名。
                         </para>                   
                     </callout>
-                    <callout arearefs="manytoone16">
+                    <callout arearefs="manytoone15">
                         <para>
                             <literal>formula</literal> (可选): 
                             SQL表达式，用于定义<emphasis>computed（计算出的）</emphasis>外键值。
@@ -1483,12 +1483,12 @@
             
             <para>
                 <literal>cascade</literal>属性设置为除了<literal>none</literal>以外任何有意义的值，
-                它将把特定的操作传播到关联对象中。这个值就代表着Hibernate基本操作的名称，
+                它将把特定的操作传递到关联对象中。这个值就代表着Hibernate基本操作的名称，
                 <literal>persist, merge, delete, save-update, evict, replicate, lock, refresh</literal>，
                 以及特别的值<literal>delete-orphan</literal>和<literal>all</literal>，并且可以用逗号分隔符
-                来合并这些操作，例如，<literal>cascade="persist,merge,evict"</literal>或
+                来组合这些操作，例如，<literal>cascade="persist,merge,evict"</literal>或
                 <literal>cascade="all,delete-orphan"</literal>。更全面的解释请参考<xref linkend="objectstate-transitive"/>. 注意，单值关联 (many-to-one 和 
-                one-to-one associations) 不支持删除孤儿（orphan delete，删除不再被引用的值）.
+                one-to-one 关联) 不支持删除孤儿（orphan delete，删除不再被引用的值）.
                 
                 
             </para>
@@ -1500,10 +1500,10 @@
             <programlisting><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
             
             <para>
-                <literal>property-ref</literal>属性只应该用来对付老旧的数据库系统，
+                <literal>property-ref</literal>属性只应该用来对付遗留下来的数据库系统，
                 可能有外键指向对方关联表的是个非主键字段（但是应该是一个惟一关键字）的情况下。
                 这是一种十分丑陋的关系模型。比如说，假设<literal>Product</literal>类有一个惟一的序列号，
-                它并不是主键。（<literal>unique</literal>属性控制Hibernate通过SchemaExport工具生成DDL的过程。）
+                它并不是主键。（<literal>unique</literal>属性控制Hibernate通过SchemaExport工具进行的DDL生成。）
             </para>
             
             
@@ -1700,7 +1700,7 @@
 </natural-id>]]></programlisting>
 
             <para>
-                我们建议使用代用键（键值不具备实际意义）作为主键，我们仍然应该尝试为所有的实体采用自然的键值作为（附加——译者注）标示。自然键（natural key）是一个或多个属性，他们必须唯一且非空。如果它还是不可变的那就更理想了。在<literal>&lt;natural-id&gt;</literal>元素中列出自然键的属性。Hibernate会帮你生成必须的唯一键值和非空约束，你的映射会更加的明显易懂（原文是self-documenting，自我注解）。
+                我们建议使用代用键（键值不具备实际意义）作为主键，我们仍然应该尝试为所有的实体采用自然的键值作为（附加——译者注）标示。自然键（natural key）是单个或组合属性，他们必须唯一且非空。如果它还是不可变的那就更理想了。在<literal>&lt;natural-id&gt;</literal>元素中列出自然键的属性。Hibernate会帮你生成必须的唯一键值和非空约束，你的映射会更加的明显易懂（原文是self-documenting，自我注解）。
             </para>
             
             <para>
@@ -1715,7 +1715,7 @@
                 <listitem>
                     <para>
                         <literal>mutable</literal> (可选, 默认为<literal>false</literal>): 
-                        默认情况下，自然标识属性被假定为时不可变的。
+                        默认情况下，自然标识属性被假定为不可变的（常量）。
                     </para>
                 </listitem>
             </itemizedlist>
@@ -2297,7 +2297,7 @@
         <sect2 id="mapping-column" revision="4">
            <title>字段和规则元素（column and formula elements）</title>
            <para>
-               任何接受<literal>column</literal>属性的映射元素都可以选择接受<literal>&lt;column&gt;</literal> 子元素。同样的，<literal>formula</literal>也可以替换<literal>&lt;formula&gt;</literal>属性。
+               任何接受<literal>column</literal>属性的映射元素都可以选择接受<literal>&lt;column&gt;</literal> 子元素。同样的，<literal>formula</literal>子元素也可以替换<literal>&lt;formula&gt;</literal>属性。
            </para>
            <programlisting><![CDATA[<column
         name="column_name"
@@ -2328,7 +2328,7 @@
             <title>引用(import)</title>
 
             <para>
-                假设你的应用程序有两个同样名字的持久化类，但是你不想在Hibernate查询中使用他们的全限定名。除了依赖<literal>auto-import="true"</literal>以外，类也可以被显式地“import(引用)”。你甚至可以引用没有明确被映射的类和接口。
+                假设你的应用程序有两个同样名字的持久化类，但是你不想在Hibernate查询中使用他们的全限定名。除了依赖<literal>auto-import="true"</literal>以外，类也可以被显式地“import(引用)”。你甚至可以引用没有被明确映射的类和接口。
             </para>
             
             <programlisting><![CDATA[<import class="java.lang.Object" rename="Universe"/>]]></programlisting>
@@ -2478,7 +2478,6 @@
             <title>基本值类型</title>
 
             <para>
-                The built-in <emphasis>basic mapping types</emphasis> may be roughly categorized into
                 内建的 <emphasis>基本映射类型</emphasis>可以大致分为
                 <variablelist>
                     <varlistentry>
@@ -2657,7 +2656,7 @@
     <sect1 id="mapping-entityname">
         <title>多次映射同一个类</title>
         <para>
-            对特定的持久花类，映射多次是允许的。这种情形下，你必须指定<emphasis>entity name</emphasis>来区别不同映射实体的对象实例。（默认情况下，实体名字和类名是相同的。）
+            对特定的持久化类，映射多次是允许的。这种情形下，你必须指定<emphasis>entity name</emphasis>来区别不同映射实体的对象实例。（默认情况下，实体名字和类名是相同的。）
             Hibernate在操作持久化对象、编写查询条件，或者把关联映射到指定实体时，允许你指定这个entity name（实体名字）。
         </para>
         
@@ -2889,7 +2888,7 @@ public class Customer implements Serializable {
             SQL command that can be run via a <literal>java.sql.Statement.execute()</literal>
             method is valid here (ALTERs, INSERTS, etc).  There are essentially two modes for
             defining auxiliary database objects...
-            帮助CREATE和DROP任意数据库对象，和Hibernate的schema交互工具组合起来，可以提供在Hibernate映射文件中完全定义用户schema的能力。虽然这是为创建和销毁trigger(触发器）或stored procedure(存储过程）等特别设计的，实际上任何可以在<literal>java.sql.Statement.execute()</literal>方法中执行的SQL命令都可以在此使用（比如ALTER, INSERT，等等）。本质上有两种模式来定义辅助数据库对象...
+            帮助CREATE和DROP任意数据库对象，与Hibernate的schema交互工具组合起来，可以提供在Hibernate映射文件中完全定义用户schema的能力。虽然这是为创建和销毁trigger(触发器）或stored procedure(存储过程）等特别设计的，实际上任何可以在<literal>java.sql.Statement.execute()</literal>方法中执行的SQL命令都可以在此使用（比如ALTER, INSERT，等等）。本质上有两种模式来定义辅助数据库对象...
         </para>
         <para>
             第一种模式是在映射文件中显式声明CREATE和DROP命令：
@@ -2911,7 +2910,7 @@ public class Customer implements Serializable {
     </database-object>
 </hibernate-mapping>]]></programlisting>
         <para>
-            还有，这些数据库对象可以特别指定，仅在特定的方言中才使用。
+            还有，这些数据库对象可以特别指定为仅在特定的方言中才使用。
         </para>
         <programlisting><![CDATA[<hibernate-mapping>
     ...

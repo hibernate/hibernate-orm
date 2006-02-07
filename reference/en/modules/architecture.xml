@@ -265,7 +265,7 @@
         </para>
     </sect1>
 
-    <sect1 id="architecture-current-session" revision="1">
+    <sect1 id="architecture-current-session" revision="2">
         <title>Contextual Sessions</title>
         <para>
             Most applications using Hibernate need some form of "contextual" sessions, where a given
@@ -316,16 +316,24 @@
                     sessions are tracked by thread of execution. Again, see the Javadocs for details.
                 </para>
             </listitem>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.ManagedSessionContext</literal> - current
+                    sessions are tracked by thread of execution. However, you are responsible to
+                    bind and unbind a <literal>Session</literal> instance with static methods
+                    on this class, it does never open, flush, or close a <literal>Session</literal>.
+                </para>
+            </listitem>
         </itemizedlist>
 
         <para>
-            Both implementations provide a "one session - one database transaction" programming
+            The first two implementations provide a "one session - one database transaction" programming
             model, also known and used as <emphasis>session-per-request</emphasis>. The beginning
             and end of a Hibernate session is defined by the duration of a database transaction.
-            If you use programatic transaction demarcation (e.g. in pure J2SE or with
-            JTA/UserTransaction/BMT), you are adviced to use the Hibernate <literal>Transaction</literal>
-            API to hide the underlying transaction system from your code. If you execute in
-            an EJB container that supports CMT, transaction boundaries are defined declaratively
+            If you use programatic transaction demarcation in plain JSE without JTA, you are adviced to
+            use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system
+            from your code. If you use JTA, use the JTA interfaces to demarcate transactions. If you
+            execute in an EJB container that supports CMT, transaction boundaries are defined declaratively
             and you don't need any transaction or session demarcation operations in your code.
             Refer to <xref linkend="transactions"/> for more information and code examples.
         </para>
@@ -337,8 +345,8 @@
             but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
             Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>.
             Typically, the value of this parameter would just name the implementation class to
-            use; for the two out-of-the-box implementations, however, there are two corresponding
-            short names, "jta" and "thread".
+            use; for the three out-of-the-box implementations, however, there are two corresponding
+            short names, "jta", "thread", and "managed".
         </para>
         
     </sect1>

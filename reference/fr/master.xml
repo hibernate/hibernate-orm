@@ -63,7 +63,7 @@
 
         <para>
             Le but d'Hibernate est de libérer le développeur de 95 pourcent des tâches de
-            programmation liées à la persistence des données communes. Hibernate n'est
+            programmation liées à la persistance des données communes. Hibernate n'est
             probablement pas la meilleure solution pour les applications centrées sur les
             données qui n'utilisent que les procédures stockées pour implémenter la logique
             métier dans la base de données, il est le plus utile dans les modèles métier orientés

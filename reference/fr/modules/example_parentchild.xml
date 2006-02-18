@@ -46,7 +46,7 @@
                     est complètement logique - une modification de l'un des états internes d'une entité
                     ne doit pas causer la disparition de l'entité associée !
                     De même, l'ajout d'une entité dans une collection n'engendre pas,
-                    par défaut, la persistence de cette entité.
+                    par défaut, la persistance de cette entité.
                 </para>
             </listitem>
         </itemizedlist>

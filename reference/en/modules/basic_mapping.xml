@@ -734,6 +734,20 @@
                             </para>
                         </listitem>
                         </varlistentry>
+                        <varlistentry>
+                        <term><literal>sequence-identity</literal></term>
+                        <listitem>
+                            <para>
+                                a specialized sequence generation strategy which utilizes a
+                                database sequence for the actual value generation, but combines
+                                this with JDBC3 getGeneratedKeys to actually return the generated
+                                identifier value as part of the insert statement execution.  This
+                                strategy is only known to be supported on Oracle 10g drivers
+                                targetted for JDK 1.4.  Note comments on these insert statements
+                                are disabled due to a bug in the Oracle drivers.
+                            </para>
+                        </listitem>
+                        </varlistentry>
                     </variablelist>
 
                 </para>

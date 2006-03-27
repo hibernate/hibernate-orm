@@ -297,7 +297,7 @@
             See the Javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal>
             interface for a detailed discussion of its contract.  It defines a single method,
             <literal>currentSession()</literal>, by which the implementation is responsible for
-            tracking the current contextual session.  Out-of-the-box, Hibernate comes with two
+            tracking the current contextual session.  Out-of-the-box, Hibernate comes with three
             implementations of this interface.
         </para>
 

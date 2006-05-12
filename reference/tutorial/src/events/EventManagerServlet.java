@@ -10,12 +10,11 @@ import java.text.SimpleDateFormat;
 
 public class EventManagerServlet extends HttpServlet {
 
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response)
             throws ServletException, IOException {
+
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
 
         try {
             // Begin unit of work
@@ -42,7 +41,7 @@ public class EventManagerServlet extends HttpServlet {
 
             // Print page
             printEventForm(out);
-            listEvents(out);
+            listEvents(out, dateFormatter);
 
             // Write HTML footer
             out.println("</body></html>");
@@ -69,7 +68,7 @@ public class EventManagerServlet extends HttpServlet {
         out.println("</form>");
     }
 
-    private void listEvents(PrintWriter out) {
+    private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
         List result = HibernateUtil.getSessionFactory()
                         .getCurrentSession().createCriteria(Event.class).list();
         if (result.size() > 0) {

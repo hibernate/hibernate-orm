@@ -1254,7 +1254,7 @@ public void removeFromEvent(Event event) {
             database, and it provides an HTML form to enter new events.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet">
+        <sect2 id="tutorial-webapp-servlet" revision="1">
             <title>Writing the basic servlet</title>
 
             <para>
@@ -1268,17 +1268,8 @@ public void removeFromEvent(Event event) {
 
 public class EventManagerServlet extends HttpServlet {
 
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
     // Servlet code
 }]]></programlisting>
-
-            <para>
-                The <literal>dateFormatter</literal> is a tool we'll need later to convert
-                <literal>Date</literal> objects from and to strings. It makes sense to only
-                have one formatter as a member of the servlet.
-            </para>
 
             <para>
                 The servlet handles HTTP <literal>GET</literal> requests only, hence, the method
@@ -1288,6 +1279,8 @@ public class EventManagerServlet extends HttpServlet {
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
                      HttpServletResponse response)
         throws ServletException, IOException {
+
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
 
     try {
         // Begin unit of work
@@ -1335,7 +1328,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </sect2>
 
-        <sect2 id="tutorial-webapp-processing">
+        <sect2 id="tutorial-webapp-processing" revision="1">
             <title>Processing and rendering</title>
 
             <para>
@@ -1362,7 +1355,7 @@ if ( "store".equals(request.getParameter("action")) ) {
 
 // Print page
 printEventForm(out);
-listEvents(out);
+listEvents(out, dateFormatter);
 
 // Write HTML footer
 out.println("</body></html>");
@@ -1393,7 +1386,8 @@ out.close();]]></programlisting>
                 a query:
             </para>
 
-            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+            <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+
     List result = HibernateUtil.getSessionFactory()
                     .getCurrentSession().createCriteria(Event.class).list();
     if (result.size() > 0) {

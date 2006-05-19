@@ -455,7 +455,7 @@ cats.close()]]></programlisting>
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named" revision="1">
                 <title>Externalizing named queries</title>
 
                 <para>
@@ -464,7 +464,7 @@ cats.close()]]></programlisting>
                     be interpreted as markup.)
                 </para>
 
-                <programlisting><![CDATA[<query name="eg.DomesticCat.by.name.and.minimum.weight"><![CDATA[
+                <programlisting><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight > ?
@@ -474,7 +474,7 @@ cats.close()]]></programlisting>
                     Parameter binding and executing is done programatically:
                 </para>
 
-                <programlisting><![CDATA[Query q = sess.getNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+                <programlisting><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
@@ -483,6 +483,14 @@ List cats = q.list();]]></programlisting>
                     Note that the actual program code is independent of the query language that
                     is used, you may also define native SQL queries in metadata, or migrate
                     existing queries to Hibernate by placing them in mapping files.
+                </para>
+
+                <para>
+                    Also note that a query declaration inside a <literal>&lt;hibernate-mapping&gt;</literal>
+                    element requires a global unique name for the query, while a query declaration inside a
+                    <literal>&lt;class&gt;</literal> element is made unique automatically by prepending the
+                    fully qualified name of the class, for example
+                    <literal>eg.Cat.ByNameAndMaximumWeight</literal>.
                 </para>
 
             </sect3>

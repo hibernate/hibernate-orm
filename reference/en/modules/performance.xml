@@ -635,11 +635,14 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             (though they may be configured to regularly expire cached data).
         </para>
         
-        <para>
-            By default, Hibernate uses EHCache for JVM-level caching. (JCS support is now deprecated and will 
-            be removed in a future version of Hibernate.) You may choose a different implementation by 
+        <para revision="1">
+            You have the option to tell Hibernate which caching implementation to use by
             specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal>
-            using the property <literal>hibernate.cache.provider_class</literal>.
+            using the property <literal>hibernate.cache.provider_class</literal>.  Hibernate
+            comes bundled with a number of built-in integrations with open-source cache providers
+            (listed below); additionally, you could implement your own and plug it in as
+            outlined above.  Note that versions prior to 3.2 defaulted to use EhCache as the
+            default cache provider; that is no longer the case as of 3.2.
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">

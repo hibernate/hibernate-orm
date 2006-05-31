@@ -96,7 +96,7 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="2">
+        <sect2 id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
 
             <para>
@@ -107,6 +107,58 @@
                 Internet connection, check your DTD declaration against the contents of your
                 claspath.
             </para>
+
+            <sect3 id="mapping-declaration-entity-resolution">
+                <title>EntityResolver</title>
+                <para>
+                    As mentioned previously, Hibernate will first attempt to resolve DTDs in its classpath.  The
+                    manner in which it does this is by registering a custom <literal>org.xml.sax.EntityResolver</literal>
+                    implementation with the SAXReader it uses to read in the xml files.  This custom
+                    <literal>EntityResolver</literal> recognizes two different systemId namespaces.
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            a <literal>hibernate namespace</literal> is recognized whenever the
+                            resolver encounteres a systemId starting with
+                            <literal>http://hibernate.sourceforge.net/</literal>; the resolver
+                            attempts to resolve these entities via the classlaoder which loaded
+                            the Hibernate classes.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            a <literal>user namespace</literal> is recognized whenever the
+                            resolver encounteres a systemId using a <literal>classpath://</literal>
+                            URL protocol; the resolver will attempt to resolve these entities
+                            via (1) the current thread context classloader and (2) the
+                            classloader which loaded the Hibernate classes.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <para>
+                    An example of utilizing user namespacing:
+                </para>
+                <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
+    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
+]>
+
+<hibernate-mapping package="your.domain">
+    <class name="MyEntity">
+        <id name="id" type="my-custom-id-type">
+            ...
+        </id>
+    <class>
+    &types;
+</hibernate-mapping>]]></programlisting>
+                <para>
+                    Where <literal>types.xml</literal> is a resource in the <literal>your.domain</literal>
+                    package and contains a custom <xref linkend="mapping-types-custom">typedef</xref>.
+                </para>
+            </sect3>
         </sect2>
 
         <sect2 id="mapping-declaration-mapping" revision="3">

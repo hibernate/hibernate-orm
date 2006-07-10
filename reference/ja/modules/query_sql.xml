@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<chapter id="querysql" revision="2">
+  <title>ネイティブSQL</title>
+
+  <para>データベースのネイティブSQL方言を使ってクエリを表現することもできます。
+  クエリヒントやOracleの <literal>CONNECT</literal> キーワードのように、
+  データベース独自の機能を利用したいときに使えます。
+  SQL/JDBCを直接使用しているアプリケーションからHibernateへの移行も容易にしています。</para>
+
+  <para>Hibernate3では、生成、更新、削除、読み込み処理のようなすべての
+  SQL（ストアドプロシージャを含む）を手書きできます。</para>
+
+  <sect1 id="querysql-creating" revision="3">
+    <title> <literal>SQLQuery</literal> の使用</title>
+
+    <para>ネイティブなSQLクエリの実行は <literal>SQLQuery</literal>
+    インターフェイスを通して制御します。
+    <literal>SQLQuery</literal> インターフェイスは
+    <literal>Session.createSQLQuery()</literal> を呼び出して取得します。
+    非常に簡単な場合、次のような形を使えます。</para>
+
+    <programlisting><![CDATA[List cats = sess.createSQLQuery("select * from cats")
+    .addEntity(Cat.class)
+    .list();]]></programlisting>
+
+    <para>このクエリで指定されているものを下記に示します。</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>SQLクエリ文字列</para>
+      </listitem>
+
+      <listitem>
+        <para>クエリが返すエンティティ</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>ここでは、
+    リザルトセットの列名は、マッピングファイルで指定された列名と同じだと仮定されます。
+    これは同じ列名を持つ複数のテーブルを結合するSQLクエリでは問題となります。
+    次の形は、列名が重複しても弱みになりません。</para>
+
+    <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
+    .addEntity("cat", Cat.class)
+    .list();]]></programlisting>
+
+    <para>このクエリで指定されているものを下記に示します。</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>SQLクエリ文字列
+        （Hibernateが列の別名を挿入するためのプレースホルダを含む）</para>
+      </listitem>
+
+      <listitem>
+        <para>クエリが返すエンティティとSQLテーブルの別名</para>
+      </listitem>
+    </itemizedlist>
+
+    <para><literal>addEntity()</literal> メソッドにより、
+    SQLのテーブル別名と返されるエンティティクラスを関連付け、
+    クエリのリザルトセットの構造を決定します。</para>
+
+    <para><literal>addJoin()</literal> メソッドを使い、
+    他のエンティティとの関連とコレクションをロードします。</para>
+
+    <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .addEntity("cat", Cat.class)
+    .addJoin("kitten", "cat.kittens")
+    .list();]]></programlisting>
+
+    <para>ネイティブSQLクエリは、単純なスカラ値やスカラ値と
+    エンティティの組み合わせを返してもよいです。</para>
+
+    <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
+        .addScalar("maxWeight", Hibernate.DOUBLE);
+        .uniqueResult();]]></programlisting>
+
+    <para>代わりに、hbmファイルにリザルトセットのマッピング情報を記述し、
+    クエリで使用することができます。</para>
+
+    <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .setResultSetMapping("catAndKitten")
+    .list();]]></programlisting>
+  </sect1>
+
+  <sect1 id="querysql-aliasreferences">
+    <title>別名とプロパティの参照</title>
+    <para>上記の <literal>{cat.*}</literal> という表記は、「すべてのプロパティ」を表す省略形です。
+    代わりに、明示的にカラムを列挙してもよいですが、
+    この場合は、Hibernateに各プロパティに対応するSQL列の別名を挿入させるべきでしょう。
+    列の別名のためのプレースホルダは、テーブルの別名によって修飾されたプロパティ名です。
+    下記の例では、別のテーブル（<literal>cat_log</literal>）から
+    マッピングメタデータで定義された <literal>Cat</literal> を復元します。
+    もし好むなら、where節の中でさえ、プロパティの別名を使えることに気をつけてください。</para>
+
+    <para>名前付きクエリに対して <literal>{}</literal> 構文は必須では <emphasis>ない</emphasis> です。
+    <xref linkend="querysql-namedqueries"/> を参照してください。</para>
+
+    <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
+    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
+    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
+    "from cat_log cat where {cat.mate} = :catId"
+
+List loggedCats = sess.createSQLQuery(sql)
+    .addEntity("cat", Cat.class)
+    .setLong("catId", catId)
+    .list();]]></programlisting>
+
+    <para><emphasis>注意：</emphasis> もし明示的に各プロパティを列挙するなら、
+    クラス <emphasis>とサブクラス</emphasis> のすべてのプロパティを含めなければなりません！</para>
+
+
+    <para>別名に挿入できるものを下表に示します。
+    注意：下表の別名は一例です。
+    それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ちます。</para>
+ 
+    <table frame="topbot" id="aliasinjection-summary">
+      <title>別名に挿入する名前</title>
+
+      <tgroup cols="4">
+        <colspec colwidth="1*" />
+
+        <colspec colwidth="1*" />
+
+        <colspec colwidth="2.5*" />
+
+        <thead>
+          <row>
+            <entry>説明</entry>
+            <entry>構文</entry>
+            <entry>例</entry>
+            </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>単純なプロパティ</entry>
+            <entry><literal>{[aliasname].[propertyname]}</literal></entry>
+            <entry><literal>A_NAME as {item.name}</literal></entry>
+          </row>
+          <row>
+            <entry>複合プロパティ</entry>
+            <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
+            <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
+          </row>
+          <row>
+            <entry>エンティティのクラスを識別する値</entry>
+            <entry><literal>{[aliasname].class}</literal></entry>
+            <entry><literal>DISC as {item.class}</literal></entry>
+          </row>
+          <row>
+            <entry>エンティティの全プロパティ</entry>
+            <entry><literal>{[aliasname].*}</literal></entry>
+            <entry><literal>{item.*}</literal></entry>
+          </row>
+          <row>
+            <entry>コレクションのキー</entry>
+            <entry><literal>{[aliasname].key}</literal></entry>
+            <entry><literal>ORGID as {coll.key}</literal></entry>
+          </row>
+          <row>
+            <entry>コレクションのID</entry>
+            <entry><literal>{[aliasname].id}</literal></entry>
+            <entry><literal>EMPID as {coll.id}</literal></entry>
+          </row>
+          <row>
+            <entry>コレクションの要素</entry>
+            <entry><literal>{[aliasname].element}</literal></entry>
+            <entry><literal>XID as {coll.element}</literal></entry>
+            <entry></entry>
+          </row>
+          <row>
+            <entry>コレクションの要素のプロパティ</entry>
+            <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
+            <entry><literal>NAME as {coll.element.name}</literal></entry>
+          </row>
+          <row>
+            <entry>コレクションの要素の全プロパティ</entry>
+            <entry><literal>{[aliasname].element.*}</literal></entry>
+            <entry><literal>{coll.element.*}</literal></entry>
+          </row>
+          <row>
+            <entry>コレクションの全プロパティ</entry>
+            <entry><literal>{[aliasname].*}</literal></entry>
+            <entry><literal>{coll.*}</literal></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </sect1>
+
+  <sect1 id="querysql-namedqueries" revision="3">
+    <title>名前付きSQLクエリ</title>
+
+    <para>名前付きSQLクエリはマッピングドキュメントで定義することができ、
+    名前付きHQLクエリと全く同じ方法で呼ぶことができます。
+    この場合、<literal>addEntity()</literal> を呼び出す必要は <emphasis>ない</emphasis> です。</para>
+
+    <programlisting><![CDATA[<sql-query name="persons">
+    <return alias="person" class="eg.Person"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex}
+    FROM PERSON person
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
+
+    <programlisting><![CDATA[List people = sess.getNamedQuery("persons")
+    .setString("namePattern", namePattern)
+    .setMaxResults(50)
+    .list();]]></programlisting>
+
+    <para>関連を結合するためとコレクションを初期化するクエリを定義するために、それぞれ
+    <literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</literal>
+    要素を使います。</para>
+
+    <programlisting><![CDATA[<sql-query name="personsWith">
+    <return alias="person" class="eg.Person"/>
+    <return-join alias="address" property="person.mailingAddress"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex},
+           adddress.STREET AS {address.street},
+           adddress.CITY AS {address.city},
+           adddress.STATE AS {address.state},
+           adddress.ZIP AS {address.zip}
+    FROM PERSON person
+    JOIN ADDRESS adddress
+        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
+
+    <para>名前付きSQLクエリはスカラ値を返すこともできます。
+    <literal>&lt;return-scalar&gt;</literal> 要素を使って、
+    列の別名とHibernateの型を宣言しなければなりません。</para>
+
+    <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="age" type="long"/>
+    SELECT p.NAME AS name,
+           p.AGE AS age,
+    FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
+
+
+    <para>リザルトセットのマッピング情報を <literal>&lt;resultset&gt;</literal>
+    に外出しすることができます。
+    複数の名前付きクエリで再利用したり、<literal>setResultSetMapping()</literal>
+    APIを通して再利用したりできます。
+    </para>
+
+    <programlisting><![CDATA[<resultset name="personAddress">
+    <return alias="person" class="eg.Person"/>
+    <return-join alias="address" property="person.mailingAddress"/>
+</resultset>
+
+<sql-query name="personsWith" resultset-ref="personAddress">
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex},
+           adddress.STREET AS {address.street},
+           adddress.CITY AS {address.city},
+           adddress.STATE AS {address.state},
+           adddress.ZIP AS {address.zip}
+    FROM PERSON person
+    JOIN ADDRESS adddress
+        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
+
+    <sect2 id="propertyresults">
+      <title>列と列の別名を明示的に指定するために return-property を使う</title>
+
+      <para>別名を挿入するために <literal>{}</literal> 構文を使う代わりに、
+      <literal>&lt;return-property&gt;</literal> を使い、
+      どの列の別名を使うのかを明示できます。</para>
+
+      <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return alias="person" class="eg.Person">
+        <return-property name="name" column="myName"/>
+        <return-property name="age" column="myAge"/>
+        <return-property name="sex" column="mySex"/>
+    </return>
+    SELECT person.NAME AS myName,
+           person.AGE AS myAge,
+           person.SEX AS mySex,
+    FROM PERSON person WHERE person.NAME LIKE :name
+</sql-query>
+]]></programlisting>
+
+      <para><literal>&lt;return-property&gt;</literal> は複数の列も扱えます。
+      これは、複数列のプロパティをきめ細かく制御できないという、
+      <literal>{}</literal> 構文の制限を解決します。</para>
+
+      <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
+    <return alias="emp" class="Employment">
+        <return-property name="salary">
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>
+        </return-property>
+        <return-property name="endDate" column="myEndDate"/>
+    </return>
+        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},
+        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
+        FROM EMPLOYMENT
+        WHERE EMPLOYER = :id AND ENDDATE IS NULL
+        ORDER BY STARTDATE ASC
+</sql-query>]]></programlisting>
+
+      <para>この例では、挿入のための <literal>{}</literal> 構文といっしょに、
+      <literal>&lt;return-property&gt;</literal> を使っていることに注意してください。
+      列とプロパティをどのように参照するかを選べます。</para>
+
+      <para>マッピングに discriminator が含まれている場合、
+      discriminator の列を指定するために、&lt;return-discriminator&gt;
+      を使わなければなりません。</para>
+    </sect2>
+
+    <sect2 id="sp_query" revision="1">
+      <title>問い合わせするためにストアドプロシージャを使う</title>
+
+      <para>Hibernateはバージョン3から、ストアドプロシージャとストアド関数経由の問い合わせが
+      サポートされました。
+      以降の文書の多くは、両方に当てはまります。
+      ストアドプロシージャやストアド関数をHibernateで使うためには、
+      1番目の出力パラメータとしてリザルトセットを返さなければなりません。
+      Oracle 9（もしくはそれ以上のバージョン）のストアドプロシージャの例を以下に示します。</para>
+
+      <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
+    RETURN SYS_REFCURSOR
+AS
+    st_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN st_cursor FOR
+ SELECT EMPLOYEE, EMPLOYER,
+ STARTDATE, ENDDATE,
+ REGIONCODE, EID, VALUE, CURRENCY
+ FROM EMPLOYMENT;
+      RETURN  st_cursor;
+ END;]]></programlisting>
+
+      <para>Hibernateでこのクエリを使うためには、
+      名前付きクエリでマッピングする必要があります。</para>
+
+      <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
+    <return alias="emp" class="Employment">
+        <return-property name="employee" column="EMPLOYEE"/>
+        <return-property name="employer" column="EMPLOYER"/>
+        <return-property name="startDate" column="STARTDATE"/>
+        <return-property name="endDate" column="ENDDATE"/>
+        <return-property name="regionCode" column="REGIONCODE"/>
+        <return-property name="id" column="EID"/>
+        <return-property name="salary">
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>
+        </return-property>
+    </return>
+    { ? = call selectAllEmployments() }
+</sql-query>]]></programlisting>
+
+      <para>注意：今のところ、ストアドプロシージャはスカラとエンティティを返すのみです。
+      <literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</literal>
+      はサポートされていません。</para>
+
+      <sect3 id="querysql-limits-storedprocedures" revision="1">
+        <title>ストアドプロシージャを使う上でのルールと制限</title>
+
+        <para>Hibernateでストアドプロシージャや関数を使うためには、
+        そのプロシージャはいくつかのルールに準拠する必要があります。
+        ルールに準拠していないプロシージャは、Hibernateで使うことはできません。
+        それでも、準拠していないプロシージャを使いたいのであれば、
+        <literal>session.connection()</literal> を通じて実行しなければなりません。
+        ルールはデータベースごとに異なります。
+        ストアドプロシージャのセマンティックスとシンタックスは、
+        データベースベンダごとに異なるためです。</para>
+
+        <para><literal>setFirstResult()/setMaxResults()</literal> を使って、
+        ストアドプロシージャクエリをページ分けすることはできません。</para>
+
+        <para>推奨する呼び出し方は、標準であるSQL92に従うことです。
+        <literal>{ ? = call functionName(&lt;parameters&gt;) }</literal> や
+        <literal>{ ? = call procedureName(&lt;parameters&gt;) }</literal> です。
+        ネイティブな呼び出し構文はサポートされていません。</para>
+
+        <para>Oracleには下記のルールが適用されます。</para>
+
+        <itemizedlist spacing="compact">
+          <listitem>
+            <para>関数はリザルトセットを返さなければなりません。
+            プロシージャの第一引数はリザルトセットを返すため、
+            <literal>OUT</literal> でなければなりません。
+            Oracle 9と10では、<literal>SYS_REFCURSOR</literal> を使うことによってできます。
+            Oracleでは <literal>REF CURSOR</literal> 型を定義する必要があります。
+            Oracleの文献を参照してください。</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>SybaseとMS SQLサーバーに適用されるルールを下記に示します。</para>
+
+        <itemizedlist spacing="compact">
+          <listitem>
+            <para>プロシージャはリザルトセットを返さなければなりません。
+            サーバーは複数のリザルトセットと更新カウントを返しますが、
+            Hibernateは1つ目のリザルトセットだけを返すことに注意してください。
+            その他はすべて捨てられます。</para>
+          </listitem>
+
+          <listitem>
+            <para>プロシージャの中で <literal>SET NOCOUNT ON</literal> を有効にできれば、
+            おそらく効率がよくなるでしょう。
+            しかし、これは必要条件ではありません。</para>
+          </listitem>
+        </itemizedlist>
+      </sect3>
+    </sect2>
+  </sect1>
+
+  <sect1 id="querysql-cud">
+    <title>作成、更新、削除のためのカスタムSQL</title>
+
+    <para>Hibernate3は作成、更新、削除処理のためのカスタムSQL文を使用できます。
+    クラスとコレクションの永続化機構は、コンフィグレーション時に生成された文字列
+    （insertsql、deletesql、updatesqlなど）のセットをすでに保持しています。
+    これらの文字列より、
+    <literal>&lt;sql-insert&gt;</literal>、
+    <literal>&lt;sql-delete&gt;</literal>、
+    <literal>&lt;sql-update&gt;</literal> というマッピングタグが優先されます。</para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
+    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
+    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
+</class>]]></programlisting>
+
+    <para>SQLを直接データベースで実行するため、好みの方言を自由に使用できます。
+    データベース独自のSQLを使えば、当然マッピングのポータビリティが下がります。</para>
+
+    <para><literal>callable</literal> 属性をセットすれば、
+    ストアドプロシージャを使用できます。</para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert callable="true">{call createPerson (?, ?)}</sql-insert>
+    <sql-delete callable="true">{? = call deletePerson (?)}</sql-delete>
+    <sql-update callable="true">{? = call updatePerson (?, ?)}</sql-update>
+</class>]]></programlisting>
+
+    <para>今のところ、位置パラメータの順番はとても重要です。
+    すなわち、Hibernateが期待する順序でなければなりません。</para>
+
+    <para><literal>org.hiberante.persister.entity</literal> レベルのデバッグログを
+    有効にすることによって、期待される順番を確かめられます。
+    このレベルを有効にすることにより、エンティティの作成、更新、削除などで
+    使用される静的なSQLが出力されます。
+    （期待される順序を確認するためには、Hibernateが生成する静的なSQLをオーバーライドする
+    カスタムSQLをマッピングファイルに含めないことを忘れないでください。）</para>
+
+    <para>ストアドプロシージャは挿入/更新/削除された行数を返す必要があります
+    （読み込みの場合は、返さないよりは返す方がよいです）。
+    実行時にHibernateがSQL文の成功をチェックするからです。
+    Hibernateは、CUD処理のための数値の出力パラメータとして、
+    SQL文の最初のパラメータをいつも記録します。</para>
+
+    <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
+    RETURN NUMBER IS
+BEGIN
+
+    update PERSON
+    set
+        NAME = uname,
+    where
+        ID = uid;
+
+    return SQL%ROWCOUNT;
+
+END updatePerson;]]></programlisting>
+  </sect1>
+
+  <sect1 id="querysql-load">
+    <title>ロードのためのカスタムSQL</title>
+
+    <para>エンティティを読み込むための独自のSQL（もしくはHQL）クエリも宣言できます。</para>
+
+    <programlisting><![CDATA[<sql-query name="person">
+    <return alias="pers" class="Person" lock-mode="upgrade"/>
+    SELECT NAME AS {pers.name}, ID AS {pers.id}
+    FROM PERSON
+    WHERE ID=?
+    FOR UPDATE
+</sql-query>]]></programlisting>
+
+    <para>これは、まさに（以前議論した）名前付きクエリの宣言です。
+    この名前付きクエリをクラスのマッピングから参照できます。</para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <loader query-ref="person"/>
+</class>]]></programlisting>
+    
+
+    <para>これはストアドプロシージャでさえも動作します。</para>
+
+    <para>次のように、コレクションをロードするためのクエリさえ定義してよいです。</para>
+
+    <programlisting><![CDATA[<set name="employments" inverse="true">
+    <key/>
+    <one-to-many class="Employment"/>
+    <loader query-ref="employments"/>
+</set>]]></programlisting>
+
+    <programlisting><![CDATA[<sql-query name="employments">
+    <load-collection alias="emp" role="Person.employments"/>
+    SELECT {emp.*}
+    FROM EMPLOYMENT emp
+    WHERE EMPLOYER = :id
+    ORDER BY STARTDATE ASC, EMPLOYEE ASC
+</sql-query>]]></programlisting>
+
+    <para>次のように、結合フェッチによりコレクションをロードする
+    エンティティローダーを定義できます。</para>
+
+    <programlisting><![CDATA[<sql-query name="person">
+    <return alias="pers" class="Person"/>
+    <return-join alias="emp" property="pers.employments"/>
+    SELECT NAME AS {pers.*}, {emp.*}
+    FROM PERSON pers
+    LEFT OUTER JOIN EMPLOYMENT emp
+        ON pers.ID = emp.PERSON_ID
+    WHERE ID=?
+</sql-query>]]></programlisting>
+  </sect1>
+
+</chapter>

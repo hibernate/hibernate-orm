@@ -1,1 +1,1 @@
-test commit.
+This translated reference document is v3.1.2.

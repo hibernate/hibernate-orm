@@ -45,6 +45,7 @@
         <antcall target="lang.all"><param name="lang" value="zh-cn"/></antcall>
         <!-- TODO: These translations need updating...
         <antcall target="lang.all"><param name="lang" value="es"/></antcall>
+        <antcall target="lang.all"><param name="lang" value="ja"/></antcall>
     	-->
 
     </target>
@@ -57,6 +58,7 @@
         <antcall target="lang.revdiff"><param name="lang" value="es"/></antcall>
     	<antcall target="lang.revdiff"><param name="lang" value="ko"/></antcall>
         <antcall target="lang.revdiff"><param name="lang" value="fr"/></antcall>
+        <antcall target="lang.revdiff"><param name="lang" value="ja"/></antcall>
 
     </target>
 

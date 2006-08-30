@@ -513,4 +513,7 @@
     -->
     <xsl:param name="draft.mode" select="'no'"/>
 
+    <!-- Disable hyphenation -->
+    <xsl:param name="hyphenate" select="'false'"/>
+
 </xsl:stylesheet>

@@ -75,8 +75,8 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
     <font-triplet name="Mincho" style="italic" weight="bold"/>
    </font>
   -->
-  
-<font metrics-file="msmincho.xml" kerning="yes" embed-file="msmincho.ttc">
+
+<font metrics-file="sazanami-mincho.xml" kerning="yes" embed-file="sazanami-mincho.ttf">
     <font-triplet name="MS-Mincho" style="normal" weight="normal"/>
     <font-triplet name="MS-Mincho" style="normal" weight="bold"/>
     <font-triplet name="MS-Mincho" style="italic" weight="normal"/>
@@ -97,9 +97,25 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
     <font-triplet name="serif" style="normal" weight="bold"/>
     <font-triplet name="serif" style="italic" weight="normal"/>
     <font-triplet name="serif" style="italic" weight="bold"/>
+    <font-triplet name="Mincho" style="normal" weight="normal"/>
+    <font-triplet name="Mincho" style="normal" weight="bold"/>
+    <font-triplet name="Mincho" style="italic" weight="normal"/>
+    <font-triplet name="Mincho" style="italic" weight="bold"/>
+    <font-triplet name="SazanamiMincho" style="normal" weight="normal"/>
+    <font-triplet name="SazanamiMincho" style="normal" weight="bold"/>
+    <font-triplet name="SazanamiMincho" style="italic" weight="normal"/>
+    <font-triplet name="SazanamiMincho" style="italic" weight="bold"/> 
+    <font-triplet name="Mincho-Regular" style="normal" weight="normal"/>
+    <font-triplet name="Mincho-Regular" style="normal" weight="bold"/>
+    <font-triplet name="Mincho-Regular" style="italic" weight="normal"/>
+    <font-triplet name="Mincho-Regular" style="italic" weight="bold"/>
+    <font-triplet name="さざなみ明朝" style="normal" weight="normal"/>
+    <font-triplet name="さざなみ明朝" style="normal" weight="bold"/>
+    <font-triplet name="さざなみ明朝" style="italic" weight="normal"/>
+    <font-triplet name="さざなみ明朝" style="italic" weight="bold"/>    
  </font>    
  
-  <font metrics-file="msgothic.xml" kerning="yes" embed-file="msgothic.ttc">
+  <font metrics-file="sazanami-gothic.xml" kerning="yes" embed-file="sazanami-gothic.ttf">
     <font-triplet name="MS-Gothic" style="normal" weight="normal"/>
     <font-triplet name="MS-Gothic" style="normal" weight="bold"/>
     <font-triplet name="MS-Gothic" style="italic" weight="normal"/>
@@ -120,7 +136,25 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
     <font-triplet name="sans-serif" style="normal" weight="bold"/>
     <font-triplet name="sans-serif" style="italic" weight="normal"/>
     <font-triplet name="sans-serif" style="italic" weight="bold"/>
+    <font-triplet name="Gothic" style="normal" weight="normal"/>
+    <font-triplet name="Gothic" style="normal" weight="bold"/>
+    <font-triplet name="Gothic" style="italic" weight="normal"/>
+    <font-triplet name="Gothic" style="italic" weight="bold"/>
+    <font-triplet name="SazanamiGothic" style="normal" weight="normal"/>
+    <font-triplet name="SazanamiGothic" style="normal" weight="bold"/>
+    <font-triplet name="SazanamiGothic" style="italic" weight="normal"/>
+    <font-triplet name="SazanamiGothic" style="italic" weight="bold"/> 
+    <font-triplet name="Gothic-Regular" style="normal" weight="normal"/>
+    <font-triplet name="Gothic-Regular" style="normal" weight="bold"/>
+    <font-triplet name="Gothic-Regular" style="italic" weight="normal"/>
+    <font-triplet name="Gothic-Regular" style="italic" weight="bold"/>
+    <font-triplet name="さざなみゴシック" style="normal" weight="normal"/>
+    <font-triplet name="さざなみゴシック" style="normal" weight="bold"/>
+    <font-triplet name="さざなみゴシック" style="italic" weight="normal"/>
+    <font-triplet name="さざなみゴシック" style="italic" weight="bold"/>     
  </font>
+ 
+ 
  
 </fonts>
 

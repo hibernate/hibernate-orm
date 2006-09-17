@@ -821,7 +821,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         </para>
     </sect1>
 
-    <sect1 id="queryhql-grouping">
+    <sect1 id="queryhql-grouping" revision="1">
         <title>The group by clause</title>
 
         <para>
@@ -854,13 +854,17 @@ having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
         <programlisting><![CDATA[select cat
 from Cat cat
     join cat.kittens kitten
-group by cat
+group by cat.id, cat.name, cat.other, cat.properties
 having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
             Note that neither the <literal>group by</literal> clause nor the
             <literal>order by</literal> clause may contain arithmetic expressions.
+            Also note that Hibernate currently does not expand a grouped entity,
+            so you can't write <literal>group by cat</literal> if all properties
+            of <literal>cat</literal> are non-aggregated. You have to list all
+            non-aggregated properties explicitly.
         </para>
 
     </sect1>

@@ -588,7 +588,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="4">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="5">
             <title>Loading and storing objects</title>
 
             <para>
@@ -652,16 +652,32 @@ public class EventManager {
                 as many times and anywhere you like, once you get hold of your <literal>SessionFactory</literal>
                 (easy thanks to <literal>HibernateUtil</literal>). The <literal>getCurrentSession()</literal>
                 method always returns the "current" unit of work. Remember that we switched the configuration
-                option for this mechanism to "thread" in <literal>hibernate.cfg.xml</literal>? Hence, the scope
-                of the current unit of work is the current Java thread that executes our application. However, this
-                is not the full truth. A <literal>Session</literal> begins when it is
-                first needed, when the first call to <literal>getCurrentSession()</literal> is made.
-                It is then bound by Hibernate to the current thread. When the transaction ends,
-                either committed or rolled back, Hibernate also unbinds the <literal>Session</literal>
-                from the thread and closes it for you. If you call <literal>getCurrentSession()</literal>
-                again, you get a new <literal>Session</literal> and can start a new unit of work. This
-                <emphasis>thread-bound</emphasis> programming model is the most popular way of using
-                Hibernate.
+                option for this mechanism to "thread" in <literal>hibernate.cfg.xml</literal>? Hence,
+                the current unit of work is bound to the current Java thread that executes our application.
+                However, this is not the full picture, you also have to consider scope, when a unit of work
+                begins and when it ends.
+            </para>
+
+            <para>
+                A <literal>Session</literal> begins when it is first needed, when the first call to
+                <literal>getCurrentSession()</literal> is made. It is then bound by Hibernate to the current
+                thread. When the transaction ends, either through commit or rollback, Hibernate automatically
+                unbinds the <literal>Session</literal> from the thread and closes it for you. If you call
+                <literal>getCurrentSession()</literal> again, you get a new <literal>Session</literal> and can
+                start a new unit of work. This <emphasis>thread-bound</emphasis> programming model is the most
+                popular way of using Hibernate, as it allows flexible layering of your code (transaction
+                demarcation code can be separated from data access code, we'll do this later in this tutorial).
+            </para>
+
+            <para>
+                Related to the unit of work scope, should the Hibernate <literal>Session</literal> be used to
+                execute one or several database operations? The above example uses one <literal>Session</literal>
+                for one operation. This is pure coincidence, the example is just not complex enough to show any
+                other approach. The scope of a Hibernate <literal>Session</literal> is flexible but you should
+                never design your application to use a new Hibernate <literal>Session</literal> for
+                <emphasis>every</emphasis> database operation. So even if you see it a few more times in
+                the following (very trivial) examples, consider <emphasis>session-per-operation</emphasis>
+                an anti-pattern. A real (web) application is shown later in this tutorial.
             </para>
 
             <para>
@@ -1254,7 +1270,7 @@ public void removeFromEvent(Event event) {
             database, and it provides an HTML form to enter new events.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet" revision="1">
+        <sect2 id="tutorial-webapp-servlet" revision="2">
             <title>Writing the basic servlet</title>
 
             <para>
@@ -1308,6 +1324,13 @@ public class EventManagerServlet extends HttpServlet {
                 <literal>SessionFactory</literal>. Then a database transaction is started&mdash;all
                 data access as to occur inside a transaction, no matter if data is read or written
                 (we don't use the auto-commit mode in applications).
+            </para>
+
+            <para>
+                Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> for
+                every database operation. Use one Hibernate <literal>Session</literal> that is
+                scoped to the whole request. Use <literal>getCurrentSession()</literal>, so that
+                it is automatically bound to the current Java thread.
             </para>
 
             <para>

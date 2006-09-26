@@ -30,6 +30,11 @@ session.close();]]></programlisting>
     
 <programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
 
+    <para id="disablebatching" revision="1">
+        Note that Hibernate disables insert batching at the JDBC level transparently if you
+        use an <literal>identiy</literal> identifier generator.
+    </para>
+
     <para>
         You also might like to do this kind of work in a process where interaction with 
         the second-level cache is completely disabled:

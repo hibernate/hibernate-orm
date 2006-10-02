@@ -223,7 +223,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             objets.
         </para>
 
-        <sect2 id="objectstate-querying-executing">
+        <sect2 id="objectstate-querying-executing"  revision="1">
             <title>Exécution de requêtes</title>
 
             <para>
@@ -251,8 +251,11 @@ List kittens = session.createQuery(
 Cat mother = (Cat) session.createQuery(
     "select cat.mother from Cat as cat where cat = ?")
     .setEntity(0, izi)
-    .uniqueResult();]]></programlisting>
+    .uniqueResult();
 
+Query mothersWithKittens = (Cat) session.createQuery(
+    "select mother from Cat as mother left join fetch mother.kittens");
+Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
             <para>
                 Une requête est généralement exécutée en invoquant <literal>list()</literal>,
                 le résultat de la requête sera chargée complètement dans une collection en mémoire.
@@ -447,7 +450,7 @@ cats.close()]]></programlisting>
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named" revision="1">
                 <title>Externaliser des requêtes nommées</title>
 
                 <para>
@@ -476,6 +479,15 @@ List cats = q.list();]]></programlisting>
                     utilisé, vous pouvez aussi définir des requêtes SQL nativez dans les méta-données, ou
                     migrer des requêtes existantes vers Hibernate en les plaçant dans les fichiers de mapping.
                 </para>
+                
+                <para>
+                    Notez aussi que la déclaration d'une requête dans un élément <literal>&lt;hibernate-mapping&gt;</literal>
+                    nécessite un nom globalement unique pour la requête, alors que la déclaration d'une requête 
+                    dans une élément <literal>&lt;class&gt;</literal> est rendue unique de manière automatique par
+                    la mise en préfixe du nom entièrement de la classe, par exemple
+                    <literal>eg.Cat.ByNameAndMaximumWeight</literal>.
+                </para>
+                
 
             </sect3>
 

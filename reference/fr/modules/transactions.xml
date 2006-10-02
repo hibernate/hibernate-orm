@@ -482,7 +482,7 @@ catch (RuntimeException e) {
 
     </sect2>
 
-    <sect2 id="transactions-demarcation-jta" revision="2">
+    <sect2 id="transactions-demarcation-jta" revision="3">
         <title>Utilisation de JTA</title>
 
         <para>Si votre couche de persistance s'exécute dans un serveur d'application (par exemple, derrière un EJB
@@ -514,19 +514,26 @@ finally {
     sess.close();
 }]]></programlisting>
 
-        <para>Ou encore, avec la gestion automatique de contexte:</para>
-
+           <para>
+               Si vous souhaitez utiliser une <literal>Session</literal> couplée à la transaction, c'est à dire, utiliser 
+               la fonctionnalité <literal>getCurrentSession()</literal> pour la propagation facile du contexte,
+               vous devrez utiliser l'API JTA <literal>UserTransaction</literal> directement:
+            </para>
             <programlisting><![CDATA[// BMT idiom with getCurrentSession()
 try {
-    factory.getCurrentSession().beginTransaction();
+    UserTransaction tx = (UserTransaction)new InitialContext()
+                            .lookup("java:comp/UserTransaction");
 
-    // do some work
-    ...
+    tx.begin();
 
-    factory.getCurrentSession().getTransaction().commit();
+    // Do some work on Session bound to transaction
+    factory.getCurrentSession().load(...);
+    factory.getCurrentSession().persist(...);
+
+    tx.commit();
 }
 catch (RuntimeException e) {
-    factory.getCurrentSession().getTransaction().rollback();
+    tx.rollback();
     throw e; // or display error message
 }]]></programlisting>
 

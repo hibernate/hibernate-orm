@@ -13,7 +13,7 @@
   <para>Hibernate3 vous permet de spécifier du SQL écrit à la main (incluant les procédures stockées) 
   pour toutes les opérations de création, mise à jour, suppression et chargement.</para>
 
-  <sect1 id="querysql-creating" revision="3">
+  <sect1 id="querysql-creating" revision="4">
     <title>Utiliser une <literal>SQLQuery</literal></title>
 
     <para>L'exécution des requêtes en SQL natif est contrôlée par l'interface <literal>SQLQuery</literal>,
@@ -21,224 +21,369 @@
         Dans des cas extrêmement simples, nous pouvons utiliser la forme suivante :
     </para>
 
-    <programlisting>List cats = sess.createSQLQuery("select * from cats")
-    .addEntity(Cat.class)
-    .list();</programlisting>
+    <sect2>
+      <title>Requêtes scalaires</title>
 
-    <para>Cette requête a spécifié :</para>
+      <para>La requête SQL la plus basique permet de récupérer une liste de (valeurs) scalaires.</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>la requête SQL</para>
-      </listitem>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").list();
+sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
+]]></programlisting>
 
-      <listitem>
-        <para>l'entité retournée par la requête</para>
-      </listitem>
-    </itemizedlist>
+      <para>Ces deux requêtes retourneront un tableau d'objets (Object[]) avec
+      les valeurs scalaires de chacune des colonnes de la table CATS.
+      Hibernate utilisera le ResultSetMetadata pour déduire l'ordre et le type
+      des valeurs scalaires retournées.</para>
 
-    <para>
-        Ici, les noms de colonne des résultats sont supposés être les mêmes que les noms de colonne spécifiés dans le
-        document de mapping. Cela peut être problématique pour des requêtes SQL qui joignent de multiple tables, puisque
-        les mêmes noms de colonne peuvent apparaître dans plus d'une table. La forme suivante n'est pas vulnérable à la
-        duplication des noms de colonne :
-    </para>
+      <para>Pour éviter l'overhead lié à <literal>ResultSetMetadata</literal> ou simplement pour
+      être plus explicite dans ce qui est retourné, vous pouvez utiliser <literal>addScalar()</literal>.</para>
 
-    <programlisting>List cats = sess.createSQLQuery("select {cat.*} from cats cat")
-    .addEntity("cat", Cat.class)
-    .list();</programlisting>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+ .addScalar("ID", Hibernate.LONG)
+ .addScalar("NAME", Hibernate.STRING)
+ .addScalar("BIRTHDATE", Hibernate.DATE)
+]]></programlisting>
 
-    <para>Cette requête a spécifié :</para>
+      <para>Cette requête spécifie:</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>la requête SQL, avec un paramètre fictif pour Hibernate pour injecter les alias de colonne</para>
-      </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>la chaîne de caractère SQL</para>
+        </listitem>
 
-      <listitem>
-        <para>l'entité retournée par la requête, et son alias de table SQL</para>
-      </listitem>
-    </itemizedlist>
+        <listitem>
+          <para>les colonnes et les types retournés</para>
+        </listitem>
+      </itemizedlist>
 
-    <para>
-        La méthode <literal>addEntity()</literal> associe l'alias de la table SQL
-        avec la classe de l'entité retournée, et détermine la forme de l'ensemble des résultats de la requête.
-    </para>
+      <para>Cela retournera toujours un tableau d'objets, mais sans utiliser le 
+      <literal>ResultSetMetdata</literal>, mais récupèrera explicitement les colonnes
+      ID, NAME and BIRTHDATE column étant de respectivement de type Long, String et Short,
+      depuis le resultset sous jacent. Cela signifie aussi que seules ces colonnes seront
+      retournées même si la requête utilise <literal>*</literal> 
+      et aurait pu retourner plus que les trois colonnes listées.</para>
 
-    <para>
-        La méthode <literal>addJoin()</literal> peut être utilisée pour charger des associations vers d'autres
-        entités et collections.
-    </para>
+      <para>Il est possible de ne pas définir l'information sur le type pour toutes ou partie
+      des calaires.</para>
 
-    <programlisting>List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
-    )
-    .addEntity("cat", Cat.class)
-    .addJoin("kitten", "cat.kittens")
-    .list();</programlisting>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+ .addScalar("ID", Hibernate.LONG)
+ .addScalar("NAME")
+ .addScalar("BIRTHDATE")
+]]></programlisting>
 
-    <para>
-        Une requête SQL native pourrait retourner une simple valeur scalaire ou une combinaison de scalaires et d'entités.
-    </para>
+      <para>Il s'agit essentiellement de la même requête que précédemment, mais
+      le <literal>ResultSetMetaData</literal> est utilisé pour décider des types de NAME
+      et BIRTHDATE alors que le type de ID est explicitement spécifié.</para>
 
-    <programlisting>Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
-        .addScalar("maxWeight", Hibernate.DOUBLE);
-        .uniqueResult();</programlisting>
+      <para>Les java.sql.Types retournés par le ResultSetMetaData sont mappés aux type Hibernate
+      via le Dialect. Si un type spécifique n'est pas mappé ou est mappé à un type non souhaité, il
+      est possible de personnaliser en invoquant <literal>registerHibernateType</literal> dans
+      le Dialect.</para>
+    </sect2>
 
-    <para>Vous pouvez alternativement décrire les informations de mapping des résultats dans vos fichiers hbm 
-    et les utiliser pour vos requêtes.</para>
+    <sect2>
+      <title>Requêtes d'entités</title>
 
-    <programlisting>List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
-    )
-    .setResultSetMapping("catAndKitten")
-    .list();</programlisting>
-  </sect1>
+      <para>Les requêtes précédentes ne retournaient que des valeurs scalaires,
+      retournant basiquement que les valeurs brutes du resultset. Ce qui suit montre
+      comment récupérer des entités depuis une requête native SQL, grâce à
+      <literal>addEntity()</literal>.</para>
 
-  <sect1 id="querysql-aliasreferences">
-      <title>Alias et références de propriété</title>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
+sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class);
+]]></programlisting>
 
-    <para>
-        La notation <literal>{cat.*}</literal> utilisée au-dessus est un raccourci pour "toutes les propriétés".
-        Alternativement, vous pouvez lister explicitement les colonnes, mais même ce cas que nous laissons à Hibernate
-        injecte des alias de colonne SQL pour chaque propriété. Le remplaçant pour un alias de colonne 
-        est juste le nom de la propriété qualifié par l'alias de la table.
-        Dans l'exemple suivant, nous récupérons des <literal>Cat</literal>s à partir d'une table différente
-        (<literal>cat_log</literal>) de celle déclarée dans les méta-données de mapping.
-        Notez que nous pouvons même utiliser les alias de propriété dans la clause "where" si nous le souhaitons.
-    </para>
+      <para>Cette requête spécifie:</para>
 
-    <para>
-        La syntaxe <literal>{}</literal> <emphasis>n'est pas</emphasis> requise pour le requêtes nommées. Voir
-        <xref linkend="querysql-namedqueries" />.
-    </para>
+      <itemizedlist>
+        <listitem>
+          <para>La chaîne de caractère de requête SQL</para>
+        </listitem>
 
-    <programlisting>String sql = "select cat.originalId as {cat.id}, " +
-    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
-    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
-    "from cat_log cat where {cat.mate} = :catId"
+        <listitem>
+          <para>L'entité retournée par la requête</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Avec Cat mappé comme classe avec les colonnes ID, NAME
+      et BIRTHDATE, les requêtes précédentes retournent toutes deux une liste
+      où chaque élément est une entité Cat.</para>
+
+      <para>Si l'entité est mappée avec un <literal>many-to-one</literal> vers
+      une autre entité, il est requis de retourner aussi cette entité en exécutant
+      la requête native, sinon une erreur "column not found" spécifique à la base de
+      données sera soulevée. Les colonnes additionnelles seront automatiquement
+      retournées en utilisant la notation *, mais nous préférons être explicites
+      comme dans l'exemple suivant avec le <literal>many-to-one</literal> vers
+      <literal>Dog</literal>:</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
+]]></programlisting>
+
+      <para>Ceci permet à cat.getDog() de fonctionner normalement.</para>
+    </sect2>
+
+    <sect2>
+      <title>Gérer les associations et collections</title>
+
+      <para>Il est possible de charger agressivement <literal>Dog</literal> pour
+      éviter le chargement de proxy qui signifie aller retour supplémentaire vers
+      la base de données. Ceci est faisable via la méthode <literal>addJoin()</literal>, 
+      qui vous permet de joindre une association ou collection.</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
+ .addEntity("cat", Cat.class)
+ .addJoin("cat.dog");
+]]></programlisting>
+
+      <para>Dans cet exemple, les <literal>Cat</literal> retournés auront leur
+      propriété <literal>dog</literal> entièrement initialisées sans aucun aller/retour 
+      supplémentaire vers la base de données. Notez que nous avons ajouté un alias
+      ("cat") pour être capable de spécifier la propriété cible de la jointure.
+      Il est possible de faire la même jointure aggressive pour les collections, e.g. si le
+      <literal>Cat</literal> a un one-to-many vers <literal>Dog</literal>.</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
+ .addEntity("cat", Cat.class)
+ .addJoin("cat.dogs");
+]]></programlisting>
+
+      <p>Nous arrivons aux limites de ce qui est possible avec les requêtes natives
+      sans les modifier pour les rendre utilisables par Hibernate; les problèmes
+      surviennent lorsque nous essayons de retourner des entités du même type ou
+      lorsque les alias/colonnes par défaut ne sont plus suffisants..</p>
+    </sect2>
+
+    <sect2>
+      <title>Retour d'entités multiples</title>
+
+      <para>Jusqu'à présent, les colonnes du resultset sont supposées être les mêmes
+      que les colonnes spécifiées dans les fichiers de mapping. Ceci peut
+      être problématique pour les requêtes SQL qui effectuent de multiples
+      jointures vers différentes tables, puisque les mêmes colonnes peuvent
+      apparaître dans plus d'une table.</para>
+
+      <para>L'injection d'alias de colonne est requis pour la requête suivante
+      (qui risque de ne pas fonctionner):</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
+ .addEntity("cat", Cat.class)
+ .addEntity("mother", Cat.class)
+]]></programlisting>
+
+      <para>Le but de cette requête est de retourner deux instances de Cat par ligne,
+      un chat et sa mère. Cela échouera puisqu'il y a conflit de nom puisqu'ils sont
+      mappés au même nom de colonne et que sur certaines base de données, les alias
+      de colonnes retournés seront plutôt de la forme
+      "c.ID", "c.NAME", etc. qui ne sont pas égaux aux colonnes spécifiées dans les
+      mappings ("ID" and "NAME").</para>
+
+      <para>La forme suivante n'est pas vulnérable à la duplication des noms de colonnes:</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
+ .addEntity("cat", Cat.class)
+ .addEntity("mother", Cat.class)
+]]></programlisting>
+
+      <para>Cette requête spécifie:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>la requête SQL, avec des réceptacles pour qu'Hibernate injecte les alias de colonnes</para>
+        </listitem>
+
+        <listitem>
+          <para>les entités retournés par la requête</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Les notations {cat.*} et {mother.*} utilisées sont un équivalent à 'toutes les propriétés'.
+      Alternativement, vous pouvez lister les colonnes explicitement, mais même pour ce cas, nous
+      laissons Hibernate injecter les alias de colonne pour chaque propriété.
+      Le réceptable pour un alias de colonne est simplement le nom de la propriété
+      qualifié par l'alias de la table. Dans l'exemple suivant, nous récupérons
+      les chats et leur mère depuis une table différentes (cat_log) de celle déclarée
+      dans les mappings. Notez que nous pouvons aussi utiliser les alias de propriété
+      dans la clause where si nous le voulons.</para>
+
+      <programlisting><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
+         "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
+         "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
 
 List loggedCats = sess.createSQLQuery(sql)
-    .addEntity("cat", Cat.class)
-    .setLong("catId", catId)
-    .list();</programlisting>
+        .addEntity("cat", Cat.class)
+        .addEntity("mother", Cat.class).list()
+]]></programlisting>
+      <sect3 id="querysql-aliasreferences" revision="2">
+        <title>Références d'alias et de propriété</title>
 
-    <para>
-        <emphasis>À noter :</emphasis> si vous listez chaque propriété explicitement, vous devez inclure 
-        toutes les propriétés de la classe <emphasis>et ses sous-classes</emphasis> !
-    </para>
+        <para>Pour la plupart des cas précédents, l'injection d'alias est requis,
+        mais pour les requêtes relatives à des mappings plus complexes, comme
+        les propriétés composite, les discriminants d'héritage, les collections etc., il 
+        y a des alias spécifiques à utiliser pour permettre à Hibernate l'injection
+        des bons alias.</para>
 
-    <para>
-        La table suivante montre les différentes possibilités d'utilisation de l'injection d'alias. À noter : les noms
-        des alias dans le résultat sont des exemples, chaque alias aura un nom unique et probablement différent lors de l'utilisation.
-    </para>
+        <para>Le tableau suivant montre les diverses possiblités d'utilisation
+        d'injection d'alias. Note: les noms d'alias dans le résultat sont des
+        exemples, chaque alias aura un nom unique et probablement différent lorsqu'ils
+        seront utilisés.</para>
 
-    <table frame="topbot" id="aliasinjection-summary">
-      <title>Noms d'injection d'alias</title>
+        <table frame="topbot" id="aliasinjection-summary">
+          <title>Nom d'injection d'alias</title>
 
-      <tgroup cols="4">
-        <colspec colwidth="1*" />
+          <tgroup cols="3">
+            <colspec colwidth="1*" />
 
-        <colspec colwidth="1*" />
+            <colspec colwidth="1*" />
 
-        <colspec colwidth="2.5*" />
+            <colspec colwidth="2.5*" />
 
-        <thead>
-          <row>
-            <entry>Description</entry>
+            <thead>
+              <row>
+                <entry>Description</entry>
 
-            <entry>Syntaxe</entry>
+                <entry>Syntaxe</entry>
 
-            <entry>Exemple</entry>
-          </row>
-        </thead>
+                <entry>Exemple</entry>
+              </row>
+            </thead>
 
-        <tbody>
-          <row>
-            <entry>Une simple propriété</entry>
+            <tbody>
+              <row>
+                <entry>Une propriété simple</entry>
 
-            <entry><literal>{[aliasname].[propertyname]}</literal></entry>
+                <entry><literal>{[aliasname].[propertyname]</literal></entry>
 
-            <entry><literal>A_NAME as {item.name}</literal></entry>
-          </row>
+                <entry><literal>A_NAME as {item.name}</literal></entry>
+              </row>
 
-          <row>
-            <entry>Une propriété composée</entry>
+              <row>
+                <entry>Une propriété composite</entry>
 
-            <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
+                <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
 
-            <entry><literal>CURRENCY as {item.amount.currency}, VALUE as
-            {item.amount.value}</literal></entry>
-          </row>
+                <entry><literal>CURRENCY as {item.amount.currency}, VALUE as
+                {item.amount.value}</literal></entry>
+              </row>
 
-          <row>
-            <entry>Discriminant d'une entité</entry>
+              <row>
+                <entry>Discriminateur d'une entité</entry>
 
-            <entry><literal>{[aliasname].class}</literal></entry>
+                <entry><literal>{[aliasname].class}</literal></entry>
 
-            <entry><literal>DISC as {item.class}</literal></entry>
-          </row>
+                <entry><literal>DISC as {item.class}</literal></entry>
+              </row>
 
-          <row>
-            <entry>Toutes les propriétés d'une entité</entry>
+              <row>
+                <entry>Toutes les propriétés d'une entité</entry>
 
-            <entry><literal>{[aliasname].*}</literal></entry>
+                <entry><literal>{[aliasname].*}</literal></entry>
 
-            <entry><literal>{item.*}</literal></entry>
-          </row>
+                <entry><literal>{item.*}</literal></entry>
+              </row>
 
-          <row>
-            <entry>Une clef de collection</entry>
+              <row>
+                <entry>La clé d'une collection</entry>
 
-            <entry><literal>{[aliasname].key}</literal></entry>
+                <entry><literal>{[aliasname].key}</literal></entry>
 
-            <entry><literal>ORGID as {coll.key}</literal></entry>
-          </row>
+                <entry><literal>ORGID as {coll.key}</literal></entry>
+              </row>
 
-          <row>
-            <entry>L'identifiant d'une collection</entry>
+              <row>
+                <entry>L'id d'une collection</entry>
 
-            <entry><literal>{[aliasname].id}</literal></entry>
+                <entry><literal>{[aliasname].id}</literal></entry>
 
-            <entry><literal>EMPID as {coll.id}</literal></entry>
-          </row>
+                <entry><literal>EMPID as {coll.id}</literal></entry>
+              </row>
 
-          <row>
-            <entry>L'élément d'une collection</entry>
+              <row>
+                <entry>L'élément d'une collection</entry>
 
-            <entry><literal>{[aliasname].element}</literal></entry>
+                <entry><literal>{[aliasname].element}</literal></entry>
 
-            <entry><literal>XID as {coll.element}</literal></entry>
+                <entry><literal>XID as {coll.element}</literal></entry>
+              </row>
 
-            <entry></entry>
-          </row>
+              <row>
+                <entry>Propriété d'un élément de collection</entry>
 
-          <row>
-            <entry>Propriété de l'élément dans la collection</entry>
+                <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
 
-            <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
+                <entry><literal>NAME as {coll.element.name}</literal></entry>
+              </row>
 
-            <entry><literal>NAME as {coll.element.name}</literal></entry>
-          </row>
+              <row>
+                <entry>Toutes les propriétés d'un élément de collection</entry>
 
-          <row>
-            <entry>Toutes les propriétés de l'élément dans la collection</entry>
+                <entry><literal>{[aliasname].element.*}</literal></entry>
 
-            <entry><literal>{[aliasname].element.*}</literal></entry>
+                <entry><literal>{coll.element.*}</literal></entry>
+              </row>
 
-            <entry><literal>{coll.element.*}</literal></entry>
-          </row>
+              <row>
+                <entry>Toutes les propriétés d'une collection</entry>
 
-          <row>
-            <entry>Toutes les propriétés de la collection</entry>
+                <entry><literal>{[aliasname].*}</literal></entry>
 
-            <entry><literal>{[aliasname].*}</literal></entry>
+                <entry><literal>{coll.*}</literal></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect3>
+	</sect2>
+	
+	<sect2>
+      <title>Retour d'objet n'étant pas des entités</title>
 
-            <entry><literal>{coll.*}</literal></entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+      <para>Il est possible d'appliquer un ResultTransformer à une requête native SQL. Ce qui permet, par exemple, de 
+      retourner des entités non gérées.</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
+        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]></programlisting>
+        
+              <para>Cette requête spécifie:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>une requête SQL</para>
+        </listitem>
+
+        <listitem>
+          <para>un transformateur de résultat</para>
+        </listitem>
+      </itemizedlist>
+        
+        <para>
+        La requête précédente retournera une liste de <literal>CatDTO</literal> qui auront été instanciés
+        et dans lesquelles les valeurs de NAME et BIRTHNAME auront été injectées dans les propriétés ou champs
+        correspondants.
+        </para>
+    </sect2>
+    
+    <sect2>
+      <title>Gérer l'héritage</title>
+
+      <para>Les requêtes natives SQL pour les entités prenant part à un héritage
+      doivent inclure toutes les propriétés de la classe de base et de toutes
+      ses sous classes.</para>
+    </sect2>
+
+    <sect2>
+      <title>Paramètres</title>
+
+      <para>Les requêtes natives SQL supportent aussi les paramètres nommés:</para>
+
+      <programlisting><![CDATA[Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
+List pusList = query.setString(0, "Pus%").list();
+     
+query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like :name").addEntity(Cat.class);
+List pusList = query.setString("name", "Pus%").list();          ]]></programlisting>
+    </sect2>
+
   </sect1>
 
   <sect1 id="querysql-namedqueries" revision="3">

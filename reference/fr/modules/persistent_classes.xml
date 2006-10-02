@@ -6,7 +6,7 @@
         Les classes persistantes sont les classes d'une application qui implémentent
         les entités d'un problème métier (ex. Client et Commande dans une application
         de commerce électronique).
-        Toutes les instances d'une classe persistante ne sont pas forcément 
+        Toutes les instances d'une classe persistante ne sont pas forcément
         dans l'état persistant - au lieu de cela, une instance peut être éphémère (NdT : transient) ou détachée.
     </para>
 
@@ -116,7 +116,7 @@ public class Cat {
             <para>
                 <literal>Cat</literal> a un constructeur sans argument. Toutes les classes persistantes doivent avoir un
                 constructeur par défaut (lequel peut ne pas être public) pour qu'Hibernate puissent les instancier en utilisant
-                <literal>Constructor.newInstance()</literal>. Nous recommandons fortement d'avoir un constructeur par défaut avec 
+                <literal>Constructor.newInstance()</literal>. Nous recommandons fortement d'avoir un constructeur par défaut avec
                 au moins une visibilité <emphasis>paquet</emphasis> pour la génération du proxy à l'exécution dans Hibernate.
             </para>
         </sect2>
@@ -148,7 +148,7 @@ public class Cat {
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        Les réattachements transitifs pour les objets détachés (mise à jour en cascade ou fusion en cascade) - 
+                        Les réattachements transitifs pour les objets détachés (mise à jour en cascade ou fusion en cascade) -
                         voir <xref linkend="objectstate-transitive"/>
                     </para>
                 </listitem>
@@ -270,13 +270,13 @@ public class DomesticCat extends Cat {
             en comparant la valeur de l'identifiant des deux objets. Si cette valeur est identique, les deux
             doivent représenter la même ligne de base de données, ils sont donc égaux (si les deux sont
             ajoutés à un <literal>Set</literal>, nous n'aurons qu'un seul élément dans le
-            <literal>Set</literal>). Malheureusement, nous ne pouvons pas utiliser cette approche avec 
+            <literal>Set</literal>). Malheureusement, nous ne pouvons pas utiliser cette approche avec
             des identifiants générés ! Hibernate n'assignera de
             valeur d'identifiant qu'aux objets qui sont persistants, une instance nouvellement créée n'aura
             donc pas de valeur d'identifiant ! De plus, si une instance est non sauvegardée et actuellement dans un <literal>Set</literal>,
             le sauvegarder assignera une valeur d'identifiant à l'objet. Si <literal>equals()</literal> et <literal>hashCode()</literal>
-            sont basées sur la valeur de l'identifiant, le code de hachage devrait changer, rompant le contrat du <literal>Set</literal>. 
-            Regardez sur le site web d'Hibernate pour une discussion complète de ce problème. 
+            sont basées sur la valeur de l'identifiant, le code de hachage devrait changer, rompant le contrat du <literal>Set</literal>.
+            Regardez sur le site web d'Hibernate pour une discussion complète de ce problème.
             Notez que ceci n'est pas un problème d'Hibernate, mais la sémantique normale de Java pour l'identité d'un objet et l'égalité.
         </para>
 
@@ -314,7 +314,7 @@ public class DomesticCat extends Cat {
 }]]></programlisting>
 
         <para>
-            Notez qu'une clef métier ne doit pas être solide comme une clef primaire de base de données 
+            Notez qu'une clef métier ne doit pas être solide comme une clef primaire de base de données
             (voir <xref linkend="transactions-basics-identity"/>). Les propriétés
             immuables ou uniques sont généralement de bonnes candidates pour une clef métier.
         </para>
@@ -461,7 +461,7 @@ dynamicSession.close()
 
     </sect1>
 
-    <sect1 id="persistent-classes-tuplizers" revision="0">
+    <sect1 id="persistent-classes-tuplizers" revision="1">
         <title>Tuplizers</title>
 
         <para>
@@ -473,7 +473,7 @@ dynamicSession.close()
             une telle structure de données. Par exemple, pour le mode d'entité POJO, le tuplizer correspondant
             sait comment créer le POJO à travers son constructeur et comment accéder aux propriétés du POJO
             utilisant les accesseurs de la propriété définie. Il y a deux types de Tuplizers haut niveau,
-            représenté par les interfaces <literal>org.hibernate.tuple.EntityTuplizer</literal> et
+            représentés par les interfaces <literal>org.hibernate.tuple.EntityTuplizer</literal> et
             <literal>org.hibernate.tuple.ComponentTuplizer</literal>. Les <literal>EntityTuplizer</literal>s
             sont responsables de la gestion des contrats mentionnés ci-dessus pour les entités, alors que
             les <literal>ComponentTuplizer</literal>s s'occupent des composants.
@@ -509,7 +509,7 @@ dynamicSession.close()
 
 
 public class CustomMapTuplizerImpl
-        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {
     // override the buildInstantiator() method to plug in our custom map...
     protected final Instantiator buildInstantiator(
             org.hibernate.mapping.PersistentClass mappingInfo) {

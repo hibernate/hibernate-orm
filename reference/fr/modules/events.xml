@@ -8,7 +8,7 @@
         fonctionnalités génériques, et d'extensions de fonctionnalités d'Hibernate.
     </para>
 
-    <sect1 id="objectstate-interceptors" revision="2">
+    <sect1 id="objectstate-interceptors" revision="3">
         <title>Intercepteurs</title>
 
         <para>
@@ -115,21 +115,32 @@ public class AuditInterceptor extends EmptyInterceptor {
 }]]></programlisting>
 
         <para>
-            L'intercepteur doit être spécifié quand une session est créée.
+            Il y a deux types d'intercepteurs: lié à la <literal>Session</literal> et
+            lié à la <literal>SessionFactory</literal>.
         </para>
 
+        <para>
+            Un intercepteur lié à la <literal>Session</literal> est défini
+            lorsqu'une session est ouverte via l'invocation des méthodes surchargées SessionFactory.openSession()
+            acceptant un <literal>Interceptor</literal> (comme argument).
+        </para>
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
-            Vous pouvez aussi mettre un intercepteur au niveau global, en utilisant l'objet <literal>Configuration</literal>.
-            Dans ce cas, l'intercepteur doit être "threadsafe".
+            Un intercepteur lié a <literal>SessionFactory</literal> est défini avec l'objet <literal>Configuration</literal>
+            avant la construction de la <literal>SessionFactory</literal>. Dans ce cas, les intercepteurs fournis seront
+            appliqués à toutes les sessions ouvertes pour cette <literal>SessionFactory</literal>; ceci est vrai
+            à moins que la session ne soit ouverte en spécifiant l'intercepteur à utiliser.  
+            Les intercepteurs liés à la <literal>SessionFactory</literal> doivent être thread safe, faire attention
+            à ne pas stocker des états spécifiques de la session puisque plusieurs sessions peuvent utiliser
+            l'intercepteur de manière concurrente.
         </para>
 
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
     </sect1>
 
-     <sect1 id="objectstate-events" revision="3">
+     <sect1 id="objectstate-events" revision="4">
         <title>Système d'événements</title>
 
         <para>

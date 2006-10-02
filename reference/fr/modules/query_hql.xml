@@ -42,8 +42,8 @@
         <programlisting><![CDATA[from eg.Cat]]></programlisting>
 
         <para>
-            qui retourne simplement toutes les instances de la classe <literal>eg.Cat</literal>. 
-            Nous n'avons pas besoin d'habitude de qualifier le nom de la classe, 
+            qui retourne simplement toutes les instances de la classe <literal>eg.Cat</literal>.
+            Nous n'avons pas besoin d'habitude de qualifier le nom de la classe,
             puisque <literal>auto-import</literal> est la valeur par défaut. Donc nous écrivons presque toujours :
         </para>
 
@@ -80,7 +80,7 @@
 
     </sect1>
 
-    <sect1 id="queryhql-joins" revision="1">
+    <sect1 id="queryhql-joins" revision="2">
         <title>Associations et jointures</title>
 
         <para>
@@ -158,7 +158,7 @@
             Une jointure "fetchée" (rapportée) n'a généralement pas besoin de se voir assigner
             un alias puisque les objets associés n'ont pas à être utilisés dans les autres clauses.
             Notez aussi que les objets associés ne sont pas retournés directement dans le résultat de
-            la requête mais l'on peut y accéder via l'objet parent. La seule raison pour laquelle nous 
+            la requête mais l'on peut y accéder via l'objet parent. La seule raison pour laquelle nous
             pourrions avoir besoin d'un alias est si nous récupérions récursivement une collection supplémentaire :
         </para>
 
@@ -171,17 +171,18 @@
             Notez que la construction de <literal>fetch</literal> ne peut pas être utilisée dans les requêtes appelées par
             <literal>scroll()</literal> ou <literal>iterate()</literal>.
             <literal>fetch</literal> ne devrait pas non plus être utilisé avec <literal>setMaxResults()</literal> ou
-            <literal>setFirstResult()</literal>. <literal>fetch</literal> ne peut pas non plus être utilisé avec une 
-            condition <literal>with</literal> ad hoc. Il est
-            possible de créer un produit cartésien par jointure en récupérant plus d'une collection dans une requête, 
-            donc faites attention dans ce cas. Récupérer par jointure de multiples collections donne aussi parfois 
+            <literal>setFirstResult()</literal>, ces opérations étant basées sur le nombre de résultats qui contient
+            généralement des doublons dès que des collections sont chargées.
+            <literal>fetch</literal> ne peut pas non plus être utilisé avec une condition <literal>with</literal> ad hoc. Il est
+            possible de créer un produit cartésien par jointure en récupérant plus d'une collection dans une requête,
+            donc faites attention dans ce cas. Récupérer par jointure de multiples collections donne aussi parfois
             des résultats inattendus pour des mappings de bag, donc soyez prudent lorsque vous formulez vos requêtes dans de tels cas.
             Finalement, notez que <literal>full join fetch</literal> et <literal>right join fetch</literal> ne sont pas utiles en général.
         </para>
 
         <para>
-            Si vous utilisez un chargement retardé pour les propriétés (avec une instrumentation par bytecode), il est possible 
-            de forcer Hibernate à récupérer les propriétés non encore chargées immédiatement (dans la première requête) 
+            Si vous utilisez un chargement retardé pour les propriétés (avec une instrumentation par bytecode), il est possible
+            de forcer Hibernate à récupérer les propriétés non encore chargées immédiatement (dans la première requête)
             en utilisant <literal>fetch all properties</literal>.
         </para>
 
@@ -189,7 +190,7 @@
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
 
     </sect1>
-    
+
         <sect1 id="queryhql-joins-forms">
         <title>Formes de syntaxes pour les jointures</title>
 
@@ -198,14 +199,14 @@
         </para>
 
         <para>
-            Les requêtes présentes dans la section précédente utilisent la forme <literal>explicite</literal> 
+            Les requêtes présentes dans la section précédente utilisent la forme <literal>explicite</literal>
             où le mode clé join est explicitement utilisé dans la clause from. C'est la forme recommandée.
         </para>
 
         <para>
             La forme <literal>implicite</literal> n'utilise pas le mot clé join.
             A la place, les associations sont "déréférencées" en utilisant le notation '.'. Ces
-            jointures peuvent apparaitre dans toutes les clauses. Les jointures <literal>implicites</literal> 
+            jointures peuvent apparaitre dans toutes les clauses. Les jointures <literal>implicites</literal>
             résultent en des inner join dans le SQL généré.
         </para>
 
@@ -398,7 +399,7 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         <title>La clause where</title>
 
         <para>
-            La clause <literal>where</literal> vous permet de réduire la liste des instances retournées. 
+            La clause <literal>where</literal> vous permet de réduire la liste des instances retournées.
             Si aucun alias n'existe, vous pouvez vous référer aux propriétés par leur nom :
         </para>
 
@@ -614,7 +615,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             <listitem>
                 <para>
                     Les fonctions HQL qui s'appliquent expressions représentant des collections : <literal>size(),
-                    minelement(), maxelement(), minindex(), maxindex()</literal>, ainsi que les fonctions spéciales <literal>elements()</literal> 
+                    minelement(), maxelement(), minindex(), maxindex()</literal>, ainsi que les fonctions spéciales <literal>elements()</literal>
                     et <literal>indices</literal> qui peuvent être quantifiées en utilisant <literal>some, all, exists, any, in</literal>.
                 </para>
             </listitem>
@@ -822,11 +823,11 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         </para>
     </sect1>
 
-    <sect1 id="queryhql-grouping">
+    <sect1 id="queryhql-grouping" revision="1">
         <title>La clause group by</title>
 
         <para>
-            Si la requête retourne des valeurs aggrégées, celles ci peuvent être groupées par propriété ou composant :
+            Si la requête retourne des valeurs aggrégées, celles-ci peuvent être groupées par propriété d'une classe retournée ou par composant :
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat)
@@ -847,20 +848,24 @@ group by cat.color
 having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
-            Les fonctions SQL et les fonctions d'aggrégations sont permises dans les clauses <literal>having</literal>
-            et <literal>order by</literal>, si elles sont supportées par la base de données (ce que ne fait pas MySQL par exemple).
+            Les fonctions SQL et les fonctions d'agrégat sont permises dans les clauses <literal>having</literal>
+            et <literal>order by</literal>, si elles sont prises en charge par la base de données (ce que ne fait pas MySQL par exemple).
         </para>
 
         <programlisting><![CDATA[select cat
 from Cat cat
     join cat.kittens kitten
-group by cat
+group by cat.id, cat.name, cat.other, cat.properties
 having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
             Notez que ni la clause <literal>group by</literal> ni la clause
             <literal>order by</literal> ne peuvent contenir d'expressions arithmétiques.
+            Notez aussi qu'Hibernate ne développe pas une entité faisant partie du regroupement,
+            donc vous ne pouvez pas écrire <literal>group by cat</literal> si toutes
+            les propriétés de <literal>cat</literal> sont non-agrégées. Vous devez
+            lister toutes les propriétés non-agrégées explicitement.
         </para>
 
     </sect1>
@@ -912,7 +917,7 @@ where not ( cat.name, cat.color ) in (
 )]]></programlisting>
 
         <para>
-            Notez que sur certaines bases de données (mais par Oracle ou HSQL), vous pouvez utiliser des constructeurs de tuples 
+            Notez que sur certaines bases de données (mais par Oracle ou HSQL), vous pouvez utiliser des constructeurs de tuples
             dans d'autres contextes, par exemple lors du requêtage de composants ou de types utilisateur composites :
         </para>
 

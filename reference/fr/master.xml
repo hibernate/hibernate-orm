@@ -33,7 +33,7 @@
     <bookinfo>
         <title>HIBERNATE - Persistance relationnelle en Java standard</title>
         <subtitle>Documentation de référence d'Hibernate</subtitle>
-        <releaseinfo>3.1final</releaseinfo>
+        <releaseinfo>3.2final</releaseinfo>
     </bookinfo>
 
     <toc/>

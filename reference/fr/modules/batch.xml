@@ -33,6 +33,12 @@ session.close();]]></programlisting>
 
     <programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
 
+    <para id="disablebatching" revision="1">
+        Notez qu'Hibernate désactive, de manière transparente, l'insertion par paquet au
+        niveau JDBC si vous utilisez un générateur d'identifiant de type
+        <literal>identity</literal>.
+    </para>
+
     <para>
         Vous pourriez aussi vouloir faire cette sorte de travail dans un traitement où
         l'interaction avec le cache de second niveau est complètement désactivé :
@@ -150,7 +156,7 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct" revision="2">
+    <sect1 id="batch-direct" revision="3">
         <title>Opérations de style DML</title>
 
         <para>
@@ -218,8 +224,32 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            Pour exécuter un <literal>DELETE</literal> HQL, utilisez la même méthode
-            <literal>Query.executeUpdate()</literal> :
+            Par défaut, les statements HQL <literal>UPDATE</literal>, n'affectent pas la valeur des propriétés
+            <xref linkend="mapping-declaration-version">version</xref> ou
+            <xref linkend="mapping-declaration-timestamp">timestamp</xref>
+            pour les entités affectées; ceci est compatible avec la spec EJB3. Toutefois,
+            vous pouvez forcer Hibernate à mettre à jour les valeurs des propriétés
+			<literal>version</literal> ou <literal>timestamp</literal> en utilisant le <literal>versioned update</literal>.
+            Pour se faire, ajoutez le mot clé <literal>VERSIONED</literal> après le mot clé <literal>UPDATE</literal>.
+        </para>
+
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+String hqlVersionedUpdate = "update versioned Customer set name = :newName where name = :oldName";
+int updatedEntities = s.createQuery( hqlUpdate )
+        .setString( "newName", newName )
+        .setString( "oldName", oldName )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+            Notez que les types personnalisés (<literal>org.hibernate.usertype.UserVersionType</literal>)
+            ne sont pas supportés en conjonction avec le statement <literal>update versioned</literal> statement.
+        </para>
+
+        <para>
+            Pour exécuter un HQL <literal>DELETE</literal>, utilisez la même méthode<literal>Query.executeUpdate()</literal>:
         </para>
 
         <programlisting><![CDATA[Session session = sessionFactory.openSession();

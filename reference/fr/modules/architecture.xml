@@ -270,7 +270,7 @@
         </para>
     </sect1>
     
-    <sect1 id="architecture-current-session" revision="1">
+    <sect1 id="architecture-current-session" revision="2">
         <title>Sessions Contextuelles</title>
         <para>
             Certaines applications utilisant Hibernate ont besoin d'une sorte de session "contextuelle", où
@@ -319,6 +319,14 @@
                 <para>
                     <literal>org.hibernate.context.ThreadLocalSessionContext</literal> - les sessions
                     courantes sont associées au thread d'exécution. Voir les javadocs pour les détails.
+                </para>
+            </listitem>
+			<listitem>
+                <para>
+                    <literal>org.hibernate.context.ManagedSessionContext</literal> - les sessions
+                    courantes sont traquées par l'exécution du thread. Toutefois, vous êtes responsable
+                    de lier et délier une instance de <literal>Session</literal> avec les méthodes
+                    statiques de cette classes, qui n'ouvre, ne flush ou ne ferme jamais de <literal>Session</literal>.
                 </para>
             </listitem>
         </itemizedlist>

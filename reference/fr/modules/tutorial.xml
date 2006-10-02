@@ -18,7 +18,7 @@
             les bibliothèques tierces que nous nommons sont pour les JDK 1.4 et 5.0. Vous
             pourriez avoir besoin d'autres bibliothèques pour le JDK 1.3.
         </para>
-        
+
         <para>
             Le code source de ce tutoriel est inclus dans la distribution dans le répertoire
             <literal>doc/reference/tutorial/</literal>.
@@ -26,7 +26,7 @@
 
     </sect1>
 
-    <sect1 id="tutorial-firstapp" revision="1">
+    <sect1 id="tutorial-firstapp" revision="2">
         <title>Partie 1 - Première application Hibernate</title>
 
         <para>
@@ -339,7 +339,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-configuration"  revision="1">
+        <sect2 id="tutorial-firstapp-configuration"  revision="2">
             <title>Configuration d'Hibernate</title>
 
             <para>
@@ -351,14 +351,14 @@ public class Event {
             </para>
 
             <para>
-                Créez un répertoire appelé <literal>data</literal> à la racine du répertoire de développement - 
+                Créez un répertoire appelé <literal>data</literal> à la racine du répertoire de développement -
                 c'est là que HSQL DB stockera ses fichiers de données. Démarrez maintenant votre base de données
-                en exécutant <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> dans votre répertoire de travail.
+                en exécutant <literal>java -classpath ../lib/hsqldb.jar org.hsqldb.Server</literal> dans votre répertoire de données.
                 Vous observez qu'elle démarre et ouvre une socket TCP/IP, c'est là que notre application
                 se connectera plus tard. Si vous souhaitez démarrez à partir d'une nouvelle base de données
                 pour ce tutoriel (faites <literal>CTRL + C</literal> dans la fenêtre the window), effacez
                 le répertoire <literal>data/</literal> et redémarrez HSQL DB à nouveau.
-                
+
             </para>
 
             <para>
@@ -533,7 +533,7 @@ Total time: 1 second ]]></programlisting>
 
             <para>
                 Nous créerons une classe d'aide <literal>HibernateUtil</literal> qui s'occupe du
-                démarrage et rend la gestion des <literal>Session</literal>s plus facile. 
+                démarrage et rend la gestion des <literal>Session</literal>s plus facile.
                 Regardons l'implémentation :
             </para>
 
@@ -614,7 +614,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="4">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="5">
             <title>Charger et stocker des objets</title>
 
             <para>
@@ -655,7 +655,9 @@ public class EventManager {
         session.save(theEvent);
 
         session.getTransaction().commit();
-    }]]></programlisting>
+    }
+
+}]]></programlisting>
 
             <para>
                 Nous créons un nouvel objet <literal>Event</literal>, et le remettons à Hibernate.
@@ -675,21 +677,38 @@ public class EventManager {
             <para>
                 Que fait <literal>sessionFactory.getCurrentSession()</literal> ? Premièrement, vous pouvez
                 l'invoquer autant de fois que vous le voulez et n'importe où du moment que vous avez votre
-                <literal>SessionFactory</literal> (facile grâce à <literal>HibernateUtil</literal>). 
+                <literal>SessionFactory</literal> (facile grâce à <literal>HibernateUtil</literal>).
                 La méthode <literal>getCurrentSession()</literal> renvoie toujours l'unité de travail courante.
                 Souvenez vous que nous avons basculé notre option de configuration au mécanisme basé sur le "thread"
-                dans <literal>hibernate.cfg.xml</literal>. Par conséquent, le scope de l'unité de travail
-                courante est le thread java courant d'exécution. Ceci n'est pas totalement vrai. Une
-                <literal>Session</literal> commence lorsqu'elle est vraiment utilisée la première fois,
-                Lorsque nous appelons pour la première fois <literal>getCurrentSession()</literal>.
-                Ensuite, elle est liée, par Hibernate, au thread courant. Lorsque la transaction s'achève
-                (commit ou rollback), Hibernate délie la <literal>Session</literal> du thread et la ferme
-                pour vous. Si vous invoquez <literal>getCurrentSession()</literal> une autre fois, vous obtenez
-                une nouvelle <literal>Session</literal> et pouvez entamer une nouvelle unité de travail.
-                Ce modèle de programmation "<emphasis>thread-bound</emphasis>" est le moyen le plus 
-                populaire d'utiliser Hibernate.
+                dans <literal>hibernate.cfg.xml</literal>. Par conséquent, l'unité de travail courante est liée
+                au thread Java courant qui exécute notre application. Cependant, ce n'est pas tout, vous devez
+                aussi considérer le scope, quand une unité de travail commence et quand elle finit.
             </para>
-            
+
+            <para>
+                Une <literal>Session</literal> commence lorsqu'elle est vraiment utilisée la première fois,
+                lorsque nous appelons <literal>getCurrentSession()</literal> pour la première fois.
+                Ensuite, elle est attachée par Hibernate au thread courant. Lorsque la transaction s'achève, par
+                commit ou par rollback, Hibernate détache automatiquement la <literal>Session</literal> du thread et la ferme
+                pour vous. Si vous invoquez <literal>getCurrentSession()</literal> une nouvelle fois, vous obtenez
+                une nouvelle <literal>Session</literal> et pouvez entamer une nouvelle unité de travail.
+                Ce modèle de programmation "<emphasis>thread-bound</emphasis>" est le moyen le plus
+                populaire d'utiliser Hibernate, puisqu'il permet un découpage flexible de votre code (le code délimitant
+                les transactions peut être séparé du code accédant aux données, nous verrons cela plus loin dans ce tutorial).
+            </para>
+
+            <para>
+                A propos du scope de l'unité de travail, la <literal>Session</literal> Hibernate devrait-elle
+                être utilisée pour exécuter une ou plusieurs opérations en base de données ? L'exemple ci-dessus
+                utilise une <literal>Session</literal> pour une opération. C'est une pure coïncidence,
+                l'exemple est n'est seulement pas assez complexe pour montrer d'autres approches. Le scope d'une
+                <literal>Session</literal> Hibernate est flexible mais vous ne devriez jamais concevoir
+                votre application de manière à utiliser une nouvelle <literal>Session</literal> Hibernate pour
+                <emphasis>chaque</emphasis> opération en base de données. Donc même si vous le voyez quelques fois
+                dans les exemples (très simplistes) suivants, considérez <emphasis>une session par operation</emphasis>
+                comme un anti-pattern. Une véritable application (web) est montrée plus loin dans ce tutorial.
+            </para>
+
             <para>
                 Lisez <xref linkend="transactions"/> pour plus d'informations sur la gestion des transactions et leur démarcations.
                 Nous n'avons pas géré les erreurs et rollback sur l'exemple précédent.
@@ -836,7 +855,7 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                Créez un nouveau fichier de mapping appelé <literal>Person.hbm.xml</literal> 
+                Créez un nouveau fichier de mapping appelé <literal>Person.hbm.xml</literal>
                 (n'oubliez pas la référence à la DTD)
             </para>
 
@@ -868,7 +887,7 @@ public class Person {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-unidirset" revision="2">
+        <sect2 id="tutorial-associations-unidirset" revision="3">
             <title>Une association unidirectionnelle basée sur Set</title>
 
             <para>
@@ -906,7 +925,7 @@ public class Person {
                 Ce n'est pas nécessaire d'un point de vue fonctionnel. Vous pourrez toujours exécuter une requête
                 explicite pour récupérer les participants d'un "event" particulier. Ce choix de conception
                 vous est laissé, mais ce qui reste certains est la cardinalité de l'association: "plusieurs"
-                des deux côtés, nous appelons cela une association <emphasis>many-to-many</emphasis>. 
+                des deux côtés, nous appelons cela une association <emphasis>many-to-many</emphasis>.
                 Par conséquent nous utilisons un mapping Hibernate many-to-many:
             </para>
 
@@ -920,7 +939,7 @@ public class Person {
 
     <set name="events" table="PERSON_EVENT">
         <key column="PERSON_ID"/>
-        <many-to-many column="EVENT_ID" class="Event"/>
+        <many-to-many column="EVENT_ID" class="events.Event"/>
     </set>
 
 </class>]]></programlisting>
@@ -957,7 +976,7 @@ public class Person {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working" revision="1">
+        <sect2 id="tutorial-associations-working" revision="2">
             <title>Travailler avec l'association</title>
 
             <para>
@@ -991,14 +1010,14 @@ public class Person {
                 Hibernate surveille les changements et exécute le SQL correspondant. Le processus de
                 synchronisation de l'état de la mémoire avec la base de données, généralement seulement à la fin
                 d'une unité de travail, est appelé <emphasis>flushing</emphasis>. Dans notre code, l'unité de travail
-                s'achève par un commit (ou rollback) de la transaction avec la base de données - comme défini 
+                s'achève par un commit (ou rollback) de la transaction avec la base de données - comme défini
                 par notre option <literal>thread</literal> de configuration pour la classe <literal>CurrentSessionContext</literal>.
             </para>
 
             <para>
                 Vous pourriez bien sûr charger une personne et un événement dans différentes unités de travail. Ou
                 vous modifiez un objet à l'extérieur d'une <literal>Session</literal>, s'il n'est pas dans un état
-                persistant (s'il était persistant avant, nous appelons cet état <emphasis>détaché</emphasis>). 
+                persistant (s'il était persistant avant, nous appelons cet état <emphasis>détaché</emphasis>).
                 Vous pouvez même modifier une collection lorsqu'elle est détachée:
             </para>
 
@@ -1038,20 +1057,19 @@ public class Person {
                 pour retourner cet identifiant).
             </para>
 
+			<para>
+                Cela n'a pas grand intérêt dans notre situation, mais c'est un concept important qu'il vous faut concevoir
+                dans votre application. Pour le moment, complétez cet excercice en ajoutant une nouvelle
+                action à la méthode principale de l'<literal>EventManager</literal> et invoquez la depuis la ligne de commande.
+                Si vous avez besoin des identifiants d'un client et d'un évènement - la méthode <literal>save()</literal>
+                vous les retourne (vous devrez peut être modifier certaines méthodes précédentes pour retourner ces identifiants):
+            </para>
+
             <programlisting><![CDATA[else if (args[0].equals("addpersontoevent")) {
     Long eventId = mgr.createAndStoreEvent("My Event", new Date());
     Long personId = mgr.createAndStorePerson("Foo", "Bar");
     mgr.addPersonToEvent(personId, eventId);
     System.out.println("Added person " + personId + " to event " + eventId);]]></programlisting>
-
-            <para>
-                Ce n'est pas très utile dans notre situation actuelle, mais c'est un concept important
-                que vous pouvez mettre dans votre propre application.
-                Pour le moment, complétez cet exercice en ajoutant une nouvelle action à la méthode
-                principale des <literal>EventManager</literal>s et appelez la à partir de la ligne de
-                commande. Si vous avez besoin des identifiants d'une personne et d'un événement - la
-                méthode <literal>save()</literal> les retourne.
-            </para>
 
             <para>
                 C'était un exemple d'une association entre deux classes de même importance, deux entités.
@@ -1143,7 +1161,7 @@ public void setEmailAddresses(Set emailAddresses) {
                 nous l'avons fait avant en liant des personnes et des événements. C'est le même code
                 en Java.
             </para>
-            
+
                         <programlisting><![CDATA[private void addEmailToPerson(Long personId, String emailAddress) {
 
     Session session = HibernateUtil.getSessionFactory().getCurrentSession();
@@ -1285,7 +1303,7 @@ public void removeFromEvent(Event event) {
 -->
         </sect2>
     </sect1>
-    
+
     <sect1 id="tutorial-webapp">
         <title>Part 3 - L'application web EventManager</title>
 
@@ -1296,11 +1314,11 @@ public void removeFromEvent(Event event) {
             la base de données, et fournir une formulaire HTML pour saisir d'autres évènements.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet">
+        <sect2 id="tutorial-webapp-servlet" revision="2">
             <title>Ecrire la servlet de base</title>
 
             <para>
-                Créons une nouvelle classe dans notre répertoire source, dans le package <literal>events</literal>:
+                Créons une nouvelle classe dans notre répertoire source, dans le package <literal>events</literal> :
             </para>
 
             <programlisting><![CDATA[package events;
@@ -1309,35 +1327,28 @@ public void removeFromEvent(Event event) {
 
 public class EventManagerServlet extends HttpServlet {
 
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
     // Servlet code
 }]]></programlisting>
 
             <para>
-                Le <literal>dateFormatter</literal> est un outil que nous utiliserons plus tard pour convertir les objets
-                <literal>Date</literal> depuis et vers des chaines de caractères. Il est propice de n'avoir qu'un
-                formatter comme membre de la servlet.
-            </para>
-
-            <para>
                 La servlet n'accepte que les requêtes HTTP <literal>GET</literal>, la méthode à implémenter est donc
-				<literal>doGet()</literal>:
+                <literal>doGet()</literal> :
             </para>
 
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
                      HttpServletResponse response)
         throws ServletException, IOException {
 
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
+
     try {
-        // Begin unit of work
+        // Début de l'unité de travail
         HibernateUtil.getSessionFactory()
                 .getCurrentSession().beginTransaction();
 
-        // Process request and render page...
+        // Traitement de la requête et rendu de la page...
 
-        // End unit of work
+        // Fin de l'unité de travail
         HibernateUtil.getSessionFactory()
                 .getCurrentSession().getTransaction().commit();
 
@@ -1350,12 +1361,19 @@ public class EventManagerServlet extends HttpServlet {
 }]]></programlisting>
 
             <para>
-                La pattern que nous utilisons ici est appelé <emphasis>session-per-request</emphasis>.
-                Lorsqu'une requête touche la servlet, une nouvelle <literal>Session</literal> hibernate est
-                ouverte à l'invocationde <literal>getCurrentSession()</literal> sur la
-                <literal>SessionFactory</literal>. Ensuite, une transaction avec la base de données est démarrée&mdash;
-                tous les accès à la base de données interviennent au sein de la transactiton, peu importe que les données
+                Le pattern que nous utilisons ici est appelé <emphasis>session-per-request</emphasis>.
+                Lorsqu'une requête appelle la servlet, une nouvelle <literal>Session</literal> Hibernate est
+                ouverte à l'invocation de <literal>getCurrentSession()</literal> sur la
+                <literal>SessionFactory</literal>. Ensuite, une transaction avec la base de données est démarrée &mdash;
+                tous les accès à la base de données interviennent au sein de la transaction, peu importe que les données
                 soient lues ou écrites (nous n'utilisons pas le mode auto-commit dans les applications).
+            </para>
+
+            <para>
+                <emphasis>N'utilisez pas</emphasis> une nouvelle <literal>Session</literal> Hibernate pour
+                chaque opération en base de données. Utilisez une <literal>Session</literal> Hibernate qui
+                porte sur l'ensemble de la requête. Utlisez <literal>getCurrentSession()</literal>,
+                ainsi elle est automatiquement attachée au thread Java courant.
             </para>
 
             <para>
@@ -1367,20 +1385,20 @@ public class EventManagerServlet extends HttpServlet {
                 Enfin, l'unité de travail s'achève lorsque l'exécution et le rendu sont achevés.
                 Si un problème survient lors de ces deux phases, une exception est soulevée et la
                 transaction avec la base de données subit un rollback. Voila pour le pattern
-                <literal>session-per-request</literal>. Au lieu d'un code de démarcation de transaction
+                <literal>session-per-request</literal>. Au lieu d'avoir un code de délimitant les transactions
                 au sein de chaque servlet, vous pouvez écrire un filtre de servlet.
                 Voir le site Hibernate et le Wiki pour plus d'information sur ce pattern, appelé
-				<emphasis>Open Session in View</emphasis>&mdash; vous en aurez besoin dès que vous
-				utiliserez des JSPs et non plus des servlets pour le rendu de vos vues.
+                <emphasis>Open Session in View</emphasis> &mdash; vous en aurez besoin dès que vous
+                utiliserez des JSPs et non plus des servlets pour le rendu de vos vues.
             </para>
 
         </sect2>
 
-        <sect2 id="tutorial-webapp-processing">
+        <sect2 id="tutorial-webapp-processing"  revision="1">
             <title>Procéder et rendre</title>
 
             <para>
-                Implémentons l'exécution de la requête et le rendu de la page.                
+                Implémentons l'exécution de la requête et le rendu de la page.
             </para>
 
 <programlisting><![CDATA[// Write HTML header
@@ -1411,7 +1429,7 @@ out.flush();
 out.close();]]></programlisting>
 
             <para>
-                Ce style de code avec un mix de Java et d'HTML ne serait pas scalable 
+                Ce style de code avec un mix de Java et d'HTML ne serait pas scalable
                 dans une application plus complexe&mdash;gardez à l'esprit que nous ne faisons qu'illustrer
                 les concepts basiques d'Hibernate dans ce tutoriel. Ce code affiche une en tête et un pied de page
                 HTML. Dans cette page, sont affichés un formulaire pour la saisie d'évènements ainsi
@@ -1434,7 +1452,8 @@ out.close();]]></programlisting>
                 requête:
             </para>
 
-            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+            <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+
     List result = HibernateUtil.getSessionFactory()
                     .getCurrentSession().createCriteria(Event.class).list();
     if (result.size() > 0) {
@@ -1535,13 +1554,13 @@ out.close();]]></programlisting>
             <para>
                 Pour construire et déployer, appelez <literal>ant war</literal> dans votre projet et
                 copier le fichier <literal>hibernate-tutorial.war</literal> dans le répertoire <literal>webapp</literal> de tomcat
-                Si vous n'avez pas installé Tomcat, téléchargez le et suivez la notice d'installation. 
+                Si vous n'avez pas installé Tomcat, téléchargez le et suivez la notice d'installation.
                 Vous n'avez pas à modifier la configuration Tomcat pour déployer cette application.
             </para>
 
             <para>
                 Une fois l'application déployée et Tomcat lancé, accédez à l'application via
-                <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>. 
+                <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>.
                 Assurez vous de consulter les traces tomcat pour observer l'initialisation
                 d'Hibernate à la première requête touchant votre servlet (l'initialisation statique dans <literal>HibernateUtil</literal>
                 est invoquée) et pour vérifier qu'aucune exception ne survienne.

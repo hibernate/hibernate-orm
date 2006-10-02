@@ -86,7 +86,8 @@
              qui agissent sur le schéma de base de données exporté par l'outil de 
              génération de schéma. (Par exemple l'attribut <literal>not-null</literal>.)
         </para>
-        <sect2 id="mapping-declaration-doctype" revision="2">
+        
+        <sect2 id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
             <para>
                 Tous les mappings XML devraient utiliser le doctype indiqué. 
@@ -96,6 +97,56 @@
                 des recherches de la DTD sur Internet, vérifiez votre déclaration de DTD par rapport 
                 au contenu de votre classpath.
             </para>
+            
+            <sect3 id="mapping-declaration-entity-resolution">
+                <title>EntityResolver</title>
+                <para>
+                    Comme cité précédemment, Hibernate tentera de trouver les DTDs d'abord dans son classpath. Il
+                    réussit à faire cela en utilisant une implémentation particulière de <literal>org.xml.sax.EntityResolver</literal>
+                    avec le SAXReader qu'il utilise pour lire les fichiers xml. Cet <literal>EntityResolver</literal> particulier
+                    reconnait deux espaces de nommage systemId différents.
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            un <literal>espace de nommage hibernate</literal> est reconnu dès qu'un systemId commence par
+                            <literal>http://hibernate.sourceforge.net/</literal>; alors ces entités sont résolues via le
+                            classloader qui a chargé les classes Hibernate.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            un <literal>espace de nommage utilisateur</literal> est reconnu dès qu'un systemId utilise
+                            un protocol URL <literal>classpath://</literal>. Le résolveur tentera de résoudre ces entités
+                            via (1) le classloader du contexte du thread courant et (2) le classloader qui a chargé
+                            les classes Hibernate.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <para>
+                    Un exemple d'utilisation de l'espace de nommage utilisateur:
+                </para>
+                <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
+    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
+]>
+
+<hibernate-mapping package="your.domain">
+    <class name="MyEntity">
+        <id name="id" type="my-custom-id-type">
+            ...
+        </id>
+    <class>
+    &types;
+</hibernate-mapping>]]></programlisting>
+                <para>
+                    Où <literal>types.xml</literal> est une ressource dans le package <literal>your.domain</literal>
+                    et qui contient un <xref linkend="mapping-types-custom">typedef</xref> particulier.
+                </para>
+            </sect3>
+            
         </sect2>
         <sect2 id="mapping-declaration-mapping" revision="3">
             <title>hibernate-mapping</title>
@@ -1103,7 +1154,7 @@
                    utilisent des identifiants assignés ou des clefs composées !</emphasis>
             </para>
         </sect2>
-        <sect2 id="mapping-declaration-timestamp"  revision="3" >
+        <sect2 id="mapping-declaration-timestamp"  revision="4" >
             <title>timestamp (optionnel)</title>
             <para>
                    L'élément optionnel <literal>&lt;timestamp&gt;</literal> indique que la table contient des données 
@@ -1179,7 +1230,9 @@
             </programlistingco>
             <para>
                 Notez que <literal>&lt;timestamp&gt;</literal> est équivalent à 
-                <literal>&lt;version type="timestamp"&gt;</literal>.
+                <literal>&lt;version type="timestamp"&gt;</literal> et
+                <literal>&lt;timestamp source="db"&gt;</literal> équivaut à
+                <literal>&lt;version type="dbtimestamp"&gt;</literal>.
             </para>
         </sect2>
         <sect2 id="mapping-declaration-property" revision="4">

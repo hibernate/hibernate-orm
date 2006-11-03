@@ -7,7 +7,7 @@
         enabled or disabled for a particular Hibernate session.
     </para>
 
-    <sect1 id="objectstate-filters">
+    <sect1 id="objectstate-filters" revision="1">
         <title>Hibernate filters</title>
 
         <para>
@@ -121,6 +121,23 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
             careful of the direction of the condition expression.  Its safest to set this up for left
             outer joining; in general, place the parameter first followed by the column name(s) after
             the operator.
+        </para>
+
+        <para>
+            After being defined a filter might be attached to multiple entities and/or
+            collections each with its own condition.  That can be tedious when the
+            conditions are the same each time.  Thus <literal>&lt;filter-def/&gt;</literal>
+            allows defining a default condition, either as an attribute or CDATA:
+        </para>
+
+        <programlisting><![CDATA[<filter-def name="myFilter" condition="abc > xyz">...</filter-def>
+<filter-def name="myOtherFilter">abc=xyz</filter-def>]]></programlisting>
+
+        <para>
+            This default condition will then be used whenever the filter is attached to something
+            without specifying a condition.  Note that this means you can give a specific condition
+            as part of the attachment of the filter which overrides the default condition in that
+            particular case.
         </para>
 
     </sect1>

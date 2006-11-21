@@ -1,4 +1,4 @@
-<chapter id="queryhql">
+<chapter id="queryhql" revision="1">
     <title>HQL: The Hibernate Query Language</title>
     
     <para>
@@ -210,6 +210,42 @@
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
 	</sect1>
 
+    <sect1 id="queryhql-identifier-property">
+        <title>Refering to identifier property</title>
+
+        <para>
+            There are, generally speaking, 2 ways to refer to an entity's identifier property:
+        </para>
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    The special property (lowercase) <literal>id</literal> may be used to reference the identifier
+                    property of an entity <emphasis>provided that entity does not define a non-identifier property
+                    named id</emphasis>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    If the entity defines a named identifier property, you may use that property name.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            References to composite identifier properties follow the same naming rules.  If the
+            entity has a non-identifier property named id, the composite identifier property can only
+            be referenced by its defined named; otherwise, the special <literal>id</literal> property
+            can be used to rerference the identifier property.
+        </para>
+
+        <para>
+            Note: this has changed significantly starting in version 3.2.2.  In previous versions,
+            <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
+            matter what its actual name.  A ramification of that decision was that non-identifier
+            properties named <literal>id</literal> could never be referenced in Hibernate queries.
+        </para>
+    </sect1>
+
     <sect1 id="queryhql-select">
         <title>The select clause</title>
 
@@ -389,7 +425,7 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         
     </sect1>
 
-    <sect1 id="queryhql-where">
+    <sect1 id="queryhql-where" revision="1">
         <title>The where clause</title>
 
         <para>
@@ -448,8 +484,9 @@ from Cat cat, Cat mate
 where cat.mate = mate]]></programlisting>
 
         <para>
-            The special property (lowercase) <literal>id</literal> may be used to reference the 
-            unique identifier of an object. (You may also use its property name.)
+            The special property (lowercase) <literal>id</literal> may be used to reference the
+            unique identifier of an object. See <xref linkend="queryhql-identifier-property"/>
+            for more information.
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.id = 123
@@ -463,7 +500,8 @@ from Cat as cat where cat.mate.id = 69]]></programlisting>
         <para>
             Properties of composite identifiers may also be used. Suppose <literal>Person</literal> 
             has a composite identifier consisting of <literal>country</literal> and 
-            <literal>medicareNumber</literal>.
+            <literal>medicareNumber</literal>.  Again, see <xref linkend="queryhql-identifier-property"/>
+            for more information regarding referencing identifier properties.
         </para>
 
         <programlisting><![CDATA[from bank.Person person
@@ -477,7 +515,7 @@ where account.owner.id.country = 'AU'
         <para>
             Once again, the second query requires no table join.
         </para>
-            
+
         <para>
             Likewise, the special property <literal>class</literal> accesses the discriminator value
             of an instance in the case of polymorphic persistence. A Java class name embedded in the 
@@ -485,16 +523,11 @@ where account.owner.id.country = 'AU'
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.class = DomesticCat]]></programlisting>
-        
-        <para>
-            You may also specify properties of components or composite user types (and of components 
-            of components, etc). Never try to use a path-expression that ends in a property of component 
-            type (as opposed to a property of a component). For example, if <literal>store.owner</literal>
-            is an entity with a component <literal>address</literal>
-        </para>
 
-        <programlisting><![CDATA[store.owner.address.city    // okay
-store.owner.address         // error!]]></programlisting>
+        <para>
+            You may also use components or composite user types, or properties of said
+            component types. See <xref linkend="queryhql-coomponents"/> for more details.
+        </para>
 
         <para>
             An "any" type has the special properties <literal>id</literal> and <literal>class</literal>,
@@ -869,7 +902,7 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
     </sect1>
     
-    <sect1 id="queryhql-subqueries" revision="2">
+    <sect1 id="queryhql-subqueries" revision="3">
         <title>Subqueries</title>
         
         <para>
@@ -906,31 +939,8 @@ from Cat as cat]]></programlisting>
         </para>
 
         <para>
-            For subqueries with more than one expression in the select list, you can use a tuple constructor:
-        </para>
-        
-        <programlisting><![CDATA[from Cat as cat 
-where not ( cat.name, cat.color ) in ( 
-    select cat.name, cat.color from DomesticCat cat 
-)]]></programlisting>
-
-        <para>
-            Note that on some databases (but not Oracle or HSQL), you can use tuple constructors in other
-            contexts, for example when querying components or composite user types:
-        </para>
-
-        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
-        
-        <para>
-            Which is equivalent to the more verbose:
-        </para>
-        
-        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
-
-        <para>
-            There are two good reasons you might not want to do this kind of thing: first, it is not 
-            completely portable between database platforms; second, the query is now dependent upon
-            the ordering of properties in the mapping document.
+            Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
+            <xref linkend="queryhql-tuple"/> for more details.
         </para>
         
     </sect1>
@@ -1144,6 +1154,79 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         </para>
 
         <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+
+    </sect1>
+
+    <sect1 id="queryhql-components">
+        <title>Components</title>
+
+        <para>
+            Components might be used in just about every way that simple value types can be used in HQL
+            queries.  They can appear in the <literal>select</literal> clause:
+        </para>
+
+        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name.first from from Person p]]></programlisting>
+
+        <para>
+            where the Person's name property is a component.  Components can also be used
+            in the <literal>where</literal> clause:
+        </para>
+
+        <programlisting><![CDATA[from from Person p where p.name = :name]]></programlisting>
+        <programlisting><![CDATA[from from Person p where p.name.first = :firstName]]></programlisting>
+
+        <para>
+            Components can also be used in the <literal>order by</literal> clause:
+        </para>
+
+        <programlisting><![CDATA[from from Person p order by p.name]]></programlisting>
+        <programlisting><![CDATA[from from Person p order by p.name.first]]></programlisting>
+
+        <para>
+            Another common use of components is in <xref linkend="queryhql-tuple">row value constructors</xref>.
+        </para>
+    </sect1>
+
+    <sect1 id="queryhql-tuple">
+        <title>Row value constructor syntax</title>
+
+        <para>
+            HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax (sometimes
+            called <literal>tuple</literal> syntax), even though the underlying database may not support
+            that notion.  Here we are generally referring to multi-valued comparisons, typically associated
+            with components.  Consider an entity Person which defines a name component:
+        </para>
+
+        <programlisting><![CDATA[from Person p where p.name.first='John' and p.name.last='Jingleheimer-Schmidt']]></programlisting>
+
+        <para>
+            That's valid syntax, although a little verbose.  It be nice to make this a bit more concise and use
+            <literal>row value constructor</literal> syntax:
+        </para>
+
+        <programlisting><![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]></programlisting>
+
+        <para>
+            It can also be useful to specify this in the <literal>select</literal> clause:
+        </para>
+
+        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
+
+        <para>
+            Another time using <literal>row value constructor</literal> syntax can be beneficial
+            is when using subqueries needing to compare against multiple values:
+        </para>
+
+        <programlisting><![CDATA[from Cat as cat
+where not ( cat.name, cat.color ) in (
+    select cat.name, cat.color from DomesticCat cat
+)]]></programlisting>
+
+        <para>
+            One thing to consider when deciding if you want to use this syntax is that the query will
+            be dependent upon the ordering of the component sub-properties in the metadata.
+        </para>
 
     </sect1>
 

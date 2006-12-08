@@ -33,26 +33,13 @@
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>3.1.2</releaseinfo>
+        <releaseinfo>3.2 cr3</releaseinfo>
     </bookinfo>
 
     <toc/>
 
     <preface id="preface" revision="2">
         <title>前書き</title>
-
-        <para>
-            WARNING! This is a translated version of the English Hibernate reference
-            documentation. The translated version might not be up to date! However, the
-            differences should only be very minor. Consult the English reference
-            documentation if you are missing information or encounter a translation
-            error. If you like to contribute to a particular translation, contact us
-            on the Hibernate developer mailing list.
-        </para>
-
-        <para>
-            Translator(s): Chikara Honma, Yusuke Hiroto;
-        </para>
 
         <para>
             今日の企業環境において、オブジェクト指向ソフトウェアとリレーショナルデータベースに関わる作業は
@@ -65,7 +52,7 @@
 
         <para>
             HibernateはJavaクラスからデータベーステーブルへ（そしてJavaデータ型からSQLデータ型へ）
-            のマッピングを処理するだけではなく、データのクエリと復元の仕組みをも提供します。
+            のマッピングを処理するだけではなく、データのクエリと復元の仕組みも提供します。
             このおかげでSQLとJDBCを使った手作業でのデータ処理に費やされていた開発時間を大幅に削減できます。
         </para>
 
@@ -87,8 +74,6 @@
         <orderedlist>
             <listitem>
                 <para>
-                    <xref linkend="tutorial"/> を読んでください。
-                    段階的に解説していきます。
                     <xref linkend="tutorial"/> を読んでください。
                     段階的に解説していきます。
                     チュートリアルのソースコードはディストリビューションの 
@@ -127,11 +112,11 @@
                     FAQはHibernateウェブサイトにあります。
                 </para>
             </listitem>
-            <listitem>
+			<listitem>
                 <para>
                     サードパーティのデモ、例、チュートリアルはHibernateウェブサイトにリンクがあります。
                 </para>
-            </listitem>
+			</listitem>
             <listitem>
                 <para>
                     Hibernateウェブサイトのコミュニティエリアは、デザインパターンやさまざまな統合ソリューション
@@ -142,9 +127,9 @@
 
          <para>
              質問があればHibernateウェブサイトのユーザフォーラムを活用してください。
-             またバグレポートとフィーチャリクエストのためJIRA問題追跡システムを用意しています。
+             またバグレポートとフィーチャリクエストのためJIRA課題追跡システムを用意しています。
              Hibernateの開発に興味があれば、開発者メーリングリストに参加してください。
-             このドキュメントをあなた達の言語へ翻訳したい場合は、
+             このドキュメントをあなたの国の言葉に翻訳したい場合は、
              開発者メーリングリストで私たちにコンタクトを取ってください。
          </para>
 
@@ -154,7 +139,7 @@
              HibernateはProfessional Open Sourceプロジェクト、
              そしてJBoss Enterprise Middleware System（JEMS）プロダクトスイートのクリティカルコンポーネントです。
          </para>
-         
+
            <sect1 id="preface-s1" revision="-1">
            
                <title>日本語訳について</title>
@@ -179,7 +164,7 @@
                    <title>日本語版翻訳者について</title>
                
                    <para id="preface-s1-1-p4" revision="-1">
-                       日本語版バージョン3.1.2の翻訳は株式会社エクサ
+                       日本語版バージョン3.2 cr3の翻訳は株式会社エクサ
                        （<ulink url="http://www.exa-corp.co.jp">ホームページはこちら</ulink>）
                        の以下のメンバーで行いました。
                        本間力（6,18,19,21,22,23章担当）、

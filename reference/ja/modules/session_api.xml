@@ -434,7 +434,7 @@ cats.close()]]></programlisting>
                 
             </sect3>
             
-            <sect3 id="objectstate-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named" revision="1">
                 <title>名前付きクエリの外出し</title>
                 
                 <para> 
@@ -443,7 +443,7 @@ cats.close()]]></programlisting>
                     使うことを忘れないようにしましょう。） </para>
                 
                 
-                <programlisting><![CDATA[<query name="eg.DomesticCat.by.name.and.minimum.weight"><![CDATA[
+                <programlisting><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight > ?
@@ -452,7 +452,7 @@ cats.close()]]></programlisting>
                 <para>パラメータのバインディングと実行は、以下のようなプログラムで行われます。 </para>
                 
                 
-                <programlisting><![CDATA[Query q = sess.getNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+                <programlisting><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
@@ -460,7 +460,12 @@ List cats = q.list();]]></programlisting>
                 <para> 実際のプログラムコードは、使われるクエリ言語に依存していないことに注意しましょう。
                     メタデータには、ネイティブSQLクエリを定義することもできます。 また、既存のクエリをマッピングファイルに移すことで、
                     Hibernateに移行することもできます。 </para>
-                
+                <para>
+                    <literal>&lt;hibernate-mapping&gt;</literal> の中のクエリ定義は、クエリに対する
+                    ユニークな名前が必要なことにも注意してください。それに対して、 <literal>&lt;class&gt;</literal> の中の
+                    クエリ定義は、クラスの完全限定名が前に付けられるので、自動的にユニークな名前になります。
+                    例： <literal>eg.Cat.ByNameAndMaximumWeight</literal>
+                </para>
             </sect3>
         </sect2>
         

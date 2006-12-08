@@ -689,8 +689,16 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             JDBCトランザクションの場合、 <literal>after_transaction</literal> でクローズします。
                             <para>
                                 <emphasis role="strong">例：</emphasis> 
-                                <literal>on_close</literal> (default) | <literal>after_transaction</literal> |
-                                <literal>after_statement</literal> | <literal>auto</literal>
+                                <literal>auto</literal> (default) | <literal>on_close</literal> |
+                                <literal>after_transaction</literal> | <literal>after_statement</literal>
+                            </para>
+                            <para>
+                                注意してください。この設定は <literal>SessionFactory.openSession</literal> から
+                                取得した <literal>Session</literal> だけに効果があります。
+                                <literal>SessionFactory.getCurrentSession</literal> を通じて取得した
+                                <literal>Session</literal> では、<literal>CurrentSessionContext</literal> 
+                                の実装によって、コネクションのリリースモードを設定します。
+                                <xref linkend="architecture-current-session"/> を参照してください。
                             </para>
                         </entry>
                     </row>
@@ -906,7 +914,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="9">
+        <table frame="topbot" id="configuration-misc-properties" revision="10">
             <title>その他のプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
@@ -929,7 +937,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <para>
                                 <emphasis role="strong">例：</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
-                                <literal>custom.Class</literal>
+                                <literal>managed</literal> | <literal>custom.Class</literal>
                             </para>
                         </entry>
                     </row>

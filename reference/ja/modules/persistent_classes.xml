@@ -461,7 +461,7 @@ dynamicSession.close()
 
     </sect1>
 
-    <sect1 id="persistent-classes-tuplizers" revision="0">
+    <sect1 id="persistent-classes-tuplizers" revision="1">
         <title>Tuplizer</title>
 
         <para>
@@ -511,7 +511,7 @@ dynamicSession.close()
 
 
 public class CustomMapTuplizerImpl
-        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {
     // override the buildInstantiator() method to plug in our custom map...
     protected final Instantiator buildInstantiator(
             org.hibernate.mapping.PersistentClass mappingInfo) {
@@ -531,7 +531,7 @@ public class CustomMapTuplizerImpl
     </sect1>
 
     <para>
-        <!-- TODO: プロパティとプロキシパッケージのユーザ拡張フレームワークを文書化すること -->
+        TODO: プロパティとプロキシパッケージのユーザ拡張フレームワークを文書化すること
     </para>
 
 </chapter>

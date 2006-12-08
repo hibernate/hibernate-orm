@@ -97,7 +97,7 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="2">
+        <sect2 id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
 
             <para>
@@ -108,6 +108,68 @@
                 インターネットにあるDTDファイルを探そうとしたなら、
                 クラスパスの内容を見て、DTD宣言を確認してください。
             </para>
+            
+            
+            
+            <sect3 id="mapping-declaration-entity-resolution">
+                <title>
+                エンティティ・リゾルバ
+                </title>
+                <para>
+                    前述したように、Hibernateはまずクラスパス内でDTDを解決しようとします。
+                    <literal>org.xml.sax.EntityResolver</literal> のカスタム実装を
+                    XMLファイルを読み込むためのSAXReaderに登録することによって、DTDを解決します。
+                    このカスタムの <literal>EntityResolver</literal> は2つの異なるシステムID名前空間を認識します。
+                    
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>Hibernate名前空間</literal> は、リゾルバが 
+                            <literal>http://hibernate.sourceforge.net/</literal> で始まるシステムIDに到達したときに、
+                            認識されます。
+                            そしてリゾルバは、Hibernateのクラスをロードしたクラスローダを用いて、
+                            これらのエンティティを解決しようとします。
+                        
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                          <literal>ユーザ名前空間</literal> は、リゾルバが
+                          URLプロトコルの <literal>classpath://</literal> を使ったシステムIDに到達したときに、
+                          認識されます。そしてリゾルバは、(1)カレントスレッドのコンテキストクラスローダー、
+                          または(2)Hibernateのクラスをロードしたクラスローダを使って、
+                          これらのエンティティを解決しようとします。
+                        
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <para>
+                下記は、ユーザ名前空間を使った例です：
+                
+                </para>
+                <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
+    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
+]>
+
+<hibernate-mapping package="your.domain">
+    <class name="MyEntity">
+        <id name="id" type="my-custom-id-type">
+            ...
+        </id>
+    <class>
+    &types;
+</hibernate-mapping>]]></programlisting>
+                <para>
+                ここで <literal>types.xml</literal> は <literal>your.domain</literal> パッケージ内のリソースであり、
+                カスタム <xref linkend="mapping-types-custom">typedef</xref> を含むます。
+                </para>
+            </sect3>            
+            
+            
         </sect2>
 
         <sect2 id="mapping-declaration-mapping" revision="3">

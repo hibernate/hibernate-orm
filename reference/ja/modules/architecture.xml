@@ -79,7 +79,7 @@
                     <listitem>
                         <para>
                             アプリケーションと永続ストアとの対話を表す、
-                            シングル・スレッドで短命のオブジェクト。
+                            シングルスレッドで短命のオブジェクト。
                             JDBCコネクションをラップします。
                              <literal>Transaction</literal> のファクトリです。
                             永続オブジェクトの必須の（一次）キャッシュを保持します。
@@ -118,7 +118,7 @@
                     <listitem>
                         <para>
                             (オプション)原子性を持つ作業単位(Unit of Work)を指定するために、アプリケーションが使用する、
-                            シングル・スレッドで短命なオブジェクト。
+                            シングルスレッドで短命なオブジェクト。
                             下に位置するJDBC、JTA、CORBAトランザクションからアプリケーションを抽象化します。
                              <literal>Session</literal> は、時には
                             いくつかの <literal>Transaction</literal> をまたがるかもしれません。
@@ -277,18 +277,19 @@
         </para>
     </sect1>
 
-    <sect1 id="architecture-current-session" revision="1">
+    <sect1 id="architecture-current-session" revision="2">
         <title>コンテキスト上のセッション</title>
         <para>
             Hibernate を使ったアプリケーションは、ほとんど、なんらかの形で"コンテキスト上の"セッションが必要になります。
             「コンテキスト上のセッション」は、特定のコンテキストのスコープのなかで有効なセッションのことです。
-            しかし、ふつう、アプリケーションごとにコンテキストを構成するものの定義は異なります。
+            しかし、通常アプリケーションごとにコンテキストを構成するものの定義は異なります。
             しかも、異なる複数のコンテキストは、現時点に対して異なるスコープを定義します。
             バージョン3.0より前の Hibernate では、自作の <literal>ThreadLocal</literal> ベースの「コンテキスト上のセッション」を
             利用するか、 <literal>HibernateUtil</literal> のようなヘルパークラスを利用するか、
             proxy/interception ベースの「コンテキスト上のセッション」を提供する
-            （Spring や Pico のような）サードパーティのフレームワークを利用するかのどれかでした。
+            （Spring や Pico のような）サードパーティのフレームワークを利用するかのいずれかでした。
         </para>
+
         <para>
             バージョン 3.0.1 から、Hibernate には <literal>SessionFactory.getCurrentSession()</literal> が
             加わりました。 これは、 <literal>JTA</literal> トランザクションの使用を前提にしています。
@@ -301,7 +302,7 @@
             この考えに基づくと、 <literal>JTA</literal> ベースの「コンテキスト上のセッション」を
             使うしかないでしょう。
         </para>
-        
+
         <para>
             しかし、バージョン 3.1 からは、 <literal>SessionFactory.getCurrentSession()</literal> の後の処理が、
             プラガブルになりました。
@@ -309,6 +310,7 @@
             新しい拡張インタフェース ( <literal>org.hibernate.context.CurrentSessionContext</literal> ) と
             新しい構成パラメータ ( <literal>hibernate.current_session_context_class</literal> ) が追加されました。
         </para>
+
         <para>
             <literal>org.hibernate.context.CurrentSessionContext</literal> インタフェースの規約についての
             詳細な内容は Javadoc を参照してください。
@@ -322,41 +324,52 @@
                 <para>
                     <literal>org.hibernate.context.JTASessionContext</literal> - 
                     <literal>JTA</literal> トランザクションによって、現在のセッションが追跡され、
-                    スコープを決められます。この処理は、古い JTAだけのアプローチとまったく同じです。
-                    詳細は、Javadoc を参照してください。
+                    スコープを決められます。この処理は、古いJTAだけのアプローチとまったく同じです。
+                    詳細はJavadocを参照してください。
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>org.hibernate.context.ThreadLocalSessionContext</literal> -
                     スレッドの実行によって、現在のセッションが追跡されます。
-                    詳細は、Javadoc を参照してください。
+                    詳細はJavadocを参照してください。
                 </para>
+            </listitem>
+            <listitem>
+                <para>
+                	<literal>org.hibernate.context.ManagedSessionContext</literal> - 
+                	スレッドの実行によって、現在のセッションが追跡されます。
+                	しかし、このクラスのstaticメソッドで <literal>Session</literal> インスタンスを
+                	バインド/アンバインドする責任はあなたにあります。
+                	これは決して <literal>Session</literal> をオープン、フラッシュ、クローズしません。
+                </para>               
             </listitem>
         </itemizedlist>
 
         <para>
-            この2つの実装は、"1セッション - 1データベーストランザクション" プログラミングモデルを提供します。
-            また、 <emphasis>リクエストごとのセッション</emphasis> として知られており、使われています。
+            始めの2つの実装は、"1セッション - 1データベーストランザクション" プログラミングモデルを提供します。
+            これは <emphasis>リクエストごとのセッション（session-per-request）</emphasis> としても知られており、使われています。
             Hibernate セッションの開始と終了は、データベーストランザクションの期間で決まります。
-            もし、プログラムによるトランザクション境界設定（例：純粋な J2SE や JTA/UserTransaction/BMT を使用する場合）
-            を使いたいなら、下位にあるトランザクションシステムを隠蔽するために、
-            Hibernate の <literal>Transaction</literal> を使った方が良いです。
-            もし、CMT をサポートする EJB コンテナーで動作させるつもりならば、トランザクション境界は、
-            宣言的に定義でき、トランザクションやセッションの境界設定に関するどのような操作も必要となりません。
-            より詳細な情報やコードの例は、 <xref linkend="transactions"/> を参照してください。
+            JTAを使わない普通のJSEで、プログラム上のトランザクション境界設定を行うなら、
+            コードから基礎のトランザクションシステムを隠蔽するために、
+            Hibernate <literal>Transaction</literal> APIを使うとよいでしょう。
+            JTAを使うなら、トランザクションの境界設定には、JTAインターフェイスを使ってください。
+            CMTをサポートするEJBコンテナで実行するつもりなら、トランザクション境界は宣言的に定義できるため、
+            コード上でトランザクションやセッションの境界を設定する必要はありません。
+            さらに詳細な情報やコードの例は、 <xref linkend="transactions"/> を参照してください。
         </para>
 
         <para>
-            <literal>hibernate.current_session_context_class</literal> 構成パラメータは、
+            <literal>hibernate.current_session_context_class</literal> 設定パラメータは、
             <literal>org.hibernate.context.CurrentSessionContext</literal> のどの実装を使うかを指定します。
-            下位互換性のため、この構成パラメータが設定されずに
-            <literal>org.hibernate.transaction.TransactionManagerLookup</literal> が設定されていた場合は、
-            <literal>org.hibernate.context.JTASessionContext</literal> を使います。
-            通常、このパラメータの値には、2つのすぐに使える実装のうち、使用する方の実装クラスの名前を指定しますが、
-            "jta" と "thread" というそれぞれの省略名も用意されています。
+            下位互換性のため、このパラメータが設定されず
+            <literal>org.hibernate.transaction.TransactionManagerLookup</literal> が設定されていた場合、
+            Hibernateは <literal>org.hibernate.context.JTASessionContext</literal> を使うことに注意してください。
+            通常このパラメータの値には、3つの実装の中から使用する実装クラスの名前を直接指定します。
+            しかし、"jta", "thread", "managed"というそれぞれの省略名も用意されています。
         </para>
         
     </sect1>
 
 </chapter>
+

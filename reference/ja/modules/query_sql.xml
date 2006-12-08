@@ -10,187 +10,354 @@
   <para>Hibernate3では、生成、更新、削除、読み込み処理のようなすべての
   SQL（ストアドプロシージャを含む）を手書きできます。</para>
 
-  <sect1 id="querysql-creating" revision="3">
-    <title> <literal>SQLQuery</literal> の使用</title>
+  <sect1 id="querysql-creating" revision="4">
+    <title><literal>SQLQuery</literal> の使用</title>
 
     <para>ネイティブなSQLクエリの実行は <literal>SQLQuery</literal>
     インターフェイスを通して制御します。
     <literal>SQLQuery</literal> インターフェイスは
     <literal>Session.createSQLQuery()</literal> を呼び出して取得します。
-    非常に簡単な場合、次のような形を使えます。</para>
+    このAPIを使って問い合わせする方法を以下で説明します。</para>
 
-    <programlisting><![CDATA[List cats = sess.createSQLQuery("select * from cats")
-    .addEntity(Cat.class)
-    .list();]]></programlisting>
+    <sect2>
+      <title>スカラーのクエリ</title>
 
-    <para>このクエリで指定されているものを下記に示します。</para>
+      <para>最も基本的なSQLクエリはスカラー（値）のリストを得ることです。</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>SQLクエリ文字列</para>
-      </listitem>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").list();
+sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
+]]></programlisting>
 
-      <listitem>
-        <para>クエリが返すエンティティ</para>
-      </listitem>
-    </itemizedlist>
+      <para>これらはどちらも、CATSテーブルの各カラムのスカラー値を含む
+      Object配列（Object[]）のリストを返します。
+      返すスカラー値の実際の順番と型を推定するために、
+      HibernateはResultSetMetadataを使用します。</para>
 
-    <para>ここでは、
-    リザルトセットの列名は、マッピングファイルで指定された列名と同じだと仮定されます。
-    これは同じ列名を持つ複数のテーブルを結合するSQLクエリでは問題となります。
-    次の形は、列名が重複しても弱みになりません。</para>
+      <para><literal>ResultSetMetadata</literal> を使用するオーバーヘッドを避けるため、
+      もしくは単に何が返されるか明確にするため、<literal>addScalar()</literal>
+      を使えます。</para>
 
-    <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
-    .addEntity("cat", Cat.class)
-    .list();]]></programlisting>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+ .addScalar("ID", Hibernate.LONG)
+ .addScalar("NAME", Hibernate.STRING)
+ .addScalar("BIRTHDATE", Hibernate.DATE)
+]]></programlisting>
 
-    <para>このクエリで指定されているものを下記に示します。</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>SQLクエリ文字列
-        （Hibernateが列の別名を挿入するためのプレースホルダを含む）</para>
-      </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>SQLクエリ文字列</para>
+        </listitem>
 
-      <listitem>
-        <para>クエリが返すエンティティとSQLテーブルの別名</para>
-      </listitem>
-    </itemizedlist>
+        <listitem>
+          <para>返されるカラムと型</para>
+        </listitem>
+      </itemizedlist>
 
-    <para><literal>addEntity()</literal> メソッドにより、
-    SQLのテーブル別名と返されるエンティティクラスを関連付け、
-    クエリのリザルトセットの構造を決定します。</para>
+      <para>これはまだObject配列を返しますが、
+      <literal>ResultSetMetdata</literal> を使用しません。
+      ただし、その代わりに基礎にあるリザルトセットから
+      ID、NAME、BIRTHDATE カラムをそれぞれ
+      Long、String、Short として明示的に取得します。
+      これは３つのカラムを返すのみであることも意味します。
+      たとえ、クエリが <literal>*</literal> を使用し、
+      列挙した３つより多くのカラムを返せるとしてもです。</para>
 
-    <para><literal>addJoin()</literal> メソッドを使い、
-    他のエンティティとの関連とコレクションをロードします。</para>
+      <para>スカラーの型情報を省くこともできます。</para>
 
-    <programlisting><![CDATA[List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
-    )
-    .addEntity("cat", Cat.class)
-    .addJoin("kitten", "cat.kittens")
-    .list();]]></programlisting>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+ .addScalar("ID", Hibernate.LONG)
+ .addScalar("NAME")
+ .addScalar("BIRTHDATE")
+]]></programlisting>
 
-    <para>ネイティブSQLクエリは、単純なスカラ値やスカラ値と
-    エンティティの組み合わせを返してもよいです。</para>
+      <para>
+      これは本質的に前と同じクエリですが、、
+      NAME と BIRTHDATE の型を決めるために <literal>ResultSetMetaData</literal>
+      を使用します。一方、ID の型は明示的に指定されています。
+      </para>
 
-    <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
-        .addScalar("maxWeight", Hibernate.DOUBLE);
-        .uniqueResult();]]></programlisting>
+      <para>
+      ResultSetMetaData から返される java.sql.Types を Hibernate の型に
+      マッピングすることは、Dialect が制御します。
+      明示された型がマッピングされていないか、結果の型が期待したものと異なる場合、
+      Dialect の <literal>registerHibernateType</literal> を呼び出し、
+      カスタマイズできます。
+      </para>
+    </sect2>
 
-    <para>代わりに、hbmファイルにリザルトセットのマッピング情報を記述し、
-    クエリで使用することができます。</para>
+    <sect2>
+      <title>エンティティのクエリ</title>
 
-    <programlisting><![CDATA[List cats = sess.createSQLQuery(
-        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
-    )
-    .setResultSetMapping("catAndKitten")
-    .list();]]></programlisting>
-  </sect1>
+      <para>ここまでのクエリは、すべてスカラー値を返すものでした。
+      基本的に、リザルトセットから「未加工」の値を返します。
+      以降では、<literal>addEntity()</literal> により、ネイティブSQLクエリから
+      エンティティオブジェクトを取得する方法を示します。</para>
 
-  <sect1 id="querysql-aliasreferences">
-    <title>別名とプロパティの参照</title>
-    <para>上記の <literal>{cat.*}</literal> という表記は、「すべてのプロパティ」を表す省略形です。
-    代わりに、明示的にカラムを列挙してもよいですが、
-    この場合は、Hibernateに各プロパティに対応するSQL列の別名を挿入させるべきでしょう。
-    列の別名のためのプレースホルダは、テーブルの別名によって修飾されたプロパティ名です。
-    下記の例では、別のテーブル（<literal>cat_log</literal>）から
-    マッピングメタデータで定義された <literal>Cat</literal> を復元します。
-    もし好むなら、where節の中でさえ、プロパティの別名を使えることに気をつけてください。</para>
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
+sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class);
+]]></programlisting>
 
-    <para>名前付きクエリに対して <literal>{}</literal> 構文は必須では <emphasis>ない</emphasis> です。
-    <xref linkend="querysql-namedqueries"/> を参照してください。</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
-    <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
-    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
-    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
-    "from cat_log cat where {cat.mate} = :catId"
+      <itemizedlist>
+        <listitem>
+          <para>SQLクエリ文字列</para>
+        </listitem>
+
+        <listitem>
+          <para>クエリが返すエンティティとSQLテーブルの別名
+          </para>
+        </listitem>
+      </itemizedlist>
+
+      <para>CatがID, NAME, BIRTHDATEのカラムを使ってクラスにマッピングされる場合、
+      上記のクエリはどちらも、要素がCatエンティティであるリストを返します。</para>
+
+      <para>エンティティを別のエンティティに <literal>多対一</literal> でマッピングしている場合は、
+      ネイティブクエリを実行する際に、この別のエンティティを返すことも要求します。
+      さもなければ、データベース固有の「column not found(カラムが見つかりません)」エラーが発生します。
+      * 表記を使用した際は、追加のカラムが自動的に返されますが、
+      次の例のように、<literal>Dog</literal> に <literal>多対一</literal> であることを
+      明示することを私たちは好みます。</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
+]]></programlisting>
+
+      <para>これにより cat.getDog() が正しく機能します。</para>
+    </sect2>
+
+    <sect2>
+      <title>関連とコレクションの操作</title>
+
+      <para>プロキシを初期化するための余分な処理を避けるため、
+      <literal>Dog</literal> の中で即時結合できます。
+      これは <literal>addJoin()</literal> メソッドにより行います。
+      関連もしくはコレクションに結合できます。
+      </para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
+ .addEntity("cat", Cat.class)
+ .addJoin("cat.dog");
+]]></programlisting>
+
+      <para>この例の中で、返される <literal>Cat</literal> は、
+      データベースへの余分処理なしで、
+      完全に初期化された <literal>dog</literal> プロパティを持ちます。
+      結合対象のプロパティへのパスを指定できるように、
+      別名（「cat」）を追加したことに注意してください。
+      コレクションの即時結合も同じようにできます。
+      たとえば、<literal>Cat</literal> が一対多で <literal>Dog</literal>
+      を持っていた場合、次のようになります。</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
+ .addEntity("cat", Cat.class)
+ .addJoin("cat.dogs");
+]]></programlisting>
+
+      <para>現在のところ、
+      Hibernateで使いやすくするためのSQLクエリの拡張なしに、
+      ネイティブクエリで何かを可能にする限界に来ています。
+      同じ型のエンティティを複数返す際や、デフォルトの別名や列名で十分ではない場合に、
+      問題は起こり始めます。      
+      </para>
+    </sect2>
+
+    <sect2>
+      <title>複数エンティティの取得</title>
+
+      <para>ここまでは、リザルトセットのカラム名は、
+      マッピングファイルで指定されたカラム名と同じであると仮定していました。
+      複数のテーブルが同じカラム名を持つ場合があるため、
+      複数テーブルを結合するSQLクエリで問題となる場合があります。</para>
+
+      <para>下記のような（失敗しそうな）クエリでは、
+      カラム別名インジェクション（column alias injection）が必要です。</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
+ .addEntity("cat", Cat.class)
+ .addEntity("mother", Cat.class)
+]]></programlisting>
+
+      <para>このクエリの意図は、
+      １行ごとに２つのCatインスタンス、つまり猫とその母親を返すということです。
+      同じカラム名にマッピングすることにより名前が衝突するため、このクエリは失敗します。
+      ベータベースによっては、返されるカラムの別名が "c.ID"、"c.NAME" などの形式であり、
+      マッピングで指定されたカラム（"ID" と "NAME"）と等しくないため、失敗します。</para>
+
+
+      <para>下記の形式は、カラム名が重複しても大丈夫です。</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
+ .addEntity("cat", Cat.class)
+ .addEntity("mother", Cat.class)
+]]></programlisting>
+
+      <para>このクエリで指定されているものを下記に示します。</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>SQLクエリ文字列
+                （Hibernateがカラムの別名を挿入するためのプレースホルダを含む）</para>
+        </listitem>
+
+        <listitem>
+          <para>クエリによって返されるエンティティ</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>上記で使用している {cat.*} と {mother.*} という表記は、
+      「すべてのプロパティ」を表す省略形です。
+      代わりに、明示的にカラムを列挙してもよいですが、
+      その場合は、Hibernateに各プロパティに対応するSQLカラムの別名を挿入させるべきでしょう。
+      カラムの別名のためのプレースホルダは、テーブルの別名によって修飾されたプロパティ名です。
+      下記の例では、別のテーブル cat_log から
+      マッピングメタデータで定義された Cat とその母親を復元します。
+      もし好むなら、where節の中でも、プロパティの別名を使えます。</para>
+
+      <programlisting><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
+         "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
+         "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
 
 List loggedCats = sess.createSQLQuery(sql)
-    .addEntity("cat", Cat.class)
-    .setLong("catId", catId)
-    .list();]]></programlisting>
+        .addEntity("cat", Cat.class)
+        .addEntity("mother", Cat.class).list()
+]]></programlisting>
 
-    <para><emphasis>注意：</emphasis> もし明示的に各プロパティを列挙するなら、
-    クラス <emphasis>とサブクラス</emphasis> のすべてのプロパティを含めなければなりません！</para>
+      <sect3 id="querysql-aliasreferences" revision="2">
+        <title>別名とプロパティのリファレンス</title>
 
+        <para>多くの場合、上記のような別名インジェクションが必要です。
+        ただし、複合プロパティ、継承識別子、コレクションなどのような
+        より複雑なマッピングと関連するクエリがなければです。
+        ある特定の別名を使用することにより、Hibernateは適切な別名を挿入できます。</para>
 
-    <para>別名に挿入できるものを下表に示します。
-    注意：下表の別名は一例です。
-    それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ちます。</para>
+        <para>別名インジェクションとして使用できるものを下表に示します。
+        注意：下表の別名は一例です。
+        それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ちます。</para>
  
-    <table frame="topbot" id="aliasinjection-summary">
-      <title>別名に挿入する名前</title>
+        <table frame="topbot" id="aliasinjection-summary">
+          <title>別名に挿入する名前</title>
 
-      <tgroup cols="4">
-        <colspec colwidth="1*" />
+          <tgroup cols="3">
+            <colspec colwidth="1*" />
 
-        <colspec colwidth="1*" />
+            <colspec colwidth="1*" />
 
-        <colspec colwidth="2.5*" />
+            <colspec colwidth="2.5*" />
 
-        <thead>
-          <row>
-            <entry>説明</entry>
-            <entry>構文</entry>
-            <entry>例</entry>
-            </row>
-        </thead>
-        <tbody>
-          <row>
-            <entry>単純なプロパティ</entry>
-            <entry><literal>{[aliasname].[propertyname]}</literal></entry>
-            <entry><literal>A_NAME as {item.name}</literal></entry>
-          </row>
-          <row>
-            <entry>複合プロパティ</entry>
-            <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
-            <entry><literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</literal></entry>
-          </row>
-          <row>
-            <entry>エンティティのクラスを識別する値</entry>
-            <entry><literal>{[aliasname].class}</literal></entry>
-            <entry><literal>DISC as {item.class}</literal></entry>
-          </row>
-          <row>
-            <entry>エンティティの全プロパティ</entry>
-            <entry><literal>{[aliasname].*}</literal></entry>
-            <entry><literal>{item.*}</literal></entry>
-          </row>
-          <row>
-            <entry>コレクションのキー</entry>
-            <entry><literal>{[aliasname].key}</literal></entry>
-            <entry><literal>ORGID as {coll.key}</literal></entry>
-          </row>
-          <row>
-            <entry>コレクションのID</entry>
-            <entry><literal>{[aliasname].id}</literal></entry>
-            <entry><literal>EMPID as {coll.id}</literal></entry>
-          </row>
-          <row>
-            <entry>コレクションの要素</entry>
-            <entry><literal>{[aliasname].element}</literal></entry>
-            <entry><literal>XID as {coll.element}</literal></entry>
-            <entry></entry>
-          </row>
-          <row>
-            <entry>コレクションの要素のプロパティ</entry>
-            <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
-            <entry><literal>NAME as {coll.element.name}</literal></entry>
-          </row>
-          <row>
-            <entry>コレクションの要素の全プロパティ</entry>
-            <entry><literal>{[aliasname].element.*}</literal></entry>
-            <entry><literal>{coll.element.*}</literal></entry>
-          </row>
-          <row>
-            <entry>コレクションの全プロパティ</entry>
-            <entry><literal>{[aliasname].*}</literal></entry>
-            <entry><literal>{coll.*}</literal></entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+            <thead>
+              <row>
+                <entry>説明</entry>
+                <entry>構文</entry>
+                <entry>例</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>単純なプロパティ</entry>
+                <entry><literal>{[aliasname].[propertyname]}</literal></entry>
+                <entry><literal>A_NAME as {item.name}</literal></entry>
+              </row>
+              <row>
+                <entry>複合プロパティ</entry>
+                <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
+                <entry><literal>CURRENCY as {item.amount.currency}, VALUE as
+                {item.amount.value}</literal></entry>
+              </row>
+              <row>
+                <entry>エンティティのクラスを識別する値</entry>
+                <entry><literal>{[aliasname].class}</literal></entry>
+                <entry><literal>DISC as {item.class}</literal></entry>
+              </row>
+              <row>
+                <entry>エンティティの全プロパティ</entry>
+                <entry><literal>{[aliasname].*}</literal></entry>
+                <entry><literal>{item.*}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションのキー</entry>
+                <entry><literal>{[aliasname].key}</literal></entry>
+                <entry><literal>ORGID as {coll.key}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションのID</entry>
+                <entry><literal>{[aliasname].id}</literal></entry>
+                <entry><literal>EMPID as {coll.id}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションの要素</entry>
+                <entry><literal>{[aliasname].element}</literal></entry>
+                <entry><literal>XID as {coll.element}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションの要素のプロパティ</entry>
+                <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
+                <entry><literal>NAME as {coll.element.name}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションの要素の全プロパティ</entry>
+                <entry><literal>{[aliasname].element.*}</literal></entry>
+                <entry><literal>{coll.element.*}</literal></entry>
+              </row>
+              <row>
+                <entry>コレクションの全プロパティ</entry>
+                <entry><literal>{[aliasname].*}</literal></entry>
+                <entry><literal>{coll.*}</literal></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect3>
+    </sect2>
+
+    <sect2>
+      <title>管理されていないエンティティの取得</title>
+
+      <para>ネイティブSQLクエリに ResultTransformer を適用できます。
+      下記のように、例えば、管理されていないエンティティを返します。</para>
+
+      <programlisting><![CDATA[sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
+        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]></programlisting>
+
+      <para>このクエリで指定されているものを下記に示します。</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>SQLクエリ文字列</para>
+        </listitem>
+
+        <listitem>
+          <para>結果を変換したもの</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>上記のクエリは、インスタンス化し、NAME と BIRTHDATE の値を
+      対応するプロパティもしくはフィールドに挿入した <literal>CatDTO</literal>
+      のリストを返します。</para>
+    </sect2>
+
+    <sect2>
+      <title>継承の制御</title>
+
+      <para>継承の一部としてマッピングされたエンティティを問い合わせるネイティブSQLクエリは、
+      ベースのクラスとそのすべてのサブクラスのプロパティすべてを含まなければなりません。</para>
+    </sect2>
+
+    <sect2>
+      <title>パラメータ</title>
+
+      <para>ネイティブSQLクエリは、以下のように、
+      名前付きパラメータ（:name）と同様に位置パラメータをサポートします。</para>
+
+      <programlisting><![CDATA[Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
+List pusList = query.setString(0, "Pus%").list();
+     
+query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like :name").addEntity(Cat.class);
+List pusList = query.setString("name", "Pus%").list();          ]]></programlisting>
+    </sect2>
+
   </sect1>
 
   <sect1 id="querysql-namedqueries" revision="3">
@@ -271,6 +438,15 @@ List loggedCats = sess.createSQLQuery(sql)
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
+
+    <para>代わりに、hbmファイル内のリザルトセットのマッピング情報を
+    直接Javaコードの中で使用できます。</para>
+
+    <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .setResultSetMapping("catAndKitten")
+    .list();]]></programlisting>
 
     <sect2 id="propertyresults">
       <title>列と列の別名を明示的に指定するために return-property を使う</title>

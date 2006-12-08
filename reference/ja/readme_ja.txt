@@ -1,1 +1,1 @@
-This translated reference document is v3.1.2.
+This is v3.2.0

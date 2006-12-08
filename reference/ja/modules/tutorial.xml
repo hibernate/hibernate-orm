@@ -6,13 +6,13 @@
         <title>前書き</title>
         
         <para>
-            この章はHibernateを初めて使うユーザへの入門的なチュートリアルです。
+            この章はHibernateを初めて使うユーザ向けの入門的なチュートリアルです。
             インメモリデータベースを使う簡単なコマンドラインアプリケーションから始め、
             一歩一歩わかりやすいやり方で開発を進めます。
         </para>
 
         <para>
-            このチュートリアルはHibernateを初めて使うユーザを意図したものですが、
+            このチュートリアルはHibernateを初めて使うユーザを想定していますが、
             理解するにはJavaとSQLについての知識が必要です。
             これはMichael Gloeglの手によるチュートリアルを下敷きにしていますが、
             ここでサードパーティライブラリと言っているのは、JDK 1.4と5.0用のものです。
@@ -20,7 +20,8 @@
         </para>
 
         <para>
-             チュートリアルのソースコードはHibernateディストリビューションの <literal>doc/reference/tutorial/</literal> にあります。
+             チュートリアルのソースコードはHibernateディストリビューションの 
+             <literal>doc/reference/tutorial/</literal> にあります。
         </para>
 
     </sect1>
@@ -63,7 +64,7 @@
   log4j.jar ]]></programlisting>
 
         <para>
-            これが <emphasis>本ドキュメント記述時点での</emphasis> Hibernateの必要最低限のライブラリです
+            これが <emphasis>本ドキュメント執筆時点での</emphasis> Hibernateの必要最低限のライブラリです
             （メインアーカイブのhibernate3.jarもコピーしていることに注意してください）。
             Hibernateのバージョンによってはさらに必要なライブラリや、不要なライブラリがあるかもしれません。
             Hibernateディストリビューションの <literal>lib/</literal> ディレクトリにある 
@@ -80,7 +81,7 @@
             <title>最初のクラス</title>
             
             <para>
-                最初の永続クラスはいくつかのプロパティを持つ単純なJavaBeanクラスです。
+				最初の永続クラスは、プロパティをいくつか持つシンプルなJavaBeanです：
             </para>
 
             <programlisting><![CDATA[package events;
@@ -233,7 +234,7 @@ public class Event {
                 <literal>EVENTS</literal> テーブルに対して、どのように永続化したりロードしたりするのかを
                 Hibernateに教えてきました。そして個々のインスタンスはテーブルの行として表現されます。
                 それでは引き続きテーブルの主キーに対するユニークな識別子プロパティをマッピングしていきます。
-                さらに、この識別子の扱いに気を使いたくなかったのど同様に、
+                さらに、この識別子の扱いに気を使いたくなかったのと同様に、
                 代理の主キーカラムに対するHibernateの識別子生成戦略を設定します。
             </para>
 
@@ -398,7 +399,7 @@ public class Event {
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
 
         <!-- Enable Hibernate's automatic session context management -->
-        <property name="current_session__class">thread</property>
+        <property name="current_session_context_class">thread</property>
 
         <!-- Disable the second-level cache  -->
         <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
@@ -814,7 +815,6 @@ else if (args[0].equals("list")) {
                 しかし上記のステップに従えば、hbm2ddlが最初に実行されたときにデータベーススキーマを作成し、
                 その後の実行においてもこのスキーマを使用するので、問題は起こらないでしょう。
                 マッピングやデータベーススキーマを変更したときは、もう一度hbm2ddlを有効にしてください。
-                
             </para>
 
         </sect2>
@@ -882,7 +882,6 @@ public class Person {
                 人々がイベントに参加でき、イベントが参加者を持つのは明らかです。
                 扱わなければならない設計の問題は、方向、多重度、コレクションの振る舞いです。
             </para>
-
         </sect2>
 
         <sect2 id="tutorial-associations-unidirset" revision="3">
@@ -976,7 +975,7 @@ public class Person {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working" revision="1">
+        <sect2 id="tutorial-associations-working" revision="2">
             <title>関連を働かせる</title>
 
             <para>
@@ -1053,7 +1052,7 @@ public class Person {
                 <literal>update</literal> の呼び出しは分離オブジェクトを再び永続化します。
                 これは、新しい作業単位(Unit of Work)にバインドすると言えるでしょう。
                 そのため分離の間に加えられたどのような修正もデータベースにセーブできます。
-                実体オブジェクトのコレクションへの修正（追加･削除）も同様にセーブできます。
+                エンティティオブジェクトのコレクションへの修正（追加･削除）も同様にセーブできます。
             </para>
 
             <para>
@@ -1070,7 +1069,8 @@ public class Person {
     Long eventId = mgr.createAndStoreEvent("My Event", new Date());
     Long personId = mgr.createAndStorePerson("Foo", "Bar");
     mgr.addPersonToEvent(personId, eventId);
-    System.out.println("Added person " + personId + " to event " + eventId);]]></programlisting>
+    System.out.println("Added person " + personId + " to event " + eventId);
+}]]></programlisting>
 
             <para>
                 これは同じように重要な2つのクラス、つまり2つのエンティティ間の関連の例でした。
@@ -1128,7 +1128,7 @@ public void setEmailAddresses(Set emailAddresses) {
                 Hibernateにこのコレクションが他のエンティティへの参照を含まず、
                 <literal>String</literal> 型の要素のコレクションを含むことを教えます。
                 （小文字の名前(string)はHibernateのマッピング型またはコンバータであるということです）。
-                復習ですが、<literal>set</literal> 要素の <literal>table</literal> 属性は、
+                繰り返しますが、<literal>set</literal> 要素の <literal>table</literal> 属性は、
                 コレクションのためのテーブル名を指定します。
                 <literal>key</literal> 要素はコレクションテーブルの外部キーカラム名を定義します。
                 <literal>element</literal> 要素の <literal>column</literal> 属性は <literal>String</literal> 
@@ -1193,7 +1193,7 @@ public void setEmailAddresses(Set emailAddresses) {
             <para>
                 次に双方向関連をマッピングします。
                 Javaで両側から人とイベントの関連を動作させます。
-                データベーススキーマは当然変わりませんが、多重度は多対多のままです。
+                もちろん、データベーススキーマは変わりませんが、多重度は多対多のままです。
                 リレーショナルデータベースはネットワークプログラミング言語よりも柔軟なので、
                 ナビゲーションの方向のようなものを必要としません。
                 データはあらゆるの方法で見たり復元できるということです。
@@ -1288,7 +1288,7 @@ public void removeFromEvent(Event event) {
             </para>
 
             <para>
-                <literal>inverse</literal> マッピング属性とはいったいなんでしょうか？
+                <literal>inverse</literal> マッピング属性とはいったい何でしょうか？
                 開発者とJavaにとっては、双方向リンクは単に両側の参照を正しく設定するということです。
                 しかしHibernateは（制約違反を避けるために）SQLの <literal>INSERT</literal> と <literal>UPDATE</literal> 
                 文を正確に変更するための十分な情報を持っていないので、
@@ -1306,7 +1306,7 @@ public void removeFromEvent(Event event) {
         </sect2>
 
         <para>
-             ではこれを小規模なWebアプリケーションにしてみましょう。
+             ではこれを小さなWebアプリケーションにしてみましょう。
         </para>
 
     </sect1>
@@ -1322,11 +1322,11 @@ public void removeFromEvent(Event event) {
              データベースに格納した全てのイベントをリストにでき、さらにHTMLフォームから新しいイベントを入力できるものです。
         </para>
 
-        <sect2 id="tutorial-webapp-servlet">
+        <sect2 id="tutorial-webapp-servlet" revision="1">
             <title>基本的なServletの記述</title>
 
             <para>
-                ソースディレクトリの <literal>events</literal> パッケージに新しいクラスを作成してください。
+                新しいクラスを、ソースディレクトリの <literal>events</literal> パッケージに作成してください。
             </para>
 
             <programlisting><![CDATA[package events;
@@ -1335,17 +1335,8 @@ public void removeFromEvent(Event event) {
 
 public class EventManagerServlet extends HttpServlet {
 
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
     // Servlet code
 }]]></programlisting>
-
-            <para>
-                <literal>dateFormatter</literal> は <literal>Date</literal> オブジェクトと
-                Stringオブジェクトの間の変換を行うツールで、後で必要となります。
-                これはサーブレットのメンバとして1つのフォーマッタしか持たないことを示します。
-            </para>
 
             <para>
                 ServletはHTTPの <literal>GET</literal> リクエストのみを処理するので、
@@ -1355,6 +1346,8 @@ public class EventManagerServlet extends HttpServlet {
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
                      HttpServletResponse response)
         throws ServletException, IOException {
+
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
 
     try {
         // Begin unit of work
@@ -1393,7 +1386,7 @@ public class EventManagerServlet extends HttpServlet {
             <para>
                 最後にリクエストの処理とHTML描画が完了したときに、作業単位(Unit of Work)を終了します。
                 もし処理や描画中に問題が発生した場合、exceptionが投げられてデータベーストランザクションをロールバックします。
-                これにより、 <literal>session-per-request</literal> パターンが完成します。
+                これで <literal>session-per-request</literal> パターンが完了します。
                 全てのサーブレットにトランザクション境界のコードを書く代わりに、サーブレットフィルタに記述することも可能です。
                 <emphasis>Open Session in View</emphasis> と呼ばれるこのパターンについては、
                 HibernateのWebサイトやWikiを参照してください。
@@ -1402,7 +1395,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </sect2>
 
-        <sect2 id="tutorial-webapp-processing">
+        <sect2 id="tutorial-webapp-processing" revision="1">
             <title>処理と描画</title>
 
             <para>
@@ -1429,7 +1422,7 @@ if ( "store".equals(request.getParameter("action")) ) {
 
 // Print page
 printEventForm(out);
-listEvents(out);
+listEvents(out, dateFormatter);
 
 // Write HTML footer
 out.println("</body></html>");
@@ -1438,7 +1431,7 @@ out.close();]]></programlisting>
 
             <para>
                 JavaとHTMLが混在するコーディングスタイルは、より複雑なアプリケーションには適していないでしょう
-                （このチュートリアルでは基本的なHibernateのコンセプトを示しているだけであることを覚えておいてください）。
+                （このチュートリアルでは、基本的なHibernateのコンセプトを示しているだけであることを覚えておいてください）。
                 このコードはHTMLのヘッダーとフッターの記述です。
                 このページには、イベントを入力するHTMLフォームと、データベースにある全てのイベントのリストが表示されます。
                 最初のメソッドはごく単純なHTML出力です。
@@ -1458,7 +1451,8 @@ out.close();]]></programlisting>
                  Hibernateの <literal>Session</literal> を使用して、クエリを実行します。
             </para>
 
-            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+            <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+
     List result = HibernateUtil.getSessionFactory()
                     .getCurrentSession().createCriteria(Event.class).list();
     if (result.size() > 0) {
@@ -1494,12 +1488,15 @@ out.close();]]></programlisting>
 }]]></programlisting>
 
             <para>
-                これでサーブレットが完成しました。
-                サーブレットへのリクエストは、１つの <literal>Session</literal> と <literal>Transaction</literal> で処理されるでしょう。
+                これでサーブレットの完成です。
+                サーブレットへのリクエストは、一つの <literal>Session</literal> と 
+                <literal>Transaction</literal> で処理されるでしょう。
                 最初のスタンドアローンのアプリケーションのように、
                 Hibernateは自動的にこれらのオブジェクトを実行するスレッドに結び付けることができます。
-                このことで開発者はコードのレイヤー分けが自由になり、好みの方法で <literal>SessionFactory</literal> へのアクセスができるようになります。
-                通常、開発者はより洗練されたデザインを使用して、データアクセスのコードをデータアクセス・オブジェクト（DAOパターン）に移動するでしょう。
+                これにより、開発者が自由にコードをレイヤー分けでき、
+                好きな方法で <literal>SessionFactory</literal> へのアクセスができるようになります。
+                通常、開発者はより洗練されたデザインを使用して、データアクセスのコードを
+                データアクセスオブジェクトに移動するでしょう（DAOパターン）。
                 より多くの例は、HibernateのWikiを参照してください。
             </para>
 
@@ -1524,8 +1521,10 @@ out.close();]]></programlisting>
 </target>]]></programlisting>
 
             <para>
-                このターゲットは <literal>hibernate-tutorial.war</literal> というファイルをプロジェクト・ディレクトリに作成します。
-                このファイルはすべてのライブラリと<literal>web.xml</literal> 記述子を含んでおり、プロジェクトのベース・ディレクトリに置かれます。
+                このターゲットは <literal>hibernate-tutorial.war</literal> というファイルを
+                プロジェクトディレクトリに作成します。
+                このファイルはすべてのライブラリと <literal>web.xml</literal> 記述子を含んでおり、
+                プロジェクトのベースディレクトリに置かれることを期待されます。
             </para>
 
             <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -1549,15 +1548,17 @@ out.close();]]></programlisting>
                 Webアプリケーションのコンパイルとデプロイの前に、 <literal>jsdk.jar</literal> という
                 追加のライブラリが必要なことに注意してください。
                 これはJavaサーブレットの開発キットです。
-                もしまだこのライブラリをお持ちで無いなら、Sunのウェブサイトで入手して、ライブラリ・ディレクトリにコピーしてください。
-                これはコンパイルにのみ使用され、WARパッケージからは除外されます。
+                もしまだこのライブラリを持っていないなら、Sunのウェブサイトで入手して、
+                ライブラリディレクトリにコピーしてください。
+                しかし、これはコンパイルにのみ使用され、WARパッケージからは除外されます。
             </para>
 
             <para>
-                ビルドとデプロイのために、プロジェクト・ディレクトリで <literal>ant war</literal> を呼び出し、
-                <literal>hibernate-tutorial.war</literal> ファイルをTomcatの <literal>webapp</literal> ディレクトリにコピーしてください。
-                Tomcatを入手していないのであれば、入手してインストールを行ってください。
-                このアプリケーションのデプロイのためにTomcatの設定を変更する必要はありません。
+                ビルドとデプロイのために、プロジェクトディレクトリで <literal>ant war</literal> を呼び出し、
+                <literal>hibernate-tutorial.war</literal> ファイルをTomcatの <literal>webapp</literal> 
+                ディレクトリにコピーしてください。
+                まだTomcatをインストールしていなければ、ダウンロードして、以下のインストールガイドに従ってください。
+                しかし、このアプリケーションのデプロイするために、Tomcatの設定を変更する必要はありません。
             </para>
 
             <para>
@@ -1582,10 +1583,10 @@ out.close();]]></programlisting>
         </para>
 
         <para>
-            すでにHibernateに対して自信を感じれば、面白そうだと思うトピックを探して、
-            リファレンスドキュメントの目次に目を通してください。
+            もうHibernateに自信があれば、リファレンスドキュメントの目次に目を通して、
+            面白そうだと思うトピックを探してください。
             最も頻繁に質問があるのは、トランザクション処理（<xref linkend="transactions"/>）、
-            フェッチパフォーマンス（<xref linkend="performance"/>）、
+            フェッチのパフォーマンス（<xref linkend="performance"/>）、
             APIの使い方（<xref linkend="objectstate"/>）とクエリ
             （<xref linkend="objectstate-querying"/>）です。
         </para>

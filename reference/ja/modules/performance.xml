@@ -634,11 +634,13 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             考慮しません（キャッシュデータを定期的に期限切れにする設定は出来ます）。
         </para>
         
-        <para>
-            デフォルトでは、HibernateはJVMレベルのキャッシュにEHCacheを使います。（JCSサポートは現在推奨されておらず、
-            Hibernateの将来のバージョンでは削除されるでしょう）。 <literal>hibernate.cache.provider_class</literal> 
-            プロパティに、 <literal>org.hibernate.cache.CacheProvider</literal> を実装したクラスの名前を指定することで、
-            別の実装を選択することも出来ます。
+        <para revision="1">
+            Hibernateが使用するキャッシュ実装は、<literal>hibernate.cache.provider_class</literal> プロパティに
+            <literal>org.hibernate.cache.CacheProvider</literal> を実装したクラス名を指定することで変更できます。
+            Hibernateは多くのオープンソースのキャッシュプロバイダをビルトイン実装で持っています（後にリストがあります）。
+            加えて、前に説明したように、あなた自身が独自の実装をして、それを組み込むことも出来ます。
+            バージョン3.2より前ではEhCacheがデフォルトのキャッシュプロバイダであることに注意してください。
+            バージョン3.2ではこれは当てはまりません。
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">

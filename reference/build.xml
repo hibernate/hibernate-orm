@@ -41,8 +41,7 @@
         <!-- TRANSLATOR: Duplicate this line for your language -->
         <antcall target="lang.all"><param name="lang" value="en"/></antcall>
         <antcall target="lang.all"><param name="lang" value="fr"/></antcall>
-        <!-- TODO: These translations need updating...
-        <antcall target="lang.all"><param name="lang" value="es"/></antcall>
+        <!-- TODO: These translations need updating before we can enable them...
         <antcall target="lang.all"><param name="lang" value="ja"/></antcall>
     	<antcall target="lang.all"><param name="lang" value="ko"/></antcall>
         <antcall target="lang.all"><param name="lang" value="zh-cn"/></antcall>
@@ -54,10 +53,9 @@
             description="Generates a diff report for all translated versions.">
 
         <!-- TRANSLATOR: Duplicate this line for your language -->
-        <antcall target="lang.revdiff"><param name="lang" value="fr"/></antcall>
-        <antcall target="lang.revdiff"><param name="lang" value="es"/></antcall>
-        <antcall target="lang.revdiff"><param name="lang" value="ja"/></antcall>
+		<antcall target="lang.revdiff"><param name="lang" value="fr"/></antcall>
         <antcall target="lang.revdiff"><param name="lang" value="ko"/></antcall>
+		<antcall target="lang.revdiff"><param name="lang" value="ja"/></antcall>
         <antcall target="lang.revdiff"><param name="lang" value="zh-cn"/></antcall>
 
     </target>
@@ -184,6 +182,8 @@
 
     <target name="lang.revdiff"
             description="Reports difference between English and translation (set lang)">
+
+		<mkdir dir="${build.dir}"/>
 
         <taskdef name="revdiff"
             classname="org.hibernate.docproc.revdiff.RevDiffReportTask"

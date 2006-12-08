@@ -184,8 +184,7 @@
             <property name="purchaseDate"/>
             <property name="price"/>
             <property name="quantity"/>
-            <many-to-one name="item" class="eg.Item"/>
-            <!-- class attribute is optional -->
+            <many-to-one name="item" class="eg.Item"/> <!-- class attribute is optional -->
         </composite-element>
     </set>
 </class>]]></programlisting>

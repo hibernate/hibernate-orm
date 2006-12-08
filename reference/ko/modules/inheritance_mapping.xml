@@ -63,6 +63,7 @@
      </subclass>
  </hibernate-mapping>]]></programlisting>
 
+
         <sect2 id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 

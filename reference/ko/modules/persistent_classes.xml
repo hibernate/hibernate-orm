@@ -104,6 +104,7 @@ public class Cat {
                         준수할 네 개의 주요 규칙들이 다음에 있다:
         </para>
 
+
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
             <title>아규먼트 없는 생성자를 구현하라 </title>
 
@@ -228,7 +229,8 @@ public class DomesticCat extends Cat {
         <title><literal>equals()</literal>와 <literal>hashCode()</literal> 구현하기</title>
 
         <para>
-                        만일 당신이 
+                        만일 당신이 다음의 경우라면, 당신은 <literal>equals()</literal>와 <literal>hashCode()</literal> 
+                        메소드들을 오버라이드 시켜야 한다. 
         </para>
         <itemizedlist spacing="compact">
             <listitem>
@@ -244,10 +246,7 @@ public class DomesticCat extends Cat {
                 </para>
             </listitem>
         </itemizedlist>
-        <para>
-                        경우에 당신은 <literal>equals()</literal>와 <literal>hashCode()</literal> 메소드들을 오버라이드 시켜야 한다. 
-        </para>
-        
+
         <para>
             Hibernate는 특정 session 범위 내에서만 persistent identity(데이터베이스 행)과 Java identity의 같음을 보장한다. 
                         따라서 우리가 다른 세션들에서 검색된 인스턴스들을 혼합시키자마자, 우리가 <literal>Set</literal>들에 대해 유의미하게 
@@ -432,7 +431,7 @@ dynamicSession.close()
 
     </sect1>
 
-    <sect1 id="persistent-classes-tuplizers" revision="0">
+    <sect1 id="persistent-classes-tuplizers" revision="1">
         <title>Tuplizer들</title>
 
         <para>
@@ -442,8 +441,8 @@ dynamicSession.close()
                         그런 데이터 구조로부터 값들을 추출시키는 방법 그리고 그런 데이터구조 속으로 값들을 삽입시키는 방법을 알고 있는 것이다. 
                         예를 들어, POJO 엔티티 모드의 경우, 대응하는 tuplizer는 그것의 생성자를 통해 POJO를 생성시키는 방법, 그리고 정의된
                         프로퍼티 접근자들을 사용하여 POJO 프로퍼티들에 접근하는 방법을 안다. 
-            <literal>org.hibernate.tuple.EntityTuplizer</literal> 인터페이스와 
-            <literal>org.hibernate.tuple.ComponentTuplizer</literal> 인터페이스에 의해 표현되는 두 가지 고급 유형의 
+            <literal>org.hibernate.tuple.entity.EntityTuplizer</literal> 인터페이스와 
+            <literal>org.hibernate.tuple.component.ComponentTuplizer</literal> 인터페이스에 의해 표현되는 두 가지 고급 유형의 
             Tuplizer들이 존재한다. <literal>EntityTuplizer</literal>들은 엔티티들에 관해서는 위에 언급된 계약들을 매핑할 
                         책임이 있는 반면에, <literal>ComponentTuplizer</literal>들은 컴포넌트들에 대해서도 동일한 것을 행한다.
         </para>
@@ -476,7 +475,7 @@ dynamicSession.close()
 
 
 public class CustomMapTuplizerImpl
-        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {
     // override the buildInstantiator() method to plug in our custom map...
     protected final Instantiator buildInstantiator(
             org.hibernate.mapping.PersistentClass mappingInfo) {

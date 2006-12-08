@@ -317,10 +317,7 @@
                         않다.
         </para>
 
-        <para>
-            However, it is often desirable to keep your persistence layer portable between non-managed
-            resource-local environments, and systems that can rely on JTA but use BMT instead of CMT.
-            In both cases you'd use programmatic transaction demaracation.            
+        <para>           
                         하지만, CMT 대신 BMT를 사용하는 JTA에 의존할 수 있는 시스템들, 그리고  관리되지 않는 resource-local 환경들 사이에서 
                         당신의 영속 계층에 이식성을 유지시키는 것이 자주 희망된다. 두 경우들에서 당신은 프로그램 상의 트랜잭션 경계설정을 사용할 것이다.
             Hibernate는 당신의 배치 환경의 고유한 트랜잭션 시스템 속으로 변환되는 <literal>Transaction</literal>이라 명명되는 
@@ -488,7 +485,7 @@ catch (RuntimeException e) {
     tx.rollback();
     throw e; // or display error message
 }]]></programlisting>
-            
+
             <para>
                 CMT의 경우, 트랜잭션 관할[경계 설정]은 프로그램 상이 아닌, session bean 배치 디스크립터들 속에서 행해진다. 
                                 그러므로 코드는 다음으로 감소된다:
@@ -621,7 +618,7 @@ try {
     sess.getTransaction().commit()
 }
 catch (RuntimeException e) {
-        sess.getTransaction().rollback();
+    sess.getTransaction().rollback();
     throw e; // or display error message
 }
 finally {
@@ -716,7 +713,6 @@ foo.setProperty("bar");
 session.flush();    // Only for last transaction in conversation
 t.commit();         // Also return JDBC connection
 session.close();    // Only for last transaction in conversation]]></programlisting>
-
             <para>
                 <literal>foo</literal> 객체는 그것이 로드되었던 <literal>Session</literal>이 어느 것인지를 여전히 알고 있다.
                                 이전 세션 상에서 하나의 새로운 데이터베이스 트랜잭션을 시작하는 것은 하나의 새로운 커넥션을 획득하고 그 세션을 소비한다.

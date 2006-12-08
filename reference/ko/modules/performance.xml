@@ -576,11 +576,24 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                         만료되도록 구성되어 있을지라도) 또 다른 어플리케이션에 의해 영속 저장소에 대해 행해진 변경들을 결코 알지 못한다.
         </para>
         
-        <para>
+        <para revision="1">
                         디폴트로, Hibernate는 JVM-레벨의 캐싱에 EHCache를 사용한다. (JCS 지원은 이제 진부하게 되었고 Hibernate의 장래 버전에서 
                         제거될 것이다.) 당신은 <literal>hibernate.cache.provider_class</literal> 프로퍼티를 사용하여 
             <literal>org.hibernate.cache.CacheProvider</literal>를 구현하는 클래스의 이름을 지정함으로써 다른 구현을 선택할 수도 
                         있다.
+            You have the option to tell Hibernate which caching implementation to use by
+            specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal>
+            using the property <literal>hibernate.cache.provider_class</literal>.  Hibernate
+            comes bundled with a number of built-in integrations with open-source cache providers
+            (listed below); additionally, you could implement your own and plug it in as
+            outlined above.  Note that versions prior to 3.2 defaulted to use EhCache as the
+            default cache provider; that is no longer the case as of 3.2.
+                        당신은 <literal>hibernate.cache.provider_class</literal> 프로퍼티를 사용하여 
+            <literal>org.hibernate.cache.CacheProvider</literal>를 구현하는 클래스의 이름을 지정함으로써 어느 캐싱 구현을 
+                        사용할 것인지를 Hibernate에게 알려주는 옵션을 갖는다. Hibernate는 (아래에 열거된) 오픈-소스 프로바이더들을 가진 
+                        많은 빌드되어 있는 통합들을 번들로 갖고 있다; 추가적으로 당신은 위에서 언급했듯이 그것에 당신 자신의 것을 구현할 수 있고 그것에 
+                        플러그 시킬 수 있다. 3.2 이번 버전들은 디플트 캐시 프로바이더로서 EhCache를 사용하도록 디포릍로 내장되어 있음을 노트하라; 
+                        버전 3.2의 경우에 그것은 더이상 디폴트 내장이 아니다.
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">

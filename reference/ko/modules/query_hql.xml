@@ -1,5 +1,5 @@
 <chapter id="queryhql">
-    <title>HQL: Hibernate Query Language</title>
+    <title>HQL: 하이버네이트 질의 언어(Hibernate Query Language)</title>
     
     <para>
         Hibernate는 (아주 의도적으로) SQL과 매우 흡사하게 보이는 극히 강력한 질의 언어를 구비하고 있다. 그러나 그 구문에 의해 우롱당하지 말라; 
@@ -126,7 +126,7 @@
         <programlisting><![CDATA[from Cat as cat 
     left join cat.kittens as kitten 
         with kitten.bodyWeight > 10.0]]></programlisting>
-             
+
         <para>
                         게다가, "fetch" join은 값들을 가진 콜렉션들이나 연관관계들이 한 개의 select를 사용하여, 그것들의 부모 객체들에 따라 초기화 되는 
                         것을 허용해준다. 이것은 콜렉션의 경우에 특히 유용하다. 그것은 연관관계들과 콜렉션들에 대한 매핑 파일의 outer join과 lazy 선언들을 
@@ -147,7 +147,7 @@
     inner join fetch cat.mate
     left join fetch cat.kittens child
     left join fetch child.kittens]]></programlisting>
-            
+    
         <para>
             (비록 <literal>scroll()</literal>이 사용될 수 있을지라도) <literal>fetch</literal> 구조체는 
             <literal>iterate()</literal>를 사용하여 호출되는 질의들 내에 사용될 수 없음을 노트하라. 이들 오퍼레이션들이 결과 행들에 
@@ -167,9 +167,9 @@
         
         <programlisting><![CDATA[from Document fetch all properties order by name]]></programlisting>
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
-            
+
     </sect1>
-    
+
     <sect1 id="queryhql-joins-forms">
         <title>join 구문의 형식들</title>
 
@@ -566,6 +566,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
+                    <literal>cast(... as ...)</literal>, 여기서 두번 째 아규먼트는 Hibernate 타입의 이름이고, 
+                    ANSI <literal>cast()</literal>와 <literal>extract()</literal>가 기반 데이터베이스에 의해 
+                                        지원될 경우에는 <literal>extract(... from ...)</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                                         조인된 인덱싱된 콜렉션의 alias들에 적용되는, HQL <literal>index()</literal> 함수 
                 </para>
             </listitem>
@@ -578,27 +585,8 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    <literal>cast(... as ...)</literal>, 여기서 두번 째 아규먼트는 Hibernate 타입의 이름이고, 
-                    ANSI <literal>cast()</literal>와 <literal>extract()</literal>가 기본 데이터베이스에 의해 지원될 경우에는
-                    <literal>extract(... from ...)</literal>
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                                        조인된 인덱싱된 콜렉션의 alias들을 적용하는 HQL <literal>index()</literal> 함수
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                                        콜렉션 값 경로 표현식들을 취하는 HQL 함수들: <literal>some, all, exists, any, in</literal>을 사용하여 
-                                        양이 한정될 수 있는 특별한 <literal>elements()</literal> 및 <literal>indices</literal> 함수들과 함께 
-                    <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal> 함수들.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
                     <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, 
-                    <literal>sin()</literal>과 같이 임의의 데이터베이스-지원 SQL 스칼라 함수
+                    <literal>sin()</literal>과 같이 임의의 데이터베이스 지원 SQL 스칼라 함수
                 </para>
             </listitem>
             <listitem>
@@ -866,6 +854,10 @@ from Cat as cat]]></programlisting>
 
         <para>
             select 리스트 내에 있는 하나 이상의 표현식을 가진 서브질의들의 경우에 당신은 tuple 생성자를 사용할 수 있다:
+        </para>
+
+        <para>
+            select 목록 내에 하나 이상의 표현식을 가진 서브질의들의 경우, 당신은 튜플(tuple) 구조를 사용할 수 있다:
         </para>
         
         <programlisting><![CDATA[from Cat as cat 

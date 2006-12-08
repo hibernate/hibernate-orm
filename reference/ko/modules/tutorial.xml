@@ -1,18 +1,23 @@
 <chapter id="tutorial">
     <title>Hibernate 개요</title>
     
-    <sect1 id="tutorial-intro">
+    <sect1 id="tutorial-intro" revision="1">
         <title>머리말</title>
         
         <para>
                         이 장은 Hibernate 초심자를 위한 개론적인 튜토리얼이다.  우리는 메모리-내 데이터베이스를  
                         사용하는 간단한 명령 라인 어플리케이션으로 시작하고 단계들을 이해하도록 쉽게 그것을 개발한다.
-
         </para>
 
         <para>
                         이 튜토리얼은 Hibernate 신규 사용자들을 의도하고 있지만 Java와 SQL 지식을 필요로 한다. 
-                        그것은 Michael Gloegl이 작성한 튜토리얼에 기초한다.
+                        그것은 Michael Gloegl이 작성한 튜토리얼에 기초하며, 우리가 명명하는 제 3의 라이브러리들은
+            JDK 1.4와 5.0 버전용이다. 당신은 JDK1.3에 대해 다른 라이브러리들을 필요로 할 수도 있다.
+        </para>
+
+        <para>
+                        튜토리얼용 소스는 <literal>doc/reference/tutorial/</literal> 디렉토리 내에 있는
+                        배포본 내에 포함되어 있다.
         </para>
 
     </sect1>
@@ -62,14 +67,16 @@
                         다음으로 우리는 우리가 데이터베이스 속에 저장시키고자 원하는 이벤트를 표현하는 한 개의 클래스를 생성시킨다.
         </para>
       
-        <sect2 id="tutorial-firstapp-firstclass">
+        <sect2 id="tutorial-firstapp-firstclass" revision="1">
             <title>첫 번째 클래스</title>
             
             <para>
                                 우리의 첫 번째 영속 클래스는 몇몇 프로퍼티들을 가진 간단한 자바빈즈 클래스이다:
             </para>
 
-            <programlisting><![CDATA[import java.util.Date;
+             <programlisting><![CDATA[package events;
+
+import java.util.Date;
 
 public class Event {
     private Long id;
@@ -77,7 +84,7 @@ public class Event {
     private String title;
     private Date date;
 
-    Event() {}
+    public Event() {}
 
     public Long getId() {
         return id;
@@ -107,18 +114,19 @@ public class Event {
             <para>
                                 당신은 이 클래스가 프로퍼티 getter와 setter 메소드들에 대한 표준 자바빈즈 명명법들 뿐만 아니라 필드들에 대한 
                 private 가시성을 사용하고 있음을 알 수 있다. 이것은 권장되는 설계이지만, 필수적이지는 않다. Hibernate는 
-                                또한 필드들에 직접 접근할 수 있으며, accessor 메소드들의 이점은 강건한 리팩토링이다.
+                                또한 필드들에 직접 접근할 수 있으며, accessor 메소드들의 이점은 강건한 리팩토링이다. 아규먼트 없는 생성자는 
+                reflection을 통해 이 클래스의 객체를 초기화 시킬 필요가 있다.
             </para>
 
             <para>
-                <literal>id</literal> 프로퍼티는 특별한 이벤트를 위한 유일 식별자를 소유한다. 만일 우리가 Hibernate의 
-                전체 특징을 사용하고자 원할 경우 모든 영속 엔티티 클래스들(보다 덜 중요한 종속 클래스들 또한 존재한다)은 그런 
-                식별자 프로퍼티를 필요로 할 것이다. 사실 대부분의 어플리케이션들(특히 웹 어플리케이션들)은 식별자에 의해 
-                객체들을 구분지을 필요가 있어서, 당신은  이것을 어떤 제한이라기 보다는 하나의 특징으로 간주할 것이다. 하지만 
-                우리는 대개 객체의 항등(identity)를 처리하지 않으므로, setter 메소드는 private이어야 한다. 객체가 저장될 때, 
-                Hibernate는 단지 식별자를 할당할 것이다. 당신은 Hibernate가 public, private, protected 접근자 메소드들 
-                뿐만 아니라 (public, private, protected) 필드들에도 직접 접근할 수 있음을 알 수 있다. 선택은 당신에게 달려
-                있으며, 당신은 당신의 어플리케이션 설계에 적합하도록 그것을 부합시킬 수 있다.
+                <literal>id</literal> 프로퍼티는 특별한 이벤트를 위한 유일 식별자를 소유한다. 모든 영속 엔티티 클래스들
+                (보다 덜 중요한 종속 클래스들도 존재한다)은  우리가 Hibernate의 전체 특징 집합을 사용하고자 원할 경우에 
+                                그런 식별자 프로퍼티를 필요로 할 것이다. 사실 대부분의 어플리케이션들(특히 웹 어플리케이션들)은 식별자에 의해 
+                                객체들을 구분지을 필요가 있어서, 당신은  이것을 어떤 제약점이라기 보다는 하나의 특징으로 간주할 것이다. 하지만 
+                                우리는 대개 객체의 항등(identity)를 처리하지 않으므로, setter 메소드는 private이어야 한다. 객체가 저장될 때, 
+                Hibernate는 단지 식별자들을 할당할 것이다. 당신은 Hibernate가 public, private, protected 접근자 메소드들 
+                                뿐만 아니라 (public, private, protected) 필드들에도 직접 접근할 수 있음을 알 수 있다. 선택은 당신에게 달려
+                                있으며, 당신은 당신의 어플리케이션 설계에 적합하도록 그것을 부합시킬 수 있다.
             </para>
 
             <para>
@@ -128,7 +136,7 @@ public class Event {
             </para>
 
             <para>
-                                이 Java 노스 파일을 개발 폴더 내의 <literal>src</literal>로 명명된 디렉토리 속에 있는 위치지워라. 이제
+                                이 Java 소스 파일을 개발 폴더 내의 <literal>src</literal>로 명명된 디렉토리 속에 있는 위치지워라. 이제
                                 그 디렉토리는 다음과 같을 것이다:
             </para>
 
@@ -136,7 +144,8 @@ public class Event {
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java]]></programlisting>
+  +events
+    Event.java]]></programlisting>
 
             <para>
                                 다음 단계에서, 우리는 Hiberante에게 이 영속 클래스에 대해 알려 준다.
@@ -144,8 +153,8 @@ public class Event {
                 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-mapping">
-            <title>매핑 파일</title>
+        <sect2 id="tutorial-firstapp-mapping" revision="1">
+            <title>The mapping file</title>
 
             <para>
                 Hibernate는 영속 크래스들에 대한 객체들을 로드시키고 저장시키는 방법을 알 필요가 있다. 
@@ -189,7 +198,7 @@ public class Event {
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
 
     </class>
 
@@ -204,9 +213,9 @@ public class Event {
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
         <id name="id" column="EVENT_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
     </class>
 
@@ -230,9 +239,9 @@ public class Event {
             <programlisting><![CDATA[
 <hibernate-mapping>
 
-    <class name="Event" table="EVENTS">
+    <class name="events.Event" table="EVENTS">
         <id name="id" column="EVENT_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
         <property name="date" type="timestamp" column="EVENT_DATE"/>
         <property name="title"/>
@@ -242,7 +251,9 @@ public class Event {
             
             <para>
                 <literal>id</literal> 요소의 경우처럼, <literal>property</literal> 요소의 <literal>name</literal> 
-                                속성은 사용할 getter 및 setter 메소드들이 어느 것인지를 Hibernate에게 알려준다. 
+                                속성은 사용할 getter 및 setter 메소드들이 어느 것인지를 Hibernate에게 알려준다. 따라서 이 경우에 Hibernate는 
+                <literal>getDate()/setDate()</literal> 뿐만 아니라 <literal>getTitle()/setTitle()</literal>을 
+                                찾게 될 것이다.
             </para>
 
             <para>
@@ -262,8 +273,9 @@ public class Event {
                                 그 자체를 결정하려고 시도할 것이다. 몇몇 경우들에서 (Java 클래스에 대한 Reflection을 사용하는) 이 자동적인 검출은 
                                 당신이 예상하거나 필요로 하는 디폴트를 갖지 않을 수도 있다. 이것은 <literal>date</literal> 프로퍼티를 가진 
                                 경우이다. Hibernate는  그 프로퍼티가 SQL <literal>date</literal> 컬럼, <literal>timestamp</literal> 
-                                컬럼 또는 <literal>time</literal> 컬럼 중 어느 것으로 매핑되어야 하는지를 알 수가 없다. 우리는  <literal>timestamp</literal>를 
-                                가진 프로퍼티를 매핑함으로써 전체 날짜와 시간 정보를 보존하고 싶다고 선언한다.
+                                컬럼 또는 <literal>time</literal> 컬럼 중 어느 것으로 매핑되어야 하는지를 알 수가 없다. 우리는  
+                <literal>timestamp</literal> 컨버터를 가진 프로퍼티를 매핑함으로써 전체 날짜와 시간 정보를 보존하고 싶다고 
+                                선언한다.
             </para>
 
             <para>
@@ -277,8 +289,9 @@ public class Event {
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java
-  Event.hbm.xml]]></programlisting>
+  +events
+    Event.java
+    Event.hbm.xml]]></programlisting>
 
              <para>
                                 우리는 Hibernate의 메인 구성을 계속 행한다.
@@ -299,7 +312,7 @@ public class Event {
             <para>
                                 개발 디렉토리의 루트에 <literal>data</literal>로 명명된 디렉토리를 생성시켜라 - 이  디렉토리는 
                 HSQL DB가 그것의 데이터 파일들을 저장하게 될 장소이다. 이제 이 데이터 디렉토리에서 
-                <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal>를 실행시켜서 
+                <literal>java -classpath ../lib/hsqldb.jar org.hsqldb.Server</literal>를 실행시켜서 
                                 데이터베이스를 시작시켜라. 당신은 그것이 시작되고 이것은 우리의 어플리케이션이 나중에 연결하게 될 장소인, 
                                 하나의 TCP/IP 소켓에 바인드 되는 것을 볼 수 있다. 만일 이 튜토리얼 동안에 당신이 새 데이터베이스로 
                                 시작하고자 원할 경우, HSQL DB를 셧다운시키고(왼도우에서 <literal>CTRL + C</literal>를 눌러라), 
@@ -332,18 +345,21 @@ public class Event {
 
         <!-- Database connection settings -->
         <property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
-        <property name="connection.url">jdbc:hsqldb:data/tutorial</property>
+        <property name="connection.url">jdbc:hsqldb:hsql://localhost</property>
         <property name="connection.username">sa</property>
         <property name="connection.password"></property>
 
         <!-- JDBC connection pool (use the built-in) -->
         <property name="connection.pool_size">1</property>
 
-        <!-- For a HSQL 1.8 in-memory database, this is required -->
-        <property name="connection.shutdown">true</property>
-
         <!-- SQL dialect -->
         <property name="dialect">org.hibernate.dialect.HSQLDialect</property>
+
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="current_session_context_class">thread</property>
+
+        <!-- Disable the second-level cache  -->
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
 
         <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>
@@ -351,7 +367,7 @@ public class Event {
         <!-- Drop and re-create the database schema on startup -->
         <property name="hbm2ddl.auto">create</property>
 
-        <mapping resource="Event.hbm.xml"/>
+        <mapping resource="events/Event.hbm.xml"/>
 
     </session-factory>
 
@@ -382,7 +398,7 @@ public class Event {
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-ant">
+        <sect2 id="tutorial-firstapp-ant" revision="1">
             <title>Ant로 빌드하기</title>
 
             <para>
@@ -392,16 +408,6 @@ public class Event {
                                 참조하길 바란다. 당신이 Ant를 설치한 후에, 우리는 빌드파일 생성을 시작할 수 있다. 그것은 <literal>build.xml</literal>로 
                                 명명되고 개발 디렉토리 속에 직접 위치될 것이다.
             </para>
-
-            <note>
-                <title>Ant 설치</title>
-                <para>
-                                        디폴트로 Ant 배포본은 (FAQ에 설명되었듯이) 깨어져 있으며, 예를 들어, 만일 당신이 당신의 빌드 파일 내부에서 
-                    JUnit를 사용하고자 원할 경우 당신에 의해 정정되어야 한다. JUnit 태스크 작업을 행하기 위해(우리는 이 
-                                        튜토리얼에서 그것을 필요로 하지 않을 것이다), junit.jar를 <literal>ANT_HOME/lib</literal>에 복사하거나 
-                    <literal>ANT_HOME/lib/ant-junit.jar</literal> 플러그인 스텁을 제거하라.
-                </para>
-            </note>
 
             <para>
                                 기본 빌드 파일은 다음과 같다: 
@@ -460,7 +466,7 @@ Total time: 1 second ]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-helpers" revision="1">
+        <sect2 id="tutorial-firstapp-helpers" revision="3">
             <title>시작과 helper들</title>
 
             <para>
@@ -478,12 +484,14 @@ Total time: 1 second ]]></programlisting>
                                 유용하며, 우리는 현재의 작업 단위를 현재의 쓰레드와 연관지워 유지한다. 구현을 살펴보자: 
             </para>
 
-            <programlisting><![CDATA[import org.hibernate.*;
+            <programlisting><![CDATA[package util;
+
+import org.hibernate.*;
 import org.hibernate.cfg.*;
 
 public class HibernateUtil {
 
-    public static final SessionFactory sessionFactory;
+    private static final SessionFactory sessionFactory;
 
     static {
         try {
@@ -496,25 +504,10 @@ public class HibernateUtil {
         }
     }
 
-    public static final ThreadLocal session = new ThreadLocal();
-
-    public static Session getCurrentSession() throws HibernateException {
-        Session s = (Session) session.get();
-        // Open a new Session, if this thread has none yet
-        if (s == null) {
-            s = sessionFactory.openSession();
-            // Store it in the ThreadLocal variable
-            session.set(s);
-        }
-        return s;
+    public static SessionFactory getSessionFactory() {
+        return sessionFactory;
     }
 
-    public static void closeSession() throws HibernateException {
-        Session s = (Session) session.get();
-        if (s != null)
-            s.close();
-        session.set(null);
-    }
 }]]></programlisting>
 
             <para>
@@ -545,9 +538,11 @@ public class HibernateUtil {
 +lib
   <Hibernate and third-party libraries>
 +src
-  Event.java
-  Event.hbm.xml
-  HibernateUtil.java
+  +events
+    Event.java
+    Event.hbm.xml
+  +util
+    HibernateUtil.java
   hibernate.cfg.xml
 +data
 build.xml]]></programlisting>
@@ -567,7 +562,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="2">
+        <sect2 id="tutorial-firstapp-workingpersistence" revision="4">
             <title>객체 로딩과 객체 저장</title>
 
             <para>
@@ -575,10 +570,12 @@ build.xml]]></programlisting>
                                 메소드를 가진 한 개의 <literal>EventManager</literal> 클래스를 작성한다: 
             </para>
 
-            <programlisting><![CDATA[import org.hibernate.Transaction;
+            <programlisting><![CDATA[package events;
 import org.hibernate.Session;
 
 import java.util.Date;
+
+import util.HibernateUtil;
 
 public class EventManager {
 
@@ -589,28 +586,24 @@ public class EventManager {
             mgr.createAndStoreEvent("My Event", new Date());
         }
 
-        HibernateUtil.sessionFactory.close();
+        HibernateUtil.getSessionFactory().close();
     }
 
-}]]></programlisting>
+    private void createAndStoreEvent(String title, Date theDate) {
 
-            <para>
-                                우리는 명령 라인으로부터 몇몇 아규먼트들을 읽어들이고, 만일 첫 번째 아규먼트가 "store"이면, 우리는 
-                                새로운 Event를 생성시키고 저장시킨다:
-            </para>
+        Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
-            <programlisting><![CDATA[private void createAndStoreEvent(String title, Date theDate) {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+        session.beginTransaction();
 
-    Event theEvent = new Event();
-    theEvent.setTitle(title);
-    theEvent.setDate(theDate);
+        Event theEvent = new Event();
+        theEvent.setTitle(title);
+        theEvent.setDate(theDate);
 
-    session.save(theEvent);
+        session.save(theEvent);
 
-    tx.commit();
-    HibernateUtil.closeSession();
+        session.getTransaction().commit();
+    }
+
 }]]></programlisting>
 
             <para>
@@ -621,22 +614,31 @@ public class EventManager {
             </para>
 
             <para>
-                <literal>Session</literal>은 한 개의 작업 단위이다. 당신은 우리가 추가적인 API, <literal>Transaction</literal>dmf 
-                                갖고 있음에 놀랐을 수도 있다. 이것은 작업 단위가 한 개의 데이터베이스 트랜잭션보다 "더 긴" 경우일 수 있음을 의미한다 
-                -웹 어플리케이션 속에서 여러 개의 Http 요청/응답 주기들(예를 들면 마법사 대화상자)에 걸치는 작업 단위를 상상하라.
-                                지금 우리는 그것들을 간단하게 유지할 것이고 <literal>Session</literal>과 <literal>Transaction</literal> 
-                                사이에 한 개의 one-to-one 입상을 가정할 것이다. 
+                <literal>Session</literal>은 한 개의 작업 단위이다. 지금부터 우리는 단숨함을 유지할 것이고 
+                Hibernate <literal>Session</literal>과 데이터베이스 트랜잭션 사이의 일-대-일 과립형(granularity)을 가정할 것이다.
+                                실제 기반 트랜잭션 시스템으로부터 우리의 소스를 은폐시키기 위해(이 경우 통상의 JDBC이지만, 그것은 또한 JTA에도 실행된다) 
+                                우리는  Hibernate <literal>Session</literal> 상에서 이용 가능한 <literal>Transaction</literal> API를 
+                                사용한다.
             </para>
 
             <para>
-                <literal>Transaction.begin()</literal>과 <literal>commit()</literal>은 무엇을 행하는가? 
-                                잘못되는 경우들에서 <literal>rollback()</literal>은 어디에 있는가? Hibernate 
-                <literal>Transaction</literal> API는 실제 옵션이지만, 우리는 편의와 이식성을 위해 그것을 사용한다.
-                (예를 들어 <literal>session.connection.commit()</literal>을 호출함으로써)만일 당신 자신이 
-                                데이터베이스 트랜잭션을 처리했다면, 당신은 이 직접적인 관리되지 않는 JDBC로 특별한 배치 환경에 그 코드를 
-                                바인드시켰다. 당신의 Hibernate 구성 속에서 <literal>Transaction</literal>을 위한 팩토리를 설정함으로써, 
-                                당신은 당신의 영속 계층을 어디에서나 배치할 수 있다. 트랜잭션 처리와 관할에 대한 추가 정보는 
-                <xref linkend="transactions"/>를 살펴보라. 우리는 또한 이 예제에서 오류 핸들링과 롤백을 생략했다.
+                <literal>sessionFactory.getCurrentSession()</literal>은 무엇을 행하는가? 먼저 
+                                당신은 당신이 (<literal>HibernateUtil</literal> 덕분에 쉽게) <literal>SessionFactory</literal>을 
+                                당신이 소유하고 있다면, 원하는 만큼 어디서든 여러번 그것을 호출할 수 있다. 
+                <literal>getCurrentSession()</literal> 메소드는 항상 "현재의" 작업 단위를 반환한다. 우리가 
+                <literal>hibernate.cfg.xml</literal> 내에서 이 매커니즘에 대한 구성 옵션을 "thread"로 전환시켰음을 기억하는가?
+                                그러므로 현재 작업 단위의 영역은 우리의 어플리케이션을 실행시키는 현재의 Java 쓰레드이다. 하지만 이것은 
+                                전부가 진실은 아니다. 그것이 처음으로 필요로 되고, <literal>getCurrentSession()</literal>을 첫번째로 
+                                호출할 때 <literal>Session</literal>이 시작된다. 그때 현째의 쓰레드에 대해 Hibernate에 의해 바인드 된다. 
+                                트랜잭션이 종료될 때 커밋 되거나 롤백되고, Hibernate는 또한 쓰레드로부터 <literal>Session</literal>을 
+                                바인드 해제시키고 당신을 위해 그것을 닫는다. 만일 당신이 <literal>getCurrentSession()</literal>을 다시 
+                                호출한다면, 당신은  새로운 <literal>Session</literal>을 얻고 새로운 작업단위를 시작할 수 있다. 이 
+                <emphasis>thread-bound</emphasis> 프로그래밍 모형은 Hibernate를 사용하는 가장 대중적인 방법이다.
+            </para>
+
+            <para>
+                                트랜잭션 핸들링과 경계구분에 대한 추가 정보는 <xref linkend="transactions"/>을 살펴보라. 
+                                우리는 또한 앞의 예제에서 임의의 오류 처리와 롤백을 생략했다.
             </para>
 
             <para>
@@ -644,7 +646,7 @@ public class EventManager {
             </para>
 
             <programlisting><![CDATA[<target name="run" depends="compile">
-    <java classname="EventManager" classpathref="libraries">
+    <java fork="true" classname="events.EventManager" classpathref="libraries">
         <classpath path="${targetdir}"/>
         <arg value="${action}"/>
     </java>
@@ -691,13 +693,14 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+
+    session.beginTransaction();
 
     List result = session.createQuery("from Event").list();
 
-    tx.commit();
-    session.close();
+    session.getTransaction().commit();
 
     return result;
 }]]></programlisting>
@@ -722,9 +725,9 @@ else if (args[0].equals("list")) {
                 </listitem>
                 <listitem>
                     <para>
-                                                이제 당신의 <literal>hibernate.cfg.xml</literal> 파일 속에서 프로퍼티를 주석처리함으로써 hbm2ddl을 
-                                                사용불가능하게 하라. 대개 당신은 지속되는 단위 테스팅에서 그것을 사용 가능하게 내버려두어도 되지만, 또 다른 
-                        hbm2ddl의 실행은 당신이 저장했던 모든 것을 <emphasis>드롭</emphasis>시킬 것이다 - <literal>create</literal>
+                                                이제 당신의 <literal>hibernate.cfg.xml</literal> 파일 속에서 그 프로퍼티를 주석처리함으로써 hbm2ddl을 
+                                                사용불가능하게 하라. 대개 당신은 지속되는 단위 테스팅에서는 그것을 사용 가능하게 내버려두어도 되지만, 또 다른 
+                        hbm2ddl의 실행은 당신이 저장했던 모든 것을 <emphasis>drop</emphasis>시킬 것이다 - <literal>create</literal>
                                                 구성 설정은 실제로 "스키마로부터 모든 테이블들을 드롭시키고 나서, SessionFactory가 빌드될 때 모든 테이블들을 
                                                 다시 생성시키는 것"으로 변환된다.
                     </para>
@@ -755,35 +758,38 @@ else if (args[0].equals("list")) {
                         우리는 우리의 어플리케이션에 사람들을 추가하고 그들이 참여하는 이벤트들의 목록을 저장할 것이다.
         </para>
 
-        <sect2 id="tutorial-associations-mappinguser">
+        <sect2 id="tutorial-associations-mappinguser" revision="1">
             <title>Person 클래스 매핑하기</title>
 
             <para>
                                 클래스의 첫 번째 장면은 간단하다: 
             </para>
 
-            <programlisting><![CDATA[public class Person {
+            <programlisting><![CDATA[package events;
+
+public class Person {
 
     private Long id;
     private int age;
     private String firstname;
     private String lastname;
 
-    Person() {}
+    public Person() {}
 
     // Accessor methods for all properties, private setter for 'id'
 
 }]]></programlisting>
 
             <para>
-                <literal>Person.hbm.xml</literal>로 명명된 새로운 매핑 파일을 생성시켜라: 
+                <literal>Person.hbm.xml</literal>로 명명되는 새로운 매핑 파일을 생성시켜라
+                (맨위에 DTD 참조를 잊지말라):
             </para>
 
             <programlisting><![CDATA[<hibernate-mapping>
 
-    <class name="Person" table="PERSON">
+    <class name="events.Person" table="PERSON">
         <id name="id" column="PERSON_ID">
-            <generator class="increment"/>
+            <generator class="native"/>
         </id>
         <property name="age"/>
         <property name="firstname"/>
@@ -796,9 +802,8 @@ else if (args[0].equals("list")) {
                                 마지막으로 새로운 매핑을 Hibernate의 구성에 추가하라: 
             </para>
 
-            <programlisting><![CDATA[        <mapping resource="Event.hbm.xml"/>
-        <mapping resource="Person.hbm.xml"/>
-]]></programlisting>
+            <programlisting><![CDATA[<mapping resource="events/Event.hbm.xml"/>
+<mapping resource="events/Person.hbm.xml"/>]]></programlisting>
 
             <para>
                                 이제 우리는 이들 두 개의 엔티티들 사이에 한 개의 연관을 생성시킬 것이다. 명백하게, 개인들은 이벤트들에 
@@ -845,29 +850,6 @@ else if (args[0].equals("list")) {
                                 사용한다: 
             </para>
 
-            <programlisting><![CDATA[public class Person {
-
-    private Set events = new HashSet();
-
-    public Set getEvents() {
-        return events;
-    }
-
-    public void setEvents(Set events) {
-        this.events = events;
-    }
-}]]></programlisting>
-
-            <para>
-                                이 연관을 매핑시키기 전에, 다른 측에 대해 생각해보자. 명료하게 우리는 이것을 단방향으로 유지시킬 수 있다. 또는 
-                                만일 우리가 양방향으로 네비게이트하는 것을 가능하도록 하고자 원할 경우에, 우리는 <literal>Event</literal> 상의 
-                                또 다른 콜렉션을 생성시킬 수 있다. 예를 들면.<literal>anEvent.getParticipants()</literal>. 이것은 
-                                기능적인 관점에서 필수적이지 않다. 당신은 특정 이벤트에 대한 참여자들을 검색하기 위해 하나의 명시적인 질의를 항상 
-                                실행시킬 수 있다. 이것은 당신에게 설계상의 선택으로 남겨두지만, 이 논의에서 명료해지는 것은 그 연관의 다중성이다: 
-                                양 측들이 "many" 값을 가질 경우, 우리는 이것을 <emphasis>many-to-many</emphasis> 연관이라 명명한다. 그러므로,
-                                우리는 Hibernate의 many-to-many 매핑을 사용한다:
-            </para>
-
             <programlisting><![CDATA[<class name="events.Person" table="PERSON">
     <id name="id" column="PERSON_ID">
         <generator class="native"/>
@@ -882,6 +864,7 @@ else if (args[0].equals("list")) {
     </set>
 
 </class>]]></programlisting>
+
             <para>
                 Hibernate는 모든 종류의 콜렉션 매핑들, 가장 공통적인 <literal>&lt;set&gt;</literal>을 지원한다. many-to-many 
                                 연관 (또는 <emphasis>n:m</emphasis> 엔티티 관계)의 경우, 한 개의 연관 테이블이 필요하다. 이 테이블 내에 있는 각각의 
@@ -912,7 +895,7 @@ else if (args[0].equals("list")) {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working" revision="1">
+        <sect2 id="tutorial-associations-working" revision="2">
             <title>연관들에 작업하기</title>
 
             <para>
@@ -920,16 +903,16 @@ else if (args[0].equals("list")) {
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
-    Session session = HibernateUtil.getCurrentSession();
-    Transaction tx = session.beginTransaction();
+
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
 
     Person aPerson = (Person) session.load(Person.class, personId);
     Event anEvent = (Event) session.load(Event.class, eventId);
 
     aPerson.getEvents().add(anEvent);
 
-    tx.commit();
-    HibernateUtil.closeSession();
+    session.getTransaction().commit();
 }]]></programlisting>
 
             <para>
@@ -940,7 +923,9 @@ else if (args[0].equals("list")) {
                                 프로퍼티를 변경함으로써 그것을 시도할 수 있다. 그것들이 <emphasis>영속(persistent)</emphasis> 상태에 있는 동안, 즉 특정 Hibernate 
                 <literal>Session</literal>에 바인드되어 있는 동안(예를 들면. 그것들은 작업 단위 속에 방금 로드되었거나 저장되었다), 
                 Hibernate는 임의의 변경들을 모니터링하고 쓰기 이면의 형태로 SQL을 실행시킨다. 메모리 상태를 데이터베이스와 동기화 시키는 
-                                과정은 대개 오직 작업 단위의 끝에서이고, <emphasis>flushing</emphasis>이라 명명된다. 
+                                과정은 대개 오직 작업 단위의 끝에서이고, <emphasis>flushing</emphasis>이라 명명된다. 우리의 코드에서, 작업 단위는 
+                <literal>CurrentSessionContext</literal> 클래스에 대한 <literal>thread</literal> 구성 옵션에 의해 정의된 
+                                대로 - 데이터베이스 트랜잭션의 커밋(또는 롤백)으로 끝이난다.
             </para>
 
             <para>
@@ -949,40 +934,53 @@ else if (args[0].equals("list")) {
                 <emphasis>detached</emphasis>라고 부른다). (매우 사실적이지 않은) 코드 내에서 이것은 다음과 같을 수 있다: 
             </para>
 
-            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+            <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
 
-        Session session = HibernateUtil.getCurrentSession();
-        Transaction tx = session.beginTransaction();
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
 
-        Person aPerson = (Person) session.load(Person.class, personId);
-        Event anEvent = (Event) session.load(Event.class, eventId);
+    Person aPerson = (Person) session
+            .createQuery("select p from Person p left join fetch p.events where p.id = :pid")
+            .setParameter("pid", personId)
+            .uniqueResult(); // Eager fetch the collection so we can use it detached
 
-        tx.commit();
-        HibernateUtil.closeSession();
+    Event anEvent = (Event) session.load(Event.class, eventId);
 
-        aPerson.getEvents().add(anEvent); // aPerson is detached
+    session.getTransaction().commit();
 
-        Session session2 = HibernateUtil.getCurrentSession();
-        Transaction tx2 = session.beginTransaction();
+    // End of first unit of work
 
-        session2.update(aPerson); // Reattachment of aPerson
+    aPerson.getEvents().add(anEvent); // aPerson (and its collection) is detached
 
-        tx2.commit();
-        HibernateUtil.closeSession();
-    }
-]]></programlisting>
+    // Begin second unit of work
+
+    Session session2 = HibernateUtil.getSessionFactory().getCurrentSession();
+    session2.beginTransaction();
+
+    session2.update(aPerson); // Reattachment of aPerson
+
+    session2.getTransaction().commit();
+}]]></programlisting>
 
             <para>
-                <literal>update</literal>에 대한 호출은 한 개의 detached 객체를 영속화 시키고, 당신은 그것이 새로운 작업 단위에 
+                <literal>update</literal>에 대한 호출은 한 개의 detached 객체를  다시 영속화 시키고, 당신은 그것이 새로운 작업 단위에 
                                 바인드된다고 말할 수 있고, 따라서 detached 동안에 당신이 그것에 대해 행한 임의의 변경들이 데이터베이스에 저장될 수 있다. 
+                                이것은 당신이 그 엔티티 객체의 콜렉션에 대해 행했던 임의의 변경들(추가/삭제)를 포함한다. 
             </para>
 
             <para>
-                                물론, 이것은 우리의 현재 상황에서 많이 사용되지 않지만, 그것은 당신이 당신 자신의 어플리케이션 속으로 설계할 수 있는 중요한 
-                                개념이다. 지금 한 개의 새로운 액션을 <literal>EventManager</literal>의 main 메소드에 추가하고 명령 라인에서 그것을 
+                                물론, 우리의 현재 상황에서 이것은 많이 사용되지 않지만, 그것은 당신이 당신 자신의 어플리케이션 내로 설계할 수 있는 중요한 
+                                개념이다. 지금 <literal>EventManager</literal>의 main 메소드에 한 개의 새로운 액션을 추가하고 명령 라인에서 그것을 
                                 호출하여 이 연습을 완료하라. 만일 당신이 한명의 개인과 한 개의 이벤트에 대한 식별자들을 필요로 할 경우 - <literal>save()</literal> 
-                                메소드가 그것을 반환시킨다.
+                                메소드가 그것을 반환시킨다(당신은 그 식별자를 반환시키는 앞의 메소드들 중 몇몇을 변경시켜야 할 것이다):
             </para>
+
+            <programlisting><![CDATA[else if (args[0].equals("addpersontoevent")) {
+    Long eventId = mgr.createAndStoreEvent("My Event", new Date());
+    Long personId = mgr.createAndStorePerson("Foo", "Bar");
+    mgr.addPersonToEvent(personId, eventId);
+    System.out.println("Added person " + personId + " to event " + eventId);
+}]]></programlisting>
 
             <para>
                                 이것은 두 개의 동등하게 중요한 클래스들, 두 개의 엔티티들 사이에서 한 개의 연관에 관한 예제였다. 앞서 언급했듯이, 전형적인 모형 내에는 
@@ -1065,9 +1063,29 @@ public void setEmailAddresses(Set emailAddresses) {
                                 그것은 Java에서 동일한 코드이다.
             </para>
 
+            <programlisting><![CDATA[private void addEmailToPerson(Long personId, String emailAddress) {
+
+    Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+    session.beginTransaction();
+
+    Person aPerson = (Person) session.load(Person.class, personId);
+
+    // The getEmailAddresses() might trigger a lazy load of the collection
+    aPerson.getEmailAddresses().add(emailAddress);
+
+    session.getTransaction().commit();
+}]]></programlisting>
+
+            <para>
+                                지금 우리는 콜렉션을 초기화 시키는데 <emphasis>fetch</emphasis> 질의를 사용하지 않았다. 
+                                그러므로 콜렉션의 getter 메소드에 대한 호출은 콜렉션을 초기화 시키기 위해 추가적인 select를 트리거 시킬 
+                                것이어서, 우리는 그것에 요소를 추가시킬 수 있다. SQL 로그를 관찰하고 이것을 eager fetch로 최적화 시키려고 
+                                시도하라.
+            </para>
+
         </sect2>
 
-        <sect2 id="tutorial-associations-bidirectional">
+        <sect2 id="tutorial-associations-bidirectional" revision="1">
             <title>Bi-directional associations</title>
 
             <para>
@@ -1097,7 +1115,7 @@ public void setParticipants(Set participants) {
 
             <programlisting><![CDATA[<set name="participants" table="PERSON_EVENT" inverse="true">
     <key column="EVENT_ID"/>
-    <many-to-many column="PERSON_ID" class="Person"/>
+    <many-to-many column="PERSON_ID" class="events.Person"/>
 </set>]]></programlisting>
 
             <para>
@@ -1183,7 +1201,7 @@ public void removeFromEvent(Event event) {
                         그것은 새로운 이벤트들을 입력하기 위한 HTML form을 제공한다.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet">
+        <sect2 id="tutorial-webapp-servlet" revision="1">
             <title>기본 서블릿 작성하기</title>
 
             <para>
@@ -1198,16 +1216,8 @@ public void removeFromEvent(Event event) {
 
 public class EventManagerServlet extends HttpServlet {
 
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
     // Servlet code
 }]]></programlisting>
-
-            <para>
-                <literal>dateFormatter</literal>는 나중에 문자열들로부터 그리고 문자열로 <literal>Date</literal> 객체들을 
-                                변환하는데 나중에 사용하게 될 도구이다. 서블릿의 멤버로서 오직 한 개의 formatter를 갖는 것이 도리에 맞다.
-            </para>
 
             <para>
                                 서블릿은 HTTP <literal>GET</literal> 요청들 만을 처리하므로, 우리가 구현하는 메소드는 <literal>doGet()</literal>이다:
@@ -1216,6 +1226,8 @@ public class EventManagerServlet extends HttpServlet {
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
                      HttpServletResponse response)
         throws ServletException, IOException {
+
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
 
     try {
         // Begin unit of work
@@ -1259,7 +1271,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </sect2>
 
-        <sect2 id="tutorial-webapp-processing">
+        <sect2 id="tutorial-webapp-processing" revision="1">
             <title>프로세싱과 렌더링</title>
 
             <para>
@@ -1286,7 +1298,7 @@ if ( "store".equals(request.getParameter("action")) ) {
 
 // Print page
 printEventForm(out);
-listEvents(out);
+listEvents(out, dateFormatter);
 
 // Write HTML footer
 out.println("</body></html>");
@@ -1315,7 +1327,8 @@ out.close();]]></programlisting>
                                 쓰레드에 결합된 Hibernate <literal>Session</literal>을 사용한다:
             </para>
 
-            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+            <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+
     List result = HibernateUtil.getSessionFactory()
                     .getCurrentSession().createCriteria(Event.class).list();
     if (result.size() > 0) {

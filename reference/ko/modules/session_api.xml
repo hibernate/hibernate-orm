@@ -413,7 +413,7 @@ cats.close()]]></programlisting>
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named" revision="1">
                 <title>명명된 질의들을 구체화 시키기</title>
 
                 <para>
@@ -421,7 +421,7 @@ cats.close()]]></programlisting>
                                         포함할 경우에 <literal>CDATA</literal> 섹션을 사용하는 것을 기억하라))
                 </para>
 
-                <programlisting><![CDATA[<query name="eg.DomesticCat.by.name.and.minimum.weight"><![CDATA[
+                <programlisting><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight > ?
@@ -431,7 +431,7 @@ cats.close()]]></programlisting>
                                         파라미터 바인딩과 실행은 프로그램 상으로 행해진다:
                 </para>
 
-                <programlisting><![CDATA[Query q = sess.getNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+                <programlisting><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
@@ -439,6 +439,13 @@ List cats = q.list();]]></programlisting>
                 <para>
                                         실제 프로그램 코드는 사용되는 질의 언어에 독립적이고, 당신은 또한 메타데이터로 native SQL 질의들을 정의할 수도 있거나 
                                         그것들을 매핑 파일들 속에 기존 질의들을 위치지움으로써 기존 질의들을 Hibernate로 이전시킬 수도 있음을 노트하라.
+                </para>
+                
+                <para>
+                                        또한 <literal>&lt;hibernate-mapping&gt;</literal> 요소 내에서 하나의 질의 선언은 그 질의에 대한 
+                                        전역 유일 이름을 필요로 하고, 반면에 <literal>&lt;class&gt;</literal> 요소 내에서의 질의 선언은 
+                                        클래스 이름으로 수직된이름을 첨가하여 자동적으로 유일하게 만들어진다. 
+                                        예를 들어  <literal>eg.Cat.ByNameAndMaximumWeight</literal>.
                 </para>
 
             </sect3>

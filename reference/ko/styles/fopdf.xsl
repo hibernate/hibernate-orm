@@ -43,10 +43,10 @@
                             <fo:block>
                                 <fo:external-graphic src="file:images/hibernate_logo_a.png"/>
                             </fo:block>
-                            <fo:block font-family="가을체" font-size="24pt" padding-before="10mm">
+                            <fo:block font-family="Bangwool" font-size="18pt" padding-before="10mm">
                                 <xsl:value-of select="bookinfo/subtitle"/>
                             </fo:block>
-                            <fo:block font-family="가을체" font-size="14pt" padding="10mm">
+                            <fo:block font-family="Bangwool" font-size="12pt" padding="10mm">
                                                                 버전:
                                 <xsl:value-of select="bookinfo/releaseinfo"/>
                             </fo:block>
@@ -92,7 +92,7 @@
         <xsl:variable name="Version">
             <xsl:choose>
                 <xsl:when test="//releaseinfo">
-                    <xsl:text>하이버네이트 </xsl:text>
+                    <xsl:text>하이버네이트</xsl:text>
                     <xsl:value-of select="//releaseinfo"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -256,10 +256,10 @@
         ################################################### -->
 
     <!-- Default Font size -->
-    <xsl:param name="body.font.master">11</xsl:param>
+    <xsl:param name="body.font.master">10</xsl:param>
 
     <!-- Line height in body text -->
-    <xsl:param name="line-height">1.4</xsl:param>
+    <xsl:param name="line-height">1.6</xsl:param>
 
     <!-- Monospaced fonts are smaller than regular text -->
     <xsl:attribute-set name="monospace.properties">
@@ -311,7 +311,6 @@
                 <l:template name="sect4" text="the section called %t"/>
                 <l:template name="sect5" text="the section called %t"/>
             </l:context>
-            
         </l:l10n>
     </l:i18n>
     
@@ -516,9 +515,9 @@
     
     <!-- Korean related Settings -->
     <xsl:param name="hyphenate">false</xsl:param>
-    <xsl:param name="body.font.family">Gulim</xsl:param>
-    <!-- xsl:param name="monospace.font.family">가을체</xsl:param-->
-    <xsl:param name="title.font.family">가을체</xsl:param>
+    <xsl:param name="body.font.family">Hankc</xsl:param>
+    <!-- xsl:param name="monospace.font.family">Bangwool</xsl:param-->
+    <xsl:param name="title.font.family">Bangwool</xsl:param>
     <xsl:param name="saxon.character.representation" select="native"/>
     <xsl:param name="callout.unicode" select="1"/>
     <xsl:param name="callout.unicode.start.character" select="10102"/>

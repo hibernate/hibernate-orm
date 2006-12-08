@@ -538,7 +538,7 @@ alter table line_items
 </class>
 ]]></programlisting>
         </sect2>
-        
+
         <sect2 id="example-mappings-content-discrimination">
             <title>내용 기반 판별</title>
 <programlisting><![CDATA[<class name="Person"

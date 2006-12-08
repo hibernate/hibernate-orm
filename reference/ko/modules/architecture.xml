@@ -78,19 +78,19 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Persistent objects and collections</term>
+                    <term>영속 객체들과 콜렉션들</term>
                     <listitem>
                         <para>
                             persistent 상태와 비지니스 기능을 포함하는 수명이 짧고, 단일 쓰레드인 객체들. 이것들은 통상의 JavaBeans/POJO들일 
                                                         수 있고, 오직 그것들에 대한 오직 특별한 것은 그것들이 현재 (정확하게 한 개의) <literal>Session</literal>과  연관되어 
                                                         있다는 점이다. <literal>Session</literal>이 닫히자마자, 그것들은 분리될(detached 상태가 될) 것이고 어플리케이션 
-                                                        레이어에서 사용하는 것이 자유로와진다(예를 들면. 프리젠테이션으로의 데이터 전송 객체들로서 직접적으로  그리고 프리젠테이션으로부터 
-                                                        데이터 전송 객체들로서 직접으로).
+                                                        레이어에서 사용하는 것이 자유로와진다(예를 들면. 직접적으로 프리젠테이션 계층으로 
+                                                        데이터 전송 객체들로서 그리고 직접적으로 프리젠테이션 계층으로부터 데이터 전송 객체들로서).
                         </para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>Transient and detached objects and collections</term>
+                    <term>전이(Transient, 필자 주-과도) 객체들과 콜렉션들</term>
                     <listitem>
                         <para>
                             <literal>Session</literal>과 현재 연관되어 있지 않은 영속 클래스들의 인스턴스들. 그것들은 어플리케이션에 의해 초기화
@@ -236,7 +236,7 @@
         </para>
     </sect1>
 
-    <sect1 id="architecture-current-session" revision="1">
+    <sect1 id="architecture-current-session" revision="2">
         <title>컨텍스트 상의 세션들</title>
         <para>
 	        Hibernate를 사용하는 대부분의 어플리케이션들은 어떤 양식의 "컨텍스트상의(contextual)" 세션들을 필요로 한다. 여기서 
@@ -264,7 +264,7 @@
 	    <para>
 		        그것의 계약에 대한 상세한 논의는 <literal>org.hibernate.context.CurrentSessionContext</literal> 인터페이스에 
 		        관한 javadocs를 보라. 그것은 하나의 메소드, <literal>currentSession()</literal>를 정의하며, 그 구현은 
-		        현재의 컨텍스트 상의 세션을 추적할 책임이 있다. 비공식적으로, Hibernate는 이 인터페이스에 대한 구 개의 구현들을 부수적으로 
+		        현재의 컨텍스트 상의 세션을 추적할 책임이 있다. 비공식적으로, Hibernate는 이 인터페이스에 대한 세 개의 구현들을 부수적으로 
 		        포함하고 있다.
 	    </para>
 	    
@@ -284,7 +284,7 @@
 			</listitem>
 		</itemizedlist>
 	    <para>
-                        두 구현들은 <emphasis>session-per-request</emphasis>로 알려지고 사용되고 있는 
+                        처음의 두 구현들은 <emphasis>session-per-request</emphasis>로 알려지고 사용되고 있는 
             "하나의 세션 - 하나의 데이터베이스 트랜잭션" 프로그래밍 모형을 제공한다. 하나의 Hibernate 세션의 시작과 끝은 
                         데이터베이스 트랜잭션의 존속 기간에 의해 정의된다. 만일 (예를 들면 순수 J2SE에서 또는 JTA/UserTransaction/BMT의 경우에)
                         당신이 프로그램 상의 트랜잭션 경계구분을 사용할 경우, 당신은 당신의 코드로부터 기본 트랜잭션 시스템을 은폐시키는데 

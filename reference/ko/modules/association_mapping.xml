@@ -48,8 +48,7 @@
     </id>
 </class>]]></programlisting>
         <programlisting><![CDATA[
-create table Person ( personId bigint not null primary key, 
-                      addressId bigint not null )
+create table Person ( personId bigint not null primary key, addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -79,8 +78,7 @@ create table Address ( addressId bigint not null primary key )
     </id>
 </class>]]></programlisting>
         <programlisting><![CDATA[
-create table Person ( personId bigint not null primary key, 
-                      addressId bigint not null unique )
+create table Person ( personId bigint not null primary key, addressId bigint not null unique )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -135,8 +133,7 @@ create table Address ( personId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table Address ( addressId bigint not null primary key, 
-                       personId bigint not null )
+create table Address ( addressId bigint not null primary key, personId bigint not null )
         ]]></programlisting>
         
         <para>
@@ -177,8 +174,7 @@ create table Address ( addressId bigint not null primary key,
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId not null, 
-                             addressId bigint not null primary key )
+create table PersonAddress ( personId not null, addressId bigint not null primary key )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -211,8 +207,7 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null primary key, 
-                             addressId bigint not null )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -247,8 +242,7 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null primary key, 
-                             addressId bigint not null unique )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -279,9 +273,7 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null, 
-                             addressId bigint not null, 
-                             primary key (personId, addressId) )
+create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -319,8 +311,7 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
 
         <programlisting><![CDATA[
-create table Person ( personId bigint not null primary key, 
-                      addressId bigint not null )
+create table Person ( personId bigint not null primary key, addressId bigint not null )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
 
@@ -386,8 +377,7 @@ create table Address ( addressId bigint not null primary key )
         property-ref="address"/>
 </class>]]></programlisting>
         <programlisting><![CDATA[
-create table Person ( personId bigint not null primary key, 
-                      addressId bigint not null unique )
+create table Person ( personId bigint not null primary key, addressId bigint not null unique )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -459,8 +449,7 @@ create table Address ( personId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null, 
-                             addressId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, addressId bigint not null primary key )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
@@ -505,8 +494,7 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null primary key, 
-                             addressId bigint not null unique )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
 
@@ -543,9 +531,7 @@ create table Address ( addressId bigint not null primary key )
 
         <programlisting><![CDATA[
 create table Person ( personId bigint not null primary key )
-create table PersonAddress ( personId bigint not null, 
-                             addressId bigint not null, 
-                             primary key (personId, addressId) )
+create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         

@@ -364,7 +364,6 @@ session.createCriteria(Cat.class, "cat")
 
     </sect1>
 
-        
         <!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer는 -JDO2에서 setResultClass와 유사한- 임의적인 
                                     사용자 객체들을 반환하는 것을 허용한다. ResultTransformer에 대한 일반적인 사용이 또한 설명될 수 있다. -->
                

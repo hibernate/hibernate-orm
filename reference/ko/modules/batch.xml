@@ -28,8 +28,6 @@ session.close();]]></programlisting>
 
     <para>
                 당신은 또한 second-level 캐시를 가진 상호작용이 완전하게 불가능한 프로세스 내에서 이런 종류의 작업을 행하고 싶어할 수도 있다:
-        You also might like to do this kind of work in a process where interaction with 
-        the second-level cache is completely disabled:
     </para>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
@@ -94,7 +92,6 @@ tx.commit();
 session.close();]]></programlisting>
 
     </sect1>
-
     
     <sect1 id="batch-statelesssession">
         <title>StatelessSession 인터페이스</title>
@@ -140,7 +137,7 @@ session.close();]]></programlisting>
 
     </sect1>
 
-    <sect1 id="batch-direct" revision="2">
+    <sect1 id="batch-direct" revision="3">
         <title>DML-스타일 연산들</title>
 
         <para>
@@ -151,9 +148,9 @@ session.close();]]></programlisting>
             (<xref linkend="queryhql">HQL</xref>)를 통해 실행되는 대량 SQL-스타일의 DML 문장 실행을 위한 메소드들을 제공한다.
         </para>
 
-        <para>
-             <literal>UPDATE</literal>와 <literal>DELETE</literal> 문장들의 유사-구문은 다음과 같다: 
-             <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>. 노트할 몇 가지 :
+	    <para>
+            <literal>UPDATE</literal>와 <literal>DELETE</literal> 문장들에 대한 유사 구문은 다음과 같다: 
+            <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>. 노트할 몇 가지:
         </para>
 
         <itemizedlist spacing="compact">
@@ -201,10 +198,34 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-                        한 개의 HQL <literal>DELETE</literal>를 실행하기 위해, 동일한 <literal>Query.executeUpdate()</literal> 메소드를 
-                        사용하라:
+            HQL <literal>UPDATE</literal> 문장들은 디폴트로 영향받는 엔티티들에 대한 
+            <xref linkend="mapping-declaration-version">version</xref> 또는 
+            <xref linkend="mapping-declaration-timestamp">timestamp</xref> 프로퍼티 값들에 영향을 주지 않는다;
+                        이것은 EJB3 명세서에서 유지되고 있다. 하지만 당신은 하이버네이트로 하여금 <literal>versioned update</literal>의 
+                        사용을 통해 <literal>version</literal> 또는 <literal>timestamp</literal> 프로퍼티 값들을 적절하게 
+                        재설정하도록 강제할 수 있다. 이것은 <literal>UPDATE</literal> 키워드 뒤에 <literal>VERSIONED</literal> 키워드를 
+                        추가시켜서 성취된다.
+        </para>
+<programlisting><![CDATA[Session session = sessionFactory.openSession();
+Transaction tx = session.beginTransaction();
+String hqlVersionedUpdate = "update versioned Customer set name = :newName where name = :oldName";
+int updatedEntities = s.createQuery( hqlUpdate )
+        .setString( "newName", newName )
+        .setString( "oldName", oldName )
+        .executeUpdate();
+tx.commit();
+session.close();]]></programlisting>
+
+        <para>
+                        맞춤형 version 타입들(<literal>org.hibernate.usertype.UserVersionType</literal>)은 
+            <literal>update versioned</literal> 문장과 함께 사용하는 것이 허용되지 않음을 노트하라.
         </para>
 
+        <para>
+            HQL <literal>DELETE</literal>를 실행하려면, 같은 메소드 <literal>Query.executeUpdate()</literal>를 
+                        사용하라:
+        </para>
+        
 <programlisting><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 

@@ -92,17 +92,17 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
     <font-triplet name="Mincho" style="italic" weight="bold"/>
    </font>
   -->
- <font metrics-file="Gulim.xml" kerning="yes" embed-file="gulim.ttc">
-    <font-triplet name="Gulim" style="normal" weight="normal"/>
-    <font-triplet name="Gulim" style="normal" weight="bold"/>
-    <font-triplet name="Gulim" style="italic" weight="normal"/>
-    <font-triplet name="Gulim" style="italic" weight="bold"/>
+ <font metrics-file="Hankc.xml" kerning="yes" embed-file="Hankc.ttf">
+    <font-triplet name="Hankc" style="normal" weight="normal"/>
+    <font-triplet name="Hankc" style="normal" weight="bold"/>
+    <font-triplet name="Hankc" style="italic" weight="normal"/>
+    <font-triplet name="Hankc" style="italic" weight="bold"/>
 </font>
-<font metrics-file="Gaeul.xml" kerning="yes" embed-file="Gaeul.ttf">
-<font-triplet name="가을체" style="normal" weight="normal"/>
-<font-triplet name="가을체" style="normal" weight="bold"/>
-<font-triplet name="가을체" style="italic" weight="normal"/>
-<font-triplet name="가을체" style="italic" weight="bold"/>
+<font metrics-file="Bangwool.xml" kerning="yes" embed-file="Bangwool.ttf">
+<font-triplet name="Bangwool" style="normal" weight="normal"/>
+<font-triplet name="Bangwool" style="normal" weight="bold"/>
+<font-triplet name="Bangwool" style="italic" weight="normal"/>
+<font-triplet name="Bangwool" style="italic" weight="bold"/>
 </font>
 </fonts>
 

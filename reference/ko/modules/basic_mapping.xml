@@ -92,7 +92,7 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="2">
+        <sect2 id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
 
             <para>
@@ -102,6 +102,56 @@
                 당신이 인터넷 연결을 사용하는 DTD에 대한 룩업들을 겪게 될 경우, 당신의 classpath의 컨텐츠에 대해 당신의 DTD 선언을 
                 체크하라.
             </para>
+            
+            <sect3 id="mapping-declaration-entity-resolution">
+                <title>EntityResolver</title>
+                <para>
+                                        앞서 언급했듯이, Hibernate는 먼저 그것의 classpath에서 DTD들을 해석하려고 시도할 것이다. 
+                    Hibernate가 이것을 행하는 방법은 그것이 xml 파일들을 읽어들이는데 사용하는 SAXReader에 맞춤형  
+                    <literal>org.xml.sax.EntityResolver</literal> 구현을 등록하는 것이다. 이 맞춤형 
+                    <literal>EntityResolver</literal>는 두 개의 다른 systemId namespace들을 인지해낸다.
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>hibernate namespace</literal>는  resolver가 
+                            <literal>http://hibernate.sourceforge.net/</literal>로 시작하는 하나의 
+                            systemId와 만날때마다 인지된다; resolver는 Hibernate 클래스들을 로드시켰던 클래스로더를 통해 
+                                                        이들 엔티티들을 해석하려고 시도한다.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>user namespace</literal>는 resolver가  <literal>classpath://</literal> 
+                            URL 프로토콜을 사용하는 systemId를 만날때마다 인지된다; resolver는 (1)현재 쓰레드 컨텍스트 
+                                                        클래스로더와 (2)Hibernate 클래스들을 로드시켰던 클래스로더를 통해 이들 엔티티들을 해석하려고 
+                                                        시도할 것이다.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <para>
+                    user namespacing을 활용하는 예제:
+                </para>
+                <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
+    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
+]>
+
+<hibernate-mapping package="your.domain">
+    <class name="MyEntity">
+        <id name="id" type="my-custom-id-type">
+            ...
+        </id>
+    <class>
+    &types;
+</hibernate-mapping>]]></programlisting>
+                <para>
+                                        여기서 <literal>types.xml</literal>은 <literal>your.domain</literal> 패키지 내에 있는 리소스이고 
+                                        맞춤형 <xref linkend="mapping-types-custom">typedef</xref>를 포함한다.
+                </para>
+            </sect3>
         </sect2>
 
         <sect2 id="mapping-declaration-mapping" revision="3">
@@ -692,6 +742,17 @@
                             </para>
                         </listitem>
                         </varlistentry>
+                        <varlistentry>
+                        <term><literal>sequence-identity</literal></term>
+                        <listitem>
+                            <para>
+                                                                실제 값 생성을 위해 데이터베이스 시퀀스를 활용하지만, 생성된 식별자 값을 insert 문장 실행의 부분으로서 
+                                                                실제로 반환시키기 위해 이것을 JDBC3 getGeneratedKeys와 결합시킨 특화된 시퀀스 생성 방도. 이 방도는 
+                                JDK 1.4에 대상화된 Oracle 10g 드라이버들 상에서만 지원되는 거승로 알려져 있다. 이들 insert 문장들에 
+                                                                대한 주석들은 Oracle 드라이버들 내에 있는 버그 때문에 사용불가능하게 되어 있음을 노트하라.
+                            </para>
+                        </listitem>
+                        </varlistentry>
                     </variablelist>
 
                 </para>
@@ -1082,7 +1143,7 @@
             </para>
         </sect2>
         
-        <sect2 id="mapping-declaration-timestamp" revision="3" >
+        <sect2 id="mapping-declaration-timestamp" revision="4" >
             <title>timestamp (옵션)</title>
 
             <para>
@@ -1090,7 +1151,7 @@
                                 버전화에 대한 대체물로서 고안되었다. Timestamp은 고유하게 optimistic 잠금에 대한 다소 안전한 구현이다. 하지만 때때로 
                                 어플리케이션은 다른 방법들로 timestamp들을 사용할 수도 있다.
             </para>
-            
+                        
             <programlistingco>
                 <areaspec>
                     <area id="timestamp1" coords="2 70"/>
@@ -1123,7 +1184,7 @@
                                                         가진 자바빈즈 스타일의 프로퍼티 이름.
                         </para>
                     </callout>
-                   <callout arearefs="timestamp3">
+                    <callout arearefs="timestamp3">
                         <para>
                             <literal>access</literal> (옵션 - 디폴트는 <literal>property</literal>): 
                             Hibernate가 프로퍼티 값에 접근하는데 사용할 방도.
@@ -1140,18 +1201,18 @@
                     <callout arearefs="timestamp5">
                         <para>
                             <literal>source</literal> (옵션 - 디폴트는 <literal>vm</literal>):
-                            Hibernate는 어느 장소로부터 timestamp 값을 검색할 것인가? 데이터베이스로부터인가 현재의 JVM으로부터인가?
-                            Hibernate가 "다음 값"을 결정하기 위해 데이터베이스에 접속해야 하기 때문에 데이터베이스 기반의 
-                            timestamp들은 오버헤드를 초래하지만, 클러스터링된 환경들의 용도로 더 안전할 것이다. 또한 모든 
+                            Hibernate는 어디서 timestamp 값을 검색할 것인가? 데이터베이스로부터인가 현재의 JVM으로부터인가?
+                                                        데이터베이스 기반의 timestamp들은 Hibernate가 "다음 값"을 결정하기 위해 데이터베이스에 접속해야 
+                                                        하기 때문에 오버헤드를 초래하지만, 클러스터링된 환경들에서의 용도로 보다 더 안전할 것이다. 또한 모든 
                             <literal>Dialect</literal>들이 데이터베이스의 현재의 timestamp에 대한 검색을 지원하는 것으로 알려져 
-                                                        있는 반면에, 다른 <literal>Dialect</literal>들은 정밀도 결핍 때문에 잠금에 있어 사용에 대해 안전하지 않을 
+                                                        있지 않지만, 다른 <literal>Dialect</literal>들은 정밀도 결핍 때문에 잠금에 있어 사용이 안전하지 않을 
                                                         수 있음을 노트하라(예를 들면 오라클 8).
                         </para>
                     </callout>
                     <callout arearefs="timestamp6">
                         <para>
                             <literal>generated</literal> (옵션 - 디폴트는 <literal>never</literal>):
-                                                        이 timestamp 프로퍼티 값이 데이터베이스에 의해 실제로 산출되는지를 지정한다.
+                                                        이 timestamp 프로퍼티 값이 데이터베이스에 의해 실제로 생성됨을 지정한다.
                             <xref linkend="mapping-generated">산출되는 프로퍼티들</xref>에 대한 논의들 보라.
                         </para>
                     </callout>
@@ -2202,7 +2263,8 @@
             <title>join</title>
 
             <para>
-                <literal>&lt;join&gt;</literal> 요소를 사용하면, 한 개의 클래스의 프로퍼티들을 몇 개의 테이블들로 매핑시키는 것이 
+                <literal>&lt;join&gt;</literal> 테이블들 사이에 1대일 관계가 존재할 때, 
+                                요소를 사용하여 하나의 클래스에 속한 프로퍼티들을 몇 개의 테이블들로 매핑시키는 것이 
                                 가능하다.
             </para>
 

@@ -26,6 +26,10 @@ session.close();]]></programlisting>
     
 <programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
 
+    <para id="disablebatching" revision="1">
+        注意,假若你使用了<literal>identiy</literal>标识符生成器,Hibernate在JDBC级别透明的关闭插入语句的批量执行。
+    </para>
+
     <para>
         你也可能想在执行批量处理时关闭二级缓存：
     </para>

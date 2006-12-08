@@ -35,7 +35,7 @@
         <title>HIBERNATE - 符合Java习惯的关系数据库持久化</title>
         
         <subtitle>Hibernate参考文档</subtitle>
-        <releaseinfo>3.1.2</releaseinfo>
+        <releaseinfo>3.2</releaseinfo>
     </bookinfo>
 
     <toc/>
@@ -373,6 +373,10 @@
                 </tbody>
             </tgroup>
         </table>
+	         
+	         <para>
+	         v3.2版本在2006年11月份由曹晓钢更新。
+	         </para>
 	         
 	         <para>
 	         关于我们

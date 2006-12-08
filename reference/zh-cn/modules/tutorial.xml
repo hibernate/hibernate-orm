@@ -258,7 +258,7 @@ public class Event {
             </para>
 
             <para>
-	在开发的根目录下创建一个<literal>data</literal>目录 － 这是HSQL DB存储数据文件的地方。此时在data目录中运行<literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal>就可启动数据库。你可以在log中看到它的启动，及绑定到TCP/IP套结字，这正是我们的应用程序稍后会连接的地方。如果你希望在本例中运行一个全新的数据库，就在窗口中按下<literal>CTRL + C</literal>来关闭HSQL数据库，并删除<literal>data/</literal>目录下的所有文件，再重新启动HSQL数据库。
+	在开发的根目录下创建一个<literal>data</literal>目录 － 这是HSQL DB存储数据文件的地方。此时在data目录中运行<literal>java -classpath ../lib/hsqldb.jar org.hsqldb.Server</literal>就可启动数据库。你可以在log中看到它的启动，及绑定到TCP/IP套结字，这正是我们的应用程序稍后会连接的地方。如果你希望在本例中运行一个全新的数据库，就在窗口中按下<literal>CTRL + C</literal>来关闭HSQL数据库，并删除<literal>data/</literal>目录下的所有文件，再重新启动HSQL数据库。
             </para>
 
             <para>
@@ -462,7 +462,7 @@ build.xml]]></programlisting>
 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-workingpersistence"  revision="4">
+        <sect2 id="tutorial-firstapp-workingpersistence"  revision="5">
             <title>
 	加载并存储对象
 		</title>
@@ -518,8 +518,20 @@ public class EventManager {
             </para>
 
             <para>
-                <literal>sessionFactory.getCurrentSession()</literal>是干什么的呢？首先，只要你持有<literal>SessionFactory</literal>（幸亏我们有<literal>HibernateUtil</literal>，可以随时获得），大可在任何时候、任何地点调用这个方法。<literal>getCurrentSession()</literal>方法总会返回“当前的”工作单元。记得我们在<literal>hibernate.cfg.xml</literal>中把这一配置选项调整为"thread"了吗？因此，当前工作单元的范围就是当前执行我们应用程序的Java线程。但是，这并非总是正确的。 <literal>Session</literal>在第一次被使用的时候,或者第一次调用<literal>getCurrentSession()</literal>的时候,其生命周期就开始。然后它被Hibernate绑定到当前线程。当事务结束的时候，不管是提交还是回滚，Hibernate也会把<literal>Session</literal>从当前线程剥离，并且关闭它。假若你再次调用<literal>getCurrentSession()</literal>，你会得到一个新的<literal>Session</literal>，并且开始一个新的工作单元。这种<emphasis>线程绑定(thread-bound)</emphasis>的编程模型（model）是使用Hibernate的最广泛的方式。
+                <literal>sessionFactory.getCurrentSession()</literal>是干什么的呢？首先，只要你持有<literal>SessionFactory</literal>（幸亏我们有<literal>HibernateUtil</literal>，可以随时获得），大可在任何时候、任何地点调用这个方法。<literal>getCurrentSession()</literal>方法总会返回“当前的”工作单元。记得我们在<literal>hibernate.cfg.xml</literal>中把这一配置选项调整为"thread"了吗？因此，因此，当前工作单元被绑定到当前执行我们应用程序的Java线程。但是，这并非是完全准确的,你还得考虑工作单元的生命周期范围 (scope),它何时开始,又何时结束. 
+             </para>
+
+             <para>
+                <literal>Session</literal>在第一次被使用的时候,即第一次调用<literal>getCurrentSession()</literal>的时候,其生命周期就开始。然后它被Hibernate绑定到当前线程。当事务结束的时候，不管是提交还是回滚，Hibernate会自动把<literal>Session</literal>从当前线程剥离，并且关闭它。假若你再次调用<literal>getCurrentSession()</literal>，你会得到一个新的<literal>Session</literal>，并且开始一个新的工作单元。这种<emphasis>线程绑定(thread-bound)</emphasis>的编程模型（model）是使用Hibernate的最广泛的方式,因为它支持对你的代码灵活分层(事务划分可以和你的数据访问代码分离开来,在本教程的后面部分就会这么做)。
+  
             </para>
+
+            <para>
+                
+                和工作单元的生命周期这个话题相关，Hibernate <literal>Session</literal>是否被应该用来执行多次数据库操作？上面的例子对每一次操作使用了一个<literal>Session</literal>，这完全是巧合，这个例子不是很复杂，无法展示其他方式。Hibernate <literal>Session</literal>的生命周期可以很灵活，但是你绝不要把你的应用程序设计成为<emphasis>每一次</emphasis>数据库操作都用一个新的Hibernate <literal>Session</literal>。因此就算下面的例子（它们都很简单）中你可以看到这种用法，记住<emphasis>每次操作一个session</emphasis>是一个反模式。在本教程的后面会展示一个真正的(web)程序。
+            </para>
+
+            
 
             <para>
                 关于事务处理及事务边界界定的详细信息，请参看<xref linkend="transactions"/>。在上面的例子中，我们也忽略了所有的错误与回滚的处理。
@@ -750,7 +762,7 @@ public class Person {
 
         </sect2>
 
-        <sect2 id="tutorial-associations-working"  revision="1">
+        <sect2 id="tutorial-associations-working"  revision="2">
             <title>
 	使关联工作
 	</title>
@@ -820,7 +832,8 @@ public class Person {
     Long eventId = mgr.createAndStoreEvent("My Event", new Date());
     Long personId = mgr.createAndStorePerson("Foo", "Bar");
     mgr.addPersonToEvent(personId, eventId);
-    System.out.println("Added person " + personId + " to event " + eventId);]]></programlisting>
+    System.out.println("Added person " + personId + " to event " + eventId);
+}]]></programlisting>
 
             <para>
 	上面是个关于两个同等重要的实体类间关联的例子。像前面所提到的那样，在特定的模型中也存在其它的类和类型，这些类和类型通常是“次要的”。你已看到过其中的一些，像<literal>int</literal>或<literal>String</literal>。我们称这些类为<emphasis>值类型（value type）</emphasis>，它们的实例<emphasis>依赖（depend）</emphasis>在某个特定的实体上。这些类型的实例没有它们自己的标识（identity），也不能在实体间被共享（比如，两个person不能引用同一个<literal>firstname</literal>对象，即使他们有相同的first name）。当然，值类型并不仅仅在JDK中存在（事实上，在一个Hibernate应用程序中，所有的JDK类都被视为值类型），而且你也可以编写你自己的依赖类，例如<literal>Address</literal>，<literal>MonetaryAmount</literal>。
@@ -1001,7 +1014,7 @@ public void removeFromEvent(Event event) {
             Hibernate web应用程序使用<literal>Session</literal> 和<literal>Transaction</literal>的方式几乎和独立应用程序是一样的。但是，有一些常见的模式（pattern）非常有用。现在我们编写一个<literal>EventManagerServlet</literal>。这个servlet可以列出数据库中保存的所有的events，还提供一个HTML表单来增加新的events。
         </para>
 
-        <sect2 id="tutorial-webapp-servlet">
+        <sect2 id="tutorial-webapp-servlet" revision="2">
             <title>编写基本的servlet</title>
 
             <para>
@@ -1013,9 +1026,6 @@ public void removeFromEvent(Event event) {
 // Imports
 
 public class EventManagerServlet extends HttpServlet {
-
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
 
     // Servlet code
 }]]></programlisting>
@@ -1031,6 +1041,8 @@ public class EventManagerServlet extends HttpServlet {
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
                      HttpServletResponse response)
         throws ServletException, IOException {
+
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
 
     try {
         // Begin unit of work
@@ -1050,9 +1062,13 @@ public class EventManagerServlet extends HttpServlet {
     }
 
 }]]></programlisting>
-
             <para>
 我们称这里应用的模式为每次请求一个session<emphasis>(session-per-request)</emphasis>。当有请求到达这个servlet的时候，通过对<literal>SessionFactory</literal>的第一次调用，打开一个新的Hibernate <literal>Session</literal>。然后启动一个数据库事务&mdash;所有的数据访问都是在事务中进行，不管是读还是写（我们在应用程序中不使用auto-commit模式）。
+            </para>
+            
+            <para>
+
+                <emphasis>不要</emphasis>为每次数据库操作都使用一个新的Hibernate <literal>Session</literal>。将Hibernate <literal>Session</literal>的范围设置为整个请求。要用<literal>getCurrentSession()</literal>，这样它自动会绑定到当前Java线程。
             </para>
 
             <para>
@@ -1065,7 +1081,7 @@ public class EventManagerServlet extends HttpServlet {
 
         </sect2>
 
-        <sect2 id="tutorial-webapp-processing">
+        <sect2 id="tutorial-webapp-processing" revision="1">
             <title>处理与渲染</title>
 
             <para>
@@ -1092,31 +1108,18 @@ if ( "store".equals(request.getParameter("action")) ) {
 
 // Print page
 printEventForm(out);
-listEvents(out);
+listEvents(out, dateFormatter);
 
 // Write HTML footer
 out.println("</body></html>");
 out.flush();
 out.close();]]></programlisting>
-
-            <para>
-                必须承认，这种编码风格让Java与HTML混合在了一起，在更复杂的应用程序中不应大量地使用&mdash;记住我们在章中仅为了展示Hibernate的基本概念。这段代码打印出了HTML头和尾部。在页面中，打印出一个输入event条目的表单，并列出数据库中所有events。第一个方法微不足道，仅仅是输出HTML:
-            </para>
-
-            <programlisting><![CDATA[private void printEventForm(PrintWriter out) {
-    out.println("<h2>Add new event:</h2>");
-    out.println("<form>");
-    out.println("Title: <input name='eventTitle' length='50'/><br/>");
-    out.println("Date (e.g. 24.12.2009): <input name='eventDate' length='10'/><br/>");
-    out.println("<input type='submit' name='action' value='store'/>");
-    out.println("</form>");
-}]]></programlisting>
-
             <para>
                 <literal>listEvents()</literal>方法使用绑定到当前线程的Hibernate <literal>Session</literal>来执行查询：
             </para>
 
-            <programlisting><![CDATA[private void listEvents(PrintWriter out) {
+            <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+
     List result = HibernateUtil.getSessionFactory()
                     .getCurrentSession().createCriteria(Event.class).list();
     if (result.size() > 0) {

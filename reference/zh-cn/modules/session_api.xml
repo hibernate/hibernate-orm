@@ -408,7 +408,7 @@ cats.close()]]></programlisting>
 
             </sect3>
 
-            <sect3 id="objectstate-querying-executing-named">
+            <sect3 id="objectstate-querying-executing-named" revision="1">
                 <title>外置命名查询(Externalizing named queries)</title>
 
                 <para>
@@ -416,7 +416,7 @@ cats.close()]]></programlisting>
 					（如果你的查询串中包含可能被解释为XML标记(markup)的字符，别忘了用<literal>CDATA</literal>包裹起来。）
                 </para>                
 
-                <programlisting><![CDATA[<query name="eg.DomesticCat.by.name.and.minimum.weight"><![CDATA[
+                <programlisting><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight > ?
@@ -427,7 +427,7 @@ cats.close()]]></programlisting>
 					参数绑定及执行以编程方式(programatically)完成：
                 </para>                
 
-                <programlisting><![CDATA[Query q = sess.getNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+                <programlisting><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
@@ -437,6 +437,11 @@ List cats = q.list();]]></programlisting>
                 	请注意实际的程序代码与所用的查询语言无关，你也可在元数据中定义原生SQL(native SQL)查询，
                 	或将原有的其他的查询语句放在配置文件中，这样就可以让Hibernate统一管理，达到迁移的目的。
                 </para>                
+
+                <para>
+
+                     也请注意在<literal>&lt;hibernate-mapping&gt;</literal>元素中声明的查询必须有一个全局唯一的名字,而在<literal>&lt;class&gt;</literal>元素中声明的查询自动具有全局名,是通过类的全名加以限定的。比如<literal>eg.Cat.ByNameAndMaximumWeight</literal>。
+                </para>
 
             </sect3>
 

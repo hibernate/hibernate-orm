@@ -685,9 +685,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             为JDBC事务策略选择<literal>after_transaction</literal>.
                             <para>
                                 <emphasis role="strong">取值</emphasis>
-                                <literal>on_close</literal> | <literal>after_transaction</literal> |
-                                <literal>after_statement</literal> | <literal>auto</literal>
+                                <literal>auto</literal> (默认) | <literal>on_close</literal> |
+                                <literal>after_transaction</literal> | <literal>after_statement</literal>
                             </para>
+                            <para>
+
+                                注意,这些设置仅对通过<literal>SessionFactory.openSession</literal>得到的<literal>Session</literal>起作用。对于通过<literal>SessionFactory.getCurrentSession</literal>得到的<literal>Session</literal>，所配置的<literal>CurrentSessionContext</literal>实现控制这些<literal>Session</literal>的连接释放模式。请参阅<xref linkend="architecture-current-session"/>。
+                            </para>
+
+
   	                    </entry>
   	                </row>
   	                <row>
@@ -902,7 +908,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <table frame="topbot" id="configuration-misc-properties" revision="9">
+        <table frame="topbot" id="configuration-misc-properties" revision="10">
             <title>
                 其他属性
             </title>
@@ -931,7 +937,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
-                                <literal>custom.Class</literal>
+                                <literal>managed</literal> | <literal>custom.Class</literal>
                             </para>
                         </entry>
                     </row>

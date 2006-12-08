@@ -93,7 +93,7 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="2">
+        <sect2 id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
 
             <para>
@@ -102,6 +102,53 @@
                 或<literal>hibernate.jar</literal>文件中找到。Hibernate总是会首先在它的classptah中搜索DTD文件。
                 如果你发现它是通过连接Internet查找DTD文件，就对照你的classpath目录检查XML文件里的DTD声明。
             </para>
+            
+            <sect3 id="mapping-declaration-entity-resolution">
+                <title>EntityResolver</title>
+                <para>
+                    As mentioned previously, Hibernate will first attempt to resolve DTDs in its classpath.  The
+                    manner in which it does this is by registering a custom <literal>org.xml.sax.EntityResolver</literal>
+                    implementation with the SAXReader it uses to read in the xml files.  This custom
+                    <literal>EntityResolver</literal> recognizes two different systemId namespaces.
+                    如前所述,Hibernate首先在其classpath中查找DTD。其行为是依靠在系统中注册的<literal>org.xml.sax.EntityResolver</literal>的一个具体实现，SAXReader依靠它来读取xml文件。这一 <literal>EntityResolver</literal> 实现能辨认两种不同的 systenId命名空间。
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            若resolver遇到了一个以<literal>http://hibernate.sourceforge.net/</literal>为开头的systemId，它会辨认出是<literal>hibernate namespace</literal>，resolver就试图通过加载Hibernate类的classloader来查找这些实体。
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+
+                            若resolver遇到了一个使用<literal>classpath://</literal>URL协议的systemId，它会辨认出这是<literal>user namespace</literal>,resolver试图通过(1)当前线程上下文的classloader和(2)加载Hibernate class的classloader来查找这些实体。
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <para>
+                    使用user namespace(用户命名空间)的例子：
+                </para>
+                <programlisting><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
+    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
+]>
+
+<hibernate-mapping package="your.domain">
+    <class name="MyEntity">
+        <id name="id" type="my-custom-id-type">
+            ...
+        </id>
+    <class>
+    &types;
+</hibernate-mapping>]]></programlisting>
+                <para>
+                    <literal>types.xml</literal>是<literal>your.domain</literal>包中的一个资源，它包含了一个定制的<xref linkend="mapping-types-custom">typedef</xref>。
+                </para>
+                
+            </sect3>
+            
         </sect2>
 
         <sect2 id="mapping-declaration-mapping" revision="3">
@@ -693,6 +740,15 @@
                             </para>
                         </listitem>
                         </varlistentry>
+                        <varlistentry>
+                        <term><literal>sequence-identity</literal></term>
+                        <listitem>
+                            <para>
+                                一种特别的序列生成策略,使用数据库序列来生成实际值,但将它和JDBC3的getGeneratedKeys结合在一起,使得在插入语句执行的时候就返回生成的值。目前为止只有面向JDK 1.4的Oracle 10g驱动支持这一策略。注意，因为Oracle驱动程序的一个bug，这些插入语句的注释被关闭了。（原文：Note comments on these insert statements are disabled due to a bug in the Oracle drivers.）
+                            </para>
+                        </listitem>
+                        </varlistentry>
+                        
                     </variablelist>
 
                 </para>
@@ -2141,7 +2197,7 @@
             <title>连接(join)</title>
 
             <para>
-               使用 <literal>&lt;join&gt;</literal> 元素，可以将一个类的属性映射到多张表中。
+               使用 <literal>&lt;join&gt;</literal> 元素，假若在表之间存在一对一关联,可以将一个类的属性映射到多张表中。
             </para>
 
             <programlistingco>

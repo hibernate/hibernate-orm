@@ -564,10 +564,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 			（即使可以将缓存数据设定为定期失效）。 
         </para>
         
-        <para>
-			默认情况下，Hibernate使用EHCache进行JVM级别的缓存（目前，Hibernate已经废弃了对JCS的支持，未来版本中将会去掉它）。
-			你可以通过设置<literal>hibernate.cache.provider_class</literal>属性，指定其他的缓存策略，
-			该缓存策略必须实现<literal>org.hibernate.cache.CacheProvider</literal>接口。
+        <para revision="1">
+            通过在<literal>hibernate.cache.provider_class</literal>属性中指定<literal>org.hibernate.cache.CacheProvider</literal>的某个实现的类名,你可以选择让Hibernate使用哪个缓存实现。Hibernate打包一些开源缓存实现，提供对它们的内置支持（见下表）。除此之外，你也可以实现你自己的实现，将它们插入到系统中。注意，在3.2版本之前，默认使用EhCache 作为缓存实现，但从3.2起就不再这样了。
 		</para>
 
         <table frame="topbot" id="cacheproviders" revision="1">

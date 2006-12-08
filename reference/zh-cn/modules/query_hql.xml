@@ -772,7 +772,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         </para>
     </sect1>
 
-    <sect1 id="queryhql-grouping">
+    <sect1 id="queryhql-grouping" revision="1">
         <title>group by子句</title>
 
         <para>
@@ -804,13 +804,15 @@ having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
         <programlisting><![CDATA[select cat
 from Cat cat
     join cat.kittens kitten
-group by cat
+group by cat.id, cat.name, cat.other, cat.properties
 having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
             注意<literal>group by</literal>子句与
             <literal>order by</literal>子句中都不能包含算术表达式（arithmetic expressions）.
+            
+			也要注意Hibernate目前不会扩展group的实体,因此你不能写<literal>group by cat</literal>,除非<literal>cat</literal>的所有属性都不是聚集的(non-aggregated)。你必须明确的列出所有的非聚集属性。
         </para>
 
     </sect1>

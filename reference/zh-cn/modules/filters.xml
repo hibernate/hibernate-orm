@@ -7,7 +7,7 @@
                 对于某个特定的Hibernate session您可以选择是否启用（或禁用）某个过滤器。
     </para>
 
-    <sect1 id="objectstate-filters">
+    <sect1 id="objectstate-filters" revision="1">
         <title>Hibernate 过滤器(filters)</title>
 
         <para>
@@ -122,6 +122,18 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
 			最安全的方式是使用左外连接（left outer joining）。并且通常来说，先写参数，
 			然后是操作符，最后写数据库字段名。
         </para>
+        
+        <para>
+            在Filter定义之后,它可能被附加到多个实体和/或集合类,每个都有自己的条件。假若这些条件都是一样的，每次都要定义就显得很繁琐。因此，<literal>&lt;filter-def/&gt;</literal>被用来定义一个默认条件，它可能作为属性或者CDATA出现：
+        </para>
+
+        <programlisting><![CDATA[<filter-def name="myFilter" condition="abc > xyz">...</filter-def>
+<filter-def name="myOtherFilter">abc=xyz</filter-def>]]></programlisting>
+
+        <para>
+        	当这个filter被附加到任何目的地，而又没有指明条件时，这个条件就会被使用。注意，换句话说，你可以通过给filter附加特别的条件来重载默认条件。
+        </para>
+
 
     </sect1>
 

@@ -435,11 +435,11 @@ dynamicSession.close()
 				</para>
     </sect1>
 
-    <sect1 id="persistent-classes-tuplizers" revision="0">
+    <sect1 id="persistent-classes-tuplizers" revision="1">
         <title>元组片断映射(Tuplizers)</title>
 
         <para>
-            <literal>org.hibernate.tuple.Tuplizer</literal>，以及其子接口，负责根据给定的<literal>org.hibernate.EntityMode</literal>，来复现片断数据。如果给定的片断数据被认为其是一种数据结构，"tuplizer"就是一个知道如何创建这样的数据结构，以及如何给这个数据结构赋值的东西。比如说，对于POJO这种Entity Mode，对应的tuplizer知道通过其构造方法来创建一个POJO，再通过其属性访问器来访问POJO属性。有两大类高层Tuplizer，分别是<literal>org.hibernate.tuple.EntityTuplizer</literal> 和<literal>org.hibernate.tuple.ComponentTuplizer</literal>接口。<literal>EntityTuplizer</literal>负责管理上面提到的实体的契约，而<literal>ComponentTuplizer</literal>则是针对组件的。
+            <literal>org.hibernate.tuple.Tuplizer</literal>，以及其子接口，负责根据给定的<literal>org.hibernate.EntityMode</literal>，来复现片断数据。如果给定的片断数据被认为其是一种数据结构，"tuplizer"就是一个知道如何创建这样的数据结构，以及如何给这个数据结构赋值的东西。比如说，对于POJO这种Entity Mode，对应的tuplizer知道通过其构造方法来创建一个POJO，再通过其属性访问器来访问POJO属性。有两大类高层Tuplizer，分别是<literal>org.hibernate.tuple.entity.EntityTuplizer</literal> 和<literal>org.hibernate.tuple.entity.ComponentTuplizer</literal>接口。<literal>EntityTuplizer</literal>负责管理上面提到的实体的契约，而<literal>ComponentTuplizer</literal>则是针对组件的。
         </para>
 
         <para>
@@ -466,7 +466,7 @@ dynamicSession.close()
 
 
 public class CustomMapTuplizerImpl
-        extends org.hibernate.tuple.DynamicMapEntityTuplizer {
+        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {
     // override the buildInstantiator() method to plug in our custom map...
     protected final Instantiator buildInstantiator(
             org.hibernate.mapping.PersistentClass mappingInfo) {

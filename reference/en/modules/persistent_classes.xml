@@ -181,7 +181,7 @@ public class Cat {
             <para>
                 You should also avoid declaring <literal>public final</literal> methods on the 
                 non-final classes. If you want to use a class with a <literal>public final</literal> 
-                method, you must explicitly disable proying by setting <literal>lazy="false"</literal>.
+                method, you must explicitly disable proxying by setting <literal>lazy="false"</literal>.
             </para>
         </sect2>
         

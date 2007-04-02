@@ -33,7 +33,7 @@
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>3.2.2</releaseinfo>
+        <releaseinfo>3.2.3</releaseinfo>
     </bookinfo>
 
     <toc/>

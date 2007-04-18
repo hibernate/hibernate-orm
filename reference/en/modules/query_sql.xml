@@ -533,7 +533,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       discriminator column.</para>
     </sect2>
 
-    <sect2 id="sp_query" revision="2">
+    <sect2 id="sp_query" revision="1">
       <title>Using stored procedures for querying</title>
 
       <para>Hibernate 3 introduces support for queries via stored procedures
@@ -573,6 +573,10 @@ BEGIN
     </return>
     { ? = call selectAllEmployments() }
 </sql-query>]]></programlisting>
+
+      <para>Notice stored procedures currently only return scalars and
+      entities. <literal>&lt;return-join&gt;</literal> and
+      <literal>&lt;load-collection&gt;</literal> are not supported.</para>
 
       <sect3 id="querysql-limits-storedprocedures" revision="1">
         <title>Rules/limitations for using stored procedures</title>

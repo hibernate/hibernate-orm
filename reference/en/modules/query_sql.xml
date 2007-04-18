@@ -533,7 +533,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       discriminator column.</para>
     </sect2>
 
-    <sect2 id="sp_query" revision="1">
+    <sect2 id="sp_query" revision="2">
       <title>Using stored procedures for querying</title>
 
       <para>Hibernate 3 introduces support for queries via stored procedures

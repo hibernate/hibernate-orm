@@ -1,0 +1,2384 @@
+Hibernate Changelog
+===================
+Note: Newer entries are automatically generated and the description might not
+match the actual issue resolution (i.e. a bug might not be a bug). Please
+refer to the particular case on JIRA using the issue tracking number to learn
+more about each case.
+
+
+Changes in version 3.2.4 (2007.05.09)
+-------------------------------------------
+
+** Bug
+    * [HHH-511] - reattach object from same session
+    * [HHH-2316] - org.hibernate.cache.CacheKey.equals() can cause PropertyAccessException to be thrown
+    * [HHH-2553] - New LoadContexts Implementation causing possible performance degradation
+    * [HHH-2602] - instrumented many-to-one problem with aggressive release
+
+** Deprecation
+    * [HHH-2603] - Deprecate the Session.connection() method
+
+** Improvement
+    * [HHH-2549] - Warn users explicitly about schemaexport and schemaupdate does not support annotations
+
+** New Feature
+    * [HHH-1] - Optimize Hibernate for the bulk insertion of related entities
+
+** Patch
+    * [HHH-2301] - Identity generator with custom insert SQL broken in 3.2 (Scott Rankin and Gail Badner)
+    * [HHH-2336] - paremeterizable and typedef-able UserCollectionType (Holger Brands)
+    * [HHH-2580] - Performace: Too many lookups of WAS extended transaction support (Jesper Udby)
+
+
+Changes in version 3.2.3 (2007.04.02)
+-------------------------------------------
+
+** Bug
+    * [HHH-2376] - Query with fully qualified entity class fails
+    * [HHH-2392] - LockModes referencing non-root joined-subclass class in HQL/Criteria
+    * [HHH-2393] - Generated properties leave open ResultSet on Batcher to be closed on transaction completion
+    * [HHH-2397] - hilo generator can generate negative numbers because of arithmetic overflow
+    * [HHH-2469] - ArrayIndexOutOfBoundsException during update by rowid
+    * [HHH-2476] - PersistentMap.put() incorrect on uninitialized, non-extra-lazy map
+    * [HHH-2481] - Big memory leak in the use of CGLIB
+    * [HHH-2499] - incorrect assertion failure relating to generated property values
+    * [HHH-2513] - Abusive WARN logged during deserialization of replicated SessionFactory
+    * [HHH-2521] - Fix cascading of merge across component properties
+    * [HHH-2532] - update/delete executeUpdate() causes problems with JBossCache (at least in opt-locking setups)
+
+** Improvement
+    * [HHH-2495] - encapsulate the notion of state pertaining to processing a result set
+    * [HHH-2534] - better error message for illegal 'collection dereference' in HQL query
+    * [HHH-2535] - Change Cache' Cache71Dialect so that sequence support returns false
+
+** New Feature
+    * [HHH-2471] - create a set of "enhanced" generators
+    * [HHH-2500] - apply Terradata certification results
+
+** Patch
+    * [HHH-2367] - InformixDialect uses wrong data type
+    * [HHH-2489] - SQL comments for HQL bulk operations
+
+
+Changes in version 3.2.2 (2007.01.24)
+-------------------------------------------
+
+** Bug
+    * [HHH-1471] - If the 'generated' attribute is set to 'insert' or 'always' on the property of a component it is ignored and the value is not read from the database.
+    * [HHH-1646] - Bad code in FastClass.equals
+    * [HHH-1889] - LockMode.UPGRADE not applied in all cases for SQL Server / Sybase
+    * [HHH-2112] - ClassCastException in StatefulPersistenceContext.getCachedDatabaseSnapshot(...)
+    * [HHH-2221] - MySQL temp table DDL and isolation
+    * [HHH-2238] - SQLQuery executeUpdate doesn't respect Query.setFlushMode()
+    * [HHH-2251] - Settings build unnecessary in schemaupdate/schemavalidate
+    * [HHH-2257] - Query.iterate() results differ from Query.list() 2
+    * [HHH-2259] - autoflush and autoclose not longer occur in JTA environment with hibernate 3.2
+    * [HHH-2264] - NPE when NamedQuery contains space before variable name
+    * [HHH-2274] - Collection ordering when many to many order by is used is not respected
+    * [HHH-2275] - Mapping a composite element as a map key using formulas can lead to AOOBE
+    * [HHH-2284] - HQL: selecting components inside components doesn't work
+    * [HHH-2291] - collection based on property-ref not handled correctly during reattch
+    * [HHH-2292] - merge detached instance fails to persist collection changes in case of bare collection reference
+    * [HHH-2356] - NullableType.toString(Object) should account for nulls
+    * [HHH-2366] - Changing a component's value does not trigger an update during flush
+    * [HHH-2378] - replicate() of non-versioned entiy can result in wrong value for version in entity cache
+
+** Improvement
+    * [HHH-1851] - relax special handling of 'id' property
+    * [HHH-2130] - SQLQuery does not autoflush all entities used in the query
+    * [HHH-2193] - Introduce a flag to avoid checking NamedQuery at startup
+    * [HHH-2242] - Consider Allowing Optimistic Lock Strategies other than 'Version' with joined-subclass
+    * [HHH-2250] - Create an appropriate error message if Query.setEntity is passed a NULL value
+    * [HHH-2282] - PersistentClass property lookups do not properly account for embedded composite identifiers
+    * [HHH-2286] - dialect informational metadata
+    * [HHH-2372] - Allow tooling to create Settings via SettingsFactory without contacting the db
+
+** New Feature
+    * [HHH-2246] - No way to specify CACHE_PROVIDER_CONFIG in HibernateServiceMBean
+
+** Patch
+    * [HHH-2300] - Updated dialect for H2 database engine
+    * [HHH-2371] - enhancements to C3P0ConnectionProvider
+
+** Task
+    * [HHH-2032] - update c3p0 to 0.9.1
+
+
+
+Changes in version 3.2.1 (2006.11.16)
+-------------------------------------------
+
+** Bug
+    * [HHH-939] - 'class' property in HQL results in incorrect SQL for joined-subclass
+    * [HHH-1401] - session.merge() executes unnecessary updates when one-to-many relationship is defined.
+    * [HHH-1460] - Inconsistent behavior when using Session.get() with multiple subclasses
+    * [HHH-1564] - deleting versioned object with collection leads to unecessary update
+    * [HHH-1629] - SchemaUpdate/validator doesn't listen to quoting
+    * [HHH-1631] - Missing table in SQL from clause that is referenced in where clause when using joined subclass
+    * [HHH-1651] - hibernate does not find an existing sequence from an Oracle database
+    * [HHH-1663] - <any/> with collection will produce "AssertionFailure: collection was not processed by flush()"
+    * [HHH-1737] - Add a ConnectionWrapper interface to allow access to the underlying connection from a BorrowedConnectionProxy
+    * [HHH-1756] - Proxy objects are not removed from the BatchFetchQueue during a session evict
+    * [HHH-1774] - Component parameters bound incorrectly
+    * [HHH-1921] - "dirty, but no dirty properties" thrown when Interceptor resets properties.
+    * [HHH-1986] - javassist throws InvocationTargetException instead of original checked Exception
+    * [HHH-2027] - merge listener over-writes Interceptor changes to component state for a transient entity
+    * [HHH-2044] - DefaultMergeEventListener.entityIsDetached call StaleObjectStateException with wrong identifier
+    * [HHH-2082] - UpdateTimestampsCache.isUpToDate returns before checking all spaces
+    * [HHH-2108] - cacheable files broken
+    * [HHH-2138] - merge with bidirectional one-to-one may fail
+    * [HHH-2145] - set.retainAll calling set.addAll
+    * [HHH-2174] - Wrong log message in SessionImpl.afterTransactionCompletion(...)
+    * [HHH-2199] - Unique constraints on nullable columns should not be generated with unique-key is used and supportsNotNullUnique=false
+    * [HHH-2202] - Clearing the connection warnings even when log is > WARN to workaround a Sybase issue
+    * [HHH-2206] - SessionImpl tries to deserialize itself in an incorrect order
+    * [HHH-2207] - Suggested fix for HQL - MySQL setMaxResults issue
+    * [HHH-2226] - org.hibernate.hql.ast.tree.FromElementType contains warning log message that should be debug instead
+    * [HHH-2229] - Performance issue with fix for HHH-1293, CGLIBLazyInitializer may be slower for certain Java classes
+    * [HHH-2236] - Lazy property + setReadOnly + Instrumented classes results in NullPointerException when accessing lazy property
+
+** Improvement
+    * [HHH-2037] - provide Query.setProperties(Map)
+    * [HHH-2042] - Typo in FlushMode.MANUAL Javadoc
+    * [HHH-2057] - Add "remove" cascading style to CascadeStyle for XML mappings
+    * [HHH-2127] - Document <filter-def condition="defaultCondition"> and <filter-def>defaultCondition
+    * [HHH-2135] - Hibernate Deserialization:  In org.hibernate.type.SerializableType the code makes a test for the return of a null object by simply testing the object as to whether or not it is null.
+    * [HHH-2185] - introduce setting to control cglib caching of classes
+    * [HHH-2203] - Make Post*Events extend AbstractEvent
+    * [HHH-2208] - Table schema use in DatabaseMetadata
+    * [HHH-2209] - ehcache.jar is old and does not contain the SingletonCacheProvider which are advised in exception messages
+    * [HHH-2217] - Collection write methods and dirtying the collection
+
+** New Feature
+    * [HHH-2205] - Dialect for Intersystems' Cache SQL 2007.1
+
+** Patch
+    * [HHH-1767] - read-only cache for immutable collection causes unnecessary warning
+
+** Task
+    * [HHH-2219] - Upgrade to Javassist 3.4
+
+
+Changes in version 3.2.0.ga (16.10.2006)
+-----------------------------------------
+(retag of 3.2.0.cr5 (2006.10.16))
+
+Changes in version 3.2.0.cr5 (04.10.2006)
+-------------------------------------------
+
+** Bug
+    * [HHH-1668] - PersistentSet write methods mark collection as dirty even if entry is not written
+    * [HHH-1714] - Session.get() behavior
+    * [HHH-1891] - Since rc3 deprecation Warning: The syntax 'TYPE=storage_engine' is deprecated and will be removed in MySQL 5.2.
+
+** Improvement
+    * [HHH-2093] - PERSIST_ON_FLUSH ineffective for recursive object graphs
+    * [HHH-2103] - Rolling back 'SELECT is mandatory' on JPA strict compliance
+
+** Task
+    * [HHH-1931] - verify that the instrument tasks actually work
+
+
+Changes in version 3.2.0.cr4 (24.08.2006)
+-------------------------------------------
+
+** Bug
+    * [HHH-1293] - java.lang.NoSuchMethodError: <persistent class>.getHibernateLazyInitializer()
+    * [HHH-1677] - optimistic-lock="dirty|all" is ignored at delete time
+    * [HHH-1710] - persistent collections with property-ref to secondary tables cannot be joined in HQL
+    * [HHH-1713] - AbstractEntityPersister causes an exception when a row in a joined table is missing with fetch="select"
+    * [HHH-1740] - Build-time instrumentation breaks lazy="proxy"
+    * [HHH-1750] - Exception ORA-01000 too many open cursors by generated="insert"
+    * [HHH-1806] - No Dialect mapping for JDBC type: 3
+    * [HHH-1848] - A session.lock generates a query with a version column in a joined subclass which does not exist
+    * [HHH-1892] - finish HHH-1789 for ordered and sorted collections
+    * [HHH-1898] - With hibernate 3.2.0-cr3 there is an hql parsing error on a one-to-one relation
+    * [HHH-1924] - ForeignKeys: TransientObjectException is thrown without a message because of a wrong bracket in the code
+    * [HHH-1927] - persist() and then merge() not handled correctly for multiple entity instances representing the same logical state
+    * [HHH-1937] - Proxy creation failure leads to NPEs
+    * [HHH-1943] - PersistenceContext not checked to see whether the associated entity is transient or not
+    * [HHH-1944] - generated subqueries and jpaql compliance (derived select clause) check
+    * [HHH-1947] - OF part of MEMBER  OF is optional
+    * [HHH-1948] - Query Idetification variables are case insensitive in JPA
+    * [HHH-1949] - having trim(BOTH from c.name) translated into having ltrim(rtrim(BOTH)) on DB2
+    * [HHH-1954] - Proxies are never unassociated (evicted) from a session
+    * [HHH-1958] - session.lock(LockMode.FORCE) can lead to NPE
+    * [HHH-1963] - meta inheritance broken
+    * [HHH-1992] - Some cascade actions should not trigger a property access on lazy properties
+    * [HHH-2001] - javaassist does not setup the proper protection domain thus does not work with signed/secured deployments such as webstart
+    * [HHH-2015] - where= does not set parenthesis leading to unexpected query when multiclause are used
+    * [HHH-2017] - locate function defined on Oracle9Dialect is incorrect
+    * [HHH-2022] - property names beginning with underscores cause Hibernate to generate invalid aliases
+
+** Improvement
+    * [HHH-1470] - Enhance Hibernate-Mapping DTD Definition of type element
+    * [HHH-1934] - logging NonUniqueObjectException and WrongClassException
+    * [HHH-1941] - Be more specific about x not found and invalid mapping exceptions to allow tools to tell about it
+    * [HHH-1968] - unify bytecode instrumentation
+    * [HHH-1980] - disallow the mapping combination of <version/> and optimistic-lock
+    * [HHH-2005] - more standard build script
+    * [HHH-2023] - performance optimization of JTATransactionFactory.isTransactionInProgress()
+
+** Patch
+    * [HHH-1271] - When using Stored Procedure for update or delete, the check is not done correctly.
+
+** Task
+    * [HHH-1931] - verify that the instrument tasks actually work
+
+
+Chages in version 3.2 cr3 (2006.07.06)
+-------------------------------------------
+
+** Bug
+    * [HHH-1452] - Native SQL query is missing join if entity includes many-to-one on secondary table
+    * [HHH-1507] - one-to-one can have formula or meta but not both of them.
+    * [HHH-1552] - Error when using ?1 and parameterList
+    * [HHH-1586] - ClassCastException in CollectionType.toLoggableString if using CustomCollectionType
+    * [HHH-1732] - EhCache.toMap still assumes Serializable objects
+    * [HHH-1734] - Connection leak when using hilo strategy in SE environment
+    * [HHH-1741] - Bug in reference documentation
+    * [HHH-1746] - NullPointerException at IdentNode.resolveAsNakedComponentPropertyRefLHS(IdentNode.java:195
+    * [HHH-1748] - Setting a comment that contains a single quote on a query results in an unintuitive exception
+    * [HHH-1763] - Bug in InputStream org.hibernate.util.ConfigHelper.getResourceAsStream(String resource)
+    * [HHH-1791] - property update="false" ignored since 3.2.0.cr2
+    * [HHH-1816] - serializing session from a named session factory to a different vm broken
+    * [HHH-1822] - flushing entity linked to transient instance (non cascaded) should always fail
+    * [HHH-1828] - registering a transaction marked for Rollback is illegal
+    * [HHH-1833] - Not Generating HibernateException
+    * [HHH-1838] - Wrong SQL generated for hql query on "any" relation
+    * [HHH-1855] - booleans not properly handled in assignment clause of UPDATE statements
+    * [HHH-1858] - wrong sql generated against many-to-any association table
+    * [HHH-1871] - query type autodiscovery assume wrong column when mixing entities and scalars
+
+** Deprecation
+    * [HHH-1792] - Callable update/insert/delete statements should not force rowcount out parameter
+
+** Improvement
+    * [HHH-1617] - Check the second-level cache before adding a PK to a batch fetch
+    * [HHH-1773] - Typo in ImprovedNamingStrategy
+    * [HHH-1779] - Allow Session.remove() on transient object
+    * [HHH-1789] - improve efficiency of collection initialization from L2 cache hits
+    * [HHH-1795] - default cache provider to NoCacheProvider
+    * [HHH-1796] - TreeCache based providers and Fqn
+    * [HHH-1800] - session.get() / load() should raise exception when the id is of the wrong type
+    * [HHH-1818] - remove() should force subsequent contains() calls to return false
+    * [HHH-1831] - Batch loading the same EntityKey (one side of manytoone ) more than once
+    * [HHH-1861] - More complete component handling in HQL
+    * [HHH-1881] - introduce LoggableUserType interface
+
+** New Feature
+    * [HHH-1709] - Be able to raise ENFE rather than LIE in proxies
+    * [HHH-1727] - Add a SQLFunctionRegistry
+    * [HHH-1817] - Introduce setting for JPA-QL strict compliance
+    * [HHH-1826] - Built-in type for char[] -> VARCHAR Byte[] and Character[]
+
+** Patch
+    * [HHH-1558] - Dialect for new database engine H2
+    * [HHH-1847] - QBE 'like' clause with backslashes don't work with MySQL
+
+** Task
+    * [HHH-1839] - rename FlushMode.NEVER -> FlushMode.MANUAL
+
+
+Changes in version 3.2 cr2 (2006.05.05)
+-------------------------------------------
+
+** Bug
+    * [HHH-1114] - The first (HSQL) Hibernate Application doesn't work as expected due to lack of database shutdown
+    * [HHH-1175] - Exception when loading inheritance mapping in single file
+    * [HHH-1560] - PropertiesHelper.resolvePlaceHolders() fails with non-String values in System properties
+    * [HHH-1620] - Errors on max_lo <=1 boundaries
+    * [HHH-1625] - Hibernate.isPropertyInitialized() returns false on instrumented transient object
+    * [HHH-1648] - Exception while resuming a transaction is silently eaten
+    * [HHH-1674] - Configuration serialization error: filterDefinitions map not serializable
+    * [HHH-1695] - subsequent calls to non-existent proxy causes NPE
+
+** Improvement
+    * [HHH-1266] - StatelessSession can implement refresh
+    * [HHH-1414] - many-to-many and metadata order-by based on column from the target table
+    * [HHH-1477] - Improve naming strategy for ANN-195
+    * [HHH-1538] - aggregations functions in EJBQL queries does not return the appropriate types
+    * [HHH-1670] - Update EhCache and EhCache provider to support EhCache 1.2
+    * [HHH-1704] - Deduplicate unique constraints generation sharing the same column(s)
+
+** New Feature
+    * [HHH-870] - support SQL updates in named queries
+    * [HHH-1591] - Replace LazyInitializationException by EntityNotFoundException
+    * [HHH-1719] - Provide a ClassTransformer interface to the BytecodeProvider
+
+
+Changes in version 3.2 cr1 (2006.03.27)
+-------------------------------------------
+
+** Bug
+    * [HHH-1453] - Broken exception handling in NullableType
+
+** Improvement
+    * [HHH-227] - remove reflection optimizer
+    * [HHH-587] - Make ResultTransformer available for all query methods
+    * [HHH-1588] - delay inserts for insert-generated-identifiers outside transaction
+    * [HHH-1590] - redesign how PostInsertIdentifierGenerators are handled at insertion
+    * [HHH-1592] - allow SelectGenerator to use a defined natural-id (if one)
+
+** New Feature
+    * [HHH-332] - create ability to add resulttransformer to HQL query
+    * [HHH-1179] - support inline sequence id generation on Oracle using RETURNING clause
+
+
+Changes in version 3.2 alpha2 (2006.03.15)
+-------------------------------------------
+
+** Bug
+    * [HHH-535] - properties element causes exception in interface/abstract class
+    * [HHH-1325] - ArrayOutOfBounds expected in DatabaseMetadata.isTable when specifing schema
+    * [HHH-1435] - many-to-one lazy seems to be broken in 3.1.x
+    * [HHH-1531] - NPE with many-to-many and property-ref
+    * [HHH-1546] - generated version properties fail with multiple actions per flush
+
+** Improvement
+    * [HHH-1540] - Better Error Feedback In CollectionEntry.postFlush(PersistentCollection)
+    * [HHH-1555] - ConnectionReleaseMode.AFTER_STATEMENT and flushes
+    * [HHH-1559] - introduce TransactionFactory.isTransactionInProgress to facilitate EJB3 joinTransaction handling
+
+
+Changes in version 3.2 alpha1 (2006.02.28)
+-------------------------------------------
+
+** Bug
+    * [HHH-687] - Exception QuerySyntaxError not really serializable
+    * [HHH-1236] - Remove static reference to classloader, to avoid memory leak at webapp reload
+    * [HHH-1287] - Problem with WAS ExtendedJTATransaction not available when using MDB
+    * [HHH-1419] - Update + Exists doesn't seem to work
+    * [HHH-1445] - SchemaUpdate closes shared ConnectionProvider
+    * [HHH-1464] - QueryException from Query.getReturnAliases when query uses "fetch"
+    * [HHH-1486] - Concurrent access issues with both SoftLimitMRUCache and SimpleMRUCache
+    * [HHH-1508] - Session.createQuery() should not flush the session
+
+** Improvement
+    * [HHH-1411] - Collection fetches and DISTINCT
+    * [HHH-1412] - Collection fetches and firstResult/maxRows
+    * [HHH-1416] - LockMode.FORCE to implement EJB3 LockModeType.WRITE
+    * [HHH-1457] - support new optimisitc locking capabilities of JBossCache
+    * [HHH-1466] - better handling of Antlr exceptions
+    * [HHH-1516] - support DataDirect standard jdbc stored procedures
+    * [HHH-1518] - Guarentee LockMode behaviors
+    * [HHH-1520] - with clause with implied joins within an explicit join
+    * [HHH-1526] - Improved DTDEntityResolver
+
+** New Feature
+    * [HHH-1251] - Avoid replicating the clearing of TreeCache on SessionFactory..close()
+    * [HHH-1410] - FlushMode.AUTO -> COMMIT when outside a transaction
+    * [HHH-1447] - pluggable bytecode libraries
+
+
+Changes in version 3.1.2 (01.27.2006)
+-------------------------------------------
+
+** Bug
+    * [HHH-73] - Statistics for HQL queries use pre-processed query string
+    * [HHH-1306] - HQL parsing problem with join fetching of arrays/collections of values
+    * [HHH-1370] - Warning in hibernate-mapping-3.0.dtd
+    * [HHH-1371] - MappingException is thrown when the same column is referenced with different case
+    * [HHH-1386] - Numeric (long) literals not properly handled by HQL parser
+    * [HHH-1390] - Session.isOpen() throws exeception when the session is closed with ThreadLocalSessionContext
+    * [HHH-1391] - Invalid parameter index SQLException when using named parameters after positional parameters
+    * [HHH-1392] - Proxies cannot be serialized after session is closed
+    * [HHH-1398] - extends and entity-names broken with mapping-level package attribute
+    * [HHH-1407] - return-join broken for entity collections
+
+** Improvement
+    * [HHH-1364] - Defensive check of isClosed when obtaining a connection from ConnectionManager
+    * [HHH-1367] - warn level log "this operation breaks ==" may be disturbing
+
+** New Feature
+    * [HHH-1372] - Support for MySQL5 new varchar length
+
+** Patch
+    * [HHH-1005] - Criteria LEFT JOIN capability when adding Order to associations
+
+** Task
+    * [HHH-1373] - Document update versioned
+
+
+Changes in version 3.1.1 (01.13.2006)
+-------------------------------------------
+
+** Bug
+    * [HHH-853] - DML-style HQL queries and associations
+    * [HHH-1281] - FORWARD_ONLY ScrollableResults#next() throw GenericJDBCException
+    * [HHH-1286] - Set entity in HQL query without prefix -> incorrect SQL
+    * [HHH-1308] - Session.createFilter(...).iterate() results in bogus column names for result set extraction
+    * [HHH-1314] - float/double literals not sent to the database correctly
+    * [HHH-1316] - SchemaUpdate : java.sql.SQLException: You cannot commit during a managed transaction!
+    * [HHH-1328] - org.hibernate.util.SimpleMRUCache keeps a soft reference to the cache key, so cached values get collected prematurely
+    * [HHH-1336] - ForeignGenerator does not handle transient entities with an entity-name properly
+    * [HHH-1337] - Mapped <component> generated column names incorrect with ImprovedNamingStrategy
+    * [HHH-1349] - HQL delete statement problem due to oracle lacking table aliases in delete clause
+    * [HHH-1361] - creating temporary table for bulk delete will commit current transaction in managed environment such as J2EE
+
+** Improvement
+    * [HHH-1019] - Native SQL return-property mapping doesn't support dot-syntax in return-property for components
+    * [HHH-1290] - Defensive checking of session status
+    * [HHH-1302] - query.getReturnTypes inconsistent
+    * [HHH-1304] - better handling of borrowed connections in non-ON_CLOSE release semantics
+    * [HHH-1309] - schemaupdate does not handle TableHiLoGenerator
+    * [HHH-1339] - empty property name in mapping file gives imcomprehensible error message
+    * [HHH-1344] - ANSI-SQL trim function for SQLServer
+    * [HHH-1345] - ANSI-SQL mod function for SQLServer
+    * [HHH-1346] - ANSI-SQL bit_length function for SQLServer
+    * [HHH-1351] - <return-scalar name="blah"/> should be possible
+    * [HHH-1360] - set autodiscovery flag for SQLQueries when resultsetmappings are used
+
+
+Changes in version 3.1  (12.12.2005)
+-------------------------------------------
+
+** Bug
+    * [HHH-849] - Cartesian product + implicit joins
+    * [HHH-1065] - user provided connection not usable by default due to agressive release changes
+    * [HHH-1101] - associations join fetched in HQL without owner being selected
+    * [HHH-1133] - Comparators, defined for collections in mapping files, are not set
+    * [HHH-1149] - NPE flushing reattached entity  w/ non-mutable natural-id
+    * [HHH-1170] - HQL 'cast' function doesn't work with MySQL 4 when casting to string
+    * [HHH-1187] - Cannot delete a object having a delete-orphan collection when user_rollback_id is set
+    * [HHH-1191] - HQL fails backward compatibility using classic translator
+    * [HHH-1194] - hql delete statements with joined-subclass hierarchies with a mapped where attribute at the root
+    * [HHH-1206] - Mappings.TableDescription is not serializable
+    * [HHH-1212] - mismatch in entity-modes defined in DTD and EntityMode class
+    * [HHH-1227] - ClassCastException on DOM4J replicate of Calendar property
+    * [HHH-1239] - BinaryArithmeticOperatorNode.getDataType() does not properly handle date/time arithmetic
+    * [HHH-1240] - Track connection leakage in JDBCContext.afterTransactionCompletion()
+    * [HHH-1245] - Calling the Session should register it with the current JTA txn.
+    * [HHH-1254] - Serialization of Sessions using JDBCTransactions with auto-flush/auto-close
+
+** New Feature
+    * [HHH-1222] - Autodiscover scalar types in native-sql
+    * [HHH-1243] - allow placeholders to system properties in config properties
+    * [HHH-1244] - Support for MySQL5 stored procedures
+    * [HHH-1260] - Configuration.mergeProperties()
+
+** Task
+    * [HHH-1066] - Upgrade CGLIB to fix proxy memory leak
+    * [HHH-1242] - upgrade ANTLR to 2.7.6rc1
+
+** Improvement
+    * [HHH-860] - insert ... select ... and version numbers
+    * [HHH-926] - TypeDef should be global
+    * [HHH-1138] - No ConstraintName when using PostgreSQL
+    * [HHH-1144] - Implement naming convention for temporary test failures
+    * [HHH-1153] - PropertiesHelper fails reading primitive values from hibernate-mapping when doc has whitespace
+    * [HHH-1182] - Access to filter metadata
+    * [HHH-1183] - Getting sql "plan" for DML operations
+    * [HHH-1197] - Support for HQL delete on MaxDB
+    * [HHH-1198] - post-insert event pass the entity wo the id field filled when the generator is identity
+    * [HHH-1213] - make JACC event listeners auto configurable (through initialize(Configuration))
+    * [HHH-1215] - Added support for LVARCHAR in InformixDialect
+    * [HHH-1218] - Add concat() function support to SAPDBDialect
+    * [HHH-1255] - ThreadLocalSessionContext and Session serialization
+
+** Patch
+    * [HHH-967] - executeUpdate on StatelessSession
+    * [HHH-1172] - Missing configuration templates for the new MimerSQLDialect
+
+** Deprecation
+    * [HHH-1229] - deprecate ability for entities to not define identifier properties
+
+
+Changes in version 3.1 rc3  (17.11.2005)
+-------------------------------------------
+
+** Bug
+    * [HHH-755] - Setter / Getter for property gDate are wrong
+    * [HHH-764] - XML mapping
+    * [HHH-1034] - The connection is closed  *outside* the JTA transaction in TransactionHelper
+    * [HHH-1062] - java:comp/UserTransaction not correct for JBoss
+    * [HHH-1064] - Exception using JTATransaction in WebSphere 6
+    * [HHH-1069] - Unnecessary commas generated in select with left outer joins
+    * [HHH-1075] - New parser  "not exists" command bug
+    * [HHH-1077] - Typo in docs: "equiped"
+    * [HHH-1080] - HQL delete fails on entities with where-fragments using operators other than '='
+    * [HHH-1081] - missing parens in example code for Criteria Associations
+    * [HHH-1084] - incorrect method name "sql" in Restrictions example, should be "sqlRestriction"
+    * [HHH-1091] - Can't write transparent CurrentSessionContext for BMT
+    * [HHH-1098] - Patch for build.sh to be able to build latest version on linux
+    * [HHH-1106] - HQL "not in" generatad wrong SQL
+    * [HHH-1111] - JDBCTransaction.rollback() results in a call to Interceptor.beforeTransactionCompletion()
+    * [HHH-1128] - Column alias clashes under  certain circumstances
+    * [HHH-1146] - latest cvs(11/10/05)  hibernate3 issue with classic query
+    * [HHH-1156] - StatefulPersistenceContext not serializable when property-ref is used
+    * [HHH-1160] - Incorrect use of getGeneratedKey() for Oracle
+
+** New Feature
+    * [HHH-449] - korean hibernate reference manual
+    * [HHH-1129] - use expected-type in 'untyped' Query.setParameter()
+
+** Improvement
+    * [HHH-221] - Proxy for one-to-one with property-ref
+    * [HHH-844] - move parameter "bookkeeping" into QueryTranslator
+    * [HHH-1051] - "Compiled" native SQL queries are not cached
+    * [HHH-1061] - import.sql should allow more human readable and usable files
+    * [HHH-1078] - <dynamic-component> requires type on property
+    * [HHH-1120] - Make NamingStrategy to work nicely with HA and EJB3 naming strategy
+    * [HHH-1142] - added getSelectSequenceNextValString() and getCurrentTimestampSelectString() to TimesTenDialect
+
+** Patch
+    * [HHH-1063] - support for 'locate' function in SQLServer and Sybase dialects
+    * [HHH-1090] - Allow subqueries on criteria to obtain non-string results
+    * [HHH-1095] - Hibernate takes incorrect HasCode when a lot of CompositeKeys and Lazy loading is involved
+    * [HHH-1103] -  finalize method filter for proxies
+    * [HHH-1136] - more meaningful AssertionFailure message in org.hibernate.persister.entity.JoinedSubclassEntityPersister.getTableId(...)
+
+
+Changes in version 3.1 rc2  (17.10.2005)
+-------------------------------------------
+** Bug
+    * [HHH-1045] - Example contains inner classes that aren't serializable
+    * [HHH-1055] - optimistic-lock is not inherited from class to subclass et.al.
+
+** Improvement
+    * [HHH-702] - auto detect aliasing for collection properties (coll.key, coll.id etc.)
+    * [HHH-1038] - make 'auto' the default for hibernate.connection.release_mode
+    * [HHH-1042] - determine "expected type" of parameters during HQL parsing
+
+
+Changes in version 3.1 rc1  (07.10.2005)
+-------------------------------------------
+** Bug
+    * [HHH-528] - component.manyToOne.id in HQL causes join
+    * [HHH-871] - Configuration.setListener(String type, Object listener) throws ClassCastException
+    * [HHH-873] - referencing raw HQL FromElement alias outide the from clause of update and delete statements generates incorrect sql
+    * [HHH-876] - PreparedStatement being closed before being executed by AbstractBatcher
+    * [HHH-884] - SchemaExport does not propagate parent indexes to <union-subclass> tables
+    * [HHH-887] - Aggressive release and Session.connection()
+    * [HHH-893] - custom tuplizer are not instantiated for components
+    * [HHH-905] - $PlaceHolder$ remains in generated SQL when filter is enabled
+    * [HHH-907] - optimistic-lock="false" for timestamped object results in SQLException: Invalid column index
+    * [HHH-908] - CLONE -NullPointerException when using BigInteger in a query
+    * [HHH-911] - CGLIBLazyInitializer and Exceptions
+    * [HHH-913] - NPE in CMTTransaction since javax.transaction.Transaction is never set
+    * [HHH-918] - impossible to move objects to another session
+    * [HHH-924] - Useless OracleErrorCodeConverter (and possibly others)
+    * [HHH-932] - HQL UPDATE and <union-subclass>
+    * [HHH-946] - QuerySyntaxException might not be serializable
+    * [HHH-964] - ORA-00936 with joined subclass / Oracle
+    * [HHH-986] - Need to check Thread.currentThread().getContextClassLoader() in ConfigHelper
+    * [HHH-991] - Cannot use comparator class
+    * [HHH-1000] - varchar(xxx char) not supported on Oracle8i
+
+** New Feature
+    * [HHH-950] - interface for SessionFactory.getCurrentSession() handling
+
+
+** Improvement
+    * [HHH-608] - update HSQLDialect for HSQL 1.8 sequence support
+    * [HHH-889] - Add read-only cache-mode comment in <query and <sql-query
+    * [HHH-898] - OracleDialect UTF8 varchar2
+    * [HHH-909] - Onquoted primary key in IncrementGenerator
+    * [HHH-988] - generated="never|insert|always"
+    * [HHH-989] - add discussion of implicit and explcit joins
+    * [HHH-1011] - Make disconnect/reconnect of a Session implicit
+
+** Patch
+    * [HHH-994] - Sybase/SQLServer support for temporary tables
+
+
+Changes in version 3.1 beta 3  (13.09.2005)
+-------------------------------------------
+** Bug
+    * [HHH-528] - component.manyToOne.id in HQL causes join
+    * [HHH-871] - Configuration.setListener(String type, Object listener) throws ClassCastException
+    * [HHH-873] - referencing raw HQL FromElement alias of update and delete statements
+    * [HHH-876] - PreparedStatement being closed before being executed by AbstractBatcher
+    * [HHH-884] - SchemaExport does not propagate parent indexes to <union-subclass> tables
+    * [HHH-887] - Aggressive release and Session.connection()
+    * [HHH-893] - custom tuplizer are not instantiated for components
+    * [HHH-905] - $PlaceHolder$ remains in generated SQL when filter is enabled
+    * [HHH-907] - optimistic-lock="false" for timestamped object results in SQLException: Invalid column index
+    * [HHH-908] - NullPointerException when using BigInteger in a query
+    * [HHH-911] - CGLIBLazyInitializer and Exceptions
+    * [HHH-913] - NPE in CMTTransaction since javax.transaction.Transaction is never set
+    * [HHH-918] - impossible to move objects to another session 
+    * [HHH-924] - Removed ErrorCodeConverters
+    * [HHH-946] - QuerySyntaxException might not be serializable
+
+** Improvement
+    * [HHH-898] - OracleDialect UTF8 varchar2
+    * [HHH-909] - Unquoted primary key in IncrementGenerator
+
+
+Changes in version 3.1 beta 2 (16.08.2005)
+-------------------------------------------
+** Bug
+    * [HHH-477] - Boolean discriminators generate invalid SQL for PostgreSQL dialect
+    * [HHH-480] - SchemaExportTask ignores some properties not defined in hibernate.properties
+    * [HHH-615] - SchemaExport outputFile ignores ant's basedir
+    * [HHH-770] - hql query execution generates invalid SQL
+    * [HHH-779] - Assertion failure occured with Hibernate 3 saving objects
+    * [HHH-781] - SimpleExpression ignorecase regression
+    * [HHH-799] - merge() and embedded composite identifiers
+    * [HHH-801] - subselect fetch and named parameters
+    * [HHH-802] - querying "mapped" composite identifiers
+    * [HHH-803] - no version increment from delayed collection adds
+    * [HHH-805] - Session.getStatistics().getEntityCount() throws UnsupportedOperationException
+    * [HHH-819] - Firebird CONCAT SQL function
+    * [HHH-821] - query by natural-id cache is not update when object is inserted or deleted
+    * [HHH-822] - <key-property> will actually pick up <type> tags if it were allowed by the DTD
+    * [HHH-825] - ReadWrite-Cache issues NullPointerException after modification of an array
+    * [HHH-839] - Session.refresh not working for custom 'Load' SQL
+    * [HHH-849] - Cartesian product + implicit joins
+    * [HHH-854] - Class with mapped composite id can't have subclasses
+    * [HHH-858] - Autocommit status inconsistent in connections created by DriverManagerConnectionProvider
+    * [HHH-863] - Hibernate generates "notExists" instead of "not exists"
+    * [HHH-868] - Missing parens after / or -
+
+** New Feature
+    * [HHH-35] - add attribute haltonerror to schemaexport Ant task
+    * [HHH-182] - Mimer SQL Dialect for Hibernate 3
+    * [HHH-704] - Statistics for optimistic lock failures
+    * [HHH-725] - Allow hooks into all executed sql by a session
+    * [HHH-783] - collection lazy="extra"
+    * [HHH-818] - Optimisitc locking using database current timestamp
+    * [HHH-828] - session.getTransaction()
+    * [HHH-829] - <cache include="all|non-lazy" ... />
+    * [HHH-831] - allow database generated property values
+    * [HHH-832] - allow database generated property values for versioning
+    * [HHH-838] - Transaction.setTimeout()
+    * [HHH-840] - allow definition of "auxiliary" database objects in mapping
+    * [HHH-846] - Add Intializable interface for events
+    * [HHH-848] - Validate mappings against JDBC metadata
+    * [HHH-859] - post-commit events
+
+** Improvement
+    * [HHH-133] - schemaexport task: provide independent drop/create output
+    * [HHH-135] - parameterized types can't be used on key-property or ir (possible others)
+    * [HHH-552] - NoopAccessor for HQL-only properties
+    * [HHH-680] - Easier support for doing UserCollectionType's
+    * [HHH-686] - Final classes and classes with private null ctors cause unhelpful NullPointerException
+    * [HHH-754] - Allow HQL DML for implicit polymorphism
+    * [HHH-782] - Avoid unnecessary updates when component property is update='false' but modified
+    * [HHH-786] - Improve lazy options for <one-to-one>
+    * [HHH-791] - Use cascade styles when fetching entities in refresh() and merge()
+    * [HHH-815] - Confusing use of the term "dereference"
+    * [HHH-830] - Improvements to caching lazy properties
+
+** Patch
+    * [HHH-378] - Better LockMode.UPGRADE for DB2 UDB v8.2
+    * [HHH-430] - Improved SizeExpression with greater, lesser, not equals, etc. capabilities
+    * [HHH-735] - SchemaUpdate reads table metadata from wrong schema
+    * [HHH-780] - org.hibernate.proxy.BasicLazyInitializer reflection hotspot
+    * [HHH-864] - Use QUERY_CACHE for sessions with filters to improve performance
+
+
+Changes in version 3.1 beta 1 (21.07.2005)
+-------------------------------------------
+
+** Bug
+   * [HHH-145] - union-subclass and oracle 8i
+   * [HHH-374] - EJB3 example delete query doesn't work in Hibernate.
+   * [HHH-447] - EHCache integration prevents multiple session factories
+   * [HHH-488] - JACCListeners are not working at all
+   * [HHH-564] - missing commas for implicit joins
+   * [HHH-577] - joins within subqueries on dbs supporting ansi-joins result in extraneous commas
+   * [HHH-592] - cast() function doesn't know its returned Hibernate type
+   * [HHH-639] - CGLIB instrumentation of subclasses
+   * [HHH-658] - Bug in Alias Name Generation
+   * [HHH-671] - Firebird support of sequences/generators
+   * [HHH-679] - setLockMode(LockMode.UPGRADE_NOWAIT) does not translate to correct SQL on Oracle
+   * [HHH-688] - Bad implementation in org.hibernate.type.CustomType.stringToObject
+   * [HHH-691] - generated column alias is incorrect if there is a prior relationship and the table column names are similar to the table name
+   * [HHH-694] - NPE when accessing the SLCache stats with TreeCache
+   * [HHH-698] - Exception on EG , trying to change immutable id (natural-id)
+   * [HHH-699] - Incorrect Tablename genetaion when using MySQL Dialect and no Schema definition
+   * [HHH-708] - Restrictions.in could not be used properly on composite-ids
+   * [HHH-709] - ArrayType.replaceElements fails if original.length != target.length
+   * [HHH-718] - HQL "fetch all properties" not working for column level lazy props
+   * [HHH-726] - ConstraintViolationException with primitive collection
+   * [HHH-727] - java.lang.StackOverflowError when cascade="true" on both sides of bidirectional one-to-one association using FK
+   * [HHH-734] - HQL incorrectly parses certain query strings
+   * [HHH-736] - Use of sql functions containing space not supported in filter conditions
+   * [HHH-738] - formula property with select-before-update
+   * [HHH-747] - Order.toSQLString generates incorrect statement
+   * [HHH-748] - component dereferencing in subquery from clauses
+   * [HHH-752] - Typo in 8.5.3 bidirectional one-to-one jjoin table example
+   * [HHH-757] - NullPointerException when using BigInteger in a query
+
+** New Feature
+   * [HHH-595] - HQL insert select
+   * [HHH-597] - Named XML resultsetmappings
+   * [HHH-696] - handle discriminators on HQL insert
+   * [HHH-697] - allow bumping versions in HQL update
+   * [HHH-716] - handle version columns in bulk inserts
+   * [HHH-723] - Need to be able to pass in javax.sql.DataSource in SF creation
+   * [HHH-739] - Order.ignoreCase()
+   * [HHH-741] - select clause subselects
+   * [HHH-742] - Stateless session
+   * [HHH-744] - collection fetching in scroll() via "break processing"
+   * [HHH-768] - <many-to-many property-ref=".."/>
+
+** Improvement
+   * [HHH-14] - Add Session.delete(String entityName, Object entity)
+   * [HHH-295] - cleanup and expose the Tuplizers
+   * [HHH-352] - HQL bulk and cache
+   * [HHH-689] - exclude parens for components outside where-clause
+   * [HHH-743] - {coll.key}, {coll.index}, {coll.element}, etc
+   * [HHH-745] - EJB3 composite PK style
+   * [HHH-749] - Cascade merge() and unidirectional one-to-many
+   * [HHH-750] - use attribute name other than 'type' in dynamic-maps
+   * [HHH-753] - Replace antlr System.exit with QueryException
+   * [HHH-769] - property-ref="foo.bar" to a component property
+   * [HHH-772] - null in maps are handled inconsistently
+   * [TODO-18] - optimistic-lock="all|dirty" with components
+
+
+Changes in version 3.1 alpha 1 (24.06.2005)
+------------------------------------
+** Bug
+    * [HHH-204] - Wrong/uncommon log name in class ...hql ast ErrorCounter
+    * [HHH-241] - HQL lexer doesn't support unicode quoted strings
+    * [HHH-354] - property named "full" breaks HQL queries
+    * [HHH-493] -  WARNING: Keyword 'member' is being intepreted as an ident
+    * [HHH-538] - length() function does not work in SQLServerDialect
+    * [HHH-539] - ClassCastException on mapping a property with a formula in a set of composite elements
+    * [HHH-540] - Mapping a one-to-many collection with a non-null foreign key within a component fails on save
+    * [HHH-547] - Cannot commit using UserCollectionType and debug logging
+    * [HHH-548] - many-to-many faulty delete optimization when filter in use
+    * [HHH-554] - Hibernate 3 HQL to SQL FROM Clause Comma Generation Problem
+    * [HHH-558] - HQL doesn't support multi-byte character in class name and property names
+    * [HHH-559] - quoted multi-byte character in HQL is translated into weird character in SQL.
+    * [HHH-565] - delete-orphan generating AssertionFailure
+    * [HHH-566] - The result is not correct in  'createQuery("select new Foor(x,x) from Foo").scroll()'
+    * [HHH-570] - size operator fails on a many to many in HQL
+    * [HHH-571] - JDK 1.3 Compatibility Issue
+    * [HHH-573] - error when merging entity graph has cascade level>2
+    * [HHH-575] - org.hibernate.cache.FilterKey is not Serializable
+    * [HHH-589] - parameterized expression inside function
+    * [HHH-594] - order-by mapping for collections overrides order by in HQL
+    * [HHH-601] - New temporary table feature assumes all persisters are ready
+    * [HHH-614] - SchemaUpdate broken in DB2/400
+    * [HHH-622] - Spelling mistake 'intepreted' in org.hibernate.hql.PARSER warning
+    * [HHH-642] - criterias with projection
+    * [HHH-650] - FilterImpl is Serializable yet FilterDefinition is not
+    * [HHH-657] - Date parse exception using EntityMode.DOM4J
+    * [HHH-666] - JTAHelper.isInProgress( txn.getStatus()) throws NPE when txn null
+
+** New Feature
+    * [HHH-620] - Extra join conditions in HQL
+    * [HHH-640] - short-circuit dirty checking for instrumented classes
+    * [HHH-643] - support mutable="false" for collections
+    * [HHH-645] - Session.setReadOnly()
+    * [HHH-549] - portable to_char() function
+    * [HHH-576] - Hook to pre-process generated select strings in the Dialect
+    * [HHH-662] - Add support for definition of functional composite key ("properties") in joined subclass
+
+** Improvement
+    * [HHH-46] - Allow access to properties that are not joined
+    * [HHH-261] - Stored procedure support for SQLServer dialects
+    * [HHH-351] - multi-table bulk operations
+    * [HHH-574] - improve in naming named-query
+    * [HHH-596] - Auto-detect {..} in native SQL queries
+    * [HHH-641] - create constraints for many-to-one property-ref
+    * [HHH-501] - warn when a final method is tried to be proxied
+    * [HHH-525] - cglib related startup performance
+    * [HHH-557] - Helpful error message for non Serializable classes with a composite-id
+    * [HHH-586] - check immutable natural-ids
+    * [HHH-609] - Adds substr to PostgreSQL dialect
+    * [HHH-618] - documentation bugs
+
+** Patch
+    * [HHH-224] - JDataStore Dialect and updated Testfiles
+    * [HHH-366] - InformixDialect SQLExceptionConverter
+    * [HHH-536] - ImprovedNamingStrategy modifies capitalized column names inappropriately
+    * [HHH-632] - Informix Dialect missing from automatic dialect discovery
+    * [HHH-4] - CachedFile bugfix + configuration + autodetect resource as file
+
+
+Changes in version 3.0.5 (25.5.2005)
+------------------------------------
+
+** Bug
+    * [HHH-516] - Interceptor.onFlushDirty() sometimes not called
+    * [HHH-517] - getDatabaseMajorVersion() not available in JDK 1.3
+    * [HHH-518] - SQL parser does not recognize all whitespace
+    * [HHH-519] - broken SQL when traversing many-to-many to joined <subselect>
+    * [HHH-529] - Bug in merge()
+
+** New Feature
+    * added <natural-id> mapping
+    * [HHH-533] - allow unique-key on <property> and <many-to-one>
+    * [HHH-534] - efficient cache by natural key
+    * support for <comment> on MySQL
+
+** Improvement
+    * [HHH-526] - log "Aggressively releasing JDBC Connection" as DEBUG instead of INFO
+    * various logging improvements
+
+
+Changes in version 3.0.4 (23.5.2005)
+------------------------------------
+
+** Bug
+    * [HHH-452] - UnsavedValueFactory.instantiate does not wrap the Exception it catches
+    * [HHH-456] - Session still holds references to entities after close()
+    * [HHH-457] - Log info for structured second-level cache entries is incorrect
+    * [HHH-466] - Made default for MS SQL dialect definition more flexible
+    * [HHH-473] - Formula can't contain SQL cast keyword
+    * [HHH-484] - Order-by not applied to collections fetched by OuterJoinLoader
+    * [HHH-487] - Possible empty union in UnionSubclassEntityPersister
+    * [HHH-505] - Possible NullPointerException in BigIntegerType
+    * [HHH-507] - Cached List does not show additions
+    * Fixed bugs in subselect fetching
+
+** New Feature
+    * [HHH-455] - Obtain non-intercepted Session by passing an EmptyInterceptor
+    * [HHH-467] - HQL: support for case when then else end IN select clause
+    * [HHH-485] - Support multiple collection join fetches (attention: Cartesian product) in native SQL queries
+    * Added SessionStatistics metric interface
+    * Added support for table and column level <comment> blocks
+    * Added Simplified Chinese translation of reference documentation (Xiaogang Cao)
+
+** Improvement
+    * Any query may now join fetch >1 collection role (attention: Cartesian product)
+    * [HHH-454] - Add 2292 integrityViolationCode to Oracle9Dialect
+    * [HHH-503] - Implemented ViolatedConstraintNameExtracter for HSQLDialect (Frank Grimes)
+
+
+Changes in version 3.0.3 (8.5.2005)
+-----------------------------------
+* fixed bug in HQL for composite key classes which have a property named the same as the owning entity's id property
+* replaced 'connection.aggressive_release' with 'hibernate.connection.release_mode'
+* added ConnectionReleaseMode
+* added eager fetch for any associations with fetch=join, even after a HQL query, or cache retrieval (EJB3)
+* added replicate() isUpdate flag to OnReplicateVisitor, useful for native ids
+* fixed ParameterizedTypes order of initialization
+* fixed bug in DB2Dialect
+* fixed EntityMode.DOM4J creation of duplicate <set> output
+* fixed JDBCException error code handling
+* fixed Criteria Restrictions.isEmpty()/isNotEmpty() when collection is mapped to superclass
+* fixed HQL indexed collections access with no alias
+* fixed HQL aggregate functions on components when "id" property is used
+* fixed issue with non-cascading refresh to collections
+* fixed query-timeout not being applied to bulk HQL (Stephan Fudeus)
+* fixed pessimistic locking with Firebird (Yuichi Sugimura)
+* updated Ant 1.6.3
+* improved validation of sql queries, throw QueryException if addEntity() nor addScalar() was called
+* added automatic dialect detection if no dialect is configured
+* added new tutorial (Michael Gloegl, Christian Bauer)
+
+
+Changes in version 3.0.2 (27.4.2005)
+------------------------------------
+* fixed union operations on PostgreSQL
+* fixed HQL concat() function for Oracle dialect
+* fixed auto-close/auto-flush during getCurrentSession() processing
+* fixed ClassCastException with EntityMode.DOM4J
+* fixed HQL dynamic instantiation with iterate()
+* fixed HQL bug with missing parantheses and implicit joins
+* fixed bug were Interceptor.getEntity() wasn't called if in cache
+* fixed bug in merge() of sorted sets
+* fixed bug in EntityMode.DOM4J with non-lazy embedded many-to-ones
+* fixed Criteria/Projection ordering bug
+* fixed HQL referencing component attribute
+* fixed column duplication detection for components
+* fixed eager fetching for many-to-many associations
+* fixed stack overflow with auto_close_session and aggressive_release and unclosed ScrollableResults/HibernateIterator
+* fixed bug in HQL parser regarding naked property refs which reference component properties
+* fixed bug with eager fetched arrays not being loaded
+* fixed bug in filter against joined-subclass
+* improved CacheMode.GET/IGNORE, disabled cache put
+* improved HQL support for standard SQL functions, including coalesce() and nullif()
+* improved filtering of many-to-many associations
+* added HQL support for cast(x as type) if SQL database supports it
+* added increment id generation for union-subclass
+* added ConnectionProvider.supportsAggressiveRelease() for managed environments
+* added support for caching of queries if filter is enabled
+* added PreparedStatement count to Statistics
+* added transactional/nontransactional read()/get() to Cache API
+* added quotation of schema names
+* added Distinct to Projection API
+* added config parameter 'connection.aggressive_release'
+
+Changes in version 3.0.1 (18.4.2005)
+------------------------------------
+* added HQL tuple constructor/comparison feature
+* added HQL "fetch all properties" override if instrumentation is used for lazy loading
+* added HQL projection feature, return Lists instead of arrays for projection
+* added HQL projection feature, return Maps with user-defined HQL SELECT aliases as keys
+* added HQL support for expressions in aggregation functions
+* added new IntegrityViolationException to MySQL dialect
+* added value mapping type 'big_integer'
+* added not-found="ignore|exception" switch for legacy associations (i.e. broken database integrity)
+* added fully automatic Session scoping in JTA environments with sf.getCurrentSession()
+* fixed bug in DTD that wouldn't allow union-subclass in separate file
+* fixed a MS SQL Server case sensitivity issue with native SQL queries
+* fixed a minor bug in subselect fetching
+* fixed case sensitivity in HQL functions
+* fixed a bug with listener assignment for save() operation (Matthew Inger)
+* fixed return-property in named SQL queries to work with all identifier names
+* fixed TransactionManager lookup (again) for WAS 6.0
+* fixed a bug with HQL batch delete and MS SQL Server
+* fixed session not getting closed with auto_close when rollback occured
+* improved concatentation handling in AST parser
+* updated dom4j to avoid memory leak in old version
+* updated C3P0
+
+
+Changes in version 3.0 (31.3.2005)
+----------------------------------
+* added support for autoflush/autoclose to HibernateServiceMBean
+* fixed initialization/session association detection problem of collections
+* fixed creation of FK constraints to union superclass table
+* fixed bug where union-subclass table did not get a PK constraint
+* added a separate log category for HQL parser warnings and errors
+* fixed bulk delete operation on MS SQL Server
+* added support for proxying protected methods (Juozas)
+* added support for unicode quoted strings in new HQL parser
+* fixed implied joins in subselect WHERE clause in new HQL parser
+* added SQLServer7Dialect to handle differences in functions
+* added support for JNDI-bound cache instances, future use for JBoss Cache
+* added scale attribute to column mappings for numeric precision control
+* added fetch=subselect for collections
+* added support for bulk update/delete against discriminator-based inheritence hierarchies
+* added the ability to use naked property refs in HQL (required in update/delete statements)
+* updated CGLIB 2.1.0
+* fixed NPE at BasicEntityPersister.getPropertyIndex (Todd Nine)
+* fixed issue with entity-name and subclasses (Sverker Abrahamsson)
+* fixed issue with correlated subqueries in new HQL parser
+* fixed a problem with native SQL query mapping and embedded composite identifiers
+* improved mapping binding, allowing unordered extends for pure entity-name hiearchies
+* fixed NPE for delete() with deprecated Lifecycle interface
+* fixed a problem with serial joins ending in component value in new HQL parser
+* fixed inner join/subselect precedence problem in new HQL parser
+* fixed indices() function in new HQL parser
+* fixed a bug in InformixDialect, now correct LIMIT clause
+* fixed a bug in idbag.remove() (Sebastien Cesbron)
+* fixed a conflict on OracleDialect between setMaxResult and LockMode.UPGRADE
+* fixed XML configuration file issue with SchemaExport
+* fixed an ArrayIndexOutOfBounds problem
+* renamed executeUpate() to executeUpdate()
+* fixed batch loading for property-ref entities
+* fixed loading from cache of <key property-ref> collection owner
+* fixed minor bug in SQL exception reporting
+* fixed dynamic-component cannot be bound to XML
+* fixed querying component with formula property
+* fixed incorrect table alias for order-by on many-to-many
+* fixed a bug for unidirectional one-to-many with moving child objects
+* fixed a bug with union-subclasses and persister creation
+* fixed a HQL concatenation problem on MySQL
+* fixed a bug where an unnecessary exception was thrown for a property-ref to a superclass property
+* fixed minor dtd bug
+* fixed new bug in Clob/Blob support
+* fixed issue with INDEX_OP and subclass joins on theta-join dialects
+* fixed some minor issues in query cache regions, including HB-1449
+* fixed superflous import and regression bug in verifyparameters
+* fixed two bugs in select id generator (Malcolm Green)
+* fixed increment generator for union-subclass mappings
+* updated JBoss Cache to 1.2.1alpha, fixing locking issues
+* made stat classes serializable
+* fixed merge(), now ignores blob and clob fields
+* added support/dialect for TimesTen
+* improved algorithm for batch fetching, more aggressive
+* improved toStrings()s for Statistics objects (Ryan Lynch)
+* renamed <result-*> to <return-*> for externalized SQL query mapping
+* renamed Session.openSession() for EntityMode to Session.getSession()
+* added support for CASE in HQL
+* fixed bug with filters and polymorphic queries
+* fixed import ordering problem of super/subclass mappings
+* switched to patched ANTLR 2.7.5, now using context classloader before doing class.forname
+* TableHiloGenerator now falls back to TableGenerator properly with max_lo < 2 (Emmanuel Bernard)
+* better transaction handling of TableGenerator in a JTA environment  (Emmanuel Bernard)
+* removed hard coded log4j dependency (Emmanuel Bernard)
+* added support for stored procedure in named queries (Max Andersen)
+* added <property-result> to named SQL queries to allow users to use sql without {}-markup
+* added multi-column property support to native SQL mapping
+
+Changes in version 3.0rc1 (28.2.2005)
+----------------------------------
+* introduced EntityModes, and XML mapping preview
+* several minor dialect improvements
+* fixed a problem where filters were not applied to subclasses
+* fixed a problem where InstrumentTask would fail if applied to already-instrumented classes
+* fixed many problems with new parser and made it the default (thanks again to Joshua for the new parser)
+* implemented bulk update/delete queries for the new parser
+* fixed a minor bug in the classic query parser
+* renamed create() to persist() as per EJB3edr2
+
+Changes in version 3.0 beta 4 (11.2.2005)
+-----------------------------------------
+* support unidirection one-to-many with a not-null foreign key
+* support formulas for index and element of collections
+* support one-to-ones mapped to formulas
+* fixed a bug in proxying methods that return "this"
+* optimized proxies for embededded composite id classes
+* fixed a bug affecting <key-many-to-one>
+* fixed a bug caching newly inserted objects
+* introduced DetachedCriteria
+* support subselects in Criteria queries
+* miscellaneous Criteria API enhancements
+* fixed a problem where hibernate.max_fetch_depth applied to eager fetching via setFetchMode()
+* use inner joins for join fetching not-null fk associations
+* support unique="true" in <component> and <properties> mappings
+* union-subclass hierarchies may own collections (dtd bug)
+* added guid support for Oracle
+* new mechanism for auto-detecting unsaved-value
+* pass state array in delete events
+* improved implementation of hibernate.auto_close_session and hibernate.close_before_completion
+* fixed a bug where components with only collections would be incorrectly nullified
+* fixed a bug where criteria queries with projection could not be cached
+* fixed a problem where duplicate column name aliases could be generated
+
+Changes in version 3.0 beta 3 (30.1.2005)
+------------------------------------------
+* Major rework of Criteria queries, support for projection, grouping, aggregation, ordering by any attribute
+* various improvements to new HQL parser (Joshua Davis)
+* fixed a bug where <join fetch="select"> was broken for subclasses with duplicated property names
+* fixed problems with long types in Oracle DDL generation
+* added EnhancedUserType, UserCollectionType, UserVersionType
+* added CacheMode
+* fixed minor performance problem where cascade delete could add objects to second-level cache
+* added hibernate.default_batch_fetch_size
+* added hibernate.cache.use_structured_entries
+* different classes and collection roles may now share a cache region
+* don't include discriminators for abstract classes in generated SQL
+* it is no longer truly necessary for composite identifier classes to implement equals()/hashCode() (but still recommended)
+* workaround for bug in MySQL InnoDB with self-referential foreign keys
+* added lazy="true" to many-to-one and one-to-one mappings (requires bytecode instrumentation)
+
+Changes in version 3.0 beta 2 (24.1.2005)
+------------------------------------------
+* added LockAcquisitionErrorCodes to MySQL dialect (Jesse Barnum, Emmanuel Bernard)
+* added MultipleHiLoPerTableGenerator, one hi value per row/per table (compliant with EJB3)
+* added a generator handling multiple hi values per table (Emmanuel Bernard)
+* added events for pre/post SQL operation interception
+* added experimental support for JACC-aware configuration and events
+* added full support for implicit polymorphism in Criteria queries
+* added support annotated classes through XML configuration (Emmanuel Bernard)
+* added support for WebSphere's weird TxManagerLookup
+* added support for filters with dynamic-class mappings
+* added support for lists of parameters in filters
+* added support for scalar queries in createSQLQuery (Michael Gloegl)
+* added support for scalar results in native SQL queries (Michael Gloegl)
+* fixed SchemaExport/SchemaUpdate, now respect default_schema and default_catalog (Michael Gloegl)
+* fixed a bug in one-to-one mapping with property-ref
+* fixed a bug in the query cache lookup routine
+* fixed compilation problems on IBM JDK 1.4. and JDK 1.3.1
+* fixed custom SQL for loading when using composite identifiers
+* fixed exception thrown from optimistic locking failures
+* fixed support for limit queries (select first ?) in Informix
+* improved SchemaExport/Update, now respect default_schema and default_catalog
+* improved dialect handling, throw an exception if no dialect has been set
+* improved loading of mappings, no ordering of super/subclasses required anymore
+* improved statistics for second-level cache
+* improved table generators for hi/lo, can now be used in a JTA environment (Emmanuel Bernard)
+* query engine: added support for 'trim([leading | trailing | both] [expression from] expression)'
+* query engine: added support for DISTINCT and ALL
+* query engine: added support for FETCH
+* query engine: added support for HAVING count()
+* query engine: added support for HQL NOT IN and EJBQL '[NOT] MEMBER OF'
+* query engine: added support for ORDER BY COUNT(*)
+* query engine: added support for collections of scalar values
+* query engine: added support for literals in constructor select expressions.
+* query engine: added support for select elements(..) from Foo f
+* query engine: added support for template functions in the SELECT clause
+* query engine: fixed NOT LIKE
+* query engine: introduced EMPTY and added it to constant (support for IS [NOT] EMPTY)
+* updated dom4j, OSCache, EHCache, JBoss Cache, Xerces, Xalan, and Log4j
+* associated class where filter now applies to <one-to-one property-ref>
+
+Changes in version 3.0 beta 1 (21.12.2004)
+------------------------------------------
+* reimplemented HQL using an ANTLR-based AST parser (Joshua Davis)
+* added class="select" id generator
+* added Query.setReadOnly()
+* added hibernate.order_updates
+* introduced cascade refresh
+* added typed JDBC exceptions (Steve Ebersole)
+* improved lifecycle for CacheProviders (Steve Ebersole)
+* added Expression.isEmpty()
+* fixed some minor mapping DTD bugs (Ben Sommerville)
+* fixed auto-commit mode for SchemaUpdate
+* added default-lazy to <hibernate-mapping>, which defaults to true!
+* added fetch="join|select" and deprecated outer-join attribute
+* fixed a bug where <custom-insert> was not used for entities with "identity" id generation
+* fixed some problems with dynamic-class
+* added property-level optimistic-lock attribute, to allow an unchecked property
+* cascade lock() now cascades with LockMode.NONE
+* fixed some bugs in filter handling (Steve Ebersole)
+* added hibernate.transaction.flush_before_completion and hibernate.transaction.auto_flush_session
+* added JSR-220 compliant create() and merge() operations
+* cascade attribute is now multi-valued, with values save-update,create,merge,delete,delete-orphan,lock,evict,replicate,all-delete-orphan
+* index and unique-key attributes may now be multi-valued
+* introduced unsaved-value="undefined", the default for "assigned" ids and <composite-id>, which forces Hibernate to hit the db
+* primitive typed <id> property mappings now default to unsaved-value="0"
+* added ScrollMode
+* added dialect for Derby (Simon Johnston)
+* added MySQLMyISAMDialect and MySQLInnoDBDialect
+* added precision and scale mapping attributes, for numeric types in DDL
+* fixed a problem with duplicate column mappings on Sybase
+* read-write cache now uses version numbers to ensure consistency with database, if available
+* native SQL queries may now fetch a collection role (Steve Ebersole)
+* added sequential-select, optional and inverse attributes to <join/>
+* added <properties> element, which can be the target of a property-ref
+* fixed a bug relating to composite property-refs
+* Hibernate now much more robust if user does not implement equals()/hashCode() on id and unique key classes
+* enabled batch deletes for versioned data
+* fixed a minor bug in Session.close()
+* removed uuid.string and renamed uuid.hex to plain uuid
+* workaround for a MySQL bug in SchemaUpdate
+* added JDBCException.getSQL() and made various improvements to exception flow
+* createSQLQuery() now fully supports components
+* fixed a bug in SQL generation for <joined-subclass> mappings
+* fixed a bug where filter and query parameters could be bound in the wrong order (Steve Ebersole)
+* fixed a problem where quantifiers could not appear in SQL fragments
+* fixed a bug with dynamic components
+* fixed a bug where Dialect default properties overrode user-specified properties (Ben Sommerville)
+* fixed a bug where duplicate column name in a joined table caused an exception
+* implemented two-phase load for dynamic components
+* fixed a bug where cancelQuery() canceled a re-pooled statement
+* deleted collections are now removed from session-level cache
+* fixed a bug in LocaleType (Steve Ebersole)
+* use "with rr" to obtain UPGRADE locks in DB2
+* package attribute now significant for extends
+* fixed a minor problem with Hibernate Clobs and Blobs
+* extends attribute does no longer require specific ordering of mapping files
+
+Changes in version 3.0 alpha (23.8.2004)
+----------------------------------------
+* package rename net.sf.hibernate -> org.hibernate
+* checked exceptions are now runtime exceptions
+* some session methods deprecated and moved to org.hibernate.classic.Session
+* removed various deprecated functionality
+* added Filter API and mappings, for temporal, regional and permissioned data (Steve Ebersole, Gavin King)
+* support cascade delete via ON DELETE CASCADE constraint
+* added extra attributes to named query definition
+* added hibernate.use_identifier_rollback
+* added subselect mappings
+* added lazy="true" to property mappings
+* added <join/> for multitable mappings
+* added <union-subclass/> for table-per-concrete-class strategy
+* added Statistics API and JMX MBean (Gavin King, Emmanuel Bernard)
+* introduced new event-driven design (Steve Ebersole)
+* support for faster startup with Configuration.addCachableFile() (Joris Verschoor, Max Andersen)
+* mask connection password for log level greater of equals to info (Joris Verschoor, Emmanuel Bernard)
+* add check of named queries when building SessionFactory (Joris Verschoor, Emmanuel Bernard)
+* added custom EntityResolver setting capability (Emmanuel Ligne, Emmanuel Bernard)
+* PropertyValueException for null values in not-null properties of components (Emmanuel Bernard)
+* enhanced support for single- and no-argument sql-functions in HQL select clause (Michael Gloegl)
+* Added catalog element, to enable table names like catalog.schema.table (Michael Gloegl)
+* Added <sql-insert>, <sql-update> and <sql-delete> support (Max Andersen)
+* Support callable statements (stored procedures/functions) via callable="true" on custom sql (Max Andersen)
+* Added support for type parameters and typedefs (Michael Gloegl)
+* Added support for JDBC escape sequences in createSQLQuery (Max Andersen)
+* Added statistics per SessionFactory (Gavin King, Emmanuel Bernard)
+* Added a StatisticsService MBean for JMX publucation (Emmanuel Bernard)
+* support for updates via rownum in Oracle
+* fixed problems with SchemaUpdate
+* support for <column formula="..."/>
+* added hibernate.use_sql_comments
+* added property-ref to collection <key/>
+* fixed performance problems with <one-to-one property-ref=.../>
+* enhanced UserType with new methods assemble()/disassemble()
+* better algorithm for batch fetch batch sizes
+* added <dynamic-class>
+* added entity-name concept, and session methods save(entityName, object), update(entityName, object), etc
+* added framework in proxy package
+* native SQL queries may now fetch a collection role
+* added <loader/> for class and collection mappings
+* added getEntity() and getEntityName() to Interceptor
+* formula-based discriminators and association mappings
+* added "guid" id generation strategy
+* various improvements to dialects
+* <discriminator force="true"/> now acts as a filter on collections
+* where filters now apply in the on clause in an outer join
+* added hibernate.jdbc.factory_class to select a custom batcher
+* session now uses entity name + id to enforce uniqueness, instead of table name + id
+
+Changes in version 2.1.6 (9.8.2004)
+------------------------------------
+* fixed Quickstart/readme.txt instructions
+* fixed DB2/400 identity column support
+* fixed the scroll() query method
+* fixed exotic classloader problems with CGLIB
+* added insert="false" for discriminator columns which are part of a composite identifier
+* added several new configuration settings to JMX HibernateService
+* added new instantiate() method to SessionFactory.getClassMetadata()
+* improved the HSQL DB dialect with features from new version
+* added hibernate.jdbc.batch_versioned_data (Steve Ebersole)
+
+Changes in version 2.1.4 (2.6.2004)
+------------------------------------
+* improved Session serialization support by adding ability to serialize unflushed sessions (Steve Ebersole)
+* fixed Session.clear() functionality to clear the internal nonExists cache (Steve Ebersole)
+* much better implementation of scroll() (Steve Ebersole)
+* support "select new ..." for iterate() and scroll() (Steve Ebersole)
+* added support for multi-parameter SQL functions (Steve Ebersole)
+* fixed hbm2ddl generating infinite indexes on MySQL (Michael Gloegl)
+* fixed alias precedence in HQL queries, function names are second (Steve Ebersole)
+* added "transactional" as allowed cache concurrency strategy in XML configuration file
+* improved System.getProperties() with security exception warning in secure environments
+* improved Proxool integration, better property handling
+* fixed problem with use of getDefinedMethod() in secure environments (Ken Arnold)
+* fixed bug in createSQLQuery() which prohibited multiple aliases for the same entity (Max Andersen)
+* fixed query cache misses when using named bind parameters (Michael Greer)
+* recognize "left" and "right as keywords in SQL fragments
+* recognize SQL quoted identifiers in SQL fragments
+* improved identity handling on SQL Server by using scope_identity() for update counts (Arthur Fitt)
+* added DB2390Dialect for DB2/390 databases (Kristoffer Dyrkorn)
+* fixed a bug in toArray() of identifier bag collections (Khachchou Mohammed)
+* fixed a problem with DDL generation for serial columns in Informix
+* fixed a problem with DDL generation for timestamp columns in Informix (Michael Schmidt)
+* fixed a NPE that occurred calling saveOrUpdateCopy() for components
+* fixed a bug with replicate() and uninitialized collections
+* fixed a bug caching one-to-one associations
+* fixed eviction from named query cache regions
+
+Changes in version 2.1.3 (25.4.2004)
+-----------------------------------
+* added SELECT-clause SQL function support to main Dialects
+* fixed a problem where some unnecessary selects where issued for optional one-to-one associations
+* fixed a bug in SQL generation for criteria queries with multiple one-to-many joins
+* deprecated everything related to PersistentEnum
+* fixed an NPE that occurred when using <one-to-one property-ref> with composite ids
+* fixed a problem with JCA adaptor on WebLogic (Michael Gloegl)
+* improved behavior when removing elements from <idbag>s
+* fixed a bug in getGeneratedKeys() support (Michael Gloegl, Kevin Day)
+* fixed a bug when using Criteria queries with collections of joined-subclasses
+* fixed an NPE that occurred when calling comparator() on a lazy sorted set (Attila Szegedi)
+* fixed a bug when using setMaxResults() with native SQL queries in some Dialects
+* validate that composite id classes override hashCode() (Adrien)
+* fixed some minor problems with saveOrUpdateCopy()
+* fixed some problems in OSCache provider
+* fixed an NPE that occurred when calling a lazy collection after evicting from session
+* fixed an NPE that occurred when select-before-update is used with unversioned data (Patrick Peralta)
+* fixed a bug where dynamic-components could not be queried (Massimo Ferrari)
+* SQL formula parser now recognizes all Dialect-specific SQL functions (Anthony Patricio)
+* fixed a problem where SQL CASE statements could not appear in SQL formulas
+* fixed a problem where subselects with joins could not appear in SQL formulas
+* C3P0 and Proxool pools now cleaned up after SessionFactory.close()
+* fixed a bug where dirty checking of mutable properties was broken after lock()
+* fixed a minor bug where orphan delete was broken for newly saved instances
+* added Query.setFetchSize() and Criteria.setFetchSize()
+* PreparedStatement pooling in DBCPConnectionProvider can now be disabled (Emmanuel Bernard)
+* Query.setProperties(Object) now detects array and collection valued properties and delegates to Query.setParameterList() (Max Andersen, Nick Heudecker)
+* lengths of positional parameters and types arrays are now validated
+* fixed an obscure problem where a PreparedStatement was not closed
+
+Changes in version 2.1.2 (4.2.2004)
+-----------------------------------
+* added Session.isDirty()
+* fixed a very obscure concurrency problem with read-write cache for inverse collections
+* deprecated Criteria.returnMaps() / Criteria.returnRootEntities() in favor of new ResultTransformer framework
+* don't cache objects with dynamic-update="true" or <joined-subclass> mappings immediately after insert/update
+* added version checking to saveOrUpdateCopy()
+* fixed constraint violations that occurred when mixing identity columns with other id generation strategies
+* added Sybase 11.9.2 dialect to support older versions of Sybase that do not support ANSI joins (Colm O' Flaherty)
+* added Informix9Dialect (Finn McCann and Max Andersen)
+* added DB2400Dialect (Peter DeGregorio)
+* fixed a problem where mapping validation failure was reported as duplicate import (Michael Gloegl)
+* fixed a problem with Expression.not() in MySQL (Michael Gloegl)
+* added support for ResultSet.getGeneratedKeys() (David Morris, John Kristian)
+* added check attribute to allow check constraints in DDL
+* implicit polymorphism for Criteria queries (Shorn Tolley)
+* use IF EXISTS for dropping hilo tables (Michael Gloegl)
+* better exception report if deleted object is resaved by cascade
+* support nested components in Example queries (Emmanuel Bernard)
+* fixed a minor problem with onDelete() callbacks
+* fixed an obscure problem with select-before-update
+* added SunONETransactionManagerLookup (Robert Davidson)
+* fixed a problem with replicate() and <joined-subclass> mappings
+* made setParameterList() accept empty lists and deny null values (Max Andersen)
+* validation check on query parameters now allows setParameter(x, null) (Max Andersen)
+* added default-access to DTD (Max Andersen)
+* made Query.setParameterList() accept empty lists and deny null values (Max Andersen)
+* allow Query.setParameter(x, null) (Max Andersen)
+* queries with "select new" now cacheable
+* throw meaningful exception when lazy initialization occurs on disconnected session
+* added default-access to <hibernate-mapping> (Max Andersen)
+* added -text support to SchemaUpdate (Max Andersen, Matt Hall)
+* fixed broken implementation of embedded composite keys with createSQLQuery() (Max Andersen)
+* added hibernate.cache.use_minimal_puts config property to reduce unnecessary second-level cache puts
+* optimized performance of orphan delete detection (Bertrand Renuart)
+* fixed problem where unnecessary UPDATE occurred after INSERT for versioned objects with collections
+* WebSphereTransactionManagerLookup for WAS 5.1 (Edina Pimp)
+* Criteria queries now cacheable (Mario Ivankovits)
+* fixed problem with ordered, paginated queries in DB2 (Tim Collins)
+* fixed a bug caching <idbag>s
+* lazy="true" collections are now lazy even when available in cache
+* fixed a problem with version unsaved-value="negative"
+* added hibernate.cache.region_prefix config property (William Drai)
+* fixed problem where configuration input streams were not closed (Rajesh Patel)
+
+Changes in version 2.1.1 (17.12.2003)
+-------------------------------------
+* added optional package attribute to <hibernate-mapping>
+* added <meta-value> element to allow simpler <any> mapping
+* native SQL queries are now cacheable - added <synchronize> element to allow correct result set expiry
+* fixed a bug in CGLIB2 integration (Chris Nockleberg)
+* added NamingStrategy
+* don't cache objects with formula properties immediately after insert/update
+* log generated SQL to a special category
+* type of property with access="field" may now be guessed using reflection
+
+Changes in version 2.1 final (12.12.2003)
+-----------------------------------------
+* fixed a problem with CGLIB2 proxies and method calls inside constructors
+* fixed a bug running SchemaExportTask with mappings in jar files (Tom McCune)
+* allow custom persister declaration for subclasses (Nick Johnson)
+* fixed handling of sequences in SchemaUpdate on Oracle (Andrew Delpha)
+* fixed a bug where Iterator did not handle single null values correctly
+* detect and throw exception in the case of a duplicate property mapping
+* don't auto-create indexes for collection foreign keys (roll back to 2.0.x)
+
+Changes in version 2.1 rc1 (29.11.2003)
+---------------------------------------
+* long identifier and discriminator column names are now safely aliased (Max Andersen)
+* cleaned up mapping package to allow applications to manipulate metamodel programmatically
+* fixed a recent bug where collection sort order was lost in second-level cache
+* formula attribute now supported for joined-subclass mappings
+* formula properties may now be used anywhere in queries
+* dialect-specific query pagination for SQL Server
+* fixed a bug where a long path expression ending in collection access by index missed some tables in SQL FROM clause
+* fixed a very ancient performance problem where null one-to-one associations caused n+1 selects
+* added Session.saveOrUpdateCopy()
+* fixed some bugs in Example queries
+* fixed some minor bugs in dialect-specific query pagination
+* immutable entity passed to update() is now lock()ed instead
+* reworked the semantics of nonstrict-read-write
+* JCS cache support now deprecated
+* fixed some obscure bugs in collection handling
+* migrated to CGLIB2 (thanks to Chris Nockleberg)
+* fixed bugs in replicate()
+* fixed a bug affecting joined-subclass mappings with dynamic-update=true
+* performance improvements to boolean type mappings (Bertrand Renuart)
+* integrated JBoss TreeCache clustered cache (thanks to Bela Ban and Ben Wang)
+* fixed a bug in new query parameter validation (Steve Ebersole)
+* fixed a bug where <any> mappings caused unnecessary ObjectDeletedException at flush time
+* fixed a bug where associations with property-ref mappings were not properly cached
+* throw PropertyValueException when not-null properties are null at flush time
+* added unsaved-value attribute to version property mapping (Emmanuel Bernard)
+* tolerate classnames containing $ (Steve Ebersole)
+
+Changes in version 2.1 beta 6 (5.11.2003)
+-----------------------------------------
+* added Session.cancelQuery()
+* improvements to transaction handling for failed commit (thanks to Juergen Hoeller)
+* added cascade="delete-orphan"
+* fixed an exception that occurred when a property was declared not-null="true" update="false" (thanks to John Kristian)
+* support multiple named query cache regions (Mikheil Kapanadze)
+* some improvements to collection reattachment
+* fixed a bad bug with adds to an uninitialized bag or list
+* removed support for <dynabean/> components
+* added <dynamic-component/> mapping for properties of type Map
+* fixed a bug where schema export generated index names that were too long for DB2
+* allow per-region expiry policies in OSCache (Matthias Bogaert)
+* fixed a stack overflow that could occur while initializing nonlazy collections
+* fixed a bug in case-insensitive like for Example queries
+* fixed a bug in ScrollableResults.setRowNumber() (Martin Priekopa)
+* improvements to the cache concurrency strategies
+
+Changes in version 2.1 beta 5 (30.10.2003)
+------------------------------------------
+* Support for custom CollectionPersister (Nick Johnson, Max Andersen)
+* Support for named SQL queries (Max Andersen)
+* duplicate named queries now throws MappingException instead of just logging warning (Max Andersen)
+* fixed problems with WebSphereTransactionManagerLookup (Ralf Taugerbeck, Daniel Bradby)
+* added support for custom collection persisters (thanks to Max Anderson, Nick Johnson)
+* fixed a performance problem during query compilation (Bulent Erdemir)
+* composite keys now supported in createSQLQuery() (Max Andersen)
+* fixed JCA adaptor to run in WebLogic (Daniel Bradby)
+* integrated SwarmCache (Jason Carreira)
+* integrated OSCache (Matthias Bogaert)
+* fixed an NPE that could occur with lists and orphan delete
+* allow nullable one-to-one with property-ref
+* improved usage of Dialect-specific limit SQL
+* fixed problem where non-lazy collections held by cached objects were not immediately initialized
+* fixed getReturnTypes() for native SQL queries (Max Andersen)
+* fixed problems with Criterions that applied to multi-column properties
+* check of rowcounts when JDBC batch updates enabled
+* added named SQL queries using <sql-query> element (Max Andersen)
+* added some extra validations so Hibernate fails earlier when user makes mistakes
+* allow lazy="true" as an alternative to proxy="ClassName"
+* removed dependency to commons-lang
+* SchemaExport now creates indexes for collection foreign key columns if specified by Dialect
+* fixed a bug parsing named parameters in setParameterList()
+* select new Foo(...) will now tolerate null values if the constructor accepts a wrapper type
+* fixed a problem detecting Proxool
+* added logging of persistent object states during flush()
+* allow "not null" as a discriminator value
+* added "parameters" config param to "sequence" generator (Matthias Bogaert)
+
+Changes in version 2.1 beta 4 (3.10.2003)
+-----------------------------------------
+* fixed a bug where <any> mappings did not handle proxies correctly
+* implemented new optimistic-lock strategies
+* fixed several bugs in Criteria query API
+* fixed a bug caching property-ref associations
+* improvements to XML Databinder (Ara Abrahamian)
+* added Session.replicate() and ReplicationMode
+* added ScrollableResults.setRowNumber() / ScrollableResults.getRowNumber()
+* added query cache and Query.setCacheable()
+* added Criteria.returnMaps()
+* fixed some problems with CGLIB proxies
+* fixed an NPE that occurred when a joined-subclass of a versioned entity defined only collections
+* added the access attribute, direct field access and the PropertyAccessor extension point
+* added MatchMode for use with Criteria queries (thanks to Michael Gloegl)
+* fixed a bug where some lazy="false" collections were not immediately initialized
+* fixed problem with WebSphere 5 TransactionManager
+* support schema attribute in MySQL, by using an underscore in the table name (Chris Hane)
+* now seperate Dialects for Interbase and Firebird (Reha Cenani, Max Andersen)
+* removed built-in PreparedStatement cache
+* added Session.getSessionFactory()
+* fixed problem with native SQL queries and Query.setProperties() (Max Andersen)
+* Query now fully validates parameters against the query string before passing them to JDBC (Max Andersen)
+* fixed an NPE in SessionFactory.close()
+* fixed an NPE that occurred when using <idbag>s
+* added SQL-level query results paging to DB2Dialect
+* "foreign" id generator now handles detached instances
+
+Changes in version 2.1 beta 3 (7.9.2003)
+----------------------------------------
+* added Example queries
+* fixed an exception that occurred at startup with <key-many-to-one> and <joined-subclass>
+* fixed a bug where composite-elements were not being updated if a property not in the equals() was changed
+* <parent> property of a composite-element may now be used in equals()
+* named parameters may now be used in HQL order by clause
+* null value of version property now indicates unsaved instance
+* added select-before-update attribute
+* two-phase loading now use for components
+* better implementation of equals()/hashCode() for proxies
+* added property-ref attribute to <many-to-one>
+* renamed result() to uniqueResult()
+* added Session.get()
+* added HashtableCacheProvider
+* JTA TransactionManager now used even when not using Hibernate Transaction API
+* always bypass process-level cache for LockMode.READ
+
+Changes in version 2.1 beta 2 (27.8.2003)
+-----------------------------------------
+* <subclass> and <joined-subclass> may now appear outside of a <class> element, by providing the extends attribute (Max Andersen)
+* fixed an NPE at startup that was introduced in beta 1
+* fixed a bug in Map.putAll()
+* new pluggable cache API
+- deprecated <jcs-cache> in favor of <cache>
+- net.sf.hibernate.cache.CacheProvider settable via hibernate.cache.provider_class
+* more aggressive caching
+* added Hibernate.close(Iterator)
+* Criteria queries may now include joins
+- Criteria.addJoin()
+- Criteria.createCriteria()
+* hibernate.transaction.manager_lookup_class should now ALWAYS be specified in JTA environment when using jcs caching
+* fixed a bug caching <key-many-to-one>
+* fixed bug where cached component did not get <parent> property populated
+* added hibernate.max_fetch_depth property
+* smarter outer-join fetching
+* transient object may now be associated with session using Session.lock()
+* added Query.result(), Criteria.result()
+
+Changes in version 2.1 beta 1 (10.8.2003)
+-----------------------------------------
+* batch-size attribute for collection and class mappings, to allow batch loading
+* collections of "value types" (including composite-elements) may now appear in HQL from clause
+* more efficient loading of collections, and better handling of non-lazy collections
+* added HQL index() function to allow access to collection element index
+* added Session.createSQLQuery() (Max Andersen)
+* added outer-join attribute to collection mappings
+* Criteria.setFetchMode() now applies to collection-valued path expressions
+* added property-ref attribute to <one-to-one>, enabling unique foreign key associations
+* added hibernate.max_fetch_depth config property
+* added hibernate.hbm2ddl.auto config property
+* fixed a bug with combination of <jcs-cache> and <key-many-to-one>
+* support for Dialect-specific SQL functions in HQL select clause (David Channon)
+* added Session.clear()
+
+Changes in version 2.0.2 (2.8.2003)
+-----------------------------------
+* subqueries may now use HAVING and GROUP BY clauses
+* fixed a bug with setMaxResults(), setFirstResult() in HSQL (introduced in 2.0.1)
+* fixed a bug in Set.removeAll()
+* fixed a bug in SchemaUpdate (Mathias Bogaert)
+* added weak typing functionality to ScrollableResults
+* fixed a bug with "calendar" versioning in IBM JDK1.3.1 (workaround for JDK bug)
+* fixed a bug in mapping DTD that caused a problem for hbm2java (Max Andersen)
+* fixed a bug querying nested components
+* SQL generation now prefers ANSI-style inner joins to theta inner joins
+* fixed a bug caching collection references loaded using FETCH
+* fixed a bug with composite foreign keys in normalized table mappings (Tom Sedge)
+* limit support for Interbase (Ludovic Orban)
+* added where attribute to <class> mappings
+* added cascade="all-delete-orphan" for collection mappings
+* fixed a bug binding named parameters with setMaxResults()/setFirstResults()
+* fixed some minor bugs in HQL translator
+* fixed a long-standing bug where a <key-many-to-one> could not be dereferenced in HQL
+* SQL UPDATEs now occur in a predictable order (same order as objects were loaded)
+* support for SELECT ... FOR UPDATE in SAPDB
+* fixed bug where Criteria queries against a subclass also returned superclass instances
+* fixed a very rare bug where an update could get lost with normalized mappings
+* fixed a problem with proxied class heirarchies rooted at an interface or abstract class
+* where and order-by attributes now allow SQL function calls and subselects
+* added formula attribute to <property> tag, to allow "computed" properties
+* fixed a bug where PreparedStatements were sometimes not closed when an exception occured
+* workaround for a problem with <joined-subclass> and Interceptor.onFlushDirty()
+
+Changes in version 2.0.1 (17.6.2003)
+------------------------------------
+* fixed some problems with new dialect-specific LIMIT clauses
+* improved parsing of collection where attribute
+* made one-to-many bags more efficient (they are really sets!)
+* allowed type="calendar" for <version> properties
+* fixed a bug with locking a versioned composite-id class
+* refresh() may now take a transient instance
+* added ProxoolConnectionProvider (Martin Crawford)
+* fixed some minor JCA issues (Mike Mosiewicz)
+* fixed a bug with FETCH and sorted associations
+* improved performance of SchemaUpdate tool (Teodor Danciu)
+* fixed a bug in Configuration.addFile(String) (Ken Geis)
+* tidied up and documented hbm2ddl package (esp. Ant tasks)
+* deprecated CounterGenerator in favor of IncrementGenerator
+* improved logging during initialization
+* deprecated "vm" in favor of "increment" id generator
+
+Changes in version 2.0 final (8.6.2003)
+---------------------------------------
+* added "fetch" keyword to HQL
+* added evict() methods to SessionFactory for JVM-level cache
+* destroy caches from SessionFactory.close()
+* fixed an NPE in Session.evict() (Simon Spero)
+* added Query.setLockMode()
+* tidied up implementation of Loader
+* release ResultSets more aggressively
+* miscellaneous improvements to some Dialects
+* hbm2java now honors the sort attribute (Max Andersen)
+* added exceptions to Interceptor interface
+* fixed problem with setMaxResults(), setFirstResult() in Oracle (introduced in beta 6)
+* fixed some SQL generation that was a problem for Sybase (Dietmar Posselt)
+* fixed some problems with ODMG API (Oliver Gries)
+* added JOTMTransactionManagerLookup (Low Heng Sin)
+* added JOnASTransactionManagerLookup (?)
+* fixed a bug in WeblogicTransactionManagerLookup (Mathias Bogaert)
+* added Criteria.setFetchMode()
+* added new Expressions
+* much more elegant/robust handling of quoted identifiers
+* renamed Hibernate.association() to Hibernate.entity()
+* added dynamic-update and dynamic-insert mapping attributes
+* fixed a bug with refresh() of objects with collections
+* HQL aliases now optional - "from Cat" now legal
+* platform-independant quoting of identifiers using backticks
+
+Changes in version 2.0 beta 6 (10.5.2003)
+-----------------------------------------
+* fixed a bug querying one-to-many associations to a <joined-subclass>
+* added support for dialect-specific LIMIT-style clauses (David White)
+* added <idbag>
+* fixed bug in hashCode() of persistent collections
+* <joined-subclass> now supported in HSQL (Wolfgang Jung)
+* fixed problem for XML parsers which ignore default values declared in DTD
+* <meta> tags can now be set to not be inheritable
+* fixed bug in Expression.in()
+* fixed an NPE that could occur from update() in very strange cases (Chris Nockleberg)
+* disabled outer-join back to owner when initializing one-to-many (performance improvement)
+* fixed a bug in Query.setParameterList() (Nick Heudecker)
+* improved JCA support (Igor Fedorenko)
+
+Changes in version 2.0 beta 5 (21.4.2003)
+-----------------------------------------
+* Informix support (Steve Molitor)
+* fixed a bug parsing "select new ... " queries
+* deprecated "object" type in favor of <any> mappings
+* added Session.contains()
+* added extra DBCP config options (Alex Burgel)
+* SessionFactory.close() now unbinds from JNDI
+* added Session.evict()
+* got rid of an unnecessary SQL DELETE issued when an empty collection was dereferenced
+* where attribute of collection mappings no longer ignored for deletion
+* improved logging
+* support polymorphic associations to "embedded" composite id classes
+* various bugfixes to collection filter parameter binding
+* fixed some problems with proxies introduced in earlier beta versions
+* fixed bug with self-reference in the case of identity column id generation
+* added hibernate.cglib.use_reflection_optimizer property
+* added nonstrict-read-write cache
+* fixed an SQL-generation bug in new Criteria API
+* added CompositeUserType
+* sequence and table id generators now aware of default-schema
+* added update and insert attributes to <component> element
+* fixed a bug with expressions like elements(foo.bar.baz) in where clause
+* more efficient Set initialization (two-phase load)
+* removed support for hibernate.query.imports and added <import> mapping element
+* fixed problem in DBCP connection validation and added new config properties
+* hbm2java can now generate finder methods for persistent objects (experimental) (Matt Hall)
+* hbm2java small fixes/refactorings to support generating more than one file per persistent object (Max Andersen)
+
+Changes in version 2.0 beta 4 (22.3.2003)
+-----------------------------------------
+* Major HQL improvements
+- from "Foo as foo join foo.bars as bar" instead of "from foo in class Foo, bar in elements(foo.bars)"
+- "select new Foo(bar.name, bar.amount) from ...."
+- outer and full join support
+* Query methods now return this, to allow chaining
+* FrontBase support (Run Lussier)
+* experimental JCA support (Daniel Bradby)
+* hbm2java now can generate Beans style property events (Klaus Zimmermann)
+* support SQL identifiers quoted with []
+* fixed bug with PostgreSQL
+* name attribute now optional in .cfg.xml
+* support for postgres ilike operator (M Lang)
+* squash warnings with GNU JAXP (Chris Nockleberg)
+* fixed a bug in Query.setParameterList()
+* Ingres support (Ian Booth)
+* collections now detect changes not made via wrapper for newly saved objects
+* new (experimental) Criteria + Expression APIs
+* Query.setEntity(), etc, now aware of proxies (also improved hueristics for guessing Type)
+* added Hibernate.isInitialized()
+* detect changes made directly to newly-wrapped collection (ie. not via the wrapper)
+* added Hibernate.refresh(Object, LockMode)
+* update(), saveOrUpdate() no longer initialize a proxy
+* fixed problems with Sybase
+* added force attribute to <discriminator>
+* improved handling of null discriminator-value
+* support SQL-style '' escape for HQL strings
+
+Changes in version 2.0 beta 3 (24.2.2003)
+----------------------------------------
+* collections now represent null elements as a missing row
+* collections now deserialize correctly (fix for bug in beta 2)
+* standardised on dom4j for XML parsing
+* fixed bugs in collection caching (an exception occurred for some sorted collections and some kinds of maps)
+* allowed null discriminators
+* set autocommit to true in SchemaUpdate
+* fixed a stack overflow that could occur in toString() of classes created with hbm2java (Max Andersen)
+* fixed a bug where composite-element <parent> property was not being set after retrieval from cache
+* added where attribute to collection mappings to allow filtering
+* fixed a exception that occurred when wrapping collections with sort="MyComparator" (Jason Horne)
+* objects with mutable="false" are now never updated
+* fixed an exception that occurs with <key-many-to-one> association to a class with a composite id (Stefano Travelli)
+* added SchemaExport Ant task (Rong C Ou)
+* integrated latest CGLIB release (Juozas Baliuka)
+- added support for new CGLIB reflection optimizer (Juozas Baliuka)
+* improved query cache algorithm (Who?)
+* fixed a bug in "object" type
+* Lists and arrays now represent null elements as a missing row
+* fixed a bug in Hibernate PreparedStatement cache where maxRows and fetchSize were not cleared before re-caching
+* fixed a bug in HibernateService that caused a restart to fail
+* added SybaseAnywhereDialect (?)
+* added SessionFactory.close()
+
+Changes in version 2.0 beta 2 (2.2.2003)
+----------------------------------------
+* property column names may now be of any length (Mark Woon)
+* fixed problem where CodeGenerator created private get/set pairs (Max Andersen)
+* fixed all silly bugs in Configuration.configure()
+* efficient collection updates from Session.update()
+* added <jcs-class-cache> and <jcs-collection-cache> elements to hibernate-configuration.dtd
+* support for normalized mappings for databases with DECODE instead of CASE (Simon Harris)
+* added Oracle9Dialect
+* added JRun4TransactionManagerLookup (Joseph Bissen)
+* fixed JDBCException to keep reference to underlying SQLException
+* fixed a bug loading many-to-many associations with a repeated column name
+* fixed a bug in ShortType
+* added IngresDialect (Ian Booth)
+* added --config option to SchemaExport
+
+Changed in version 2.0 beta 1 (28.1.2003)
+-----------------------------------------
+* renamed packages to net.sf.hibernate.*
+* all API methods now wrap SQLExceptions
+* removed support for toplevel collections / subcollections
+* created hibernate-mapping-2.0.dtd
+- renamed 'readonly' attribute to 'inverse'
+- renamed 'role' attribute to 'name'
+- changed default value for 'unsaved-value' to "null"
+- added mandatory 'name' attribute to <param>
+- added <meta> tag
+* created hibernate-configuration-2.0.dtd
+* brand new Configuration API, including exposed mapping package
+* completely reworked IdentifierGenerator framework
+- built-in generators now auto-detect the type (so integer identity columns are supported, for example)
+- parameters are now named
+- built-in strategies are renamed
+* expanded Interceptor interface
+* removed exceptions that occur if an object is saved or deleted multiple times in a session
+* added <parent> subelement to <composite-element> and <nested-composite-element>
+* collections except for <bag>s now implement by-value equals() and hashCode()
+* removed all deprecated methods
+* added Session.refresh()
+* added dynamic-update functionality
+* added update and insert attributes to <property> and <many-to-one> mappings
+* added elements(), indices(), size(), maxelement(), minelement(), maxindex(), minindex() collection functions to query language
+* huge improvements to CodeGenerator (Max Andersen)
+* enhanced outerjoin fetching support in queries
+* experimental support for DynaBeans as components
+
+Changes in version 1.2.3 (28.1.2003)
+------------------------------------
+* fixed a recently-introduced problem with Timestamp dirty checking
+* added createClob(), createBlob() for streams (Benoit Menendez)
+* SchemaUpdate now configures Dialect correctly (Michael Locher)
+* update() now working for classes with embedded composite ids
+* unsaved-value attribute now recognized for <composite-id>
+* fixed a minor problem where a very specific kind of SQL select did not qualify a column name
+* added Query.getQueryString()
+* fixed an NPE that sometimes occurred when hibernate.connection.username was not specified
+* fixed a bug in SchemaExport where foreign key constraints did not use qualified tablenames
+* added isFirst(), isLast() to ScrollableResults
+* fixed bug finding properties inherited by mapped interfaces
+
+Changes in version 1.2.1b (4.1.2003)
+------------------------------------
+* fixed an NPE that occurred while loading Hibernate classes in IBM JVM
+* arbitrary JNDI InitialContext properties may now be passed as hibernate.jndi.*
+* fixed a problem where index column was not being nullified when an entity was removed from a one-to-many
+
+Changes in version 1.2.1 (31.12.2002)
+-------------------------------------
+* Changed the MySQL mapping of Hibernate "timestamp" to MySQL "DATETIME" (Matthias Schwinn)
+* TransactionManagerLookup classes now define defaut UserTransaction JNDI names
+* support for WebSphere 5 (Venkat Srinivasan)
+* fixed a bug with query expressions of the form "foo.bar.id" for normalized mappings
+* experimental Blob/Clob support (thanks to Benoit Menendez and Mark Woon)
+* improvements to SchemaUpdater (Benoit Menendez)
+* deprecated suspendFlushes() / resumeFlushes() in favor of FlushMode
+* deprecated IDGenerationException in favor of IdentifierGenerationException
+* fixed a bug introduced in 1.2 final where cascade save-update was sometimes ignored for readonly="true" bags
+* fixed a bug caching null-valued one-to-one associations
+* CodeGenerator now supports <bag> and <joined-subclass>
+* fixed problem with TimestampType on DB2 (Jonas)
+* fixed a bug in generated SQL for collections with <joined-subclass> mappings (Robson Miranda)
+* fixed a bug caching Maps (Benoit Menendez)
+* SchemaExport now accepts a .jar file as a source of mappings
+* hibernate.dbcp.validationQuery setting (Juozas Baliuka)
+* hibernate.c3p0.validate setting
+* added Query.setTimeout()
+* setMaxResults() now behaves sensibly on SAPDB (Russel Smyth)
+* added Query.setProperties() and Query.getNamedParameters(), fixed a bug in Query.getReturnTypes()
+* CodeGenerator now generates equals() and hashCode() for composite-id classes (and toString() for all classes)
+* CodeGenerator now includes superclass properties in subclass constructors (Max Andersen)
+* added Hibernate.custom()
+
+Changes in version 1.2 final (7.12.2002)
+----------------------------------------
+* fixed a bug where uppercase IS NOT NULL, NOT IN, etc were not parsed correctly
+* addition to readonly="true" bags now no longer requires collection initialization
+* added ResinTransactionManagerLookup (Aapo Laakkonen)
+* improved exception message when setting null to primitive type (Max Andersen)
+* improved exception message for an unserializable identifier
+* support for overloaded setter methods (patch by Alex Staubo)
+* CodeGenerator support for <composite-element> (patch by Wolfgang Jung)
+
+Changes in version 1.2 beta 4 (29.11.2002)
+------------------------------------------
+* fixed bugs in one-to-many associations to a <joined-subclass>
+* LockMode class now properly serializable
+* exceptions thrown by proxied objects are now propagated correctly (rather than being wrapped)
+* made Calendar types compilable in JDK1.2
+* added --format and --delimiter options to SchemaExport (thanks to Richard Mixon)
+* fix for problem with class with no properties + native id generation + MS SQL Server contributed by Max Andersen
+* fixed a BAD bug in Hibernate.configure() (thanks to Rob Stokes)
+* CodeGenerator now recognizes <key-many-to-one> (patch by Wolfgang Jung)
+* CodeGenerator now recognizes <version> and <timestamp> (patch by Max Andersen)
+
+Changes in version 1.2 beta 3 (26.11.2002)
+------------------------------------------
+* fixed bug in UPDATE SQL generation for <joined-subclass> mapping strategy (fix by Robson Miranda)
+* support <composite-id> correctly in CodeGenerator (patch by Tom Cellucci)
+* fixed an exception that occurred with short qualified tablenames
+* added the polymorphism attribute to the <class> element
+* allow "not between", "not in" in query language
+* allow subqueries beginning with a from clause in query language
+* query expressions like "not (foo.bar.baz=1)" now translated to "(bar.baz!=1 and foo.bar=bar.id)"
+* support for PostgreSQL ~ operator (regular expression match)
+* load(id, lockMode) now working for normalized table mappings
+* now compiling properly under JDK1.2, 1.3 (fix by Tom Cellucci)
+* support for subcollections in query language: foo.bars[2]['index'], foo.bars[4].elements, foo.bars[0].size, etc.
+* added calendar and calendar_date types
+* find() queries may now return scalar values
+* component-type properties may appear in a select clause
+* ConnectionProviders now set isolation level before toggle autocommit
+* Iterator.next() now throws NoSuchElementException as per Iterator contract (fix by Alex Staubo)
+* database reverse engineering GUI tool contributed by Tom Cellucci
+* SchemaExport now generates column in mapping file order (rather than alphabetical order)
+* <joined-subclass> mappings working on Oracle (?)
+
+Changes in version 1.2 beta 2 (15.11.2002)
+------------------------------------------
+* support multi-argument SQL functions in queries
+* reintroduced deprecated form of update() with slightly altered semantics
+* fixed BAD problem in the generated SQL for certain queries
+* added OrionTransactionManagerLookup
+
+Changes in version 1.2 beta 1 (11.11.2002)
+------------------------------------------
+* Fixed a bad bug binding to JNDI with servers that use serialization in preference to getReference()
+* support for quoted SQL identifiers (patch by Jean-Francois Nadeau)
+* Hibernate.initialize() allows the user to force initialization of a proxy or persistent collection
+* fix to minor bug in CodeGenerator by Max Andersen
+* fixed a problem with outerjoin fetching of one-to-one associations defined on subclasses
+* fixed a minor problem with proxies of classes that override finalize()
+* finished work on normalized table mappings using <joined-subclass> declaration (only for databases with ANSI OUTER JOIN and CASE)
+* deprecated hibernate-mapping.dtd in favor of hibernate-mapping-1.1.dtd
+* reworked unmapped class / interface / table-per-concrete-class query functionality, fixing several problems
+* removed deprecated methods
+* deprecated findIdentifiers()
+* fixed some problems with embedded composite identifiers
+* fixed a bug cascading deletes to one-to-one associations
+* CodeGenerator now generates isFoo() style getters for boolean properties (patch by Aapo Laakkonen)
+* components may now have a nonpublic constructor (patch by Jon Lipsky)
+* changes / bugfixes to MapGenerator tool
+* experimental SchemaUpdate tool contributed by Christoph Sturm
+
+Changes in version 1.1.8 (30.10.2002)
+-------------------------------------
+* full support for composite keys in query language
+* fixed bug where character type could not be null
+* fixed bug parsing collection filters like: "group by this.date"
+* fixed a bad bug where C3P0 properties were not always being used
+* replaced hibernate.use_jdbc_batch with hibernate.jdbc.batch_size
+* renamed some other properties to hibernate.jdbc.*
+* made hibernate.show_sql settable from JMX (patch by Matas Veitas)
+* added SessionFactory.getAllClassMetadata(), getAllCollectionMetadata (patch by Max Andersen)
+* allowed use of concrete-class proxies with inherited classes ie. <subclass name="ConcreteClass" proxy="ConcreteClass">
+* HibernateException extends Apache commons lang NestableException (patch by Max Andersen)
+* <parent> subelement of <component> allows a component to get a reference back to owning entity
+* Query.setParameterList() to bind lists of values to "in (:list)"
+* Java constants may now be used in Queries
+* serialization of an object graph now removes all initialized proxies
+* several other improvements to proxy handling
+* proxies may now be used in JDK 1.2
+
+Changes in version 1.1.7 (25.10.2002)
+-------------------------------------
+* added Session.createFilter() 
+* fixed a bug parsing queries with properties of form idXXX (introduced in 1.1.6)
+* fixed a bug parsing queries with the id property named in the select clause (introduced in 1.1.6)
+* fixed a bug dirty checking big_decimal (fix by Andrea Aime)
+
+Changes in version 1.1.6 (24.10.2002)
+-------------------------------------
+* classes without subclasses may now declare themselves as their own proxy
+* outer-join attribute now working for component properties and <many-to-many>
+* outer-join="true" will now force outerjoin loading for an association even if associated class has a proxy
+* enabled oracle-style outerjoins for SAP DB
+* version properties may now be long or short (previously always integer)
+* discriminators may now be boolean type
+* fixed the foo.bar.id.baz syntax for queries doing composite-key joins
+* fixed an NPE that occurred when no Dialect was specified
+* CodeGenerator now fully proxy-aware (patch by Max Andersen)
+* removed dependency upon trove4j
+
+Changes in version 1.1.5b (20.10.2002)
+--------------------------------------
+* fixed an NPE that occurred on JMX startup
+* smarter fetching for one-to-one associations
+
+Changes in version 1.1.5 (19.10.2002)
+-------------------------------------
+* added built-in currency and timezone types
+* hibernate-mapping-1.1.dtd
+- added <index-many-to-many> and <composite-index> subelements of <map>
+- added <key-property> and <key-many-to-one>
+- renamed "save/update" to "save-update"
+- tightened up the dtd (now using enumerated attribute types)
+* enabled multi-column map indexes (ie. key of a Map)
+* composited-id may now include a many-to-one association
+* improvements to Databinder contributed by Brad Clow
+* fixed bugs in minIndex, maxIndex, minElement, maxElement
+* fixed a problem with JTATransaction in a JBoss BMT bean
+* added addMapResource() to the MBean
+* minor improvements to Configuration
+* more accurate cache entry timestamping to increase the likelihood of cache hits
+* JCS cache may now be used with JTATransaction in WebSphere, Weblogic, JBoss (thanks to Matt Baird)
+* improvements to CodeGenerator contributed by Andrea Aime
+* stopped a TransientObjectException that was being thrown when it shouldn't be
+* re-enabled primary key export for tables of sets with not-null elements
+* hibernate.statement.fetch_size configuration contributed by Matas Veitas
+* added Interceptor application callback interface
+* added metadata package to expose persistence metadata to the application
+* changed filter() argument type from Collection to Object to allow filtering of arrays and Maps
+* added <column> index attribute to allow table indexes to be specified in mapping document
+* implemented support for queries against interfaces and abstract superclasses
+
+Changes in version 1.1.4b (4.10.2002)
+-------------------------------------
+* fixed problems for JDK1.2 (thanks to Chris Webb)
+
+Changes in version 1.1.4 (4.10.2002)
+------------------------------------
+* New locking API
+* disabled 2-phase load for objects contained in Sets (because they should be initialized before equals() or hashCode() is called)
+* fixed a bug where non-serializable cache entries could not be cached by JCS auxiliary cache
+* fixed a bug in dirty checking PersistentEnums
+* deprecated getID() in favor of getIdentifier() (for mainly cosmetic reasons)
+* HibernateService may now be subclassed to obtain mapping files by some other mechanism (patch by Chris Winters)
+
+Changes in version 1.1.3 (1.10.2002)
+------------------------------------
+* new 2-phase loading process (replaces complicated "deferred" loading process)
+* new ScrollableResults interface for efficiently navigating Query results
+* removed deprecated interfaces
+* created engine package to hold "internal" APIs (ie. the external contract of the impl package)
+* fixed bug where a component defined before all collections in the mapping file caused collections to not be persisted (thanks to Michael Link)
+* fixed a bug where cascaded saveOrUpdate was ignoring the unsaved-value setting
+* faster Timestamp dirty checking
+
+Changes in version 1.1.2 (29.9.2002)
+------------------------------------
+* added persister attibute of class mapping to support custom persistence strategies
+* Support for Oracle outerjoins contributed by Jon Lipsky
+* Reworked versioning, fixing bugs (and tightening tests)
+* Fixed a bug where an ObjectNotFoundException was thrown for null one-to-one associations
+* fixed problems with timestamps introduced in 1.1.1
+* added batch file for running demo
+
+Changes in version 1.1.1 (27.9.2002)
+------------------------------------
+* Major refactoring / abstraction of persistence logic
+* added maxIndex, minIndex, maxElement, minElement properties for collections
+* added support for class names in where clause of queries
+* fixed a bug where an association could become null after caching
+* fixed a bug where an NPE could occur for a null component
+* fixed minor bugs in SortedMap, SortedSet
+* object type is now cacheable
+* added big_integer type
+* improved dirty checking for timestamp type
+
+Changes in version 1.1.0 (22.9.2002)
+------------------------------------
+* implemented collection indexing with [] in query language
+* fixed some minor query-language bugs
+
+Changes in version 1.1 beta 14 (19.9.2002)
+------------------------------------------
+* bags now implement java.util.List
+* delete() may now take a transient object
+* bug where sorted collections were not being sorted fixed by Brad Clow
+* fixed a bug in many-to-many association filtering
+* no longer try to query connection metadata when using user-supplied connections
+* added hibernate.use_scrollable_resultsets for user-supplied connections
+* fixed a problem where sublists were not being proxied
+* fixed a problem where Hibernate could not call methods of package-visibility classes
+* removed obsolete select attribute from MapGenerator
+* multiple occurrences of same path in a query no longer require multiple joins
+* added WrongClassException
+
+Changes in version 1.1 beta 13 (15.9.2002)
+------------------------------------------
+* added constants to Lifecycle interface
+* fix for circular cascade="save/update"
+* fixed a bug in cascaded update introduced in version 1.1 beta 11
+* added object type
+
+Changes in version 1.1 beta 12 (14.9.2002)
+------------------------------------------
+* Session.filter() for applying a filter query to collections
+* experimental ODMG API (OQL features are not yet compliant)
+* new DBCPConnectionProvider for Apache commons-dbcp connection pool
+* Session.lock() now does version number check even on databases with no FOR UPDATE clause
+* introduced new cascade styles: cascade="save/update", cascade="delete"
+* added default-cascade attribute
+* foreign key columns lengths now automatically set to primary key column lengths for SchemaExport
+* added error checking of row update counts when batching disabled
+* major improvements to ProxyGenerator tool
+* CodeGenerator now aware of proxy attribute
+* integrated PointbaseDialect contributed by Ed Mackenzie
+* fix for problem where Proxies were being initialized on identifier access by Christoph Sturm
+
+Changes in version 1.1 beta 11 (7.9.2002)
+-----------------------------------------
+* deprecated update() in favor of saveOrUpdate() and introduced unsaved-value attribute of <id>
+* children mapped with cascade="all" are now always saved/updated even without a call to update(parent)
+* support for composite-id classes where the composite id consists of properties of the persistent class
+* added constrained attribute to <one-to-one> element
+* added Validatable interface
+* renamed several config properties (Hibernate issues log warnings for obsolete property usage)
+* arbitrary JDBC connection properties may now be passed using hibernate.connection.*
+* fixed a classloading bug in C3P0ConnectionProvider (introduced in 1.1 beta 10)
+* CodeGenerator may now take multiple mapping files on the commandline
+
+Changes in version 1.1 beta 10 (28.8.2002)
+------------------------------------------
+* fixed a bug that occurred when calling Session.update() for an object with no properties
+* changed class loading to use the context classloader first
+* introduced <timestamp> as an alternative to <version>
+* added Query.getReturnTypes()
+* fixed a bug with composite-elements introduced in 1.1 beta 7
+* save() may now be used to persist classes with composite-ids
+* improved handling of nanoseconds values in Timestamps
+* support for composite id properties + objects in select clause of iterate()
+* beefed-up collection tests
+
+Changes in version 1.1 beta 9 (26.8.2002)
+-----------------------------------------
+* fixed a bug introduced in 1.1 beta 8 that could cause an NPE after deserializing a session with proxies
+* deprecated insert() in favor of more flexible save()
+* deprecated IDGenerator in favor of new IdentifierGenerator interface
+* "assigned" id generator now returns the existing value of the id property instead of throwing an Exception
+* fixed a problem where PreparedStatements were not being recached after retrieving a natively generated id
+
+Changes in version 1.1 beta 8 (25.8.2002)
+-----------------------------------------
+* fixed a bug introduced in 1.1 beta 6 where an updated element of an indexed one-to-many collection caused an SQLException
+* uninitialized collections passed to update() may now be initialized in the new Session
+* uninitialized proxies passed to update() may now be initialized in the new Session
+
+Changes in version 1.1 beta 7 (23.8.2002)
+-----------------------------------------
+* fixed a bug where Hibernate was not returning statements to the cache when batch updates were disabled
+* fixed a bad bug parsing mappings with toplevel one-to-many associations
+* fixed a bug with versioning and subcollections
+* reworked Set updates again for much improved efficiency
+* schema export now creates primary keys for indexed collection tables
+* minor refactor to Type hierarchy
+* improved some user-error detection
+* fixed foreign key constraint creation for MySQL with Innodb tables
+
+Changes in version 1.1 beta 6b (20.8.2002)
+------------------------------------------
+* Fixed a problem updating Sets
+* added <bag> mapping for java.util.Collection
+
+Changes in version 1.1 beta 6 (20.8.2002)
+-----------------------------------------
+* completely reworked fetching code
+- one-to-many associations now always fetched in a single select
+- many-to-many associations fetched in a single select when outerjoin fetching is enabled 
+- this includes nested outerjoin fetching of the associated class!
+- outerjoin fetching for <many-to-one> nested inside <component> or <composite-element>
+- code refactored to be cleaner and faster
+* removed unnecessary order by clause in List and array fetching SQL
+* collections now individually update, insert and delete only rows that changed (thanks to Doug Currie)
+* fixed a problem where exceptions were being wrapped in a LazyInitializationException for non-lazy collections
+* added order-by attribute to <set> and <map> to specify a table column as defining the iteration order (JDK1.4 only)
+* improved error detection in Session.update()
+* further usage of JDBC2 batch updates
+* some fine-tuning of JDBC2 feature usage configuration
+* CodeGenerator will now generate components and arrays
+* fixed problem where CodeGenerator could not generate classes in the default package
+* improved logging of flush() activity
+* renamed property hibernate.use_jdbc2 to hibernate.use_jdbc_batch
+
+Changes in version 1.1 beta 5 (13.8.2002)
+-----------------------------------------
+* hibernate.query.imports property to allow use of unqualified classnames in queries
+* fixed a bug in collection flushing that was introduced in 1.1 beta 4
+
+Changes in version 1.1 beta 4 (11.8.2002)
+-----------------------------------------
+* JMX integration (thanks to John Urberg)
+* "having" clause in query language
+
+Changes in version 1.1 beta 3 (10.8.2002)
+-----------------------------------------
+* removed the select="all" attribute for <class> mappings - "select distinct" now specified in the hibernate query
+* system properties now override hibernate.properties
+* Session now flushes changes even less often (only when actual updates to the queried table(s) are waiting)
+* fixed a *very* rare problem where an unnecessary update could be accidently issued before a delete
+
+Changes in version 1.1 beta 2 (6.8.2002)
+----------------------------------------
+* fixed a bug exporting schemas with identity columns
+* implemented factory-level caching of collections
+* Datastore.storeJar() contributed by Christian Meunier
+* added <mapping jar="jarfile"> to hibernate.cfg.xml
+
+Changes in version 1.1 beta 1 (4.8.2002)
+----------------------------------------
+* new Query API including named parameters, pageable results
+* subqueries in Hibernate queries (only for databases that support subselects)
+* new DocBook documentation (contributed by Christian Bauer)
+* support collections .elements, .indices inside select clause (even in aggregate functions)
+* don't load collections before removal unless absolutely necessary
+* mutable="false" attribute in <class> element to map immutable classes
+* use JDBC batch to insert collection elements if hibernate.use_jdbc2 is set
+* brand new PreparedStatementCache
+* improvements to MYSQL dialect for long datatypes
+* always check isAccessible() before setAccessible(true)
+* removed extra unnecessary table join in queries with one-to-many association
+* removed ugly "WHERE 1=1" from generated SQL
+* fixed exception mapping a class with no properties (fix by Rob Stokes)
+* logging enhancements including SQLException logging
+* reworked factory-level cache and integrated JCS support (thanks to Christian Meunier)
+* fixed a bug with circular references in cached data
+* removed blocking cache support
+* now rendering outerjoins as "LEFT OUTER JOIN" because "LEFT JOIN" caused problems for some Sybase versions
+* added default Hibernate properties to Dialects
+* native id generation now falls back to sequence id generation when identity columns not supported by the dialect
+* fixed some problems with native id generation under HSQL
+* may now use Session.insert() even when using native id generation
+
+Changes in version 1.0.1b (18.7.2002)
+-------------------------------------
+* fixed a bad bug in query parser when hibernate.query.substitutions was unset
+* much improved build.xml Ant script
+* latest c3p0.jar
+
+Changes in version 1.0.1 (17.7.2002)
+------------------------------------
+* enabled use of scalar values and aggregate SQL functions in select clause of iterate() queries
+* fixed bug in JNDI lookup for SessionFactory
+* changed ordering of SQL inserts/deletes for child collections of a cascade-enabled association 
+- better behaviour for some not-null constraints
+- performance optimization for bidirectional many-to-one associations
+* added hibernate.query.substitutions property to allow named query constants (eg. translate 'true' to '1')
+* added locale type for java.util.Locale
+* added sequence hi/lo generator (seqhilo.long)
+* fixed bug where load(), onLoad() callbacks were sometimes called at wrong time
+* fixed an exception (fix by Eric Everman) and improved identifier searching in MapGenerator tool 
+* refactored SerializableType
+* extra logging + error handling
+* documentation enhancements
+
+Changes in version 0.9.17 (3.7.2002)
+------------------------------------
+* Added UserType interface
+* documented Lifecycle
+* added some new trace messages to log
+* bugfix to allow SQL functions like upper(), lower(), etc to work on all platforms
+* documented SAP DB support (dialect contributed by Brad Clow)
+* foreign key constraint export for SAP DB
+* map index may be the composite-id of the element class (contributed by Jon Lipsky)
+* fixes to CodeGenerator tool (contributed by Uros Jurglic)
+
+Changes in version 0.9.16 (19.6.2002)
+------------------------------------
+* fixed bug cacheing objects with references to themselves
+* support for composite ids of classes with no id property
+* may now disable outer join (deep) fetching for an association by setting outer-join="false"
+* enabled outer join fetching for one-to-one
+* fixed a bug for mappings that specify class attribute of <one-to-many>
+* fixed a bug where Hashbelt did not expire cached data in a timely fashion
+* fixed a mistake in the mapping DTD
+* new user-error check in update()
+
+Changes in version 0.9.15 (15.6.2002)
+------------------------------------
+* one-to-one associations
+* support for "tricky" mappings in SchemaExport tool (multiple properties to one column, etc)
+* Transaction API contributed by Anton van Straaten
+* SessionFactory may be bound to JNDI name by setting hibernate.session_factory_name
+* Sessions are now Serializable!
+* added Session.findIdentifiers() query methods
+* new Lifecycle interface to replace deprecated PersistentLifecycle
+* fixed problem where session did not autoflush on iterate() queries
+* performance enhancements to collection dirty checking
+* added Hibernate.configure() and configuration file format
+* removed some deprecated methods
+* refactored Type hierarchy
+* query language identifiers now case sensitive (bugfix for case sensitive SQL dialects)
+* username/password now optional for datasource (contributed by Emmanuel Bourg)
+* much improved API documentation
+* binary types now saved using streams if hibernate.use_streams_for_binary=true (contributed by Jon Lipsky)
+* MySQL Strings now mapped to TEXT columns if length > 255 (contributed by Christoph Beck)
+
+Changes in version 0.9.14 (4.6.2002)
+-------------------------------------
+* lifecycle objects - properties now have a cascade attribute to cascade save, update, delete
+* composite id properties may now be used in queries eg. foo.id.bar (contributed by Jon Lipsky)
+* slightly changed semantics of update() so it now also save()s new transient instances
+* Session now flushes() itself less often before query execution (performance enhancement)
+* fixed problem where Session.save() returned null instead of the natively generated id
+* fixed bug with object identity for cached classes
+* fixed bug where delete(x) could not be called after update(x)
+* MUCH improved Exception hierarchy
+* deprecated create()
+* added sql-type attribute to <column> tag to allow user to override default type mapping
+* deeper fetching with use_outer_join
+* new ConnectionProvider framework
+* fixed a bug where blocking cache could return stale data
+* now working again in JDK1.2.2
+* fixed problem with not-null associations + native key generation
+* minor changes to PersistentLifecycle interface
+* initial, minimal version of new Transaction mechanism
+* MUCH improved documentation
+
+Changes in version 0.9.13 (25.5.2002)
+-------------------------------------
+* Datastore.storeResource() to load mapping files from classpath
+* fixed a problem executing under JDK1.3 when compiled from JDK1.4
+* documentation improvements
+
+Changes in version 0.9.12 (24.5.2002)
+------------------------------------
+* Session.update() methods to update a persistent instance from transient copy (as requested by many users)
+* discriminator column name, type, length, etc now configurable by <discriminator> tag in mapping file
+* discriminator column values configurable by discriminator-value attribute of <class> and <subclass> tags
+* added Session.insert(object, id) for classes with no identifier property
+* fixed another bad bug with connection handling (fix by Anton van Straaten)
+* fixed a problem with deferred loading
+* fixed a problem with sorted collections (fix by Anton van Straaten)
+* nested collections of objects now require 2 SQL SELECTs to load, rather than size+1
+* session is NO LONGER atomic - application should discard session when exception occurs
+* fixed problem where character type was mapped to VARCHAR column
+* arrays of proxies now possible by using new element-class attribute of <array> tag
+* fixed various problems with proxies
+* added proxy generation tool
+* proxy unit tests
+* replaced two RuntimeExceptions with checked exceptions
+* made hibernate.username/hibernate.password optional for DriverManager
+* CodeGenerator now supports all hibernate basic types
+* much improved caching algorithm for compiled queries
+* may now specify properties simply by placing hibernate.properties in classpath
+* documentation improvements + fixes
+* --abstract switch to MapGenerator (contributed by Eric Everman)
+
+Changes in version 0.9.11 (12.5.2002)
+------------------------------------
+* fixed major bug with connection handling (fix by Anton van Straaten)
+
+Changes in version 0.9.10 (11.5.2002)
+------------------------------------
+* set a default schema name using SessionFactory property hibernate.default_schema
+* code generator tool contributed by Brad Clow (www.workingmouse.com)
+* lazy object initialization under JDK 1.3 and above
+* fixed some error messages to go to logging framework, not stdout
+* new system property hibernate.show_sql=true logs all executed SQL to stdout
+* integration of bugfixes in c3p0
+* wrap IllegalArgumentExceptions in HibernateExceptions
+* added ObjectNotFoundException and StaleObjectStateException
+* fixed a bug when using schemas
+* new caching strategy (and documented cache feature)
+
+Changes in version 0.9.9 (25.4.2002)
+-----------------------------------
+* sorted sets and maps (thanks to Doug Currie)
+* mapping files may now be loaded using getResourceAsStream() (thanks to Markus Meissner)
+* hibernate messages now logged by Apache commons-logging
+* default hi/lo generator table now has column named "next_id", instead of "next"
+* query language may now refer to identifier property name (eg. foo.fooKey as alternative to foo.id)
+* hibernate.jndi_class, hibernate.jndi_url now optional when using datasource
+* hibernate now throws an exception if you try to persist an object with a reference to a transient object
+* improved connection pooling algorithm (hibernate.pool_size limits pooled conections)
+* very experimental integration of c3p0 JDBC connection pool (http://sourceforge.net/projects/c3p0)
+* now compiles under JDK 1.2.2
+* fixed bug persisting null components
+* fixed bug where cached prepared statements were not cleaned up after disconnect() session
+* fixed a null pointer exception in MappingByReflection
+
+Changes in version 0.9.8 (13.3.2002)
+-----------------------------------
+* supports database native key generation in Sybase, MS SQL, MySQL, DB2, Hypersonic (contributed by Christoph Sturm)
+* supports Mckoi (dialect contributed by Doug Currie)
+* supports Progress (dialect contributed by Phillip Baird)
+* added exceptions to catch Session reentrancy from PersistentLifecycle.load() + store()
+* experimental cross-transaction cache
+* Session.lock() and Session.loadWithLock() for pessimistic locking
+* HiLoGenerators may now use their own DriverManager connection properties + may now use same table across diff mapping files
+* Session.flush(), Session.close() and Session.connection() replace Session.commit(), Session.cancel()
+* Session.disconnect() and Session.reconnect() for long transactions
+* added single JVM id generators vm.long, vm.hex
+* added unique column constraints to mappings
+* extensions to IDGenerator framework
+* support sequence-style ID generation in Oracle, PostgreSQL, DB2, Interbase
+
+* fixed problem where subcollections of a collection that changed roles would be deleted
+* changed class loading strategy to be compatible with JBoss
+* stopped queries retrieving unnecessary columns
+* mutable types (binary + serializable) now always detected as dirty
+
+Changes in version 0.9.7 (26.2.2002)
+-----------------------------------
+* save() now safe from foreign key violations (so create() is no longer preferred method of adding data)
+* delete() now completely safe from foreign key violations - it no longer matters what order objects are deleted in
+* removed Session.copy()
+* hilo generators now NOT for use with application server datasources
+
+* fixed two intermittent bugs in queries
+* fixed a problem where components not detected as dirty
+* fixed broken hilo generator which was not updating database
+* fixed a minor bug when hibernate.use_outer_join was set
+
+Changes in version 0.9.6 (24.2.2002)
+-----------------------------------
+* experimental XML generation
+* added support for bi-directional associations (one-to-set, set-to-set) with <set readonly="true"> config
+* reflective generation of mappings tool was contributed by Doug Currie
+* Session operations now atomic, so exceptions are recoverable
+* made ID properties optional in persistent classes
+* support for multiple schemas through schema attribute of <hibernate-mapping>, <class>, <set>, <map>, etc.
+* auto-creation of tables for hilo id generators (restriction: cannot use same table from more than one mapping file)
+* added some more assertions to catch user "mistakes" like deleting transient or saving persistent objects
+
+* major rework of collections and fixed some bad bugs
+* lazy initialization re-enabled for one-to-many associations (thanks to Georg Schneemayer)
+* fixed a problem in the mapping DTD to allow nested components in collections
+* fixed a BAD bug in RelationalDatabaseSession when loading objects with PersistentLifecycle callbacks (thanks to Paul Szego)
+* fixed problems with quoted strings in query language
+* fixed a bug where a stack overflow occurred instead of HibernateException thrown (thanks to Georg Schneemayer)
+* fixed a bug deleting updated versioned data
+* fixed some problems with name generation for indexes + foreign keys
+* fixed problem in Sun JDK 1.4 (only?) where IllegalArgumentException was not handled
+* minor improvements to handling of dates and times
+* HiLoGenerator now safe for all transaction isolation levels + safe when rollback occurs
+* noticed and fixed obscure piece of nonthreadsafe code outside of core persistence engine
+* removed unnecessary drop constraints for some dialects
+
+* MUCH more comprehensive test suite
+
+* changed some terminology used in documentation
+* added javadoc for API classes
+* commented the mapping DTD
+
+Changes in version 0.9.5 (8.2.2002)
+-----------------------------------
+* supports HypersonicSQL (dialect contributed by Phillip Baird)
+* supports Microsoft SQL server (with third party JDBC driver)
+* proper command-line tool for schema generation and export
+* deprecated the interface cirrus.hibernate.Persistent (due to popular demand)
+* changes to hibernate-mapping DTD (required to support optional Persistent interface):
+- deprecated <property type="package.PersistentClassName"/> in favor of <many-to-one class="package.PersistentClassName"/>
+- deprecated <element type="package.PersistentClassName"/> in favor of <many-to-many class="package.PersistentClassName"/>
+- deprecated <property role="..."/> in favor of <collection role="..."/>
+- deprecated <element role=".."/> in favor of <subcollection role="..."/>
+- deprecated <association> in favor of <one-to-many>
+* class attribute optional in <component> and <composite-id> tags (determined by reflection)
+* querying components of components now supported
+* one-shot table creation (no use of unportable "alter table")
+* time dataype support
+* reflective mappings of java.sql.Time, java.sql.Timestamp, java.sql.Date
+* fixed error msg thrown when class is missing a method but has a superclass
+* property names now conform to JavaBean spec ("foo" instead of "Foo"). Note that "Foo" still works
+* constructors of persistent classes may now be non-public
+* collection indexes now mapped to not-null columns
+* fixed obscure bug with querying collections inside components of components
+* fixed potential bug related to cacheing of compiled queries
+* major rewrite of code relating to O-R mappings
+* Session.copy() and Session.equals() as convenience for users
+* fixed repeated invocations of hasNext() on iterator + iterators now always work with distinct SQL resultsets
+* McKoi dialect was contributed by Gabe Hicks
+
+Changes in version 0.9.4 (29.1.2002)
+------------------------------------
+* fixed BAD bug where XML parsing would not work for parsers other than Xerces - thanks to Christian Winkler
+* added some more assertions to catch user "mistakes" like changing ids or reusing existing ids
+
+Changes in version 0.9.3 (27.1.2002)
+------------------------------------
+* repackaged (corrupted DatasourceConnectionProvider.class)
+* better exception reporting using datasource
+* added Datastore.storeClass() which looks for mapping file in classpath (class foo.Bar -> foo/Bar.hbm.xml)
+* improved documentation
+
+Changes in version 0.9.2 (25.1.2002)
+------------------------------------
+* iterate over query results (lazy instantiation of query results)
+* added "select foo, bar" style queries returning multiple objects per row
+* delete by query
+* composite key support
+* outer joins for faster (?) loading of associated objects ( set "hibernate.use_outer_join" to "true" )
+* connection pooling when using DriverManager
+* foreign key constraint from unkeyed collection table to owner entity table
+* improved drop tables script execution (still not infallible)
+* added <composite-element> tag
+* added not-null properties and elements
+* added an optimisation for dates and components
+* made some XML attributes optional
+* fixed errors in documentation + documented some extra features
+* bugfix: store() not getting called on lifecycle interface
+* bugfix: schema generation for indexed associations
+* added many tests
+
+Changes in version 0.9.1 (20.1.2002)
+------------------------------------
+Too many to list
+
+version 0.8.1
+-------------
+Initial alpha version
+

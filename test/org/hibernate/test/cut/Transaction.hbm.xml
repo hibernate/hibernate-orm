@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Demonstrates the use of a CompositeUserType.
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.cut">
+
+    <class name="Transaction" table="Trnsctn">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="description" length="100" not-null="true"/>
+		<property name="value" type="money">
+			<column name="amount" not-null="true"/>
+			<column name="currency" not-null="true"/>
+		</property>
+	</class>
+
+</hibernate-mapping>

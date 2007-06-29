@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates mapping an "optional" one-to-one association.  Basically
+    a (zero or one)-to-one.
+
+    Note that this is only conceptually possible on the non-constrained
+    side of the association (the side without the FK).
+
+    Also, it is impossible that the optional side be lazy; we must hit the
+    target table to determine whether a matching row actually exists or not.
+    This is so we can properly determine whether to use null or some value
+    for the association property's value.
+-->
+<hibernate-mapping package="org.hibernate.test.onetoone.optional" default-access="field">
+
+	<class name="Entity">
+		<id name="name"/>
+		<joined-subclass name="Person">
+			<key column="entityName"/>
+			<one-to-one name="address" cascade="all" constrained="false" outer-join="false" lazy="proxy"/>
+		</joined-subclass>
+		<joined-subclass name="Org">
+			<key column="entityName"/>
+		</joined-subclass>
+	</class>
+	
+	<class name="Address">
+		<id name="entityName"/>
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+</hibernate-mapping>

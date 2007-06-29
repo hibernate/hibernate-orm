@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+          "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.any">
+
+    <class name="Person" table="T_ANY_PERSON">
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <property name="name" />
+        <any name="data" id-type="long" cascade="none">
+            <meta-value value="A" class="Address"/>
+            <column name="DATATYPE_"/>
+            <column name="DATAID_"/>
+        </any>
+    </class>
+
+    <class name="Address" table="T_ANY_ADDRESS">
+        <id name="id" column="ID_">
+            <generator class="increment" />
+        </id>
+        <set name="lines" table="LINE">
+            <key column="ADDRESS" />
+            <element type="string" />
+        </set>
+    </class>
+
+</hibernate-mapping>

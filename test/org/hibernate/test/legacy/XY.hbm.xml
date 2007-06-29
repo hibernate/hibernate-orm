@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.test.legacy.X">
+		<id name="id" unsaved-value="0" column="xid">
+			<generator class="foreign">
+				<param name="property">y</param>
+			</generator>
+		</id>
+		<one-to-one name="y" constrained="true" cascade="all"/>
+		<bag name="xxs" inverse="true" cascade="all">
+			<key column="x"/>
+			<one-to-many class="org.hibernate.test.legacy.X$XX"/>
+		</bag>
+	</class>
+	<class name="org.hibernate.test.legacy.Y">
+		<id name="id" column="yid">
+			<generator class="hilo"/>
+		</id>
+		<property name="x"/>
+		<one-to-one name="theX" cascade="save-update"/>
+	</class>
+	<class name="org.hibernate.test.legacy.X$XX" table="xxx">
+		<id name="id">
+			<generator class="hilo"/>
+		</id>
+		<many-to-one name="x" not-null="true"/>
+	</class>
+</hibernate-mapping>
+	

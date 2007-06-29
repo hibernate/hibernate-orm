@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.A" discriminator-value="0" lazy="true" table="AP">
+		<id name="id" column="identifier_column" unsaved-value = "null">
+			<generator class="increment"/>
+		</id>
+		<discriminator column="clazz_discriminata" type="integer" force="true" not-null="false"/>
+		<property name="name"/>
+		<many-to-one name="forward" class="org.hibernate.test.legacy.E" cascade="save-update" />
+		<subclass name="org.hibernate.test.legacy.B" discriminator-value="null" lazy="true">
+			<property name="count" column="count_"/>
+
+			<map name="map">
+				<key column="BID"/>
+				<index column="MAPKEY" type="string"/>
+				<element column="MAPVAL" type="int"/>
+			</map>
+
+			<subclass name="org.hibernate.test.legacy.C1" discriminator-value="1" lazy="true">
+				<property name="address" column="c1"/>
+				<one-to-one name="d"/>
+				<many-to-one name="c2" column="c" class="org.hibernate.test.legacy.C2"/>
+				<bag name="c2s" inverse="true" where="identifier_column is not null"> <!--where="clazz_discriminata=2"-->
+					<key column="c"/>
+					<one-to-many class="org.hibernate.test.legacy.C2"/>
+				</bag>
+			</subclass>
+			<subclass name="org.hibernate.test.legacy.C2" discriminator-value="2" lazy="true">
+				<property name="address" column="c2"/>
+				<many-to-one name="c1" column="c" class="org.hibernate.test.legacy.C1"/>
+				<bag name="c1s" inverse="true" > <!--where="clazz_discriminata=1"-->
+					<key column="c"/>
+					<one-to-many class="org.hibernate.test.legacy.C1"/>
+				</bag>
+			</subclass>
+		</subclass>
+	</class>
+
+	<class name="org.hibernate.test.legacy.D" discriminator-value="0" lazy="true" table="DP">
+		<id name = "id" unsaved-value = "null">
+			<generator class="assigned"/>
+		</id>
+		<property name="amount"/>
+	</class>
+	
+	<class name="org.hibernate.test.legacy.E" discriminator-value="0" lazy="true" table="EP">
+		<id name = "id" unsaved-value = "null">
+			<generator class="increment"/>
+		</id>
+		<property name="amount"/>
+		<one-to-one name="reverse" class="org.hibernate.test.legacy.A" property-ref="forward" cascade="save-update"/>
+		<set name="as" lazy="true">
+			<key column="e"/>
+			<one-to-many class="org.hibernate.test.legacy.A"/>
+		</set>
+	</class>
+	
+</hibernate-mapping>

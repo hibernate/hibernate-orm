@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.lob">
+
+	<class name="LobHolder" table="LOB_ENTITY">
+		<id name="id" type="long" column="ID">
+			<generator class="increment"/>
+		</id>
+
+		<property name="serialData" column="SER_DATA" type="serializable"/>
+
+		<property name="materializedClob" column="MAT_CLOB_DATA" type="text" length="15000"/>
+        <property name="clobLocator" column="CLOB_DATA" type="clob" length="15000" />
+
+		<property name="materializedBlob" column="MAT_BLOB_DATA" type="org.hibernate.test.lob.MaterializedBlobType" length="15000"/>
+        <property name="blobLocator" column="BLOB_DATA" type="blob" length="15000" />
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Fo" table="foes">
+		<composite-id class="org.hibernate.test.legacy.FumCompositeID">
+			<key-property name="string">
+				<column name="string_" length="20"/>
+			</key-property>
+			<key-property name="short" column="short_"/>
+			<key-property name="date" column="date_" type="date"/>
+		</composite-id>
+		<version name="version" type="long"/>
+		<property name="serial" column="serial_"/>
+		<property name="buf"/>
+		<property name="x"/>
+	</class>
+	
+</hibernate-mapping>

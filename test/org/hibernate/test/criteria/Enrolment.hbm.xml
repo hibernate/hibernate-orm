@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.criteria">
+	
+	<class name="Course">
+		<id name="courseCode">
+			<generator class="assigned"/>
+		</id>
+		<property name="description"/>
+	</class>
+	
+	<class name="Student">
+		<id name="studentNumber">
+		    <column name="studentId"/>
+			<generator class="assigned"/>
+		</id>
+		<property name="name" not-null="true"/>
+		<set name="enrolments" inverse="true" cascade="delete">
+			<key column="studentId"/>
+			<one-to-many class="Enrolment"/>
+		</set>
+        <many-to-one name="preferredCourse" column="preferredCourseCode"/>
+	</class>
+	
+	<class name="Enrolment">
+		<composite-id>
+			<key-property name="studentNumber">
+				<column name="studentId"/>
+			</key-property>
+			<key-property name="courseCode"/>
+		</composite-id>
+		<many-to-one name="student" insert="false" update="false">
+			<column name="studentId"/>
+		</many-to-one>
+		<many-to-one name="course" insert="false" update="false">
+			<column name="courseCode"/>
+		</many-to-one>
+		<property name="semester" not-null="true"/>
+		<property name="year" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

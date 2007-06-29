@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.A" discriminator-value="0" lazy="true" table="TA">
+		<id name = "id" column="identifier_column" unsaved-value = "null">
+			<generator class="increment"/>
+		</id>
+		<discriminator column="clazz_discriminata" type="integer" not-null="false"/>
+
+		<property name="name" index="indx_a_name">
+			<column name="name" index="indx_a_name2"/>
+		</property>
+
+		<subclass name="org.hibernate.test.legacy.B" discriminator-value="-1" lazy="true">
+			<property name="count" column="count_"/>
+			<join fetch="select" table="B2">
+				<key column="bid"/>
+				<property name="BName" not-null="true"/>
+			</join>
+			<subclass name="org.hibernate.test.legacy.C1" discriminator-value="null" lazy="true">
+				<property name="address" column="c1"/>
+				<one-to-one name="d"/>
+				<join table="cmore" fetch="select">
+					<key column="c1" on-delete="cascade"/>
+					<property name="C1Name"/>
+				</join>
+			</subclass>
+		</subclass>
+	</class>
+
+	<class name="org.hibernate.test.legacy.D" discriminator-value="0" proxy="org.hibernate.test.legacy.D" table="TD">
+		<id name = "id" unsaved-value = "null">
+			<generator class="assigned"/>
+		</id>
+		<property name="amount"/>
+		<many-to-one name="reverse" insert="false" update="false" outer-join="true">
+			<formula>(id)</formula>
+		</many-to-one>
+		<many-to-one name="inverse" access="field" insert="false" update="false" formula = "(id)" outer-join="true"/>
+		<!--many-to-one name="reverse" formula = "(select a.id from TA a where a.id = id)"/-->
+	</class>
+	
+	<sql-query name="propertyResultDiscriminator">
+		<return alias="a" class="org.hibernate.test.legacy.A">
+  			<return-discriminator column="clazz"/>
+			<return-property name="id" column="identifier_column"/>
+			<return-property name="name" column="name"/>
+			<return-property name="count" column="count_"/>
+		</return>
+		select identifier_column, clazz_discriminata as clazz, name, count_ from TA s
+	</sql-query>
+</hibernate-mapping>

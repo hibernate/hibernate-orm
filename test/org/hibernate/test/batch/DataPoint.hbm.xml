@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.batch">
+
+	<class name="DataPoint" 
+		dynamic-update="true">
+		<!--rowid="rowid"--> <!-- remove this if not oracle -->
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="x">
+			<column name="xval" not-null="true" length="4" unique-key="xy"/>
+		</property>
+		<property name="y">
+			<column name="yval" not-null="true" length="4" unique-key="xy"/>
+		</property>
+		<property name="description"/>
+	</class>
+
+</hibernate-mapping>

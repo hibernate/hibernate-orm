@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql">
+
+	<class name="EntityWithCrazyCompositeKey">
+		<composite-id name="id" class="CrazyCompositeKey">
+			<key-property name="id" column="id"/>
+			<key-property name="otherId" column="other_id"/>
+		</composite-id>
+		<property name="name"/>
+	</class>
+
+</hibernate-mapping>

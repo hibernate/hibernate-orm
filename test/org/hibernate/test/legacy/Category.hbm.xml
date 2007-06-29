@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Category" 
+		table="category"
+		dynamic-update="true"
+		dynamic-insert="true">
+
+		<id name="id" column="category_key_col">
+			<generator class="native"/>
+		</id>
+
+		<list name="subcategories" lazy="true" cascade="save-update,merge,delete,lock">
+		    <!--cache-->
+			<key column="parent"/>
+			<index column="ord"/>
+			<one-to-many class="org.hibernate.test.legacy.Category"/>
+		</list>
+
+		<property name="name"/>
+		<many-to-one name="assignable" column="`assign-able-id`"/>
+
+	</class>
+
+	<class name="org.hibernate.test.legacy.Assignable" table="`assign-able`">
+		<id name="id">
+			<generator class="assigned"/>
+		</id>
+
+		<bag name="categories" inverse="true" cascade="all" lazy="true">
+			<key column="`assign-able-id`"/>
+			<one-to-many class="org.hibernate.test.legacy.Category"/>
+		</bag>
+	</class>
+
+	<sql-query name="namedsql">
+		<return alias="category" class="org.hibernate.test.legacy.Category"/>
+		<return alias="assignable" class="org.hibernate.test.legacy.Assignable"/>		
+		select {category.*}, {assignable.*} from category {category}, "assign-able" {assignable}	
+	</sql-query>
+
+	<sql-query name="nonaliasedsql">
+		<return alias="category" class="org.hibernate.test.legacy.Category">
+			<return-property name="id" column="category_key_col"/>
+			<return-property name="name" column="name"/>
+			<return-property name="assignable" column="assignid"/>
+		</return>
+		select category_key_col, name, "assign-able-id" as assignid from category
+	</sql-query>
+	
+</hibernate-mapping>

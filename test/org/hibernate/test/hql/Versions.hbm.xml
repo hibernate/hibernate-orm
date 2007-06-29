@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql" default-access="field">
+
+	<class name="IntegerVersioned">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+        <version name="version" column="vers"/>
+		<property name="name"/>
+	</class>
+
+	<class name="TimestampVersioned">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+        <timestamp name="version" column="vers"/> 
+		<property name="name"/>
+	</class>
+
+</hibernate-mapping>

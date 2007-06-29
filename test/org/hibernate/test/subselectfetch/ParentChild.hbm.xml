@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.subselectfetch">
+	
+	<class name="Child">
+		<id name="name"/>
+		<bag name="friends" fetch="subselect" table="ChildChild">
+			<key column="childName1" not-null="true"/>
+			<many-to-many class="Child" column="childName2"/>
+		</bag>
+	</class>
+	
+	<class name="Parent">
+		<id name="name"/>
+		<list name="children" fetch="subselect" cascade="persist, delete">
+			<key column="parentName" not-null="true"/>
+			<list-index column="loc"/>
+			<one-to-many class="Child"/>
+		</list>
+		<list name="moreChildren" table="ParentChild" fetch="subselect">
+			<key column="parentName" not-null="true"/>
+			<list-index column="loc"/>
+			<many-to-many class="Child" column="childName"/>
+		</list>
+	</class>
+		
+</hibernate-mapping>

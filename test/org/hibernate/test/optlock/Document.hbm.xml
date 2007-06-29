@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+  
+  Demonstrates the use of dirty-property optimistic locking.
+  We do not recommend this approach, since it does not work
+  for detached entities. Use version-based optimistic locking.
+  
+-->
+
+<hibernate-mapping package="org.hibernate.test.optlock">
+	
+	<class name="Document" entity-name="LockDirty" table="Document" optimistic-lock="dirty" dynamic-update="true">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="title"/>
+		<property name="author"/>
+		<component name="pubDate">
+			<property name="year" not-null="true"/>
+			<property name="month"/>
+		</component>
+		<property name="summary"/>
+		<property name="totalSales" optimistic-lock="false"/>
+		<property name="text" column="`text`"/>
+	</class>
+	
+	<class name="Document" entity-name="LockAll" table="Document" optimistic-lock="all" dynamic-update="true">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="title"/>
+		<property name="author"/>
+		<component name="pubDate">
+			<property name="year" not-null="true"/>
+			<property name="month"/>
+		</component>
+		<property name="summary"/>
+		<property name="totalSales" optimistic-lock="false"/>
+		<property name="text" column="`text`"/>
+	</class>
+	
+</hibernate-mapping>
+

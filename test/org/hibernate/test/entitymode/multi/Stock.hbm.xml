@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.entitymode.multi">
+
+	<class table="STOCK" name="Stock" node="stock">
+
+		<id name="id" column="STOCK_ID" node="@id">
+			<generator class="increment"/>
+		</id>
+
+		<property name="tradeSymbol" type="string" column="SYMBOL"/>
+
+		<many-to-one name="currentValuation" class="Valuation" column="CURR_VAL_ID" cascade="all" />
+
+		<set name="valuations" cascade="all" lazy="true">
+			<key column="STOCK_ID"/>
+			<one-to-many class="Valuation"/>
+		</set>
+	</class>
+
+</hibernate-mapping>

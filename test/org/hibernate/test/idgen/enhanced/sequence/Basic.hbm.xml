@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of the enhanced sequence-based identifier
+    generator, with no performance optimizations (the DB is hit
+    everytime when generating a value).
+-->
+
+<hibernate-mapping package="org.hibernate.test.idgen.enhanced.sequence">
+
+    <class name="Entity" table="ID_SEQ_BSC_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="org.hibernate.id.enhanced.SequenceStyleGenerator">
+                <param name="sequence_name">ID_SEQ_BSC_SEQ</param>
+                <param name="initial_value">1</param>
+                <param name="increment_size">1</param>
+                <param name="optimizer">none</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

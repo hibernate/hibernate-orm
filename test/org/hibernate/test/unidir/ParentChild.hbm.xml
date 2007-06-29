@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.unidir">
+
+	<class name="Parent">
+		<id name="name"/>
+		<list name="children" cascade="persist,merge">
+			<key column="parentName" not-null="true"/>
+			<list-index column="sibling"/>
+			<one-to-many class="Child"/>
+		</list>
+	</class>
+	
+	<class name="Child">
+		<id name="name"/>
+		<property name="age" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

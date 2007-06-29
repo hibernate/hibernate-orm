@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Location">
+		<composite-id>
+			<key-property name="streetNumber"/>
+			<key-property name="streetName" length="20"/>
+			<key-property name="city" length="20"/>
+			<key-property name="countryCode" length="2"/>
+		</composite-id>
+		<property name="locale"/>
+		<property name="description"/>
+	</class>
+	
+</hibernate-mapping>

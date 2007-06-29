@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates how to control the optimistic locking behavior
+    of a collection (do changes to the collection result in
+    a version increment on the owning instance)
+ -->
+<hibernate-mapping
+		package="org.hibernate.test.version.db">
+
+	<class name="User" table="db_vers_user">
+        <id name="id" column="user_id" type="long">
+            <generator class="native"/>
+        </id>
+        <timestamp name="timestamp" column="ts" source="db"/>
+        <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
+        <property name="username" column="user_name" type="string" unique="true"/>
+        <set name="groups" table="db_vers_user_group" batch-size="9" inverse="true" optimistic-lock="true" lazy="true" cascade="none" >
+            <key column="user_id"/>
+            <many-to-many column="group_id" class="Group" lazy="false" fetch="join" />
+        </set>
+        <set name="permissions" table="db_vers_user_perm" batch-size="9" inverse="false" optimistic-lock="false" lazy="true" cascade="none">
+            <key column="user_id"/>
+            <many-to-many column="perm_id" class="Permission" lazy="false" fetch="join"/>
+        </set>
+	</class>
+
+	<class name="Group" table="db_vers_group">
+        <id name="id" column="group_id" type="long">
+            <generator class="native"/>
+        </id>
+        <timestamp name="timestamp" column="ts" source="db"/>
+        <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
+        <property name="name" column="name" type="string" unique="true"/>
+        <set name="users" table="db_vers_user_group" batch-size="9" inverse="false" lazy="true" cascade="none" >
+            <key column="group_id"/>
+            <many-to-many column="user_id" class="User" lazy="false" fetch="join" />
+        </set>
+	</class>
+
+	<class name="Permission" table="db_vers_permission">
+        <id name="id" column="perm_id" type="long">
+            <generator class="native"/>
+        </id>
+        <timestamp name="timestamp" column="ts" source="db"/>
+        <!--<version name="timestamp" column="ts" type="org.hibernate.type.DbTimestampType"/>-->
+        <property name="name" column="name" type="string" unique="true"/>
+        <property name="context" column="ctx" type="string"/>
+        <property name="access" column="priv" type="string"/>
+	</class>
+
+</hibernate-mapping>

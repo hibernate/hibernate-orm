@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.schemaupdate">
+
+	<class name="Version" schema="PUBLIC">
+		<id name="id">
+			<generator class="org.hibernate.id.TableHiLoGenerator">
+                <param name="table">uid_table</param>
+<!--                 <param name="schema">PUBLIC</param>                -->
+                <param name="column">next_hi_value_column</param>
+        	</generator>
+		</id>
+		<property name="description"/>	
+		<property name="name"/>			
+	</class>
+	
+</hibernate-mapping>
+

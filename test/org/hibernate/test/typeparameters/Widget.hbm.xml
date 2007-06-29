@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.typeparameters">
+
+	<typedef name="nullToTwo"
+		class="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+		<param name="default">2</param>
+	</typedef>
+
+    <class name="Widget" table="STRANGE_TYPED_OBJECT">
+        <id name="id" column="ID">
+            <generator class="increment"/>
+        </id>
+        <property name="valueOne" column="VALUE_ONE">
+			<type name="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+				<param name="default">1</param>
+			</type>
+		</property>
+        <property name="valueTwo" column="VALUE_TWO" type="nullToTwo"/>
+        <property name="valueThree" column="VALUE_THREE" type="nullToMinusOne"/>
+        <property name="valueFour" column="VALUE_FOUR">
+			<type name="nullToTwo">
+				<param name="default">-5</param>
+			</type>
+		</property>
+		<property name="string"/>
+    </class>
+    
+
+</hibernate-mapping>

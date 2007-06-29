@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.bidi">
+
+	<class name="Auction" table="TAuction">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="description"/>
+		<property name="end" column="endDatetime"/>
+		<bag name="bids" inverse="true" 
+				cascade="persist">
+			<key column="auctionId"/>
+			<one-to-many class="Bid"/>
+		</bag>
+		<one-to-one name="successfulBid" 
+				property-ref="abc">
+			<formula>id</formula>
+			<formula>1</formula>
+		</one-to-one>
+	</class>
+	
+	<class name="Bid" table="TBid">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="amount" 
+				scale="19" 
+				precision="31" />
+		<property name="datetime" 
+				column="createdDatetime"/>
+		<properties name="abc">
+			<many-to-one name="item" 
+					column="auctionId" 
+					cascade="persist"/>
+			<property name="successful" 
+					column="success"/>
+		</properties>
+	</class>
+
+</hibernate-mapping>

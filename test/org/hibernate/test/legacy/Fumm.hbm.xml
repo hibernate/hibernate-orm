@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<class name="org.hibernate.test.legacy.Fumm">
+		<composite-id name="id">
+			<key-property name="string">
+				<column name="string_" length="10"/>
+			</key-property>
+			<key-property name="short" column="short_"/>
+			<key-property name="date" column="date_" type="date"/>
+		</composite-id>
+		<property name="locale"/>
+		<one-to-one name="fum" cascade="all" constrained="true"/>
+	</class>
+	
+</hibernate-mapping>

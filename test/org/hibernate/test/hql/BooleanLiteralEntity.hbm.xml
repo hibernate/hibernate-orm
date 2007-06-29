@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql" default-access="field">
+
+	<class name="BooleanLiteralEntity">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+        <property name="yesNoBoolean" column="Y_N_BOOL" type="yes_no"/>
+        <property name="trueFalseBoolean" column="T_F_BOOL" type="true_false"/>
+        <property name="zeroOneBoolean" column="NUM_BOOL" type="boolean"/>
+    </class>
+
+</hibernate-mapping>

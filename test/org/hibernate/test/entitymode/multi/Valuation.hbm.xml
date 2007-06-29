@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.entitymode.multi">
+
+	<class table="STOCK_VAL" name="Valuation" node="valuation">
+
+		<id name="id" column="VAL_ID" node="@id">
+			<generator class="increment"/>
+		</id>
+
+		<many-to-one name="stock" embed-xml="false"
+			class="Stock" column="STOCK_ID" cascade="none" />
+
+		<property name="valuationDate" type="date" column="DT"/>
+		<property name="value" type="double" column="VAL"/>
+
+	</class>
+
+</hibernate-mapping>

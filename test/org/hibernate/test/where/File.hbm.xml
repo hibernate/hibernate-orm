@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+    Demonstrates use of a class-level where restriction
+ -->
+<hibernate-mapping package="org.hibernate.test.where">
+
+    <class name="File" where="deleted=0" table="T_FILE">
+    	<id name="id">
+    		<generator class="increment"/>
+    	</id>
+    	<property name="name"/>
+    	<property name="deleted" type="org.hibernate.test.where.NumericTrueFalseType"/>
+    	<many-to-one name="parent"/>
+    	<set name="children" inverse="true" where="deleted=0">
+    		<key column="parent"/>
+    		<one-to-many class="File"/>
+    	</set>
+    </class>	
+
+</hibernate-mapping>

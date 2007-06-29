@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.filter">
+
+    <class name="Category" table="CATEGORY">
+    	<id name="id" column="CAT_ID" >
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="name" type="string"/>
+	    <property name="effectiveStartDate" column="eff_start_dt" type="java.util.Date"/>
+	    <property name="effectiveEndDate" column="eff_end_dt" type="java.util.Date"/>
+
+	    <set cascade="none" inverse="true" name="products" table="PROD_CAT">
+		    <key column="CAT_ID"/>
+		    <many-to-many column="PROD_ID" class="Product"/>
+	    </set>
+
+	    <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>
+
+	</class>
+
+</hibernate-mapping>

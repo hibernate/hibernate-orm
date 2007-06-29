@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping illustrates use of <natural-id>.
+  
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.naturalid"
+	default-access="field">
+	
+	<class name="org.hibernate.test.naturalid.mutable.User" table="SystemUserInfo">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<natural-id>
+			<property name="name"/>
+			<property name="org"/>
+		</natural-id>
+		<property name="password"/>
+	</class>
+	
+</hibernate-mapping>

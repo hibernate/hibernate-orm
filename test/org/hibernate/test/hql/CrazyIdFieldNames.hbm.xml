@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql">
+
+    <class name="HeresAnotherCrazyIdFieldName" table="CRAZY_ID_NODE">
+        <id name="heresAnotherCrazyIdFieldName" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" type="string"/>
+    </class>
+
+    <class name="MoreCrazyIdFieldNameStuffEntity" table="CRAZY_ID_TOP">
+        <id name="moreCrazyIdFieldNameStuffEntity" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" type="string" />
+        <many-to-one name="heresAnotherCrazyIdFieldName" class="HeresAnotherCrazyIdFieldName"/>
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.ternary">
+
+	<class name="Employee">
+		<id name="name"/>
+		<property name="hireDate" type="imm_date"/>
+		<map name="managerBySite" table="employeeSite">
+			<key column="employeeName" not-null="true"/>
+			<map-key-many-to-many column="siteName" class="Site"/>
+			<many-to-many column="managerName" class="Employee"/>
+		</map>
+		<set name="underlings" table="employeeSite" inverse="true">
+			<key column="managerName" not-null="true"/>
+			<many-to-many column="employeeName" class="Employee"/>
+		</set>
+	</class>
+	
+	<class name="Site">
+		<id name="name"/>
+		<property name="description"/>
+		<set name="employees" table="employeeSite" inverse="true">
+			<key column="siteName"/>
+			<many-to-many column="employeeName" class="Employee"/>
+		</set>
+		<set name="managers" table="employeeSite" inverse="true">
+			<key column="siteName"/>
+			<many-to-many column="managerName" class="Employee"/>
+		</set>
+	</class>
+
+</hibernate-mapping>

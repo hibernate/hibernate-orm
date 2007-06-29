@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.filter">
+
+    <class name="Department" table="DEPARTMENT">
+    	<id name="id" column="DEPT_ID" type="long">
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="name" column="REG" type="string"/>
+
+	    <set name="salespersons" cascade="save-update" inverse="true">
+		    <key column="DEPT_ID"/>
+		    <one-to-many class="Salesperson"/>
+		    <filter name="seniorSalespersons"><![CDATA[`hire dt` < :asOfDate]]></filter>
+	    </set>
+
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.subclassfilter">
+
+	<class name="Person" discriminator-value="0" table="SPerson">
+
+		<id name="id" column="person_id">
+			<generator class="native"/>
+		</id>
+
+		<discriminator type="int"
+			formula="CASE WHEN company is null THEN 0 WHEN company = 'JBoss' THEN 1 ELSE 2 END"/>
+
+		<property name="name"/>
+		<property name="company"/>
+		<property name="region"/>
+
+		<subclass name="Employee" discriminator-value="1">
+			<property name="title"/>
+			<property name="department" column="dept"/>
+			<many-to-one name="manager" column="mgr_id" class="Employee" cascade="none"/>
+			<set name="minions" inverse="true" lazy="true" cascade="all">
+				<key column="mgr_id"/>
+				<one-to-many class="Employee"/>
+				<filter name="region" condition="region = :userRegion"/>
+			</set>
+		</subclass>
+
+		<subclass name="Customer" discriminator-value="2">
+			<many-to-one name="contactOwner" class="Employee"/>
+		</subclass>
+
+		<filter name="region" condition="region = :userRegion"/>
+
+	</class>
+
+	<filter-def name="region">
+		<filter-param name="userRegion" type="string"/>
+    </filter-def>
+
+</hibernate-mapping>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.test.legacy.One" table="one">
+		<id name="key" column="one_key">
+			<generator class="native" />
+		</id>
+		<property name="x"/>
+		<property column="one_value" name="value"/>
+		<set name="manies" inverse="true" lazy="true">
+			<key column="one_key"/>
+			<one-to-many class="org.hibernate.test.legacy.Many"/>
+		</set>
+	</class>
+</hibernate-mapping>
+

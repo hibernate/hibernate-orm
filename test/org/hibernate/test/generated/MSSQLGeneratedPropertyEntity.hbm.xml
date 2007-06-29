@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generated">
+
+    <class name="GeneratedPropertyEntity" table="gen_prop">
+
+    	<id name="id">
+    		<generator class="native"/>
+    	</id>
+        <property name="name"/>
+        <property name="lastModified" generated="always" type="binary">
+            <column name="lastModified" length="8" sql-type="TIMESTAMP"/>
+        </property>
+
+	</class>
+
+</hibernate-mapping>

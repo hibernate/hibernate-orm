@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates how to map a many-to-many
+  association with a shared attribute in the primary keys
+  of the associated entities.
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.manytomany">
+	
+	<class name="User" table="`User`">
+		<composite-id>
+			<key-property name="name"/>
+			<key-property name="org"/>
+		</composite-id>
+		<set name="groups" table="UserGroup">
+			<key>
+				<column name="userName"/>
+				<column name="org"/>
+			</key>
+			<many-to-many class="Group">
+				<column name="groupName"/>
+				<formula>org</formula>
+			</many-to-many>
+		</set>
+	</class>
+	
+	<class name="Group" table="`Group`">
+		<composite-id>
+			<key-property name="name"/>
+			<key-property name="org"/>
+		</composite-id>
+		<property name="description"/>
+		<set name="users" table="UserGroup" inverse="true">
+			<key>
+				<column name="groupName"/>
+				<column name="org"/>
+			</key>
+			<many-to-many class="User">
+				<column name="userName"/>
+				<formula>org</formula>
+			</many-to-many>
+		</set>
+	</class>
+	
+</hibernate-mapping>

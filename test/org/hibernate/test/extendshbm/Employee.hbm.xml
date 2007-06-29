@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates 
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.extendshbm">
+	<subclass name="Employee" extends="Person">
+				<property name="title"
+					length="20"/>
+				<property name="salary"
+					length="0"/>
+				<many-to-one name="manager"/>
+		</subclass>
+</hibernate-mapping>

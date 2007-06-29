@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generated">
+
+    <class name="GeneratedPropertyEntity" table="gen_prop">
+
+    	<id name="id">
+    		<generator class="native"/>
+    	</id>
+        <property name="name"/>
+        <property name="lastModified" generated="always" type="binary">
+            <column name="lastModified" length="8"/>
+        </property>
+
+	</class>
+
+    <database-object>
+        <create>
+            <![CDATA[CREATE OR REPLACE TRIGGER t_iu_gen_prop
+            BEFORE INSERT OR UPDATE ON gen_prop
+            FOR EACH ROW
+            BEGIN
+                IF INSERTING THEN
+                    :new.lastModified := HEXTORAW( '1' );
+                ELSE
+                    :new.lastModified := HEXTORAW(
+                        TO_NUMBER( RAWTOHEX( :old.lastModified ) ) + 1
+                    );
+                END IF;
+            END;]]>
+        </create>
+        <drop>
+            <![CDATA[DROP TRIGGER t_iu_gen_prop]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+
+</hibernate-mapping>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<typedef name="nullToMinusOne"
+		class="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+		<param name="default">-1</param>
+	</typedef>
+	
+</hibernate-mapping>

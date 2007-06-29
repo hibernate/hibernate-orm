@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.batchfetch">
+
+<!-- 
+
+  This mapping demonstrates the use of batch fetching
+  for collections and entities.
+     
+-->
+
+    <class name="ProductLine" 
+    		batch-size="64">
+    
+    	<id name="id" 
+    		column="productId" 
+    		length="32">
+    		<generator class="uuid.hex"/>
+    	</id>
+    	
+    	<property name="description" 
+    		not-null="true" 
+    		length="200"/>
+    	
+    	<set name="models" 
+    			batch-size="64"
+    			cascade="all"
+    			inverse="true">
+    		<key column="productId"/>
+    		<one-to-many class="Model"/>
+    	</set>
+    	
+	</class>
+
+    <class name="Model" 
+    		batch-size="64">
+    
+    	<id name="id" 
+    		column="modelId" 
+    		length="32">
+    		<generator class="uuid.hex"/>
+    	</id>
+    	
+    	<property name="name"
+    		not-null="true"
+    		length="25"/>
+    		
+    	<property name="description" 
+    		not-null="true" 
+    		length="200"/>
+    	
+    	<many-to-one name="productLine" 
+    		column="productId"
+    		not-null="true"/>
+    	
+	</class>
+
+</hibernate-mapping>

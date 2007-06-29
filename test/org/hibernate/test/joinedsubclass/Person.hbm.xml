@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates 
+
+     (1) a table-per-subclass mapping strategy
+         
+     (2) a simple component mapping
+     
+     (3) recursive associations withing an inheritance tree
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.joinedsubclass"
+	default-access="field">
+	
+	<class name="Person" table="JPerson">
+		
+		<id name="id" 
+			column="person_id" 
+			unsaved-value="0">
+			<generator class="native"/>
+		</id>
+
+        <version name="version" column="version" type="int"/>
+
+        <property name="name"
+			not-null="true"
+			length="80"/>
+		<property name="sex" 
+			not-null="true"
+			update="false"/>
+		
+		<component name="address">
+			<property name="address"/>
+			<property name="zip"/>
+			<property name="country"/>
+		</component>
+		
+		<joined-subclass name="Employee" table="JEmployee">
+				<key column="person_id"/>
+				<property name="title" 
+					not-null="true" 
+					length="20"/>
+				<property name="salary" 
+					length="0"/>
+				<many-to-one name="manager"/>
+		</joined-subclass>
+		
+		<joined-subclass name="Customer" table="JManager">
+				<key column="person_id"/>
+				<property name="comments"/>
+				<many-to-one name="salesperson"/>
+		</joined-subclass>
+		
+	</class>
+	
+
+</hibernate-mapping>

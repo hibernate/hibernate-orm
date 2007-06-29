@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.interceptor">
+	
+	<class name="User" table="users">
+		<id name="name"/>
+		<property name="password"/>
+		<property name="lastUpdated"/>
+		<property name="created"/>
+		<set name="actions" lazy="false" fetch="join">
+			<key column="user_name"/>
+			<element column="action" type="string"/>
+		</set>
+	</class>
+	
+	<class name="Log" table="log_entries">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="entityName" column="entity_name"/>
+		<property name="entityId" column="entity_id"/>
+		<property name="action"/>
+		<property name="time" column="action_time"/>
+	</class>
+	
+</hibernate-mapping>

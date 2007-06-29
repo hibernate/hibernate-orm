@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.cid">
+
+<!-- 
+
+  This mapping demonstrates 
+  
+     (1) composite keys and one-to-many associations on 
+         composite keys
+      
+     (2) use of insert="false" update="false" on an
+         association mapping, when the foreign key is
+         also part of the primary key
+         
+     (3) use of a derived property which performs a
+         subselect against associated tables
+         
+     (4) use of <synchronize/> to ensure that auto-flush
+         works correctly for an entity with a property
+         derived from other tables
+         
+     
+-->
+
+    <class name="Order" table="CustomerOrder">
+    	<synchronize table="LineItem"/>
+    	<synchronize table="Product"/>
+    	
+    	<composite-id name="id" 
+    		class="Order$Id">
+    		<key-property name="customerId" length="10"/>
+    		<key-property name="orderNumber"/>
+    	</composite-id>
+    	
+    	<property name="orderDate" 
+    		type="calendar_date"
+    		not-null="true"/>
+    	
+    	<property name="total" 
+    		formula="( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = customerId and li.orderNumber = orderNumber )"/>
+    	
+    	<many-to-one name="customer"
+    		column="customerId"
+    		insert="false"
+			update="false" 
+			not-null="true"/>
+			
+    	<bag name="lineItems"
+    		fetch="join" 
+    		lazy="false"
+    		inverse="true"
+    		cascade="save-update">
+    		<key>
+    			<column name="customerId"/>
+    			<column name="orderNumber"/>
+    		</key>
+    		<one-to-many class="LineItem"/>
+    	</bag>
+    	
+    </class>
+ 	
+</hibernate-mapping>

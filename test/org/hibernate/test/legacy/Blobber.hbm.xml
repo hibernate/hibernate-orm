@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	<class name="org.hibernate.test.legacy.Blobber" dynamic-update="true">
+		<id name="id">
+			<generator class="hilo"/>
+		</id>
+		<property name="blob" column="blob_"/>
+		<property name="clob" column="clob_"/>
+	</class>
+</hibernate-mapping>

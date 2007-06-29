@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+     
+-->
+
+<hibernate-mapping package="org.hibernate.test.mapcompelem">
+	
+	<import class="Part"/>
+
+	<class name="Product" table="Products">
+		<id name="name" column="productName"/>
+		<map name="parts" table="Parts">
+			<key column="productName"/>
+			<map-key column="partName" type="string"/>
+			<composite-element class="Part">
+				<property name="name" formula="lower(partName)"/>
+				<property name="description" column="partDescription"/>
+			</composite-element>
+		</map>
+	</class>
+	
+	<class name="Item" table="Items">
+		<id name="code"/>
+		<many-to-one name="product" column="productName"/>
+	</class>
+
+</hibernate-mapping>

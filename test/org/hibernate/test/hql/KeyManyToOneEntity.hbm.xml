@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.hql">
+
+	<class name="KeyManyToOneKeyEntity">
+		<id name="id" type="long" access="field" >
+			<generator class="native"/>
+        </id>
+		<property name="name" type="string"/>
+	</class>
+
+	<class name="KeyManyToOneEntity">
+		<composite-id name="id" access="field" class="KeyManyToOneEntity$Id" unsaved-value="undefined" >
+			<key-many-to-one name="key1" class="KeyManyToOneKeyEntity" />
+			<key-property name="key2" type="string"/>
+		</composite-id>
+		<property name="name" type="string"/> 
+	</class>
+
+</hibernate-mapping>

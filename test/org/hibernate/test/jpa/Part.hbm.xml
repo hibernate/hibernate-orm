@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.jpa">
+
+	<class name="Part" table="EJB3_PART">
+        <id name="id" column="PART_ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <many-to-one name="item" class="Item" column="ITEM_ID" cascade="save-update, lock" not-null="true"/>
+        <property name="name" column="NAME" not-null="true" type="string"/>
+        <property name="stockNumber" column="STOCK_NUM" not-null="true" type="string"/>
+        <property name="unitPrice" column="UNIT_PRICE" not-null="true" type="big_decimal"/>
+    </class>
+
+</hibernate-mapping>

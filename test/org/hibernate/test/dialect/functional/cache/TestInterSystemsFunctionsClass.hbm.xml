@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.dialect.functional.cache" >
+
+    <class name="TestInterSystemsFunctionsClass" table="SQLUser.TestInterSystemsFunctionsClass">
+        <id type="long" column="id_">
+            <generator class="assigned"/>
+        </id>
+        <property name="date" column="date_"/>
+        <property name="date1" column="date1_"/>
+        <property name="date3" column="date3_"/>
+        <property name="dateText" column="dateText_"/>
+    </class>
+
+</hibernate-mapping>

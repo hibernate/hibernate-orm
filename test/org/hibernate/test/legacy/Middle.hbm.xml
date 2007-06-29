@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+	
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.test.legacy.Inner" table="CID_IN">
+        <composite-id name="id">
+            <key-property name="akey" type="string" length="10" column="AKEY"/>
+            <key-property name="bkey" type="string" length="10" column="BKEY"/>
+        </composite-id>
+        <property name="dudu" length="10" column="DUDU" not-null="true" type="string"/>
+        <bag name="middles" lazy="true" inverse="true">
+        	<key>
+                <column length="10" name="AKEY"/>
+                <column length="10" name="BKEY"/>
+			</key>
+			<one-to-many class="org.hibernate.test.legacy.Middle"/>
+		</bag>
+		<many-to-one name="backOut">
+               <column name="BO_AKEY"/>
+               <column name="BO_BKEY"/>
+               <column name="BO_ONE"/>
+               <column name="BO_TWO"/>
+               <column name="BO_DET"/>
+ 		</many-to-one>	
+    </class>
+
+    <class name="org.hibernate.test.legacy.Middle" table="CID_MID">
+        <composite-id name="id">
+            <key-many-to-one name="sup">
+                <column length="10" name="AKEY"/>
+                <column length="10" name="BKEY"/>
+            </key-many-to-one>
+            <key-property name="one" type="string" length="10" column="ONE"/>
+            <key-property name="two" type="string" length="10" column="TWO"/>
+        </composite-id>
+        <property column="BLA" length="10" name="bla" not-null="true" type="string"/>
+    </class>
+
+    <class name="org.hibernate.test.legacy.Outer" table="CID_OUT">
+        <composite-id name="id">
+            <key-many-to-one name="master">
+                <column length="10" name="AKEY"/>
+                <column length="10" name="BKEY"/>
+                <column length="10" name="ONE"/>
+                <column length="10" name="TWO"/>
+            </key-many-to-one>
+            <key-property name="detailId" type="string" column="ID" length="10"/>
+        </composite-id>
+        <property name="bubu" column="BUBU" length="10" type="string"/>
+    </class>
+
+</hibernate-mapping>

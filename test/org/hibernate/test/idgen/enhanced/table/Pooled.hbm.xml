@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of the enhanced sequence-based identifier
+    generator, using a pooled algorithm as the optimization (to
+    avoid hitting the database to generate each value).
+-->
+
+<hibernate-mapping package="org.hibernate.test.idgen.enhanced.table">
+
+    <class name="Entity" table="ID_TBL_POOL_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="org.hibernate.id.enhanced.TableGenerator">
+                <param name="table_name">ID_TBL_POOL_TBL</param>
+                <param name="segment_value">test</param>
+                <param name="initial_value">1</param>
+                <param name="increment_size">10</param>
+                <param name="optimizer">pooled</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

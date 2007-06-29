@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false" package="org.hibernate.test.legacy">
+
+	<import class="Result"/>
+	<import class="Named"/>
+
+	<class
+		name="Foo"
+		table="`foos`"
+		proxy="FooProxy"
+		discriminator-value="F"
+		batch-size="4"
+		dynamic-insert="true"
+		dynamic-update="true"
+		select-before-update="true">
+
+		<!--cache-->
+
+		<id name="key" type="string">
+			<column name="`foo_idcolumnname123`" length="36"/>
+			<generator class="uuid.hex">
+				<param name="seperator">:</param>
+			</generator>
+		</id>
+		<discriminator column="`foo_subclass_1234`" type="character" force="true"/>
+		<version name="version"/>
+		<!--<version name="versionCalendar" type="calendar"/>-->
+		<!--<timestamp name="versionTimestamp"/>-->
+		<many-to-one name="foo" class="Foo">
+				<column name="foo" length="36" index="fbmtoidx"/>
+		</many-to-one>
+		<property name="long">
+			<column name="long_" index="fbmtoidx" unique-key="abc" not-null="true"/>
+		</property>
+		<property name="integer">
+				<column name="`integer__`" unique-key="abc" not-null="true"/>
+		</property>
+		<property name="float">
+				<column name="float_" unique-key="abc" not-null="true" check="float_ > 0.0"/>
+		</property>
+		<property name="x"/>
+		<property name="double" column="double_"/>
+
+		<primitive-array name="bytes" table="foobytes">
+			<key column="id"/>
+			<index column="i"/>
+			<element column="byte_" type="byte"/>
+		</primitive-array>
+
+		<property name="date" type="date" column="date_"/>
+		<property name="timestamp" type="timestamp" column="timestamp_"/>
+		<property name="boolean" column="boolean_"/>
+		<property name="bool" column="bool_"/>
+		<property name="null" column="null_"/>
+		<property name="short" column="short_"/>
+		<property name="char" column="char_"/>
+		<property name="zero" column="zero_"/>
+		<property name="int" column="int_"/>
+		<property name="string">
+				<column name="string_" length="48" index="fbstridx"/>
+		</property>
+		<property name="byte" column="byte_"/>
+		<property name="yesno" type="yes_no"/>
+		<property name="blob" type="org.hibernate.test.legacy.Foo$Struct" column="blobb_"/>
+		<property name="nullBlob" type="serializable"/>
+		<property name="binary" column="bin_"/>
+		<property name="theLocale" access="field" column="`localeayzabc123`"/>
+
+		<property name="formula" formula="int_/2"/>
+
+		<property name="custom" type="org.hibernate.test.legacy.DoubleStringType" access="field">
+				<column name="first_name" length="66"/>
+				<column name="surname" length="66"/>
+		</property>
+
+		<component name="component">
+			<property name="count" column="count_" type="int" not-null="true"/>
+			<property name="name">
+				<column name="name_" length="32" not-null="true"/>
+			</property>
+			<many-to-one name="glarch"
+				column="g__"
+				cascade="all"
+				class="org.hibernate.test.legacy.Glarch"
+				lazy="proxy"
+				outer-join="true"/>
+			<property name="null" column="cmpnt_null_"/>
+			<component name="subcomponent">
+				<!--property name="count" column="subcount"/-->
+				<property name="name" column="subname"/>
+				<array name="importantDates" table="foo_times">
+					<key column="foo_id"/>
+					<index column="i"/>
+					<element column="date_" type="time"/>
+				</array>
+				<many-to-one name="fee"
+					column="fee_sub"
+					cascade="all"
+					class="Fee"
+					outer-join="false"
+					access="field"/>
+			</component>
+			<array name="importantDates" table="foo_dates">
+				<key column="foo_id"/>
+				<index column="i"/>
+				<element column="date_" type="date"/>
+			</array>
+		</component>
+		<component name="nullComponent">
+			<property name="name" column="null_cmpnt_"/>
+		</component>
+
+		<join table="jointable">
+			<key column="fooid" on-delete="cascade"/>
+			<property name="joinedProp"/>
+		</join>
+
+		<join table="foo_dep_table">
+			<key column="fooid"/>
+			<many-to-one name="dependent"
+				class="org.hibernate.test.legacy.Fee"
+				cascade="all"
+				not-null="true"/>
+		</join>
+
+		<subclass
+			name="Trivial"
+			proxy="FooProxy"
+			discriminator-value="T"/>
+
+		<subclass
+			name="Abstract"
+			proxy="AbstractProxy"
+			discriminator-value="null">
+				<set name="abstracts" batch-size="2">
+					<key column="abstract_id"/>
+					<one-to-many class="Abstract"/>
+				</set>
+				<property name="time" column="the_time"/>
+
+				<subclass
+					name="Bar"
+					proxy="BarProxy"
+					discriminator-value="B">
+					<many-to-one name="baz"/>
+					<property name="barString">
+						<column name="bar_string" length="24"/>
+					</property>
+					<component name="barComponent" class="FooComponent">
+						<parent name="parent"/>
+						<property name="count" column="bar_count"/>
+						<property name="name" length="64"/>
+						<array name ="importantDates">
+								<key column="id" />
+								<index column="i"/>
+							 <element column="date_" type="date"/>
+						</array>
+					</component>
+					<any name="object" meta-type="character" id-type="long" cascade="all">
+						<meta-value value="O" class="One"/>
+						<meta-value value="M" class="Many"/>
+						<column name="clazz" length="100"/>
+						<column name="gen_id"/>
+					</any>
+					<join table="bar_join_table">
+						<key column="bar_id"/>
+						<property name="name" column="name_name"/>
+					</join>
+				</subclass>
+		</subclass>
+	</class>
+
+
+</hibernate-mapping>
+

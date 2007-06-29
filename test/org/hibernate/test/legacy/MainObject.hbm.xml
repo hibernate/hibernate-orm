@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+    <class
+        name="org.hibernate.test.legacy.MainObject"
+        table="mainobject"
+        dynamic-update="false"
+        dynamic-insert="false"
+    >
+        <cache usage="read-write" />
+
+        <id
+            name="id"
+            column="id"
+            type="java.lang.Long"
+        >
+            <generator class="native">
+                <param name="sequence">seq_mainobj</param>
+            </generator>
+        </id>
+
+        <one-to-one
+            name="obj2"
+            class="org.hibernate.test.legacy.Object2"
+            cascade="all"
+            outer-join="auto"
+            constrained="false"
+        />
+
+        <property
+            name="description"
+            type="java.lang.String"
+            update="true"
+            insert="true"
+            column="description"
+        />
+
+        <!--
+            To add non XDoclet property mappings, create a file named
+                hibernate-properties-MainObject.xml
+            containing the additional properties and place it in your merge dir.
+        -->
+
+    </class>
+
+</hibernate-mapping>

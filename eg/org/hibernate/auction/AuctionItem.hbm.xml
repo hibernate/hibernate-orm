@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping 
+	package="org.hibernate.auction">
+
+	<import class="AuctionInfo"/>
+
+	<class name="AuctionItem">
+		<comment>An item that is being auctioned.</comment>
+		
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		
+		<natural-id>
+			<many-to-one name="seller"/>
+			<property name="shortDescription"
+					length="200"/>
+		</natural-id>
+				
+		<property name="description"
+				length="1000"/>
+				
+		<property name="ends"/>
+		
+		<property name="condition" column="`CONDITION`"/>
+		
+		<many-to-one name="successfulBid" 
+				outer-join="false"/>
+		
+		<bag name="bids"
+				inverse="true" 
+				cascade="all">
+			<key column="item"/>
+			<one-to-many class="Bid"/>
+		</bag>
+		
+	</class>
+		
+</hibernate-mapping>

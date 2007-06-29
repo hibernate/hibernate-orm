@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping 
+	package="org.hibernate.auction">
+
+	<class name="User" table="AuctionUser" lazy="true">
+		<comment>Users may bid for or sell auction items.</comment>
+		
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		
+		<natural-id mutable="true">
+			<property name="userName"
+					length="10"/>
+		</natural-id>
+		
+		<property name="password" 
+				not-null="true"
+				length="15"
+				column="`password`"/>
+		
+		<property name="email"/>
+		
+		<component name="name">
+			<property name="firstName"
+					length="50"
+					not-null="true"/>
+			<property name="initial" 
+					column="`initial`"/>
+			<property name="lastName"
+					length="50"
+					not-null="true"/>
+		</component>
+		
+		<bag name="bids"
+				inverse="true" 
+				cascade="save-update,lock">
+			<key column="bidder"/>
+			<one-to-many class="Bid"/>
+		</bag>
+		
+		<bag name="auctions"
+				inverse="true" 
+				cascade="save-update,lock">
+			<key column="seller"/>
+			<one-to-many class="AuctionItem"/>
+		</bag>
+		
+	</class>
+	
+</hibernate-mapping>

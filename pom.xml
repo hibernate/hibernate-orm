@@ -1,0 +1,91 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>3.3.0.beta1</version>
+
+    <name>Hibernate Parent</name>
+    <description>The parent POM for all Hibernate Core modules.</description>
+    <url>http://hibernate.org</url>
+
+    <issueManagement>
+        <system>jira</system>
+        <url>http://opensource.atlassian.com/projects/hibernate/browse/HHH</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>cruisecontrol</system>
+        <url>http://cruisecontrol.jboss.com/cc/</url>
+        <notifiers>
+            <notifier>
+                <type>mail</type>
+                <address>hibernate-dev@lists.jboss.org</address>
+            </notifier>
+        </notifiers>
+    </ciManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>Hibernate Announcements</name>
+            <post>hibernate-announce@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Commit Notificatons</name>
+            <post>hibernate-commits@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-commits/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Developers</name>
+            <post>hibernate-dev@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+            <otherArchives>
+                <otherArchive>http://www.mail-archive.com/hibernate-dev%40lists.jboss.org/index.html</otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Issue Notifications</name>
+            <post>hibernate-issues@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-issues/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <url>http://www.gnu.org/copyleft/lesser.html</url>
+            <comments>See discussion at http://hibernate.org/356.html for more details.</comments>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/</developerConnection>
+        <tag></tag>
+        <url>http://fisheye.jboss.com/viewrep/Hibernate</url>
+    </scm>
+
+    <modules>
+        <module>code</module>
+        <module>documentation</module>
+    </modules>
+
+    <properties>
+        <hibernate.core.version>${version}</hibernate.core.version>
+    </properties>
+
+</project>

@@ -1,0 +1,176 @@
+THE HIBERNATE DOCUMENTATION
+christian@hibernate.org
+
+COPYRIGHT NOTICE: This documentation system and all its source files are
+licensed under the GNU Lesser Public License (LGPL). Authors and translators
+retain the copyright of their work. All font and other build files (the DocBook
+system) are property of their respective copyright holders. Some of the files
+(especially font files) might require a license from the respective vendor; you
+are responsible to check and obtain these licenses as necessary before you use
+and/or distribute these files.
+
+
+Preface
+
+The Hibernate documentation is a modular documentation, it uses
+various XML files (written with the DocBook DTD) and a Java-based
+build process to generate HTML and PDF output. Use a simple text
+editor with XML support, such as JEdit, to edit the source files. You
+will need Java and Ant installed for the output generation. The toolset
+is Java only and should work on any operating system.
+
+Note: Always use 4 spaces to indent, no tabstops (code examples will
+be broken otherwise).
+
+
+1. How to get it
+
+Check out a copy of Hibernate from the repository. A regular
+Hibernate download will not contain the build process for the
+documentation, only the PDF/HTML output, use the repository!
+See http://www.hibernate.org/Download/DownloadOverview
+
+
+2. Working on the original language
+
+The original and master language is English, hence the "en" subdirectory
+in /doc/reference/ is authorative. We use "id" and "revision" attributes on
+XML elements to track changes. Here are the rules, they are mandatory:
+
+2a. Changing existing content involves an update of the "revision" of the XML
+element you are working on (e.g. a <sect1>, <sect2> or even a <para>).
+
+If a <sect1> has a revision="1", you update it to "2" after updating the
+content in that section.
+
+You can also add a revision attribute to an element if there is none,
+start with revision="1". You should not add a revision attribute to each
+paragraph, try to only add/use revision attributes to sections. You can'
+t add a revision attribute to elements without an "id" attribute!
+
+2b. Adding new content involves adding new elements (even new files), such
+as <sect1>, <para> and so on. Any new element (or its new parent element)
+needs an "id" attribute if the new content is to be included in the change
+tracking. If you add a section, give it a unique short text
+identifer, look at the parent element's identifier for the common prefix.
+
+2c. Deleting content involves removing old elements. Just remove them and
+make sure that the parent elements revision is updated, if the removed
+element did not itself have an identifer and a revision. If you remove an
+element with its own identifier, everything is fine and no other changes are
+necessary.
+
+
+3. Starting a new language
+
+If you start a translation for a new language, you have to copy
+the default language (English) and start an initial translation.
+
+3a. First, duplicate the default language "en" by duplicating the directory
+/doc/reference/en. For example, a new German translation
+will be a copy of that directory in /doc/reference/de. We use the ISO
+codes to name the language subdirectories.
+
+3b. You also have to add your new language to the language build file,
+/doc/reference/build.xml. Look for the lines that have a "TRANSLATOR"
+comment and duplicate them. Change the default "en" to your language
+code, every language listed here will be included in both the PDF/HTML
+generation and the revision diff change tracking reports (discussed later).
+
+
+4. The initial translation
+
+If you just copied the default language, start translating the DocBook
+XML modules and illustrations in the new language subdirectory. For
+example, all modules for German would be in /doc/reference/de/modules
+and all illustrations in /doc/reference/de/images, note that you also have
+to translate the master.xml in your language subdirectory.
+
+The initial translation is straightforward: Translate all modules and
+all illustrations, but don't add any files, don't add any new XML elements
+(like a section or a chapter, not even a paragraph). Simply translate
+sentence by sentence. This is very important.
+
+Note that every DocBook XML file needs an encoding, specific to a
+language. Add a line like this at the top of every file, if it doesn't exist:
+<?xml version='1.0' encoding="iso-8859-1"?>
+
+You can use UTF-8 or any other character set, please experiment with
+the builds to see what works for you.
+
+If you need a new section or paragraph, because your translation requires
+more explanation, you can add it if you also add an "id" and a "revision"
+to that new section or paragraph.
+
+For example, if you add a new <para> element to the existing document,
+give it an identifier, a short unique string that extends the identifier
+string of the parent element: <para id="queryhql-projection-specialnote">
+would be a special paragraph in the <sect1 id="queryhql-projection">
+section in the chapter <chapter id="queryhql">.
+
+Never add a new element in a translated version without also adding a new
+unique identifier value! Also, you have to mark this new element as "only
+relevant in the translated version". Simply set the "revision" attribute of
+your new element to "-1". For example, set the previously created
+paragraph to "only relevant in the translation" by declaring
+<para id="queryhql-projection-specialnote" revision="-1">.
+Changes to that paragraph will not be tracked, it is your responsibility to
+watch out for neccessary updates. Any element with revision="-1" will not be
+tracked.
+
+
+5. Updating translated documentation
+
+Translators get updates by updating their working directory from the
+repository. As a translator you will get an e-mail from us when translation
+is required, you can then update your copy. Or, subscribe to the commit
+mailing list to get all updates automatically.
+
+The documentation tools can generate a report after you updated
+from the repository and show you what needs to be translated and/or removed
+in your local translation copy. To generate that report, run "ant all.revdiff"
+in the doc/reference/ subdirectory. Click on the generated HTML report
+file for your language and you will see what has to be updated and/or
+removed.
+
+If the report indicates that content in the original has been removed,
+simply remove the identified XML element from your language modules.
+
+If the report detects a new revision, open the file that has been updated
+in your translation, find the identified XML element and update/translate
+its contents. Important: Make sure you also update the "revision"
+attribute of that XML element by setting it to the same version as in
+the original file, hence both the original XML file and your translated
+file should have the same revision number for all elements. If an
+XML element in your translation doesn't have a revision, but the original
+file has, add a new "revision" attribute to your XML element.
+The HTML report shows the identifiers and revisions for both the original
+and the translated files, use it to compare.
+
+Rerun the "ant all.revdiff" report generation as often as you like until
+no more differences are detected. You should always try to get your
+copy clean, with all updated revisions and all identified elements
+synchronzied.
+
+
+6. Committing a translation
+
+All translators will be asked to submit their translated versions from
+time to time. This will be a manual process, you will get an e-mail from
+the Hibernate team and simply send your language subdirectory as
+a ZIP file to us. It will then be integrated in the main Hibernate
+distribution and on the website. Or, you can contact us for commit access
+to the repository, where you can maintain a translation directly.
+
+
+7. Generating PDF and HTML output
+
+The documentation is generated with the target 'ant all.doc'.
+
+To build the reference docs for a particular language only, use
+"ant -Dlang=en", for example, and call either lang.all, lang.docpdf,
+lang.dochtml, or lang.dochtmlsingle for the target of your choice.
+
+You can also call lang.section-check to track down missing identifiers in
+a particular language, or you can call lang.revdiff to get a difference
+report for a particular language, compared with the English reference.

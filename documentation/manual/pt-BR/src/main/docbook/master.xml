@@ -1,0 +1,261 @@
+<?xml version='1.0' encoding="iso-8859-1"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
+                      "../support/docbook-dtd/docbookx.dtd"
+[
+<!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
+<!ENTITY architecture           SYSTEM "modules/architecture.xml">
+<!ENTITY configuration          SYSTEM "modules/configuration.xml">
+<!ENTITY persistent-classes     SYSTEM "modules/persistent_classes.xml">
+<!ENTITY basic-mapping          SYSTEM "modules/basic_mapping.xml">
+<!ENTITY collection-mapping     SYSTEM "modules/collection_mapping.xml">
+<!ENTITY association-mapping    SYSTEM "modules/association_mapping.xml">
+<!ENTITY component-mapping      SYSTEM "modules/component_mapping.xml">
+<!ENTITY inheritance-mapping    SYSTEM "modules/inheritance_mapping.xml">
+<!ENTITY session-api            SYSTEM "modules/session_api.xml">
+<!ENTITY transactions           SYSTEM "modules/transactions.xml">
+<!ENTITY events                 SYSTEM "modules/events.xml">
+<!ENTITY batch                  SYSTEM "modules/batch.xml">
+<!ENTITY query-hql              SYSTEM "modules/query_hql.xml">
+<!ENTITY query-criteria         SYSTEM "modules/query_criteria.xml">
+<!ENTITY query-sql              SYSTEM "modules/query_sql.xml">
+<!ENTITY filters                SYSTEM "modules/filters.xml">
+<!ENTITY xml                    SYSTEM "modules/xml.xml">
+<!ENTITY performance            SYSTEM "modules/performance.xml">
+<!ENTITY toolset-guide          SYSTEM "modules/toolset_guide.xml">
+<!ENTITY example-parentchild    SYSTEM "modules/example_parentchild.xml">
+<!ENTITY example-weblog         SYSTEM "modules/example_weblog.xml">
+<!ENTITY example-mappings       SYSTEM "modules/example_mappings.xml">
+<!ENTITY best-practices         SYSTEM "modules/best_practices.xml">
+]>
+
+<book lang="en">
+
+    <bookinfo>
+        <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
+        <subtitle>Documentação da Referência do Hibernate</subtitle>
+        <releaseinfo>3.2 cr2</releaseinfo>
+    </bookinfo>
+
+    <toc/>
+
+    <preface id="preface" revision="2">
+        <title>Prefácio</title>
+        
+        <para>
+		        <emphasis>Advertencia! Esta é uma versão traduzida do inglês da 
+		        documentação de referencia do Hibernate. A versão traduziada pode estar
+		        desatualizada. Sem dúvida, as diferenças devem ser pequenas e serão corrigidas o 
+		        mais breve possivel. Consulte a documentação de referencia em inglês, se estiver
+		        faltando alguma informação ou você encotrar erros de tradução. Se quiser 
+		        colaborar com ama tradução em particular, entre em contato com um dos tradutores
+		        abaixo:</emphasis>. Gamarra
+		        
+        </para>
+
+        <para>
+            Tradutor(es) em ordem alfabética: 
+        </para>
+
+       <itemizedlist>
+        <listitem>
+        <para>
+            <emphasis>Alvaro Netto</emphasis> alvaronetto@cetip.com.br
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Anderson Braulio</emphasis> andersonbraulio@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Daniel Vieira Costa</emphasis> danielvc@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Francisco gamarra</emphasis> francisco.gamarra@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Gamarra</emphasis> mauricio.gamarra@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Luiz Carlos Rodrigues</emphasis> luizcarlos_rodrigues@yahoo.com.br
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Marcel Castelo</emphasis> marcel.castelo@gmail.com
+        </para>
+        </listitem>
+
+        <listitem>
+        <para>
+            <emphasis>Paulo César</emphasis> paulocol@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Pablo L. de Miranda</emphasis> pablolmiranda@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+         <para>
+            <emphasis>Renato Deggau</emphasis> rdeggau@gmail.com
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Rogério Araújo</emphasis> rgildoaraujo@yahoo.com.br
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <emphasis>Wanderson	Siqueira</emphasis> wandersonxs@gmail.com
+        </para>
+        </listitem>
+       
+
+        </itemizedlist>
+ 
+        <para>
+            Trabalhando com software orientado a objetos e banco de dados relacional, podemos 
+            ter alguns incômodos hoje em dia em ambientes empresariais. Hibernate é uma ferramenta 
+            que mapeia o objeto/relacional para o ambiente Java. O termo de mapeamento de 
+            objeto/relacional (ou ORM – Object/Relational Mapping) se refere a técnica de mapear 
+            uma representação de dados de um modelo de objeto para dados de modelo 
+            relacional com o esquema baseado em SQL
+        </para>
+
+        <para>
+            O Hibernate não somente cuida do mapeamento de classes em Java 
+            para tabelas de banco de dados (e de tipos de dados em Java para tipos de dados em SQL), como também 
+            fornece facilidade de consultas e recuperação de dados, podendo também reduzir significantemente o 
+            tempo de desenvolvimento gasto com a manipulação manual de dados no SQL e JDBC.
+        </para>
+
+        <para>
+            O objetivo do Hibernate é de aliviar o desenvolvedor de 95 por cento das tarefas de programação 
+            relacionadas aos dados comuns de persistência. O Hibernate talvez não seja a melhor solução para 
+            aplicações de dados-data-centric que somente usa stored-procedures para implementar a lógica 
+            de negócio no banco de dados, isto é muito utilizado com o domínio de modelos orientado a objetos e 
+            lógicas de negócio em camadas do meio (middle-tier) baseadas em Java. Porém, o Hibernate
+            poderá certamente ajuda-lo a remover ou encapsular o código SQL de um vendedor específico,
+            ajudando também com a tarefa comum da tradução do resultado ajustado de uma representação 
+            para um gráfico de objetos.
+        </para>
+
+        <para>
+            Se você for novo no Hibernate e no mapeamento Objeto/Relacional, ou até mesmo em Java, 
+            por favor, siga os seguintes passos.
+        </para>
+
+        <orderedlist>
+            <listitem>
+                <para>
+                    Leia <xref linkend="tutorial"/> para um tutorial com instruções passo-a-passo. 
+                    O código fonte para do tutorial está incluído na distribuição no diretório 
+                    <literal>doc/reference/tutorial/</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Leia o <xref linkend="architecture"/> para entender o ambiente onde o Hibernate pode ser utilizado. 
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Dê uma olhada no diretório de exemplo <literal>eg/</literal> da distribuição 
+                    do Hibernate, ele contém uma simples aplicação standalone. 
+                    Copie seu driver JDBC para o diretório <literal>lib/</literal> e edite o arquivo 
+                    <literal>etc/hibernate.properties</literal>, especificando corretamente os valores 
+                    para seu banco de dados. Usando o prompt de commando no diretorio de distribuicao,
+                    digite <literal>ant eg</literal> (usando Ant), ou no Windows, digite
+                    <literal>build eg</literal>.                     
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Use esta documentação de referencia como sua fonte primaria de informação. 
+                    Considere ler também o livro <emphasis>Hibernate in Action</emphasis>  
+                    (http://www.manning.com/bauer) caso você precise de mais ajuda com o 
+                    desenvolvimento de aplicações ou caso prefira um tutorial passo-a-passo. 
+                    Também visite o site http://caveatemptor.hibernate.org e faça o download 
+                    da aplicação de exemplo do Hibernate em Ação.
+                </para>
+            </listitem>
+            <listitem>
+				<para>
+					FAQs (perguntas feitas com mais freqüência) estão respondidas no site do Hibernate
+				</para>
+            </listitem>
+			<listitem>
+				<para>
+					Demonstrações, exemplos e tutorials estão disponíveis no site do Hibernate.
+				</para>
+			</listitem>
+            <listitem>
+                <para>
+                    A Área da comunidade no site do Hibernate é uma boa fonte de recursos 
+                    para padrões de projeto e várias soluções de integração (Tomcat, JBoss AS, Struts, EJB, etc.).
+                </para>
+            </listitem>
+         </orderedlist>
+
+         <para>
+             Caso você tenha dúvidas, use o fórum dos usuários encontrado no site do Hibernate. 
+             Nós também fornecemos um sistema para controle de bug’s (JIRA) para relatórios de erros 
+             e requisições de features. Se você está interessado no desenvolvimento do Hibernate, 
+             junte-se a lista de e-mail dos desenvolvedores. 
+         </para>
+
+         <para>
+             Suporte comercial de desenvolvimento, suporte de produção e treinamento para o Hibernate 
+             está disponível através do JBoss Inc. (veja http://www.hibernate.org/SupportTraining). 
+             O Hibernate é um Projeto Profissional de Código Aberto e um componente crítico da suíte 
+             de produtos JBoss Enterprise Middleware System (JEMS).              
+         </para>
+
+    </preface>
+
+    &tutorial;
+
+    &architecture;
+
+    &configuration;
+
+    &persistent-classes;
+
+    &basic-mapping;
+    &collection-mapping;
+    &association-mapping;
+    &component-mapping;
+    &inheritance-mapping;
+
+    &session-api;
+    &transactions;
+    &events;
+    &batch;
+
+    &query-hql;
+    &query-criteria;
+    &query-sql;
+    &filters;
+    &xml;
+
+    &performance;
+
+    &toolset-guide;
+
+    &example-parentchild;
+    &example-weblog;
+    &example-mappings;
+
+    &best-practices;
+
+</book>
+

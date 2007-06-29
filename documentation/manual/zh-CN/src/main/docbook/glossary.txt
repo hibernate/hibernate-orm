@@ -1,0 +1,27 @@
+﻿O/R Mapping 对象/关系数据库映射
+identifier property: 标识属性
+discriminator: 辨别标志(不使用"鉴别器")
+
+join-subclass,union-subclass,join: 不翻译
+
+fine-grained 细粒度
+domain model 领域模型
+business object 业务对象(v2的时候翻译为"商业对象",被无数人痛骂....)
+annotations 注解(这个词还比较新,也见到有翻译为"特殊注释"/"标注"的)
+
+Aggregate functions 统计函数 (聚集函数?聚合函数? 还是翻译为统计函数才能让人看懂)
+Criteria Queries 条件查询(标准查询?这里Criteria是"判据"的含义,而非"标准",意译为条件查询更加明白)
+
+session flush session清洗
+lazy fetching 延迟加载(懒加载,翻译很直白,但是却不易理解)
+
+对象状态：
+ persistent class 持久化类
+ persistent object 持久对象 (体现这是与某个持久化设备联系的,掉电之后不消失)
+ transient object 瞬时对象  (其含义是仅在内存中存在的,掉电之后消失,翻译为瞬时对象比较好)
+ detached object 脱管对象(与session脱离的对象)
+
+outer-join fetching 外连接抓取 (fetch一般翻译为"获取",v2翻译的时候,为了突出其主动获取的特点,翻译为"抓取")
+
+class hierarchy 类分层结构 http://www.umlchina.com/xprogrammer/glossary1.htm
+inheritance hierarchy 继承层次 http://www-128.ibm.com/developerworks/cn/java/j-aopwork4/?ca=dwcn-newsletter-java

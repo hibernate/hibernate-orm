@@ -1,0 +1,65 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-manual</artifactId>
+        <version>3.3.0.beta1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>hibernate-manual-${translation}</artifactId>
+    <packaging>docbook</packaging>
+    <name>Hibernate Manual (${translation})</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-jboss-docbook-plugin</artifactId>
+                <version>2.0-SNAPSHOT</version>
+                <extensions>true</extensions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.redhat</groupId>
+                        <artifactId>docbook-xslt</artifactId>
+                        <version>0.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <sourceDocumentName>master.xml</sourceDocumentName>
+                    <formats>
+                        <format>
+                            <formatName>pdf</formatName>
+                            <stylesheetResource>/standard/fopdf.xsl</stylesheetResource>
+                            <finalName>Hibernate_Reference.pdf</finalName>
+                        </format>
+                        <format>
+                            <formatName>eclipse</formatName>
+                        </format>
+                        <format>
+                            <formatName>html</formatName>
+                            <stylesheetResource>/standard/html.xsl</stylesheetResource>
+                            <finalName>index.html</finalName>
+                        </format>
+                    </formats>
+                    <options>
+                        <xincludeSupported>true</xincludeSupported>
+                        <xmlTransformerType>saxon</xmlTransformerType>
+                        <!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
+                        <!--     could also locate the docbook dependency and inspect its version... -->
+                        <docbookVersion>1.72.0</docbookVersion>
+                    </options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <properties>
+        <translation>en-US</translation>
+    </properties>
+
+</project>

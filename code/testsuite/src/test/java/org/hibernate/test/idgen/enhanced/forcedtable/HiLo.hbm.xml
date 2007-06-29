@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+    Demonstrates use of the enhanced table-based identifier
+    generator, using a hilo algorithm as the optimization (to
+    avoid hitting the database to generate each value).
+-->
+
+<hibernate-mapping package="org.hibernate.test.idgen.enhanced.forcedtable">
+
+    <class name="Entity" table="ID_SEQ_TBL_HILO_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="org.hibernate.id.enhanced.SequenceStyleGenerator">
+                <param name="table_name">ID_SEQ_TBL_HILO_SEQ</param>
+                <param name="initial_value">1</param>
+                <param name="increment_size">10</param>
+                <param name="optimizer">hilo</param>
+                <param name="force_tbl_use">true</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

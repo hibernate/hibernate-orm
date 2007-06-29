@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Demonstrates the use of property-ref to map legacy data where
+  foreign keys reference something other than the primary key of
+  the associated entity. Here we show:
+  
+  (1) A one-to-one foreign key association (prefer primary key 
+      associations)
+      
+  (2) A bidirectional one-to-many association on a key that is
+      not the primary key (prefer associations from foreign keys
+      to primary keys)
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.propertyref.inheritence.joined">
+
+	<class name="Person" table="J_SBCLS_PROPREF_PERS">
+		<id name="id">
+			<generator class="hilo"/>
+		</id>
+		<property name="name" length="100"/>
+		<many-to-one name="bankAccount" property-ref="bsbAccountNumber" cascade="all">
+			<column name="bsb"/>
+			<column name="accountNumber"/>
+		</many-to-one>
+	</class>
+	
+	<class name="Account" table="J_SBCLS_PROPREF_ACCT">
+		<id name="accountId" length="32">
+			<generator class="uuid"/>
+		</id>
+		<property name="type" not-null="true"/>
+		<joined-subclass name="BankAccount" table="J_SBCLS_PROPREF_BACCT">
+			<key column="accountId"/>
+			<properties unique="true" name="bsbAccountNumber">
+				<property name="bsb" length="4" not-null="true"/>
+				<property name="accountNumber" length="16" not-null="true"/>
+			</properties>
+		</joined-subclass>
+		
+	</class>
+
+</hibernate-mapping>

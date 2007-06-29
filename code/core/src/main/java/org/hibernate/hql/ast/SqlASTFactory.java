@@ -1,0 +1,221 @@
+// $Id: SqlASTFactory.java 10060 2006-06-28 02:53:39Z steve.ebersole@jboss.com $
+package org.hibernate.hql.ast;
+
+import antlr.ASTFactory;
+import antlr.Token;
+import antlr.collections.AST;
+import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.ast.tree.AggregateNode;
+import org.hibernate.hql.ast.tree.BinaryArithmeticOperatorNode;
+import org.hibernate.hql.ast.tree.BinaryLogicOperatorNode;
+import org.hibernate.hql.ast.tree.Case2Node;
+import org.hibernate.hql.ast.tree.CaseNode;
+import org.hibernate.hql.ast.tree.CollectionFunction;
+import org.hibernate.hql.ast.tree.ConstructorNode;
+import org.hibernate.hql.ast.tree.CountNode;
+import org.hibernate.hql.ast.tree.DeleteStatement;
+import org.hibernate.hql.ast.tree.DotNode;
+import org.hibernate.hql.ast.tree.FromClause;
+import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.hql.ast.tree.IdentNode;
+import org.hibernate.hql.ast.tree.ImpliedFromElement;
+import org.hibernate.hql.ast.tree.IndexNode;
+import org.hibernate.hql.ast.tree.InitializeableNode;
+import org.hibernate.hql.ast.tree.InsertStatement;
+import org.hibernate.hql.ast.tree.IntoClause;
+import org.hibernate.hql.ast.tree.LiteralNode;
+import org.hibernate.hql.ast.tree.MethodNode;
+import org.hibernate.hql.ast.tree.OrderByClause;
+import org.hibernate.hql.ast.tree.ParameterNode;
+import org.hibernate.hql.ast.tree.QueryNode;
+import org.hibernate.hql.ast.tree.SelectClause;
+import org.hibernate.hql.ast.tree.SelectExpressionImpl;
+import org.hibernate.hql.ast.tree.SqlFragment;
+import org.hibernate.hql.ast.tree.SqlNode;
+import org.hibernate.hql.ast.tree.UnaryArithmeticNode;
+import org.hibernate.hql.ast.tree.UpdateStatement;
+import org.hibernate.hql.ast.tree.BetweenOperatorNode;
+import org.hibernate.hql.ast.tree.UnaryLogicOperatorNode;
+import org.hibernate.hql.ast.tree.InLogicOperatorNode;
+import org.hibernate.hql.ast.tree.JavaConstantNode;
+import org.hibernate.hql.ast.tree.SessionFactoryAwareNode;
+import org.hibernate.hql.ast.tree.BooleanLiteralNode;
+
+import java.lang.reflect.Constructor;
+
+/**
+ * Custom AST factory the intermediate tree that causes ANTLR to create specialized
+ * AST nodes, given the AST node type (from HqlSqlTokenTypes).   HqlSqlWalker registers
+ * this factory with itself when it is initialized.
+ *
+ * @author Joshua
+ */
+public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
+	private HqlSqlWalker walker;
+
+	/**
+	 * Create factory with a specific mapping from token type
+	 * to Java AST node type.  Your subclasses of ASTFactory
+	 * can override and reuse the map stuff.
+	 */
+	public SqlASTFactory(HqlSqlWalker walker) {
+		super();
+		this.walker = walker;
+	}
+
+	/**
+	 * Returns the class for a given token type (a.k.a. AST node type).
+	 *
+	 * @param tokenType The token type.
+	 * @return Class - The AST node class to instantiate.
+	 */
+	public Class getASTNodeType(int tokenType) {
+		switch ( tokenType ) {
+			case SELECT:
+			case QUERY:
+				return QueryNode.class;
+			case UPDATE:
+				return UpdateStatement.class;
+			case DELETE:
+				return DeleteStatement.class;
+			case INSERT:
+				return InsertStatement.class;
+			case INTO:
+				return IntoClause.class;
+			case FROM:
+				return FromClause.class;
+			case FROM_FRAGMENT:
+				return FromElement.class;
+			case IMPLIED_FROM:
+				return ImpliedFromElement.class;
+			case DOT:
+				return DotNode.class;
+			case INDEX_OP:
+				return IndexNode.class;
+				// Alias references and identifiers use the same node class.
+			case ALIAS_REF:
+			case IDENT:
+				return IdentNode.class;
+			case SQL_TOKEN:
+				return SqlFragment.class;
+			case METHOD_CALL:
+				return MethodNode.class;
+			case ELEMENTS:
+			case INDICES:
+				return CollectionFunction.class;
+			case SELECT_CLAUSE:
+				return SelectClause.class;
+			case SELECT_EXPR:
+				return SelectExpressionImpl.class;
+			case AGGREGATE:
+				return AggregateNode.class;
+			case COUNT:
+				return CountNode.class;
+			case CONSTRUCTOR:
+				return ConstructorNode.class;
+			case NUM_INT:
+			case NUM_FLOAT:
+			case NUM_LONG:
+			case NUM_DOUBLE:
+			case QUOTED_STRING:
+				return LiteralNode.class;
+			case TRUE:
+			case FALSE:
+				return BooleanLiteralNode.class;
+			case JAVA_CONSTANT:
+				return JavaConstantNode.class;
+			case ORDER:
+				return OrderByClause.class;
+			case PLUS:
+			case MINUS:
+			case STAR:
+			case DIV:
+				return BinaryArithmeticOperatorNode.class;
+			case UNARY_MINUS:
+			case UNARY_PLUS:
+				return UnaryArithmeticNode.class;
+			case CASE2:
+				return Case2Node.class;
+			case CASE:
+				return CaseNode.class;
+			case PARAM:
+			case NAMED_PARAM:
+				return ParameterNode.class;
+			case EQ:
+			case NE:
+			case LT:
+			case GT:
+			case LE:
+			case GE:
+			case LIKE:
+			case NOT_LIKE:
+				return BinaryLogicOperatorNode.class;
+			case IN:
+			case NOT_IN:
+				return InLogicOperatorNode.class;
+			case BETWEEN:
+			case NOT_BETWEEN:
+				return BetweenOperatorNode.class;
+			case IS_NULL:
+			case IS_NOT_NULL:
+			case EXISTS:
+				return UnaryLogicOperatorNode.class;
+			default:
+				return SqlNode.class;
+		} // switch
+	}
+
+	protected AST createUsingCtor(Token token, String className) {
+		Class c;
+		AST t;
+		try {
+			c = Class.forName( className );
+			Class[] tokenArgType = new Class[]{antlr.Token.class};
+			Constructor ctor = c.getConstructor( tokenArgType );
+			if ( ctor != null ) {
+				t = ( AST ) ctor.newInstance( new Object[]{token} ); // make a new one
+				initializeSqlNode( t );
+			}
+			else {
+				// just do the regular thing if you can't find the ctor
+				// Your AST must have default ctor to use this.
+				t = create( c );
+			}
+		}
+		catch ( Exception e ) {
+			throw new IllegalArgumentException( "Invalid class or can't make instance, " + className );
+		}
+		return t;
+	}
+
+	private void initializeSqlNode(AST t) {
+		// Initialize SQL nodes here.
+		if ( t instanceof InitializeableNode ) {
+			InitializeableNode initializeableNode = ( InitializeableNode ) t;
+			initializeableNode.initialize( walker );
+		}
+		if ( t instanceof SessionFactoryAwareNode ) {
+			( ( SessionFactoryAwareNode ) t ).setSessionFactory( walker.getSessionFactoryHelper().getFactory() );
+		}
+	}
+
+	/**
+	 * Actually instantiate the AST node.
+	 *
+	 * @param c The class to instantiate.
+	 * @return The instantiated and initialized node.
+	 */
+	protected AST create(Class c) {
+		AST t;
+		try {
+			t = ( AST ) c.newInstance(); // make a new one
+			initializeSqlNode( t );
+		}
+		catch ( Exception e ) {
+			error( "Can't create AST Node " + c.getName() );
+			return null;
+		}
+		return t;
+	}
+
+}

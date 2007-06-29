@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.test.legacy.Custom" persister="org.hibernate.test.legacy.CustomPersister">
+        <id type="string" name="id" column="id_" length="64" unsaved-value="null">
+            <generator class="uuid.hex"/>
+        </id>
+    </class>
+
+</hibernate-mapping>

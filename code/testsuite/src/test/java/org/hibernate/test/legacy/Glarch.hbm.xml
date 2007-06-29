@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false" package="org.hibernate.test.legacy">
+
+    <class name="Glarch"
+    	table="`glarchez`"
+    	proxy="GlarchProxy"
+    	dynamic-update="true">
+
+        <!--cache-->
+        <id type="string" column="tha_key" length="32">
+            <generator class="uuid"/>
+        </id>
+        <version name="version"/>
+        <property name="name" column="namecvbnmasdf"/>
+        <!-- <property name="currency"/> -->
+        <many-to-one name="next" column="next_" class="Glarch"/>
+        <property name="order" column="order_"/>
+        <dynamic-component name="dynaBean">
+        	<property name="foo" type="string"/>
+        	<property name="bar" type="integer"/>
+        </dynamic-component>
+        <property name="x"/>
+        <list name="strings">
+            <key column="glarch_key"/>
+            <index column="`indx_`"/>
+            <element type="string" column="`tha_stryng`"/>
+        </list>
+        <list name="fooComponents" lazy="true" cascade="all">
+            <key column="glarch_key"/>
+            <index column="tha_indecks"/>
+            <composite-element class="FooComponent">
+                <property name="name" column="name_"/>
+                <property name="count" column="count_"/>
+                <nested-composite-element name="subcomponent" class="FooComponent">
+                    <property name="name" column="x_"/>
+                    <property name="count" column="y_"/>
+                </nested-composite-element>
+                <many-to-one name="fee" cascade="all" outer-join="true"/>
+            </composite-element>
+        </list>
+        <array name="proxyArray" element-class="GlarchProxy">
+        	<key column="array_key"/>
+        	<index column="array_indecks"/>
+        	<one-to-many class="org.hibernate.test.legacy.Glarch"/>
+        </array>
+        <set name="proxySet">
+        	<key column="set_key"/>
+        	<one-to-many class="Glarch"/>
+        </set>
+        <property name="immutable" update="false" not-null="true"/>
+        <property name="derivedVersion" insert="false" update="false" column="version"/>
+        <property name="any" type="object">
+        	<column name="`any_id_of_object`"/>
+        	<column name="`any_class_of_object`"/>
+        </property>
+        <property name="multiple" type="org.hibernate.test.legacy.MultiplicityType">
+        	<column name="count_"/>
+        	<column name="glarch_"/>
+        </property>
+    </class>
+
+</hibernate-mapping>

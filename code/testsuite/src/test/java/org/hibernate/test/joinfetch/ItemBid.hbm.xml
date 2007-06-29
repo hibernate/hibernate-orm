@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.joinfetch"
+	default-access="field">
+	
+	<class name="Category" table="AuctionCategories">
+		<id name="name"/>
+	</class>
+	
+	<class name="Item" table="AuctionItems">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="description" not-null="true"/>
+		<many-to-one name="category" not-null="true"/>
+		<set name="bids" cascade="all" fetch="join" inverse="true" order-by="`timestamp`">
+			<key column="item"/>
+			<one-to-many class="Bid"/>
+		</set>
+		<set name="comments" cascade="all" fetch="join" inverse="true" order-by="`timestamp`">
+			<key column="item"/>
+			<one-to-many class="Comment"/>
+		</set>
+
+		<sql-query name="all">
+			<return alias="item" class="Item"/>
+			<return-join alias="bid" property="item.bids"/>
+			<return-join alias="commnt" property="item.comments"/>
+			select {item.*}, {bid.*}, {commnt.*} 
+			from AuctionItems item
+				left outer join AuctionBids bid on bid.item = item.id
+				left outer join AuctionComments commnt on commnt.item = item.id
+		</sql-query>
+
+	</class>
+	
+	<class name="Bid" table="AuctionBids">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="amount" not-null="true"/>
+		<property name="timestamp" column="`timestamp`" not-null="true"/>
+		<many-to-one name="item" fetch="join" not-null="true"/>
+	</class>
+
+	<class name="Comment" table="AuctionComments">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="text" not-null="true"/>
+		<property name="timestamp" column="`timestamp`" not-null="true"/>
+		<many-to-one name="item" fetch="join" not-null="true"/>
+	</class>
+	
+</hibernate-mapping>

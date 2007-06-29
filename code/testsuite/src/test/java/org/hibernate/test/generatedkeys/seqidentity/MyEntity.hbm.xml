@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.generatedkeys.seqidentity" default-access="field">
+
+    <class name="MyEntity" table="my_entity">
+
+    	<id name="id">
+    		<generator class="sequence-identity"/>
+    	</id>
+        <natural-id>
+            <property name="name"/>
+        </natural-id>
+	</class>
+
+</hibernate-mapping>

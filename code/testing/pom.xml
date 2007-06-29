@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-code</artifactId>
+        <version>3.3.0.beta1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-testing</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Hibernate Testing</name>
+    <description>Hibernate JUnit test utilities</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <!-- here we need to pull JUnit deps into compile scope... -->
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+</project>

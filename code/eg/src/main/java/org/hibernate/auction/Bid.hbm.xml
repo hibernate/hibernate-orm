@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping 
+	package="org.hibernate.auction">
+
+	<class name="Bid" 
+		discriminator-value="N">
+		<comment>A bid or "buy now" for an item.</comment>
+		
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		
+		<discriminator type="char">
+			<column name="isBuyNow">
+				<comment>Y if a "buy now", N if a regular bid.</comment>
+			</column>
+		</discriminator>
+		
+		<natural-id>
+			<many-to-one name="item"/>
+			<property name="amount"/>
+		</natural-id>
+		
+		<property name="datetime" 
+				not-null="true" 
+				column="`datetime`"/>
+		
+		<many-to-one name="bidder" 
+				not-null="true"/>
+		
+		<subclass name="BuyNow" 
+			discriminator-value="Y"/>
+			
+	</class>
+	
+</hibernate-mapping>

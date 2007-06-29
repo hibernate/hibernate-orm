@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+    This mapping demonstrates the use of Hibernate with all-handwritten SQL!
+
+    This version is for MySQL
+-->
+
+<hibernate-mapping package="org.hibernate.test.sql.hand" default-access="field">
+
+	<class name="Organization">
+		<id name="id" unsaved-value="0" column="orgid">
+			<generator class="increment"/>
+		</id>
+		<property name="name" not-null="true"/>
+		<set name="employments" 
+			inverse="true"
+			order-by="DUMMY">
+			<key column="employer"/> <!-- only needed for DDL generation -->
+			<one-to-many class="Employment"/>
+			<loader query-ref="organizationEmployments"/>
+		</set>
+		<!-- query-list name="currentEmployments" 
+			query-ref="organizationCurrentEmployments"-->
+		<loader query-ref="organization"/>
+		<sql-insert>INSERT INTO ORGANIZATION (NAME, ORGID) VALUES ( UPPER(?), ? )</sql-insert>
+		<sql-update>UPDATE ORGANIZATION SET NAME=UPPER(?) WHERE ORGID=?</sql-update>
+		<sql-delete>DELETE FROM ORGANIZATION WHERE ORGID=?</sql-delete>
+	</class>
+	
+	<class name="Person">
+		<id name="id" unsaved-value="0" column="perid">
+			<generator class="increment"/>
+		</id>
+		<property name="name" not-null="true"/>
+		<loader query-ref="person"/>
+		<sql-insert>INSERT INTO PERSON (NAME, PERID) VALUES ( UPPER(?), ? )</sql-insert>
+		<sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE PERID=?</sql-update>
+		<sql-delete>DELETE FROM PERSON WHERE PERID=?</sql-delete>
+	</class>
+	
+	<class name="Employment">
+		<id name="employmentId" unsaved-value="0" column="empid">
+			<generator class="increment"/>
+		</id>
+		<many-to-one name="employee" not-null="true" update="false"/>
+		<many-to-one name="employer" not-null="true" update="false"/>
+		<property name="startDate" not-null="true" update="false" insert="false"/>
+		<property name="endDate" insert="false"/>
+		<property name="regionCode" update="false"/>
+	  <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
+			<column name="VALUE" sql-type="float"/>
+			<column name="CURRENCY"/>			
+		</property>
+		<loader query-ref="employment"/>
+   		<sql-insert>
+			INSERT INTO EMPLOYMENT 
+				(EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, VALUE, CURRENCY, EMPID) 
+				VALUES (?, ?, now(), UPPER(?), ?, ?, ?)
+		</sql-insert>
+		<sql-update>UPDATE EMPLOYMENT SET ENDDATE=?, VALUE=?, CURRENCY=? WHERE EMPID=?</sql-update> 
+		<sql-delete>DELETE FROM EMPLOYMENT WHERE EMPID=?</sql-delete> 
+	</class>
+
+    <resultset name="org-emp-regionCode">
+        <return-scalar column="regionCode" type="string"/>
+        <return alias="org" class="Organization"/>
+        <return-join alias="emp" property="org.employments"/>
+    </resultset>
+
+    <resultset name="org-emp-person">
+        <return alias="org" class="Organization"/>
+        <return-join alias="emp" property="org.employments"/>
+        <return-join alias="pers" property="emp.employee"/>
+    </resultset>
+	
+	<sql-query name="person">
+		<return alias="p" class="Person" lock-mode="upgrade"/>
+		SELECT NAME AS {p.name}, PERID AS {p.id} FROM PERSON WHERE PERID=? /*FOR UPDATE*/
+	</sql-query>
+
+	<sql-query name="organization">
+		<return alias="org" class="Organization"/>
+		<return-join alias="emp" property="org.employments"/>
+		SELECT {org.*}, {emp.*}
+		FROM ORGANIZATION org
+			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
+		WHERE org.ORGID=?
+	</sql-query>
+
+
+
+	<!--sql-query name="organization">
+		<return alias="org" class="Organization"/>
+		SELECT NAME AS {org.name}, ORGID AS {org.id} FROM ORGANIZATION
+		WHERE ORGID=?
+	</sql-query-->
+	
+	<sql-query name="allOrganizationsWithEmployees" flush-mode="never">
+		<return alias="org" class="Organization"/>
+		SELECT DISTINCT org.NAME AS {org.name}, org.ORGID AS {org.id} 
+		FROM ORGANIZATION org
+		INNER JOIN EMPLOYMENT e ON e.EMPLOYER = org.ORGID
+	</sql-query>
+	
+	<sql-query name="employment">
+		<return alias="emp" class="Employment"/>
+		SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+			STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+			REGIONCODE as {emp.regionCode}, EMPID AS {emp.id}
+		FROM EMPLOYMENT
+		WHERE EMPID = ?
+	</sql-query>
+
+	
+	<sql-query name="organizationEmployments">
+		<load-collection alias="empcol" role="Organization.employments"/>
+		SELECT {empcol.*}
+		FROM EMPLOYMENT empcol
+		WHERE EMPLOYER = :id
+		ORDER BY STARTDATE ASC, EMPLOYEE ASC
+	</sql-query>
+
+
+	<sql-query name="organizationCurrentEmployments">
+		<return alias="emp" class="Employment">		    
+			<return-property name="salary"> 
+		      <!-- as multi column properties are not supported via the
+		      {}-syntax, we need to provide an explicit column list for salary via <return-property> -->
+  			  <return-column name="VALUE"/>
+			  <return-column name="CURRENCY"/>			
+			</return-property>
+			<!-- Here we are remapping endDate. Notice that we can still use {emp.endDate} in the SQL. -->
+			<return-property name="endDate" column="myEndDate"/>
+		</return>
+		<synchronize table="EMPLOYMENT"/>
+		SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+			STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+			REGIONCODE as {emp.regionCode}, EMPID AS {emp.id}, VALUE, CURRENCY
+		FROM EMPLOYMENT
+		WHERE EMPLOYER = :id AND ENDDATE IS NULL
+		ORDER BY STARTDATE ASC
+	</sql-query>
+
+	<sql-query name="simpleScalar" callable="true">
+	 <return-scalar column="name" type="string"/>
+	 <return-scalar column="value" type="long"/>
+		{ call simpleScalar(:number) }
+	</sql-query>
+
+	<sql-query name="paramhandling" callable="true">
+		<return-scalar column="value" type="long"/>
+		<return-scalar column="value2" type="long"/>
+		{ call paramHandling(?,?) }
+	</sql-query>
+
+	<sql-query name="paramhandling_mixed" callable="true">
+		<return-scalar column="value" type="long" />
+		<return-scalar column="value2" type="long" />
+		{ call paramHandling(?,:second) }
+	</sql-query>
+	
+	<sql-query name="selectAllEmployments" callable="true">
+		<return alias="" class="Employment">
+			<return-property name="employee" column="EMPLOYEE"/>
+			<return-property name="employer" column="EMPLOYER"/>			
+			<return-property name="startDate" column="STARTDATE"/>
+			<return-property name="endDate" column="ENDDATE"/>			
+			<return-property name="regionCode" column="REGIONCODE"/>			
+			<return-property name="id" column="EMPID"/>						
+			<return-property name="salary"> 
+				<!-- as multi column properties are not supported via the
+				{}-syntax, we need to provide an explicit column list for salary via <return-property> -->
+				<return-column name="VALUE"/>
+				<return-column name="CURRENCY"/>			
+			</return-property>
+		</return>
+		{ call selectAllEmployments() }
+	</sql-query>
+	
+	<database-object>
+		<create>
+		CREATE PROCEDURE selectAllEmployments ()
+			SELECT EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE, 
+			REGIONCODE, EMPID, VALUE, CURRENCY
+			FROM EMPLOYMENT
+		</create>
+		<drop>
+		DROP PROCEDURE selectAllEmployments
+		</drop>
+	</database-object>
+	
+	<database-object>
+		<create>
+		CREATE PROCEDURE paramHandling (j int, i int) 
+			SELECT j AS value, i AS value2
+		</create>
+		<drop>
+		DROP PROCEDURE paramHandling
+		</drop>
+	</database-object>
+	
+	<database-object>
+		<create>
+		CREATE PROCEDURE simpleScalar (number int) 
+			SELECT number AS value, 'getAll' AS name
+		</create>
+		<drop>
+		DROP PROCEDURE simpleScalar
+		</drop>
+	</database-object>
+	
+</hibernate-mapping>

@@ -1,0 +1,101 @@
+//$Id: InterfaceProxyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+package org.hibernate.test.interfaceproxy;
+
+import junit.framework.Test;
+
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+
+/**
+ * @author Gavin King
+ */
+public class InterfaceProxyTest extends FunctionalTestCase {
+	
+	public InterfaceProxyTest(String str) {
+		super(str);
+	}
+
+	public String[] getMappings() {
+		return new String[] { "interfaceproxy/Item.hbm.xml" };
+	}
+
+	public String getCacheConcurrencyStrategy() {
+		return null;
+	}
+
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( InterfaceProxyTest.class );
+	}
+	
+	public void testInterfaceProxies() {
+		
+		if ( getDialect() instanceof PostgreSQLDialect ) {
+			// TODO : why?
+			return;
+		}
+		
+		Session s = openSession( new DocumentInterceptor() );
+		Transaction t = s.beginTransaction();
+		Document d = new DocumentImpl();
+		d.setName("Hibernate in Action");
+		d.setContent( Hibernate.createBlob( "blah blah blah".getBytes() ) );
+		Long did = (Long) s.save(d);
+		SecureDocument d2 = new SecureDocumentImpl();
+		d2.setName("Secret");
+		d2.setContent( Hibernate.createBlob( "wxyz wxyz".getBytes() ) );
+		d2.setPermissionBits( (byte) 664 );
+		d2.setOwner("gavin");
+		Long d2id = (Long) s.save(d2);
+		t.commit();
+		s.close();
+
+		s = openSession( new DocumentInterceptor() );
+		t = s.beginTransaction();
+		d = (Document) s.load(ItemImpl.class, did);
+		assertEquals( did, d.getId() );
+		assertEquals( "Hibernate in Action", d.getName() );
+		assertNotNull( d.getContent() );
+		
+		d2 = (SecureDocument) s.load(ItemImpl.class, d2id);
+		assertEquals( d2id, d2.getId() );
+		assertEquals( "Secret", d2.getName() );
+		assertNotNull( d2.getContent() );
+		
+		s.clear();
+		
+		d = (Document) s.load(DocumentImpl.class, did);
+		assertEquals( did, d.getId() );
+		assertEquals( "Hibernate in Action", d.getName() );
+		assertNotNull( d.getContent() );
+		
+		d2 = (SecureDocument) s.load(SecureDocumentImpl.class, d2id);
+		assertEquals( d2id, d2.getId() );
+		assertEquals( "Secret", d2.getName() );
+		assertNotNull( d2.getContent() );
+		assertEquals( "gavin", d2.getOwner() );
+		
+		//s.clear();
+		
+		d2 = (SecureDocument) s.load(SecureDocumentImpl.class, did);
+		assertEquals( did, d2.getId() );
+		assertEquals( "Hibernate in Action", d2.getName() );
+		assertNotNull( d2.getContent() );
+		
+		try {
+			d2.getOwner(); //CCE
+			assertFalse(true);
+		}
+		catch (ClassCastException cce) {
+			//correct
+		}
+
+		s.createQuery( "delete ItemImpl" ).executeUpdate();
+		t.commit();
+		s.close();
+	}
+}
+

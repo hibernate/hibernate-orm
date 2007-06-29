@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.test.collection.list">
+
+    <class name="ListOwner">
+		<id name="name" column="NAME" type="string" />
+
+        <many-to-one name="parent" class="ListOwner" cascade="none" />
+
+        <list name="children" inverse="true" cascade="all">
+            <key column="PARENT" />
+            <list-index column="LIST_INDEX"/>
+            <one-to-many class="ListOwner" />
+        </list>
+	</class>
+
+</hibernate-mapping>

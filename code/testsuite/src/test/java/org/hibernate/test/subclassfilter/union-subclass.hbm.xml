@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.subclassfilter">
+
+	<class name="Person" table="UPerson">
+
+		<id name="id" column="person_id">
+			<generator class="hilo"/>
+		</id>
+
+		<property name="name" unique="true"/>
+		<property name="company"/>
+		<property name="region"/>
+
+		<union-subclass name="Employee" table="UEmployee">
+			<property name="title"/>
+			<property name="department" column="dept"/>
+			<many-to-one name="manager" column="mgr_id" class="Employee" cascade="none"/>
+			<set name="minions" inverse="true" lazy="true" cascade="all">
+				<key column="mgr_id"/>
+				<one-to-many class="Employee"/>
+				<filter name="region" condition="region = :userRegion"/>
+			</set>
+		</union-subclass>
+
+		<union-subclass name="Customer" table="UCustomer">
+			<many-to-one name="contactOwner" class="Employee"/>
+		</union-subclass>
+
+		<filter name="region" condition="region = :userRegion"/>
+
+	</class>
+
+	<filter-def name="region">
+		<filter-param name="userRegion" type="string"/>
+    </filter-def>
+
+</hibernate-mapping>

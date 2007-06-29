@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates the use of
+  the EJB3 compliant table hilo generator
+  with all the parameters
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.id">
+
+    <class name="Radio">
+    
+    	<id name="id">
+    		<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator">
+				<param name="table">sequences</param>
+				<param name="value_column">hi_value</param>
+                <param name="primary_key_column">name</param>
+				<param name="primary_key_length">50</param>
+				<param name="max_lo">2</param>
+				<param name="primary_key_value">Radio</param>
+ 			</generator>
+    	</id>
+        <property name="frequency"/>
+	</class>
+
+</hibernate-mapping>

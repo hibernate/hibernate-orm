@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.cascade">
+
+	<class name="JobBatch" table="T_JOB_BATCH">
+		<id name="id" column="BATCH_ID">
+			<generator class="native"/>
+		</id>
+
+		<property name="batchDate" type="timestamp" column="BATCH_DATE" not-null="true"/>
+
+		<set name="jobs" inverse="true" fetch="select" lazy="true" cascade="all, refresh">
+			<key column="BATCH_ID"/>
+			<one-to-many class="Job"/>
+		</set>
+
+	</class>
+
+</hibernate-mapping>

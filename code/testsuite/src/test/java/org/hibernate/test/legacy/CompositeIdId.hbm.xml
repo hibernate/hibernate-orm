@@ -1,0 +1,23 @@
+<?xml version="1.0"?> 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"> 
+<hibernate-mapping package="org.hibernate.test.legacy"> 
+   <class name="CompositeIdId"> 
+      <composite-id> 
+         <key-property name="system"/> 
+         <key-property name="id"/> 
+      </composite-id> 
+      <property name="name"/>
+      
+      <component name="composite">
+      	<property name="foo"/>
+      	<property name="bar"/>
+      </component>
+      <loader query-ref="loadC"/>
+   </class> 
+   
+   <sql-query name="loadC"> 
+      <return alias="c" class="CompositeIdId"/> 
+      select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?
+   </sql-query> 
+   
+</hibernate-mapping>

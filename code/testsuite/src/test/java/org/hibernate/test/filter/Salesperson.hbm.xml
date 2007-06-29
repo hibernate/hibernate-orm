@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.filter">
+
+    <class name="Salesperson" table="SALES_PERSON">
+    	<id name="id" column="SALES_PERSON_ID" >
+    		<generator class="native"/>
+    	</id>
+
+	    <property name="name" column="NAME" type="string"/>
+    	<property name="region" column="REG" type="string"/>
+
+	    <many-to-one name="department" cascade="none" class="Department" column="DEPT_ID"/>
+
+	    <property name="hireDate" column="`hire dt`" type="java.util.Date"/>
+
+	    <set name="orders" cascade="none" inverse="true" fetch="join">
+		    <key column="SALES_PERSON_ID"/>
+		    <one-to-many class="Order"/>
+		    <filter name="region" condition="REG = :region"/>
+	        <filter name="fulfilledOrders"><![CDATA[`close dt` < :asOfDate]]></filter>
+	    </set>
+
+	    <filter name="region" condition="REG = :region"/>
+	    <filter name="regionlist" condition="REG IN (:regions)"/>
+
+	</class>
+
+</hibernate-mapping>

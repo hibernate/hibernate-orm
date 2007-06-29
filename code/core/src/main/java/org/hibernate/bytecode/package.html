@@ -1,0 +1,38 @@
+<html>
+	<head></head>
+	<body>
+		<p>
+			This package defines the API for plugging in bytecode libraries
+			for usage by Hibernate.  Hibernate uses these bytecode libraries
+			in three scenarios:<ol>
+				<li>
+					<b>Reflection optimization</b> - to speed up the performance of
+					POJO entity and component conctruction and field/property access
+				</li>
+				<li>
+					<b>Proxy generation</b> - runtime building of proxies used for
+					deferred loading of lazy entities
+				</li>
+				<li>
+					<b>Field-level interception</b> - build-time instrumentation of entity
+					classes for the purpose of intercepting field-level access (read/write)
+					for both lazy loading and dirty tracking.
+				</li>
+			</ol>
+		</p>
+		<p>
+			Currently, both CGLIB and Javassist are supported out-of-the-box.
+		</p>
+		<p>
+			Note that for field-level interception, simply plugging in a new {@link BytecodeProvider}
+			is not enough for Hibernate to be able to recognize new providers.  You would additionally
+			need to make appropriate code changes to the {@link org.hibernate.intercept.Helper}
+			class.  This is because the detection of these enhanced classes is needed in a static
+			environment (i.e. outside the scope of any {@link org.hibernate.SessionFactory}.
+		</p>
+		<p>
+			Note that in the current form the ability to specify a different bytecode provider
+			is actually considered a global settings (global to the JVM).
+		</p>
+	</body>
+</html>

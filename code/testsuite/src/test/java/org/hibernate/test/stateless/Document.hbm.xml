@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.stateless">
+
+	<class name="Document">
+		<id name="name"/>
+		<timestamp name="lastModified"/>
+		<property name="text"/>
+	</class>
+
+    <class name="Paper">
+		<id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="color"/>
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+	<subclass name="org.hibernate.test.legacy.C2" discriminator-value="2" extends="org.hibernate.test.legacy.B" lazy="true">
+		<property name="address" column="c2"/>
+		<join table="c2more" fetch="select">
+			<key column="c2"/>
+			<property name="C2Name"/>
+		</join>
+	</subclass>
+
+	
+</hibernate-mapping>

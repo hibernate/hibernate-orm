@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class entity-name="Employer" node="employer">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="name" node="@name" type="string"/>
+		<set name="employees" node="." cascade="all,delete-orphan" fetch="join" lazy="false">
+			<key not-null="true" column="employerId"/>
+			<one-to-many entity-name="Employee" />
+		</set>
+	</class>
+
+	<class entity-name="Employee" node="employee">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+		<discriminator column="role" type="string" length="10"/>
+		<property name="name" node="@name" type="string"/>
+		<subclass entity-name="Techie" node="techie" />
+		<subclass entity-name="Salesdude" node="sales-dude"/>
+	</class>
+
+    <class entity-name="Department" node="department">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+        <property name="name" node="@name" type="string"/>
+        <many-to-one name="manager" entity-name="Employee" cascade="all" fetch="join" lazy="false" embed-xml="true" node="manager" />
+    </class>
+	
+</hibernate-mapping>

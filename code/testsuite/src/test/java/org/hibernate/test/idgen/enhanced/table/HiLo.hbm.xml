@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.idgen.enhanced.table">
+
+    <class name="Entity" table="ID_TBL_HILO_ENTITY">
+        <id name="id" column="ID" type="long">
+            <generator class="org.hibernate.id.enhanced.TableGenerator">
+                <param name="table_name">ID_TBL_HILO_TBL</param>
+                <param name="segment_value">test</param>
+                <param name="initial_value">1</param>
+                <param name="increment_size">10</param>
+                <param name="optimizer">hilo</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+	</class>
+
+</hibernate-mapping>

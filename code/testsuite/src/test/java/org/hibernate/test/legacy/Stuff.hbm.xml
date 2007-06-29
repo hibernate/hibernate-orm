@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	
+	<class name="org.hibernate.test.legacy.MoreStuff">
+		<composite-id>
+			<key-property name="intId"/>
+			<key-property name="stringId" length="32"/>
+		</composite-id>
+		<property name="name"/>
+		<bag name="stuffs" inverse="true" lazy="false" cascade="all">
+			<key>
+				<!--unfortunately have to specify not-null here because of limitation in schema export....-->
+				<column name="moreInt" not-null="true"/>
+				<column name="moreString" not-null="true" length="32"/>
+			</key>
+			<one-to-many class="org.hibernate.test.legacy.Stuff"/>
+		</bag>
+	</class>
+	
+    <class name="org.hibernate.test.legacy.Stuff">
+        <composite-id unsaved-value="any">
+            <key-property name="id"/>
+            <key-many-to-one name="foo" class="org.hibernate.test.legacy.Foo"/>
+            <key-many-to-one name="moreStuff" class="org.hibernate.test.legacy.MoreStuff">
+            	<column name="moreInt"/>
+				<column name="moreString" length="32"/>
+			</key-many-to-one>
+        </composite-id>
+        <property name="property"/>
+    </class>
+
+</hibernate-mapping>

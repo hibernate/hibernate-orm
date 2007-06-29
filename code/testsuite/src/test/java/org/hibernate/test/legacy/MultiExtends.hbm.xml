@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+        <joined-subclass 
+        	name="org.hibernate.test.legacy.Mono" 
+        	extends="org.hibernate.test.legacy.Top"
+        	table="mono"
+        	dynamic-insert="true" 
+    		dynamic-update="true">
+        	<key column="superid"/>
+        	<set name="strings" table="monostrings">
+        		<key column="monoid_"/>
+        		<element type="string" column="str_" not-null="true"/>
+        	</set>
+        </joined-subclass>
+
+
+</hibernate-mapping>

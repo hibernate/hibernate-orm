@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+	
+	<class name="org.hibernate.test.legacy.Parent">
+		<id name="id" type="long">
+			<generator class="native"> <!--seqhilo-->
+				<!--<param>foo_seq</param>-->
+			</generator>
+		</id>
+		<property name="x"/>
+		<property name="count" column="count_"/>
+		<one-to-one name="child"/>
+        <property name="any" type="object">
+        	<column name="any_id"/>
+        	<column name="any_class"/>
+        </property>
+	</class>
+	
+	<class name="org.hibernate.test.legacy.Child">
+		<id name="id" type="long">
+			<generator class="assigned"/>
+		</id>
+		<property name="x"/>
+		<one-to-one name="parent" class="org.hibernate.test.legacy.Parent" constrained="true" foreign-key="parentfk"/>
+		<property name="count" column="count_"/>
+	</class>
+
+</hibernate-mapping>

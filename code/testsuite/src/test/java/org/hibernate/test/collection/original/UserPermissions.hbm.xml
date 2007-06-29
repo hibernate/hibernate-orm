@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates how to use a composite
+  element mapping to model a parent/child association.
+     
+-->
+
+<hibernate-mapping  package="org.hibernate.test.collection.original">
+	
+	<import class="Permission"/>
+
+	<class name="User" table="`Users`">
+		<id name="userName"/>
+		<list name="permissions" lazy="extra">
+			<key column="userName"/>
+			<list-index column="displayOrder" base="1"/>
+			<composite-element class="Permission">
+				<property name="type" column="permissionType"/>
+			</composite-element>
+		</list>
+		<list name="emailAddresses" fetch="join">
+			<key column="userName"/>
+			<list-index column="displayOrder" base="1"/>
+			<composite-element class="Email">
+				<property name="address"/>
+			</composite-element>
+		</list>
+		<map name="sessionData" 
+				order-by="lower(`attributeName`) asc" 
+				lazy="extra">
+			<key column="userName"/>
+			<map-key column="`attributeName`" 
+					type="string"/>
+			<element column="`attributeValue`" 
+					type="serializable" 
+					not-null="true"/>
+		</map>
+		<set name="sessionAttributeNames" 
+				lazy="extra" 
+				inverse="true">
+			<key column="userName"/>
+			<element column="`attributeName`" 
+					type="string"/>
+		</set>
+	</class>
+	
+
+</hibernate-mapping>

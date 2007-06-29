@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates how to use a composite
+  element mapping to model a parent/child association.
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.compositeelement">
+	
+	<import class="Child"/>
+
+	<class name="Parent">
+		<id name="id" 
+			column="parent_id">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<set name="children" table="ParentChild">
+			<key column="parent_id"/>
+			<composite-element class="Child">
+				<parent name="parent"/>
+				<property name="name" not-null="true"/>
+				<property name="bio"/>
+				<property name="bioLength" formula="length(bio)"/>
+			</composite-element>
+		</set>
+	</class>
+	
+
+</hibernate-mapping>

@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+	
+<hibernate-mapping default-lazy="false">
+
+    <class entity-name="TestMap">
+
+        <id name="id" type="long" column="id_">
+            <generator class="hilo"/>
+        </id>
+
+        <property name="name" type="string"/>
+        <property name="address" type="string"/>
+
+        <many-to-one name="parent" entity-name="TestMap"/>
+
+        <bag name="children" inverse="true" lazy="false">
+        	<key column="parent"/>
+        	<one-to-many entity-name="TestMap"/>
+        </bag>
+
+        <dynamic-component name="cmp">
+        	<property name="a" type="integer"/>
+        	<property name="b" type="float"/>
+        </dynamic-component>
+    </class>
+    
+	<class entity-name="ParentMap">
+
+		<id name="parentId" column="ParentId" type="long" unsaved-value="null">
+			<generator class="hilo">
+				<param name="sequence">parent_sequence</param>
+			</generator>
+		</id>
+
+		<version name="version" type="java.lang.Integer" column="version"/>
+		<property name="field" type="string" column="Field" length="50"/>
+
+		<one-to-one name="child" entity-name="ChildMap" cascade="all" outer-join="false" constrained="false" property-ref="parent"/>
+	</class>
+
+	<class entity-name="ChildMap">
+
+		<id name="childId" column="ChildId" type="long" unsaved-value="null">
+			<generator class="hilo">
+				<param name="sequence">child_sequence</param>
+			</generator>
+		</id>
+
+		<property name="field" type="string" column="Field" length="50"/>
+
+		<many-to-one name="parent" entity-name="ParentMap" cascade="all" outer-join="false" column="ParentId" not-null="true"/>
+	</class>
+
+</hibernate-mapping>

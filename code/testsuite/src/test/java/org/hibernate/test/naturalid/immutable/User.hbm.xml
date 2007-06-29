@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.naturalid.immutable">
+
+	<class name="User" table="IMM_NAT_ID_USER" lazy="true">
+        <comment>Users may bid for or sell auction items.</comment>
+        <id name="myUserId" type="java.lang.Integer">
+            <generator class="increment"/>
+        </id>
+        <natural-id mutable="false">
+            <property name="userName" length="10"/>
+        </natural-id>
+        <version name="version"/>
+        <property name="password" not-null="true" length="15" column="`password`"/>
+        <property name="email"/>
+        <property name="firstName" length="50" not-null="true"/>
+        <property name="initial" column="`initial`"/>
+        <property name="lastName" length="50" not-null="true"/>
+    </class>
+
+</hibernate-mapping>

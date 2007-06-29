@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false" 
+	package="org.hibernate.test.legacy" 
+	default-access="field">
+
+	<class name="I">
+		<id name="id">
+			<generator class="hilo"/>
+		</id>
+		<property name="name" unique="true" not-null="true"/>
+		<property name="type" column="type_"/>
+		<many-to-one name="parent" cascade="save-update"/>
+		<union-subclass name="J">
+			<property name="amount"/>
+		</union-subclass>
+	</class>
+	
+	<class name="K">
+		<id name="id">
+			<generator class="hilo"/>
+		</id>
+		<set name="is" inverse="true">
+			<key column="parent"/>
+			<one-to-many class="I"/>
+		</set>
+	</class>
+	
+</hibernate-mapping>

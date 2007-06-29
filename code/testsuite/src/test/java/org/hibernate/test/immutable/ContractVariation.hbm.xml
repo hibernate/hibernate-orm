@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  Test for immutable classes/collections.
+     
+-->
+
+<hibernate-mapping package="org.hibernate.test.immutable">
+	
+	<class name="Contract" mutable="false">
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+		<property name="customerName" not-null="true"/>
+		<property name="type" not-null="true"/>
+		<bag name="variations" inverse="true" order-by="version asc"
+				mutable="false" cascade="all" fetch="join">
+			<key column="contract"/>
+			<one-to-many class="ContractVariation"/>
+		</bag>
+	</class>
+	
+	<class name="ContractVariation" mutable="false">
+		<composite-id>
+			<key-many-to-one name="contract"/>
+			<key-property name="version"/>
+		</composite-id>
+		<property name="text" type="text"/>
+	</class>
+	
+</hibernate-mapping>

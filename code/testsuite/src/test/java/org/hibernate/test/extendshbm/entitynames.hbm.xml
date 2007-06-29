@@ -1,0 +1,18 @@
+<!DOCTYPE hibernate-mapping
+        PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class lazy="true" entity-name="EntityHasName" table="F5_ENTITY_HASNAME">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="attrName" type="string">
+            <column name="NAME"/>
+        </property>
+    </class>
+    <joined-subclass lazy="true" entity-name="EntityCompany" table="F5_ENTITY_COMPANY" extends="EntityHasName">
+        <key column="REF_ID"/>
+        <many-to-one name="parent" entity-name="EntityHasName"/>
+    </joined-subclass>
+</hibernate-mapping>

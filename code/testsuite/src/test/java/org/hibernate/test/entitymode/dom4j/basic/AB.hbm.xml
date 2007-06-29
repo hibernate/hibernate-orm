@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping >
+
+    <class entity-name="A" table="AX" node="a">
+        <id name="aId" type="int" column="aId" node="@id"/>
+        <property name="x"  type="string"/>
+        <set name="bs" node="." embed-xml="true" cascade="all" inverse="true">
+            <key column="aId"/>
+            <one-to-many class="B"/>
+        </set>
+    </class>
+
+
+    <class entity-name="B" table="BX" node="b">
+        <composite-id>
+            <key-property name="bId" column="bId" type="int" node="@bId"/>
+            <key-property name="aId" column="aId" type="int" node="@aId"/>
+        </composite-id>
+        <property name="y" type="string" node="."/>
+    </class>
+
+</hibernate-mapping>

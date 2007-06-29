@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.idprops">
+
+    <!--
+        Person has an identitifer property named something other than 'id';
+        additionally, it has a non-identitifer property named 'id'
+    -->
+    <class name="Person" table="T_ID_PERSON">
+        <id name="pk" column="PK" type="long">
+            <generator class="assigned"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <property name="id" column="ID_NON_ID" type="int" />
+    </class>
+
+    <!--
+        Order has an identitifer property named something other than 'id';
+        it has no non-identitifer property named 'id'
+    -->
+    <class name="Order" table="T_ID_ORDER">
+        <id name="number" column="PK" type="long">
+            <generator class="assigned"/>
+        </id>
+        <property name="placed" column="ORDR_DT" type="timestamp"/>
+        <many-to-one name="orderee" class="Person" column="ORDEREE"/>
+        <set name="lineItems" cascade="all-delete-orphan" lazy="true" inverse="true">
+            <key column="ORDR_ID"/>
+            <one-to-many class="LineItem"/>
+        </set>
+    </class>
+
+    <!--
+        LineItem has a composite identitifer property named something other than 'id';
+        additionally, it has a non-identitifer property named 'id'
+    -->
+    <class name="LineItem" table="T_ID_LINE_ITEM">
+        <composite-id class="LineItemPK" name="pk">
+            <key-many-to-one name="order" class="Order" column="ORDR_ID" />
+            <key-property name="productCode" column="PROD_CODE" type="string"/>
+        </composite-id>
+        <property name="quantity" column="QTY" type="int"/>
+        <property name="id" column="ID_NON_ID2" type="string"/>
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.lazyonetoone">
+
+	<class name="Person">
+		<id name="name"/>
+		<one-to-one name="employee" lazy="no-proxy" cascade="persist,delete"/>
+	</class>
+	
+	<class name="Employee">
+		<id name="personName"/>
+		<one-to-one name="person" lazy="no-proxy"/>
+		<bag name="employments" 
+				inverse="true"
+				fetch="join" 
+				lazy="false"
+				where="endDate is null" 
+				cascade="persist,delete">
+			<key column="personName"/>
+			<one-to-many class="Employment"/>
+		</bag>
+	</class>
+	
+	<class name="Employment">
+		<composite-id>
+			<key-property name="personName"/>
+			<key-property name="organizationName"/>
+		</composite-id>
+		<property name="startDate" update="false"/>
+		<property name="endDate"/>
+	</class>
+	
+</hibernate-mapping>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  Sample TreeCache Service Configuration                               -->
+<!--  Recommended for use as Hibernate's 2nd Level Cache                   -->
+<!--  For use with JBossCache >= 1.3.0 ONLY!!!                             -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<server>
+
+    <classpath codebase="./lib" archives="jboss-cache.jar, jgroups.jar"/>
+
+
+    <!-- ==================================================================== -->
+    <!-- Defines TreeCache configuration                                      -->
+    <!-- ==================================================================== -->
+
+    <mbean code="org.jboss.cache.TreeCache"
+        name="jboss.cache:service=TreeCache">
+
+        <depends>jboss:service=Naming</depends>
+        <depends>jboss:service=TransactionManager</depends>
+
+        <!--
+            Configure the TransactionManager : no matter since Hibernate will plug in
+            an "adapter" to its own TransactionManagerLookup strategy here
+        -->
+        <attribute name="TransactionManagerLookupClass">org.jboss.cache.GenericTransactionManagerLookup</attribute>
+
+
+        <!--
+            Node locking scheme:
+                OPTIMISTIC
+                PESSIMISTIC (default)
+        -->
+        <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
+
+        <!--
+            Note that this attribute is IGNORED if your NodeLockingScheme above is OPTIMISTIC.
+
+            Isolation level : SERIALIZABLE
+                              REPEATABLE_READ (default)
+                              READ_COMMITTED
+                              READ_UNCOMMITTED
+                              NONE
+        -->
+        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+
+        <!--
+             Valid modes are LOCAL
+                             REPL_ASYNC
+                             REPL_SYNC
+                             INVALIDATION_ASYNC
+                             INVALIDATION_SYNC
+
+             INVALIDATION_ASYNC is highly recommended as the mode for use
+             with clustered second-level caches.
+        -->
+        <attribute name="CacheMode">LOCAL</attribute>
+
+        <!--
+        Just used for async repl: use a replication queue
+        -->
+        <attribute name="UseReplQueue">false</attribute>
+
+        <!--
+            Replication interval for replication queue (in ms)
+        -->
+        <attribute name="ReplQueueInterval">0</attribute>
+
+        <!--
+            Max number of elements which trigger replication
+        -->
+        <attribute name="ReplQueueMaxElements">0</attribute>
+
+        <!-- Name of cluster. Needs to be the same for all clusters, in order
+             to find each other
+        -->
+        <attribute name="ClusterName">TreeCache-Cluster</attribute>
+
+        <!-- JGroups protocol stack properties. Can also be a URL,
+             e.g. file:/home/bela/default.xml
+           <attribute name="ClusterProperties"></attribute>
+        -->
+
+        <attribute name="ClusterConfig">
+            <config>
+                <!-- UDP: if you have a multihomed machine,
+                set the bind_addr attribute to the appropriate NIC IP address -->
+                <!-- UDP: On Windows machines, because of the media sense feature
+                 being broken with multicast (even after disabling media sense)
+                 set the loopback attribute to true -->
+                <UDP mcast_addr="228.1.2.3" mcast_port="48866"
+                    ip_ttl="64" ip_mcast="true"
+                    mcast_send_buf_size="150000" mcast_recv_buf_size="80000"
+                    ucast_send_buf_size="150000" ucast_recv_buf_size="80000"
+                    loopback="false"/>
+                <PING timeout="2000" num_initial_members="3"
+                    up_thread="false" down_thread="false"/>
+                <MERGE2 min_interval="10000" max_interval="20000"/>
+                <!--        <FD shun="true" up_thread="true" down_thread="true" />-->
+                <FD_SOCK/>
+                <VERIFY_SUSPECT timeout="1500"
+                    up_thread="false" down_thread="false"/>
+                <pbcast.NAKACK gc_lag="50" retransmit_timeout="600,1200,2400,4800"
+                    max_xmit_size="8192" up_thread="false" down_thread="false"/>
+                <UNICAST timeout="600,1200,2400" window_size="100" min_threshold="10"
+                    down_thread="false"/>
+                <pbcast.STABLE desired_avg_gossip="20000"
+                    up_thread="false" down_thread="false"/>
+                <FRAG frag_size="8192"
+                    down_thread="false" up_thread="false"/>
+                <pbcast.GMS join_timeout="5000" join_retry_timeout="2000"
+                    shun="true" print_local_addr="true"/>
+                <pbcast.STATE_TRANSFER up_thread="true" down_thread="true"/>
+            </config>
+        </attribute>
+
+        <!--
+         Whether or not to fetch state on joining a cluster
+         NOTE this used to be called FetchStateOnStartup and has been renamed to be more descriptive.
+        -->
+        <attribute name="FetchInMemoryState">false</attribute>
+
+        <!--
+            Number of milliseconds to wait until all responses for a
+            synchronous call have been received.
+        -->
+        <attribute name="SyncReplTimeout">20000</attribute>
+
+        <!-- Max number of milliseconds to wait for a lock acquisition -->
+        <attribute name="LockAcquisitionTimeout">15000</attribute>
+
+
+        <!-- Name of the eviction policy class. -->
+        <attribute name="EvictionPolicyClass"></attribute>
+
+       <!--
+          Indicate whether to use marshalling or not. Set this to true if you are running under a scoped
+          class loader, e.g., inside an application server. Default is "false".
+       -->
+       <attribute name="UseMarshalling">false</attribute>
+
+    </mbean>
+</server>

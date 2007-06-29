@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.dynamicentity">
+
+    <!--
+        Mapping the Customer and Company interfaces.  Our custom Interceptor
+        will be responsible for: a) creating instances representing these
+        interfaces; b) determining the appropriate entity-name (i.e., which
+        entity mapping to use) given an instance of one of these proxies.
+    -->
+    <class name="Person" table="t_person" discriminator-value="person" abstract="false">
+        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer.MyEntityTuplizer" entity-mode="pojo"/>
+		<id name="id">
+            <generator class="native"/>
+        </id>
+        <discriminator force="false"/>
+		<property name="name"/>
+
+        <many-to-one name="address" cascade="all" column="addr_id"/>
+
+        <set name="family" lazy="true" cascade="all">
+            <key column="pers_id"/>
+            <one-to-many class="Person"/>
+        </set>
+
+        <subclass name="Customer" discriminator-value="customer" abstract="false">
+            <tuplizer class="org.hibernate.test.dynamicentity.tuplizer.MyEntityTuplizer" entity-mode="pojo"/>
+            <many-to-one name="company" cascade="none" column="comp_id"/>
+    	</subclass>
+    </class>
+
+    <!-- Company interface mapping -->
+	<class name="Company" table="t_company" abstract="false">
+        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer.MyEntityTuplizer" entity-mode="pojo"/>
+		<id name="id">
+            <generator class="native"/>
+        </id>
+		<property name="name"/>
+	</class>
+
+    <class name="Address" table="t_address" abstract="false">
+        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer.MyEntityTuplizer" entity-mode="pojo"/>
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="street"/>
+        <property name="city"/>
+        <property name="postalCode"/>
+    </class>
+
+</hibernate-mapping>

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+    Demonstrates how to control the optimistic locking behavior
+    of a collection (do changes to the collection result in
+    a version increment on the owning instance)
+ -->
+<hibernate-mapping 
+		package="org.hibernate.test.version">
+
+	<class name="Person">
+		<id name="name"/>
+		<version name="version"/>
+		<bag name="things" 
+				inverse="true"
+				cascade="all,delete-orphan"> 
+			<key column="person"/>
+			<one-to-many class="Thing"/>	
+		</bag>
+		<bag name="tasks"
+				inverse="true"
+				cascade="all,delete-orphan"
+				optimistic-lock="false"> 
+			<key column="person"/>
+			<one-to-many class="Task"/>	
+		</bag>
+	</class>
+
+    <class name="Thing">
+    	<id name="description"/>
+    	<version name="version"/>
+    	<property name="longDescription"/>
+    	<many-to-one name="person"/>
+    </class>	
+
+    <class name="Task">
+    	<id name="description"/>
+    	<version name="version"/>
+    	<many-to-one name="person"/>
+    </class>	
+
+</hibernate-mapping>

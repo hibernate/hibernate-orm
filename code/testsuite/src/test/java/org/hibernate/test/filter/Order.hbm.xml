@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.filter">
+
+    <class name="Order" table="T_ORDER">
+    	<id name="id" column="ORDER_ID" type="long">
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="region" column="REG" type="string"/>
+	    <property name="buyer" column="BUYER" type="string"/>
+    	<property name="placementDate" column="`ord dt`" type="java.util.Date"/>
+    	<property name="fulfillmentDate" column="`close dt`" type="java.util.Date"/>
+
+	    <many-to-one name="salesperson" class="Salesperson" column="SALES_PERSON_ID"/>
+
+	    <list cascade="all-delete-orphan" inverse="true" name="lineItems">
+		    <key column="ORDER_ID"/>
+		    <index column="SEQ"/>
+		    <one-to-many class="LineItem"/>
+	    </list>
+
+	    <filter name="region" condition="REG = :region"/>
+	    <filter name="fulfilledOrders"><![CDATA[`close dt` < :asOfDate]]></filter>
+
+	</class>
+
+</hibernate-mapping>

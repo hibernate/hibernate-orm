@@ -1,0 +1,1083 @@
+//$Id: ParentChildTest.java 11089 2007-01-24 14:34:22Z max.andersen@jboss.com $
+package org.hibernate.test.legacy;
+
+import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import junit.framework.Test;
+
+import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.ReplicationMode;
+import org.hibernate.Transaction;
+import org.hibernate.classic.Session;
+import org.hibernate.criterion.Expression;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.engine.EntityEntry;
+import org.hibernate.impl.SessionImpl;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+
+
+public class ParentChildTest extends LegacyTestCase {
+
+	public ParentChildTest(String x) {
+		super(x);
+	}
+
+	public String[] getMappings() {
+		return new String[] {
+			"legacy/ParentChild.hbm.xml",
+			"legacy/FooBar.hbm.xml",
+		 	"legacy/Baz.hbm.xml",
+		 	"legacy/Qux.hbm.xml",
+		 	"legacy/Glarch.hbm.xml",
+		 	"legacy/Fum.hbm.xml",
+		 	"legacy/Fumm.hbm.xml",
+		 	"legacy/Fo.hbm.xml",
+		 	"legacy/One.hbm.xml",
+		 	"legacy/Many.hbm.xml",
+		 	"legacy/Immutable.hbm.xml",
+		 	"legacy/Fee.hbm.xml",
+		 	"legacy/Vetoer.hbm.xml",
+		 	"legacy/Holder.hbm.xml",
+		 	"legacy/Simple.hbm.xml",
+		 	"legacy/Container.hbm.xml",
+		 	"legacy/Circular.hbm.xml",
+		 	"legacy/Stuff.hbm.xml"
+		};
+	}
+
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( ParentChildTest.class );
+	}
+
+	public void testReplicate() throws Exception {
+		Session s = openSession();
+		Container baz = new Container();
+		Contained f = new Contained();
+		List list = new ArrayList();
+		list.add(baz);
+		f.setBag(list);
+		List list2 = new ArrayList();
+		list2.add(f);
+		baz.setBag(list2);
+		s.save(f);
+		s.save(baz);
+		s.flush();
+		s.connection().commit();
+		s.close();
+		s = openSession();
+		s.replicate(baz, ReplicationMode.OVERWRITE);
+		
+		// HHH-2378
+		SessionImpl x = (SessionImpl)s;
+		EntityEntry entry = x.getPersistenceContext().getEntry( baz );
+		assertNull(entry.getVersion());
+		
+		s.flush();
+		s.connection().commit();
+		s.close();
+		s = openSession();
+		s.replicate(baz, ReplicationMode.IGNORE);
+		s.flush();
+		s.connection().commit();
+		s.close();
+		s = openSession();
+		s.delete(baz);
+		s.delete(f);
+		s.flush();
+		s.connection().commit();
+		s.close();
+	}
+
+	public void testQueryOneToOne() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Serializable id = s.save( new Parent() );
+		assertTrue( s.find("from Parent p left join fetch p.child").size()==1 );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		Parent p = (Parent) s.createQuery("from Parent p left join fetch p.child").uniqueResult();
+		assertTrue( p.getChild()==null );
+		s.find("from Parent p join p.child c where c.x > 0");
+		s.find("from Child c join c.parent p where p.x > 0");
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( s.get(Parent.class, id) );
+		t.commit();
+		s.close();
+	}
+
+	public void testProxyReuse() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		FooProxy foo = new Foo();
+		FooProxy foo2 = new Foo();
+		Serializable id = s.save(foo);
+		Serializable id2 = s.save(foo2);
+		foo2.setInt(1234567);
+		foo.setInt(1234);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		foo = (FooProxy) s.load(Foo.class, id);
+		foo2 = (FooProxy) s.load(Foo.class, id2);
+		assertFalse( Hibernate.isInitialized(foo) );
+		Hibernate.initialize(foo2);
+		Hibernate.initialize(foo);
+		assertTrue( foo.getComponent().getImportantDates().length==4 );
+		assertTrue( foo2.getComponent().getImportantDates().length==4 );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		foo.setFloat( new Float(1.2f) );
+		foo2.setFloat( new Float(1.3f) );
+		foo2.getDependent().setKey(null);
+		foo2.getComponent().getSubcomponent().getFee().setKey(null);
+		assertFalse( foo2.getKey().equals(id) );
+		s.save(foo, "xyzid");
+		s.update(foo2, id); //intentionally id, not id2!
+		assertEquals( foo2.getKey(), id );
+		assertTrue( foo2.getInt()==1234567 );
+		assertEquals( foo.getKey(), "xyzid" );
+		t.commit();
+		s.close();
+		
+		s = openSession();
+		t = s.beginTransaction();
+		foo = (FooProxy) s.load(Foo.class, id);
+		assertTrue( foo.getInt()==1234567 );
+		assertTrue( foo.getComponent().getImportantDates().length==4 );
+		String feekey = foo.getDependent().getKey();
+		String fookey = foo.getKey();
+		s.delete(foo);
+		s.delete( s.get(Foo.class, id2) );
+		s.delete( s.get(Foo.class, "xyzid") );
+		assertTrue( s.delete("from java.lang.Object")==3 );
+		t.commit();
+		s.close();
+		
+		//to account for new id rollback shit
+		foo.setKey(fookey);
+		foo.getDependent().setKey(feekey);
+		foo.getComponent().setGlarch(null);
+		foo.getComponent().setSubcomponent(null);
+		
+		s = openSession();
+		t = s.beginTransaction();
+		//foo.getComponent().setGlarch(null); //no id property!
+		s.replicate(foo, ReplicationMode.OVERWRITE);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		Foo refoo = (Foo) s.get(Foo.class, id);
+		assertEquals( feekey, refoo.getDependent().getKey() );
+		s.delete(refoo);
+		t.commit();
+		s.close();
+	}
+
+	public void testComplexCriteria() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		baz.setDefaults();
+		Map topGlarchez = new HashMap();
+		baz.setTopGlarchez(topGlarchez);
+		Glarch g1 = new Glarch();
+		g1.setName("g1");
+		s.save(g1);
+		Glarch g2 = new Glarch();
+		g2.setName("g2");
+		s.save(g2);
+		g1.setProxyArray( new GlarchProxy[] {g2} );
+		topGlarchez.put( new Character('1'),g1 );
+		topGlarchez.put( new Character('2'), g2);
+		Foo foo1 = new Foo();
+		Foo foo2 = new Foo();
+		s.save(foo1);
+		s.save(foo2);
+		baz.getFooSet().add(foo1);
+		baz.getFooSet().add(foo2);
+		baz.setFooArray( new FooProxy[] { foo1 } );
+
+		LockMode lockMode = (getDialect() instanceof DB2Dialect) ? LockMode.READ : LockMode.UPGRADE;
+
+		Criteria crit = s.createCriteria(Baz.class);
+		crit.createCriteria("topGlarchez")
+			.add( Expression.isNotNull("name") )
+			.createCriteria("proxyArray")
+				.add( Expression.eqProperty("name", "name") )
+				.add( Expression.eq("name", "g2") )
+				.add( Expression.gt("x", new Integer(-666) ) );
+		crit.createCriteria("fooSet")
+			.add( Expression.isNull("null") )
+			.add( Expression.eq("string", "a string") )
+			.add( Expression.lt("integer", new Integer(-665) ) );
+		crit.createCriteria("fooArray")
+			.add( Expression.eq("string", "a string") )
+			.setLockMode(lockMode);
+
+		List list = crit.list();
+		assertTrue( list.size()==2 );
+		
+		s.createCriteria(Glarch.class).setLockMode(LockMode.UPGRADE).list();
+		s.createCriteria(Glarch.class).setLockMode(Criteria.ROOT_ALIAS, LockMode.UPGRADE).list();
+		
+		g2.setName(null);
+		t.commit();
+		s.close();
+		
+		s = openSession();
+		t = s.beginTransaction();
+		
+		list = s.createCriteria(Baz.class).add( Expression.isEmpty("fooSet") ).list();
+		assertEquals( list.size(), 0 );
+
+		list = s.createCriteria(Baz.class).add( Expression.isNotEmpty("fooSet") ).list();
+		assertEquals( new HashSet(list).size(), 1 );
+
+		list = s.createCriteria(Baz.class).add( Expression.sizeEq("fooSet", 2) ).list();
+		assertEquals( new HashSet(list).size(), 1 );
+		
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+
+		crit = s.createCriteria(Baz.class)
+			.setLockMode(lockMode);
+		crit.createCriteria("topGlarchez")
+			.add( Expression.gt( "x", new Integer(-666) ) );
+		crit.createCriteria("fooSet")
+			.add( Expression.isNull("null") );
+		list = crit.list();
+
+		assertTrue( list.size()==4 );
+		baz = (Baz) crit.uniqueResult();
+		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
+		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
+
+		/*list = s.createCriteria(Baz.class)
+			.createCriteria("fooSet.foo.component.glarch")
+				.add( Expression.eq("name", "xxx") )
+			.add( Expression.eq("fooSet.foo.component.glarch.name", "xxx") )
+			.list();
+		assertTrue( list.size()==0 );*/
+		list = s.createCriteria(Baz.class)
+			.createCriteria("fooSet")
+				.createCriteria("foo")
+					.createCriteria("component.glarch")
+						.add( Expression.eq("name", "xxx") )
+			.list();
+		assertTrue( list.size()==0 );
+
+		list = s.createCriteria(Baz.class)
+			.createAlias("fooSet", "foo")
+			.createAlias("foo.foo", "foo2")
+			.setLockMode("foo2", lockMode)
+			.add( Expression.isNull("foo2.component.glarch") )
+			.createCriteria("foo2.component.glarch")
+				.add( Expression.eq("name", "xxx") )
+			.list();
+		assertTrue( list.size()==0 );
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+
+		crit = s.createCriteria(Baz.class);
+		crit.createCriteria("topGlarchez")
+			.add( Expression.isNotNull("name") );
+		crit.createCriteria("fooSet")
+			.add( Expression.isNull("null") );
+
+		list = crit.list();
+		assertTrue( list.size()==2 );
+		baz = (Baz) crit.uniqueResult();
+		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
+		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
+		
+		
+		list = s.createCriteria(Child.class).setFetchMode("parent", FetchMode.JOIN).list();
+		
+		s.delete("from Glarch g");
+		s.delete( s.get(Foo.class, foo1.getKey() ) );
+		s.delete( s.get(Foo.class, foo2.getKey() ) );
+		s.delete(baz);
+		t.commit();
+		s.close();
+	}
+
+	public void testClassWhere() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		baz.setParts( new ArrayList() );
+		Part p1 = new Part();
+		p1.setDescription("xyz");
+		Part p2 = new Part();
+		p2.setDescription("abc");
+		baz.getParts().add(p1);
+		baz.getParts().add(p2);
+		s.save(baz);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
+		assertTrue( s.createCriteria(Part.class).add( Expression.eq( "id", p1.getId() ) ).list().size()==1 );
+		assertTrue( s.createQuery("from Part").list().size()==1 );
+		assertTrue( s.createQuery("from Baz baz join baz.parts").list().size()==2 );
+		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();
+		assertTrue( s.createFilter( baz.getParts(), "" ).list().size()==2 );
+		//assertTrue( baz.getParts().size()==1 );
+		s.delete( s.get( Part.class, p1.getId() ));
+		s.delete( s.get( Part.class, p2.getId() ));
+		s.delete(baz);
+		t.commit();
+		s.close();
+	}
+
+	public void testClassWhereManyToMany() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		baz.setMoreParts( new ArrayList() );
+		Part p1 = new Part();
+		p1.setDescription("xyz");
+		Part p2 = new Part();
+		p2.setDescription("abc");
+		baz.getMoreParts().add(p1);
+		baz.getMoreParts().add(p2);
+		s.save(baz);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
+		assertTrue( s.createCriteria(Part.class).add( Expression.eq( "id", p1.getId() ) ).list().size()==1 );
+		assertTrue( s.createQuery("from Part").list().size()==1 );
+		assertTrue( s.createQuery("from Baz baz join baz.moreParts").list().size()==2 );
+		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();
+		assertTrue( s.createFilter( baz.getMoreParts(), "" ).list().size()==2 );
+		//assertTrue( baz.getParts().size()==1 );
+		s.delete( s.get( Part.class, p1.getId() ));
+		s.delete( s.get( Part.class, p2.getId() ));
+		s.delete(baz);
+		t.commit();
+		s.close();
+	}
+
+	public void testCollectionQuery() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Simple s1 = new Simple();
+		s1.setName("s");
+		s1.setCount(0);
+		Simple s2 = new Simple();
+		s2.setCount(2);
+		Simple s3 = new Simple();
+		s3.setCount(3);
+		s.save( s1, new Long(1) ); s.save( s2, new Long(2) ); s.save( s3, new Long(3) );
+		Container c = new Container();
+		Contained cd = new Contained();
+		List bag = new ArrayList();
+		bag.add(cd);
+		c.setBag(bag);
+		List l = new ArrayList();
+		l.add(s1);
+		l.add(s3);
+		l.add(s2);
+		c.setOneToMany(l);
+		l = new ArrayList();
+		l.add(s1);
+		l.add(null);
+		l.add(s2);
+		c.setManyToMany(l);
+		s.save(c);
+		Container cx = new Container();
+		s.save(cx);
+		Simple sx = new Simple();
+		sx.setCount(5);
+		sx.setName("s");
+		s.save( sx, new Long(5) );
+		assertTrue(
+			s.find("select c from ContainerX c, Simple s where c.oneToMany[2] = s")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c, Simple s where c.manyToMany[2] = s")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c, Simple s where s = c.oneToMany[2]")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c, Simple s where s = c.manyToMany[2]")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where c.oneToMany[0].name = 's'")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where c.manyToMany[0].name = 's'")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where 's' = c.oneToMany[2 - 2].name")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where 's' = c.manyToMany[(3+1)/4-1].name")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where c.oneToMany[ c.manyToMany[0].count ].name = 's'")
+			.size() == 1
+		);
+		assertTrue(
+			s.find("select c from ContainerX c where c.manyToMany[ c.oneToMany[0].count ].name = 's'")
+			.size() == 1
+		);
+		if ( ! ( getDialect() instanceof MySQLDialect ) && !(getDialect() instanceof org.hibernate.dialect.TimesTenDialect) ) {
+			assertTrue(
+				s.find("select c from ContainerX c where c.manyToMany[ maxindex(c.manyToMany) ].count = 2")
+				.size() == 1
+			);
+		}
+		assertTrue( s.contains(cd) );
+		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) )  {
+			s.filter( c.getBag(), "where 0 in elements(this.bag)" );
+			s.filter( c.getBag(), "where 0 in elements(this.lazyBag)" );
+		}
+		s.find("select count(comp.name) from ContainerX c join c.components comp");
+		s.delete(cd);
+		s.delete(c);
+		s.delete(s1);
+		s.delete(s2);
+		s.delete(s3);
+		s.delete(cx);
+		s.delete(sx);
+		t.commit();
+		s.close();
+	}
+
+	public void testParentChild() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Parent p = new Parent();
+		Child c = new Child();
+		c.setParent(p);
+		p.setChild(c);
+		s.save(p);
+		s.save(c);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Child) s.load( Child.class, new Long( c.getId() ) );
+		p = c.getParent();
+		assertTrue( "1-1 parent", p!=null );
+		c.setCount(32);
+		p.setCount(66);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Child) s.load( Child.class, new Long( c.getId() ) );
+		p = c.getParent();
+		assertTrue( "1-1 update", p.getCount()==66 );
+		assertTrue( "1-1 update", c.getCount()==32 );
+		assertTrue(
+			"1-1 query",
+			s.find("from Child c where c.parent.count=66").size()==1
+		);
+		assertTrue(
+			"1-1 query",
+			( (Object[]) s.find("from Parent p join p.child c where p.count=66").get(0) ).length==2
+		);
+		s.find("select c, c.parent from Child c order by c.parent.count");
+		s.find("select c, c.parent from Child c where c.parent.count=66 order by c.parent.count");
+		s.iterate("select c, c.parent, c.parent.count from Child c order by c.parent.count");
+		assertTrue(
+			"1-1 query",
+			s.find("FROM Parent AS p WHERE p.count = ?", new Integer(66), Hibernate.INTEGER).size()==1
+		);
+		s.delete(c); s.delete(p);
+		t.commit();
+		s.close();
+	}
+
+	public void testParentNullChild() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Parent p = new Parent();
+		s.save(p);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		p = (Parent) s.load( Parent.class, new Long( p.getId() ) );
+		assertTrue( p.getChild()==null );
+		p.setCount(66);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		p = (Parent) s.load( Parent.class, new Long( p.getId() ) );
+		assertTrue( "null 1-1 update", p.getCount()==66 );
+		assertTrue( p.getChild()==null );
+		s.delete(p);
+		t.commit();
+		s.close();
+	}
+
+	public void testManyToMany() throws Exception {
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Container c = new Container();
+		c.setManyToMany( new ArrayList() );
+		c.setBag( new ArrayList() );
+		Simple s1 = new Simple();
+		Simple s2 = new Simple();
+		s1.setCount(123); s2.setCount(654);
+		Contained c1 = new Contained();
+		c1.setBag( new ArrayList() );
+		c1.getBag().add(c);
+		c.getBag().add(c1);
+		c.getManyToMany().add(s1);
+		c.getManyToMany().add(s2);
+		Serializable cid = s.save(c); //s.save(c1);
+		s.save(s1, new Long(12) ); s.save(s2, new Long(-1) );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load(Container.class, cid);
+		assertTrue( c.getBag().size()==1 );
+		assertTrue( c.getManyToMany().size()==2 );
+		c1 = (Contained) c.getBag().iterator().next();
+		assertTrue( c.getBag().size()==1 );
+		c.getBag().remove(c1);
+		c1.getBag().remove(c);
+		assertTrue( c.getManyToMany().remove(0)!=null );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load(Container.class, cid);
+		assertTrue( c.getBag().size()==0 );
+		assertTrue( c.getManyToMany().size()==1 );
+		c1 = (Contained) s.load( Contained.class, new Long(c1.getId()) );
+		assertTrue( c1.getBag().size()==0 );
+		assertTrue( s.delete("from ContainerX c")==1 );
+		assertTrue( s.delete("from Contained")==1 );
+		assertTrue( s.delete("from Simple")==2 );
+		t.commit();
+		s.close();
+	}
+
+	public void testContainer() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Container c = new Container();
+		Simple x = new Simple(); x.setCount(123);
+		Simple y = new Simple(); y.setCount(456);
+		s.save( x, new Long(1) ); s.save( y, new Long(0) );
+		List o2m = new ArrayList();
+		o2m.add(x); o2m.add(null); o2m.add(y);
+		List m2m = new ArrayList();
+		m2m.add(x); m2m.add(null); m2m.add(y);
+		c.setOneToMany(o2m); c.setManyToMany(m2m);
+		List comps = new ArrayList();
+		Container.ContainerInnerClass ccic = new Container.ContainerInnerClass();
+		ccic.setName("foo");
+		ccic.setSimple(x);
+		comps.add(ccic);
+		comps.add(null);
+		ccic = new Container.ContainerInnerClass();
+		ccic.setName("bar");
+		ccic.setSimple(y);
+		comps.add(ccic);
+		HashSet compos = new HashSet();
+		compos.add(ccic);
+		c.setComposites(compos);
+		c.setComponents(comps);
+		One one = new One();
+		Many many = new Many();
+		HashSet manies = new HashSet();
+		manies.add(many);
+		one.setManies(manies);
+		many.setOne(one);
+		ccic.setMany(many);
+		ccic.setOne(one);
+		s.save(one);
+		s.save(many);
+		s.save(c);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		Long count = (Long) s.createQuery("select count(*) from ContainerX as c join c.components as ce join ce.simple as s where ce.name='foo'").uniqueResult();
+		assertTrue( count.intValue()==1 );
+		List res = s.find("select c, s from ContainerX as c join c.components as ce join ce.simple as s where ce.name='foo'");
+		assertTrue(res.size()==1);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load( Container.class, new Long( c.getId() ) );
+		System.out.println( c.getOneToMany() );
+		System.out.println( c.getManyToMany() );
+		System.out.println( c.getComponents() );
+		System.out.println( c.getComposites() );
+		ccic = (Container.ContainerInnerClass) c.getComponents().get(2);
+		assertTrue( ccic.getMany().getOne()==ccic.getOne() );
+		assertTrue( c.getComponents().size()==3 );
+		assertTrue( c.getComposites().size()==1 );
+		assertTrue( c.getOneToMany().size()==3 );
+		assertTrue( c.getManyToMany().size()==3 );
+		assertTrue( c.getOneToMany().get(0)!=null );
+		assertTrue( c.getOneToMany().get(2)!=null );
+		for ( int i=0; i<3; i++ ) {
+			assertTrue( c.getManyToMany().get(i) == c.getOneToMany().get(i) );
+		}
+		Object o1 = c.getOneToMany().get(0);
+		Object o2 = c.getOneToMany().remove(2);
+		c.getOneToMany().set(0, o2);
+		c.getOneToMany().set(1, o1);
+		o1 = c.getComponents().remove(2);
+		c.getComponents().set(0, o1);
+		c.getManyToMany().set( 0, c.getManyToMany().get(2) );
+		Container.ContainerInnerClass ccic2 = new Container.ContainerInnerClass();
+		ccic2.setName("foo");
+		ccic2.setOne(one);
+		ccic2.setMany(many);
+		ccic2.setSimple( (Simple) s.load(Simple.class, new Long(0) ) );
+		c.getComposites().add(ccic2);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load( Container.class, new Long( c.getId() ) );
+		System.out.println( c.getOneToMany() );
+		System.out.println( c.getManyToMany() );
+		System.out.println( c.getComponents() );
+		System.out.println( c.getComposites() );
+		assertTrue( c.getComponents().size()==1 ); //WAS: 2
+		assertTrue( c.getComposites().size()==2 );
+		assertTrue( c.getOneToMany().size()==2 );
+		assertTrue( c.getManyToMany().size()==3 );
+		assertTrue( c.getOneToMany().get(0)!=null );
+		assertTrue( c.getOneToMany().get(1)!=null );
+		( (Container.ContainerInnerClass) c.getComponents().get(0) ).setName("a different name");
+		( (Container.ContainerInnerClass) c.getComposites().iterator().next() ).setName("once again");
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load( Container.class, new Long( c.getId() ) );
+		System.out.println( c.getOneToMany() );
+		System.out.println( c.getManyToMany() );
+		System.out.println( c.getComponents() );
+		System.out.println( c.getComposites() );
+		assertTrue( c.getComponents().size()==1 ); //WAS: 2
+		assertTrue( c.getComposites().size()==2 );
+		assertTrue( ( (Container.ContainerInnerClass) c.getComponents().get(0) ).getName().equals("a different name") );
+		Iterator iter = c.getComposites().iterator();
+		boolean found = false;
+		while ( iter.hasNext() ) {
+			if ( ( (Container.ContainerInnerClass) iter.next() ).getName().equals("once again") ) found = true;
+		}
+		assertTrue(found);
+		c.getOneToMany().clear();
+		c.getManyToMany().clear();
+		c.getComposites().clear();
+		c.getComponents().clear();
+		s.delete("from Simple");
+		s.delete("from Many");
+		s.delete("from One");
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.load( Container.class, new Long( c.getId() ) );
+		assertTrue( c.getComponents().size()==0 );
+		assertTrue( c.getComposites().size()==0 );
+		assertTrue( c.getOneToMany().size()==0 );
+		assertTrue( c.getManyToMany().size()==0 );
+		s.delete(c);
+		t.commit();
+		s.close();
+	}
+
+	public void testCascadeCompositeElements() throws Exception {
+		Container c = new Container();
+		List list = new ArrayList();
+		c.setCascades(list);
+		Container.ContainerInnerClass cic = new Container.ContainerInnerClass();
+		cic.setMany( new Many() );
+		cic.setOne( new One() );
+		list.add(cic);
+		Session s = openSession();
+		s.save(c);
+		s.flush();
+		s.connection().commit();
+		s.close();
+		
+		s=openSession();
+		c = (Container) s.iterate("from ContainerX c").next();
+		cic = (Container.ContainerInnerClass) c.getCascades().iterator().next();
+		assertTrue( cic.getMany()!=null && cic.getOne()!=null );
+		assertTrue( c.getCascades().size()==1 );
+		s.delete(c);
+		s.flush();
+		s.connection().commit();
+		s.close();
+
+		c = new Container();
+		s = openSession();
+		s.save(c);
+		list = new ArrayList();
+		c.setCascades(list);
+		cic = new Container.ContainerInnerClass();
+		cic.setMany( new Many() );
+		cic.setOne( new One() );
+		list.add(cic);
+		s.flush();
+		s.connection().commit();
+		s.close();
+		
+		s=openSession();
+		c = (Container) s.iterate("from ContainerX c").next();
+		cic = (Container.ContainerInnerClass) c.getCascades().iterator().next();
+		assertTrue( cic.getMany()!=null && cic.getOne()!=null );
+		assertTrue( c.getCascades().size()==1 );
+		s.delete(c);
+		s.flush();
+		s.connection().commit();
+		s.close();
+	}
+
+	public void testBag() throws Exception {
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Container c = new Container();
+		Contained c1 = new Contained();
+		Contained c2 = new Contained();
+		c.setBag( new ArrayList() );
+		c.getBag().add(c1);
+		c.getBag().add(c2);
+		c1.getBag().add(c);
+		c2.getBag().add(c);
+		s.save(c);
+		c.getBag().add(c2);
+		c2.getBag().add(c);
+		c.getLazyBag().add(c1);
+		c1.getLazyBag().add(c);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.find("from ContainerX c").get(0);
+		c.getLazyBag().size();
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.find("from ContainerX c").get(0);
+		Contained c3 = new Contained();
+		//c.getBag().add(c3);
+		//c3.getBag().add(c);
+		c.getLazyBag().add(c3);
+		c3.getLazyBag().add(c);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.find("from ContainerX c").get(0);
+		Contained c4 = new Contained();
+		c.getLazyBag().add(c4);
+		c4.getLazyBag().add(c);
+		assertTrue( c.getLazyBag().size()==3 ); //forces initialization
+		//s.save(c4);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Container) s.find("from ContainerX c").get(0);
+		Iterator i = c.getBag().iterator();
+		int j=0;
+		while ( i.hasNext() ) {
+			assertTrue( i.next()!=null );
+			j++;
+		}
+		assertTrue(j==3);
+		assertTrue( c.getLazyBag().size()==3 );
+		s.delete(c);
+		c.getBag().remove(c2);
+		Iterator iter = c.getBag().iterator();
+		j=0;
+		while ( iter.hasNext() ) {
+			j++;
+			s.delete( iter.next() );
+		}
+		assertTrue(j==2);
+		s.delete( s.load(Contained.class, new Long( c4.getId() ) ) );
+		s.delete( s.load(Contained.class, new Long( c3.getId() ) ) );
+		t.commit();
+		s.close();
+
+	}
+
+	public void testCircularCascade() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Circular c = new Circular();
+		c.setClazz(Circular.class);
+		c.setOther( new Circular() );
+		c.getOther().setOther( new Circular() );
+		c.getOther().getOther().setOther(c);
+		c.setAnyEntity( c.getOther() );
+		String id = (String) s.save(c);
+		tx.commit();
+		s.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		c = (Circular) s.load(Circular.class, id);
+		c.getOther().getOther().setClazz(Foo.class);
+		tx.commit();
+		s.close();
+		c.getOther().setClazz(Qux.class);
+		s = openSession();
+		tx = s.beginTransaction();
+		s.saveOrUpdate(c);
+		tx.commit();
+		s.close();
+		c.getOther().getOther().setClazz(Bar.class);
+		s = openSession();
+		tx = s.beginTransaction();
+		s.saveOrUpdate(c);
+		tx.commit();
+		s.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		c = (Circular) s.load(Circular.class, id);
+		assertTrue( c.getOther().getOther().getClazz()==Bar.class);
+		assertTrue( c.getOther().getClazz()==Qux.class);
+		assertTrue( c.getOther().getOther().getOther()==c);
+		assertTrue( c.getAnyEntity()==c.getOther() );
+		assertTrue( s.delete("from Universe")==3 );
+		tx.commit();
+		s.close();
+	}
+
+	public void testDeleteEmpty() throws Exception {
+		Session s = openSession();
+		assertTrue( s.delete("from Simple")==0 );
+		assertTrue( s.delete("from Universe")==0 );
+		s.close();
+	}
+
+	public void testLocking() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Simple s1 = new Simple(); s1.setCount(1);
+		Simple s2 = new Simple(); s2.setCount(2);
+		Simple s3 = new Simple(); s3.setCount(3);
+		Simple s4 = new Simple(); s4.setCount(4);
+		s.save(s1, new Long(1) );
+		s.save(s2, new Long(2) );
+		s.save(s3, new Long(3) );
+		s.save(s4, new Long(4) );
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.WRITE );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		s1 = (Simple) s.load(Simple.class, new Long(1), LockMode.NONE);
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.READ || s.getCurrentLockMode(s1)==LockMode.NONE ); //depends if cache is enabled
+		s2 = (Simple) s.load(Simple.class, new Long(2), LockMode.READ);
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.READ );
+		s3 = (Simple) s.load(Simple.class, new Long(3), LockMode.UPGRADE);
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
+		s4 = (Simple) s.get(Simple.class, new Long(4), LockMode.UPGRADE_NOWAIT);
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+
+		s1 = (Simple) s.load(Simple.class, new Long(1), LockMode.UPGRADE); //upgrade
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.UPGRADE );
+		s2 = (Simple) s.load(Simple.class, new Long(2), LockMode.NONE);
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.READ );
+		s3 = (Simple) s.load(Simple.class, new Long(3), LockMode.READ);
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
+		s4 = (Simple) s.load(Simple.class, new Long(4), LockMode.UPGRADE);
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+
+		s.lock(s2, LockMode.UPGRADE); //upgrade
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.UPGRADE );
+		s.lock(s3, LockMode.UPGRADE);
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
+		s.lock(s1, LockMode.UPGRADE_NOWAIT);
+		s.lock(s4, LockMode.NONE);
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+
+		tx.commit();
+		tx = s.beginTransaction();
+
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.NONE );
+
+		s.lock(s1, LockMode.READ); //upgrade
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.READ );
+		s.lock(s2, LockMode.UPGRADE); //upgrade
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.UPGRADE );
+		s.lock(s3, LockMode.UPGRADE_NOWAIT); //upgrade
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE_NOWAIT );
+		s.lock(s4, LockMode.NONE);
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.NONE );
+
+		s4.setName("s4");
+		s.flush();
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.WRITE );
+		tx.commit();
+
+		tx = s.beginTransaction();
+
+		assertTrue( s.getCurrentLockMode(s3)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s1)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s2)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s4)==LockMode.NONE );
+
+		s.delete(s1); s.delete(s2); s.delete(s3); s.delete(s4);
+		tx.commit();
+		s.close();
+	}
+
+	public void testObjectType() throws Exception {
+		Session s = openSession();
+		Parent g = new Parent();
+		Foo foo = new Foo();
+		g.setAny(foo);
+		s.save(g);
+		s.save(foo);
+		s.flush();
+		s.connection().commit();
+		s.close();
+		s = openSession();
+		g = (Parent) s.load( Parent.class, new Long( g.getId() ) );
+		assertTrue( g.getAny()!=null && g.getAny() instanceof FooProxy );
+		s.delete( g.getAny() );
+		s.delete(g);
+		s.flush();
+		s.connection().commit();
+		s.close();
+	}
+
+	public void testLoadAfterNonExists() throws HibernateException, SQLException {
+
+		Session session = openSession();
+		if ( (getDialect() instanceof MySQLDialect) ) {
+			session.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		}
+
+		// First, prime the fixture session to think the entity does not exist
+		try {
+			session.load( Simple.class, new Long(-1) );
+			fail();
+		}
+		catch(ObjectNotFoundException onfe) {
+			// this is correct
+		}
+
+		// Next, lets create that entity under the covers
+		Session anotherSession = getSessions().openSession();
+		Simple myNewSimple = new Simple();
+		myNewSimple.setName("My under the radar Simple entity");
+		myNewSimple.setAddress("SessionCacheTest.testLoadAfterNonExists");
+		myNewSimple.setCount(1);
+		myNewSimple.setDate( new Date() );
+		myNewSimple.setPay( new Float(100000000) );
+		anotherSession.save( myNewSimple, new Long(-1) );
+		anotherSession.flush();
+		anotherSession.connection().commit();
+		anotherSession.close();
+
+		// Verify that the original session is still able to see the new entry...
+		//try {
+			session.load( Simple.class, new Long(-1) );
+			/*fail();
+		}
+		catch(ObjectNotFoundException onfe) {
+		}*/
+
+		// Now, lets clear the original session at which point it should be able to see
+		// the new entity
+		session.clear();
+		try {
+			Simple dummy = (Simple) session.load( Simple.class, new Long(-1) );
+			assertNotNull("Unable to locate entity Simple with id = -1", dummy);
+		}
+		catch(ObjectNotFoundException onfe) {
+			fail("Unable to locate entity Simple with id = -1");
+		}
+		session.connection().commit();
+		session.close();
+	}
+
+}

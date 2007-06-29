@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+	
+<hibernate-mapping package="org.hibernate.test.entitymode.dom4j.many2one">
+
+	<class name="Car" lazy="false" node="car">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="model"  type="string" node="model"/>
+		<many-to-one name="carType" node="carType" class="CarType"/>
+		<set name="carParts" node="." cascade="all">
+			<key column="car" not-null="true"/>
+			<one-to-many class="CarPart" node="carPart" embed-xml="false"/>
+		</set>
+	</class>
+	
+	<class name="CarType" lazy="true" node="carType">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="typeName" type="string" node="typeName"/>
+	</class>
+	
+	<class name="CarPart" node="carPart">
+		<id name="id" node="@id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="partName" type="string" node="partName"/>
+	</class>
+	
+</hibernate-mapping>

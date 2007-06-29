@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping
+	package="org.hibernate.test.hql"
+	default-access="field">
+
+	<class name="Animal">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="description"/>
+		<property name="bodyWeight" column="body_weight"/>
+		<many-to-one name="mother" column="mother_id"/>
+		<many-to-one name="father" column="father_id"/>
+		<many-to-one name="zoo" column="zoo_id"/>
+		<property name="serialNumber"/>
+		<set name="offspring" order-by="father_id">
+			<key column="mother_id"/>
+			<one-to-many class="Animal"/>
+		</set>
+		<joined-subclass name="Reptile">
+			<key column="animal"/>
+			<property name="bodyTemperature"/>
+			<joined-subclass name="Lizard">
+				<key column="reptile"/>
+			</joined-subclass>
+		</joined-subclass>
+		<joined-subclass name="Mammal">
+			<key column="animal"/>
+			<property name="pregnant"/>
+			<property name="birthdate" type="date"/>
+			<joined-subclass name="DomesticAnimal">
+				<key column="mammal"/>
+				<many-to-one name="owner"/>
+				<joined-subclass name="Cat">
+					<key column="mammal"/>
+				</joined-subclass>
+				<joined-subclass name="Dog">
+					<key column="mammal"/>
+				</joined-subclass>
+			</joined-subclass>
+			<joined-subclass name="Human">
+				<key column="mammal"/>
+				<component name="name">
+					<property name="first" column="name_first"/>
+					<property name="initial" column="name_initial"/>
+					<property name="last" column="name_last"/>
+				</component>
+				<property name="nickName"/>
+				<property name="height"/>
+
+				<property name="intValue"/>
+				<property name="floatValue"/>
+				<property name="bigDecimalValue"/>
+				<property name="bigIntegerValue"/>
+
+				<bag name="friends">
+					<key column="human1"/>
+					<many-to-many column="human2" class="Human"/>
+				</bag>
+				<map name="family">
+					<key column="human1"/>
+					<map-key column="relationship" type="string"/>
+					<many-to-many column="human2" class="Human"/>
+				</map>
+				<bag name="pets" inverse="true">
+					<key column="owner"/>
+					<one-to-many class="DomesticAnimal"/>
+				</bag>
+				<set name="nickNames" lazy="false" table="human_nick_names" sort="natural">
+					<key column="human"/>
+					<element column="nick_name" type="string" not-null="true"/>
+				</set>
+				<map name="addresses" table="addresses">
+					<key column="human"/>
+					<map-key type="string" column="type"/>
+					<composite-element class="Address">
+						<property name="street"/>
+						<property name="city"/>
+						<property name="postalCode"/>
+						<property name="country"/>
+                        <many-to-one name="stateProvince" column="state_prov_id" class="StateProvince"/>
+					</composite-element>
+				</map>
+			</joined-subclass>
+		</joined-subclass>
+	</class>
+
+	<class name="User" table="`User`">
+		<id name="id">
+			<generator class="foreign">
+				<param name="property">human</param>
+			</generator>
+		</id>
+		<property name="userName"/>
+		<one-to-one name="human" constrained="true"/>
+		<list name="permissions">
+			<key column="userId"/>
+			<list-index column="permissionId"/>
+			<element type="string" column="permissionName"/>
+		</list>
+	</class>
+
+	<class name="Zoo" discriminator-value="Z">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<discriminator column="zooType" type="character"/>
+		<property name="name" type="string"/>
+        <property name="classification" type="org.hibernate.test.hql.ClassificationType"/>
+        <map name="mammals">
+			<key column="mammalZoo_id"/>
+			<index type="string" column="name"/>
+			<one-to-many class="Mammal"/>
+		</map>
+		<map name="animals" inverse="true">
+			<key column="zoo_id"/>
+			<index type="string" column="serialNumber"/>
+			<one-to-many class="Animal"/>
+		</map>
+        <component name="address" class="Address">
+            <property name="street"/>
+            <property name="city"/>
+            <property name="postalCode"/>
+            <property name="country"/>
+            <many-to-one name="stateProvince" column="state_prov_id" class="StateProvince"/>
+        </component>
+		<subclass name="PettingZoo" discriminator-value="P"/>
+	</class>
+
+    <class name="StateProvince">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="name"/>
+        <property name="isoCode"/>
+    </class>
+
+	<class name="Joiner">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+		<join table="JOINED">
+			<key column="ID"/>
+			<property name="joinedName"/>
+		</join>
+	</class>
+
+</hibernate-mapping>

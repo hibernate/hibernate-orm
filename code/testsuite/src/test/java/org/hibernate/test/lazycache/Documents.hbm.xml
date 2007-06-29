@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates 
+
+     (1) use of lazy properties - this feature requires buildtime 
+         bytecode instrumentation; we don't think this is a very
+         necessary feature, but provide it for completeleness; if
+         Hibernate encounters uninstrumented classes, lazy property
+         fetching will be silently disabled, to enable testing
+     
+     (2) use of a formula to define a "derived property"
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.lazycache"
+	default-access="field">
+ 	
+	<class name="Document" table="documents">
+    	<cache usage="nonstrict-read-write" include="non-lazy" region="foo"/>
+   		<id name="id">
+    		<generator class="native"/>
+    	</id>
+    	<property name="name" not-null="true" length="50"/>
+    	<property name="upperCaseName" formula="upper(name)" lazy="true"/>
+    	<property name="summary" not-null="true" length="200" lazy="true"/>
+    	<property name="text" not-null="true" length="2000" lazy="true"/>
+    	<property name="lastTextModification" not-null="true" lazy="true" access="field"/>
+    </class>
+ 	
+
+</hibernate-mapping>

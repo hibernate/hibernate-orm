@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.test.collection.bag">
+
+    <class name="BagOwner">
+		<id name="name" column="NAME" type="string" />
+
+        <many-to-one name="parent" class="BagOwner" cascade="none" />
+
+        <bag name="children" inverse="true" cascade="all">
+            <key column="PARENT" />
+            <one-to-many class="BagOwner" />
+        </bag>
+	</class>
+
+</hibernate-mapping>

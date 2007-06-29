@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates 
+  
+     (1) composite keys and many-to-one associations on 
+         composite keys
+      
+     (2) use of insert="false" update="false" on an
+         association mapping, when the foreign key is
+         also part of the primary key
+     
+-->
+
+<hibernate-mapping package="org.hibernate.test.cid">
+
+    <class name="LineItem">
+    	
+    	<composite-id name="id" 
+    		class="LineItem$Id">
+    		<key-property name="customerId" length="10"/>
+    		<key-property name="orderNumber"/>
+    		<key-property name="productId" length="10"/>
+    	</composite-id>
+    	
+    	<property name="quantity"/>
+    	
+    	<many-to-one name="order"
+    		insert="false"
+			update="false" 
+			not-null="true">
+			<column name="customerId"/>
+			<column name="orderNumber"/>
+		</many-to-one>
+    	
+    	<many-to-one name="product"
+    		insert="false"
+			update="false" 
+			not-null="true"
+			column="productId"/>
+			
+    </class>
+ 	
+
+</hibernate-mapping>

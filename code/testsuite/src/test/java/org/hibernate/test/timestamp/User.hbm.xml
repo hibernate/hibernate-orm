@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.timestamp">
+	
+	<class name="User" table="T_USER" dynamic-update="true">
+		<id name="userName"/>
+		<timestamp name="lastModified"/>
+		<property name="password" not-null="true" optimistic-lock="false"/>
+		<component name="person">
+			<property name="name" update="false" not-null="true"/>
+			<property name="dob" update="false" not-null="true"/>
+			<property name="currentAddress" 
+				column="address" 
+				insert="false" 
+				update="false"/>
+		</component>
+	</class>
+	
+	<query name="userNameIn"><![CDATA[from User where person.name in (:nameList) or userName in (:nameList)]]></query>
+	
+</hibernate-mapping>

@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+	Shows how to map a one-to-many relationship in the relational
+	schema to "typed" one-to-one associations in the object model.
+	We map the Address class twice, with different entity names,
+	specifying a filtering condition in each mapping. The typed
+	associations then reference the named entities.
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.typedonetoone">
+
+	<class name="Customer">
+	
+		<id name="customerId">
+			<generator class="assigned"/>
+		</id>
+	
+		<property name="name" not-null="true"/>
+		
+		<one-to-one name="billingAddress" 
+			entity-name="BillingAddress"
+			property-ref="customer"
+			cascade="persist, delete"
+			fetch="join"/>
+			
+		<one-to-one name="shippingAddress" 
+			entity-name="ShippingAddress"
+			property-ref="customer"
+			cascade="persist, delete"
+			fetch="join"/>
+			
+	</class>
+	
+	<class name="Address"
+		table="Address"
+		entity-name="BillingAddress" 
+		where="type='BILLING'" 
+		check="type in ('BILLING', 'SHIPPING')">
+	
+		<composite-id name="addressId">
+			<key-property name="customerId"/>
+			<key-property name="type"/>
+		</composite-id>
+		
+		<property name="street" not-null="true"/>
+		<property name="city" not-null="true"/>
+		<property name="state" not-null="true"/>
+		<property name="zip" not-null="true"/>
+		
+		<many-to-one name="customer" 
+			column="customerId" 
+			insert="false"
+			update="false"/>
+						
+	</class>
+
+	<class name="Address" 
+		table="Address"
+		entity-name="ShippingAddress"
+		where="type='SHIPPING'">
+	
+		<composite-id name="addressId">
+			<key-property name="customerId"/>
+			<key-property name="type"/>
+		</composite-id>
+		
+		<property name="street" not-null="true"/>
+		<property name="city" not-null="true"/>
+		<property name="state" not-null="true"/>
+		<property name="zip" not-null="true"/>
+		
+		<many-to-one name="customer" 
+			column="customerId" 
+			insert="false"
+			update="false"/>
+						
+	</class>
+
+</hibernate-mapping>

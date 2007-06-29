@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+    This version is for Oracle drivers proprietary handling of stored procedures/functions.
+-->
+<hibernate-mapping package="org.hibernate.test.sql.hand" default-access="field">
+
+    <sql-query name="simpleScalar" callable="true">
+        <return-scalar column="name" type="string"/>
+        <return-scalar column="value" type="long"/>
+        { ? = call simpleScalar(:number) }
+    </sql-query>
+
+    <sql-query name="paramhandling" callable="true">
+        <return-scalar column="value" type="long"/>
+        <return-scalar column="value2" type="long"/>
+        { ? = call testParamHandling(?,?) }
+    </sql-query>
+
+    <sql-query name="paramhandling_mixed" callable="true">
+        <return-scalar column="value" type="long"/>
+        <return-scalar column="value2" type="long"/>
+        { ? = call testParamHandling(?,:second) }
+    </sql-query>
+
+    <sql-query name="selectAllEmployments" callable="true">
+        <return alias="emp" class="Employment">
+            <return-property name="employee" column="EMPLOYEE"/>
+            <return-property name="employer" column="EMPLOYER"/>
+            <return-property name="startDate" column="STARTDATE"/>
+            <return-property name="endDate" column="ENDDATE"/>
+            <return-property name="regionCode" column="REGIONCODE"/>
+            <return-property name="employmentId" column="EMPID"/>
+            <return-property name="salary">
+                <return-column name="VALUE"/>
+                <return-column name="CURRENCY"/>
+            </return-property>
+        </return>
+        { ? = call allEmployments() }
+    </sql-query>
+
+</hibernate-mapping>

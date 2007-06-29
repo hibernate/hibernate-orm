@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+    <class entity-name="Customer" node="customer">
+        <id name="customerId" type="string" node="@id"/>
+        <component name="name">
+            <property name="first" type="string"/>
+            <property name="last" type="string"/>
+        </component>
+        <property name="address" type="string" node="address"/>
+        <map name="stuff">
+            <key column="customerId"/>
+            <map-key type="string" column="bar" node="@bar"/>
+            <element type="string" node="foo" column="foo"/>
+        </map>
+        <bag name="morestuff" node=".">
+            <key column="customerId"/>
+            <element type="integer" node="amount" column="amount"/>
+        </bag>
+        <list name="accounts" cascade="all">
+            <key column="customerId2"/>
+            <list-index column="acctno" base="1"/>
+            <one-to-many entity-name="Account" node="account"/>
+        </list>
+        <many-to-one name="location" node="location/@id" entity-name="Location" embed-xml="false"/>
+        <property name="description" node="." type="string"/>
+        <set name="unembedded" embed-xml="false">
+            <key column="x"/>
+            <element type="string" column="y" not-null="true"/>
+        </set>
+    </class>
+
+    <class entity-name="Account" node="account">
+        <id name="accountId" type="string" node="@id"/>
+        <many-to-one name="customer" column="customerId" entity-name="Customer" cascade="all" embed-xml="true" />
+        <!--not-null="true"-->
+        <property name="balance" type="big_decimal" node="balance" precision="10" scale="0" />
+    </class>
+
+    <class entity-name="Location" node="location">
+        <id name="id" node="@id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="address" type="string"/>
+    </class>
+
+</hibernate-mapping>

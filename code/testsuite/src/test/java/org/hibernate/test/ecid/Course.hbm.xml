@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.ecid" 
+	default-access="field">
+
+<!-- 
+
+  This mapping demonstrates inheritance with embedded composite ids.
+     
+-->
+
+	<class name="Course" table="SchoolCourses"
+			discriminator-value="secondary/primary">
+		<composite-id>
+			<key-property name="courseCode"/>
+			<key-property name="org"/>
+		</composite-id>
+		<discriminator column="schoolLevel" length="20"/>
+		<property name="description" not-null="true"/>
+		<subclass name="UniversityCourse" discriminator-value="tertiary">
+			<property name="semester"/>
+		</subclass>
+	</class>
+
+</hibernate-mapping>

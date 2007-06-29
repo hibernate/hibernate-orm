@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM
+  "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+  
+<hibernate-mapping package="org.hibernate.test.tool">
+	<class name="Team" table="`Team`">
+	  	<id name="id" column="`iD`">
+		  <generator class="native">
+		  <param name="sequence">TEAM_SEQ</param>
+		  </generator>
+	  	</id>
+	  	<property name="name"/>
+	</class>
+	
+	<class entity-name="OtherTeam" name="Team" table="TEAM">
+		<id name="id" column="id">
+		  <generator class="native">
+		  <param name="sequence">TEAM_SEQ</param>
+		  </generator>
+	  	</id>
+	  	<property name="name" column="xname"/>
+	</class>
+
+</hibernate-mapping>

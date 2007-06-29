@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.onetoone.joined"
+	default-access="field">
+
+	<class name="Entity">
+		<id name="name"/>
+		<joined-subclass name="Person">
+			<key column="entityName"/>
+			<one-to-one name="address" 
+				cascade="all" 
+				constrained="true"/>
+			<one-to-one name="mailingAddress" 
+				cascade="all"
+				entity-name="MailingAddress"/>
+		</joined-subclass>
+		<joined-subclass name="Org">
+			<key column="entityName"/>
+		</joined-subclass>
+	</class>
+	
+	<class name="Address">
+		<id name="entityName"/>
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+	<class name="Address" entity-name="MailingAddress">
+		<id name="entityName"/>
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+</hibernate-mapping>

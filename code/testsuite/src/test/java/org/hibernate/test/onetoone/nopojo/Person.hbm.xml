@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.onetoone.nopojo">
+
+	<class entity-name="Person">
+		<id name="id" type="long">
+            <generator class="foreign">
+                <param name="property">address</param>
+            </generator>
+        </id>
+        <property name="name" type="string"/>
+        <one-to-one name="address" cascade="all" entity-name="Address" constrained="true"/>
+	</class>
+	
+	<class entity-name="Address">
+		<id name="id" type="long">
+            <generator class="native"/>
+        </id>
+		<property name="street" type="string"/>
+		<property name="state" type="string"/>
+		<property name="zip" type="string"/>
+        <one-to-one name="owner" entity-name="Person" />
+	</class>
+
+</hibernate-mapping>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+
+<hibernate-mapping package="org.hibernate.test.collection.map">
+
+    <class name="Parent">
+		<id name="name" column="NAME" type="string" />
+
+        <map name="children" inverse="true" cascade="all">
+            <key column="PARENT" />
+            <map-key type="string" />
+            <one-to-many class="Child" />
+        </map>
+	</class>
+
+    <class name="Child">
+        <id name="name" column="NAME" type="string"/>
+        <many-to-one name="parent" class="Parent" cascade="none" />
+    </class>
+
+</hibernate-mapping>

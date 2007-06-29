@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.deletetransient">
+	
+	<class name="Person" table="T_PERSON">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" type="string"/>
+        <set name="addresses" lazy="true" inverse="false" cascade="all">
+            <key column="PERSON_ID"/>
+            <one-to-many class="Address"/>
+        </set>
+        <bag name="friends" lazy="true" inverse="false" cascade="all" table="T_FRIENDS">
+            <key column="FRIEND_ID_1"/>
+            <many-to-many class="Person" column="FRIEND_ID_2"/>
+        </bag>
+    </class>
+
+    <class name="Address" table="T_ADDRESS">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="info" type="string"/>
+    </class>
+	
+</hibernate-mapping>

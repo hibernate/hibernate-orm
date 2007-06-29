@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates how to use an "inverse" join
+  to map an association table as an association with 
+  one-to-many multiplicity at the level of the object
+  model.
+     
+-->
+
+<hibernate-mapping 
+	package="org.hibernate.test.onetomany">
+
+	<class name="Parent">
+		<id name="id" 
+			column="parent_id">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<set name="children" 
+			table="ParentChild" 
+			cascade="all"
+			inverse="true">
+			<key column="parent_id"/>
+			<many-to-many column="child_id" 
+				class="Child"/>
+		</set>
+	</class>
+	
+	<class name="Child">
+		<id name="id" 
+			column="child_id">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<join table="ParentChild" 
+			optional="true">
+			<key column="child_id"/>
+			<many-to-one name="parent" 
+				column="parent_id" 
+				not-null="true"/>
+		</join>
+	</class>
+
+</hibernate-mapping>

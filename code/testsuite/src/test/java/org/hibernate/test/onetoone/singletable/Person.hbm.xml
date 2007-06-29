@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.test.onetoone.singletable"
+	default-access="field">
+
+	<class name="Entity">
+		<id name="name"/>
+		<discriminator type="string" column="subtype"/>
+		<subclass name="Person">
+			<one-to-one name="address" cascade="all"/>
+			<one-to-one name="mailingAddress" 
+				cascade="all"
+				entity-name="MailingAddress"/>
+		</subclass>
+		<subclass name="Org">
+			<set name="addresses" inverse="true" cascade="all-delete-orphan">
+				<key column="entityName"/>
+				<one-to-many class="Address"/>
+			</set>
+		</subclass>
+	</class>
+	
+	<class name="Address">
+		<id name="entityName"/>
+		
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+	<class name="Address" entity-name="MailingAddress">
+		<id name="entityName"/>
+		<property name="street"/>
+		<property name="state"/>
+		<property name="zip"/>
+	</class>
+
+</hibernate-mapping>

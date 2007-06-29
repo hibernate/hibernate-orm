@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false" package="org.hibernate.test.legacy">
+	<class name="Role">
+
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		
+		<property name="name" type="string"/>
+		
+		<set name="interventions" lazy="true" cascade="all">
+			<key column="role_id"/>
+			<one-to-many class="Intervention"/>
+			<sql-insert callable="false">/* max comment */
+				update Intervention set role_id=? where id=?</sql-insert>
+			<sql-delete callable="false">update Intervention set role_id=null where role_id=? and id=?</sql-delete>
+			<sql-delete-all callable="false">update Intervention set role_id=null where role_id=?</sql-delete-all>
+		</set>
+		
+		<list name="bunchOfStrings">			
+			<key column="GROUPID"/>
+			<index column="posn"/>
+		    <element column="NAME" type="string"/>
+			<sql-insert callable="true">{ ? = call createRoleBunchOfStrings(?, ?, ?)}</sql-insert>
+			<sql-update callable="true">{ ? = call updateRoleBunchOfStrings(?, ?, ?)}</sql-update>
+			<sql-delete callable="true">{ ? = call deleteRoleBunchOfString(?, ?)}</sql-delete>
+			<sql-delete-all callable="true">{ ? = call deleteAllRoleBunchOfString(?)}</sql-delete-all>
+		</list>
+		
+<!--		<sql-load   callable="true">{ call loadPatient (?)}</sql-load>
+		<sql-insert callable="true">{call createPatient (?, ?, ?, ?)}</sql-insert>
+		<sql-delete callable="true">{? = call deletePatient (?)}</sql-delete> 
+		<sql-update callable="true">{? = call updatePatient (?, ?, ?, ?)}</sql-update> -->
+<!--	<sql-insert callable="true">insert </sql-insert> -->
+<!--		<sql-delete>delete from Role where values (?, upper(?)) /** i did this */</sql-insert>   -->
+		<sql-insert>insert into Role (name, id) values (?, upper(?)) /** i did this */</sql-insert>  
+<!--		<sql-update>update</sql-update>-->
+		<sql-delete>delete from Role where id=?</sql-delete>
+		
+	</class>	
+	
+	<class name="Resource" table="ecruoser">
+		<id name="id" type="string">
+			<generator class="uuid.hex"/>
+		</id>
+		
+		<discriminator column="discriminator" type="string"/>
+		
+		<property name="name" type="string"/>
+		<property name="userCode" type="string"/>
+		
+		<subclass name="Drug">
+			
+		</subclass>
+	</class>
+	
+	<class name="Party">
+		<id name="id" type="string">
+			<generator class="uuid.hex"/>
+		</id>
+		<discriminator column="discriminator" type="string"/>
+		<join table="partyjointable">
+			<key column="partyid"/>
+     		<property name="name" column="xname" type="string"/>
+	    	<property name="address" type="string"/>
+			<sql-insert callable="true">{ call createJoinTable(?, ?, ?) }</sql-insert>			
+			<sql-update callable="true">{ ? = call updateJoinTable(?, ?, ?) }</sql-update> <!-- xname, address, partyid -->
+			<sql-delete callable="true">{ ? = call deleteJoinTable(?) }</sql-delete> <!-- partyid -->
+		</join>
+							
+		<subclass name="Person">
+			<property name="givenName" type="string"/>			
+			<property name="lastName" type="string"/>		
+			<property name="nationalID" unique="true" type="string"/>
+		</subclass>		
+
+		<subclass name="Company">
+		   <property name="president" type="string"/>
+		</subclass>				
+	</class>
+	
+	<class name="Intervention">
+		<id name="id" type="string">
+			<generator class="uuid.hex"/>
+		</id>
+		
+		<version name="version" type="long"/>
+		
+		<property name="description" type="string"/>
+		
+		<joined-subclass name="Medication">
+			<key column="interventionid"/>
+			<many-to-one name="prescribedDrug" class="org.hibernate.test.legacy.Drug"/>			
+			<sql-insert>insert into /** put weird comments here */ Medication (prescribedDrug, interventionid) values (?, ?)</sql-insert> 
+		</joined-subclass>
+		
+	</class>
+	
+	
+	
+</hibernate-mapping>

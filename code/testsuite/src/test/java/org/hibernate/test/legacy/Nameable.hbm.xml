@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.test.legacy.Nameable">
+        <id name="key" column="key_">
+        	<generator class="native"/>
+         </id>
+        <discriminator column="clazz"/>
+        <property name="name"/>
+        <subclass name="org.hibernate.test.legacy.BasicNameable"/>
+    </class>
+
+</hibernate-mapping>

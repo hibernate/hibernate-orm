@@ -488,7 +488,7 @@
                 O atributo opcional <literal>proxy</literal> habilita a inicialização tardia das 
                 instâncias persistentes da classe. O Hibernate irá retornar CGLIB proxies como implementado 
                 na interface nomeada. O objeto persistente atual  será carregado quando um método do proxy 
-                for invocado. Veja "Proxies para Inicialização Lazy" abaixo.
+                for invocado. Veja "Inicializando coleções e proxies" abaixo.
             </para>
             
             <para>Polimorfismo <emphasis>implícito</emphasis> significa que instâncias de uma classe 

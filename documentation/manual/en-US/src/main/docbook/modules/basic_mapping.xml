@@ -474,7 +474,7 @@
                 The optional <literal>proxy</literal> attribute enables lazy initialization of persistent
                 instances of the class. Hibernate will initially return CGLIB proxies which implement
                 the named interface. The actual persistent object will be loaded when a method of the
-                proxy is invoked. See "Proxies for Lazy Initialization" below.
+                proxy is invoked. See "Initializing collections and proxies" below.
             </para>
 
             <para><emphasis>Implicit</emphasis> polymorphism means that instances of the class will be returned

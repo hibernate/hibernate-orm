@@ -109,7 +109,7 @@
         </para>
  
         <sect2 id="performance-fetching-lazy">
-            <title>Trabalhando com associações preguiçosas (lazy)</title>
+            <title>Inicializando coleções e proxies</title>
             
             <para>
                 Por padrão, o Hibernate3 usa busca preguiçosa para coleções e busca preguiçosa 

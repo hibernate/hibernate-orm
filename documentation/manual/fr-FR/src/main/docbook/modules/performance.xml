@@ -563,7 +563,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
         <para>
-            Avec une taille de lot (<literal>batch-size</literal>) de 8, Hibernate chargera 
+            Avec une taille de lot (<literal>batch-size</literal>) de 3, Hibernate chargera 
         respectivement 3, 3, 3, et 1 collections en quatre <literal>SELECT</literal>s. 
         Encore une fois, la valeur de l'attribut dépend du nombre de collections
         non initialisées dans une <literal>Session</literal> particulière.

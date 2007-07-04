@@ -1211,7 +1211,7 @@ public void setParticipants(Set participants) {
             </para>
 
             <para>
-                Many developers program defensive and create a link management methods to
+                Many developers program defensive and create link management methods to
                 correctly set both sides, e.g. in <literal>Person</literal>:
             </para>
 

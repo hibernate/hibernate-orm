@@ -527,7 +527,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                Com um <literal>batch-size</literal>de 8, o Hibernate irá carregar 3, 3, 3, 1 coleções em 4 
+                Com um <literal>batch-size</literal> de 3, o Hibernate irá carregar 3, 3, 3, 1 coleções em 4 
                 <literal>SELECT</literal>s. Novamente, o valor do atributo depende do número esperado de coleções 
                 não inicialiadas em determinada <literal>Session</literal>.
             </para>

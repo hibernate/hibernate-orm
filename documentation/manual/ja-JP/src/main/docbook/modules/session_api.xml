@@ -517,7 +517,7 @@ List cats = q.list();]]></programlisting>
             
             
             <programlisting><![CDATA[Criteria crit = session.createCriteria(Cat.class);
-crit.add( Expression.eq( "color", eg.Color.BLACK ) );
+crit.add( Restrictions.eq( "color", eg.Color.BLACK ) );
 crit.setMaxResults(10);
 List cats = crit.list();]]></programlisting>
             

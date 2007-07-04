@@ -118,11 +118,11 @@
             <listitem>
                 <para>
                     Usa esta documentaci&#x00f3;n de referencia como tu fuente de informaci&#x00f3;n
-                    primaria. Ten en consideraci&#x00f3;n leer <emphasis>Hibernate in Action</emphasis>
-                    (http://www.manning.com/bauer) si necesitas mas ayuda con el dise&#x00f1;o
+                    primaria. Ten en consideraci&#x00f3;n leer <emphasis>Java Persistence with Hibernate</emphasis>
+                    (http://www.manning.com/bauer2) si necesitas mas ayuda con el dise&#x00f1;o
                     de aplicaciones o si prefieres un tutorial paso a paso.
                     Visita tambi&#x00e9;n http://caveatemptor.hibernate.org y descarga la aplicaci&#x00f3;n
-                    de ejemplo para Hibernate in Action.
+                    de ejemplo para Java Persistence with Hibernate.
                 </para>
             </listitem>
             <listitem>

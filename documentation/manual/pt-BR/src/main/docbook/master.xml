@@ -181,11 +181,11 @@
             <listitem>
                 <para>
                     Use esta documentação de referencia como sua fonte primaria de informação. 
-                    Considere ler também o livro <emphasis>Hibernate in Action</emphasis>  
-                    (http://www.manning.com/bauer) caso você precise de mais ajuda com o 
+                    Considere ler também o livro <emphasis>Java Persistence with Hibernate</emphasis>  
+                    (http://www.manning.com/bauer2) caso você precise de mais ajuda com o 
                     desenvolvimento de aplicações ou caso prefira um tutorial passo-a-passo. 
                     Também visite o site http://caveatemptor.hibernate.org e faça o download 
-                    da aplicação de exemplo do Hibernate em Ação.
+                    da aplicação de exemplo do Java Persistence with Hibernate.
                 </para>
             </listitem>
             <listitem>

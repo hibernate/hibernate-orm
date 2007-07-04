@@ -585,7 +585,7 @@ public class HibernateUtil {
                 Aseg&#x00fa;rate de entender el concepto Java de una variable local a una hebra antes
                 de usar esta ayuda. Una clase <literal>HibernateUtil</literal> m&#x00e1;s potente puede
                 encontrarse en <literal>CaveatEmptor</literal>, http://caveatemptor.hibernate.org/, 
-                as&#x00ed; como en el libro "Hibernate in Action". Observa que esta clase no es necesaria
+                as&#x00ed; como en el libro "Java Persistence with Hibernate". Observa que esta clase no es necesaria
                 si despliegas Hibernate en un servidor de aplicaciones J2EE: una <literal>Session</literal>
                 ser&#x00e1; autom&#x00e1;ticamente ligada a la transacci&#x00f3;n JTA actual, y puedes
                 buscar la <literal>SessionFactory</literal> a trav&#x00e9;s de JNDI. Si usas JBoss AS,

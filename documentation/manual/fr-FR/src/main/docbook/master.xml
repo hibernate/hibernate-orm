@@ -104,11 +104,11 @@
             <listitem>
                 <para>
                     Faîtes de cette documentation de référence votre principale source d'information.
-                    Pensez à lire <emphasis>Hibernate in Action</emphasis>
-                    (http://www.manning.com/bauer) si vous avez besoin de plus d'aide avec le design
+                    Pensez à lire <emphasis>Java Persistence with Hibernate</emphasis>
+                    (http://www.manning.com/bauer2) si vous avez besoin de plus d'aide avec le design
                     d'applications ou si vous préférez un tutoriel pas à pas. Visitez aussi
                     http://caveatemptor.hibernate.org et téléchargez l'application exemple
-                    pour Hibernate in Action.
+                    pour Java Persistence with Hibernate.
                 </para>
             </listitem>
             <listitem>

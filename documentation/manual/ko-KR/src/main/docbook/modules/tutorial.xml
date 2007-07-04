@@ -521,7 +521,7 @@ public class HibernateUtil {
             <para>
                                 당신이 이 helper를 사용하기 전에 thread-local 변수들에 대한 Java 개념을 확실히 이해하도록 하라. 
                                 보다 강력한 <literal>HibernateUtil</literal> helper는 http://caveatemptor.hibernate.org/에 
-                                있는 <literal>CaveatEmptor</literal> 뿐만 아니라 "Hibernate in Action" 책에서 찾을 수 있다. 
+                                있는 <literal>CaveatEmptor</literal> 뿐만 아니라 "Java Persistence with Hibernate" 책에서 찾을 수 있다. 
                                 당신이 J2EE 어플리케이션 서버 내에 Hibernate를 배치할 경우에 이 클래스는 필수적이지 않다: 하나의 
                 <literal>Session</literal>은 현재의 JTA 트랜잭션에 자동적으로 바인드 될 것이고 당신은 JNDI를 통해 
                 <literal>SessionFactory</literal>를 룩업할 수 있다. 만일 당신이 JBoss AS를 사용할 경우, 

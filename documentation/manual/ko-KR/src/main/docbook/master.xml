@@ -104,10 +104,10 @@
                 <para>
                     당신의 주된 정보의 소스로서 이 참조 문서를 사용하라. 만일 어플리케이션 설계에 대해 더 많은
                     도움을 필요로 하거나 당신이 단계적인 튜토리얼을 선호한다면
-                    <emphasis>Hibernate in Action</emphasis>
-                    (http://www.manning.com/bauer)을 읽는 것을 고려하라.또한
-                    http://caveatemptor.hibernate.org에 방문하여 Hibernate in
-                    Action용 예제 어플리케이션을 다운로드 하라.
+                    <emphasis>Java Persistence with Hibernate</emphasis>
+                    (http://www.manning.com/bauer2)을 읽는 것을 고려하라.또한
+                    http://caveatemptor.hibernate.org에 방문하여 Java Persistence
+                    with Hibernate용 예제 어플리케이션을 다운로드 하라.
                 </para>
             </listitem>
             <listitem>

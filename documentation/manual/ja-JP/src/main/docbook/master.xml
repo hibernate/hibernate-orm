@@ -101,10 +101,10 @@
                 <para>
                     このリファレンスドキュメントを第一の情報源として利用してください。
                     アプリケーション設計についてのさらなる情報や段階的なチュートリアルを探しているなら、
-                    <emphasis>Hibernate in Action</emphasis>（http://www.manning.com/bauer）
+                    <emphasis>Java Persistence with Hibernate</emphasis>（http://www.manning.com/bauer2）
                     をおすすめします。
                     またhttp://caveatemptor.hibernate.orgから
-                    Hibernate in Actionの例題のアプリケーションをダウンロードできます。
+                    Java Persistence with Hibernateの例題のアプリケーションをダウンロードできます。
                 </para>
             </listitem>
             <listitem>

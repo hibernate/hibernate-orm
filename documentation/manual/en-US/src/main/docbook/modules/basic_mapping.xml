@@ -1376,7 +1376,7 @@
 
             <para>
                 A version or timestamp property should never be null for a detached instance, so
-                Hibernate will detact any instance with a null version or timestamp as transient,
+                Hibernate will detect any instance with a null version or timestamp as transient,
                 no matter what other <literal>unsaved-value</literal> strategies are specified.
                 <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid
                 any problems with transitive reattachment in Hibernate, especially useful for people

@@ -1059,7 +1059,7 @@ sess.close();]]></programlisting>
 
         <para>
             If the children in a parent/child relationship would be value typed (e.g. a collection
-            of addresses or strings), their lifecycle would depend on the parent and no
+            of addresses or strings), their life cycle would depend on the parent and no
             further action would be required for convenient "cascading" of state changes.
             When the parent is saved, the value-typed child objects are saved as
             well, when the parent is deleted, the children will be deleted, etc. This
@@ -1071,7 +1071,7 @@ sess.close();]]></programlisting>
         <para>
             Now consider the same scenario with parent and child objects being entities,
             not value-types (e.g. categories and items, or parent and child cats). Entities
-            have their own lifecycle, support shared references (so removing an entity from
+            have their own life cycle, support shared references (so removing an entity from
             the collection does not mean it can be deleted), and there is by default no
             cascading of state from one entity to any other associated entities. Hibernate
             does not implement <emphasis>persistence by reachability</emphasis> by default.
@@ -1123,7 +1123,7 @@ sess.close();]]></programlisting>
             <listitem>
                 <para>
                     If the child object's lifespan is bounded by the lifespan of the of the parent
-                    object make it a <emphasis>lifecycle object</emphasis> by specifying
+                    object make it a <emphasis>life cycle object</emphasis> by specifying
                     <literal>cascade="all,delete-orphan"</literal>.
                 </para>
             </listitem>

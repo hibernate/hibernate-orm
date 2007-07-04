@@ -52,7 +52,7 @@
             Instead, the default behaviour is that adding an entity to a collection merely creates a link between
             the two entities, while removing it removes the link. This is very appropriate for all sorts of cases.
             Where it is not appropriate at all is the case of a parent / child relationship, where the life of the
-            child is bound to the lifecycle of the parent.
+            child is bound to the life cycle of the parent.
         </para>
     
     </sect1>
@@ -171,7 +171,7 @@ session.flush();]]></programlisting>
      </sect1>
      
      <sect1 id="example-parentchild-cascades">
-         <title>Cascading lifecycle</title>
+         <title>Cascading life cycle</title>
      
          <para>
              The explicit call to <literal>save()</literal> is still annoying. We will address this by

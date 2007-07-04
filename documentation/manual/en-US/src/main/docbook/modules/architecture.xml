@@ -225,7 +225,7 @@
         <itemizedlist>
             <listitem>
                 <para>
-                    <emphasis>Session Management:</emphasis> The Hibernate <literal>Session</literal>'s lifecycle
+                    <emphasis>Session Management:</emphasis> The Hibernate <literal>Session</literal>'s life cycle
                     can be automatically bound to the scope of a JTA transaction. This means you no
                     longer have to manually open and close the <literal>Session</literal>, this
                     becomes the job of a JBoss EJB interceptor. You also don't have to worry about

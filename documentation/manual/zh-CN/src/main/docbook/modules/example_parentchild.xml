@@ -137,7 +137,7 @@ session.flush();]]></programlisting>
      </sect1>
      
      <sect1 id="example-parentchild-cascades">
-     <title>级联生命周期（Cascading lifecycle）</title>
+     <title>级联生命周期（Cascading life cycle）</title>
      <para>
 	需要显式调用<literal>save()</literal>仍然很麻烦，我们可以用级联来解决这个问题。
      </para>

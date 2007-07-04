@@ -132,11 +132,11 @@
             <listitem>
                 <para>
                     Database Transactions have to be as short as possible for best scalability. However, it is often
-                    neccessary to implement long running <emphasis>application transactions</emphasis>, a single 
+                    necessary to implement long running <emphasis>application transactions</emphasis>, a single 
                     unit-of-work from the point of view of a user. An application transaction might span several 
                     client request/response cycles. It is common to use detached objects to implement application
                     transactions. An alternative, extremely appropriate in two tiered architecture, is to maintain
-                    a single open persistence contact (session) for the whole lifecycle of the application transaction 
+                    a single open persistence contact (session) for the whole life cycle of the application transaction 
                     and simply disconnect from the JDBC connection at the end of each request and reconnect at the 
                     beginning of the subsequent request. Never share a single session across more than one application 
                     transaction, or you will be working with stale data.

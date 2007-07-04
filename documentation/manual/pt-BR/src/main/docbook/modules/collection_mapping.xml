@@ -275,8 +275,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 Collections may contain almost any other Hibernate type, including all basic types,
                 custom types, components, and of course, references to other entities. This is an
                 important distinction: an object in a collection might be handled with "value" 
-                semantics (its lifecycle fully depends on the collection owner) or it might be a
-                reference to another entity, with its own lifecycle. In the latter case, only the 
+                semantics (its life cycle fully depends on the collection owner) or it might be a
+                reference to another entity, with its own life cycle. In the latter case, only the 
                 "link" between the two objects is considered to be state held by the collection. 
             </para>
                 

@@ -111,7 +111,7 @@ session.close();]]></programlisting>
             Alternatively, Hibernate provides a command-oriented API that may be used for 
             streaming data to and from the database in the form of detached objects. A 
             <literal>StatelessSession</literal> has no persistence context associated
-            with it and does not provide many of the higher-level lifecycle semantics.
+            with it and does not provide many of the higher-level life cycle semantics.
             In particular, a stateless session does not implement a first-level cache nor
             interact with any second-level or query cache. It does not implement 
             transactional write-behind or automatic dirty checking. Operations performed

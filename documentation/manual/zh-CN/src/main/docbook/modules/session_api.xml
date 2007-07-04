@@ -1019,7 +1019,7 @@ sess.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                	如果子对象的寿命限定在父亲对象的寿命之内，可通过指定<literal>cascade="all,delete-orphan"</literal>将其变为<emphasis>自动生命周期管理的对象(lifecycle object)</emphasis>。
+                	如果子对象的寿命限定在父亲对象的寿命之内，可通过指定<literal>cascade="all,delete-orphan"</literal>将其变为<emphasis>自动生命周期管理的对象(life cycle object)</emphasis>。
                 </para>                
             </listitem>
             <listitem>

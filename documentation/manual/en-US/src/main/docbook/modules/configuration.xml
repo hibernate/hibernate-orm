@@ -167,7 +167,7 @@
                     <literal>hibernate.connection.driver_class</literal>
                 </entry>
                 <entry>
-                    <emphasis>jdbc driver class</emphasis>
+                    <emphasis>JDBC driver class</emphasis>
                 </entry>
             </row>
             <row>
@@ -175,7 +175,7 @@
                     <literal>hibernate.connection.url</literal>
                 </entry>
                 <entry>
-                    <emphasis>jdbc URL</emphasis>
+                    <emphasis>JDBC URL</emphasis>
                 </entry>
             </row>
             <row>
@@ -253,7 +253,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Propery name</entry>
+                        <entry>Property name</entry>
                         <entry>Purpose</entry>
                     </row>
                 </thead>
@@ -321,7 +321,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
             Arbitrary connection properties may be given by prepending
-            "<literal>hibernate.connnection</literal>" to the property name. For example, you
+            "<literal>hibernate.connection</literal>" to the property name. For example, you
             may specify a <literal>charSet</literal> using <literal>hibernate.connection.charSet</literal>.
         </para>
 
@@ -405,7 +405,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_schema</literal>
                         </entry>
                         <entry>
-                            Qualify unqualified tablenames with the given schema/tablespace
+                            Qualify unqualified table names with the given schema/tablespace
                             in generated SQL.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
@@ -418,7 +418,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_catalog</literal>
                         </entry>
                         <entry>
-                            Qualify unqualified tablenames with the given catalog
+                            Qualify unqualified table names with the given catalog
                             in generated SQL.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
@@ -509,7 +509,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.use_identifer_rollback</literal>
+                            <literal>hibernate.use_identifier_rollback</literal>
                         </entry>
                         <entry>
                             If enabled, generated identifier properties will be
@@ -634,7 +634,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             Enable use of JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal>
                             to retrieve natively generated keys after insert. Requires JDBC3+ driver
                             and JRE1.4+, set to false if your driver has problems with the Hibernate
-                            identifier generators. By default, tries to determine the driver capabilites
+                            identifier generators. By default, tries to determine the driver capabilities
                             using connection metadata.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
@@ -1421,7 +1421,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 a JTA compatible <literal>TransactionManager</literal> and a
                 <literal>ResourceManager</literal> take care of transaction management (CMT),
                 esp. distributed transaction handling across several datasources. You may
-                of course also demarcate transaction boundaries programatically (BMT) or
+                of course also demarcate transaction boundaries programmatically (BMT) or
                 you might want to use the optional Hibernate <literal>Transaction</literal>
                 API for this to keep your code portable.
                 </para>
@@ -1625,7 +1625,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <para>
                 We recommend that you bind the <literal>SessionFactory</literal> to JNDI in
-                a managend environment and use a <literal>static</literal> singleton otherwise.
+                a managed environment and use a <literal>static</literal> singleton otherwise.
                 To shield your application code from these details, we also recommend to hide the
                 actual lookup code for a <literal>SessionFactory</literal> in a helper class,
                 such as <literal>HibernateUtil.getSessionFactory()</literal>. Note that such a
@@ -1649,7 +1649,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 	            will be set to automatically flush before the transaction completes, close
 	            after the transaction completes, and aggressively release JDBC connections
 	            after each statement.  This allows the <literal>Session</literal>s to
-	            be managed by the lifecycle of the JTA transaction to which it is associated,
+	            be managed by the life cycle of the JTA transaction to which it is associated,
 	            keeping user code clean of such management concerns. Your code can either use
 	            JTA programmatically through <literal>UserTransaction</literal>, or (recommended
 	            for portable code) use the Hibernate <literal>Transaction</literal> API to set

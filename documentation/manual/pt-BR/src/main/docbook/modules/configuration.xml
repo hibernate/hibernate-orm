@@ -1700,7 +1700,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 	            will be set to automatically flush before the transaction completes, close
 	            after the transaction completes, and aggressively release JDBC connections
 	            after each statement.  This allows the <literal>Session</literal>s to
-	            be managed by the lifecycle of the JTA transaction to which it is associated,
+	            be managed by the life cycle of the JTA transaction to which it is associated,
 	            keeping user code clean of such management concerns. Your code can either use
 	            JTA programmatically through <literal>UserTransaction</literal>, or (recommended
 	            for portable code) use the Hibernate <literal>Transaction</literal> API to set

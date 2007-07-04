@@ -478,7 +478,7 @@ kittens = cat.getKittens(); //Okay, kittens collection is a Set
 </bag>]]></programlisting>
 
             <para>
-                一个实体数组,在这个案例中是一个多对多的关联(注意这里的实体是自动管理生命周期的对象（lifecycle objects）,<literal>cascade="all"</literal>):
+                一个实体数组,在这个案例中是一个多对多的关联(注意这里的实体是自动管理生命周期的对象（life cycle objects）,<literal>cascade="all"</literal>):
             </para>
 
 

@@ -721,7 +721,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
                                 또 다른 트랜잭션에 의해 업데이트되었을 수도 있는 임의의 객체들에 대해 <literal>LockMode.READ</literal>로서 
                 <literal>Session.lock()</literal>을 호출할 수도 있다. 당신은 당신이 업데이트 중인 임의의 데이터를 잠금할 필요가 없다.
                                 대개 당신은 마지막 데이터베이스 트랜잭션 주기만이 이 대화 내에서 행해진 모든 변경들을 실제로 영속화시키는 것이 허용되도록 하기 위해, 
-                                하나의 확장된 <literal>Session</literal>에 대해 <literal>FlushMode.NEVER</literal>를 설정할 것이다.
+                                하나의 확장된 <literal>Session</literal>에 대해 <literal>FlushMode.MANUAL</literal>를 설정할 것이다.
                                 그러므로 오직 이 마지막 데이터베이스 트랜잭션 만이 <literal>flush()</literal> 오퍼레이션을 포함할 것이고, 또한 
                                 대화를 종료시키기 위해 세션을 <literal>close()</literal>할 것이다.
             </para>

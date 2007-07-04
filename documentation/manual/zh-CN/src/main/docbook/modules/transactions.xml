@@ -618,7 +618,7 @@ t.commit();         // Also return JDBC connection
 session.close();    // Only for last transaction in conversation]]></programlisting>
 
             <para>
-                <literal>foo</literal>对象知道它是在哪个<literal>Session</literal>中被装入的。在一个旧session中开启一个新的数据库事务，会导致session获取一个新的连接，并恢复session的功能。将数据库事务提交，使得session从JDBC连接断开，并将此连接交还给连接池。在重新连接之后，要强制对你没有更新的数据进行一次版本检查，你可以对所有可能被其他事务修改过的对象，使用参数<literal>LockMode.READ</literal>来调用<literal>Session.lock()</literal>。你不用lock任何你<emphasis>正在</emphasis>更新的数据。一般你会在扩展的<literal>Session</literal>上设置<literal>FlushMode.NEVER</literal>，因此只有最后一个数据库事务循环才会真正的吧整个对话中发生的修改发送到数据库。因此，只有这最后一次数据库事务才会包含<literal>flush()</literal>操作，然后在整个对话结束后，还要<literal>close()</literal>这个session。
+                <literal>foo</literal>对象知道它是在哪个<literal>Session</literal>中被装入的。在一个旧session中开启一个新的数据库事务，会导致session获取一个新的连接，并恢复session的功能。将数据库事务提交，使得session从JDBC连接断开，并将此连接交还给连接池。在重新连接之后，要强制对你没有更新的数据进行一次版本检查，你可以对所有可能被其他事务修改过的对象，使用参数<literal>LockMode.READ</literal>来调用<literal>Session.lock()</literal>。你不用lock任何你<emphasis>正在</emphasis>更新的数据。一般你会在扩展的<literal>Session</literal>上设置<literal>FlushMode.MANUAL</literal>，因此只有最后一个数据库事务循环才会真正的吧整个对话中发生的修改发送到数据库。因此，只有这最后一次数据库事务才会包含<literal>flush()</literal>操作，然后在整个对话结束后，还要<literal>close()</literal>这个session。
             </para>
 
             <para>

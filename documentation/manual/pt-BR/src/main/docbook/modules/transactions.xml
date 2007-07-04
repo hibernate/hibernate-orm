@@ -829,7 +829,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
                 forçar uma checagem de versão em dados que você não está atualizando, você pode chamar 
                 <literal>Session.lock()</literal> com o <literal>LockMode.READ</literal> em todos os objetos 
                 que possam ter sido atualizados por uma outra transação. Você não necessita bloquear nenhum 
-                dado para atualizar. Geralmente você configuraria <literal>FlushMode.NEVER</literal> em uma
+                dado para atualizar. Geralmente você configuraria <literal>FlushMode.MANUAL</literal> em uma
                 <literal>Session</literal> estendida, de modo que somente o último ciclo da transação tenha
                 permissão de persistir todas as modificações feitas nesta conversação. Disso, somente esta última 
                 transação incluiria a operação <literal>flush()</literal> e então chamar também <literal>close()</literal>

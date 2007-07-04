@@ -937,7 +937,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
                 を呼び出すことができます。
                 更新して <emphasis>いる</emphasis> データをロックする必要はありません。
                 
-                通常、拡張 <literal>Session</literal> に <literal>FlushMode.NEVER</literal>
+                通常、拡張 <literal>Session</literal> に <literal>FlushMode.MANUAL</literal>
                 をセットします。
                 最後のデータベーストランザクションの周期でのみ、
                 対話の中で変更されたすべてを実際に永続化させるためです。

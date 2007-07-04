@@ -802,7 +802,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
                 force a version check on data  you aren't updating, you may call <literal>Session.lock()</literal>
                 with <literal>LockMode.READ</literal> on any objects that might have been updated by another
                 transaction. You don't need to lock any data that you <emphasis>are</emphasis> updating.
-                Usually you would set <literal>FlushMode.NEVER</literal> on an extended <literal>Session</literal>,
+                Usually you would set <literal>FlushMode.MANUAL</literal> on an extended <literal>Session</literal>,
                 so that only the last database transaction cycle is allowed to actually persist all
                 modifications made in this conversation. Hence, only this last database transaction
                 would include the <literal>flush()</literal> operation, and then also

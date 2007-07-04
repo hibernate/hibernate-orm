@@ -356,7 +356,7 @@ session.close();]]></programlisting>
         <programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
     .setProjection( Property.forName("weight").avg() );
 session.createCriteria(Cat.class)
-    .add( Property.forName("weight).gt(avgWeight) )
+    .add( Property.forName("weight").gt(avgWeight) )
     .list();]]></programlisting>
     
         <programlisting><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
@@ -373,7 +373,7 @@ session.createCriteria(Cat.class)
     .setProjection( Property.forName("weight").avg() )
     .add( Property.forName("cat2.sex").eqProperty("cat.sex") );
 session.createCriteria(Cat.class, "cat")
-    .add( Property.forName("weight).gt(avgWeightForSex) )
+    .add( Property.forName("weight").gt(avgWeightForSex) )
     .list();]]></programlisting>
 
     </sect1>

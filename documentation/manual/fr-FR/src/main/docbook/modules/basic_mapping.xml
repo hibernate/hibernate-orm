@@ -1707,7 +1707,7 @@
             <para>
                 Et cette association peut être rendue bidirectionnelle en ajoutant ceci au mapping de <literal>Person</literal> :
             </para>
-            <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
+            <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
         </sect2>
         
         <sect2 id="mapping-declaration-naturalid">

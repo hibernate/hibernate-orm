@@ -1742,7 +1742,7 @@
                 如果在<literal>Person</literal>的映射加入下面几句，这种关联就是双向的：
             </para>
             
-           <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
+           <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
 
         </sect2>
 

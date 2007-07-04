@@ -1776,7 +1776,7 @@
                                 그리고 이 연관은 다음을 <literal>Person</literal> 매핑에 추가함으로써 양방향이 될 수 있다:
             </para>
             
-           <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
+           <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
 
         </sect2>
 

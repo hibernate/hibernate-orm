@@ -1916,7 +1916,7 @@
                 以下の記述を <literal>Person</literal> のマッピングに追加することで双方向にすることができます：
             </para>
             
-           <programlisting><![CDATA[<one-to-one name"employee" class="Employee" property-ref="person"/>]]></programlisting>
+           <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
 
         </sect2>
         

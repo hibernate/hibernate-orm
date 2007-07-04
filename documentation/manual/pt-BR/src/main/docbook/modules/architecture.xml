@@ -350,7 +350,7 @@
             não é determinado mas um <literal>org.hibernate.transaction.TransactionManagerLookup</literal> 
             é configurado, Hibernate usará o <literal>org.hibernate.context.JTASessionContext</literal>.
             Tipicamente, o valor deste parâmetro nomearia apenas a classe de implementação para usar; 
-            para as duas implementações out-of-the-box, entretanto, há dois pequenos nomes correspondentes, 
+            para as duas implementações out-of-the-box, entretanto, há três pequenos nomes correspondentes, 
             "jta", "thread", and "managed".
         </para>
         

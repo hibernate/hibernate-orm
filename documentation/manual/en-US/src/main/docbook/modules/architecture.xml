@@ -345,7 +345,7 @@
             but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
             Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>.
             Typically, the value of this parameter would just name the implementation class to
-            use; for the three out-of-the-box implementations, however, there are two corresponding
+            use; for the three out-of-the-box implementations, however, there are three corresponding
             short names, "jta", "thread", and "managed".
         </para>
         

@@ -593,7 +593,7 @@ new SchemaValidator(cfg).validate();]]></programlisting>
         <fileset dir="src">
             <include name="**/*.hbm.xml"/>
         </fileset>
-    </schemaupdate>
+    </schemavalidator>
 </target>]]></programlisting>
 
         </sect2>

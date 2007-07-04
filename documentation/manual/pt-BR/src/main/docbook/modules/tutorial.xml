@@ -317,7 +317,7 @@ public class Event {
             <para>
                 Agora nós temos uma classe persistente e este arquivo de mapeamento no lugar. 
                 Está na hora de configurar o Hibernate. Antes de fazermos isso, iremos precisar de uma base de dados. 
-                O HSQL DB, um SQL DBMS feito em java, pode ser baixado através do site do HSQL DB. 
+                O HSQL DB, um SQL DBMS feito em java, pode ser baixado através do site do HSQL DB(http://hsqldb.org/). 
                 Atualmente, você só precisa baixar o <literal>hsqldb.jar</literal>. 
                 Coloque este arquivo no diretório da pasta de desenvolvimento <literal>lib/</literal>.
             </para>

@@ -323,7 +323,7 @@ public class Event {
             <para>
                 We now have a persistent class and its mapping file in place. It is time to configure
                 Hibernate. Before we do this, we will need a database. HSQL DB, a java-based SQL DBMS,
-                can be downloaded from the HSQL DB website. Actually, you only need the <literal>hsqldb.jar</literal>
+                can be downloaded from the HSQL DB website(http://hsqldb.org/). Actually, you only need the <literal>hsqldb.jar</literal>
                 from this download. Place this file in the <literal>lib/</literal> directory of the
                 development folder.
             </para>

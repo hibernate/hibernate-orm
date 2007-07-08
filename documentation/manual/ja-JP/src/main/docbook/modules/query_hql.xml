@@ -1056,7 +1056,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             実際に結果を返さなくてもクエリの結果数を数えることができます。:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             コレクションのサイズにより結果を並べ替えるためには以下のクエリを使用します。:
@@ -1123,7 +1123,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             コレクションを初期化せずにコレクションのサイズを得ることができます。: 
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

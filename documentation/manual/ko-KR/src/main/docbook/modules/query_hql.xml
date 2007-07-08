@@ -1032,7 +1032,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
                         당신은 실제로 질의 결과들을 반환하지 않고서 그것들(질의 결과들)의 개수를 카운트할 수  있다:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
                         콜렉션의 크기에 따라 결과를 순서(ordering)지우려면, 다음 질의를 사용하라:
@@ -1099,7 +1099,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
                         당신은 콜렉션을 초기화 하지 않고서 그것(콜렉션)의 크기를 찾을 수 있다:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

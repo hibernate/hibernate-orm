@@ -369,7 +369,7 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
-Iterator iter = session.iterate("from CatImpl as cat where cat.name='fritz'");
+Iterator iter = session.createQuery("from CatImpl as cat where cat.name='fritz'").iterate();
 Cat fritz = (Cat) iter.next();]]></programlisting>
         
         <para>

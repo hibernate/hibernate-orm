@@ -1014,7 +1014,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             你可以统计查询结果的数目而不必实际的返回他们：
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             若想根据一个集合的大小来进行排序，可以使用如下的语句：
@@ -1081,7 +1081,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             不用通过初始化，你就可以知道一个集合（Collection）的大小：
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

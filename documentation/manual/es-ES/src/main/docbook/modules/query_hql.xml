@@ -1031,7 +1031,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             Puedes contar el n&#x00fa;mero de resultados de una consulta sin devolverlos realmente:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             Para ordenar un resultado por el tama&#x00f1;o de una colecci&#x00f3;n, usa la siguiente consulta:
@@ -1099,7 +1099,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             Puedes hallar el tama&#x00f1;o de una colecci&#x00f3;n sin inicializarla:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

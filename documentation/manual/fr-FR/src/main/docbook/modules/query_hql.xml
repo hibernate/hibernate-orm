@@ -1074,7 +1074,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             Vous pouvez compter le nombre de résultats d'une requête sans les retourner :
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             Pour trier les résultats par la taille d'une collection, utilisez la requête suivante :
@@ -1142,7 +1142,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             Vous pouvez récupérer la taille d'une collection sans l'initialiser :
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

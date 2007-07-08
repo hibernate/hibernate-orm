@@ -1085,7 +1085,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             Pode-se contar o número de resultados da query, sem realmente retorna-los.
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue()]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             Para ordenar um resultado pelo tamanho de uma Collection, use a query a seguir.
@@ -1154,7 +1154,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             Pode-se achar o tamanho de uma Collection sem inicializa-la:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.iterate("select count(*) from ....").next() ).intValue();]]></programlisting>
+        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

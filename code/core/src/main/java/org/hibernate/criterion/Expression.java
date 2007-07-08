@@ -22,6 +22,7 @@ public final class Expression extends Restrictions {
 	 * parameters. Any occurrences of <tt>{alias}</tt> will be
 	 * replaced by the table alias.
 	 *
+	 * @deprecated use {@link org.hibernate.criterion.Restrictions#sqlRestriction(String, Object[], Type[])}
 	 * @param sql
 	 * @param values
 	 * @param types
@@ -35,6 +36,7 @@ public final class Expression extends Restrictions {
 	 * parameter. Any occurrences of <tt>{alias}</tt> will be replaced
 	 * by the table alias.
 	 *
+	 * @deprecated use {@link org.hibernate.criterion.Restrictions#sqlRestriction(String, Object, Type)}
 	 * @param sql
 	 * @param value
 	 * @param type
@@ -47,6 +49,7 @@ public final class Expression extends Restrictions {
 	 * Apply a constraint expressed in SQL. Any occurrences of <tt>{alias}</tt>
 	 * will be replaced by the table alias.
 	 *
+	 * @deprecated use {@link org.hibernate.criterion.Restrictions#sqlRestriction(String)}
 	 * @param sql
 	 * @return Criterion
 	 */

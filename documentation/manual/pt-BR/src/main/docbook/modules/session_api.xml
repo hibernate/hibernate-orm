@@ -1130,7 +1130,7 @@ sess.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    If the child object's lifespan is bounded by the lifespan of the of the parent
+                    If the child object's lifespan is bounded by the lifespan of the parent
                     object make it a <emphasis>life cycle object</emphasis> by specifying
                     <literal>cascade="all,delete-orphan"</literal>.
                 </para>

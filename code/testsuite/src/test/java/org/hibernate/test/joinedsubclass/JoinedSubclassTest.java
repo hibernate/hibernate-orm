@@ -11,8 +11,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -96,7 +96,7 @@ public class JoinedSubclassTest extends FunctionalTestCase {
 
 		if ( supportsRowValueConstructorSyntaxInInList() ) {
 			s.createCriteria(Person.class).add(
-					Expression.in("address", new Address[] { mark.getAddress(), joe.getAddress() } )
+					Restrictions.in("address", new Address[] { mark.getAddress(), joe.getAddress() } )
 			).list();
 		}
 

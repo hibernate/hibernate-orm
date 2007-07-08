@@ -13,7 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 
@@ -88,9 +88,9 @@ public class MapTest extends LegacyTestCase {
 		assertTrue( bag.size()==1 );
 
 		size = s.createCriteria("TestMap")
-			.add( Expression.eq("address", "bar") )
+			.add( Restrictions.eq("address", "bar") )
 				.createCriteria("parent")
-				.add( Expression.eq("name", "foobar") )
+				.add( Restrictions.eq("name", "foobar") )
 			.list()
 			.size();
 		assertTrue(size==1);

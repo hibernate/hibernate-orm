@@ -18,15 +18,15 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
@@ -195,7 +195,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		log.info( "Criteria query against Product..." );
 		List products = session.createCriteria( Product.class )
-		        .add( Expression.eq( "stockNumber", new Integer( 124 ) ) )
+		        .add( Restrictions.eq( "stockNumber", new Integer( 124 ) ) )
 		        .list();
 		assertEquals( "Incorrect product count", 1, products.size() );
 
@@ -273,7 +273,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		Product prod = ( Product ) session.createCriteria( Product.class )
 		        .setResultTransformer( new DistinctRootEntityResultTransformer() )
-		        .add( Expression.eq( "id", testData.prod1Id ) )
+		        .add( Restrictions.eq( "id", testData.prod1Id ) )
 		        .uniqueResult();
 
 		assertNotNull( prod );
@@ -413,7 +413,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		Session session = openSession();
 
 		List result = session.createCriteria( Product.class )
-		        .add( Expression.eq( "id", testData.prod1Id ) )
+		        .add( Restrictions.eq( "id", testData.prod1Id ) )
 		        .list();
 
 		Product prod = ( Product ) result.get( 0 );

@@ -16,7 +16,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -45,9 +45,9 @@ public class MultiTableTest extends LegacyTestCase {
 		s.flush();
 		Criteria c = s.createCriteria(Lower.class);
 		c.createCriteria("yetanother")
-			.add( Expression.isNotNull("id") )
+			.add( Restrictions.isNotNull("id") )
 			.createCriteria("another");
-		c.createCriteria("another").add( Expression.isNotNull("id") );
+		c.createCriteria("another").add( Restrictions.isNotNull("id") );
 		c.list();
 		t.commit();
 		s.close();
@@ -308,13 +308,13 @@ public class MultiTableTest extends LegacyTestCase {
 		assertTrue( s.createCriteria(SubMulti.class).list().size()==1 );
 		assertTrue(
 			s.createCriteria(SubMulti.class)
-				.add( Expression.lt("amount", new Float(0)) )
+				.add( Restrictions.lt("amount", new Float(0)) )
 				.list()
 				.size()==0
 		);
 		assertTrue(
 			s.createCriteria(SubMulti.class)
-				.add( Expression.ge("amount", new Float(0)) )
+				.add( Restrictions.ge("amount", new Float(0)) )
 				.list()
 				.size()==1
 		);

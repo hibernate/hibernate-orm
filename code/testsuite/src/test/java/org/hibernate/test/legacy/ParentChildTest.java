@@ -23,7 +23,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -232,17 +232,17 @@ public class ParentChildTest extends LegacyTestCase {
 
 		Criteria crit = s.createCriteria(Baz.class);
 		crit.createCriteria("topGlarchez")
-			.add( Expression.isNotNull("name") )
+			.add( Restrictions.isNotNull("name") )
 			.createCriteria("proxyArray")
-				.add( Expression.eqProperty("name", "name") )
-				.add( Expression.eq("name", "g2") )
-				.add( Expression.gt("x", new Integer(-666) ) );
+				.add( Restrictions.eqProperty("name", "name") )
+				.add( Restrictions.eq("name", "g2") )
+				.add( Restrictions.gt("x", new Integer(-666) ) );
 		crit.createCriteria("fooSet")
-			.add( Expression.isNull("null") )
-			.add( Expression.eq("string", "a string") )
-			.add( Expression.lt("integer", new Integer(-665) ) );
+			.add( Restrictions.isNull("null") )
+			.add( Restrictions.eq("string", "a string") )
+			.add( Restrictions.lt("integer", new Integer(-665) ) );
 		crit.createCriteria("fooArray")
-			.add( Expression.eq("string", "a string") )
+			.add( Restrictions.eq("string", "a string") )
 			.setLockMode(lockMode);
 
 		List list = crit.list();
@@ -258,13 +258,13 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		
-		list = s.createCriteria(Baz.class).add( Expression.isEmpty("fooSet") ).list();
+		list = s.createCriteria(Baz.class).add( Restrictions.isEmpty("fooSet") ).list();
 		assertEquals( list.size(), 0 );
 
-		list = s.createCriteria(Baz.class).add( Expression.isNotEmpty("fooSet") ).list();
+		list = s.createCriteria(Baz.class).add( Restrictions.isNotEmpty("fooSet") ).list();
 		assertEquals( new HashSet(list).size(), 1 );
 
-		list = s.createCriteria(Baz.class).add( Expression.sizeEq("fooSet", 2) ).list();
+		list = s.createCriteria(Baz.class).add( Restrictions.sizeEq("fooSet", 2) ).list();
 		assertEquals( new HashSet(list).size(), 1 );
 		
 		t.commit();
@@ -276,9 +276,9 @@ public class ParentChildTest extends LegacyTestCase {
 		crit = s.createCriteria(Baz.class)
 			.setLockMode(lockMode);
 		crit.createCriteria("topGlarchez")
-			.add( Expression.gt( "x", new Integer(-666) ) );
+			.add( Restrictions.gt( "x", new Integer(-666) ) );
 		crit.createCriteria("fooSet")
-			.add( Expression.isNull("null") );
+			.add( Restrictions.isNull("null") );
 		list = crit.list();
 
 		assertTrue( list.size()==4 );
@@ -286,17 +286,11 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
 		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
 
-		/*list = s.createCriteria(Baz.class)
-			.createCriteria("fooSet.foo.component.glarch")
-				.add( Expression.eq("name", "xxx") )
-			.add( Expression.eq("fooSet.foo.component.glarch.name", "xxx") )
-			.list();
-		assertTrue( list.size()==0 );*/
 		list = s.createCriteria(Baz.class)
 			.createCriteria("fooSet")
 				.createCriteria("foo")
 					.createCriteria("component.glarch")
-						.add( Expression.eq("name", "xxx") )
+						.add( Restrictions.eq("name", "xxx") )
 			.list();
 		assertTrue( list.size()==0 );
 
@@ -304,9 +298,9 @@ public class ParentChildTest extends LegacyTestCase {
 			.createAlias("fooSet", "foo")
 			.createAlias("foo.foo", "foo2")
 			.setLockMode("foo2", lockMode)
-			.add( Expression.isNull("foo2.component.glarch") )
+			.add( Restrictions.isNull("foo2.component.glarch") )
 			.createCriteria("foo2.component.glarch")
-				.add( Expression.eq("name", "xxx") )
+				.add( Restrictions.eq("name", "xxx") )
 			.list();
 		assertTrue( list.size()==0 );
 
@@ -318,16 +312,15 @@ public class ParentChildTest extends LegacyTestCase {
 
 		crit = s.createCriteria(Baz.class);
 		crit.createCriteria("topGlarchez")
-			.add( Expression.isNotNull("name") );
+			.add( Restrictions.isNotNull("name") );
 		crit.createCriteria("fooSet")
-			.add( Expression.isNull("null") );
+			.add( Restrictions.isNull("null") );
 
 		list = crit.list();
 		assertTrue( list.size()==2 );
 		baz = (Baz) crit.uniqueResult();
 		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
 		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
-		
 		
 		list = s.createCriteria(Child.class).setFetchMode("parent", FetchMode.JOIN).list();
 		
@@ -357,7 +350,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
-		assertTrue( s.createCriteria(Part.class).add( Expression.eq( "id", p1.getId() ) ).list().size()==1 );
+		assertTrue( s.createCriteria(Part.class).add( Restrictions.eq( "id", p1.getId() ) ).list().size()==1 );
 		assertTrue( s.createQuery("from Part").list().size()==1 );
 		assertTrue( s.createQuery("from Baz baz join baz.parts").list().size()==2 );
 		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();
@@ -388,7 +381,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		assertTrue( s.createCriteria(Part.class).list().size()==1 ); //there is a where condition on Part mapping
-		assertTrue( s.createCriteria(Part.class).add( Expression.eq( "id", p1.getId() ) ).list().size()==1 );
+		assertTrue( s.createCriteria(Part.class).add( Restrictions.eq( "id", p1.getId() ) ).list().size()==1 );
 		assertTrue( s.createQuery("from Part").list().size()==1 );
 		assertTrue( s.createQuery("from Baz baz join baz.moreParts").list().size()==2 );
 		baz = (Baz) s.createCriteria(Baz.class).uniqueResult();

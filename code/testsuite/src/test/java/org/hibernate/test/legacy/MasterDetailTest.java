@@ -18,7 +18,7 @@ import org.hibernate.Query;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -224,7 +224,7 @@ public class MasterDetailTest extends LegacyTestCase {
 			.uniqueResult();
 		assertTrue( m1.getOtherMaster()==m1 );
 		m1 = (Master) s.createCriteria(Master.class)
-			.add( Expression.eq("name", "foobar") )
+			.add( Restrictions.eq("name", "foobar") )
 			.uniqueResult();
 		assertTrue( m1==null );
 		m1 = (Master) s.createCriteria(Master.class)

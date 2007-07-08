@@ -40,15 +40,17 @@ import org.hibernate.classic.Session;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.connection.DriverManagerConnectionProvider;
 import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PointbaseDialect;
@@ -56,8 +58,6 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.RootClass;
@@ -1801,10 +1801,10 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 
 		List list = s.createCriteria(Foo.class)
-			.add( Expression.eq( "integer", f.getInteger() ) )
-			.add( Expression.eqProperty("integer", "integer") )
-			.add( Expression.like( "string", f.getString().toUpperCase() ).ignoreCase() )
-			.add( Expression.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
+			.add( Restrictions.eq( "integer", f.getInteger() ) )
+			.add( Restrictions.eqProperty("integer", "integer") )
+			.add( Restrictions.like( "string", f.getString().toUpperCase() ).ignoreCase() )
+			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
 			.setFetchMode("foo", FetchMode.JOIN)
 			.setFetchMode("baz", FetchMode.SELECT)
 			.setFetchMode("abstracts", FetchMode.JOIN)
@@ -1812,12 +1812,12 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( list.size()==1 && list.get(0)==f );
 
 		list = s.createCriteria(Foo.class).add(
-				Expression.disjunction()
-					.add( Expression.eq( "integer", f.getInteger() ) )
-					.add( Expression.like( "string", f.getString() ) )
-					.add( Expression.eq( "boolean", f.getBoolean() ) )
+				Restrictions.disjunction()
+					.add( Restrictions.eq( "integer", f.getInteger() ) )
+					.add( Restrictions.like( "string", f.getString() ) )
+					.add( Restrictions.eq( "boolean", f.getBoolean() ) )
 			)
-			.add( Expression.isNotNull("boolean") )
+			.add( Restrictions.isNotNull("boolean") )
 			.list();
 		assertTrue( list.size()==1 && list.get(0)==f );
 
@@ -1847,12 +1847,12 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "Example API without like did not work correctly, size was " + list.size(), list.size()==1 && list.get(0)==f );
 
 		list = s.createCriteria(Foo.class)
-			.add( Expression.or(
-				Expression.and(
-					Expression.eq( "integer", f.getInteger() ),
-					Expression.like( "string", f.getString() )
+			.add( Restrictions.or(
+					Restrictions.and(
+					Restrictions.eq( "integer", f.getInteger() ),
+					Restrictions.like( "string", f.getString() )
 				),
-				Expression.eq( "boolean", f.getBoolean() )
+				Restrictions.eq( "boolean", f.getBoolean() )
 			) )
 			.list();
 		assertTrue( list.size()==1 && list.get(0)==f );
@@ -1890,10 +1890,10 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		txn = s.beginTransaction();
 		list = s.createCriteria(Foo.class)
-			.add( Expression.eq( "integer", f.getInteger() ) )
-			.add( Expression.like( "string", f.getString() ) )
-			.add( Expression.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
-			.add( Expression.isNotNull("foo") )
+			.add( Restrictions.eq( "integer", f.getInteger() ) )
+			.add( Restrictions.like( "string", f.getString() ) )
+			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
+			.add( Restrictions.isNotNull("foo") )
 			.setFetchMode("foo", FetchMode.EAGER)
 			.setFetchMode("baz", FetchMode.LAZY)
 			.setFetchMode("component.glarch", FetchMode.LAZY)
@@ -4447,7 +4447,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( l.getCountryCode().equals("AU") );
 		assertTrue( l.getCity().equals("Melbourne") );
 		assertTrue( l.getLocale().equals( Locale.getDefault() ) );
-		assertTrue( s.createCriteria(Location.class).add( Expression.eq( "streetNumber", new Integer(300) ) ).list().size()==1 );
+		assertTrue( s.createCriteria(Location.class).add( Restrictions.eq( "streetNumber", new Integer(300) ) ).list().size()==1 );
 		s.connection().commit();
 		s.close();
 

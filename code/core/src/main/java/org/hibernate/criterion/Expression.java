@@ -4,10 +4,8 @@ package org.hibernate.criterion;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 
-
 /**
- * This class is semi-deprecated. Use <tt>Restrictions</tt>.
- *
+ * @deprecated Use <tt>Restrictions</tt>.
  * @see Restrictions
  * @author Gavin King
  */

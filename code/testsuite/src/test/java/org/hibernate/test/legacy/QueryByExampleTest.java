@@ -9,7 +9,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -59,7 +59,7 @@ public class QueryByExampleTest extends LegacyTestCase {
         Criteria crit = s.createCriteria(Componentizable.class);
         Example ex = Example.create(master).enableLike();
 
-        crit.add(Expression.or(Expression.not(ex), ex));
+        crit.add(Restrictions.or(Restrictions.not(ex), ex));
 
         List result = crit.list();
         assertNotNull(result);

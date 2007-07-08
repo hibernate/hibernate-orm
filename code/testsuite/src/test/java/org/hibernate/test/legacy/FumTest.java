@@ -31,14 +31,14 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
@@ -107,10 +107,9 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		Fum b = (Fum) s.createCriteria(Fum.class).add(
-			Expression.in("fum", new String[] { "a value", "no value" } )
+			Restrictions.in("fum", new String[] { "a value", "no value" } )
 		)
 		.uniqueResult();
-		//assertTrue( Hibernate.isInitialized( b.getMapComponent().getFummap() ) );
 		assertTrue( Hibernate.isInitialized( b.getMapComponent().getStringmap() ) );
 		assertTrue( b.getMapComponent().getFummap().size()==1 );
 		assertTrue( b.getMapComponent().getStringmap().size()==2 );
@@ -140,21 +139,21 @@ public class FumTest extends LegacyTestCase {
 		s.save(fum);
 
 		Criteria base = s.createCriteria(Fum.class)
-			.add( Expression.like("fum", "f", MatchMode.START) );
+			.add( Restrictions.like("fum", "f", MatchMode.START) );
 		base.createCriteria("fo")
-			.add( Expression.isNotNull("fum") );
+			.add( Restrictions.isNotNull("fum") );
 		base.createCriteria("friends")
-			.add( Expression.like("fum", "g%") );
+			.add( Restrictions.like("fum", "g%") );
 		List list = base.list();
 		assertTrue( list.size()==1 && list.get(0)==fum );
 
 		base = s.createCriteria(Fum.class)
-			.add( Expression.like("fum", "f%") )
+			.add( Restrictions.like("fum", "f%") )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
 		base.createCriteria("fo", "fo")
-			.add( Expression.isNotNull("fum") );
+			.add( Restrictions.isNotNull("fum") );
 		base.createCriteria("friends", "fum")
-			.add( Expression.like("fum", "g", MatchMode.START) );
+			.add( Restrictions.like("fum", "g", MatchMode.START) );
 		Map map = (Map) base.uniqueResult();
 
 		assertTrue(
@@ -165,11 +164,11 @@ public class FumTest extends LegacyTestCase {
 		);
 
 		base = s.createCriteria(Fum.class)
-			.add( Expression.like("fum", "f%") )
+			.add( Restrictions.like("fum", "f%") )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
 			.setFetchMode("friends", FetchMode.EAGER);
 		base.createCriteria("fo", "fo")
-			.add( Expression.eq( "fum", fum.getFo().getFum() ) );
+			.add( Restrictions.eq( "fum", fum.getFo().getFum() ) );
 		map = (Map) base.list().get(0);
 
 		assertTrue(
@@ -181,11 +180,11 @@ public class FumTest extends LegacyTestCase {
 		list = s.createCriteria(Fum.class)
 			.createAlias("friends", "fr")
 			.createAlias("fo", "fo")
-			.add( Expression.like("fum", "f%") )
-			.add( Expression.isNotNull("fo") )
-			.add( Expression.isNotNull("fo.fum") )
-			.add( Expression.like("fr.fum", "g%") )
-			.add( Expression.eqProperty("fr.id.short", "id.short") )
+			.add( Restrictions.like("fum", "f%") )
+			.add( Restrictions.isNotNull("fo") )
+			.add( Restrictions.isNotNull("fo.fum") )
+			.add( Restrictions.like("fr.fum", "g%") )
+			.add( Restrictions.eqProperty("fr.id.short", "id.short") )
 			.list();
 		assertTrue( list.size()==1 && list.get(0)==fum );
 		txn.commit();
@@ -194,11 +193,11 @@ public class FumTest extends LegacyTestCase {
 		s = openSession();
 		txn = s.beginTransaction();
 		base = s.createCriteria(Fum.class)
-			.add( Expression.like("fum", "f%") );
+			.add( Restrictions.like("fum", "f%") );
 		base.createCriteria("fo")
-			.add( Expression.isNotNull("fum") );
+			.add( Restrictions.isNotNull("fum") );
 		base.createCriteria("friends")
-			.add( Expression.like("fum", "g%") );
+			.add( Restrictions.like("fum", "g%") );
 		fum = (Fum) base.list().get(0);
 		assertTrue(  fum.getFriends().size()==2 );
 		s.delete(fum);
@@ -254,11 +253,11 @@ public class FumTest extends LegacyTestCase {
 		assertNotNull(fc.get("xam"));
 		
 		Criteria base = s.createCriteria(Fum.class, "fum")
-		.add( Expression.like("fum", "f%") )
+		.add( Restrictions.like("fum", "f%") )
 		.setResultTransformer(Transformers.aliasToBean(ABean.class))
 		.setFetchMode("friends", FetchMode.JOIN);
 		base.createCriteria("fo", "fo")
-		.add( Expression.eq( "fum", fum.getFo().getFum() ) );
+		.add( Restrictions.eq( "fum", fum.getFo().getFum() ) );
 		ABean map = (ABean) base.list().get(0);
 
 		assertTrue(

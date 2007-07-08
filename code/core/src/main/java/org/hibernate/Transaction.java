@@ -32,7 +32,7 @@ public interface Transaction {
 
 	/**
 	 * Flush the associated <tt>Session</tt> and end the unit of work (unless
-	 * we are in {@link FlushMode#NEVER}.
+	 * we are in {@link FlushMode#MANUAL}.
 	 * </p>
 	 * This method will commit the underlying transaction if and only
 	 * if the underlying transaction was initiated by this object.

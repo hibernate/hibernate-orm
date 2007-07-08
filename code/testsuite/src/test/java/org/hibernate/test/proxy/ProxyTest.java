@@ -325,7 +325,7 @@ public class ProxyTest extends FunctionalTestCase {
 		s.close();
 
 		s = openSession();
-		s.setFlushMode( FlushMode.NEVER );
+		s.setFlushMode( FlushMode.MANUAL );
 		t = s.beginTransaction();
 		// load the last container as a proxy
 		Container proxy = ( Container ) s.load( Container.class, lastContainerId );

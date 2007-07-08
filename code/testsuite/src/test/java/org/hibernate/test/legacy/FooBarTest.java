@@ -4442,7 +4442,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 		s = openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 		l = (Location) s.find("from Location l where l.countryCode = 'AU' and l.description='foo bar'").get(0);
 		assertTrue( l.getCountryCode().equals("AU") );
 		assertTrue( l.getCity().equals("Melbourne") );
@@ -4746,7 +4746,7 @@ public class FooBarTest extends LegacyTestCase {
  		s.close();
 
  		s = openSession();
- 		s.setFlushMode(FlushMode.NEVER);
+ 		s.setFlushMode(FlushMode.MANUAL);
 		t = s.beginTransaction();
 		Foo foo = (Foo) s.get(Foo.class, id);
 		t.commit();

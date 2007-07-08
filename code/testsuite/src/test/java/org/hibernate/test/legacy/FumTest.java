@@ -719,7 +719,7 @@ public class FumTest extends LegacyTestCase {
 		///////////////////////////////////////////////////////////////////////////
 		// Test insertions across serializations
 		Session s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 
 		Simple simple = new Simple();
 		simple.setAddress("123 Main St. Anytown USA");
@@ -751,7 +751,7 @@ public class FumTest extends LegacyTestCase {
 		///////////////////////////////////////////////////////////////////////////
 		// Test updates across serializations
 		s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 
 		simple = (Simple) s.get( Simple.class, new Long(10) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
@@ -773,7 +773,7 @@ public class FumTest extends LegacyTestCase {
 		///////////////////////////////////////////////////////////////////////////
 		// Test deletions across serializations
 		s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 
 		simple = (Simple) s.get( Simple.class, new Long(10) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
@@ -795,7 +795,7 @@ public class FumTest extends LegacyTestCase {
 		///////////////////////////////////////////////////////////////////////////
 		// Test collection actions across serializations
 		s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 
 		Fum fum = new Fum( fumKey("uss-fum") );
 		fum.setFo( new Fum( fumKey("uss-fo") ) );
@@ -824,7 +824,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 
 		s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 
 		assertTrue("the Fum.friends did not get saved", fum.getFriends().size() == 2);
@@ -842,7 +842,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 
 		s = getSessions().openSession();
-		s.setFlushMode(FlushMode.NEVER);
+		s.setFlushMode(FlushMode.MANUAL);
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 		assertTrue("the Fum.friends is not empty", fum.getFriends() == null || fum.getFriends().size() == 0);
 		s.connection().commit();

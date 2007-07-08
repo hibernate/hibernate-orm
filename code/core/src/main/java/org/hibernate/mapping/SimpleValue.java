@@ -260,6 +260,9 @@ public class SimpleValue implements KeyValue {
 		Type result = TypeFactory.heuristicType(typeName, typeParameters);
 		if (result==null) {
 			String msg = "Could not determine type for: " + typeName;
+			if(table != null){
+				msg += ", at table: " + table.getName();
+			}
 			if(columns!=null && columns.size()>0) {
 				msg += ", for columns: " + columns;
 			}

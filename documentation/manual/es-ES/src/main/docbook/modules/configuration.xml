@@ -601,7 +601,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             esta propiedad de configuraci&#x00f3;n.
                             <para>
                                 <emphasis role="strong">ej.</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

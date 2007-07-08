@@ -594,7 +594,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             will not need this configuration property.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

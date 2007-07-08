@@ -586,7 +586,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             ほとんどのアプリケーションに、この設定は必要ありません。
                             <para>
                                 <emphasis role="strong">例：</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

@@ -602,7 +602,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                            de configuration
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

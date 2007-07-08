@@ -600,7 +600,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             aplicações não irão necessitar desta propriedade de configuração
                             <para>
                                 <emphasis role="strong">Ex.</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

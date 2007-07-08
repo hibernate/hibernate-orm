@@ -591,7 +591,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             选择一个自定义的<literal>Batcher</literal>. 多数应用程序不需要这个配置属性.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
-                                <literal>classname.of.Batcher</literal>
+                                <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
                     </row>

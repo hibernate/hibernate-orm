@@ -394,12 +394,12 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex},
-           adddress.STREET AS {address.street},
-           adddress.CITY AS {address.city},
-           adddress.STATE AS {address.state},
-           adddress.ZIP AS {address.zip}
+           address.STREET AS {address.street},
+           address.CITY AS {address.city},
+           address.STATE AS {address.state},
+           address.ZIP AS {address.zip}
     FROM PERSON person
-    JOIN ADDRESS adddress
+    JOIN ADDRESS address
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
@@ -428,12 +428,12 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex},
-           adddress.STREET AS {address.street},
-           adddress.CITY AS {address.city},
-           adddress.STATE AS {address.state},
-           adddress.ZIP AS {address.zip}
+           address.STREET AS {address.street},
+           address.CITY AS {address.city},
+           address.STATE AS {address.state},
+           address.ZIP AS {address.zip}
     FROM PERSON person
-    JOIN ADDRESS adddress
+    JOIN ADDRESS address
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>

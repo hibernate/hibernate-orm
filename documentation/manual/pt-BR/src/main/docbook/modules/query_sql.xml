@@ -1,4 +1,4 @@
-ï»¿<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <chapter id="querysql" revision="2">
   <title>Native SQL</title>
 
@@ -425,12 +425,12 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex},
-           adddress.STREET AS {address.street},
-           adddress.CITY AS {address.city},
-           adddress.STATE AS {address.state},
-           adddress.ZIP AS {address.zip}
+           address.STREET AS {address.street},
+           address.CITY AS {address.city},
+           address.STATE AS {address.state},
+           address.ZIP AS {address.zip}
     FROM PERSON person
-    JOIN ADDRESS adddress
+    JOIN ADDRESS address
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
@@ -461,12 +461,12 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
            person.SEX AS {person.sex},
-           adddress.STREET AS {address.street},
-           adddress.CITY AS {address.city},
-           adddress.STATE AS {address.state},
-           adddress.ZIP AS {address.zip}
+           address.STREET AS {address.street},
+           address.CITY AS {address.city},
+           address.STATE AS {address.state},
+           address.ZIP AS {address.zip}
     FROM PERSON person
-    JOIN ADDRESS adddress
+    JOIN ADDRESS address
         ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
@@ -601,10 +601,10 @@ BEGIN
         <itemizedlist spacing="compact">
           <listitem>
             <para>            
-            A funÃ§Ã£p deve retornar um result set. O primeiro parÃ¢metro da procedure 
-            dever ser uma <literal>SAÃDA</literal> que retorne um result set. Isto Ã© feito 
-            usando o tipo a <literal>SYS_REFCURSOR</literal> no Oracle 9 ou 10.  No Oracle Ã© 
-            necessÃ¡rio  definir o tipo <literal>REF CURSOR</literal>, veja a documentaÃ§Ã£o do Oracle.
+            A funçãp deve retornar um result set. O primeiro parâmetro da procedure 
+            dever ser uma <literal>SAÍDA</literal> que retorne um result set. Isto é feito 
+            usando o tipo a <literal>SYS_REFCURSOR</literal> no Oracle 9 ou 10.  No Oracle é 
+            necessário  definir o tipo <literal>REF CURSOR</literal>, veja a documentação do Oracle.
             </para>
           </listitem>
         </itemizedlist>
@@ -615,16 +615,16 @@ BEGIN
           <listitem>
             <para>
             	A procedure deve retornar um result set. Veja que este servidor pode retornar 
-            	mÃºltiplos result sets e update counts. O Hibernate ira iterar os resultados e 
-            	pegar o primeiro resultado que Ã© o valor de retorno do result set. 
-            	O resto serÃ¡ descartado.
+            	múltiplos result sets e update counts. O Hibernate ira iterar os resultados e 
+            	pegar o primeiro resultado que é o valor de retorno do result set. 
+            	O resto será descartado.
             </para>
           </listitem>
 
           <listitem>
             <para>
-            Se vocÃª habilitar <literal>SET NOCOUNT ON</literal>  na sua procedure, ela 
-            provavelmente serÃ¡ mais eficiente. Mas, isto nÃ£o Ã© obrigatÃ³rio</para>
+            Se você habilitar <literal>SET NOCOUNT ON</literal>  na sua procedure, ela 
+            provavelmente será mais eficiente. Mas, isto não é obrigatório</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -642,9 +642,9 @@ BEGIN
     <literal>&lt;sql-delete&gt;</literal>, and
     <literal>&lt;sql-update&gt;</literal> override these strings:
   
-    	Hibernate3 pode usar SQL customizado para operaÃ§Ãµes de create, update e delete. 
-    	A persistÃªncia de classe e collection no hibernate jÃ¡ contem alguma strings 
-    	de configuraÃ§Ãµes (insertsql, deletesql, updatesql etc.). 
+    	Hibernate3 pode usar SQL customizado para operações de create, update e delete. 
+    	A persistência de classe e collection no hibernate já contem alguma strings 
+    	de configurações (insertsql, deletesql, updatesql etc.). 
     	O mapaemento das tags  
     	<literal>&lt;sql-insert&gt;</literal>,
 	<literal>&lt;sql-delete&gt;</literal>, e
@@ -663,13 +663,13 @@ BEGIN
 </class>]]></programlisting>
 
     <para>
-    O SQL Ã© executado diretamente no seu banco de dados, entÃ£o vocÃª pode usar qualquer 
+    O SQL é executado diretamente no seu banco de dados, então você pode usar qualquer 
     linguagem que quiser. Isto com certeza reduzira a portabilidade do seu mapeamento se 
-    vocÃª utilizar um SQL para um banco de dados especifico. 
+    você utilizar um SQL para um banco de dados especifico. 
     </para>
 
     <para>
-    	Stored Procedures sÃ£o suportadas se o atributo the 
+    	Stored Procedures são suportadas se o atributo the 
     	<literal>callable</literal> estiver ativado:
     </para>
 
@@ -684,22 +684,22 @@ BEGIN
 </class>]]></programlisting>
 
     <para>
-    A ordem de posiÃ§Ãµes dos parÃ¢metros sÃ£o vitais, pois eles devem estar na mesma seqÃ¼Ãªncia 
+    A ordem de posições dos parâmetros são vitais, pois eles devem estar na mesma seqüência 
     esperada pelo Hibernate.
     </para>
 
-    <para>VocÃª pode ver a ordem esperada ativando o debug logging no nÃ­vel 
-    <literal>org.hibernate.persister.entity</literal>. Com este nÃ­vel ativado, o Hibernate 
-    irÃ¡ imprimir o SQL estÃ¡tico que foi usado para create, update, delete, etc. 
-    Entidades. (Para ver a seqÃ¼Ãªncia esperada, lembre-se de nÃ£o incluir seu SQL 
-    customizado no arquivo de mapeamento, pois ele irÃ¡ sobreecreve o SQL 
-    estÃ¡tico gerado pelo Hibernate).
+    <para>Você pode ver a ordem esperada ativando o debug logging no nível 
+    <literal>org.hibernate.persister.entity</literal>. Com este nível ativado, o Hibernate 
+    irá imprimir o SQL estático que foi usado para create, update, delete, etc. 
+    Entidades. (Para ver a seqüência esperada, lembre-se de não incluir seu SQL 
+    customizado no arquivo de mapeamento, pois ele irá sobreecreve o SQL 
+    estático gerado pelo Hibernate).
     </para>
 
-    <para>As stored procedures sÃ£o na maioria dos casos (leia: melhor nÃ£o fazer) requeridas para 
+    <para>As stored procedures são na maioria dos casos (leia: melhor não fazer) requeridas para 
     retornar o numero de linhas inseridas/atualizadas/deletadas. O hibernate tem algumas 
-    verificaÃ§Ãµes em tempo de execuÃ§Ã£o para o sucesso da declaraÃ§Ã£o. Hibernate sempre registra 
-    o primeiro parÃ¢metro da declaraÃ§Ã£o como uma saÃ­da numÃ©rica para operaÃ§Ãµes CRUD.
+    verificações em tempo de execução para o sucesso da declaração. Hibernate sempre registra 
+    o primeiro parâmetro da declaração como uma saída numérica para operações CRUD.
     </para>
 
     <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
@@ -723,7 +723,7 @@ END updatePerson;]]>
     <title>SQL customizado para carga</title>
 
     <para>
-    VocÃª pode declarar sua prÃ³pria query SQL (ou HQL) para iniciar entidades:
+    Você pode declarar sua própria query SQL (ou HQL) para iniciar entidades:
     </para>
 
     <programlisting><![CDATA[<sql-query name="person">
@@ -735,8 +735,8 @@ END updatePerson;]]>
 </sql-query>]]></programlisting>
 
     <para>
-    Este Ã© apenas uma declaraÃ§Ã£o de query com nome, como discutido anteriormente. 
-    VocÃª pode referenciar esta query com nome em um mapeamento de classe:
+    Este é apenas uma declaração de query com nome, como discutido anteriormente. 
+    Você pode referenciar esta query com nome em um mapeamento de classe:
     </para>
 
     <programlisting><![CDATA[<class name="Person">
@@ -747,10 +747,10 @@ END updatePerson;]]>
     <loader query-ref="person"/>
 </class>]]></programlisting>
 
-    <para>Isto tambÃ©m funciona com stored procedures.
+    <para>Isto também funciona com stored procedures.
     </para>
 
-    <para>VocÃª pode tembÃ©m definir uma query para iniciar collection:
+    <para>Você pode tembém definir uma query para iniciar collection:
     </para>
 
     <programlisting><![CDATA[<set name="employments" inverse="true">

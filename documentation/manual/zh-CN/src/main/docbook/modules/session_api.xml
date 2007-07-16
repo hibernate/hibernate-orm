@@ -517,20 +517,16 @@ List cats = crit.list();]]></programlisting>
 				如果你选择使用Hibernate的API, 你必须把SQL别名用大括号包围起来:
             </para>            
 
-            <programlisting><![CDATA[List cats = session.createSQLQuery(
-    "SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list();]]></programlisting>
+            <programlisting><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list();]]></programlisting>
                 
             <programlisting><![CDATA[List cats = session.createSQLQuery(
     "SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, " +
            "{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... " +
-    "FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list()]]></programlisting>
-
+    "FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list()]]></programlisting>
 
             <para>
                 和Hibernate查询一样，SQL查询也可以包含命名参数和占位参数。

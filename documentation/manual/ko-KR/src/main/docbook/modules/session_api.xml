@@ -523,19 +523,16 @@ List cats = crit.list();]]></programlisting>
                                 중괄호들 속에 포함시켜야 한다:
             </para>
 
-            <programlisting><![CDATA[List cats = session.createSQLQuery(
-    "SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list();]]></programlisting>
+            <programlisting><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list();]]></programlisting>
                 
             <programlisting><![CDATA[List cats = session.createSQLQuery(
     "SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, " +
            "{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... " +
-    "FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list()]]></programlisting>
+    "FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list()]]></programlisting>
 
             <para>
                 SQL 질의들은 Hibernate 질의들처럼 명명된 파라미터들과 위치 파라미터들을 포함할 수도 있다. SQL 질의들에 대한 

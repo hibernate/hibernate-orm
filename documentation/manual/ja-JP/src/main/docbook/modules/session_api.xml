@@ -537,21 +537,16 @@ List cats = crit.list();]]></programlisting>
                  <literal>Connection</literal> を使用できることを覚えておきましょう。 もし、Hibernate
                 APIを使うのであれば、下記のようにSQLの別名を括弧でくくらなければなりません。 </para>
             
-            
-            <programlisting><![CDATA[List cats = session.createSQLQuery(
-    "SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list();]]></programlisting>
-            
-            
+            <programlisting><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list();]]></programlisting>
+                
             <programlisting><![CDATA[List cats = session.createSQLQuery(
     "SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, " +
            "{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... " +
-    "FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list()]]></programlisting>
+    "FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list()]]></programlisting>
             
             <para> 
                 SQLクエリは、Hibernateクエリと同じように、名前付きのパラメータと位置パラメータを持つことができます。

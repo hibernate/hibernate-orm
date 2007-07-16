@@ -580,19 +580,16 @@ List cats = crit.list();]]></programlisting>
                 Hibernate API, you must enclose SQL aliases in braces:
             </para>
 
-            <programlisting><![CDATA[List cats = session.createSQLQuery(
-    "SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list();]]></programlisting>
+            <programlisting><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list();]]></programlisting>
                 
             <programlisting><![CDATA[List cats = session.createSQLQuery(
     "SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, " +
            "{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... " +
-    "FROM CAT {cat} WHERE ROWNUM<10",
-    "cat",
-    Cat.class
-).list()]]></programlisting>
+    "FROM CAT {cat} WHERE ROWNUM<10")
+    .addEntity("cat", Cat.class)
+.list()]]></programlisting>
 
             <para>
                 SQL queries may contain named and positional parameters, just like Hibernate queries.

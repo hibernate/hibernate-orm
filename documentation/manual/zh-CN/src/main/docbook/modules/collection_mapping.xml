@@ -722,7 +722,7 @@ LinkedHashMap实现)。 它是在SQL查询中完成排序，而不是在内存�
 </class>
 
 <class name="Item">
-    <id name="id" column="CATEGORY_ID"/>
+    <id name="id" column="ITEM_ID"/>
     ...
 
     <!-- inverse end -->

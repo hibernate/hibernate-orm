@@ -312,8 +312,8 @@ while ( iter.hasNext() ) {
 
 while ( kittensAndMothers.hasNext() ) {
     Object[] tuple = (Object[]) kittensAndMothers.next();
-    Cat kitten  = tuple[0];
-    Cat mother  = tuple[1];
+    Cat kitten = (Cat) tuple[0];
+    Cat mother = (Cat) tuple[1];
     ....
 }]]></programlisting>
 

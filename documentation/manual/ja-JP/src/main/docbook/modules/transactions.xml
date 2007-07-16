@@ -858,7 +858,7 @@ Transaction t = session.beginTransaction();
 
 int oldVersion = foo.getVersion();
 session.load( foo, foo.getKey() ); // load the current state
-if ( oldVersion!=foo.getVersion ) throw new StaleObjectStateException();
+if ( oldVersion != foo.getVersion() ) throw new StaleObjectStateException();
 foo.setProperty("bar");
 
 t.commit();

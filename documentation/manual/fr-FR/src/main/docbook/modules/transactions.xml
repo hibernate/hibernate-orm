@@ -713,7 +713,7 @@ catch (RuntimeException e) {
             int oldVersion = foo.getVersion();
             session.load( foo, foo.getKey() ); // Charger l'état courant
 
-            if ( oldVersion!=foo.getVersion )
+            if ( oldVersion != foo.getVersion() )
                 throw new StaleObjectStateException();
 
             foo.setProperty("bar");

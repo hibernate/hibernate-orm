@@ -777,7 +777,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </class>
 
 <class name="Item">
-    <id name="id" column="CATEGORY_ID"/>
+    <id name="id" column="ITEM_ID"/>
     ...
 
     <!-- inverse end -->

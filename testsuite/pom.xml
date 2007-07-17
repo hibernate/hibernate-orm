@@ -3,16 +3,16 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-
+    
     <parent>
         <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-code</artifactId>
-        <version>3.3.0.beta1</version>
-        <relativePath>../pom.xml</relativePath>
+        <artifactId>hibernate-core-parent</artifactId>
+        <version>1</version>
     </parent>
-
+    
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-testsuite</artifactId>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hibernate Testsuite</name>
@@ -20,58 +20,62 @@
 
     <dependencies>
         <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${hibernate.core.version}</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-testing</artifactId>
-            <version>${hibernate.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-ehcache</artifactId>
-            <version>${hibernate.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-jbosscache</artifactId>
-            <version>${hibernate.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-oscache</artifactId>
-            <version>${hibernate.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-swarmcache</artifactId>
-            <version>${hibernate.core.version}</version>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-testing</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-ehcache</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-jbosscache</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-oscache</artifactId>
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-swarmcache</artifactId>
+            <version>${version}</version>
         </dependency>
         <!-- these are optional on core... :( -->
         <dependency>
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>3.4.GA</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
             <version>2.1_3</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>asm</groupId>
             <artifactId>asm-attrs</artifactId>
             <version>1.5.3</version>
-            <optional>true</optional>
         </dependency>
         <!-- optional dom4j dependency; needed here for dom4j (de)serialization -->
         <dependency>
@@ -95,7 +99,20 @@
                 <directory>src/test/resources</directory>
             </testResource>
         </testResources>
+
         <plugins>
+            <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-test-ext-plugin</artifactId>
+                <version>1.0.3</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>extend</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -111,28 +128,9 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>hsqldb</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <testResources>
-                    <testResource>
-                        <filtering>false</filtering>
-                        <directory>src/test/profile/hsqldb</directory>
-                    </testResource>
-                </testResources>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>hsqldb</groupId>
-                    <artifactId>hsqldb</artifactId>
-                    <version>1.8.0.2</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
+    <properties>
+        <test.extender.cfg>${basedir}/src/test/profile/hsqldb/hsqldb-env.xml</test.extender.cfg>
+	<test.extender.env>hsqldb</test.extender.env>
+    </properties>
 
 </project>

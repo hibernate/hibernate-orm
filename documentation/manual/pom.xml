@@ -3,86 +3,24 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-
+    
     <parent>
         <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-documentation</artifactId>
-        <version>3.3.0.beta1</version>
-        <relativePath>../pom.xml</relativePath>
+        <artifactId>hibernate-core-parent</artifactId>
+        <version>1</version>
     </parent>
-
+    
+    <groupId>org.hibernate</groupId>
     <artifactId>hibernate-manual</artifactId>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Hibernate Manual</name>
-    <description>The Hibernate reference manual</description>
+
+    <name>Hibernate Manual (aggregator)</name>
+    <description>The Hibernate reference manual (aggregator)</description>
 
     <modules>
         <module>en-US</module>
         <module>fr-FR</module>
     </modules>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.jboss.maven.plugins</groupId>
-                <artifactId>maven-jboss-docbook-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-docbook-xslt</artifactId>
-                        <version>0.1</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <sourceDocumentName>master.xml</sourceDocumentName>
-                    <formats>
-                        <format>
-                            <formatName>pdf</formatName>
-                            <stylesheetResource>/standard/fopdf.xsl</stylesheetResource>
-                            <finalName>hibernate_reference.pdf</finalName>
-                        </format>
-                        <format>
-                            <formatName>html</formatName>
-                            <stylesheetResource>/standard/html.xsl</stylesheetResource>
-                            <finalName>index.html</finalName>
-                        </format>
-                    </formats>
-                    <xincludeSupported>true</xincludeSupported>
-                    <options>
-                        <xincludeSupported>true</xincludeSupported>
-                        <xmlTransformerType>saxon</xmlTransformerType>
-                        <transformerParameters>
-                            <property>
-                                <name>custom.titlepage.img</name>
-                                <value>${basedir}/src/main/resources/shared/images/hibernate_logo_a.png</value>
-                            </property>
-                        </transformerParameters>
-                    </options>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-<!-- report plugin is currently hosed
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.jboss.maven.plugin</groupId>
-                <artifactId>jboss-docbook-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </reporting>
--->
-    <properties>
-        <masterTranslation>en-US</masterTranslation>
-    </properties>
 
 </project>

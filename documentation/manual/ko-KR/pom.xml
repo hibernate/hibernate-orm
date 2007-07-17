@@ -3,17 +3,20 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-
+    
     <parent>
         <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-manual</artifactId>
-        <version>3.3.0.beta1</version>
-        <relativePath>../pom.xml</relativePath>
+        <artifactId>hibernate-manual-parent</artifactId>
+        <version>1</version>
     </parent>
-
+    
+    <groupId>org.hibernate</groupId>
     <artifactId>hibernate-manual-${translation}</artifactId>
-    <packaging>pom</packaging>
+    <version>3.3.0-SNAPSHOT</version>
+    <packaging>jdocbook</packaging>
+    
     <name>Hibernate Manual (${translation})</name>
+    <description>The Hibernate reference manual (${translation})</description>
 
     <properties>
         <translation>ko-KR</translation>

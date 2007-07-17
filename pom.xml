@@ -4,88 +4,57 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core-parent</artifactId>
+        <version>1</version>
+    </parent>
+    
     <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-parent</artifactId>
+    <artifactId>hibernate</artifactId>
     <packaging>pom</packaging>
-    <version>3.3.0.beta1</version>
+    <version>3.3.0-SNAPSHOT</version>
 
-    <name>Hibernate Parent</name>
-    <description>The parent POM for all Hibernate Core modules.</description>
-    <url>http://hibernate.org</url>
-
-    <issueManagement>
-        <system>jira</system>
-        <url>http://opensource.atlassian.com/projects/hibernate/browse/HHH</url>
-    </issueManagement>
-
-    <ciManagement>
-        <system>cruisecontrol</system>
-        <url>http://cruisecontrol.jboss.com/cc/</url>
-        <notifiers>
-            <notifier>
-                <type>mail</type>
-                <address>hibernate-dev@lists.jboss.org</address>
-            </notifier>
-        </notifiers>
-    </ciManagement>
-
-    <mailingLists>
-        <mailingList>
-            <name>Hibernate Announcements</name>
-            <post>hibernate-announce@lists.jboss.org</post>
-            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</subscribe>
-            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</unsubscribe>
-            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
-        </mailingList>
-        <mailingList>
-            <name>Hibernate Commit Notificatons</name>
-            <post>hibernate-commits@lists.jboss.org</post>
-            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</subscribe>
-            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</unsubscribe>
-            <archive>http://lists.jboss.org/pipermail/hibernate-commits/</archive>
-        </mailingList>
-        <mailingList>
-            <name>Hibernate Developers</name>
-            <post>hibernate-dev@lists.jboss.org</post>
-            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</subscribe>
-            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</unsubscribe>
-            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
-            <otherArchives>
-                <otherArchive>http://www.mail-archive.com/hibernate-dev%40lists.jboss.org/index.html</otherArchive>
-            </otherArchives>
-        </mailingList>
-        <mailingList>
-            <name>Hibernate Issue Notifications</name>
-            <post>hibernate-issues@lists.jboss.org</post>
-            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</subscribe>
-            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</unsubscribe>
-            <archive>http://lists.jboss.org/pipermail/hibernate-issues/</archive>
-        </mailingList>
-    </mailingLists>
-
-    <licenses>
-        <license>
-            <name>GNU Lesser General Public License</name>
-            <url>http://www.gnu.org/copyleft/lesser.html</url>
-            <comments>See discussion at http://hibernate.org/356.html for more details.</comments>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+    <name>Hibernate Core Aggregator</name>
+    <description>Aggregator of the Hibernate Core modules.</description>
 
     <scm>
-        <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/</developerConnection>
-        <tag></tag>
-        <url>http://fisheye.jboss.com/viewrep/Hibernate</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
     </scm>
 
     <modules>
-        <module>code</module>
+        <module>core</module>
+        <module>cache-ehcache</module>
+        <module>cache-jbosscache</module>
+        <module>cache-jbosscache2</module>
+        <module>cache-oscache</module>
+        <module>cache-swarmcache</module>
+        <module>connection-c3p0</module>
+        <module>connection-proxool</module>
+        <module>jmx</module>
+        <module>testing</module>
+        <module>testsuite</module>
+        <module>eg</module>
+<!-- Need to scope bytecode providers first
+        <module>bytecode-cglib</module>
+        <module>bytecode-javassist</module>
+-->
         <module>documentation</module>
     </modules>
-
-    <properties>
-        <hibernate.core.version>${version}</hibernate.core.version>
-    </properties>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.0-beta-6</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

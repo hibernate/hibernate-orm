@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<environments>
+    <environment name="hsqldb">
+        <testResources>
+            <testResource>
+                <directory>${basedir}/src/test/profile/hsqldb</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>hibernate.properties</include>
+                </includes>
+            </testResource>
+        </testResources>
+        <dependencies>
+            <dependency>
+                <groupId>hsqldb</groupId>
+                <artifactId>hsqldb</artifactId>
+                <version>1.8.0.2</version>
+            </dependency>
+        </dependencies>
+    </environment>
+</environments>

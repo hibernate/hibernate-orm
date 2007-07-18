@@ -95,7 +95,30 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
             You may also use <literal>persist()</literal> instead of <literal>save()</literal>,
             with the semantics defined in the EJB3 early draft.
         </para>
-        
+
+        <itemizedlist spacing="compact">
+            <listitem>
+                <para>
+                    <literal>persist()</literal> makes a transient instance persistent. 
+                    However, it doesn't guarantee that the identifier value will be assigned to 
+                    the persistent instance immediately, the assignment might happen at flush time. 
+                    <literal>persist()</literal> also guarantees that it will not execute an 
+                    <literal>INSERT</literal> statement if it is called outside of transaction 
+                    boundaries. This is useful in long-running conversations with an extended 
+                    Session/persistence context.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>save()</literal> does guarantee to return an identifier. If an INSERT 
+                    has to be executed to get the identifier ( e.g. "identity" generator, not 
+                    "sequence"), this INSERT happens immediately, no matter if you are inside or 
+                    outside of a transaction. This is problematic in a long-running conversation  
+                    with an extended Session/persistence context.
+                </para>
+            </listitem>
+        </itemizedlist>        
+
         <para>
             Alternatively, you may assign the identifier using an overloaded version
             of <literal>save()</literal>.

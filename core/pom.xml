@@ -88,6 +88,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antlr-plugin</artifactId>
+<!--
+    This is how we should define dep on antlr...
+                <dependencies>
+                    <dependency>
+                        <groupId>antlr</groupId>
+                        <artifactId>antlr</artifactId>
+                        <version>2.7.6</version>
+                    </dependency>
+                </dependencies>
+-->
                 <configuration>
                     <grammars>hql.g,hql-sql.g,sql-gen.g</grammars>
                 </configuration>

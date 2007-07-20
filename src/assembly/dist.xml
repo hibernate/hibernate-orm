@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Steve Ebersole
+  -->
+<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.1.0-SNAPSHOT.xsd">
+
+    <!--
+        Produces a dist-style bundle similar to what previous (non-mavenized) versions of
+        Hibernate did.
+    -->
+
+    <id>dist</id>
+    <formats>
+        <format>zip</format>
+        <format>tar.gz</format>
+    </formats>
+
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <includeSiteDirectory>true</includeSiteDirectory>
+
+    <files>
+        <file>
+            <source>lgpl.txt</source>
+        </file>
+        <file>
+            <!-- todo : bundle only current changelog?  that's supportable as a generated artifact...  -->
+            <!-- maven-changelog-plugin may already support this (^^) ... -->
+            <source>changelog.txt</source>
+        </file>
+    </files>
+
+    <fileSets>
+        <fileSet>
+            <outputDirectory>sources</outputDirectory>
+            <useDefaultExcludes>true</useDefaultExcludes>
+            <excludes>
+                <exclude>**/target/**</exclude>
+            </excludes>
+        </fileSet>
+        <!-- ugh! -->
+        <fileSet>
+            <directory>documentation/manual/en-US/target/docbook</directory>
+            <outputDirectory>manual/en-US</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>documentation/manual/fr-FR/target/docbook</directory>
+            <outputDirectory>manual/fr-FR</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <moduleSets>
+        <!-- Handle the "code" related modules -->
+        <moduleSet>
+            <!-- this setting makes sure that sub modules of documentation are not picked up here -->
+            <includeSubModules>false</includeSubModules>
+            <includes>
+                <include>org.hibernate:*</include>
+            </includes>
+            <excludes>
+                <!-- documentation handled in separate moduleSet -->
+                <exclude>org.hibernate:hibernate-documentation</exclude>
+                <!-- not included in the dist bundle -->
+                <exclude>org.hibernate:hibernate-testsuite</exclude>
+                <!-- not included in the dist bundle (for now; eventually will become part of documentation/tutorial) -->
+                <exclude>org.hibernate:hibernate-eg</exclude>
+            </excludes>
+            <binaries>
+                <unpack>false</unpack>
+                <includeDependencies>false</includeDependencies>
+                <!-- drop version from JAR file name -->
+                <outputFileNameMapping>${artifactId}.${extension}</outputFileNameMapping>
+                <dependencySets>
+                    <dependencySet>
+                        <outputDirectory>lib</outputDirectory>
+                        <includes>
+                            <include>*:jar:*</include>
+                        </includes>
+                        <excludes>
+                            <exclude>org.hibernate:*</exclude>
+                            <exclude>*:sources</exclude>
+                            <exclude>*:javadoc</exclude>
+                            <!-- stuff jbosscache's pom pulls in -->
+                            <exclude>c3p0:c3p0:jar:0.9.0.4</exclude>
+                            <exclude>commons-logging:commons-logging:jar:1.1</exclude>
+                            <exclude>findbugs:annotations:*</exclude>
+                            <exclude>apache-httpclient:commons-httpclient:*</exclude>
+                            <exclude>apache-slide:*</exclude>
+                            <exclude>jdbm:jdbm:*</exclude>
+                            <exclude>org.beanshell:bsh:*</exclude>
+                            <exclude>sleepycat:je:*</exclude>
+                        </excludes>
+                    </dependencySet>
+                </dependencySets>
+            </binaries>
+        </moduleSet>
+    </moduleSets>
+
+</assembly>

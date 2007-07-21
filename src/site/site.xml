@@ -1,0 +1,35 @@
+<project name="Hibernate Core">
+
+    <bannerLeft>
+        <name>Hibernate Core Project</name>
+        <src>images/hibernate_logo.png</src>
+        <href>http://hibernate.org</href>
+    </bannerLeft>
+    
+    <version position="left"/>
+    <publishDate position="navigation-bottom" format="yyyy-MM-dd"/>
+
+    <poweredBy>
+        <logo name="Maven" href="http://maven.apache.org/" img="images/maven-button-4.png"/>
+    </poweredBy>
+
+    <body>
+        <head>
+            <link rel="shortcut icon" href="images/favicon.ico"/>
+        </head>
+
+        <links>
+            <item name="Hibernate" href="http://hibernate.org"/>
+            <item name="JBoss" href="http://jboss.org"/>
+            <item name="Red Hat" href="http://redhat.com"/>
+        </links>
+
+        <menu name="Overview">
+            <item name="Introduction" href="index.html"/>
+        </menu>
+
+        <menu ref="reports"/>
+    </body>
+</project> 
+
+        

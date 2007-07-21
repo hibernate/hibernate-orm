@@ -13,9 +13,17 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-h2 {
+
+/*
+ * Apply the colors taken from the Hibernate logo in various places
+ * thoughout the generated site pages.
+ *
+ * brown : #aea477
+ * gray  : #59666c
+ */
+
+h1, h2, h3, h4, h5, h6 {
     color: #aea477;
-    /*color: #c2b585;*/
 }
 
 #navcolumn h5 {

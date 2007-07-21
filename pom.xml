@@ -61,7 +61,7 @@
                 <executions>
                     <execution>
                         <id>assemble</id>
-                        <phase>site</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>

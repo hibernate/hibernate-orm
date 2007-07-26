@@ -104,7 +104,7 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-test-ext-plugin</artifactId>
-                <version>1.0.3</version>
+                <version>1.1.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -128,9 +128,248 @@
         </plugins>
     </build>
 
-    <properties>
-        <test.extender.cfg>${basedir}/src/test/profile/hsqldb/hsqldb-env.xml</test.extender.cfg>
-	<test.extender.env>hsqldb</test.extender.env>
-    </properties>
+    <!-- Set up profiles defining test environments -->
+    <profiles>
+        <!-- HSQLDB is the default (eventually move to H2) -->
+        <profile>
+            <id>hsqldb</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>hsqldb</groupId>
+                    <artifactId>hsqldb</artifactId>
+                    <version>1.8.0.2</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/hsqldb</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The H2 test envionment -->
+        <profile>
+            <id>h2</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.h2database</groupId>
+                    <artifactId>h2database</artifactId>
+                    <version>1.0.20061217</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/h2</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!--
+            Profiles naming db instances in the Red Hat QA/QE lab
+        -->
+
+        <!-- The MySQL5 test envionment -->
+        <profile>
+            <id>mysql5</id>
+            <dependencies>
+                <dependency>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                    <version>5.0.5</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/mysql5</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The PostgreSQL test envionment -->
+        <profile>
+            <id>pgsql8</id>
+            <dependencies>
+                <dependency>
+                    <groupId>postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>8.2-504</version>
+                    <classifier>jdbc3</classifier>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/pgsql8</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The Oracle9i test envionment -->
+        <profile>
+            <id>oracle9i</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.oracle</groupId>
+                    <artifactId>ojdbc14</artifactId>
+                    <!-- use the 10g drivers which are surprisingly largely bug free -->
+                    <version>10.0.2.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/oracle9i</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The Oracle10g test envionment -->
+        <profile>
+            <id>oracle10g</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.oracle</groupId>
+                    <artifactId>ojdbc14</artifactId>
+                    <!-- use the 10g drivers which are surprisingly largely bug free -->
+                    <version>10.0.2.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/oracle10g</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The DB2 8.x test envionment -->
+        <profile>
+            <id>db2-8</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.ibm</groupId>
+                    <artifactId>ojdbc14</artifactId>
+                    <version>10.0.2.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/db2-8</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The Sybase 12 test envionment -->
+        <profile>
+            <id>sybase12</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sybase</groupId>
+                    <artifactId>jconnect</artifactId>
+                    <version>6.0.5</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/sybase12</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The SQLServer2005 (jTDS) test envionment -->
+        <profile>
+            <id>sqlserver-jtds</id>
+            <dependencies>
+                <dependency>
+                    <groupId>net.sourceforge.jtds</groupId>
+                    <artifactId>jtds</artifactId>
+                    <version>1.2</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/sqlserver2005/jtds</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+        <!-- The SQLServer2005 (MS JDBC) test envionment -->
+        <profile>
+            <id>sqlserver-msjdbc</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.microsoft.sqlserver</groupId>
+                    <artifactId>msjdbc</artifactId>
+                    <version>1.1</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <testResources>
+                    <testResource>
+                        <directory>${basedir}/src/test/profile/rh-qa/sqlserver2005/msjdbc</directory>
+                        <filtering>false</filtering>
+                        <includes>
+                            <include>hibernate.properties</include>
+                        </includes>
+                    </testResource>
+                </testResources>
+            </build>
+        </profile>
+
+    </profiles>
 
 </project>

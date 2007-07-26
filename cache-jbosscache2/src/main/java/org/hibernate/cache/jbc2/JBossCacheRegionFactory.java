@@ -25,6 +25,7 @@ import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.jbc2.builder.InvalidationCacheInstanceManager;
+import org.hibernate.cache.jbc2.collection.CollectionRegionImpl;
 import org.hibernate.cache.jbc2.entity.EntityRegionImpl;
 import org.hibernate.cfg.Settings;
 
@@ -74,7 +75,7 @@ public class JBossCacheRegionFactory implements RegionFactory {
 			String regionName,
 			Properties properties,
 			CacheDataDescription metadata) throws CacheException {
-		return null;
+		return new CollectionRegionImpl( cacheInstanceManager.getCollectionCacheInstance(), regionName, metadata );
 	}
 
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {

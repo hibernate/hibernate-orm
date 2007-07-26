@@ -203,9 +203,4 @@ public interface EntityRegionAccessStrategy {
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.Region}
 	 */
 	public void evictAll() throws CacheException;
-
-	/**
-	 * Clean up all resources.
-	 */
-	public void destroy();
 }

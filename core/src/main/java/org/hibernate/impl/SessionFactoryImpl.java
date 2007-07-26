@@ -772,7 +772,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		while ( iter.hasNext() ) {
 			EntityPersister p = (EntityPersister) iter.next();
 			if ( p.hasCache() ) {
-				p.getCacheAccessStrategy().destroy();
+				p.getCacheAccessStrategy().getRegion().destroy();
 			}
 		}
 
@@ -780,7 +780,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		while ( iter.hasNext() ) {
 			CollectionPersister p = (CollectionPersister) iter.next();
 			if ( p.hasCache() ) {
-				p.getCacheAccessStrategy().destroy();
+				p.getCacheAccessStrategy().getRegion().destroy();
 			}
 		}
 

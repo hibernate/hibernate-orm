@@ -16,22 +16,25 @@
 package org.hibernate.cache.jbc2.builder;
 
 import java.util.Properties;
-
 import javax.transaction.TransactionManager;
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.DefaultCacheFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jboss.cache.Cache;
+import org.jboss.cache.DefaultCacheFactory;
 
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
+import org.hibernate.cache.jbc2.util.CacheModeHelper;
 import org.hibernate.cfg.Settings;
+import org.hibernate.util.PropertiesHelper;
 
 /**
- * A {@link org.hibernate.cache.jbc2.CacheInstanceManager} implementation where we use a single cache instance
+ * A {@link CacheInstanceManager} implementation where we use a single cache instance
  * we assume to be configured for invalidation if operating on a cluster.  Under that
  * assumption, we can store all data into the same {@link Cache} instance.
+ * <p/>
+ * todo : this is built on the assumption that JBC clustered invalidation is changed to keep the "cache node" around on the other "cluster nodes"
  *
  * @author Steve Ebersole
  */
@@ -77,6 +80,9 @@ public class InvalidationCacheInstanceManager implements CacheInstanceManager {
 	 * {@inheritDoc}
 	 */
 	public Cache getQueryCacheInstance() {
+		if ( CacheModeHelper.isClusteredInvalidation( cache ) ) {
+			throw new CacheException( "Query cache not supported for clustered invalidation" );
+		}
 		return cache;
 	}
 
@@ -84,6 +90,9 @@ public class InvalidationCacheInstanceManager implements CacheInstanceManager {
 	 * {@inheritDoc}
 	 */
 	public Cache getTimestampsCacheInstance() {
+		if ( CacheModeHelper.isClusteredInvalidation( cache ) ) {
+			throw new CacheException( "Query cache not supported for clustered invalidation" );
+		}
 		return cache;
 	}
 

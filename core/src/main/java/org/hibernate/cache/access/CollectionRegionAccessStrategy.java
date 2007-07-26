@@ -1,7 +1,5 @@
 package org.hibernate.cache.access;
 
-import java.util.Comparator;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
 
@@ -148,9 +146,4 @@ public interface CollectionRegionAccessStrategy {
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.Region}
 	 */
 	public void evictAll() throws CacheException;
-
-	/**
-	 * Clean up all resources.
-	 */
-	public void destroy();
 }

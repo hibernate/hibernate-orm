@@ -13,59 +13,70 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-package org.hibernate.cache.jbc2.entity;
+package org.hibernate.cache.jbc2.collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.CacheException;
 
 /**
- * This defines the strategy for transactional access to enity data in JBossCache using its 2.x APIs
- * <p/>
- * read-only access to a JBossCache really is still transactional, just with
- * the extra semantic or guarentee that we will not update data.
+ * todo : implement
  *
  * @author Steve Ebersole
  */
-public class ReadOnlyAccess extends TransactionalAccess {
-	private static final Log log = LogFactory.getLog( ReadOnlyAccess.class );
+public class TransactionalAccess implements CollectionRegionAccessStrategy {
+	private static final Log log = LogFactory.getLog( TransactionalAccess.class );
 
-	public ReadOnlyAccess(EntityRegionImpl region) {
-		super( region );
+	private final CollectionRegionImpl region;
+
+	public TransactionalAccess(CollectionRegionImpl region) {
+		this.region = region;
+	}
+
+	public CollectionRegion getRegion() {
+		return region;
+	}
+
+	public Object get(Object key, long txTimestamp) throws CacheException {
+		return null;
+	}
+
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+		return false;
+	}
+
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+			throws CacheException {
+		return false;
 	}
 
 	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
+		return null;
 	}
 
 	public SoftLock lockRegion() throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only region" );
+		return null;
 	}
 
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		log.error( "Illegal attempt to edit read only item" );
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {
-		log.error( "Illegal attempt to edit read only region" );
 	}
 
-	public boolean update(
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
+	public void remove(Object key) throws CacheException {
 	}
 
-	public boolean afterUpdate(
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
+	public void removeAll() throws CacheException {
+	}
+
+	public void evict(Object key) throws CacheException {
+	}
+
+	public void evictAll() throws CacheException {
 	}
 }

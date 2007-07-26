@@ -13,7 +13,7 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-package org.hibernate.cache.jbc2.entity;
+package org.hibernate.cache.jbc2.collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +32,7 @@ import org.hibernate.cache.CacheException;
 public class ReadOnlyAccess extends TransactionalAccess {
 	private static final Log log = LogFactory.getLog( ReadOnlyAccess.class );
 
-	public ReadOnlyAccess(EntityRegionImpl region) {
+	public ReadOnlyAccess(CollectionRegionImpl region) {
 		super( region );
 	}
 

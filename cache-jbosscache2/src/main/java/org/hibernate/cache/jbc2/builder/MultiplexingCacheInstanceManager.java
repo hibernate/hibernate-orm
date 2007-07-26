@@ -30,9 +30,11 @@ import org.hibernate.util.PropertiesHelper;
 
 /**
  * Here we build separate {@link Cache} instances for each type of region, but
- * using the jgroups multiplexer under the covers to re-use the same group comm
- * stack.
- *
+ * using the jgroups multiplexer under the covers to re-use the same group
+ * communication stack.
+ * <p/>
+ * todo : this can get simplified once JBC implemants their "configuration factory" (the stuff akin to channel factory)
+ * 
  * @author Steve Ebersole
  */
 public class MultiplexingCacheInstanceManager implements CacheInstanceManager {

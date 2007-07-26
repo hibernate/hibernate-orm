@@ -63,6 +63,14 @@ public abstract class BasicRegionAdapter implements Region {
 		return regionName;
 	}
 
+	public Cache getCacheInstance() {
+		return jbcCache;
+	}
+
+	public Fqn getRegionFqn() {
+		return regionFqn;
+	}
+
 	public void destroy() throws CacheException {
 		try {
 			// NOTE : this is being used from the process of shutting down a

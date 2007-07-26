@@ -13,32 +13,28 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-package org.hibernate.cache.jbc2.entity;
+package org.hibernate.cache.jbc2.collection;
 
 import org.jboss.cache.Cache;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.EntityRegion;
+import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.jbc2.TransactionalDataRegionAdapter;
 
 /**
- * Defines the behavior of the entity cache regions for JBossCache.
+ * Defines the behavior of the collection cache regions for JBossCache.
  *
  * @author Steve Ebersole
  */
-public class EntityRegionImpl extends TransactionalDataRegionAdapter implements EntityRegion {
-
-	public EntityRegionImpl(Cache jbcCache, String regionName, CacheDataDescription metadata) {
+public class CollectionRegionImpl extends TransactionalDataRegionAdapter implements CollectionRegion {
+	public CollectionRegionImpl(Cache jbcCache, String regionName, CacheDataDescription metadata) {
 		super( jbcCache, regionName, metadata );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		if ( AccessType.READ_ONLY.equals( accessType ) ) {
 			return new ReadOnlyAccess( this );
 		}

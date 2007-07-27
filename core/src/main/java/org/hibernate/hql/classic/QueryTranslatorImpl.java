@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -63,8 +63,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private final String queryIdentifier;
 	private final String queryString;
 
-	private final Map typeMap = new SequencedHashMap();
-	private final Map collections = new SequencedHashMap();
+	private final Map typeMap = new LinkedHashMap();
+	private final Map collections = new LinkedHashMap();
 	private List returnedTypes = new ArrayList();
 	private final List fromTypes = new ArrayList();
 	private final List scalarTypes = new ArrayList();
@@ -77,7 +77,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private final List scalarSelectTokens = new ArrayList();
 	private final List whereTokens = new ArrayList();
 	private final List havingTokens = new ArrayList();
-	private final Map joins = new SequencedHashMap();
+	private final Map joins = new LinkedHashMap();
 	private final List orderByTokens = new ArrayList();
 	private final List groupByTokens = new ArrayList();
 	private final Set querySpaces = new HashSet();

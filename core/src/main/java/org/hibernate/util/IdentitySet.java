@@ -1,23 +1,36 @@
 //$Id: IdentitySet.java 8807 2005-12-09 15:27:05Z epbernard $
 package org.hibernate.util;
 
-import java.util.Set;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Set;
 
 /**
- * Set implementation that use == instead of equals() as its comparison mechanism
- * that base its implementation of IdentityMap
- * 
+ * Set implementation that use == instead of equals() as its comparison
+ * mechanism.  This is achieved by internally using an IdentityHashMap.
+ *
  * @author Emmanuel Bernard
  */
 public class IdentitySet implements Set {
-	private Map map;
 	private static final Object DUMP_VALUE = new Object();
 
+	private final IdentityHashMap map;
+
+	/**
+	 * Create an IdentitySet with default sizing.
+	 */
 	public IdentitySet() {
-		this.map = IdentityMap.instantiate( 10 );
+		this.map = new IdentityHashMap();
+	}
+
+	/**
+	 * Create an IdentitySet with the given sizing.
+	 *
+	 * @param sizing The sizing of the set to create.
+	 */
+	public IdentitySet(int sizing) {
+		this.map = new IdentityHashMap( sizing );
 	}
 
 	public int size() {
@@ -41,11 +54,11 @@ public class IdentitySet implements Set {
 	}
 
 	public Object[] toArray(Object[] a) {
-		return map.entrySet().toArray(a);
+		return map.entrySet().toArray( a );
 	}
 
 	public boolean add(Object o) {
-		return map.put( o, DUMP_VALUE) == null;
+		return map.put( o, DUMP_VALUE ) == null;
 	}
 
 	public boolean remove(Object o) {
@@ -55,7 +68,9 @@ public class IdentitySet implements Set {
 	public boolean containsAll(Collection c) {
 		Iterator it = c.iterator();
 		while ( it.hasNext() ) {
-			if ( ! map.containsKey( it.next() ) ) return false;
+			if ( !map.containsKey( it.next() ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -64,7 +79,9 @@ public class IdentitySet implements Set {
 		Iterator it = c.iterator();
 		boolean changed = false;
 		while ( it.hasNext() ) {
-			if ( this.add( it.next() ) ) changed = true;
+			if ( this.add( it.next() ) ) {
+				changed = true;
+			}
 		}
 		return changed;
 	}
@@ -78,7 +95,9 @@ public class IdentitySet implements Set {
 		Iterator it = c.iterator();
 		boolean changed = false;
 		while ( it.hasNext() ) {
-			if ( this.remove( it.next() ) ) changed = true;
+			if ( this.remove( it.next() ) ) {
+				changed = true;
+			}
 		}
 		return changed;
 	}

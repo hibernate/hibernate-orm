@@ -7,11 +7,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.collections.SequencedHashMap;
 
 /**
  * A <tt>Map</tt> where keys are compared by object identity,
@@ -26,22 +25,31 @@ public final class IdentityMap implements Map {
 
 	/**
 	 * Return a new instance of this class, with an undefined
-	 * iteration order
+	 * iteration order.
 	 *
+	 * @param size The size of the map
 	 * @return Map
 	 */
 	public static Map instantiate(int size) {
-		return new IdentityMap( new HashMap(size) );
+		return new IdentityMap( new HashMap( size ) );
 	}
 
 	/**
 	 * Return a new instance of this class, with iteration
-	 * order defined by the order that entries were added
+	 * order defined as the order in which entries were added
+	 *
+	 * @param size The size of the map to create
+	 * @return
 	 */
 	public static Map instantiateSequenced(int size) {
-		return new IdentityMap( new SequencedHashMap(size) );
+		return new IdentityMap( new LinkedHashMap( size ) );
 	}
 
+	/**
+	 * Private ctor used in serialization.
+	 *
+	 * @param underlyingMap The delegate map.
+	 */
 	private IdentityMap(Map underlyingMap) {
 		map = underlyingMap;
 		dirty = true;

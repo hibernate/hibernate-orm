@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
@@ -2610,14 +2609,11 @@ public final class HbmBinder {
 	}
 
 	public static java.util.Map getParameterTypes(Element queryElem) {
-		java.util.Map result = new SequencedHashMap();
+		java.util.Map result = new java.util.LinkedHashMap();
 		Iterator iter = queryElem.elementIterator("query-param");
 		while ( iter.hasNext() ) {
 			Element element = (Element) iter.next();
-			result.put(
-					element.attributeValue("name"),
-					element.attributeValue("type") 
-				);
+			result.put( element.attributeValue("name"), element.attributeValue("type") );
 		}
 		return result;
 	}

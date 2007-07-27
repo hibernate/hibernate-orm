@@ -4,9 +4,9 @@ package org.hibernate.engine;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
@@ -30,12 +30,12 @@ public class BatchFetchQueue {
 	 * elegible for batch-fetching.
 	 * <p/>
 	 * Even though this is a map, we only use the keys.  A map was chosen in
-	 * order to utilize a {@link SequencedHashMap} to maintain sequencing
+	 * order to utilize a {@link LinkedHashMap} to maintain sequencing
 	 * as well as uniqueness.
 	 * <p/>
 	 * TODO : this would be better as a SequencedReferenceSet, but no such beast exists!
 	 */
-	private final Map batchLoadableEntityKeys = new SequencedHashMap(8);
+	private final Map batchLoadableEntityKeys = new LinkedHashMap(8);
 
 	/**
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the

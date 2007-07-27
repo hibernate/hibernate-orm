@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -30,7 +30,7 @@ public class Table implements RelationalModel, Serializable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map columns = new SequencedHashMap();
+	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
 	private Map indexes = new HashMap();

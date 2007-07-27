@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.LinkedHashMap;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -49,11 +49,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final String rootSQLAlias;
 	private int aliasCount = 0;
 
-	private final Map criteriaEntityNames = new SequencedHashMap();
+	private final Map criteriaEntityNames = new LinkedHashMap();
 	private final Map criteriaSQLAliasMap = new HashMap();
 	private final Map aliasCriteriaMap = new HashMap();
-	private final Map associationPathCriteriaMap = new SequencedHashMap();
-	private final Map associationPathJoinTypesMap = new SequencedHashMap();
+	private final Map associationPathCriteriaMap = new LinkedHashMap();
+	private final Map associationPathJoinTypesMap = new LinkedHashMap();
 
 	private final SessionFactoryImplementor sessionFactory;
 

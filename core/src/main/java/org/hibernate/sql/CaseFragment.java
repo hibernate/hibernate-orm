@@ -2,10 +2,9 @@
 package org.hibernate.sql;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.hibernate.util.StringHelper;
-
-import org.apache.commons.collections.SequencedHashMap;
 
 /**
  * Abstract SQL case fragment renderer
@@ -17,7 +16,7 @@ public abstract class CaseFragment {
 
 	protected String returnColumnName;
 
-	protected Map cases = new SequencedHashMap();
+	protected Map cases = new LinkedHashMap();
 
 	public CaseFragment setReturnColumnName(String returnColumnName) {
 		this.returnColumnName = returnColumnName;

@@ -3,8 +3,8 @@ package org.hibernate.sql;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
-import org.apache.commons.collections.SequencedHashMap;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LiteralType;
 
@@ -17,7 +17,7 @@ public class Insert {
 	private Dialect dialect;
 	private String tableName;
 	private String comment;
-	private Map columns = new SequencedHashMap();
+	private Map columns = new LinkedHashMap();
 
 	public Insert(Dialect dialect) {
 		this.dialect = dialect;

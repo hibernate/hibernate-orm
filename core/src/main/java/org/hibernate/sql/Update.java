@@ -3,12 +3,11 @@ package org.hibernate.sql;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LiteralType;
 import org.hibernate.util.StringHelper;
-
-import org.apache.commons.collections.SequencedHashMap;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
@@ -24,8 +23,8 @@ public class Update {
 	private String assignments;
 	private String comment;
 
-	private Map columns = new SequencedHashMap();
-	private Map whereColumns = new SequencedHashMap();
+	private Map columns = new LinkedHashMap();
+	private Map whereColumns = new LinkedHashMap();
 	
 	private Dialect dialect;
 	

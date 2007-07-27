@@ -1,6 +1,6 @@
 package org.hibernate.util;
 
-import org.apache.commons.collections.LRUMap;
+import org.apache.commons.collections.map.LRUMap;
 
 import java.io.Serializable;
 import java.io.IOException;

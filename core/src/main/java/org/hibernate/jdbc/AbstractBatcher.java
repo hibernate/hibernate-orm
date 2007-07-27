@@ -20,9 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.pretty.Formatter;
-import org.hibernate.util.GetGeneratedKeysHelper;
 import org.hibernate.util.JDBCExceptionReporter;
-import org.hibernate.util.NamedGeneratedKeysHelper;
 
 /**
  * Manages prepared statements and batching.
@@ -492,10 +490,10 @@ public abstract class AbstractBatcher implements Batcher {
 			}
 		}
 		else if ( useGetGeneratedKeys ) {
-			result = GetGeneratedKeysHelper.prepareStatement( conn, sql );
+			result = conn.prepareStatement( sql, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 		else if ( namedGeneratedKeys != null ) {
-			result = NamedGeneratedKeysHelper.prepareStatement( conn, sql, namedGeneratedKeys );
+			result = conn.prepareStatement( sql, namedGeneratedKeys );
 		}
 		else {
 			if ( callable ) {

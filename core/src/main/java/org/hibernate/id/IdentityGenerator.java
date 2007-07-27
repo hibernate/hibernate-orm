@@ -15,7 +15,6 @@ import org.hibernate.id.insert.InsertSelectIdentityInsert;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.util.GetGeneratedKeysHelper;
 
 
 /**
@@ -72,7 +71,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
 			return IdentifierGeneratorFactory.getGeneratedIdentity(
-					GetGeneratedKeysHelper.getGeneratedKey( insert ),
+					insert.getGeneratedKeys(),
 			        persister.getIdentifierType()
 			);
 		}

@@ -7,7 +7,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.sql.Insert;
-import org.hibernate.util.NamedGeneratedKeysHelper;
 import org.hibernate.type.Type;
 import org.hibernate.engine.SessionImplementor;
 import org.apache.commons.logging.Log;
@@ -79,7 +78,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
 			return IdentifierGeneratorFactory.getGeneratedIdentity(
-					NamedGeneratedKeysHelper.getGeneratedKey( insert ),
+					insert.getGeneratedKeys(),
 			        getPersister().getIdentifierType()
 			);
 		}

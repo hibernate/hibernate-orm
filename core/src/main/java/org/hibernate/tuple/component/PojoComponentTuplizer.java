@@ -1,25 +1,25 @@
 //$Id: PojoComponentTuplizer.java 9619 2006-03-15 00:12:47Z steve.ebersole@jboss.com $
 package org.hibernate.tuple.component;
 
-import java.lang.reflect.Method;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 
-import org.hibernate.HibernateException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.tuple.component.AbstractComponentTuplizer;
-import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.PojoInstantiator;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.bytecode.ReflectionOptimizer;
+import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BasicProxyFactory;
+import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
+import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.PojoInstantiator;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * A {@link ComponentTuplizer} specific to the pojo entity mode.
@@ -76,6 +76,9 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	public Object[] getPropertyValues(Object component) throws HibernateException {
+		if ( component == BackrefPropertyAccessor.UNKNOWN ) {
+			return new Object[ propertySpan ];
+		}
 		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return optimizer.getAccessOptimizer().getPropertyValues( component );
 		}

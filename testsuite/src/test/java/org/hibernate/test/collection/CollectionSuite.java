@@ -9,6 +9,7 @@ import org.hibernate.test.collection.list.PersistentListTest;
 import org.hibernate.test.collection.map.PersistentMapTest;
 import org.hibernate.test.collection.original.CollectionTest;
 import org.hibernate.test.collection.set.PersistentSetTest;
+import org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest;
 
 /**
  * Suite of collection (i.e. PersistentCollection) related tests
@@ -25,6 +26,7 @@ public class CollectionSuite {
 		suite.addTest( PersistentMapTest.suite() );
 		suite.addTest( CollectionTest.suite() );
 		suite.addTest( PersistentSetTest.suite() );
+		suite.addTest( BackrefCompositeMapKeyTest.suite() );
 		return suite;
 	}
 

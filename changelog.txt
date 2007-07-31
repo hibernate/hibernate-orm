@@ -6,7 +6,53 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
-Changes in version 3.2.4 (2007.05.18)
+Changes in version 3.2.5 (2007.07.31)
+-------------------------------------------
+
+** Bug
+    * [HHH-1116] - batch-size typo
+    * [HHH-1561] - Missing " in Documentation for H3, Chapter 15.8
+    * [HHH-1569] - Immutable Natural Id check fails with ArrayIndexOutOfBounds in some cases
+    * [HHH-1694] - Documentation Outdated: "10.4.4. Queries in native SQL"
+    * [HHH-2180] - minordocumentation error in hbm xml
+    * [HHH-2201] - session.iterate() does not exist
+    * [HHH-2267] - A copy/paste mistake in the documentation for <schemavalidator> ant task
+    * [HHH-2334] - Documentation error in section 5.1.3
+    * [HHH-2420] - Error in 2.5. Contextual Sessions
+    * [HHH-2502] - The second level caching documentation states that ehcache is not distributed.
+    * [HHH-2631] - Leaking PreparedStatement and ResultSet via CollectionLoadContext instances maintained in Map collectionLoadContexts in LoadContexts
+    * [HHH-2649] - Batcher configuration parameter incorrectly documented
+    * [HHH-2711] - PropertyAccessException with backref and <composite-map-key/>
+    * [HHH-2713] - duplicated phrase in docs "of the of the"
+    * [HHH-2714] - Three typos in code examples
+    * [HHH-2719] - adddress --> address
+    * [HHH-2720] - Monetory --> Monetary
+
+** Improvement
+    * [HHH-1022] - incomplete documentation in _README.txt in the lib directory
+    * [HHH-1682] - Improve the description of differences between save() and persist()
+    * [HHH-2048] - Incomplete MappingException at org.hibernate.mapping.SimpleValue
+    * [HHH-2417] - Update book on Hibernate reference
+    * [HHH-2418] - Refer HSQL DB website in chapter 1.2.3
+    * [HHH-2487] - Typo in "5.1.7. version (optional)"
+    * [HHH-2550] - Update API Class in 10.4.3. Criteria queries
+    * [HHH-2662] - Workaround PostgreSQL issues in testsuite
+    * [HHH-2663] - Map java.sql.Types.REAL to Hibernate FloatType for auto-discovery stuff
+    * [HHH-2665] - Split Oracle9Dialect into Oracle9iDialect and Oracle10gDialect
+
+** Patch
+    * [HHH-2520] - Miscellaneous config doc spelling fixes
+    * [HHH-2630] - Hibernate Dialect is not auto-detected for Sybase ASE and DB2 (Shelley McGowan)
+    * [HHH-2758] - Patch IngresDialect based on certification
+
+** Task
+    * [HHH-2551] - Deprecate org.hibernate.criterion.Expression
+    * [HHH-2566] - Replace usages of FlushMode.NEVER with FlushMode.MANUAL
+    * [HHH-2567] - Update reference to use FlushMode.MANUAL
+    * [HHH-2568] - Hibernate javadoc overview refering wrong classes and packages
+
+
+Changes in version 3.2.4.sp1 (2007.05.18)
 -------------------------------------------
 
 ** Bug

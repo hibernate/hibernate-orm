@@ -43,16 +43,16 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
 		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "date" );
-		registerColumnType( Types.TIMESTAMP, "date" );
-		registerColumnType( Types.BLOB, "long byte" );
-		registerColumnType( Types.CLOB, "long varchar" );
+		registerColumnType( Types.TIME, "time with time zone" );
+		registerColumnType( Types.TIMESTAMP, "timestamp with time zone" );
+		registerColumnType( Types.BLOB, "blob" );
+		registerColumnType( Types.CLOB, "clob" );
 
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
 		registerFunction( "atan", new StandardSQLFunction( "atan", Hibernate.DOUBLE ) );
 		registerFunction( "bit_add", new StandardSQLFunction( "bit_add" ) );
 		registerFunction( "bit_and", new StandardSQLFunction( "bit_and" ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length" ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "octet_length(hex(?1))*4" ) );
 		registerFunction( "bit_not", new StandardSQLFunction( "bit_not" ) );
 		registerFunction( "bit_or", new StandardSQLFunction( "bit_or" ) );
 		registerFunction( "bit_xor", new StandardSQLFunction( "bit_xor" ) );
@@ -101,7 +101,7 @@ public class IngresDialect extends Dialect {
 		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", Hibernate.DOUBLE ) );
 		registerFunction( "substring", new SQLFunctionTemplate( Hibernate.STRING, "substring(?1 FROM ?2 FOR ?3)" ) );
 		registerFunction( "system_user", new NoArgSQLFunction( "system_user", Hibernate.STRING, false ) );
-		registerFunction( "trim", new StandardSQLFunction( "trim", Hibernate.STRING ) );
+		//registerFunction( "trim", new StandardSQLFunction( "trim", Hibernate.STRING ) );
 		registerFunction( "unhex", new StandardSQLFunction( "unhex", Hibernate.STRING ) );
 		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
 		registerFunction( "uppercase", new StandardSQLFunction( "uppercase" ) );
@@ -168,6 +168,10 @@ public class IngresDialect extends Dialect {
 	 */
 	public String getSequenceNextValString(String sequenceName) {
 		return "select nextval for " + sequenceName;
+	}
+
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return sequenceName + ".nextval";
 	}
 
 	/**
@@ -289,4 +293,13 @@ public class IngresDialect extends Dialect {
 	public boolean supportsSubselectAsInPredicateLHS() {
 		return false;
 	}
+
+	public boolean supportsEmptyInList() {
+		return false;
+	}
+
+	public boolean supportsExpectedLobUsagePattern () {
+		return false;
+	}
 }
+

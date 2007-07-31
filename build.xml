@@ -99,6 +99,9 @@
         <exclude name="**/*.hbm.xml" />
     </patternset>
 
+    <!-- Define default test suite parameters -->
+    <property name="hibernate.junit.forkmode" value="perBatch"/>
+    <property name="hibernate.junit.timeout" value="2147483647"/>
 
     <!-- ################################################################## -->
     <!-- ############################# Tasks ############################## -->
@@ -283,7 +286,7 @@
             <pathelement path="${dir.props}"/>
         </path>
 
-        <junit printsummary="yes" dir="${basedir}" maxmemory="256M" fork="yes" forkmode="perBatch">
+        <junit printsummary="yes" dir="${basedir}" maxmemory="256M" fork="yes" forkmode="${hibernate.junit.forkmode}" timeout="${hibernate.junit.timeout}">
 			<jvmarg value="-Dhibernate.test.validatefailureexpected=${hibernate.test.validatefailureexpected}"/>
 			<classpath>
                 <fileset refid="fs.lib" />
@@ -311,7 +314,7 @@
 
     <target name="junit.instrument.cglib" depends="instrument.cglib">
         <mkdir dir="${dir.out.junit}"/>
-		<junit printsummary="yes" maxmemory="256M" fork="yes">
+		<junit printsummary="yes" maxmemory="256M" fork="yes" timeout="${hibernate.junit.timeout}">
 			<jvmarg value="-Dhibernate.test.validatefailureexpected=${hibernate.test.validatefailureexpected}"/>
 			<classpath>
                 <fileset refid="fs.lib" />
@@ -333,7 +336,7 @@
 
     <target name="junit.instrument.javassist" depends="instrument.javassist">
         <mkdir dir="${dir.out.junit}"/>
-		<junit printsummary="yes" maxmemory="256M" fork="yes">
+		<junit printsummary="yes" maxmemory="256M" fork="yes" timeout="${hibernate.junit.timeout}">
 			<jvmarg value="-Dhibernate.test.validatefailureexpected=${hibernate.test.validatefailureexpected}"/>
 			<classpath>
                 <fileset refid="fs.lib" />
@@ -357,7 +360,7 @@
 	<target name="junitsingle" depends="cleantestdb,compiletest" description="Run a single test suite (requires testname and jar.driver properties)">
         <delete dir="${dir.out.junit}"/>
         <mkdir dir="${dir.out.junit}"/>
-        <junit printsummary="yes" fork="yes" haltonfailure="yes" dir="${basedir}">
+        <junit printsummary="yes" fork="yes" haltonfailure="yes" dir="${basedir}" timeout="${hibernate.junit.timeout}">
 			<classpath>
                 <fileset refid="fs.lib" />
                 <path refid="path.jdbc" />

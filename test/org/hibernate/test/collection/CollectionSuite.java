@@ -3,6 +3,7 @@ package org.hibernate.test.collection;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.hibernate.test.collection.backref.map.compkey.BackrefCompositeMapKeyTest;
 import org.hibernate.test.collection.bag.PersistentBagTest;
 import org.hibernate.test.collection.idbag.PersistentIdBagTest;
 import org.hibernate.test.collection.list.PersistentListTest;
@@ -25,6 +26,7 @@ public class CollectionSuite {
 		suite.addTest( PersistentMapTest.suite() );
 		suite.addTest( CollectionTest.suite() );
 		suite.addTest( PersistentSetTest.suite() );
+		suite.addTest( BackrefCompositeMapKeyTest.suite() );
 		return suite;
 	}
 

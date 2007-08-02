@@ -7,58 +7,65 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 
-
 public final class PropertiesHelper {
 
 	private static final String PLACEHOLDER_START = "${";
 
+	public static String getString(String propertyName, Properties properties, String defaultValue) {
+		String value = extractPropertyValue( propertyName, properties );
+		return value == null ? defaultValue : value;
+	}
+
+	private static String extractPropertyValue(String propertyName, Properties properties) {
+		String value = properties.getProperty( propertyName );
+		if ( value == null ) {
+			return null;
+		}
+		value = value.trim();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+		return value;
+	}
+
 	public static boolean getBoolean(String property, Properties properties) {
-		String setting = properties.getProperty(property);
-		return setting != null && Boolean.valueOf( setting.trim() ).booleanValue();
+		return getBoolean( property, properties, false );
 	}
 
-	public static boolean getBoolean(String property, Properties properties, boolean defaultValue) {
-		String setting = properties.getProperty(property);
-		return setting==null ? defaultValue : Boolean.valueOf( setting.trim() ).booleanValue();
+	public static boolean getBoolean(String propertyName, Properties properties, boolean defaultValue) {
+		String value = extractPropertyValue( propertyName, properties );
+		return value == null ? defaultValue : Boolean.valueOf( value ).booleanValue();
 	}
 
-	public static int getInt(String property, Properties properties, int defaultValue) {
-		String propValue = properties.getProperty(property);
-		return propValue==null ? defaultValue : Integer.parseInt( propValue.trim() );
+	public static int getInt(String propertyName, Properties properties, int defaultValue) {
+		String value = extractPropertyValue( propertyName, properties );
+		return value == null ? defaultValue : Integer.parseInt( value );
 	}
 
-	public static String getString(String property, Properties properties, String defaultValue) {
-		String propValue = properties.getProperty(property);
-		return propValue==null ? defaultValue : propValue;
+	public static Integer getInteger(String propertyName, Properties properties) {
+		String value = extractPropertyValue( propertyName, properties );
+		return value == null ? null : Integer.valueOf( value );
 	}
 
-	public static Integer getInteger(String property, Properties properties) {
-		String propValue = properties.getProperty(property);
-		return propValue==null ? null : Integer.valueOf( propValue.trim() );
-	}
-
-	public static Map toMap(String property, String delim, Properties properties) {
+	public static Map toMap(String propertyName, String delim, Properties properties) {
 		Map map = new HashMap();
-		String propValue = properties.getProperty(property);
-		if (propValue!=null) {
-			StringTokenizer tokens = new StringTokenizer(propValue, delim);
+		String value = extractPropertyValue( propertyName, properties );
+		if ( value != null ) {
+			StringTokenizer tokens = new StringTokenizer( value, delim );
 			while ( tokens.hasMoreTokens() ) {
-				map.put(
-					tokens.nextToken(),
-				    tokens.hasMoreElements() ? tokens.nextToken() : ""
-				);
+				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
 			}
 		}
 		return map;
 	}
 
-	public static String[] toStringArray(String property, String delim, Properties properties) {
-		return toStringArray( properties.getProperty(property), delim );
+	public static String[] toStringArray(String propertyName, String delim, Properties properties) {
+		return toStringArray( extractPropertyValue( propertyName, properties ), delim );
 	}
 
-	public static String[] toStringArray(String propValue, String delim) {
-		if (propValue!=null) {
-			return StringHelper.split(delim, propValue);
+	public static String[] toStringArray(String stringForm, String delim) {
+		if ( stringForm != null ) {
+			return StringHelper.split( delim, stringForm );
 		}
 		else {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
@@ -73,9 +80,9 @@ public final class PropertiesHelper {
 	 * @return cloned and masked properties
 	 */
 	public static Properties maskOut(Properties props, String key) {
-		Properties clone = (Properties) props.clone();
-		if (clone.get(key) != null) {
-			clone.setProperty(key, "****");
+		Properties clone = ( Properties ) props.clone();
+		if ( clone.get( key ) != null ) {
+			clone.setProperty( key, "****" );
 		}
 		return clone;
 	}
@@ -145,5 +152,6 @@ public final class PropertiesHelper {
 	}
 
 
-	private PropertiesHelper() {}
+	private PropertiesHelper() {
+	}
 }

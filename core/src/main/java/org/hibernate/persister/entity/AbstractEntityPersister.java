@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Comparator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -100,7 +100,7 @@ public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
 		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
-	private static final Log log = LogFactory.getLog( AbstractEntityPersister.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractEntityPersister.class );
 
 	public static final String ENTITY_CLASS = "class";
 

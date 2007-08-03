@@ -7,8 +7,8 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.NamingHelper;
 import org.hibernate.util.StringHelper;
@@ -21,7 +21,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 
-	private static final Log log = LogFactory.getLog( AbstractJndiBoundCacheProvider.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractJndiBoundCacheProvider.class );
 	private Object cache;
 
 	protected void prepare(Properties properties) {

@@ -4,8 +4,8 @@ package org.hibernate.hql.ast.tree;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines a top-level AST node representing an HQL delete statement.
@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DeleteStatement extends AbstractRestrictableStatement {
 
-	private static final Log log = LogFactory.getLog( DeleteStatement.class );
+	private static final Logger log = LoggerFactory.getLogger( DeleteStatement.class );
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.Statement#getStatementType()
@@ -34,7 +34,7 @@ public class DeleteStatement extends AbstractRestrictableStatement {
 		return SqlTokenTypes.FROM;
 	}
 
-	protected Log getLog() {
+	protected Logger getLog() {
 		return log;
 	}
 }

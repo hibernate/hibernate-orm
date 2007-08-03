@@ -15,8 +15,8 @@
  */
 package org.hibernate.cache.jbc2.collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.CacheException;
@@ -30,7 +30,7 @@ import org.hibernate.cache.CacheException;
  * @author Steve Ebersole
  */
 public class ReadOnlyAccess extends TransactionalAccess {
-	private static final Log log = LogFactory.getLog( ReadOnlyAccess.class );
+	private static final Logger log = LoggerFactory.getLogger( ReadOnlyAccess.class );
 
 	public ReadOnlyAccess(CollectionRegionImpl region) {
 		super( region );

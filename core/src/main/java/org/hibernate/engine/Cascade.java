@@ -4,8 +4,8 @@ package org.hibernate.engine;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
@@ -72,7 +72,7 @@ public final class Cascade {
 	public static final int BEFORE_MERGE = 0;
 
 
-	private static final Log log = LogFactory.getLog( Cascade.class );
+	private static final Logger log = LoggerFactory.getLogger( Cascade.class );
 
 
 	private int cascadeTo;

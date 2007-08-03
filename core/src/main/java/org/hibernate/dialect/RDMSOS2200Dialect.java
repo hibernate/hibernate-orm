@@ -24,14 +24,14 @@ import org.hibernate.LockMode;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Ploski and Hanson
  */
 public class RDMSOS2200Dialect extends Dialect {
-	private static Log log = LogFactory.getLog(RDMSOS2200Dialect.class);
+	private static Logger log = LoggerFactory.getLogger(RDMSOS2200Dialect.class);
 
 	public RDMSOS2200Dialect() {
 		super();

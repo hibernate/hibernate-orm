@@ -1,8 +1,8 @@
 //$Id: QuerySplitter.java 7646 2005-07-25 07:37:13Z oneovthafew $
 package org.hibernate.hql;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public final class QuerySplitter {
 
-	private static final Log log = LogFactory.getLog( QuerySplitter.class );
+	private static final Logger log = LoggerFactory.getLogger( QuerySplitter.class );
 
 	private static final Set BEFORE_CLASS_TOKENS = new HashSet();
 	private static final Set NOT_AFTER_CLASS_TOKENS = new HashSet();

@@ -5,12 +5,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class JDBCExceptionReporter {
 
-	public static final Log log = LogFactory.getLog(JDBCExceptionReporter.class);
+	public static final Logger log = LoggerFactory.getLogger(JDBCExceptionReporter.class);
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
 

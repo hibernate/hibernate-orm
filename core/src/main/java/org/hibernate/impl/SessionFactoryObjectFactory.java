@@ -21,8 +21,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.util.FastHashMap;
 import org.hibernate.util.NamingHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resolves <tt>SessionFactory</tt> JNDI lookups and deserialization
@@ -31,10 +31,10 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 
 	private static final SessionFactoryObjectFactory INSTANCE; //to stop the class from being unloaded
 
-	private static final Log log;
+	private static final Logger log;
 
 	static {
-		log = LogFactory.getLog(SessionFactoryObjectFactory.class);
+		log = LoggerFactory.getLogger( SessionFactoryObjectFactory.class );
 		INSTANCE = new SessionFactoryObjectFactory();
 		log.debug("initializing class SessionFactoryObjectFactory");
 	}
@@ -136,7 +136,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 		Object result = NAMED_INSTANCES.get(name);
 		if (result==null) {
 			log.debug("Not found: " + name);
-			log.debug(NAMED_INSTANCES);
+			log.debug( NAMED_INSTANCES.toString() );
 		}
 		return result;
 	}
@@ -146,7 +146,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 		Object result = INSTANCES.get(uid);
 		if (result==null) {
 			log.debug("Not found: " + uid);
-			log.debug(INSTANCES);
+			log.debug( INSTANCES.toString() );
 		}
 		return result;
 	}

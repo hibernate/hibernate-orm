@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -41,10 +41,10 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
 		if (value == null || defaultValue.equals(value) ) {
-			LogFactory.getLog( getClass() ).trace("binding null to parameter: " + index);
+			LoggerFactory.getLogger( getClass() ).trace("binding null to parameter: " + index);
 			st.setNull(index, Types.INTEGER);
 		} else {
-			LogFactory.getLog( getClass() ).trace("binding " + value + " to parameter: " + index);
+			LoggerFactory.getLogger( getClass() ).trace("binding " + value + " to parameter: " + index);
 			st.setInt(index, ((Integer)value).intValue());
 		}
 	}

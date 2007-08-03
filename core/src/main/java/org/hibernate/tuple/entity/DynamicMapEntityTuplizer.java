@@ -16,8 +16,8 @@ import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.proxy.ProxyFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
-	static final Log log = LogFactory.getLog( DynamicMapEntityTuplizer.class );
+	static final Logger log = LoggerFactory.getLogger( DynamicMapEntityTuplizer.class );
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super(entityMetamodel, mappedEntity);

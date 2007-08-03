@@ -1,8 +1,8 @@
 //$Id: Versioning.java 10857 2006-11-21 23:28:07Z steve.ebersole@jboss.com $
 package org.hibernate.engine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
@@ -36,7 +36,7 @@ public final class Versioning {
 	 */
 	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
 
-	private static final Log log = LogFactory.getLog( Versioning.class );
+	private static final Logger log = LoggerFactory.getLogger( Versioning.class );
 
 	/**
 	 * Private constructor disallowing instantiation.

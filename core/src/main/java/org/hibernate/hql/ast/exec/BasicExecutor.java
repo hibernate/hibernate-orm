@@ -18,8 +18,8 @@ import org.hibernate.persister.entity.Queryable;
 
 import antlr.RecognitionException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of BasicExecutor.
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Steve Ebersole
  */
 public class BasicExecutor extends AbstractStatementExecutor {
-	private static final Log log = LogFactory.getLog( BasicExecutor.class );
+	private static final Logger log = LoggerFactory.getLogger( BasicExecutor.class );
 
 	private final Queryable persister;
 	private final String sql;

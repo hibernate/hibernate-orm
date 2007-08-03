@@ -21,8 +21,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Delegate that handles the type and join sequence information for a FromElement.
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * @author josh Feb 12, 2005 10:17:34 AM
  */
 class FromElementType {
-	private static final Log log = LogFactory.getLog( FromElementType.class );
+	private static final Logger log = LoggerFactory.getLogger( FromElementType.class );
 
 	private FromElement fromElement;
 	private EntityType entityType;

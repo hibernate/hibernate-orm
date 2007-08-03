@@ -7,8 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.LockMode;
@@ -23,8 +23,8 @@ import org.hibernate.id.IdentifierGenerationException;
  * @author Steve Ebersole
  */
 public class TableStructure extends TransactionHelper implements DatabaseStructure {
-	private static final Log log = LogFactory.getLog( TableStructure.class );
-	private static final Log SQL_LOG = LogFactory.getLog( "org.hibernate.SQL" );
+	private static final Logger log = LoggerFactory.getLogger( TableStructure.class );
+	private static final Logger SQL_LOG = LoggerFactory.getLogger( "org.hibernate.SQL" );
 
 	private final String tableName;
 	private final String valueColumnName;

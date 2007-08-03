@@ -23,7 +23,7 @@ import org.hibernate.util.StringHelper;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * Implementation of AbstractStatementExecutor.
@@ -32,10 +32,10 @@ import org.apache.commons.logging.Log;
  */
 public abstract class AbstractStatementExecutor implements StatementExecutor {
 
-	private final Log log;
+	private final Logger log;
 	private final HqlSqlWalker walker;
 
-	public AbstractStatementExecutor(HqlSqlWalker walker, Log log) {
+	public AbstractStatementExecutor(HqlSqlWalker walker, Logger log) {
 		this.walker = walker;
 		this.log = log;
 	}

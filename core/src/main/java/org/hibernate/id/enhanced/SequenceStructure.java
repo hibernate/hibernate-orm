@@ -4,8 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -18,7 +18,7 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class SequenceStructure implements DatabaseStructure {
-	private static final Log log = LogFactory.getLog( SequenceStructure.class );
+	private static final Logger log = LoggerFactory.getLogger( SequenceStructure.class );
 
 	private final String sequenceName;
 	private final int initialValue;

@@ -16,15 +16,14 @@
  */
 package org.hibernate.cache;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EHCache plugin for Hibernate
@@ -39,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Emmanuel Bernard
  */
 public class EhCache implements Cache {
-	private static final Log log = LogFactory.getLog( EhCache.class );
+	private static final Logger log = LoggerFactory.getLogger( EhCache.class );
 
 	private static final int SIXTY_THOUSAND_MS = 60000;
 

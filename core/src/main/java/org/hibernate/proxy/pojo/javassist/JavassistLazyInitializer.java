@@ -9,7 +9,7 @@ import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
@@ -79,7 +79,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			return proxy;
 		}
 		catch ( Throwable t ) {
-			LogFactory.getLog( BasicLazyInitializer.class ).error(
+			LoggerFactory.getLogger( BasicLazyInitializer.class ).error(
 					"Javassist Enhancement failed: " + entityName, t
 			);
 			throw new HibernateException(
@@ -138,7 +138,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			return factory.createClass();
 		}
 		catch ( Throwable t ) {
-			LogFactory.getLog( BasicLazyInitializer.class ).error(
+			LoggerFactory.getLogger( BasicLazyInitializer.class ).error(
 					"Javassist Enhancement failed: "
 					+ persistentClass.getName(), t
 			);

@@ -19,8 +19,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a single mapped class mentioned in an HQL FROM clause.  Each
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * Time: 10:28:17 AM<br>
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode {
-	private static final Log log = LogFactory.getLog( FromElement.class );
+	private static final Logger log = LoggerFactory.getLogger( FromElement.class );
 
 	private String className;
 	private String classAlias;

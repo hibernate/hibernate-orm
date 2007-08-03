@@ -1,8 +1,8 @@
 //$Id: PersistentIdentifierGenerator.java 6514 2005-04-26 06:37:54Z oneovthafew $
 package org.hibernate.id;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 
@@ -69,7 +69,7 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 */
 	public Object generatorKey();
 	
-	static final Log SQL = LogFactory.getLog("org.hibernate.SQL");
+	static final Logger SQL = LoggerFactory.getLogger( "org.hibernate.SQL" );
 
 }
 

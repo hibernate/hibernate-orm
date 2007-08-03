@@ -4,8 +4,8 @@ package org.hibernate.event.def;
 import org.hibernate.HibernateException;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines the default dirty-check event listener used by hibernate for
@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
 
-	private static final Log log = LogFactory.getLog(DefaultDirtyCheckEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultDirtyCheckEventListener.class);
 
     /** Handle the given dirty-check event.
      *

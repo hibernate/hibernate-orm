@@ -20,8 +20,8 @@ import org.hibernate.util.StringHelper;
 
 import antlr.ASTFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JoinProcessor implements SqlTokenTypes {
 
-	private static final Log log = LogFactory.getLog( JoinProcessor.class );
+	private static final Logger log = LoggerFactory.getLogger( JoinProcessor.class );
 
 	private QueryTranslatorImpl queryTranslatorImpl;
 	private SyntheticAndFactory andFactory;

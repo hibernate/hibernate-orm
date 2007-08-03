@@ -12,8 +12,8 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -36,7 +36,7 @@ import org.hibernate.stat.Statistics;
  */
 public class SessionFactoryStub implements SessionFactory {
 
-	private static final Log log = LogFactory.getLog(SessionFactoryStub.class);
+	private static final Logger log = LoggerFactory.getLogger(SessionFactoryStub.class);
 
 	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
 

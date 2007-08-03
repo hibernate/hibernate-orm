@@ -1,8 +1,8 @@
 //$Id: AbstractLockUpgradeEventListener.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.event.def;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.LockMode;
 import org.hibernate.ObjectDeletedException;
@@ -22,7 +22,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
 
-	private static final Log log = LogFactory.getLog(AbstractLockUpgradeEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractLockUpgradeEventListener.class);
 
 	/**
 	 * Performs a pessimistic lock upgrade on a given entity, if needed.

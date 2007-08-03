@@ -2,8 +2,8 @@ package org.hibernate.bytecode.javassist;
 
 import java.lang.reflect.Modifier;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ClassTransformer;
 import org.hibernate.bytecode.ProxyFactoryFactory;
@@ -19,7 +19,7 @@ import org.hibernate.util.StringHelper;
  */
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private static final Log log = LogFactory.getLog( BytecodeProviderImpl.class );
+	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();

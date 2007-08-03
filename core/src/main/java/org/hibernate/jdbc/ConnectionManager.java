@@ -8,8 +8,8 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -27,7 +27,7 @@ import org.hibernate.util.JDBCExceptionReporter;
  */
 public class ConnectionManager implements Serializable {
 
-	private static final Log log = LogFactory.getLog( ConnectionManager.class );
+	private static final Logger log = LoggerFactory.getLogger( ConnectionManager.class );
 
 	public static interface Callback {
 		public void connectionOpened();

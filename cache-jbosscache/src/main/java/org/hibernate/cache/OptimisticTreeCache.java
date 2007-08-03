@@ -8,8 +8,8 @@ import java.util.Set;
 import java.util.Comparator;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.optimistic.DataVersion;
 import org.jboss.cache.config.Option;
@@ -27,7 +27,7 @@ public class OptimisticTreeCache implements OptimisticCache, TransactionAwareCac
 
 	// todo : eventually merge this with TreeCache and just add optional opt-lock support there.
 
-	private static final Log log = LogFactory.getLog( OptimisticTreeCache.class);
+	private static final Logger log = LoggerFactory.getLogger( OptimisticTreeCache.class);
 
 	private static final String ITEM = "item";
 

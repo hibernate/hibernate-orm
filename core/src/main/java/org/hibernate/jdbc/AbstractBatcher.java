@@ -9,8 +9,8 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -35,8 +35,8 @@ public abstract class AbstractBatcher implements Batcher {
 	private int openPreparedStatementCount;
 	private int openResultSetCount;
 
-	protected static final Log log = LogFactory.getLog(AbstractBatcher.class);
-	protected static final Log SQL_LOG = LogFactory.getLog("org.hibernate.SQL");
+	protected static final Logger log = LoggerFactory.getLogger( AbstractBatcher.class );
+	protected static final Logger SQL_LOG = LoggerFactory.getLogger( "org.hibernate.SQL" );
 
 	private final ConnectionManager connectionManager;
 	private final SessionFactoryImplementor factory;

@@ -3,8 +3,8 @@ package org.hibernate.engine;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.Type;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,7 +22,7 @@ import java.util.Iterator;
  */
 public class ParameterBinder {
 
-	private static final Log log = LogFactory.getLog( ParameterBinder.class );
+	private static final Logger log = LoggerFactory.getLogger( ParameterBinder.class );
 
 	public static interface NamedParameterSource {
 		public int[] getNamedParameterLocations(String name);

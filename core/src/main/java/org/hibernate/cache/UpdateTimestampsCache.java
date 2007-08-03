@@ -6,8 +6,8 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Settings;
@@ -24,7 +24,7 @@ import org.hibernate.cfg.Settings;
  */
 public class UpdateTimestampsCache {
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-	private static final Log log = LogFactory.getLog( UpdateTimestampsCache.class );
+	private static final Logger log = LoggerFactory.getLogger( UpdateTimestampsCache.class );
 
 	private final TimestampsRegion region;
 

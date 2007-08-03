@@ -2,8 +2,8 @@
 package org.hibernate;
 
 import org.hibernate.exception.NestableRuntimeException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
@@ -13,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class AssertionFailure extends NestableRuntimeException {
 
-	private static final Log log = LogFactory.getLog(AssertionFailure.class);
+	private static final Logger log = LoggerFactory.getLogger(AssertionFailure.class);
 
 	private static final String MESSAGE = "an assertion failure occured (this may indicate a bug in Hibernate, but is more likely due to unsafe use of the session)";
 

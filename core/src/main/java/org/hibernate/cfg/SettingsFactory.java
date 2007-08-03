@@ -10,8 +10,8 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -46,7 +46,7 @@ import org.hibernate.util.StringHelper;
 public class SettingsFactory implements Serializable {
 
 	public static final String DEF_CACHE_REG_FACTORY = NoCachingRegionFactory.class.getName();
-	private static final Log log = LogFactory.getLog(SettingsFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(SettingsFactory.class);
 
 	protected SettingsFactory() {
 	}

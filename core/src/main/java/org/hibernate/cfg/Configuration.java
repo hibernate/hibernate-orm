@@ -26,8 +26,8 @@ import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.dom4j.Attribute;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -117,7 +117,7 @@ import org.xml.sax.InputSource;
  */
 public class Configuration implements Serializable {
 
-	private static Log log = LogFactory.getLog( Configuration.class );
+	private static Logger log = LoggerFactory.getLogger( Configuration.class );
 
 	protected Map classes;
 	protected Map imports;

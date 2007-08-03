@@ -3,8 +3,8 @@ package org.hibernate.stat;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -19,7 +19,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	
 	//TODO: we should provide some way to get keys of collection of statistics to make it easier to retrieve from a GUI perspective
 	
-	private static final Log log = LogFactory.getLog(StatisticsImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(StatisticsImpl.class);
 
 	private SessionFactoryImplementor sessionFactory;
 

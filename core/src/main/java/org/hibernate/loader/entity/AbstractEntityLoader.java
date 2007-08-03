@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -20,7 +20,7 @@ import org.hibernate.type.Type;
 public abstract class AbstractEntityLoader extends OuterJoinLoader 
 		implements UniqueEntityLoader {
 
-	protected static final Log log = LogFactory.getLog(EntityLoader.class);
+	protected static final Logger log = LoggerFactory.getLogger(EntityLoader.class);
 	protected final OuterJoinLoadable persister;
 	protected final Type uniqueKeyType;
 	protected final String entityName;

@@ -19,8 +19,8 @@ import org.hibernate.type.Type;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultReplicateEventListener extends AbstractSaveEventListener implements ReplicateEventListener {
 
-	private static final Log log = LogFactory.getLog( DefaultReplicateEventListener.class );
+	private static final Logger log = LoggerFactory.getLogger( DefaultReplicateEventListener.class );
 
 	/**
 	 * Handle the given replicate event.

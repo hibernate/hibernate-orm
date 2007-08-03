@@ -3,8 +3,8 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -36,7 +36,7 @@ import org.hibernate.proxy.HibernateProxy;
  */
 public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener implements SaveOrUpdateEventListener {
 
-	private static final Log log = LogFactory.getLog( DefaultSaveOrUpdateEventListener.class );
+	private static final Logger log = LoggerFactory.getLogger( DefaultSaveOrUpdateEventListener.class );
 
 	/**
 	 * Handle the given update event.

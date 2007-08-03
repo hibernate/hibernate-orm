@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDBC table metadata
@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TableMetadata {
 	
-	private static final Log log = LogFactory.getLog(TableMetadata.class);
+	private static final Logger log = LoggerFactory.getLogger(TableMetadata.class);
 	
 	private final String catalog;
 	private final String schema;

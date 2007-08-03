@@ -3,8 +3,8 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.util.ReflectHelper;
@@ -16,7 +16,7 @@ import org.hibernate.id.IdentifierGeneratorFactory;
  * @author Steve Ebersole
  */
 public class OptimizerFactory {
-	private static final Log log = LogFactory.getLog( OptimizerFactory.class );
+	private static final Logger log = LoggerFactory.getLogger( OptimizerFactory.class );
 
 	public static final String NONE = "none";
 	public static final String HILO = "hilo";

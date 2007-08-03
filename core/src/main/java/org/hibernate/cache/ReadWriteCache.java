@@ -4,8 +4,8 @@ package org.hibernate.cache;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.access.SoftLock;
 
@@ -27,7 +27,7 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class ReadWriteCache implements CacheConcurrencyStrategy {
 
-	private static final Log log = LogFactory.getLog(ReadWriteCache.class);
+	private static final Logger log = LoggerFactory.getLogger(ReadWriteCache.class);
 
 	private Cache cache;
 	private int nextLockId;

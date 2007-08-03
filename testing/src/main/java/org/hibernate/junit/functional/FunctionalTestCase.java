@@ -17,8 +17,8 @@ import org.hibernate.Session;
 import org.hibernate.junit.UnitTestCase;
 import org.hibernate.engine.SessionFactoryImplementor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Most of the Hibernate test suite in fact is a series of functional tests, not
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class FunctionalTestCase extends UnitTestCase implements ExecutionEnvironment.Settings {
 
-	private static final Log log = LogFactory.getLog( FunctionalTestCase.class );
+	private static final Logger log = LoggerFactory.getLogger( FunctionalTestCase.class );
 
 	private ExecutionEnvironment environment;
 	private boolean isEnvironmentLocallyManaged;

@@ -36,8 +36,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for processing the series of {@link org.hibernate.engine.query.sql.NativeSQLQueryReturn returns}
@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SQLQueryReturnProcessor {
 
-	public static final Log log = LogFactory.getLog( SQLQueryReturnProcessor.class );
+	public static final Logger log = LoggerFactory.getLogger( SQLQueryReturnProcessor.class );
 
 	private NativeSQLQueryReturn[] queryReturns;
 

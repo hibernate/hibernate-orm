@@ -9,8 +9,8 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -85,7 +85,7 @@ import org.hibernate.util.StringHelper;
  */
 public final class HbmBinder {
 
-	private static final Log log = LogFactory.getLog( HbmBinder.class );
+	private static final Logger log = LoggerFactory.getLogger( HbmBinder.class );
 
 	/**
 	 * Private constructor to disallow instantiation.

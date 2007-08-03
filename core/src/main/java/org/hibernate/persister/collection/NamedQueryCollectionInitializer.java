@@ -3,8 +3,8 @@ package org.hibernate.persister.collection;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
@@ -19,7 +19,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 	private final String queryName;
 	private final CollectionPersister persister;
 	
-	private static final Log log = LogFactory.getLog(NamedQueryCollectionInitializer.class);
+	private static final Logger log = LoggerFactory.getLogger(NamedQueryCollectionInitializer.class);
 
 	public NamedQueryCollectionInitializer(String queryName, CollectionPersister persister) {
 		super();

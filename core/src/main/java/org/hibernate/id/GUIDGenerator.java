@@ -6,8 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -19,7 +19,7 @@ import org.hibernate.exception.JDBCExceptionHelper;
  */
 public class GUIDGenerator implements IdentifierGenerator {
 
-	private static final Log log = LogFactory.getLog(GUIDGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(GUIDGenerator.class);
 
 	public Serializable generate(SessionImplementor session, Object obj) 
 	throws HibernateException {

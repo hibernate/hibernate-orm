@@ -17,8 +17,8 @@ import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BulkManipulationTest extends FunctionalTestCase {
 
-	private static final Log log = LogFactory.getLog( BulkManipulationTest.class );
+	private static final Logger log = LoggerFactory.getLogger( BulkManipulationTest.class );
 
 	public BulkManipulationTest(String name) {
 		super( name );

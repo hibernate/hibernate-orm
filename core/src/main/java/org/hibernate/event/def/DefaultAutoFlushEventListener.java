@@ -1,8 +1,8 @@
 //$Id: DefaultAutoFlushEventListener.java 7785 2005-08-08 23:24:44Z oneovthafew $
 package org.hibernate.event.def;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.event.AutoFlushEvent;
@@ -17,7 +17,7 @@ import org.hibernate.event.EventSource;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final Log log = LogFactory.getLog(DefaultAutoFlushEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultAutoFlushEventListener.class);
 
     /** Handle the given auto-flush event.
      *

@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BytecodeProvider;
@@ -490,7 +490,7 @@ public final class Environment {
 	private static final Map OBSOLETE_PROPERTIES = new HashMap();
 	private static final Map RENAMED_PROPERTIES = new HashMap();
 
-	private static final Log log = LogFactory.getLog(Environment.class);
+	private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
 	/**
 	 * Issues warnings to the user when any obsolete property names are used.

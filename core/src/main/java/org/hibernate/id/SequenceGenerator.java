@@ -7,8 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -49,7 +49,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 	private Type identifierType;
 	private String sql;
 
-	private static final Log log = LogFactory.getLog(SequenceGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(SequenceGenerator.class);
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		sequenceName = PropertiesHelper.getString(SEQUENCE, params, "hibernate_sequence");

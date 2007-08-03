@@ -4,8 +4,8 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -41,7 +41,7 @@ public class TableHiLoGenerator extends TableGenerator {
 	private int maxLo;
 	private Class returnClass;
 
-	private static final Log log = LogFactory.getLog(TableHiLoGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(TableHiLoGenerator.class);
 
 	public void configure(Type type, Properties params, Dialect d) {
 		super.configure(type, params, d);

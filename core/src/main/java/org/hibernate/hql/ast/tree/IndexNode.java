@@ -13,8 +13,8 @@ import antlr.RecognitionException;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents the [] operator and provides it's semantics.
@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class IndexNode extends FromReferenceNode {
 
-	private static final Log log = LogFactory.getLog( IndexNode.class );
+	private static final Logger log = LoggerFactory.getLogger( IndexNode.class );
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );

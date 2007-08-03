@@ -4,8 +4,8 @@ package org.hibernate.cache;
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookupFactory;
@@ -32,7 +32,7 @@ public class OptimisticTreeCacheProvider implements CacheProvider {
 	public static final String DEFAULT_CONFIG = "treecache.xml";
 
 	private static final String NODE_LOCKING_SCHEME = "OPTIMISTIC";
-	private static final Log log = LogFactory.getLog( OptimisticTreeCacheProvider.class );
+	private static final Logger log = LoggerFactory.getLogger( OptimisticTreeCacheProvider.class );
 
 	private org.jboss.cache.TreeCache cache;
 

@@ -19,8 +19,8 @@ import org.hibernate.util.StringHelper;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a reference to a property or alias expression.  This should duplicate the relevant behaviors in
@@ -49,7 +49,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	public static IllegalCollectionDereferenceExceptionBuilder ILLEGAL_COLL_DEREF_EXCP_BUILDER = DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
 	///////////////////////////////////////////////////////////////////////////
 
-	private static final Log log = LogFactory.getLog( DotNode.class );
+	private static final Logger log = LoggerFactory.getLogger( DotNode.class );
 
 	private static final int DEREF_UNKNOWN = 0;
 	private static final int DEREF_ENTITY = 1;

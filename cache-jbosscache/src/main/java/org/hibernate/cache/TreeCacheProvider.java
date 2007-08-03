@@ -4,8 +4,8 @@ package org.hibernate.cache;
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookupFactory;
 import org.hibernate.cfg.Environment;
@@ -25,7 +25,7 @@ public class TreeCacheProvider implements CacheProvider {
 	public static final String CONFIG_RESOURCE = "hibernate.cache.tree_cache.config";
 	public static final String DEFAULT_CONFIG = "treecache.xml";
 
-	private static final Log log = LogFactory.getLog( TreeCacheProvider.class );
+	private static final Logger log = LoggerFactory.getLogger( TreeCacheProvider.class );
 
 	private org.jboss.cache.TreeCache cache;
 	private TransactionManager transactionManager;

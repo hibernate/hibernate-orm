@@ -4,8 +4,8 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
@@ -37,7 +37,7 @@ import org.hibernate.util.IdentityMap;
 public class DefaultMergeEventListener extends AbstractSaveEventListener 
 	implements MergeEventListener {
 
-	private static final Log log = LogFactory.getLog(DefaultMergeEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultMergeEventListener.class);
 	
 	protected Map getMergeMap(Object anything) {
 		return IdentityMap.invert( (Map) anything );

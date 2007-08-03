@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -56,7 +56,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class Dialect {
 
-	private static final Log log = LogFactory.getLog( Dialect.class );
+	private static final Logger log = LoggerFactory.getLogger( Dialect.class );
 
 	public static final String DEFAULT_BATCH_SIZE = "15";
 	public static final String NO_BATCH = "0";

@@ -3,8 +3,8 @@ header
 // $Id: hql-sql.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
 package org.hibernate.hql.antlr;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 }
 
 /**
@@ -54,7 +54,7 @@ tokens
 
 // -- Declarations --
 {
-	private static Log log = LogFactory.getLog( HqlSqlBaseWalker.class );
+	private static Logger log = LoggerFactory.getLogger( HqlSqlBaseWalker.class );
 
 	private int level = 0;
 	private boolean inSelect = false;

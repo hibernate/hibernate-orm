@@ -4,7 +4,7 @@ package org.hibernate.connection;
 import java.sql.Connection;
 import java.util.Properties;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 
 /**
@@ -20,7 +20,8 @@ public class UserSuppliedConnectionProvider implements ConnectionProvider {
 	 * @see org.hibernate.connection.ConnectionProvider#configure(Properties)
 	 */
 	public void configure(Properties props) throws HibernateException {
-		LogFactory.getLog(UserSuppliedConnectionProvider.class).warn("No connection properties specified - the user must supply JDBC connections");
+		LoggerFactory.getLogger( UserSuppliedConnectionProvider.class )
+				.warn( "No connection properties specified - the user must supply JDBC connections" );
 	}
 
 	/**

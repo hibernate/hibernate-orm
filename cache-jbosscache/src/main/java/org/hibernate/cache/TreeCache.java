@@ -10,8 +10,8 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.lock.TimeoutException;
 
@@ -22,7 +22,7 @@ import org.jboss.cache.lock.TimeoutException;
  */
 public class TreeCache implements Cache, TransactionAwareCache {
 	
-	private static final Log log = LogFactory.getLog(TreeCache.class);
+	private static final Logger log = LoggerFactory.getLogger(TreeCache.class);
 
 	private static final String ITEM = "item";
 

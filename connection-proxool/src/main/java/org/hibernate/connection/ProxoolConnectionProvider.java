@@ -12,8 +12,8 @@ import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.ConfigHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
@@ -30,7 +30,7 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 
 	private static final String PROXOOL_JDBC_STEM = "proxool.";
 
-	private static final Log log = LogFactory.getLog(ProxoolConnectionProvider.class);
+	private static final Logger log = LoggerFactory.getLogger(ProxoolConnectionProvider.class);
 
 	private String proxoolAlias;
 

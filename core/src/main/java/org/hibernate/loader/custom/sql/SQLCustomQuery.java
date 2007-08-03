@@ -15,8 +15,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements Hibernate's built-in support for native SQL queries.
@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SQLCustomQuery implements CustomQuery {
 
-	public static final Log log = LogFactory.getLog( SQLCustomQuery.class );
+	public static final Logger log = LoggerFactory.getLogger( SQLCustomQuery.class );
 
 	private final String sql;
 	private final Set querySpaces = new HashSet();

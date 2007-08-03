@@ -6,8 +6,8 @@ import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
@@ -55,7 +55,7 @@ public class StatisticsService implements StatisticsServiceMBean {
 	
 	SessionFactory sf;
 	String sfJNDIName;
-	Log log = LogFactory.getLog(StatisticsService.class);
+	Logger log = LoggerFactory.getLogger(StatisticsService.class);
 	Statistics stats = new StatisticsImpl();
 
 	/**

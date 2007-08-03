@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import junit.framework.Test;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -45,7 +45,7 @@ import org.hibernate.test.legacy.Single;
  */
 public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTestCase {
 
-	private static final Log log = LogFactory.getLog(SQLFunctionsInterSystemsTest.class);
+	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsInterSystemsTest.class);
 
 	public SQLFunctionsInterSystemsTest(String name) {
 		super(name);

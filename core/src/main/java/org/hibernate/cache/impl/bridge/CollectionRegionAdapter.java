@@ -1,7 +1,7 @@
 package org.hibernate.cache.impl.bridge;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.Cache;
@@ -23,7 +23,7 @@ import org.hibernate.cfg.Settings;
  * @author Steve Ebersole
  */
 public class CollectionRegionAdapter extends BaseTransactionalDataRegionAdapter implements CollectionRegion {
-	private static final Log log = LogFactory.getLog( CollectionRegionAdapter.class );
+	private static final Logger log = LoggerFactory.getLogger( CollectionRegionAdapter.class );
 
 	public CollectionRegionAdapter(Cache underlyingCache, Settings settings, CacheDataDescription metadata) {
 		super( underlyingCache, settings, metadata );

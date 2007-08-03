@@ -3,8 +3,8 @@ header
 //   $Id: sql-gen.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
 package org.hibernate.hql.antlr;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 }
 /**
@@ -28,7 +28,7 @@ options {
 }
 
 {
-	private static Log log = LogFactory.getLog(SqlGeneratorBase.class);
+	private static Logger log = LoggerFactory.getLogger(SqlGeneratorBase.class);
 
    /** the buffer resulting SQL statement is written to */
 	private StringBuffer buf = new StringBuffer();

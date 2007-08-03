@@ -1,8 +1,8 @@
 //$Id: Collections.java 8694 2005-11-28 19:28:17Z steveebersole $
 package org.hibernate.engine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -21,7 +21,7 @@ public final class Collections {
 
 	private Collections() {}
 
-	private static final Log log = LogFactory.getLog(Collections.class);
+	private static final Logger log = LoggerFactory.getLogger(Collections.class);
 
 	/**
 	 * record the fact that this collection was dereferenced

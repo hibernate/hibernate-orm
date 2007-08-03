@@ -8,8 +8,8 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.DataSources;
 
@@ -27,7 +27,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class C3P0ConnectionProvider implements ConnectionProvider {
 
-	private static final Log log = LogFactory.getLog( C3P0ConnectionProvider.class );
+	private static final Logger log = LoggerFactory.getLogger( C3P0ConnectionProvider.class );
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -97,7 +97,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 				}
 				catch ( ClassNotFoundException e ) {
 					String msg = "JDBC Driver class not found: " + jdbcDriverClass;
-					log.fatal( msg, e );
+					log.error( msg, e );
 					throw new HibernateException( msg, e );
 				}
 			}
@@ -159,7 +159,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
 		catch ( Exception e ) {
-			log.fatal( "could not instantiate C3P0 connection pool", e );
+			log.error( "could not instantiate C3P0 connection pool", e );
 			throw new HibernateException( "Could not instantiate C3P0 connection pool", e );
 		}
 

@@ -18,8 +18,8 @@ package org.hibernate.cache.jbc2.builder;
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
 
@@ -42,7 +42,7 @@ public class InvalidationCacheInstanceManager implements CacheInstanceManager {
 	public static final String CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.invalidation";
 	public static final String DEFAULT_CACHE_RESOURCE = "treecache.xml";
 
-	private static final Log log = LogFactory.getLog( InvalidationCacheInstanceManager.class );
+	private static final Logger log = LoggerFactory.getLogger( InvalidationCacheInstanceManager.class );
 
 	private final Cache cache;
 

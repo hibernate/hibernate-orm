@@ -8,8 +8,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.classic.Session;
 import org.hibernate.context.ManagedSessionContext;
@@ -23,7 +23,7 @@ import org.hibernate.tutorial.util.HibernateUtil;
  */
 public class SessionInterceptor implements Filter {
 
-	private static final Log log = LogFactory.getLog( SessionInterceptor.class );
+	private static final Logger log = LoggerFactory.getLogger( SessionInterceptor.class );
 
 	public void doFilter(
 			ServletRequest request,

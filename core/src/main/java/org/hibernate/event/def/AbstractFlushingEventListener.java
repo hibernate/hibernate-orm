@@ -6,8 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.action.CollectionRecreateAction;
 import org.hibernate.action.CollectionRemoveAction;
@@ -39,7 +39,7 @@ import org.hibernate.util.LazyIterator;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-	private static final Log log = LogFactory.getLog(AbstractFlushingEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractFlushingEventListener.class);
 	
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section

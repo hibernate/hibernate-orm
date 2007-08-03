@@ -3,13 +3,13 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-core-parent</artifactId>
         <version>1</version>
     </parent>
-    
+
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jmx</artifactId>
     <version>3.3.0-SNAPSHOT</version>
@@ -24,9 +24,16 @@
             <artifactId>hibernate-core</artifactId>
             <version>${version}</version>
         </dependency>
+        <!-- logging setup for the test suite -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
         </dependency>
     </dependencies>
 

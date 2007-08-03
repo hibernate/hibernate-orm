@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -191,7 +191,7 @@ public abstract class AbstractCollectionPersister
 	private Map collectionPropertyColumnAliases = new HashMap();
 	private Map collectionPropertyColumnNames = new HashMap();
 
-	private static final Log log = LogFactory.getLog( AbstractCollectionPersister.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractCollectionPersister.class );
 
 	public AbstractCollectionPersister(
 			final Collection collection,

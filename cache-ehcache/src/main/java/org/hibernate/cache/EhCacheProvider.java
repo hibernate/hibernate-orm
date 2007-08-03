@@ -20,8 +20,8 @@ import java.util.Properties;
 import java.net.URL;
 
 import net.sf.ehcache.CacheManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.ConfigHelper;
@@ -62,7 +62,7 @@ import org.hibernate.util.ConfigHelper;
  */
 public class EhCacheProvider implements CacheProvider {
 
-    private static final Log log = LogFactory.getLog(EhCacheProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(EhCacheProvider.class);
 
 	private CacheManager manager;
 

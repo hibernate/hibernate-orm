@@ -11,14 +11,14 @@ import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.Environment;
 
 public final class NamingHelper {
 
-	private static final Log log = LogFactory.getLog(NamingHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(NamingHelper.class);
 
 	public static InitialContext getInitialContext(Properties props) throws NamingException {
 

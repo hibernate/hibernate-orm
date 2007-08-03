@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
 public final class Printer {
 
 	private SessionFactoryImplementor factory;
-	private static final Log log = LogFactory.getLog(Printer.class);
+	private static final Logger log = LoggerFactory.getLogger(Printer.class);
 
 	/**
 	 * @param entity an actual entity object, not a proxy!

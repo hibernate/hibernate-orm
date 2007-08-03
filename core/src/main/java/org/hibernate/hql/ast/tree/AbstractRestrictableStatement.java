@@ -6,7 +6,7 @@ import org.hibernate.hql.ast.util.ASTUtil;
 
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * Convenience implementation of RestrictableStatement to centralize common functionality.
@@ -19,7 +19,7 @@ public abstract class AbstractRestrictableStatement extends AbstractStatement im
 	private AST whereClause;
 
 	protected abstract int getWhereClauseParentTokenType();
-	protected abstract Log getLog();
+	protected abstract Logger getLog();
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.RestrictableStatement#getFromClause

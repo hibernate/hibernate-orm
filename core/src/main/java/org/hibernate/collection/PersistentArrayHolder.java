@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.loader.CollectionAliases;
@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
 public class PersistentArrayHolder extends AbstractPersistentCollection {
 	protected Object array;
 
-	private static final Log log = LogFactory.getLog(PersistentArrayHolder.class);
+	private static final Logger log = LoggerFactory.getLogger(PersistentArrayHolder.class);
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;

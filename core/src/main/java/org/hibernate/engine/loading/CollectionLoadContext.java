@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -35,7 +35,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class CollectionLoadContext {
-	private static final Log log = LogFactory.getLog( CollectionLoadContext.class );
+	private static final Logger log = LoggerFactory.getLogger( CollectionLoadContext.class );
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;

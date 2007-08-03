@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -28,7 +28,7 @@ import org.hibernate.util.ArrayHelper;
  */
 public class CollectionElementLoader extends OuterJoinLoader {
 	
-	private static final Log log = LogFactory.getLog(CollectionElementLoader.class);
+	private static final Logger log = LoggerFactory.getLogger(CollectionElementLoader.class);
 
 	private final OuterJoinLoadable persister;
 	private final Type keyType;

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -57,7 +57,7 @@ import org.hibernate.util.CollectionHelper;
 public class StatelessSessionImpl extends AbstractSessionImpl
 		implements JDBCContext.Context, StatelessSession {
 
-	private static final Log log = LogFactory.getLog( StatelessSessionImpl.class );
+	private static final Logger log = LoggerFactory.getLogger( StatelessSessionImpl.class );
 
 	private JDBCContext jdbcContext;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );

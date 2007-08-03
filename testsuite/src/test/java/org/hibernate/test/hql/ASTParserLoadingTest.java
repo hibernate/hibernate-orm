@@ -51,8 +51,8 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -66,7 +66,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ASTParserLoadingTest extends FunctionalTestCase {
 
-	private static final Log log = LogFactory.getLog( ASTParserLoadingTest.class );
+	private static final Logger log = LoggerFactory.getLogger( ASTParserLoadingTest.class );
 
 	private List createdAnimalIds = new ArrayList();
 

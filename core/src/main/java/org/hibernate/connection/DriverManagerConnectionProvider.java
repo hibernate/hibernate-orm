@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.PropertiesHelper;
@@ -31,7 +31,7 @@ public class DriverManagerConnectionProvider implements ConnectionProvider {
 	private int checkedOut = 0;
 	private boolean autocommit;
 
-	private static final Log log = LogFactory.getLog(DriverManagerConnectionProvider.class);
+	private static final Logger log = LoggerFactory.getLogger(DriverManagerConnectionProvider.class);
 
 	public void configure(Properties props) throws HibernateException {
 
@@ -62,20 +62,20 @@ public class DriverManagerConnectionProvider implements ConnectionProvider {
 				}
 				catch (ClassNotFoundException e) {
 					String msg = "JDBC Driver class not found: " + driverClass;
-					log.fatal(msg, e);
+					log.error( msg, e );
 					throw new HibernateException(msg, e);
 				}
 			}
 		}
 
-		url = props.getProperty(Environment.URL);
-		if (url==null) {
+		url = props.getProperty( Environment.URL );
+		if ( url == null ) {
 			String msg = "JDBC URL was not specified by property " + Environment.URL;
-			log.fatal(msg);
-			throw new HibernateException(msg);
+			log.error( msg );
+			throw new HibernateException( msg );
 		}
 
-		connectionProps = ConnectionProviderFactory.getConnectionProperties(props);
+		connectionProps = ConnectionProviderFactory.getConnectionProperties( props );
 
 		log.info( "using driver: " + driverClass + " at URL: " + url );
 		// if debug level is enabled, then log the password, otherwise mask it

@@ -1,7 +1,7 @@
 package org.hibernate.jdbc;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.StaleStateException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
@@ -19,7 +19,7 @@ import java.sql.Types;
  * @author Steve Ebersole
  */
 public class Expectations {
-	private static final Log log = LogFactory.getLog( Expectations.class );
+	private static final Logger log = LoggerFactory.getLogger( Expectations.class );
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;

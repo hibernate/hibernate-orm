@@ -3,8 +3,8 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.EntityEntry;
@@ -25,7 +25,7 @@ import org.hibernate.type.TypeFactory;
  */
 public class AbstractReassociateEventListener implements Serializable {
 
-	private static final Log log = LogFactory.getLog( AbstractReassociateEventListener.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractReassociateEventListener.class );
 
 	/**
 	 * Associates a given entity (either transient or associated with another session) to

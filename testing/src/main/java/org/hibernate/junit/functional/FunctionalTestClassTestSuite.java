@@ -4,8 +4,8 @@ import junit.framework.TestSuite;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A specialized {@link junit.framework.TestSuite} implementation intended
@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class FunctionalTestClassTestSuite extends TestSuite {
 
-	private static final Log log = LogFactory.getLog( FunctionalTestClassTestSuite.class );
+	private static final Logger log = LoggerFactory.getLogger( FunctionalTestClassTestSuite.class );
 
 	private ExecutionEnvironment.Settings settings;
 	private ExecutionEnvironment environment;

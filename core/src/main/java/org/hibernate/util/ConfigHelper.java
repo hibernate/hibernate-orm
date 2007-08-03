@@ -9,8 +9,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 
@@ -20,7 +20,7 @@ import org.hibernate.cfg.Environment;
  * @author Steve
  */
 public final class ConfigHelper {
-	private static final Log log = LogFactory.getLog(ConfigHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigHelper.class);
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this
@@ -84,7 +84,7 @@ public final class ConfigHelper {
 
 		if (url == null) {
 			String msg = "Unable to locate config file: " + path;
-			log.fatal(msg);
+			log.error( msg );
 			throw new HibernateException(msg);
 		}
 

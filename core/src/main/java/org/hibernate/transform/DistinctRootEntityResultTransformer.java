@@ -6,15 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gavin King
  */
 public class DistinctRootEntityResultTransformer implements ResultTransformer {
 
-	private static final Log log = LogFactory.getLog(DistinctRootEntityResultTransformer.class);
+	private static final Logger log = LoggerFactory.getLogger(DistinctRootEntityResultTransformer.class);
 
 	static final class Identity {
 		final Object entity;

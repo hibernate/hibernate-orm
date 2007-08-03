@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.util.ReflectHelper;
@@ -207,12 +207,12 @@ public class RootClass extends PersistentClass implements TableOwner {
 			if ( !id.isDynamic() ) {
 				Class idClass = id.getComponentClass();
 				if ( idClass != null && !ReflectHelper.overridesEquals( idClass ) ) {
-					LogFactory.getLog(RootClass.class)
+					LoggerFactory.getLogger( RootClass.class )
 						.warn( "composite-id class does not override equals(): "
 							+ id.getComponentClass().getName() );
 				}
 				if ( !ReflectHelper.overridesHashCode( idClass ) ) {
-					LogFactory.getLog(RootClass.class)
+					LoggerFactory.getLogger( RootClass.class )
 						.warn( "composite-id class does not override hashCode(): "
 							+ id.getComponentClass().getName() );
 				}

@@ -9,8 +9,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
@@ -56,7 +56,7 @@ public class TableGenerator extends TransactionHelper
 	/** Default table name */	
 	public static final String DEFAULT_TABLE_NAME = "hibernate_unique_key";
 
-	private static final Log log = LogFactory.getLog(TableGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(TableGenerator.class);
 
 	private String tableName;
 	private String columnName;

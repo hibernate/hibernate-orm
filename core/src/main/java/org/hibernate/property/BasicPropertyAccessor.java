@@ -6,8 +6,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyAccessException;
@@ -23,7 +23,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class BasicPropertyAccessor implements PropertyAccessor {
 
-	private static final Log log = LogFactory.getLog(BasicPropertyAccessor.class);
+	private static final Logger log = LoggerFactory.getLogger(BasicPropertyAccessor.class);
 
 	public static final class BasicSetter implements Setter {
 		private Class clazz;

@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.FilterDefinition;
@@ -33,7 +33,7 @@ import org.hibernate.util.StringHelper;
  */
 public class Mappings implements Serializable {
 
-	private static final Log log = LogFactory.getLog(Mappings.class);
+	private static final Logger log = LoggerFactory.getLogger(Mappings.class);
 
 	protected final Map classes;
 	protected final Map collections;

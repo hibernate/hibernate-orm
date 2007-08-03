@@ -3,8 +3,8 @@ package org.hibernate.engine;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class IdentifierValue {
 
-	private static final Log log = LogFactory.getLog(IdentifierValue.class);
+	private static final Logger log = LoggerFactory.getLogger(IdentifierValue.class);
 	
 	private final Serializable value;
 	

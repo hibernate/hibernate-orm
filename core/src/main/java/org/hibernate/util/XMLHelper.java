@@ -3,8 +3,8 @@ package org.hibernate.util;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.dom4j.io.DOMReader;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.OutputFormat;
@@ -23,7 +23,7 @@ import org.xml.sax.SAXParseException;
  */
 public final class XMLHelper {
 
-	private static final Log log = LogFactory.getLog(XMLHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(XMLHelper.class);
 	public static final EntityResolver DEFAULT_DTD_RESOLVER = new DTDEntityResolver();
 
 	private DOMReader domReader;

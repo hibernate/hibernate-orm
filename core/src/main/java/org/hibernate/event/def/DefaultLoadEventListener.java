@@ -3,8 +3,8 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -46,7 +46,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	public static final Object INCONSISTENT_RTN_CLASS_MARKER = new Object();
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
 
-	private static final Log log = LogFactory.getLog(DefaultLoadEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultLoadEventListener.class);
 
 
 	/**

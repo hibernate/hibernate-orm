@@ -4,8 +4,8 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -32,7 +32,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 	public static final String MAX_LO = "max_lo";
 
-	private static final Log log = LogFactory.getLog(SequenceHiLoGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(SequenceHiLoGenerator.class);
 
 	private int maxLo;
 	private int lo;

@@ -3,8 +3,8 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
@@ -29,7 +29,7 @@ import org.hibernate.proxy.LazyInitializer;
  */
 public class DefaultEvictEventListener implements EvictEventListener {
 
-	private static final Log log = LogFactory.getLog(DefaultEvictEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultEvictEventListener.class);
 
 	/** 
 	 * Handle the given evict event.

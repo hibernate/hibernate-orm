@@ -22,8 +22,8 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
@@ -152,7 +152,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
 
-	private static final Log log = LogFactory.getLog(SessionFactoryImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(SessionFactoryImpl.class);
 
 	public SessionFactoryImpl(
 			Configuration cfg,

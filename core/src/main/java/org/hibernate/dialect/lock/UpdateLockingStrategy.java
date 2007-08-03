@@ -10,8 +10,8 @@ import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -27,7 +27,7 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public class UpdateLockingStrategy implements LockingStrategy {
-	private static final Log log = LogFactory.getLog( UpdateLockingStrategy.class );
+	private static final Logger log = LoggerFactory.getLogger( UpdateLockingStrategy.class );
 
 	private final Lockable lockable;
 	private final LockMode lockMode;

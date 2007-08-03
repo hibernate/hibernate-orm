@@ -12,8 +12,8 @@ import antlr.Token;
 import antlr.TokenStream;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.hql.antlr.HqlBaseParser;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
@@ -30,7 +30,7 @@ public final class HqlParser extends HqlBaseParser {
 	/**
 	 * A logger for this class.
 	 */
-	private static final Log log = LogFactory.getLog( HqlParser.class );
+	private static final Logger log = LoggerFactory.getLogger( HqlParser.class );
 
 	private ParseErrorHandler parseErrorHandler;
 	private ASTPrinter printer = getASTPrinter();

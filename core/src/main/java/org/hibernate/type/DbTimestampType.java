@@ -11,8 +11,8 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCExceptionHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DbTimestampType extends TimestampType implements VersionType {
 
-	private static final Log log = LogFactory.getLog( DbTimestampType.class );
+	private static final Logger log = LoggerFactory.getLogger( DbTimestampType.class );
 	
 	public String getName() { return "dbtimestamp"; }
 

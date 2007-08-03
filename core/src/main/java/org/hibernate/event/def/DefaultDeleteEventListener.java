@@ -4,8 +4,8 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -39,7 +39,7 @@ import org.hibernate.type.TypeFactory;
  */
 public class DefaultDeleteEventListener implements DeleteEventListener {
 
-	private static final Log log = LogFactory.getLog( DefaultDeleteEventListener.class );
+	private static final Logger log = LoggerFactory.getLogger( DefaultDeleteEventListener.class );
 
 	/**
 	 * Handle the given delete event.

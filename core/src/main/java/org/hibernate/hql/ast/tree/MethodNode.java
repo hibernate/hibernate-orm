@@ -15,8 +15,8 @@ import org.hibernate.type.Type;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a method call.
@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MethodNode extends AbstractSelectExpression implements SelectExpression {
 
-	private static final Log log = LogFactory.getLog( MethodNode.class );
+	private static final Logger log = LoggerFactory.getLogger( MethodNode.class );
 
 	private String methodName;
 	private FromElement fromElement;

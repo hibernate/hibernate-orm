@@ -11,8 +11,8 @@ import java.util.Set;
 
 import junit.framework.Test;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -37,7 +37,7 @@ import org.hibernate.transform.DistinctRootEntityResultTransformer;
  */
 public class DynamicFilterTest extends FunctionalTestCase {
 
-	private Log log = LogFactory.getLog( DynamicFilterTest.class );
+	private Logger log = LoggerFactory.getLogger( DynamicFilterTest.class );
 
 	public DynamicFilterTest(String testName) {
 		super( testName );

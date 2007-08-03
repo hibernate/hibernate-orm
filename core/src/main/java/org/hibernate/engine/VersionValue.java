@@ -1,8 +1,8 @@
 //$Id: VersionValue.java 7017 2005-06-05 04:31:34Z oneovthafew $
 package org.hibernate.engine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorFactory;
 
@@ -16,7 +16,7 @@ import org.hibernate.id.IdentifierGeneratorFactory;
  */
 public class VersionValue {
 
-	private static final Log log = LogFactory.getLog(VersionValue.class);
+	private static final Logger log = LoggerFactory.getLogger(VersionValue.class);
 
 	private final Object value;
 	/**

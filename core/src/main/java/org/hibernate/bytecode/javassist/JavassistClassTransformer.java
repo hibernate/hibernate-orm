@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.security.ProtectionDomain;
 
 import javassist.bytecode.ClassFile;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.ClassFilter;
@@ -24,7 +24,7 @@ import org.hibernate.bytecode.util.ClassFilter;
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 
-	private static Log log = LogFactory.getLog( JavassistClassTransformer.class.getName() );
+	private static Logger log = LoggerFactory.getLogger( JavassistClassTransformer.class.getName() );
 
 	public JavassistClassTransformer(ClassFilter classFilter, org.hibernate.bytecode.util.FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );

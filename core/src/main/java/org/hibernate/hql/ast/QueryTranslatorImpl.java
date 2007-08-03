@@ -5,8 +5,8 @@ import antlr.ANTLRException;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -54,8 +54,8 @@ import java.util.ArrayList;
  */
 public class QueryTranslatorImpl implements FilterTranslator {
 
-	private static final Log log = LogFactory.getLog( QueryTranslatorImpl.class );
-	private static final Log AST_LOG = LogFactory.getLog( "org.hibernate.hql.ast.AST" );
+	private static final Logger log = LoggerFactory.getLogger( QueryTranslatorImpl.class );
+	private static final Logger AST_LOG = LoggerFactory.getLogger( "org.hibernate.hql.ast.AST" );
 
 	private SessionFactoryImplementor factory;
 

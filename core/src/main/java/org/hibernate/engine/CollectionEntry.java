@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -24,7 +24,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public final class CollectionEntry implements Serializable {
 
-	private static final Log log = LogFactory.getLog(CollectionEntry.class);
+	private static final Logger log = LoggerFactory.getLogger(CollectionEntry.class);
 	
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 	

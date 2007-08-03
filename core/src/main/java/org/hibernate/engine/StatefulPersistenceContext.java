@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -51,8 +51,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-	private static final Log log = LogFactory.getLog( StatefulPersistenceContext.class );
-	private static final Log PROXY_WARN_LOG = LogFactory.getLog( StatefulPersistenceContext.class.getName() + ".ProxyWarnLog" );
+	private static final Logger log = LoggerFactory.getLogger( StatefulPersistenceContext.class );
+	private static final Logger PROXY_WARN_LOG = LoggerFactory.getLogger( StatefulPersistenceContext.class.getName() + ".ProxyWarnLog" );
 	private static final int INIT_COLL_SIZE = 8;
 
 	private SessionImplementor session;

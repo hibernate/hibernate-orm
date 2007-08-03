@@ -1,8 +1,8 @@
 // $Id: SQLExceptionConverterFactory.java 4782 2004-11-21 00:11:27Z pgmjsd $
 package org.hibernate.exception;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
@@ -21,7 +21,7 @@ import java.util.Properties;
  */
 public class SQLExceptionConverterFactory {
 
-	private static final Log log = LogFactory.getLog( SQLExceptionConverterFactory.class );
+	private static final Logger log = LoggerFactory.getLogger( SQLExceptionConverterFactory.class );
 
 	private SQLExceptionConverterFactory() {
 		// Private constructor - stops checkstyle from complaining.

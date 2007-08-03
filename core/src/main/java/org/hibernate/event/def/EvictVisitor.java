@@ -1,8 +1,8 @@
 //$Id: EvictVisitor.java 6929 2005-05-27 03:54:08Z oneovthafew $
 package org.hibernate.event.def;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
@@ -20,7 +20,7 @@ import org.hibernate.type.CollectionType;
  */
 public class EvictVisitor extends AbstractVisitor {
 	
-	private static final Log log = LogFactory.getLog(EvictVisitor.class);
+	private static final Logger log = LoggerFactory.getLogger(EvictVisitor.class);
 
 	EvictVisitor(EventSource session) {
 		super(session);

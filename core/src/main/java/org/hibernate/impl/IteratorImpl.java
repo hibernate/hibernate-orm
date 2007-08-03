@@ -6,8 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
  */
 public final class IteratorImpl implements HibernateIterator {
 
-	private static final Log log = LogFactory.getLog(IteratorImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(IteratorImpl.class);
 
 	private ResultSet rs;
 	private final EventSource session;

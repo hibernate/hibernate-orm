@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.HashMap;
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.util.IdentityMap;
 import org.hibernate.engine.PersistenceContext;
@@ -36,7 +36,7 @@ import org.hibernate.EntityMode;
  * @author Steve Ebersole
  */
 public class LoadContexts {
-	private static final Log log = LogFactory.getLog( LoadContexts.class );
+	private static final Logger log = LoggerFactory.getLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
 	private Map collectionLoadContexts;

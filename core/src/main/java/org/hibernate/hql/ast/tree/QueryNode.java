@@ -10,8 +10,8 @@ import org.hibernate.type.Type;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines a top-level AST node representing an HQL select statement.
@@ -20,7 +20,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class QueryNode extends AbstractRestrictableStatement implements SelectExpression {
 
-	private static final Log log = LogFactory.getLog( QueryNode.class );
+	private static final Logger log = LoggerFactory.getLogger( QueryNode.class );
 
 	private OrderByClause orderByClause;
 
@@ -42,7 +42,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 		return SqlTokenTypes.FROM;
 	}
 
-	protected Log getLog() {
+	protected Logger getLog() {
 		return log;
 	}
 

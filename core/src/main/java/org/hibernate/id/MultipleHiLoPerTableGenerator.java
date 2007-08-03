@@ -9,8 +9,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -56,7 +56,7 @@ public class MultipleHiLoPerTableGenerator
 	extends TransactionHelper
 	implements PersistentIdentifierGenerator, Configurable {
 	
-	private static final Log log = LogFactory.getLog(MultipleHiLoPerTableGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(MultipleHiLoPerTableGenerator.class);
 	
 	public static final String ID_TABLE = "table";
 	public static final String PK_COLUMN_NAME = "primary_key_column";

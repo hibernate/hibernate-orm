@@ -5,8 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.dom4j.Node;
 
 import org.hibernate.EntityMode;
@@ -33,12 +33,12 @@ public abstract class NullableType extends AbstractType {
 	 * in order to check the trace-enablement.  Driving this via a central Log-specific class
 	 * would alleviate that performance hit, and yet still allow more "normal" logging usage/config.
 	 */
-	private static final boolean IS_VALUE_TRACING_ENABLED = LogFactory.getLog( StringHelper.qualifier( Type.class.getName() ) ).isTraceEnabled();
-	private transient Log log;
+	private static final boolean IS_VALUE_TRACING_ENABLED = LoggerFactory.getLogger( StringHelper.qualifier( Type.class.getName() ) ).isTraceEnabled();
+	private transient Logger log;
 
-	private Log log() {
+	private Logger log() {
 		if ( log == null ) {
-			log = LogFactory.getLog( getClass() );
+			log = LoggerFactory.getLogger( getClass() );
 		}
 		return log;
 	}

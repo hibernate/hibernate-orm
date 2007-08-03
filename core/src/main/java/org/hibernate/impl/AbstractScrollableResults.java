@@ -13,8 +13,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -34,7 +34,7 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractScrollableResults implements ScrollableResults {
 
-	private static final Log log = LogFactory.getLog( AbstractScrollableResults.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractScrollableResults.class );
 
 	private final ResultSet resultSet;
 	private final PreparedStatement ps;

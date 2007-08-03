@@ -6,8 +6,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
@@ -23,7 +23,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaValidator {
 
-	private static final Log log = LogFactory.getLog( SchemaValidator.class );
+	private static final Logger log = LoggerFactory.getLogger( SchemaValidator.class );
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;
 	private Dialect dialect;

@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -78,7 +78,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class Loader {
 
-	private static final Log log = LogFactory.getLog( Loader.class );
+	private static final Logger log = LoggerFactory.getLogger( Loader.class );
 
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;

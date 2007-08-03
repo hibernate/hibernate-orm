@@ -8,8 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -42,7 +42,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
-	static final Log log = LogFactory.getLog( PojoEntityTuplizer.class );
+	static final Logger log = LoggerFactory.getLogger( PojoEntityTuplizer.class );
 
 	private final Class mappedClass;
 	private final Class proxyInterface;

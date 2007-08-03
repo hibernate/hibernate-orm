@@ -5,8 +5,8 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.JTAHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -39,7 +39,7 @@ import java.util.Hashtable;
  */
 public class JTASessionContext implements CurrentSessionContext {
 
-	private static final Log log = LogFactory.getLog( JTASessionContext.class );
+	private static final Logger log = LoggerFactory.getLogger( JTASessionContext.class );
 
 	protected final SessionFactoryImplementor factory;
 	private transient Map currentSessionMap = new Hashtable();

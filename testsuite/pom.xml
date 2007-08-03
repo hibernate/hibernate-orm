@@ -20,18 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${groupId}</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${version}</version>
@@ -83,6 +71,17 @@
             <artifactId>jaxen</artifactId>
             <version>1.1</version>
         </dependency>
+        <!-- logging setup for the test suite -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -95,7 +94,7 @@
                 </includes>
             </testResource>
             <testResource>
-                <filtering>false</filtering>
+                <filtering>true</filtering>
                 <directory>src/test/resources</directory>
             </testResource>
         </testResources>
@@ -128,7 +127,6 @@
         </plugins>
     </build>
 
-    <!-- Set up profiles defining test environments -->
     <profiles>
         <!-- HSQLDB is the default (eventually move to H2) -->
         <profile>
@@ -143,17 +141,14 @@
                     <version>1.8.0.2</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/hsqldb</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.HSQLDialect</db.dialect>
+                <jdbc.driver>org.hsqldb.jdbcDriver</jdbc.driver>
+                <jdbc.url>jdbc:hsqldb:target/test/db/hsqldb/hibernate</jdbc.url>
+                <jdbc.user>sa</jdbc.user>
+                <jdbc.pass/>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The H2 test envionment -->
@@ -166,21 +161,22 @@
                     <version>1.0.20061217</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/h2</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.H2Dialect</db.dialect>
+                <jdbc.driver>org.h2.Driver</jdbc.driver>
+                <jdbc.url>jdbc:h2:mem:target/test/db/h2/hibernate</jdbc.url>
+                <jdbc.user>sa</jdbc.user>
+                <jdbc.pass/>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!--
+            ###################################################################
             Profiles naming db instances in the Red Hat QA/QE lab
+
+            First, those with OSS drivers
+            ###################################################################
         -->
 
         <!-- The MySQL5 test envionment -->
@@ -193,17 +189,14 @@
                     <version>5.0.5</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/mysql5</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.MySQL5InnoDBDialect</db.dialect>
+                <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+                <jdbc.url>jdbc:mysql://dev02.qa.atl.jboss.com/cruisecontrol</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The PostgreSQL test envionment -->
@@ -217,18 +210,21 @@
                     <classifier>jdbc3</classifier>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/pgsql8</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.PostgreSQLDialect</db.dialect>
+                <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+                <jdbc.url>jdbc:postgresql://dev01.qa.atl.jboss.com:5432:cruisecontrol</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
+
+        <!--
+            ###################################################################
+            Then, those with commercial drivers
+            ###################################################################
+        -->
 
         <!-- The Oracle9i test envionment -->
         <profile>
@@ -241,17 +237,14 @@
                     <version>10.0.2.0</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/oracle9i</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.Oracle9iDialect</db.dialect>
+                <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
+                <jdbc.url>jdbc:oracle:thin:@dev20.qa.atl.jboss.com:1521:qa</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The Oracle10g test envionment -->
@@ -265,40 +258,39 @@
                     <version>10.0.2.0</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/oracle10g</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.Oracle10gDialect</db.dialect>
+                <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
+                <jdbc.url>jdbc:oracle:thin:@dev01.qa.atl.jboss.com:1521:qadb01</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
-        <!-- The DB2 8.x test envionment -->
+        <!-- The DB2 8.x test envionment (using 9x drivers)-->
         <profile>
             <id>db2-8</id>
             <dependencies>
                 <dependency>
                     <groupId>com.ibm</groupId>
-                    <artifactId>ojdbc14</artifactId>
-                    <version>10.0.2.0</version>
+                    <artifactId>db2jcc</artifactId>
+                    <version>3.1.57</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.ibm</groupId>
+                    <artifactId>db2jcc_license_cu</artifactId>
+                    <version>3.1.57</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/db2-8</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.DB2Dialect</db.dialect>
+                <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
+                <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
+                <jdbc.user>hiber</jdbc.user>
+                <jdbc.pass>hiber</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The Sybase 12 test envionment -->
@@ -311,17 +303,14 @@
                     <version>6.0.5</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/sybase12</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.SybaseDialect</db.dialect>
+                <jdbc.driver>com.sybase.jdbc3.jdbc.SybDriver</jdbc.driver>
+                <jdbc.url>jdbc:sybase:Tds:dev01.qa.atl.jboss.com:4100/cruisecontrol</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The SQLServer2005 (jTDS) test envionment -->
@@ -334,17 +323,14 @@
                     <version>1.2</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/sqlserver2005/jtds</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.SQLServerDialect</db.dialect>
+                <jdbc.driver>net.sourceforge.jtds.jdbc.Driver</jdbc.driver>
+                <jdbc.url>jdbc:jtds:sqlserver://dev30.qa.atl.jboss.com:3918/cruisecontrol</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation/>
+            </properties>
         </profile>
 
         <!-- The SQLServer2005 (MS JDBC) test envionment -->
@@ -357,17 +343,14 @@
                     <version>1.1</version>
                 </dependency>
             </dependencies>
-            <build>
-                <testResources>
-                    <testResource>
-                        <directory>${basedir}/src/test/profile/rh-qa/sqlserver2005/msjdbc</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>hibernate.properties</include>
-                        </includes>
-                    </testResource>
-                </testResources>
-            </build>
+            <properties>
+                <db.dialect>org.hibernate.dialect.SQLServerDialect</db.dialect>
+                <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
+                <jdbc.url>jdbc:sqlserver://dev30.qa.atl.jboss.com:3918</jdbc.url>
+                <jdbc.user>cruisecontrol</jdbc.user>
+                <jdbc.pass>cruisecontrol</jdbc.pass>
+                <jdbc.isolation>4096</jdbc.isolation>
+            </properties>
         </profile>
 
     </profiles>

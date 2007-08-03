@@ -2,8 +2,8 @@
 package org.hibernate.hql.ast;
 
 import antlr.RecognitionException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.QueryException;
 
 import java.util.ArrayList;
@@ -14,8 +14,8 @@ import java.util.List;
  * An error handler that counts parsing errors and warnings.
  */
 public class ErrorCounter implements ParseErrorHandler {
-	private Log log = LogFactory.getLog( ErrorCounter.class );
-	private Log hqlLog = LogFactory.getLog( "org.hibernate.hql.PARSER" );
+	private Logger log = LoggerFactory.getLogger( ErrorCounter.class );
+	private Logger hqlLog = LoggerFactory.getLogger( "org.hibernate.hql.PARSER" );
 
 	private List errorList = new ArrayList();
 	private List warningList = new ArrayList();
@@ -25,7 +25,7 @@ public class ErrorCounter implements ParseErrorHandler {
 		reportError( e.toString() );
 		recognitionExceptions.add( e );
 		if ( log.isDebugEnabled() ) {
-			log.debug( e, e );
+			log.debug( e.toString(), e );
 		}
 	}
 

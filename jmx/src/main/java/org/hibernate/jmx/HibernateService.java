@@ -6,8 +6,8 @@ import java.util.Map;
 
 import javax.naming.InitialContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -28,7 +28,7 @@ import org.hibernate.util.ExternalSessionFactoryConfig;
  */
 public class HibernateService extends ExternalSessionFactoryConfig implements HibernateServiceMBean {
 
-	private static final Log log = LogFactory.getLog(HibernateServiceMBean.class);
+	private static final Logger log = LoggerFactory.getLogger(HibernateServiceMBean.class);
 
 	private String boundName;
 	private Properties properties = new Properties();

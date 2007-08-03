@@ -19,7 +19,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.AbstractComponentType;
 import org.hibernate.util.ReflectHelper;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 
 /**
  * A <tt>LazyInitializer</tt> implemented using the CGLIB bytecode generation library
@@ -65,7 +65,7 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 			return proxy;
 		}
 		catch (Throwable t) {
-			LogFactory.getLog( BasicLazyInitializer.class )
+			LoggerFactory.getLogger( BasicLazyInitializer.class )
 				.error( "CGLIB Enhancement failed: " + entityName, t );
 			throw new HibernateException( "CGLIB Enhancement failed: " + entityName, t );
 		}

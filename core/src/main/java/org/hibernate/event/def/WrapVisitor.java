@@ -1,8 +1,8 @@
 //$Id: WrapVisitor.java 7181 2005-06-17 19:36:08Z oneovthafew $
 package org.hibernate.event.def;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
@@ -22,7 +22,7 @@ import org.hibernate.type.Type;
  */
 public class WrapVisitor extends ProxyVisitor {
 
-	private static final Log log = LogFactory.getLog(WrapVisitor.class);
+	private static final Logger log = LoggerFactory.getLogger(WrapVisitor.class);
 
 	boolean substitute = false;
 

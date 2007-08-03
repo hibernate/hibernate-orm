@@ -14,8 +14,8 @@ import net.sf.cglib.transform.impl.InterceptFieldFilter;
 import net.sf.cglib.transform.impl.InterceptFieldTransformer;
 import net.sf.cglib.core.ClassNameReader;
 import net.sf.cglib.core.DebuggingClassWriter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.bytecode.util.ClassFilter;
@@ -34,7 +34,7 @@ import org.objectweb.asm.attrs.Attributes;
  */
 public class CglibClassTransformer extends AbstractClassTransformerImpl {
 
-	private static Log log = LogFactory.getLog( CglibClassTransformer.class.getName() );
+	private static Logger log = LoggerFactory.getLogger( CglibClassTransformer.class.getName() );
 
 	public CglibClassTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );

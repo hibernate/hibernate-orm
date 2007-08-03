@@ -515,7 +515,7 @@ import org.hibernate.cfg.*;
 
 public class HibernateUtil {
 
-    private static Log log = LogFactory.getLog(HibernateUtil.class);
+    private static Logger log = LoggerFactory.getLogger(HibernateUtil.class);
 
     private static final SessionFactory sessionFactory;
 

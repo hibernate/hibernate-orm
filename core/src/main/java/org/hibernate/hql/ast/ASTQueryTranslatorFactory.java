@@ -1,8 +1,8 @@
 //$Id: ASTQueryTranslatorFactory.java 9162 2006-01-27 23:40:32Z steveebersole $
 package org.hibernate.hql.ast;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.QueryTranslator;
@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class ASTQueryTranslatorFactory implements QueryTranslatorFactory {
 
-	private static final Log log = LogFactory.getLog( ASTQueryTranslatorFactory.class );
+	private static final Logger log = LoggerFactory.getLogger( ASTQueryTranslatorFactory.class );
 
 	public ASTQueryTranslatorFactory() {
 		log.info( "Using ASTQueryTranslatorFactory" );

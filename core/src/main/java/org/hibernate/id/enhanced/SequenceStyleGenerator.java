@@ -3,8 +3,8 @@ package org.hibernate.id.enhanced;
 import java.util.Properties;
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.Configurable;
@@ -72,7 +72,7 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Configurable {
-	private static final Log log = LogFactory.getLog( SequenceStyleGenerator.class );
+	private static final Logger log = LoggerFactory.getLogger( SequenceStyleGenerator.class );
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public static final String SEQUENCE_PARAM = "sequence_name";

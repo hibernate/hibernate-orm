@@ -11,8 +11,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.NamingHelper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A connection provider that uses a <tt>DataSource</tt> registered with JNDI.
@@ -26,7 +26,7 @@ public class DatasourceConnectionProvider implements ConnectionProvider {
 	private String user;
 	private String pass;
 
-	private static final Log log = LogFactory.getLog(DatasourceConnectionProvider.class);
+	private static final Logger log = LoggerFactory.getLogger(DatasourceConnectionProvider.class);
 
 	public DataSource getDataSource() {
 		return ds;
@@ -38,24 +38,24 @@ public class DatasourceConnectionProvider implements ConnectionProvider {
 
 	public void configure(Properties props) throws HibernateException {
 
-		String jndiName = props.getProperty(Environment.DATASOURCE);
-		if (jndiName==null) {
+		String jndiName = props.getProperty( Environment.DATASOURCE );
+		if ( jndiName == null ) {
 			String msg = "datasource JNDI name was not specified by property " + Environment.DATASOURCE;
-			log.fatal(msg);
-			throw new HibernateException(msg);
+			log.error( msg );
+			throw new HibernateException( msg );
 		}
 
-		user = props.getProperty(Environment.USER);
-		pass = props.getProperty(Environment.PASS);
+		user = props.getProperty( Environment.USER );
+		pass = props.getProperty( Environment.PASS );
 
 		try {
-			ds = (DataSource) NamingHelper.getInitialContext(props).lookup(jndiName);
+			ds = ( DataSource ) NamingHelper.getInitialContext( props ).lookup( jndiName );
 		}
-		catch (Exception e) {
-			log.fatal( "Could not find datasource: " + jndiName, e );
+		catch ( Exception e ) {
+			log.error( "Could not find datasource: " + jndiName, e );
 			throw new HibernateException( "Could not find datasource", e );
 		}
-		if (ds==null) {
+		if ( ds == null ) {
 			throw new HibernateException( "Could not find datasource: " + jndiName );
 		}
 		log.info( "Using datasource: " + jndiName );

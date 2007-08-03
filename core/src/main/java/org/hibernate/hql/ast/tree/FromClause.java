@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -24,7 +24,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, DisplayableNode {
-	private static Log log = LogFactory.getLog( FromClause.class );
+	private static Logger log = LoggerFactory.getLogger( FromClause.class );
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;

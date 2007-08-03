@@ -11,14 +11,14 @@ import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard
  */
 public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements QuerySecondPass {
-	private static Log log = LogFactory.getLog( NamedSQLQuerySecondPass.class);
+	private static Logger log = LoggerFactory.getLogger( NamedSQLQuerySecondPass.class);
 	private Element queryElem;
 	private String path;
 	private Mappings mappings;

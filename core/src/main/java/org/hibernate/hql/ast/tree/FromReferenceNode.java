@@ -4,8 +4,8 @@ package org.hibernate.hql.ast.tree;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a reference to a FROM element, for example a class alias in a WHERE clause.
@@ -15,7 +15,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class FromReferenceNode extends AbstractSelectExpression
         implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
 
-	private static final Log log = LogFactory.getLog( FromReferenceNode.class );
+	private static final Logger log = LoggerFactory.getLogger( FromReferenceNode.class );
 
 	private FromElement fromElement;
 	private boolean resolved = false;

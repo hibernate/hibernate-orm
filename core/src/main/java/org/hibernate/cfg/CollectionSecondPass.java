@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -20,7 +20,7 @@ import org.hibernate.mapping.Value;
  * @author Emmanuel Bernard
  */
 public abstract class CollectionSecondPass implements SecondPass {
-	private static Log log = LogFactory.getLog( CollectionSecondPass.class );
+	private static Logger log = LoggerFactory.getLogger( CollectionSecondPass.class );
 	Mappings mappings;
 	Collection collection;
 	private Map localInheritedMetas;

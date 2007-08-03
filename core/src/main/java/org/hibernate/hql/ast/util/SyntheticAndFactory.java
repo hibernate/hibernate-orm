@@ -16,8 +16,8 @@ import org.hibernate.util.StringHelper;
 import antlr.ASTFactory;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates synthetic and nodes based on the where fragment part of a JoinSequence.
@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
  * @author josh Dec 5, 2004 12:25:20 PM
  */
 public class SyntheticAndFactory implements HqlSqlTokenTypes {
-	private static final Log log = LogFactory.getLog( SyntheticAndFactory.class );
+	private static final Logger log = LoggerFactory.getLogger( SyntheticAndFactory.class );
 
 	private ASTFactory astFactory;
 	private AST thetaJoins;

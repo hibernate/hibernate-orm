@@ -8,8 +8,8 @@ import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 
 /**
@@ -19,7 +19,7 @@ import org.hibernate.HibernateException;
  */
 public class JACCConfiguration {
 
-	private static final Log log = LogFactory.getLog( JACCConfiguration.class );
+	private static final Logger log = LoggerFactory.getLogger( JACCConfiguration.class );
 
 	private final PolicyConfiguration policyConfiguration;
 

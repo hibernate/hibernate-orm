@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -27,7 +27,7 @@ import org.hibernate.util.ArrayHelper;
  * @author Gavin King
  */
 public final class QueryParameters {
-	private static final Log log = LogFactory.getLog(QueryParameters.class);
+	private static final Logger log = LoggerFactory.getLogger(QueryParameters.class);
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;

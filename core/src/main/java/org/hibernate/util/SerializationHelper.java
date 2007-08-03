@@ -65,8 +65,8 @@ import java.io.ObjectInputStream;
 
 import org.hibernate.type.SerializationException;
 import org.hibernate.Hibernate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Assists with the serialization process and performs additional functionality based
@@ -92,7 +92,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class SerializationHelper {
 
-	private static final Log log = LogFactory.getLog(SerializationHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(SerializationHelper.class);
 
     private SerializationHelper() {}
 

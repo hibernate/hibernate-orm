@@ -13,8 +13,8 @@ import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.HibernateException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.CacheException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ import java.io.ObjectOutputStream;
  */
 public class ActionQueue {
 
-	private static final Log log = LogFactory.getLog( ActionQueue.class );
+	private static final Logger log = LoggerFactory.getLogger( ActionQueue.class );
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;

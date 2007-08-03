@@ -2,8 +2,8 @@ package org.hibernate.cache.impl.bridge;
 
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.CacheProvider;
@@ -27,7 +27,7 @@ import org.hibernate.cfg.Settings;
  */
 public class RegionFactoryCacheProviderBridge implements RegionFactory {
 	public static final String DEF_PROVIDER = NoCacheProvider.class.getName();
-	private static final Log log = LogFactory.getLog( RegionFactoryCacheProviderBridge.class );
+	private static final Logger log = LoggerFactory.getLogger( RegionFactoryCacheProviderBridge.class );
 
 	private CacheProvider cacheProvider;
 	private Settings settings;

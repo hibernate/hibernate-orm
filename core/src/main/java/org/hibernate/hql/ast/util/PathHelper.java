@@ -7,8 +7,8 @@ import org.hibernate.util.StringHelper;
 import antlr.ASTFactory;
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides utility methods for paths.
@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class PathHelper {
 
-	private static final Log log = LogFactory.getLog( PathHelper.class );
+	private static final Logger log = LoggerFactory.getLogger( PathHelper.class );
 
 	private PathHelper() {
 	}

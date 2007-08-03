@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.ReflectionOptimizer;
@@ -19,7 +19,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class PojoInstantiator implements Instantiator, Serializable {
 
-	private static final Log log = LogFactory.getLog(PojoInstantiator.class);
+	private static final Logger log = LoggerFactory.getLogger(PojoInstantiator.class);
 
 	private transient Constructor constructor;
 

@@ -11,8 +11,8 @@ import net.sf.cglib.transform.ClassTransformerFactory;
 import net.sf.cglib.transform.TransformingClassLoader;
 import net.sf.cglib.transform.impl.InterceptFieldFilter;
 import net.sf.cglib.transform.impl.InterceptFieldTransformer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
@@ -27,7 +27,7 @@ import org.objectweb.asm.Type;
  */
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private static final Log log = LogFactory.getLog( BytecodeProviderImpl.class );
+	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();

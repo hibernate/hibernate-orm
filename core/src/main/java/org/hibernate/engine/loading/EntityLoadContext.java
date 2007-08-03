@@ -4,8 +4,8 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@inheritDoc}
@@ -13,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Steve Ebersole
  */
 public class EntityLoadContext {
-	private static final Log log = LogFactory.getLog( EntityLoadContext.class );
+	private static final Logger log = LoggerFactory.getLogger( EntityLoadContext.class );
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;

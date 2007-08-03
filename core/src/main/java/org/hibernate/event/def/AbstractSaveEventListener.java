@@ -4,8 +4,8 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -44,7 +44,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	protected static final int DETACHED = 2;
 	protected static final int DELETED = 3;
 
-	private static final Log log = LogFactory.getLog( AbstractSaveEventListener.class );
+	private static final Logger log = LoggerFactory.getLogger( AbstractSaveEventListener.class );
 
 	/**
 	 * Prepares the save call using the given requested id.

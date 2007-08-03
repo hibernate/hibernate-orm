@@ -3,8 +3,8 @@ package org.hibernate.loader.collection;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
@@ -21,7 +21,7 @@ import org.hibernate.persister.collection.QueryableCollection;
  */
 public class BasicCollectionLoader extends CollectionLoader {
 
-	private static final Log log = LogFactory.getLog(BasicCollectionLoader.class);
+	private static final Logger log = LoggerFactory.getLogger(BasicCollectionLoader.class);
 
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister, 

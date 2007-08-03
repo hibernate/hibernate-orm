@@ -21,8 +21,8 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An SQL dialect compatible with HSQLDB (Hypersonic SQL).
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class HSQLDialect extends Dialect {
 
-	private static final Log log = LogFactory.getLog( HSQLDialect.class );
+	private static final Logger log = LoggerFactory.getLogger( HSQLDialect.class );
 
 	private boolean schemaSupport;
 

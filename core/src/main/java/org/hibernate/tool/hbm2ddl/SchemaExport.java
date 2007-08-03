@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
@@ -41,7 +41,7 @@ import org.hibernate.util.JDBCExceptionReporter;
  */
 public class SchemaExport {
 
-	private static final Log log = LogFactory.getLog( SchemaExport.class );
+	private static final Logger log = LoggerFactory.getLogger( SchemaExport.class );
 
 	private ConnectionHelper connectionHelper;
 	private String[] dropSQL;

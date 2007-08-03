@@ -9,8 +9,8 @@ import java.util.Properties;
 import java.util.HashMap;
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.engine.SessionImplementor;
@@ -87,7 +87,7 @@ import org.hibernate.util.CollectionHelper;
  * @author Steve Ebersole
  */
 public class TableGenerator extends TransactionHelper implements PersistentIdentifierGenerator, Configurable {
-	private static final Log log = LogFactory.getLog( TableGenerator.class );
+	private static final Logger log = LoggerFactory.getLogger( TableGenerator.class );
 
 	public static final String TABLE_PARAM = "table_name";
 	public static final String DEF_TABLE = "hibernate_sequences";

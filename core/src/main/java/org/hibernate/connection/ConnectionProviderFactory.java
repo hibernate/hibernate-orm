@@ -13,8 +13,8 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
@@ -34,11 +34,11 @@ import org.hibernate.util.ReflectHelper;
 
 public final class ConnectionProviderFactory {
 
-	private static final Log log = LogFactory.getLog(ConnectionProviderFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(ConnectionProviderFactory.class);
 
 	/**
 	 * Instantiate a <tt>ConnectionProvider</tt> using <tt>System</tt> properties.
-	 * @return ConnectionProvider
+	 * @return The created connection provider.
 	 * @throws HibernateException
 	 */
 	public static ConnectionProvider newConnectionProvider() throws HibernateException {
@@ -57,11 +57,11 @@ public final class ConnectionProviderFactory {
 	}
 
 	/**
-	 * Instantiate a <tt>ConnectionProvider</tt> using given properties.
-	 * Method newConnectionProvider.
-	 * @param properties hibernate <tt>SessionFactory</tt> properties
-	 * @Param connectionProviderInjectionData object to be injected in the conenction provided
-	 * @return ConnectionProvider
+	 * Create a connection provider based on the given information.
+	 *
+	 * @param properties Properties being used to build the {@link org.hibernate.SessionFactory}.
+	 * @param connectionProviderInjectionData Soemthing to be injected in the conenction provided
+	 * @return The created connection provider
 	 * @throws HibernateException
 	 */
 	public static ConnectionProvider newConnectionProvider(Properties properties, Map connectionProviderInjectionData) throws HibernateException {
@@ -72,8 +72,8 @@ public final class ConnectionProviderFactory {
 				log.info("Initializing connection provider: " + providerClass);
 				connections = (ConnectionProvider) ReflectHelper.classForName(providerClass).newInstance();
 			}
-			catch (Exception e) {
-				log.fatal("Could not instantiate connection provider", e);
+			catch ( Exception e ) {
+				log.error( "Could not instantiate connection provider", e );
 				throw new HibernateException("Could not instantiate connection provider: " + providerClass);
 			}
 		}

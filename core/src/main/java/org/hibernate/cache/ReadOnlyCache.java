@@ -3,8 +3,8 @@ package org.hibernate.cache;
 
 import java.util.Comparator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.access.SoftLock;
 
@@ -15,7 +15,7 @@ import org.hibernate.cache.access.SoftLock;
 public class ReadOnlyCache implements CacheConcurrencyStrategy {
 	
 	private Cache cache;
-	private static final Log log = LogFactory.getLog(ReadOnlyCache.class);
+	private static final Logger log = LoggerFactory.getLogger(ReadOnlyCache.class);
 	
 	public ReadOnlyCache() {}
 	

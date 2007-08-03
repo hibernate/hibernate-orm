@@ -7,8 +7,8 @@ import org.hibernate.hql.ast.util.ASTUtil;
 
 import antlr.collections.AST;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines a top-level AST node representing an HQL update statement.
@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UpdateStatement extends AbstractRestrictableStatement {
 
-	private static final Log log = LogFactory.getLog( UpdateStatement.class );
+	private static final Logger log = LoggerFactory.getLogger( UpdateStatement.class );
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.Statement#getStatementType()
@@ -37,7 +37,7 @@ public class UpdateStatement extends AbstractRestrictableStatement {
 		return SqlTokenTypes.SET;
 	}
 
-	protected Log getLog() {
+	protected Logger getLog() {
 		return log;
 	}
 

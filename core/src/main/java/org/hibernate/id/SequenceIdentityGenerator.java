@@ -9,8 +9,8 @@ import org.hibernate.MappingException;
 import org.hibernate.sql.Insert;
 import org.hibernate.type.Type;
 import org.hibernate.engine.SessionImplementor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -33,7 +33,7 @@ import java.util.Properties;
 public class SequenceIdentityGenerator extends SequenceGenerator
 		implements PostInsertIdentifierGenerator {
 
-	private static final Log log = LogFactory.getLog( SequenceIdentityGenerator.class );
+	private static final Logger log = LoggerFactory.getLogger( SequenceIdentityGenerator.class );
 
 	public Serializable generate(SessionImplementor s, Object obj) {
 		return IdentifierGeneratorFactory.POST_INSERT_INDICATOR;

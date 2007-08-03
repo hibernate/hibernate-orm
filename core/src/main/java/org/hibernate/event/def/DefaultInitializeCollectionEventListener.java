@@ -3,8 +3,8 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
@@ -23,7 +23,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class DefaultInitializeCollectionEventListener implements InitializeCollectionEventListener {
 
-	private static final Log log = LogFactory.getLog(DefaultInitializeCollectionEventListener.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultInitializeCollectionEventListener.class);
 
 	/**
 	 * called by a collection that wants to initialize itself

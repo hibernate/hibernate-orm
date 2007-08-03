@@ -16,8 +16,8 @@ import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.Dom4jInstantiator;
 import org.hibernate.type.AbstractComponentType;
 import org.dom4j.Element;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ import java.util.Iterator;
  */
 public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 
-	static final Log log = LogFactory.getLog( Dom4jEntityTuplizer.class );
+	static final Logger log = LoggerFactory.getLogger( Dom4jEntityTuplizer.class );
 
 	private Set subclassNodeNames = new HashSet();
 

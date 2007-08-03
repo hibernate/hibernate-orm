@@ -90,10 +90,10 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 		if ( "true".equals(externalConfig) ) {
 
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty(proxoolAlias) ) {
+			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
 				String msg = "Cannot configure Proxool Provider to use an existing in memory pool without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.fatal(msg);
-				throw new HibernateException(msg);
+				log.error( msg );
+				throw new HibernateException( msg );
 			}
 			// Append the stem to the proxool pool alias
 			proxoolAlias = PROXOOL_JDBC_STEM + proxoolAlias;
@@ -101,28 +101,28 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 			// Set the existing pool flag to true
 			existingPool = true;
 
-			log.info("Configuring Proxool Provider using existing pool in memory: " + proxoolAlias);
+			log.info( "Configuring Proxool Provider using existing pool in memory: " + proxoolAlias );
 
 			// Configured using the JAXP Configurator
 		}
-		else if ( StringHelper.isNotEmpty(jaxpFile) ) {
+		else if ( StringHelper.isNotEmpty( jaxpFile ) ) {
 
-			log.info("Configuring Proxool Provider using JAXPConfigurator: " + jaxpFile);
+			log.info( "Configuring Proxool Provider using JAXPConfigurator: " + jaxpFile );
 
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty(proxoolAlias) ) {
+			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
 				String msg = "Cannot configure Proxool Provider to use JAXP without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.fatal(msg);
-				throw new HibernateException(msg);
+				log.error( msg );
+				throw new HibernateException( msg );
 			}
 
 			try {
-				JAXPConfigurator.configure( ConfigHelper.getConfigStreamReader(jaxpFile), false );
+				JAXPConfigurator.configure( ConfigHelper.getConfigStreamReader( jaxpFile ), false );
 			}
-			catch (ProxoolException e) {
+			catch ( ProxoolException e ) {
 				String msg = "Proxool Provider unable to load JAXP configurator file: " + jaxpFile;
-				log.fatal(msg, e);
-				throw new HibernateException(msg, e);
+				log.error( msg, e );
+				throw new HibernateException( msg, e );
 			}
 
 			// Append the stem to the proxool pool alias
@@ -131,24 +131,24 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 
 			// Configured using the Properties File Configurator
 		}
-		else if ( StringHelper.isNotEmpty(propFile) ) {
+		else if ( StringHelper.isNotEmpty( propFile ) ) {
 
-			log.info("Configuring Proxool Provider using Properties File: " + propFile);
+			log.info( "Configuring Proxool Provider using Properties File: " + propFile );
 
 			// Validate that an alias name was provided to determine which pool to use
-			if ( !StringHelper.isNotEmpty(proxoolAlias) ) {
+			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
 				String msg = "Cannot configure Proxool Provider to use Properties File without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.fatal(msg);
-				throw new HibernateException(msg);
+				log.error( msg );
+				throw new HibernateException( msg );
 			}
 
 			try {
-				PropertyConfigurator.configure( ConfigHelper.getConfigProperties(propFile) );
+				PropertyConfigurator.configure( ConfigHelper.getConfigProperties( propFile ) );
 			}
-			catch (ProxoolException e) {
+			catch ( ProxoolException e ) {
 				String msg = "Proxool Provider unable to load load Property configurator file: " + propFile;
-				log.fatal(msg, e);
-				throw new HibernateException(msg, e);
+				log.error( msg, e );
+				throw new HibernateException( msg, e );
 			}
 
 			// Append the stem to the proxool pool alias

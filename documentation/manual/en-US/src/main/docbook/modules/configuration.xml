@@ -1344,7 +1344,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </para>
 
         <para>
-            The XML configuration file is by default expected to be in the root o
+            The XML configuration file is by default expected to be in the root of
             your <literal>CLASSPATH</literal>. Here is an example:
         </para>
 
@@ -1384,7 +1384,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <para>
             As you can see, the advantage of this approach is the externalization of the
             mapping file names to configuration. The <literal>hibernate.cfg.xml</literal>
-            is also more convenient once you have to tune the Hibernate cache. Note that is
+            is also more convenient once you have to tune the Hibernate cache. Note that it is
             your choice to use either <literal>hibernate.properties</literal> or
             <literal>hibernate.cfg.xml</literal>, both are equivalent, except for the above
             mentioned benefits of using the XML syntax.

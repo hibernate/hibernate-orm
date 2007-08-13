@@ -24,7 +24,9 @@ public class OrderedSetType extends SetType {
 	 * {@inheritDoc}
 	 */
 	public Object instantiate(int anticipatedSize) {
-		return new LinkedHashSet( anticipatedSize );
+		return anticipatedSize > 0
+				? new LinkedHashSet( anticipatedSize )
+				: new LinkedHashSet();
 	}
 
 }

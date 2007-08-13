@@ -24,7 +24,9 @@ public class OrderedMapType extends MapType {
 	 * {@inheritDoc}
 	 */
 	public Object instantiate(int anticipatedSize) {
-		return new LinkedHashMap( anticipatedSize );
+		return anticipatedSize > 0
+				? new LinkedHashMap( anticipatedSize )
+				: new LinkedHashMap();
 	}
 
 }

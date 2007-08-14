@@ -989,9 +989,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <entry>
                             Automatically validate or export schema DDL to the database 
                             when the <literal>SessionFactory</literal> is created. With
-                            <literal>create-drop</literal>, the database schema will be 
-                            dropped when the <literal>SessionFactory</literal> is closed 
-                            explicitly.
+                            <literal>create</literal>, the database schema will be dropped
+                            and re-created when the <literal>SessionFactory</literal> is
+                            created. <literal>create-drop</literal> implies
+                            <literal>create</literal>, and will additionally cause the
+                            schema be dropped when the <literal>SessionFactory</literal>
+                            is closed explicitly. With <literal>update</literal>, the
+                            schema will not be dropped, but is updated. <literal>validate</literal>
+                            will check the database for required tables/columns and throw an
+                            Exception if something is missing.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>validate</literal> | <literal>update</literal> | 

@@ -553,7 +553,7 @@ public final class TypeFactory {
 				AbstractComponentType componentType = ( AbstractComponentType ) types[i];
 				Type[] subtypes = componentType.getSubtypes();
 				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = componentType.getPropertyValues( target[i], session );
+				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );
 				replaceAssociations( origComponentValues, targetComponentValues, subtypes, session, null, copyCache, foreignKeyDirection );
 				copied[i] = target[i];
 			}

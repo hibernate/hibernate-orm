@@ -9,6 +9,7 @@ import junit.framework.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.Hibernate;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
@@ -186,6 +187,132 @@ public class ComponentTest extends FunctionalTestCase {
 		s.getNamedQuery("userNameIn")
 			.setParameterList( "nameList", new Object[] {"1ovthafew", "turin", "xam"} )
 			.list();
+		t.commit();
+		s.close();
+	}
+
+	public void testMergeComponent() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Employee emp = new Employee();
+		emp.setHireDate( new Date() );
+		emp.setPerson( new Person() );
+		emp.getPerson().setName( "steve" );
+		emp.getPerson().setDob( new Date() );
+		s.persist( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		t.commit();
+		s.close();
+
+		assertNull(emp.getOptionalComponent());
+		emp.setOptionalComponent( new OptionalComponent() );
+		emp.getOptionalComponent().setValue1( "emp-value1" );
+		emp.getOptionalComponent().setValue2( "emp-value2" );
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.merge( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		t.commit();
+		s.close();
+
+		assertEquals("emp-value1", emp.getOptionalComponent().getValue1());
+		assertEquals("emp-value2", emp.getOptionalComponent().getValue2());
+		emp.getOptionalComponent().setValue1( null );
+		emp.getOptionalComponent().setValue2( null );
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.merge( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		Hibernate.initialize(emp.getDirectReports());
+		t.commit();
+		s.close();
+
+		assertNull(emp.getOptionalComponent());
+
+		Employee emp1 = new Employee();
+		emp1.setHireDate( new Date() );
+		emp1.setPerson( new Person() );
+		emp1.getPerson().setName( "bozo" );
+		emp1.getPerson().setDob( new Date() );
+		emp.getDirectReports().add( emp1 );
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.merge( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		Hibernate.initialize(emp.getDirectReports());
+		t.commit();
+		s.close();
+
+		assertEquals(1, emp.getDirectReports().size());
+		emp1 = (Employee)emp.getDirectReports().iterator().next();
+		assertNull( emp1.getOptionalComponent() );
+		emp1.setOptionalComponent( new OptionalComponent() );
+		emp1.getOptionalComponent().setValue1( "emp1-value1" );
+		emp1.getOptionalComponent().setValue2( "emp1-value2" );
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.merge( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		Hibernate.initialize(emp.getDirectReports());
+		t.commit();
+		s.close();
+
+		assertEquals(1, emp.getDirectReports().size());
+		emp1 = (Employee)emp.getDirectReports().iterator().next();
+		assertEquals( "emp1-value1", emp1.getOptionalComponent().getValue1());
+		assertEquals( "emp1-value2", emp1.getOptionalComponent().getValue2());
+		emp1.getOptionalComponent().setValue1( null );
+		emp1.getOptionalComponent().setValue2( null );
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.merge( emp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		emp = (Employee)s.get( Employee.class, emp.getId() );
+		Hibernate.initialize(emp.getDirectReports());
+		t.commit();
+		s.close();
+
+		assertEquals(1, emp.getDirectReports().size());
+		emp1 = (Employee)emp.getDirectReports().iterator().next();
+		assertNull(emp1.getOptionalComponent());
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( emp );
 		t.commit();
 		s.close();
 	}

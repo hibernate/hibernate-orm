@@ -1,6 +1,8 @@
 package org.hibernate.test.component.basic;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * todo: describe Employee
@@ -11,6 +13,8 @@ public class Employee {
 	private Long id;
 	private Person person;
 	private Date hireDate;
+	private OptionalComponent optionalComponent;
+	private Set directReports = new HashSet();
 
 	public Long getId() {
 		return id;
@@ -34,5 +38,21 @@ public class Employee {
 
 	public void setHireDate(Date hireDate) {
 		this.hireDate = hireDate;
+	}
+
+	public OptionalComponent getOptionalComponent() {
+		return optionalComponent;
+	}
+
+	public void setOptionalComponent(OptionalComponent optionalComponent) {
+		this.optionalComponent = optionalComponent;
+	}
+
+	public Set getDirectReports() {
+		return directReports;
+	}
+
+	public void setDirectReports(Set directReports) {
+		this.directReports = directReports;
 	}
 }

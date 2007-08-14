@@ -1,4 +1,4 @@
-﻿<chapter id="tutorial">
+<chapter id="tutorial">
     <title>Introdu&#x00E7;&#x00E3;o ao Hibernate</title>
     
     <sect1 id="tutorial-intro" revision="1">
@@ -1447,7 +1447,7 @@ out.close();]]></programlisting>
 <programlisting><![CDATA[<target name="war" depends="compile">
     <war destfile="hibernate-tutorial.war" webxml="web.xml">
         <lib dir="${librarydir}">
-          <exclude name="jsdk*.jar"/>
+          <exclude name="servlet.jar"/>
         </lib>
 
         <classes dir="${targetdir}"/>
@@ -1479,8 +1479,9 @@ out.close();]]></programlisting>
 
             <para>
                 Antes de você compilar e fazer o deploy desta aplicação web, note que uma biblioteca 
-                adicional é requerida: <literal>jsdk.jar</literal>. Esse é o Java servlet development kit, 
-                se você não possui esta biblioteca, faça seu download na página da Sun e copie-a
+                adicional é requerida: <literal>servlet.jar</literal>. Esse é o Java Servlet Development Kit, 
+                se você não possui esta biblioteca, faça seu download na 
+                <ulink url="http://java.sun.com/products/servlet/archive.html">página da Sun</ulink> e copie-a
                 para seu diretório de bibliotecas. Entretanto, será usado somente para a compilação e 
                 excluído do pacote WAR.
             </para>

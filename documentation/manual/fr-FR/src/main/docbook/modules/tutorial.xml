@@ -1494,7 +1494,7 @@ out.close();]]></programlisting>
 <programlisting><![CDATA[<target name="war" depends="compile">
     <war destfile="hibernate-tutorial.war" webxml="web.xml">
         <lib dir="${librarydir}">
-          <exclude name="jsdk*.jar"/>
+          <exclude name="servlet.jar"/>
         </lib>
 
         <classes dir="${targetdir}"/>
@@ -1526,8 +1526,9 @@ out.close();]]></programlisting>
 
             <para>
                 Avant de compiler et déployer l'application web, notez qu'une bibliothèque supplémentaire
-                est requise: <literal>jsdk.jar</literal>. C'est le kit de développement de Servlet Java,
-                si vous ne disposez pas de cette bibliothèque, prenez la sur le site de Sun et copiez la
+                est requise: <literal>servlet.jar</literal>. C'est le kit de développement de Servlet Java,
+                si vous ne disposez pas de cette bibliothèque, prenez la sur le 
+                <ulink url="http://java.sun.com/products/servlet/archive.html">site de Sun</ulink> et copiez la
                 dans votre répertoire des bibliothèques. Cependant, elle ne sera utilisée uniquement pour la
                 compilation et sera exclue du paackage WAR.
             </para>

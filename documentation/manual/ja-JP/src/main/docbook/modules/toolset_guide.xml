@@ -92,7 +92,7 @@
             </para>
             
             <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
-<property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
+<property name="employeeId" unique-key="OrgEmployeeId"/>]]></programlisting>
 
             
 

@@ -94,7 +94,7 @@
                 dans le fichier de mapping.
             </para>
             <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
-            <property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
+            <property name="employeeId" unique-key="OrgEmployeeId"/>]]></programlisting>
 
             <para>
                 Un attribut <literal>index</literal> indique le nom d'un index qui sera

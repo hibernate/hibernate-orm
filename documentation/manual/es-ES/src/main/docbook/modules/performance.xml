@@ -639,7 +639,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memoria, disco</entry>
-                <entry></entry>
+                <entry>s&#x00ed; (invalidaci&#x00f3;n en cluster)</entry>
                 <entry>s&#x00ed;</entry>
             </row>
             <row>

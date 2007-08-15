@@ -679,7 +679,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>メモリ、ディスク</entry>
-                <entry></entry>
+                <entry>yes（クラスタ無効化）</entry>
                 <entry>yes</entry>
             </row>
             <row>

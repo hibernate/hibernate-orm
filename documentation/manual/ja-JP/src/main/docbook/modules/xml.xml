@@ -264,7 +264,7 @@ List results = dom4jSession
 for ( int i=0; i<results.size(); i++ ) {
     //add the customer data to the XML document
     Element customer = (Element) results.get(i);
-    doc.add(customer);
+    doc.getRootElement().add(customer);
 }
 
 tx.commit();

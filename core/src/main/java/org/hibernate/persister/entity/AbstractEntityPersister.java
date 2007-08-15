@@ -3718,7 +3718,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch( SQLException sqle ) {
-			JDBCExceptionHelper.convert(
+			throw JDBCExceptionHelper.convert(
 					getFactory().getSQLExceptionConverter(),
 					sqle,
 					"unable to select generated column values",

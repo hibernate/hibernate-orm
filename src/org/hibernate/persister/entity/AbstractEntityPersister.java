@@ -1764,6 +1764,7 @@ public abstract class AbstractEntityPersister
 				}
 				throw new StaleObjectStateException( getEntityName(), id );
 			}
+			return false;
 		}
 		catch( TooManyRowsAffectedException e ) {
 			throw new HibernateException(

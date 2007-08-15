@@ -56,7 +56,7 @@ import org.hibernate.test.instrument.runtime.JavassistInstrumentationTest;
 import org.hibernate.test.interceptor.InterceptorTest;
 import org.hibernate.test.interfaceproxy.InterfaceProxyTest;
 import org.hibernate.test.iterate.IterateTest;
-import org.hibernate.test.join.JoinTest;
+import org.hibernate.test.join.JoinSuite;
 import org.hibernate.test.joinedsubclass.JoinedSubclassTest;
 import org.hibernate.test.joinfetch.JoinFetchTest;
 import org.hibernate.test.jpa.JPAComplianceSuite;
@@ -222,7 +222,7 @@ public class AllTests {
 			suite.addTest( DynamicFilterTest.suite() );
 			suite.addTest( InterfaceProxyTest.suite() );
 			suite.addTest( OrphanSuite.suite() );
-			suite.addTest( JoinTest.suite() );
+			suite.addTest( JoinSuite.suite() );
 			suite.addTest( JoinedSubclassTest.suite() );
 			suite.addTest( org.hibernate.test.unionsubclass2.UnionSubclassTest.suite() );
 			suite.addTest( MixedTest.suite() );

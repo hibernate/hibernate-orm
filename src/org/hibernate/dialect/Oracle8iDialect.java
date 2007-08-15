@@ -64,6 +64,8 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	protected void registerDateTimeTypeMappings() {
+		registerColumnType( Types.DATE, "date" );
+		registerColumnType( Types.TIME, "date" );
 		registerColumnType( Types.TIMESTAMP, "date" );
 	}
 

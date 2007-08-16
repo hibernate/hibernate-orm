@@ -1,4 +1,4 @@
-﻿<chapter id="performance">
+<chapter id="performance">
     <title>Aumentando a performance</title>
 
     <sect1 id="performance-fetching" revision="2">
@@ -940,26 +940,32 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         <itemizedlist>
         <listitem>
         <para>
-            <literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache
+            <literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache.
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            <literal>CacheMode.IGNORE</literal> - never write nor read items from the second-level cache, 
+            except when updating data.
         </para>
         </listitem>
         <listitem>
         <para>
             <literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to
-            the second-level cache except when updating data
+            the second-level cache except when updating data.
         </para>
         </listitem>
         <listitem>
         <para>
             <literal>CacheMode.PUT</literal> - write items to the second-level cache, but don't read from
-            the second-level cache
+            the second-level cache.
         </para>
         </listitem>
         <listitem>
         <para>
             <literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from
             the second-level cache, bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal>, forcing
-            a refresh of the second-level cache for all items read from the database
+            a refresh of the second-level cache for all items read from the database.
         </para>
         </listitem>
         </itemizedlist>

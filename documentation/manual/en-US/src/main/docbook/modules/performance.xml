@@ -949,6 +949,12 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         </listitem>
         <listitem>
         <para>
+            <literal>CacheMode.IGNORE</literal> - never write nor read items from the second-level cache, 
+            except when updating data.
+        </para>
+        </listitem>
+        <listitem>
+        <para>
             <literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to
             the second-level cache except when updating data
         </para>

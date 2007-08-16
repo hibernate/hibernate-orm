@@ -20,8 +20,8 @@ import javax.transaction.TransactionManager;
 
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
@@ -33,7 +33,7 @@ import org.hibernate.util.PropertiesHelper;
  * using the jgroups multiplexer under the covers to re-use the same group
  * communication stack.
  * <p/>
- * todo : this can get simplified once JBC implemants their "configuration factory" (the stuff akin to channel factory)
+ * todo : this can get simplified once JBC implemants their "configuration factory" (the stuff akin to channel factory) - http://jira.jboss.com/jira/browse/JBCACHE-1156
  * 
  * @author Steve Ebersole
  */
@@ -50,7 +50,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
 
 	public static final String OPTIMISTIC_LOCKING_SCHEME = "OPTIMISTIC";
 
-	private static final Log log = LogFactory.getLog( MultiplexingCacheInstanceManager.class );
+	private static final Logger log = LoggerFactory.getLogger( MultiplexingCacheInstanceManager.class );
 
 	private final Cache jbcEntityCache;
 	private final Cache jbcCollectionCache;

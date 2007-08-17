@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.sql.Connection;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
@@ -279,6 +280,29 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 
 
 
+	/**
+	 * Do connections enforce SERIALIZABLE isolation...
+	 *
+	 * @return
+	 * @throws Exception
+	 */
+	protected boolean isSerializableIsolationEnforced() throws Exception {
+		Connection conn = null;
+		try {
+			conn = sfi().getConnectionProvider().getConnection();
+			return conn.getTransactionIsolation() >= Connection.TRANSACTION_SERIALIZABLE;
+		}
+		finally {
+			if ( conn != null ) {
+				try {
+					sfi().getConnectionProvider().closeConnection( conn );
+				}
+				catch ( Throwable ignore ) {
+					// ignore...
+				}
+			}
+		}
+	}
 
 	/**
 	 * Is connection at least read committed?

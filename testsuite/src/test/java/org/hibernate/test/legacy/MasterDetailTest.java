@@ -835,6 +835,10 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	public void testCachedCollectionRefresh() throws Exception {
+		if ( isSerializableIsolationEnforced() ) {
+			reportSkip( "SERIALIZABLE isolation", "cached collection refreshing" );
+			return;
+		}
 		Session s = openSession();
 		Category c = new Category();
 		List list = new ArrayList();
@@ -853,7 +857,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 		
 		s = openSession();
-		if ( (getDialect() instanceof MySQLDialect) ) s.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		if ( (getDialect() instanceof MySQLDialect) ) {
+			s.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		}
 		c = (Category) s.load(Category.class, id);
 		c.getSubcategories().size(); //force load
 

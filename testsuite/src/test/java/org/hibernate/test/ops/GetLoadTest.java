@@ -2,7 +2,6 @@
 package org.hibernate.test.ops;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -81,6 +80,26 @@ public class GetLoadTest extends FunctionalTestCase {
 		s.close();
 		
 		assertFetchCount(0);
+	}
+
+	public void testGetAfterDelete() {
+		clearCounts();
+
+		Session s = openSession();
+		s.beginTransaction();
+		Employer emp = new Employer();
+		s.persist( emp );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( emp );
+		emp = ( Employer ) s.get( Employee.class, emp.getId() );
+		s.getTransaction().commit();
+		s.close();
+
+		assertNull( "get did not return null after delete", emp );
 	}
 
 	private void clearCounts() {

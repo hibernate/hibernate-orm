@@ -268,10 +268,10 @@ public class LoadContexts {
 		LoadingCollectionEntry rtn = ( LoadingCollectionEntry ) xrefLoadingCollectionEntries.get( key );
 		if ( log.isTraceEnabled() ) {
 			if ( rtn == null ) {
-				log.trace( "collection [" + key + "] located in load context" );
+				log.trace( "collection [" + key + "] not located in load context" );
 			}
 			else {
-				log.trace( "collection [" + key + "] not located in load context" );
+				log.trace( "collection [" + key + "] located in load context" );
 			}
 		}
 		return rtn;

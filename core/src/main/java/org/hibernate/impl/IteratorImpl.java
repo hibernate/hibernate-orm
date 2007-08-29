@@ -1,4 +1,4 @@
-//$Id: IteratorImpl.java 11651 2007-06-07 18:22:50Z steve.ebersole@jboss.com $
+//$Id: IteratorImpl.java 13956 2007-08-29 00:47:06Z gbadner $
 package org.hibernate.impl;
 
 import java.sql.PreparedStatement;
@@ -54,12 +54,7 @@ public final class IteratorImpl implements HibernateIterator {
 
 		single = types.length==1;
 
-		// rs.isBeforeFirst() will return false if rs contains no rows
-		hasNext = this.rs.isBeforeFirst();
-		if ( !hasNext ) {
-			log.debug("ResultSet contains no rows");
-			close();
-		}
+		postNext();
 	}
 
 	public void close() throws JDBCException {
@@ -92,10 +87,14 @@ public final class IteratorImpl implements HibernateIterator {
 	}
 
 	private void postNext() throws SQLException {
-		this.hasNext = !rs.isLast();
+		log.debug("attempting to retrieve next results");
+		this.hasNext = rs.next();
 		if (!hasNext) {
 			log.debug("exhausted results");
 			close();
+		}
+		else {
+			log.debug("retrieved next results");
 		}
 	}
 
@@ -106,10 +105,9 @@ public final class IteratorImpl implements HibernateIterator {
 	public Object next() throws HibernateException {
 		if ( !hasNext ) throw new NoSuchElementException("No more results");
 		try {
-			log.debug("retrieving next results");
-			rs.next();
 			boolean isHolder = holderInstantiator.isRequired();
 
+			log.debug("assembling results");
 			if ( single && !isHolder ) {
 				currentResult = types[0].nullSafeGet( rs, names[0], session, null );
 			}

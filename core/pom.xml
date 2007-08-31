@@ -22,7 +22,7 @@
         <dependency>
             <groupId>antlr</groupId>
             <artifactId>antlr</artifactId>
-            <version>2.7.6</version>
+            <version>${antlr.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
@@ -35,6 +35,7 @@
             <version>1.6.1</version>
         </dependency>
         <dependency>
+            <!-- YUCK, YUCK, YUCK!!!! -->
             <groupId>javax.transaction</groupId>
             <artifactId>jta</artifactId>
             <version>1.1</version>
@@ -82,18 +83,16 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antlr-plugin</artifactId>
-<!--
-    This is how we should define dep on antlr...
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>antlr-maven-plugin</artifactId>
+                <version>2.0-SNAPSHOT</version>
                 <dependencies>
                     <dependency>
                         <groupId>antlr</groupId>
                         <artifactId>antlr</artifactId>
-                        <version>2.7.6</version>
+                        <version>${antlr.version}</version>
                     </dependency>
                 </dependencies>
--->
                 <configuration>
                     <grammars>hql.g,hql-sql.g,sql-gen.g</grammars>
                 </configuration>
@@ -111,8 +110,9 @@
     <reporting>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antlr-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>antlr-maven-plugin</artifactId>
+                <version>2.0-SNAPSHOT</version>
                 <configuration>
                     <!-- eventually should be based on the second phase grammar -->
                     <grammars>hql.g</grammars>
@@ -148,5 +148,9 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <properties>
+        <antlr.version>2.7.6</antlr.version>
+    </properties>
 
 </project>

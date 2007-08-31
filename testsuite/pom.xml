@@ -97,14 +97,6 @@
             <artifactId>log4j</artifactId>
             <version>1.2.14</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>5.5</version>
-            <classifier>jdk15</classifier>
-        </dependency>
--->
     </dependencies>
 
     <build>

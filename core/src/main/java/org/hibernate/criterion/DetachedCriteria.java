@@ -87,7 +87,7 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 
 	public DetachedCriteria createCriteria(String associationPath, String alias)
 	throws HibernateException {
-		return new DetachedCriteria( impl, criteria.createCriteria(associationPath) );
+		return new DetachedCriteria( impl, criteria.createCriteria(associationPath, alias) );
 	}
 
 	public DetachedCriteria createCriteria(String associationPath)

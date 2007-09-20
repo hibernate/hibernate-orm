@@ -68,12 +68,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private void checkNaturalId(
 			EntityPersister persister,
-	        Serializable identifier,
+	        EntityEntry entry,
 	        Object[] current,
 	        Object[] loaded,
 	        EntityMode entityMode,
 	        SessionImplementor session) {
-		if ( persister.hasNaturalIdentifier() ) {
+		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
  			Object[] snapshot = null;			
 			Type[] types = persister.getPropertyTypes();
 			int[] props = persister.getNaturalIdentifierProperties();
@@ -84,7 +84,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
  					Object loadedVal;
  					if ( loaded == null ) {
  						if ( snapshot == null) {
- 							snapshot = session.getPersistenceContext().getNaturalIdSnapshot( identifier, persister );
+ 							snapshot = session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister );
  						}
  						loadedVal = snapshot[i];
  					} else {
@@ -166,7 +166,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// grab its current state
 			values = persister.getPropertyValues( entity, entityMode );
 
-			checkNaturalId( persister, entry.getId(), values, loadedState, entityMode, session );
+			checkNaturalId( persister, entry, values, loadedState, entityMode, session );
 		}
 		return values;
 	}

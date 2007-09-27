@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -30,6 +31,7 @@ import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.BatchingBatcherFactory;
 import org.hibernate.jdbc.NonBatchingBatcherFactory;
+import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionFactoryFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
@@ -278,11 +280,13 @@ public class SettingsFactory implements Serializable {
 
 		boolean showSql = PropertiesHelper.getBoolean(Environment.SHOW_SQL, properties);
 		if (showSql) log.info("Echoing all SQL to stdout");
-		settings.setShowSqlEnabled(showSql);
+//		settings.setShowSqlEnabled(showSql);
 
 		boolean formatSql = PropertiesHelper.getBoolean(Environment.FORMAT_SQL, properties);
-		settings.setFormatSqlEnabled(formatSql);
-		
+//		settings.setFormatSqlEnabled(formatSql);
+
+		settings.setSqlStatementLogger( new SQLStatementLogger( showSql, formatSql ) );
+
 		boolean useStatistics = PropertiesHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
 		log.info( "Statistics: " + enabledDisabled(useStatistics) );
 		settings.setStatisticsEnabled(useStatistics);

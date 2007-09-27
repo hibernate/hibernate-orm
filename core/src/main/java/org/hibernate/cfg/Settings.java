@@ -3,17 +3,18 @@ package org.hibernate.cfg;
 
 import java.util.Map;
 
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.EntityMode;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
+import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
-import org.hibernate.exception.SQLExceptionConverter;
-import org.hibernate.EntityMode;
-import org.hibernate.ConnectionReleaseMode;
 
 /**
  * Settings that affect the behaviour of Hibernate at runtime.
@@ -22,8 +23,9 @@ import org.hibernate.ConnectionReleaseMode;
  */
 public final class Settings {
 
-	private boolean showSql;
-	private boolean formatSql;
+//	private boolean showSql;
+//	private boolean formatSql;
+	private SQLStatementLogger sqlStatementLogger;
 	private Integer maximumFetchDepth;
 	private Map querySubstitutions;
 	private Dialect dialect;
@@ -77,6 +79,18 @@ public final class Settings {
 
 	// public getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+//	public boolean isShowSqlEnabled() {
+//		return showSql;
+//	}
+//
+//	public boolean isFormatSqlEnabled() {
+//		return formatSql;
+//	}
+
+	public SQLStatementLogger getSqlStatementLogger() {
+		return sqlStatementLogger;
+	}
+
 	public String getDefaultSchemaName() {
 		return defaultSchemaName;
 	}
@@ -99,14 +113,6 @@ public final class Settings {
 
 	public Map getQuerySubstitutions() {
 		return querySubstitutions;
-	}
-
-	public boolean isShowSqlEnabled() {
-		return showSql;
-	}
-
-	public boolean isFormatSqlEnabled() {
-		return formatSql;
 	}
 
 	public boolean isIdentifierRollbackEnabled() {
@@ -260,6 +266,18 @@ public final class Settings {
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+//	void setShowSqlEnabled(boolean b) {
+//		showSql = b;
+//	}
+//
+//	void setFormatSqlEnabled(boolean b) {
+//		formatSql = b;
+//	}
+
+	void setSqlStatementLogger(SQLStatementLogger sqlStatementLogger) {
+		this.sqlStatementLogger = sqlStatementLogger;
+	}
+
 	void setDefaultSchemaName(String string) {
 		defaultSchemaName = string;
 	}
@@ -282,14 +300,6 @@ public final class Settings {
 
 	void setQuerySubstitutions(Map map) {
 		querySubstitutions = map;
-	}
-
-	void setShowSqlEnabled(boolean b) {
-		showSql = b;
-	}
-
-	void setFormatSqlEnabled(boolean b) {
-		formatSql = b;
 	}
 
 	void setIdentifierRollbackEnabled(boolean b) {

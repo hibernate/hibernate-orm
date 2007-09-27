@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.LockMode;
+import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.StringHelper;
@@ -223,7 +224,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		int rows;
 		do {
 			sql = query;
-			SQL.debug( sql );
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement queryPS = conn.prepareStatement( query );
 			try {
 				queryPS.setString( 1, segmentValue );
@@ -233,7 +234,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 					try {
 						result = initialValue;
 						sql = insert;
-						SQL.debug( sql );
+						SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 						insertPS = conn.prepareStatement( insert );
 						insertPS.setString( 1, segmentValue );
 						insertPS.setLong( 2, result );
@@ -259,7 +260,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 			}
 
 			sql = update;
-			SQL.debug( sql );
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement updatePS = conn.prepareStatement( update );
 			try {
 				long newValue = optimizer.applyIncrementSizeToSourceValues()

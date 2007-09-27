@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,9 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.dom4j.Element;
+
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -41,7 +43,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
@@ -55,6 +56,7 @@ import org.hibernate.engine.Status;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
+import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEvent;
@@ -71,6 +73,7 @@ import org.hibernate.event.InitializeCollectionEvent;
 import org.hibernate.event.InitializeCollectionEventListener;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
+import org.hibernate.event.LoadEventListener.LoadType;
 import org.hibernate.event.LockEvent;
 import org.hibernate.event.LockEventListener;
 import org.hibernate.event.MergeEvent;
@@ -83,9 +86,10 @@ import org.hibernate.event.ReplicateEvent;
 import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.event.SaveOrUpdateEventListener;
-import org.hibernate.event.LoadEventListener.LoadType;
+import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.jdbc.Batcher;
 import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.jdbc.Work;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -1839,6 +1843,16 @@ public final class SessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		persistenceContext.setReadOnly(entity, readOnly);
+	}
+
+	public void doWork(Work work) throws HibernateException {
+		try {
+			work.execute( jdbcContext.getConnectionManager().getConnection() );
+			jdbcContext.getConnectionManager().afterStatement();
+		}
+		catch ( SQLException e ) {
+			throw JDBCExceptionHelper.convert( factory.getSettings().getSQLExceptionConverter(), e, "error executing work" );
+		}
 	}
 
 	public void afterScrollOperation() {

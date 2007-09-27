@@ -11,6 +11,7 @@ import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -19,7 +20,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.pretty.Formatter;
+import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.util.JDBCExceptionReporter;
 
 /**
@@ -36,7 +37,6 @@ public abstract class AbstractBatcher implements Batcher {
 	private int openResultSetCount;
 
 	protected static final Logger log = LoggerFactory.getLogger( AbstractBatcher.class );
-	protected static final Logger SQL_LOG = LoggerFactory.getLogger( "org.hibernate.SQL" );
 
 	private final ConnectionManager connectionManager;
 	private final SessionFactoryImplementor factory;
@@ -395,29 +395,14 @@ public abstract class AbstractBatcher implements Batcher {
 	}
 
 	private void log(String sql) {
-		if ( SQL_LOG.isDebugEnabled() ) {
-			SQL_LOG.debug( format(sql) );
-		}
-		if ( factory.getSettings().isShowSqlEnabled() ) {
-			System.out.println( "Hibernate: " + format(sql) );
-		}
-	}
-
-	private String format(String sql) {
-		if ( factory.getSettings().isFormatSqlEnabled() ) {
-			return new Formatter(sql).format();
-		}
-		else {
-			return sql;
-		}
+		factory.getSettings().getSqlStatementLogger().logStatement( sql, FormatStyle.BASIC );
 	}
 
 	private PreparedStatement getPreparedStatement(
 			final Connection conn,
 	        final String sql,
 	        final boolean scrollable,
-	        final ScrollMode scrollMode)
-	throws SQLException {
+	        final ScrollMode scrollMode) throws SQLException {
 		return getPreparedStatement(
 				conn,
 		        sql,

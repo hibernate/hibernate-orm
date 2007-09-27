@@ -22,7 +22,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public class AbstractJPATest extends FunctionalTestCase {
+public abstract class AbstractJPATest extends FunctionalTestCase {
 	public AbstractJPATest(String name) {
 		super( name );
 	}

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
@@ -128,7 +129,7 @@ public class TableGenerator extends TransactionHelper
 			// or read committed isolation level
 
 			sql = query;
-			SQL.debug(query);
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement qps = conn.prepareStatement(query);
 			try {
 				ResultSet rs = qps.executeQuery();
@@ -149,7 +150,7 @@ public class TableGenerator extends TransactionHelper
 			}
 
 			sql = update;
-			SQL.debug(update);
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement ups = conn.prepareStatement(update);
 			try {
 				ups.setInt( 1, result + 1 );

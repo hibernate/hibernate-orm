@@ -12,14 +12,15 @@ import java.io.Reader;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.SQLWarning;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
@@ -27,17 +28,19 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.pretty.DDLFormatter;
+import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.util.Formatter;
+import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.util.ConfigHelper;
+import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.JDBCExceptionReporter;
 
 /**
- * Commandline tool to export table schema to the database. This
- * class may also be called from inside an application.
+ * Commandline tool to export table schema to the database. This class may also be called from inside an application.
  *
- * @author Daniel Bradby, Gavin King
+ * @author Daniel Bradby
+ * @author Gavin King
  */
 public class SchemaExport {
 
@@ -52,37 +55,46 @@ public class SchemaExport {
 	private String delimiter;
 	private final List exceptions = new ArrayList();
 	private boolean haltOnError = false;
-	private boolean format = true;
+	private Formatter formatter;
+	private SQLStatementLogger sqlStatementLogger;
 
 	/**
 	 * Create a schema exporter for the given Configuration
+	 *
+	 * @param cfg The configuration from which to build a schema export.
+	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
 	public SchemaExport(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );
 	}
 
 	/**
-	 * Create a schema exporter for the given Configuration
-	 * and given settings
+	 * Create a schema exporter for the given Configuration and given settings
+	 *
+	 * @param cfg The configuration from which to build a schema export.
+	 * @param settings The 'parsed' settings.
+	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
 	public SchemaExport(Configuration cfg, Settings settings) throws HibernateException {
 		dialect = settings.getDialect();
-		connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				settings.getConnectionProvider()
-		);
+		connectionHelper = new SuppliedConnectionProviderConnectionHelper( settings.getConnectionProvider() );
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
-		format = settings.isFormatSqlEnabled();
+		sqlStatementLogger = settings.getSqlStatementLogger();
+		formatter = ( sqlStatementLogger.isFormatSql() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
 	/**
 	 * Create a schema exporter for the given Configuration, with the given
 	 * database connection properties.
 	 *
+	 * @param cfg The configuration from which to build a schema export.
+	 * @param properties The properties from which to configure connectivity etc.
+	 * @throws HibernateException Indicates problem preparing for schema export.
+	 *
 	 * @deprecated properties may be specified via the Configuration object
 	 */
-	public SchemaExport(Configuration cfg, Properties properties)
-			throws HibernateException {
+	public SchemaExport(Configuration cfg, Properties properties) throws HibernateException {
 		dialect = Dialect.getDialect( properties );
 
 		Properties props = new Properties();
@@ -92,24 +104,42 @@ public class SchemaExport {
 		connectionHelper = new ManagedProviderConnectionHelper( props );
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
-		format = PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props );
+
+		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
-	public SchemaExport(Configuration cfg, Connection connection) {
+	/**
+	 * Create a schema exporter for the given Configuration, using the supplied connection for connectivity.
+	 *
+	 * @param cfg The configuration to use.
+	 * @param connection The JDBC connection to use.
+	 * @throws HibernateException Indicates problem preparing for schema export.
+	 */
+	public SchemaExport(Configuration cfg, Connection connection) throws HibernateException {
 		this.connectionHelper = new SuppliedConnectionHelper( connection );
 		dialect = Dialect.getDialect( cfg.getProperties() );
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
+		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
 	/**
-	 * Set an output filename. The generated script will be written to this file.
+	 * For generating a export script file, this is the file which will be written.
+	 *
+	 * @param filename The name of the file to which to write the export script.
+	 * @return this
 	 */
 	public SchemaExport setOutputFile(String filename) {
 		outputFile = filename;
 		return this;
 	}
 
+	/**
+	 * An import file, containing raw SQL statements to be executed.
+	 *
+	 * @param filename The import file name.
+	 * @return this
+	 */
 	public SchemaExport setImportFile(String filename) {
 		importFile = filename;
 		return this;
@@ -117,9 +147,34 @@ public class SchemaExport {
 
 	/**
 	 * Set the end of statement delimiter
+	 *
+	 * @param delimiter The delimiter
+	 * @return this
 	 */
 	public SchemaExport setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
+		return this;
+	}
+
+	/**
+	 * Should we format the sql strings?
+	 *
+	 * @param format Should we format SQL strings
+	 * @return this
+	 */
+	public SchemaExport setFormat(boolean format) {
+		this.formatter = ( format ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		return this;
+	}
+
+	/**
+	 * Should we stop once an error occurs?
+	 *
+	 * @param haltOnError True if export should stop after error.
+	 * @return this
+	 */
+	public SchemaExport setHaltOnError(boolean haltOnError) {
+		this.haltOnError = haltOnError;
 		return this;
 	}
 
@@ -141,12 +196,6 @@ public class SchemaExport {
 	 */
 	public void drop(boolean script, boolean export) {
 		execute( script, export, true, false );
-	}
-
-	private String format(String sql) {
-		return format ?
-		       new DDLFormatter( sql ).format() :
-		       sql;
 	}
 
 	public void execute(boolean script, boolean export, boolean justDrop, boolean justCreate) {
@@ -295,7 +344,7 @@ public class SchemaExport {
 
 	private void execute(boolean script, boolean export, Writer fileOutput, Statement statement, final String sql)
 			throws IOException, SQLException {
-		String formatted = format( sql );
+		String formatted = formatter.format( sql );
 		if ( delimiter != null ) {
 			formatted += delimiter;
 		}
@@ -307,6 +356,7 @@ public class SchemaExport {
 			fileOutput.write( formatted + "\n" );
 		}
 		if ( export ) {
+
 			statement.executeUpdate( sql );
 			try {
 				SQLWarning warnings = statement.getWarnings();
@@ -422,15 +472,5 @@ public class SchemaExport {
 	 */
 	public List getExceptions() {
 		return exceptions;
-	}
-
-	public SchemaExport setFormat(boolean format) {
-		this.format = format;
-		return this;
-	}
-
-	public SchemaExport setHaltOnError(boolean haltOnError) {
-		this.haltOnError = haltOnError;
-		return this;
 	}
 }

@@ -4,6 +4,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.sql.Connection;
 
+import org.hibernate.jdbc.Work;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -158,7 +159,8 @@ public interface Session extends Serializable {
 	 *
 	 * @return the JDBC connection in use by the <tt>Session</tt>
 	 * @throws HibernateException if the <tt>Session</tt> is disconnected
-	 * @deprecated To be replaced with a SPI for performing work against the connection; scheduled for removal in 4.x
+	 * @deprecated (scheduled for removal in 4.x).  Replacement depends on need; for doing direct JDBC stuff use
+	 * {@link #doWork}; for opening a 'temporary Session' use (TBD).
 	 */
 	public Connection connection() throws HibernateException;
 
@@ -739,6 +741,14 @@ public interface Session extends Serializable {
 	 */
 	public void setReadOnly(Object entity, boolean readOnly);
 
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection
+	 * managed by this Session.
+	 *
+	 * @param work The work to be performed.
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	public void doWork(Work work) throws HibernateException;
 
 
 	/**

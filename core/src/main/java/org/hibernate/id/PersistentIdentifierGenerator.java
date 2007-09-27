@@ -1,10 +1,9 @@
 //$Id: PersistentIdentifierGenerator.java 6514 2005-04-26 06:37:54Z oneovthafew $
 package org.hibernate.id;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.jdbc.util.SQLStatementLogger;
 
 /**
  * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
@@ -48,28 +47,31 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
     
 	/**
 	 * The SQL required to create the underlying database objects.
-	 * @param dialect
-	 * @return String[]
-	 * @throws HibernateException
+	 *
+	 * @param dialect The dialect against which to generate the create command(s)
+	 * @return The create command(s)
+	 * @throws HibernateException problem creating the create command(s)
 	 */
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException;
 
 	/**
 	 * The SQL required to remove the underlying database objects.
-	 * @param dialect
-	 * @return String
-	 * @throws HibernateException
+	 *
+	 * @param dialect The dialect against which to generate the drop command(s)
+	 * @return The drop command(s)
+	 * @throws HibernateException problem creating the drop command(s)
 	 */
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException;
 
 	/**
 	 * Return a key unique to the underlying database objects. Prevents us from
 	 * trying to create/remove them multiple times.
+	 * 
 	 * @return Object an identifying key for this generator
 	 */
 	public Object generatorKey();
-	
-	static final Logger SQL = LoggerFactory.getLogger( "org.hibernate.SQL" );
+
+	static final SQLStatementLogger SQL_STATEMENT_LOGGER = new SQLStatementLogger( false, false );
 
 }
 

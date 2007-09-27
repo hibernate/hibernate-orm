@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
@@ -129,7 +130,7 @@ public class MultipleHiLoPerTableGenerator
 			// or read committed isolation level
 
 			//sql = query;
-			SQL.debug(query);
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement qps = conn.prepareStatement(query);
 			PreparedStatement ips = null;
 			try {

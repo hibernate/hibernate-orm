@@ -1,21 +1,23 @@
 package org.hibernate.id.enhanced;
 
-import java.sql.Types;
+import java.io.Serializable;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.io.Serializable;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.LockMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.util.SQLStatementLogger;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -24,7 +26,7 @@ import org.hibernate.id.IdentifierGenerationException;
  */
 public class TableStructure extends TransactionHelper implements DatabaseStructure {
 	private static final Logger log = LoggerFactory.getLogger( TableStructure.class );
-	private static final Logger SQL_LOG = LoggerFactory.getLogger( "org.hibernate.SQL" );
+	private static final SQLStatementLogger SQL_STATEMENT_LOGGER = new SQLStatementLogger( false, false );
 
 	private final String tableName;
 	private final String valueColumnName;
@@ -98,7 +100,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		int rows;
 		do {
 			sql = select;
-			SQL_LOG.debug( sql );
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement qps = conn.prepareStatement( select );
 			try {
 				ResultSet rs = qps.executeQuery();
@@ -119,7 +121,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 			}
 
 			sql = update;
-			SQL_LOG.debug( sql );
+			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement ups = conn.prepareStatement( update );
 			try {
 				int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;

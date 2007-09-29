@@ -259,8 +259,11 @@ public class Table implements RelationalModel, Serializable {
 						|| columnInfo.getTypeCode() == col.getSqlTypeCode( mapping );
 				if ( !typesMatch ) {
 					throw new HibernateException(
-							"Wrong column type: " + col.getName() +
-									", expected: " + col.getSqlType( dialect, mapping )
+							"Wrong column type in " +
+							Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()) +
+							" for column " + col.getName() +
+							". Found: " + columnInfo.getTypeName().toLowerCase() +
+							", expected: " + col.getSqlType( dialect, mapping )
 					);
 				}
 			}

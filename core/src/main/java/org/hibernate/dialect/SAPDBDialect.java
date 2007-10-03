@@ -9,6 +9,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.OracleJoinFragment;
@@ -73,6 +74,15 @@ public class SAPDBDialect extends Dialect {
 		registerFunction("timestamp", new StandardSQLFunction("timestamp", Hibernate.TIMESTAMP) );
 		registerFunction("date", new StandardSQLFunction("date", Hibernate.DATE) );
 		registerFunction("microsecond", new StandardSQLFunction("microsecond", Hibernate.INTEGER) );
+
+		registerFunction( "second", new SQLFunctionTemplate(Hibernate.INTEGER, "second(?1)") );
+		registerFunction( "minute", new SQLFunctionTemplate(Hibernate.INTEGER, "minute(?1)") );
+		registerFunction( "hour", new SQLFunctionTemplate(Hibernate.INTEGER, "hour(?1)") );
+		registerFunction( "day", new SQLFunctionTemplate(Hibernate.INTEGER, "day(?1)") );
+		registerFunction( "month", new SQLFunctionTemplate(Hibernate.INTEGER, "month(?1)") );
+		registerFunction( "year", new SQLFunctionTemplate(Hibernate.INTEGER, "year(?1)") );
+
+		registerFunction( "extract", new SQLFunctionTemplate(Hibernate.INTEGER, "?1(?3)") );
 
 		registerFunction("dayname", new StandardSQLFunction("dayname", Hibernate.STRING) );
 		registerFunction("monthname", new StandardSQLFunction("monthname", Hibernate.STRING) );

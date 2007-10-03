@@ -109,21 +109,30 @@ public class DialectFactory {
 		}
 	}
 
+	// TODO : this is the stuff it'd be nice to move to a properties file or some other easily user-editable place
 	private static final Map MAPPERS = new HashMap();
 	static {
-		// TODO : this is the stuff it'd be nice to move to a properties file or some other easily user-editable place
 		MAPPERS.put( "HSQL Database Engine", new VersionInsensitiveMapper( "org.hibernate.dialect.HSQLDialect" ) );
 		MAPPERS.put( "H2", new VersionInsensitiveMapper( "org.hibernate.dialect.H2Dialect" ) );
-		MAPPERS.put( "DB2/NT", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
-		MAPPERS.put( "DB2/LINUX", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
 		MAPPERS.put( "MySQL", new VersionInsensitiveMapper( "org.hibernate.dialect.MySQLDialect" ) );
 		MAPPERS.put( "PostgreSQL", new VersionInsensitiveMapper( "org.hibernate.dialect.PostgreSQLDialect" ) );
+		MAPPERS.put( "Apache Derby", new VersionInsensitiveMapper( "org.hibernate.dialect.DerbyDialect" ) );
+
 		MAPPERS.put( "Microsoft SQL Server Database", new VersionInsensitiveMapper( "org.hibernate.dialect.SQLServerDialect" ) );
 		MAPPERS.put( "Microsoft SQL Server", new VersionInsensitiveMapper( "org.hibernate.dialect.SQLServerDialect" ) );
 		MAPPERS.put( "Sybase SQL Server", new VersionInsensitiveMapper( "org.hibernate.dialect.SybaseDialect" ) );
 		MAPPERS.put( "Adaptive Server Enterprise", new VersionInsensitiveMapper( "org.hibernate.dialect.SybaseDialect" ) );
+
 		MAPPERS.put( "Informix Dynamic Server", new VersionInsensitiveMapper( "org.hibernate.dialect.InformixDialect" ) );
-		MAPPERS.put( "Apache Derby", new VersionInsensitiveMapper( "org.hibernate.dialect.DerbyDialect" ) );
+
+		// thanks goodness for "universal" databases...
+		MAPPERS.put( "DB2/NT", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/LINUX", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/6000", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/HPUX", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/SUN", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/LINUX390", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
+		MAPPERS.put( "DB2/AIX64", new VersionInsensitiveMapper( "org.hibernate.dialect.DB2Dialect" ) );
 
 		MAPPERS.put(
 		        "Oracle",

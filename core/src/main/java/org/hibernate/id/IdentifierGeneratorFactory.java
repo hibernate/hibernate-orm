@@ -95,7 +95,7 @@ public final class IdentifierGeneratorFactory {
 			return idgen;
 		}
 		catch (Exception e) {
-			throw new MappingException("could not instantiate id generator", e);
+			throw new MappingException("could not instantiate id generator [entity-name=" + params.get( IdentifierGenerator.ENTITY_NAME ) + "]", e);
 		}
 	}
 

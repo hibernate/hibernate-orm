@@ -22,7 +22,7 @@ public class CacheableFileTest extends UnitTestCase {
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		mappingFile = new File( getClass().getClassLoader().getResource( MAPPING ).getFile() );
+		mappingFile = new File( getClass().getClassLoader().getResource( MAPPING ).toURI() );
 		assertTrue( mappingFile.exists() );
 		File cached = new File( mappingFile.getParentFile(), mappingFile.getName() + ".bin" );
 		if ( cached.exists() ) {

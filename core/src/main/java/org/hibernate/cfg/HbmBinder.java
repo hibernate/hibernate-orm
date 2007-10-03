@@ -1566,9 +1566,9 @@ public final class HbmBinder {
 	}
 
 	private static void validateCascade(Element node, String path) {
-		String cascade = node.attributeValue("cascade");
-		if ( cascade!=null && cascade.indexOf("delete-orphan")>0 ) {
-			throw new MappingException("single-valued associations do not support orphan delete: " + path);
+		String cascade = node.attributeValue( "cascade" );
+		if ( cascade != null && cascade.indexOf( "delete-orphan" ) >= 0 ) {
+			throw new MappingException( "single-valued associations do not support orphan delete: " + path );
 		}
 	}
 

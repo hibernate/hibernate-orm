@@ -27,4 +27,8 @@
 	<filter-def name="cat">
 		<filter-param name="catId" type="long"/>
 	</filter-def>
+
+    <filter-def name="unioned">
+    </filter-def>
+
 </hibernate-mapping>

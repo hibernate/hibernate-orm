@@ -65,6 +65,13 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( DynamicFilterTest.class );
 	}
 
+	public void testSqlSyntaxOfFiltersWithUnions() {
+		Session session = openSession();
+		session.enableFilter( "unioned" );
+		session.createQuery( "from Category" ).list();
+		session.close();
+	}
+
 	public void testSecondLevelCachedCollectionsFiltering() {
 		TestData testData = new TestData();
 		testData.prepare();

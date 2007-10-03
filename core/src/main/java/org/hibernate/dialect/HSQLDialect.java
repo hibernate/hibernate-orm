@@ -202,23 +202,12 @@ public class HSQLDialect extends Dialect {
 		return true;
 	}
 
-	public String[] getCreateSequenceStrings(String sequenceName) {
-		return getCreateSequenceStrings( sequenceName, 1, 1 );
+	protected String getCreateSequenceString(String sequenceName) {
+		return "create sequence " + sequenceName;
 	}
 
-	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) {
-		return new String[] {
-				"create table dual_" + sequenceName + " (zero integer)",
-		        "insert into dual_" + sequenceName + " values (0)",
-		        "create sequence " + sequenceName + " start with " + initialValue + " increment by " + incrementSize
-		};
-	}
-
-	public String[] getDropSequenceStrings(String sequenceName) {
-		return new String[] {
-				"drop table dual_" + sequenceName + " if exists",
-		        "drop sequence " + sequenceName
-		};
+	protected String getDropSequenceString(String sequenceName) {
+		return "drop sequence " + sequenceName;
 	}
 
 	public String getSelectSequenceNextValString(String sequenceName) {
@@ -226,7 +215,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public String getSequenceNextValString(String sequenceName) {
-		return "select next value for " + sequenceName + " from dual_" + sequenceName;
+		return "call next value for " + sequenceName;
 	}
 
 	public String getQuerySequencesString() {

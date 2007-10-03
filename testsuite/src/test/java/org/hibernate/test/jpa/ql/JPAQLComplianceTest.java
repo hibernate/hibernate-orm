@@ -41,6 +41,12 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		s.close();
 	}
 
+	public void testIdentifierCasesensitivityAndDuplicateFromElements() throws Exception {
+		Session s = openSession();
+		s.createQuery( "select e from MyEntity e where exists (select 1 from MyEntity e2 where e2.other.name  = 'something' and e2.other.other = e)" );
+		s.close();
+	}
+
 	public void testGeneratedSubquery() {
 		Session s = openSession();
 		s.createQuery( "select c FROM Item c WHERE c.parts IS EMPTY" ).list();

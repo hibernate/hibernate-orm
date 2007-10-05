@@ -6,10 +6,10 @@ import java.io.Serializable;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.CriteriaImpl;
-import org.hibernate.impl.SessionImpl;
 import org.hibernate.transform.ResultTransformer;
 
 /**
@@ -122,4 +122,32 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 	CriteriaImpl getCriteriaImpl() {
 		return impl;
 	}
+
+    public DetachedCriteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+        criteria.createAlias(associationPath, alias, joinType);
+        return this;
+    }
+
+    public DetachedCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
+        return new DetachedCriteria(impl, criteria.createCriteria(associationPath, joinType));
+    }
+
+    public DetachedCriteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+        return new DetachedCriteria(impl, criteria.createCriteria(associationPath, alias, joinType));
+    }
+
+    public DetachedCriteria setComment(String comment) {
+        criteria.setComment(comment);
+        return this;
+    }
+
+    public DetachedCriteria setLockMode(LockMode lockMode) {
+        criteria.setLockMode(lockMode);
+        return this;
+    }
+
+    public DetachedCriteria setLockMode(String alias, LockMode lockMode) {
+        criteria.setLockMode(alias, lockMode);
+        return this;
+    }
 }

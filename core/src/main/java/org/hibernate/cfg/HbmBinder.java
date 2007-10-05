@@ -632,10 +632,7 @@ public final class HbmBinder {
 
 		// PERSISTER
 		Attribute persisterNode = node.attribute( "persister" );
-		if ( persisterNode == null ) {
-			// persister = SingleTableEntityPersister.class;
-		}
-		else {
+		if ( persisterNode != null ) {
 			try {
 				entity.setEntityPersisterClass( ReflectHelper.classForName( persisterNode
 					.getValue() ) );
@@ -2249,7 +2246,7 @@ public final class HbmBinder {
 			String entityName = ( (OneToMany) list.getElement() ).getReferencedEntityName();
 			PersistentClass referenced = mappings.getClass( entityName );
 			IndexBackref ib = new IndexBackref();
-			ib.setName( '_' + node.attributeValue( "name" ) + "IndexBackref" );
+			ib.setName( '_' + list.getOwnerEntityName() + "." + node.attributeValue( "name" ) + "IndexBackref" );
 			ib.setUpdateable( false );
 			ib.setSelectable( false );
 			ib.setCollectionRole( list.getRole() );
@@ -2352,7 +2349,7 @@ public final class HbmBinder {
 			String entityName = ( (OneToMany) map.getElement() ).getReferencedEntityName();
 			PersistentClass referenced = mappings.getClass( entityName );
 			IndexBackref ib = new IndexBackref();
-			ib.setName( '_' + node.attributeValue( "name" ) + "IndexBackref" );
+			ib.setName( '_' + map.getOwnerEntityName() + "." + node.attributeValue( "name" ) + "IndexBackref" );
 			ib.setUpdateable( false );
 			ib.setSelectable( false );
 			ib.setCollectionRole( map.getRole() );
@@ -2485,7 +2482,7 @@ public final class HbmBinder {
 			String entityName = ( (OneToMany) collection.getElement() ).getReferencedEntityName();
 			PersistentClass referenced = mappings.getClass( entityName );
 			Backref prop = new Backref();
-			prop.setName( '_' + node.attributeValue( "name" ) + "Backref" );
+			prop.setName( '_' + collection.getOwnerEntityName() + "." + node.attributeValue( "name" ) + "Backref" );
 			prop.setUpdateable( false );
 			prop.setSelectable( false );
 			prop.setCollectionRole( collection.getRole() );

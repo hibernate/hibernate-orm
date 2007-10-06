@@ -34,7 +34,6 @@ public final class IteratorImpl implements HibernateIterator {
 	private boolean hasNext;
 	private final String[][] names;
 	private PreparedStatement ps;
-	private Object nextResult;
 	private HolderInstantiator holderInstantiator;
 
 	public IteratorImpl(
@@ -62,7 +61,6 @@ public final class IteratorImpl implements HibernateIterator {
 		if (ps!=null) {
 			try {
 				log.debug("closing iterator");
-				nextResult = null;
 				session.getBatcher().closeQueryStatement(ps, rs);
 				ps = null;
 				rs = null;
@@ -88,33 +86,15 @@ public final class IteratorImpl implements HibernateIterator {
 		}
 	}
 
-	private void postNext() throws HibernateException, SQLException {
+	private void postNext() throws SQLException {
+		log.debug("attempting to retrieve next results");
 		this.hasNext = rs.next();
 		if (!hasNext) {
 			log.debug("exhausted results");
 			close();
 		}
 		else {
-			log.debug("retrieving next results");
-			boolean isHolder = holderInstantiator.isRequired();
-
-			if ( single && !isHolder ) {
-				nextResult = types[0].nullSafeGet( rs, names[0], session, null );
-			}
-			else {
-				Object[] nextResults = new Object[types.length];
-				for (int i=0; i<types.length; i++) {
-					nextResults[i] = types[i].nullSafeGet( rs, names[i], session, null );
-				}
-
-				if (isHolder) {
-					nextResult = holderInstantiator.instantiate(nextResults);
-				}
-				else {
-					nextResult = nextResults;
-				}
-			}
-
+			log.debug("retrieved next results");
 		}
 	}
 
@@ -122,10 +102,29 @@ public final class IteratorImpl implements HibernateIterator {
 		return hasNext;
 	}
 
-	public Object next() {
+	public Object next() throws HibernateException {
 		if ( !hasNext ) throw new NoSuchElementException("No more results");
 		try {
-			currentResult = nextResult;
+			boolean isHolder = holderInstantiator.isRequired();
+
+			log.debug("assembling results");
+			if ( single && !isHolder ) {
+				currentResult = types[0].nullSafeGet( rs, names[0], session, null );
+			}
+			else {
+				Object[] currentResults = new Object[types.length];
+				for (int i=0; i<types.length; i++) {
+					currentResults[i] = types[i].nullSafeGet( rs, names[i], session, null );
+				}
+
+				if (isHolder) {
+					currentResult = holderInstantiator.instantiate(currentResults);
+				}
+				else {
+					currentResult = currentResults;
+				}
+			}
+
 			postNext();
 			log.debug("returning current results");
 			return currentResult;

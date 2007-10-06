@@ -1,5 +1,9 @@
 package org.hibernate.test.reattachment;
 
+import java.util.Set;
+import java.util.Iterator;
+import java.util.HashSet;
+
 import junit.framework.Test;
 
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -70,6 +74,153 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		s.delete( p );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testIterateWithClearTopOfLoop() {
+		Session s = openSession();
+		s.beginTransaction();
+		Set parents = new HashSet();
+		for (int i=0; i<5; i++) {
+			Parent p = new Parent( String.valueOf( i ) );
+			Child child = new Child( "child" + i );
+			child.setParent( p );
+			p.getChildren().add( child );
+			s.save( p );
+			parents.add(p);
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		int i = 0;
+		for ( Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+			i++;
+			if (i % 2 == 0) {
+				s.flush();
+				s.clear();
+			}
+			Parent p = (Parent) it.next();
+			assertEquals( 1, p.getChildren().size() );
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		for (Iterator it=parents.iterator(); it.hasNext(); ) {
+			s.delete(it.next());
+		}
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testIterateWithClearBottomOfLoop() {
+		Session s = openSession();
+		s.beginTransaction();
+		Set parents = new HashSet();
+		for (int i=0; i<5; i++) {
+			Parent p = new Parent( String.valueOf( i ) );
+			Child child = new Child( "child" + i );
+			child.setParent( p );
+			p.getChildren().add( child );
+			s.save( p );
+			parents.add(p);
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		int i = 0;
+		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+			Parent p = (Parent) it.next();
+			assertEquals( 1, p.getChildren().size() );
+			i++;
+			if (i % 2 == 0) {
+				s.flush();
+				s.clear();
+			}
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		for (Iterator it=parents.iterator(); it.hasNext(); ) {
+			s.delete(it.next());
+		}
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testIterateWithEvictTopOfLoop() {
+		Session s = openSession();
+		s.beginTransaction();
+		Set parents = new HashSet();
+		for (int i=0; i<5; i++) {
+			Parent p = new Parent( String.valueOf( i + 100 ) );
+			Child child = new Child( "child" + i );
+			child.setParent( p );
+			p.getChildren().add( child );
+			s.save( p );
+			parents.add(p);
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		Parent p = null;
+		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+			if ( p != null) { s.evict(p); }
+			p = (Parent) it.next();
+			assertEquals( 1, p.getChildren().size() );
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		for (Iterator it=parents.iterator(); it.hasNext(); ) {
+			s.delete(it.next());
+		}
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testIterateWithEvictBottomOfLoop() {
+		Session s = openSession();
+		s.beginTransaction();
+		Set parents = new HashSet();
+		for (int i=0; i<5; i++) {
+			Parent p = new Parent( String.valueOf( i + 100 ) );
+			Child child = new Child( "child" + i );
+			child.setParent( p );
+			p.getChildren().add( child );
+			s.save( p );
+			parents.add(p);
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		for (Iterator it = s.createQuery( "from Parent" ).iterate(); it.hasNext(); ) {
+			Parent p = (Parent) it.next();
+			assertEquals( 1, p.getChildren().size() );
+			s.evict(p);
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		for (Iterator it=parents.iterator(); it.hasNext(); ) {
+			s.delete(it.next());
+		}
 		s.getTransaction().commit();
 		s.close();
 	}

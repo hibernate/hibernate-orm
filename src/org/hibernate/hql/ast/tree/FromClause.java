@@ -85,13 +85,14 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addDuplicateAlias(String alias, FromElement element) {
-		fromElementByClassAlias.put( alias, element );
+		if ( alias != null ) {
+			fromElementByClassAlias.put( alias, element );
+		}
 	}
 
 	private void checkForDuplicateClassAlias(String classAlias) throws SemanticException {
 		if ( classAlias != null && fromElementByClassAlias.containsKey( classAlias ) ) {
-			throw new SemanticException( "Duplicate definition of alias '"
-					+ classAlias + "'" );
+			throw new SemanticException( "Duplicate definition of alias '" + classAlias + "'" );
 		}
 	}
 

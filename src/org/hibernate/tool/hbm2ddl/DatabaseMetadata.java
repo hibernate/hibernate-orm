@@ -46,7 +46,7 @@ public class DatabaseMetadata {
 		initSequences(connection, dialect);
 	}
 
-	private static final String[] TYPES = {"TABLE"};
+	private static final String[] TYPES = {"TABLE", "VIEW"};
 
 	public TableMetadata getTableMetadata(String name, String schema, String catalog, boolean isQuoted) throws HibernateException {
 

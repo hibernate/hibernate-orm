@@ -1653,31 +1653,41 @@ public class Configuration implements Serializable {
 		setListeners( type, new String[]{impl} );
 	}
 
+	public void setListener(String type, String listener) {
+		String[] listeners = null;
+		if ( listener != null ) {
+			listeners = (String[]) Array.newInstance( String.class, 1 );
+			listeners[0] = listener;
+		}
+		setListeners( type, listeners );
+	}
+
 	public void setListeners(String type, String[] listenerClasses) {
-		Object[] listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), listenerClasses.length );
-		for ( int i = 0; i < listeners.length ; i++ ) {
-			try {
-				listeners[i] = ReflectHelper.classForName( listenerClasses[i] ).newInstance();
-			}
-			catch (Exception e) {
-				throw new MappingException(
-						"Unable to instantiate specified event (" + type + ") listener class: " + listenerClasses[i],
-						e
-					);
+		Object[] listeners = null;
+		if ( listenerClasses != null ) {
+			listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), listenerClasses.length );
+			for ( int i = 0; i < listeners.length ; i++ ) {
+				try {
+					listeners[i] = ReflectHelper.classForName( listenerClasses[i] ).newInstance();
+				}
+				catch (Exception e) {
+					throw new MappingException(
+							"Unable to instantiate specified event (" + type + ") listener class: " + listenerClasses[i],
+							e
+						);
+				}
 			}
 		}
 		setListeners( type, listeners );
 	}
 
 	public void setListener(String type, Object listener) {
-		if ( listener == null ) {
-			setListener( type, null );
-		}
-		else {
-			Object[] listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), 1 );
+		Object[] listeners = null;
+		if ( listener != null ) {
+			listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), 1 );
 			listeners[0] = listener;
-			setListeners( type, listeners );
 		}
+		setListeners( type, listeners );
 	}
 
 	public void setListeners(String type, Object[] listeners) {
@@ -1916,7 +1926,7 @@ public class Configuration implements Serializable {
 			}
 		}
 		else {
-			log.warn( "Unrecognized listener type [" + type + "]" );
+			throw new MappingException("Unrecognized listener type [" + type + "]");
 		}
 	}
 

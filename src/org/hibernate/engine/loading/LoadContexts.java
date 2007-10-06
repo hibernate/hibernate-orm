@@ -132,6 +132,17 @@ public class LoadContexts {
 	 * false otherwise.
 	 */
 	public boolean hasLoadingCollectionEntries() {
+		return ( collectionLoadContexts != null && !collectionLoadContexts.isEmpty() );
+	}
+
+	/**
+	 * Do we currently have any registered internal entries corresponding to loading
+	 * collections?
+	 *
+	 * @return True if we currently hold state pertaining to a registered loading collections;
+	 * false otherwise.
+	 */
+	public boolean hasRegisteredLoadingCollectionEntries() {
 		return ( xrefLoadingCollectionEntries != null && !xrefLoadingCollectionEntries.isEmpty() );
 	}
 
@@ -228,7 +239,7 @@ public class LoadContexts {
 	 * @param key The key of the collection we are done processing.
 	 */
 	void unregisterLoadingCollectionXRef(CollectionKey key) {
-		if ( !hasLoadingCollectionEntries() ) {
+		if ( !hasRegisteredLoadingCollectionEntries() ) {
 			return;
 		}
 		xrefLoadingCollectionEntries.remove(key);
@@ -260,10 +271,10 @@ public class LoadContexts {
 		LoadingCollectionEntry rtn = ( LoadingCollectionEntry ) xrefLoadingCollectionEntries.get( key );
 		if ( log.isTraceEnabled() ) {
 			if ( rtn == null ) {
-				log.trace( "collection [" + key + "] located in load context" );
+				log.trace( "collection [" + key + "] not located in load context" );
 			}
 			else {
-				log.trace( "collection [" + key + "] not located in load context" );
+				log.trace( "collection [" + key + "] located in load context" );
 			}
 		}
 		return rtn;

@@ -153,7 +153,7 @@ public class CollectionLoadContext {
 	public void endLoadingCollections(CollectionPersister persister) {
 		SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
 		if ( !loadContexts.hasLoadingCollectionEntries()
-				|| localLoadingCollectionKeys.isEmpty() ) {
+				&& localLoadingCollectionKeys.isEmpty() ) {
 			return;
 		}
 

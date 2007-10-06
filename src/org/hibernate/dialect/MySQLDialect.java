@@ -36,7 +36,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
 		registerColumnType( Types.VARBINARY, 65535, "blob" );
 		registerColumnType( Types.VARBINARY, 255, "tinyblob" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		registerColumnType( Types.BLOB, "longblob" );
 		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
 		registerColumnType( Types.BLOB, 65535, "blob" );

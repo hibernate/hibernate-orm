@@ -48,6 +48,8 @@ public final class Template {
 		KEYWORDS.add("some");
 		KEYWORDS.add("exists");
 		KEYWORDS.add("all");
+		KEYWORDS.add("union");
+		KEYWORDS.add("minus");
 		
 		BEFORE_TABLE_KEYWORDS.add("from");
 		BEFORE_TABLE_KEYWORDS.add("join");

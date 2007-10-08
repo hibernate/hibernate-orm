@@ -20,7 +20,7 @@ import org.hibernate.test.bidi.AuctionTest;
 import org.hibernate.test.bidi.AuctionTest2;
 import org.hibernate.test.bytecode.BytecodeSuite;
 import org.hibernate.test.cache.CacheSuite;
-import org.hibernate.test.cascade.RefreshTest;
+import org.hibernate.test.cascade.CascadeSuite;
 import org.hibernate.test.cfg.ListenerTest;
 import org.hibernate.test.cid.CompositeIdTest;
 import org.hibernate.test.collection.CollectionSuite;
@@ -259,7 +259,7 @@ public class AllTests {
 			suite.addTest( SortTest.suite() );
 			suite.addTest( WhereTest.suite() );
 			suite.addTest( IterateTest.suite() );
-			suite.addTest( RefreshTest.suite() );
+			suite.addTest( CascadeSuite.suite() );
 			suite.addTest( ListenerTest.suite() );
 			suite.addTest( ExtraLazyTest.suite() );
 			suite.addTest( StatsTest.suite() );

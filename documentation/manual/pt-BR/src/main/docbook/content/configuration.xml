@@ -1384,7 +1384,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </para>
 
         <para>
-            The XML configuration file is by default expected to be in the root of
+            The XML configuration file is by default expected to be in the root o
             your <literal>CLASSPATH</literal>. Here is an example:
             O arquivo XML de configuração é por default esperado para estar na 
             raiz do seu <literal>CLASSPATH</literal>. Veja um exemplo:

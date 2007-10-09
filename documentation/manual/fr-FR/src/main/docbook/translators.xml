@@ -1,0 +1,34 @@
+<?xml version='1.0'?>
+
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<authorgroup id="AuthorGroup">
+    <othercredit class="translator">
+        <firstname>Vincent</firstname>
+        <surname>Ricard</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Sebastien</firstname>
+        <surname>Cesbron</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Michael</firstname>
+        <surname>Courcy</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Vincent</firstname>
+        <surname>Giguère</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Baptiste</firstname>
+        <surname>Mathus</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Emmanuel</firstname>
+        <surname>Bernard</surname>
+    </othercredit>
+    <othercredit class="translator">
+        <firstname>Anthony</firstname>
+        <surname>Patricio</surname>
+    </othercredit>
+</authorgroup>

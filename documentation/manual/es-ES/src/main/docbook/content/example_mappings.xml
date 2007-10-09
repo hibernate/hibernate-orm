@@ -17,10 +17,10 @@
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/EmployerEmployee.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/EmployerEmployee.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         
@@ -130,10 +130,10 @@ create sequence employer_id_seq]]></programlisting>
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/AuthorWork.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/AuthorWork.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         
@@ -252,10 +252,10 @@ alter table author_work
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/CustomerOrderProduct.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/CustomerOrderProduct.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         

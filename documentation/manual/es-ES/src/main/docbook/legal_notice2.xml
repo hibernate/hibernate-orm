@@ -1,0 +1,16 @@
+<?xml version='1.0'?>
+<!DOCTYPE legalnotice PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<legalnotice id="Legal_Notice">
+    <title>Translation-specific Legal Notice</title>
+    <para>
+        Advertencia! Esta es una versi&#x00f3;n traducida del ingl&#x00e9;s de
+        la documentaci&#x00e9;n de referencia de Hibernate. La versi&#x00f3;n
+        traducida puede no estar actualizada! Sin embargo, las diferencias
+        deber&#x00ed;an ser s&#x00f3;lo menores. Consulta la documentaci&#x00f3;n
+        de referencia en ingl&#x00e9;s si est&#x00e1;s perdiendo informaci&#x00f3;n
+        o encuentras alg&#x00fa;n error de traducci&#x00f3;n. Si quieres colaborar con
+        una traducci&#x00f3;n en particular, cont&#x00e1;ctanos en la lista de correo
+        de desarrolladores de Hibernate.
+    </para>
+</legalnotice>

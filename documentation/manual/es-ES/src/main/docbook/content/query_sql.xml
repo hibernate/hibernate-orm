@@ -1,0 +1,477 @@
+<chapter id="querysql" revision="2">
+    <title>SQL Nativo</title>
+
+    <para>
+        Puedes tambi&#x00e9;n expresar consultas en el dialecto SQL nativo de tu base de datos. Esto es &#x00fa;til si quieres
+        utilizar aspectos espec&#x00ed;ficos de base de datos tal como consejos (hints) de consulta o la palabra clave
+        <literal>CONNECT</literal> en Oracle. Provee adem&#x00e1;s una clara ruta de migraci&#x00f3;n desde una aplicaci&#x00f3;n
+        basada en SQL/JDBC directo a Hibernate.
+    </para>
+
+    <para>
+        Hibernate3 te permite especificar SQL escrito a mano (incluyendo procedimientos almacenados) para todas
+        las operaciones de creaci&#x00f3;n, actualizaci&#x00f3;n, borrado y carga.
+    </para>
+
+    <sect1 id="querysql-creating">
+        <title>Creando una <literal>Query</literal> de SQL nativo</title>
+
+        <para>
+            Las consultas SQL se controlan por medio de la interface <literal>SQLQuery</literal>, que se obtiene
+            llamando a <literal>Session.createSQLQuery()</literal>.
+        </para>
+
+        <programlisting><![CDATA[List cats = sess.createSQLQuery("select {cat.*} from cats cat")
+    .addEntity("cat", Cat.class)
+    .setMaxResults(50)
+    .list();]]></programlisting>
+
+        <para>
+            Esta consulta especificada:
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            la cadena de consulta SQL, con un lugar para que Hibernate inyecte los alias de columnas
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            la entidad devuelta por la consulta, y sus alias de tablas SQL
+        </para>
+        </listitem>
+        </itemizedlist>
+    
+        <para>
+            El m&#x00e9;todo <literal>addEntity()</literal> asocia alias de tablas SQL con clases de entidad,
+            y determina la forma del conjunto resultado de la consulta.
+        </para>
+        
+        <para>
+            El m&#x00e9;todo <literal>addJoin()</literal> puede ser usado para cargar asociaciones a otras entidades y
+            colecciones.
+        </para>
+        
+        <programlisting><![CDATA[List cats = sess.createSQLQuery(
+        "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
+    )
+    .addEntity("cat", Cat.class)
+    .addJoin("kitten", "cat.kittens")
+    .list();]]></programlisting>
+    
+        <para>
+            Una consulta SQL nativa podr&#x00ed;a devolver un valor escalar simple o una combinaci&#x00f3;n de escalares y entidades.
+        </para>
+
+        <programlisting><![CDATA[Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
+        .addScalar("maxWeight", Hibernate.DOUBLE);
+        .uniqueResult();]]></programlisting>
+
+
+    </sect1>
+
+    <sect1 id="querysql-aliasreferences">
+        <title>Alias y referencias de propiedad</title>
+
+        <para>
+            La notaci&#x00f3;n <literal>{cat.*}</literal> usada arriba es un atajo para "todas las propiedades".
+            Alternativamente, puedes listar las columnas expl&#x00ed;citamente, pero incluso en este caso dejamos
+            que Hibernate inyecte los alias de columnas SQL para cada propiedad. El lugar para un alias de columna
+            es s&#x00f3;lo el nombre de propiedad cualificado por el alias de la tabla. En el siguiente ejemplo,
+            recuperamos <literal>Cat</literal>s de una tabla diferente (<literal>cat_log</literal>) a una
+            declarada en los metadatos de mapeo. Nota que podr&#x00ed;amos incluso usar los alias de propiedad en la
+            cl&#x00e1;usula where si quisieramos.
+        </para>
+        <para>
+            La sint&#x00e1;xis <literal>{}</literal> <emphasis>no</emphasis> es requerida para consultas con nombre.
+            Ver <xref linkend="querysql-namedqueries"/>
+        </para>
+
+        <programlisting><![CDATA[String sql = "select cat.originalId as {cat.id}, " +
+    "cat.mateid as {cat.mate}, cat.sex as {cat.sex}, " +
+    "cat.weight*10 as {cat.weight}, cat.name as {cat.name} " +
+    "from cat_log cat where {cat.mate} = :catId"
+    
+List loggedCats = sess.createSQLQuery(sql)
+    .addEntity("cat", Cat.class)
+    .setLong("catId", catId)
+    .list();]]></programlisting>
+
+        <para>
+            <emphasis>Nota:</emphasis> si listas cada propiedad expl&#x00ed;citamente, &#x00a1;debes incluir todas las
+            propiedades de la clase <emphasis>y sus subclases</emphasis>!
+        </para>
+
+    </sect1>
+    
+    <sect1 id="querysql-namedqueries" revision="2">
+        <title>Consultas SQL con nombre</title>
+
+        <para>
+            Las consultas SQL con nombre pueden definirse en el documento de mapeo y llamadas exactamente
+            en la misma forma en que a una consulta HQL con nombre. En este caso, <emphasis>no</emphasis>
+            necesitamos llamar a <literal>addEntity()</literal>.
+        </para>
+
+         <programlisting><![CDATA[<sql-query name="persons">
+    <return alias="person" class="eg.Person"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex}
+    FROM PERSON person 
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
+
+        <programlisting><![CDATA[List people = sess.getNamedQuery("persons")
+    .setString("namePattern", namePattern)
+    .setMaxResults(50)
+    .list();]]></programlisting>
+
+         <para>
+             Los elementos <literal>&lt;return-join&gt;</literal> y <literal>&lt;load-collection&gt;</literal>
+             se usan para unir asociaciones y definir consultas que inicialicen colecciones, respectivamente.
+         </para>
+         
+         <programlisting><![CDATA[<sql-query name="personsWith">
+    <return alias="person" class="eg.Person"/>
+    <return-join alias="address" property="person.mailingAddress"/>
+    SELECT person.NAME AS {person.name},
+           person.AGE AS {person.age},
+           person.SEX AS {person.sex},
+           address.STREET AS {address.street},
+           address.CITY AS {address.city},
+           address.STATE AS {address.state},
+           address.ZIP AS {address.zip}
+    FROM PERSON person 
+    JOIN ADDRESS address
+    	ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'
+    WHERE person.NAME LIKE :namePattern
+</sql-query>]]></programlisting>
+
+        <para>
+            Una consulta SQL con nombre puede devolver un valor escalar. Debes especificar el alias de columna y
+            tipo Hibernate usando el elementp <literal>&lt;return-scalar&gt;</literal>:
+        </para>
+        
+        <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return-scalar column="name" type="string"/>
+    <return-scalar column="age" type="long"/>
+    SELECT p.NAME AS name,
+           p.AGE AS age,
+    FROM PERSON p WHERE p.NAME LIKE 'Hiber%'
+</sql-query>]]></programlisting>
+
+         <sect2 id="propertyresults">
+             <title>Usando return-property para especificar expl&#x00ed;citamente nombres de columna/alias</title>
+             
+             <para>
+                 Con <literal>&lt;return-property&gt;</literal> puedes decirle expl&#x00ed;citamente a Hibernate qu&#x00e9;
+                 alias de columna usar, en vez de usar la sint&#x00e1;xis <literal>{}</literal> para dejar que Hibernate
+                 inyecte sus propios alias.
+             </para>
+             
+            <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <return alias="person" class="eg.Person">
+        <return-property name="name" column="myName"/>
+        <return-property name="age" column="myAge"/>
+        <return-property name="sex" column="mySex"/>
+    </return>
+    SELECT person.NAME AS myName,
+           person.AGE AS myAge,
+           person.SEX AS mySex,
+    FROM PERSON person WHERE person.NAME LIKE :name
+</sql-query>
+]]></programlisting>
+             
+             <para>
+                 <literal>&lt;return-property&gt;</literal> tambi&#x00e9;n trabaja con m&#x00fa;ltiples columnas. Esto resuelve una
+                 limitaci&#x00f3;n de la sint&#x00e1;xis <literal>{}</literal>, la cual no puede permitir un control fino de propiedades
+                 multi-columna.
+             </para>
+             
+             <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
+    <return alias="emp" class="Employment">            
+        <return-property name="salary"> 
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>            
+        </return-property>
+        <return-property name="endDate" column="myEndDate"/>
+    </return>
+        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
+        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},
+        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY
+        FROM EMPLOYMENT
+        WHERE EMPLOYER = :id AND ENDDATE IS NULL
+        ORDER BY STARTDATE ASC
+</sql-query>]]></programlisting>
+             
+            <para>
+                Nota que en este ejemplo hemos usado <literal>&lt;return-property&gt;</literal> en combinaci&#x00f3;n con
+                la sint&#x00e1;xis <literal>{}</literal> para inyecci&#x00f3;n, permitiendo a los usuarios elejir c&#x00f3;mo quieren
+                referirse a las columnas y propiedades.
+            </para>
+
+            <para>
+                Si tu mapeo tiene un discriminador debes usar <literal>&lt;return-discriminator&gt;</literal>
+                para especificar la columna discriminadora.
+            </para>
+         </sect2>
+         
+         <sect2 id="sp_query">
+             <title>Usando procedimientos almacenados para consultar</title>
+             
+             <para>
+                 Hibernate3 introduce soporte para consultas v&#x00ed;a procedimientos almacenados. Los procedimientos
+                 almacenados deben devolver un conjunto resultado como el primer par&#x00e1;metro de salida para ser
+                 capaces de funcionar con Hibernate. Un ejemplo de uno procedimiento almacenado en Oracle 9
+                 o superior es as&#x00ed;:
+             </para>
+                 
+                 <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments 
+    RETURN SYS_REFCURSOR 
+AS 
+    st_cursor SYS_REFCURSOR; 
+BEGIN 
+    OPEN st_cursor FOR 
+ SELECT EMPLOYEE, EMPLOYER, 
+ STARTDATE, ENDDATE, 
+ REGIONCODE, EID, VALUE, CURRENCY 
+ FROM EMPLOYMENT; 
+      RETURN  st_cursor; 
+ END;]]></programlisting>
+                 
+             <para>
+                 Para usar esta consulta en Hibernate necesitas mapearla por medio de una consulta con nombre.
+             </para>
+                 
+             <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
+    <return alias="emp" class="Employment">
+        <return-property name="employee" column="EMPLOYEE"/>
+        <return-property name="employer" column="EMPLOYER"/>            
+        <return-property name="startDate" column="STARTDATE"/>
+        <return-property name="endDate" column="ENDDATE"/>            
+        <return-property name="regionCode" column="REGIONCODE"/>            
+        <return-property name="id" column="EID"/>                        
+        <return-property name="salary"> 
+            <return-column name="VALUE"/>
+            <return-column name="CURRENCY"/>            
+        </return-property>
+    </return>
+    { ? = call selectAllEmployments() }
+</sql-query>]]></programlisting>
+             
+             <para>
+               Nota que los procedimientos almacenados s&#x00f3;lo devuelven escalares y entidades.
+               No est&#x00e1;n soportados <literal>&lt;return-join&gt;</literal> y <literal>&lt;load-collection&gt;</literal>.
+             </para>
+             
+             <sect3 id="querysql-limits-storedprocedures">
+               <title>Reglas/limitaciones para usar procedimientos almacenados</title>
+               
+               <para>
+                   Para usar procedimientos almacenados con Hibernate los procedimientos tienen que seguir algunas reglas.
+                   Si no siguen esas reglas no son usables por Hibernate. Si a&#x00fa;n quisieras usar estos procedimientos
+                   tendr&#x00ed;as que ejecutarlos por medio de <literal>session.connection()</literal>. Las reglas son
+                   diferentes para cada base de datos, ya que los vendedores de base de datos tienen diferentes
+                   sem&#x00e1;nticas/sint&#x00e1;xis de procedimientos almacenados.
+               </para>
+
+                <para>
+                   Las consultas de procedimientos almacenados no pueden ser paginadas con 
+                   <literal>setFirstResult()/setMaxResults()</literal>.
+               </para>
+
+                 <para>
+                   Para Oracle se aplican las siguientes reglas:
+               </para>
+               
+               <itemizedlist spacing="compact">
+               <listitem>
+               <para>    
+                   El procedimiento debe devolver un conjunto resultado. Esto se hace devolviendo un
+                   <literal>SYS_REFCURSOR</literal> en Oracle 9 o 10. En Oracle necesitas definir un
+                   tipo <literal>REF CURSOR</literal>.
+               </para>
+               </listitem>    
+               <listitem>
+               <para>
+                   La forma recomendada es <literal>{ ? = call procName(&lt;parameters&gt;) }</literal> o
+                   <literal>{ ? = call procName }</literal> (esto es m&#x00e1;s una regla de Oracle que una regla de Hibernate).
+               </para>
+               </listitem>    
+              </itemizedlist>
+                           
+              <para>                   
+                   Para Sybase o MS SQL server se aplican las siguientes reglas:
+               </para>
+                   
+               <itemizedlist spacing="compact">
+               <listitem>
+               <para>    
+                   El procedimiento debe devolver un conjunto resultado. Nota que ya que estos servidores pueden
+                   y devolver&#x00e1;n m&#x00fa;ltiples conjuntos resultados y cuentas de actualizaci&#x00f3;n, Hibernate iterar&#x00e1;
+                   los resultados y tomar&#x00e1; el primer resultado que sea un conjunto resultado como su valor
+                   a devolver. Todo lo dem&#x00e1;s ser&#x00e1; descartado.
+               </para>
+               </listitem>    
+               <listitem>
+               <para>
+                   Si habilitas <literal>SET NOCOUNT ON</literal> en tu procedimiento ser&#x00e1; probablemente m&#x00e1;s
+                   eficiente, pero esto no es un requerimiento.
+               </para>
+               </listitem>    
+              </itemizedlist>
+              </sect3>
+         </sect2>
+
+    </sect1>
+
+    <sect1 id="querysql-cud">
+        <title>SQL personalizado para crear, actualizar y borrar</title>
+
+        <para>
+            Hibernate3 puede usar sentencias SQL personalizadas para las operaciones de
+            crear, actualizar y borrar. Los persistidores de clases y colecciones en Hibernate
+            ya contienen un conjunto de cadenas generadas en tiempo de configuraci&#x00f3;n (insertsql,
+            deletesql, updatesql, etc.). Las etiquetas de mapeo <literal>&lt;sql-insert&gt;</literal>,
+            <literal>&lt;sql-delete&gt;</literal>, y <literal>&lt;sql-update&gt;</literal> sobrescriben
+            estas cadenas:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-insert>
+    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>
+    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
+</class>]]></programlisting>
+
+        <para>
+            El SQL se ejecuta directamente en tu base de datos, de modo que eres libre de usar cualquier
+            dialecto que quieras. Esto reducir&#x00e1;, por supuesto, la portabilidad de tu mapeo si usas SQL
+            espec&#x00ed;fico de la base de datos.
+        </para>
+
+        <para>
+            Los procedimientos almacenados son soportados si est&#x00e1; establecido el atributo
+            <literal>callable</literal>:
+        </para>
+
+    <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <sql-insert callable="true">{call createPerson (?, ?)}</sql-insert>
+    <sql-delete callable="true">{? = call deletePerson (?)}</sql-delete>
+    <sql-update callable="true">{? = call updatePerson (?, ?)}</sql-update>
+</class>]]></programlisting>
+
+        <para>
+          El orden de los par&#x00e1;metros posicionales son actualmente vitales, ya que deben estar en la
+          misma secuencia en que las espera Hibernate.
+        </para>
+        
+        <para>
+          Puedes ver el orden esperado habilitando el registro de depuraci&#x00f3;n para el nivel
+          <literal>org.hibernate.persister.entity</literal>. Con este nivel habilitado, Hibernate
+          imprimir&#x00e1; el SQL est&#x00e1;tico que se usa para crear, actualizar, borrar, etc. las entidades.
+          (Para ver la secuencia esperada, recuerda no incluir tu SQL personalizado en los ficheros
+          de mapeo ya que sobrescribir&#x00e1;n el sql est&#x00e1;tico generado por Hibernate.)
+        </para>
+
+        <para>
+            Los procedimientos almacenados son, en la mayor&#x00ed;a de los casos (l&#x00e9;ase, mejor hacerlo que no hacerlo),
+            obligados a devolver el n&#x00fa;mero de filas insertadas/actualizadas/borradas, ya que Hibernate tiene algunas
+            comprobaciones en tiempo de ejecuci&#x00f3;n del &#x00e9;xito de la sentencia. Hibernate siempre registra el primer
+            par&#x00e1;metro de la sentencia como un par&#x00e1;metro de salida num&#x00e9;rico para las operaciones CUD:
+        </para>
+
+        <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
+    RETURN NUMBER IS
+BEGIN
+
+    update PERSON
+    set
+        NAME = uname,
+    where
+        ID = uid;
+
+    return SQL%ROWCOUNT;
+
+END updatePerson;]]></programlisting>
+
+        
+    </sect1>
+
+    <sect1 id="querysql-load">
+        <title>SQL personalizado para carga</title>
+
+        <para>
+            Puedes tambi&#x00e9;n declarar tu propias consultas SQL (o HQL) para cargar entidades:
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="person">
+    <return alias="pers" class="Person" lock-mode="upgrade"/>
+    SELECT NAME AS {pers.name}, ID AS {pers.id} 
+    FROM PERSON 
+    WHERE ID=? 
+    FOR UPDATE
+</sql-query>]]></programlisting>
+
+        <para>
+            Esto es s&#x00f3;lo una declaraci&#x00f3;n de consulta con nombrem como se ha discutido anteriormente.
+            Puedes hacer referencia a esta consulta con nombre en un mapeo de clase:
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id">
+        <generator class="increment"/>
+    </id>
+    <property name="name" not-null="true"/>
+    <loader query-ref="person"/>
+</class>]]></programlisting>
+    
+        <para>
+            Esto incluso funciona con procedimientos almacenados.
+        </para>
+
+        <para>
+            Puedes incluso definit una consulta para la carga de colecciones:
+        </para>
+
+<programlisting><![CDATA[<set name="employments" inverse="true">
+    <key/>
+    <one-to-many class="Employment"/>
+    <loader query-ref="employments"/>
+</set>]]></programlisting>
+		
+        <programlisting><![CDATA[<sql-query name="employments">
+    <load-collection alias="emp" role="Person.employments"/>
+    SELECT {emp.*}
+    FROM EMPLOYMENT emp
+    WHERE EMPLOYER = :id
+    ORDER BY STARTDATE ASC, EMPLOYEE ASC
+</sql-query>]]></programlisting>
+
+        <para>
+            Podr&#x00ed;as incluso definir un cargador de entidades que cargue una colecci&#x00f3;n por
+            recuperaci&#x00f3;n por uni&#x00f3;n (join fetching):
+        </para>
+
+        <programlisting><![CDATA[<sql-query name="person">
+    <return alias="pers" class="Person"/>
+    <return-join alias="emp" property="pers.employments"/> 
+    SELECT NAME AS {pers.*}, {emp.*}
+    FROM PERSON pers
+    LEFT OUTER JOIN EMPLOYMENT emp 
+        ON pers.ID = emp.PERSON_ID
+    WHERE ID=?
+</sql-query>]]></programlisting>
+
+    </sect1>
+
+</chapter>

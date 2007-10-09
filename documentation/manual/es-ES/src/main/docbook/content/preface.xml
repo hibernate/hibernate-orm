@@ -1,63 +1,10 @@
-<?xml version='1.0' encoding="iso-8859-1"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
-                      "../support/docbook-dtd/docbookx.dtd"
-[
-<!ENTITY quickstart             SYSTEM "modules/quickstart.xml">
-<!ENTITY tutorial               SYSTEM "modules/tutorial.xml">
-<!ENTITY architecture           SYSTEM "modules/architecture.xml">
-<!ENTITY configuration          SYSTEM "modules/configuration.xml">
-<!ENTITY persistent-classes     SYSTEM "modules/persistent_classes.xml">
-<!ENTITY basic-mapping          SYSTEM "modules/basic_mapping.xml">
-<!ENTITY collection-mapping     SYSTEM "modules/collection_mapping.xml">
-<!ENTITY association-mapping    SYSTEM "modules/association_mapping.xml">
-<!ENTITY component-mapping      SYSTEM "modules/component_mapping.xml">
-<!ENTITY inheritance-mapping    SYSTEM "modules/inheritance_mapping.xml">
-<!ENTITY session-api            SYSTEM "modules/session_api.xml">
-<!ENTITY transactions           SYSTEM "modules/transactions.xml">
-<!ENTITY events                 SYSTEM "modules/events.xml">
-<!ENTITY batch                  SYSTEM "modules/batch.xml">
-<!ENTITY query-hql              SYSTEM "modules/query_hql.xml">
-<!ENTITY query-criteria         SYSTEM "modules/query_criteria.xml">
-<!ENTITY query-sql              SYSTEM "modules/query_sql.xml">
-<!ENTITY filters                SYSTEM "modules/filters.xml">
-<!ENTITY xml                    SYSTEM "modules/xml.xml">
-<!ENTITY performance            SYSTEM "modules/performance.xml">
-<!ENTITY toolset-guide          SYSTEM "modules/toolset_guide.xml">
-<!ENTITY example-parentchild    SYSTEM "modules/example_parentchild.xml">
-<!ENTITY example-weblog         SYSTEM "modules/example_weblog.xml">
-<!ENTITY example-mappings       SYSTEM "modules/example_mappings.xml">
-<!ENTITY best-practices         SYSTEM "modules/best_practices.xml">
-]>
+<?xml version='1.0'?>
 
-<book lang="es">
-
-    <bookinfo>
-        <title>HIBERNATE - Persistencia Relacional para Java Idiom&#x00e1;tico</title>
-        <subtitle>Documentaci&#x00f3;n de Referencia de Hibernate</subtitle>
-        <releaseinfo>3.0.5</releaseinfo>
-    </bookinfo>
-
-    <toc/>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
     <preface id="preface" revision="2">
         <title>Prefacio</title>
 
-        <para>
-            Advertencia! Esta es una versi&#x00f3;n traducida del ingl&#x00e9;s de
-            la documentaci&#x00e9;n de referencia de Hibernate. La versi&#x00f3;n 
-            traducida puede no estar actualizada! Sin embargo, las diferencias
-            deber&#x00ed;an ser s&#x00f3;lo menores. Consulta la documentaci&#x00f3;n
-            de referencia en ingl&#x00e9;s si est&#x00e1;s perdiendo informaci&#x00f3;n
-            o encuentras alg&#x00fa;n error de traducci&#x00f3;n. Si quieres colaborar con
-            una traducci&#x00f3;n en particular, cont&#x00e1;ctanos en la lista de correo
-            de desarrolladores de Hibernate.
-        </para>
-
-        <para>
-            Traductor(es): Bernardo Antonio Buffa Colom&#x00e9; &lt;kreimer@bbs.frc.utn.edu.ar&gt;
-<!--,
-            Antonio L&#x00f3;pez Gota &lt;antoniogota@gmail.com&gt; -->
-        </para>
 
         <para>
             Trabajar con software orientado a objetos y una base de datos relacional puede ser
@@ -108,8 +55,8 @@
                 <para>
                     Dale una mirada al directorio <literal>eg/</literal> en la distribuci&#x00f3;n
                     de Hibernate, contiene una aplicaci&#x00f3;n independiente simple.
-                    Copia tu driver JDBC al directorio <literal>lib/</literal> y edita 
-                    <literal>etc/hibernate.properties</literal>, especificando los valores 
+                    Copia tu driver JDBC al directorio <literal>lib/</literal> y edita
+                    <literal>etc/hibernate.properties</literal>, especificando los valores
                     correctos para tu base de datos. Desde l&#x00ed;nea de comandos en el
                     directorio de la distribuci&#x00f3;n, tipea <literal>ant eg</literal>
                     (usando Ant), o bajo Windows, tipea <literal>build eg</literal>.
@@ -163,41 +110,3 @@
          </para>
 
     </preface>
-
-    &quickstart;
-    &tutorial;
-    &architecture;
-
-    &configuration;
-
-    &persistent-classes;
-
-    &basic-mapping;
-    &collection-mapping;
-    &association-mapping;
-    &component-mapping;
-    &inheritance-mapping;
-
-    &session-api;
-    &transactions;
-    &events;
-    &batch;
-
-    &query-hql;
-    &query-criteria;
-    &query-sql;
-    &filters;
-    &xml;
-
-    &performance;
-
-    &toolset-guide;
-
-    &example-parentchild;
-    &example-weblog;
-    &example-mappings;
-
-    &best-practices;
-
-</book>
-

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="Shift_JIS"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="example-mappings">
     <title>例：いろいろなマッピング</title>
     
@@ -19,10 +21,10 @@
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="images/EmployerEmployee.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../shared/images/EmployerEmployee.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         
@@ -132,10 +134,10 @@ create sequence employer_id_seq]]></programlisting>
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="images/AuthorWork.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../shared/images/AuthorWork.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         
@@ -256,10 +258,10 @@ alter table author_work
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="images/CustomerOrderProduct.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../shared/images/CustomerOrderProduct.gif" format="GIF" align="center"/>
+                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
         

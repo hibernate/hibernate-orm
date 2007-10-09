@@ -1,3 +1,8 @@
+<?xml version='1.0' encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+        <!ENTITY mdash "-">
+]>
+
 <chapter id="tutorial">
     <title>Introduction to Hibernate</title>
     
@@ -1471,7 +1476,7 @@ out.close();]]></programlisting>
 <programlisting><![CDATA[<target name="war" depends="compile">
     <war destfile="hibernate-tutorial.war" webxml="web.xml">
         <lib dir="${librarydir}">
-          <exclude name="servlet.jar"/>
+          <exclude name="jsdk*.jar"/>
         </lib>
 
         <classes dir="${targetdir}"/>
@@ -1503,9 +1508,8 @@ out.close();]]></programlisting>
 
             <para>
                 Before you compile and deploy the web application, note that an additional library
-                is required: <literal>servlet.jar</literal>. This is the Java Servlet Development Kit,
-                if you don't have this library already, get it from the 
-                <ulink url="http://java.sun.com/products/servlet/archive.html">Sun website</ulink> and copy it to
+                is required: <literal>jsdk.jar</literal>. This is the Java servlet development kit,
+                if you don't have this library already, get it from the Sun website and copy it to
                 your library directory. However, it will be only used for compliation and excluded
                 from the WAR package.
             </para>

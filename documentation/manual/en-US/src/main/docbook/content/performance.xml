@@ -1,3 +1,6 @@
+<?xml version='1.0' encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="performance">
     <title>Improving performance</title>
 
@@ -681,7 +684,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
-                <entry>yes (clustered invalidation)</entry>
+                <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
@@ -945,12 +948,6 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         <listitem>
         <para>
             <literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            <literal>CacheMode.IGNORE</literal> - never write nor read items from the second-level cache, 
-            except when updating data.
         </para>
         </listitem>
         <listitem>

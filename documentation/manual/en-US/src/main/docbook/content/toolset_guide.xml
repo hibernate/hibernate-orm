@@ -1,3 +1,6 @@
+<?xml version='1.0' encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="toolsetguide" revision="2">
     <title>Toolset Guide</title>
 
@@ -100,7 +103,7 @@
             </para>
             
             <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
-<property name="employeeId" unique-key="OrgEmployeeId"/>]]></programlisting>
+<property name="employeeId" unique-key="OrgEmployee"/>]]></programlisting>
 
             <para>
                 An <literal>index</literal> attribute specifies the name of an index that

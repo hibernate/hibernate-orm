@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<authorgroup id="translators">
+
+    <othercredit class="translator">
+        <firstname>Cao</firstname>
+        <surname>Xiaogang</surname>
+        <affiliation>
+            <orgname>RedSaga</orgname>
+        </affiliation>
+        <contrib>Translation Lead</contrib>
+        <email>caoxg@yahoo.com</email>
+    </othercredit>
+
+</authorgroup>

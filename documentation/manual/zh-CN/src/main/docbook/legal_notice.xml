@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE legalnotice PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Steve Ebersole
+  -->
+<legalnotice id="Legal_Notice">
+    <title>Legal Notice</title>
+    <para>
+        <address>
+            <street>1801 Varsity Drive</street>
+            <city>Raleigh</city>, <state>NC</state><postcode>27606-2072</postcode><country>USA</country>
+            <phone>Phone: +1 919 754 3700</phone>
+            <phone>Phone: 888 733 4281</phone>
+            <fax>Fax: +1 919 754 3701</fax>
+            <pob>PO Box 13588</pob><city>Research Triangle Park</city>, <state>NC</state><postcode>27709</postcode><country>USA</country>
+        </address>
+    </para>
+    <para>
+        Copyright <trademark class="copyright"></trademark> 2007 by Red Hat, Inc. This material may be distributed only subject to the terms and conditions set forth in the Open Publication License, V1.0 or later (the latest version is presently available at <ulink url="http://www.opencontent.org/openpub/">http://www.opencontent.org/openpub/</ulink>).
+    </para>
+    <para>
+        Distribution of substantively modified versions of this document is prohibited without the explicit permission of the copyright holder.
+    </para>
+    <para>
+        Distribution of the work or derivative of the work in any standard (paper) book form for commercial purposes is prohibited unless prior permission is obtained from the copyright holder.
+    </para>
+    <para>
+        Red Hat and the Red Hat "Shadow Man" logo are registered trademarks of Red Hat, Inc. in the United States and other countries.
+    </para>
+    <para>
+    All other trademarks referenced herein are the property of their respective owners.
+    </para>
+    <para>
+        The GPG fingerprint of the security@redhat.com key is:
+    </para>
+    <para>
+        CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E
+    </para>
+</legalnotice>

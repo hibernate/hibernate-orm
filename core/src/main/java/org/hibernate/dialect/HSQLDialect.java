@@ -11,7 +11,6 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -29,13 +28,12 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * Note this version supports HSQLDB version 1.8 and higher, only.
  *
- * @author Christoph Sturm, Phillip Baird
+ * @author Christoph Sturm
+ * @author Phillip Baird
  */
 public class HSQLDialect extends Dialect {
 
 	private static final Logger log = LoggerFactory.getLogger( HSQLDialect.class );
-
-	private boolean schemaSupport;
 
 	public HSQLDialect() {
 		super();
@@ -130,17 +128,6 @@ public class HSQLDialect extends Dialect {
 		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-
-		try {
-			// Does present HSQLDB Database class support schemas?
-			// yuck! Perhaps we should think about a new dialect?  Especially
-			// if more things are going to break back-compat moving forward
-			ReflectHelper.classForName( "org.hsqldb.Database" ).getDeclaredField( "schemaManager" );
-			schemaSupport = true;
-		}
-		catch (Throwable t) {
-			schemaSupport = false;
-		}
 	}
 
 	public String getAddColumnString() {
@@ -219,12 +206,8 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public String getQuerySequencesString() {
-		if ( schemaSupport ) {
-			return "select sequence_name from information_schema.system_sequences";
-		}
-		else {
-			return "select sequence_name from system_sequences";
-		}
+		// this assumes schema support, which is present in 1.8.0 and later...
+		return "select sequence_name from information_schema.system_sequences";
 	}
 
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {

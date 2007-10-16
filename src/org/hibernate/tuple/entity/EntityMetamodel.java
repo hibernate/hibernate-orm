@@ -82,6 +82,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasNonIdentifierPropertyNamedId;
 
 	private final int[] naturalIdPropertyNumbers;
+	private final boolean hasImmutableNaturalId;
 
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
@@ -159,6 +160,7 @@ public class EntityMetamodel implements Serializable {
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundInsertGeneratedValue = false;
 		boolean foundUpdateGeneratedValue = false;
+		boolean foundUpdateableNaturalIdProperty = false;
 
 		while ( iter.hasNext() ) {
 			Property prop = ( Property ) iter.next();
@@ -173,6 +175,9 @@ public class EntityMetamodel implements Serializable {
 
 			if ( prop.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( new Integer(i) );
+				if ( prop.isUpdateable() ) {
+					foundUpdateableNaturalIdProperty = true;
+				}
 			}
 
 			if ( "id".equals( prop.getName() ) ) {
@@ -229,9 +234,11 @@ public class EntityMetamodel implements Serializable {
 
 		if (naturalIdNumbers.size()==0) {
 			naturalIdPropertyNumbers = null;
+			hasImmutableNaturalId = false;
 		}
 		else {
 			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
+			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
 		}
 
 		hasInsertGeneratedValues = foundInsertGeneratedValue;
@@ -371,6 +378,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasNaturalIdentifier() {
 		return naturalIdPropertyNumbers!=null;
+	}
+
+	public boolean hasImmutableNaturalId() {
+		return hasImmutableNaturalId;
 	}
 
 	public Set getSubclassEntityNames() {

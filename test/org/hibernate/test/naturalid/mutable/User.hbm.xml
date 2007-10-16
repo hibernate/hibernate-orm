@@ -5,7 +5,7 @@
 
 <!--
 
-  This mapping illustrates use of <natural-id>.
+  This mapping illustrates use of <natural-id mutable="true"/>
   
 -->
 

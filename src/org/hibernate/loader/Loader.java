@@ -2156,18 +2156,13 @@ public abstract class Loader {
 			final QueryCache queryCache, 
 			final QueryKey key) {
 		List result = null;
-		
-		if ( session.getCacheMode().isGetEnabled() ) {
-			result = queryCache.get( 
-					key, 
-					resultTypes, 
-					queryParameters.isNaturalKeyLookup(), 
-					querySpaces, 
-					session 
-				);
 
+		if ( session.getCacheMode().isGetEnabled() ) {
+			boolean isImmutableNaturalKeyLookup = queryParameters.isNaturalKeyLookup()
+					&& getEntityPersisters()[0].getEntityMetamodel().hasImmutableNaturalId();
+			result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				if (result==null) {
+				if ( result == null ) {
 					factory.getStatisticsImplementor()
 							.queryCacheMiss( getQueryIdentifier(), queryCache.getRegionName() );
 				}
@@ -2176,9 +2171,8 @@ public abstract class Loader {
 							.queryCacheHit( getQueryIdentifier(), queryCache.getRegionName() );
 				}
 			}
-			
 		}
-		
+
 		return result;
 	}
 
@@ -2189,13 +2183,12 @@ public abstract class Loader {
 			final QueryCache queryCache, 
 			final QueryKey key, 
 			final List result) {
-		
 		if ( session.getCacheMode().isPutEnabled() ) {
 			boolean put = queryCache.put(
 					key, 
 					resultTypes, 
 					result, 
-					queryParameters.isNaturalKeyLookup(), 
+					queryParameters.isNaturalKeyLookup(),
 					session 
 			);
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {

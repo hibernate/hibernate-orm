@@ -76,26 +76,6 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 	
-	public void testNaturalIdCheck() throws Exception {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		
-		User u = new User("gavin", "hb", "secret");
-		s.persist(u);
-		Field name = u.getClass().getDeclaredField("name");
-		name.setAccessible(true);
-		name.set(u, "Gavin");
-		try {
-			s.flush();
-			fail();
-		}
-		catch (HibernateException he) {}
-		name.set(u, "gavin");
-		s.delete(u);
-		t.commit();
-		s.close();
-	}
-	
 	public void testNonexistentNaturalIdCache() {
 		getSessions().getStatistics().clear();
 
@@ -248,12 +228,22 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 			.uniqueResult();
 		
 		assertNotNull(u);
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
+
+		u = (User) s.createCriteria( User.class)
+			.add( Restrictions.naturalId()
+				.set("name", "gavin")
+				.set("org", "hb")
+			).setCacheable(true)
+			.uniqueResult();
+
+		assertNotNull(u);
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
 		
 		t.commit();
 		s.close();
-		
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s = openSession();
 		t = s.beginTransaction();

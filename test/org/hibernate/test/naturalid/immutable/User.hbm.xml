@@ -1,11 +1,32 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
-	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
+<!--
+  ~ Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Steve Ebersole
+  -->
+
+<!--
+
+  This mapping illustrates use of <natural-id mutable="false"/>
+
+-->
 <hibernate-mapping package="org.hibernate.test.naturalid.immutable">
 
-	<class name="User" table="IMM_NAT_ID_USER" lazy="true">
+    <class name="User" table="IMM_NAT_ID_USER" lazy="true">
         <comment>Users may bid for or sell auction items.</comment>
         <id name="myUserId" type="java.lang.Integer">
             <generator class="increment"/>
@@ -16,9 +37,6 @@
         <version name="version"/>
         <property name="password" not-null="true" length="15" column="`password`"/>
         <property name="email"/>
-        <property name="firstName" length="50" not-null="true"/>
-        <property name="initial" column="`initial`"/>
-        <property name="lastName" length="50" not-null="true"/>
     </class>
 
 </hibernate-mapping>

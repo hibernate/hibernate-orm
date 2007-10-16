@@ -2147,23 +2147,18 @@ public abstract class Loader {
 	}
 
 	private List getResultFromQueryCache(
-			final SessionImplementor session, 
-			final QueryParameters queryParameters, 
-			final Set querySpaces, 
+			final SessionImplementor session,
+			final QueryParameters queryParameters,
+			final Set querySpaces,
 			final Type[] resultTypes,
-			final QueryCache queryCache, 
+			final QueryCache queryCache,
 			final QueryKey key) {
 		List result = null;
-		
-		if ( session.getCacheMode().isGetEnabled() ) {
-			result = queryCache.get( 
-					key, 
-					resultTypes, 
-					queryParameters.isNaturalKeyLookup(), 
-					querySpaces, 
-					session 
-			);
 
+		if ( session.getCacheMode().isGetEnabled() ) {
+			boolean isImmutableNaturalKeyLookup = queryParameters.isNaturalKeyLookup()
+					&& getEntityPersisters()[0].getEntityMetamodel().hasImmutableNaturalId();
+			result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
 				if ( result == null ) {
 					factory.getStatisticsImplementor()
@@ -2174,28 +2169,20 @@ public abstract class Loader {
 							.queryCacheHit( getQueryIdentifier(), queryCache.getRegion().getName() );
 				}
 			}
-			
 		}
-		
+
 		return result;
 	}
 
 	private void putResultInQueryCache(
-			final SessionImplementor session, 
-			final QueryParameters queryParameters, 
+			final SessionImplementor session,
+			final QueryParameters queryParameters,
 			final Type[] resultTypes,
-			final QueryCache queryCache, 
-			final QueryKey key, 
+			final QueryCache queryCache,
+			final QueryKey key,
 			final List result) {
-		
 		if ( session.getCacheMode().isPutEnabled() ) {
-			boolean put = queryCache.put(
-					key, 
-					resultTypes, 
-					result, 
-					queryParameters.isNaturalKeyLookup(), 
-					session 
-			);
+			boolean put = queryCache.put( key, resultTypes, result, queryParameters.isNaturalKeyLookup(), session );
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor()
 						.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );

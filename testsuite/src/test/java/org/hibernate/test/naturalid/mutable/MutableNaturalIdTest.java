@@ -177,10 +177,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 	public void testNaturalIdCache() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-
-		User u = new User("gavin", "hb", "secret");
-		s.persist(u);
-
+		User u = new User( "gavin", "hb", "secret" );
+		s.persist( u );
 		t.commit();
 		s.close();
 
@@ -188,17 +186,14 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-
-		u = (User) s.createCriteria(User.class)
-			.add( Restrictions.naturalId()
-				.set("name", "gavin")
-				.set("org", "hb")
-			)
-			.setCacheable(true)
-			.uniqueResult();
-
-		assertNotNull(u);
-
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set( "name", "gavin" )
+						.set( "org", "hb" )
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNotNull( u );
 		t.commit();
 		s.close();
 
@@ -208,10 +203,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-
 		User v = new User("xam", "hb", "foobar");
 		s.persist(v);
-
 		t.commit();
 		s.close();
 
@@ -219,25 +212,24 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-
-		u = (User) s.createCriteria( User.class)
-			.add( Restrictions.naturalId()
-				.set("name", "gavin")
-				.set("org", "hb")
-			).setCacheable(true)
-			.uniqueResult();
-
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "gavin")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
 		assertNotNull(u);
 		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
 
-		u = (User) s.createCriteria( User.class)
-			.add( Restrictions.naturalId()
-				.set("name", "gavin")
-				.set("org", "hb")
-			).setCacheable(true)
-			.uniqueResult();
-
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "gavin")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
 		assertNotNull(u);
 		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );

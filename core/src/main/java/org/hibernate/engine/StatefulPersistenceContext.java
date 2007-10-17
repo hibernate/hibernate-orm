@@ -1003,74 +1003,124 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				.append("]")
 				.toString();
 	}
-	
+
 	/**
-	 * Search the persistence context for an owner for the child object,
-	 * given a collection role. If <tt>mergeMap</tt> is non-null, also
-	 * check the detached graph being merged for a parent.
+	 * Search <tt>this</tt> persistence context for an associated entity instance which is considered the "owner" of
+	 * the given <tt>childEntity</tt>, and return that owner's id value.  This is performed in the scenario of a
+	 * uni-directional, non-inverse one-to-many collection (which means that the collection elements do not maintain
+	 * a direct reference to the owner).
+	 * <p/>
+	 * As such, the processing here is basically to loop over every entity currently associated with this persistence
+	 * context and for those of the correct entity (sub) type to extract its collection role property value and see
+	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
+	 * <p/>
+	 * Also need to account for <tt>mergeMap</tt> which acts as a local copy cache managed for the duration of a merge
+	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
+	 *
+	 * @param entityName The entity name for the entity type which would own the child
+	 * @param propertyName The name of the property on the owning entity type which would name this child association.
+	 * @param childEntity The child entity instance for which to locate the owner instance id.
+	 * @param mergeMap A map of non-persistent instances from an on-going merge operation (possibly null).
+	 *
+	 * @return The id of the entityName instance which is said to own the child; null if an appropriate owner not
+	 * located.
 	 */
-	public Serializable getOwnerId(String entity, String property, Object childEntity, Map mergeMap) {
-		
-		EntityPersister persister = session.getFactory()
-				.getEntityPersister(entity);
-		final CollectionPersister collectionPersister = session.getFactory()
-				.getCollectionPersister(entity + '.' + property);
-		
+	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
+		final String collectionRole = entityName + '.' + propertyName;
+		final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
+		final CollectionPersister collectionPersister = session.getFactory().getCollectionPersister( collectionRole );
+
+		// iterate all the entities currently associated with the persistence context.
 		Iterator entities = entityEntries.entrySet().iterator();
 		while ( entities.hasNext() ) {
-			Map.Entry me = (Map.Entry) entities.next();
-			EntityEntry ee = (EntityEntry) me.getValue();
-			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
-				Object instance = me.getKey();
+			final Map.Entry me = ( Map.Entry ) entities.next();
+			final EntityEntry entityEntry = ( EntityEntry ) me.getValue();
+			// does this entity entry pertain to the entity persister in which we are interested (owner)?
+			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+				final Object entityEntryInstance = me.getKey();
 
 				//check if the managed object is the parent
-				boolean found = isFoundInParent( 
-						property, 
-						childEntity, 
-						persister, 
+				boolean found = isFoundInParent(
+						propertyName,
+						childEntity,
+						persister,
 						collectionPersister,
-						instance 
-					);
+						entityEntryInstance
+				);
 
-				if (!found && mergeMap!=null) {
+				if ( !found && mergeMap != null ) {
 					//check if the detached object being merged is the parent
-					Object unmergedInstance = mergeMap.get(instance);
-					Object unmergedChild = mergeMap.get(childEntity);
-					if ( unmergedInstance!=null && unmergedChild!=null ) {
-						found = isFoundInParent( 
-								property, 
-								unmergedChild, 
-								persister, 
+					Object unmergedInstance = mergeMap.get( entityEntryInstance );
+					Object unmergedChild = mergeMap.get( childEntity );
+					if ( unmergedInstance != null && unmergedChild != null ) {
+						found = isFoundInParent(
+								propertyName,
+								unmergedChild,
+								persister,
 								collectionPersister,
-								unmergedInstance 
-							);
+								unmergedInstance
+						);
 					}
 				}
-				
+
 				if ( found ) {
-					return ee.getId();
+					return entityEntry.getId();
 				}
-				
+
 			}
 		}
+
+		// if we get here, it is possible that we have a proxy 'in the way' of the merge map resolution...
+		// 		NOTE: decided to put this here rather than in the above loop as I was nervous about the performance
+		//		of the loop-in-loop especially considering this is far more likely the 'edge case'
+		if ( mergeMap != null ) {
+			Iterator mergeMapItr = mergeMap.entrySet().iterator();
+			while ( mergeMapItr.hasNext() ) {
+				final Map.Entry mergeMapEntry = ( Map.Entry ) mergeMapItr.next();
+				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
+					final HibernateProxy proxy = ( HibernateProxy ) mergeMapEntry.getKey();
+					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
+						boolean found = isFoundInParent(
+								propertyName,
+								childEntity,
+								persister,
+								collectionPersister,
+								mergeMap.get( proxy )
+						);
+						if ( !found ) {
+							found = isFoundInParent(
+									propertyName,
+									mergeMap.get( childEntity ),
+									persister,
+									collectionPersister,
+									mergeMap.get( proxy )
+							);
+						}
+						if ( found ) {
+							return proxy.getHibernateLazyInitializer().getIdentifier();
+						}
+					}
+				}
+			}
+		}
+
 		return null;
 	}
 
 	private boolean isFoundInParent(
-			String property, 
-			Object childEntity, 
-			EntityPersister persister, 
+			String property,
+			Object childEntity,
+			EntityPersister persister,
 			CollectionPersister collectionPersister,
-			Object potentialParent
-	) {
-		Object collection = persister.getPropertyValue( 
-				potentialParent, 
-				property, 
-				session.getEntityMode() 
-			);
-		return collection!=null && Hibernate.isInitialized(collection) &&
-				collectionPersister.getCollectionType()
-						.contains(collection, childEntity, session);
+			Object potentialParent) {
+		Object collection = persister.getPropertyValue(
+				potentialParent,
+				property,
+				session.getEntityMode()
+		);
+		return collection != null
+				&& Hibernate.isInitialized( collection )
+				&& collectionPersister.getCollectionType().contains( collection, childEntity, session );
 	}
 
 	/**

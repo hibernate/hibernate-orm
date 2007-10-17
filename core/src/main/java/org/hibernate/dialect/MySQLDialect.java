@@ -38,11 +38,11 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, 255, "tinyblob" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		registerColumnType( Types.BLOB, "longblob" );
-		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
-		registerColumnType( Types.BLOB, 65535, "blob" );
+//		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
+//		registerColumnType( Types.BLOB, 65535, "blob" );
 		registerColumnType( Types.CLOB, "longtext" );
-		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
-		registerColumnType( Types.CLOB, 65535, "text" );
+//		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
+//		registerColumnType( Types.CLOB, 65535, "text" );
 		registerVarcharTypes();
 
 		registerFunction("ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
@@ -155,8 +155,8 @@ public class MySQLDialect extends Dialect {
 
 	protected void registerVarcharTypes() {
 		registerColumnType( Types.VARCHAR, "longtext" );
-		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-		registerColumnType( Types.VARCHAR, 65535, "text" );
+//		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
+//		registerColumnType( Types.VARCHAR, 65535, "text" );
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 	}
 

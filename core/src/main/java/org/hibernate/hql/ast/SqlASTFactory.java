@@ -40,6 +40,8 @@ import org.hibernate.hql.ast.tree.InLogicOperatorNode;
 import org.hibernate.hql.ast.tree.JavaConstantNode;
 import org.hibernate.hql.ast.tree.SessionFactoryAwareNode;
 import org.hibernate.hql.ast.tree.BooleanLiteralNode;
+import org.hibernate.hql.ast.tree.IsNullLogicOperatorNode;
+import org.hibernate.hql.ast.tree.IsNotNullLogicOperatorNode;
 
 import java.lang.reflect.Constructor;
 
@@ -157,7 +159,9 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 			case NOT_BETWEEN:
 				return BetweenOperatorNode.class;
 			case IS_NULL:
+				return IsNullLogicOperatorNode.class;
 			case IS_NOT_NULL:
+				return IsNotNullLogicOperatorNode.class;
 			case EXISTS:
 				return UnaryLogicOperatorNode.class;
 			default:

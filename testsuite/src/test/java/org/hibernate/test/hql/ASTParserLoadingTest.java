@@ -102,6 +102,41 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( ASTParserLoadingTest.class );
 	}
 
+	public void testComponentNullnessChecks() {
+		Session s = openSession();
+		s.beginTransaction();
+		Human h = new Human();
+		h.setName( new Name( "Johnny", 'B', "Goode" ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( "Steve", null, "Ebersole" ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( "Bono", null, null ) );
+		s.save( h );
+		h = new Human();
+		h.setName( new Name( null, null, null ) );
+		s.save( h );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List results = s.createQuery( "from Human where name is null" ).list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "from Human where name is not null" ).list();
+		assertEquals( 3, results.size() );
+		s.createQuery( "from Human where ? is null" ).setParameter( 0, null ).list();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete Human" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	public void testInvalidCollectionDereferencesFail() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -4,9 +4,11 @@ import org.hibernate.type.Type;
 import org.hibernate.Hibernate;
 
 /**
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * Represents a unary operator node.
+ *
+ * @author Steve Ebersole
  */
-public class UnaryLogicOperatorNode extends SqlNode implements UnaryOperatorNode {
+public class UnaryLogicOperatorNode extends HqlSqlWalkerNode implements UnaryOperatorNode {
 	public Node getOperand() {
 		return ( Node ) getFirstChild();
 	}

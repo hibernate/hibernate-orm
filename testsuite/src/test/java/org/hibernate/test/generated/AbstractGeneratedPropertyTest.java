@@ -1,4 +1,4 @@
-// $Id: AbstractGeneratedPropertyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+// $Id: AbstractGeneratedPropertyTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.generated;
 
 import org.hibernate.Session;
@@ -17,6 +17,13 @@ public abstract class AbstractGeneratedPropertyTest extends DatabaseSpecificFunc
 	}
 
 	public final void testGeneratedProperty() {
+		// The following block is repeated 300 times to reproduce HHH-2627.
+		// Without the fix, Oracle will run out of cursors using 10g with
+		// a default installation (ORA-01000: maximum open cursors exceeded).
+		// The number of loops may need to be adjusted depending on the how
+		// Oracle is configured.
+		// Note: The block is not indented to avoid a lot of irrelevant differences.
+		for ( int i=0; i<300; i++ ) {
 		GeneratedPropertyEntity entity = new GeneratedPropertyEntity();
 		entity.setName( "entity-1" );
 		Session s = openSession();
@@ -43,5 +50,6 @@ public abstract class AbstractGeneratedPropertyTest extends DatabaseSpecificFunc
 		s.delete( entity );
 		t.commit();
 		s.close();
+		}
 	}
 }

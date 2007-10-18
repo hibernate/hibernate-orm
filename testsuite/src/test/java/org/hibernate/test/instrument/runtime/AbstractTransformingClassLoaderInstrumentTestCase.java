@@ -78,7 +78,9 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable" );
 	}
 
-
+	public void testSharedPKOneToOne() {
+		executeExecutable( "org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable" );
+	}
 
 	// reflection code to ensure isolation into the created classloader ~~~~~~~
 

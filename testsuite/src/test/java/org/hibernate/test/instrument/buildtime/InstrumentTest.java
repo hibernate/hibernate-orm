@@ -1,4 +1,4 @@
-//$Id: InstrumentTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: InstrumentTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.instrument.buildtime;
 
 import junit.framework.Test;
@@ -14,6 +14,7 @@ import org.hibernate.test.instrument.cases.TestInjectFieldInterceptorExecutable;
 import org.hibernate.test.instrument.cases.TestIsPropertyInitializedExecutable;
 import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
 import org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable;
+import org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.junit.UnitTestCase;
 
@@ -60,6 +61,10 @@ public class InstrumentTest extends UnitTestCase {
 
 	public void testLazyPropertyCustomTypeExecutable() {
 		execute( new TestLazyPropertyCustomTypeExecutable() );
+	}
+
+	public void testSharedPKOneToOne() {
+		execute( new TestSharedPKOneToOneExecutable() );
 	}
 
 	private void execute(Executable executable) {

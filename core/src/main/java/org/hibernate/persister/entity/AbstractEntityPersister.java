@@ -776,31 +776,35 @@ public abstract class AbstractEntityPersister
 
 			Object result = null;
 			PreparedStatement ps = null;
-			ResultSet rs = null;
 			try {
 				final String lazySelect = getSQLLazySelectString();
-				if ( lazySelect != null ) {
-					// null sql means that the only lazy properties
-					// are shared PK one-to-one associations which are
-					// handled differently in the Type#nullSafeGet code...
-					ps = session.getBatcher().prepareSelectStatement(lazySelect);
-					getIdentifierType().nullSafeSet( ps, id, 1, session );
-					rs = session.getBatcher().getResultSet( ps );
-					rs.next();
+				ResultSet rs = null;
+				try {
+					if ( lazySelect != null ) {
+						// null sql means that the only lazy properties
+						// are shared PK one-to-one associations which are
+						// handled differently in the Type#nullSafeGet code...
+						ps = session.getBatcher().prepareSelectStatement(lazySelect);
+						getIdentifierType().nullSafeSet( ps, id, 1, session );
+						rs = ps.executeQuery();
+						rs.next();
+					}
+					final Object[] snapshot = entry.getLoadedState();
+					for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
+						Object propValue = lazyPropertyTypes[j].nullSafeGet( rs, lazyPropertyColumnAliases[j], session, entity );
+						if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
+							result = propValue;
+						}
+					}
 				}
-				final Object[] snapshot = entry.getLoadedState();
-				for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-					Object propValue = lazyPropertyTypes[j].nullSafeGet( rs, lazyPropertyColumnAliases[j], session, entity );
-					if ( initializeLazyProperty( fieldName, entity, session, snapshot, j, propValue ) ) {
-						result = propValue;
+				finally {
+					if ( rs != null ) {
+						rs.close();
 					}
 				}
 			}
 			finally {
-				if ( rs != null ) {
-					session.getBatcher().closeQueryStatement( ps, rs );
-				}
-				else if ( ps != null ) {
+				if ( ps != null ) {
 					session.getBatcher().closeStatement( ps );
 				}
 			}
@@ -3695,26 +3699,32 @@ public abstract class AbstractEntityPersister
 
 		try {
 			PreparedStatement ps = session.getBatcher().prepareSelectStatement( selectionSQL );
-			ResultSet rs = null;
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				rs = session.getBatcher().getResultSet( ps );
-				if ( !rs.next() ) {
-					throw new HibernateException(
-							"Unable to locate row for retrieval of generated properties: " +
-							MessageHelper.infoString( this, id, getFactory() )
-						);
+				ResultSet rs = ps.executeQuery();
+				try {
+					if ( !rs.next() ) {
+						throw new HibernateException(
+								"Unable to locate row for retrieval of generated properties: " +
+								MessageHelper.infoString( this, id, getFactory() )
+							);
+					}
+					for ( int i = 0; i < getPropertySpan(); i++ ) {
+						if ( includeds[i] != ValueInclusion.NONE ) {
+							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
+							state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
+							setPropertyValue( entity, i, state[i], session.getEntityMode() );
+						}
+					}
 				}
-				for ( int i = 0; i < getPropertySpan(); i++ ) {
-					if ( includeds[i] != ValueInclusion.NONE ) {
-						Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
-						state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
-						setPropertyValue( entity, i, state[i], session.getEntityMode() );
+				finally {
+					if ( rs != null ) {
+						rs.close();
 					}
 				}
 			}
 			finally {
-				session.getBatcher().closeQueryStatement( ps, rs );
+				session.getBatcher().closeStatement( ps );
 			}
 		}
 		catch( SQLException sqle ) {

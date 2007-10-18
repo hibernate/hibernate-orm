@@ -49,4 +49,8 @@ public class JavassistInstrumentationTest extends AbstractTransformingClassLoade
 	public void testManyToOneProxy() {
 		super.testManyToOneProxy();
 	}
+
+	public void testSharedPKOneToOne() {
+		super.testSharedPKOneToOne();
+	}
 }

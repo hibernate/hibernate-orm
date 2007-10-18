@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates shared PK one-to-one associations using
+  lazy="proxy" and lazy="no-proxy".
+
+  Implementation note: This test does not include any other
+  lazy properties, and allows testing special case code in
+  AbstractEntityPersister.initializeLazyPropertiesFromDatastore()
+  (lazy select string will be null) and OneToOne.nullSafeGet()
+  (ResultSet arg is ignored and the owner's ID is returned).
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.instrument.domain" default-access="field">
+
+    <class name="EntityWithOneToOnes">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <one-to-one name="oneToOneNoProxy" class="OneToOneNoProxy" lazy="no-proxy" cascade="all" />
+        <one-to-one name="oneToOneProxy" class="OneToOneProxy" lazy="proxy" cascade="all" />
+        <property name="name"/>
+    </class>
+
+    <class name="OneToOneNoProxy">
+        <id name="entityId">
+            <generator class="foreign">
+                <param name="property">entity</param>
+            </generator>
+        </id>
+        <one-to-one name="entity" class="EntityWithOneToOnes" constrained="true"/>
+        <property name="name"/>
+    </class>
+
+    <class name="OneToOneProxy">
+        <id name="entityId">
+            <generator class="foreign">
+                <param name="property">entity</param>
+            </generator>
+        </id>
+        <one-to-one name="entity" class="EntityWithOneToOnes" constrained="true"/>
+        <property name="name"/>
+    </class>
+
+
+</hibernate-mapping>

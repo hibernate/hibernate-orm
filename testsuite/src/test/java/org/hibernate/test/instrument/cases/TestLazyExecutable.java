@@ -17,6 +17,14 @@ import org.hibernate.test.instrument.domain.Owner;
  */
 public class TestLazyExecutable extends AbstractExecutable {
 	public void execute() {
+		// The following block is repeated 100 times to reproduce HHH-2627.
+		// Without the fix, Oracle will run out of cursors using 10g with
+		// a default installation (ORA-01000: maximum open cursors exceeded).
+		// The number of loops may need to be adjusted depending on the how
+		// Oracle is configured.
+		// Note: The block is not indented to avoid a lot of irrelevant differences.
+		for ( int i=0; i<100; i++ ) {
+
 		SessionFactory factory = getFactory();
 		Session s = factory.openSession();
 		Transaction t = s.beginTransaction();
@@ -192,6 +200,9 @@ public class TestLazyExecutable extends AbstractExecutable {
 		s.flush();
 		t.commit();
 		s.close();
+
+		}
+
 	}
 
 }

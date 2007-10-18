@@ -48,4 +48,8 @@ public class CGLIBInstrumentationTest extends AbstractTransformingClassLoaderIns
 	public void testManyToOneProxy() {
 		super.testManyToOneProxy();    //To change body of overridden methods use File | Settings | File Templates.
 	}
+
+	public void testSharedPKOneToOne() {
+		super.testSharedPKOneToOne();
+	}
 }

@@ -16,6 +16,8 @@
 package org.hibernate.cache.jbc2.entity;
 
 import org.jboss.cache.Cache;
+import org.jboss.cache.Fqn;
+import org.jboss.cache.config.Configuration.NodeLockingScheme;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
@@ -26,28 +28,39 @@ import org.hibernate.cache.jbc2.TransactionalDataRegionAdapter;
 
 /**
  * Defines the behavior of the entity cache regions for JBossCache.
- *
+ * 
  * @author Steve Ebersole
  */
 public class EntityRegionImpl extends TransactionalDataRegionAdapter implements EntityRegion {
 
-	public EntityRegionImpl(Cache jbcCache, String regionName, CacheDataDescription metadata) {
-		super( jbcCache, regionName, metadata );
-	}
+    public static final String TYPE = "ENTITY";
+    
+    private boolean optimistic;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-		if ( AccessType.READ_ONLY.equals( accessType ) ) {
-			return new ReadOnlyAccess( this );
-		}
-		if ( AccessType.TRANSACTIONAL.equals( accessType ) ) {
-			return new TransactionalAccess( this );
-		}
+    public EntityRegionImpl(Cache jbcCache, String regionName, String regionPrefix, CacheDataDescription metadata) {
+        super(jbcCache, regionName, regionPrefix, metadata);
+        optimistic = (jbcCache.getConfiguration().getNodeLockingScheme() == NodeLockingScheme.OPTIMISTIC);
+    }
 
-		// todo : add support for READ_WRITE ( + NONSTRICT_READ_WRITE ??? )
+    /**
+     * {@inheritDoc}
+     */
+    public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+        if (AccessType.READ_ONLY.equals(accessType)) {
+            return optimistic ? new OptimisticReadOnlyAccess(this) : new ReadOnlyAccess(this);
+        }
+        if (AccessType.TRANSACTIONAL.equals(accessType)) {
+            return optimistic ? new OptimisticTransactionalAccess(this) : new TransactionalAccess(this);
+        }
 
-		throw new CacheException( "unsupported access type [" + accessType.getName() + "]" );
-	}
+        // todo : add support for READ_WRITE ( + NONSTRICT_READ_WRITE ??? )
+
+        throw new CacheException("unsupported access type [" + accessType.getName() + "]");
+    }
+
+    @Override
+    protected Fqn<String> createRegionFqn(String regionName, String regionPrefix) {
+        return getTypeLastRegionFqn(regionName, regionPrefix, TYPE);
+    }
+
 }

@@ -1,0 +1,137 @@
+/*
+ * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, v. 2.1. This program is distributed in the
+ * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details. You should have received a
+ * copy of the GNU Lesser General Public License, v.2.1 along with this
+ * distribution; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * Red Hat Author(s): Brian Stansberry
+ */
+
+package org.hibernate.test.cache.jbc2.entity;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import junit.framework.AssertionFailedError;
+
+import org.hibernate.cache.access.AccessType;
+import org.jboss.cache.transaction.BatchModeTransactionManager;
+
+/**
+ * Base class for tests of TRANSACTIONAL access.
+ * 
+ * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
+ * @version $Revision: 1 $
+ */
+public abstract class AbstractTransactionalAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
+
+    /**
+     * Create a new AbstractTransactionalAccessTestCase.
+     * 
+     */
+    public AbstractTransactionalAccessTestCase(String name) {
+        super(name);
+    }
+
+    @Override
+    protected AccessType getAccessType() {
+        return AccessType.TRANSACTIONAL;
+    }
+    
+    public void testContestedPutFromLoad() throws Exception {
+        
+        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+               
+        final CountDownLatch pferLatch = new CountDownLatch(1);
+        final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
+        final CountDownLatch commitLatch = new CountDownLatch(1);
+        final CountDownLatch completionLatch = new CountDownLatch(1);
+        
+        Thread blocker = new Thread() {          
+            
+            public void run() {
+                
+                try {       
+                    long txTimestamp = System.currentTimeMillis();
+                    BatchModeTransactionManager.getInstance().begin();
+                    
+                    assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(KEY, txTimestamp));
+                    
+                    localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
+                    
+                    pferLatch.countDown();
+                    commitLatch.await();
+                    
+                    BatchModeTransactionManager.getInstance().commit();
+                }
+                catch (Exception e) {
+                    log.error("node1 caught exception", e);
+                    node1Exception = e;
+                    rollback();
+                }
+                catch (AssertionFailedError e) {
+                    node1Failure = e;
+                    rollback();
+                }
+                finally {
+                    completionLatch.countDown();
+                }
+            }
+        };
+        
+        Thread putter = new Thread() {          
+            
+            public void run() {
+                
+                try {       
+                    long txTimestamp = System.currentTimeMillis();
+                    BatchModeTransactionManager.getInstance().begin();
+                    
+                    localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
+                    
+                    BatchModeTransactionManager.getInstance().commit();
+                }
+                catch (Exception e) {
+                    log.error("node1 caught exception", e);
+                    node1Exception = e;
+                    rollback();
+                }
+                catch (AssertionFailedError e) {
+                    node1Failure = e;
+                    rollback();
+                }
+                finally {
+                    pferCompletionLatch.countDown();
+                }
+            }
+        };
+        
+        blocker.start();
+        assertTrue("Active tx has done an update", pferLatch.await(1, TimeUnit.SECONDS));
+        putter.start();
+        assertTrue("putFromLoadreturns promtly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
+        
+        commitLatch.countDown();       
+        
+        assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
+        
+        if (node1Failure != null)
+            throw node1Failure;
+        if (node2Failure != null)
+            throw node2Failure;
+        
+        assertEquals("node1 saw no exceptions", null, node1Exception);
+        assertEquals("node2 saw no exceptions", null, node2Exception);
+        
+        long txTimestamp = System.currentTimeMillis();
+        assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
+    }
+
+}

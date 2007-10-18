@@ -22,50 +22,37 @@ import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.CacheException;
 
 /**
- * This defines the strategy for transactional access to enity data in JBossCache using its 2.x APIs
- * <p/>
- * read-only access to a JBossCache really is still transactional, just with
- * the extra semantic or guarentee that we will not update data.
- *
+ * This defines the strategy for transactional access to collection data in a
+ * pessimistic-locking JBossCache using its 2.x APIs. <p/> The read-only access
+ * to a JBossCache really is still transactional, just with the extra semantic
+ * or guarantee that we will not update data.
+ * 
  * @author Steve Ebersole
  */
 public class ReadOnlyAccess extends TransactionalAccess {
-	private static final Logger log = LoggerFactory.getLogger( ReadOnlyAccess.class );
+    private static final Logger log = LoggerFactory.getLogger(ReadOnlyAccess.class);
 
-	public ReadOnlyAccess(CollectionRegionImpl region) {
-		super( region );
-	}
+    public ReadOnlyAccess(CollectionRegionImpl region) {
+        super(region);
+    }
 
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
-	}
+    @Override
+    public SoftLock lockItem(Object key, Object version) throws CacheException {
+        throw new UnsupportedOperationException("Illegal attempt to edit read only item");
+    }
 
-	public SoftLock lockRegion() throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only region" );
-	}
+    @Override
+    public SoftLock lockRegion() throws CacheException {
+        throw new UnsupportedOperationException("Illegal attempt to edit read only region");
+    }
 
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		log.error( "Illegal attempt to edit read only item" );
-	}
+    @Override
+    public void unlockItem(Object key, SoftLock lock) throws CacheException {
+        log.error("Illegal attempt to edit read only item");
+    }
 
-	public void unlockRegion(SoftLock lock) throws CacheException {
-		log.error( "Illegal attempt to edit read only region" );
-	}
-
-	public boolean update(
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
-	}
-
-	public boolean afterUpdate(
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock) throws CacheException {
-		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
-	}
+    @Override
+    public void unlockRegion(SoftLock lock) throws CacheException {
+        log.error("Illegal attempt to edit read only region");
+    }
 }

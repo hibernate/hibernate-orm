@@ -15,36 +15,38 @@
  */
 package org.hibernate.cache.jbc2;
 
-import org.jboss.cache.Cache;
-
-import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.TransactionalDataRegion;
+import org.jboss.cache.Cache;
 
 /**
  * {@inheritDoc}
- *
+ * 
  * @author Steve Ebersole
  */
-public class TransactionalDataRegionAdapter extends BasicRegionAdapter implements TransactionalDataRegion {
-	protected final CacheDataDescription metadata;
+public abstract class TransactionalDataRegionAdapter extends BasicRegionAdapter implements TransactionalDataRegion {
 
-	public TransactionalDataRegionAdapter(Cache jbcCache, String regionName, CacheDataDescription metadata) {
-		super( jbcCache, regionName );
-		this.metadata = metadata;
-	}
+    protected final CacheDataDescription metadata;
 
-	/**
-	 * Here, for JBossCache, we consider the cache to be transaction aware if the underlying
-	 * cache instance has a refernece to the transaction manager.
-	 */
-	public boolean isTransactionAware() {
-		return jbcCache.getConfiguration().getRuntimeConfig().getTransactionManager() != null;
-	}
+    public TransactionalDataRegionAdapter(Cache jbcCache, String regionName, String regionPrefix,
+            CacheDataDescription metadata) {
+        super(jbcCache, regionName, regionPrefix);
+        this.metadata = metadata;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CacheDataDescription getCacheDataDescription() {
-		return metadata;
-	}
+    /**
+     * Here, for JBossCache, we consider the cache to be transaction aware if
+     * the underlying cache instance has a reference to the transaction manager.
+     */
+    public boolean isTransactionAware() {
+        return transactionManager != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public CacheDataDescription getCacheDataDescription() {
+        return metadata;
+    }
+
 }

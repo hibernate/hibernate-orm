@@ -15,68 +15,100 @@
  */
 package org.hibernate.cache.jbc2.collection;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.CacheException;
+import org.hibernate.cache.jbc2.access.TransactionalAccessDelegate;
 
 /**
- * todo : implement
- *
+ * This defines the strategy for transactional access to collection data in a
+ * pessimistic-locking JBossCache using its 2.x APIs
+ * 
  * @author Steve Ebersole
+ * @author Brian Stansberry
  */
 public class TransactionalAccess implements CollectionRegionAccessStrategy {
-	private static final Logger log = LoggerFactory.getLogger( TransactionalAccess.class );
 
-	private final CollectionRegionImpl region;
+    private final CollectionRegionImpl region;
 
-	public TransactionalAccess(CollectionRegionImpl region) {
-		this.region = region;
-	}
+    /**
+     * Most of our logic is shared between this and entity regions, so we
+     * delegate to a class that encapsulates it
+     */
+    private final TransactionalAccessDelegate delegate;
 
-	public CollectionRegion getRegion() {
-		return region;
-	}
+    /**
+     * Create a new TransactionalAccess.
+     * 
+     * @param region
+     */
+    public TransactionalAccess(CollectionRegionImpl region) {
+        this(region, new TransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn()));
+    }
 
-	public Object get(Object key, long txTimestamp) throws CacheException {
-		return null;
-	}
+    /**
+     * Allow subclasses to define the delegate.
+     * 
+     * @param region
+     * @param delegate
+     */
+    protected TransactionalAccess(CollectionRegionImpl region, TransactionalAccessDelegate delegate) {
+        this.region = region;
+        this.delegate = delegate;
+    }
 
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return false;
-	}
+    public CollectionRegion getRegion() {
+        return region;
+    }
 
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
-			throws CacheException {
-		return false;
-	}
+    public Object get(Object key, long txTimestamp) throws CacheException {
 
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		return null;
-	}
+        return delegate.get(key, txTimestamp);
+    }
 
-	public SoftLock lockRegion() throws CacheException {
-		return null;
-	}
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-	}
+        return delegate.putFromLoad(key, value, txTimestamp, version);
+    }
 
-	public void unlockRegion(SoftLock lock) throws CacheException {
-	}
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+            throws CacheException {
 
-	public void remove(Object key) throws CacheException {
-	}
+        return delegate.putFromLoad(key, value, txTimestamp, version, minimalPutOverride);
+    }
 
-	public void removeAll() throws CacheException {
-	}
+    public void remove(Object key) throws CacheException {
 
-	public void evict(Object key) throws CacheException {
-	}
+        delegate.remove(key);
+    }
 
-	public void evictAll() throws CacheException {
-	}
+    public void removeAll() throws CacheException {
+        delegate.removeAll();
+    }
+
+    public void evict(Object key) throws CacheException {
+        delegate.evict(key);
+    }
+
+    public void evictAll() throws CacheException {
+        delegate.evictAll();
+    }
+
+    // Following methods we don't delegate since they have so little logic
+    // it's clearer to just implement them here
+
+    public SoftLock lockItem(Object key, Object version) throws CacheException {
+        return null;
+    }
+
+    public SoftLock lockRegion() throws CacheException {
+        return null;
+    }
+
+    public void unlockItem(Object key, SoftLock lock) throws CacheException {
+    }
+
+    public void unlockRegion(SoftLock lock) throws CacheException {
+    }
 }

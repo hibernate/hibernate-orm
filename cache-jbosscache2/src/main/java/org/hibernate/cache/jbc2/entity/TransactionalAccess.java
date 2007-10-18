@@ -15,145 +15,108 @@
  */
 package org.hibernate.cache.jbc2.entity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.jboss.cache.Fqn;
-import org.jboss.cache.lock.TimeoutException;
-
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.jbc2.access.TransactionalAccessDelegate;
 import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.CacheException;
 
 /**
- * This defines the strategy for transactional access to enity data
- * in JBossCache using its 2.x APIs
- *
+ * Defines the strategy for transactional access to entity data in a
+ * pessimistic-locking JBossCache using its 2.x APIs
+ * 
  * @author Steve Ebersole
  */
 public class TransactionalAccess implements EntityRegionAccessStrategy {
-	private static final Logger log = LoggerFactory.getLogger( TransactionalAccess.class );
 
-	private final EntityRegionImpl region;
+    protected final EntityRegionImpl region;
 
-	public TransactionalAccess(EntityRegionImpl region) {
-		this.region = region;
-	}
+    /**
+     * Most of our logic is shared between this and entity regions, so we
+     * delegate to a class that encapsulates it
+     */
+    private final TransactionalAccessDelegate delegate;
 
-	public EntityRegion getRegion() {
-		return region;
-	}
+    public TransactionalAccess(EntityRegionImpl region) {
+        this(region, new TransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn()));
+    }
 
-	public Object get(Object key, long txTimestamp) throws CacheException {
-		try {
-			return region.getCacheInstance().get( region.getRegionFqn(), EntityRegionImpl.ITEM );
-		}
-		catch ( Exception e ) {
-			throw new CacheException( e );
-		}
-	}
+    protected TransactionalAccess(EntityRegionImpl region, TransactionalAccessDelegate delegate) {
+        this.region = region;
+        this.delegate = delegate;
+    }
 
-	public boolean putFromLoad(
-			Object key,
-			Object value,
-			long txTimestamp,
-			Object version) throws CacheException {
-		try {
-			region.getCacheInstance().putForExternalRead( new Fqn( region.getRegionFqn(), key ), EntityRegionImpl.ITEM, value );
-			return true;
-		}
-		catch ( TimeoutException te) {
-			//ignore!
-			log.debug( "ignoring write lock acquisition failure" );
-			return false;
-		}
-		catch ( Throwable t ) {
-			throw new CacheException( t );
-		}
-	}
+    public EntityRegion getRegion() {
+        return region;
+    }
 
-	public boolean putFromLoad(
-			Object key,
-			Object value,
-			long txTimestamp,
-			Object version,
-			boolean minimalPutOverride) throws CacheException {
-		if ( minimalPutOverride && get( key, txTimestamp ) != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "item already cached: " + key );
-			}
-			return false;
-		}
-		return putFromLoad( key, value, txTimestamp, version );
-	}
+    public Object get(Object key, long txTimestamp) throws CacheException {
 
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		return null;
-	}
+        return delegate.get(key, txTimestamp);
+    }
 
-	public SoftLock lockRegion() throws CacheException {
-		return null;
-	}
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-	}
+        return delegate.putFromLoad(key, value, txTimestamp, version);
+    }
 
-	public void unlockRegion(SoftLock lock) throws CacheException {
-	}
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+            throws CacheException {
 
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
-		try {
-			region.getCacheInstance().put( new Fqn( region.getRegionFqn(), key ), EntityRegionImpl.ITEM, value );
-		}
-		catch ( Throwable t ) {
-			throw new CacheException( t );
-		}
-		return true;
-	}
+        return delegate.putFromLoad(key, value, txTimestamp, version, minimalPutOverride);
+    }
 
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		return false;
-	}
+    public boolean insert(Object key, Object value, Object version) throws CacheException {
 
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
-			throws CacheException {
-		try {
-			region.getCacheInstance().put( new Fqn( region.getRegionFqn(), key ), EntityRegionImpl.ITEM, value );
-		}
-		catch ( Throwable t ) {
-			throw new CacheException( t );
-		}
-		return true;
-	}
+        return delegate.insert(key, value, version);
+    }
 
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
-			throws CacheException {
-		return false;
-	}
+    public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+            throws CacheException {
 
-	public void remove(Object key) throws CacheException {
-		try {
-			region.getCacheInstance().removeNode( new Fqn( region.getRegionFqn(), key ) );
-		}
-		catch ( Exception e ) {
-			throw new CacheException( e );
-		}
-	}
+        return delegate.update(key, value, currentVersion, previousVersion);
+    }
 
-	public void removeAll() throws CacheException {
-		try {
-			region.getCacheInstance().removeNode( region.getRegionFqn() );
-		}
-		catch ( Exception e ) {
-			throw new CacheException( e );
-		}
-	}
+    public void remove(Object key) throws CacheException {
 
-	public void evict(Object key) throws CacheException {
-		remove( key );
-	}
+        delegate.remove(key);
+    }
 
-	public void evictAll() throws CacheException {
-		removeAll();
-	}
+    public void removeAll() throws CacheException {
+        delegate.removeAll();
+    }
+
+    public void evict(Object key) throws CacheException {
+        delegate.evict(key);
+    }
+
+    public void evictAll() throws CacheException {
+        delegate.evictAll();
+    }
+
+    // Following methods we don't delegate since they have so little logic
+    // it's clearer to just implement them here
+
+    public SoftLock lockItem(Object key, Object version) throws CacheException {
+        return null;
+    }
+
+    public SoftLock lockRegion() throws CacheException {
+        return null;
+    }
+
+    public void unlockItem(Object key, SoftLock lock) throws CacheException {
+    }
+
+    public void unlockRegion(SoftLock lock) throws CacheException {
+    }
+
+    public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+        return false;
+    }
+
+    public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+            throws CacheException {
+        return false;
+    }
 }

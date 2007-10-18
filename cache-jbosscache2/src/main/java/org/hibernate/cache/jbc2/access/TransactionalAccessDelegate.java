@@ -1,0 +1,124 @@
+/*
+ * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, v. 2.1. This program is distributed in the
+ * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details. You should have received a
+ * copy of the GNU Lesser General Public License, v.2.1 along with this
+ * distribution; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * Red Hat Author(s): Steve Ebersole
+ */
+package org.hibernate.cache.jbc2.access;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.jbc2.util.CacheHelper;
+import org.jboss.cache.Cache;
+import org.jboss.cache.Fqn;
+
+/**
+ * Defines the strategy for transactional access to entity or collection data in
+ * a pessimistic-locking JBoss Cache using its 2.x APIs.
+ * <p>
+ * The intent of this class is to encapsulate common code and serve as a
+ * delegate for {@link EntityRegionAccessStrategy} and
+ * {@link CollectionRegionAccessStrategy} implementations.
+ * </p>
+ * 
+ * @author Brian Stansberry
+ */
+public class TransactionalAccessDelegate {
+
+    protected final Cache cache;
+    protected final Fqn regionFqn;
+
+    public TransactionalAccessDelegate(Cache cache, Fqn regionFqn) {
+        this.cache = cache;
+        this.regionFqn = regionFqn;
+    }
+
+    public Object get(Object key, long txTimestamp) throws CacheException {
+
+        return CacheHelper.get(cache, regionFqn, key);
+    }
+
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+
+        return CacheHelper.putForExternalRead(cache, regionFqn, key, value);
+    }
+
+    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+            throws CacheException {
+
+        // We ignore minimalPutOverride. JBossCache putForExternalRead is
+        // already about as minimal as we can get; it will promptly return
+        // if it discovers that the node we want to write to already exists
+        return CacheHelper.putForExternalRead(cache, regionFqn, key, value);
+    }
+
+    public SoftLock lockItem(Object key, Object version) throws CacheException {
+        return null;
+    }
+
+    public SoftLock lockRegion() throws CacheException {
+        return null;
+    }
+
+    public void unlockItem(Object key, SoftLock lock) throws CacheException {
+    }
+
+    public void unlockRegion(SoftLock lock) throws CacheException {
+    }
+
+    public boolean insert(Object key, Object value, Object version) throws CacheException {
+
+        CacheHelper.put(cache, regionFqn, key, value);
+        return true;
+    }
+
+    public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+        return false;
+    }
+
+    public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+            throws CacheException {
+
+        CacheHelper.put(cache, regionFqn, key, value);
+        return true;
+    }
+
+    public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+            throws CacheException {
+        return false;
+    }
+
+    public void remove(Object key) throws CacheException {
+
+        CacheHelper.remove(cache, regionFqn, key);
+    }
+
+    public void removeAll() throws CacheException {
+        evictOrRemoveAll();
+    }
+
+    public void evict(Object key) throws CacheException {
+        CacheHelper.remove(cache, regionFqn, key);
+    }
+
+    public void evictAll() throws CacheException {
+        evictOrRemoveAll();
+    }
+    
+    private void evictOrRemoveAll() throws CacheException {
+        CacheHelper.removeAll(cache, regionFqn);
+        // Restore the region root node
+        CacheHelper.addNode(cache, regionFqn, false, true, null);        
+    }
+}

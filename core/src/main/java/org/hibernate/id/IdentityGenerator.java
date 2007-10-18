@@ -70,10 +70,19 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
-			return IdentifierGeneratorFactory.getGeneratedIdentity(
-					insert.getGeneratedKeys(),
-			        persister.getIdentifierType()
-			);
+			ResultSet rs = null;
+			try {
+				rs = insert.getGeneratedKeys();
+				return IdentifierGeneratorFactory.getGeneratedIdentity(
+						rs,
+						persister.getIdentifierType()
+				);
+			}
+			finally {
+				if ( rs != null ) {
+					rs.close();
+				}
+			}
 		}
 	}
 

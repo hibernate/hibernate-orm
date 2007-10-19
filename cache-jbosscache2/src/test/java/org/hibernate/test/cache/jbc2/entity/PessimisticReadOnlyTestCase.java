@@ -19,8 +19,6 @@ package org.hibernate.test.cache.jbc2.entity;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.hibernate.cache.access.AccessType;
-
 /**
  * Tests READ_ONLY access when pessimistic locking and invalidation are used.
  * 

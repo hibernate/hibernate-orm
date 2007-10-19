@@ -1,21 +1,23 @@
-<?xml version='1.0' encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="components">
     <title>Mapping de composants</title>
 
     <para>
-        La notion de <emphasis>composants</emphasis> est réutilisé dans différents contextes,
-        avec différents objectifs, à travers Hibernate.
+        La notion de <emphasis>composants</emphasis> est rÃ©utilisÃ© dans diffÃ©rents contextes,
+        avec diffÃ©rents objectifs, Ã  travers Hibernate.
     </para>
 
     <sect1 id="components-dependentobjects" revision="2" >
-        <title>Objects dépendants</title>
+        <title>Objects dÃ©pendants</title>
 
         <para>
-            Le composant est un objet inclu dans un autre qui est sauvegardé comme une valeur, et
-            non pas comme une entité.
-            Le composant fait référence à la notion (au sens objet) de composition
+            Le composant est un objet inclu dans un autre qui est sauvegardÃ© comme une valeur, et
+            non pas comme une entitÃ©.
+            Le composant fait rÃ©fÃ©rence Ã  la notion (au sens objet) de composition
             (et non pas de composant au sens d'architecture de composants).
-            Par exemple on pourrait modélisé l'objet personne de cette façon:
+            Par exemple on pourrait modÃ©lisÃ© l'objet personne de cette faÃ§on:
         </para>
 
         <programlisting><![CDATA[public class Person {
@@ -69,14 +71,14 @@
 }]]></programlisting>
 
         <para>
-            Maintenant <literal>Name</literal> peut-être sauvegardé comme un composant de 
-            <literal>Person</literal>. Remarquer que <literal>Name</literal> définit des methodes 
-            d'accès et de modification pour ses propriétés persistantes, mais il n'a pas besoin 
-            des interfaces ou des propriétés d'identification ( par exemple getId() ) qui sont propres aux entités.
+            Maintenant <literal>Name</literal> peut-Ãªtre sauvegardÃ© comme un composant de 
+            <literal>Person</literal>. Remarquer que <literal>Name</literal> dÃ©finit des methodes 
+            d'accÃ¨s et de modification pour ses propriÃ©tÃ©s persistantes, mais il n'a pas besoin 
+            des interfaces ou des propriÃ©tÃ©s d'identification ( par exemple getId() ) qui sont propres aux entitÃ©s.
         </para>
 
         <para>
-            Nous serions alors amené à mapper ce composant de cette façon:
+            Nous serions alors amenÃ© Ã  mapper ce composant de cette faÃ§on:
         </para>
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
@@ -100,24 +102,24 @@
         </para>
 
         <para>
-            Comme tous les types valeurs, les composants ne supportent pas les références partagés.
-            En d'autres mots, deux instances de person peuvent avoir un même nom, mais ces noms sont
-			indépendants, ils peuvent être identiques si on les compare par valeur mais ils représentent
-			deux objets distincts en mémoire. La notion de nullité pour un composant est 
+            Comme tous les types valeurs, les composants ne supportent pas les rÃ©fÃ©rences partagÃ©s.
+            En d'autres mots, deux instances de person peuvent avoir un mÃªme nom, mais ces noms sont
+			indÃ©pendants, ils peuvent Ãªtre identiques si on les compare par valeur mais ils reprÃ©sentent
+			deux objets distincts en mÃ©moire. La notion de nullitÃ© pour un composant est 
             <emphasis>ad hoc</emphasis>. Quand il recharge l'objet qui contient le composant, Hibernate 
-            supposera que si tous les champs du composants sont nuls alors le composant sera positionné 
-            à la valeur null. Ce choix programmatif devrait être satisfaisant dans la plupart des cas.
+            supposera que si tous les champs du composants sont nuls alors le composant sera positionnÃ© 
+            Ã  la valeur null. Ce choix programmatif devrait Ãªtre satisfaisant dans la plupart des cas.
         </para>
 
         <para>
-            Les propriétés d'un composant peuvent être de tous les types qu'Hibernate supporte habituellement
+            Les propriÃ©tÃ©s d'un composant peuvent Ãªtre de tous les types qu'Hibernate supporte habituellement
             (collections, many-to-one associations, autres composants, etc). Les composants inclus ne doivent <emphasis>pas</emphasis> 
-            être vus comme quelque chose d'exotique. Hibernate a été conçu pour supporter un modèle objet très granulaire.
+            Ãªtre vus comme quelque chose d'exotique. Hibernate a Ã©tÃ© conÃ§u pour supporter un modÃ¨le objet trÃ¨s granulaire.
         </para>
 
         <para>
-            Le  <literal>&lt;component&gt;</literal> peut inclure dans la liste de ses propriétés
-            une référence au <literal>&lt;parent&gt;</literal> conteneur.
+            Le  <literal>&lt;component&gt;</literal> peut inclure dans la liste de ses propriÃ©tÃ©s
+            une rÃ©fÃ©rence au <literal>&lt;parent&gt;</literal> conteneur.
         </para>
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
@@ -126,7 +128,7 @@
     </id>
     <property name="birthday" type="date"/>
     <component name="Name" class="eg.Name" unique="true">
-        <parent name="namedPerson"/> <!-- référence arrière à Person -->
+        <parent name="namedPerson"/> <!-- rÃ©fÃ©rence arriÃ¨re Ã  Person -->
         <property name="initial"/>
         <property name="first"/>
         <property name="last"/>
@@ -136,11 +138,11 @@
     </sect1>
 
     <sect1 id="components-incollections" revision="1">
-        <title>Collection d'objets dépendants</title>
+        <title>Collection d'objets dÃ©pendants</title>
 
         <para>
-            Les collections d'objets dépendants sont supportés (exemple: un tableau de type 
-            <literal>Name</literal>). Déclarer la collection de composants en remplaçant le tag <literal>&lt;element&gt;</literal> 
+            Les collections d'objets dÃ©pendants sont supportÃ©s (exemple: un tableau de type 
+            <literal>Name</literal>). DÃ©clarer la collection de composants en remplaÃ§ant le tag <literal>&lt;element&gt;</literal> 
             par le tag <literal>&lt;composite-element&gt;</literal>.
         </para>
 
@@ -154,39 +156,39 @@
 </set>]]></programlisting>
 
         <para>
-            Remarque: Si vous définissez un <literal>Set</literal> d'élément composite,
-            il est très important d'implémenter la méthode <literal>equals()</literal> et 
+            Remarque: Si vous dÃ©finissez un <literal>Set</literal> d'Ã©lÃ©ment composite,
+            il est trÃ¨s important d'implÃ©menter la mÃ©thode <literal>equals()</literal> et 
             <literal>hashCode()</literal> correctement.
         </para>
 
         <para>
-            Les élements composite peuvent aussi contenir des composants mais pas des collections.
-            Si votre élément composite contient aussi des composants, utilisez l'élément <literal>&lt;nested-composite-element&gt;</literal> 
-            . Une collections de composants qui ccontiennent eux-mêmes des composants est un cas très exotique.
-            A ce stade demandez-vous si une association un-à-plusieurs ne serait pas plus approprié.
-            Essayez de re remodeler votre élément composite comme une entité ( Dans ce cas même si le modèle
-            Java est le même la logique de persitence et de relation sont tout de même différentes)
+            Les Ã©lements composite peuvent aussi contenir des composants mais pas des collections.
+            Si votre Ã©lÃ©ment composite contient aussi des composants, utilisez l'Ã©lÃ©ment <literal>&lt;nested-composite-element&gt;</literal> 
+            . Une collections de composants qui ccontiennent eux-mÃªmes des composants est un cas trÃ¨s exotique.
+            A ce stade demandez-vous si une association un-Ã -plusieurs ne serait pas plus appropriÃ©.
+            Essayez de re remodeler votre Ã©lÃ©ment composite comme une entitÃ© ( Dans ce cas mÃªme si le modÃ¨le
+            Java est le mÃªme la logique de persitence et de relation sont tout de mÃªme diffÃ©rentes)
         </para>
 
         <para>
-            Remarque, le mapping d'éléments composites ne supporte pas la nullité des 
-            propriétés lorsqu'on utilise un <literal>&lt;set&gt;</literal>. Hibernate
+            Remarque, le mapping d'Ã©lÃ©ments composites ne supporte pas la nullitÃ© des 
+            propriÃ©tÃ©s lorsqu'on utilise un <literal>&lt;set&gt;</literal>. Hibernate
             lorsqu'il supprime un objet utilise chaque colonne pour identifier un objet
-            (on ne peut pas utiliser des clés primaires distinctes dans une table d'éléments composites),
-            ce qui n'est pas possible avec des valeurs nulles. Vous devez donc choisir d'interdire la nullité
-            des propriétés d'un élément composite ou choisir un autre type de collection comme :
+            (on ne peut pas utiliser des clÃ©s primaires distinctes dans une table d'Ã©lÃ©ments composites),
+            ce qui n'est pas possible avec des valeurs nulles. Vous devez donc choisir d'interdire la nullitÃ©
+            des propriÃ©tÃ©s d'un Ã©lÃ©ment composite ou choisir un autre type de collection comme :
             <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>,
             <literal>&lt;bag&gt;</literal> ou <literal>&lt;idbag&gt;</literal>.
         </para>
 
         <para>
-            Un cas particulier d'élément composite est un élément composite qui inclut un élément
+            Un cas particulier d'Ã©lÃ©ment composite est un Ã©lÃ©ment composite qui inclut un Ã©lÃ©ment
             <literal>&lt;many-to-one&gt;</literal>. Un mapping comme celui-ci 
-            vous permet d'associer les colonnes d'une table d'association plusieurs à plusieurs (many-to-many)
-            à la classse de l'élément composite. L'exemple suivant est une association plusieurs à plusieurs
-            de <literal>Order</literal> à <literal>Item</literal> à 
+            vous permet d'associer les colonnes d'une table d'association plusieurs Ã  plusieurs (many-to-many)
+            Ã  la classse de l'Ã©lÃ©ment composite. L'exemple suivant est une association plusieurs Ã  plusieurs
+            de <literal>Order</literal> Ã  <literal>Item</literal> Ã  
             <literal>purchaseDate</literal>, <literal>price</literal> et
-            <literal>quantity</literal> sont des propriétés de l'association.
+            <literal>quantity</literal> sont des propriÃ©tÃ©s de l'association.
         </para>
 
         <programlisting><![CDATA[<class name="eg.Order" .... >
@@ -203,12 +205,12 @@
 </class>]]></programlisting>
 
         <para>
-            Bien sûr, il ne peut pas y avoir de référence à l'achat (purchase) depuis l'article (item), pour 
-            pouvoir naviguer de façon bidirectionnelle dans l'association. N'oubliez pas que les composants 
-            sont de type valeurs et n'autorise pas les références partagées. 
+            Bien sÃ»r, il ne peut pas y avoir de rÃ©fÃ©rence Ã  l'achat (purchase) depuis l'article (item), pour 
+            pouvoir naviguer de faÃ§on bidirectionnelle dans l'association. N'oubliez pas que les composants 
+            sont de type valeurs et n'autorise pas les rÃ©fÃ©rences partagÃ©es. 
         </para>
 
-        <para>Même les associations ternaires ou quaternaires sont possibles:</para>
+        <para>MÃªme les associations ternaires ou quaternaires sont possibles:</para>
 
         <programlisting><![CDATA[<class name="eg.Order" .... >
     ....
@@ -222,8 +224,8 @@
 </class>]]></programlisting>
 
         <para>
-            Les éléments composites peuvent apparaître dans les requêtes en utilisant
-            la même syntaxe que associations
+            Les Ã©lÃ©ments composites peuvent apparaÃ®tre dans les requÃªtes en utilisant
+            la mÃªme syntaxe que associations
         </para>
 
     </sect1>
@@ -232,9 +234,9 @@
         <title>Utiliser les composants comme index de map</title>
 
         <para>
-            l'élément <literal>&lt;composite-map-key&gt;</literal> 
+            l'Ã©lÃ©ment <literal>&lt;composite-map-key&gt;</literal> 
             vous permet d'utiliser une classe de composant comme indice de 
-            <literal>Map</literal>. Assurez-vous d'avoir surdéfini 
+            <literal>Map</literal>. Assurez-vous d'avoir surdÃ©fini 
             <literal>hashCode()</literal> et <literal>equals()</literal> dans la 
             classe du composant.
         </para>
@@ -244,42 +246,42 @@
         <title>Utiliser un composant comme identifiant</title>
 
         <para>
-            Vous pouvez utiliser un composant comme identifiant d'une entité.
-            Mais pour cela la classe du composant doit respecter certaines règles.
+            Vous pouvez utiliser un composant comme identifiant d'une entitÃ©.
+            Mais pour cela la classe du composant doit respecter certaines rÃ¨gles.
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    Elle doit implémenter <literal>java.io.Serializable</literal>.
+                    Elle doit implÃ©menter <literal>java.io.Serializable</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Elle doit redéfinir <literal>equals()</literal> et
-                    <literal>hashCode()</literal>, de façon cohérente avec le 
-                    fait qu'elle définit une clé composite dans la base de 
-                    données.
+                    Elle doit redÃ©finir <literal>equals()</literal> et
+                    <literal>hashCode()</literal>, de faÃ§on cohÃ©rente avec le 
+                    fait qu'elle dÃ©finit une clÃ© composite dans la base de 
+                    donnÃ©es.
                 </para>
             </listitem>
         </itemizedlist>
         
         <para>
             <emphasis>
-            Remarque: avec hibernate3, la seconde règle n'est plus absolument 
-            necessaire mais faîtes le quand même.</emphasis>
+            Remarque: avec hibernate3, la seconde rÃ¨gle n'est plus absolument 
+            necessaire mais faÃ®tes le quand mÃªme.</emphasis>
         </para>
 
         <para>
-        	Vous ne pouvez pas utiliser de <literal>IdentifierGenerator</literal> pour générer 
-        	une clé composite, l'application devra définir elle même ses propres identifiants.
+        	Vous ne pouvez pas utiliser de <literal>IdentifierGenerator</literal> pour gÃ©nÃ©rer 
+        	une clÃ© composite, l'application devra dÃ©finir elle mÃªme ses propres identifiants.
         </para>
 
         <para>
-            Utiliser l'élément <literal>&lt;composite-id&gt;</literal>  (en incluant l'élément 
-            <literal>&lt;key-property&gt;</literal>) à la place de l'habituel déclaration 
+            Utiliser l'Ã©lÃ©ment <literal>&lt;composite-id&gt;</literal>  (en incluant l'Ã©lÃ©ment 
+            <literal>&lt;key-property&gt;</literal>) Ã  la place de l'habituel dÃ©claration 
             <literal>&lt;id&gt;</literal>. Par exemple la classe
-            <literal>OrderLine</literal> qui dépend de la clé primaire 
+            <literal>OrderLine</literal> qui dÃ©pend de la clÃ© primaire 
              (composite) de  <literal>Order</literal>.
         </para>
 
@@ -303,9 +305,9 @@
 </class>]]></programlisting>
 
         <para>
-            Maintenant toutes clés étrangères référençant la table <literal>OrderLine</literal> 
-            devra aussi être composite. Vous devez en tenir compte lorsque vous écrivez vos mapping d'association pour les autres classes.
-            Une association à <literal>OrderLine</literal> devrait être mappé de la façon suivante :
+            Maintenant toutes clÃ©s Ã©trangÃ¨res rÃ©fÃ©renÃ§ant la table <literal>OrderLine</literal> 
+            devra aussi Ãªtre composite. Vous devez en tenir compte lorsque vous Ã©crivez vos mapping d'association pour les autres classes.
+            Une association Ã  <literal>OrderLine</literal> devrait Ãªtre mappÃ© de la faÃ§on suivante :
         </para>
 
         <programlisting><![CDATA[<many-to-one name="orderLine" class="OrderLine">
@@ -316,13 +318,13 @@
 </many-to-one>]]></programlisting>
 
         <para>
-            (Remarque: l'élément <literal>&lt;column&gt;</literal> est une alternative à l'attribut 
+            (Remarque: l'Ã©lÃ©ment <literal>&lt;column&gt;</literal> est une alternative Ã  l'attribut 
             <literal>column</literal> que l'on utilise partout.) 
         </para>
         
         <para>
-            Une association <literal>plusieurs-à-plusieurs</literal> (many-to-many) à <literal>OrderLine</literal> 
-            utilisera aussi une clé étrangère composite:
+            Une association <literal>plusieurs-Ã -plusieurs</literal> (many-to-many) Ã  <literal>OrderLine</literal> 
+            utilisera aussi une clÃ© Ã©trangÃ¨re composite:
         </para>
     
     <programlisting><![CDATA[<set name="undeliveredOrderLines">
@@ -348,12 +350,12 @@
 </set>]]></programlisting>
 
         <para>
-            (L'élément <literal>&lt;one-to-many&gt;</literal>, comme d'habitude, ne déclare pas de colonne.)
+            (L'Ã©lÃ©ment <literal>&lt;one-to-many&gt;</literal>, comme d'habitude, ne dÃ©clare pas de colonne.)
         </para>
         
         <para>
-            Si <literal>OrderLine</literal> lui-même possède une collection, celle-ci aura aussi 
-            une clé composite étrangère.
+            Si <literal>OrderLine</literal> lui-mÃªme possÃ¨de une collection, celle-ci aura aussi 
+            une clÃ© composite Ã©trangÃ¨re.
         </para>
 
         <programlisting><![CDATA[<class name="OrderLine">
@@ -378,7 +380,7 @@
         <title>Composant Dynamique</title>
 
         <para>
-            Vous pouvez même mapper une propriété de type <literal>Map</literal>:
+            Vous pouvez mÃªme mapper une propriÃ©tÃ© de type <literal>Map</literal>:
         </para>
 
     <programlisting><![CDATA[<dynamic-component name="userAttributes">
@@ -388,12 +390,12 @@
 </dynamic-component>]]></programlisting>
 
         <para>
-            La sémantique de l'association à un <literal>&lt;dynamic-component&gt;</literal>
-            est identique à celle que l'on utilise pour les composants.
-            L'avantage de ce type de mapping est qu'il pemet de déterminer les véritables propriétés 
-            du bean au moment su déploiement en éditant simplement le document de mapping.
+            La sÃ©mantique de l'association Ã  un <literal>&lt;dynamic-component&gt;</literal>
+            est identique Ã  celle que l'on utilise pour les composants.
+            L'avantage de ce type de mapping est qu'il pemet de dÃ©terminer les vÃ©ritables propriÃ©tÃ©s 
+            du bean au moment su dÃ©ploiement en Ã©ditant simplement le document de mapping.
             La manipulation du document de mapping pendant l'execution de l'application est aussi 
-            possible en utilisant un parser DOM. Il ya même mieux, vous pouvez accéder (et changer)
+            possible en utilisant un parser DOM. Il ya mÃªme mieux, vous pouvez accÃ©der (et changer)
             le metamodel de configuration d'hibernate en utilisant l'objet <literal>Configuration</literal>            
         </para>
 

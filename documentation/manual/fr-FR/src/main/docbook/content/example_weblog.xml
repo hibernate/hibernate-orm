@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="example-weblog">
     <title>Exemple : application Weblog</title>
 
@@ -6,9 +8,9 @@
         <title>Classes persistantes</title>
 
         <para>
-            Les classes persistantes representent un weblog, et un article posté
-            dans un weblog. Il seront modélisés comme une relation père/fils
-            standard, mais nous allons utiliser un "bag" trié au lieu d'un set.
+            Les classes persistantes representent un weblog, et un article postÃ©
+            dans un weblog. Il seront modÃ©lisÃ©s comme une relation pÃ¨re/fils
+            standard, mais nous allons utiliser un "bag" triÃ© au lieu d'un set.
 
         </para>
 
@@ -91,7 +93,7 @@ public class BlogItem {
         <title>Mappings Hibernate</title>
 
         <para>
-            Le mapping XML doit maintenant être relativement simple à vos yeux.
+            Le mapping XML doit maintenant Ãªtre relativement simple Ã  vos yeux.
         </para>
 
         <programlisting><![CDATA[<?xml version="1.0"?>

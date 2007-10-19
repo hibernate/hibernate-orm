@@ -1,61 +1,63 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="example-parentchild">
-    <title>Exemple : Père/Fils</title>
+    <title>Exemple : PÃ¨re/Fils</title>
 
     <para>
-        L'une des premières choses que les nouveaux utilisateurs essaient de faire avec Hibernate est de modéliser
-        une relation père/fils. Il y a deux approches différentes pour cela. Pour un certain nombre de raisons, la méthode la
-        plus courante, en particulier pour les nouveaux utilisateurs, est de modéliser les deux relations <literal>Père</literal>
-        et <literal>Fils</literal> comme des classes entités liées par une association <literal>&lt;one-to-many&gt;</literal> du
-        <literal>Père</literal> vers le <literal>Fils</literal> (l'autre approche est de déclarer le <literal>Fils</literal>
-        comme un <literal>&lt;composite-element&gt;</literal>). Il est évident que le sens de l'association un vers plusieurs
-        (dans Hibernate) est bien moins proche du sens habituel d'une relation père/fils que ne l'est celui d'un
-        élément cmposite. Nous allons vous expliquer comment utiliser une association <emphasis>un vers plusieurs bidirectionnelle
-        avec cascade</emphasis> afin de modéliser efficacement et élégamment une relation père/fils, ce n'est vraiment
+        L'une des premiÃ¨res choses que les nouveaux utilisateurs essaient de faire avec Hibernate est de modÃ©liser
+        une relation pÃ¨re/fils. Il y a deux approches diffÃ©rentes pour cela. Pour un certain nombre de raisons, la mÃ©thode la
+        plus courante, en particulier pour les nouveaux utilisateurs, est de modÃ©liser les deux relations <literal>PÃ¨re</literal>
+        et <literal>Fils</literal> comme des classes entitÃ©s liÃ©es par une association <literal>&lt;one-to-many&gt;</literal> du
+        <literal>PÃ¨re</literal> vers le <literal>Fils</literal> (l'autre approche est de dÃ©clarer le <literal>Fils</literal>
+        comme un <literal>&lt;composite-element&gt;</literal>). Il est Ã©vident que le sens de l'association un vers plusieurs
+        (dans Hibernate) est bien moins proche du sens habituel d'une relation pÃ¨re/fils que ne l'est celui d'un
+        Ã©lÃ©ment cmposite. Nous allons vous expliquer comment utiliser une association <emphasis>un vers plusieurs bidirectionnelle
+        avec cascade</emphasis> afin de modÃ©liser efficacement et Ã©lÃ©gamment une relation pÃ¨re/fils, ce n'est vraiment
         pas difficile !
     </para>
 
     <sect1 id="example-parentchild-collections">
-        <title>Une note à propos des collections</title>
+        <title>Une note Ã  propos des collections</title>
 
         <para>
-            Les collections Hibernate sont considérées comme étant une partie logique
-            de l'entité dans laquelle elles sont contenues ; jamais des entités qu'elle
-            contient. C'est une distinction crutiale ! Les conséquences sont les suivantes :
+            Les collections Hibernate sont considÃ©rÃ©es comme Ã©tant une partie logique
+            de l'entitÃ© dans laquelle elles sont contenues ; jamais des entitÃ©s qu'elle
+            contient. C'est une distinction crutiale ! Les consÃ©quences sont les suivantes :
         </para>
 
         <itemizedlist>
             <listitem>
                 <para>
-                    Quand nous ajoutons / retirons un objet d'une collection, le numéro de version du
-                    propriétaire de la collection est incrémenté.
+                    Quand nous ajoutons / retirons un objet d'une collection, le numÃ©ro de version du
+                    propriÃ©taire de la collection est incrÃ©mentÃ©.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un objet qui a été enlevé d'une collection est une instance de type valeur (ex :
-                    élément composite), cet objet cessera d'être persistant et son état sera complètement effacé
-                    de la base de données. Par ailleurs, ajouter une instance de type valeur dans une collection
-                    aura pour conséquence que son état sera immédiatement persistant.
+                    Si un objet qui a Ã©tÃ© enlevÃ© d'une collection est une instance de type valeur (ex :
+                    Ã©lÃ©ment composite), cet objet cessera d'Ãªtre persistant et son Ã©tat sera complÃ¨tement effacÃ©
+                    de la base de donnÃ©es. Par ailleurs, ajouter une instance de type valeur dans une collection
+                    aura pour consÃ©quence que son Ã©tat sera immÃ©diatement persistant.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si une entité est enlevée d'une collection (association un-vers-plusieurs
-                    ou plusieurs-vers-plusieurs), par défaut, elle ne sera pas effacée. Ce comportement
-                    est complètement logique - une modification de l'un des états internes d'une entité
-                    ne doit pas causer la disparition de l'entité associée !
-                    De même, l'ajout d'une entité dans une collection n'engendre pas,
-                    par défaut, la persistance de cette entité.
+                    Si une entitÃ© est enlevÃ©e d'une collection (association un-vers-plusieurs
+                    ou plusieurs-vers-plusieurs), par dÃ©faut, elle ne sera pas effacÃ©e. Ce comportement
+                    est complÃ¨tement logique - une modification de l'un des Ã©tats internes d'une entitÃ©
+                    ne doit pas causer la disparition de l'entitÃ© associÃ©e !
+                    De mÃªme, l'ajout d'une entitÃ© dans une collection n'engendre pas,
+                    par dÃ©faut, la persistance de cette entitÃ©.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Le comportement par défaut est donc que l'ajout d'une entité dans une collection créé
-            simplement le lien entre les deux entités, et qu'effacer une entité supprime ce lien.
-            C'est le comportement le plus approprié dans la plupart des cas. Ce comportement n'est
-            cependant pas approprié lorsque la vie du fils est liée au cycle de vie du père.
+            Le comportement par dÃ©faut est donc que l'ajout d'une entitÃ© dans une collection crÃ©Ã©
+            simplement le lien entre les deux entitÃ©s, et qu'effacer une entitÃ© supprime ce lien.
+            C'est le comportement le plus appropriÃ© dans la plupart des cas. Ce comportement n'est
+            cependant pas appropriÃ© lorsque la vie du fils est liÃ©e au cycle de vie du pÃ¨re.
         </para>
 
     </sect1>
@@ -84,16 +86,16 @@ session.save(c);
 session.flush();]]></programlisting>
 
         <para>
-            Hibernate exécuterait deux ordres SQL:
+            Hibernate exÃ©cuterait deux ordres SQL:
         </para>
 
         <itemizedlist>
             <listitem>
-                <para>un <literal>INSERT</literal> pour créer l'enregistrement pour <literal>c</literal></para>
+                <para>un <literal>INSERT</literal> pour crÃ©er l'enregistrement pour <literal>c</literal></para>
             </listitem>
             <listitem>
                 <para>
-                    un <literal>UPDATE</literal> pour créer le lien de <literal>p</literal> vers
+                    un <literal>UPDATE</literal> pour crÃ©er le lien de <literal>p</literal> vers
                     <literal>c</literal>
                 </para>
             </listitem>
@@ -101,8 +103,8 @@ session.flush();]]></programlisting>
 
         <para>
             Ceci est non seuleument inefficace, mais viole aussi toute contrainte <literal>NOT NULL</literal> sur
-            la colonne <literal>parent_id</literal>. Nous pouvons réparer la contrainte de nullité
-            en spécifiant <literal>not-null="true"</literal> dans le mapping de la collection :
+            la colonne <literal>parent_id</literal>. Nous pouvons rÃ©parer la contrainte de nullitÃ©
+            en spÃ©cifiant <literal>not-null="true"</literal> dans le mapping de la collection :
         </para>
 
         <programlisting><![CDATA[<set name="children">
@@ -111,25 +113,25 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
         <para>
-            Cependant ce n'est pas la solution recommandée.
+            Cependant ce n'est pas la solution recommandÃ©e.
         </para>
 
         <para>
-            La cause sous jacente à ce comportement est que le lien (la clé étrangère <literal>parent_id</literal>) de
-            <literal>p</literal> vers <literal>c</literal> n'est pas considérée comme faisant partie de l'état
-            de l'objet <literal>Child</literal> et n'est donc pas créé par l'<literal>INSERT</literal>.
+            La cause sous jacente Ã  ce comportement est que le lien (la clÃ© Ã©trangÃ¨re <literal>parent_id</literal>) de
+            <literal>p</literal> vers <literal>c</literal> n'est pas considÃ©rÃ©e comme faisant partie de l'Ã©tat
+            de l'objet <literal>Child</literal> et n'est donc pas crÃ©Ã© par l'<literal>INSERT</literal>.
             La solution est donc que ce lien fasse partie du mapping de <literal>Child</literal>.
         </para>
 
         <programlisting><![CDATA[<many-to-one name="parent" column="parent_id" not-null="true"/>]]></programlisting>
 
         <para>
-            (Nous avons aussi besoin d'ajouter la propriété <literal>parent</literal> dans la classe <literal>Child</literal>).
+            (Nous avons aussi besoin d'ajouter la propriÃ©tÃ© <literal>parent</literal> dans la classe <literal>Child</literal>).
         </para>
 
         <para>
-            Maintenant que l'état du lien est géré par l'entité <literal>Child</literal>, nous spécifions à la
-            collection de ne pas mettre à jour le lien. Nous utilisons l'attribut <literal>inverse</literal>.
+            Maintenant que l'Ã©tat du lien est gÃ©rÃ© par l'entitÃ© <literal>Child</literal>, nous spÃ©cifions Ã  la
+            collection de ne pas mettre Ã  jour le lien. Nous utilisons l'attribut <literal>inverse</literal>.
         </para>
 
         <programlisting><![CDATA[<set name="children" inverse="true">
@@ -138,7 +140,7 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
         <para>
-            Le code suivant serait utilisé pour ajouter un nouveau <literal>Child</literal>
+            Le code suivant serait utilisÃ© pour ajouter un nouveau <literal>Child</literal>
         </para>
 
         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -149,11 +151,11 @@ session.save(c);
 session.flush();]]></programlisting>
 
         <para>
-            Maintenant, seul un <literal>INSERT</literal> SQL est nécessaire !
+            Maintenant, seul un <literal>INSERT</literal> SQL est nÃ©cessaire !
         </para>
 
         <para>
-            Pour alléger encore un peu les choses, nous devrions créer une méthode <literal>addChild()</literal>
+            Pour allÃ©ger encore un peu les choses, nous devrions crÃ©er une mÃ©thode <literal>addChild()</literal>
             dans <literal>Parent</literal>.
         </para>
 
@@ -188,7 +190,7 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
         <para>
-            Simplifie le code précédent en
+            Simplifie le code prÃ©cÃ©dent en
         </para>
 
         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -197,9 +199,9 @@ p.addChild(c);
 session.flush();]]></programlisting>
 
         <para>
-            De la même manière, nous n'avons pas à itérer sur les fils lorsque nous sauvons
+            De la mÃªme maniÃ¨re, nous n'avons pas Ã  itÃ©rer sur les fils lorsque nous sauvons
             ou effacons un <literal>Parent</literal>. Le code suivant efface <literal>p</literal>
-            et tous ses fils de la base de données.
+            et tous ses fils de la base de donnÃ©es.
         </para>
 
          <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -217,7 +219,7 @@ c.setParent(null);
 session.flush();]]></programlisting>
 
          <para>
-             n'effacera pas <literal>c</literal> de la base de données, il enlèvera seulement
+             n'effacera pas <literal>c</literal> de la base de donnÃ©es, il enlÃ¨vera seulement
              le lien vers  <literal>p</literal> (et causera une violation de contrainte
              <literal>NOT NULL</literal>, dans ce cas).
              Vous devez explicitement utiliser <literal>delete()</literal> sur <literal>Child</literal>.
@@ -230,8 +232,8 @@ session.delete(c);
 session.flush();]]></programlisting>
 
         <para>
-            Dans notre cas, un <literal>Child</literal> ne peut pas vraiment exister sans son père. Si nous
-            effacons un <literal>Child</literal> de la collection, nous voulons vraiment qu'il soit effacé.
+            Dans notre cas, un <literal>Child</literal> ne peut pas vraiment exister sans son pÃ¨re. Si nous
+            effacons un <literal>Child</literal> de la collection, nous voulons vraiment qu'il soit effacÃ©.
             Pour cela, nous devons utiliser <literal>cascade="all-delete-orphan"</literal>.
         </para>
 
@@ -241,9 +243,9 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
         <para>
-            A noter : même si le mapping de la collection spécifie <literal>inverse="true"</literal>, les cascades
-            sont toujours assurées par l'itération sur les éléments de la collection. Donc, si vous avez besoin
-            qu'un objet soit enregistré, effacé ou mis à jour par cascade, vous devez l'ajouter dans la colleciton.
+            A noter : mÃªme si le mapping de la collection spÃ©cifie <literal>inverse="true"</literal>, les cascades
+            sont toujours assurÃ©es par l'itÃ©ration sur les Ã©lÃ©ments de la collection. Donc, si vous avez besoin
+            qu'un objet soit enregistrÃ©, effacÃ© ou mis Ã  jour par cascade, vous devez l'ajouter dans la colleciton.
             Il ne suffit pas d'appeler explicitement <literal>setParent()</literal>.
         </para>
 
@@ -253,26 +255,26 @@ session.flush();]]></programlisting>
         <title>Cascades et <literal>unsaved-value</literal></title>
 
         <para>
-            Supposons que nous ayons chargé un <literal>Parent</literal> dans une <literal>Session</literal>,
-            que nous l'ayons ensuite modifié et que voulions persiter ces modifications dans une nouvelle session
+            Supposons que nous ayons chargÃ© un <literal>Parent</literal> dans une <literal>Session</literal>,
+            que nous l'ayons ensuite modifiÃ© et que voulions persiter ces modifications dans une nouvelle session
             en appelant <literal>update()</literal>.
-            Le <literal>Parent</literal> contiendra une collection de fils et, puisque la cascade est activée,
-            Hibernate a besoin de savoir quels fils viennent d'être instanciés et quels fils proviennent de la base
-            de données. Supposons aussi que <literal>Parent</literal> et <literal>Child</literal> ont tous deux
+            Le <literal>Parent</literal> contiendra une collection de fils et, puisque la cascade est activÃ©e,
+            Hibernate a besoin de savoir quels fils viennent d'Ãªtre instanciÃ©s et quels fils proviennent de la base
+            de donnÃ©es. Supposons aussi que <literal>Parent</literal> et <literal>Child</literal> ont tous deux
             des identifiants du type <literal>Long</literal>.
-            Hibernate utilisera la propriété de l'identifiant et la propriété de la version/horodatage pour déterminer quels fils sont nouveaux
-            (vous pouvez aussi utiliser la propriété version ou timestamp, voir
+            Hibernate utilisera la propriÃ©tÃ© de l'identifiant et la propriÃ©tÃ© de la version/horodatage pour dÃ©terminer quels fils sont nouveaux
+            (vous pouvez aussi utiliser la propriÃ©tÃ© version ou timestamp, voir
             <xref linkend="manipulatingdata-updating-detached"/>).
-            <emphasis>Dans Hibernate3, il n'est plus nécessaire de spécifier
+            <emphasis>Dans Hibernate3, il n'est plus nÃ©cessaire de spÃ©cifier
             une <literal>unsaved-value</literal> explicitement.</emphasis>
         </para>
 
         <para>
-            Le code suivant mettra à jour <literal>parent</literal> et <literal>child</literal>
-            et insérera <literal>newChild</literal>.
+            Le code suivant mettra Ã  jour <literal>parent</literal> et <literal>child</literal>
+            et insÃ©rera <literal>newChild</literal>.
         </para>
 
-        <programlisting><![CDATA[//parent et child ont été chargés dans une session précédente
+        <programlisting><![CDATA[//parent et child ont Ã©tÃ© chargÃ©s dans une session prÃ©cÃ©dente
 parent.addChild(child);
 Child newChild = new Child();
 parent.addChild(newChild);
@@ -280,12 +282,12 @@ session.update(parent);
 session.flush();]]></programlisting>
 
         <para>
-            Ceci est très bien pour des identifiants générés, mais qu'en est-il des identifiants assignés et des
-            identifiants composés ? C'est plus difficile,
-            puisqu'Hibernate ne peut pas utiliser la propriété de l'identifiant pour distinguer un objet
-            nouvellement instancié (avec un identifiant assigné par l'utilisateur) d'un objet chargé dans une session précédente.
-            Dans ce cas, Hibernate utilisera soit la propriété de version ou d'horodatage, soit effectuera vraiment une requête au cache
-            de second niveau, soit, dans le pire des cas, à la base de données, pour voir si la ligne existe.
+            Ceci est trÃ¨s bien pour des identifiants gÃ©nÃ©rÃ©s, mais qu'en est-il des identifiants assignÃ©s et des
+            identifiants composÃ©s ? C'est plus difficile,
+            puisqu'Hibernate ne peut pas utiliser la propriÃ©tÃ© de l'identifiant pour distinguer un objet
+            nouvellement instanciÃ© (avec un identifiant assignÃ© par l'utilisateur) d'un objet chargÃ© dans une session prÃ©cÃ©dente.
+            Dans ce cas, Hibernate utilisera soit la propriÃ©tÃ© de version ou d'horodatage, soit effectuera vraiment une requÃªte au cache
+            de second niveau, soit, dans le pire des cas, Ã  la base de donnÃ©es, pour voir si la ligne existe.
         </para>
 
          <!-- undocumenting
@@ -354,17 +356,17 @@ public boolean onSave(Object entity,
         <title>Conclusion</title>
 
         <para>
-            Il y a quelques principes à maîtriser dans ce chapitre et tout cela peut paraître déroutant la première fois.
+            Il y a quelques principes Ã  maÃ®triser dans ce chapitre et tout cela peut paraÃ®tre dÃ©routant la premiÃ¨re fois.
             Cependant, dans la pratique, tout fonctionne parfaitement. La plupart des applications Hibernate utilisent
-            le pattern père / fils.
+            le pattern pÃ¨re / fils.
         </para>
 
         <para>
-            Nous avons évoqué une alternative dans le premier paragraphe. Aucun des points traités précédemment n'existe
-            dans le cas d'un mapping <literal>&lt;composite-element&gt;</literal> qui possède exactement la sémantique
-            d'une relation père / fils. Malheureusement, il y a deux grandes limitations pour les classes éléments
-            composites : les éléments composites ne peuvent contenir de collections, et ils ne peuvent être les fils
-            d'entités autres que l'unique parent.
+            Nous avons Ã©voquÃ© une alternative dans le premier paragraphe. Aucun des points traitÃ©s prÃ©cÃ©demment n'existe
+            dans le cas d'un mapping <literal>&lt;composite-element&gt;</literal> qui possÃ¨de exactement la sÃ©mantique
+            d'une relation pÃ¨re / fils. Malheureusement, il y a deux grandes limitations pour les classes Ã©lÃ©ments
+            composites : les Ã©lÃ©ments composites ne peuvent contenir de collections, et ils ne peuvent Ãªtre les fils
+            d'entitÃ©s autres que l'unique parent.
         </para>
 
      </sect1>

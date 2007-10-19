@@ -1,46 +1,48 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="querysql" revision="2">
     <title>SQL natif</title>
 
     <para>
-        Vous pouvez aussi écrire vos requêtes dans le dialecte SQL natif de votre base de données.
-        Ceci est utile si vous souhaitez utiliser les fonctionnalités spécifiques de votre base de
-        données comme le mot clé <literal>CONNECT</literal> d'Oracle. Cette fonctionnalité offre par ailleurs un moyen
-        de migration plus propre et doux d'une application basée sur SQL/JDBC vers
+        Vous pouvez aussi Ã©crire vos requÃªtes dans le dialecte SQL natif de votre base de donnÃ©es.
+        Ceci est utile si vous souhaitez utiliser les fonctionnalitÃ©s spÃ©cifiques de votre base de
+        donnÃ©es comme le mot clÃ© <literal>CONNECT</literal> d'Oracle. Cette fonctionnalitÃ© offre par ailleurs un moyen
+        de migration plus propre et doux d'une application basÃ©e sur SQL/JDBC vers
         une application Hibernate.
     </para>
 
-  <para>Hibernate3 vous permet de spécifier du SQL écrit à la main (incluant les procédures stockées) 
-  pour toutes les opérations de création, mise à jour, suppression et chargement.</para>
+  <para>Hibernate3 vous permet de spÃ©cifier du SQL Ã©crit Ã  la main (incluant les procÃ©dures stockÃ©es) 
+  pour toutes les opÃ©rations de crÃ©ation, mise Ã  jour, suppression et chargement.</para>
 
   <sect1 id="querysql-creating" revision="3">
     <title>Utiliser une <literal>SQLQuery</literal></title>
 
-    <para>L'exécution des requêtes en SQL natif est contrôlée par l'interface <literal>SQLQuery</literal>,
+    <para>L'exÃ©cution des requÃªtes en SQL natif est contrÃ´lÃ©e par l'interface <literal>SQLQuery</literal>,
         laquelle est obtenue en appelant <literal>Session.createSQLQuery()</literal>.
-        Dans des cas extrêmement simples, nous pouvons utiliser la forme suivante :
+        Dans des cas extrÃªmement simples, nous pouvons utiliser la forme suivante :
     </para>
 
     <programlisting>List cats = sess.createSQLQuery("select * from cats")
     .addEntity(Cat.class)
     .list();</programlisting>
 
-    <para>Cette requête a spécifié :</para>
+    <para>Cette requÃªte a spÃ©cifiÃ© :</para>
 
     <itemizedlist>
       <listitem>
-        <para>la requête SQL</para>
+        <para>la requÃªte SQL</para>
       </listitem>
 
       <listitem>
-        <para>l'entité retournée par la requête</para>
+        <para>l'entitÃ© retournÃ©e par la requÃªte</para>
       </listitem>
     </itemizedlist>
 
     <para>
-        Ici, les noms de colonne des résultats sont supposés être les mêmes que les noms de colonne spécifiés dans le
-        document de mapping. Cela peut être problématique pour des requêtes SQL qui joignent de multiple tables, puisque
-        les mêmes noms de colonne peuvent apparaître dans plus d'une table. La forme suivante n'est pas vulnérable à la
+        Ici, les noms de colonne des rÃ©sultats sont supposÃ©s Ãªtre les mÃªmes que les noms de colonne spÃ©cifiÃ©s dans le
+        document de mapping. Cela peut Ãªtre problÃ©matique pour des requÃªtes SQL qui joignent de multiple tables, puisque
+        les mÃªmes noms de colonne peuvent apparaÃ®tre dans plus d'une table. La forme suivante n'est pas vulnÃ©rable Ã  la
         duplication des noms de colonne :
     </para>
 
@@ -48,26 +50,26 @@
     .addEntity("cat", Cat.class)
     .list();</programlisting>
 
-    <para>Cette requête a spécifié :</para>
+    <para>Cette requÃªte a spÃ©cifiÃ© :</para>
 
     <itemizedlist>
       <listitem>
-        <para>la requête SQL, avec un paramètre fictif pour Hibernate pour injecter les alias de colonne</para>
+        <para>la requÃªte SQL, avec un paramÃ¨tre fictif pour Hibernate pour injecter les alias de colonne</para>
       </listitem>
 
       <listitem>
-        <para>l'entité retournée par la requête, et son alias de table SQL</para>
+        <para>l'entitÃ© retournÃ©e par la requÃªte, et son alias de table SQL</para>
       </listitem>
     </itemizedlist>
 
     <para>
-        La méthode <literal>addEntity()</literal> associe l'alias de la table SQL
-        avec la classe de l'entité retournée, et détermine la forme de l'ensemble des résultats de la requête.
+        La mÃ©thode <literal>addEntity()</literal> associe l'alias de la table SQL
+        avec la classe de l'entitÃ© retournÃ©e, et dÃ©termine la forme de l'ensemble des rÃ©sultats de la requÃªte.
     </para>
 
     <para>
-        La méthode <literal>addJoin()</literal> peut être utilisée pour charger des associations vers d'autres
-        entités et collections.
+        La mÃ©thode <literal>addJoin()</literal> peut Ãªtre utilisÃ©e pour charger des associations vers d'autres
+        entitÃ©s et collections.
     </para>
 
     <programlisting>List cats = sess.createSQLQuery(
@@ -78,15 +80,15 @@
     .list();</programlisting>
 
     <para>
-        Une requête SQL native pourrait retourner une simple valeur scalaire ou une combinaison de scalaires et d'entités.
+        Une requÃªte SQL native pourrait retourner une simple valeur scalaire ou une combinaison de scalaires et d'entitÃ©s.
     </para>
 
     <programlisting>Double max = (Double) sess.createSQLQuery("select max(cat.weight) as maxWeight from cats cat")
         .addScalar("maxWeight", Hibernate.DOUBLE);
         .uniqueResult();</programlisting>
 
-    <para>Vous pouvez alternativement décrire les informations de mapping des résultats dans vos fichiers hbm 
-    et les utiliser pour vos requêtes.</para>
+    <para>Vous pouvez alternativement dÃ©crire les informations de mapping des rÃ©sultats dans vos fichiers hbm 
+    et les utiliser pour vos requÃªtes.</para>
 
     <programlisting>List cats = sess.createSQLQuery(
         "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
@@ -96,20 +98,20 @@
   </sect1>
 
   <sect1 id="querysql-aliasreferences">
-      <title>Alias et références de propriété</title>
+      <title>Alias et rÃ©fÃ©rences de propriÃ©tÃ©</title>
 
     <para>
-        La notation <literal>{cat.*}</literal> utilisée au-dessus est un raccourci pour "toutes les propriétés".
-        Alternativement, vous pouvez lister explicitement les colonnes, mais même ce cas que nous laissons à Hibernate
-        injecte des alias de colonne SQL pour chaque propriété. Le remplaçant pour un alias de colonne 
-        est juste le nom de la propriété qualifié par l'alias de la table.
-        Dans l'exemple suivant, nous récupérons des <literal>Cat</literal>s à partir d'une table différente
-        (<literal>cat_log</literal>) de celle déclarée dans les méta-données de mapping.
-        Notez que nous pouvons même utiliser les alias de propriété dans la clause "where" si nous le souhaitons.
+        La notation <literal>{cat.*}</literal> utilisÃ©e au-dessus est un raccourci pour "toutes les propriÃ©tÃ©s".
+        Alternativement, vous pouvez lister explicitement les colonnes, mais mÃªme ce cas que nous laissons Ã  Hibernate
+        injecte des alias de colonne SQL pour chaque propriÃ©tÃ©. Le remplaÃ§ant pour un alias de colonne 
+        est juste le nom de la propriÃ©tÃ© qualifiÃ© par l'alias de la table.
+        Dans l'exemple suivant, nous rÃ©cupÃ©rons des <literal>Cat</literal>s Ã  partir d'une table diffÃ©rente
+        (<literal>cat_log</literal>) de celle dÃ©clarÃ©e dans les mÃ©ta-donnÃ©es de mapping.
+        Notez que nous pouvons mÃªme utiliser les alias de propriÃ©tÃ© dans la clause "where" si nous le souhaitons.
     </para>
 
     <para>
-        La syntaxe <literal>{}</literal> <emphasis>n'est pas</emphasis> requise pour le requêtes nommées. Voir
+        La syntaxe <literal>{}</literal> <emphasis>n'est pas</emphasis> requise pour le requÃªtes nommÃ©es. Voir
         <xref linkend="querysql-namedqueries" />.
     </para>
 
@@ -124,13 +126,13 @@ List loggedCats = sess.createSQLQuery(sql)
     .list();</programlisting>
 
     <para>
-        <emphasis>À noter :</emphasis> si vous listez chaque propriété explicitement, vous devez inclure 
-        toutes les propriétés de la classe <emphasis>et ses sous-classes</emphasis> !
+        <emphasis>Ã€ noter :</emphasis> si vous listez chaque propriÃ©tÃ© explicitement, vous devez inclure 
+        toutes les propriÃ©tÃ©s de la classe <emphasis>et ses sous-classes</emphasis> !
     </para>
 
     <para>
-        La table suivante montre les différentes possibilités d'utilisation de l'injection d'alias. À noter : les noms
-        des alias dans le résultat sont des exemples, chaque alias aura un nom unique et probablement différent lors de l'utilisation.
+        La table suivante montre les diffÃ©rentes possibilitÃ©s d'utilisation de l'injection d'alias. Ã€ noter : les noms
+        des alias dans le rÃ©sultat sont des exemples, chaque alias aura un nom unique et probablement diffÃ©rent lors de l'utilisation.
     </para>
 
     <table frame="topbot" id="aliasinjection-summary">
@@ -155,7 +157,7 @@ List loggedCats = sess.createSQLQuery(sql)
 
         <tbody>
           <row>
-            <entry>Une simple propriété</entry>
+            <entry>Une simple propriÃ©tÃ©</entry>
 
             <entry><literal>{[aliasname].[propertyname]}</literal></entry>
 
@@ -163,7 +165,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Une propriété composée</entry>
+            <entry>Une propriÃ©tÃ© composÃ©e</entry>
 
             <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
 
@@ -172,7 +174,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Discriminant d'une entité</entry>
+            <entry>Discriminant d'une entitÃ©</entry>
 
             <entry><literal>{[aliasname].class}</literal></entry>
 
@@ -180,7 +182,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Toutes les propriétés d'une entité</entry>
+            <entry>Toutes les propriÃ©tÃ©s d'une entitÃ©</entry>
 
             <entry><literal>{[aliasname].*}</literal></entry>
 
@@ -204,7 +206,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>L'élément d'une collection</entry>
+            <entry>L'Ã©lÃ©ment d'une collection</entry>
 
             <entry><literal>{[aliasname].element}</literal></entry>
 
@@ -214,7 +216,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Propriété de l'élément dans la collection</entry>
+            <entry>PropriÃ©tÃ© de l'Ã©lÃ©ment dans la collection</entry>
 
             <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
 
@@ -222,7 +224,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Toutes les propriétés de l'élément dans la collection</entry>
+            <entry>Toutes les propriÃ©tÃ©s de l'Ã©lÃ©ment dans la collection</entry>
 
             <entry><literal>{[aliasname].element.*}</literal></entry>
 
@@ -230,7 +232,7 @@ List loggedCats = sess.createSQLQuery(sql)
           </row>
 
           <row>
-            <entry>Toutes les propriétés de la collection</entry>
+            <entry>Toutes les propriÃ©tÃ©s de la collection</entry>
 
             <entry><literal>{[aliasname].*}</literal></entry>
 
@@ -242,11 +244,11 @@ List loggedCats = sess.createSQLQuery(sql)
   </sect1>
 
   <sect1 id="querysql-namedqueries" revision="3">
-    <title>Requêtes SQL nommées</title>
+    <title>RequÃªtes SQL nommÃ©es</title>
 
     <para>
-        Les requêtes SQL nommées peuvent être définies dans le document de mapping
-        et appelées exactement de la même manière qu'un requête HQL nommée. Dans ce
+        Les requÃªtes SQL nommÃ©es peuvent Ãªtre dÃ©finies dans le document de mapping
+        et appelÃ©es exactement de la mÃªme maniÃ¨re qu'un requÃªte HQL nommÃ©e. Dans ce
         cas, nous <emphasis>n'avons pas besoin</emphasis> d'appeler <literal>addEntity()</literal>.
     </para>
 
@@ -265,9 +267,9 @@ List loggedCats = sess.createSQLQuery(sql)
     .list();</programlisting>
 
     <para>
-        Les éléments <literal>&lt;return-join&gt;</literal> et
-        <literal>&lt;load-collection&gt;</literal> sont respectivement utilisés pour lier
-        des associations et définir des requêtes qui initialisent des collections.
+        Les Ã©lÃ©ments <literal>&lt;return-join&gt;</literal> et
+        <literal>&lt;load-collection&gt;</literal> sont respectivement utilisÃ©s pour lier
+        des associations et dÃ©finir des requÃªtes qui initialisent des collections.
     </para>
 
     <programlisting>&lt;sql-query name="personsWith"&gt;
@@ -287,8 +289,8 @@ List loggedCats = sess.createSQLQuery(sql)
 &lt;/sql-query&gt;</programlisting>
 
     <para>
-        Une requête SQL nommée peut retourner une valeur scalaire. Vous devez
-        spécifier l'alias de colonne et le type Hibernate utilisant l'élément
+        Une requÃªte SQL nommÃ©e peut retourner une valeur scalaire. Vous devez
+        spÃ©cifier l'alias de colonne et le type Hibernate utilisant l'Ã©lÃ©ment
         <literal>&lt;return-scalar&gt;</literal> :</para>
 
     <programlisting>&lt;sql-query name="mySqlQuery"&gt;
@@ -300,9 +302,9 @@ List loggedCats = sess.createSQLQuery(sql)
 &lt;/sql-query&gt;</programlisting>
 
     <para>
-        Vous pouvez externaliser les informations de mapping des résultats dans un
-        élément <literal>&lt;resultset&gt;</literal> pour soit les réutiliser
-        dans différentes requêtes nommées, soit à travers l'API
+        Vous pouvez externaliser les informations de mapping des rÃ©sultats dans un
+        Ã©lÃ©ment <literal>&lt;resultset&gt;</literal> pour soit les rÃ©utiliser
+        dans diffÃ©rentes requÃªtes nommÃ©es, soit Ã  travers l'API
         <literal>setResultSetMapping()</literal>.
     </para>
 
@@ -326,11 +328,11 @@ List loggedCats = sess.createSQLQuery(sql)
 &lt;/sql-query&gt;</programlisting>
 
     <sect2 id="propertyresults">
-      <title>Utilisation de return-property pour spécifier explicitement les noms des colonnes/alias</title>
+      <title>Utilisation de return-property pour spÃ©cifier explicitement les noms des colonnes/alias</title>
 
       <para>
           Avec <literal>&lt;return-property&gt;</literal> vous pouvez explicitement dire
-          à Hibernate quels alias de colonne utiliser, plutot que d'employer la syntaxe
+          Ã  Hibernate quels alias de colonne utiliser, plutot que d'employer la syntaxe
           <literal>{}</literal> pour laisser Hibernate injecter ses propres alias.
       </para>
 
@@ -349,8 +351,8 @@ List loggedCats = sess.createSQLQuery(sql)
 
       <para>
           <literal>&lt;return-property&gt;</literal> fonctionne aussi avec de
-          multiple colonnes. Cela résout une limitation de la syntaxe <literal>{}</literal>
-          qui ne peut pas permettre une bonne granularité des propriétés multi-colonnes.
+          multiple colonnes. Cela rÃ©sout une limitation de la syntaxe <literal>{}</literal>
+          qui ne peut pas permettre une bonne granularitÃ© des propriÃ©tÃ©s multi-colonnes.
       </para>
 
       <programlisting>&lt;sql-query name="organizationCurrentEmployments"&gt;
@@ -370,28 +372,28 @@ List loggedCats = sess.createSQLQuery(sql)
 &lt;/sql-query&gt;</programlisting>
 
       <para>
-          Notez que dans cet exemple nous avons utilisé <literal>&lt;return-property&gt;</literal>
+          Notez que dans cet exemple nous avons utilisÃ© <literal>&lt;return-property&gt;</literal>
           en combinaison avec la syntaxe <literal>{}</literal> pour l'injection. Cela autorise les
-          utilisateurs à choisir comment ils veulent référencer les colonnes et les propriétés.
+          utilisateurs Ã  choisir comment ils veulent rÃ©fÃ©rencer les colonnes et les propriÃ©tÃ©s.
       </para>
 
       <para>
           Si votre mapping a un discriminant vous devez utiliser
-          <literal>&lt;return-discriminator&gt;</literal> pour spécifier la colonne
+          <literal>&lt;return-discriminator&gt;</literal> pour spÃ©cifier la colonne
           discriminante.
       </para>
     </sect2>
 
     <sect2 id="sp_query" revision="1">
-      <title>Utilisation de procédures stockées pour les requêtes</title>
+      <title>Utilisation de procÃ©dures stockÃ©es pour les requÃªtes</title>
 
       <para>
-          Hibernate 3 introduit le support des requêtes via procédures stockées et les fonctions. 
+          Hibernate 3 introduit le support des requÃªtes via procÃ©dures stockÃ©es et les fonctions. 
           La documentation suivante est valable pour les deux.
-          Les procédures stockées/fonctions doivent retourner l'ensemble de résultats en tant que
-          premier paramètre sortant (NdT: "out-parameter") pour être capable de fonctionner
-          avec Hibernate. Un exemple d'une telle procédure stockée en Oracle 9 et
-          version supérieure :
+          Les procÃ©dures stockÃ©es/fonctions doivent retourner l'ensemble de rÃ©sultats en tant que
+          premier paramÃ¨tre sortant (NdT: "out-parameter") pour Ãªtre capable de fonctionner
+          avec Hibernate. Un exemple d'une telle procÃ©dure stockÃ©e en Oracle 9 et
+          version supÃ©rieure :
       </para>
 
       <programlisting>CREATE OR REPLACE FUNCTION selectAllEmployments
@@ -407,7 +409,7 @@ BEGIN
       RETURN  st_cursor;
  END;</programlisting>
 
-      <para>Pour utiliser cette requête dans Hibernate vous avez besoin de la mapper via une requête nommée.</para>
+      <para>Pour utiliser cette requÃªte dans Hibernate vous avez besoin de la mapper via une requÃªte nommÃ©e.</para>
 
       <programlisting>&lt;sql-query name="selectAllEmployees_SP" callable="true"&gt;
     &lt;return alias="emp" class="Employment"&gt;
@@ -426,52 +428,52 @@ BEGIN
 &lt;/sql-query&gt;</programlisting>
 
       <para>
-          Notez que les procédures stockées retournent, pour le moment, seulement des
-          scalaires et des entités. <literal>&lt;return-join&gt;</literal> et
-          <literal>&lt;load-collection&gt;</literal> ne sont pas supportés.
+          Notez que les procÃ©dures stockÃ©es retournent, pour le moment, seulement des
+          scalaires et des entitÃ©s. <literal>&lt;return-join&gt;</literal> et
+          <literal>&lt;load-collection&gt;</literal> ne sont pas supportÃ©s.
       </para>
 
       <sect3 id="querysql-limits-storedprocedures" revision="1">
-        <title>Règles/limitations lors de l'utilisation des procédures stockées</title>
+        <title>RÃ¨gles/limitations lors de l'utilisation des procÃ©dures stockÃ©es</title>
 
         <para>
-            Pur utiliser des procédures stockées avec Hibernate, les procédures doivent
-            suivre certaines règles. Si elles ne suivent pas ces règles, elles ne sont pas
-            utilisables avec Hibernate. Si vous voulez encore utiliser ces procédures vous
-            devez les exécuter via <literal>session.connection()</literal>. Les règles
-            sont différentes pour chaque base de données, puisque les vendeurs de base
-            de données ont des sémantiques/syntaxes différentes pour les procédures stockées.
+            Pur utiliser des procÃ©dures stockÃ©es avec Hibernate, les procÃ©dures doivent
+            suivre certaines rÃ¨gles. Si elles ne suivent pas ces rÃ¨gles, elles ne sont pas
+            utilisables avec Hibernate. Si vous voulez encore utiliser ces procÃ©dures vous
+            devez les exÃ©cuter via <literal>session.connection()</literal>. Les rÃ¨gles
+            sont diffÃ©rentes pour chaque base de donnÃ©es, puisque les vendeurs de base
+            de donnÃ©es ont des sÃ©mantiques/syntaxes diffÃ©rentes pour les procÃ©dures stockÃ©es.
         </para>
 
-        <para>Les requêtes de procédures stockées ne peuvent pas être paginées avec
+        <para>Les requÃªtes de procÃ©dures stockÃ©es ne peuvent pas Ãªtre paginÃ©es avec
             <literal>setFirstResult()/setMaxResults()</literal>.</para>
 
-        <para>Pour Oracle les règles suivantes s'appliquent :</para>
+        <para>Pour Oracle les rÃ¨gles suivantes s'appliquent :</para>
 
         <itemizedlist spacing="compact">
           <listitem>
             <para>
-                La procédure doit retourner un ensemble de résultats. Le
-                prmeier paramètre d'une procédure doit être un <literal>OUT</literal> 
-                qui retourne un ensemble de résultats. Ceci est fait en
+                La procÃ©dure doit retourner un ensemble de rÃ©sultats. Le
+                prmeier paramÃ¨tre d'une procÃ©dure doit Ãªtre un <literal>OUT</literal> 
+                qui retourne un ensemble de rÃ©sultats. Ceci est fait en
                 retournant un <literal>SYS_REFCURSOR</literal> dans Oracle 9 ou 10. Dans
-                Oracle vous avez besoin de définir un type <literal>REF CURSOR</literal>.</para>
+                Oracle vous avez besoin de dÃ©finir un type <literal>REF CURSOR</literal>.</para>
           </listitem>
 
         </itemizedlist>
 
-        <para>Pour Sybase ou MS SQL server les règles suivantes s'appliquent :</para>
+        <para>Pour Sybase ou MS SQL server les rÃ¨gles suivantes s'appliquent :</para>
 
         <itemizedlist spacing="compact">
           <listitem>
-            <para>La procédure doit retourner un ensemble de résultats. Notez que comme
-            ces serveurs peuvent retourner de multiples ensembles de résultats et mettre à jour
-            des compteurs, Hibernate itérera les résultats et prendra le premier résultat qui est
-            un ensemble de résultat comme valeur de retour. Tout le reste sera ignoré.</para>
+            <para>La procÃ©dure doit retourner un ensemble de rÃ©sultats. Notez que comme
+            ces serveurs peuvent retourner de multiples ensembles de rÃ©sultats et mettre Ã  jour
+            des compteurs, Hibernate itÃ©rera les rÃ©sultats et prendra le premier rÃ©sultat qui est
+            un ensemble de rÃ©sultat comme valeur de retour. Tout le reste sera ignorÃ©.</para>
           </listitem>
 
           <listitem>
-            <para>Si vous pouvez activer <literal>SET NOCOUNT ON</literal> dans votre procédure,
+            <para>Si vous pouvez activer <literal>SET NOCOUNT ON</literal> dans votre procÃ©dure,
                 elle sera probablement plus efficace, mais ce n'est pas une obligation.</para>
           </listitem>
         </itemizedlist>
@@ -480,16 +482,16 @@ BEGIN
   </sect1>
 
   <sect1 id="querysql-cud">
-    <title>SQL personnalisé pour créer, mettre à jour et effacer</title>
+    <title>SQL personnalisÃ© pour crÃ©er, mettre Ã  jour et effacer</title>
 
     <para>
-        Hibernate3 peut utiliser des expression SQL personnalisées pour des opérations de création,
-        de mise à jour, et de suppression. Les objets persistants les classes et les collections
-        dans Hibernate contiennent déjà un ensemble de chaînes de caractères générées lors de la
+        Hibernate3 peut utiliser des expression SQL personnalisÃ©es pour des opÃ©rations de crÃ©ation,
+        de mise Ã  jour, et de suppression. Les objets persistants les classes et les collections
+        dans Hibernate contiennent dÃ©jÃ  un ensemble de chaÃ®nes de caractÃ¨res gÃ©nÃ©rÃ©es lors de la
         configuration (insertsql, deletesql, updatesql, etc). Les tages de mapping
     <literal>&lt;sql-insert&gt;</literal>,
     <literal>&lt;sql-delete&gt;</literal>, et
-    <literal>&lt;sql-update&gt;</literal> surchargent ces chaînes de caractères :</para>
+    <literal>&lt;sql-update&gt;</literal> surchargent ces chaÃ®nes de caractÃ¨res :</para>
 
     <programlisting>&lt;class name="Person"&gt;
     &lt;id name="id"&gt;
@@ -501,11 +503,11 @@ BEGIN
     &lt;sql-delete&gt;DELETE FROM PERSON WHERE ID=?&lt;/sql-delete&gt;
 &lt;/class&gt;</programlisting>
 
-    <para>Le SQL est directement exécuté dans votre base de données, donc vous êtes libre d'utiliser
-        le dialecte que vous souhaitez. Cela réduira bien sûr la portabilité de votre mapping si vous
-        utilisez du SQL spécifique à votre base de données.</para>
+    <para>Le SQL est directement exÃ©cutÃ© dans votre base de donnÃ©es, donc vous Ãªtes libre d'utiliser
+        le dialecte que vous souhaitez. Cela rÃ©duira bien sÃ»r la portabilitÃ© de votre mapping si vous
+        utilisez du SQL spÃ©cifique Ã  votre base de donnÃ©es.</para>
 
-    <para>Les procédures stockées sont supportées si l'attribut <literal>callable</literal> est paramétré :</para>
+    <para>Les procÃ©dures stockÃ©es sont supportÃ©es si l'attribut <literal>callable</literal> est paramÃ©trÃ© :</para>
 
     <programlisting>&lt;class name="Person"&gt;
     &lt;id name="id"&gt;
@@ -517,22 +519,22 @@ BEGIN
     &lt;sql-update callable="true"&gt;{? = call updatePerson (?, ?)}&lt;/sql-update&gt;
 &lt;/class&gt;</programlisting>
 
-    <para>L'ordre des paramètres positionnels est actuellement vital, car ils doivent être dans la
-        même séquence qu'Hibernate les attend.</para>
+    <para>L'ordre des paramÃ¨tres positionnels est actuellement vital, car ils doivent Ãªtre dans la
+        mÃªme sÃ©quence qu'Hibernate les attend.</para>
 
     <para>
         Vous pouvez voir l'ordre attendu en activant les journaux de debug pour le
-        niveau <literal>org.hibernate.persister.entity</literal> level. Avec ce niveau activé,
-        Hibernate imprimera le SQL statique qui est utilisé pour créer, mettre à jour,
-        supprimer, etc. des entités. (Pour voir la séquence attendue, rappelez-vous de ne pas
-        inclure votre SQL personnalisé dans les fichiers de mapping de manière à surcharger le
-        SQL statique généré par Hibernate.)</para>
+        niveau <literal>org.hibernate.persister.entity</literal> level. Avec ce niveau activÃ©,
+        Hibernate imprimera le SQL statique qui est utilisÃ© pour crÃ©er, mettre Ã  jour,
+        supprimer, etc. des entitÃ©s. (Pour voir la sÃ©quence attendue, rappelez-vous de ne pas
+        inclure votre SQL personnalisÃ© dans les fichiers de mapping de maniÃ¨re Ã  surcharger le
+        SQL statique gÃ©nÃ©rÃ© par Hibernate.)</para>
 
-    <para>Les procédures stockées sont dans la plupart des cas (lire : il vaut mieux le faire)
-    requises pour retourner le nombre de lignes insérées/mises à jour/supprimées, puisque
-    Hibernate fait quelques vérifications de succès lors de l'exécution de l'expression.
-    Hibernate inscrit toujours la première expression comme un paramètre de sortie numérique pour les
-    opérations CUD :</para>
+    <para>Les procÃ©dures stockÃ©es sont dans la plupart des cas (lire : il vaut mieux le faire)
+    requises pour retourner le nombre de lignes insÃ©rÃ©es/mises Ã  jour/supprimÃ©es, puisque
+    Hibernate fait quelques vÃ©rifications de succÃ¨s lors de l'exÃ©cution de l'expression.
+    Hibernate inscrit toujours la premiÃ¨re expression comme un paramÃ¨tre de sortie numÃ©rique pour les
+    opÃ©rations CUD :</para>
 
     <programlisting>CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
     RETURN NUMBER IS
@@ -550,9 +552,9 @@ END updatePerson;</programlisting>
   </sect1>
 
   <sect1 id="querysql-load">
-    <title>SQL personnalisé pour le chargement</title>
+    <title>SQL personnalisÃ© pour le chargement</title>
 
-    <para>Vous pouvez aussi déclarer vos propres requêtes SQL (ou HQL) pour le chargement d'entité :</para>
+    <para>Vous pouvez aussi dÃ©clarer vos propres requÃªtes SQL (ou HQL) pour le chargement d'entitÃ© :</para>
 
     <programlisting>&lt;sql-query name="person"&gt;
     &lt;return alias="pers" class="Person" lock-mode="upgrade"/&gt;
@@ -562,8 +564,8 @@ END updatePerson;</programlisting>
     FOR UPDATE
 &lt;/sql-query&gt;</programlisting>
 
-    <para>Ceci est juste une déclaration de requête nommée, comme vu plus tôt. Vous pouvez référencer
-    cette requête nommée dans un mapping de classe :</para>
+    <para>Ceci est juste une dÃ©claration de requÃªte nommÃ©e, comme vu plus tÃ´t. Vous pouvez rÃ©fÃ©rencer
+    cette requÃªte nommÃ©e dans un mapping de classe :</para>
 
     <programlisting>&lt;class name="Person"&gt;
     &lt;id name="id"&gt;
@@ -573,9 +575,9 @@ END updatePerson;</programlisting>
     &lt;loader query-ref="person"/&gt;
 &lt;/class&gt;</programlisting>
 
-    <para>Ceci fonctionne même avec des procédures stockées.</para>
+    <para>Ceci fonctionne mÃªme avec des procÃ©dures stockÃ©es.</para>
 
-    <para>Vous pouvez même définir une requête pour le chargement d'une collection :</para>
+    <para>Vous pouvez mÃªme dÃ©finir une requÃªte pour le chargement d'une collection :</para>
 
     <programlisting>&lt;set name="employments" inverse="true"&gt;
     &lt;key/&gt;
@@ -591,7 +593,7 @@ END updatePerson;</programlisting>
     ORDER BY STARTDATE ASC, EMPLOYEE ASC
 &lt;/sql-query&gt;</programlisting>
 
-    <para>Vous pourriez même définir un chargeur d'entité qui charge une collection par jointure :</para>
+    <para>Vous pourriez mÃªme dÃ©finir un chargeur d'entitÃ© qui charge une collection par jointure :</para>
 
     <programlisting>&lt;sql-query name="person"&gt;
     &lt;return alias="pers" class="Person"/&gt;

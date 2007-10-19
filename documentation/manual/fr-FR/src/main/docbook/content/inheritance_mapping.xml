@@ -1,18 +1,20 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="inheritance">
-    <title>Mapping d'héritage de classe</title>
+    <title>Mapping d'hÃ©ritage de classe</title>
 
     <sect1 id="inheritance-strategies" revision="3">
-        <title>Les trois stratégies</title>
+        <title>Les trois stratÃ©gies</title>
 
         <para>
-            Hibernate supporte les trois stratégies d'héritage de base :
+            Hibernate supporte les trois stratÃ©gies d'hÃ©ritage de base :
         </para>
 
         <itemizedlist>
         <listitem>
         <para>
-            une table par hiérarchie de classe (table per class hierarchy)
+            une table par hiÃ©rarchie de classe (table per class hierarchy)
         </para>
         </listitem>
         <listitem>
@@ -22,13 +24,13 @@
         </listitem>
         <listitem>
         <para>
-            une table par classe concrète (table per concrete class)
+            une table par classe concrÃ¨te (table per concrete class)
         </para>
         </listitem>
         </itemizedlist>
 
         <para>
-            Hibernate supporte en plus une quatrièmestratégie, légèrement différente, qui supporte le polymorphisme :
+            Hibernate supporte en plus une quatriÃ¨mestratÃ©gie, lÃ©gÃ¨rement diffÃ©rente, qui supporte le polymorphisme :
         </para>
 
         <itemizedlist>
@@ -40,26 +42,26 @@
         </itemizedlist>
 
         <para>
-            Il est possible d'utiliser différentes stratégies de mapping pour différentes branches d'une même
-            hiérarchie d'héritage, et alors d'employer le polymorphisme implicite pour réaliser le
-            polymorphisme à travers toute la hiérarchie. Pourtant, Hibernate ne supporte pas de mélanger
+            Il est possible d'utiliser diffÃ©rentes stratÃ©gies de mapping pour diffÃ©rentes branches d'une mÃªme
+            hiÃ©rarchie d'hÃ©ritage, et alors d'employer le polymorphisme implicite pour rÃ©aliser le
+            polymorphisme Ã  travers toute la hiÃ©rarchie. Pourtant, Hibernate ne supporte pas de mÃ©langer
             des mappings <literal>&lt;subclass&gt;</literal> et
             <literal>&lt;joined-subclass&gt;</literal> et <literal>&lt;union-subclass&gt;</literal>
-            pour le même élément <literal>&lt;class&gt;</literal> racine.
-            Il est possible de mélanger ensemble les stratégies d'une table par hiérarchie et d'une
-            table par sous-classe, pour le même élément <literal>&lt;class&gt;</literal>, en combinant
-            les éléments <literal>&lt;subclass&gt;</literal> et <literal>&lt;join&gt;</literal> (voir dessous).
+            pour le mÃªme Ã©lÃ©ment <literal>&lt;class&gt;</literal> racine.
+            Il est possible de mÃ©langer ensemble les stratÃ©gies d'une table par hiÃ©rarchie et d'une
+            table par sous-classe, pour le mÃªme Ã©lÃ©ment <literal>&lt;class&gt;</literal>, en combinant
+            les Ã©lÃ©ments <literal>&lt;subclass&gt;</literal> et <literal>&lt;join&gt;</literal> (voir dessous).
         </para>
 
         <para>
-            Il est possible de définir des mappings de <literal>subclass</literal>, <literal>union-subclass</literal>,
-            et <literal>joined-subclass</literal> dans des documents de mapping séparés, directement sous
-            <literal>hibernate-mapping</literal>. Ceci vous permet d'étendre une hiérarchie de classe juste en
-            ajoutant un nouveau fichier de mapping. Vous devez spécifier un attribut <literal>extends</literal>
-            dans le mapping de la sous-classe, en nommant une super-classe précédemment mappée. Note :
-            précédemment cette foncionnalité rendait l'ordre des documents de mapping important. Depuis
+            Il est possible de dÃ©finir des mappings de <literal>subclass</literal>, <literal>union-subclass</literal>,
+            et <literal>joined-subclass</literal> dans des documents de mapping sÃ©parÃ©s, directement sous
+            <literal>hibernate-mapping</literal>. Ceci vous permet d'Ã©tendre une hiÃ©rarchie de classe juste en
+            ajoutant un nouveau fichier de mapping. Vous devez spÃ©cifier un attribut <literal>extends</literal>
+            dans le mapping de la sous-classe, en nommant une super-classe prÃ©cÃ©demment mappÃ©e. Note :
+            prÃ©cÃ©demment cette foncionnalitÃ© rendait l'ordre des documents de mapping important. Depuis
             Hibernate3, l'ordre des fichier de mapping n'importe plus lors de l'utilisation du mot-clef "extends".
-            L'ordre à l'intérieur d'un simple fichier de mapping impose encore de définir les classes mères
+            L'ordre Ã  l'intÃ©rieur d'un simple fichier de mapping impose encore de dÃ©finir les classes mÃ¨res
             avant les classes filles.
          </para>
 
@@ -72,12 +74,12 @@
 
 
         <sect2 id="inheritance-tableperclass" >
-        <title>Une table par hiérarchie de classe</title>
+        <title>Une table par hiÃ©rarchie de classe</title>
 
         <para>
-            Supposons que nous ayons une interface <literal>Payment</literal>, implémentée
+            Supposons que nous ayons une interface <literal>Payment</literal>, implÃ©mentÃ©e
             par <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>,
-            <literal>ChequePayment</literal>. La stratégie une table par hiérarchie serait :
+            <literal>ChequePayment</literal>. La stratÃ©gie une table par hiÃ©rarchie serait :
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -101,7 +103,7 @@
 
         <para>
             Une seule table est requise. Une grande limitation de cette
-            stratégie est que les colonnes déclarées par les classes filles, telles que <literal>CCTYPE</literal>,
+            stratÃ©gie est que les colonnes dÃ©clarÃ©es par les classes filles, telles que <literal>CCTYPE</literal>,
             ne peuvent avoir de contrainte <literal>NOT NULL</literal>.
         </para>
 
@@ -111,7 +113,7 @@
         <title>Une table par classe fille</title>
 
         <para>
-            La stratégie une table par classe fille serait :
+            La stratÃ©gie une table par classe fille serait :
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -137,7 +139,7 @@
 
         <para>
             Quatre tables sont requises. Les trois tables des classes filles ont
-            une clé primaire associée à la table classe mère (le modèle relationnel
+            une clÃ© primaire associÃ©e Ã  la table classe mÃ¨re (le modÃ¨le relationnel
             est une association un-vers-un).
         </para>
 
@@ -147,14 +149,14 @@
         <title>Une table par classe fille, en utilisant un discriminant</title>
 
         <para>
-            Notez que l'implémentation Hibernate de la stratégie un table par
-            classe fille ne nécessite pas de colonne discriminante dans la table
-            classe mère. D'autres implémentations de mappers Objet/Relationnel utilisent
-            une autre implémentation de la stratégie une table par classe fille qui nécessite
-            une colonne de type discriminant dans la table de la classe mère. L'approche
-            prise par Hibernate est plus difficile à implémenter mais plus correcte
+            Notez que l'implÃ©mentation Hibernate de la stratÃ©gie un table par
+            classe fille ne nÃ©cessite pas de colonne discriminante dans la table
+            classe mÃ¨re. D'autres implÃ©mentations de mappers Objet/Relationnel utilisent
+            une autre implÃ©mentation de la stratÃ©gie une table par classe fille qui nÃ©cessite
+            une colonne de type discriminant dans la table de la classe mÃ¨re. L'approche
+            prise par Hibernate est plus difficile Ã  implÃ©menter mais plus correcte
         d'une point de vue relationnel. Si vous aimeriez utiliser
-            une colonne discriminante avec la stratégie d'une table par classe fille, vous pourriez combiner
+            une colonne discriminante avec la stratÃ©gie d'une table par classe fille, vous pourriez combiner
             l'utilisation de <literal>&lt;subclass&gt;</literal> et
             <literal>&lt;join&gt;</literal>, comme suit :
         </para>
@@ -188,17 +190,17 @@
 </class>]]></programlisting>
 
         <para>
-            La déclaration optionnelle <literal>fetch="select"</literal> indique à Hibernate
-            de ne pas récupérer les données de la classe fille <literal>ChequePayment</literal> par une jointure externe lors des requêtes sur la classe mère.
+            La dÃ©claration optionnelle <literal>fetch="select"</literal> indique Ã  Hibernate
+            de ne pas rÃ©cupÃ©rer les donnÃ©es de la classe fille <literal>ChequePayment</literal> par une jointure externe lors des requÃªtes sur la classe mÃ¨re.
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-mixing-tableperclass-tablepersubclass">
-            <title>Mélange d'une table par hiérarchie de classe avec une table par classe fille</title>
+            <title>MÃ©lange d'une table par hiÃ©rarchie de classe avec une table par classe fille</title>
 
         <para>
-            Vous pouvez même mélanger les stratégies d'une table par hiérarchie de classe et d'une table par classe fille en utilisant cette approche :
+            Vous pouvez mÃªme mÃ©langer les stratÃ©gies d'une table par hiÃ©rarchie de classe et d'une table par classe fille en utilisant cette approche :
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -223,8 +225,8 @@
 </class>]]></programlisting>
 
         <para>
-            Pour importe laquelle de ces stratégies, une association polymorphique vers la classe racine
-            <literal>Payment</literal> est mappée en utilisant <literal>&lt;many-to-one&gt;</literal>.
+            Pour importe laquelle de ces stratÃ©gies, une association polymorphique vers la classe racine
+            <literal>Payment</literal> est mappÃ©e en utilisant <literal>&lt;many-to-one&gt;</literal>.
         </para>
 
         <programlisting><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
@@ -232,10 +234,10 @@
         </sect2>
 
         <sect2 id="inheritance-tableperconcrete" revision="2">
-        <title>Une table par classe concrète</title>
+        <title>Une table par classe concrÃ¨te</title>
 
         <para>
-            Il y a deux manières d'utiliser la stratégie d'une table par classe concrète. La première
+            Il y a deux maniÃ¨res d'utiliser la stratÃ©gie d'une table par classe concrÃ¨te. La premiÃ¨re
             est d'employer <literal>&lt;union-subclass&gt;</literal>.
         </para>
 
@@ -258,30 +260,30 @@
 </class>]]></programlisting>
 
         <para>
-            Trois tables sont nécessaires pour les classes filles. Chaque table définit des colonnes
-            pour toutes les propriétés de la classe, incluant les propriétés héritéés.
+            Trois tables sont nÃ©cessaires pour les classes filles. Chaque table dÃ©finit des colonnes
+            pour toutes les propriÃ©tÃ©s de la classe, incluant les propriÃ©tÃ©s hÃ©ritÃ©Ã©s.
         </para>
 
         <para>
-            La limitation de cette approche est que si une propriété est mappée sur la classe mère, le nom
-            de la colonne doit être le même pour toutes les classes filles. (Nous pourrions être plus souple
+            La limitation de cette approche est que si une propriÃ©tÃ© est mappÃ©e sur la classe mÃ¨re, le nom
+            de la colonne doit Ãªtre le mÃªme pour toutes les classes filles. (Nous pourrions Ãªtre plus souple
             dans une future version d'Hibernate).
-            La stratégie du générateur d'identifiant n'est pas permise dans l'héritage de classes filles par
+            La stratÃ©gie du gÃ©nÃ©rateur d'identifiant n'est pas permise dans l'hÃ©ritage de classes filles par
             union, en effet la valeur (NdT : seed) de la clef primaire
-            doit être partagée par toutes les classes filles "union" d'une hiérarchie.
+            doit Ãªtre partagÃ©e par toutes les classes filles "union" d'une hiÃ©rarchie.
         </para>
 
         <para>
-            Si votre classe mère est abstraite, mappez la avec <literal>abstract="true"</literal>.
-            Bien sûr, si elle n'est pas abstraite, une table supplémentaire (par défaut,
+            Si votre classe mÃ¨re est abstraite, mappez la avec <literal>abstract="true"</literal>.
+            Bien sÃ»r, si elle n'est pas abstraite, une table supplÃ©mentaire (par dÃ©faut,
             <literal>PAYMENT</literal> dans l'exemple ci-dessus) est requise pour contenir des instances
-            de la classe mère.
+            de la classe mÃ¨re.
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-tableperconcreate-polymorphism">
-        <title>Une table par classe concrète, en utilisant le polymorphisme implicite</title>
+        <title>Une table par classe concrÃ¨te, en utilisant le polymorphisme implicite</title>
 
         <para>
             Une approche alternative est l'emploi du polymorphisme implicite :
@@ -313,20 +315,20 @@
 
         <para>
             Notez que nulle part nous ne mentionnons l'interface <literal>Payment</literal> explicitement.
-            Notez aussi que des propriétés de <literal>Payment</literal> sont mappées dans
-            chaque classe fille. Si vous voulez éviter des duplications, considérez l'utilisation des
-            entités XML (cf. <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
-            dans la déclaration du <literal>DOCTYPE</literal> et <literal>&amp;allproperties;</literal> dans le mapping).
+            Notez aussi que des propriÃ©tÃ©s de <literal>Payment</literal> sont mappÃ©es dans
+            chaque classe fille. Si vous voulez Ã©viter des duplications, considÃ©rez l'utilisation des
+            entitÃ©s XML (cf. <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
+            dans la dÃ©claration du <literal>DOCTYPE</literal> et <literal>&amp;allproperties;</literal> dans le mapping).
         </para>
 
         <para>
-            L'inconvénient de cette approche est qu'Hibernate ne génère pas d'<literal>UNION</literal>s SQL
-            lors de l'exécution des requêtes polymorphiques.
+            L'inconvÃ©nient de cette approche est qu'Hibernate ne gÃ©nÃ¨re pas d'<literal>UNION</literal>s SQL
+            lors de l'exÃ©cution des requÃªtes polymorphiques.
         </para>
 
         <para>
-            Pour cette stratégie de mapping, une association polymorphique pour <literal>Payment</literal>
-            est habituellement mappée en utilisant <literal>&lt;any&gt;</literal>.
+            Pour cette stratÃ©gie de mapping, une association polymorphique pour <literal>Payment</literal>
+            est habituellement mappÃ©e en utilisant <literal>&lt;any&gt;</literal>.
         </para>
 
         <programlisting><![CDATA[<any name="payment" meta-type="string" id-type="long">
@@ -340,14 +342,14 @@
         </sect2>
 
         <sect2 id="inheritace-mixingpolymorphism">
-        <title>Mélange du polymorphisme implicite avec d'autres mappings d'héritage</title>
+        <title>MÃ©lange du polymorphisme implicite avec d'autres mappings d'hÃ©ritage</title>
 
         <para>
-            Il y a une chose supplémentaire à noter à propos de ce mapping. Puisque les classes filles sont
-            chacune mappées avec leur propre élément <literal>&lt;class&gt;</literal> (et puisque
+            Il y a une chose supplÃ©mentaire Ã  noter Ã  propos de ce mapping. Puisque les classes filles sont
+            chacune mappÃ©es avec leur propre Ã©lÃ©ment <literal>&lt;class&gt;</literal> (et puisque
             <literal>Payment</literal> est juste une interface), chaque classe fille pourrait
-            facilement faire partie d'une autre hiérarchie
-            d'héritage ! (Et vous pouvez encore faire des requêtes polymorphiques pour l'interface <literal>Payment</literal>).
+            facilement faire partie d'une autre hiÃ©rarchie
+            d'hÃ©ritage ! (Et vous pouvez encore faire des requÃªtes polymorphiques pour l'interface <literal>Payment</literal>).
        </para>
 
         <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
@@ -380,10 +382,10 @@
 
         <para>
             Encore une fois, nous ne mentionnons pas explicitement <literal>Payment</literal>.
-            Si nous exécutons une requête sur l'interface <literal>Payment</literal> - par
+            Si nous exÃ©cutons une requÃªte sur l'interface <literal>Payment</literal> - par
             exemple, <literal>from Payment</literal> - Hibernate retournera
             automatiquement les instances de <literal>CreditCardPayment</literal>
-            (et ses classes filles puisqu'elles implémentent aussi <literal>Payment</literal>),
+            (et ses classes filles puisqu'elles implÃ©mentent aussi <literal>Payment</literal>),
             <literal>CashPayment</literal> et <literal>ChequePayment</literal> mais pas
             les instances de <literal>NonelectronicTransaction</literal>.
         </para>
@@ -396,17 +398,17 @@
         <title>Limitations</title>
 
         <para>
-            Il y a certaines limitations à l'approche du "polymorphisme implicite"
-            pour la stratégie de mapping d'une table par classe concrète.
-            Il y a plutôt moins de limitations restrictives aux mappings <literal>&lt;union-subclass&gt;</literal>.
+            Il y a certaines limitations Ã  l'approche du "polymorphisme implicite"
+            pour la stratÃ©gie de mapping d'une table par classe concrÃ¨te.
+            Il y a plutÃ´t moins de limitations restrictives aux mappings <literal>&lt;union-subclass&gt;</literal>.
         </para>
 
         <para>
-            La table suivante montre les limitations des mappings d'une table par classe concrète, et du polymorphisme implicite, dans Hibernate.
+            La table suivante montre les limitations des mappings d'une table par classe concrÃ¨te, et du polymorphisme implicite, dans Hibernate.
         </para>
 
         <table frame="topbot">
-            <title>Caractéristiques du mapping d'héritage</title>
+            <title>CaractÃ©ristiques du mapping d'hÃ©ritage</title>
             <tgroup cols='8' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="1*"/>
@@ -418,20 +420,20 @@
             <colspec colname='c8' colwidth="1*"/>
             <thead>
             <row>
-              <entry>Stratégie d'héritage</entry>
+              <entry>StratÃ©gie d'hÃ©ritage</entry>
               <entry>many-to-one polymorphique</entry>
               <entry>one-to-one polymorphique</entry>
               <entry>one-to-many polymorphique</entry>
               <entry>many-to-many polymorphique</entry>
               <entry><literal>load()/get()</literal> polymorphique</entry>
-              <entry>Requêtes polymorphiques</entry>
+              <entry>RequÃªtes polymorphiques</entry>
               <entry>Jointures polymorphiques</entry>
-              <entry>Récupération par jointure externe</entry>
+              <entry>RÃ©cupÃ©ration par jointure externe</entry>
             </row>
             </thead>
             <tbody>
             <row>
-                <entry>une table par hiérarchie de classe</entry>
+                <entry>une table par hiÃ©rarchie de classe</entry>
                 <entry><literal>&lt;many-to-one&gt;</literal></entry>
                 <entry><literal>&lt;one-to-one&gt;</literal></entry>
                 <entry><literal>&lt;one-to-many&gt;</literal></entry>
@@ -439,7 +441,7 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>supportée</emphasis></entry>
+                <entry><emphasis>supportÃ©e</emphasis></entry>
             </row>
             <row>
                 <entry>une table par classe fille</entry>
@@ -450,10 +452,10 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>supportée</emphasis></entry>
+                <entry><emphasis>supportÃ©e</emphasis></entry>
             </row>
             <row>
-                <entry>une table par classe concrète (union-subclass)</entry>
+                <entry>une table par classe concrÃ¨te (union-subclass)</entry>
                 <entry><literal>&lt;many-to-one&gt;</literal></entry>
                 <entry><literal>&lt;one-to-one&gt;</literal></entry>
                 <entry><literal>&lt;one-to-many&gt;</literal> (pour <literal>inverse="true"</literal> seulement)</entry>
@@ -461,18 +463,18 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>supportée</emphasis></entry>
+                <entry><emphasis>supportÃ©e</emphasis></entry>
             </row>
             <row>
-                <entry>une table par classe concrète (polymorphisme implicite)</entry>
+                <entry>une table par classe concrÃ¨te (polymorphisme implicite)</entry>
                 <entry><literal>&lt;any&gt;</literal></entry>
-                <entry><emphasis>non supporté</emphasis></entry>
-                <entry><emphasis>non supporté</emphasis></entry>
+                <entry><emphasis>non supportÃ©</emphasis></entry>
+                <entry><emphasis>non supportÃ©</emphasis></entry>
                 <entry><literal>&lt;many-to-any&gt;</literal></entry>
                 <entry><literal>s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
-                <entry><emphasis>non supportées</emphasis></entry>
-                <entry><emphasis>non supportée</emphasis></entry>
+                <entry><emphasis>non supportÃ©es</emphasis></entry>
+                <entry><emphasis>non supportÃ©e</emphasis></entry>
             </row>
             </tbody>
             </tgroup>

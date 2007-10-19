@@ -1,70 +1,72 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="objectstate">
     <title>Travailler avec des objets</title>
     <para>
-        Hibernate est une solution de mapping objet/relationnel complète qui ne masque pas
-        seulement au développpeur les détails du système de gestion de base de données sous-jacent,
-        mais offre aussi <emphasis>la gestion d'état</emphasis> des objets. C'est, contrairement
-        à la gestion de <literal>statements</literal> SQL dans les couches de persistance
-        habituelles JDBC/SQL, une vue orientée objet très naturelle de la persistance dans les
+        Hibernate est une solution de mapping objet/relationnel complÃ¨te qui ne masque pas
+        seulement au dÃ©velopppeur les dÃ©tails du systÃ¨me de gestion de base de donnÃ©es sous-jacent,
+        mais offre aussi <emphasis>la gestion d'Ã©tat</emphasis> des objets. C'est, contrairement
+        Ã  la gestion de <literal>statements</literal> SQL dans les couches de persistance
+        habituelles JDBC/SQL, une vue orientÃ©e objet trÃ¨s naturelle de la persistance dans les
         applications Java.
     </para>
 
 	<para>
-        En d'autres mots, les développeurs d'applications Hibernate devrait toujours
-        réfléchir à <emphasis>l'état</emphasis> de leurs objets, et pas nécessairement à
-        l'exécution des expressions SQL. Cette part est prise en charge pas Hibernate et
-        seulement importante pour les développeurs d'applications lors du réglage de la
-        performance de leur système.
+        En d'autres mots, les dÃ©veloppeurs d'applications Hibernate devrait toujours
+        rÃ©flÃ©chir Ã  <emphasis>l'Ã©tat</emphasis> de leurs objets, et pas nÃ©cessairement Ã 
+        l'exÃ©cution des expressions SQL. Cette part est prise en charge pas Hibernate et
+        seulement importante pour les dÃ©veloppeurs d'applications lors du rÃ©glage de la
+        performance de leur systÃ¨me.
     </para>
 
     <sect1 id="objectstate-overview">
-        <title>États des objets Hibernate</title>
+        <title>Ã‰tats des objets Hibernate</title>
 
         <para>
-            Hibernate définit et comprend les états suivants :
+            Hibernate dÃ©finit et comprend les Ã©tats suivants :
         </para>
 
         <itemizedlist>
             <listitem>
                 <para>
-                    <emphasis>Éphémère</emphasis> (NdT : transient) - un objet est éphémère s'il a juste
-                    été instancié en utilisant l'opérateur <literal>new</literal>. Il n'a aucune
-                    représentation persistante dans la base de données et aucune valeur d'identifiant
-                    n'a été assignée. Les instances éphémères seront détruites par le ramasse-miettes
-                    si l'application n'en conserve aucune référence. Utilisez la <literal>Session</literal>
+                    <emphasis>Ã‰phÃ©mÃ¨re</emphasis> (NdT : transient) - un objet est Ã©phÃ©mÃ¨re s'il a juste
+                    Ã©tÃ© instanciÃ© en utilisant l'opÃ©rateur <literal>new</literal>. Il n'a aucune
+                    reprÃ©sentation persistante dans la base de donnÃ©es et aucune valeur d'identifiant
+                    n'a Ã©tÃ© assignÃ©e. Les instances Ã©phÃ©mÃ¨res seront dÃ©truites par le ramasse-miettes
+                    si l'application n'en conserve aucune rÃ©fÃ©rence. Utilisez la <literal>Session</literal>
                     d'Hibernate pour rendre un objet persistant (et laisser Hibernate s'occuper des
-                    expressions SQL qui ont besoin d'être exécutées pour cette transistion).
+                    expressions SQL qui ont besoin d'Ãªtre exÃ©cutÃ©es pour cette transistion).
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Persistant</emphasis> - une instance persistante a une représentation dans la
-                    base de données et une valeur d'identifiant. Elle pourrait avoir juste été sauvegardée
-                    ou chargée, pourtant, elle est par définition dans la portée d'une <literal>Session</literal>.
-                    Hibernate détectera n'importe quels changements effectués sur un objet dans l'état
-                    persistant et synchronisera l'état avec la base de données lors de la fin l'unité de travail.
-                    Les développeurs n'exécutent pas d'expressions <literal>UPDATE</literal> ou
-                    <literal>DELETE</literal> manuelles lorsqu'un objet devrait être rendu éphémère.
+                    <emphasis>Persistant</emphasis> - une instance persistante a une reprÃ©sentation dans la
+                    base de donnÃ©es et une valeur d'identifiant. Elle pourrait avoir juste Ã©tÃ© sauvegardÃ©e
+                    ou chargÃ©e, pourtant, elle est par dÃ©finition dans la portÃ©e d'une <literal>Session</literal>.
+                    Hibernate dÃ©tectera n'importe quels changements effectuÃ©s sur un objet dans l'Ã©tat
+                    persistant et synchronisera l'Ã©tat avec la base de donnÃ©es lors de la fin l'unitÃ© de travail.
+                    Les dÃ©veloppeurs n'exÃ©cutent pas d'expressions <literal>UPDATE</literal> ou
+                    <literal>DELETE</literal> manuelles lorsqu'un objet devrait Ãªtre rendu Ã©phÃ©mÃ¨re.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Détaché</emphasis> - une instance détachée est un objet qui a été persistant,
-                    mais dont sa <literal>Session</literal> a été fermée. La référence à l'objet est
-                    encore valide, bien sûr, et l'instance détachée pourrait même être modifiée dans cet
-                    état. Une instance détachée peut être réattachée à une nouvelle <literal>Session</literal>
+                    <emphasis>DÃ©tachÃ©</emphasis> - une instance dÃ©tachÃ©e est un objet qui a Ã©tÃ© persistant,
+                    mais dont sa <literal>Session</literal> a Ã©tÃ© fermÃ©e. La rÃ©fÃ©rence Ã  l'objet est
+                    encore valide, bien sÃ»r, et l'instance dÃ©tachÃ©e pourrait mÃªme Ãªtre modifiÃ©e dans cet
+                    Ã©tat. Une instance dÃ©tachÃ©e peut Ãªtre rÃ©attachÃ©e Ã  une nouvelle <literal>Session</literal>
                     plus tard dans le temps, la rendant (et toutes les modifications avec) de nouveau persistante.
-                    Cette fonctionnalité rend possible un modèle de programmation pour de longues unités de travail
-                    qui requièrent un temps de réflexion de l'utilisateur. Nous les appelons des <emphasis>conversations</emphasis>,
-                    c'est-à-dire une unité de travail du point de vue de l'utilisateur.
+                    Cette fonctionnalitÃ© rend possible un modÃ¨le de programmation pour de longues unitÃ©s de travail
+                    qui requiÃ¨rent un temps de rÃ©flexion de l'utilisateur. Nous les appelons des <emphasis>conversations</emphasis>,
+                    c'est-Ã -dire une unitÃ© de travail du point de vue de l'utilisateur.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Nous alons maintenant dicuster des états et des transitions d'état (et des méthodes
-            d'Hibernate qui déclenchent une transition) plus en détails.
+            Nous alons maintenant dicuster des Ã©tats et des transitions d'Ã©tat (et des mÃ©thodes
+            d'Hibernate qui dÃ©clenchent une transition) plus en dÃ©tails.
         </para>
 
     </sect1>
@@ -73,9 +75,9 @@
         <title>Rendre des objets persistants</title>
 
         <para>
-            Les instances nouvellement instanciées d'une classe persistante sont considérées
-            <emphasis>éphémères</emphasis> par Hibernate. Nous pouvons rendre une instance
-            éphémère <emphasis>persistante</emphasis> en l'associant avec une session :
+            Les instances nouvellement instanciÃ©es d'une classe persistante sont considÃ©rÃ©es
+            <emphasis>Ã©phÃ©mÃ¨res</emphasis> par Hibernate. Nous pouvons rendre une instance
+            Ã©phÃ©mÃ¨re <emphasis>persistante</emphasis> en l'associant avec une session :
         </para>
 
         <programlisting><![CDATA[DomesticCat fritz = new DomesticCat();
@@ -85,17 +87,17 @@ fritz.setName("Fritz");
 Long generatedId = (Long) sess.save(fritz);]]></programlisting>
 
         <para>
-            Si <literal>Cat</literal> a un identifiant généré, l'identifiant est généré et assigné
-            au <literal>cat</literal> lorsque <literal>save()</literal> est appelée. Si <literal>Cat</literal>
-            a un identifiant <literal>assigned</literal>, ou une clef composée, l'identifiant
-            devrait être assigné à l'instance de <literal>cat</literal> avant d'appeler <literal>save()</literal>.
-            Vous pouvez aussi utiliser <literal>persist()</literal> à la place de<literal>save()</literal>,
-            avec la sémantique définie plus tôt dans le brouillon d'EJB3.
+            Si <literal>Cat</literal> a un identifiant gÃ©nÃ©rÃ©, l'identifiant est gÃ©nÃ©rÃ© et assignÃ©
+            au <literal>cat</literal> lorsque <literal>save()</literal> est appelÃ©e. Si <literal>Cat</literal>
+            a un identifiant <literal>assigned</literal>, ou une clef composÃ©e, l'identifiant
+            devrait Ãªtre assignÃ© Ã  l'instance de <literal>cat</literal> avant d'appeler <literal>save()</literal>.
+            Vous pouvez aussi utiliser <literal>persist()</literal> Ã  la place de<literal>save()</literal>,
+            avec la sÃ©mantique dÃ©finie plus tÃ´t dans le brouillon d'EJB3.
         </para>
 
         <para>
             Alternativement, vous pouvez assigner l'identifiant en utilisant une version
-            surchargée de <literal>save()</literal>.
+            surchargÃ©e de <literal>save()</literal>.
         </para>
 
 <programlisting><![CDATA[DomesticCat pk = new DomesticCat();
@@ -107,23 +109,23 @@ pk.addKitten(fritz);
 sess.save( pk, new Long(1234) );]]></programlisting>
 
         <para>
-            Si l'objet que vous rendez persistant a des objets associés (par exemple,
-            la collection <literal>kittens</literal> dans l'exemple précédent), ces objets
-            peuvent être rendus persistants dans n'importe quel ordre que vous souhaitez
-            à moins que vous ayez une contrainte <literal>NOT NULL</literal> sur la
-            colonne de la clef étrangère. Il n'y a jamais de risque de violer une
-            contrainte de clef étrangère. Cependant, vous pourriez violer une contrainte
+            Si l'objet que vous rendez persistant a des objets associÃ©s (par exemple,
+            la collection <literal>kittens</literal> dans l'exemple prÃ©cÃ©dent), ces objets
+            peuvent Ãªtre rendus persistants dans n'importe quel ordre que vous souhaitez
+            Ã  moins que vous ayez une contrainte <literal>NOT NULL</literal> sur la
+            colonne de la clef Ã©trangÃ¨re. Il n'y a jamais de risque de violer une
+            contrainte de clef Ã©trangÃ¨re. Cependant, vous pourriez violer une contrainte
             <literal>NOT NULL</literal> si vous appeliez <literal>save()</literal> sur
             les objets dans le mauvais ordre.
         </para>
 
         <para>
-            Habituellement, vous ne vous préoccupez pas de ce détail, puisque vous
-            utiliserez très probablement la fonctionnalité de <emphasis>persistance
-            transitive</emphasis> d'Hibernate pour sauvegarder les objets associés
-            automatiquement. Alors, même les violations de contrainte <literal>NOT NULL</literal>
+            Habituellement, vous ne vous prÃ©occupez pas de ce dÃ©tail, puisque vous
+            utiliserez trÃ¨s probablement la fonctionnalitÃ© de <emphasis>persistance
+            transitive</emphasis> d'Hibernate pour sauvegarder les objets associÃ©s
+            automatiquement. Alors, mÃªme les violations de contrainte <literal>NOT NULL</literal>
             n'ont plus lieu - Hibernate prendra soin de tout. La persistance transitive est
-            traitée plus loin dans ce chapitre.
+            traitÃ©e plus loin dans ce chapitre.
         </para>
 
     </sect1>
@@ -132,10 +134,10 @@ sess.save( pk, new Long(1234) );]]></programlisting>
         <title>Chargement d'un objet</title>
 
         <para>
-            Les méthodes <literal>load()</literal> de <literal>Session</literal> vous donnent
-            un moyen de récupérer une instance persistante si vous connaissez déjà son identifiant.
-            <literal>load()</literal> prend un objet de classe et chargera l'état dans une instance
-            nouvellement instanciée de cette classe, dans un état persistant.
+            Les mÃ©thodes <literal>load()</literal> de <literal>Session</literal> vous donnent
+            un moyen de rÃ©cupÃ©rer une instance persistante si vous connaissez dÃ©jÃ  son identifiant.
+            <literal>load()</literal> prend un objet de classe et chargera l'Ã©tat dans une instance
+            nouvellement instanciÃ©e de cette classe, dans un Ã©tat persistant.
         </para>
 
         <programlisting><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
@@ -145,7 +147,7 @@ long pkId = 1234;
 DomesticCat pk = (DomesticCat) sess.load( Cat.class, new Long(pkId) );]]></programlisting>
 
         <para>
-            Alternativement, vous pouvez charger un état dans une instance donnée :
+            Alternativement, vous pouvez charger un Ã©tat dans une instance donnÃ©e :
         </para>
 
 <programlisting><![CDATA[Cat cat = new DomesticCat();
@@ -154,20 +156,20 @@ sess.load( cat, new Long(pkId) );
 Set kittens = cat.getKittens();]]></programlisting>
 
         <para>
-            Notez que <literal>load()</literal> lèvera une exception irrécupérable s'il
-            n'y a pas de ligne correspondante dans la base de données. Si la classe est mappée
-            avec un proxy, <literal>load()</literal> retourne juste un proxy non initialisé et
-            n'accède en fait pas à la base de données jusqu'à ce que vous invoquiez une
-            méthode du proxy. Ce comportement est très utile si vous souhaitez créer
-            une association vers un objet sans réellement le charger à partir de la base de
-            données. Cela permet aussi à de multiples instances d'être chargées comme un lot
-            si <literal>batch-size</literal> est défini pour le mapping de la classe.
+            Notez que <literal>load()</literal> lÃ¨vera une exception irrÃ©cupÃ©rable s'il
+            n'y a pas de ligne correspondante dans la base de donnÃ©es. Si la classe est mappÃ©e
+            avec un proxy, <literal>load()</literal> retourne juste un proxy non initialisÃ© et
+            n'accÃ¨de en fait pas Ã  la base de donnÃ©es jusqu'Ã  ce que vous invoquiez une
+            mÃ©thode du proxy. Ce comportement est trÃ¨s utile si vous souhaitez crÃ©er
+            une association vers un objet sans rÃ©ellement le charger Ã  partir de la base de
+            donnÃ©es. Cela permet aussi Ã  de multiples instances d'Ãªtre chargÃ©es comme un lot
+            si <literal>batch-size</literal> est dÃ©fini pour le mapping de la classe.
         </para>
 
         <para>
-            Si vous n'êtes pas certain qu'une ligne correspondante existe, vous devriez
-            utiliser la méthode <literal>get()</literal>, laquelle accède à la base de
-            données immédiatement et retourne null s'il n'y a pas de ligne correspondante.
+            Si vous n'Ãªtes pas certain qu'une ligne correspondante existe, vous devriez
+            utiliser la mÃ©thode <literal>get()</literal>, laquelle accÃ¨de Ã  la base de
+            donnÃ©es immÃ©diatement et retourne null s'il n'y a pas de ligne correspondante.
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);
@@ -178,23 +180,23 @@ if (cat==null) {
 return cat;]]></programlisting>
 
         <para>
-            Vous pouvez même charger un objet en employant un <literal>SELECT ... FOR UPDATE</literal> SQL,
+            Vous pouvez mÃªme charger un objet en employant un <literal>SELECT ... FOR UPDATE</literal> SQL,
             en utilisant un <literal>LockMode</literal>. Voir la documentation de l'API pour plus d'informations.
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]></programlisting>
 
         <para>
-            Notez que n'importe quelles instances associées ou collections contenues
-            <emphasis>ne sont pas</emphasis> sélectionnées par <literal>FOR UPDATE</literal>,
-            à moins que vous ne décidiez de spécifier <literal>lock</literal> ou <literal>all</literal>
+            Notez que n'importe quelles instances associÃ©es ou collections contenues
+            <emphasis>ne sont pas</emphasis> sÃ©lectionnÃ©es par <literal>FOR UPDATE</literal>,
+            Ã  moins que vous ne dÃ©cidiez de spÃ©cifier <literal>lock</literal> ou <literal>all</literal>
             en tant que style de cascade pour l'association.
         </para>
 
         <para>
-            Il est possible de re-charger un objet et toutes ses collections à n'importe quel moment,
-            en utilisant la méthode <literal>refresh()</literal>. C'est utile lorsque des "triggers" de
-            base de données sont utilisés pour initiliser certains propriétés de l'objet.
+            Il est possible de re-charger un objet et toutes ses collections Ã  n'importe quel moment,
+            en utilisant la mÃ©thode <literal>refresh()</literal>. C'est utile lorsque des "triggers" de
+            base de donnÃ©es sont utilisÃ©s pour initiliser certains propriÃ©tÃ©s de l'objet.
         </para>
 
         <programlisting><![CDATA[sess.save(cat);
@@ -202,34 +204,34 @@ sess.flush(); //force the SQL INSERT
 sess.refresh(cat); //re-read the state (after the trigger executes)]]></programlisting>
 
         <para>
-            Une question importante apparaît généralement à ce point : combien (NdT : de données) Hibernate
-            charge-t-il de la base de données et combient de <literal>SELECT</literal>s utilisera-t-il ?
-            Cela dépent de la <emphasis>stratégie de récupération</emphasis> et cela est expliqué dans
+            Une question importante apparaÃ®t gÃ©nÃ©ralement Ã  ce point : combien (NdT : de donnÃ©es) Hibernate
+            charge-t-il de la base de donnÃ©es et combient de <literal>SELECT</literal>s utilisera-t-il ?
+            Cela dÃ©pent de la <emphasis>stratÃ©gie de rÃ©cupÃ©ration</emphasis> et cela est expliquÃ© dans
             <xref linkend="performance-fetching"/>.
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-querying" revision="1">
-        <title>Requêtage</title>
+        <title>RequÃªtage</title>
 
         <para>
             Si vous ne connaissez par les identifiants des objets que vous recherchez, vous
-            avez besoin d'une requête. Hibernate supporte un langage de requêtes orientées objet
-            facile à utiliser mais puissant. Pour la création de requêtes par programmation,
-            Hibernate supporte une fonction de requêtage sophistiqué Criteria et Example (QBC et QBE).
-            Vous pouvez aussi exprimez votre requête dans le SQL natif de votre base de données,
-            avec un support optionnel d'Hibernate pour la conversion des ensembles de résultats en
+            avez besoin d'une requÃªte. Hibernate supporte un langage de requÃªtes orientÃ©es objet
+            facile Ã  utiliser mais puissant. Pour la crÃ©ation de requÃªtes par programmation,
+            Hibernate supporte une fonction de requÃªtage sophistiquÃ© Criteria et Example (QBC et QBE).
+            Vous pouvez aussi exprimez votre requÃªte dans le SQL natif de votre base de donnÃ©es,
+            avec un support optionnel d'Hibernate pour la conversion des ensembles de rÃ©sultats en
             objets.
         </para>
 
         <sect2 id="objectstate-querying-executing">
-            <title>Exécution de requêtes</title>
+            <title>ExÃ©cution de requÃªtes</title>
 
             <para>
-                Les requêtes HQL et SQL natives sont représentées avec une instance de <literal>org.hibernate.Query</literal>.
-                L'interface offre des méthodes pour la liaison des paramètres, la gestion des ensembles de resultats, et pour
-                l'exécution de la requête réelle. Vous obtenez toujours une <literal>Query</literal> en utilisant la
+                Les requÃªtes HQL et SQL natives sont reprÃ©sentÃ©es avec une instance de <literal>org.hibernate.Query</literal>.
+                L'interface offre des mÃ©thodes pour la liaison des paramÃ¨tres, la gestion des ensembles de resultats, et pour
+                l'exÃ©cution de la requÃªte rÃ©elle. Vous obtenez toujours une <literal>Query</literal> en utilisant la
                 <literal>Session</literal> courante :
             </para>
 
@@ -254,26 +256,26 @@ Cat mother = (Cat) session.createQuery(
     .uniqueResult();]]></programlisting>
 
             <para>
-                Une requête est généralement exécutée en invoquant <literal>list()</literal>,
-                le résultat de la requête sera chargée complètement dans une collection en mémoire.
-                Les intances d'entités recupérées par une requête sont dans un état persistant.
-                La méthode <literal>uniqueResult()</literal> offre un raccourci si vous
-                savez que votre requête retournera seulement un seul objet.
+                Une requÃªte est gÃ©nÃ©ralement exÃ©cutÃ©e en invoquant <literal>list()</literal>,
+                le rÃ©sultat de la requÃªte sera chargÃ©e complÃ¨tement dans une collection en mÃ©moire.
+                Les intances d'entitÃ©s recupÃ©rÃ©es par une requÃªte sont dans un Ã©tat persistant.
+                La mÃ©thode <literal>uniqueResult()</literal> offre un raccourci si vous
+                savez que votre requÃªte retournera seulement un seul objet.
             </para>
 
             <sect3 id="objectstate-querying-executing-iterate">
-                <title>Itération de résultats</title>
+                <title>ItÃ©ration de rÃ©sultats</title>
 
                 <para>
-                    Occasionnellement, vous pourriez être capable d'obtenir de meilleures
-                    performances en exécutant la requête avec la méthode <literal>iterate()</literal>.
-                    Ce sera généralement seulement le cas si vous espérez que les intances réelles
-                    d'entité retournées par la requête soient déjà chargées dans la session ou le
-                    cache de second niveau. Si elles ne sont pas cachées, <literal>iterate()</literal>
-                    sera plus lent que <literal>list()</literal> et pourrait nécessiter plusieurs
-                    accès à la base de données pour une simple requête, généralement <emphasis>1</emphasis>
+                    Occasionnellement, vous pourriez Ãªtre capable d'obtenir de meilleures
+                    performances en exÃ©cutant la requÃªte avec la mÃ©thode <literal>iterate()</literal>.
+                    Ce sera gÃ©nÃ©ralement seulement le cas si vous espÃ©rez que les intances rÃ©elles
+                    d'entitÃ© retournÃ©es par la requÃªte soient dÃ©jÃ  chargÃ©es dans la session ou le
+                    cache de second niveau. Si elles ne sont pas cachÃ©es, <literal>iterate()</literal>
+                    sera plus lent que <literal>list()</literal> et pourrait nÃ©cessiter plusieurs
+                    accÃ¨s Ã  la base de donnÃ©es pour une simple requÃªte, gÃ©nÃ©ralement <emphasis>1</emphasis>
                     pour le select initial qui retourne seulement les identifiants, et <emphasis>n</emphasis>
-                    selects supplémentaires pour initialiser les instances réelles.
+                    selects supplÃ©mentaires pour initialiser les instances rÃ©elles.
                 </para>
 
                 <programlisting><![CDATA[// fetch ids
@@ -291,11 +293,11 @@ while ( iter.hasNext() ) {
             </sect3>
 
             <sect3 id="objectstate-querying-executing-tuples">
-                <title>Requêtes qui retournent des tuples</title>
+                <title>RequÃªtes qui retournent des tuples</title>
 
                 <para>
-                    Les requêtes d'Hibernate retournent parfois des tuples d'objets, auquel cas chaque tuple
-                    est retourné comme un tableau :
+                    Les requÃªtes d'Hibernate retournent parfois des tuples d'objets, auquel cas chaque tuple
+                    est retournÃ© comme un tableau :
                 </para>
 
                 <programlisting><![CDATA[Iterator kittensAndMothers = sess.createQuery(
@@ -313,12 +315,12 @@ while ( kittensAndMothers.hasNext() ) {
             </sect3>
 
             <sect3 id="objectstate-querying-executing-scalar"  revision="1">
-                <title>Résultats scalaires</title>
+                <title>RÃ©sultats scalaires</title>
 
                 <para>
-                    Des requêtes peuvent spécifier une propriété d'une classe dans la clause <literal>select</literal>.
-                    Elles peuvent même appeler des fonctions d'aggrégat SQL. Les propriétés ou les aggrégats sont
-                    considérés comme des résultats "scalaires" (et pas des entités dans un état persistant).
+                    Des requÃªtes peuvent spÃ©cifier une propriÃ©tÃ© d'une classe dans la clause <literal>select</literal>.
+                    Elles peuvent mÃªme appeler des fonctions d'aggrÃ©gat SQL. Les propriÃ©tÃ©s ou les aggrÃ©gats sont
+                    considÃ©rÃ©s comme des rÃ©sultats "scalaires" (et pas des entitÃ©s dans un Ã©tat persistant).
                 </para>
 
                 <programlisting><![CDATA[Iterator results = sess.createQuery(
@@ -338,46 +340,46 @@ while ( results.hasNext() ) {
             </sect3>
 
             <sect3 id="objectstate-querying-executing-parameters">
-                <title>Lier des paramètres</title>
+                <title>Lier des paramÃ¨tres</title>
 
                 <para>
-                    Des méthodes de <literal>Query</literal> sont fournies pour lier des
-                    valeurs à des paramètres nommés ou à des paramètres de style JDBC <literal>?</literal>.
-                    <emphasis>Contrairement à JDBC, les numéros des paramètres d'Hibernate commencent à zéro.</emphasis>
-                    Les paramètres nommés sont des identifiants de la forme <literal>:nom</literal> dans la chaîne de
-                    caractères de la requête. Les avantages des paramètres nommés sont :
+                    Des mÃ©thodes de <literal>Query</literal> sont fournies pour lier des
+                    valeurs Ã  des paramÃ¨tres nommÃ©s ou Ã  des paramÃ¨tres de style JDBC <literal>?</literal>.
+                    <emphasis>Contrairement Ã  JDBC, les numÃ©ros des paramÃ¨tres d'Hibernate commencent Ã  zÃ©ro.</emphasis>
+                    Les paramÃ¨tres nommÃ©s sont des identifiants de la forme <literal>:nom</literal> dans la chaÃ®ne de
+                    caractÃ¨res de la requÃªte. Les avantages des paramÃ¨tres nommÃ©s sont :
                 </para>
 
                 <itemizedlist spacing="compact">
                     <listitem>
                         <para>
-                            les paramètres nommés sont insensibles à l'ordre de leur place dans la chaîne
-                            de la requête
+                            les paramÃ¨tres nommÃ©s sont insensibles Ã  l'ordre de leur place dans la chaÃ®ne
+                            de la requÃªte
                         </para>
                     </listitem>
                     <listitem>
                         <para>
-                            ils peuvent apparaître plusieurs fois dans la même requête
+                            ils peuvent apparaÃ®tre plusieurs fois dans la mÃªme requÃªte
                         </para>
                     </listitem>
                     <listitem>
                         <para>
-                            ils sont auto-documentés
+                            ils sont auto-documentÃ©s
                         </para>
                     </listitem>
                 </itemizedlist>
 
-                <programlisting><![CDATA[//paramètre nomme (préféré)
+                <programlisting><![CDATA[//paramÃ¨tre nomme (prÃ©fÃ©rÃ©)
 Query q = sess.createQuery("from DomesticCat cat where cat.name = :name");
 q.setString("name", "Fritz");
 Iterator cats = q.iterate();]]></programlisting>
 
-                <programlisting><![CDATA[//paramètre positionnel
+                <programlisting><![CDATA[//paramÃ¨tre positionnel
 Query q = sess.createQuery("from DomesticCat cat where cat.name = ?");
 q.setString(0, "Izi");
 Iterator cats = q.iterate();]]></programlisting>
 
-                <programlisting><![CDATA[//liste de paramètres nommés
+                <programlisting><![CDATA[//liste de paramÃ¨tres nommÃ©s
 List names = new ArrayList();
 names.add("Izi");
 names.add("Fritz");
@@ -391,9 +393,9 @@ List cats = q.list();]]></programlisting>
                 <title>Pagination</title>
 
                 <para>
-                    Si vous avez besoin de spécifier des liens sur votre ensemble de résultats (le nombre
-                    maximum de lignes que vous voulez récupérez et/ou la première ligne que vous voulez récupérer)
-                    vous devriez utiliser des méthodes de l'interface <literal>Query</literal> :
+                    Si vous avez besoin de spÃ©cifier des liens sur votre ensemble de rÃ©sultats (le nombre
+                    maximum de lignes que vous voulez rÃ©cupÃ©rez et/ou la premiÃ¨re ligne que vous voulez rÃ©cupÃ©rer)
+                    vous devriez utiliser des mÃ©thodes de l'interface <literal>Query</literal> :
                 </para>
 
                 <programlisting><![CDATA[Query q = sess.createQuery("from DomesticCat cat");
@@ -402,19 +404,19 @@ q.setMaxResults(10);
 List cats = q.list();]]></programlisting>
 
                 <para>
-                    Hibernate sait comment traduite cette requête de limite en SQL natif pour votre SGBD.
+                    Hibernate sait comment traduite cette requÃªte de limite en SQL natif pour votre SGBD.
                 </para>
 
             </sect3>
 
             <sect3 id="objectstate-querying-executing-scrolling">
-                <title>Itération "scrollable"</title>
+                <title>ItÃ©ration "scrollable"</title>
 
                 <para>
                     Si votre connecteur JDBC supporte les <literal>ResultSet</literal>s "scrollables",
-                    l'interface <literal>Query</literal> peut être utilisée pour obtenir un objet
+                    l'interface <literal>Query</literal> peut Ãªtre utilisÃ©e pour obtenir un objet
                     <literal>ScrollableResults</literal>, lequel permet une navigation flexible dans les
-                    résultats de la requête.
+                    rÃ©sultats de la requÃªte.
                 </para>
 
                 <programlisting><![CDATA[Query q = sess.createQuery("select cat.name, cat from DomesticCat cat " +
@@ -422,7 +424,7 @@ List cats = q.list();]]></programlisting>
 ScrollableResults cats = q.scroll();
 if ( cats.first() ) {
 
-    // trouve le premier nom sur chaque page d'une liste alphabétique de noms de chats
+    // trouve le premier nom sur chaque page d'une liste alphabÃ©tique de noms de chats
     firstNamesOfPages = new ArrayList();
     do {
         String name = cats.getString(0);
@@ -430,7 +432,7 @@ if ( cats.first() ) {
     }
     while ( cats.scroll(PAGE_SIZE) );
 
-    // Maintenant, obtiens la première page de chats
+    // Maintenant, obtiens la premiÃ¨re page de chats
     pageOfCats = new ArrayList();
     cats.beforeFirst();
     int i=0;
@@ -440,20 +442,20 @@ if ( cats.first() ) {
 cats.close()]]></programlisting>
 
                 <para>
-                    Notez qu'une connexion ouverte (et un curseur) est requise pour cette fonctionnalité,
+                    Notez qu'une connexion ouverte (et un curseur) est requise pour cette fonctionnalitÃ©,
                     utilisez <literal>setMaxResult()</literal>/<literal>setFirstResult()</literal> si vous
-                    avez besoin d'une fonctionnalité de pagination hors ligne.
+                    avez besoin d'une fonctionnalitÃ© de pagination hors ligne.
                 </para>
 
             </sect3>
 
             <sect3 id="objectstate-querying-executing-named">
-                <title>Externaliser des requêtes nommées</title>
+                <title>Externaliser des requÃªtes nommÃ©es</title>
 
                 <para>
-                    Vous pouvez aussi définir des requêtes nommées dans le document de mapping.
-                    (Souvenez-vous d'utiliser une section <literal>CDATA</literal> si votre requête
-                    contient des caractères qui pourraient être interprétés comme des éléments XML.)
+                    Vous pouvez aussi dÃ©finir des requÃªtes nommÃ©es dans le document de mapping.
+                    (Souvenez-vous d'utiliser une section <literal>CDATA</literal> si votre requÃªte
+                    contient des caractÃ¨res qui pourraient Ãªtre interprÃ©tÃ©s comme des Ã©lÃ©ments XML.)
                 </para>
 
                 <programlisting><![CDATA[<query name="eg.DomesticCat.by.name.and.minimum.weight"><![CDATA[
@@ -463,7 +465,7 @@ cats.close()]]></programlisting>
 ] ]></query>]]></programlisting>
 
                 <para>
-                    La liaison de paramètres et l'exécution sont fait par programmation :
+                    La liaison de paramÃ¨tres et l'exÃ©cution sont fait par programmation :
                 </para>
 
                 <programlisting><![CDATA[Query q = sess.getNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
@@ -472,9 +474,9 @@ q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
 
                 <para>
-                    Notez que le code réel du programme est indépendant du langage de requête qui est
-                    utilisé, vous pouvez aussi définir des requêtes SQL nativez dans les méta-données, ou
-                    migrer des requêtes existantes vers Hibernate en les plaçant dans les fichiers de mapping.
+                    Notez que le code rÃ©el du programme est indÃ©pendant du langage de requÃªte qui est
+                    utilisÃ©, vous pouvez aussi dÃ©finir des requÃªtes SQL nativez dans les mÃ©ta-donnÃ©es, ou
+                    migrer des requÃªtes existantes vers Hibernate en les plaÃ§ant dans les fichiers de mapping.
                 </para>
 
             </sect3>
@@ -484,9 +486,9 @@ List cats = q.list();]]></programlisting>
         <sect2 id="objectstate-filtering" revision="1">
             <title>Filtrer des collections</title>
             <para>
-                Un <emphasis>filtre</emphasis> de collection est un type spécial de requête qui peut être
-                appliqué à une collection persistante ou à un tableau. La chaîne de requête peut se référer à
-                <literal>this</literal>, correspondant à l'élément de la collection courant.
+                Un <emphasis>filtre</emphasis> de collection est un type spÃ©cial de requÃªte qui peut Ãªtre
+                appliquÃ© Ã  une collection persistante ou Ã  un tableau. La chaÃ®ne de requÃªte peut se rÃ©fÃ©rer Ã 
+                <literal>this</literal>, correspondant Ã  l'Ã©lÃ©ment de la collection courant.
             </para>
 
             <programlisting><![CDATA[Collection blackKittens = session.createFilter(
@@ -497,15 +499,15 @@ List cats = q.list();]]></programlisting>
 );]]></programlisting>
 
             <para>
-                La collection retournée est considérée comme un bag, et c'est une copie de la
-                collection donnée. La collection originale n'est pas modifiée (c'est contraire
-                à l'implication du nom "filtre"; mais cohérent avec le comportement attendu).
+                La collection retournÃ©e est considÃ©rÃ©e comme un bag, et c'est une copie de la
+                collection donnÃ©e. La collection originale n'est pas modifiÃ©e (c'est contraire
+                Ã  l'implication du nom "filtre"; mais cohÃ©rent avec le comportement attendu).
             </para>
 
             <para>
-                Observez que les filtres ne nécessitent pas une clause <literal>from</literal> (bien qu'ils
-                puissent en avoir une si besoin est). Les filtres ne sont pas limités à retourner des
-                éléments de la collection eux-mêmes.
+                Observez que les filtres ne nÃ©cessitent pas une clause <literal>from</literal> (bien qu'ils
+                puissent en avoir une si besoin est). Les filtres ne sont pas limitÃ©s Ã  retourner des
+                Ã©lÃ©ments de la collection eux-mÃªmes.
             </para>
 
             <programlisting><![CDATA[Collection blackKittenMates = session.createFilter(
@@ -514,8 +516,8 @@ List cats = q.list();]]></programlisting>
     .list();]]></programlisting>
 
             <para>
-                Même une requête de filtre vide est utile, par exemple pour charger un sous-ensemble
-                d'éléments dans une énorme collection :
+                MÃªme une requÃªte de filtre vide est utile, par exemple pour charger un sous-ensemble
+                d'Ã©lÃ©ments dans une Ã©norme collection :
             </para>
 
             <programlisting><![CDATA[Collection tenKittens = session.createFilter(
@@ -526,12 +528,12 @@ List cats = q.list();]]></programlisting>
         </sect2>
 
         <sect2 id="objecstate-querying-criteria" revision="1">
-           <title>Requêtes Criteria</title>
+           <title>RequÃªtes Criteria</title>
 
             <para>
-                HQL est extrêmement puissant mais certains développeurs préfèrent construire des
-                requêtes dynamiquement, en utilisant l'API orientée objet, plutôt que construire
-                des chaînes de requêtes. Hibernate fournit une API intuitive de requête <literal>Criteria</literal>
+                HQL est extrÃªmement puissant mais certains dÃ©veloppeurs prÃ©fÃ¨rent construire des
+                requÃªtes dynamiquement, en utilisant l'API orientÃ©e objet, plutÃ´t que construire
+                des chaÃ®nes de requÃªtes. Hibernate fournit une API intuitive de requÃªte <literal>Criteria</literal>
                 pour ces cas :
             </para>
 
@@ -541,18 +543,18 @@ crit.setMaxResults(10);
 List cats = crit.list();]]></programlisting>
 
             <para>
-                Les APIs <literal>Criteria</literal> et <literal>Example</literal> associé sont
-                traitées plus en détail dans <xref linkend="querycriteria"/>.
+                Les APIs <literal>Criteria</literal> et <literal>Example</literal> associÃ© sont
+                traitÃ©es plus en dÃ©tail dans <xref linkend="querycriteria"/>.
             </para>
 
         </sect2>
 
         <sect2 id="objectstate-querying-nativesql" revision="2">
-            <title>Requêtes en SQL natif</title>
+            <title>RequÃªtes en SQL natif</title>
 
             <para>
-                Vous pouvez exprimer une requête en SQL, en utilisant <literal>createSQLQuery()</literal>
-                et laisser Hibernate s'occuper du mapping des résultats vers des objets. Notez que vous
+                Vous pouvez exprimer une requÃªte en SQL, en utilisant <literal>createSQLQuery()</literal>
+                et laisser Hibernate s'occuper du mapping des rÃ©sultats vers des objets. Notez que vous
                 pouvez n'importe quand appeler <literal>session.connection()</literal> et utiliser
                 directement la <literal>Connection</literal> JDBC. Si vous choisissez d'utiliser
                 l'API Hibernate, vous devez mettre les alias SQL entre accolades :
@@ -570,9 +572,9 @@ List cats = crit.list();]]></programlisting>
 .list()]]></programlisting>
 
             <para>
-                Les requêtes SQL peuvent contenir des paramètres nommés et positionnels, comme des
-                requêtes Hibernate. Plus d'informations à propos des requêtes SQL natives dans Hibernate
-                peuvent être trouvées dans <xref linkend="querysql"/>.
+                Les requÃªtes SQL peuvent contenir des paramÃ¨tres nommÃ©s et positionnels, comme des
+                requÃªtes Hibernate. Plus d'informations Ã  propos des requÃªtes SQL natives dans Hibernate
+                peuvent Ãªtre trouvÃ©es dans <xref linkend="querysql"/>.
             </para>
 
         </sect2>
@@ -583,13 +585,13 @@ List cats = crit.list();]]></programlisting>
         <title>Modifier des objets persistants</title>
 
         <para>
-            Les <emphasis>instances persistantes transactionnelles</emphasis> (c'est-à-dire des objets
-            chargés, sauvegardés, créés ou requêtés par la <literal>Session</literal>) peuvent être
-            manipulées par l'application et n'importe quel changement vers l'état persistant sera
-            persisté lorsque la <literal>Session</literal> est <emphasis>"flushée"</emphasis> (traité
-            plus tard dans ce chapitre). Il n'y a pas besoin d'appeler une méthode particulière
-            (comme <literal>update()</literal>, qui a un but différent) pour rendre vos modifications
-            persistantes. Donc la manière la plus directe de mettre à jour l'état d'un objet est de
+            Les <emphasis>instances persistantes transactionnelles</emphasis> (c'est-Ã -dire des objets
+            chargÃ©s, sauvegardÃ©s, crÃ©Ã©s ou requÃªtÃ©s par la <literal>Session</literal>) peuvent Ãªtre
+            manipulÃ©es par l'application et n'importe quel changement vers l'Ã©tat persistant sera
+            persistÃ© lorsque la <literal>Session</literal> est <emphasis>"flushÃ©e"</emphasis> (traitÃ©
+            plus tard dans ce chapitre). Il n'y a pas besoin d'appeler une mÃ©thode particuliÃ¨re
+            (comme <literal>update()</literal>, qui a un but diffÃ©rent) pour rendre vos modifications
+            persistantes. Donc la maniÃ¨re la plus directe de mettre Ã  jour l'Ã©tat d'un objet est de
             le charger avec <literal>load()</literal>, et puis le manipuler directement, tant que la
             <literal>Session</literal> est ouverte :
         </para>
@@ -599,45 +601,45 @@ cat.setName("PK");
 sess.flush();  // changes to cat are automatically detected and persisted]]></programlisting>
 
         <para>
-            Parfois ce modèle de programmation est inefficace puisqu'il nécessiterait un
+            Parfois ce modÃ¨le de programmation est inefficace puisqu'il nÃ©cessiterait un
             <literal>SELECT</literal> SQL (pour charger l'objet) et un <literal>UPDATE</literal>
-            SQL (pour persister son état mis à jour) dans la même session. Aussi Hibernate offre
-            une autre approche, en utilisant des instances détachées.
+            SQL (pour persister son Ã©tat mis Ã  jour) dans la mÃªme session. Aussi Hibernate offre
+            une autre approche, en utilisant des instances dÃ©tachÃ©es.
         </para>
 
         <para>
-            <emphasis>Notez que Hibernate n'offre par sa propre API pour l'exécution directe
+            <emphasis>Notez que Hibernate n'offre par sa propre API pour l'exÃ©cution directe
             d'expressions <literal>UPDATE</literal> ou <literal>DELETE</literal>. Hibernate
-            est un service de <emphasis>gestion d'état</emphasis>, vous n'avez pas à penser
+            est un service de <emphasis>gestion d'Ã©tat</emphasis>, vous n'avez pas Ã  penser
             aux <emphasis>expressions</emphasis> pour l'utiliser. JDBC est une API parfaite
-            pour exécuter des expressions SQL, vous pouvez obtenir une <literal>Connection</literal>
+            pour exÃ©cuter des expressions SQL, vous pouvez obtenir une <literal>Connection</literal>
             JDBC n'importe quand en appelant <literal>session.connection()</literal>. En outre,
-            la notion d'opérations de masse entre en conflit avec le mapping objet/relationnel
-            pour les applications orientées processus de transactions en ligne. Les futures
-            versions d'Hibernate peuvent cependant fournir des fonctions d'opération de masse.
-            Voir <xref linkend="batch"/> pour les astuces possibles d'opérations groupées.</emphasis>
+            la notion d'opÃ©rations de masse entre en conflit avec le mapping objet/relationnel
+            pour les applications orientÃ©es processus de transactions en ligne. Les futures
+            versions d'Hibernate peuvent cependant fournir des fonctions d'opÃ©ration de masse.
+            Voir <xref linkend="batch"/> pour les astuces possibles d'opÃ©rations groupÃ©es.</emphasis>
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-detached" revision="2">
-        <title>Modifier des objets détachés</title>
+        <title>Modifier des objets dÃ©tachÃ©s</title>
 
         <para>
-            Beaucoup d'applications ont besoin de récupérer un objet dans une transaction,
-            l'envoyer à la couche interfacée avec l'utilisateur pour les manipulations, puis
+            Beaucoup d'applications ont besoin de rÃ©cupÃ©rer un objet dans une transaction,
+            l'envoyer Ã  la couche interfacÃ©e avec l'utilisateur pour les manipulations, puis
             sauvegarder les changements dans une nouvelle transaction. Les applications
-            qui utilisent cette approche dans un environnement à haute concurrence utilisent
-            généralement des données versionnées pour assurer l'isolation pour les "longues"
-            unités de travail.
+            qui utilisent cette approche dans un environnement Ã  haute concurrence utilisent
+            gÃ©nÃ©ralement des donnÃ©es versionnÃ©es pour assurer l'isolation pour les "longues"
+            unitÃ©s de travail.
         </para>
 
         <para>
-            Hibernate supporte ce modèle en permettant pour le réattachement d'instances détachées
-            l'utilisation des méthodes <literal>Session.update()</literal> ou <literal>Session.merge()</literal> :
+            Hibernate supporte ce modÃ¨le en permettant pour le rÃ©attachement d'instances dÃ©tachÃ©es
+            l'utilisation des mÃ©thodes <literal>Session.update()</literal> ou <literal>Session.merge()</literal> :
         </para>
 
-        <programlisting><![CDATA[// dans la première session
+        <programlisting><![CDATA[// dans la premiÃ¨re session
 Cat cat = (Cat) firstSession.load(Cat.class, catId);
 Cat potentialMate = new Cat();
 firstSession.save(potentialMate);
@@ -650,64 +652,64 @@ secondSession.update(cat);  // update cat
 secondSession.update(mate); // update mate]]></programlisting>
 
         <para>
-            Si le <literal>Cat</literal> avec l'identifiant <literal>catId</literal> avait déjà
-            été chargé par <literal>secondSession</literal> lorsque l'application a essayé de le
-            réattacher, une exception aurait été levée.
+            Si le <literal>Cat</literal> avec l'identifiant <literal>catId</literal> avait dÃ©jÃ 
+            Ã©tÃ© chargÃ© par <literal>secondSession</literal> lorsque l'application a essayÃ© de le
+            rÃ©attacher, une exception aurait Ã©tÃ© levÃ©e.
         </para>
 
         <para>
-            Utilisez <literal>update()</literal> si vous êtes sure que la session ne contient pas
-            déjà une instance persistante avec le même identifiant, et <literal>merge()</literal>
-            si vous voulez fusionner vos modifications n'importe quand sans considérer l'état de
-            la session. En d'autres mots, <literal>update()</literal> est généralement la première méthode
-            que vous devriez appeler dans une session fraîche, pour s'assurer que le réattachement
-            de vos instances détachées est la première opération qui est exécutée.
+            Utilisez <literal>update()</literal> si vous Ãªtes sure que la session ne contient pas
+            dÃ©jÃ  une instance persistante avec le mÃªme identifiant, et <literal>merge()</literal>
+            si vous voulez fusionner vos modifications n'importe quand sans considÃ©rer l'Ã©tat de
+            la session. En d'autres mots, <literal>update()</literal> est gÃ©nÃ©ralement la premiÃ¨re mÃ©thode
+            que vous devriez appeler dans une session fraÃ®che, pour s'assurer que le rÃ©attachement
+            de vos instances dÃ©tachÃ©es est la premiÃ¨re opÃ©ration qui est exÃ©cutÃ©e.
         </para>
 
         <para>
-            L'application devrait individuellement <literal>update()</literal> (NdT : mettre à jour)
-            les instances détachées accessibles depuis l'instance détachée donnée si et
-            <emphasis>seulement</emphasis> si elle veut que leur état soit aussi mis à jour. Ceci
-            peut être automatisé bien sûr, en utilisant la <emphasis>persistance transitive</emphasis>,
+            L'application devrait individuellement <literal>update()</literal> (NdT : mettre Ã  jour)
+            les instances dÃ©tachÃ©es accessibles depuis l'instance dÃ©tachÃ©e donnÃ©e si et
+            <emphasis>seulement</emphasis> si elle veut que leur Ã©tat soit aussi mis Ã  jour. Ceci
+            peut Ãªtre automatisÃ© bien sÃ»r, en utilisant la <emphasis>persistance transitive</emphasis>,
             voir <xref linkend="objectstate-transitive"/>.
         </para>
 
         <para>
-            La méthode <literal>lock()</literal> permet aussi à une application de réassocier un
-            objet avec une nouvelle session. Pourtant, l'instance détachée doit être non modifiée !
+            La mÃ©thode <literal>lock()</literal> permet aussi Ã  une application de rÃ©associer un
+            objet avec une nouvelle session. Pourtant, l'instance dÃ©tachÃ©e doit Ãªtre non modifiÃ©e !
         </para>
 
-        <programlisting><![CDATA[//réassocie :
+        <programlisting><![CDATA[//rÃ©associe :
 sess.lock(fritz, LockMode.NONE);
-//fait une vérification de version, puis réassocie :
+//fait une vÃ©rification de version, puis rÃ©associe :
 sess.lock(izi, LockMode.READ);
-//fait une vérification de version, en utilisant SELECT ... FOR UPDATE, puis réassocie :
+//fait une vÃ©rification de version, en utilisant SELECT ... FOR UPDATE, puis rÃ©associe :
 sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
 
         <para>
-            Notez que <literal>lock()</literal> peut être utilisé avec différents
+            Notez que <literal>lock()</literal> peut Ãªtre utilisÃ© avec diffÃ©rents
             <literal>LockMode</literal>s, voir la documentation de l'API documentation et le chapitre
-            sur la gestion des transactions pour plus d'informations. Le réattachement n'est pas le seul
+            sur la gestion des transactions pour plus d'informations. Le rÃ©attachement n'est pas le seul
             cas d'utilisation pour <literal>lock()</literal>.
         </para>
 
         <para>
-            D'autres modèles pour de longues unités de travail sont traités dans <xref linkend="transactions-optimistic"/>.
+            D'autres modÃ¨les pour de longues unitÃ©s de travail sont traitÃ©s dans <xref linkend="transactions-optimistic"/>.
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-saveorupdate">
-        <title>Détection automatique d'un état</title>
+        <title>DÃ©tection automatique d'un Ã©tat</title>
 
         <para>
-            Les utilisateurs d'Hibernate ont demandé une méthode dont l'intention générale
-            serait soit de sauvegarder une instance éphémère en générant un nouvel identifiant,
-            soit mettre à jour/réattacher les instances détachées associées à l'identifiant courant.
-            La méthode <literal>saveOrUpdate()</literal> implémente cette fonctionnalité.
+            Les utilisateurs d'Hibernate ont demandÃ© une mÃ©thode dont l'intention gÃ©nÃ©rale
+            serait soit de sauvegarder une instance Ã©phÃ©mÃ¨re en gÃ©nÃ©rant un nouvel identifiant,
+            soit mettre Ã  jour/rÃ©attacher les instances dÃ©tachÃ©es associÃ©es Ã  l'identifiant courant.
+            La mÃ©thode <literal>saveOrUpdate()</literal> implÃ©mente cette fonctionnalitÃ©.
         </para>
 
-        <programlisting><![CDATA[// dans la première session
+        <programlisting><![CDATA[// dans la premiÃ¨re session
 Cat cat = (Cat) firstSession.load(Cat.class, catID);
 
 // dans une partie plus haute de l'application
@@ -715,41 +717,41 @@ Cat mate = new Cat();
 cat.setMate(mate);
 
 // plus tard, dans une nouvelle session
-secondSession.saveOrUpdate(cat);   // met à jour un état existant (cat a un identifiant non-null)
+secondSession.saveOrUpdate(cat);   // met Ã  jour un Ã©tat existant (cat a un identifiant non-null)
 secondSession.saveOrUpdate(mate);  // sauvegarde les nouvelles instances (mate a un identiant null)]]></programlisting>
 
         <para>
-            L'usage et la sémantique de <literal>saveOrUpdate()</literal> semble être confuse pour les
-            nouveaux utilisateurs. Premièrement, aussi longtemps que vous n'essayez pas d'utiliser des
+            L'usage et la sÃ©mantique de <literal>saveOrUpdate()</literal> semble Ãªtre confuse pour les
+            nouveaux utilisateurs. PremiÃ¨rement, aussi longtemps que vous n'essayez pas d'utiliser des
             instances d'une session dans une autre, vous ne devriez pas avoir besoin d'utiliser <literal>update()</literal>,
             <literal>saveOrUpdate()</literal>, ou <literal>merge()</literal>. Certaines applications
-            n'utiliseront jamais ces méthodes.
+            n'utiliseront jamais ces mÃ©thodes.
         </para>
 
         <para>
-            Généralement <literal>update()</literal> ou <literal>saveOrUpdate()</literal> sont utilisées dans
-            le scénario suivant :
+            GÃ©nÃ©ralement <literal>update()</literal> ou <literal>saveOrUpdate()</literal> sont utilisÃ©es dans
+            le scÃ©nario suivant :
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    l'application charge un objet dans la première session
+                    l'application charge un objet dans la premiÃ¨re session
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    l'objet est passé à la couche utilisateur
+                    l'objet est passÃ© Ã  la couche utilisateur
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    certaines modifications sont effectuées sur l'objet
+                    certaines modifications sont effectuÃ©es sur l'objet
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    l'objet est retourné à la couche logique métier
+                    l'objet est retournÃ© Ã  la couche logique mÃ©tier
                 </para>
             </listitem>
             <listitem>
@@ -767,65 +769,65 @@ secondSession.saveOrUpdate(mate);  // sauvegarde les nouvelles instances (mate a
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    si l'objet est déjà persistant dans cette session, ne rien faire
+                    si l'objet est dÃ©jÃ  persistant dans cette session, ne rien faire
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    si un autre objet associé à la session a le même identifiant, lever une exception
+                    si un autre objet associÃ© Ã  la session a le mÃªme identifiant, lever une exception
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    si l'objet n'a pas de propriété d'identifiant, appeler <literal>save()</literal>
+                    si l'objet n'a pas de propriÃ©tÃ© d'identifiant, appeler <literal>save()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    si l'identifiant de l'objet a une valeur assignée à un objet nouvellement instancié,
+                    si l'identifiant de l'objet a une valeur assignÃ©e Ã  un objet nouvellement instanciÃ©,
                     appeler <literal>save()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    si l'objet est versionné (par <literal>&lt;version&gt;</literal> ou
-                    <literal>&lt;timestamp&gt;</literal>), et la valeur de la propriété de version
-                    est la même valeur que celle assignée à un objet nouvellement instancié, appeler
+                    si l'objet est versionnÃ© (par <literal>&lt;version&gt;</literal> ou
+                    <literal>&lt;timestamp&gt;</literal>), et la valeur de la propriÃ©tÃ© de version
+                    est la mÃªme valeur que celle assignÃ©e Ã  un objet nouvellement instanciÃ©, appeler
                     <literal>save()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    sinon mettre à jour l'objet avec <literal>update()</literal>
+                    sinon mettre Ã  jour l'objet avec <literal>update()</literal>
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            et <literal>merge()</literal> est très différent :
+            et <literal>merge()</literal> est trÃ¨s diffÃ©rent :
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    s'il y a une instance persistante avec le même identifiant couramment
-                    associée à la session, copier l'état de l'objet donné dans l'instance persistante
+                    s'il y a une instance persistante avec le mÃªme identifiant couramment
+                    associÃ©e Ã  la session, copier l'Ã©tat de l'objet donnÃ© dans l'instance persistante
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    s'il n'y a pas d'instance persistante associée à cette session, essayer de le charger
-                    à partir de la base de données, ou créer une nouvelle instance persistante
+                    s'il n'y a pas d'instance persistante associÃ©e Ã  cette session, essayer de le charger
+                    Ã  partir de la base de donnÃ©es, ou crÃ©er une nouvelle instance persistante
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    l'instance persistante est retournée
+                    l'instance persistante est retournÃ©e
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    l'instance donnée ne devient pas associée à la session, elle reste détachée
+                    l'instance donnÃ©e ne devient pas associÃ©e Ã  la session, elle reste dÃ©tachÃ©e
                 </para>
             </listitem>
         </itemizedlist>
@@ -836,40 +838,40 @@ secondSession.saveOrUpdate(mate);  // sauvegarde les nouvelles instances (mate a
         <title>Suppression d'objets persistants</title>
 
         <para>
-            <literal>Session.delete()</literal> supprimera l'état d'un objet de la base de données.
-            Bien sûr, votre application pourrait encore conserver une référence vers un objet effacé.
-            Il est mieux de penser à <literal>delete()</literal> comme rendant une instance persistante
-            éphémère.
+            <literal>Session.delete()</literal> supprimera l'Ã©tat d'un objet de la base de donnÃ©es.
+            Bien sÃ»r, votre application pourrait encore conserver une rÃ©fÃ©rence vers un objet effacÃ©.
+            Il est mieux de penser Ã  <literal>delete()</literal> comme rendant une instance persistante
+            Ã©phÃ©mÃ¨re.
         </para>
 
         <programlisting><![CDATA[sess.delete(cat);]]></programlisting>
 
         <para>
             Vous pouvez effacer des objets dans l'ordre que vous voulez, sans risque de violations
-            de contrainte de clef étrangère. Il est encore possible de violer une contrainte <literal>NOT
-            NULL</literal> sur une colonne de clef étrangère en effaçant des objets dans le
+            de contrainte de clef Ã©trangÃ¨re. Il est encore possible de violer une contrainte <literal>NOT
+            NULL</literal> sur une colonne de clef Ã©trangÃ¨re en effaÃ§ant des objets dans le
             mauvais ordre, par exemple si vous effacer le parent, mais oubliez d'effacer les enfants.
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-replicating" revision="1">
-        <title>Réplication d'objets entre deux entrepôts de données</title>
+        <title>RÃ©plication d'objets entre deux entrepÃ´ts de donnÃ©es</title>
 
         <para>
             Il est occasionnellement utile de pouvoir prendre un graphe d'instances persistantes
-            et de les rendre persistantes dans un entrepôt différent, sans regénérer les valeurs
+            et de les rendre persistantes dans un entrepÃ´t diffÃ©rent, sans regÃ©nÃ©rer les valeurs
             des identifiants.
         </para>
 
-        <programlisting><![CDATA[//récupère un cat de la base de données
+        <programlisting><![CDATA[//rÃ©cupÃ¨re un cat de la base de donnÃ©es
 Session session1 = factory1.openSession();
 Transaction tx1 = session1.beginTransaction();
 Cat cat = session1.get(Cat.class, catId);
 tx1.commit();
 session1.close();
 
-// réconcilie la seconde base de données
+// rÃ©concilie la seconde base de donnÃ©es
 Session session2 = factory2.openSession();
 Transaction tx2 = session2.beginTransaction();
 session2.replicate(cat, ReplicationMode.LATEST_VERSION);
@@ -877,41 +879,41 @@ tx2.commit();
 session2.close();]]></programlisting>
 
         <para>
-            Le <literal>ReplicationMode</literal> détermine comment <literal>replicate()</literal>
-            traitera les conflits avec les lignes existantes dans la base de données.
+            Le <literal>ReplicationMode</literal> dÃ©termine comment <literal>replicate()</literal>
+            traitera les conflits avec les lignes existantes dans la base de donnÃ©es.
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
                     <literal>ReplicationMode.IGNORE</literal> - ignore l'objet s'il y a une ligne
-                    existante dans la base de données avec le même identifiant
+                    existante dans la base de donnÃ©es avec le mÃªme identifiant
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>ReplicationMode.OVERWRITE</literal> - écrase n'importe quelle ligne existante
-                    dans la base de données avec le même identifiant
+                    <literal>ReplicationMode.OVERWRITE</literal> - Ã©crase n'importe quelle ligne existante
+                    dans la base de donnÃ©es avec le mÃªme identifiant
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>ReplicationMode.EXCEPTION</literal> - lève une exception s'il y une ligne dans
-                    la base de données avec le même identifiant
+                    <literal>ReplicationMode.EXCEPTION</literal> - lÃ¨ve une exception s'il y une ligne dans
+                    la base de donnÃ©es avec le mÃªme identifiant
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>ReplicationMode.LATEST_VERSION</literal> - écrase la ligne si son numéro de version
-                    est plus petit que le numéro de version de l'objet, ou ignore l'objet sinon
+                    <literal>ReplicationMode.LATEST_VERSION</literal> - Ã©crase la ligne si son numÃ©ro de version
+                    est plus petit que le numÃ©ro de version de l'objet, ou ignore l'objet sinon
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Les cas d'utilisation de cette fonctionnalité incluent la réconciliation de données
-            entrées dans différentes base de données, l'extension des informations de configuration
-            du système durant une mise à jour du produit, retour en arrière sur les changements effectués
+            Les cas d'utilisation de cette fonctionnalitÃ© incluent la rÃ©conciliation de donnÃ©es
+            entrÃ©es dans diffÃ©rentes base de donnÃ©es, l'extension des informations de configuration
+            du systÃ¨me durant une mise Ã  jour du produit, retour en arriÃ¨re sur les changements effectuÃ©s
             durant des transactions non-ACID, et plus.
         </para>
 
@@ -921,44 +923,44 @@ session2.close();]]></programlisting>
         <title>Flush de la session</title>
 
         <para>
-            De temps en temps la <literal>Session</literal> exécutera les expressions SQL
-            requises pour syncrhoniser l'état de la connexion JDBC avec l'état des objets
-            retenus en mémoire. Ce processus, <emphasis>flush</emphasis>, arrive par défaut aux
+            De temps en temps la <literal>Session</literal> exÃ©cutera les expressions SQL
+            requises pour syncrhoniser l'Ã©tat de la connexion JDBC avec l'Ã©tat des objets
+            retenus en mÃ©moire. Ce processus, <emphasis>flush</emphasis>, arrive par dÃ©faut aux
             points suivants :
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    lors de certaines exécutions de requête
+                    lors de certaines exÃ©cutions de requÃªte
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    lors d'un appel à <literal>org.hibernate.Transaction.commit()</literal>
+                    lors d'un appel Ã  <literal>org.hibernate.Transaction.commit()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    lors d'un appel à <literal>Session.flush()</literal>
+                    lors d'un appel Ã  <literal>Session.flush()</literal>
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Les expressions SQL sont effectuées dans l'ordre suivant :
+            Les expressions SQL sont effectuÃ©es dans l'ordre suivant :
         </para>
 
         <orderedlist spacing="compact">
             <listitem>
                 <para>
-                    insertion des entités, dans le même ordre que celui des
-                    objets correspondants sauvegardés par l'appel à <literal>Session.save()</literal>
+                    insertion des entitÃ©s, dans le mÃªme ordre que celui des
+                    objets correspondants sauvegardÃ©s par l'appel Ã  <literal>Session.save()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    mise à jours des entités
+                    mise Ã  jours des entitÃ©s
                 </para>
             </listitem>
             <listitem>
@@ -968,7 +970,7 @@ session2.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    suppression, mise à jour et insertion des éléments des collections
+                    suppression, mise Ã  jour et insertion des Ã©lÃ©ments des collections
                 </para>
             </listitem>
             <listitem>
@@ -978,54 +980,54 @@ session2.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    suppression des entités, dans le même ordre que celui des objets
-                    correspondants qui ont été supprimés par l'appel à <literal>Session.delete()</literal>
+                    suppression des entitÃ©s, dans le mÃªme ordre que celui des objets
+                    correspondants qui ont Ã©tÃ© supprimÃ©s par l'appel Ã  <literal>Session.delete()</literal>
                 </para>
             </listitem>
         </orderedlist>
 
         <para>
-            (Une exception est que des objets utilisant la génération <literal>native</literal>
-            d'identifiants sont insérés lorsqu'ils sont sauvegardés.)
+            (Une exception est que des objets utilisant la gÃ©nÃ©ration <literal>native</literal>
+            d'identifiants sont insÃ©rÃ©s lorsqu'ils sont sauvegardÃ©s.)
         </para>
 
         <para>
-            Excepté lorsque vous appelez <literal>flush()</literal> explicitement, il n'y
-            absolument aucune garantie à propos de <emphasis>quand</emphasis> la <literal>Session</literal>
-            exécute les appels JDBC, seulement sur l'<emphasis>ordre</emphasis> dans lequel ils sont
-            exécutés. Cependant, Hibernate garantit que <literal>Query.list(..)</literal> ne
-            retournera jamais de données périmées, ni des données fausses.
+            ExceptÃ© lorsque vous appelez <literal>flush()</literal> explicitement, il n'y
+            absolument aucune garantie Ã  propos de <emphasis>quand</emphasis> la <literal>Session</literal>
+            exÃ©cute les appels JDBC, seulement sur l'<emphasis>ordre</emphasis> dans lequel ils sont
+            exÃ©cutÃ©s. Cependant, Hibernate garantit que <literal>Query.list(..)</literal> ne
+            retournera jamais de donnÃ©es pÃ©rimÃ©es, ni des donnÃ©es fausses.
         </para>
 
         <para>
-            Il est possible de changer le comportement par défaut, donc que le flush se produise
-            moins fréquemment. La classe <literal>FlushMode</literal> définit trois modes différents :
+            Il est possible de changer le comportement par dÃ©faut, donc que le flush se produise
+            moins frÃ©quemment. La classe <literal>FlushMode</literal> dÃ©finit trois modes diffÃ©rents :
             flush seulement lors du commit (et seulement quand l'API <literal>Transaction</literal>
-            d'Hibernate est utilisée), flush automatiquement en utilisant la procédure expliquée, ou
-            jamais de flush à moins que <literal>flush()</literal> soit appelée explicitement.
-            Le dernier mode est utile pour l'exécution de longues unités de travail, où une
-            <literal>Session</literal> est gardée ouverte et déconnectée pour un long moment
+            d'Hibernate est utilisÃ©e), flush automatiquement en utilisant la procÃ©dure expliquÃ©e, ou
+            jamais de flush Ã  moins que <literal>flush()</literal> soit appelÃ©e explicitement.
+            Le dernier mode est utile pour l'exÃ©cution de longues unitÃ©s de travail, oÃ¹ une
+            <literal>Session</literal> est gardÃ©e ouverte et dÃ©connectÃ©e pour un long moment
             (voir <xref linkend="transactions-optimistic-longsession"/>).
         </para>
 
         <programlisting><![CDATA[sess = sf.openSession();
 Transaction tx = sess.beginTransaction();
-sess.setFlushMode(FlushMode.COMMIT); // permet aux requêtes de retourner un état périmé
+sess.setFlushMode(FlushMode.COMMIT); // permet aux requÃªtes de retourner un Ã©tat pÃ©rimÃ©
 
 Cat izi = (Cat) sess.load(Cat.class, id);
 izi.setName(iznizi);
 
-// pourrait retourner des données périmées
+// pourrait retourner des donnÃ©es pÃ©rimÃ©es
 sess.find("from Cat as cat left outer join cat.kittens kitten");
 
-// le changement pour izi n'est pas flushé !
+// le changement pour izi n'est pas flushÃ© !
 ...
 tx.commit(); // le flush se produit]]></programlisting>
 
         <para>
-            Durant le flush, une exception peut se produire (par exemple, si une opération de la
+            Durant le flush, une exception peut se produire (par exemple, si une opÃ©ration de la
             DML viole une contrainte). Puisque les exceptions de gestion impliquent une certaine
-            compréhension du comportement transactionnel d'Hibernate, nous le traitons dans
+            comprÃ©hension du comportement transactionnel d'Hibernate, nous le traitons dans
             <xref linkend="transactions"/>.
         </para>
 
@@ -1035,59 +1037,59 @@ tx.commit(); // le flush se produit]]></programlisting>
         <title>Persistance transitive</title>
 
         <para>
-            Il est assez pénible de sauvegarder, supprimer, ou réattacher des objets
-            un par un, surtout si vous traitez un graphe d'objets associés. Un cas habituel
-            est une relation parent/enfant. Considérez l'exemple suivant :
+            Il est assez pÃ©nible de sauvegarder, supprimer, ou rÃ©attacher des objets
+            un par un, surtout si vous traitez un graphe d'objets associÃ©s. Un cas habituel
+            est une relation parent/enfant. ConsidÃ©rez l'exemple suivant :
         </para>
 
         <para>
-            Si les enfants de la relation parent/enfant étaient des types de valeur (par exemple,
-            une collection d'adresses ou de chaînes de caractères), leur cycle de vie dépendraient
+            Si les enfants de la relation parent/enfant Ã©taient des types de valeur (par exemple,
+            une collection d'adresses ou de chaÃ®nes de caractÃ¨res), leur cycle de vie dÃ©pendraient
             du parent et aucune action ne serait requise pour "cascader" facilement les
-            changements d'état. Si le parent est sauvegardé, les objets enfants de type de valeur sont
-            sauvegardés également, si le parent est supprimé, les enfants sont supprimés, etc. Ceci
-            fonctionne même pour des opérations telles que la suppression d'un enfant de la collection ;
-            Hibernate détectera cela et, puisque les objets de type de valeur ne peuvent pas avoir
-            des références partagées, supprimera l'enfant de la base de données.
+            changements d'Ã©tat. Si le parent est sauvegardÃ©, les objets enfants de type de valeur sont
+            sauvegardÃ©s Ã©galement, si le parent est supprimÃ©, les enfants sont supprimÃ©s, etc. Ceci
+            fonctionne mÃªme pour des opÃ©rations telles que la suppression d'un enfant de la collection ;
+            Hibernate dÃ©tectera cela et, puisque les objets de type de valeur ne peuvent pas avoir
+            des rÃ©fÃ©rences partagÃ©es, supprimera l'enfant de la base de donnÃ©es.
         </para>
 
         <para>
-            Maintenant considérez le même scénario avec un parent et dont les objets enfants
-            sont des entités, et non des types de valeur (par exemple, des catégories et des
-            objets, ou un parent et des chatons). Les entités ont leur propre cycle de vie,
-            supportent les références partagées (donc supprimer une entité de la collection
-            ne signifie pas qu'elle peut être supprimée), et il n'y a par défaut pas de
-            cascade d'état d'une entité vers n'importe quelle entité associée. Hibernate
-            n'implémente pas la <emphasis>persistance par accessibilité</emphasis> par défaut.
+            Maintenant considÃ©rez le mÃªme scÃ©nario avec un parent et dont les objets enfants
+            sont des entitÃ©s, et non des types de valeur (par exemple, des catÃ©gories et des
+            objets, ou un parent et des chatons). Les entitÃ©s ont leur propre cycle de vie,
+            supportent les rÃ©fÃ©rences partagÃ©es (donc supprimer une entitÃ© de la collection
+            ne signifie pas qu'elle peut Ãªtre supprimÃ©e), et il n'y a par dÃ©faut pas de
+            cascade d'Ã©tat d'une entitÃ© vers n'importe quelle entitÃ© associÃ©e. Hibernate
+            n'implÃ©mente pas la <emphasis>persistance par accessibilitÃ©</emphasis> par dÃ©faut.
         </para>
 
         <para>
-            Pour chaque opération basique de la session d'Hibernate - incluant <literal>persist(), merge(),
+            Pour chaque opÃ©ration basique de la session d'Hibernate - incluant <literal>persist(), merge(),
             saveOrUpdate(), delete(), lock(), refresh(), evict(), replicate()</literal> - il y a un
             style de cascade correspondant. Respectivement, les styles de cascade s'appellent <literal>persist,
             merge, save-update, delete, lock, refresh, evict, replicate</literal>. Si vous voulez qu'une
-            opération soit cascadée le long d'une association, vous devez l'indiquer dans le document de
+            opÃ©ration soit cascadÃ©e le long d'une association, vous devez l'indiquer dans le document de
             mapping. Par exemple :
         </para>
 
         <programlisting><![CDATA[<one-to-one name="person" cascade="persist"/>]]></programlisting>
 
         <para>
-            Les styles de cascade peuvent être combinés :
+            Les styles de cascade peuvent Ãªtre combinÃ©s :
         </para>
 
         <programlisting><![CDATA[<one-to-one name="person" cascade="persist,delete,lock"/>]]></programlisting>
 
         <para>
-            Vous pouvez même utiliser <literal>cascade="all"</literal> pour spécifier que <emphasis>toutes</emphasis>
-            les opérations devraient être cascadées le long de l'association. La valeur par défaut
-            <literal>cascade="none"</literal> spécifie qu'aucune opération ne sera cascadée.
+            Vous pouvez mÃªme utiliser <literal>cascade="all"</literal> pour spÃ©cifier que <emphasis>toutes</emphasis>
+            les opÃ©rations devraient Ãªtre cascadÃ©es le long de l'association. La valeur par dÃ©faut
+            <literal>cascade="none"</literal> spÃ©cifie qu'aucune opÃ©ration ne sera cascadÃ©e.
         </para>
 
         <para>
-            Une style de cascade spécial, <literal>delete-orphan</literal>, s'applique seulement
-            aux associations un-vers-plusieurs, et indique que l'opération <literal>delete()</literal>
-            devrait être appliquée à n'importe quel enfant qui est supprimé de l'association.
+            Une style de cascade spÃ©cial, <literal>delete-orphan</literal>, s'applique seulement
+            aux associations un-vers-plusieurs, et indique que l'opÃ©ration <literal>delete()</literal>
+            devrait Ãªtre appliquÃ©e Ã  n'importe quel enfant qui est supprimÃ© de l'association.
         </para>
 
 
@@ -1098,7 +1100,7 @@ tx.commit(); // le flush se produit]]></programlisting>
        <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    Cela n'a généralement aucun sens d'activer la cascade sur une association
+                    Cela n'a gÃ©nÃ©ralement aucun sens d'activer la cascade sur une association
                     <literal>&lt;many-to-one&gt;</literal> ou <literal>&lt;many-to-many&gt;</literal>. Les
                     cascades sont souvent utiles pour des associations
                     <literal>&lt;one-to-one&gt;</literal> et <literal>&lt;one-to-many&gt;</literal>.
@@ -1106,103 +1108,103 @@ tx.commit(); // le flush se produit]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    Si la durée de vie de l'objet enfant est liée à la durée de vie de l'objet parent,
-                    faites en un <emphasis>objet du cycle de vie</emphasis> en spécifiant
+                    Si la durÃ©e de vie de l'objet enfant est liÃ©e Ã  la durÃ©e de vie de l'objet parent,
+                    faites en un <emphasis>objet du cycle de vie</emphasis> en spÃ©cifiant
                     <literal>cascade="all,delete-orphan"</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Sinon, vous pourriez ne pas avoir besoin de cascade du tout. Mais si vous pensez que vous
-                    travaillerez souvent avec le parent et les enfants ensemble dans la même transaction, et
-                    que vous voulez vous éviter quelques frappes, considérez l'utilisation de
+                    travaillerez souvent avec le parent et les enfants ensemble dans la mÃªme transaction, et
+                    que vous voulez vous Ã©viter quelques frappes, considÃ©rez l'utilisation de
                     <literal>cascade="persist,merge,save-update"</literal>.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Mapper une association (soit une simple association valuée, soit une collection) avec
+            Mapper une association (soit une simple association valuÃ©e, soit une collection) avec
             <literal>cascade="all"</literal> marque l'association comme une relation de style
-            <emphasis>parent/enfant</emphasis> où la sauvegarde/mise à jour/suppression du parent
-            entraîne la sauvegarde/mise à jour/suppression de l'enfant ou des enfants.
+            <emphasis>parent/enfant</emphasis> oÃ¹ la sauvegarde/mise Ã  jour/suppression du parent
+            entraÃ®ne la sauvegarde/mise Ã  jour/suppression de l'enfant ou des enfants.
         </para>
         <para>
-            En outre, une simple référence à un enfant d'un parent persistant aura pour conséquence
-            la sauvegarde/mise à jour de l'enfant. Cette métaphore est cependant incomplète. Un enfant
-            qui devient non référencé par son parent <emphasis>n'est pas</emphasis> automatiquement
-            supprimée, excepté dans le cas d'une association <literal>&lt;one-to-many&gt;</literal>
-            mappée avec <literal>cascade="delete-orphan"</literal>. La sémantique précise des opérations
+            En outre, une simple rÃ©fÃ©rence Ã  un enfant d'un parent persistant aura pour consÃ©quence
+            la sauvegarde/mise Ã  jour de l'enfant. Cette mÃ©taphore est cependant incomplÃ¨te. Un enfant
+            qui devient non rÃ©fÃ©rencÃ© par son parent <emphasis>n'est pas</emphasis> automatiquement
+            supprimÃ©e, exceptÃ© dans le cas d'une association <literal>&lt;one-to-many&gt;</literal>
+            mappÃ©e avec <literal>cascade="delete-orphan"</literal>. La sÃ©mantique prÃ©cise des opÃ©rations
             de cascade pour une relation parent/enfant est la suivante :
         </para>
 
        <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    Si un parent est passé à <literal>persist()</literal>, tous les enfant sont passés à
+                    Si un parent est passÃ© Ã  <literal>persist()</literal>, tous les enfant sont passÃ©s Ã 
                     <literal>persist()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un parent est passé à <literal>merge()</literal>, tous les enfants sont passés à
+                    Si un parent est passÃ© Ã  <literal>merge()</literal>, tous les enfants sont passÃ©s Ã 
                     <literal>merge()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un parent est passé à <literal>save()</literal>, <literal>update()</literal> ou
-                    <literal>saveOrUpdate()</literal>, tous les enfants sont passés à <literal>saveOrUpdate()</literal>
+                    Si un parent est passÃ© Ã  <literal>save()</literal>, <literal>update()</literal> ou
+                    <literal>saveOrUpdate()</literal>, tous les enfants sont passÃ©s Ã  <literal>saveOrUpdate()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un enfant détaché ou éphémère devient référencé par un parent persistant,
-                    il est passé à <literal>saveOrUpdate()</literal>
+                    Si un enfant dÃ©tachÃ© ou Ã©phÃ©mÃ¨re devient rÃ©fÃ©rencÃ© par un parent persistant,
+                    il est passÃ© Ã  <literal>saveOrUpdate()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un parent est supprimé, tous les enfants sont passés à <literal>delete()</literal>
+                    Si un parent est supprimÃ©, tous les enfants sont passÃ©s Ã  <literal>delete()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Si un enfant est déréférencé par un parent persistant, <emphasis>rien de spécial
-                    n'arrive</emphasis> - l'application devrait explicitement supprimer l'enfant si nécessaire -
-                    à moins que <literal>cascade="delete-orphan"</literal> soit paramétré,
-                    au quel cas l'enfant "orphelin" est supprimé.
+                    Si un enfant est dÃ©rÃ©fÃ©rencÃ© par un parent persistant, <emphasis>rien de spÃ©cial
+                    n'arrive</emphasis> - l'application devrait explicitement supprimer l'enfant si nÃ©cessaire -
+                    Ã  moins que <literal>cascade="delete-orphan"</literal> soit paramÃ©trÃ©,
+                    au quel cas l'enfant "orphelin" est supprimÃ©.
                 </para>
             </listitem>
         </itemizedlist>
 		
 		<para>
-            Enfin, la cascade des opérations peut être effectuée sur un graphe donné lors
-			de l'<emphasis>appel de l'opération</emphasis> or lors du <emphasis>flush</emphasis>
-			suivant. Toutes les opérations, lorsque cascadées, le sont sur toutes les entités
-			associées atteignables lorsque l'opétation est exécutée. Cependant 
-			<literal>save-upate</literal> et <literal>delete-orphan</literal> sont cascadées
-            à toutes les entités associées atteignables lors du flush de la 
+            Enfin, la cascade des opÃ©rations peut Ãªtre effectuÃ©e sur un graphe donnÃ© lors
+			de l'<emphasis>appel de l'opÃ©ration</emphasis> or lors du <emphasis>flush</emphasis>
+			suivant. Toutes les opÃ©rations, lorsque cascadÃ©es, le sont sur toutes les entitÃ©s
+			associÃ©es atteignables lorsque l'opÃ©tation est exÃ©cutÃ©e. Cependant 
+			<literal>save-upate</literal> et <literal>delete-orphan</literal> sont cascadÃ©es
+            Ã  toutes les entitÃ©s associÃ©es atteignables lors du flush de la 
             <literal>Session</literal>.
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-metadata">
-        <title>Utilisation des méta-données</title>
+        <title>Utilisation des mÃ©ta-donnÃ©es</title>
 
         <para>
-            Hibernate requiert un modèle de méta-niveau très riche de toutes les entités et types valués.
-            De temps en temps, ce modèle est très utile à l'application elle même. Par exemple,
-            l'application pourrait utiliser les méta-données d'Hibernate pour implémenter un algorithme
-            de copie en profondeur "intelligent" qui comprendrait quels objets devraient copiés
-            (par exemple les types de valeur mutables) et lesquels ne devraient pas l'être (par exemple
-            les types de valeurs immutables et, possiblement, les entités associées).
+            Hibernate requiert un modÃ¨le de mÃ©ta-niveau trÃ¨s riche de toutes les entitÃ©s et types valuÃ©s.
+            De temps en temps, ce modÃ¨le est trÃ¨s utile Ã  l'application elle mÃªme. Par exemple,
+            l'application pourrait utiliser les mÃ©ta-donnÃ©es d'Hibernate pour implÃ©menter un algorithme
+            de copie en profondeur "intelligent" qui comprendrait quels objets devraient copiÃ©s
+            (par exemple les types de valeur mutables) et lesquels ne devraient pas l'Ãªtre (par exemple
+            les types de valeurs immutables et, possiblement, les entitÃ©s associÃ©es).
         </para>
         <para>
-            Hibernate expose les méta-données via les interfaces <literal>ClassMetadata</literal>
-            et <literal>CollectionMetadata</literal> et la hiérarchie <literal>Type</literal>.
-            Les instances des interfaces de méta-données peuvent être obtenues à partir de la
+            Hibernate expose les mÃ©ta-donnÃ©es via les interfaces <literal>ClassMetadata</literal>
+            et <literal>CollectionMetadata</literal> et la hiÃ©rarchie <literal>Type</literal>.
+            Les instances des interfaces de mÃ©ta-donnÃ©es peuvent Ãªtre obtenues Ã  partir de la
             <literal>SessionFactory</literal>.
         </para>
 
@@ -1213,7 +1215,7 @@ Object[] propertyValues = catMeta.getPropertyValues(fritz);
 String[] propertyNames = catMeta.getPropertyNames();
 Type[] propertyTypes = catMeta.getPropertyTypes();
 
-// récupère une Map de toutes les propriétés qui ne sont pas des collections ou des associations
+// rÃ©cupÃ¨re une Map de toutes les propriÃ©tÃ©s qui ne sont pas des collections ou des associations
 Map namedValues = new HashMap();
 for ( int i=0; i<propertyNames.length; i++ ) {
     if ( !propertyTypes[i].isEntityType() && !propertyTypes[i].isCollectionType() ) {

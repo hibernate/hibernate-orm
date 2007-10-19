@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="collections">
     <title>Mapping des collections</title>
 
@@ -6,7 +8,7 @@
         <title>Collections persistantes</title>
 
         <para>
-            Hibernate requiert que les champs contenant des collections persistantes soient déclarés
+            Hibernate requiert que les champs contenant des collections persistantes soient dÃ©clarÃ©s
             comme des types d'interface, par exemple :
         </para>
 
@@ -21,21 +23,21 @@
 }]]></programlisting>
 
         <para>
-            L'interface réelle devrait être <literal>java.util.Set</literal>,
+            L'interface rÃ©elle devrait Ãªtre <literal>java.util.Set</literal>,
             <literal>java.util.Collection</literal>, <literal>java.util.List</literal>,
             <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>,
-            <literal>java.util.SortedMap</literal> ou ... n'importe quoi d'autre ! (Où
-            "n'importe quoi d'autre" signifie que vous devrez écrire une implémentation de
+            <literal>java.util.SortedMap</literal> ou ... n'importe quoi d'autre ! (OÃ¹
+            "n'importe quoi d'autre" signifie que vous devrez Ã©crire une implÃ©mentation de
             <literal>org.hibernate.usertype.UserCollectionType</literal>.)
         </para>
 
         <para>
-            Notez comment nous avons initialisé les variables d'instance avec une instance de
+            Notez comment nous avons initialisÃ© les variables d'instance avec une instance de
             <literal>HashSet</literal>. C'est le meilleur moyen pour initialiser les 
-            collections d'instances nouvellement créées (non persistantes). Quand
+            collections d'instances nouvellement crÃ©Ã©es (non persistantes). Quand
             nous fabriquons l'instance persistante - en appelant <literal>persist()</literal>,
-            par exemple - Hibernate remplacera réellement le <literal>HashSet</literal>
-            avec une instance d'une implémentation propre à Hibernate de <literal>Set</literal>.
+            par exemple - Hibernate remplacera rÃ©ellement le <literal>HashSet</literal>
+            avec une instance d'une implÃ©mentation propre Ã  Hibernate de <literal>Set</literal>.
             Prenez garde aux erreurs :
         </para>
 
@@ -50,7 +52,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 (HashSet) cat.getKittens(); // Erreur !]]></programlisting>
 
         <para>
-            Les collections persistantes injectées par Hibernate se comportent de la même manière que
+            Les collections persistantes injectÃ©es par Hibernate se comportent de la mÃªme maniÃ¨re que
             <literal>HashMap</literal>, <literal>HashSet</literal>,
             <literal>TreeMap</literal>, <literal>TreeSet</literal> ou
             <literal>ArrayList</literal>, selon le type de l'interface.
@@ -58,19 +60,19 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 
         <para>
             Les instances des collections ont le comportement habituel des types des valeurs.
-            Elles sont automatiquement persistées quand elles sont référencées par un objet persistant et
-            automatiquement effacées quand elles sont déréférencées. Si une collection est passée
-            d'un objet persistant à un autre, ses éléments pourraient être déplacés d'une table
-            à une autre. Deux entités ne peuvent pas partager une référence vers une même instance
-            d'une collection. Dû au modèle relationnel sous-jacent, les propriétés contenant des
-            collections ne supportent pas la sémantique de la valeur null ; Hibernate ne distingue pas
-            une référence vers une collection nulle d'une collection vide.
+            Elles sont automatiquement persistÃ©es quand elles sont rÃ©fÃ©rencÃ©es par un objet persistant et
+            automatiquement effacÃ©es quand elles sont dÃ©rÃ©fÃ©rencÃ©es. Si une collection est passÃ©e
+            d'un objet persistant Ã  un autre, ses Ã©lÃ©ments pourraient Ãªtre dÃ©placÃ©s d'une table
+            Ã  une autre. Deux entitÃ©s ne peuvent pas partager une rÃ©fÃ©rence vers une mÃªme instance
+            d'une collection. DÃ» au modÃ¨le relationnel sous-jacent, les propriÃ©tÃ©s contenant des
+            collections ne supportent pas la sÃ©mantique de la valeur null ; Hibernate ne distingue pas
+            une rÃ©fÃ©rence vers une collection nulle d'une collection vide.
         </para>
 
         <para>
-            Vous ne devriez pas vous préoccuper trop de ça. Utilisez les collections persistantes de
-            la même manière que vous utilisez des collections Java ordinaires. Assurez-vous
-            de comprendre la sémantique des associations bidirectionnelles (traitée plus loin).
+            Vous ne devriez pas vous prÃ©occuper trop de Ã§a. Utilisez les collections persistantes de
+            la mÃªme maniÃ¨re que vous utilisez des collections Java ordinaires. Assurez-vous
+            de comprendre la sÃ©mantique des associations bidirectionnelles (traitÃ©e plus loin).
         </para>
 
     </sect1>
@@ -79,9 +81,9 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
         <title>Mapper une collection</title>
 
         <para>
-            L'élément de mapping d'Hibernate utilisé pour mapper une collection dépend du type de
-            l'interface. Par exemple, un élément <literal>&lt;set&gt;</literal> est utilisé
-            pour mapper des propriétés de type <literal>Set</literal>.
+            L'Ã©lÃ©ment de mapping d'Hibernate utilisÃ© pour mapper une collection dÃ©pend du type de
+            l'interface. Par exemple, un Ã©lÃ©ment <literal>&lt;set&gt;</literal> est utilisÃ©
+            pour mapper des propriÃ©tÃ©s de type <literal>Set</literal>.
         </para>
 
         <programlisting><![CDATA[<class name="Product">
@@ -93,11 +95,11 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 </class>]]></programlisting>
 
         <para>
-            À part <literal>&lt;set&gt;</literal>, il y  aussi les éléments de mapping
+            Ã€ part <literal>&lt;set&gt;</literal>, il y  aussi les Ã©lÃ©ments de mapping
             <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>,
             <literal>&lt;bag&gt;</literal>, <literal>&lt;array&gt;</literal> et
             <literal>&lt;primitive-array&gt;</literal>.
-            L'élément <literal>&lt;map&gt;</literal> est représentatif :
+            L'Ã©lÃ©ment <literal>&lt;map&gt;</literal> est reprÃ©sentatif :
         </para>
 
         <programlistingco>
@@ -143,97 +145,97 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
             <calloutlist>
                 <callout arearefs="mappingcollection1">
                     <para>
-                        <literal>name</literal> : le nom de la propriété contenant la collection
+                        <literal>name</literal> : le nom de la propriÃ©tÃ© contenant la collection
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection2">
                     <para>
-                        <literal>table</literal> (optionnel - par défaut = nom de la propriété) : le
-                        nom de la table de la collection (non utilisé pour les associations one-to-many)
+                        <literal>table</literal> (optionnel - par dÃ©faut = nom de la propriÃ©tÃ©) : le
+                        nom de la table de la collection (non utilisÃ© pour les associations one-to-many)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection3">
                     <para>
-                        <literal>schema</literal> (optionnel) : le nom du schéma pour surcharger le
-                        schéma déclaré dans l'élément racine
+                        <literal>schema</literal> (optionnel) : le nom du schÃ©ma pour surcharger le
+                        schÃ©ma dÃ©clarÃ© dans l'Ã©lÃ©ment racine
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection4">
                     <para>
-                        <literal>lazy</literal> (optionnel - par défaut = <literal>true</literal>) :
-                        peut être utilisé pour désactiver l'initialisation tardive et spécifier
-                        que l'association est toujours rapportée, ou pour activer la
-                        récupération extra-paresseuse (NdT : extra-lazy) où la plupart des
-                        opérations n'initialisent pas la collection (approprié pour de très
+                        <literal>lazy</literal> (optionnel - par dÃ©faut = <literal>true</literal>) :
+                        peut Ãªtre utilisÃ© pour dÃ©sactiver l'initialisation tardive et spÃ©cifier
+                        que l'association est toujours rapportÃ©e, ou pour activer la
+                        rÃ©cupÃ©ration extra-paresseuse (NdT : extra-lazy) oÃ¹ la plupart des
+                        opÃ©rations n'initialisent pas la collection (appropriÃ© pour de trÃ¨s
                         grosses collections)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
                     <para>
-                        <literal>inverse</literal> (optionnel - par défaut = <literal>false</literal>) :
-                        définit cette collection comme l'extrêmité "inverse" de l'association
+                        <literal>inverse</literal> (optionnel - par dÃ©faut = <literal>false</literal>) :
+                        dÃ©finit cette collection comme l'extrÃªmitÃ© "inverse" de l'association
                         bidirectionnelle
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection6">
                     <para>
-                        <literal>cascade</literal> (optionnel - par défaut = <literal>none</literal>) :
-                        active les opérations de cascade vers les entités filles
+                        <literal>cascade</literal> (optionnel - par dÃ©faut = <literal>none</literal>) :
+                        active les opÃ©rations de cascade vers les entitÃ©s filles
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection7">
                     <para>
-                        <literal>sort</literal> (optionnel) : spécifie une collection triée via un ordre
-                        de tri <literal>naturel</literal>, ou via une classe comparateur donnée (implémentant Comparator)
+                        <literal>sort</literal> (optionnel) : spÃ©cifie une collection triÃ©e via un ordre
+                        de tri <literal>naturel</literal>, ou via une classe comparateur donnÃ©e (implÃ©mentant Comparator)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection8">
                     <para>
-                        <literal>order-by</literal> (optionnel, seulement à partir du JDK1.4) :
-                        spécifie une colonne de table
-                        (ou des colonnes) qui définit l'ordre d'itération de <literal>Map</literal>, <literal>Set</literal>
+                        <literal>order-by</literal> (optionnel, seulement Ã  partir du JDK1.4) :
+                        spÃ©cifie une colonne de table
+                        (ou des colonnes) qui dÃ©finit l'ordre d'itÃ©ration de <literal>Map</literal>, <literal>Set</literal>
                         ou Bag, avec en option <literal>asc</literal> ou <literal>desc</literal>
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection9">
                     <para>
-                        <literal>where</literal> (optionnel) : spécifie une condition SQL arbitraire <literal>WHERE</literal>
-                        à utiliser au chargement ou à la suppression d'une collection (utile si la collection
-                        ne doit contenir qu'un sous ensemble des données disponibles)
+                        <literal>where</literal> (optionnel) : spÃ©cifie une condition SQL arbitraire <literal>WHERE</literal>
+                        Ã  utiliser au chargement ou Ã  la suppression d'une collection (utile si la collection
+                        ne doit contenir qu'un sous ensemble des donnÃ©es disponibles)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection10">
                     <para>
-                        <literal>fetch</literal> (optionnel, par défaut = <literal>select</literal>) :
-                        à choisir entre récupération par jointures externes, récupération par
-                        selects séquentiels, et récupération par sous-selects séquentiels
+                        <literal>fetch</literal> (optionnel, par dÃ©faut = <literal>select</literal>) :
+                        Ã  choisir entre rÃ©cupÃ©ration par jointures externes, rÃ©cupÃ©ration par
+                        selects sÃ©quentiels, et rÃ©cupÃ©ration par sous-selects sÃ©quentiels
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">
                     <para>
-                        <literal>batch-size</literal> (optionnel, par défaut = <literal>1</literal>) : une taille
-                        de batch (batch size) utilisée pour charger plusieurs instances de cette collection en
+                        <literal>batch-size</literal> (optionnel, par dÃ©faut = <literal>1</literal>) : une taille
+                        de batch (batch size) utilisÃ©e pour charger plusieurs instances de cette collection en
                         initialisation tardive
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection12">
                     <para>
-                        <literal>access</literal> (optionnel - par défaut = <literal>property</literal>) : La
-                        stratégie qu'Hibernate doit utiliser pour accéder à la valeur de la propriété
+                        <literal>access</literal> (optionnel - par dÃ©faut = <literal>property</literal>) : La
+                        stratÃ©gie qu'Hibernate doit utiliser pour accÃ©der Ã  la valeur de la propriÃ©tÃ©
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection13">
                     <para>
-                        <literal>optimistic-lock</literal> (optionnel - par défaut = <literal>true</literal>) :
-                        spécifie que changer l'état de la collection entraîne l'incrémentation
-                        de la version appartenant à l'entité (Pour une association un vers plusieurs,
-                        il est souvent raisonnable de désactiver ce paramètre)
+                        <literal>optimistic-lock</literal> (optionnel - par dÃ©faut = <literal>true</literal>) :
+                        spÃ©cifie que changer l'Ã©tat de la collection entraÃ®ne l'incrÃ©mentation
+                        de la version appartenant Ã  l'entitÃ© (Pour une association un vers plusieurs,
+                        il est souvent raisonnable de dÃ©sactiver ce paramÃ¨tre)
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection14">
                     <para>
-                        <literal>mutable</literal> (optionnel - par défaut = <literal>true</literal>) :
-                        une valeur à <literal>false</literal> spécifie que les éléments de la
+                        <literal>mutable</literal> (optionnel - par dÃ©faut = <literal>true</literal>) :
+                        une valeur Ã  <literal>false</literal> spÃ©cifie que les Ã©lÃ©ments de la
                         collection ne changent jamais (une optimisation mineure dans certains cas)
                     </para>
                 </callout>
@@ -241,74 +243,74 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
         </programlistingco>
 
         <sect2 id="collections-foreignkeys" >
-           <title>Les clefs étrangères d'une collection</title>
+           <title>Les clefs Ã©trangÃ¨res d'une collection</title>
 
             <para>
-                Les instances d'une collection sont distinguées dans la base par la clef étrangère
-                de l'entité qui possède la collection. Cette clef étrangère est référencée comme la(es)
+                Les instances d'une collection sont distinguÃ©es dans la base par la clef Ã©trangÃ¨re
+                de l'entitÃ© qui possÃ¨de la collection. Cette clef Ã©trangÃ¨re est rÃ©fÃ©rencÃ©e comme la(es)
                 <emphasis>colonne(s) de la clef de la collection</emphasis> de la table de la collection.
-                La colonne de la clef de la collection est mappée par l'élément <literal>&lt;key&gt;</literal>.
+                La colonne de la clef de la collection est mappÃ©e par l'Ã©lÃ©ment <literal>&lt;key&gt;</literal>.
             </para>
 
             <para>
-                Il peut y avoir une contrainte de nullité sur la colonne de la clef étrangère. Pour les
-                associations unidirectionnelles un vers plusieurs, la colonne de la clef étrangère
-                peut être nulle par défaut, donc vous pourriez avoir besoin de spécifier
+                Il peut y avoir une contrainte de nullitÃ© sur la colonne de la clef Ã©trangÃ¨re. Pour les
+                associations unidirectionnelles un vers plusieurs, la colonne de la clef Ã©trangÃ¨re
+                peut Ãªtre nulle par dÃ©faut, donc vous pourriez avoir besoin de spÃ©cifier
                 <literal>not-null="true"</literal>.
             </para>
 
             <programlisting><![CDATA[<key column="productSerialNumber" not-null="true"/>]]></programlisting>
 
             <para>
-                La contraite de la clef étrangère peut utiliser <literal>ON DELETE CASCADE</literal>.
+                La contraite de la clef Ã©trangÃ¨re peut utiliser <literal>ON DELETE CASCADE</literal>.
             </para>
 
             <programlisting><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
 
             <para>
-                Voir le chapitre précédent pour une définition complète de l'élément <literal>&lt;key&gt;</literal>.
+                Voir le chapitre prÃ©cÃ©dent pour une dÃ©finition complÃ¨te de l'Ã©lÃ©ment <literal>&lt;key&gt;</literal>.
             </para>
 
         </sect2>
 
         <sect2 id="collections-elements" >
-            <title>Les éléments d'une collection</title>
+            <title>Les Ã©lÃ©ments d'une collection</title>
 
             <para>
                 Les collections peuvent contenir la plupart des autres types Hibernate, dont tous les types
-                basiques, les types utilisateur, les composants, et bien sûr, les références vers
-                d'autres entités. C'est une distinction importante : un objet dans une collection
-                pourrait être géré avec une sémantique de "valeur" (sa durée de vie dépend complètement
-                du propriétaire de la collection) ou il pourrait avoir une référence vers une autre
-                entité, avec sa propre durée de vie. Dans le dernier cas, seul le "lien" entre les 2 objets
-                est considéré être l'état retenu par la collection.
+                basiques, les types utilisateur, les composants, et bien sÃ»r, les rÃ©fÃ©rences vers
+                d'autres entitÃ©s. C'est une distinction importante : un objet dans une collection
+                pourrait Ãªtre gÃ©rÃ© avec une sÃ©mantique de "valeur" (sa durÃ©e de vie dÃ©pend complÃ¨tement
+                du propriÃ©taire de la collection) ou il pourrait avoir une rÃ©fÃ©rence vers une autre
+                entitÃ©, avec sa propre durÃ©e de vie. Dans le dernier cas, seul le "lien" entre les 2 objets
+                est considÃ©rÃ© Ãªtre l'Ã©tat retenu par la collection.
             </para>
 
             <para>
-                Le type contenu est référencé comme le <emphasis>type de l'élément de la collection</emphasis>.
-                Les éléments de la collections sont mappés par <literal>&lt;element&gt;</literal> ou
-                <literal>&lt;composite-element&gt;</literal>, ou dans le cas des références d'entité, avec
+                Le type contenu est rÃ©fÃ©rencÃ© comme le <emphasis>type de l'Ã©lÃ©ment de la collection</emphasis>.
+                Les Ã©lÃ©ments de la collections sont mappÃ©s par <literal>&lt;element&gt;</literal> ou
+                <literal>&lt;composite-element&gt;</literal>, ou dans le cas des rÃ©fÃ©rences d'entitÃ©, avec
                 <literal>&lt;one-to-many&gt;</literal> ou <literal>&lt;many-to-many&gt;</literal>.
-                Les deux premiers mappent des éléments avec un sémantique de valeur, les deux suivants sont
-                utilisés pour mapper des associations d'entité.
+                Les deux premiers mappent des Ã©lÃ©ments avec un sÃ©mantique de valeur, les deux suivants sont
+                utilisÃ©s pour mapper des associations d'entitÃ©.
             </para>
 
         </sect2>
 
         <sect2 id="collections-indexed">
-            <title>Collections indexées</title>
+            <title>Collections indexÃ©es</title>
 
             <para>
-                Tous les mappings de collection, exceptés ceux avec les sémantiques d'ensemble (NdT : set) et
+                Tous les mappings de collection, exceptÃ©s ceux avec les sÃ©mantiques d'ensemble (NdT : set) et
                 de sac (NdT : bag), ont besoin d'une <emphasis>colonne d'index</emphasis> dans la
                 table de la collection - une colonne qui mappe un index de tableau, ou un index de
                 <literal>List</literal>, ou une clef de <literal>Map</literal>. L'index d'une
-                <literal>Map</literal> peut être n'importe quel type basique, mappé avec
-                <literal>&lt;map-key&gt;</literal>, ça peut être une référence d'entité mappée avec
-                <literal>&lt;map-key-many-to-many&gt;</literal>, ou ça peut être un type composé, mappé avec
+                <literal>Map</literal> peut Ãªtre n'importe quel type basique, mappÃ© avec
+                <literal>&lt;map-key&gt;</literal>, Ã§a peut Ãªtre une rÃ©fÃ©rence d'entitÃ© mappÃ©e avec
+                <literal>&lt;map-key-many-to-many&gt;</literal>, ou Ã§a peut Ãªtre un type composÃ©, mappÃ© avec
                 <literal>&lt;composite-map-key&gt;</literal>. L'index d'un tableau ou d'une liste est toujours
-                de type <literal>integer</literal> et est mappé en utilisant l'élément <literal>&lt;list-index&gt;</literal>.
-                Les colonnes mappées contiennent des entiers séquentiels (numérotés à partir de zéro par défaut).
+                de type <literal>integer</literal> et est mappÃ© en utilisant l'Ã©lÃ©ment <literal>&lt;list-index&gt;</literal>.
+                Les colonnes mappÃ©es contiennent des entiers sÃ©quentiels (numÃ©rotÃ©s Ã  partir de zÃ©ro par dÃ©faut).
             </para>
 
         <programlistingco>
@@ -327,8 +329,8 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
                 </callout>
                 <callout arearefs="index1">
                     <para>
-                        <literal>base</literal> (optionnel, par défaut = <literal>0</literal>) : la valeur
-                        de la colonne de l'index qui correspond au premier élément de la liste ou du tableau
+                        <literal>base</literal> (optionnel, par dÃ©faut = <literal>0</literal>) : la valeur
+                        de la colonne de l'index qui correspond au premier Ã©lÃ©ment de la liste ou du tableau
                     </para>
                 </callout>
             </calloutlist>
@@ -356,7 +358,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
                 <callout arearefs="mapkey2">
                     <para>
                         <literal>formula</literal> (optionnel) :
-                        une formule SQL utilisée pour évaluer la clef de la map
+                        une formule SQL utilisÃ©e pour Ã©valuer la clef de la map
                     </para>
                 </callout>
                 <callout arearefs="mapkey3">
@@ -382,35 +384,35 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
                 <callout arearefs="indexmanytomany1">
                     <para>
                         <literal>column</literal> (optionnel) :
-                        le nom de la colonne de la clef étrangère pour les valeurs de l'index de la collection
+                        le nom de la colonne de la clef Ã©trangÃ¨re pour les valeurs de l'index de la collection
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany2">
                     <para>
                         <literal>formula</literal> (optionnel) :
-                        une formulre SQL utilisée pour évaluer la clef étrangère de la clef de la map
+                        une formulre SQL utilisÃ©e pour Ã©valuer la clef Ã©trangÃ¨re de la clef de la map
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany3">
                     <para>
-                        <literal>class</literal> (requis): la classe de l'entité utilisée comme clef de la map
+                        <literal>class</literal> (requis): la classe de l'entitÃ© utilisÃ©e comme clef de la map
                     </para>
                 </callout>
             </calloutlist>
         </programlistingco>
             <para>
-                Si votre table n'a pas de colonne d'index, et que vous souhaitez tout de même utiliser
-                <literal>List</literal> comme type de propriété, vous devriez mapper la propriété comme un
+                Si votre table n'a pas de colonne d'index, et que vous souhaitez tout de mÃªme utiliser
+                <literal>List</literal> comme type de propriÃ©tÃ©, vous devriez mapper la propriÃ©tÃ© comme un
                 <emphasis>&lt;bag&gt;</emphasis> Hibernate. Un sac (NdT : bag) ne garde pas son ordre quand
-                il est récupéré de la base de données, mais il peut être optionnellement trié ou ordonné.
+                il est rÃ©cupÃ©rÃ© de la base de donnÃ©es, mais il peut Ãªtre optionnellement triÃ© ou ordonnÃ©.
             </para>
 
         </sect2>
 
         <para>
-            Il y a pas mal de variétés de mappings qui peuvent être générés pour les collections,
-            couvrant beaucoup des modèles relationnels communs. Nous vous suggérons d'expérimenter avec l'outil de
-            génération de schéma pour avoir une idée de comment traduire les différentes déclarations de mapping vers des table de la base de données.
+            Il y a pas mal de variÃ©tÃ©s de mappings qui peuvent Ãªtre gÃ©nÃ©rÃ©s pour les collections,
+            couvrant beaucoup des modÃ¨les relationnels communs. Nous vous suggÃ©rons d'expÃ©rimenter avec l'outil de
+            gÃ©nÃ©ration de schÃ©ma pour avoir une idÃ©e de comment traduire les diffÃ©rentes dÃ©clarations de mapping vers des table de la base de donnÃ©es.
         </para>
 
     <sect2 id="collections-ofvalues" revision="2">
@@ -418,8 +420,8 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 
         <para>
             N'importe quelle collection de valeurs ou association plusieurs-vers-plusieurs requiert une
-            <emphasis>table de collection</emphasis> avec une(des) colonne(s) de clef étrangère, une(des)
-            <emphasis>colonne(s) d'élément de la collection</emphasis> ou des colonnes et possiblement
+            <emphasis>table de collection</emphasis> avec une(des) colonne(s) de clef Ã©trangÃ¨re, une(des)
+            <emphasis>colonne(s) d'Ã©lÃ©ment de la collection</emphasis> ou des colonnes et possiblement
             une(des) colonne(s) d'index.
         </para>
 
@@ -447,25 +449,25 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
             <calloutlist>
                 <callout arearefs="element1b">
                     <para>
-                        <literal>column</literal> (optionnel) : le nom de la colonne contenant les valeurs de l'élément de la collection
+                        <literal>column</literal> (optionnel) : le nom de la colonne contenant les valeurs de l'Ã©lÃ©ment de la collection
                     </para>
                 </callout>
                 <callout arearefs="element2b">
                     <para>
-                        <literal>formula</literal> (optionnel) : une formule SQL utilisée pour évaluer l'élément
+                        <literal>formula</literal> (optionnel) : une formule SQL utilisÃ©e pour Ã©valuer l'Ã©lÃ©ment
                     </para>
                 </callout>
                 <callout arearefs="element3b">
                     <para>
-                        <literal>type</literal> (requis) : le type de l'élément de la collection
+                        <literal>type</literal> (requis) : le type de l'Ã©lÃ©ment de la collection
                     </para>
                 </callout>
             </calloutlist>
         </programlistingco>
 
         <para>
-            Une <emphasis>association plusieurs-vers-plusieurs</emphasis> est spécifiée en
-            utilisant l'élément <literal>&lt;many-to-many&gt;</literal>.
+            Une <emphasis>association plusieurs-vers-plusieurs</emphasis> est spÃ©cifiÃ©e en
+            utilisant l'Ã©lÃ©ment <literal>&lt;many-to-many&gt;</literal>.
         </para>
 
         <programlistingco>
@@ -494,63 +496,63 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
             <calloutlist>
                 <callout arearefs="manytomany1">
                     <para>
-                        <literal>column</literal> (optionnel) : le nom de la colonne de la clef étrangère de l'élément
+                        <literal>column</literal> (optionnel) : le nom de la colonne de la clef Ã©trangÃ¨re de l'Ã©lÃ©ment
                     </para>
                 </callout>
                 <callout arearefs="manytomany2">
                     <para>
                         <literal>formula</literal> (optionnel) :
-                        une formule SQL utilisée pour évaluer la valeur de la clef étrangère de l'élément
+                        une formule SQL utilisÃ©e pour Ã©valuer la valeur de la clef Ã©trangÃ¨re de l'Ã©lÃ©ment
                     </para>
                 </callout>
                 <callout arearefs="manytomany3">
                     <para>
-                        <literal>class</literal> (requis) : le nom de la classe associée
+                        <literal>class</literal> (requis) : le nom de la classe associÃ©e
                     </para>
                 </callout>
                 <callout arearefs="manytomany4">
                     <para>
-                        <literal>fetch</literal> (optionnel - par défaut <literal>join</literal>) :
-                        active les récupérations par jointures externes ou par selects séquentiels pour cette association.
-                        C'est un cas spécial ; pour une récupération complète sans attente (dans un seul <literal>SELECT</literal>) d'une
-                        entité et de ses relations plusieurs-vers-plusieurs vers d'autres entités,
-                        vous devriez activer la récupération <literal>join</literal> non seulement sur
-                        la collection elle-même, mais aussi avec cet attribut sur l'élément imbriqué
+                        <literal>fetch</literal> (optionnel - par dÃ©faut <literal>join</literal>) :
+                        active les rÃ©cupÃ©rations par jointures externes ou par selects sÃ©quentiels pour cette association.
+                        C'est un cas spÃ©cial ; pour une rÃ©cupÃ©ration complÃ¨te sans attente (dans un seul <literal>SELECT</literal>) d'une
+                        entitÃ© et de ses relations plusieurs-vers-plusieurs vers d'autres entitÃ©s,
+                        vous devriez activer la rÃ©cupÃ©ration <literal>join</literal> non seulement sur
+                        la collection elle-mÃªme, mais aussi avec cet attribut sur l'Ã©lÃ©ment imbriquÃ©
                         <literal>&lt;many-to-many&gt;</literal>.
                     </para>
                 </callout>
                 <callout arearefs="manytomany5">
                     <para>
-                        <literal>unique</literal> (optionnel) : activer la génération DDL d'une
-                        contrainte d'unicité pour la colonne de la clef étrangère. Ça rend la pluralité
+                        <literal>unique</literal> (optionnel) : activer la gÃ©nÃ©ration DDL d'une
+                        contrainte d'unicitÃ© pour la colonne de la clef Ã©trangÃ¨re. Ã‡a rend la pluralitÃ©
                         de l'association effectivement un-vers-plusieurs.
                     </para>
                 </callout>
 	            <callout arearefs="manytomany6">
 	                <para>
-	                    <literal>not-found</literal> (optionnel - par défaut <literal>exception</literal>) :
-                            spécifie comment les clefs étrangères qui référencent la lignes
-                            manquantes seront gérées : <literal>ignore</literal> traitera
+	                    <literal>not-found</literal> (optionnel - par dÃ©faut <literal>exception</literal>) :
+                            spÃ©cifie comment les clefs Ã©trangÃ¨res qui rÃ©fÃ©rencent la lignes
+                            manquantes seront gÃ©rÃ©es : <literal>ignore</literal> traitera
                             une ligne manquante comme une association nulle.
 	                </para>
 	            </callout>
                 <callout arearefs="manytomany7">
                     <para>
-                        <literal>entity-name</literal> (optionnel) : le nom de l'entité de la classe associée, comme une alternative à <literal>class</literal>
+                        <literal>entity-name</literal> (optionnel) : le nom de l'entitÃ© de la classe associÃ©e, comme une alternative Ã  <literal>class</literal>
                     </para>
                 </callout>
                 <callout arearefs="manytomany8">
                     <para>
-                        <literal>property-ref</literal> (optionnel) : le nom d'une propriété de
-                        la classe associée qui est jointe à cette clef étrangère. Si non spécifiée,
-                        la clef primaire de la classe associée est utilisée.
+                        <literal>property-ref</literal> (optionnel) : le nom d'une propriÃ©tÃ© de
+                        la classe associÃ©e qui est jointe Ã  cette clef Ã©trangÃ¨re. Si non spÃ©cifiÃ©e,
+                        la clef primaire de la classe associÃ©e est utilisÃ©e.
                     </para>
                 </callout>
             </calloutlist>
         </programlistingco>
 
         <para>
-            Quelques exemples, d'abord, un ensemble de chaînes de caractères :
+            Quelques exemples, d'abord, un ensemble de chaÃ®nes de caractÃ¨res :
         </para>
 
         <programlisting><![CDATA[<set name="names" table="person_names">
@@ -559,7 +561,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 </set>]]></programlisting>
 
         <para>
-            Un bag contenant des entiers (avec un ordre d'itération déterminé par l'attribut <literal>order-by</literal>) :
+            Un bag contenant des entiers (avec un ordre d'itÃ©ration dÃ©terminÃ© par l'attribut <literal>order-by</literal>) :
         </para>
 
         <programlisting><![CDATA[<bag name="sizes"
@@ -570,7 +572,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 </bag>]]></programlisting>
 
         <para>
-            Un tableau d'entités - dans ce cas, une association plusieurs-vers-plusieurs :
+            Un tableau d'entitÃ©s - dans ce cas, une association plusieurs-vers-plusieurs :
         </para>
 
         <programlisting><![CDATA[<array name="addresses"
@@ -582,7 +584,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 </array>]]></programlisting>
 
         <para>
-            Une map de chaînes de caractères vers des dates :
+            Une map de chaÃ®nes de caractÃ¨res vers des dates :
         </para>
 
         <programlisting><![CDATA[<map name="holidays"
@@ -616,26 +618,26 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 
         <para>
             Une <emphasis>association un vers plusieurs</emphasis> lie les tables de deux classes
-            par une clef étrangère, sans l'intervention d'une table de collection. Ce mapping perd certaines sémantiques des collections Java normales :
+            par une clef Ã©trangÃ¨re, sans l'intervention d'une table de collection. Ce mapping perd certaines sÃ©mantiques des collections Java normales :
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    Une instance de la classe de l'entité contenue ne peut pas appartenir à plus d'une
+                    Une instance de la classe de l'entitÃ© contenue ne peut pas appartenir Ã  plus d'une
                     instance de la collection
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Une instance de la classe de l'entité contenue ne peut pas apparaître plus plus d'une valeur d'index de la collection
+                    Une instance de la classe de l'entitÃ© contenue ne peut pas apparaÃ®tre plus plus d'une valeur d'index de la collection
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
             Une association de <literal>Product</literal> vers <literal>Part</literal> requiert l'existence d'une
-            clef étrangère et possiblement une colonne d'index pour la table <literal>Part</literal>. Une balise
+            clef Ã©trangÃ¨re et possiblement une colonne d'index pour la table <literal>Part</literal>. Une balise
             <literal>&lt;one-to-many&gt;</literal> indique que c'est une association un vers plusieurs.
         </para>
 
@@ -655,41 +657,41 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
             <calloutlist>
                 <callout arearefs="onetomany1">
                     <para>
-                        <literal>class</literal> (requis) : le nom de la classe associée
+                        <literal>class</literal> (requis) : le nom de la classe associÃ©e
                     </para>
                 </callout>
                 <callout arearefs="onetomany2">
                     <para>
-                        <literal>not-found</literal> (optionnel - par défaut <literal>exception</literal>) :
-                        spécifie comment les identifiants cachés qui référencent des lignes manquantes seront gérés :
+                        <literal>not-found</literal> (optionnel - par dÃ©faut <literal>exception</literal>) :
+                        spÃ©cifie comment les identifiants cachÃ©s qui rÃ©fÃ©rencent des lignes manquantes seront gÃ©rÃ©s :
                         <literal>ignore</literal> traitera une ligne manquante comme une association nulle
                     </para>
                 </callout>
                 <callout arearefs="onetomany3">
                     <para>
-                        <literal>entity-name</literal> (optionnel) : le nom de l'entité de la
-                        classe associée, comme une alternative à <literal>class</literal>.
+                        <literal>entity-name</literal> (optionnel) : le nom de l'entitÃ© de la
+                        classe associÃ©e, comme une alternative Ã  <literal>class</literal>.
                     </para>
                 </callout>
             </calloutlist>
        </programlistingco>
 
         <para>
-            Notez que l'élément <literal>&lt;one-to-many&gt;</literal> n'a pas besoin de déclarer de colonnes. Il n'est pas non plus nécessaire de spécifier le nom de la table nulle part.
+            Notez que l'Ã©lÃ©ment <literal>&lt;one-to-many&gt;</literal> n'a pas besoin de dÃ©clarer de colonnes. Il n'est pas non plus nÃ©cessaire de spÃ©cifier le nom de la table nulle part.
         </para>
 
         <para>
-            <emphasis>Note très importante :</emphasis> si la colonne de la clef d'une association
-            <literal>&lt;one-to-many&gt;</literal> est déclarée <literal>NOT NULL</literal>, vous devez déclarer le
+            <emphasis>Note trÃ¨s importante :</emphasis> si la colonne de la clef d'une association
+            <literal>&lt;one-to-many&gt;</literal> est dÃ©clarÃ©e <literal>NOT NULL</literal>, vous devez dÃ©clarer le
             mapping de <literal>&lt;key&gt;</literal> avec <literal>not-null="true"</literal> ou
             <emphasis>utiliser une association bidirectionnelle</emphasis> avec le mapping de la
-            collection marqué <literal>inverse="true"</literal>. Voir la discussion sur les associations bidirectionnelles plus tard dans ce chapitre.
+            collection marquÃ© <literal>inverse="true"</literal>. Voir la discussion sur les associations bidirectionnelles plus tard dans ce chapitre.
         </para>
 
         <para>
-            Cet exemple montre une map d'entités <literal>Part</literal> par nom (où
-            <literal>partName</literal> est une propriété persistante de <literal>Part</literal>).
-            Notez l'utilisation d'un index basé sur une formule.
+            Cet exemple montre une map d'entitÃ©s <literal>Part</literal> par nom (oÃ¹
+            <literal>partName</literal> est une propriÃ©tÃ© persistante de <literal>Part</literal>).
+            Notez l'utilisation d'un index basÃ© sur une formule.
         </para>
 
         <programlisting><![CDATA[<map name="parts"
@@ -703,14 +705,14 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
     </sect1>
 
     <sect1 id="collections-advancedmappings">
-        <title>Mappings de collection avancés</title>
+        <title>Mappings de collection avancÃ©s</title>
 
     <sect2 id="collections-sorted" revision="2">
-        <title>Collections triées</title>
+        <title>Collections triÃ©es</title>
 
         <para>
-            Hibernate supporte des collections implémentant <literal>java.util.SortedMap</literal> et
-            <literal>java.util.SortedSet</literal>. Vous devez spécifier un comparateur dans le fichier de mapping :
+            Hibernate supporte des collections implÃ©mentant <literal>java.util.SortedMap</literal> et
+            <literal>java.util.SortedSet</literal>. Vous devez spÃ©cifier un comparateur dans le fichier de mapping :
         </para>
 
         <programlisting><![CDATA[<set name="aliases"
@@ -728,21 +730,21 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 
         <para>
             Les valeurs permises pour l'attribut <literal>sort</literal> sont <literal>unsorted</literal>,
-            <literal>natural</literal> et le nom d'une classe implémentant
+            <literal>natural</literal> et le nom d'une classe implÃ©mentant
             <literal>java.util.Comparator</literal>.
         </para>
 
         <para>
-            Les collections triées se comportent réellement comme <literal>java.util.TreeSet</literal> ou
+            Les collections triÃ©es se comportent rÃ©ellement comme <literal>java.util.TreeSet</literal> ou
             <literal>java.util.TreeMap</literal>.
         </para>
 
         <para>
-            Si vous voulez que la base de données elle-même ordonne les éléments de la collection, utilisez l'attribut
+            Si vous voulez que la base de donnÃ©es elle-mÃªme ordonne les Ã©lÃ©ments de la collection, utilisez l'attribut
             <literal>order-by</literal> des mappings <literal>set</literal>, <literal>bag</literal>
-            ou <literal>map</literal>. Cette solution est seulement disponible à partir du JDK 1.4 (c'est
-            implémenté en utilisant <literal>LinkedHashSet</literal> ou
-            <literal>LinkedHashMap</literal>). Ceci exécute le tri dans la requête SQL, pas en mémoire.
+            ou <literal>map</literal>. Cette solution est seulement disponible Ã  partir du JDK 1.4 (c'est
+            implÃ©mentÃ© en utilisant <literal>LinkedHashSet</literal> ou
+            <literal>LinkedHashMap</literal>). Ceci exÃ©cute le tri dans la requÃªte SQL, pas en mÃ©moire.
         </para>
 
         <programlisting><![CDATA[<set name="aliases" table="person_aliases" order-by="lower(name) asc">
@@ -761,7 +763,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
         </para>
 
         <para>
-            Les associations peuvent même être triées sur des critères arbitraires à l'exécution en utilisant un <literal>filter()</literal> de collection.
+            Les associations peuvent mÃªme Ãªtre triÃ©es sur des critÃ¨res arbitraires Ã  l'exÃ©cution en utilisant un <literal>filter()</literal> de collection.
         </para>
 
         <programlisting><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
@@ -772,14 +774,14 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
         <title>Associations bidirectionnelles</title>
 
         <para>
-            Une <emphasis>association bidirectionnelle</emphasis> permet une navigation à
-            partir de la "fin" de l'association. Deux sortes d'associations bidirectionnelles sont supportées :
+            Une <emphasis>association bidirectionnelle</emphasis> permet une navigation Ã 
+            partir de la "fin" de l'association. Deux sortes d'associations bidirectionnelles sont supportÃ©es :
             <variablelist>
                 <varlistentry>
                     <term>un-vers-plusieurs (NdT : one-to-many)</term>
                     <listitem>
                         <para>
-                            ensemble ou sac à une extrémité, une seule valeur à l'autre
+                            ensemble ou sac Ã  une extrÃ©mitÃ©, une seule valeur Ã  l'autre
                         </para>
                     </listitem>
                 </varlistentry>
@@ -787,7 +789,7 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
                     <term>plusieurs-vers-plusieurs (NdT : many-to-many)</term>
                     <listitem>
                         <para>
-                            ensemble ou sac aux deux extrémités
+                            ensemble ou sac aux deux extrÃ©mitÃ©s
                         </para>
                     </listitem>
                 </varlistentry>
@@ -795,13 +797,13 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
         </para>
 
         <para>
-            Vous pouvez spécifier une association plusieurs-vers-plusieurs bidirectionnelle simplement
-            en mappant deux associations plusieurs-vers-plusieurs vers la même table de base de données et en déclarant une extrémité comme <emphasis>inverse</emphasis> (celle de votre choix, mais ça ne peut pas être une collection indexée).
+            Vous pouvez spÃ©cifier une association plusieurs-vers-plusieurs bidirectionnelle simplement
+            en mappant deux associations plusieurs-vers-plusieurs vers la mÃªme table de base de donnÃ©es et en dÃ©clarant une extrÃ©mitÃ© comme <emphasis>inverse</emphasis> (celle de votre choix, mais Ã§a ne peut pas Ãªtre une collection indexÃ©e).
         </para>
 
         <para>
-            Voici un exemple d'association bidirectionnelle plusieurs-vers-plusieurs ; chaque catégorie peut
-            avoir plusieurs objets et chaque objet peut être dans plusieurs catégories :
+            Voici un exemple d'association bidirectionnelle plusieurs-vers-plusieurs ; chaque catÃ©gorie peut
+            avoir plusieurs objets et chaque objet peut Ãªtre dans plusieurs catÃ©gories :
         </para>
 
         <programlisting><![CDATA[<class name="Category">
@@ -825,28 +827,28 @@ kittens = cat.getKittens(); // Ok, la collection kittens est un Set
 </class>]]></programlisting>
 
         <para>
-            Les changements faits uniquement sur l'extréminté inverse de l'association <emphasis>ne sont pas</emphasis>
-            persistés. Ceci signifie qu'Hibernate a deux représentations en mémoire pour chaque
+            Les changements faits uniquement sur l'extrÃ©mintÃ© inverse de l'association <emphasis>ne sont pas</emphasis>
+            persistÃ©s. Ceci signifie qu'Hibernate a deux reprÃ©sentations en mÃ©moire pour chaque
             association bidirectionnelles, un lien de A vers B et un autre de B vers A. C'est
-            plus facile à comprendre si vous pensez au modèle objet de Java et comment nous
-            créons une relation plusieurs-vers-plusieurs en Java :
+            plus facile Ã  comprendre si vous pensez au modÃ¨le objet de Java et comment nous
+            crÃ©ons une relation plusieurs-vers-plusieurs en Java :
         </para>
 
         <programlisting><![CDATA[
-category.getItems().add(item);          // La catégorie est maintenant "au courant" de la relation
+category.getItems().add(item);          // La catÃ©gorie est maintenant "au courant" de la relation
 item.getCategories().add(category);     // L'objet est maintenant "au courant" de la relation
 
-session.persist(item);                   // La relation ne sera pas sauvegardée !
-session.persist(category);               // La relation sera sauvegardée]]></programlisting>
+session.persist(item);                   // La relation ne sera pas sauvegardÃ©e !
+session.persist(category);               // La relation sera sauvegardÃ©e]]></programlisting>
 
         <para>
-            La partie non-inverse est utilisée pour sauvegarder la représentation en mémoire dans la base de données.
+            La partie non-inverse est utilisÃ©e pour sauvegarder la reprÃ©sentation en mÃ©moire dans la base de donnÃ©es.
         </para>
 
         <para>
-            Vous pouvez définir une association un-vers-plusieurs bidirectionnelle en mappant une
-            association un-vers-plusieurs vers la(es) même(s) colonne(s) de table qu'une association
-            plusieurs-vers-un et en déclarant l'extrémité pluri-valuée <literal>inverse="true"</literal>.
+            Vous pouvez dÃ©finir une association un-vers-plusieurs bidirectionnelle en mappant une
+            association un-vers-plusieurs vers la(es) mÃªme(s) colonne(s) de table qu'une association
+            plusieurs-vers-un et en dÃ©clarant l'extrÃ©mitÃ© pluri-valuÃ©e <literal>inverse="true"</literal>.
         </para>
 
         <programlisting><![CDATA[<class name="Parent">
@@ -868,19 +870,19 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
 </class>]]></programlisting>
 
         <para>
-            Mapper une extrémité d'une association avec <literal>inverse="true"</literal> n'affecte
-            pas l'opération de cascades, ce sont des concepts orthogonaux !
+            Mapper une extrÃ©mitÃ© d'une association avec <literal>inverse="true"</literal> n'affecte
+            pas l'opÃ©ration de cascades, ce sont des concepts orthogonaux !
         </para>
 
     </sect2>
 
     <sect2 id="collections-indexedbidirectional">
-        <title>Associations bidirectionnelles avec des collections indexées</title>
+        <title>Associations bidirectionnelles avec des collections indexÃ©es</title>
         <para>
-            Une association bidirectionnelle où une extrémité est représentée comme une <literal>&lt;list&gt;</literal>
-            ou une <literal>&lt;map&gt;</literal> requiert une considération spéciale. Si il y a une
-            propriété de la classe enfant qui mappe la colonne de l'index, pas de problème, nous pouvons
-            continuer à utiliser <literal>inverse="true"</literal> sur le mapping de la collection :
+            Une association bidirectionnelle oÃ¹ une extrÃ©mitÃ© est reprÃ©sentÃ©e comme une <literal>&lt;list&gt;</literal>
+            ou une <literal>&lt;map&gt;</literal> requiert une considÃ©ration spÃ©ciale. Si il y a une
+            propriÃ©tÃ© de la classe enfant qui mappe la colonne de l'index, pas de problÃ¨me, nous pouvons
+            continuer Ã  utiliser <literal>inverse="true"</literal> sur le mapping de la collection :
         </para>
 
         <programlisting><![CDATA[<class name="Parent">
@@ -906,10 +908,10 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
 </class>]]></programlisting>
 
         <para>
-            Mais, si il n'y a pas de telle prorpriété sur la classe enfant, nous ne pouvons pas penser
-            à l'association comme vraiment bidirectionnelle (il y a des informations disponibles à une
-            extrémité de l'association qui ne sont pas disponibles à l'autre extrémité). Dans ce cas,
-            nous ne pouvons pas mapper la collection <literal>inverse="true"</literal>. À la place, nous
+            Mais, si il n'y a pas de telle prorpriÃ©tÃ© sur la classe enfant, nous ne pouvons pas penser
+            Ã  l'association comme vraiment bidirectionnelle (il y a des informations disponibles Ã  une
+            extrÃ©mitÃ© de l'association qui ne sont pas disponibles Ã  l'autre extrÃ©mitÃ©). Dans ce cas,
+            nous ne pouvons pas mapper la collection <literal>inverse="true"</literal>. Ã€ la place, nous
             pourrions utiliser le mapping suivant :
         </para>
 
@@ -937,8 +939,8 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
 </class>]]></programlisting>
 
        <para>
-           Notez que dans ce mapping, l'extrémité de l'association contenant la collection est responsable
-           des mises à jour de la clef étrangère. À faire : cela entraîne-t-il réellement des expressions
+           Notez que dans ce mapping, l'extrÃ©mitÃ© de l'association contenant la collection est responsable
+           des mises Ã  jour de la clef Ã©trangÃ¨re. Ã€ faire : cela entraÃ®ne-t-il rÃ©ellement des expressions
            updates inutiles ?
        </para>
 
@@ -965,12 +967,12 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
 </map>]]></programlisting>
 
         <para>
-            Une seconde approche est simplement de remodeler l'association comme une classe d'entité. C'est
+            Une seconde approche est simplement de remodeler l'association comme une classe d'entitÃ©. C'est
             l'approche la plus commune.
         </para>
 
         <para>
-            Une alternative finale est d'utiliser des éléments composites, dont nous discuterons plus tard.
+            Une alternative finale est d'utiliser des Ã©lÃ©ments composites, dont nous discuterons plus tard.
         </para>
 
     </sect2>
@@ -979,21 +981,21 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
         <title>Utiliser un <literal>&lt;idbag&gt;</literal></title>
 
         <para>
-            Si vous embrassez pleinement notre vue que les clefs composées sont une mauvaise
-            chose et que des entités devraient avoir des identifiants artificiels (des clefs
-            subrogées), alors vous pourriez trouver un peu curieux que les associations
-            plusieurs-vers-plusieurs et les collections de valeurs que nous avons montré jusqu'ici
-            mappent toutes des tables avec des clefs composées ! Maintenant, ce point est assez
-            discutable ; une table d'association pure ne semble pas beaucoup bénéficier d'une clef
-            subrogée (bien qu'une collection de valeur composées le <emphasis>pourrait</emphasis>).
-            Néanmoins, Hibernate fournit une foncionnalité qui vous permet de mapper
+            Si vous embrassez pleinement notre vue que les clefs composÃ©es sont une mauvaise
+            chose et que des entitÃ©s devraient avoir des identifiants artificiels (des clefs
+            subrogÃ©es), alors vous pourriez trouver un peu curieux que les associations
+            plusieurs-vers-plusieurs et les collections de valeurs que nous avons montrÃ© jusqu'ici
+            mappent toutes des tables avec des clefs composÃ©es ! Maintenant, ce point est assez
+            discutable ; une table d'association pure ne semble pas beaucoup bÃ©nÃ©ficier d'une clef
+            subrogÃ©e (bien qu'une collection de valeur composÃ©es le <emphasis>pourrait</emphasis>).
+            NÃ©anmoins, Hibernate fournit une foncionnalitÃ© qui vous permet de mapper
             des associations plusieurs-vers-plusieurs et des collections de valeurs vers une
-            table avec une clef subrogée.
+            table avec une clef subrogÃ©e.
         </para>
 
         <para>
-            L'élément <literal>&lt;idbag&gt;</literal> vous laisse mapper une <literal>List</literal>
-            (ou une <literal>Collection</literal>) avec une sémantique de sac.
+            L'Ã©lÃ©ment <literal>&lt;idbag&gt;</literal> vous laisse mapper une <literal>List</literal>
+            (ou une <literal>Collection</literal>) avec une sÃ©mantique de sac.
         </para>
 
 <programlisting><![CDATA[<idbag name="lovers" table="LOVERS">
@@ -1005,22 +1007,22 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
 </idbag>]]></programlisting>
 
         <para>
-            Comme vous pouvez voir, un <literal>&lt;idbag&gt;</literal> a un généréteur d'id
-            artificiel, comme une classe d'entité ! Une clef subrogée différente est assignée
-            à chaque ligne de la collection. Cependant, Hibernate ne fournit pas de mécanisme pour
-            découvrir la valeur d'une clef subrogée d'une ligne particulière.
+            Comme vous pouvez voir, un <literal>&lt;idbag&gt;</literal> a un gÃ©nÃ©rÃ©teur d'id
+            artificiel, comme une classe d'entitÃ© ! Une clef subrogÃ©e diffÃ©rente est assignÃ©e
+            Ã  chaque ligne de la collection. Cependant, Hibernate ne fournit pas de mÃ©canisme pour
+            dÃ©couvrir la valeur d'une clef subrogÃ©e d'une ligne particuliÃ¨re.
         </para>
 
         <para>
-            Notez que les performances de la mise à jour d'un <literal>&lt;idbag&gt;</literal>
+            Notez que les performances de la mise Ã  jour d'un <literal>&lt;idbag&gt;</literal>
             sont <emphasis>bien</emphasis> meilleures qu'un <literal>&lt;bag&gt;</literal> ordinaire !
-            Hibernate peut localiser des lignes individuelles efficacement et les mettre à jour ou
+            Hibernate peut localiser des lignes individuelles efficacement et les mettre Ã  jour ou
             les effacer individuellement, comme une liste, une map ou un ensemble.
         </para>
 
         <para>
-            Dans l'implémentation actuelle, la stratégie de la génération de l'identifiant <literal>native</literal>
-            n'est pas supportée pour les identifiants de collection <literal>&lt;idbag&gt;</literal>.
+            Dans l'implÃ©mentation actuelle, la stratÃ©gie de la gÃ©nÃ©ration de l'identifiant <literal>native</literal>
+            n'est pas supportÃ©e pour les identifiants de collection <literal>&lt;idbag&gt;</literal>.
         </para>
 
     </sect2>
@@ -1045,7 +1047,7 @@ session.persist(category);               // La relation sera sauvegardée]]></pro
         <title>Exemples de collections</title>
 
         <para>
-            Les sections précédentes sont assez confuses. Donc prenons un exemple. Cette classe :
+            Les sections prÃ©cÃ©dentes sont assez confuses. Donc prenons un exemple. Cette classe :
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -1093,7 +1095,7 @@ public class Parent {
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            Ceci mappe les définitions de tables suivantes :
+            Ceci mappe les dÃ©finitions de tables suivantes :
         </para>
 
         <programlisting><![CDATA[create table parent ( id bigint not null primary key )
@@ -1139,7 +1141,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 
         <para>
             Alternativement, si vous insistez absolument pour que cette association soit unidirectionnelle,
-            vous pouvez déclarer la contrainte <literal>NOT NULL</literal> sur le mapping <literal>&lt;key&gt;</literal> :
+            vous pouvez dÃ©clarer la contrainte <literal>NOT NULL</literal> sur le mapping <literal>&lt;key&gt;</literal> :
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1164,8 +1166,8 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            D'un autre côté, si un enfant pouvait avoir plusieurs parent, une association
-            plusieurs-vers-plusieurs est plus appropriée :
+            D'un autre cÃ´tÃ©, si un enfant pouvait avoir plusieurs parent, une association
+            plusieurs-vers-plusieurs est plus appropriÃ©e :
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1190,7 +1192,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            Définitions des tables :
+            DÃ©finitions des tables :
         </para>
 
         <programlisting><![CDATA[create table parent ( id bigint not null primary key )
@@ -1202,12 +1204,12 @@ alter table childset add constraint childsetfk0 (parent_id) references parent
 alter table childset add constraint childsetfk1 (child_id) references child]]></programlisting>
 
         <para>
-            Pour plus d'exemples et une revue complète du mapping de la relation parent/enfant, voir
+            Pour plus d'exemples et une revue complÃ¨te du mapping de la relation parent/enfant, voir
             see <xref linkend="example-parentchild"/>.
         </para>
 
         <para>
-            Des mappings d'association plus exotiques sont possibles, nous cataloguerons toutes les possibilités
+            Des mappings d'association plus exotiques sont possibles, nous cataloguerons toutes les possibilitÃ©s
             dans le prochain chapitre.
         </para>
 

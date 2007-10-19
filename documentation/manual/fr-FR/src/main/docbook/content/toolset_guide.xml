@@ -1,85 +1,87 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="toolsetguide" revision="2">
     <title>Guide des outils</title>
 
     <para>
-        Des outils en ligne de commande, des plugins Eclipse ainsu que des tâches Ant permettent de gérer de cycles de développement complet
+        Des outils en ligne de commande, des plugins Eclipse ainsu que des tÃ¢ches Ant permettent de gÃ©rer de cycles de dÃ©veloppement complet
     de projets utilisant Hibernate.
     </para>
 
     <para>
-        Les <emphasis>outils Hibernate</emphasis> actuels incluent des plugins pour l'IDE Eclipse ainsi que des tâches Ant pour l'ingénierie 
-        inverse de bases de données existantes :
+        Les <emphasis>outils Hibernate</emphasis> actuels incluent des plugins pour l'IDE Eclipse ainsi que des tÃ¢ches Ant pour l'ingÃ©nierie 
+        inverse de bases de donnÃ©es existantes :
     </para>
 
     <itemizedlist>
         <listitem><para>
-            <emphasis>Mapping Editor :</emphasis> un éditeur pour les fichiers de mapping XML Hibernate, supportant l'auto-complétion et la mise en valeur de la syntaxe.
-            Il supporte aussi l'auto-complétion automatique pour les noms de classes et les noms de propriété/champ,
-            le rendant beaucoup plus polyvalent qu'un éditeurXML normal.
+            <emphasis>Mapping Editor :</emphasis> un Ã©diteur pour les fichiers de mapping XML Hibernate, supportant l'auto-complÃ©tion et la mise en valeur de la syntaxe.
+            Il supporte aussi l'auto-complÃ©tion automatique pour les noms de classes et les noms de propriÃ©tÃ©/champ,
+            le rendant beaucoup plus polyvalent qu'un Ã©diteurXML normal.
         </para></listitem>
         <listitem><para>
             <emphasis>Console :</emphasis> la console est une nouvelle vue d'Eclipse. En plus de la vue d'ensemble
             arborescente de vos configurations de console, vous obtenez aussi une vue interactive de vos classes persistantes et de leurs relations.
-            La console vous permet d'exécuter des requête HQL dans votre base de données et de parcourir les résultats directement dans Eclipse.
+            La console vous permet d'exÃ©cuter des requÃªte HQL dans votre base de donnÃ©es et de parcourir les rÃ©sultats directement dans Eclipse.
         </para></listitem>
         <listitem><para>
             <emphasis>Development Wizards :</emphasis> plusieurs assistants sont fournis avec les outils d'Hibernate
-            pour Eclipse ; vous pouvez utiliser un assistant pour générer rapidement les fichiers de configuration d'Hibernate (cfg.xml),
-            ou vous pouvez même complètement générer les fichiers de mapping Hibernate et les sources des POJOs à partir d'un schéma de base de données existant.
-            L'assistant d'ingénierie inverse supporte les modèles utilisateur.
+            pour Eclipse ; vous pouvez utiliser un assistant pour gÃ©nÃ©rer rapidement les fichiers de configuration d'Hibernate (cfg.xml),
+            ou vous pouvez mÃªme complÃ¨tement gÃ©nÃ©rer les fichiers de mapping Hibernate et les sources des POJOs Ã  partir d'un schÃ©ma de base de donnÃ©es existant.
+            L'assistant d'ingÃ©nierie inverse supporte les modÃ¨les utilisateur.
         </para></listitem>
         <listitem><para>
-            <emphasis>Tâches Ant :</emphasis>
+            <emphasis>TÃ¢ches Ant :</emphasis>
         </para></listitem>
 
     </itemizedlist>
 
     <para>
-        Veuillez-vous référer au paquet <emphasis>outils Hibernate</emphasis> et sa documentation pour plus d'informations.
+        Veuillez-vous rÃ©fÃ©rer au paquet <emphasis>outils Hibernate</emphasis> et sa documentation pour plus d'informations.
     </para>
 
     <para>
-        Pourtant, le paquet principal d'Hibernate arrive avec un lot d'outils intégrés (il peut même être utilisé de "l'intérieur" d'Hibernate à la volée) :
+        Pourtant, le paquet principal d'Hibernate arrive avec un lot d'outils intÃ©grÃ©s (il peut mÃªme Ãªtre utilisÃ© de "l'intÃ©rieur" d'Hibernate Ã  la volÃ©e) :
         <emphasis>SchemaExport</emphasis> aussi connu comme
         <literal>hbm2ddl</literal>.
     </para>
 
     <sect1 id="toolsetguide-s1" revision="2">
-        <title>Génération automatique du schéma</title>
+        <title>GÃ©nÃ©ration automatique du schÃ©ma</title>
 
         <para>
-            La DDL peut être générée à partir de vos fichiers de mapping par un utilitaire d'Hibernate. Le schéma généré
-            inclut les contraintes d'intégrité référentielle (clefs primaires et étrangères) pour les tables d'entités
-            et de collections. Les tables et les séquences sont aussi créées pour les générateurs d'identifiant mappés.
+            La DDL peut Ãªtre gÃ©nÃ©rÃ©e Ã  partir de vos fichiers de mapping par un utilitaire d'Hibernate. Le schÃ©ma gÃ©nÃ©rÃ©
+            inclut les contraintes d'intÃ©gritÃ© rÃ©fÃ©rentielle (clefs primaires et Ã©trangÃ¨res) pour les tables d'entitÃ©s
+            et de collections. Les tables et les sÃ©quences sont aussi crÃ©Ã©es pour les gÃ©nÃ©rateurs d'identifiant mappÃ©s.
         </para>
 
         <para>
-            Vous <emphasis>devez</emphasis> spécifier un <literal>Dialect</literal> SQL via la propriété
+            Vous <emphasis>devez</emphasis> spÃ©cifier un <literal>Dialect</literal> SQL via la propriÃ©tÃ©
             <literal>hibernate.dialect</literal> lors de l'utilisation de cet outils, puisque la DDL est
-            fortement dépendante de la base de données.
+            fortement dÃ©pendante de la base de donnÃ©es.
         </para>
 
         <para>
-            D'abord, personnalisez vos fichiers de mapping pour améliorer le schéma généré.
+            D'abord, personnalisez vos fichiers de mapping pour amÃ©liorer le schÃ©ma gÃ©nÃ©rÃ©.
         </para>
 
         <sect2 id="toolsetguide-s1-2" revision="3">
-            <title>Personnaliser le schéma</title>
+            <title>Personnaliser le schÃ©ma</title>
 
             <para>
-                Plusieurs éléments du mapping hibernate définissent des attributs optionnels
-                nommés <literal>length</literal>, <literal>precision</literal> et <literal>scale</literal>.
-                Vous pouvez paramétrer la longueur, la précision,...  d'une colonne avec ces attributs.
+                Plusieurs Ã©lÃ©ments du mapping hibernate dÃ©finissent des attributs optionnels
+                nommÃ©s <literal>length</literal>, <literal>precision</literal> et <literal>scale</literal>.
+                Vous pouvez paramÃ©trer la longueur, la prÃ©cision,...  d'une colonne avec ces attributs.
             </para>
             
             <programlisting><![CDATA[<property name="zip" length="5"/>]]></programlisting>
             <programlisting><![CDATA[<property name="balance" precision="12" scale="2"/>]]></programlisting>
 
             <para>
-                Certains éléments acceptent aussi un attribut <literal>not-null</literal>
-                (utilisé pour générer les contraintes de colonnes <literal>NOT NULL</literal>) et
-                un attribut <literal>unique</literal> (pour générer une contrainte de colonne
+                Certains Ã©lÃ©ments acceptent aussi un attribut <literal>not-null</literal>
+                (utilisÃ© pour gÃ©nÃ©rer les contraintes de colonnes <literal>NOT NULL</literal>) et
+                un attribut <literal>unique</literal> (pour gÃ©nÃ©rer une contrainte de colonne
                 <literal>UNIQUE</literal>).
             </para>
             
@@ -87,10 +89,10 @@
             <programlisting><![CDATA[<element column="serialNumber" type="long" not-null="true" unique="true"/>]]></programlisting>
 
             <para>
-                Un attribut <literal>unique-key</literal> peut être utilisé pour grouper les colonnes
-                en une seule contrainte d'unicité. Actuellement, la valeur spécifiée par
-                l'attribut <literal>unique-key</literal> n'est <emphasis>pas</emphasis> utilisée pour
-                nommer la contrainte dans le DDL généré, elle sert juste à grouper les colonnes
+                Un attribut <literal>unique-key</literal> peut Ãªtre utilisÃ© pour grouper les colonnes
+                en une seule contrainte d'unicitÃ©. Actuellement, la valeur spÃ©cifiÃ©e par
+                l'attribut <literal>unique-key</literal> n'est <emphasis>pas</emphasis> utilisÃ©e pour
+                nommer la contrainte dans le DDL gÃ©nÃ©rÃ©, elle sert juste Ã  grouper les colonnes
                 dans le fichier de mapping.
             </para>
             <programlisting><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
@@ -98,8 +100,8 @@
 
             <para>
                 Un attribut <literal>index</literal> indique le nom d'un index qui sera
-                créé  en utilisant la ou les colonnes mappées. Plusieurs colonnes
-                peuvent être groupées dans un même index, en spécifiant le même
+                crÃ©Ã©  en utilisant la ou les colonnes mappÃ©es. Plusieurs colonnes
+                peuvent Ãªtre groupÃ©es dans un mÃªme index, en spÃ©cifiant le mÃªme
                 nom d'index. 
             </para>
 
@@ -107,14 +109,14 @@
 <property name="firstName" index="CustName"/>]]></programlisting>
 
             <para>
-                Un attribut <literal>foreign-key</literal> peut être utilisé pour surcharger le nom
-                des clés étrangères générées.
+                Un attribut <literal>foreign-key</literal> peut Ãªtre utilisÃ© pour surcharger le nom
+                des clÃ©s Ã©trangÃ¨res gÃ©nÃ©rÃ©es.
             </para>
             
             <programlisting><![CDATA[<many-to-one name="bar" column="barId" foreign-key="FKFooBar"/>]]></programlisting>
 
             <para>
-                Plusieurs éléments de mapping acceptent aussi un élément fils <literal>&lt;column&gt;</literal>. 
+                Plusieurs Ã©lÃ©ments de mapping acceptent aussi un Ã©lÃ©ment fils <literal>&lt;column&gt;</literal>. 
                 Ceci est utile pour les type multi-colonnes:
             </para>
 
@@ -125,9 +127,9 @@
 </property>]]></programlisting>
 
             <para>
-                L'attribut <literal>default</literal> vous laisse spécifier une valeur par défaut pour
-                une colonnes (vous devriez assigner la même valeur à la propriété mappée avant de sauvegarder une nouvelle instance
-                de la classe mappée).
+                L'attribut <literal>default</literal> vous laisse spÃ©cifier une valeur par dÃ©faut pour
+                une colonnes (vous devriez assigner la mÃªme valeur Ã  la propriÃ©tÃ© mappÃ©e avant de sauvegarder une nouvelle instance
+                de la classe mappÃ©e).
             </para>
 
             <programlisting><![CDATA[<property name="credits" type="integer" insert="false">
@@ -140,7 +142,7 @@
 
             <para>
                 L'attribut <literal>sql-type</literal> laisse l'utilisateur surcharger le mapping
-                par défaut du type Hibernate vers un type SQL.
+                par dÃ©faut du type Hibernate vers un type SQL.
             </para>
             
             <programlisting><![CDATA[<property name="balance" type="float">
@@ -149,7 +151,7 @@
             
 
             <para>
-                L'attribut <literal>check</literal> permet de spécifier une contrainte de vérification.
+                L'attribut <literal>check</literal> permet de spÃ©cifier une contrainte de vÃ©rification.
             </para>
 
             <programlisting><![CDATA[<property name="foo" type="integer">
@@ -172,53 +174,53 @@
                         <row>
                             <entry>Attribut</entry>
                             <entry>Valeur</entry>
-                            <entry>Interprétation</entry>
+                            <entry>InterprÃ©tation</entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
                             <entry><literal>length</literal></entry>
-                            <entry>numérique</entry>
+                            <entry>numÃ©rique</entry>
                             <entry>taille d'une colonne</entry>
                         </row>
                         <row>
                             <entry><literal>precision</literal></entry>
-                            <entry>numérique</entry>
-                            <entry>précision décimale de la colonne</entry>
+                            <entry>numÃ©rique</entry>
+                            <entry>prÃ©cision dÃ©cimale de la colonne</entry>
                         </row>
                         <row>
                             <entry><literal>scale</literal></entry>
-                            <entry>numérique</entry>
-                            <entry>scale décimale de la colonne</entry>
+                            <entry>numÃ©rique</entry>
+                            <entry>scale dÃ©cimale de la colonne</entry>
                         </row>
                         <row>
                             <entry><literal>not-null</literal></entry>
                             <entry><literal>true|false</literal></entry>
-                            <entry>spécifie que la colonne doit être non-nulle</entry>
+                            <entry>spÃ©cifie que la colonne doit Ãªtre non-nulle</entry>
                         </row>
                         <row>
                             <entry><literal>unique</literal></entry>
                             <entry><literal>true|false</literal></entry>
-                            <entry>spécifie que la colonne doit avoir une contrainte d'unicité</entry>
+                            <entry>spÃ©cifie que la colonne doit avoir une contrainte d'unicitÃ©</entry>
                         </row>
                         <row>
                             <entry><literal>index</literal></entry>
                             <entry><literal>index_name</literal></entry>
-                            <entry>spécifie le nom d'un index (multi-colonnes)</entry>
+                            <entry>spÃ©cifie le nom d'un index (multi-colonnes)</entry>
                         </row>
                         <row>
                             <entry><literal>unique-key</literal></entry>
                             <entry><literal>unique_key_name</literal></entry>
-                            <entry>spécifie le nom d'une contrainte d'unicité multi-colonnes</entry>
+                            <entry>spÃ©cifie le nom d'une contrainte d'unicitÃ© multi-colonnes</entry>
                         </row>
                         <row>
                             <entry><literal>foreign-key</literal></entry>
                             <entry><literal>foreign_key_name</literal></entry>
                             <entry>
-                                spécifie le nom d'une contrainte de clé étrangère générée pour
-                                une association, utilisez-la avec les éléments de mapping
+                                spÃ©cifie le nom d'une contrainte de clÃ© Ã©trangÃ¨re gÃ©nÃ©rÃ©e pour
+                                une association, utilisez-la avec les Ã©lÃ©ments de mapping
                                 &lt;one-to-one&gt;, &lt;many-to-one&gt;, &lt;key&gt;, et &lt;many-to-many&gt;
-                                Notez que les extrêmités <literal>inverse="true"</literal>
+                                Notez que les extrÃªmitÃ©s <literal>inverse="true"</literal>
                                 se seront pas prises en compte par <literal>SchemaExport</literal>.
                             </entry>
                         </row>
@@ -226,22 +228,22 @@
                             <entry><literal>sql-type</literal></entry>
                             <entry><literal>SQL column_type</literal></entry>
                             <entry>
-                                surcharge le type par défaut (attribut de
-                                l'élément <literal>&lt;column&gt;</literal> uniquement)
+                                surcharge le type par dÃ©faut (attribut de
+                                l'Ã©lÃ©ment <literal>&lt;column&gt;</literal> uniquement)
                             </entry>
                        </row>
                        <row>
                             <entry><literal>default</literal></entry>
                             <entry>expression SQL</entry>
                             <entry>
-                                spécifie une valeur par défaut pour la colonne
+                                spÃ©cifie une valeur par dÃ©faut pour la colonne
                             </entry>
                        </row>
                        <row>
                             <entry><literal>check</literal></entry>
                             <entry>SQL expression</entry>
                             <entry>
-                                crée une contrainte de vérification sur la table ou la colonne
+                                crÃ©e une contrainte de vÃ©rification sur la table ou la colonne
                             </entry>
                        </row>
                    </tbody>
@@ -249,7 +251,7 @@
             </table>
 
             <para>
-                L'élément <literal>&lt;comment&gt;</literal> vous permet de spécifier un commentaire pour le schéma généré.
+                L'Ã©lÃ©ment <literal>&lt;comment&gt;</literal> vous permet de spÃ©cifier un commentaire pour le schÃ©ma gÃ©nÃ©rÃ©.
             </para>
 
             <programlisting><![CDATA[<class name="Customer" table="CurCust">
@@ -264,19 +266,19 @@
 </property>]]></programlisting>
 
             <para>
-                Ceci a pour résultat une expression
+                Ceci a pour rÃ©sultat une expression
                 <literal>comment on table</literal> ou
-                <literal>comment on column</literal> dans la DDL générée (où supportée).
+                <literal>comment on column</literal> dans la DDL gÃ©nÃ©rÃ©e (oÃ¹ supportÃ©e).
             </para>
 
         </sect2>
 
         <sect2 id="toolsetguide-s1-3" revision="2">
-            <title>Exécuter l'outil</title>
+            <title>ExÃ©cuter l'outil</title>
 
             <para>
-                L'outil <literal>SchemaExport</literal> génère un script DDL vers
-                la sortie standard et/ou exécute les ordres DDL.
+                L'outil <literal>SchemaExport</literal> gÃ©nÃ¨re un script DDL vers
+                la sortie standard et/ou exÃ©cute les ordres DDL.
             </para>
 
             <para>
@@ -298,7 +300,7 @@
                     <tbody>
                         <row>
                             <entry><literal>--quiet</literal></entry>
-                            <entry>ne pas écrire le script vers la sortie standard</entry>
+                            <entry>ne pas Ã©crire le script vers la sortie standard</entry>
                         </row>
                         <row>
                             <entry><literal>--drop</literal></entry>
@@ -306,42 +308,42 @@
                         </row>
                         <row>
                             <entry><literal>--create</literal></entry>
-                            <entry>ne créé que les tables</entry>
+                            <entry>ne crÃ©Ã© que les tables</entry>
                         </row>
                         <row>
                             <entry><literal>--text</literal></entry>
-                            <entry>ne pas exécuter sur la base de données</entry>
+                            <entry>ne pas exÃ©cuter sur la base de donnÃ©es</entry>
                         </row>
                         <row>
                             <entry><literal>--output=my_schema.ddl</literal></entry>
-                            <entry>écrit le script ddl vers un fichier</entry>
+                            <entry>Ã©crit le script ddl vers un fichier</entry>
                         </row>
                         <row>
                             <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
-                            <entry>sélectionne une <literal>NamingStrategy</literal></entry>
+                            <entry>sÃ©lectionne une <literal>NamingStrategy</literal></entry>
                         </row>
                         <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
-                            <entry>lit la configuration Hibernate à partir d'un fichier XML</entry>
+                            <entry>lit la configuration Hibernate Ã  partir d'un fichier XML</entry>
                         </row>
                         <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>lit les propriétés de la base de données à partir d'un fichier</entry>
+                            <entry>lit les propriÃ©tÃ©s de la base de donnÃ©es Ã  partir d'un fichier</entry>
                         </row>
                         <row>
                             <entry><literal>--format</literal></entry>
-                            <entry>formatte proprement le SQL généré dans le script</entry>
+                            <entry>formatte proprement le SQL gÃ©nÃ©rÃ© dans le script</entry>
                         </row>
                         <row>
                             <entry><literal>--delimiter=x</literal></entry>
-                            <entry>paramètre un délimiteur de fin de ligne pour le script</entry>
+                            <entry>paramÃ¨tre un dÃ©limiteur de fin de ligne pour le script</entry>
                         </row>
                     </tbody>
                 </tgroup>
             </table>
 
             <para>
-                Vous pouvez même intégrer <literal>SchemaExport</literal> dans votre application :
+                Vous pouvez mÃªme intÃ©grer <literal>SchemaExport</literal> dans votre application :
             </para>
 
             <programlisting><![CDATA[Configuration cfg = ....;
@@ -350,26 +352,26 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
         </sect2>
 
         <sect2 id="toolsetguide-s1-4">
-            <title>Propriétés</title>
+            <title>PropriÃ©tÃ©s</title>
 
             <para>
-                Les propriétés de la base de données peuvent être spécifiées
+                Les propriÃ©tÃ©s de la base de donnÃ©es peuvent Ãªtre spÃ©cifiÃ©es
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
-                    <para>comme propriétés système avec <literal>-D</literal><emphasis>&lt;property&gt;</emphasis></para>
+                    <para>comme propriÃ©tÃ©s systÃ¨me avec <literal>-D</literal><emphasis>&lt;property&gt;</emphasis></para>
                 </listitem>
                 <listitem>
                     <para>dans <literal>hibernate.properties</literal></para>
                 </listitem>
                 <listitem>
-                    <para>dans un fichier de propriétés déclaré avec <literal>--properties</literal></para>
+                    <para>dans un fichier de propriÃ©tÃ©s dÃ©clarÃ© avec <literal>--properties</literal></para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                Les propriétés nécessaires sont :
+                Les propriÃ©tÃ©s nÃ©cessaires sont :
             </para>
 
             <table frame="topbot">
@@ -379,7 +381,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     <colspec colwidth="2*"/>
                     <thead>
                         <row>
-                            <entry>Nom de la propriété</entry>
+                            <entry>Nom de la propriÃ©tÃ©</entry>
                             <entry>Description</entry>
                         </row>
                     </thead>
@@ -394,7 +396,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     </row>
                     <row>
                         <entry><literal>hibernate.connection.username</literal></entry>
-                        <entry>utilisateur de la base de données</entry>
+                        <entry>utilisateur de la base de donnÃ©es</entry>
                     </row>
                     <row>
                         <entry><literal>hibernate.connection.password</literal></entry>
@@ -439,12 +441,12 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
         </sect2>
 
         <sect2 id="toolsetguide-s1-6" revision="2">
-            <title>Mises à jour incrémentales du schéma</title>
+            <title>Mises Ã  jour incrÃ©mentales du schÃ©ma</title>
 
             <para>
-                L'outil <literal>SchemaUpdate</literal> mettra à jour un schéma existant
-                en effectuant les changement par "incrément".
-                Notez que <literal>SchemaUpdate</literal> dépends beaucoup de l'API JDBC
+                L'outil <literal>SchemaUpdate</literal> mettra Ã  jour un schÃ©ma existant
+                en effectuant les changement par "incrÃ©ment".
+                Notez que <literal>SchemaUpdate</literal> dÃ©pends beaucoup de l'API JDBC
                 metadata, il ne fonctionnera donc pas avec tous les drivers JDBC.
             </para>
 
@@ -467,11 +469,11 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     <tbody>
                         <row>
                             <entry><literal>--quiet</literal></entry>
-                            <entry>ne pas écrire vers la sortie standard</entry>
+                            <entry>ne pas Ã©crire vers la sortie standard</entry>
                         </row>
                         <row>
                             <entry><literal>--text</literal></entry>
-                            <entry>ne pas exporter vers la base de données</entry>
+                            <entry>ne pas exporter vers la base de donnÃ©es</entry>
                         </row>
                         <row>
                             <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
@@ -479,14 +481,14 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                         </row>
                         <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>lire les propriétés de la base de données à partir d'un fichier</entry>
+                            <entry>lire les propriÃ©tÃ©s de la base de donnÃ©es Ã  partir d'un fichier</entry>
                         </row>
                      </tbody>
                 </tgroup>
             </table>
 
             <para>
-                Vous pouvez intégrer <literal>SchemaUpdate</literal> dans votre application :
+                Vous pouvez intÃ©grer <literal>SchemaUpdate</literal> dans votre application :
             </para>
 
             <programlisting><![CDATA[Configuration cfg = ....;
@@ -495,7 +497,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
         </sect2>
 
         <sect2 id="toolsetguide-s1-7">
-            <title>Utiliser Ant pour des mises à jour de schéma par incrément</title>
+            <title>Utiliser Ant pour des mises Ã  jour de schÃ©ma par incrÃ©ment</title>
 
             <para>
                 Vous pouvez appeler <literal>SchemaUpdate</literal> depuis le script Ant :
@@ -516,12 +518,12 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 </target>]]></programlisting>
 
         <sect2 id="toolsetguide-s1-8" revision="1">
-            <title>Validation du schéma</title>
+            <title>Validation du schÃ©ma</title>
 
             <para>
-                L'outil <literal>SchemaValidator</literal> validera que le schéma existant correspond à vos documents de mapping.
-                Notez que le <literal>SchemaValidator</literal> dépends de l'API metadata de JDBC, il ne fonctionnera
-                donc pas avec tous les drivers JDBC. Cet outil est extrêmement utile pour tester.
+                L'outil <literal>SchemaValidator</literal> validera que le schÃ©ma existant correspond Ã  vos documents de mapping.
+                Notez que le <literal>SchemaValidator</literal> dÃ©pends de l'API metadata de JDBC, il ne fonctionnera
+                donc pas avec tous les drivers JDBC. Cet outil est extrÃªmement utile pour tester.
             </para>
 
             <para>
@@ -547,7 +549,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                         </row>
                         <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>lit les propriétés dela base de données depuis un fichier de propriétés</entry>
+                            <entry>lit les propriÃ©tÃ©s dela base de donnÃ©es depuis un fichier de propriÃ©tÃ©s</entry>
                         </row>
                         <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
@@ -568,7 +570,7 @@ new SchemaValidator(cfg).validate();]]></programlisting>
 
         </sect2>
         <sect2 id="toolsetguide-s1-9">
-            <title>Utiliser Ant pour la validation du Schéma</title>
+            <title>Utiliser Ant pour la validation du SchÃ©ma</title>
 
             <para>
                 Vous pouvez appeler <literal>SchemaValidator</literal> depuis le script Ant:

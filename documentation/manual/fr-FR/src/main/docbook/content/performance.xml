@@ -1,143 +1,145 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="performance">
-    <title>Améliorer les performances</title>
+    <title>AmÃ©liorer les performances</title>
 
     <sect1 id="performance-fetching" revision="2">
-        <title>Stratégies de chargement</title>
+        <title>StratÃ©gies de chargement</title>
 
         <para>
-            Une <emphasis>stratégie de chargement</emphasis> est une stratégie qu'Hibernate va
-            utiliser pour récupérer des objets associés si l'application à besoin de naviguer à 
+            Une <emphasis>stratÃ©gie de chargement</emphasis> est une stratÃ©gie qu'Hibernate va
+            utiliser pour rÃ©cupÃ©rer des objets associÃ©s si l'application Ã  besoin de naviguer Ã  
             travers une association.
-            Les stratégies de chargement peuvent être déclarées dans les méta-données de l'outil
-            de mapping objet relationnel ou surchargées par une requête de type HQL ou <literal>Criteria</literal>
-            particulière.
+            Les stratÃ©gies de chargement peuvent Ãªtre dÃ©clarÃ©es dans les mÃ©ta-donnÃ©es de l'outil
+            de mapping objet relationnel ou surchargÃ©es par une requÃªte de type HQL ou <literal>Criteria</literal>
+            particuliÃ¨re.
         </para>
 
         <para>
-            Hibernate3 définit les stratégies de chargement suivantes :
+            Hibernate3 dÃ©finit les stratÃ©gies de chargement suivantes :
         </para>
 
         <itemizedlist>
              <listitem>
                 <para>
-                    <emphasis>Chargement par jointure</emphasis> - Hibernate récupère 
-                    l'instance associée ou la collection dans un même <literal>SELECT</literal>,
+                    <emphasis>Chargement par jointure</emphasis> - Hibernate rÃ©cupÃ¨re 
+                    l'instance associÃ©e ou la collection dans un mÃªme <literal>SELECT</literal>,
                     en utilisant un <literal>OUTER JOIN</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement par select</emphasis> - Un second <literal>SELECT</literal>
-                    est utilisé pour récupérer l'instance associée ou la collection. A moins
-                    que vous ne désactiviez explicitement le chargement tardif en spécifiant
-                    <literal>lazy="false"</literal>, ce second select ne sera exécuté que lorsque
-                    vous accéderez réellement à l'association.
+                    est utilisÃ© pour rÃ©cupÃ©rer l'instance associÃ©e ou la collection. A moins
+                    que vous ne dÃ©sactiviez explicitement le chargement tardif en spÃ©cifiant
+                    <literal>lazy="false"</literal>, ce second select ne sera exÃ©cutÃ© que lorsque
+                    vous accÃ©derez rÃ©ellement Ã  l'association.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement par sous-select</emphasis> - Un second <literal>SELECT</literal>
-                    est utilisé pour récupérer les associations pour toutes les entités récupérées dans
-                    une requête ou un chargement préalable. A moins
-                    que vous ne désactiviez explicitement le chargement tardif en spécifiant
-                    <literal>lazy="false"</literal>, ce second select ne sera exécuté que lorsque
-                    vous accéderez réellement à l'association.
+                    est utilisÃ© pour rÃ©cupÃ©rer les associations pour toutes les entitÃ©s rÃ©cupÃ©rÃ©es dans
+                    une requÃªte ou un chargement prÃ©alable. A moins
+                    que vous ne dÃ©sactiviez explicitement le chargement tardif en spÃ©cifiant
+                    <literal>lazy="false"</literal>, ce second select ne sera exÃ©cutÃ© que lorsque
+                    vous accÃ©derez rÃ©ellement Ã  l'association.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Chargement par lot</emphasis> - Il s'agit d'une stratégie d'optimisation
-                    pour le chargement par select - Hibernate récupère un lot
-                    d'instances ou de collections en un seul <literal>SELECT</literal> en spécifiant
-                    une liste de clé primaire ou de clé étrangère.
+                    <emphasis>Chargement par lot</emphasis> - Il s'agit d'une stratÃ©gie d'optimisation
+                    pour le chargement par select - Hibernate rÃ©cupÃ¨re un lot
+                    d'instances ou de collections en un seul <literal>SELECT</literal> en spÃ©cifiant
+                    une liste de clÃ© primaire ou de clÃ© Ã©trangÃ¨re.
                 </para>
             </listitem>
         </itemizedlist>
         
         <para>
-            Hibernate fait également la distinction entre :
+            Hibernate fait Ã©galement la distinction entre :
         </para>
 
         <itemizedlist>
              <listitem>
                 <para>
-                    <emphasis>Chargement immédiat</emphasis> - Une association, une collection ou
-                    un attribut est chargé immédiatement lorsque l'objet auquel appartient cet
-                    élément est chargé.
+                    <emphasis>Chargement immÃ©diat</emphasis> - Une association, une collection ou
+                    un attribut est chargÃ© immÃ©diatement lorsque l'objet auquel appartient cet
+                    Ã©lÃ©ment est chargÃ©.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement tardif d'une collection</emphasis> - Une collection est
-                    chargée lorque l'application invoque une méthode sur cette collection (il s'agit
-                    du mode de chargement par défaut pour les collections).
+                    chargÃ©e lorque l'application invoque une mÃ©thode sur cette collection (il s'agit
+                    du mode de chargement par dÃ©faut pour les collections).
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement "super tardif" d'une collection</emphasis> - les
-                    éléments de la collection sont récupérés individuellement depuis la base de données
-                    lorsque nécessaire.
-                    Hibernate essaie de ne pas charger toute la collection en mémoire sauf si cela est
-                    absolument nécessaire (bien adapté aux très grandes collections).
+                    Ã©lÃ©ments de la collection sont rÃ©cupÃ©rÃ©s individuellement depuis la base de donnÃ©es
+                    lorsque nÃ©cessaire.
+                    Hibernate essaie de ne pas charger toute la collection en mÃ©moire sauf si cela est
+                    absolument nÃ©cessaire (bien adaptÃ© aux trÃ¨s grandes collections).
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement par proxy</emphasis> - une association vers un seul
-                    objet est chargée lorsqu'une méthode autre que le getter sur l'identifiant est
-                    appelée sur l'objet associé. 
+                    objet est chargÃ©e lorsqu'une mÃ©thode autre que le getter sur l'identifiant est
+                    appelÃ©e sur l'objet associÃ©. 
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement "sans proxy"</emphasis> - une association vers un seul objet
-                    est chargée lorsque l'on accède à cet objet. Par rapport au chargement par proxy,
-                    cette approche est moins tardif (l'association est quand même chargée même
-                    si on n'accède qu'à l'identifiant) mais plus transparente car il n'y a pas de proxy
+                    est chargÃ©e lorsque l'on accÃ¨de Ã  cet objet. Par rapport au chargement par proxy,
+                    cette approche est moins tardif (l'association est quand mÃªme chargÃ©e mÃªme
+                    si on n'accÃ¨de qu'Ã  l'identifiant) mais plus transparente car il n'y a pas de proxy
                     visible dans l'application. Cette approche requiert une instrumentation du bytecode
-                    à la compilation et est rarement nécessaire.
+                    Ã  la compilation et est rarement nÃ©cessaire.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <emphasis>Chargement tardif des attributs</emphasis> - Un attribut ou un
-                    objet associé seul est chargé lorsque l'on y accède. Cette approche requiert 
-                    une instrumentation du bytecode à la compilation et est rarement nécessaire.
+                    objet associÃ© seul est chargÃ© lorsque l'on y accÃ¨de. Cette approche requiert 
+                    une instrumentation du bytecode Ã  la compilation et est rarement nÃ©cessaire.
                 </para>
             </listitem>
         </itemizedlist>
         
         <para>
             Nous avons ici deux notions orthogonales : <emphasis>quand</emphasis> l'association est
-            chargée et <emphasis>comment</emphasis> (quelle requête SQL est utilisée). Il ne faut
-            pas confondre les deux. Le mode de chargement est utilisé pour améliorer les performances.
-            On peut utiliser le mode tardif pour définir un contrat sur quelles données sont toujours
-            accessibles sur une instance détachée d'une classe particulière.
+            chargÃ©e et <emphasis>comment</emphasis> (quelle requÃªte SQL est utilisÃ©e). Il ne faut
+            pas confondre les deux. Le mode de chargement est utilisÃ© pour amÃ©liorer les performances.
+            On peut utiliser le mode tardif pour dÃ©finir un contrat sur quelles donnÃ©es sont toujours
+            accessibles sur une instance dÃ©tachÃ©e d'une classe particuliÃ¨re.
         </para>
  
         <sect2 id="performance-fetching-lazy">
-            <title>Travailler avec des associations chargées tardivement</title>
+            <title>Travailler avec des associations chargÃ©es tardivement</title>
             
             <para>
-                Par défaut, Hibernate3 utilise le chargement tardif par select pour les collections
+                Par dÃ©faut, Hibernate3 utilise le chargement tardif par select pour les collections
                 et le chargement tardif par proxy pour les associations vers un seul objet.
-                Ces valeurs par défaut sont valables pour la plupart des associations dans la
+                Ces valeurs par dÃ©faut sont valables pour la plupart des associations dans la
                 plupart des applications.
             </para>
             
             <para>
-                <emphasis>Note :</emphasis> si vous définissez
+                <emphasis>Note :</emphasis> si vous dÃ©finissez
                 <literal>hibernate.default_batch_fetch_size</literal>, Hibernate va utiliser l'optimisation
                 du chargement par lot pour le chargement tardif (cette optimisation peut aussi
-                être activée à un niveau de granularité plus fin).
+                Ãªtre activÃ©e Ã  un niveau de granularitÃ© plus fin).
             </para>
             
             <para>
-                Cependant, le chargement tardif pose un problème qu'il faut connaitre. L'accès à 
-                une association définie comme "tardive", hors du contexte d'une session hibernate
-                ouverte, va conduire à une exception. Par exemple :
+                Cependant, le chargement tardif pose un problÃ¨me qu'il faut connaitre. L'accÃ¨s Ã  
+                une association dÃ©finie comme "tardive", hors du contexte d'une session hibernate
+                ouverte, va conduire Ã  une exception. Par exemple :
             </para>
         
             <programlisting><![CDATA[s = sessions.openSession();
@@ -153,38 +155,38 @@ s.close();
 Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></programlisting>
 
             <para>
-                Etant donné que la collection des permissions n'a pas été initialisée
-                avant que la <literal>Session</literal> soit fermée, la collection n'est
+                Etant donnÃ© que la collection des permissions n'a pas Ã©tÃ© initialisÃ©e
+                avant que la <literal>Session</literal> soit fermÃ©e, la collection n'est
                 pas capable de se charger. <emphasis>Hibernate ne supporte pas le chargement
-                tardif pour des objets détachés</emphasis>. La solution à ce problème est de
-                déplacer le code qui lit la collection avant le "commit" de la transaction.
+                tardif pour des objets dÃ©tachÃ©s</emphasis>. La solution Ã  ce problÃ¨me est de
+                dÃ©placer le code qui lit la collection avant le "commit" de la transaction.
             </para>
     
             <para>
                 Une autre alternative est d'utiliser une collection ou une association non
-                "tardive" en spécifiant <literal>lazy="false"</literal> dans le mapping de
+                "tardive" en spÃ©cifiant <literal>lazy="false"</literal> dans le mapping de
                 l'association.
-                Cependant il est prévu que le chargement tardif soit utilisé pour quasiment
-                toutes les collections ou associations. Si vous définissez trop d'associtions
-                non "tardives" dans votre modèle objet, Hibernate va finir par devoir charger
-                toute la base de données en mémoire à chaque transaction !
+                Cependant il est prÃ©vu que le chargement tardif soit utilisÃ© pour quasiment
+                toutes les collections ou associations. Si vous dÃ©finissez trop d'associtions
+                non "tardives" dans votre modÃ¨le objet, Hibernate va finir par devoir charger
+                toute la base de donnÃ©es en mÃ©moire Ã  chaque transaction !
             </para>
     
             <para>
-                D'un autre côté, on veut souvent choisir un chargement par jointure (qui est par
-                défaut non tardif) à la place du chargement par select dans une transaction particulière.
-                Nous allons maintenant voir comment adapter les stratégies de chargement. Dans Hibernate3
-                les mécanismes pour choisir une stratégie de chargement sont identiques que
+                D'un autre cÃ´tÃ©, on veut souvent choisir un chargement par jointure (qui est par
+                dÃ©faut non tardif) Ã  la place du chargement par select dans une transaction particuliÃ¨re.
+                Nous allons maintenant voir comment adapter les stratÃ©gies de chargement. Dans Hibernate3
+                les mÃ©canismes pour choisir une stratÃ©gie de chargement sont identiques que
                 l'on ait une association vers un objet simple ou vers une collection.
             </para>
         
         </sect2>
         
         <sect2 id="performance-fetching-custom" revision="4">
-            <title>Personnalisation des stratégies de chargement</title>
+            <title>Personnalisation des stratÃ©gies de chargement</title>
             
             <para>
-                Le chargement par select (mode par défaut) est très vulnérable au problème du
+                Le chargement par select (mode par dÃ©faut) est trÃ¨s vulnÃ©rable au problÃ¨me du
                 N+1 selects, du coup vous pouvez avoir envie d'activer le chargement par jointure
                 dans les fichiers de mapping :
             </para>
@@ -198,53 +200,53 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
-                La stratégie de chargement définie à l'aide du mot <literal>fetch</literal> dans les fichiers
+                La stratÃ©gie de chargement dÃ©finie Ã  l'aide du mot <literal>fetch</literal> dans les fichiers
                 de mapping affecte :
             </para>
             
         <itemizedlist>
              <listitem>
                 <para>
-                    La récupération via <literal>get()</literal> ou <literal>load()</literal>
+                    La rÃ©cupÃ©ration via <literal>get()</literal> ou <literal>load()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    La récupération implicite lorsque l'on navigue à travers une association
+                    La rÃ©cupÃ©ration implicite lorsque l'on navigue Ã  travers une association
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Les requêtes de type <literal>Criteria</literal>
+                    Les requÃªtes de type <literal>Criteria</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Les requêtes HQL si l'on utilise le chargement par <literal>subselect</literal>
+                    Les requÃªtes HQL si l'on utilise le chargement par <literal>subselect</literal>
                 </para>
             </listitem>
         </itemizedlist>
 
             <para>
-                Quelle que soit la stratégie de chargement que vous utilisez, la partie du graphe
-                d'objets qui est définie comme non "tardive" sera chargée en mémoire. Cela peut
-                mener à l'exécution de plusieurs selects successifs pour une seule requête HQL.
+                Quelle que soit la stratÃ©gie de chargement que vous utilisez, la partie du graphe
+                d'objets qui est dÃ©finie comme non "tardive" sera chargÃ©e en mÃ©moire. Cela peut
+                mener Ã  l'exÃ©cution de plusieurs selects successifs pour une seule requÃªte HQL.
             </para>
 
             <para>
                 On n'utilise pas souvent les documents de mapping pour adapter le chargement.
-                Au lieu de cela, on conserve le comportement par défaut et on le surcharge pour
-                une transaction particulière en utilisant <literal>left join fetch</literal>
-                dans les requêtes HQL. Cela indique à hibernate à Hibernate de charger l'association
-                de manière agressive lors du premier select en utilisant une jointure externe.
-                Dans l'API Criteria vous pouvez utiliser la méthode 
+                Au lieu de cela, on conserve le comportement par dÃ©faut et on le surcharge pour
+                une transaction particuliÃ¨re en utilisant <literal>left join fetch</literal>
+                dans les requÃªtes HQL. Cela indique Ã  hibernate Ã  Hibernate de charger l'association
+                de maniÃ¨re agressive lors du premier select en utilisant une jointure externe.
+                Dans l'API Criteria vous pouvez utiliser la mÃ©thode 
                 <literal>setFetchMode(FetchMode.JOIN)</literal>
             </para>
             
             <para>
-                Si vous ne vous sentez pas prêt à modifier la stratégie de chargement utilisé
+                Si vous ne vous sentez pas prÃªt Ã  modifier la stratÃ©gie de chargement utilisÃ©
                 par <literal>get()</literal> ou <literal>load()</literal>, vous pouvez juste
-                utiliser une requête de type <literal>Criteria</literal>  comme par exemple :
+                utiliser une requÃªte de type <literal>Criteria</literal>  comme par exemple :
             </para>
             
             <programlisting><![CDATA[User user = (User) session.createCriteria(User.class)
@@ -253,12 +255,12 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 .uniqueResult();]]></programlisting>
                 
             <para>
-                (Il s'agit de l'équivalent pour Hibernate de ce que d'autres outils de mapping
+                (Il s'agit de l'Ã©quivalent pour Hibernate de ce que d'autres outils de mapping
                 appellent un "fetch plan" ou "plan de chargement")
             </para>
 
             <para>
-                Une autre manière complètement différente d'éviter le problème des N+1 selects
+                Une autre maniÃ¨re complÃ¨tement diffÃ©rente d'Ã©viter le problÃ¨me des N+1 selects
                 est d'utiliser le cache de second niveau.
             </para>
 
@@ -268,34 +270,34 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             <title>Proxys pour des associations vers un seul objet</title>
 
             <para>
-                Le chargement tardif des collections est implémenté par Hibernate en utilisant
-                ses propres implémentations pour des collections persistantes. Si l'on veut un
-                chargement tardif pour des associations vers un seul objet métier il faut utiliser
-                un autre mécanisme. L'entité qui est pointée par l'association doit être masquée
-                derrière un proxy. Hibernate implémente l'initialisation tardive des proxys sur des
-                objets persistents via une mise à jour à chaud du bytecode (à l'aide de l'excellente
+                Le chargement tardif des collections est implÃ©mentÃ© par Hibernate en utilisant
+                ses propres implÃ©mentations pour des collections persistantes. Si l'on veut un
+                chargement tardif pour des associations vers un seul objet mÃ©tier il faut utiliser
+                un autre mÃ©canisme. L'entitÃ© qui est pointÃ©e par l'association doit Ãªtre masquÃ©e
+                derriÃ¨re un proxy. Hibernate implÃ©mente l'initialisation tardive des proxys sur des
+                objets persistents via une mise Ã  jour Ã  chaud du bytecode (Ã  l'aide de l'excellente
                 librairie CGLIB).
             </para>
 
             <para>
-                Par défaut, Hibernate génère des proxys (au démarrage) pour toutes les classes
+                Par dÃ©faut, Hibernate gÃ©nÃ¨re des proxys (au dÃ©marrage) pour toutes les classes
                 persistantes et les utilise pour activer le chargement tardif des associations
                 <literal>many-to-one</literal> et <literal>one-to-one</literal>.
             </para>
 
             <para>
-                Le fichier de mapping peut déclarer une interface qui sera utilisée par le proxy
-                d'interfaçage pour cette classe à l'aide de l'attribut <literal>proxy</literal>.
-                Par défaut Hibernate utilises une sous classe de la classe persistante.
-                <emphasis>Il faut que les classes pour lesquelles on ajoute un proxy implémentent
-                un constructeur par défaut de visibilité au moins package. Ce constructeur est
-                recommandé pour toutes les classes persistantes !</emphasis>
+                Le fichier de mapping peut dÃ©clarer une interface qui sera utilisÃ©e par le proxy
+                d'interfaÃ§age pour cette classe Ã  l'aide de l'attribut <literal>proxy</literal>.
+                Par dÃ©faut Hibernate utilises une sous classe de la classe persistante.
+                <emphasis>Il faut que les classes pour lesquelles on ajoute un proxy implÃ©mentent
+                un constructeur par dÃ©faut de visibilitÃ© au moins package. Ce constructeur est
+                recommandÃ© pour toutes les classes persistantes !</emphasis>
             </para>
 
 
 
             <para>
-                Il y a quelques précautions à prendre lorsque l'on étend cette approche à des classes
+                Il y a quelques prÃ©cautions Ã  prendre lorsque l'on Ã©tend cette approche Ã  des classes
           polymorphiques, exemple :
             </para>
 
@@ -307,19 +309,19 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
     </class>]]></programlisting>
 
         <para>
-            Tout d'abord, les instances de <literal>Cat</literal> ne pourront jamais être "castées"
-        en <literal>DomesticCat</literal>, même si l'instance sous jacente est une instance 
+            Tout d'abord, les instances de <literal>Cat</literal> ne pourront jamais Ãªtre "castÃ©es"
+        en <literal>DomesticCat</literal>, mÃªme si l'instance sous jacente est une instance 
         de <literal>DomesticCat</literal> :
         </para>
         
-        <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instancie un proxy (n'interroge pas la base de données)
-if ( cat.isDomesticCat() ) {                  // interroge la base de données pour initialiser le proxy
+        <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instancie un proxy (n'interroge pas la base de donnÃ©es)
+if ( cat.isDomesticCat() ) {                  // interroge la base de donnÃ©es pour initialiser le proxy
     DomesticCat dc = (DomesticCat) cat;       // Erreur !
     ....
 }]]></programlisting>
     
         <para>
-            Deuxièmement, il est possible de casser la notion d'<literal>==</literal> des proxy.
+            DeuxiÃ¨mement, il est possible de casser la notion d'<literal>==</literal> des proxy.
         </para>
             
         <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instancie un proxy Cat
@@ -328,29 +330,29 @@ DomesticCat dc =
 System.out.println(cat==dc);                            // faux]]></programlisting>
         
         <para>
-            Cette situation n'est pas si mauvaise qu'il n'y parait. Même si nous avons deux
-        références à deux objets proxys différents, l'instance de base sera quand même le même objet :
+            Cette situation n'est pas si mauvaise qu'il n'y parait. MÃªme si nous avons deux
+        rÃ©fÃ©rences Ã  deux objets proxys diffÃ©rents, l'instance de base sera quand mÃªme le mÃªme objet :
         </para>
     
-        <programlisting><![CDATA[cat.setWeight(11.0);  // interroge la base de données pour initialiser le proxy
+        <programlisting><![CDATA[cat.setWeight(11.0);  // interroge la base de donnÃ©es pour initialiser le proxy
 System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 
         <para>
-            Troisièmement, vous ne pourrez pas utiliser un proxy CGLIB pour une classe <literal>final</literal>
-        ou pour une classe contenant la moindre méthode <literal>final</literal>.
+            TroisiÃ¨mement, vous ne pourrez pas utiliser un proxy CGLIB pour une classe <literal>final</literal>
+        ou pour une classe contenant la moindre mÃ©thode <literal>final</literal>.
         </para>
         
         <para>
-            Enfin, si votre objet persistant obtient une ressource à l'instanciation (par
-        example dans les initialiseurs ou dans le contructeur par défaut), alors ces ressources
+            Enfin, si votre objet persistant obtient une ressource Ã  l'instanciation (par
+        example dans les initialiseurs ou dans le contructeur par dÃ©faut), alors ces ressources
         seront aussi obtenues par le proxy. La classe proxy est vraiment une sous classe de la classe
         persistante.
         </para>
         
         <para>
-            Ces problèmes sont tous dus aux limitations fondamentales du modèle d'héritage unique de Java.
-        Si vous souhaitez éviter ces problèmes, vos classes persistantes doivent chacune implémenter
-        une interface qui déclare ses méthodes métier. Vous devriez alors spécifier ces interfaces
+            Ces problÃ¨mes sont tous dus aux limitations fondamentales du modÃ¨le d'hÃ©ritage unique de Java.
+        Si vous souhaitez Ã©viter ces problÃ¨mes, vos classes persistantes doivent chacune implÃ©menter
+        une interface qui dÃ©clare ses mÃ©thodes mÃ©tier. Vous devriez alors spÃ©cifier ces interfaces
         dans le fichier de mapping :
         </para>
 
@@ -362,10 +364,10 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 </class>]]></programlisting>
 
         <para>
-            où <literal>CatImpl</literal> implémente l'interface <literal>Cat</literal> et <literal>DomesticCatImpl</literal> 
-        implémente l'interface <literal>DomesticCat</literal>. Ainsi, des proxys pour les instances de 
-        <literal>Cat</literal> et <literal>DomesticCat</literal> pourraient être retournées par <literal>load()</literal> 
-        ou <literal>iterate()</literal> (Notez que <literal>list()</literal> ne retourne généralement pas de proxy).
+            oÃ¹ <literal>CatImpl</literal> implÃ©mente l'interface <literal>Cat</literal> et <literal>DomesticCatImpl</literal> 
+        implÃ©mente l'interface <literal>DomesticCat</literal>. Ainsi, des proxys pour les instances de 
+        <literal>Cat</literal> et <literal>DomesticCat</literal> pourraient Ãªtre retournÃ©es par <literal>load()</literal> 
+        ou <literal>iterate()</literal> (Notez que <literal>list()</literal> ne retourne gÃ©nÃ©ralement pas de proxy).
         </para>
 
         <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
@@ -373,13 +375,13 @@ Iterator iter = session.createQuery("from CatImpl as cat where cat.name='fritz'"
 Cat fritz = (Cat) iter.next();]]></programlisting>
         
         <para>
-            Les relations sont aussi initialisées tardivement. Ceci signifie que vous 
-        devez déclarer chaque propriété comme étant de type <literal>Cat</literal>, 
+            Les relations sont aussi initialisÃ©es tardivement. Ceci signifie que vous 
+        devez dÃ©clarer chaque propriÃ©tÃ© comme Ã©tant de type <literal>Cat</literal>, 
         et non <literal>CatImpl</literal>.
         </para>
         
         <para>
-            Certaines opérations ne nécessitent pas l'initialisation du proxy
+            Certaines opÃ©rations ne nÃ©cessitent pas l'initialisation du proxy
         </para>
         
         <itemizedlist spacing="compact">
@@ -403,15 +405,15 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </itemizedlist>
             
         <para>
-            Hibernate détectera les classes qui surchargent <literal>equals()</literal> ou
+            Hibernate dÃ©tectera les classes qui surchargent <literal>equals()</literal> ou
             <literal>hashCode()</literal>.
         </para>
 
         <para>
             Eh choisissant <literal>lazy="no-proxy"</literal> au lieu de <literal>lazy="proxy"</literal>
-            qui est la valeur par défaut, il est possible d'éviter les problèmes liés au transtypage.
-            Il faudra alors une instrumentation du bytecode à la compilation et toutes les opérations
-            résulterons immédiatement en une initialisation du proxy.
+            qui est la valeur par dÃ©faut, il est possible d'Ã©viter les problÃ¨mes liÃ©s au transtypage.
+            Il faudra alors une instrumentation du bytecode Ã  la compilation et toutes les opÃ©rations
+            rÃ©sulterons immÃ©diatement en une initialisation du proxy.
         </para>
 
         </sect2>
@@ -420,94 +422,94 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Initialisation des collections et des proxys</title>
 
             <para>
-                Une exception de type <literal>LazyInitializationException</literal> sera renvoyée par hibernate
-                si une collection ou un proxy non initialisé est accédé en dehors de la portée de la <literal>Session</literal>,
-                e.g. lorsque l'entité à laquelle appartient la collection ou qui a une référence vers le proxy est
-                dans l'état "détachée".
+                Une exception de type <literal>LazyInitializationException</literal> sera renvoyÃ©e par hibernate
+                si une collection ou un proxy non initialisÃ© est accÃ©dÃ© en dehors de la portÃ©e de la <literal>Session</literal>,
+                e.g. lorsque l'entitÃ© Ã  laquelle appartient la collection ou qui a une rÃ©fÃ©rence vers le proxy est
+                dans l'Ã©tat "dÃ©tachÃ©e".
             </para>
 
         <para>
-            Parfois, nous devons nous assurer qu'un proxy ou une collection est initialisée avant de 
-            fermer la <literal>Session</literal>. Bien sûr, nous pouvons toujours forcer l'initialisation
+            Parfois, nous devons nous assurer qu'un proxy ou une collection est initialisÃ©e avant de 
+            fermer la <literal>Session</literal>. Bien sÃ»r, nous pouvons toujours forcer l'initialisation
             en appelant par exemple <literal>cat.getSex()</literal> ou <literal>cat.getKittens().size()</literal>.
-            Mais ceci n'est pas très lisible pour les personnes parcourant le code et n'est pas très générique.
+            Mais ceci n'est pas trÃ¨s lisible pour les personnes parcourant le code et n'est pas trÃ¨s gÃ©nÃ©rique.
         </para>
         
         <para>
-            Les méthodes statiques <literal>Hibernate.initialize()</literal> et <literal>Hibernate.isInitialized()</literal>
-            fournissent à l'application un moyen de travailler avec des proxys ou des collections initialisés.
+            Les mÃ©thodes statiques <literal>Hibernate.initialize()</literal> et <literal>Hibernate.isInitialized()</literal>
+            fournissent Ã  l'application un moyen de travailler avec des proxys ou des collections initialisÃ©s.
             <literal>Hibernate.initialize(cat)</literal> forcera l'initialisation d'un proxy de <literal>cat</literal>, 
             si tant est que sa <literal>Session</literal> est ouverte. <literal>Hibernate.initialize( cat.getKittens() )</literal> 
-            a le même effet sur la collection kittens. 
+            a le mÃªme effet sur la collection kittens. 
         </para>
 
             <para>
-                Une autre option est de conserver la <literal>Session</literal> ouverte jusqu'à
-                ce que toutes les collections et tous les proxys aient été chargés. Dans certaines
-                architectures applicatives, particulièrement celles ou le code d'accès aux données
-                via hiberante et le code qui utilise ces données sont dans des couches applicatives
-                différentes ou des processus physiques différents, il peut devenir problématique
+                Une autre option est de conserver la <literal>Session</literal> ouverte jusqu'Ã 
+                ce que toutes les collections et tous les proxys aient Ã©tÃ© chargÃ©s. Dans certaines
+                architectures applicatives, particuliÃ¨rement celles ou le code d'accÃ¨s aux donnÃ©es
+                via hiberante et le code qui utilise ces donnÃ©es sont dans des couches applicatives
+                diffÃ©rentes ou des processus physiques diffÃ©rents, il peut devenir problÃ©matique
                 de garantir que la <literal>Session</literal> est ouverte lorsqu'une collection
-                est initialisée. Il y a deux moyens de traiter ce problème :
+                est initialisÃ©e. Il y a deux moyens de traiter ce problÃ¨me :
             </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
-                        Dans une application web, un filtre de servlet peut être utilisé pour
-                        fermer la <literal>Session</literal> uniquement lorsque la requête
-                        a été entièrement traitée, lorsque le rendu de la vue est fini
+                        Dans une application web, un filtre de servlet peut Ãªtre utilisÃ© pour
+                        fermer la <literal>Session</literal> uniquement lorsque la requÃªte
+                        a Ã©tÃ© entiÃ¨rement traitÃ©e, lorsque le rendu de la vue est fini
                         (il s'agit du pattern <emphasis>Open Session in View</emphasis>).
-                        Bien sûr, cela demande plus d'attention à la bonne gestion des exceptions
+                        Bien sÃ»r, cela demande plus d'attention Ã  la bonne gestion des exceptions
                         de l'application. Il est d'une importance vitale que la <literal>Session</literal>
-                        soit fermée et la transaction terminée avant que l'on rende la main à l'utilisateur
-                        même si une exception survient durant le traitement de la vue. 
+                        soit fermÃ©e et la transaction terminÃ©e avant que l'on rende la main Ã  l'utilisateur
+                        mÃªme si une exception survient durant le traitement de la vue. 
                         Voir le wiki Hibernate pour des exemples sur le pattern
                         "Open Session in View".
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        Dans une application avec une couche métier séparée, la couche contenant
-                        la logique métier doit "préparer" toutes les collections qui seront
-                        nécessaires à la couche web avant de retourner les données. Cela signifie
-                        que la couche métier doit charger toutes les données et retourner toutes
-                        les données déjà initialisées à la couche de présentation/web pour un
-                        cas d'utilisation donné. En général l'application appelle la méthode
-                        <literal>Hibernate.initialize()</literal> pour chaque collection nécessaire
-                        dans la couche web (cet appel doit être fait avant la fermeture de la session)
-                        ou bien récupère les collections de manière agressive à l'aide d'une requête
-                        HQL avec une clause <literal>FETCH</literal> ou à l'aide du mode
-                        <literal>FetchMode.JOIN</literal> pour une requête de type <literal>Criteria</literal>.
-                        Cela est en général plus facile si vous utilisez le pattern <emphasis>Command</emphasis>
-                        plutôt que <emphasis>Session Facade</emphasis>.
+                        Dans une application avec une couche mÃ©tier sÃ©parÃ©e, la couche contenant
+                        la logique mÃ©tier doit "prÃ©parer" toutes les collections qui seront
+                        nÃ©cessaires Ã  la couche web avant de retourner les donnÃ©es. Cela signifie
+                        que la couche mÃ©tier doit charger toutes les donnÃ©es et retourner toutes
+                        les donnÃ©es dÃ©jÃ  initialisÃ©es Ã  la couche de prÃ©sentation/web pour un
+                        cas d'utilisation donnÃ©. En gÃ©nÃ©ral l'application appelle la mÃ©thode
+                        <literal>Hibernate.initialize()</literal> pour chaque collection nÃ©cessaire
+                        dans la couche web (cet appel doit Ãªtre fait avant la fermeture de la session)
+                        ou bien rÃ©cupÃ¨re les collections de maniÃ¨re agressive Ã  l'aide d'une requÃªte
+                        HQL avec une clause <literal>FETCH</literal> ou Ã  l'aide du mode
+                        <literal>FetchMode.JOIN</literal> pour une requÃªte de type <literal>Criteria</literal>.
+                        Cela est en gÃ©nÃ©ral plus facile si vous utilisez le pattern <emphasis>Command</emphasis>
+                        plutÃ´t que <emphasis>Session Facade</emphasis>.
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        Vous pouvez également attacher à une <literal>Session</literal> un objet chargé
-                        au préalable à l'aide des méthodes <literal>merge()</literal> ou <literal>lock()</literal>
-                        avant d'accéder aux collections (ou aux proxys) non initialisés. Non, Hibernate ne
+                        Vous pouvez Ã©galement attacher Ã  une <literal>Session</literal> un objet chargÃ©
+                        au prÃ©alable Ã  l'aide des mÃ©thodes <literal>merge()</literal> ou <literal>lock()</literal>
+                        avant d'accÃ©der aux collections (ou aux proxys) non initialisÃ©s. Non, Hibernate ne
                         fait pas, et ne doit pas faire, cela automatiquement car cela pourrait introduire
-                        une sémantique transactionnelle ad hoc.
+                        une sÃ©mantique transactionnelle ad hoc.
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                Parfois, vous ne voulez pas initialiser une grande collection mais vous avez quand même
-                besoin d'informations sur elle (comme sa taille) ou un sous ensemble de ses données
+                Parfois, vous ne voulez pas initialiser une grande collection mais vous avez quand mÃªme
+                besoin d'informations sur elle (comme sa taille) ou un sous ensemble de ses donnÃ©es
             </para>
 
             <para>
-                Vous pouvez utiliser un filtre de collection pour récupérer sa taille sans l'initialiser :
+                Vous pouvez utiliser un filtre de collection pour rÃ©cupÃ©rer sa taille sans l'initialiser :
             </para>
 
             <programlisting><![CDATA[( (Integer) s.createFilter( collection, "select count(*)" ).list().get(0) ).intValue()]]></programlisting>
 
             <para>
-                La méthode <literal>createFilter()</literal> est également utilisée pour récupérer
-                de manière efficace des sous ensembles d'une collection sans avoir besoin de l'initialiser
+                La mÃ©thode <literal>createFilter()</literal> est Ã©galement utilisÃ©e pour rÃ©cupÃ©rer
+                de maniÃ¨re efficace des sous ensembles d'une collection sans avoir besoin de l'initialiser
                 dans son ensemble.
             </para>
 
@@ -520,40 +522,40 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         <title>Utiliser le chargement par lot</title>
 
         <para>
-            Pour améliorer les performances, Hibernate peut utiliser le chargement par lot
-            ce qui veut dire qu'Hibernate peut charger plusieurs proxys (ou collections) non initialisés en une seule 
-            requête lorsque l'on accède à l'un de ces proxys. Le chargement par lot est une optimisation 
-            intimement liée à la stratégie de chargement tardif par select. Il y a deux moyens d'activer le  
+            Pour amÃ©liorer les performances, Hibernate peut utiliser le chargement par lot
+            ce qui veut dire qu'Hibernate peut charger plusieurs proxys (ou collections) non initialisÃ©s en une seule 
+            requÃªte lorsque l'on accÃ¨de Ã  l'un de ces proxys. Le chargement par lot est une optimisation 
+            intimement liÃ©e Ã  la stratÃ©gie de chargement tardif par select. Il y a deux moyens d'activer le  
             chargement par lot : au niveau de la classe et au niveau de la collection.
         </para>
 
         <para>
-            Le chargement par lot pour les classes/entités est plus simple à comprendre. Imaginez que vous ayez la
-            situation suivante à l'exécution : vous avez 25 instances de <literal>Cat</literal> 
-            chargées dans une <literal>Session</literal>, chaque <literal>Cat</literal> a une référence 
-            à son <literal>owner</literal>, une <literal>Person</literal>.
-            La classe <literal>Person</literal> est mappée avec un proxy, <literal>lazy="true"</literal>. 
-            Si vous itérez sur tous les cats et appelez <literal>getOwner()</literal> sur chacun d'eux, 
-            Hibernate exécutera par défaut 25 <literal>SELECT</literal>, pour charger les owners
-            (initialiser le proxy). Vous pouvez paramétrer ce comportement en spécifiant une 
+            Le chargement par lot pour les classes/entitÃ©s est plus simple Ã  comprendre. Imaginez que vous ayez la
+            situation suivante Ã  l'exÃ©cution : vous avez 25 instances de <literal>Cat</literal> 
+            chargÃ©es dans une <literal>Session</literal>, chaque <literal>Cat</literal> a une rÃ©fÃ©rence 
+            Ã  son <literal>owner</literal>, une <literal>Person</literal>.
+            La classe <literal>Person</literal> est mappÃ©e avec un proxy, <literal>lazy="true"</literal>. 
+            Si vous itÃ©rez sur tous les cats et appelez <literal>getOwner()</literal> sur chacun d'eux, 
+            Hibernate exÃ©cutera par dÃ©faut 25 <literal>SELECT</literal>, pour charger les owners
+            (initialiser le proxy). Vous pouvez paramÃ©trer ce comportement en spÃ©cifiant une 
             <literal>batch-size</literal> (taille du lot) dans le mapping de <literal>Person</literal> :
         </para>
 
             <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
 
         <para>
-            Hibernate exécutera désormais trois requêtes, en chargeant respectivement 10, 
-            10, et 5 entités.
+            Hibernate exÃ©cutera dÃ©sormais trois requÃªtes, en chargeant respectivement 10, 
+            10, et 5 entitÃ©s.
         </para>
 
         <para>
             Vous pouvez aussi activer le chargement par lot pour les collections. Par exemple, 
-            si chaque <literal>Person</literal> a une collection chargée tardivement de 
-            <literal>Cat</literal>s, et que 10 personnes sont actuellement chargées dans la 
-            <literal>Session</literal>, itérer sur toutes les persons générera 10 <literal>SELECT</literal>s,
+            si chaque <literal>Person</literal> a une collection chargÃ©e tardivement de 
+            <literal>Cat</literal>s, et que 10 personnes sont actuellement chargÃ©es dans la 
+            <literal>Session</literal>, itÃ©rer sur toutes les persons gÃ©nÃ©rera 10 <literal>SELECT</literal>s,
             un pour chaque appel de <literal>getCats()</literal>. Si vous activez le chargement par lot pour la
             collection <literal>cats</literal> dans le mapping de <literal>Person</literal>, Hibernate pourra
-            précharger les collections :
+            prÃ©charger les collections :
         </para>
 
         <programlisting><![CDATA[<class name="Person">
@@ -565,15 +567,15 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         <para>
             Avec une taille de lot (<literal>batch-size</literal>) de 3, Hibernate chargera 
         respectivement 3, 3, 3, et 1 collections en quatre <literal>SELECT</literal>s. 
-        Encore une fois, la valeur de l'attribut dépend du nombre de collections
-        non initialisées dans une <literal>Session</literal> particulière.
+        Encore une fois, la valeur de l'attribut dÃ©pend du nombre de collections
+        non initialisÃ©es dans une <literal>Session</literal> particuliÃ¨re.
         </para>
 
         <para>
-            Le chargement par lot de collections est particulièrement utile si vous avez des 
-        arborescenses récursives d'éléments (typiquement, le schéma facture de 
-        matériels). (Bien qu'un <emphasis>sous ensemble</emphasis> ou un 
-        <emphasis>chemin matérialisé</emphasis> est sans doute une meilleure option pour
+            Le chargement par lot de collections est particuliÃ¨rement utile si vous avez des 
+        arborescenses rÃ©cursives d'Ã©lÃ©ments (typiquement, le schÃ©ma facture de 
+        matÃ©riels). (Bien qu'un <emphasis>sous ensemble</emphasis> ou un 
+        <emphasis>chemin matÃ©rialisÃ©</emphasis> est sans doute une meilleure option pour
         des arbres principalement en lecture.)
         </para>
 
@@ -583,9 +585,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Utilisation du chargement par sous select</title>
 
             <para>
-                Si une collection ou un proxy vers un objet doit être chargé, Hibernate va tous les
-                charger en ré-exécutant la requête orignial dans un sous select. Cela fonctionne de la
-                même manière que le chargement par lot sans la possibilité de fragmenter le chargement.
+                Si une collection ou un proxy vers un objet doit Ãªtre chargÃ©, Hibernate va tous les
+                charger en rÃ©-exÃ©cutant la requÃªte orignial dans un sous select. Cela fonctionne de la
+                mÃªme maniÃ¨re que le chargement par lot sans la possibilitÃ© de fragmenter le chargement.
             </para>
             
             <!-- TODO: Write more about this -->
@@ -593,21 +595,21 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </sect2>
         
         <sect2 id="performance-fetching-lazyproperties">
-            <title>Utiliser le chargement tardif des propriétés</title>
+            <title>Utiliser le chargement tardif des propriÃ©tÃ©s</title>
 
             <para>
-                Hibernate3 supporte le chargement tardif de propriétés individuelles. La technique
-                d'optimisation est également connue sous le nom de <emphasis>fetch groups</emphasis> (groupes
-                de chargement). Il faut noter qu'il s'agit principalement d'une fonctionnalité marketing
+                Hibernate3 supporte le chargement tardif de propriÃ©tÃ©s individuelles. La technique
+                d'optimisation est Ã©galement connue sous le nom de <emphasis>fetch groups</emphasis> (groupes
+                de chargement). Il faut noter qu'il s'agit principalement d'une fonctionnalitÃ© marketing
                 car en pratique l'optimisation de la lecture d'un enregistrement est beaucoup plus importante
-                que l'optimisation de la lecture d'une colonne. Cependant, la restriction du chargement à
-                certaines colonnes peut être pratique dans des cas extrèmes, lorsque des tables "legacy"
-                possèdent des centaines de colonnes et que le modèle de données ne peut pas être amélioré.
+                que l'optimisation de la lecture d'une colonne. Cependant, la restriction du chargement Ã 
+                certaines colonnes peut Ãªtre pratique dans des cas extrÃ¨mes, lorsque des tables "legacy"
+                possÃ¨dent des centaines de colonnes et que le modÃ¨le de donnÃ©es ne peut pas Ãªtre amÃ©liorÃ©.
             </para>
 
             <para>
-                Pour activer le chargement tardif d'une propriété, il faut mettre l'attribut <literal>lazy</literal>
-                sur une propriété particulière du mapping :
+                Pour activer le chargement tardif d'une propriÃ©tÃ©, il faut mettre l'attribut <literal>lazy</literal>
+                sur une propriÃ©tÃ© particuliÃ¨re du mapping :
             </para>
 
             <programlisting><![CDATA[<class name="Document">
@@ -620,13 +622,13 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                Le chargement tardif des propriétés requiert une instrumentation du bytecode lors de la
-                compilation ! Si les classes persistantes ne sont pas instrumentées, Hibernate ignorera de
-                manière silencieuse le mode tardif et retombera dans le mode de chargement immédiat.
+                Le chargement tardif des propriÃ©tÃ©s requiert une instrumentation du bytecode lors de la
+                compilation ! Si les classes persistantes ne sont pas instrumentÃ©es, Hibernate ignorera de
+                maniÃ¨re silencieuse le mode tardif et retombera dans le mode de chargement immÃ©diat.
             </para>
 
             <para>
-                Pour l'instrumentation du bytecode vous pouvez utiliser la tâche Ant suivante :
+                Pour l'instrumentation du bytecode vous pouvez utiliser la tÃ¢che Ant suivante :
             </para>
 
             <programlisting><![CDATA[<target name="instrument" depends="compile">
@@ -644,16 +646,16 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </target>]]></programlisting>
 
             <para>
-                Une autre façon (meilleure ?) pour éviter de lire plus de colonnes que
-                nécessaire au moins pour des transactions en lecture seule est d'utiliser
-                les fonctionnalités de projection des requêtes HQL ou Criteria. Cela évite
-                de devoir instrumenter le bytecode à la compilation et est certainement une
-                solution préférable.
+                Une autre faÃ§on (meilleure ?) pour Ã©viter de lire plus de colonnes que
+                nÃ©cessaire au moins pour des transactions en lecture seule est d'utiliser
+                les fonctionnalitÃ©s de projection des requÃªtes HQL ou Criteria. Cela Ã©vite
+                de devoir instrumenter le bytecode Ã  la compilation et est certainement une
+                solution prÃ©fÃ©rable.
             </para>
             
             <para>
-                Vous pouvez forcer le mode de chargement agressif des propriétés en utilisant
-                <literal>fetch all properties</literal> dans les requêts HQL.
+                Vous pouvez forcer le mode de chargement agressif des propriÃ©tÃ©s en utilisant
+                <literal>fetch all properties</literal> dans les requÃªts HQL.
             </para>
 
         </sect2>
@@ -664,21 +666,21 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         <para>
             Une <literal>Session</literal> Hibernate est un cache de niveau transactionnel 
-        des données persistantes. Il est possible de configurer un cache de cluster ou de JVM 
-        (de niveau <literal>SessionFactory</literal> pour être exact) défini classe par classe 
-        et collection par collection. Vous pouvez même utiliser votr choix de cache
-        en implémentant le pourvoyeur (provider) associé.
+        des donnÃ©es persistantes. Il est possible de configurer un cache de cluster ou de JVM 
+        (de niveau <literal>SessionFactory</literal> pour Ãªtre exact) dÃ©fini classe par classe 
+        et collection par collection. Vous pouvez mÃªme utiliser votr choix de cache
+        en implÃ©mentant le pourvoyeur (provider) associÃ©.
         Faites attention, les caches ne sont jamais avertis des modifications faites 
-        dans la base de données par d'autres applications (ils peuvent cependant être 
-        configurés pour régulièrement expirer les données en cache).
+        dans la base de donnÃ©es par d'autres applications (ils peuvent cependant Ãªtre 
+        configurÃ©s pour rÃ©guliÃ¨rement expirer les donnÃ©es en cache).
         </para>
         
         <para>
-            Par défaut, Hibernate utilise EHCache comme cache de niveau JVM (le support 
-        de JCS est désormais déprécié et sera enlevé des futures versions d'Hibernate).
-        Vous pouvez choisir une autre implémentation en spécifiant le nom de la classe qui 
-        implémente <literal>org.hibernate.cache.CacheProvider</literal> en utilisant 
-        la propriété <literal>hibernate.cache.provider_class</literal>.
+            Par dÃ©faut, Hibernate utilise EHCache comme cache de niveau JVM (le support 
+        de JCS est dÃ©sormais dÃ©prÃ©ciÃ© et sera enlevÃ© des futures versions d'Hibernate).
+        Vous pouvez choisir une autre implÃ©mentation en spÃ©cifiant le nom de la classe qui 
+        implÃ©mente <literal>org.hibernate.cache.CacheProvider</literal> en utilisant 
+        la propriÃ©tÃ© <literal>hibernate.cache.provider_class</literal>.
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">
@@ -695,28 +697,28 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
               <entry>Classe pourvoyeuse</entry>
               <entry>Type</entry>
               <entry>Support en Cluster</entry>
-              <entry>Cache de requêtes supporté</entry>
+              <entry>Cache de requÃªtes supportÃ©</entry>
             </row>
             </thead>
             <tbody>
             <row>
                 <entry>Hashtable (ne pas utiliser en production)</entry>
                 <entry><literal>org.hibernate.cache.HashtableCacheProvider</literal></entry>
-                <entry>mémoire</entry>
+                <entry>mÃ©moire</entry>
                 <entry></entry>
                 <entry>oui</entry>
             </row>
             <row>
                 <entry>EHCache</entry>
                 <entry><literal>org.hibernate.cache.EhCacheProvider</literal></entry>
-                <entry>mémoire, disque</entry>
+                <entry>mÃ©moire, disque</entry>
                 <entry></entry>
                 <entry>oui</entry>
             </row>
             <row>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
-                <entry>mémoire, disque</entry>
+                <entry>mÃ©moire, disque</entry>
                 <entry>oui (invalidation de cluster)</entry>
                 <entry>oui</entry>
             </row>
@@ -732,7 +734,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
                 <entry>en cluster (multicast ip), transactionnel</entry>
                 <entry>oui (replication)</entry>
-                <entry>oui (horloge sync. nécessaire)</entry>
+                <entry>oui (horloge sync. nÃ©cessaire)</entry>
             </row>
             </tbody>
             </tgroup>
@@ -742,7 +744,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Mapping de Cache</title>
 
             <para>
-                L'élément <literal>&lt;cache&gt;</literal> d'une classe ou d'une collection à
+                L'Ã©lÃ©ment <literal>&lt;cache&gt;</literal> d'une classe ou d'une collection Ã 
         la forme suivante :
             </para>
 
@@ -760,39 +762,39 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <calloutlist>
                     <callout arearefs="cache1">
                         <para>
-                            <literal>usage</literal> (requis) spécifie la stratégie de cache :
+                            <literal>usage</literal> (requis) spÃ©cifie la stratÃ©gie de cache :
                             <literal>transactionel</literal>,
-                            <literal>lecture-écriture</literal>,
-                            <literal>lecture-écriture non stricte</literal> ou
+                            <literal>lecture-Ã©criture</literal>,
+                            <literal>lecture-Ã©criture non stricte</literal> ou
                             <literal>lecture seule</literal>
                         </para>
                     </callout>                   
                     <callout arearefs="cache2">
                         <para>
-                            <literal>region</literal> (optionnel, par défaut il s'agit du nom
-                            de la classe ou du nom de role de la collection) spécifie le nom de la
-                            région du cache de second niveau
+                            <literal>region</literal> (optionnel, par dÃ©faut il s'agit du nom
+                            de la classe ou du nom de role de la collection) spÃ©cifie le nom de la
+                            rÃ©gion du cache de second niveau
                         </para>
                     </callout>
                     <callout arearefs="cache3">
                         <para>
-                            <literal>include</literal> (optionnel, par défaut <literal>all</literal>)
-                            <literal>non-lazy</literal> spécifie que les propriétés des entités mappées avec 
-                            <literal>lazy="true"</literal> ne doivent pas être mises en cache lorsque
-                            le chargement tardif des attributs est activé.
+                            <literal>include</literal> (optionnel, par dÃ©faut <literal>all</literal>)
+                            <literal>non-lazy</literal> spÃ©cifie que les propriÃ©tÃ©s des entitÃ©s mappÃ©es avec 
+                            <literal>lazy="true"</literal> ne doivent pas Ãªtre mises en cache lorsque
+                            le chargement tardif des attributs est activÃ©.
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
-                Alternativement (voir préférentiellement), vous pouvez spécifier les éléments 
+                Alternativement (voir prÃ©fÃ©rentiellement), vous pouvez spÃ©cifier les Ã©lÃ©ments 
         <literal>&lt;class-cache&gt;</literal> et <literal>&lt;collection-cache&gt;</literal> 
         dans <literal>hibernate.cfg.xml</literal>.
             </para>
             
             <para>
-                L'attribut <literal>usage</literal> spécifie une <emphasis>stratégie de concurrence d'accès au cache</emphasis>.
+                L'attribut <literal>usage</literal> spÃ©cifie une <emphasis>stratÃ©gie de concurrence d'accÃ¨s au cache</emphasis>.
             </para>
 
         </sect2>
@@ -802,8 +804,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 Si votre application a besoin de lire mais ne modifie jamais les instances d'une classe,
-        un cache <literal>read-only</literal> peut être utilisé. C'est la stratégie la plus simple
-        et la plus performante. Elle est même parfaitement sûre dans un cluster.
+        un cache <literal>read-only</literal> peut Ãªtre utilisÃ©. C'est la stratÃ©gie la plus simple
+        et la plus performante. Elle est mÃªme parfaitement sÃ»re dans un cluster.
             </para>
 
             <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
@@ -815,19 +817,19 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
 
         <sect2 id="performance-cache-readwrite">
-            <title>Stratégie : lecture/écriture</title>
+            <title>StratÃ©gie : lecture/Ã©criture</title>
 
             <para>
-                Si l'application a besoin de mettre à jour des données, un cache <literal>read-write</literal> peut
-        être approprié. Cette stratégie ne devrait jamais être utilisée si votre application
-        nécessite un niveau d'isolation transactionnelle sérialisable. Si le cache est utilisé 
-        dans un environnement JTA, vous devez spécifier 
-        <literal>hibernate.transaction.manager_lookup_class</literal>, fournissant une stratégie pour obtenir
+                Si l'application a besoin de mettre Ã  jour des donnÃ©es, un cache <literal>read-write</literal> peut
+        Ãªtre appropriÃ©. Cette stratÃ©gie ne devrait jamais Ãªtre utilisÃ©e si votre application
+        nÃ©cessite un niveau d'isolation transactionnelle sÃ©rialisable. Si le cache est utilisÃ© 
+        dans un environnement JTA, vous devez spÃ©cifier 
+        <literal>hibernate.transaction.manager_lookup_class</literal>, fournissant une stratÃ©gie pour obtenir
         le <literal>TransactionManager</literal> JTA. Dans d'autres environnements, vous devriez vous assurer
-        que la transation est terminée à l'appel de <literal>Session.close()</literal> 
-        ou <literal>Session.disconnect()</literal>. Si vous souhaitez utiliser cette stratégie 
-        dans un cluster, vous devriez vous assurer que l'implémentation de cache utilisée supporte 
-        le vérrouillage. Ce que ne font <emphasis>pas</emphasis> les pourvoyeurs caches fournis.
+        que la transation est terminÃ©e Ã  l'appel de <literal>Session.close()</literal> 
+        ou <literal>Session.disconnect()</literal>. Si vous souhaitez utiliser cette stratÃ©gie 
+        dans un cluster, vous devriez vous assurer que l'implÃ©mentation de cache utilisÃ©e supporte 
+        le vÃ©rrouillage. Ce que ne font <emphasis>pas</emphasis> les pourvoyeurs caches fournis.
             </para>
 
             <programlisting><![CDATA[<class name="eg.Cat" .... >
@@ -842,40 +844,40 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </sect2>
 
         <sect2 id="performance-cache-nonstrict">
-            <title>Stratégie : lecture/écriture non stricte</title>
+            <title>StratÃ©gie : lecture/Ã©criture non stricte</title>
 
             <para>
-                Si l'application besoin de mettre à jour les données de manière occasionnelle 
-        (qu'il est très peu probable que deux transactions essaient de mettre à jour le même 
-        élément simultanément) et qu'une isolation transactionnelle stricte n'est pas nécessaire, 
-        un cache <literal>nonstrict-read-write</literal> peut être approprié. Si le cache est 
-        utilisé dans un environnement JTA, vous devez spécifier
+                Si l'application besoin de mettre Ã  jour les donnÃ©es de maniÃ¨re occasionnelle 
+        (qu'il est trÃ¨s peu probable que deux transactions essaient de mettre Ã  jour le mÃªme 
+        Ã©lÃ©ment simultanÃ©ment) et qu'une isolation transactionnelle stricte n'est pas nÃ©cessaire, 
+        un cache <literal>nonstrict-read-write</literal> peut Ãªtre appropriÃ©. Si le cache est 
+        utilisÃ© dans un environnement JTA, vous devez spÃ©cifier
         <literal>hibernate.transaction.manager_lookup_class</literal>. Dans d'autres 
-        environnements, vous devriez vous assurer que la transation est terminée à l'appel 
+        environnements, vous devriez vous assurer que la transation est terminÃ©e Ã  l'appel 
         de <literal>Session.close()</literal> ou <literal>Session.disconnect()</literal> 
             </para>
 
         </sect2>
 
         <sect2 id="performance-cache-transactional">
-            <title>Stratégie : transactionelle</title>
+            <title>StratÃ©gie : transactionelle</title>
 
             <para>
-                La stratégie de cache <literal>transactional</literal> supporte un cache 
-        complètement transactionnel comme, par exemple, JBoss TreeCache. Un tel cache ne 
-        peut être utilisé que dans un environnement JTA et vous devez spécifier 
+                La stratÃ©gie de cache <literal>transactional</literal> supporte un cache 
+        complÃ¨tement transactionnel comme, par exemple, JBoss TreeCache. Un tel cache ne 
+        peut Ãªtre utilisÃ© que dans un environnement JTA et vous devez spÃ©cifier 
         <literal>hibernate.transaction.manager_lookup_class</literal>. 
             </para>
 
         </sect2>
         
         <para>
-            Aucun des caches livrés ne supporte toutes les stratégies de concurrence. Le tableau suivant montre
-        quels caches sont compatibles avec quelles stratégies de concurrence.       
+            Aucun des caches livrÃ©s ne supporte toutes les stratÃ©gies de concurrence. Le tableau suivant montre
+        quels caches sont compatibles avec quelles stratÃ©gies de concurrence.       
         </para>
 
         <table frame="topbot">
-            <title>Stratégie de concurrence du cache</title>
+            <title>StratÃ©gie de concurrence du cache</title>
             <tgroup cols='5' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="1*"/>
@@ -886,8 +888,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <row>
               <entry>Cache</entry>
               <entry>read-only (lecture seule)</entry>
-              <entry>nonstrict-read-write (lecture-écriture non stricte)</entry>
-              <entry>read-write (lecture-ériture)</entry>
+              <entry>nonstrict-read-write (lecture-Ã©criture non stricte)</entry>
+              <entry>read-write (lecture-Ã©riture)</entry>
               <entry>transactional (transactionnel)</entry>
             </row>
             </thead>
@@ -934,21 +936,21 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     </sect1>
 
     <sect1 id="performance-sessioncache" revision="2">
-        <title>Gérer les caches</title>
+        <title>GÃ©rer les caches</title>
 
         <para>
-            A chaque fois que vous passez un objet à la méthode <literal>save()</literal>, 
-            <literal>update()</literal> ou <literal>saveOrUpdate()</literal> et à chaque fois
-            que vous récupérez un objet avec <literal>load()</literal>, <literal>get()</literal>,
+            A chaque fois que vous passez un objet Ã  la mÃ©thode <literal>save()</literal>, 
+            <literal>update()</literal> ou <literal>saveOrUpdate()</literal> et Ã  chaque fois
+            que vous rÃ©cupÃ©rez un objet avec <literal>load()</literal>, <literal>get()</literal>,
             <literal>list()</literal>, <literal>iterate()</literal> or <literal>scroll()</literal>, 
-            cet objet est ajouté au cache interne de la <literal>Session</literal>. 
+            cet objet est ajoutÃ© au cache interne de la <literal>Session</literal>. 
         </para>
         <para>
-            Lorsqu'il y a un appel à la méthode <literal>flush()</literal>, l'état de cet objet
-            va être synchronisé avec la base de données. Si vous ne voulez pas que cette synchronisation
-            ait lieu ou si vous traitez un grand nombre d'objets et que vous avez besoin de gérer
-            la mémoire de manière efficace, vous pouvez utiliser la méthode <literal>evict()</literal>
-            pour supprimer l'objet et ses collections dépendantes du cache de la session
+            Lorsqu'il y a un appel Ã  la mÃ©thode <literal>flush()</literal>, l'Ã©tat de cet objet
+            va Ãªtre synchronisÃ© avec la base de donnÃ©es. Si vous ne voulez pas que cette synchronisation
+            ait lieu ou si vous traitez un grand nombre d'objets et que vous avez besoin de gÃ©rer
+            la mÃ©moire de maniÃ¨re efficace, vous pouvez utiliser la mÃ©thode <literal>evict()</literal>
+            pour supprimer l'objet et ses collections dÃ©pendantes du cache de la session
         </para>
         
         <programlisting><![CDATA[ScrollableResult cats = sess.createQuery("from Cat as cat").scroll(); //a huge result set
@@ -959,7 +961,7 @@ while ( cats.next() ) {
 }]]></programlisting>
             
         <para>
-          La <literal>Session</literal> dispose aussi de la méthode <literal>contains()</literal> pour déterminer
+          La <literal>Session</literal> dispose aussi de la mÃ©thode <literal>contains()</literal> pour dÃ©terminer
             si une instance appartient au cache de la session.
         </para>
         
@@ -968,10 +970,10 @@ while ( cats.next() ) {
         </para>
         
         <para>
-            Pour le cache de second niveau, il existe des méthodes définies dans 
+            Pour le cache de second niveau, il existe des mÃ©thodes dÃ©finies dans 
         <literal>SessionFactory</literal> pour retirer des instances du cache, 
-        la classe entière, une instance de collection ou
-        le rôle entier d'une collection.
+        la classe entiÃ¨re, une instance de collection ou
+        le rÃ´le entier d'une collection.
         </para>
         
         <programlisting><![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat
@@ -980,39 +982,39 @@ sessionFactory.evictCollection("Cat.kittens", catId); //evict a particular colle
 sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]></programlisting>
 
         <para>
-            Le <literal>CacheMode</literal> contrôle comme une session particulière interragit avec le
+            Le <literal>CacheMode</literal> contrÃ´le comme une session particuliÃ¨re interragit avec le
             cache de second niveau
         </para>
         
         <itemizedlist>
         <listitem>
         <para>
-            <literal>CacheMode.NORMAL</literal> - lit et écrit les items dans le cache de second niveau
+            <literal>CacheMode.NORMAL</literal> - lit et Ã©crit les items dans le cache de second niveau
         </para>
         </listitem>
         <listitem>
         <para>
             <literal>CacheMode.GET</literal> - lit les items dans le cache de second niveau mais ne
-            les écrit pas sauf dans le cache d'une mise à jour d'une donnée
+            les Ã©crit pas sauf dans le cache d'une mise Ã  jour d'une donnÃ©e
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.PUT</literal> -  écrit les items dans le cache de second niveau mais ne les
+            <literal>CacheMode.PUT</literal> -  Ã©crit les items dans le cache de second niveau mais ne les
             lit pas dans le cache de second niveau
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.REFRESH</literal> - écrit les items dans le cache de second niveau mais ne les
+            <literal>CacheMode.REFRESH</literal> - Ã©crit les items dans le cache de second niveau mais ne les
             lit pas dans le cache de second niveau, outrepasse l'effet de<literal>hibernate.cache.use_minimal_puts</literal>, 
-            en forçant un rafraîchissement du cache de second niveau pour chaque item lu dans la base
+            en forÃ§ant un rafraÃ®chissement du cache de second niveau pour chaque item lu dans la base
         </para>
         </listitem>
         </itemizedlist>
         
         <para>
-            Pour parcourir le contenu du cache de second niveau ou la région du cache dédiée au requêtes, vous
+            Pour parcourir le contenu du cache de second niveau ou la rÃ©gion du cache dÃ©diÃ©e au requÃªtes, vous
             pouvez utiliser l'API <literal>Statistics</literal>
             API:
         </para>
@@ -1022,8 +1024,8 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         .getEntries();]]></programlisting>
         
         <para>
-          Vous devez pour cela activer les statistiques et optionnellement forcer Hibernate à conserver les entrées dans le
-          cache sous un format plus compréhensible pour l'utilisateur :
+          Vous devez pour cela activer les statistiques et optionnellement forcer Hibernate Ã  conserver les entrÃ©es dans le
+          cache sous un format plus comprÃ©hensible pour l'utilisateur :
         </para>
         
         <programlisting><![CDATA[hibernate.generate_statistics true
@@ -1032,37 +1034,37 @@ hibernate.cache.use_structured_entries true]]></programlisting>
     </sect1>
     
     <sect1 id="performance-querycache" revision="1">
-        <title>Le cache de requêtes</title>
+        <title>Le cache de requÃªtes</title>
 
         <para>
-          Les résultats d'une requête peuvent aussi être placés en cache. Ceci n'est utile
-            que pour les requêtes qui sont exécutées avec les mêmes paramètres. Pour utiliser
-            le cache de requêtes, vous devez d'abord l'activer :
+          Les rÃ©sultats d'une requÃªte peuvent aussi Ãªtre placÃ©s en cache. Ceci n'est utile
+            que pour les requÃªtes qui sont exÃ©cutÃ©es avec les mÃªmes paramÃ¨tres. Pour utiliser
+            le cache de requÃªtes, vous devez d'abord l'activer :
         </para>
         
         <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>       
 
         <para>
-          Ce paramètre amène la création de deux nouvelles régions dans le cache, une qui va conserver
-          le résultat des requêtes mises en cache (<literal>org.hibernate.cache.StandardQueryCache</literal>)
-          et l'autre qui va conserver l'horodatage des mises à jour les plus récentes effectuées sur les
-          tables requêtables (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>).
-          Il faut noter que le cache de requête ne conserve pas l'état des entités, il met en cache
+          Ce paramÃ¨tre amÃ¨ne la crÃ©ation de deux nouvelles rÃ©gions dans le cache, une qui va conserver
+          le rÃ©sultat des requÃªtes mises en cache (<literal>org.hibernate.cache.StandardQueryCache</literal>)
+          et l'autre qui va conserver l'horodatage des mises Ã  jour les plus rÃ©centes effectuÃ©es sur les
+          tables requÃªtables (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>).
+          Il faut noter que le cache de requÃªte ne conserve pas l'Ã©tat des entitÃ©s, il met en cache
           uniquement les valeurs de l'identifiant et les valeurs de types de base (?). Le cache
-          de requête doit toujours être utilisé avec le cache de second niveau pour être efficace.
+          de requÃªte doit toujours Ãªtre utilisÃ© avec le cache de second niveau pour Ãªtre efficace.
         </para>
         
         <para>
-          La plupart des requêtes ne retirent pas de bénéfice pas du cache, 
-          donc par défaut les requêtes ne sont pas mises en cache. Pour activer le cache, 
+          La plupart des requÃªtes ne retirent pas de bÃ©nÃ©fice pas du cache, 
+          donc par dÃ©faut les requÃªtes ne sont pas mises en cache. Pour activer le cache, 
           appelez <literal>Query.setCacheable(true)</literal>. 
-            Cet appel permet de vérifier si les résultats sont en cache ou non, voire
-          d'ajouter ces résultats si la requête est exécutée.
+            Cet appel permet de vÃ©rifier si les rÃ©sultats sont en cache ou non, voire
+          d'ajouter ces rÃ©sultats si la requÃªte est exÃ©cutÃ©e.
         </para>
         
         <para>
-          Si vous avez besoin de contrôler finement les délais d'expiration du cache, vous
-            pouvez spécifier une région de cache nommée pour une requête particulière en
+          Si vous avez besoin de contrÃ´ler finement les dÃ©lais d'expiration du cache, vous
+            pouvez spÃ©cifier une rÃ©gion de cache nommÃ©e pour une requÃªte particuliÃ¨re en
             appelant <literal>Query.setCacheRegion()</literal>.
         </para>
         
@@ -1074,12 +1076,12 @@ hibernate.cache.use_structured_entries true]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-          Si une requête doit forcer le rafraîchissement de sa région de cache, vous devez
-          appeler <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. C'est particulièrement
-          utile lorsque les données peuvent avoir été mises à jour par un processus séparé (e.g. elles
-          n'ont pas été modifiées par Hibernate). Cela permet à l'application de rafraîchir de
-          manière sélective les résultats d'une requête particulière. Il s'agit d'une alternative plus
-          efficace à l'éviction d'une région du cache à l'aide de la méthode 
+          Si une requÃªte doit forcer le rafraÃ®chissement de sa rÃ©gion de cache, vous devez
+          appeler <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. C'est particuliÃ¨rement
+          utile lorsque les donnÃ©es peuvent avoir Ã©tÃ© mises Ã  jour par un processus sÃ©parÃ© (e.g. elles
+          n'ont pas Ã©tÃ© modifiÃ©es par Hibernate). Cela permet Ã  l'application de rafraÃ®chir de
+          maniÃ¨re sÃ©lective les rÃ©sultats d'une requÃªte particuliÃ¨re. Il s'agit d'une alternative plus
+          efficace Ã  l'Ã©viction d'une rÃ©gion du cache Ã  l'aide de la mÃ©thode 
           <literal>SessionFactory.evictQueries()</literal>.
         </para>
 
@@ -1088,15 +1090,15 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         <title>Comprendre les performances des Collections</title>
 
         <para>
-            Nous avons déjà passé du temps à discuter des collections.
+            Nous avons dÃ©jÃ  passÃ© du temps Ã  discuter des collections.
         Dans cette section, nous allons traiter du comportement des
-        collections à l'exécution.
+        collections Ã  l'exÃ©cution.
         </para>
 
         <sect2 id="performance-collections-taxonomy">
             <title>Classification</title>
 
-            <para>Hibernate définit trois types de collections :</para>
+            <para>Hibernate dÃ©finit trois types de collections :</para>
 
             <itemizedlist>
             <listitem>
@@ -1111,17 +1113,17 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             </itemizedlist>
 
             <para>
-                Cette classification distingue les différentes relations entre les tables
-        et les clés étrangères mais ne nous apprend rien de ce que nous devons savoir
-        sur le modèle relationnel. Pour comprendre parfaitement la structure relationnelle
-        et les caractéristiques des performances, nous devons considérer la structure
-        de la clé primaire qui est utilisée par Hibernate pour mettre à jour ou supprimer
-        les éléments des collections. Celà nous amène aux classifications suivantes :
+                Cette classification distingue les diffÃ©rentes relations entre les tables
+        et les clÃ©s Ã©trangÃ¨res mais ne nous apprend rien de ce que nous devons savoir
+        sur le modÃ¨le relationnel. Pour comprendre parfaitement la structure relationnelle
+        et les caractÃ©ristiques des performances, nous devons considÃ©rer la structure
+        de la clÃ© primaire qui est utilisÃ©e par Hibernate pour mettre Ã  jour ou supprimer
+        les Ã©lÃ©ments des collections. CelÃ  nous amÃ¨ne aux classifications suivantes :
             </para>
 
             <itemizedlist>
             <listitem>
-                <para>collections indexées</para>
+                <para>collections indexÃ©es</para>
             </listitem>
             <listitem>
                 <para>sets</para>
@@ -1132,46 +1134,46 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             </itemizedlist>
 
             <para>
-                Toutes les collections indexées (maps, lists, arrays) ont une clé primaire constituée 
-        des colonnes clé (<literal>&lt;key&gt;</literal>) et <literal>&lt;index&gt;</literal>.
-        Avec ce type de clé primaire, la mise à jour de collection est en général très performante - la clé
-        primaire peut être indexées efficacement et un élément particulier peut être 
-        localisé efficacement lorsqu'Hibernate essaie de le mettre à jour ou de le supprimer.
+                Toutes les collections indexÃ©es (maps, lists, arrays) ont une clÃ© primaire constituÃ©e 
+        des colonnes clÃ© (<literal>&lt;key&gt;</literal>) et <literal>&lt;index&gt;</literal>.
+        Avec ce type de clÃ© primaire, la mise Ã  jour de collection est en gÃ©nÃ©ral trÃ¨s performante - la clÃ©
+        primaire peut Ãªtre indexÃ©es efficacement et un Ã©lÃ©ment particulier peut Ãªtre 
+        localisÃ© efficacement lorsqu'Hibernate essaie de le mettre Ã  jour ou de le supprimer.
             </para>
 
             <para>
-              Les Sets ont une clé primaire composée de <literal>&lt;key&gt;</literal> et des
-              colonnes représentant l'élément. Elle est donc moins efficace pour certains 
-              types de collections d'éléments, en particulier les éléments composites, 
-              les textes volumineux ou les champs binaires ; la base de données
-                  peut ne pas être capable d'indexer aussi efficacement une clé primaire 
+              Les Sets ont une clÃ© primaire composÃ©e de <literal>&lt;key&gt;</literal> et des
+              colonnes reprÃ©sentant l'Ã©lÃ©ment. Elle est donc moins efficace pour certains 
+              types de collections d'Ã©lÃ©ments, en particulier les Ã©lÃ©ments composites, 
+              les textes volumineux ou les champs binaires ; la base de donnÃ©es
+                  peut ne pas Ãªtre capable d'indexer aussi efficacement une clÃ© primaire 
               aussi complexe. Cependant, pour les associations un-vers-plusieurs 
-              ou plusieurs-vers-plusieurs, spécialement lorsque l'on utilise des entités
+              ou plusieurs-vers-plusieurs, spÃ©cialement lorsque l'on utilise des entitÃ©s
               ayant des identifiants techniques, il est probable que cela soit aussi efficace
-                  (note : si vous voulez que <literal>SchemaExport</literal> créé effectivement
-              la clé primaire   d'un <literal>&lt;set&gt;</literal> pour vous, vous devez 
-              déclarer toutes les colonnes avec <literal>not-null="true"</literal>).
+                  (note : si vous voulez que <literal>SchemaExport</literal> crÃ©Ã© effectivement
+              la clÃ© primaire   d'un <literal>&lt;set&gt;</literal> pour vous, vous devez 
+              dÃ©clarer toutes les colonnes avec <literal>not-null="true"</literal>).
             </para>
 
             <para>
-              Le mapping à l'aide d'<literal>&lt;idbag&gt;</literal> définit une clé
-              de substitution ce qui leur permet d'être très efficaces lors de la
-              mise à jour. En fait il s'agit du meilleur cas de mise à jour d'une collection
+              Le mapping Ã  l'aide d'<literal>&lt;idbag&gt;</literal> dÃ©finit une clÃ©
+              de substitution ce qui leur permet d'Ãªtre trÃ¨s efficaces lors de la
+              mise Ã  jour. En fait il s'agit du meilleur cas de mise Ã  jour d'une collection
             </para>
 
             <para>
-              Le pire cas intervient pour les Bags. Dans la mesure où un bag permet 
-              la duplications des éléments et n'a pas de colonne d'index, aucune clé primaire 
-              ne peut être définie. Hibernate   n'a aucun moyen de distinguer des enregistrements 
-              dupliqués. Hibernate résout ce problème en supprimant complètement les 
-              enregistrements (via un simple <literal>DELETE</literal>), puis en recréant
-                  la collection chaque fois qu'elle change. Ce qui peut être très inefficace.
+              Le pire cas intervient pour les Bags. Dans la mesure oÃ¹ un bag permet 
+              la duplications des Ã©lÃ©ments et n'a pas de colonne d'index, aucune clÃ© primaire 
+              ne peut Ãªtre dÃ©finie. Hibernate   n'a aucun moyen de distinguer des enregistrements 
+              dupliquÃ©s. Hibernate rÃ©sout ce problÃ¨me en supprimant complÃ¨tement les 
+              enregistrements (via un simple <literal>DELETE</literal>), puis en recrÃ©ant
+                  la collection chaque fois qu'elle change. Ce qui peut Ãªtre trÃ¨s inefficace.
             </para>
 
             <para>
-              Notez que pour une relation un-vers-plusieurs, la "clé primaire" 
-              peut ne pas être la clé   primaire de la table en base de données - 
-              mais même dans ce cas, la classification ci-dessus reste utile 
+              Notez que pour une relation un-vers-plusieurs, la "clÃ© primaire" 
+              peut ne pas Ãªtre la clÃ©   primaire de la table en base de donnÃ©es - 
+              mais mÃªme dans ce cas, la classification ci-dessus reste utile 
               (Elle explique comment Hibernate "localise" chaque enregistrement
                   de la collection).
             </para>
@@ -1179,39 +1181,39 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         </sect2>
 
         <sect2 id="performance-collections-mostefficientupdate">
-            <title>Les lists, les maps, les idbags et les sets sont les collections les plus efficaces pour la mise à jour</title>
+            <title>Les lists, les maps, les idbags et les sets sont les collections les plus efficaces pour la mise Ã  jour</title>
 
             <para>
-              La discussion précédente montre clairement que les collections indexées 
-              et (la plupart du temps) les sets, permettent de réaliser le plus efficacement 
-              les opérations d'ajout, de suppression ou de modification d'éléments.     
+              La discussion prÃ©cÃ©dente montre clairement que les collections indexÃ©es 
+              et (la plupart du temps) les sets, permettent de rÃ©aliser le plus efficacement 
+              les opÃ©rations d'ajout, de suppression ou de modification d'Ã©lÃ©ments.     
             </para>
 
             <para>
-              Il existe un autre avantage qu'ont les collections indexées sur les Sets 
+              Il existe un autre avantage qu'ont les collections indexÃ©es sur les Sets 
                   dans le cadre d'une association plusieurs vers plusieurs ou d'une collection de valeurs.
-                  A cause de la structure inhérente d'un <literal>Set</literal>, Hibernate n'effectue jamais  
-                  d'<literal>UPDATE</literal> quand un enregistrement est modifié. Les modifications
-                  apportées à un <literal>Set</literal> se font via un <literal>INSERT</literal> et <literal>DELETE</literal> 
+                  A cause de la structure inhÃ©rente d'un <literal>Set</literal>, Hibernate n'effectue jamais  
+                  d'<literal>UPDATE</literal> quand un enregistrement est modifiÃ©. Les modifications
+                  apportÃ©es Ã  un <literal>Set</literal> se font via un <literal>INSERT</literal> et <literal>DELETE</literal> 
                   (de chaque enregistrement). Une fois de plus, ce cas ne s'applique pas aux associations
                 un vers plusieurs.
             </para>
 
             <para>
-              Après s'être rappelé que les tableaux ne peuvent pas être chargés tardivement,
+              AprÃ¨s s'Ãªtre rappelÃ© que les tableaux ne peuvent pas Ãªtre chargÃ©s tardivement,
               nous pouvons conclure que les lists, les maps et les idbags sont les types de collections
-              (non inversées) les plus performants, avec les sets pas loin derrières.
+              (non inversÃ©es) les plus performants, avec les sets pas loin derriÃ¨res.
               Les sets son le type de collection le plus courant dans les applications Hibernate. Cela
-              est du au fait que la sémantique des "set" est la plus naturelle dans le modèle
+              est du au fait que la sÃ©mantique des "set" est la plus naturelle dans le modÃ¨le
               relationnel.
             </para>
 
             <para>
-                Cependant, dans des modèles objet bien conçus avec Hibernate, on voit souvent que
+                Cependant, dans des modÃ¨les objet bien conÃ§us avec Hibernate, on voit souvent que
                 la plupart des collections sont en fait des associations "un-vers-plusieurs" avec
-                <literal>inverse="true"</literal>. Pour ces associations, les mises à jour sont gérées
-                au niveau de l'association "plusieurs-vers-un" et les considérations de performance de
-                mise à jour des collections ne s'appliquent tout simplement pas dans ces cas là.
+                <literal>inverse="true"</literal>. Pour ces associations, les mises Ã  jour sont gÃ©rÃ©es
+                au niveau de l'association "plusieurs-vers-un" et les considÃ©rations de performance de
+                mise Ã  jour des collections ne s'appliquent tout simplement pas dans ces cas lÃ .
             </para>
 
         </sect2>
@@ -1220,11 +1222,11 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <title>Les Bags et les lists sont les plus efficaces pour les collections inverse</title>
 
             <para>
-                Avant que vous n'oubliez les bags pour toujours, il y a un cas précis où les bags 
-        (et les lists) sont bien plus performants que les sets. Pour une collection marquée
+                Avant que vous n'oubliez les bags pour toujours, il y a un cas prÃ©cis oÃ¹ les bags 
+        (et les lists) sont bien plus performants que les sets. Pour une collection marquÃ©e
         comme <literal>inverse="true"</literal> (le choix le plus courant pour un relation
-        un vers plusieurs bidirectionnelle), nous pouvons ajouter des éléments à un bag 
-        ou une list sans avoir besoin de l'initialiser (fetch) les éléments du sac! 
+        un vers plusieurs bidirectionnelle), nous pouvons ajouter des Ã©lÃ©ments Ã  un bag 
+        ou une list sans avoir besoin de l'initialiser (fetch) les Ã©lÃ©ments du sac! 
         Ceci parce que <literal>Collection.add()</literal> ou <literal>Collection.addAll()</literal> 
         doit toujours retourner vrai pour un bag ou une <literal>List</literal>
         (contrairement au <literal>Set</literal>). 
@@ -1243,49 +1245,49 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <title>Suppression en un coup</title>
 
             <para>
-                Parfois, effacer les éléments d'une collection un par un peut être extrêmement inefficace.
+                Parfois, effacer les Ã©lÃ©ments d'une collection un par un peut Ãªtre extrÃªmement inefficace.
         Hibernate n'est pas totalement stupide, il sait qu'il ne faut pas le faire dans le cas d'une
-        collection complètement vidée (lorsque vous appellez <literal>list.clear()</literal>, par exemple).
+        collection complÃ¨tement vidÃ©e (lorsque vous appellez <literal>list.clear()</literal>, par exemple).
         Dans ce cas, Hibernate fera un simple <literal>DELETE</literal> et le travail est fait !
             </para>
 
             <para>
-                Supposons que nous ajoutions un élément dans une collection de taille vingt et que nous
-        enlevions ensuite deux éléments. Hibernate effectuera un <literal>INSERT</literal> puis
-        deux <literal>DELETE</literal> (à moins que la collection ne soit un bag). Ce qui est
+                Supposons que nous ajoutions un Ã©lÃ©ment dans une collection de taille vingt et que nous
+        enlevions ensuite deux Ã©lÃ©ments. Hibernate effectuera un <literal>INSERT</literal> puis
+        deux <literal>DELETE</literal> (Ã  moins que la collection ne soit un bag). Ce qui est
         souhaitable.
             </para>
 
             <para>
-                Cependant, supposons que nous enlevions dix huit éléments, laissant ainsi deux éléments, puis
-        que nous ajoutions trois nouveaux éléments. Il y a deux moyens de procéder.
+                Cependant, supposons que nous enlevions dix huit Ã©lÃ©ments, laissant ainsi deux Ã©lÃ©ments, puis
+        que nous ajoutions trois nouveaux Ã©lÃ©ments. Il y a deux moyens de procÃ©der.
             </para>
 
             <itemizedlist>
             <listitem>
-                <para>effacer dix huit enregistrements un à un puis en insérer trois</para>
+                <para>effacer dix huit enregistrements un Ã  un puis en insÃ©rer trois</para>
             </listitem>
             <listitem>
-                <para>effacer la totalité de la collection (en un <literal>DELETE</literal> SQL) puis insérer
-                les cinq éléments restant un à un</para>
+                <para>effacer la totalitÃ© de la collection (en un <literal>DELETE</literal> SQL) puis insÃ©rer
+                les cinq Ã©lÃ©ments restant un Ã  un</para>
             </listitem>
             </itemizedlist>
 
             <para>
-                Hibernate n'est pas assez intelligent pour savoir que, dans ce cas, la seconde méthode est plus
-        rapide (Il plutôt heureux qu'Hibernate ne soit pas trop intelligent ; un tel comportement
-        pourrait rendre l'utilisation de triggers de bases de données plutôt aléatoire, etc...).
+                Hibernate n'est pas assez intelligent pour savoir que, dans ce cas, la seconde mÃ©thode est plus
+        rapide (Il plutÃ´t heureux qu'Hibernate ne soit pas trop intelligent ; un tel comportement
+        pourrait rendre l'utilisation de triggers de bases de donnÃ©es plutÃ´t alÃ©atoire, etc...).
             </para>
 
             <para>
                 Heureusement, vous pouvez forcer ce comportement lorsque vous le souhaitez, en liberant 
-        (c'est-à-dire en déréférençant) la collection initiale et en retournant une collection
-        nouvellement instanciée avec les éléments restants. Ceci peut être très pratique et 
-        très puissant de temps en temps.
+        (c'est-Ã -dire en dÃ©rÃ©fÃ©renÃ§ant) la collection initiale et en retournant une collection
+        nouvellement instanciÃ©e avec les Ã©lÃ©ments restants. Ceci peut Ãªtre trÃ¨s pratique et 
+        trÃ¨s puissant de temps en temps.
             </para>
 
             <para>
-              Bien sûr, la suppression en un coup ne s'applique pas pour les collections qui sont mappées
+              Bien sÃ»r, la suppression en un coup ne s'applique pas pour les collections qui sont mappÃ©es
               avec <literal>inverse="true"</literal>.
             </para>
         </sect2>
@@ -1296,8 +1298,8 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         <title>Moniteur de performance</title>
 
         <para>
-          L'optimisation n'est pas d'un grand intérêt sans le suivi et l'accès aux données de
-          performance. Hibernate fournit toute une panoplie de rapport sur ses opérations internes.
+          L'optimisation n'est pas d'un grand intÃ©rÃªt sans le suivi et l'accÃ¨s aux donnÃ©es de
+          performance. Hibernate fournit toute une panoplie de rapport sur ses opÃ©rations internes.
           Les statistiques dans Hibernate sont fournies par <literal>SessionFactory</literal>.
         </para>
 
@@ -1305,13 +1307,13 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <title>Suivi d'une SessionFactory</title>
 
             <para>
-              Vous pouvez accéder au métriques d'une <literal>SessionFactory</literal> de deux
-              manières. La première option est d'appeler <literal>sessionFactory.getStatistics()</literal>
-              et de lire ou d'afficher les <literal>Statistics</literal> vous même.
+              Vous pouvez accÃ©der au mÃ©triques d'une <literal>SessionFactory</literal> de deux
+              maniÃ¨res. La premiÃ¨re option est d'appeler <literal>sessionFactory.getStatistics()</literal>
+              et de lire ou d'afficher les <literal>Statistics</literal> vous mÃªme.
             </para>
 
             <para>
-              Hibernate peut également utiliser JMX pour publier les métriques si vous activez
+              Hibernate peut Ã©galement utiliser JMX pour publier les mÃ©triques si vous activez
               le MBean <literal>StatisticsService</literal>. Vous pouvez activer un seul MBean
               pour toutes vos <literal>SessionFactory</literal> ou un par factory. Voici un code
               qui montre un exemple de configuration minimaliste :
@@ -1338,81 +1340,81 @@ StatisticsService stats = new StatisticsService(); // MBean implementation
 server.registerMBean(stats, on); // Register the MBean on the server]]></programlisting>
 
             <para>
-              TODO: Cela n'a pas de sens : dans le premier cs on récupère et on utilise le MBean directement.
+              TODO: Cela n'a pas de sens : dans le premier cs on rÃ©cupÃ¨re et on utilise le MBean directement.
               Dans le second, on doit fournir le nom JNDI sous lequel est retenu la fabrique de session avant de
               l'utiliser. Pour cela il faut utiliser
                 <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal>
             </para>
             <para>
-              Vous pouvez (dés)activer le suivi pour une <literal>SessionFactory</literal>
+              Vous pouvez (dÃ©s)activer le suivi pour une <literal>SessionFactory</literal>
             </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                        au moment de la configuration en mettant <literal>hibernate.generate_statistics</literal> à <literal>false</literal>
+                        au moment de la configuration en mettant <literal>hibernate.generate_statistics</literal> Ã  <literal>false</literal>
                     </para>
                 </listitem>
             </itemizedlist>
             <itemizedlist>
                 <listitem>
                     <para>
-                        à chaud avec <literal>sf.getStatistics().setStatisticsEnabled(true)</literal>
+                        Ã  chaud avec <literal>sf.getStatistics().setStatisticsEnabled(true)</literal>
                         ou <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-              Les statistiques peuvent être remises à zéro de manière programmatique à l'aide de la méthode
+              Les statistiques peuvent Ãªtre remises Ã  zÃ©ro de maniÃ¨re programmatique Ã  l'aide de la mÃ©thode
               <literal>clear()</literal>
-              Un résumé peut être envoyé à un logger (niveau info) à l'aide de la méthode <literal>logSummary()</literal>
+              Un rÃ©sumÃ© peut Ãªtre envoyÃ© Ã  un logger (niveau info) Ã  l'aide de la mÃ©thode <literal>logSummary()</literal>
             </para>
 
         </sect2>
 
         <sect2 id="performance-monitoring-metrics" revision="1">
-            <title>Métriques</title>
+            <title>MÃ©triques</title>
 
             <para>
-              Hibernate fournit un certain nombre de métriques, qui vont des informations très basiques
-              aux informations très spécialisées qui ne sont appropriées que dans certains scenarii.
-              Tous les compteurs accessibles sont décrits dans l'API de l'interface
-              <literal>Statistics</literal> dans trois catégories :
+              Hibernate fournit un certain nombre de mÃ©triques, qui vont des informations trÃ¨s basiques
+              aux informations trÃ¨s spÃ©cialisÃ©es qui ne sont appropriÃ©es que dans certains scenarii.
+              Tous les compteurs accessibles sont dÃ©crits dans l'API de l'interface
+              <literal>Statistics</literal> dans trois catÃ©gories :
             </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                      Les métriques relatives à l'usage général de la <literal>Session</literal>
-                      comme le nombre de sessions ouvertes, le nombre de connexions JDBC récupérées, etc...
+                      Les mÃ©triques relatives Ã  l'usage gÃ©nÃ©ral de la <literal>Session</literal>
+                      comme le nombre de sessions ouvertes, le nombre de connexions JDBC rÃ©cupÃ©rÃ©es, etc...
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                      Les métriques relatives aux entités, collections, requêtes et caches dans
-                      leur ensemble (métriques globales),
+                      Les mÃ©triques relatives aux entitÃ©s, collections, requÃªtes et caches dans
+                      leur ensemble (mÃ©triques globales),
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                      Les métriques détaillées relatives à une entité, une collection, une requête
-                      ou une région de cache particulière.
+                      Les mÃ©triques dÃ©taillÃ©es relatives Ã  une entitÃ©, une collection, une requÃªte
+                      ou une rÃ©gion de cache particuliÃ¨re.
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-              Par exemple, vous pouvez vérifier l'accès au cache ainsi que le taux d'éléments manquants et
-              de mise à jour des entités, collections et requêtes et le temps moyen que met une requête.
-              Il faut faire attention au fait que le nombre de millisecondes est sujet à approximation en
-              Java. Hibernate est lié à la précision de la machine virtuelle, sur certaines plateformes,
-              cela n'offre qu'une précision de l'ordre de 10 secondes.
+              Par exemple, vous pouvez vÃ©rifier l'accÃ¨s au cache ainsi que le taux d'Ã©lÃ©ments manquants et
+              de mise Ã  jour des entitÃ©s, collections et requÃªtes et le temps moyen que met une requÃªte.
+              Il faut faire attention au fait que le nombre de millisecondes est sujet Ã  approximation en
+              Java. Hibernate est liÃ© Ã  la prÃ©cision de la machine virtuelle, sur certaines plateformes,
+              cela n'offre qu'une prÃ©cision de l'ordre de 10 secondes.
             </para>
 
             <para>
-              Des accesseurs simples sont utilisés pour accéder aux métriques globales (e.g. celles qui ne
-              sont pas liées à une entité, collection ou région de cache particulière). Vous pouvez accéder
-              aux métriques d'une entité, collection, région de cache particulière à l'aide de son nom et à l'aide
-              de sa représentation HQL ou SQL pour une requête. Référez vous à la javadoc des APIS 
+              Des accesseurs simples sont utilisÃ©s pour accÃ©der aux mÃ©triques globales (e.g. celles qui ne
+              sont pas liÃ©es Ã  une entitÃ©, collection ou rÃ©gion de cache particuliÃ¨re). Vous pouvez accÃ©der
+              aux mÃ©triques d'une entitÃ©, collection, rÃ©gion de cache particuliÃ¨re Ã  l'aide de son nom et Ã  l'aide
+              de sa reprÃ©sentation HQL ou SQL pour une requÃªte. RÃ©fÃ©rez vous Ã  la javadoc des APIS 
               <literal>Statistics</literal>, <literal>EntityStatistics</literal>,
               <literal>CollectionStatistics</literal>, <literal>SecondLevelCacheStatistics</literal>,
               and <literal>QueryStatistics</literal> pour plus d'informations. Le code ci-dessous montre
@@ -1437,9 +1439,9 @@ long changes =
 log.info(Cat.class.getName() + " changed " + changes + "times"  );]]></programlisting>
 
             <para>
-              Pour travailler sur toutes les entités, collections, requêtes et régions de cache, vous pouvez
-              récupérer la liste des noms des entités, collections, requêtes et régions de cache avec les
-              méthodes : <literal>getQueries()</literal>, <literal>getEntityNames()</literal>,
+              Pour travailler sur toutes les entitÃ©s, collections, requÃªtes et rÃ©gions de cache, vous pouvez
+              rÃ©cupÃ©rer la liste des noms des entitÃ©s, collections, requÃªtes et rÃ©gions de cache avec les
+              mÃ©thodes : <literal>getQueries()</literal>, <literal>getEntityNames()</literal>,
                 <literal>getCollectionRoleNames()</literal>, et
                 <literal>getSecondLevelCacheRegionNames()</literal>.
             </para>

@@ -1,32 +1,34 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="filters">
-    <title>Filtrer les données</title>
+    <title>Filtrer les donnÃ©es</title>
 
     <para>
-        Hibernate3 fournit une nouvelle approche innovatrice pour gérer des données
-        avec des règles de "visibilité". Un <emphasis>filtre Hibernate</emphasis> est un filtre
-        global, nommé, paramétré qui peut être activé ou désactivé pour une session Hibernate
-        particulière.
+        Hibernate3 fournit une nouvelle approche innovatrice pour gÃ©rer des donnÃ©es
+        avec des rÃ¨gles de "visibilitÃ©". Un <emphasis>filtre Hibernate</emphasis> est un filtre
+        global, nommÃ©, paramÃ©trÃ© qui peut Ãªtre activÃ© ou dÃ©sactivÃ© pour une session Hibernate
+        particuliÃ¨re.
     </para>
 
     <sect1 id="objectstate-filters">
         <title>Filtres Hibernate</title>
 
         <para>
-            Hibernate3 ajoute la capacité de prédéfinir des critères de filtre et d'attacher ces
-            filtres à une classe ou à une collection. Un critère de filtre est la faculté de définir
-            une clause de restriction très similaire à l'attribut "where" existant disponible sur
-            une classe et divers éléments d'une collection. Mis à part que ces conditions de filtre
-            peuvent être paramétrées. L'application peut alors prendre la décision à l'exécution
-            si des filtres donnés devraient être activés et quels devraient être leurs paramètres.
-            Des filtres peuvent être utilisés comme des vues de base de données, mais paramétrées
+            Hibernate3 ajoute la capacitÃ© de prÃ©dÃ©finir des critÃ¨res de filtre et d'attacher ces
+            filtres Ã  une classe ou Ã  une collection. Un critÃ¨re de filtre est la facultÃ© de dÃ©finir
+            une clause de restriction trÃ¨s similaire Ã  l'attribut "where" existant disponible sur
+            une classe et divers Ã©lÃ©ments d'une collection. Mis Ã  part que ces conditions de filtre
+            peuvent Ãªtre paramÃ©trÃ©es. L'application peut alors prendre la dÃ©cision Ã  l'exÃ©cution
+            si des filtres donnÃ©s devraient Ãªtre activÃ©s et quels devraient Ãªtre leurs paramÃ¨tres.
+            Des filtres peuvent Ãªtre utilisÃ©s comme des vues de base de donnÃ©es, mais paramÃ©trÃ©es
             dans l'application.
         </para>
 
         <para>
-            Afin d'utiliser des filtres, ils doivent d'abord être définis, puis attachés aux éléments
-            de mapping appropriés. Pour définir un filtre, utilisez l'élément <literal>&lt;filter-def/&gt;</literal>
-            dans un élément <literal>&lt;hibernate-mapping/&gt;</literal> :
+            Afin d'utiliser des filtres, ils doivent d'abord Ãªtre dÃ©finis, puis attachÃ©s aux Ã©lÃ©ments
+            de mapping appropriÃ©s. Pour dÃ©finir un filtre, utilisez l'Ã©lÃ©ment <literal>&lt;filter-def/&gt;</literal>
+            dans un Ã©lÃ©ment <literal>&lt;hibernate-mapping/&gt;</literal> :
         </para>
 
         <programlisting><![CDATA[<filter-def name="myFilter">
@@ -34,7 +36,7 @@
 </filter-def>]]></programlisting>
 
         <para>
-            Puis, ce filtre peut être attaché à une classe :
+            Puis, ce filtre peut Ãªtre attachÃ© Ã  une classe :
         </para>
 
         <programlisting><![CDATA[<class name="myClass" ...>
@@ -43,7 +45,7 @@
 </class>]]></programlisting>
 
         <para>
-            ou à une collection :
+            ou Ã  une collection :
         </para>
 
         <programlisting><![CDATA[<set ...>
@@ -51,27 +53,27 @@
 </set>]]></programlisting>
 
         <para>
-            ou même aux deux (ou à plusieurs de chaque) en même temps.
+            ou mÃªme aux deux (ou Ã  plusieurs de chaque) en mÃªme temps.
         </para>
 
         <para>
-            Les méthodes sur <literal>Session</literal> sont : <literal>enableFilter(String filterName)</literal>,
+            Les mÃ©thodes sur <literal>Session</literal> sont : <literal>enableFilter(String filterName)</literal>,
             <literal>getEnabledFilter(String filterName)</literal>, et <literal>disableFilter(String filterName)</literal>.
-            Par défaut, les filtres <emphasis>ne sont pas</emphasis> activés pour une session donnée ;
-            ils doivent être explicitement activés en appelant la méthode
+            Par dÃ©faut, les filtres <emphasis>ne sont pas</emphasis> activÃ©s pour une session donnÃ©e ;
+            ils doivent Ãªtre explicitement activÃ©s en appelant la mÃ©thode
             <literal>Session.enabledFilter()</literal>, laquelle retourne une instance de l'interface
-            <literal>Filter</literal>. Utiliser le simple filtre défini au-dessus ressemblerait à :
+            <literal>Filter</literal>. Utiliser le simple filtre dÃ©fini au-dessus ressemblerait Ã  :
         </para>
 
         <programlisting><![CDATA[session.enableFilter("myFilter").setParameter("myFilterParam", "some-value");]]></programlisting>
 
         <para>
-            Notez que des méthodes sur l'interface org.hibernate.Filter autorisent le chaînage de beaucoup
-            de méthodes communes d'Hibernate.
+            Notez que des mÃ©thodes sur l'interface org.hibernate.Filter autorisent le chaÃ®nage de beaucoup
+            de mÃ©thodes communes d'Hibernate.
         </para>
 
         <para>
-            Un exemple complet, utilisant des données temporelles avec une structure de date
+            Un exemple complet, utilisant des donnÃ©es temporelles avec une structure de date
             d'enregistrement effectif :
         </para>
 
@@ -104,9 +106,9 @@
 </class>]]></programlisting>
 
         <para>
-            Puis, afin de s'assurer que vous pouvez toujours récupérer les enregistrements actuellement
-            effectifs, activez simplement le filtre sur la session avant de récupérer des données des
-            employés :
+            Puis, afin de s'assurer que vous pouvez toujours rÃ©cupÃ©rer les enregistrements actuellement
+            effectifs, activez simplement le filtre sur la session avant de rÃ©cupÃ©rer des donnÃ©es des
+            employÃ©s :
         </para>
 
 <programlisting><![CDATA[Session session = ...;
@@ -117,16 +119,16 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
 ]]></programlisting>
 
         <para>
-            Dans le HQL ci-dessus, bien que nous ayons seulement mentionné une contrainte de
-            salaire sur les resultats, à cause du filtre activé, la requête retournera seulement
-            les employés actuellement actifs qui ont un salaire supérieur à un million de dollars.
+            Dans le HQL ci-dessus, bien que nous ayons seulement mentionnÃ© une contrainte de
+            salaire sur les resultats, Ã  cause du filtre activÃ©, la requÃªte retournera seulement
+            les employÃ©s actuellement actifs qui ont un salaire supÃ©rieur Ã  un million de dollars.
         </para>
 
         <para>
-            A noter : si vous prévoyez d'utiliser des filtres avec des jointures externes (soit
-            à travers HQL, soit par le chargement) faites attention à la direction de l'expression
-            de condition. Il est plus sûr de la positionner pour les jointures externes à gauche ;
-            en général, placez le paramètre d'abord, suivi du(des) nom(s) de colonne après l'opérateur.
+            A noter : si vous prÃ©voyez d'utiliser des filtres avec des jointures externes (soit
+            Ã  travers HQL, soit par le chargement) faites attention Ã  la direction de l'expression
+            de condition. Il est plus sÃ»r de la positionner pour les jointures externes Ã  gauche ;
+            en gÃ©nÃ©ral, placez le paramÃ¨tre d'abord, suivi du(des) nom(s) de colonne aprÃ¨s l'opÃ©rateur.
         </para>
 
     </sect1>

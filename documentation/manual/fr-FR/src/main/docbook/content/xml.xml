@@ -1,50 +1,52 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="xml">
     <title>Mapping XML</title>
 
     <para><emphasis>
-        Notez que cette fonctionnalité est expérimentale dans Hibernate 3.0 et
-        est en développement extrêmement actif.
+        Notez que cette fonctionnalitÃ© est expÃ©rimentale dans Hibernate 3.0 et
+        est en dÃ©veloppement extrÃªmement actif.
     </emphasis></para>
 
     <sect1 id="xml-intro" revision="1">
-        <title>Travailler avec des données XML</title>
+        <title>Travailler avec des donnÃ©es XML</title>
 
         <para>
-            Hibernate vous laisse travailler avec des données XML persistantes de la
-            même manière que vous travaillez avec des POJOs persistants. Un arbre XML
-            peut être vu comme une autre manière de représenter les données relationnelles
-            au niveau objet, à la place des POJOs.
+            Hibernate vous laisse travailler avec des donnÃ©es XML persistantes de la
+            mÃªme maniÃ¨re que vous travaillez avec des POJOs persistants. Un arbre XML
+            peut Ãªtre vu comme une autre maniÃ¨re de reprÃ©senter les donnÃ©es relationnelles
+            au niveau objet, Ã  la place des POJOs.
         </para>
 
         <para>
             Hibernate supporte dom4j en tant qu'API pour la manipulation des arbres XML.
-            Vous pouvez écrire des requêtes qui récupèrent des arbres dom4j à partie de la
-            base de données, et avoir toutes les modifications que vous faites sur l'arbre
-            automatiquement synchronisées dans la base de données. Vous pouvez  même prendre
-            un document XML, l'analyser en utilisant dom4j, et l'écrire dans la base de
-            données via les opérations basiques d'Hibernate :
+            Vous pouvez Ã©crire des requÃªtes qui rÃ©cupÃ¨rent des arbres dom4j Ã  partie de la
+            base de donnÃ©es, et avoir toutes les modifications que vous faites sur l'arbre
+            automatiquement synchronisÃ©es dans la base de donnÃ©es. Vous pouvez  mÃªme prendre
+            un document XML, l'analyser en utilisant dom4j, et l'Ã©crire dans la base de
+            donnÃ©es via les opÃ©rations basiques d'Hibernate :
             <literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal>
-            (merge() n'est pas encore supporté).
+            (merge() n'est pas encore supportÃ©).
         </para>
 
         <para>
-            Cette fonctionnalité a plusieurs applications dont l'import/export de données,
-            l'externalisation d'entités via JMS ou SOAP et les rapports XSLT.
+            Cette fonctionnalitÃ© a plusieurs applications dont l'import/export de donnÃ©es,
+            l'externalisation d'entitÃ©s via JMS ou SOAP et les rapports XSLT.
         </para>
 
         <para>
-            Un simple mapping peut être utilisé pour simultanément mapper les propriétés
-            d'une classe et les noeuds d'un document XML vers la base de données, ou,
-            si il n'y a pas de classe à mapper, il peut être utilisé juste pour mapper
+            Un simple mapping peut Ãªtre utilisÃ© pour simultanÃ©ment mapper les propriÃ©tÃ©s
+            d'une classe et les noeuds d'un document XML vers la base de donnÃ©es, ou,
+            si il n'y a pas de classe Ã  mapper, il peut Ãªtre utilisÃ© juste pour mapper
             le XML.
         </para>
 
         <sect2 id="xml-intro-mapping">
-            <title>Spécifier le mapping XML et le mapping d'une classe ensemble</title>
+            <title>SpÃ©cifier le mapping XML et le mapping d'une classe ensemble</title>
 
             <para>
-                Voici un exemple de mapping d'un POJO et du XML simultanément :
+                Voici un exemple de mapping d'un POJO et du XML simultanÃ©ment :
             </para>
 
             <programlisting><![CDATA[<class name="Account"
@@ -70,7 +72,7 @@
         </sect2>
 
         <sect2 id="xml-onlyxml">
-            <title>Spécifier seulement un mapping XML</title>
+            <title>SpÃ©cifier seulement un mapping XML</title>
 
             <para>
                 Voici un exemple dans lequel il n'y a pas de class POJO :
@@ -101,10 +103,10 @@
 </class>]]></programlisting>
 
             <para>
-                Ce mapping vous permet d'accéder aux données comme un arbre dom4j, ou comme
-                un graphe de paire nom de propriété/valeur (<literal>Map</literal>s java). Les
-                noms des propriétés sont des constructions purement logiques qui peuvent être
-                référées des dans requêtes HQL.
+                Ce mapping vous permet d'accÃ©der aux donnÃ©es comme un arbre dom4j, ou comme
+                un graphe de paire nom de propriÃ©tÃ©/valeur (<literal>Map</literal>s java). Les
+                noms des propriÃ©tÃ©s sont des constructions purement logiques qui peuvent Ãªtre
+                rÃ©fÃ©rÃ©es des dans requÃªtes HQL.
             </para>
 
         </sect2>
@@ -112,45 +114,45 @@
      </sect1>
 
     <sect1 id="xml-mapping" revision="1">
-        <title>Métadonnées du mapping XML</title>
+        <title>MÃ©tadonnÃ©es du mapping XML</title>
 
         <para>
-            Plusieurs éléments du mapping Hibernate acceptent l'attribut <literal>node</literal>.
-            Ceci vous permet de spécifier le nom d'un attribut XML ou d'un élément qui
-            contient la propriété ou les données de l'entité. Le format de l'attribut
-            <literal>node</literal> doit être un des suivants :
+            Plusieurs Ã©lÃ©ments du mapping Hibernate acceptent l'attribut <literal>node</literal>.
+            Ceci vous permet de spÃ©cifier le nom d'un attribut XML ou d'un Ã©lÃ©ment qui
+            contient la propriÃ©tÃ© ou les donnÃ©es de l'entitÃ©. Le format de l'attribut
+            <literal>node</literal> doit Ãªtre un des suivants :
         </para>
 
         <itemizedlist spacing="compact">
         <listitem>
-            <para><literal>"element-name"</literal> - mappe vers l'élément XML nommé</para>
+            <para><literal>"element-name"</literal> - mappe vers l'Ã©lÃ©ment XML nommÃ©</para>
         </listitem>
         <listitem>
-            <para><literal>"@attribute-name"</literal> - mappe vers l'attribut XML nommé</para>
+            <para><literal>"@attribute-name"</literal> - mappe vers l'attribut XML nommÃ©</para>
         </listitem>
         <listitem>
-            <para><literal>"."</literal> - mappe vers le parent de l'élément</para>
+            <para><literal>"."</literal> - mappe vers le parent de l'Ã©lÃ©ment</para>
         </listitem>
         <listitem>
             <para>
                 <literal>"element-name/@attribute-name"</literal> -
-                mappe vers l'élément nommé de l'attribut nommé
+                mappe vers l'Ã©lÃ©ment nommÃ© de l'attribut nommÃ©
             </para>
         </listitem>
         </itemizedlist>
 
         <para>
-            Pour des collections et de simples associations valuées, il y a un attribut
-            <literal>embed-xml</literal> supplémentaire. Si <literal>embed-xml="true"</literal>,
-            qui est la valeur par défaut, l'arbre XML pour l'entité associée (ou la collection
-            des types de valeurs) sera embarquée directement dans l'arbre XML pour l'entité qui
-            possède l'association. Sinon, si <literal>embed-xml="false"</literal>, alors
-            seule la valeur de l'identifiant référencé apparaîtra dans le XML pour de simples
-            associations de points, et les collections n'appraîtront simplement pas.
+            Pour des collections et de simples associations valuÃ©es, il y a un attribut
+            <literal>embed-xml</literal> supplÃ©mentaire. Si <literal>embed-xml="true"</literal>,
+            qui est la valeur par dÃ©faut, l'arbre XML pour l'entitÃ© associÃ©e (ou la collection
+            des types de valeurs) sera embarquÃ©e directement dans l'arbre XML pour l'entitÃ© qui
+            possÃ¨de l'association. Sinon, si <literal>embed-xml="false"</literal>, alors
+            seule la valeur de l'identifiant rÃ©fÃ©rencÃ© apparaÃ®tra dans le XML pour de simples
+            associations de points, et les collections n'appraÃ®tront simplement pas.
         </para>
 
         <para>
-            Vous devriez faire attention à ne pas laisser <literal>embed-xml="true"</literal>
+            Vous devriez faire attention Ã  ne pas laisser <literal>embed-xml="true"</literal>
             pour trop d'associations, puisque XML ne traite pas bien les liens circurlaires.
         </para>
 
@@ -190,14 +192,14 @@
 </class>]]></programlisting>
 
         <para>
-            dans ce cas, nous avons décidé d'embarquer la collection d'identifiants de compte,
-            mais pas les données actuelles du compte. La requête HQL suivante :
+            dans ce cas, nous avons dÃ©cidÃ© d'embarquer la collection d'identifiants de compte,
+            mais pas les donnÃ©es actuelles du compte. La requÃªte HQL suivante :
         </para>
 
         <programlisting><![CDATA[from Customer c left join fetch c.accounts where c.lastName like :lastName]]></programlisting>
 
         <para>
-            devrait retourner l'ensemble de données suivant :
+            devrait retourner l'ensemble de donnÃ©es suivant :
         </para>
 
         <programlisting><![CDATA[<customer id="123456789">
@@ -213,8 +215,8 @@
 
         <para>
             Si vous positionnez <literal>embed-xml="true"</literal> sur le mapping
-            <literal>&lt;one-to-many&gt;</literal>, les données pourraient
-            ressembler plus à ça :
+            <literal>&lt;one-to-many&gt;</literal>, les donnÃ©es pourraient
+            ressembler plus Ã  Ã§a :
         </para>
 
         <programlisting><![CDATA[<customer id="123456789">
@@ -238,11 +240,11 @@
 
 
     <sect1 id="xml-manipulation" revision="1">
-        <title>Manipuler des données XML</title>
+        <title>Manipuler des donnÃ©es XML</title>
 
         <para>
-            Relisons et mettons à jour des documents XML dans l'application. Nous faisons
-            ça en obtenant une session dom4j :
+            Relisons et mettons Ã  jour des documents XML dans l'application. Nous faisons
+            Ã§a en obtenant une session dom4j :
         </para>
 
        <programlisting><![CDATA[Document doc = ....;
@@ -281,9 +283,9 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            Il est extrêmement utile de combiner cette fonctionnalité avec l'opération
-            <literal>replicate()</literal> d'Hibernate pour implémenter des imports/exports
-            de données XML.
+            Il est extrÃªmement utile de combiner cette fonctionnalitÃ© avec l'opÃ©ration
+            <literal>replicate()</literal> d'Hibernate pour implÃ©menter des imports/exports
+            de donnÃ©es XML.
         </para>
 
     </sect1>

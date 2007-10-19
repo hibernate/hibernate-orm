@@ -1,15 +1,17 @@
-<?xml version='1.0' encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="session-configuration" revision="1">
 
     <title>Configuration</title>
     
     <para>
-        Parce qu'Hibernate est conçu pour fonctionner dans différents environnements,
-        il existe beaucoup de paramètres de configuration. Heureusement, la plupart
-        ont des valeurs par défaut appropriées et la distribution d'Hibernate contient
-        un exemple de fichier <literal>hibernate.properties</literal> dans le répertoire
-        <literal>etc/</literal> qui montre les différentes options. Vous n'avez qu'à 
-        placer ce fichier dans votre classpath et à l'adapter.
+        Parce qu'Hibernate est conÃ§u pour fonctionner dans diffÃ©rents environnements,
+        il existe beaucoup de paramÃ¨tres de configuration. Heureusement, la plupart
+        ont des valeurs par dÃ©faut appropriÃ©es et la distribution d'Hibernate contient
+        un exemple de fichier <literal>hibernate.properties</literal> dans le rÃ©pertoire
+        <literal>etc/</literal> qui montre les diffÃ©rentes options. Vous n'avez qu'Ã  
+        placer ce fichier dans votre classpath et Ã  l'adapter.
     </para>
 
     <sect1 id="configuration-programmatic" revision="1">
@@ -17,17 +19,17 @@
 
         <para>
             Une instance de <literal>org.hibernate.cfg.Configuration</literal>
-            représente un ensemble de mappings des classes Java d'une application vers
-            la base de données SQL. La <literal>Configuration</literal> est utilisée
+            reprÃ©sente un ensemble de mappings des classes Java d'une application vers
+            la base de donnÃ©es SQL. La <literal>Configuration</literal> est utilisÃ©e
             pour construire un objet (immuable) <literal>SessionFactory</literal>.
-            Les mappings sont constitués d'un ensemble de fichiers de mapping XML.
+            Les mappings sont constituÃ©s d'un ensemble de fichiers de mapping XML.
         </para>
 
         <para>
             Vous pouvez obtenir une instance de <literal>Configuration</literal>
-            en l'instanciant directement et en spécifiant la liste des documents 
+            en l'instanciant directement et en spÃ©cifiant la liste des documents 
             XML de mapping. Si les fichiers de mapping sont dans le classpath, vous
-            pouvez le faire à l'aide de la méthode <literal>addResource()</literal> :
+            pouvez le faire Ã  l'aide de la mÃ©thode <literal>addResource()</literal> :
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -35,7 +37,7 @@
     .addResource("Bid.hbm.xml");]]></programlisting>
 
         <para>
-            Une alternative (parfois meilleure)  est de spécifier les classes mappées
+            Une alternative (parfois meilleure)  est de spÃ©cifier les classes mappÃ©es
             et de laisser Hibernate trouver les documents de mapping pour vous :
         </para>
 
@@ -47,12 +49,12 @@
             Hibernate va rechercher les fichiers de mappings 
             <literal>/org/hibernate/auction/Item.hbm.xml</literal> et
             <literal>/org/hibernate/auction/Bid.hbm.xml</literal> dans le classpath.
-            Cette approche élimine les noms de fichiers en dur.
+            Cette approche Ã©limine les noms de fichiers en dur.
         </para>
         
         <para>
-            Une <literal>Configuration</literal> vous permet également de préciser des
-            propriétés de configuration :
+            Une <literal>Configuration</literal> vous permet Ã©galement de prÃ©ciser des
+            propriÃ©tÃ©s de configuration :
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -63,32 +65,32 @@
     .setProperty("hibernate.order_updates", "true");]]></programlisting>
 
         <para>
-            Ce n'est pas le seul moyen de passer des propriétés de configuration à Hibernate.
-            Les différentes options sont :
+            Ce n'est pas le seul moyen de passer des propriÃ©tÃ©s de configuration Ã  Hibernate.
+            Les diffÃ©rentes options sont :
         </para>
 
         <orderedlist spacing="compact">
             <listitem>
                 <para>
                     Passer une instance de <literal>java.util.Properties</literal>
-                    à <literal>Configuration.setProperties()</literal>.
+                    Ã  <literal>Configuration.setProperties()</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Placer <literal>hibernate.properties</literal> dans un répertoire racine
+                    Placer <literal>hibernate.properties</literal> dans un rÃ©pertoire racine
                     du classpath
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Positionner les propriétés <literal>System</literal> en utilisant
+                    Positionner les propriÃ©tÃ©s <literal>System</literal> en utilisant
                     <literal>java -Dproperty=value</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Inclure des éléments <literal>&lt;property&gt;</literal> dans le
+                    Inclure des Ã©lÃ©ments <literal>&lt;property&gt;</literal> dans le
                     fichier <literal>hibernate.cfg.xml</literal> (voir plus loin).
                 </para>
             </listitem>
@@ -96,11 +98,11 @@
 
         <para>
             L'utilisation d'<literal>hibernate.properties</literal> est l'approche la plus
-            simple si vous voulez démarrer rapidement
+            simple si vous voulez dÃ©marrer rapidement
         </para>
         <para>
-            La <literal>Configuration</literal> est un objet de démarrage qui sera supprimé
-            une fois qu'une <literal>SessionFactory</literal> aura été créée.
+            La <literal>Configuration</literal> est un objet de dÃ©marrage qui sera supprimÃ©
+            une fois qu'une <literal>SessionFactory</literal> aura Ã©tÃ© crÃ©Ã©e.
         </para>
 
     </sect1>
@@ -109,16 +111,16 @@
         <title>Obtenir une SessionFactory</title>
 
         <para>
-            Une fois que tous les mappings ont été parsés par la <literal>Configuration</literal>, 
+            Une fois que tous les mappings ont Ã©tÃ© parsÃ©s par la <literal>Configuration</literal>, 
             l'application doit obtenir une fabrique d'instances de <literal>Session</literal>. 
-            Cette fabrique sera partagée entre tous les threads de l'application :
+            Cette fabrique sera partagÃ©e entre tous les threads de l'application :
         </para>
 
         <programlisting><![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]></programlisting>
 
         <para>
-            Hibernate permet à votre application d'instancier plus d'une <literal>SessionFactory</literal>.
-            Cela est pratique lorsque vous utilisez plus d'une base de données.
+            Hibernate permet Ã  votre application d'instancier plus d'une <literal>SessionFactory</literal>.
+            Cela est pratique lorsque vous utilisez plus d'une base de donnÃ©es.
         </para>
 
     </sect1>
@@ -127,7 +129,7 @@
         <title>Connexions JDBC</title>
 
         <para>
-            Habituellement, vous voulez que la <literal>SessionFactory</literal> crée les connexions JDBC et
+            Habituellement, vous voulez que la <literal>SessionFactory</literal> crÃ©e les connexions JDBC et
             les mette dans un pool pour vous. Si vous suivez cette approche, ouvrir une <literal>Session</literal> 
             est aussi simple que :
         </para>
@@ -135,31 +137,31 @@
         <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
         
         <para>
-            Dès que vous ferez quelquechose qui requiert un accès à la base de données, une connexion
-            JDBC sera récupérée dans le pool.
+            DÃ¨s que vous ferez quelquechose qui requiert un accÃ¨s Ã  la base de donnÃ©es, une connexion
+            JDBC sera rÃ©cupÃ©rÃ©e dans le pool.
         </para>
 
         <para>
-            Pour faire cela, il faut passer les propriétés de la connexion JDBC à Hibernate.
-            Tous les noms des propriétés Hibernate et leur signification sont définies dans
+            Pour faire cela, il faut passer les propriÃ©tÃ©s de la connexion JDBC Ã  Hibernate.
+            Tous les noms des propriÃ©tÃ©s Hibernate et leur signification sont dÃ©finies dans
             la classe <literal>org.hibernate.cfg.Environment</literal>. Nous allons maintenant
-            décrire les paramètres de configuration des connexions JDBC les plus importants.
+            dÃ©crire les paramÃ¨tres de configuration des connexions JDBC les plus importants.
         </para>
 
          <para>
             Hibernate obtiendra des connexions (et les mettra dans un pool) en utilisant 
-            <literal>java.sql.DriverManager</literal> si vous positionnez les paramètres de la manière
+            <literal>java.sql.DriverManager</literal> si vous positionnez les paramÃ¨tres de la maniÃ¨re
             suivante :
         </para>
 
         <table frame="topbot">
-            <title>Propriétés JDBC d'Hibernate</title>
+            <title>PropriÃ©tÃ©s JDBC d'Hibernate</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -185,7 +187,7 @@
                     <literal>hibernate.connection.username</literal>
                 </entry>
                 <entry>
-                    <emphasis>utilisateur de la base de données</emphasis>
+                    <emphasis>utilisateur de la base de donnÃ©es</emphasis>
                 </entry>
             </row>
             <row>
@@ -193,7 +195,7 @@
                     <literal>hibernate.connection.password</literal>
                 </entry>
                 <entry>
-                    <emphasis>mot de passe de la base de données</emphasis>
+                    <emphasis>mot de passe de la base de donnÃ©es</emphasis>
                 </entry>
             </row>
             <row>
@@ -209,19 +211,19 @@
         </table>
 
         <para>
-            L'algorithme natif de pool de connexions d'Hibernate est plutôt rudimentaire. Il a été fait 
-            dans le but de vous aider à démarrer et <emphasis>n'est pas prévu pour un système en production</emphasis>
-            ou même pour un test de peformance. Utilisez plutôt un pool tiers pour de meilleures performances et une
-            meilleure stabilité : pour cela, remplacez la propriété <literal>hibernate.connection.pool_size</literal> avec les propriétés
-            spécifique au pool de connexions que vous avez choisi. Cela désactivera le pool de connexions interne
+            L'algorithme natif de pool de connexions d'Hibernate est plutÃ´t rudimentaire. Il a Ã©tÃ© fait 
+            dans le but de vous aider Ã  dÃ©marrer et <emphasis>n'est pas prÃ©vu pour un systÃ¨me en production</emphasis>
+            ou mÃªme pour un test de peformance. Utilisez plutÃ´t un pool tiers pour de meilleures performances et une
+            meilleure stabilitÃ© : pour cela, remplacez la propriÃ©tÃ© <literal>hibernate.connection.pool_size</literal> avec les propriÃ©tÃ©s
+            spÃ©cifique au pool de connexions que vous avez choisi. Cela dÃ©sactivera le pool de connexions interne
             d'Hibernate. Vous pouvez par exemple utiliser C3P0.
         </para>
 
         <para>
-            C3P0 est un pool de connexions JDBC open source distribué avec Hibernate dans le répertoire
+            C3P0 est un pool de connexions JDBC open source distribuÃ© avec Hibernate dans le rÃ©pertoire
             <literal>lib</literal>. Hibernate utilisera son provider <literal>C3P0ConnectionProvider</literal>
-            pour le pool de connexions si vous positionnez les propriétés <literal>hibernate.c3p0.*</literal>.
-            Si vous voulez utiliser Proxool, référez vous au groupe de propriétés d'<literal>hibernate.properties</literal>
+            pour le pool de connexions si vous positionnez les propriÃ©tÃ©s <literal>hibernate.c3p0.*</literal>.
+            Si vous voulez utiliser Proxool, rÃ©fÃ©rez vous au groupe de propriÃ©tÃ©s d'<literal>hibernate.properties</literal>
             correspondant et regardez sur le site web d'Hibernate pour plus d'informations.
         </para>
 
@@ -243,18 +245,18 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             Dans le cadre de l'utilisation au sein d'un serveur d'applications,
             vous devriez quasiment toujours configurer Hibernate pour qu'il obtienne
             ses connexions de la <literal>DataSource</literal> du serveur d'application
-            enregistrée dans le JNDI. Pour cela vous devrez définir au moins une des
-            propriétés suivantes :
+            enregistrÃ©e dans le JNDI. Pour cela vous devrez dÃ©finir au moins une des
+            propriÃ©tÃ©s suivantes :
         </para>
 
         <table frame="topbot">
-            <title>Propriété d'une Datasource Hibernate</title>
+            <title>PropriÃ©tÃ© d'une Datasource Hibernate</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom d'une propriété</entry>
+                        <entry>Nom d'une propriÃ©tÃ©</entry>
                         <entry>fonction</entry>
                     </row>
                 </thead>
@@ -288,7 +290,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.connection.username</literal>
                 </entry>
                 <entry>
-                    <emphasis>utilisateur de la base de données</emphasis> (optionnelle)
+                    <emphasis>utilisateur de la base de donnÃ©es</emphasis> (optionnelle)
                 </entry>
             </row>
             <row>
@@ -296,7 +298,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.connection.password</literal>
                 </entry>
                 <entry>
-                    <emphasis>mot de passe de la base de données</emphasis> (optionnelle)
+                    <emphasis>mot de passe de la base de donnÃ©es</emphasis> (optionnelle)
                 </entry>
             </row>
             </tbody>
@@ -316,49 +318,49 @@ hibernate.transaction.manager_lookup_class = \
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            Les connexions JDBC obtenues à partir d'une datasource JNDI participeront automatiquement
-            aux transactions gérées par le conteneur du serveur d'applications.
+            Les connexions JDBC obtenues Ã  partir d'une datasource JNDI participeront automatiquement
+            aux transactions gÃ©rÃ©es par le conteneur du serveur d'applications.
         </para>
 
         <para>
-            Des propriétés supplémentaires de connexion peuvent être passées en préfixant
-            le nom de la propriété par "<literal>hibernate.connnection</literal>". Par exemple,
-            vous pouvez spécifier un jeu de caractères en utilisant 
+            Des propriÃ©tÃ©s supplÃ©mentaires de connexion peuvent Ãªtre passÃ©es en prÃ©fixant
+            le nom de la propriÃ©tÃ© par "<literal>hibernate.connnection</literal>". Par exemple,
+            vous pouvez spÃ©cifier un jeu de caractÃ¨res en utilisant 
             <literal>hibernate.connection.charSet</literal>.
         </para>
 
         <para>
-            Vous pouvez fournir votre propre stratégie d'obtention des connexions JDBC en implémentant l'interface
-            <literal>org.hibernate.connection.ConnectionProvider</literal>. Vous pouvez sélectionner
-            une implémentation spécifique en positionnant <literal>hibernate.connection.provider_class</literal>.
+            Vous pouvez fournir votre propre stratÃ©gie d'obtention des connexions JDBC en implÃ©mentant l'interface
+            <literal>org.hibernate.connection.ConnectionProvider</literal>. Vous pouvez sÃ©lectionner
+            une implÃ©mentation spÃ©cifique en positionnant <literal>hibernate.connection.provider_class</literal>.
         </para>
 
     </sect1>
 
     <sect1 id="configuration-optional" revision="1">
-        <title>Propriétés de configuration optionnelles</title>
+        <title>PropriÃ©tÃ©s de configuration optionnelles</title>
         
         <para>
-            Il y a un certain nombre d'autres propriétés qui contrôlent le fonctionnement 
-            d'Hibernate à l'exécution. Toutes sont optionnelles et ont comme valeurs par défaut
+            Il y a un certain nombre d'autres propriÃ©tÃ©s qui contrÃ´lent le fonctionnement 
+            d'Hibernate Ã  l'exÃ©cution. Toutes sont optionnelles et ont comme valeurs par dÃ©faut
             des valeurs "raisonnables" pour un fonctionnement nominal.
         </para>
 
         <para>
-            <emphasis>Attention : Certaines de ces propriétés sont uniquement de niveau System.</emphasis>
-            Les propriétés de niveau System ne peuvent être positionnées que via la ligne de commande
-            (<literal>java -Dproperty=value</literal>) ou être définies dans <literal>hibernate.properties</literal>.
-            Elle <emphasis>ne peuvent pas</emphasis> l'être via une des autres techniques décrites ci-dessus.
+            <emphasis>Attention : Certaines de ces propriÃ©tÃ©s sont uniquement de niveau System.</emphasis>
+            Les propriÃ©tÃ©s de niveau System ne peuvent Ãªtre positionnÃ©es que via la ligne de commande
+            (<literal>java -Dproperty=value</literal>) ou Ãªtre dÃ©finies dans <literal>hibernate.properties</literal>.
+            Elle <emphasis>ne peuvent pas</emphasis> l'Ãªtre via une des autres techniques dÃ©crites ci-dessus.
         </para>
 
         <table frame="topbot" id="configuration-optional-properties" revision="8">
-            <title>Propriétés de configuration d'Hibernate</title>
+            <title>PropriÃ©tÃ©s de configuration d'Hibernate</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -369,8 +371,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Le nom de la classe du <literal>Dialect</literal> Hibernate.
-                            qui permet à Hibernate de générer du SQL optimisé pour une
-                            base de données relationnelle particulière.
+                            qui permet Ã  Hibernate de gÃ©nÃ©rer du SQL optimisÃ© pour une
+                            base de donnÃ©es relationnelle particuliÃ¨re.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>nom.complet.de.ma.classe.de.Dialect</literal>
@@ -382,8 +384,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.show_sql</literal>
                         </entry>
                         <entry>
-                            Ecrit toutes les requêtes SQL sur la console. Il s'agit d'une
-                            alternative au positionnement de la catégorie de log
+                            Ecrit toutes les requÃªtes SQL sur la console. Il s'agit d'une
+                            alternative au positionnement de la catÃ©gorie de log
                             <literal>org.hibernate.SQL</literal> au niveau <literal>debug</literal>.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
@@ -408,8 +410,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_schema</literal>
                         </entry>
                         <entry>
-                            Positionne dans le SQL généré un schéma/tablespace par défaut pour les noms de
-                            table ne l'ayant pas surchargé.
+                            Positionne dans le SQL gÃ©nÃ©rÃ© un schÃ©ma/tablespace par dÃ©faut pour les noms de
+                            table ne l'ayant pas surchargÃ©.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>MON_SCHEMA</literal>
@@ -421,8 +423,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_catalog</literal>
                         </entry>
                         <entry>
-                            Qualifie les noms de tables non qualifiées avec ce catalogue
-                            dans le SQL généré.
+                            Qualifie les noms de tables non qualifiÃ©es avec ce catalogue
+                            dans le SQL gÃ©nÃ©rÃ©.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>CATALOG_NAME</literal>
@@ -435,7 +437,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             La <literal>SessionFactory</literal> sera automatiquement
-                            liée à ce nom dans le JNDI après sa création.
+                            liÃ©e Ã  ce nom dans le JNDI aprÃ¨s sa crÃ©ation.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>jndi/nom/hierarchique</literal>
@@ -447,14 +449,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.max_fetch_depth</literal>
                         </entry>
                         <entry>
-                            Définit la profondeur maximale d'un arbre de chargement par
-                            jointures ouvertes pour les associations à cardinalité unitaire
-                            (un-à-un, plusieurs-à-un).
-                            Un <literal>0</literal> désactive le chargement par jointure
+                            DÃ©finit la profondeur maximale d'un arbre de chargement par
+                            jointures ouvertes pour les associations Ã  cardinalitÃ© unitaire
+                            (un-Ã -un, plusieurs-Ã -un).
+                            Un <literal>0</literal> dÃ©sactive le chargement par jointure
                             ouverte.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
-                                valeurs recommandées entre <literal>0</literal> et <literal>3</literal>
+                                valeurs recommandÃ©es entre <literal>0</literal> et <literal>3</literal>
                             </para>
                         </entry>
                     </row>
@@ -463,10 +465,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_batch_fetch_size</literal>
                         </entry>
                         <entry>
-                            Définit une taille par défaut pour le chargement par lot des associations
+                            DÃ©finit une taille par dÃ©faut pour le chargement par lot des associations
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
-                                Valeurs recommandées : <literal>4</literal>, <literal>8</literal>, 
+                                Valeurs recommandÃ©es : <literal>4</literal>, <literal>8</literal>, 
                                 <literal>16</literal>
                             </para>
                         </entry>
@@ -476,7 +478,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_entity_mode</literal>
                         </entry>
                         <entry>
-                            Définit un mode de représentation par défaut des entités pour
+                            DÃ©finit un mode de reprÃ©sentation par dÃ©faut des entitÃ©s pour
                             toutes les sessions ouvertes depuis cette <literal>SessionFactory</literal>
                             <para>
                                 <literal>dynamic-map</literal>, <literal>dom4j</literal>,
@@ -489,9 +491,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.order_updates</literal>
                         </entry>
                         <entry>
-                            Force Hibernate à trier les updates SQL par la valeur de la clé
-                            primaire des éléments qui sont mis à jour. Cela permet de limiter
-                            les deadlocks de transaction dans les systèmes hautement concurents.
+                            Force Hibernate Ã  trier les updates SQL par la valeur de la clÃ©
+                            primaire des Ã©lÃ©ments qui sont mis Ã  jour. Cela permet de limiter
+                            les deadlocks de transaction dans les systÃ¨mes hautement concurents.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -503,8 +505,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.generate_statistics</literal>
                         </entry>
                         <entry>
-                            Si activé, Hibernate va collecter des statistiques utiles
-                            pour le réglage des performances.
+                            Si activÃ©, Hibernate va collecter des statistiques utiles
+                            pour le rÃ©glage des performances.
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -516,9 +518,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.use_identifer_rollback</literal>
                         </entry>
                         <entry>
-                            Si activé, les propriétés correspondant à l'identifiant
-                            des objets vont être remises aux valeurs par défaut lorsque
-                            les objets seront supprimés.
+                            Si activÃ©, les propriÃ©tÃ©s correspondant Ã  l'identifiant
+                            des objets vont Ãªtre remises aux valeurs par dÃ©faut lorsque
+                            les objets seront supprimÃ©s.
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -530,8 +532,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.use_sql_comments</literal>
                         </entry>
                         <entry>
-                            Si activé, Hibernate va générer des commentaires à l'intérieur
-                            des requêtes SQL pour faciliter le debogage., par défaut à <literal>false</literal>.
+                            Si activÃ©, Hibernate va gÃ©nÃ©rer des commentaires Ã  l'intÃ©rieur
+                            des requÃªtes SQL pour faciliter le debogage., par dÃ©faut Ã  <literal>false</literal>.
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -543,13 +545,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
          <table frame="topbot" id="configuration-jdbc-properties" revision="8">
-            <title>Propriétés Hibernate liées à JDBC et aux connexions</title>
+            <title>PropriÃ©tÃ©s Hibernate liÃ©es Ã  JDBC et aux connexions</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -559,7 +561,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.fetch_size</literal>
                         </entry>
                         <entry>
-                            Une valeur non nulle détermine la taille de chargement
+                            Une valeur non nulle dÃ©termine la taille de chargement
                             des statements JDBC (appelle 
                             <literal>Statement.setFetchSize()</literal>).
                         </entry>
@@ -570,10 +572,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Une valeur non nulle active l'utilisation par Hibernate des mises 
-                            à jour par batch de JDBC2.
+                            Ã  jour par batch de JDBC2.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
-                                les valeurs recommandées entre <literal>5</literal> et <literal>30</literal>
+                                les valeurs recommandÃ©es entre <literal>5</literal> et <literal>30</literal>
                             </para>
                         </entry>
                     </row>
@@ -582,10 +584,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.batch_versioned_data</literal>
                         </entry>
                         <entry>
-                            Paramétrez cette propriété à <literal>true</literal> si votre pilote JDBC
+                            ParamÃ©trez cette propriÃ©tÃ© Ã  <literal>true</literal> si votre pilote JDBC
                             retourne des row counts corrects depuis <literal>executeBatch()</literal> (il est 
-                            souvent approprié d'activer cette option). Hibernate utilisera alors le "batched DML" pour
-                            versionner automatiquement les données. Par défaut = <literal>false</literal>.
+                            souvent appropriÃ© d'activer cette option). Hibernate utilisera alors le "batched DML" pour
+                            versionner automatiquement les donnÃ©es. Par dÃ©faut = <literal>false</literal>.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -597,8 +599,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.factory_class</literal>
                         </entry>
                         <entry>
-                           Sélectionne un <literal>Batcher</literal> personnalisé. La
-                           plupart des applications n'auront pas besoin de cette propriété
+                           SÃ©lectionne un <literal>Batcher</literal> personnalisÃ©. La
+                           plupart des applications n'auront pas besoin de cette propriÃ©tÃ©
                            de configuration
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
@@ -612,9 +614,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Active l'utilisation par Hibernate des resultsets scrollables 
-                            de JDBC2. Cette propriété est seulement nécessaire lorsque l'on
+                            de JDBC2. Cette propriÃ©tÃ© est seulement nÃ©cessaire lorsque l'on
                             utilise une connexion JDBC fournie par l'utilisateur. Autrement,
-                            Hibernate utilise les métadonnées de la connexion.
+                            Hibernate utilise les mÃ©tadonnÃ©es de la connexion.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -626,9 +628,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.use_streams_for_binary</literal>
                         </entry>
                         <entry>
-                            Utilise des flux lorsque l'on écrit/lit des types
+                            Utilise des flux lorsque l'on Ã©crit/lit des types
                             <literal>binary</literal> ou <literal>serializable</literal>
-                            vers et à partir de JDBC (propriété de niveau système).
+                            vers et Ã  partir de JDBC (propriÃ©tÃ© de niveau systÃ¨me).
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -641,10 +643,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Active l'utilisation de <literal>PreparedStatement.getGeneratedKeys()</literal> de JDBC3
-                            pour récupérer nativement les clés générées après insertion. Nécessite un pilote
-                            JDBC3+, le mettre à false si votre pilote a des problèmes avec les générateurs
-                            d'identifiant Hibernate. Par défaut, essaie de déterminer les possibilités du
-                            pilote en utilisant les meta données de connexion.
+                            pour rÃ©cupÃ©rer nativement les clÃ©s gÃ©nÃ©rÃ©es aprÃ¨s insertion. NÃ©cessite un pilote
+                            JDBC3+, le mettre Ã  false si votre pilote a des problÃ¨mes avec les gÃ©nÃ©rateurs
+                            d'identifiant Hibernate. Par dÃ©faut, essaie de dÃ©terminer les possibilitÃ©s du
+                            pilote en utilisant les meta donnÃ©es de connexion.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true|false</literal>
@@ -656,8 +658,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.provider_class</literal>
                         </entry>
                         <entry>
-                            Le nom de la classe d'un <literal>ConnectionProvider</literal> personnalisé
-                            qui fournit des connexions JDBC à Hibernate
+                            Le nom de la classe d'un <literal>ConnectionProvider</literal> personnalisÃ©
+                            qui fournit des connexions JDBC Ã  Hibernate
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>classname.of.ConnectionProvider</literal>
@@ -669,10 +671,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <literal>hibernate.connection.isolation</literal>
                     </entry>
                     <entry>
-                        Définit le niveau d'isolation des transactions JDBC. Regardez
-                        <literal>java.sql.Connection</literal> pour connaître le
-                        sens des différentes valeurs mais notez également que la plupart
-                        des bases de données ne supportent pas tous les niveaux d'isolation.
+                        DÃ©finit le niveau d'isolation des transactions JDBC. Regardez
+                        <literal>java.sql.Connection</literal> pour connaÃ®tre le
+                        sens des diffÃ©rentes valeurs mais notez Ã©galement que la plupart
+                        des bases de donnÃ©es ne supportent pas tous les niveaux d'isolation.
                         <para>
                             <emphasis role="strong">ex.</emphasis> 
                             <literal>1, 2, 4, 8</literal>
@@ -685,7 +687,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Active le mode de commit automatique (autocommit) pour les connexions
-                            JDBC du pool (non recommandé).
+                            JDBC du pool (non recommandÃ©).
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -697,13 +699,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.release_mode</literal>
                         </entry>
                         <entry>
-                            Spécifie à quel moment Hibernate doit relacher les connexion JDBC.
-                            Par défaut une connexion JDBC est conservée jusqu'à ce que la session
-                            soit explicitement fermée ou déconnectée. Pour une source de données
+                            SpÃ©cifie Ã  quel moment Hibernate doit relacher les connexion JDBC.
+                            Par dÃ©faut une connexion JDBC est conservÃ©e jusqu'Ã  ce que la session
+                            soit explicitement fermÃ©e ou dÃ©connectÃ©e. Pour une source de donnÃ©es
                             JTA d'un serveur d'application, vous devriez utiliser <literal>after_statement</literal>
-                            pour libérer les connexions de manière plus agressive après chaque appel
-                            JDBC. Pour une connexion non JTA, il est souvent préférable de libérer
-                            la connexion à la fin de chaque transaction en utilisant <literal>after_transaction</literal>.
+                            pour libÃ©rer les connexions de maniÃ¨re plus agressive aprÃ¨s chaque appel
+                            JDBC. Pour une connexion non JTA, il est souvent prÃ©fÃ©rable de libÃ©rer
+                            la connexion Ã  la fin de chaque transaction en utilisant <literal>after_transaction</literal>.
                             <literal>auto</literal> choisira <literal>after_statement</literal> pour
                             des transactions JTA et CMT et <literal>after_transaction</literal> pour
                             des transactions JDBC.
@@ -719,8 +721,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                     </entry>
                     <entry>
-                        Passe la propriété JDBC<literal>propertyName</literal>
-                        à <literal>DriverManager.getConnection()</literal>.
+                        Passe la propriÃ©tÃ© JDBC<literal>propertyName</literal>
+                        Ã  <literal>DriverManager.getConnection()</literal>.
                     </entry>
                     </row>
                     <row>
@@ -728,7 +730,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                         </entry>
                         <entry>
-                           Passe la propriété <literal>propertyName</literal> à l'<literal>InitialContextFactory</literal>
+                           Passe la propriÃ©tÃ© <literal>propertyName</literal> Ã  l'<literal>InitialContextFactory</literal>
                            de JNDI.
                         </entry>
                     </row>
@@ -737,13 +739,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-cache-properties" revision="7">
-            <title>Propriétés du Cache d'Hibernate</title>
+            <title>PropriÃ©tÃ©s du Cache d'Hibernate</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -754,7 +756,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Le nom de classe d'un <literal>CacheProvider</literal> 
-                            spécifique.
+                            spÃ©cifique.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>nom.de.classe.du.CacheProvider</literal>
@@ -766,10 +768,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_minimal_puts</literal>
                         </entry>
                         <entry>
-                            Optimise le cache de second niveau en minimisant les écritures,
-                            au prix de plus de lectures. Ce paramètre est surtout utile pour
-                            les caches en cluster et est activé par défaut dans hibernate3
-                            pour les implémentations de cache en cluster.
+                            Optimise le cache de second niveau en minimisant les Ã©critures,
+                            au prix de plus de lectures. Ce paramÃ¨tre est surtout utile pour
+                            les caches en cluster et est activÃ© par dÃ©faut dans hibernate3
+                            pour les implÃ©mentations de cache en cluster.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true|false</literal>
@@ -781,8 +783,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_query_cache</literal>
                         </entry>
                         <entry>
-                            Activer le cache de requête, les requêtes individuelles doivent tout
-                            de même être déclarées comme pouvant être mise en cache.
+                            Activer le cache de requÃªte, les requÃªtes individuelles doivent tout
+                            de mÃªme Ãªtre dÃ©clarÃ©es comme pouvant Ãªtre mise en cache.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true|false</literal>
@@ -794,8 +796,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_second_level_cache</literal>
                         </entry>
                         <entry>
-                            Peut être utilisé pour désactiver complètement le cache de second niveau
-                            qui est activé par défaut pour les classes qui spécifient un élément
+                            Peut Ãªtre utilisÃ© pour dÃ©sactiver complÃ¨tement le cache de second niveau
+                            qui est activÃ© par dÃ©faut pour les classes qui spÃ©cifient un Ã©lÃ©ment
                             <literal>&lt;cache&gt;</literal> dans leur mapping.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
@@ -809,7 +811,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Le nom de classe d'une interface <literal>QueryCacheFactory</literal> ,
-                            par défaut = built-in <literal>StandardQueryCacheFactory</literal>.
+                            par dÃ©faut = built-in <literal>StandardQueryCacheFactory</literal>.
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
                                 <literal>nom.de.la.classe.de.QueryCacheFactory</literal>
@@ -822,7 +824,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.region_prefix</literal>
                         </entry>
                         <entry>
-                            Un préfixe à utiliser pour le nom des régions du 
+                            Un prÃ©fixe Ã  utiliser pour le nom des rÃ©gions du 
                             cache de second niveau.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
@@ -835,8 +837,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_structured_entries</literal>
                         </entry>
                         <entry>
-                            Force Hibernate à stocker les données dans le cache de
-                            second niveau dans un format plus adapté à la visualisation
+                            Force Hibernate Ã  stocker les donnÃ©es dans le cache de
+                            second niveau dans un format plus adaptÃ© Ã  la visualisation
                             par un humain.
                             <para>
                                 <emphasis role="strong">ex.</emphasis>
@@ -849,13 +851,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-transaction-properties" revision="9">
-            <title>Propriétés des transactions Hibernate</title>
+            <title>PropriÃ©tÃ©s des transactions Hibernate</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -866,8 +868,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Le nom de classe d'une <literal>TransactionFactory</literal>
-                            qui sera utilisée par l'API <literal>Transaction</literal>
-                            d'Hibernate (la valeur par défaut est 
+                            qui sera utilisÃ©e par l'API <literal>Transaction</literal>
+                            d'Hibernate (la valeur par dÃ©faut est 
                             <literal>JDBCTransactionFactory</literal>).
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
@@ -880,7 +882,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>jta.UserTransaction</literal>
                         </entry>
                         <entry>
-                            Le nom JNDI utilisé par la <literal>JTATransactionFactory</literal>
+                            Le nom JNDI utilisÃ© par la <literal>JTATransactionFactory</literal>
                             pour obtenir la <literal>UserTransaction</literal> JTA du serveur 
                             d'applications.
                             <para>
@@ -895,8 +897,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Le nom de la classe du <literal>TransactionManagerLookup</literal>
-                            - requis lorsque le cache de niveau JVM est activé ou lorsque l'on
-                            utilise un générateur hilo dans un environnement JTA.
+                            - requis lorsque le cache de niveau JVM est activÃ© ou lorsque l'on
+                            utilise un gÃ©nÃ©rateur hilo dans un environnement JTA.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>nom.de.classe.du.TransactionManagerLookup</literal>
@@ -908,10 +910,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.flush_before_completion</literal>
                         </entry>
                         <entry>
-                            Si activé, la session sera automatiquement vidée durant la phase
-                            qui précède la fin de la transaction (before completion). 
+                            Si activÃ©, la session sera automatiquement vidÃ©e durant la phase
+                            qui prÃ©cÃ¨de la fin de la transaction (before completion). 
                             La gestion automatique de contexte fourni par Hibernate est
-                            recommandée, voir
+                            recommandÃ©e, voir
                             <xref linkend="architecture-current-session"/>.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
@@ -924,10 +926,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.auto_close_session</literal>
                         </entry>
                         <entry>
-                            Si activé, la session sera automatiquement fermé pendant la phase 
+                            Si activÃ©, la session sera automatiquement fermÃ© pendant la phase 
                             qui suit la fin de la transaction (after completion). 
                             La gestion automatique de contexte fourni par Hibernate est
-                            recommandée, voir
+                            recommandÃ©e, voir
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -939,13 +941,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-misc-properties" revision="9">
-            <title>Propriétés diverses</title>
+            <title>PropriÃ©tÃ©s diverses</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Nom de la propriété</entry>
+                        <entry>Nom de la propriÃ©tÃ©</entry>
                         <entry>Fonction</entry>
                     </row>
                 </thead>
@@ -955,10 +957,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.current_session_context_class</literal>
                         </entry>
                         <entry>
-                            Fournit une stratégie particulière pour contextualiser
+                            Fournit une stratÃ©gie particuliÃ¨re pour contextualiser
                             la <literal>Session</literal> courante. Voir
                             <xref linkend="architecture-current-session"/> pour plus
-                            d'informations sur les stratégies fournies.
+                            d'informations sur les stratÃ©gies fournies.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
@@ -971,7 +973,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.query.factory_class</literal>
                         </entry>
                         <entry>
-                            Choisi l'implémentation du parseur de requête
+                            Choisi l'implÃ©mentation du parseur de requÃªte
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> ou
@@ -984,9 +986,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.query.substitutions</literal>
                         </entry>
                         <entry>
-                            Lien entre les tokens de requêtes Hibernate et les 
-                            tokens SQL (les tokens peuvent être des fonctions ou des
-                            noms littéraux par exemple).
+                            Lien entre les tokens de requÃªtes Hibernate et les 
+                            tokens SQL (les tokens peuvent Ãªtre des fonctions ou des
+                            noms littÃ©raux par exemple).
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>
@@ -998,11 +1000,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            Valide ou exporte  automatiquement le schéma DDL vers la base de données
-                            lorsque la <literal>SessionFactory</literal> est créée.
+                            Valide ou exporte  automatiquement le schÃ©ma DDL vers la base de donnÃ©es
+                            lorsque la <literal>SessionFactory</literal> est crÃ©Ã©e.
                             La valeur <literal>create-drop</literal> permet de supprimer 
-                            le schéma de base de données lorsque la <literal>SessionFactory</literal>
-                            est fermée explicitement.
+                            le schÃ©ma de base de donnÃ©es lorsque la <literal>SessionFactory</literal>
+                            est fermÃ©e explicitement.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>validate</literal> | <literal>update</literal> | 
@@ -1015,11 +1017,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cglib.use_reflection_optimizer</literal>
                         </entry>
                         <entry>
-                            Active l'utilisation de CGLIB à la place de la réflexion à l'exécution
-                            (Propriété de niveau système). La réflexion peut parfois être utile pour
-                            résoudre des problèmes. Notez qu'Hibernate a tout de même toujours besoin
-                            de CGLIB même si l'optimiseur est désactivé. Cette optimisation ne peut être
-                            définie que dans le fichier <literal>hibernate.cfg.xml</literal>.
+                            Active l'utilisation de CGLIB Ã  la place de la rÃ©flexion Ã  l'exÃ©cution
+                            (PropriÃ©tÃ© de niveau systÃ¨me). La rÃ©flexion peut parfois Ãªtre utile pour
+                            rÃ©soudre des problÃ¨mes. Notez qu'Hibernate a tout de mÃªme toujours besoin
+                            de CGLIB mÃªme si l'optimiseur est dÃ©sactivÃ©. Cette optimisation ne peut Ãªtre
+                            dÃ©finie que dans le fichier <literal>hibernate.cfg.xml</literal>.
                             <para>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -1034,11 +1036,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <title>Dialectes SQL</title>
 
             <para>
-                Vous devriez toujours positionner la propriété <literal>hibernate.dialect</literal> à
-                la sous-classe de <literal>org.hibernate.dialect.Dialect</literal> appropriée à 
-                votre base de données. Si vous spécifiez un dialecte,
-                Hibernate utilisera des valeurs adaptées pour certaines autres
-                propriétés listées ci-dessus, vous évitant l'effort de le faire à la main.
+                Vous devriez toujours positionner la propriÃ©tÃ© <literal>hibernate.dialect</literal> Ã 
+                la sous-classe de <literal>org.hibernate.dialect.Dialect</literal> appropriÃ©e Ã  
+                votre base de donnÃ©es. Si vous spÃ©cifiez un dialecte,
+                Hibernate utilisera des valeurs adaptÃ©es pour certaines autres
+                propriÃ©tÃ©s listÃ©es ci-dessus, vous Ã©vitant l'effort de le faire Ã  la main.
             </para>
 
             <table frame="topbot" id="sql-dialects" revision="2">
@@ -1129,24 +1131,24 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <title>Chargement par Jointure Ouverte</title>
 
             <para>
-                Si votre base de données supporte les outer joins de type ANSI, Oracle ou Sybase, 
-                <emphasis>le chargement par jointure ouverte</emphasis> devrait améliorer les 
-                performances en limitant le nombre d'aller-retour avec la base de données (la
-                base de données effectuant donc potentiellement plus de travail). Le chargement par
-                jointure ouverte permet à un graphe entier d'objets connectés par une relation plusieurs-à-un,
-                un-à-plusieurs ou un-à-un d'être chargé en un seul <literal>SELECT</literal> SQL.
+                Si votre base de donnÃ©es supporte les outer joins de type ANSI, Oracle ou Sybase, 
+                <emphasis>le chargement par jointure ouverte</emphasis> devrait amÃ©liorer les 
+                performances en limitant le nombre d'aller-retour avec la base de donnÃ©es (la
+                base de donnÃ©es effectuant donc potentiellement plus de travail). Le chargement par
+                jointure ouverte permet Ã  un graphe entier d'objets connectÃ©s par une relation plusieurs-Ã -un,
+                un-Ã -plusieurs ou un-Ã -un d'Ãªtre chargÃ© en un seul <literal>SELECT</literal> SQL.
             </para>
 
             <para>
-                Le chargement par jointure ouverte peut être désactiver <emphasis>globalement</emphasis>
-                en mettant la propriété <literal>hibernate.max_fetch_depth</literal> à <literal>0</literal>.
+                Le chargement par jointure ouverte peut Ãªtre dÃ©sactiver <emphasis>globalement</emphasis>
+                en mettant la propriÃ©tÃ© <literal>hibernate.max_fetch_depth</literal> Ã  <literal>0</literal>.
                 Une valeur de <literal>1</literal> ou plus active le chargement par jointure ouverte
-                pour les associatiosn un-à-un et plusieurs-à-un qui ont été mappée avec
+                pour les associatiosn un-Ã -un et plusieurs-Ã -un qui ont Ã©tÃ© mappÃ©e avec
                 <literal>fetch="join"</literal>.
             </para>
 
             <para>
-                Reportez vous à <xref linkend="performance-fetching"/> pour plus d'information.
+                Reportez vous Ã  <xref linkend="performance-fetching"/> pour plus d'information.
             </para>
 
         </sect2>
@@ -1155,33 +1157,33 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <title>Flux binaires</title>
 
             <para>
-                Oracle limite la taille d'un tableau de <literal>byte</literal> qui peuvent être
-                passées à et vers son pilote JDBC. Si vous souhaitez utiliser des instances larges
+                Oracle limite la taille d'un tableau de <literal>byte</literal> qui peuvent Ãªtre
+                passÃ©es Ã  et vers son pilote JDBC. Si vous souhaitez utiliser des instances larges
                 de type <literal>binary</literal> ou <literal>serializable</literal>, vous devez activer
-                la propriété <literal>hibernate.jdbc.use_streams_for_binary</literal>. <emphasis>C'est une 
-                fonctionalité de niveau système uniquement.</emphasis>
+                la propriÃ©tÃ© <literal>hibernate.jdbc.use_streams_for_binary</literal>. <emphasis>C'est une 
+                fonctionalitÃ© de niveau systÃ¨me uniquement.</emphasis>
             </para>
 
         </sect2>
 
         <sect2 id="configuration-optional-cacheprovider" revision="2">
-            <title>Cache de second niveau et cache de requêtes</title>
+            <title>Cache de second niveau et cache de requÃªtes</title>
 
             <para>
-                Les propriétés préfixées par <literal>hibernate.cache</literal>
-                vous permettent d'utiliser un système de cache de second niveau. Ce cache
-                peut avoir une portée dans le processus ou même être utilisable dans un
-                système distribué. Référez vous au chapitre <xref linkend="performance-cache"/> 
-                pour plus de détails.
+                Les propriÃ©tÃ©s prÃ©fixÃ©es par <literal>hibernate.cache</literal>
+                vous permettent d'utiliser un systÃ¨me de cache de second niveau. Ce cache
+                peut avoir une portÃ©e dans le processus ou mÃªme Ãªtre utilisable dans un
+                systÃ¨me distribuÃ©. RÃ©fÃ©rez vous au chapitre <xref linkend="performance-cache"/> 
+                pour plus de dÃ©tails.
             </para>
 
         </sect2>
         
         <sect2 id="configuration-optional-querysubstitution">
-            <title>Substitution dans le langage de requêtage</title>
+            <title>Substitution dans le langage de requÃªtage</title>
 
             <para>
-                Vous pouvez définir de nouveaux tokens dans les requêtes Hibernate en utilisant la propriété
+                Vous pouvez dÃ©finir de nouveaux tokens dans les requÃªtes Hibernate en utilisant la propriÃ©tÃ©
                 <literal>hibernate.query.substitutions</literal>. Par exemple :
             </para>
 
@@ -1189,7 +1191,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <para>
                 remplacerait les tokens <literal>vrai</literal> et <literal>faux</literal> par
-                des entiers dans le SQL généré.
+                des entiers dans le SQL gÃ©nÃ©rÃ©.
             </para>
 
             <programlisting>hibernate.query.substitutions toLowercase=LOWER</programlisting>
@@ -1205,9 +1207,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
             <para>
                 Si vous activez <literal>hibernate.generate_statistics</literal>, Hibernate va
-                fournir un certains nombre de métriques utiles pour régler les performances
+                fournir un certains nombre de mÃ©triques utiles pour rÃ©gler les performances
                 d'une application qui tourne via <literal>SessionFactory.getStatistics()</literal>.
-                Hibernate peut aussi être configuré pour exposer ces statistiques via JMX.
+                Hibernate peut aussi Ãªtre configurÃ© pour exposer ces statistiques via JMX.
                 Lisez les Javadoc des interfaces dans le package
                 <literal>org.hibernate.stats</literal> pour plus d'informations.
             </para>
@@ -1219,65 +1221,65 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <title>Tracer</title>
 
         <para>
-            Hibernate trace divers évènements en utilisant Apache commons-logging.
+            Hibernate trace divers Ã©vÃ¨nements en utilisant Apache commons-logging.
         </para>
 
         <para>
-            Le service commons-logging délèguera directement à Apache Log4j
+            Le service commons-logging dÃ©lÃ¨guera directement Ã  Apache Log4j
             (si vous incluez <literal>log4j.jar</literal> dans votre classpath)
-            ou le système de trace du JDK 1.4 (si vous tournez sous le JDK 1.4
-            et supérieur). Vous pouvez télécharger Log4j à partir de
+            ou le systÃ¨me de trace du JDK 1.4 (si vous tournez sous le JDK 1.4
+            et supÃ©rieur). Vous pouvez tÃ©lÃ©charger Log4j Ã  partir de
             <literal>http://jakarta.apache.org</literal>. Pour utiliser Log4j,
             vous devrez placer dans votre classpath un fichier 
-            <literal>log4j.properties</literal>. Un exemple de fichier est distribué
-            avec Hibernate dans le répertoire <literal>src/</literal>.
+            <literal>log4j.properties</literal>. Un exemple de fichier est distribuÃ©
+            avec Hibernate dans le rÃ©pertoire <literal>src/</literal>.
         </para>
         
         <para>
             Nous vous recommandons fortement de vous familiariser avec les messages des traces 
-            d'Hibernate. Beaucoup de soins a été apporté pour donner le plus de détails
+            d'Hibernate. Beaucoup de soins a Ã©tÃ© apportÃ© pour donner le plus de dÃ©tails
             possible sans les rendre illisibles. C'est un outil essentiel en cas de soucis.
-            Les catégories de trace les plus intéressantes sont les suivantes :
+            Les catÃ©gories de trace les plus intÃ©ressantes sont les suivantes :
         </para>
         
             <table frame="topbot" id="log-categories" revision="2">
-                <title>Catégories de trace d'Hibernate</title>
+                <title>CatÃ©gories de trace d'Hibernate</title>
                 <tgroup cols="2">
                     <colspec colwidth="1*"/>
                     <colspec colwidth="2.5*"/>
                     <thead>
                         <row>
-                            <entry>Catégorie</entry>
+                            <entry>CatÃ©gorie</entry>
                             <entry>Fonction</entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
                             <entry><literal>org.hibernate.SQL</literal></entry>
-                            <entry>Trace toutes les requêts SQL de type DML (gestion des données) qui sont exécutées</entry>
+                            <entry>Trace toutes les requÃªts SQL de type DML (gestion des donnÃ©es) qui sont exÃ©cutÃ©es</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.type</literal></entry>
-                            <entry>Trace tous les paramètres JDBC</entry>
+                            <entry>Trace tous les paramÃ¨tres JDBC</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.tool.hbm2ddl</literal></entry>
-                            <entry>Trace toutes les requêts SQL de type DDL (gestion de la structure de la base) qui sont exécutées</entry>
+                            <entry>Trace toutes les requÃªts SQL de type DDL (gestion de la structure de la base) qui sont exÃ©cutÃ©es</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.pretty</literal></entry>
                             <entry>
-                                Trace l'état de toutes les entités (20 entités maximum) qui
-                                sont associées avec la session hibernate au moment du flush
+                                Trace l'Ã©tat de toutes les entitÃ©s (20 entitÃ©s maximum) qui
+                                sont associÃ©es avec la session hibernate au moment du flush
                             </entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.cache</literal></entry>
-                            <entry>Trace toute l'activité du cache de second niveau</entry>
+                            <entry>Trace toute l'activitÃ© du cache de second niveau</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.transaction</literal></entry>
-                            <entry>Trace toute l'activité relative aux transactions</entry>
+                            <entry>Trace toute l'activitÃ© relative aux transactions</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.jdbc</literal></entry>
@@ -1286,7 +1288,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <row>
                             <entry><literal>org.hibernate.hql.ast.AST</literal></entry>
                             <entry>
-                                Trace l'arbre syntaxique des requêtes HQL et SQL durant l'analyse syntaxique des requêtes
+                                Trace l'arbre syntaxique des requÃªtes HQL et SQL durant l'analyse syntaxique des requÃªtes
                             </entry>
                         </row>
                         <row>
@@ -1296,7 +1298,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <row>
                             <entry><literal>org.hibernate</literal></entry>
                             <entry>
-                                Trace tout (beaucoupe d'informations, mais très utile pour résoudre les problèmes).
+                                Trace tout (beaucoupe d'informations, mais trÃ¨s utile pour rÃ©soudre les problÃ¨mes).
                             </entry>
                         </row>
                     </tbody>
@@ -1304,34 +1306,34 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </table>
             
         <para>
-            Lorsque vous développez des applications avec Hibernate, vous devriez quasiment toujours
-            travailler avec le niveau <literal>debug</literal> activé pour la catégorie
-            <literal>org.hibernate.SQL</literal>, ou sinon avec la propriété 
-            <literal>hibernate.show_sql</literal> activée.
+            Lorsque vous dÃ©veloppez des applications avec Hibernate, vous devriez quasiment toujours
+            travailler avec le niveau <literal>debug</literal> activÃ© pour la catÃ©gorie
+            <literal>org.hibernate.SQL</literal>, ou sinon avec la propriÃ©tÃ© 
+            <literal>hibernate.show_sql</literal> activÃ©e.
         </para>
                        
         
     </sect1>
 
     <sect1 id="configuration-namingstrategy">
-        <title>Implémenter une <literal>NamingStrategy</literal></title>
+        <title>ImplÃ©menter une <literal>NamingStrategy</literal></title>
 
         <para>
             L'interface <literal>org.hibernate.cfg.NamingStrategy</literal> vous permet de
-            spécifier une "stratégie de nommage" des objets et éléments de la base de données.
+            spÃ©cifier une "stratÃ©gie de nommage" des objets et Ã©lÃ©ments de la base de donnÃ©es.
         </para>
 
         <para>
-            Vous pouvez fournir des règles pour automatiquement générer les identifiants
-            de base de données à partir des identifiants Java, ou transformer une colonne
-            ou table "logique" donnée dans le fichier de mapping en une colonne ou table
-            "physique". Cette fonctionnalité aide à réduire la verbosité de documents
-            de mapping, en éliminant le bruit répétitif (les préfixes <literal>TBL_</literal>
-            par exemple). La stratégie par défaut utilisée par Hibernate est minimale.
+            Vous pouvez fournir des rÃ¨gles pour automatiquement gÃ©nÃ©rer les identifiants
+            de base de donnÃ©es Ã  partir des identifiants Java, ou transformer une colonne
+            ou table "logique" donnÃ©e dans le fichier de mapping en une colonne ou table
+            "physique". Cette fonctionnalitÃ© aide Ã  rÃ©duire la verbositÃ© de documents
+            de mapping, en Ã©liminant le bruit rÃ©pÃ©titif (les prÃ©fixes <literal>TBL_</literal>
+            par exemple). La stratÃ©gie par dÃ©faut utilisÃ©e par Hibernate est minimale.
         </para>
 
         <para>
-            Vous pouvez définir une stratégie différente en appelant
+            Vous pouvez dÃ©finir une stratÃ©gie diffÃ©rente en appelant
             <literal>Configuration.setNamingStrategy()</literal> avant d'ajouter des
             mappings :
         </para>
@@ -1344,7 +1346,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
     
         <para>
             <literal>net.sf.hibernate.cfg.ImprovedNamingStrategy</literal> est une 
-            stratégie fournie qui peut être utile comme point de départ de quelques
+            stratÃ©gie fournie qui peut Ãªtre utile comme point de dÃ©part de quelques
             applications.
         </para>
 
@@ -1354,14 +1356,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <title>Fichier de configuration XML</title>
 
         <para>
-            Une approche alternative est de spécifier toute la configuration dans un
-            fichier nommé <literal>hibernate.cfg.xml</literal>. Ce fichier peut être 
-            utilisé à la place du fichier <literal>hibernate.properties</literal>, voire
-            même peut servir à surcharger les propriétés si les deux fichiers sont présents.
+            Une approche alternative est de spÃ©cifier toute la configuration dans un
+            fichier nommÃ© <literal>hibernate.cfg.xml</literal>. Ce fichier peut Ãªtre 
+            utilisÃ© Ã  la place du fichier <literal>hibernate.properties</literal>, voire
+            mÃªme peut servir Ã  surcharger les propriÃ©tÃ©s si les deux fichiers sont prÃ©sents.
         </para>
 
         <para>
-            Le fichier de configuration XML doit par défaut se placer à la racine
+            Le fichier de configuration XML doit par dÃ©faut se placer Ã  la racine
             du <literal>CLASSPATH</literal>. En voici un exemple :
         </para>
 
@@ -1401,14 +1403,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
        <para>
           Commme vous pouvez le voir, l'avantage de cette approche est l'externalisation
           des noms des fichiers de mapping de la configuration. Le fichier <literal>hibernate.cfg.xml</literal>
-          est également plus pratique quand on commence à régler le cache d'Hibernate. Notez
+          est Ã©galement plus pratique quand on commence Ã  rÃ©gler le cache d'Hibernate. Notez
           que vous pouvez choisir entre utiliser <literal>hibernate.properties</literal> ou
-          <literal>hibernate.cfg.xml</literal>, les deux sont équivalents, sauf en ce qui
-          concerne les bénéfices de l'utilisation de la syntaxe XML mentionnés ci-dessus.
+          <literal>hibernate.cfg.xml</literal>, les deux sont Ã©quivalents, sauf en ce qui
+          concerne les bÃ©nÃ©fices de l'utilisation de la syntaxe XML mentionnÃ©s ci-dessus.
        </para>
  
        <para>
-           Avec la configuration XML, démarrer Hibernate devient donc aussi simple que ceci :
+           Avec la configuration XML, dÃ©marrer Hibernate devient donc aussi simple que ceci :
        </para>
 
        <programlisting><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>
@@ -1418,24 +1420,24 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
     </sect1>
 
     <sect1 id="configuration-j2ee" revision="1">
-        <title>Intégration à un serveur d'application J2EE</title>
+        <title>IntÃ©gration Ã  un serveur d'application J2EE</title>
 
         <para>
-            Hibernate possède les points suivants d'intégration à l'infrastructure J2EE :
+            Hibernate possÃ¨de les points suivants d'intÃ©gration Ã  l'infrastructure J2EE :
         </para>
 
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>Source de données gérée par le conteneur</emphasis> : Hibernate peut
-                utiliser des connexions JDBC gérées par le conteneur et fournie par l'intermédiaire
+                <emphasis>Source de donnÃ©es gÃ©rÃ©e par le conteneur</emphasis> : Hibernate peut
+                utiliser des connexions JDBC gÃ©rÃ©es par le conteneur et fournie par l'intermÃ©diaire
                 de JNDI. Souvent, un <literal>TransactionManager</literal> compatible JTA
                 et un <literal>ResourceManager</literal> s'occupent de la gestion des transactions (CMT).
-                Ils sont particulièrement prévus pour pouvoir gérer des transactions distribuées
-                sur plusieurs sources de données. Vous pouvez bien sûr également définir vos
+                Ils sont particuliÃ¨rement prÃ©vus pour pouvoir gÃ©rer des transactions distribuÃ©es
+                sur plusieurs sources de donnÃ©es. Vous pouvez bien sÃ»r Ã©galement dÃ©finir vos
                 limites de transaction dans votre programme (BMT) ou vous pouvez sinon aussi
                 utiliser l'API optionnelle <literal>Transaction</literal> d'Hibernate qui vous garantira
-                la portabilité de votre code entre plusieurs serveurs d'application.
+                la portabilitÃ© de votre code entre plusieurs serveurs d'application.
                 </para>
             </listitem>
         </itemizedlist>
@@ -1444,7 +1446,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <listitem>
                 <para>
                 <emphasis>Association JNDI automatique</emphasis>: Hibernate peut associer sa
-                <literal>SessionFactory</literal> à JNDI après le démarrage.
+                <literal>SessionFactory</literal> Ã  JNDI aprÃ¨s le dÃ©marrage.
                 </para>
             </listitem>
         </itemizedlist>
@@ -1452,12 +1454,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>Association de la Session à JTA:</emphasis> La <literal>Session</literal> Hibernate
-                peut être associée automatiquement à une transaction JTA si vous utilisez les EJBs.
-                Vous avez juste à récupérer la <literal>SessionFactory</literal> depuis JNDI et
-                à récupérer la <literal>Session</literal> courante. Hibernate s'occupe de vider et
+                <emphasis>Association de la Session Ã  JTA:</emphasis> La <literal>Session</literal> Hibernate
+                peut Ãªtre associÃ©e automatiquement Ã  une transaction JTA si vous utilisez les EJBs.
+                Vous avez juste Ã  rÃ©cupÃ©rer la <literal>SessionFactory</literal> depuis JNDI et
+                Ã  rÃ©cupÃ©rer la <literal>Session</literal> courante. Hibernate s'occupe de vider et
                 fermer la <literal>Session</literal> lorsque le transaction JTA se termine. La
-                démarcation des transactions se fait de manière déclarative dans les descripteurs de déploiement.
+                dÃ©marcation des transactions se fait de maniÃ¨re dÃ©clarative dans les descripteurs de dÃ©ploiement.
                 </para>
             </listitem>
         </itemizedlist>
@@ -1465,41 +1467,41 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>Déploiement JMX :</emphasis>Si vous avez un serveur d'application compatible JMX
-                (JBoss AS par exemple), vous pouvez choisir de déployer Hibernate en temps que MBean géré par
-                le serveur. Cela vous évite de coder la ligne de démarrage qui permet de construire
+                <emphasis>DÃ©ploiement JMX :</emphasis>Si vous avez un serveur d'application compatible JMX
+                (JBoss AS par exemple), vous pouvez choisir de dÃ©ployer Hibernate en temps que MBean gÃ©rÃ© par
+                le serveur. Cela vous Ã©vite de coder la ligne de dÃ©marrage qui permet de construire
                 la <literal>SessionFactory</literal> depuis la <literal>Configuration</literal>.
-                Le conteneur va démarrer votre <literal>HibernateService</literal>, et va idéalement
-                s'occuper des dépendances entre les services (la source de données doit être disponible
-                avant qu'Hibernate ne démarre, etc).
+                Le conteneur va dÃ©marrer votre <literal>HibernateService</literal>, et va idÃ©alement
+                s'occuper des dÃ©pendances entre les services (la source de donnÃ©es doit Ãªtre disponible
+                avant qu'Hibernate ne dÃ©marre, etc).
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            En fonction de votre environnement, vous devrez peut être mettre l'option de 
-            configuration <literal>hibernate.connection.aggressive_release</literal> à vrai si
+            En fonction de votre environnement, vous devrez peut Ãªtre mettre l'option de 
+            configuration <literal>hibernate.connection.aggressive_release</literal> Ã  vrai si
             le serveur d'application affiche des exceptions de type "connection containment".
         </para>
 
         <sect2 id="configuration-optional-transactionstrategy" revision="3">
-            <title>Configuration de la stratégie transactionnelle</title>
+            <title>Configuration de la stratÃ©gie transactionnelle</title>
 
             <para>
-                L'API de la <literal>Session</literal> Hibernate est indépendante de tout système
-                de démarcation des transactions qui peut être présent dans votre architecture. Si
+                L'API de la <literal>Session</literal> Hibernate est indÃ©pendante de tout systÃ¨me
+                de dÃ©marcation des transactions qui peut Ãªtre prÃ©sent dans votre architecture. Si
                 vous laissez Hibernate utiliser l'API JDBC directement via un pool de connexion, vous
                 devrez commencer et terminer vos transactions en utilisant l'API JDBC. Si votre
-                application tourne à l'intérieur d'un serveur d'application J2EE, vous voudrez peut être
-                utiliser les transactions gérées par les beans (BMT) et appeller l'API JTA et 
-                <literal>UserTransaction</literal> lorsque cela est nécessaire.
+                application tourne Ã  l'intÃ©rieur d'un serveur d'application J2EE, vous voudrez peut Ãªtre
+                utiliser les transactions gÃ©rÃ©es par les beans (BMT) et appeller l'API JTA et 
+                <literal>UserTransaction</literal> lorsque cela est nÃ©cessaire.
             </para>
             <para>
-                Pour conserver votre code portable entre ces deux environnements (et d'autres éventuels)
+                Pour conserver votre code portable entre ces deux environnements (et d'autres Ã©ventuels)
                 nous vous recommandons d'utiliser l'API optionnelle <literal>Transaction</literal> d'Hibernate,
-                qui va encapsuler et masquer le système de transaction sous-jacent.
-                Pour cela, vous devez préciser une classe de fabrique d'instances de <literal>Transaction</literal>
-                en positionnant la propriété
+                qui va encapsuler et masquer le systÃ¨me de transaction sous-jacent.
+                Pour cela, vous devez prÃ©ciser une classe de fabrique d'instances de <literal>Transaction</literal>
+                en positionnant la propriÃ©tÃ©
                 <literal>hibernate.transaction.factory_class</literal>.
             </para>
 
@@ -1511,38 +1513,38 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <varlistentry>
                     <term><literal>net.sf.hibernate.transaction.JDBCTransactionFactory</literal></term>
                     <listitem>
-                        <para>délègue aux transactions de la base de données (JDBC). Valeur par défaut.</para>
+                        <para>dÃ©lÃ¨gue aux transactions de la base de donnÃ©es (JDBC). Valeur par dÃ©faut.</para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
                     <listitem>
                         <para>
-                            délègue à CMT si une transaction existante est sous ce contexte (ex: méthode
-                            d'un EJB session), sinon une nouvelle transaction est entamée et
-                            une transaction gérée par le bean est utilisée.
+                            dÃ©lÃ¨gue Ã  CMT si une transaction existante est sous ce contexte (ex: mÃ©thode
+                            d'un EJB session), sinon une nouvelle transaction est entamÃ©e et
+                            une transaction gÃ©rÃ©e par le bean est utilisÃ©e.
                         </para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.CMTTransactionFactory</literal></term>
                     <listitem>
-                        <para>délègue à aux transactions JTA gérées par le conteneur</para>
+                        <para>dÃ©lÃ¨gue Ã  aux transactions JTA gÃ©rÃ©es par le conteneur</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
 
             <para>
-                Vous pouvez également définir votre propre stratégie transactionnelle
+                Vous pouvez Ã©galement dÃ©finir votre propre stratÃ©gie transactionnelle
                 (pour un service de transaction CORBA par exemple).
             </para>
 
             <para>
-                Certaines fonctionnalités d'Hibernate (i.e. le cache de second niveau, l'association
-                automatique des Session à JTA, etc.) nécessitent l'accès au <literal>TransactionManager</literal>
-                JTA dans un environnement "managé". Dans un serveur d'application, vous devez indiquer
-                comment Hibernate peut obtenir une référence vers le <literal>TransactionManager</literal>,
-                car J2EE ne fournit pas un seul mécanisme standard.
+                Certaines fonctionnalitÃ©s d'Hibernate (i.e. le cache de second niveau, l'association
+                automatique des Session Ã  JTA, etc.) nÃ©cessitent l'accÃ¨s au <literal>TransactionManager</literal>
+                JTA dans un environnement "managÃ©". Dans un serveur d'application, vous devez indiquer
+                comment Hibernate peut obtenir une rÃ©fÃ©rence vers le <literal>TransactionManager</literal>,
+                car J2EE ne fournit pas un seul mÃ©canisme standard.
             </para>
 
             <table frame="topbot" id="jtamanagerlookup" revision="1">
@@ -1604,37 +1606,37 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </sect2>
 
         <sect2 id="configuration-optional-jndi" revision="3">
-            <title><literal>SessionFactory</literal> associée au JNDI</title>
+            <title><literal>SessionFactory</literal> associÃ©e au JNDI</title>
 
             <para>
-                Une <literal>SessionFactory</literal> Hibernate associée au JNDI peut 
-                simplifier l'accès à la fabrique et donc la création de nouvelles
-                <literal>Session</literal>s. Notez que cela n'est pas lié avec les <literal>Datasource</literal>
-                associées au JNDI, elles utilisent juste le même registre.
+                Une <literal>SessionFactory</literal> Hibernate associÃ©e au JNDI peut 
+                simplifier l'accÃ¨s Ã  la fabrique et donc la crÃ©ation de nouvelles
+                <literal>Session</literal>s. Notez que cela n'est pas liÃ© avec les <literal>Datasource</literal>
+                associÃ©es au JNDI, elles utilisent juste le mÃªme registre.
             </para>
 
             <para>
-                Si vous désirez associer la <literal>SessionFactory</literal> à un nom JNDI,
-                spécifiez un nom (ex. <literal>java:hibernate/SessionFactory</literal>) en
-                utilisant la propriété <literal>hibernate.session_factory_name</literal>.
-                Si cette propriété est omise, la <literal>SessionFactory</literal> ne sera pas
-                associée au JNDI (c'est particulièrement pratique dans les environnements ayant une
-                implémentation de JNDI en lecture seule, comme c'est le cas pour Tomcat).
+                Si vous dÃ©sirez associer la <literal>SessionFactory</literal> Ã  un nom JNDI,
+                spÃ©cifiez un nom (ex. <literal>java:hibernate/SessionFactory</literal>) en
+                utilisant la propriÃ©tÃ© <literal>hibernate.session_factory_name</literal>.
+                Si cette propriÃ©tÃ© est omise, la <literal>SessionFactory</literal> ne sera pas
+                associÃ©e au JNDI (c'est particuliÃ¨rement pratique dans les environnements ayant une
+                implÃ©mentation de JNDI en lecture seule, comme c'est le cas pour Tomcat).
             </para>
 
             <para>
                 Lorsqu'il associe la <literal>SessionFactory</literal> au JNDI, Hibernate utilisera 
                 les valeurs de <literal>hibernate.jndi.url</literal>, <literal>hibernate.jndi.class</literal>
-                pour instancier un contexte d'initialisation. S'ils ne sont pas spécifiés, 
-                l'<literal>InitialContext</literal> par défaut sera utilisé.
+                pour instancier un contexte d'initialisation. S'ils ne sont pas spÃ©cifiÃ©s, 
+                l'<literal>InitialContext</literal> par dÃ©faut sera utilisÃ©.
             </para>
             
             <para>
                 Hibernate va automatiquement placer la <literal>SessionFactory</literal> dans JNDI
-                après avoir appelé <literal>cfg.buildSessionFactory()</literal>. Cela signifie que vous
-                devez avoir cet appel dans un code de démarrage (ou dans une classe utilitaire) dans
-                votre application sauf si vous utilisez le déploiement JMX avec le service
-                <literal>HibernateService</literal> présenté plus tard dans ce document.
+                aprÃ¨s avoir appelÃ© <literal>cfg.buildSessionFactory()</literal>. Cela signifie que vous
+                devez avoir cet appel dans un code de dÃ©marrage (ou dans une classe utilitaire) dans
+                votre application sauf si vous utilisez le dÃ©ploiement JMX avec le service
+                <literal>HibernateService</literal> prÃ©sentÃ© plus tard dans ce document.
             </para>
             <para>           
                 Si vous utilisez <literal>SessionFactory</literal> JNDI, un EJB ou n'importe quelle autre classe
@@ -1642,55 +1644,55 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </para>
 
             <para>
-                Nous recommandons que vous liiez la <literal>SessionFactory</literal> à JNDI dans les
-                environnements managés et que vous utilisiez un singleton <literal>static</literal> si ce n'est pas le cas.
-                Pour isoler votre application de ces détails, nous vous recommandons aussi de masquer
+                Nous recommandons que vous liiez la <literal>SessionFactory</literal> Ã  JNDI dans les
+                environnements managÃ©s et que vous utilisiez un singleton <literal>static</literal> si ce n'est pas le cas.
+                Pour isoler votre application de ces dÃ©tails, nous vous recommandons aussi de masquer
                 le code de lookup actuel pour une <literal>SessionFactory</literal> dans une classe helper,
                 comme <literal>HibernateUtil.getSessionFactory()</literal>. Notez qu'une telle classe
-                est aussi un moyen efficace de démarrer Hibernate&mdash;voir chapitre 1.
+                est aussi un moyen efficace de dÃ©marrer Hibernate&mdash;voir chapitre 1.
             </para>
         </sect2>
 
         <sect2 id="configuration-j2ee-currentsession" revision="4">
-            <title>Association automatique de la Session à JTA</title>
+            <title>Association automatique de la Session Ã  JTA</title>
 
             <para>
-                Le moyen le plus simple de gérer les <literal>Session</literal>s et transactions est
+                Le moyen le plus simple de gÃ©rer les <literal>Session</literal>s et transactions est
                 la gestion automatique de session "courante" offerte par Hibernate.
-                Voir détail à <xref linkend="architecture-current-session">current sessions</xref>.
+                Voir dÃ©tail Ã  <xref linkend="architecture-current-session">current sessions</xref>.
                 En utilisant le contexte de session <literal>"jta"</literal> session context, s'il n'y a pas
-                de <literal>Session</literal> associée à la transaction JTA courante, une session sera
-                démarrée et associée à la transaction JTA courante la première fois que vous appelez
+                de <literal>Session</literal> associÃ©e Ã  la transaction JTA courante, une session sera
+                dÃ©marrÃ©e et associÃ©e Ã  la transaction JTA courante la premiÃ¨re fois que vous appelez
                 <literal>sessionFactory.getCurrentSession()</literal>. Les <literal>Session</literal>s
                 obtenue via <literal>getCurrentSession()</literal> dans une contexte <literal>"jta"</literal> 
-                seront automatiquement flushées avant la validation de la transaction, fermées une fois
-                la transaction complétée, et libéreront les connexions JDBC de manière aggressive
-                après chaque statement. Ceci permet aux <literal>Session</literal>s d'être
-                gérées par le cycle de vie de la transaction JTA à la quelle est sont associées, 
+                seront automatiquement flushÃ©es avant la validation de la transaction, fermÃ©es une fois
+                la transaction complÃ©tÃ©e, et libÃ©reront les connexions JDBC de maniÃ¨re aggressive
+                aprÃ¨s chaque statement. Ceci permet aux <literal>Session</literal>s d'Ãªtre
+                gÃ©rÃ©es par le cycle de vie de la transaction JTA Ã  la quelle est sont associÃ©es, 
                 laissant le code de l'utilisateur propre de ce type de gestion. Votre code peut
-                soit utiliser JTA de manière programmatique via <literal>UserTransaction</literal>, ou (ce qui est recommandé
-                pour la portabilité du code) utiliser l'API <literal>Transaction</literal> API pour marquer
-                les limites. Si vous exécutez sous un conteneur EJB, la démarcation déclarative des transactions
-                avec CMT est recommandée.
+                soit utiliser JTA de maniÃ¨re programmatique via <literal>UserTransaction</literal>, ou (ce qui est recommandÃ©
+                pour la portabilitÃ© du code) utiliser l'API <literal>Transaction</literal> API pour marquer
+                les limites. Si vous exÃ©cutez sous un conteneur EJB, la dÃ©marcation dÃ©clarative des transactions
+                avec CMT est recommandÃ©e.
             </para>
 
         </sect2>
 
         <sect2 id="configuration-j2ee-jmx" revision="1">
-            <title>Déploiement JMX</title>
+            <title>DÃ©ploiement JMX</title>
 
             <para>
-                La ligne <literal>cfg.buildSessionFactory()</literal>  doit toujours être exécutée
+                La ligne <literal>cfg.buildSessionFactory()</literal>  doit toujours Ãªtre exÃ©cutÃ©e
                 quelque part pour avoir une <literal>SessionFactory</literal> dans JNDI. Vous pouvez
                 faire cela dans un bloc d'initialisation <literal>static</literal> (comme
                 celui qui se trouve dans la classe <literal>HibernateUtil</literal>) ou vous pouvez
-                déployer Hibernate en temps que <emphasis>service managé</emphasis>.
+                dÃ©ployer Hibernate en temps que <emphasis>service managÃ©</emphasis>.
             </para>
 
             <para>
-                Hibernate est distribué avec <literal>org.hibernate.jmx.HibernateService</literal>
-                pour le déploiement sur un serveur d'application avec le support de JMX comme JBoss AS.
-                Le déploiement et la configuration sont spécifiques à chaque vendeur. Voici un fichier
+                Hibernate est distribuÃ© avec <literal>org.hibernate.jmx.HibernateService</literal>
+                pour le dÃ©ploiement sur un serveur d'application avec le support de JMX comme JBoss AS.
+                Le dÃ©ploiement et la configuration sont spÃ©cifiques Ã  chaque vendeur. Voici un fichier
                 <literal>jboss-service.xml</literal> d'exemple pour JBoss 4.0.x:
             </para>
 
@@ -1738,14 +1740,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 </server>]]></programlisting>
 
             <para>
-                Ce fichier est déployé dans un répertoire <literal>META-INF</literal> et est packagé
+                Ce fichier est dÃ©ployÃ© dans un rÃ©pertoire <literal>META-INF</literal> et est packagÃ©
                 dans un fichier JAR avec l'extension <literal>.sar</literal> (service archive).
-                Vous devez également packager Hibernate, les librairies tierces requises, vos classes
-                persistantes compilées et vos fichiers de mapping dans la même archive. Vos beans
+                Vous devez Ã©galement packager Hibernate, les librairies tierces requises, vos classes
+                persistantes compilÃ©es et vos fichiers de mapping dans la mÃªme archive. Vos beans
                 entreprise (souvent des EJBs session) peuvent rester dans leur propre fichier JAR mais
-                vous pouvez inclure ce fichier JAR dans le jar principal du service pour avoir une seule unité
-                déployable à chaud. Vous pouvez consulter la documentation de JBoss AS pour plus d'information
-                sur les services JMX et le déploiement des EJBs.
+                vous pouvez inclure ce fichier JAR dans le jar principal du service pour avoir une seule unitÃ©
+                dÃ©ployable Ã  chaud. Vous pouvez consulter la documentation de JBoss AS pour plus d'information
+                sur les services JMX et le dÃ©ploiement des EJBs.
             </para>
 
         </sect2>

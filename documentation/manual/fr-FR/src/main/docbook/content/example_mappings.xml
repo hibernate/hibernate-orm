@@ -1,19 +1,6 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!--
-  ~ Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, v. 2.1. This program is distributed in the
-  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
-  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  ~ Lesser General Public License for more details. You should have received a
-  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
-  ~ distribution; if not, write to the Free Software Foundation, Inc.,
-  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-  ~
-  ~ Red Hat Author(s): Steve Ebersole
-  -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="example-mappings">
     <title>Exemple : quelques mappings</title>
 
@@ -22,14 +9,14 @@
     </para>
 
     <sect1 id="example-mappings-emp">
-        <title>Employeur/Employé (Employer/Employee)</title>
+        <title>Employeur/EmployÃ© (Employer/Employee)</title>
 
         <para>
-            Le modèle suivant de relation entre <literal>Employer</literal> et
-            <literal>Employee</literal> utilise une vraie classe entité (<literal>Employment</literal>)
-            pour représenter l'association. On a fait cela parce qu'il peut y avoir plus d'une période
-            d'emploi pour les deux mêmes parties. Des composants sont utilisés pour modéliser les
-            valeurs monétaires et les noms des employés.
+            Le modÃ¨le suivant de relation entre <literal>Employer</literal> et
+            <literal>Employee</literal> utilise une vraie classe entitÃ© (<literal>Employment</literal>)
+            pour reprÃ©senter l'association. On a fait cela parce qu'il peut y avoir plus d'une pÃ©riode
+            d'emploi pour les deux mÃªmes parties. Des composants sont utilisÃ©s pour modÃ©liser les
+            valeurs monÃ©taires et les noms des employÃ©s.
         </para>
 
         <mediaobject>
@@ -95,7 +82,7 @@
 </hibernate-mapping>]]></programlisting>
 
     <para>
-        Et voici le schéma des tables générées par <literal>SchemaExport</literal>.
+        Et voici le schÃ©ma des tables gÃ©nÃ©rÃ©es par <literal>SchemaExport</literal>.
     </para>
 
     <programlisting><![CDATA[create table employers (
@@ -138,12 +125,12 @@ create sequence employer_id_seq]]></programlisting>
         <title>Auteur/Travail (Author/Work)</title>
 
         <para>
-            Soit le modèle de la relation entre <literal>Work</literal>, <literal>Author</literal>
-            et <literal>Person</literal>. Nous représentons la relation entre <literal>Work</literal>
+            Soit le modÃ¨le de la relation entre <literal>Work</literal>, <literal>Author</literal>
+            et <literal>Person</literal>. Nous reprÃ©sentons la relation entre <literal>Work</literal>
             et <literal>Author</literal> comme une association plusieurs-vers-plusieurs. Nous avons choisi de
-            représenter la relation entre <literal>Author</literal> et <literal>Person</literal>
-            comme une association un-vers-un. Une autre possibilité aurait été que
-            <literal>Author</literal> hérite de <literal>Person</literal>.
+            reprÃ©senter la relation entre <literal>Author</literal> et <literal>Person</literal>
+            comme une association un-vers-un. Une autre possibilitÃ© aurait Ã©tÃ© que
+            <literal>Author</literal> hÃ©rite de <literal>Person</literal>.
         </para>
 
         <mediaobject>
@@ -156,7 +143,7 @@ create sequence employer_id_seq]]></programlisting>
         </mediaobject>
 
         <para>
-            Le mapping suivant représente exactement ces relations :
+            Le mapping suivant reprÃ©sente exactement ces relations :
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -214,9 +201,9 @@ create sequence employer_id_seq]]></programlisting>
     <para>
         Il y a quatre tables dans ce mapping. <literal>works</literal>,
         <literal>authors</literal> et <literal>persons</literal> qui contiennent
-        respectivement les données de work, author et person.
+        respectivement les donnÃ©es de work, author et person.
         <literal>author_work</literal> est une table d'association qui lie authors
-        à works. Voici le schéma de tables, généré par <literal>SchemaExport</literal>.
+        Ã  works. Voici le schÃ©ma de tables, gÃ©nÃ©rÃ© par <literal>SchemaExport</literal>.
     </para>
 
     <programlisting><![CDATA[create table works (
@@ -260,14 +247,14 @@ alter table author_work
         <title>Client/Commande/Produit (Customer/Order/Product)</title>
 
         <para>
-            Imaginons maintenant le modèle de relation entre <literal>Customer</literal>,
+            Imaginons maintenant le modÃ¨le de relation entre <literal>Customer</literal>,
             <literal>Order</literal>, <literal>LineItem</literal> et <literal>Product</literal>.
             Il y a une association un-vers-plusieurs entre <literal>Customer</literal> et
-            <literal>Order</literal>, mais comment devrions nous représenter <literal>Order</literal> /
+            <literal>Order</literal>, mais comment devrions nous reprÃ©senter <literal>Order</literal> /
             <literal>LineItem</literal> / <literal>Product</literal>? J'ai choisi de mapper
-            <literal>LineItem</literal> comme une classe d'association représentant l'association
+            <literal>LineItem</literal> comme une classe d'association reprÃ©sentant l'association
             plusieurs-vers-plusieurs entre <literal>Order</literal> et <literal>Product</literal>. Dans
-            Hibernate, on appelle cela un élément composite.
+            Hibernate, on appelle cela un Ã©lÃ©ment composite.
         </para>
 
         <mediaobject>
@@ -323,8 +310,8 @@ alter table author_work
 
     <para>
         <literal>customers</literal>, <literal>orders</literal>, <literal>line_items</literal> et
-        <literal>products</literal> contiennent les données de customer, order, order line item et product.
-        <literal>line_items</literal> est aussi la table d'association liant orders à products.
+        <literal>products</literal> contiennent les donnÃ©es de customer, order, order line item et product.
+        <literal>line_items</literal> est aussi la table d'association liant orders Ã  products.
     </para>
 
     <programlisting><![CDATA[create table customers (
@@ -404,7 +391,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-composite-key">
-            <title>Exemple de clef composée</title>
+            <title>Exemple de clef composÃ©e</title>
 <programlisting><![CDATA[<class name="Customer">
 
     <id name="customerId"
@@ -521,7 +508,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-composite-key-manytomany">
-            <title>Many-to-many avec une clef composée partagée</title>
+            <title>Many-to-many avec une clef composÃ©e partagÃ©e</title>
 <programlisting><![CDATA[<class name="User" table="`User`">
     <composite-id>
         <key-property name="name"/>
@@ -560,7 +547,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-content-discrimination">
-            <title>Contenu basé sur une discrimination</title>
+            <title>Contenu basÃ© sur une discrimination</title>
 <programlisting><![CDATA[<class name="Person"
     discriminator-value="P">
 
@@ -614,7 +601,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-association-alternatekeys" revision="2">
-            <title>Associations sur des clefs alternées</title>
+            <title>Associations sur des clefs alternÃ©es</title>
 <programlisting><![CDATA[<class name="Person">
 
     <id name="id">

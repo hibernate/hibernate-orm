@@ -1,20 +1,22 @@
-<?xml version='1.0' encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="persistent-classes" revision="2">
     <title>Classes persistantes</title>
 
     <para>
-        Les classes persistantes sont les classes d'une application qui implémentent
-        les entités d'un problème métier (ex. Client et Commande dans une application
-        de commerce électronique).
-        Toutes les instances d'une classe persistante ne sont pas forcément 
-        dans l'état persistant - au lieu de cela, une instance peut être éphémère (NdT : transient) ou détachée.
+        Les classes persistantes sont les classes d'une application qui implÃ©mentent
+        les entitÃ©s d'un problÃ¨me mÃ©tier (ex. Client et Commande dans une application
+        de commerce Ã©lectronique).
+        Toutes les instances d'une classe persistante ne sont pas forcÃ©ment 
+        dans l'Ã©tat persistant - au lieu de cela, une instance peut Ãªtre Ã©phÃ©mÃ¨re (NdT : transient) ou dÃ©tachÃ©e.
     </para>
 
     <para>
-        Hibernate fonctionne de manière optimale lorsque ces classes suivent quelques règles
-        simples, aussi connues comme le modèle de programmation Plain Old Java Object
-        (POJO). Cependant, aucune de ces règles ne sont des besoins absolus. En effet, Hibernate3 suppose très peu de choses à propos
-        de la nature de vos objets persistants. Vous pouvez exprimer un modèle de domaine par d'autres moyens : utiliser des arbres
+        Hibernate fonctionne de maniÃ¨re optimale lorsque ces classes suivent quelques rÃ¨gles
+        simples, aussi connues comme le modÃ¨le de programmation Plain Old Java Object
+        (POJO). Cependant, aucune de ces rÃ¨gles ne sont des besoins absolus. En effet, Hibernate3 suppose trÃ¨s peu de choses Ã  propos
+        de la nature de vos objets persistants. Vous pouvez exprimer un modÃ¨le de domaine par d'autres moyens : utiliser des arbres
         d'instances de <literal>Map</literal>, par exemple.
     </para>
 
@@ -22,8 +24,8 @@
         <title>Un exemple simple de POJO</title>
 
         <para>
-            Toute bonne application Java nécessite une classe persistante
-            représentant les félins.
+            Toute bonne application Java nÃ©cessite une classe persistante
+            reprÃ©sentant les fÃ©lins.
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -106,49 +108,49 @@ public class Cat {
 }]]></programlisting>
 
         <para>
-            Il y a quatre règles à suivre ici :
+            Il y a quatre rÃ¨gles Ã  suivre ici :
         </para>
 
 
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
-            <title>Implémenter un constructeur sans argument</title>
+            <title>ImplÃ©menter un constructeur sans argument</title>
 
             <para>
                 <literal>Cat</literal> a un constructeur sans argument. Toutes les classes persistantes doivent avoir un
-                constructeur par défaut (lequel peut ne pas être public) pour qu'Hibernate puissent les instancier en utilisant
-                <literal>Constructor.newInstance()</literal>. Nous recommandons fortement d'avoir un constructeur par défaut avec 
-                au moins une visibilité <emphasis>paquet</emphasis> pour la génération du proxy à l'exécution dans Hibernate.
+                constructeur par dÃ©faut (lequel peut ne pas Ãªtre public) pour qu'Hibernate puissent les instancier en utilisant
+                <literal>Constructor.newInstance()</literal>. Nous recommandons fortement d'avoir un constructeur par dÃ©faut avec 
+                au moins une visibilitÃ© <emphasis>paquet</emphasis> pour la gÃ©nÃ©ration du proxy Ã  l'exÃ©cution dans Hibernate.
             </para>
         </sect2>
 
         <sect2 id="persistent-classes-pojo-identifier" revision="2">
-            <title>Fournir une propriété d'indentifiant (optionnel)</title>
+            <title>Fournir une propriÃ©tÃ© d'indentifiant (optionnel)</title>
 
             <para>
-                <literal>Cat</literal> possède une propriété appelée <literal>id</literal>.
-                Cette propriété mappe la valeur de la colonne de clé primaire de la table
-                d'une base de données.La propriété aurait pu s'appeler complètement autrement,
-                et son type aurait pu être n'importe quel type primitif, n'importe quel "encapsuleur"
+                <literal>Cat</literal> possÃ¨de une propriÃ©tÃ© appelÃ©e <literal>id</literal>.
+                Cette propriÃ©tÃ© mappe la valeur de la colonne de clÃ© primaire de la table
+                d'une base de donnÃ©es.La propriÃ©tÃ© aurait pu s'appeler complÃ¨tement autrement,
+                et son type aurait pu Ãªtre n'importe quel type primitif, n'importe quel "encapsuleur"
                 de type primitif, <literal>java.lang.String</literal> ou <literal>java.util.Date</literal>.
-                (Si votre base de données héritée possède des clés composites, elles peuvent être mappées
-                en utilisant une classe définie par l'utilisateur et possédant les propriétés associées aux
-                types de la clé composite - voir la section concernant les identifiants composites plus tard).
+                (Si votre base de donnÃ©es hÃ©ritÃ©e possÃ¨de des clÃ©s composites, elles peuvent Ãªtre mappÃ©es
+                en utilisant une classe dÃ©finie par l'utilisateur et possÃ©dant les propriÃ©tÃ©s associÃ©es aux
+                types de la clÃ© composite - voir la section concernant les identifiants composites plus tard).
             </para>
 
             <para>
-                La propriété d'identifiant est strictement optionnelle. Vous pouver l'oublier et laisser Hibernate
+                La propriÃ©tÃ© d'identifiant est strictement optionnelle. Vous pouver l'oublier et laisser Hibernate
                 s'occuper des identifiants de l'objet en interne. Toutefois, nous ne le recommandons pas.
             </para>
 
             <para>
-                En fait, quelques fonctionnalités ne sont disponibles que pour les classes
-                déclarant un identifiant de propriété :
+                En fait, quelques fonctionnalitÃ©s ne sont disponibles que pour les classes
+                dÃ©clarant un identifiant de propriÃ©tÃ© :
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        Les réattachements transitifs pour les objets détachés (mise à jour en cascade ou fusion en cascade) - 
+                        Les rÃ©attachements transitifs pour les objets dÃ©tachÃ©s (mise Ã  jour en cascade ou fusion en cascade) - 
                         voir <xref linkend="objectstate-transitive"/>
                     </para>
                 </listitem>
@@ -165,8 +167,8 @@ public class Cat {
             </itemizedlist>
 
             <para>
-                Nous recommandons que vous déclariez les propriétés d'identifiant de manière
-                uniforme. Nous recommandons également que vous utilisiez un type nullable
+                Nous recommandons que vous dÃ©clariez les propriÃ©tÃ©s d'identifiant de maniÃ¨re
+                uniforme. Nous recommandons Ã©galement que vous utilisiez un type nullable
                 (ie. non primitif).
             </para>
         </sect2>
@@ -174,39 +176,39 @@ public class Cat {
         <sect2 id="persistent-classes-pojo-final">
             <title>Favoriser les classes non finales (optionnel)</title>
             <para>
-                Une fonctionnalité clef d'Hibernate, les <emphasis>proxies</emphasis>, nécessitent
-                que la classe persistente soit non finale ou qu'elle soit l'implémentation d'une
-                interface qui déclare toutes les méthodes publiques.
+                Une fonctionnalitÃ© clef d'Hibernate, les <emphasis>proxies</emphasis>, nÃ©cessitent
+                que la classe persistente soit non finale ou qu'elle soit l'implÃ©mentation d'une
+                interface qui dÃ©clare toutes les mÃ©thodes publiques.
             </para>
             <para>
-                Vous pouvez persister, grâce à Hibernate, les classes <literal>final</literal>
-                qui n'implémentent pas d'interface, mais vous ne pourrez pas utiliser les proxies pour les chargements d'associations paresseuses
-                - ce qui limitera vos possibilités d'ajustement des performances.
+                Vous pouvez persister, grÃ¢ce Ã  Hibernate, les classes <literal>final</literal>
+                qui n'implÃ©mentent pas d'interface, mais vous ne pourrez pas utiliser les proxies pour les chargements d'associations paresseuses
+                - ce qui limitera vos possibilitÃ©s d'ajustement des performances.
             </para>
             <para>
-                Vous devriez aussi éviter de déclarer des méthodes <literal>public final</literal> sur des classes
-                non-finales. Si vous voulez utiliser une classe avec une méthode <literal>public final</literal>, vous devez
-                explicitement désactiver les proxies en paramétrant
+                Vous devriez aussi Ã©viter de dÃ©clarer des mÃ©thodes <literal>public final</literal> sur des classes
+                non-finales. Si vous voulez utiliser une classe avec une mÃ©thode <literal>public final</literal>, vous devez
+                explicitement dÃ©sactiver les proxies en paramÃ©trant
                 <literal>lazy="false"</literal>.
             </para>
         </sect2>
 
         <sect2 id="persistent-classes-pojo-accessors" revision="2">
-            <title>Déclarer les accesseurs et mutateurs des attributs persistants (optionnel)</title>
+            <title>DÃ©clarer les accesseurs et mutateurs des attributs persistants (optionnel)</title>
 
             <para>
-                <literal>Cat</literal> déclare des mutateurs pour toutes ses champs persistants. Beaucoup d'autres
+                <literal>Cat</literal> dÃ©clare des mutateurs pour toutes ses champs persistants. Beaucoup d'autres
                 solutions de mapping Objet/relationnel persistent directement les variables d'instance. Nous pensons
-                qu'il est bien mieux de fournir une indirection entre le schéma relationnel et les structures de données internes de la classe.
-                Par défaut, Hibernate persiste les propriétés suivant le style JavaBean, et reconnaît les noms de méthodes de la forme <literal>
+                qu'il est bien mieux de fournir une indirection entre le schÃ©ma relationnel et les structures de donnÃ©es internes de la classe.
+                Par dÃ©faut, Hibernate persiste les propriÃ©tÃ©s suivant le style JavaBean, et reconnaÃ®t les noms de mÃ©thodes de la forme <literal>
                 getFoo</literal>, <literal>isFoo</literal> et
-                <literal>setFoo</literal>. Nous pouvons changer pour un accès direct aux champs pour des propriétés particulières, si besoin est.
+                <literal>setFoo</literal>. Nous pouvons changer pour un accÃ¨s direct aux champs pour des propriÃ©tÃ©s particuliÃ¨res, si besoin est.
             </para>
 
             <para>
-                Les propriétés <emphasis>n'ont pas</emphasis> à être déclarées publiques -
-                Hibernate peut persister une propriété avec un paire de getter/setter de
-                visibilité par défault, <literal>protected</literal> ou <literal>
+                Les propriÃ©tÃ©s <emphasis>n'ont pas</emphasis> Ã  Ãªtre dÃ©clarÃ©es publiques -
+                Hibernate peut persister une propriÃ©tÃ© avec un paire de getter/setter de
+                visibilitÃ© par dÃ©fault, <literal>protected</literal> ou <literal>
                 private</literal>.
             </para>
 
@@ -215,11 +217,11 @@ public class Cat {
     </sect1>
 
     <sect1 id="persistent-classes-inheritance">
-        <title>Implémenter l'héritage</title>
+        <title>ImplÃ©menter l'hÃ©ritage</title>
 
         <para>
-            Une sous-classe doit également suivre la première et la seconde règle.
-            Elle hérite sa propriété d'identifiant de <literal>Cat</literal>.
+            Une sous-classe doit Ã©galement suivre la premiÃ¨re et la seconde rÃ¨gle.
+            Elle hÃ©rite sa propriÃ©tÃ© d'identifiant de <literal>Cat</literal>.
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -237,55 +239,55 @@ public class DomesticCat extends Cat {
     </sect1>
 
     <sect1 id="persistent-classes-equalshashcode" revision="1">
-        <title>Implémenter <literal>equals()</literal> et <literal>hashCode()</literal></title>
+        <title>ImplÃ©menter <literal>equals()</literal> et <literal>hashCode()</literal></title>
 
         <para>
-            Vous devez surcharger les méthodes <literal>equals()</literal> et
+            Vous devez surcharger les mÃ©thodes <literal>equals()</literal> et
             <literal>hashCode()</literal> si vous
         </para>
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
                     avez l'intention de mettre des instances de classes persistantes dans un <literal>Set</literal>
-                    (la manière recommandée pour représenter des associations pluri-valuées)
+                    (la maniÃ¨re recommandÃ©e pour reprÃ©senter des associations pluri-valuÃ©es)
                     <emphasis>et</emphasis>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    avez l'intention d'utiliser le réattachement d'instances détachées
+                    avez l'intention d'utiliser le rÃ©attachement d'instances dÃ©tachÃ©es
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Hibernate garantit l'équivalence de l'identité persistante (ligne de base de données) et l'identité Java seulement
-            à l'intérieur de la portée d'une session particulière. Donc dès que nous mélangeons des instances venant de différentes
-            sessions, nous devons implémenter <literal>equals()</literal> et
-            <literal>hashCode()</literal> si nous souhaitons avoir une sémantique correcte pour les <literal>Set</literal>s.
+            Hibernate garantit l'Ã©quivalence de l'identitÃ© persistante (ligne de base de donnÃ©es) et l'identitÃ© Java seulement
+            Ã  l'intÃ©rieur de la portÃ©e d'une session particuliÃ¨re. Donc dÃ¨s que nous mÃ©langeons des instances venant de diffÃ©rentes
+            sessions, nous devons implÃ©menter <literal>equals()</literal> et
+            <literal>hashCode()</literal> si nous souhaitons avoir une sÃ©mantique correcte pour les <literal>Set</literal>s.
         </para>
 
         <para>
-            La manière la plus évidente est d'implémenter <literal>equals()</literal>/<literal>hashCode()</literal>
+            La maniÃ¨re la plus Ã©vidente est d'implÃ©menter <literal>equals()</literal>/<literal>hashCode()</literal>
             en comparant la valeur de l'identifiant des deux objets. Si cette valeur est identique, les deux
-            doivent représenter la même ligne de base de données, ils sont donc égaux (si les deux sont
-            ajoutés à un <literal>Set</literal>, nous n'aurons qu'un seul élément dans le
+            doivent reprÃ©senter la mÃªme ligne de base de donnÃ©es, ils sont donc Ã©gaux (si les deux sont
+            ajoutÃ©s Ã  un <literal>Set</literal>, nous n'aurons qu'un seul Ã©lÃ©ment dans le
             <literal>Set</literal>). Malheureusement, nous ne pouvons pas utiliser cette approche avec 
-            des identifiants générés ! Hibernate n'assignera de
-            valeur d'identifiant qu'aux objets qui sont persistants, une instance nouvellement créée n'aura
-            donc pas de valeur d'identifiant ! De plus, si une instance est non sauvegardée et actuellement dans un <literal>Set</literal>,
-            le sauvegarder assignera une valeur d'identifiant à l'objet. Si <literal>equals()</literal> et <literal>hashCode()</literal>
-            sont basées sur la valeur de l'identifiant, le code de hachage devrait changer, rompant le contrat du <literal>Set</literal>. 
-            Regardez sur le site web d'Hibernate pour une discussion complète de ce problème. 
-            Notez que ceci n'est pas un problème d'Hibernate, mais la sémantique normale de Java pour l'identité d'un objet et l'égalité.
+            des identifiants gÃ©nÃ©rÃ©s ! Hibernate n'assignera de
+            valeur d'identifiant qu'aux objets qui sont persistants, une instance nouvellement crÃ©Ã©e n'aura
+            donc pas de valeur d'identifiant ! De plus, si une instance est non sauvegardÃ©e et actuellement dans un <literal>Set</literal>,
+            le sauvegarder assignera une valeur d'identifiant Ã  l'objet. Si <literal>equals()</literal> et <literal>hashCode()</literal>
+            sont basÃ©es sur la valeur de l'identifiant, le code de hachage devrait changer, rompant le contrat du <literal>Set</literal>. 
+            Regardez sur le site web d'Hibernate pour une discussion complÃ¨te de ce problÃ¨me. 
+            Notez que ceci n'est pas un problÃ¨me d'Hibernate, mais la sÃ©mantique normale de Java pour l'identitÃ© d'un objet et l'Ã©galitÃ©.
         </para>
 
         <para>
-            Nous recommandons donc d'implémenter
+            Nous recommandons donc d'implÃ©menter
             <literal>equals()</literal> et <literal>hashCode()</literal> en utilisant <emphasis>
-            l'égalité par clé métier</emphasis>.L'égalité par clé métier signifie que la méthode <literal>equals()</literal>
-            compare uniquement les propriétés qui forment une clé métier, une clé qui
-            identifierait notre instance dans le monde réel (une clé candidate
+            l'Ã©galitÃ© par clÃ© mÃ©tier</emphasis>.L'Ã©galitÃ© par clÃ© mÃ©tier signifie que la mÃ©thode <literal>equals()</literal>
+            compare uniquement les propriÃ©tÃ©s qui forment une clÃ© mÃ©tier, une clÃ© qui
+            identifierait notre instance dans le monde rÃ©el (une clÃ© candidate
             <emphasis>naturelle</emphasis>) :
         </para>
 
@@ -314,39 +316,39 @@ public class DomesticCat extends Cat {
 }]]></programlisting>
 
         <para>
-            Notez qu'une clef métier ne doit pas être solide comme une clef primaire de base de données 
-            (voir <xref linkend="transactions-basics-identity"/>). Les propriétés
-            immuables ou uniques sont généralement de bonnes candidates pour une clef métier.
+            Notez qu'une clef mÃ©tier ne doit pas Ãªtre solide comme une clef primaire de base de donnÃ©es 
+            (voir <xref linkend="transactions-basics-identity"/>). Les propriÃ©tÃ©s
+            immuables ou uniques sont gÃ©nÃ©ralement de bonnes candidates pour une clef mÃ©tier.
         </para>
 
     </sect1>
 
     <sect1 id="persistent-classes-dynamicmodels">
-        <title>Modèles dynamiques</title>
+        <title>ModÃ¨les dynamiques</title>
 
         <para>
-            <emphasis>Notez que la fonctionnalités suivantes sont actuellement considérées
-            comme expérimentales et peuvent changer dans un futur proche.</emphasis>
+            <emphasis>Notez que la fonctionnalitÃ©s suivantes sont actuellement considÃ©rÃ©es
+            comme expÃ©rimentales et peuvent changer dans un futur proche.</emphasis>
         </para>
 
         <para>
-            Les entités persistantes ne doivent pas nécessairement être représentées comme
-            des classes POJO ou des objets JavaBean à l'exécution. Hibernate supporte aussi les
-            modèles dynamiques (en utilisant des <literal>Map</literal>s de <literal>Map</literal>s
-            à l'exécution) et la représentation des entités comme des arbres DOM4J. Avec cette
-            approche, vous n'écrivez pas de classes persistantes, seulement des fichiers de mapping.
+            Les entitÃ©s persistantes ne doivent pas nÃ©cessairement Ãªtre reprÃ©sentÃ©es comme
+            des classes POJO ou des objets JavaBean Ã  l'exÃ©cution. Hibernate supporte aussi les
+            modÃ¨les dynamiques (en utilisant des <literal>Map</literal>s de <literal>Map</literal>s
+            Ã  l'exÃ©cution) et la reprÃ©sentation des entitÃ©s comme des arbres DOM4J. Avec cette
+            approche, vous n'Ã©crivez pas de classes persistantes, seulement des fichiers de mapping.
         </para>
 
         <para>
-            Par défaut, Hibernate fonctionne en mode POJO normal. Vous pouvez paramétrer
-            un mode de représentation d'entité par défaut pour une <literal>SessionFactory</literal>
-            particulière en utilisant l'option de configuration <literal>default_entity_mode</literal>
+            Par dÃ©faut, Hibernate fonctionne en mode POJO normal. Vous pouvez paramÃ©trer
+            un mode de reprÃ©sentation d'entitÃ© par dÃ©faut pour une <literal>SessionFactory</literal>
+            particuliÃ¨re en utilisant l'option de configuration <literal>default_entity_mode</literal>
             (voir <xref linkend="configuration-optional-properties"/>).
         </para>
 
         <para>
-            Les exemples suivants démontrent la représentation utilisant des <literal>Map</literal>s.
-            D'abord, dans le fichier de mapping, un <literal>entity-name</literal> doit être déclaré
+            Les exemples suivants dÃ©montrent la reprÃ©sentation utilisant des <literal>Map</literal>s.
+            D'abord, dans le fichier de mapping, un <literal>entity-name</literal> doit Ãªtre dÃ©clarÃ©
             au lieu (ou en plus) d'un nom de classe :
         </para>
 
@@ -385,13 +387,13 @@ public class DomesticCat extends Cat {
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            Notez que même si des associations sont déclarées en utilisant des noms de classe cible,
-            le type de cible d'une association peut aussi être une entité dynamique au lieu d'un POJO.
+            Notez que mÃªme si des associations sont dÃ©clarÃ©es en utilisant des noms de classe cible,
+            le type de cible d'une association peut aussi Ãªtre une entitÃ© dynamique au lieu d'un POJO.
         </para>
 
         <para>
-            Après avoir configuré le mode d'entité par défaut à <literal>dynamic-map</literal>
-            pour la <literal>SessionFactory</literal>, nous pouvons lors de l'exécution fonctionner
+            AprÃ¨s avoir configurÃ© le mode d'entitÃ© par dÃ©faut Ã  <literal>dynamic-map</literal>
+            pour la <literal>SessionFactory</literal>, nous pouvons lors de l'exÃ©cution fonctionner
             avec des <literal>Map</literal>s de <literal>Map</literal>s :
         </para>
 
@@ -419,15 +421,15 @@ s.close();]]></programlisting>
 
         <para>
             Les avantages d'un mapping dynamique sont un gain de temps pour le prototypage
-            sans la nécessité d'implémenter les classes d'entité. Pourtant, vous perdez la
-            vérification du typage au moment de la compilation et aurez plus d'exceptions à
-            gérer lors de l'exécution. Grâce au mapping d'Hibernate, le schéma de la base de
-            données peut facilement être normalisé et solidifié, permettant de rajouter une
-            implémentation propre du modèle de domaine plus tard.
+            sans la nÃ©cessitÃ© d'implÃ©menter les classes d'entitÃ©. Pourtant, vous perdez la
+            vÃ©rification du typage au moment de la compilation et aurez plus d'exceptions Ã 
+            gÃ©rer lors de l'exÃ©cution. GrÃ¢ce au mapping d'Hibernate, le schÃ©ma de la base de
+            donnÃ©es peut facilement Ãªtre normalisÃ© et solidifiÃ©, permettant de rajouter une
+            implÃ©mentation propre du modÃ¨le de domaine plus tard.
         </para>
 
         <para>
-            Les modes de représentation d'une entité peut aussi être configuré par <literal>Session</literal> :
+            Les modes de reprÃ©sentation d'une entitÃ© peut aussi Ãªtre configurÃ© par <literal>Session</literal> :
         </para>
 
         <programlisting><![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
@@ -445,17 +447,17 @@ dynamicSession.close()
 
 
         <para>
-            Veuillez noter que l'appel à <literal>getSession()</literal> en utilisant un
+            Veuillez noter que l'appel Ã  <literal>getSession()</literal> en utilisant un
             <literal>EntityMode</literal> se fait sur l'API <literal>Session</literal>, pas
-            <literal>SessionFactory</literal>. De cette manière, la nouvelle <literal>Session</literal>
+            <literal>SessionFactory</literal>. De cette maniÃ¨re, la nouvelle <literal>Session</literal>
             partage les connexions JDBC, transactions et autres informations de contexte sous-jacentes.
-            Cela signifie que vous n'avez pas à appeler <literal>flush()</literal> et <literal>close()</literal>
+            Cela signifie que vous n'avez pas Ã  appeler <literal>flush()</literal> et <literal>close()</literal>
             sur la <literal>Session</literal> secondaire, et laissez aussi la gestion de la transaction
-            et de la connexion à l'unité de travail primaire.
+            et de la connexion Ã  l'unitÃ© de travail primaire.
         </para>
 
         <para>
-            Plus d'informations à propos de la représentation XML peuvent être trouvées dans
+            Plus d'informations Ã  propos de la reprÃ©sentation XML peuvent Ãªtre trouvÃ©es dans
             <xref linkend="xml"/>.
         </para>
 
@@ -466,27 +468,27 @@ dynamicSession.close()
 
         <para>
             <literal>org.hibernate.tuple.Tuplizer</literal>, et ses sous-interfaces, sont responsables
-            de la gestion d'une représentation particulière d'un morceau de données, en fonction du
-            <literal>org.hibernate.EntityMode</literal> de réprésentation. Si un morceau donné de données
-            est pensé comme une structure de données, alors un tuplizer est la chose qui sait comment
-            créer une telle structure de données, comment extraire des valeurs et injecter des valeurs dans
-            une telle structure de données. Par exemple, pour le mode d'entité POJO, le tuplizer correspondant
-            sait comment créer le POJO à travers son constructeur et comment accéder aux propriétés du POJO
-            utilisant les accesseurs de la propriété définie. Il y a deux types de Tuplizers haut niveau,
-            représenté par les interfaces <literal>org.hibernate.tuple.EntityTuplizer</literal> et
+            de la gestion d'une reprÃ©sentation particuliÃ¨re d'un morceau de donnÃ©es, en fonction du
+            <literal>org.hibernate.EntityMode</literal> de rÃ©prÃ©sentation. Si un morceau donnÃ© de donnÃ©es
+            est pensÃ© comme une structure de donnÃ©es, alors un tuplizer est la chose qui sait comment
+            crÃ©er une telle structure de donnÃ©es, comment extraire des valeurs et injecter des valeurs dans
+            une telle structure de donnÃ©es. Par exemple, pour le mode d'entitÃ© POJO, le tuplizer correspondant
+            sait comment crÃ©er le POJO Ã  travers son constructeur et comment accÃ©der aux propriÃ©tÃ©s du POJO
+            utilisant les accesseurs de la propriÃ©tÃ© dÃ©finie. Il y a deux types de Tuplizers haut niveau,
+            reprÃ©sentÃ© par les interfaces <literal>org.hibernate.tuple.EntityTuplizer</literal> et
             <literal>org.hibernate.tuple.ComponentTuplizer</literal>. Les <literal>EntityTuplizer</literal>s
-            sont responsables de la gestion des contrats mentionnés ci-dessus pour les entités, alors que
+            sont responsables de la gestion des contrats mentionnÃ©s ci-dessus pour les entitÃ©s, alors que
             les <literal>ComponentTuplizer</literal>s s'occupent des composants.
         </para>
 
         <para>
-            Les utilisateurs peuvent aussi brancher leurs propres tuplizers. Peut-être vous est-il nécessaire qu'une
-            implémentation de <literal>java.util.Map</literal> autre que <literal>java.util.HashMap</literal>
-            soit utilisée dans le mode d'entité dynamic-map ; ou peut-être avez-vous besoin de définir une
-            statégie de génération de proxy différente de celle utilisée par défaut. Les deux devraient être
-            effectuées en définissant une implémentation de tuplizer utilisateur. Les définitions de tuplizers
-            sont attachées au mapping de l'entité ou du composant qu'ils sont censés gérer. Retour à l'exemple de
-            notre entité utilisateur :
+            Les utilisateurs peuvent aussi brancher leurs propres tuplizers. Peut-Ãªtre vous est-il nÃ©cessaire qu'une
+            implÃ©mentation de <literal>java.util.Map</literal> autre que <literal>java.util.HashMap</literal>
+            soit utilisÃ©e dans le mode d'entitÃ© dynamic-map ; ou peut-Ãªtre avez-vous besoin de dÃ©finir une
+            statÃ©gie de gÃ©nÃ©ration de proxy diffÃ©rente de celle utilisÃ©e par dÃ©faut. Les deux devraient Ãªtre
+            effectuÃ©es en dÃ©finissant une implÃ©mentation de tuplizer utilisateur. Les dÃ©finitions de tuplizers
+            sont attachÃ©es au mapping de l'entitÃ© ou du composant qu'ils sont censÃ©s gÃ©rer. Retour Ã  l'exemple de
+            notre entitÃ© utilisateur :
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>

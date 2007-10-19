@@ -1,33 +1,35 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="queryhql">
-    <title>HQL: Langage de requêtage d'Hibernate</title>
+    <title>HQL: Langage de requÃªtage d'Hibernate</title>
 
     <para>
-        Hibernate fourni un langage d'interrogation extrêmement puissant qui
+        Hibernate fourni un langage d'interrogation extrÃªmement puissant qui
         ressemble (et c'est voulu) au SQL. Mais ne soyez pas distraits par la syntaxe ;
-        HQL est totalement orienté objet, comprenant des notions d'héritage, de
+        HQL est totalement orientÃ© objet, comprenant des notions d'hÃ©ritage, de
         polymorphisme et d'association.
     </para>
 
     <sect1 id="queryhql-casesensitivity">
-        <title>Sensibilité à la casse</title>
+        <title>SensibilitÃ© Ã  la casse</title>
 
         <para>
-            Les requêtes sont insensibles à la casse, à l'exception des noms des classes Java
-            et des propriétés.
-            Ainsi, <literal>SeLeCT</literal> est identique à
-            <literal>sELEct</literal> et à
+            Les requÃªtes sont insensibles Ã  la casse, Ã  l'exception des noms des classes Java
+            et des propriÃ©tÃ©s.
+            Ainsi, <literal>SeLeCT</literal> est identique Ã 
+            <literal>sELEct</literal> et Ã 
             <literal>SELECT</literal> mais
             <literal>net.sf.hibernate.eg.FOO</literal> n'est pas identique
             <literal>net.sf.hibernate.eg.Foo</literal> et
-            <literal>foo.barSet</literal> n'est pas identique à
+            <literal>foo.barSet</literal> n'est pas identique Ã 
             <literal>foo.BARSET</literal>.
         </para>
 
         <para>
-            Ce guide utilise les mots clés HQL en minuscule. Certains utilisateurs trouvent les
-            requêtes écrites avec les mots clés en majuscule plus lisibles, mais nous trouvons
-            cette convention pénible lorsqu'elle est lue dans du code Java.
+            Ce guide utilise les mots clÃ©s HQL en minuscule. Certains utilisateurs trouvent les
+            requÃªtes Ã©crites avec les mots clÃ©s en majuscule plus lisibles, mais nous trouvons
+            cette convention pÃ©nible lorsqu'elle est lue dans du code Java.
         </para>
 
     </sect1>
@@ -36,7 +38,7 @@
         <title>La clause from</title>
 
         <para>
-            La requête Hibernate la plus simple est de la forme :
+            La requÃªte Hibernate la plus simple est de la forme :
         </para>
 
         <programlisting><![CDATA[from eg.Cat]]></programlisting>
@@ -44,37 +46,37 @@
         <para>
             qui retourne simplement toutes les instances de la classe <literal>eg.Cat</literal>. 
             Nous n'avons pas besoin d'habitude de qualifier le nom de la classe, 
-            puisque <literal>auto-import</literal> est la valeur par défaut. Donc nous écrivons presque toujours :
+            puisque <literal>auto-import</literal> est la valeur par dÃ©faut. Donc nous Ã©crivons presque toujours :
         </para>
 
         <programlisting><![CDATA[from Cat]]></programlisting>
 
         <para>
             La plupart du temps, vous devrez assigner un <emphasis>alias</emphasis> puisque vous
-            voudrez faire référence à <literal>Cat</literal> dans d'autres parties de la requête.
+            voudrez faire rÃ©fÃ©rence Ã  <literal>Cat</literal> dans d'autres parties de la requÃªte.
         </para>
 
         <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
-            Cette requête assigne l'alias <literal>cat</literal> à l'instance <literal>Cat</literal>,
-            nous pouvons donc utiliser cet alias ailleurs dans la requête. Le mot clé <literal>as</literal>
-            est optionnel ; nous aurions pu écrire :
+            Cette requÃªte assigne l'alias <literal>cat</literal> Ã  l'instance <literal>Cat</literal>,
+            nous pouvons donc utiliser cet alias ailleurs dans la requÃªte. Le mot clÃ© <literal>as</literal>
+            est optionnel ; nous aurions pu Ã©crire :
         </para>
 
         <programlisting><![CDATA[from Cat cat]]></programlisting>
 
         <para>
-            Plusieurs classes peuvent apparaître, ce qui conduira à un produit
-            cartésien (encore appelé jointures croisées).
+            Plusieurs classes peuvent apparaÃ®tre, ce qui conduira Ã  un produit
+            cartÃ©sien (encore appelÃ© jointures croisÃ©es).
         </para>
 
         <programlisting><![CDATA[from Formula, Parameter]]></programlisting>
         <programlisting><![CDATA[from Formula as form, Parameter as param]]></programlisting>
 
         <para>
-            C'est une bonne pratique que de nommer les alias dans les requêtes en utilisant l'initiale
-            en miniscule, ce qui a le mérite d'être en phase avec les standards de
+            C'est une bonne pratique que de nommer les alias dans les requÃªtes en utilisant l'initiale
+            en miniscule, ce qui a le mÃ©rite d'Ãªtre en phase avec les standards de
             nommage Java pour les variables locales (<literal>domesticCat</literal>).
         </para>
 
@@ -84,7 +86,7 @@
         <title>Associations et jointures</title>
 
         <para>
-            On peut aussi assigner des alias à des entités associées, ou même aux éléments d'une collection
+            On peut aussi assigner des alias Ã  des entitÃ©s associÃ©es, ou mÃªme aux Ã©lÃ©ments d'une collection
             de valeurs, en utilisant un <literal>join</literal> (jointure).
         </para>
 
@@ -97,13 +99,13 @@
         <programlisting><![CDATA[from Formula form full join form.parameter param]]></programlisting>
 
         <para>
-            Les types de jointures supportées sont celles de ANSI SQL
+            Les types de jointures supportÃ©es sont celles de ANSI SQL
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>inner join</literal> (jointure fermée)
+                    <literal>inner join</literal> (jointure fermÃ©e)
                 </para>
             </listitem>
             <listitem>
@@ -118,14 +120,14 @@
             </listitem>
             <listitem>
                 <para>
-                    <literal>full join</literal> (jointure ouverte totalement - généralement inutile)
+                    <literal>full join</literal> (jointure ouverte totalement - gÃ©nÃ©ralement inutile)
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
             Les constructions des jointures <literal>inner join</literal>, <literal>left outer join</literal>
-            et <literal>right outer join</literal> peuvent être abbrégées.
+            et <literal>right outer join</literal> peuvent Ãªtre abbrÃ©gÃ©es.
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -133,7 +135,7 @@
     left join cat.kittens as kitten]]></programlisting>
 
         <para>
-            Nous pouvons soumettre des conditions de jointure supplémentaires en utilisant le mot-clef HQL <literal>with</literal>.
+            Nous pouvons soumettre des conditions de jointure supplÃ©mentaires en utilisant le mot-clef HQL <literal>with</literal>.
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -141,11 +143,11 @@
         with kitten.bodyWeight > 10.0]]></programlisting>
 
         <para>
-            Par ailleurs, une jointure "fetchée" (rapportée) permet d'initialiser
-            les associations ou collections de valeurs en même temps que leur objet parent,
+            Par ailleurs, une jointure "fetchÃ©e" (rapportÃ©e) permet d'initialiser
+            les associations ou collections de valeurs en mÃªme temps que leur objet parent,
             le tout n'utilisant qu'un seul Select.
-            Ceci est particulièrement utile dans le cas des collections. Ce système permet de surcharger
-            les déclarations "lazy" et "outer-join" des fichiers de mapping pour les associations et
+            Ceci est particuliÃ¨rement utile dans le cas des collections. Ce systÃ¨me permet de surcharger
+            les dÃ©clarations "lazy" et "outer-join" des fichiers de mapping pour les associations et
             collections. Voir
             <xref linkend="performance-fetching"/> pour plus d'informations.
         </para>
@@ -155,11 +157,11 @@
     left join fetch cat.kittens]]></programlisting>
 
         <para>
-            Une jointure "fetchée" (rapportée) n'a généralement pas besoin de se voir assigner
-            un alias puisque les objets associés n'ont pas à être utilisés dans les autres clauses.
-            Notez aussi que les objets associés ne sont pas retournés directement dans le résultat de
-            la requête mais l'on peut y accéder via l'objet parent. La seule raison pour laquelle nous 
-            pourrions avoir besoin d'un alias est si nous récupérions récursivement une collection supplémentaire :
+            Une jointure "fetchÃ©e" (rapportÃ©e) n'a gÃ©nÃ©ralement pas besoin de se voir assigner
+            un alias puisque les objets associÃ©s n'ont pas Ã  Ãªtre utilisÃ©s dans les autres clauses.
+            Notez aussi que les objets associÃ©s ne sont pas retournÃ©s directement dans le rÃ©sultat de
+            la requÃªte mais l'on peut y accÃ©der via l'objet parent. La seule raison pour laquelle nous 
+            pourrions avoir besoin d'un alias est si nous rÃ©cupÃ©rions rÃ©cursivement une collection supplÃ©mentaire :
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -168,20 +170,20 @@
     left join fetch child.kittens]]></programlisting>
 
         <para>
-            Notez que la construction de <literal>fetch</literal> ne peut pas être utilisée dans les requêtes appelées par
+            Notez que la construction de <literal>fetch</literal> ne peut pas Ãªtre utilisÃ©e dans les requÃªtes appelÃ©es par
             <literal>scroll()</literal> ou <literal>iterate()</literal>.
-            <literal>fetch</literal> ne devrait pas non plus être utilisé avec <literal>setMaxResults()</literal> ou
-            <literal>setFirstResult()</literal>. <literal>fetch</literal> ne peut pas non plus être utilisé avec une 
+            <literal>fetch</literal> ne devrait pas non plus Ãªtre utilisÃ© avec <literal>setMaxResults()</literal> ou
+            <literal>setFirstResult()</literal>. <literal>fetch</literal> ne peut pas non plus Ãªtre utilisÃ© avec une 
             condition <literal>with</literal> ad hoc. Il est
-            possible de créer un produit cartésien par jointure en récupérant plus d'une collection dans une requête, 
-            donc faites attention dans ce cas. Récupérer par jointure de multiples collections donne aussi parfois 
-            des résultats inattendus pour des mappings de bag, donc soyez prudent lorsque vous formulez vos requêtes dans de tels cas.
-            Finalement, notez que <literal>full join fetch</literal> et <literal>right join fetch</literal> ne sont pas utiles en général.
+            possible de crÃ©er un produit cartÃ©sien par jointure en rÃ©cupÃ©rant plus d'une collection dans une requÃªte, 
+            donc faites attention dans ce cas. RÃ©cupÃ©rer par jointure de multiples collections donne aussi parfois 
+            des rÃ©sultats inattendus pour des mappings de bag, donc soyez prudent lorsque vous formulez vos requÃªtes dans de tels cas.
+            Finalement, notez que <literal>full join fetch</literal> et <literal>right join fetch</literal> ne sont pas utiles en gÃ©nÃ©ral.
         </para>
 
         <para>
-            Si vous utilisez un chargement retardé pour les propriétés (avec une instrumentation par bytecode), il est possible 
-            de forcer Hibernate à récupérer les propriétés non encore chargées immédiatement (dans la première requête) 
+            Si vous utilisez un chargement retardÃ© pour les propriÃ©tÃ©s (avec une instrumentation par bytecode), il est possible 
+            de forcer Hibernate Ã  rÃ©cupÃ©rer les propriÃ©tÃ©s non encore chargÃ©es immÃ©diatement (dans la premiÃ¨re requÃªte) 
             en utilisant <literal>fetch all properties</literal>.
         </para>
 
@@ -198,15 +200,15 @@
         </para>
 
         <para>
-            Les requêtes présentes dans la section précédente utilisent la forme <literal>explicite</literal> 
-            où le mode clé join est explicitement utilisé dans la clause from. C'est la forme recommandée.
+            Les requÃªtes prÃ©sentes dans la section prÃ©cÃ©dente utilisent la forme <literal>explicite</literal> 
+            oÃ¹ le mode clÃ© join est explicitement utilisÃ© dans la clause from. C'est la forme recommandÃ©e.
         </para>
 
         <para>
-            La forme <literal>implicite</literal> n'utilise pas le mot clé join.
-            A la place, les associations sont "déréférencées" en utilisant le notation '.'. Ces
+            La forme <literal>implicite</literal> n'utilise pas le mot clÃ© join.
+            A la place, les associations sont "dÃ©rÃ©fÃ©rencÃ©es" en utilisant le notation '.'. Ces
             jointures peuvent apparaitre dans toutes les clauses. Les jointures <literal>implicites</literal> 
-            résultent en des inner join dans le SQL généré.
+            rÃ©sultent en des inner join dans le SQL gÃ©nÃ©rÃ©.
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
@@ -216,8 +218,8 @@
         <title>La clause select</title>
 
         <para>
-            La clause <literal>select</literal> sélectionne les objets et propriétés
-            qui doivent être retournés dans le résultat de la requête.
+            La clause <literal>select</literal> sÃ©lectionne les objets et propriÃ©tÃ©s
+            qui doivent Ãªtre retournÃ©s dans le rÃ©sultat de la requÃªte.
         Soit :
         </para>
 
@@ -226,14 +228,14 @@ from Cat as cat
     inner join cat.mate as mate]]></programlisting>
 
         <para>
-            La requête recherchera les <literal>mate</literal>s liés aux <literal>Cat</literal>s.
-            Vous pouvez explimer la requête d'une manière plus compacte :
+            La requÃªte recherchera les <literal>mate</literal>s liÃ©s aux <literal>Cat</literal>s.
+            Vous pouvez explimer la requÃªte d'une maniÃ¨re plus compacte :
         </para>
 
         <programlisting><![CDATA[select cat.mate from Cat cat]]></programlisting>
 
         <para>
-            Les requêtes peuvent retourner des propriétés de n'importe quel type, même celles de type
+            Les requÃªtes peuvent retourner des propriÃ©tÃ©s de n'importe quel type, mÃªme celles de type
         composant (component) :
         </para>
 
@@ -243,7 +245,7 @@ where cat.name like 'fri%']]></programlisting>
         <programlisting><![CDATA[select cust.name.firstName from Customer as cust]]></programlisting>
 
         <para>
-            Les requêtes peuvent retourner plusieurs objets et/ou propriétés sous la forme
+            Les requÃªtes peuvent retourner plusieurs objets et/ou propriÃ©tÃ©s sous la forme
         d'un tableau du type <literal>Object[]</literal>,
         </para>
 
@@ -262,7 +264,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
 
         <para>
-            ou sous la forme d'un objet Java typé,
+            ou sous la forme d'un objet Java typÃ©,
         </para>
 
         <programlisting><![CDATA[select new Family(mother, mate, offspr)
@@ -271,18 +273,18 @@ from DomesticCat as mother
     left join mother.kittens as offspr]]></programlisting>
 
         <para>
-            à condition que la classe <literal>Family</literal> possède le constructeur approprié.
+            Ã  condition que la classe <literal>Family</literal> possÃ¨de le constructeur appropriÃ©.
         </para>
 
         <para>
-            Vous pouvez assigner des alias aux expressions sélectionnées en utilisant <literal>as</literal> :
+            Vous pouvez assigner des alias aux expressions sÃ©lectionnÃ©es en utilisant <literal>as</literal> :
         </para>
 
         <programlisting><![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n
 from Cat cat]]></programlisting>
 
         <para>
-            C'est surtout utile lorsque c'est utilisé avec
+            C'est surtout utile lorsque c'est utilisÃ© avec
             <literal>select new map</literal> :
         </para>
 
@@ -290,17 +292,17 @@ from Cat cat]]></programlisting>
 from Cat cat]]></programlisting>
 
         <para>
-            Cette requête retourne une <literal>Map</literal> à partir des alias vers les valeurs sélectionnées.
+            Cette requÃªte retourne une <literal>Map</literal> Ã  partir des alias vers les valeurs sÃ©lectionnÃ©es.
         </para>
 
     </sect1>
 
     <sect1 id="queryhql-aggregation">
-        <title>Fonctions d'aggrégation</title>
+        <title>Fonctions d'aggrÃ©gation</title>
 
         <para>
-            Les requêtes HQL peuvent aussi retourner le résultat de fonctions d'aggrégation
-            sur les propriétés :
+            Les requÃªtes HQL peuvent aussi retourner le rÃ©sultat de fonctions d'aggrÃ©gation
+            sur les propriÃ©tÃ©s :
         </para>
 
         <programlisting><![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
@@ -317,7 +319,7 @@ from Cat cat group by cat]]></programlisting>
 -->
 
         <para>
-            Les fonctions supportées sont
+            Les fonctions supportÃ©es sont
         </para>
 
         <itemizedlist spacing="compact">
@@ -339,7 +341,7 @@ from Cat cat group by cat]]></programlisting>
         </itemizedlist>
 
         <para>
-            Vous pouvez utiliser des opérateurs arithmétiques, la concaténation, et des fonctions SQL reconnues dans la clause select :
+            Vous pouvez utiliser des opÃ©rateurs arithmÃ©tiques, la concatÃ©nation, et des fonctions SQL reconnues dans la clause select :
         </para>
 
         <programlisting><![CDATA[select cat.weight + sum(kitten.weight)
@@ -350,8 +352,8 @@ group by cat.id, cat.weight]]></programlisting>
         <programlisting><![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]></programlisting>
 
         <para>
-            Les mots clé <literal>distinct</literal> et <literal>all</literal> peuvent être utilisés et ont
-        la même signification qu'en SQL.
+            Les mots clÃ© <literal>distinct</literal> et <literal>all</literal> peuvent Ãªtre utilisÃ©s et ont
+        la mÃªme signification qu'en SQL.
         </para>
 
         <programlisting><![CDATA[select distinct cat.name from Cat cat
@@ -361,34 +363,34 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
     </sect1>
 
     <sect1 id="queryhql-polymorphism">
-        <title>Requêtes polymorphiques</title>
+        <title>RequÃªtes polymorphiques</title>
 
         <para>
-            Une requête comme:
+            Une requÃªte comme:
         </para>
 
         <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
             retourne non seuleument les instances de <literal>Cat</literal>, mais aussi celles des
-            sous classes comme <literal>DomesticCat</literal>. Les requêtes Hibernate peuvent nommer n'importe
-            quelle classe ou interface Java dans la clause <literal>from</literal>. La requête retournera les
-            instances de toutes les classes persistantes qui étendent cette classe ou implémente cette interface.
-        La requête suivante retournera tous les objets persistants :
+            sous classes comme <literal>DomesticCat</literal>. Les requÃªtes Hibernate peuvent nommer n'importe
+            quelle classe ou interface Java dans la clause <literal>from</literal>. La requÃªte retournera les
+            instances de toutes les classes persistantes qui Ã©tendent cette classe ou implÃ©mente cette interface.
+        La requÃªte suivante retournera tous les objets persistants :
         </para>
 
         <programlisting><![CDATA[from java.lang.Object o]]></programlisting>
 
         <para>
-            L'interface <literal>Named</literal> peut être implémentée par plusieurs classes persistantes :
+            L'interface <literal>Named</literal> peut Ãªtre implÃ©mentÃ©e par plusieurs classes persistantes :
         </para>
 
         <programlisting><![CDATA[from Named n, Named m where n.name = m.name]]></programlisting>
 
         <para>
-            Notez que ces deux dernières requêtes nécessitent plus d'un <literal>SELECT</literal> SQL.
-            Ce qui signifie que la clause <literal>order by</literal> ne trie pas correctement la totalité
-            des résultats (cela signifie aussi que vous ne pouvez exécuter ces requêtes en appelant
+            Notez que ces deux derniÃ¨res requÃªtes nÃ©cessitent plus d'un <literal>SELECT</literal> SQL.
+            Ce qui signifie que la clause <literal>order by</literal> ne trie pas correctement la totalitÃ©
+            des rÃ©sultats (cela signifie aussi que vous ne pouvez exÃ©cuter ces requÃªtes en appelant
         <literal>Query.scroll()</literal>).
         </para>
 
@@ -398,20 +400,20 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         <title>La clause where</title>
 
         <para>
-            La clause <literal>where</literal> vous permet de réduire la liste des instances retournées. 
-            Si aucun alias n'existe, vous pouvez vous référer aux propriétés par leur nom :
+            La clause <literal>where</literal> vous permet de rÃ©duire la liste des instances retournÃ©es. 
+            Si aucun alias n'existe, vous pouvez vous rÃ©fÃ©rer aux propriÃ©tÃ©s par leur nom :
         </para>
 
         <programlisting><![CDATA[from Cat where name='Fritz']]></programlisting>
 
         <para>
-            S'il y a un alias, utilisez un nom de propriété qualifié :
+            S'il y a un alias, utilisez un nom de propriÃ©tÃ© qualifiÃ© :
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.name='Fritz']]></programlisting>
 
         <para>
-            retourne les instances de <literal>Cat</literal> dont name est égale à 'Fritz'.
+            retourne les instances de <literal>Cat</literal> dont name est Ã©gale Ã  'Fritz'.
         </para>
 
         <programlisting><![CDATA[select foo
@@ -421,28 +423,28 @@ where foo.startDate = bar.date]]></programlisting>
         <para>
             retournera les instances de <literal>Foo</literal> pour lesquelles
             il existe une instance de <literal>bar</literal> avec la
-            propriété <literal>date</literal> est égale à la
-            propriété <literal>startDate</literal> de <literal>Foo</literal>.
+            propriÃ©tÃ© <literal>date</literal> est Ã©gale Ã  la
+            propriÃ©tÃ© <literal>startDate</literal> de <literal>Foo</literal>.
             Les expressions utilisant la navigation rendent la clause <literal>where</literal>
-        extrêmement puissante. Soit :
+        extrÃªmement puissante. Soit :
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.mate.name is not null]]></programlisting>
 
         <para>
-            Cette requête se traduit en SQL par une jointure interne à une table.
-        Si vous souhaitez écrire quelque chose comme :
+            Cette requÃªte se traduit en SQL par une jointure interne Ã  une table.
+        Si vous souhaitez Ã©crire quelque chose comme :
         </para>
 
         <programlisting><![CDATA[from Foo foo
 where foo.bar.baz.customer.address.city is not null]]></programlisting>
 
         <para>
-            vous finiriez avec une requête qui nécessiterait quatre jointures en SQL.
+            vous finiriez avec une requÃªte qui nÃ©cessiterait quatre jointures en SQL.
         </para>
 
         <para>
-            L'opérateur <literal>=</literal> peut être utilisé pour comparer aussi bien des propriétés que des instances :
+            L'opÃ©rateur <literal>=</literal> peut Ãªtre utilisÃ© pour comparer aussi bien des propriÃ©tÃ©s que des instances :
         </para>
 
         <programlisting><![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]></programlisting>
@@ -452,9 +454,9 @@ from Cat cat, Cat mate
 where cat.mate = mate]]></programlisting>
 
         <para>
-            La propriété spéciale (en minuscule) <literal>id</literal> peut être utilisée
-            pour faire référence à l'identifiant d'un objet (vous pouvez aussi utiliser
-        le nom de cette propriété).
+            La propriÃ©tÃ© spÃ©ciale (en minuscule) <literal>id</literal> peut Ãªtre utilisÃ©e
+            pour faire rÃ©fÃ©rence Ã  l'identifiant d'un objet (vous pouvez aussi utiliser
+        le nom de cette propriÃ©tÃ©).
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.id = 123
@@ -462,12 +464,12 @@ where cat.mate = mate]]></programlisting>
 from Cat as cat where cat.mate.id = 69]]></programlisting>
 
         <para>
-            La seconde requête est particulièrement efficace. Aucune jointure n'est nécessaire !
+            La seconde requÃªte est particuliÃ¨rement efficace. Aucune jointure n'est nÃ©cessaire !
         </para>
 
         <para>
-            Les propriétés d'un identifiant composé peuvent aussi être utilisées. Supposez que
-            <literal>Person</literal> ait un identifiant composé de <literal>country</literal> et
+            Les propriÃ©tÃ©s d'un identifiant composÃ© peuvent aussi Ãªtre utilisÃ©es. Supposez que
+            <literal>Person</literal> ait un identifiant composÃ© de <literal>country</literal> et
             <literal>medicareNumber</literal>.
         </para>
 
@@ -480,22 +482,22 @@ where account.owner.id.country = 'AU'
     and account.owner.id.medicareNumber = 123456]]></programlisting>
 
         <para>
-            Une fois de plus, la seconde requête ne nécessite pas de jointure.
+            Une fois de plus, la seconde requÃªte ne nÃ©cessite pas de jointure.
         </para>
 
         <para>
-            De même, la propriété spéciale <literal>class</literal> interroge la valeur discriminante
-            d'une instance dans le cas d'une persistance polymorphique. Le nom d'une classe Java incorporée
+            De mÃªme, la propriÃ©tÃ© spÃ©ciale <literal>class</literal> interroge la valeur discriminante
+            d'une instance dans le cas d'une persistance polymorphique. Le nom d'une classe Java incorporÃ©e
         dans la clause where sera traduite par sa valeur discriminante.
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.class = DomesticCat]]></programlisting>
 
         <para>
-            Vous pouvez aussi spécifier les propriétés des composants ou types utilisateurs composés
+            Vous pouvez aussi spÃ©cifier les propriÃ©tÃ©s des composants ou types utilisateurs composÃ©s
             (components, composite user types etc). N'essayez jamais d'utiliser un expression de navigation
-            qui se terminerait par une propriété de type composant (qui est différent d'une propriété d'un
-            composant). Par exemple, si <literal>store.owner</literal> est une entité avec un composant
+            qui se terminerait par une propriÃ©tÃ© de type composant (qui est diffÃ©rent d'une propriÃ©tÃ© d'un
+            composant). Par exemple, si <literal>store.owner</literal> est une entitÃ© avec un composant
         <literal>address</literal>
         </para>
 
@@ -503,17 +505,17 @@ where account.owner.id.country = 'AU'
 store.owner.address         // error!]]></programlisting>
 
         <para>
-            Un type "any" possède les propriétés spéciales <literal>id</literal> et <literal>class</literal>,
-            qui nous permettent d'exprimer une jointure de la manière suivante (où <literal>AuditLog.item</literal>
-            est une propriété mappée avec <literal>&lt;any&gt;</literal>).
+            Un type "any" possÃ¨de les propriÃ©tÃ©s spÃ©ciales <literal>id</literal> et <literal>class</literal>,
+            qui nous permettent d'exprimer une jointure de la maniÃ¨re suivante (oÃ¹ <literal>AuditLog.item</literal>
+            est une propriÃ©tÃ© mappÃ©e avec <literal>&lt;any&gt;</literal>).
         </para>
 
         <programlisting><![CDATA[from AuditLog log, Payment payment
 where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting>
 
         <para>
-            Dans la requête précédente, notez que <literal>log.item.class</literal> et <literal>payment.class</literal>
-            feraient référence à des valeurs de colonnes de la base de données complètement différentes.
+            Dans la requÃªte prÃ©cÃ©dente, notez que <literal>log.item.class</literal> et <literal>payment.class</literal>
+            feraient rÃ©fÃ©rence Ã  des valeurs de colonnes de la base de donnÃ©es complÃ¨tement diffÃ©rentes.
         </para>
 
     </sect1>
@@ -529,22 +531,22 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    opérateurs mathématiques <literal>+, -, *, /</literal>
+                    opÃ©rateurs mathÃ©matiques <literal>+, -, *, /</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    opérateur de comparaison binaire <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
+                    opÃ©rateur de comparaison binaire <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    opérateurs logiques <literal>and, or, not</literal>
+                    opÃ©rateurs logiques <literal>and, or, not</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Parenthèses <literal>( )</literal>, indiquant un regroupement
+                    ParenthÃ¨ses <literal>( )</literal>, indiquant un regroupement
                 </para>
             </listitem>
             <listitem>
@@ -568,7 +570,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    concatenation de chaîne de caractères <literal>...||...</literal> ou <literal>concat(...,...)</literal>
+                    concatenation de chaÃ®ne de caractÃ¨res <literal>...||...</literal> ou <literal>concat(...,...)</literal>
                 </para>
             </listitem>
             <listitem>
@@ -586,7 +588,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    N'importe quel fonction ou opérateur défini par EJB-QL 3.0 : <literal>substring(), trim(),
+                    N'importe quel fonction ou opÃ©rateur dÃ©fini par EJB-QL 3.0 : <literal>substring(), trim(),
                     lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>
                 </para>
             </listitem>
@@ -597,48 +599,48 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    <literal>str()</literal> pour convertir des valeurs numériques ou temporelles vers une chaîne de caractères lisible
+                    <literal>str()</literal> pour convertir des valeurs numÃ©riques ou temporelles vers une chaÃ®ne de caractÃ¨res lisible
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>cast(... as ...)</literal>, où le second argument est le nom d'un type Hibernate, et <literal>extract(... from ...)</literal> si le
-                    <literal>cast()</literal> ANSI et <literal>extract()</literal> sont supportés par la base de données sous-jacente
+                    <literal>cast(... as ...)</literal>, oÃ¹ le second argument est le nom d'un type Hibernate, et <literal>extract(... from ...)</literal> si le
+                    <literal>cast()</literal> ANSI et <literal>extract()</literal> sont supportÃ©s par la base de donnÃ©es sous-jacente
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    La fonction HQL <literal>index()</literal>, qui s'applique aux alias d'une collection indexée jointe
+                    La fonction HQL <literal>index()</literal>, qui s'applique aux alias d'une collection indexÃ©e jointe
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Les fonctions HQL qui s'appliquent expressions représentant des collections : <literal>size(),
-                    minelement(), maxelement(), minindex(), maxindex()</literal>, ainsi que les fonctions spéciales <literal>elements()</literal> 
-                    et <literal>indices</literal> qui peuvent être quantifiées en utilisant <literal>some, all, exists, any, in</literal>.
+                    Les fonctions HQL qui s'appliquent expressions reprÃ©sentant des collections : <literal>size(),
+                    minelement(), maxelement(), minindex(), maxindex()</literal>, ainsi que les fonctions spÃ©ciales <literal>elements()</literal> 
+                    et <literal>indices</literal> qui peuvent Ãªtre quantifiÃ©es en utilisant <literal>some, all, exists, any, in</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    N'importe quelle fonction scalaire supportée par la base de données comme
+                    N'importe quelle fonction scalaire supportÃ©e par la base de donnÃ©es comme
                     <literal>sign()</literal>,
                     <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Les paramètres positionnels de JDBC
+                    Les paramÃ¨tres positionnels de JDBC
                     <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    paramètres nommés <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>
+                    paramÃ¨tres nommÃ©s <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    littéral SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
+                    littÃ©ral SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>
             <listitem>
@@ -649,7 +651,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         </itemizedlist>
 
         <para>
-            <literal>in</literal> et <literal>between</literal> peuvent être utilisés comme suit :
+            <literal>in</literal> et <literal>between</literal> peuvent Ãªtre utilisÃ©s comme suit :
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]></programlisting>
@@ -657,7 +659,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            et la forme négative peut être écrite
+            et la forme nÃ©gative peut Ãªtre Ã©crite
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]></programlisting>
@@ -665,27 +667,27 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            De même, <literal>is null</literal> et <literal>is not null</literal> peuvent être utilisés pour tester
+            De mÃªme, <literal>is null</literal> et <literal>is not null</literal> peuvent Ãªtre utilisÃ©s pour tester
         les valeurs nulle.
         </para>
 
         <para>
-            Les booléens peuvent être facilement utilisés en déclarant les substitutions de requêtes dans la
+            Les boolÃ©ens peuvent Ãªtre facilement utilisÃ©s en dÃ©clarant les substitutions de requÃªtes dans la
         configuration Hibernate :
         </para>
 
         <programlisting><![CDATA[<property name="hibernate.query.substitutions">true 1, false 0</property>]]></programlisting>
 
         <para>
-            Ce qui remplacera les mots clés <literal>true</literal> et <literal>false</literal> par
+            Ce qui remplacera les mots clÃ©s <literal>true</literal> et <literal>false</literal> par
             <literal>1</literal> et <literal>0</literal> dans la traduction SQL du HQL suivant :
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.alive = true]]></programlisting>
 
         <para>
-            Vous pouvez tester la taille d'une collection par la propriété spéciale <literal>size</literal>, ou
-            la fonction spéciale <literal>size()</literal>.
+            Vous pouvez tester la taille d'une collection par la propriÃ©tÃ© spÃ©ciale <literal>size</literal>, ou
+            la fonction spÃ©ciale <literal>size()</literal>.
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.kittens.size > 0]]></programlisting>
@@ -693,9 +695,9 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Cat cat where size(cat.kittens) > 0]]></programlisting>
 
         <para>
-            Pour les collections indexées, vous pouvez faire référence aux indices minimum et maximum en
-            utilisant les fonctions <literal>minindex</literal> and <literal>maxindex</literal>. De manière similaire,
-            vous pouvez faire référence aux éléments minimum et maximum d'une collection de type basiques
+            Pour les collections indexÃ©es, vous pouvez faire rÃ©fÃ©rence aux indices minimum et maximum en
+            utilisant les fonctions <literal>minindex</literal> and <literal>maxindex</literal>. De maniÃ¨re similaire,
+            vous pouvez faire rÃ©fÃ©rence aux Ã©lÃ©ments minimum et maximum d'une collection de type basiques
         en utilisant les fonctions <literal>minelement</literal> et <literal>maxelement</literal>.
         </para>
 
@@ -706,9 +708,9 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Order order where minelement(order.items) > 10000]]></programlisting>
 
         <para>
-            Les fonctions SQL <literal>any, some, all, exists, in</literal> supportent que leur soient passées
-            l'élément, l'index d'une collection (fonctions <literal>elements</literal> et <literal>indices</literal>)
-        ou le résultat d'une sous requête (voir ci dessous).
+            Les fonctions SQL <literal>any, some, all, exists, in</literal> supportent que leur soient passÃ©es
+            l'Ã©lÃ©ment, l'index d'une collection (fonctions <literal>elements</literal> et <literal>indices</literal>)
+        ou le rÃ©sultat d'une sous requÃªte (voir ci dessous).
         </para>
 
         <programlisting><![CDATA[select mother from Cat as mother, Cat as kit
@@ -724,13 +726,13 @@ where p.name = some elements(list.names)]]></programlisting>
         <programlisting><![CDATA[from Show show where 'fizard' in indices(show.acts)]]></programlisting>
 
         <para>
-            Notez que l'écriture de - <literal>size</literal>, <literal>elements</literal>,
+            Notez que l'Ã©criture de - <literal>size</literal>, <literal>elements</literal>,
             <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>,
-            <literal>minelement</literal>, <literal>maxelement</literal> - peuvent seulement être utilisée dans la clause where dans Hibernate3.
+            <literal>minelement</literal>, <literal>maxelement</literal> - peuvent seulement Ãªtre utilisÃ©e dans la clause where dans Hibernate3.
         </para>
 
         <para>
-            Les éléments de collections indexées (arrays, lists, maps) peuvent être référencés via index
+            Les Ã©lÃ©ments de collections indexÃ©es (arrays, lists, maps) peuvent Ãªtre rÃ©fÃ©rencÃ©s via index
         (dans une clause where seulement) :
         </para>
 
@@ -747,14 +749,14 @@ where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]></
 where order.items[ maxindex(order.items) ] = item and order.id = 11]]></programlisting>
 
         <para>
-            L'expression entre <literal>[]</literal> peut même être une expression arithmétique.
+            L'expression entre <literal>[]</literal> peut mÃªme Ãªtre une expression arithmÃ©tique.
         </para>
 
         <programlisting><![CDATA[select item from Item item, Order order
 where order.items[ size(order.items) - 1 ] = item]]></programlisting>
 
         <para>
-            HQL propose aussi une fonction <literal>index()</literal> interne, pour les éléments
+            HQL propose aussi une fonction <literal>index()</literal> interne, pour les Ã©lÃ©ments
         d'une association one-to-many ou d'une collections de valeurs.
         </para>
 
@@ -763,14 +765,14 @@ where order.items[ size(order.items) - 1 ] = item]]></programlisting>
 where index(item) < 5]]></programlisting>
 
         <para>
-            Les fonctions SQL scalaires supportées par la base de données utilisée peuvent être utilisées
+            Les fonctions SQL scalaires supportÃ©es par la base de donnÃ©es utilisÃ©e peuvent Ãªtre utilisÃ©es
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]></programlisting>
 
         <para>
-            Si vous n'êtes pas encore convaincu par tout cela, imaginez la taille et l'illisibilité qui caractériseraient
-        la transformation SQL de la requête HQL suivante :
+            Si vous n'Ãªtes pas encore convaincu par tout cela, imaginez la taille et l'illisibilitÃ© qui caractÃ©riseraient
+        la transformation SQL de la requÃªte HQL suivante :
         </para>
 
         <programlisting><![CDATA[select cust
@@ -809,8 +811,8 @@ WHERE prod.name = 'widget'
         <title>La clause order by</title>
 
         <para>
-            La liste retounée par la requête peut être triée par n'importe quelle propriété de la classe ou
-        du composant retourné :
+            La liste retounÃ©e par la requÃªte peut Ãªtre triÃ©e par n'importe quelle propriÃ©tÃ© de la classe ou
+        du composant retournÃ© :
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat
@@ -818,7 +820,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
 
         <para>
             Le mot optionnel <literal>asc</literal> ou <literal>desc</literal> indique respectivement si le tri
-        doit être croissant ou décroissant.
+        doit Ãªtre croissant ou dÃ©croissant.
         </para>
     </sect1>
 
@@ -826,7 +828,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         <title>La clause group by</title>
 
         <para>
-            Si la requête retourne des valeurs aggrégées, celles ci peuvent être groupées par propriété ou composant :
+            Si la requÃªte retourne des valeurs aggrÃ©gÃ©es, celles ci peuvent Ãªtre groupÃ©es par propriÃ©tÃ© ou composant :
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat)
@@ -847,8 +849,8 @@ group by cat.color
 having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
-            Les fonctions SQL et les fonctions d'aggrégations sont permises dans les clauses <literal>having</literal>
-            et <literal>order by</literal>, si elles sont supportées par la base de données (ce que ne fait pas MySQL par exemple).
+            Les fonctions SQL et les fonctions d'aggrÃ©gations sont permises dans les clauses <literal>having</literal>
+            et <literal>order by</literal>, si elles sont supportÃ©es par la base de donnÃ©es (ce que ne fait pas MySQL par exemple).
         </para>
 
         <programlisting><![CDATA[select cat
@@ -860,19 +862,19 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
             Notez que ni la clause <literal>group by</literal> ni la clause
-            <literal>order by</literal> ne peuvent contenir d'expressions arithmétiques.
+            <literal>order by</literal> ne peuvent contenir d'expressions arithmÃ©tiques.
         </para>
 
     </sect1>
 
     <sect1 id="queryhql-subqueries" revision="2">
-        <title>Sous-requêtes</title>
+        <title>Sous-requÃªtes</title>
 
         <para>
-            Pour les bases de données le supportant, Hibernate supporte les sous requêtes dans les requêtes.
-            Une sous requête doit être entre parenthèses (souvent pour un appel à une fonction d'agrégation SQL)
-            Même les sous requêtes corrélées (celles qui font référence à un alias de la requête principale) sont
-        supportées.
+            Pour les bases de donnÃ©es le supportant, Hibernate supporte les sous requÃªtes dans les requÃªtes.
+            Une sous requÃªte doit Ãªtre entre parenthÃ¨ses (souvent pour un appel Ã  une fonction d'agrÃ©gation SQL)
+            MÃªme les sous requÃªtes corrÃ©lÃ©es (celles qui font rÃ©fÃ©rence Ã  un alias de la requÃªte principale) sont
+        supportÃ©es.
         </para>
 
         <programlisting><![CDATA[from Cat as fatcat
@@ -899,11 +901,11 @@ where cat.name not in (
 from Cat as cat]]></programlisting>
 
         <para>
-            Notez que les sous-requêtes HQL peuvent arriver seulememnt dans les clauses select ou where.
+            Notez que les sous-requÃªtes HQL peuvent arriver seulememnt dans les clauses select ou where.
         </para>
 
         <para>
-            Pour des sous-requêtes avec plus d'une expression dans le select, vous pouvez utiliser un constructeur de tuples :
+            Pour des sous-requÃªtes avec plus d'une expression dans le select, vous pouvez utiliser un constructeur de tuples :
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -912,22 +914,22 @@ where not ( cat.name, cat.color ) in (
 )]]></programlisting>
 
         <para>
-            Notez que sur certaines bases de données (mais par Oracle ou HSQL), vous pouvez utiliser des constructeurs de tuples 
-            dans d'autres contextes, par exemple lors du requêtage de composants ou de types utilisateur composites :
+            Notez que sur certaines bases de donnÃ©es (mais par Oracle ou HSQL), vous pouvez utiliser des constructeurs de tuples 
+            dans d'autres contextes, par exemple lors du requÃªtage de composants ou de types utilisateur composites :
         </para>
 
         <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
 
         <para>
-            Ce qui est équivalent à la forme plus verbeuse suivante :
+            Ce qui est Ã©quivalent Ã  la forme plus verbeuse suivante :
         </para>
 
         <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
 
         <para>
             Il y a deux bonnes raisons que vous ne puissiez ne pas vouloir faire cette sorte de choses : d'abord, ce n'est
-            pas complètement portable entre les plateformes de base de données ; deuxièmement, la requête est maintenant
-            dépendante de l'ordre des propriétés dans le document de mapping.
+            pas complÃ¨tement portable entre les plateformes de base de donnÃ©es ; deuxiÃ¨mement, la requÃªte est maintenant
+            dÃ©pendante de l'ordre des propriÃ©tÃ©s dans le document de mapping.
         </para>
 
     </sect1>
@@ -936,19 +938,19 @@ where not ( cat.name, cat.color ) in (
         <title>Exemples HQL</title>
 
         <para>
-            Les requêtes Hibernate peuvent être relativement puissantes et complexes. En fait, la puissance
-            du langage de requêtage est l'un des avantages principaux d'Hibernate. Voici quelques exemples
-            très similaires aux requêtes que nous avons utilisées lors d'un récent projet. Notez que la plupart
-        des requêtes que vous écrirez seront plus simples que les exemples suivantes !
+            Les requÃªtes Hibernate peuvent Ãªtre relativement puissantes et complexes. En fait, la puissance
+            du langage de requÃªtage est l'un des avantages principaux d'Hibernate. Voici quelques exemples
+            trÃ¨s similaires aux requÃªtes que nous avons utilisÃ©es lors d'un rÃ©cent projet. Notez que la plupart
+        des requÃªtes que vous Ã©crirez seront plus simples que les exemples suivantes !
         </para>
 
         <para>
-            La requête suivante retourne l'id de commande (order), le nombre d'articles (items) et la valeur
-            totale de la commande (order) pour toutes les commandes non payées d'un client (customer) particulier
-            pour un total minimum donné, le tout trié par la valeur totale. La requête SQL générée sur les tables
+            La requÃªte suivante retourne l'id de commande (order), le nombre d'articles (items) et la valeur
+            totale de la commande (order) pour toutes les commandes non payÃ©es d'un client (customer) particulier
+            pour un total minimum donnÃ©, le tout triÃ© par la valeur totale. La requÃªte SQL gÃ©nÃ©rÃ©e sur les tables
             <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>,
-            <literal>CATALOG</literal> et <literal>PRICE</literal> est composée de quatre jointures interne ainsi que
-        d'une sous-requête (non corrélée).
+            <literal>CATALOG</literal> et <literal>PRICE</literal> est composÃ©e de quatre jointures interne ainsi que
+        d'une sous-requÃªte (non corrÃ©lÃ©e).
         </para>
 
         <programlisting><![CDATA[select order.id, sum(price.amount), count(item)
@@ -972,8 +974,8 @@ order by sum(price.amount) desc]]></programlisting>
 
         <para>
             Quel monstre !
-            En principe, nous ne sommes pas très fan des sous-requêtes, la requête ressemblait donc plutôt
-        à cela :
+            En principe, nous ne sommes pas trÃ¨s fan des sous-requÃªtes, la requÃªte ressemblait donc plutÃ´t
+        Ã  cela :
         </para>
 
         <programlisting><![CDATA[select order.id, sum(price.amount), count(item)
@@ -991,10 +993,10 @@ having sum(price.amount) > :minAmount
 order by sum(price.amount) desc]]></programlisting>
 
         <para>
-            La requête suivante compte le nombre de paiements (payments) pour chaque status, en excluant
-            les paiements dans le status <literal>AWAITING_APPROVAL</literal> où le changement de status
-            le plus récent à été fait par l'utilisateur courant. En SQL, cette requête effectue deux
-            jointures internes et des sous requêtes corrélées sur les tables <literal>PAYMENT</literal>,
+            La requÃªte suivante compte le nombre de paiements (payments) pour chaque status, en excluant
+            les paiements dans le status <literal>AWAITING_APPROVAL</literal> oÃ¹ le changement de status
+            le plus rÃ©cent Ã  Ã©tÃ© fait par l'utilisateur courant. En SQL, cette requÃªte effectue deux
+            jointures internes et des sous requÃªtes corrÃ©lÃ©es sur les tables <literal>PAYMENT</literal>,
         <literal>PAYMENT_STATUS</literal> et <literal>PAYMENT_STATUS_CHANGE</literal>.
         </para>
 
@@ -1015,8 +1017,8 @@ group by status.name, status.sortOrder
 order by status.sortOrder]]></programlisting>
 
         <para>
-            Si nous avions mappé la collection <literal>statusChanges</literal> comme une liste, au lieu d'un ensemble,
-            la requête aurait été plus facile à écrire.
+            Si nous avions mappÃ© la collection <literal>statusChanges</literal> comme une liste, au lieu d'un ensemble,
+            la requÃªte aurait Ã©tÃ© plus facile Ã  Ã©crire.
         </para>
 
         <programlisting><![CDATA[select count(payment), status.name
@@ -1028,10 +1030,10 @@ group by status.name, status.sortOrder
 order by status.sortOrder]]></programlisting>
 
         <para>
-            La requête qui suit utilise la fonction de MS SQL <literal>isNull()</literal> pour retourner
-            tous les comptes (accounts) et paiements (payments) impayés pour l'organisation à laquelle
+            La requÃªte qui suit utilise la fonction de MS SQL <literal>isNull()</literal> pour retourner
+            tous les comptes (accounts) et paiements (payments) impayÃ©s pour l'organisation Ã  laquelle
             l'uilisateur (user) courant appartient. Elle est traduite en SQL par trois jointures internes,
-            une jointure externe ainsi qu'une sous requête sur les tables <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>,
+            une jointure externe ainsi qu'une sous requÃªte sur les tables <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>,
             <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> et
             <literal>ORG_USER</literal>.
         </para>
@@ -1044,7 +1046,7 @@ where :currentUser in elements(account.holder.users)
 order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></programlisting>
 
         <para>
-            Pour d'autres base de données, nous aurions dû faire sans la sous-requête (corrélée).
+            Pour d'autres base de donnÃ©es, nous aurions dÃ» faire sans la sous-requÃªte (corrÃ©lÃ©e).
         </para>
 
         <programlisting><![CDATA[select account, payment
@@ -1058,12 +1060,12 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
    </sect1>
 
     <sect1 id="queryhql-bulk" revision="2">
-        <title>Mise à jour et suppression</title>
+        <title>Mise Ã  jour et suppression</title>
 
         <para>
             HQL supporte maintenant les expressions <literal>update</literal>, <literal>delete</literal> et
             <literal>insert ... select ...</literal>.
-            Voir <xref linkend="batch-direct"/> pour les détails.
+            Voir <xref linkend="batch-direct"/> pour les dÃ©tails.
         </para>
     </sect1>
 
@@ -1071,13 +1073,13 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
         <title>Trucs &amp; Astuces</title>
 
         <para>
-            Vous pouvez compter le nombre de résultats d'une requête sans les retourner :
+            Vous pouvez compter le nombre de rÃ©sultats d'une requÃªte sans les retourner :
         </para>
 
         <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
-            Pour trier les résultats par la taille d'une collection, utilisez la requête suivante :
+            Pour trier les rÃ©sultats par la taille d'une collection, utilisez la requÃªte suivante :
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1087,14 +1089,14 @@ group by usr.id, usr.name
 order by count(msg)]]></programlisting>
 
         <para>
-            Si votre base de données supporte les sous-requêtes, vous pouvez placer des
-        conditions sur la taille de la sélection dans la clause where de votre requête:
+            Si votre base de donnÃ©es supporte les sous-requÃªtes, vous pouvez placer des
+        conditions sur la taille de la sÃ©lection dans la clause where de votre requÃªte:
         </para>
 
         <programlisting><![CDATA[from User usr where size(usr.messages) >= 1]]></programlisting>
 
         <para>
-            Si votre base de données ne supporte pas les sous-requêtes, utilisez la requête suivante :
+            Si votre base de donnÃ©es ne supporte pas les sous-requÃªtes, utilisez la requÃªte suivante :
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1104,8 +1106,8 @@ group by usr.id, usr.name
 having count(msg) >= 1]]></programlisting>
 
         <para>
-            Cette solution ne peut pas retourner un <literal>User</literal> avec zéro message
-            à cause de la jointure interne, la forme suivante peut donc être utile :
+            Cette solution ne peut pas retourner un <literal>User</literal> avec zÃ©ro message
+            Ã  cause de la jointure interne, la forme suivante peut donc Ãªtre utile :
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1115,7 +1117,7 @@ group by usr.id, usr.name
 having count(msg) = 0]]></programlisting>
 
         <para>
-            Les propriétés d'un JavaBean peuvent être injectées dans les paramètres nommés d'un requête :
+            Les propriÃ©tÃ©s d'un JavaBean peuvent Ãªtre injectÃ©es dans les paramÃ¨tres nommÃ©s d'un requÃªte :
         </para>
 
         <programlisting><![CDATA[Query q = s.createQuery("from foo Foo as foo where foo.name=:name and foo.size=:size");
@@ -1132,14 +1134,14 @@ q.setFirstResult(PAGE_SIZE * pageNumber);
 List page = q.list();]]></programlisting>
 
         <para>
-            Les éléments d'une collection peuvent être triés ou groupés en utilisant un filtre de requête :
+            Les Ã©lÃ©ments d'une collection peuvent Ãªtre triÃ©s ou groupÃ©s en utilisant un filtre de requÃªte :
         </para>
 
         <programlisting><![CDATA[Collection orderedCollection = s.filter( collection, "order by this.amount" );
 Collection counts = s.filter( collection, "select this.type, count(this) group by this.type" );]]></programlisting>
 
         <para>
-            Vous pouvez récupérer la taille d'une collection sans l'initialiser :
+            Vous pouvez rÃ©cupÃ©rer la taille d'une collection sans l'initialiser :
         </para>
 
         <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>

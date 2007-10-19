@@ -1,11 +1,13 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="events">
-    <title>Les intercepteurs et les événements</title>
+    <title>Les intercepteurs et les Ã©vÃ©nements</title>
 
     <para>
-        Il est souvent utile pour l'application de réagir à certains événements
-        qui surviennent dans Hibernate. Cela autorise l'implémentation de certaines sortes de
-        fonctionnalités génériques, et d'extensions de fonctionnalités d'Hibernate.
+        Il est souvent utile pour l'application de rÃ©agir Ã  certains Ã©vÃ©nements
+        qui surviennent dans Hibernate. Cela autorise l'implÃ©mentation de certaines sortes de
+        fonctionnalitÃ©s gÃ©nÃ©riques, et d'extensions de fonctionnalitÃ©s d'Hibernate.
     </para>
 
     <sect1 id="objectstate-interceptors" revision="2">
@@ -13,18 +15,18 @@
 
         <para>
             L'interface <literal>Interceptor</literal> fournit des "callbacks" de la session vers l'application 
-            et permettent à l'application de consulter et/ou de manipuler des propriétés
-            d'un objet persistant avant qu'il soit sauvegardé, mis à jour, supprimé ou chargé.
-            Une utilisation possible de cette fonctionnalité est de tracer l'accès à l'information.
+            et permettent Ã  l'application de consulter et/ou de manipuler des propriÃ©tÃ©s
+            d'un objet persistant avant qu'il soit sauvegardÃ©, mis Ã  jour, supprimÃ© ou chargÃ©.
+            Une utilisation possible de cette fonctionnalitÃ© est de tracer l'accÃ¨s Ã  l'information.
             Par exemple, l'<literal>Interceptor</literal> suivant positionne
-            <literal>createTimestamp</literal> quand un <literal>Auditable</literal> est créé
-            et met à jour la propriété <literal>lastUpdateTimestamp</literal> quand un
-            <literal>Auditable</literal> est mis à jour.
+            <literal>createTimestamp</literal> quand un <literal>Auditable</literal> est crÃ©Ã©
+            et met Ã  jour la propriÃ©tÃ© <literal>lastUpdateTimestamp</literal> quand un
+            <literal>Auditable</literal> est mis Ã  jour.
         </para>
 
         <para>
-            Vous pouvez soit implémenter <literal>Interceptor</literal> directement ou (mieux)
-            étendre <literal>EmptyInterceptor</literal>.
+            Vous pouvez soit implÃ©menter <literal>Interceptor</literal> directement ou (mieux)
+            Ã©tendre <literal>EmptyInterceptor</literal>.
         </para>
 
         <programlisting><![CDATA[package org.hibernate.test;
@@ -115,14 +117,14 @@ public class AuditInterceptor extends EmptyInterceptor {
 }]]></programlisting>
 
         <para>
-            L'intercepteur doit être spécifié quand une session est créée.
+            L'intercepteur doit Ãªtre spÃ©cifiÃ© quand une session est crÃ©Ã©e.
         </para>
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
             Vous pouvez aussi mettre un intercepteur au niveau global, en utilisant l'objet <literal>Configuration</literal>.
-            Dans ce cas, l'intercepteur doit être "threadsafe".
+            Dans ce cas, l'intercepteur doit Ãªtre "threadsafe".
         </para>
 
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
@@ -130,49 +132,49 @@ public class AuditInterceptor extends EmptyInterceptor {
     </sect1>
 
      <sect1 id="objectstate-events" revision="3">
-        <title>Système d'événements</title>
+        <title>SystÃ¨me d'Ã©vÃ©nements</title>
 
         <para>
-            Si vous devez réagir à des événements particuliers dans votre couche de persistance,
-            vous pouvez aussi utiliser l'architecture d'<emphasis>événements</emphasis> d'Hibernate3.
-            Le système d'événements peut être utilisé en supplément ou en remplacement des interceptors.
+            Si vous devez rÃ©agir Ã  des Ã©vÃ©nements particuliers dans votre couche de persistance,
+            vous pouvez aussi utiliser l'architecture d'<emphasis>Ã©vÃ©nements</emphasis> d'Hibernate3.
+            Le systÃ¨me d'Ã©vÃ©nements peut Ãªtre utilisÃ© en supplÃ©ment ou en remplacement des interceptors.
         </para>
 
         <para>
-            Essentiellement toutes les méthodes de l'interface <literal>Session</literal> sont corrélées à
-            un événement. Vous avez un <literal>LoadEvent</literal>, un <literal>FlushEvent</literal>, etc
+            Essentiellement toutes les mÃ©thodes de l'interface <literal>Session</literal> sont corrÃ©lÃ©es Ã 
+            un Ã©vÃ©nement. Vous avez un <literal>LoadEvent</literal>, un <literal>FlushEvent</literal>, etc
             (consultez la DTD du fichier de configuration XML ou le paquet <literal>org.hibernate.event</literal>
-            pour avoir la liste complète des types d'événement définis).
-            Quand une requête est faite à partir d'une de ces méthodes, la
-            <literal>Session</literal> Hibernate génère un événement approprié et le passe
-            au listener configuré pour ce type.
-            Par défaut, ces listeners implémentent le même traitement dans lequel ces méthodes
+            pour avoir la liste complÃ¨te des types d'Ã©vÃ©nement dÃ©finis).
+            Quand une requÃªte est faite Ã  partir d'une de ces mÃ©thodes, la
+            <literal>Session</literal> Hibernate gÃ©nÃ¨re un Ã©vÃ©nement appropriÃ© et le passe
+            au listener configurÃ© pour ce type.
+            Par dÃ©faut, ces listeners implÃ©mentent le mÃªme traitement dans lequel ces mÃ©thodes
             aboutissent toujours.
-            Cependant, vous êtes libre d'implémenter une version personnalisée d'une de ces
-            interfaces de listener (c'est-à-dire, le <literal>LoadEvent</literal> est traité par
-            l'implémentation de l'interface <literal>LoadEventListener</literal> déclarée), dans
-            quel cas leur implémentation devrait être responsable du traitement des
-            requêtes <literal>load()</literal> faites par la <literal>Session</literal>.
+            Cependant, vous Ãªtes libre d'implÃ©menter une version personnalisÃ©e d'une de ces
+            interfaces de listener (c'est-Ã -dire, le <literal>LoadEvent</literal> est traitÃ© par
+            l'implÃ©mentation de l'interface <literal>LoadEventListener</literal> dÃ©clarÃ©e), dans
+            quel cas leur implÃ©mentation devrait Ãªtre responsable du traitement des
+            requÃªtes <literal>load()</literal> faites par la <literal>Session</literal>.
         </para>
 
         <para>
-            Les listeners devraient effectivement être considérés comme des singletons ; dans le sens
-            où ils sont partagés entre des requêtes, et donc ne devraient pas sauvegarder des états
+            Les listeners devraient effectivement Ãªtre considÃ©rÃ©s comme des singletons ; dans le sens
+            oÃ¹ ils sont partagÃ©s entre des requÃªtes, et donc ne devraient pas sauvegarder des Ã©tats
             de variables d'instance.
         </para>
 
         <para>
-            Un listener personnalisé devrait implémenter l'interface appropriée pour l'événement
-            qu'il veut traiter et/ou étendre une des classes de base (ou même l'événement prêt à
-            l'emploi utilisé par Hibernate comme ceux déclarés non-finaux à cette intention). Les
-            listeners personnalisés peuvent être soit inscrits par programmation à travers l'objet
-            <literal>Configuration</literal>, ou spécifiés la configuration XML d'Hibernate
-            (la configuration déclarative à travers le fichier de propriétés n'est pas supportée).
-            Voici un exemple de listener personnalisé pour l'événement de chargement :
+            Un listener personnalisÃ© devrait implÃ©menter l'interface appropriÃ©e pour l'Ã©vÃ©nement
+            qu'il veut traiter et/ou Ã©tendre une des classes de base (ou mÃªme l'Ã©vÃ©nement prÃªt Ã 
+            l'emploi utilisÃ© par Hibernate comme ceux dÃ©clarÃ©s non-finaux Ã  cette intention). Les
+            listeners personnalisÃ©s peuvent Ãªtre soit inscrits par programmation Ã  travers l'objet
+            <literal>Configuration</literal>, ou spÃ©cifiÃ©s la configuration XML d'Hibernate
+            (la configuration dÃ©clarative Ã  travers le fichier de propriÃ©tÃ©s n'est pas supportÃ©e).
+            Voici un exemple de listener personnalisÃ© pour l'Ã©vÃ©nement de chargement :
         </para>
 
         <programlisting><![CDATA[public class MyLoadListener implements LoadEventListener {
-    // C'est une simple méthode définie par l'interface LoadEventListener
+    // C'est une simple mÃ©thode dÃ©finie par l'interface LoadEventListener
     public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
             throws HibernateException {
         if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
@@ -182,8 +184,8 @@ public class AuditInterceptor extends EmptyInterceptor {
 }]]></programlisting>
 
         <para>
-            Vous avez aussi besoin d'une entrée de configuration disant à Hibernate d'utiliser
-            ce listener en plus du listener par défaut :
+            Vous avez aussi besoin d'une entrÃ©e de configuration disant Ã  Hibernate d'utiliser
+            ce listener en plus du listener par dÃ©faut :
         </para>
 
 <programlisting><![CDATA[<hibernate-configuration>
@@ -205,33 +207,33 @@ LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener
 cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
 
         <para>
-            Les listeners inscrits déclarativement ne peuvent pas partager d'instances. Si le même
-            nom de classe est utilisée dans plusieurs éléments <literal>&lt;listener/&gt;</literal>,
-            chaque référence sera une instance distincte de cette classe. Si vous avez besoin de la
-            faculté de partager des instances de listener entre plusieurs types de listener, vous devez
+            Les listeners inscrits dÃ©clarativement ne peuvent pas partager d'instances. Si le mÃªme
+            nom de classe est utilisÃ©e dans plusieurs Ã©lÃ©ments <literal>&lt;listener/&gt;</literal>,
+            chaque rÃ©fÃ©rence sera une instance distincte de cette classe. Si vous avez besoin de la
+            facultÃ© de partager des instances de listener entre plusieurs types de listener, vous devez
             utiliser l'approche d'inscription par programmation.
         </para>
 
         <para>
-            Pourquoi implémenter une interface et définir le type spécifique durant la configuration ?
-            Une implémentation de listener pourrait implémenter plusieurs interfaces de listener
-            d'événements. Avoir en plus le type défini durant l'inscription rend plus facile
-            l'activation ou la désactivation pendant la configuration.
+            Pourquoi implÃ©menter une interface et dÃ©finir le type spÃ©cifique durant la configuration ?
+            Une implÃ©mentation de listener pourrait implÃ©menter plusieurs interfaces de listener
+            d'Ã©vÃ©nements. Avoir en plus le type dÃ©fini durant l'inscription rend plus facile
+            l'activation ou la dÃ©sactivation pendant la configuration.
         </para>
 
     </sect1>
 
     <sect1 id="objectstate-decl-security" revision="2">
-        <title>Sécurité déclarative d'Hibernate</title>
+        <title>SÃ©curitÃ© dÃ©clarative d'Hibernate</title>
         <para>
-            Généralement, la sécurité déclarative dans les applications Hibernate est gérée dans la
-            couche de session. Maintenant, Hibernate3 permet à certaines actions d'être approuvées
-            via JACC, et autorisées via JAAS. Cette fonctionnalité optionnelle est construite
-            au dessus de l'architecture d'événements.
+            GÃ©nÃ©ralement, la sÃ©curitÃ© dÃ©clarative dans les applications Hibernate est gÃ©rÃ©e dans la
+            couche de session. Maintenant, Hibernate3 permet Ã  certaines actions d'Ãªtre approuvÃ©es
+            via JACC, et autorisÃ©es via JAAS. Cette fonctionnalitÃ© optionnelle est construite
+            au dessus de l'architecture d'Ã©vÃ©nements.
         </para>
 
         <para>
-            D'abord, vous devez configurer les listeners d'événements appropriés pour permettre
+            D'abord, vous devez configurer les listeners d'Ã©vÃ©nements appropriÃ©s pour permettre
             l'utilisation d'autorisations JAAS.
         </para>
 
@@ -243,18 +245,18 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
         <para>
             Notez que <literal>&lt;listener type="..." class="..."/&gt;</literal> est juste un raccourci
             pour <literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>
-            quand il y a exactement un listener pour un type d'événement particulier.
+            quand il y a exactement un listener pour un type d'Ã©vÃ©nement particulier.
         </para>
 
         <para>
-            Ensuite, toujours dans <literal>hibernate.cfg.xml</literal>, lier les permissions aux rôles :
+            Ensuite, toujours dans <literal>hibernate.cfg.xml</literal>, lier les permissions aux rÃ´les :
         </para>
 
         <programlisting><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
 <grant role="su" entity-name="User" actions="*"/>]]></programlisting>
 
         <para>
-            Les noms de rôle sont les rôles compris par votre fournisseur JAAC.
+            Les noms de rÃ´le sont les rÃ´les compris par votre fournisseur JAAC.
         </para>
 
     </sect1>

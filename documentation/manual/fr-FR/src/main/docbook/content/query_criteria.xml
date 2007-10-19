@@ -1,17 +1,19 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="querycriteria">
-    <title>Requêtes par critères</title>
+    <title>RequÃªtes par critÃ¨res</title>
 
     <para>
-        Hibernate offre une API d'interrogation par critères intuitive et extensible.
+        Hibernate offre une API d'interrogation par critÃ¨res intuitive et extensible.
     </para>
 
     <sect1 id="querycriteria-creating">
-        <title>Créer une instance de <literal>Criteria</literal></title>
+        <title>CrÃ©er une instance de <literal>Criteria</literal></title>
 
         <para>
-            L'interface <literal>net.sf.hibernate.Criteria</literal> représente une requête sur une
-            classe persistente donnée. La <literal>Session</literal> fournit les instances de
+            L'interface <literal>net.sf.hibernate.Criteria</literal> reprÃ©sente une requÃªte sur une
+            classe persistente donnÃ©e. La <literal>Session</literal> fournit les instances de
             <literal>Criteria</literal>.
         </para>
 
@@ -22,14 +24,14 @@ List cats = crit.list();]]></programlisting>
     </sect1>
 
     <sect1 id="querycriteria-narrowing">
-        <title>Restriction du résultat</title>
+        <title>Restriction du rÃ©sultat</title>
 
         <para>
-            Un criterion (critère de recherche) est une instance de l'interface
+            Un criterion (critÃ¨re de recherche) est une instance de l'interface
             <literal>org.hibernate.criterion.Criterion</literal>. La classe
-            <literal>org.hibernate.criterion.Restrictions</literal> définit
-            des méthodes pour obtenir des types de <literal>Criterion</literal>
-            pré-définis.
+            <literal>org.hibernate.criterion.Restrictions</literal> dÃ©finit
+            des mÃ©thodes pour obtenir des types de <literal>Criterion</literal>
+            prÃ©-dÃ©finis.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -38,7 +40,7 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
 
         <para>
-            Les restrictions peuvent être goupées de manière logique.
+            Les restrictions peuvent Ãªtre goupÃ©es de maniÃ¨re logique.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -60,8 +62,8 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
 
         <para>
-            Il y a plusieurs types de criterion pré-définis (sous classes de <literal>Restriction</literal>),
-            mais l'une d'entre elle particulièrement utile vous permet de spécifier directement
+            Il y a plusieurs types de criterion prÃ©-dÃ©finis (sous classes de <literal>Restriction</literal>),
+            mais l'une d'entre elle particuliÃ¨rement utile vous permet de spÃ©cifier directement
         du SQL.
         </para>
 
@@ -70,13 +72,13 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
 
         <para>
-            La zone <literal>{alias}</literal> sera remplacée par l'alias de colonne de l'entité
-        que l'on souhaite intérroger.
+            La zone <literal>{alias}</literal> sera remplacÃ©e par l'alias de colonne de l'entitÃ©
+        que l'on souhaite intÃ©rroger.
         </para>
 
         <para>
-            Une autre approche pour obtenir un criterion est de le récupérer d'une instance de <literal>Property</literal>. 
-            Vous pouvez créer une <literal>Property</literal> en appelant <literal>Property.forName()</literal>.
+            Une autre approche pour obtenir un criterion est de le rÃ©cupÃ©rer d'une instance de <literal>Property</literal>. 
+            Vous pouvez crÃ©er une <literal>Property</literal> en appelant <literal>Property.forName()</literal>.
         </para>
 
         <programlisting><![CDATA[
@@ -94,10 +96,10 @@ List cats = sess.createCriteria(Cat.class)
    </sect1>
 
     <sect1 id="querycriteria-ordering">
-        <title>Trier les résultats</title>
+        <title>Trier les rÃ©sultats</title>
 
         <para>
-            Vous pouvez trier les résultats en utilisant <literal>org.hibernate.criterion.Order</literal>.
+            Vous pouvez trier les rÃ©sultats en utilisant <literal>org.hibernate.criterion.Order</literal>.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -120,7 +122,7 @@ List cats = sess.createCriteria(Cat.class)
         <title>Associations</title>
 
         <para>
-            Vous pouvez facilement spécifier des contraintes sur des entités liées,
+            Vous pouvez facilement spÃ©cifier des contraintes sur des entitÃ©s liÃ©es,
         par des associations en utilisant <literal>createCriteria()</literal>.
         </para>
 
@@ -132,7 +134,7 @@ List cats = sess.createCriteria(Cat.class)
 
         <para>
             Notez que la seconde <literal>createCriteria()</literal> retourne une nouvelle
-            instance de <literal>Criteria</literal>, qui se rapporte aux éléments de la
+            instance de <literal>Criteria</literal>, qui se rapporte aux Ã©lÃ©ments de la
         collection <literal>kittens</literal>.
         </para>
 
@@ -147,14 +149,14 @@ List cats = sess.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            (<literal>createAlias()</literal> ne crée pas de nouvelle instance de
+            (<literal>createAlias()</literal> ne crÃ©e pas de nouvelle instance de
             <literal>Criteria</literal>.)
         </para>
 
         <para>
             Notez que les collections kittens contenues dans les instances de <literal>Cat</literal>
-            retournées par les deux précédentes requêtes ne sont <emphasis>pas</emphasis> pré-filtrées
-            par les critères ! Si vous souhaitez récupérer uniquement les kittens qui correspondent à la
+            retournÃ©es par les deux prÃ©cÃ©dentes requÃªtes ne sont <emphasis>pas</emphasis> prÃ©-filtrÃ©es
+            par les critÃ¨res ! Si vous souhaitez rÃ©cupÃ©rer uniquement les kittens qui correspondent Ã  la
             criteria, vous devez utiliser <literal>ResultTransformer</literal>.
         </para>
 
@@ -173,11 +175,11 @@ while ( iter.hasNext() ) {
     </sect1>
 
     <sect1 id="querycriteria-dynamicfetching" revision="1">
-        <title>Peuplement d'associations de manière dynamique</title>
+        <title>Peuplement d'associations de maniÃ¨re dynamique</title>
 
         <para>
-            Vous pouvez spéficier au moment de l'exécution le peuplement d'une association en utilisant
-            <literal>setFetchMode()</literal> (c'est-à-dire le chargement de celle-ci).
+            Vous pouvez spÃ©ficier au moment de l'exÃ©cution le peuplement d'une association en utilisant
+            <literal>setFetchMode()</literal> (c'est-Ã -dire le chargement de celle-ci).
             Cela permet de surcharger les valeurs
             "lazy" et "outer-join" du mapping.
         </para>
@@ -189,18 +191,18 @@ while ( iter.hasNext() ) {
     .list();]]></programlisting>
 
         <para>
-            Cette requête recherchera <literal>mate</literal> et <literal>kittens</literal>
+            Cette requÃªte recherchera <literal>mate</literal> et <literal>kittens</literal>
             via les jointures externes. Voir <xref linkend="performance-fetching"/> pour plus d'informations.
         </para>
 
     </sect1>
 
     <sect1 id="querycriteria-examples">
-        <title>Requêtes par l'exemple</title>
+        <title>RequÃªtes par l'exemple</title>
 
         <para>
             La classe <literal>org.hibernate.criterion.Example</literal> vous permet de
-            construire un critère suivant une instance d'objet donnée.
+            construire un critÃ¨re suivant une instance d'objet donnÃ©e.
         </para>
 
         <programlisting><![CDATA[Cat cat = new Cat();
@@ -211,12 +213,12 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            Les propriétés de type version, identifiant et association sont ignorées.
-       Par défaut, les valeurs null sont exclues.
+            Les propriÃ©tÃ©s de type version, identifiant et association sont ignorÃ©es.
+       Par dÃ©faut, les valeurs null sont exclues.
         </para>
 
         <para>
-            Vous pouvez ajuster la stratégie d'utilisation de valeurs de
+            Vous pouvez ajuster la stratÃ©gie d'utilisation de valeurs de
            l'<literal>Exemple</literal>.
         </para>
 
@@ -230,7 +232,7 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            Vous pouvez utiliser les "exemples" pour des critères sur les objets associés.
+            Vous pouvez utiliser les "exemples" pour des critÃ¨res sur les objets associÃ©s.
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -242,11 +244,11 @@ List results = session.createCriteria(Cat.class)
     </sect1>
 
     <sect1 id="querycriteria-projection">
-        <title>Projections, agrégation et regroupement</title>
+        <title>Projections, agrÃ©gation et regroupement</title>
         <para>
             La classe <literal>org.hibernate.criterion.Projections</literal> est une
             fabrique d'instances de <literal>Projection</literal>. Nous appliquons une
-            projection sur une requête en appelant <literal>setProjection()</literal>.
+            projection sur une requÃªte en appelant <literal>setProjection()</literal>.
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -264,16 +266,16 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            Il n'y a pas besoin de "group by" explicite dans une requête par critère.
-            Certains types de projection sont définis pour être des <emphasis>projections
+            Il n'y a pas besoin de "group by" explicite dans une requÃªte par critÃ¨re.
+            Certains types de projection sont dÃ©finis pour Ãªtre des <emphasis>projections
             de regroupement</emphasis>, lesquels apparaissent aussi dans la clause
             <literal>group by</literal> SQL.
         </para>
 
         <para>
-            Un alias peut optionnellement être assigné à une projection, ainsi la valeur
-            projetée peut être référencée dans des restrictions ou des tris. Voici deux façons
-            différentes de faire ça :
+            Un alias peut optionnellement Ãªtre assignÃ© Ã  une projection, ainsi la valeur
+            projetÃ©e peut Ãªtre rÃ©fÃ©rencÃ©e dans des restrictions ou des tris. Voici deux faÃ§ons
+            diffÃ©rentes de faire Ã§a :
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -287,9 +289,9 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            Les méthodes <literal>alias()</literal> et <literal>as()</literal> enveloppe simplement
-            une instance de projection dans une autre instance (aliasée) de <literal>Projection</literal>.
-            Comme un raccourci, vous pouvez assignez un alias lorsque vous ajoutez la projection à la
+            Les mÃ©thodes <literal>alias()</literal> et <literal>as()</literal> enveloppe simplement
+            une instance de projection dans une autre instance (aliasÃ©e) de <literal>Projection</literal>.
+            Comme un raccourci, vous pouvez assignez un alias lorsque vous ajoutez la projection Ã  la
             liste de projections :
         </para>
 
@@ -337,10 +339,10 @@ List results = session.createCriteria(Cat.class)
     </sect1>
 
     <sect1 id="querycriteria-detachedqueries">
-        <title>Requêtes et sous-requêtes détachées</title>
+        <title>RequÃªtes et sous-requÃªtes dÃ©tachÃ©es</title>
         <para>
-            La classe <literal>DetachedCriteria</literal> vous laisse créer une requête en dehors de la
-            portée de la session, et puis l'exécuter plus tard en utilisant n'importe quelle <literal>Session</literal>
+            La classe <literal>DetachedCriteria</literal> vous laisse crÃ©er une requÃªte en dehors de la
+            portÃ©e de la session, et puis l'exÃ©cuter plus tard en utilisant n'importe quelle <literal>Session</literal>
             arbitraire.
         </para>
 
@@ -354,8 +356,8 @@ txn.commit();
 session.close();]]></programlisting>
 
         <para>
-            Une <literal>DetachedCriteria</literal> peut aussi être utilisée pour exprimer une
-            sous-requête. Des instances de criterion impliquant des sous-requêtes peuvent être
+            Une <literal>DetachedCriteria</literal> peut aussi Ãªtre utilisÃ©e pour exprimer une
+            sous-requÃªte. Des instances de criterion impliquant des sous-requÃªtes peuvent Ãªtre
             obtenues via <literal>Subqueries</literal> ou <literal>Property</literal>.
         </para>
 
@@ -372,7 +374,7 @@ session.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            Même des requêtes corrélées sont possibles :
+            MÃªme des requÃªtes corrÃ©lÃ©es sont possibles :
         </para>
 
         <programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
@@ -389,19 +391,19 @@ session.createCriteria(Cat.class, "cat")
                   could also be explained. -->
 
     <sect1 id="query-criteria-naturalid">
-        <title>Requêtes par identifiant naturel</title>
+        <title>RequÃªtes par identifiant naturel</title>
 
         <para>
-            Pour la plupart des requêtes, incluant les requêtes par critère, le cache de requêtes
-            n'est pas très efficace, parce que l'invalidation du cache de requêtes arrive trop
-            souvent. Cependant, il y a une sorte spéciale de requête où nous pouvons optimiser
+            Pour la plupart des requÃªtes, incluant les requÃªtes par critÃ¨re, le cache de requÃªtes
+            n'est pas trÃ¨s efficace, parce que l'invalidation du cache de requÃªtes arrive trop
+            souvent. Cependant, il y a une sorte spÃ©ciale de requÃªte oÃ¹ nous pouvons optimiser
             l'algorithme d'invalidation du cache : les recherches sur une clef naturelle constante.
-            Dans certaines applications, cette sorte de requête se produit fréquemment. L'API de
-            critère fournit une provision spéciale pour ce cas d'utilisation.
+            Dans certaines applications, cette sorte de requÃªte se produit frÃ©quemment. L'API de
+            critÃ¨re fournit une provision spÃ©ciale pour ce cas d'utilisation.
         </para>
 
         <para>
-            D'abord vous devriez mapper la clef naturelle de votre entité en utilisant
+            D'abord vous devriez mapper la clef naturelle de votre entitÃ© en utilisant
             <literal>&lt;natural-id&gt;</literal>, et activer l'utilisation du cache de second niveau.
         </para>
 
@@ -418,12 +420,12 @@ session.createCriteria(Cat.class, "cat")
 </class>]]></programlisting>
 
         <para>
-            Notez que cette fonctionnalité n'est pas prévue pour l'utilisation avec des
-            entités avec des clefs naturelles <emphasis>mutables</emphasis>.
+            Notez que cette fonctionnalitÃ© n'est pas prÃ©vue pour l'utilisation avec des
+            entitÃ©s avec des clefs naturelles <emphasis>mutables</emphasis>.
         </para>
 
         <para>
-            Ensuite, activez le cache de requête d'Hibernate.
+            Ensuite, activez le cache de requÃªte d'Hibernate.
         </para>
 
         <para>

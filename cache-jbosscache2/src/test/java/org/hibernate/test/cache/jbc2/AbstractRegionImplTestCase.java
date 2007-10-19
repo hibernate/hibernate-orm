@@ -16,6 +16,7 @@
 
 package org.hibernate.test.cache.jbc2;
 
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cache.CacheDataDescription;
@@ -109,14 +110,40 @@ public abstract class AbstractRegionImplTestCase extends AbstractJBossCacheTestC
         assertNull("No region node", localCache.getRoot().getChild( regionFqn ));
     }
     
+    public void testToMap() throws Exception {
+        Configuration cfg = CacheTestUtil.buildConfiguration("test", SharedJBossCacheRegionFactory.class, true, true);
+        JBossCacheRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+        
+        Region region = createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
+        
+        putInRegion(region, "key1", "value1");
+        putInRegion(region, "key2", "value2");
+        
+        Map map = region.toMap();
+        assertNotNull(map);
+        assertEquals(2, map.size());
+        assertEquals("value1", map.get("key1"));
+        assertEquals("value2", map.get("key2"));
+        
+        removeFromRegion(region, "key1");
+        
+        map = region.toMap();
+        assertNotNull(map);
+        assertEquals(1, map.size());
+        assertEquals("value2", map.get("key2"));
+    }
+    
     protected abstract Cache getJBossCache(JBossCacheRegionFactory regionFactory);
     
     protected abstract Fqn getRegionFqn(String regionName, String regionPrefix);
     
     protected abstract Region createRegion(JBossCacheRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);
     
+    protected abstract void putInRegion(Region region, Object key, Object value);
+    protected abstract void removeFromRegion(Region region, Object key);
+    
     protected CacheDataDescription getCacheDataDescription() {
        return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE);
-   }   
+    }   
 
 }

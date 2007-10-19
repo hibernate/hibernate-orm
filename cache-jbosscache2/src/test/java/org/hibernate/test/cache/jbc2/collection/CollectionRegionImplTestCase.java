@@ -49,6 +49,7 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
         super(name);
     }
     
+    @Override
     protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
         
         CollectionRegion region = regionFactory.buildCollectionRegion("test", properties, null);
@@ -92,6 +93,15 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
     protected Fqn getRegionFqn(String regionName, String regionPrefix) {
         return BasicRegionAdapter.getTypeLastRegionFqn(regionName, regionPrefix, CollectionRegionImpl.TYPE);
     }
-    
+
+    @Override
+    protected void putInRegion(Region region, Object key, Object value) {
+        ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
+    }
+
+    @Override
+    protected void removeFromRegion(Region region, Object key) {
+        ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);        
+    }    
     
 }

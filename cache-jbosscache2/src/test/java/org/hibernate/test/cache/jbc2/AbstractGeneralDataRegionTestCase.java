@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
+import org.hibernate.cache.Region;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
@@ -49,6 +50,16 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
     public AbstractGeneralDataRegionTestCase(String name) {
         super(name);
     }
+
+    @Override
+    protected void putInRegion(Region region, Object key, Object value) {
+        ((GeneralDataRegion) region).put(key, value);
+    }
+
+    @Override
+    protected void removeFromRegion(Region region, Object key) {
+        ((GeneralDataRegion) region).evict(key);        
+    }  
 
     /**
      * Test method for {@link QueryResultsRegion#evict(java.lang.Object)}.

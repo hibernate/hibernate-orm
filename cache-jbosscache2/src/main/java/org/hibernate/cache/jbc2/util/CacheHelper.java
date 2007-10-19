@@ -372,6 +372,27 @@ public class CacheHelper {
             throw new CacheException(e);
         }
     }
+
+    /**
+     * Performs a JBoss Cache <code>removeNode(Fqn)</code>, wrapping any
+     * exception in a {@link CacheException}.
+     * 
+     * @param cache
+     *            the cache to invoke on
+     * @param region
+     *            base Fqn for the cache region
+     * @param option
+     *            invocation Option to set for this invocation. May be
+     *            <code>null</code>.
+     */
+    public static void removeNode(Cache cache, Fqn region, Object key, Option option) throws CacheException {
+        try {
+            setInvocationOption(cache, option);
+            cache.removeNode(new Fqn(region, key));
+        } catch (Exception e) {
+            throw new CacheException(e);
+        }
+    }
     
     public static Node addNode(Cache cache, Fqn fqn, boolean localOnly, boolean resident, DataVersion version)
             throws CacheException {

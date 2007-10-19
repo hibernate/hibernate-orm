@@ -188,9 +188,11 @@ public abstract class BasicRegionAdapter implements Region {
             Map result = new HashMap();
             Set childrenNames = CacheHelper.getChildrenNames(jbcCache, regionFqn);
             for (Object childName : childrenNames) {
-                result.put(childName, jbcCache.get(new Fqn(regionFqn, childName), ITEM));
+                result.put(childName, CacheHelper.get(jbcCache,regionFqn, childName));
             }
             return result;
+        } catch (CacheException e) {
+            throw e;
         } catch (Exception e) {
             throw new CacheException(e);
         }

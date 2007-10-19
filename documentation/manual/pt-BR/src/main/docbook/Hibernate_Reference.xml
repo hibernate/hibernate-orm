@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="iso-8859-1"?>
+<?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
         <!ENTITY versionNumber "3.3.0.alpha1">
         <!ENTITY copyrightYear "2004">
@@ -9,7 +9,7 @@
 
     <bookinfo>
         <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
-        <subtitle>Documentação da Referência do Hibernate</subtitle>
+        <subtitle>DocumentaÃ§Ã£o da ReferÃªncia do Hibernate</subtitle>
         <releaseinfo>&versionNumber;</releaseinfo>
         <productnumber>&versionNumber;</productnumber>
         <issuenum>1</issuenum>
@@ -25,22 +25,20 @@
             <year>&copyrightYear;</year>
             <holder>&copyrightHolder;</holder>
         </copyright>
-        <xi:include href="translators.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
         <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-        <xi:include href="legal_notice2.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     </bookinfo>
 
     <toc/>
 
     <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/basic_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/collection_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

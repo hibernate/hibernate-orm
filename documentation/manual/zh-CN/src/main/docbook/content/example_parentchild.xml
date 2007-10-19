@@ -1,4 +1,7 @@
-﻿<chapter id="example-parentchild">
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+﻿﻿<chapter id="example-parentchild">
     <title>示例：父子关系(Parent Child Relationships)</title>
     <para>
     刚刚接触Hibernate的人大多是从父子关系（parent / child type relationship）的建模入手的。父子关系的建模有两种方法。由于种种原因，最方便的方法是把<literal>Parent</literal>和<literal>Child</literal>都建模成实体类，并创建一个从<literal>Parent</literal>指向<literal>Child</literal>的&lt;one-to-many&gt;关联，对新手来说尤其如此。还有一种方法，就是将<literal>Child</literal>声明为一个<literal>&lt;composite-element&gt;</literal>（组合元素）。 事实上在Hibernate中one to many关联的默认语义远没有composite element贴近parent / child关系的通常语义。下面我们会阐述如何使用<emphasis>带有级联的双向一对多关联(bidirectional one to many association with cascades)</emphasis>去建立有效、优美的parent / child关系。这一点也不难！

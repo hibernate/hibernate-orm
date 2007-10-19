@@ -1,4 +1,7 @@
-﻿<chapter id="querysql" revision="2">
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+﻿﻿<chapter id="querysql" revision="2">
     <title>Native SQL查询</title>
     <para>
 		你也可以使用你的数据库的Native SQL语言来查询数据。这对你在要使用数据库的某些特性的时候(比如说在查询提示或者Oracle中的

@@ -20,11 +20,12 @@ import java.util.Properties;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.timestamp.TimestampsRegionImpl;
-import org.hibernate.test.cache.jbc2.AbstractRegionImplTestCase;
+import org.hibernate.test.cache.jbc2.AbstractGeneralDataRegionTestCase;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 
@@ -34,7 +35,7 @@ import org.jboss.cache.Fqn;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  * @version $Revision: 1 $
  */
-public class TimestampsRegionImplTestCase extends AbstractRegionImplTestCase {
+public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
     
     /**
      * Create a new EntityRegionImplTestCase.
@@ -60,6 +61,12 @@ public class TimestampsRegionImplTestCase extends AbstractRegionImplTestCase {
     protected Fqn getRegionFqn(String regionName, String regionPrefix) {
         return BasicRegionAdapter.getTypeFirstRegionFqn(regionName, regionPrefix, TimestampsRegionImpl.TYPE);
     }
+
+    @Override
+    protected String getStandardRegionName(String regionPrefix) {
+        return regionPrefix + "/" + UpdateTimestampsCache.class.getName();
+    }
+    
     
     
 }

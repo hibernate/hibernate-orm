@@ -25,13 +25,12 @@ import junit.framework.AssertionFailedError;
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
-import org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory;
-import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.jbc2.AbstractRegionImplTestCase;
+import org.hibernate.test.cache.jbc2.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.util.CacheTestUtil;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
@@ -46,11 +45,9 @@ import org.jboss.cache.transaction.BatchModeTransactionManager;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  * @version $Revision: 1 $
  */
-public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
-    
-    private static final String KEY = "Key";
-    private static final String VALUE1 = "value1";
-    private static final String VALUE2 = "value2";
+public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
+
+//    protected static final String REGION_NAME = "test/" + StandardQueryCache.class.getName();
     
     /**
      * Create a new EntityRegionImplTestCase.
@@ -67,6 +64,11 @@ public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
     }
 
     @Override
+    protected String getStandardRegionName(String regionPrefix) {
+        return regionPrefix + "/" + StandardQueryCache.class.getName();
+    }
+
+    @Override
     protected Cache getJBossCache(JBossCacheRegionFactory regionFactory) {
         CacheInstanceManager mgr = regionFactory.getCacheInstanceManager();
         return mgr.getQueryCacheInstance();
@@ -76,7 +78,7 @@ public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
     protected Fqn getRegionFqn(String regionName, String regionPrefix) {
         return Fqn.fromString(BasicRegionAdapter.escapeRegionName(regionName, regionPrefix));
     }
-        
+
     public void testPutDoesNotBlockGetOptimistic() throws Exception {
         putDoesNotBlockGetTest("optimistic-shared");
     }
@@ -87,13 +89,10 @@ public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
     
     private void putDoesNotBlockGetTest(String configName) throws Exception {
         
-        Configuration cfg = CacheTestUtil.buildConfiguration("test", MultiplexedJBossCacheRegionFactory.class, false, true);
-        cfg.setProperty(MultiplexingCacheInstanceManager.QUERY_CACHE_RESOURCE_PROP, configName);
-        // Use the local-query config for timestamps as well to save time
-        cfg.setProperty(MultiplexingCacheInstanceManager.TIMESTAMP_CACHE_RESOURCE_PROP, configName);
+        Configuration cfg = createConfiguration(configName);
         JBossCacheRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
         
-        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion("test/com.foo.test", cfg.getProperties());
+        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX), cfg.getProperties());
         
         region.put(KEY, VALUE1);
         assertEquals(VALUE1, region.get(KEY));
@@ -178,18 +177,15 @@ public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
     
     private void getDoesNotBlockPutTest(String configName) throws Exception {
         
-        Configuration cfg = CacheTestUtil.buildConfiguration("test", MultiplexedJBossCacheRegionFactory.class, false, true);
-        cfg.setProperty(MultiplexingCacheInstanceManager.QUERY_CACHE_RESOURCE_PROP, configName);
-        // Use the local-query config for timestamps as well to save time
-        cfg.setProperty(MultiplexingCacheInstanceManager.TIMESTAMP_CACHE_RESOURCE_PROP, configName);
+        Configuration cfg = createConfiguration(configName);
         JBossCacheRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
         
-        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion("test/com.foo.test", cfg.getProperties());
+        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX), cfg.getProperties());
         
         region.put(KEY, VALUE1);
         assertEquals(VALUE1, region.get(KEY));
         
-        final Fqn rootFqn = getRegionFqn("test/com.foo.test", "test");
+        final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
         final Cache jbc = getJBossCache(regionFactory);
 
         final CountDownLatch blockerLatch = new CountDownLatch(1);
@@ -275,17 +271,7 @@ public class QueryRegionImplTestCase extends AbstractRegionImplTestCase {
                 blockerLatch.countDown();
         }
     }
-    
-    private void rollback() {
-        try {
-            BatchModeTransactionManager.getInstance().rollback();
-        }
-        catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-        
-    }
-    
+
     @CacheListener
     public class GetBlocker {
         

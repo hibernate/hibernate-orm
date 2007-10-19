@@ -116,10 +116,14 @@ public abstract class AbstractRegionImplTestCase extends AbstractJBossCacheTestC
         
         Region region = createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
         
+        Map map = region.toMap();
+        assertNotNull(map);
+        assertEquals(0, map.size());
+        
         putInRegion(region, "key1", "value1");
         putInRegion(region, "key2", "value2");
         
-        Map map = region.toMap();
+        map = region.toMap();
         assertNotNull(map);
         assertEquals(2, map.size());
         assertEquals("value1", map.get("key1"));

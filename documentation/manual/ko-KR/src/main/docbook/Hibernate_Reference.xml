@@ -33,13 +33,13 @@
 
     <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-	<xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/basic_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/collection_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

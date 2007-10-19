@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
+import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.hibernate.cfg.Settings;
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.util.PropertiesHelper;
@@ -217,6 +218,12 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * {@inheritDoc}
      */
     public Cache getQueryCacheInstance() {
+       
+        if (jbcQueryCache != null && jbcTsCache == null) {
+            // This should only be possible if the caches are constructor injected 
+            throw new CacheException("Timestamps cache must be configured if a query cache is used");   
+        }
+
         return jbcQueryCache;
     }
 
@@ -224,7 +231,11 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * {@inheritDoc}
      */
     public Cache getTimestampsCacheInstance() {
-        return jbcTsCache;
+       
+       if (jbcTsCache != null && CacheHelper.isClusteredInvalidation(jbcTsCache)) {
+          throw new CacheException("Clustered invalidation not supported for timestamps cache");
+       }
+       return jbcTsCache;
     }
 
     /**
@@ -325,12 +336,18 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                 }
                 
                 if (jbcQueryCache != null) {
-                    configureTransactionManager(jbcQueryCache, tm, false);
-                    jbcQueryCache.start();
-                }
+                   configureTransactionManager(jbcQueryCache, tm, false);
+                   jbcQueryCache.start();
+                   // TODO: I considered validating the presence of the TS cache here,
+                   // but decided to defer unti getQueryCacheInstance() in case the 
+                   // cache is never actually used
+                }                
                 if (jbcTsCache != null) {
-                    configureTransactionManager(jbcTsCache, tm, true);
-                    jbcTsCache.start();
+                   configureTransactionManager(jbcTsCache, tm, true);
+                   jbcTsCache.start();
+                   // TODO: I considered validating TS cache config here,
+                   // but decided to defer unti getTimestampsCacheInstance() in case the 
+                   // cache is never actually used
                 }
             } 
             else {

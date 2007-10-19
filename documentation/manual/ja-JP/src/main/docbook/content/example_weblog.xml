@@ -1,15 +1,17 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="example-weblog">
-    <title>��: Weblog�A�v���P�[�V����</title>
+    <title>例: Weblogアプリケーション</title>
 
     <sect1 id="example-weblog-classes">
-        <title>�i���N���X
+        <title>永続クラス
         </title>
 
         <para>
-            �i���N���X���E�F�u���O�ƁA�E�F�u���O�Ɍf�����ꂽ���ڂ�\���Ă��܂��B
-            �����͒ʏ�̐e�q�֌W�Ƃ��ă��f�����O����܂����A
-            set�ł͂Ȃ�������������bag���g�p���邱�Ƃɂ��܂��B
+            永続クラスがウェブログと、ウェブログに掲示された項目を表しています。
+            それらは通常の親子関係としてモデリングされますが、
+            setではなく順序を持ったbagを使用することにします。
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -88,11 +90,11 @@ public class BlogItem {
     </sect1>
 
     <sect1 id="example-weblog-mappings">
-        <title>Hibernate�̃}�b�s���O
+        <title>Hibernateのマッピング
         </title>
 
         <para>
-            XML�}�b�s���O�́A���ł͂ƂĂ��ȒP�Ȃ͂��ł��B
+            XMLマッピングは、今ではとても簡単なはずです。
         </para>
         
         <programlisting><![CDATA[<?xml version="1.0"?>
@@ -182,11 +184,11 @@ public class BlogItem {
     </sect1>
     
     <sect1 id="example-weblog-code">
-        <title>Hibernate�̃R�[�h</title>
+        <title>Hibernateのコード</title>
 
         <para>
-            �ȉ��̃N���X�́A
-            Hibernate�ł����̃N���X���g���Ăł��邱�Ƃ������������Ă��܂��B
+            以下のクラスは、
+            Hibernateでこれらのクラスを使ってできることをいくつか示しています。
         </para>
 
         <programlisting><![CDATA[package eg;

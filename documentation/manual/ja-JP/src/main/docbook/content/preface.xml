@@ -1,145 +1,144 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
-
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
     <preface id="preface" revision="2">
-        <title>�O����</title>
+        <title>前書き</title>
 
         <para>
-            �����̊�Ɗ��ɂ����āA�I�u�W�F�N�g�w���\�t�g�E�F�A�ƃ����[�V���i���f�[�^�x�[�X�Ɋւ���Ƃ�
-            �ώG�Ŗc��Ȏ��Ԃ�K�v�Ƃ��܂��B
-            Hibernate��Java���̃I�u�W�F�N�g/�����[�V���i���}�b�s���O�c�[���ł��B
-            �I�u�W�F�N�g/�����[�V���i���}�b�s���O�iORM�j�Ƃ́A
-            �I�u�W�F�N�g���f������SQL�x�[�X�X�L�[�}�̃����[�V���i���f�[�^���f���ւƁA
-            �f�[�^�\�����}�b�s���O����i�Ή��t����j�Z�p�̂��Ƃł��B
+            今日の企業環境において、オブジェクト指向ソフトウェアとリレーショナルデータベースに関わる作業は
+            煩雑で膨大な時間を必要とします。
+            HibernateはJava環境のオブジェクト/リレーショナルマッピングツールです。
+            オブジェクト/リレーショナルマッピング（ORM）とは、
+            オブジェクトモデルからSQLベーススキーマのリレーショナルデータモデルへと、
+            データ表現をマッピングする（対応付ける）技術のことです。
         </para>
 
         <para>
-            Hibernate��Java�N���X����f�[�^�x�[�X�e�[�u���ցi������Java�f�[�^�^����SQL�f�[�^�^�ցj
-            �̃}�b�s���O���������邾���ł͂Ȃ��A�f�[�^�̃N�G���ƕ����̎d�g�݂��񋟂��܂��B
-            ���̂�������SQL��JDBC���g�������Ƃł̃f�[�^�����ɔ�₳��Ă����J�����Ԃ�啝�ɍ팸�ł��܂��B
+            HibernateはJavaクラスからデータベーステーブルへ（そしてJavaデータ型からSQLデータ型へ）
+            のマッピングを処理するだけではなく、データのクエリと復元の仕組みも提供します。
+            このおかげでSQLとJDBCを使った手作業でのデータ処理に費やされていた開発時間を大幅に削減できます。
         </para>
 
         <para>
-            Hibernate�̍ŏI�ڕW�́A�f�[�^�̉i�����Ɋւ���ʓI�ȃv���O���~���O��Ƃ�95������J���҂�������邱�Ƃł��B
-            Hibernate�̓r�W�l�X���W�b�N�̎����ɃX�g�A�h�v���V�[�W�����g��
-            �f�[�^���S�A�v���P�[�V�����ɑ΂��Ẵx�X�g�\�����[�V�����ł���ɗ��܂�܂���B
-            �I�u�W�F�N�g�w���h���C�����f����Java�x�[�X�̒��ԑw�ł̃r�W�l�X���W�b�N�ɑ΂��čł����ɗ����܂��B
-            ������Hibernate�̓x���_�ŗL��SQL�R�[�h���팸�܂��̓J�v�Z����������A
-            �\�`������I�u�W�F�N�g�̃O���t�ւƃ��U���g�Z�b�g��ϊ�����Ȃǂ́A
-            ��ʓI�ȃ^�X�N�ɂ��𗧂ł��傤�B
+            Hibernateの最終目標は、データの永続化に関わる一般的なプログラミング作業の95％から開発者を解放することです。
+            Hibernateはビジネスロジックの実装にストアドプロシージャを使う
+            データ中心アプリケーションに対してのベストソリューションであるに留まりません。
+            オブジェクト指向ドメインモデルとJavaベースの中間層でのビジネスロジックに対して最も役に立ちます。
+            しかしHibernateはベンダ固有のSQLコードを削減またはカプセル化したり、
+            表形式からオブジェクトのグラフへとリザルトセットを変換するなどの、
+            一般的なタスクにも役立つでしょう。
         </para>
 
         <para>
-            Hibernate��I�u�W�F�N�g/�����[�V���i���}�b�s���O�A
-            ����ɂ�Java�����߂Ă̕��́A�ȉ��̃X�e�b�v�ɏ]���Ă��������F
+            Hibernateやオブジェクト/リレーショナルマッピング、
+            さらにはJavaが初めての方は、以下のステップに従ってください：
         </para>
 
         <orderedlist>
             <listitem>
                 <para>
-                    <xref linkend="tutorial"/> ��ǂ�ł��������B
-                    �i�K�I�ɉ�����Ă����܂��B
-                    �`���[�g���A���̃\�[�X�R�[�h�̓f�B�X�g���r���[�V������
-                    <literal>doc/reference/tutorial</literal> �f�B���N�g���Ɋ܂܂�Ă��܂��B
+                    <xref linkend="tutorial"/> を読んでください。
+                    段階的に解説していきます。
+                    チュートリアルのソースコードはディストリビューションの
+                    <literal>doc/reference/tutorial</literal> ディレクトリに含まれています。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <xref linkend="architecture"/> ��ǂ�ŁAHibernate�����p�\�Ȋ��𗝉����Ă��������B
+                    <xref linkend="architecture"/> を読んで、Hibernateが利用可能な環境を理解してください。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Hibernate�f�B�X�g���r���[�V������ <literal>eg/</literal> �f�B���N�g�������Ă��������B
-                    �ȒP�ȃX�^���h�A���[���̃A�v���P�[�V����������܂��B
-                    JDBC�h���C�o�� <literal>lib/</literal> �f�B���N�g���ɃR�s�[���āA
-                    �����̃f�[�^�x�[�X�ɍ����������l���w�肷��悤�� <literal>etc/hibernate.properties</literal>
-                    ��ҏW���Ă��������B
-                    �f�B�X�g���r���[�V�����f�B���N�g������A�R�}���h�v�����v�g��
-                     <literal>ant eg</literal> �ƃ^�C�v���Ă��������iAnt���g���܂��j�B
-                    �܂�Windows���ł� <literal>build eg</literal> �ƃ^�C�v���Ă��������B
+                    Hibernateディストリビューションの <literal>eg/</literal> ディレクトリを見てください。
+                    簡単なスタンドアローンのアプリケーションがあります。
+                    JDBCドライバを <literal>lib/</literal> ディレクトリにコピーして、
+                    自分のデータベースに合う正しい値を指定するように <literal>etc/hibernate.properties</literal>
+                    を編集してください。
+                    ディストリビューションディレクトリから、コマンドプロンプトで
+                     <literal>ant eg</literal> とタイプしてください（Antを使います）。
+                    またWindows環境では <literal>build eg</literal> とタイプしてください。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    ���̃��t�@�����X�h�L�������g����̏�񌹂Ƃ��ė��p���Ă��������B
-                    �A�v���P�[�V�����݌v�ɂ��Ă̂���Ȃ����i�K�I�ȃ`���[�g���A����T���Ă���Ȃ�A
-                    <emphasis>Java Persistence with Hibernate</emphasis>�ihttp://www.manning.com/bauer2�j
-                    ���������߂��܂��B
-                    �܂�http://caveatemptor.hibernate.org����
-                    Java Persistence with Hibernate�̗��̃A�v���P�[�V�������_�E�����[�h�ł��܂��B
+                    このリファレンスドキュメントを第一の情報源として利用してください。
+                    アプリケーション設計についてのさらなる情報や段階的なチュートリアルを探しているなら、
+                    <emphasis>Java Persistence with Hibernate</emphasis>（http://www.manning.com/bauer2）
+                    をおすすめします。
+                    またhttp://caveatemptor.hibernate.orgから
+                    Java Persistence with Hibernateの例題のアプリケーションをダウンロードできます。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    FAQ��Hibernate�E�F�u�T�C�g�ɂ���܂��B
+                    FAQはHibernateウェブサイトにあります。
                 </para>
             </listitem>
 			<listitem>
                 <para>
-                    �T�[�h�p�[�e�B�̃f���A��A�`���[�g���A����Hibernate�E�F�u�T�C�g�Ƀ����N������܂��B
+                    サードパーティのデモ、例、チュートリアルはHibernateウェブサイトにリンクがあります。
                 </para>
 			</listitem>
             <listitem>
                 <para>
-                    Hibernate�E�F�u�T�C�g�̃R�~���j�e�B�G���A�́A�f�U�C���p�^�[���₳�܂��܂ȓ����\�����[�V����
-                    �iTomcat, JBoss AS, Struts, EJB, ���j�ɂ��Ă̂悢��񌹂ł��B
+                    Hibernateウェブサイトのコミュニティエリアは、デザインパターンやさまざまな統合ソリューション
+                    （Tomcat, JBoss AS, Struts, EJB, 等）についてのよい情報源です。
                 </para>
             </listitem>
          </orderedlist>
 
          <para>
-             ���₪�����Hibernate�E�F�u�T�C�g�̃��[�U�t�H�[���������p���Ă��������B
-             �܂��o�O���|�[�g�ƃt�B�[�`�����N�G�X�g�̂���JIRA�ۑ�ǐՃV�X�e����p�ӂ��Ă��܂��B
-             Hibernate�̊J���ɋ���������΁A�J���҃��[�����O���X�g�ɎQ�����Ă��������B
-             ���̃h�L�������g�����Ȃ��̍��̌��t�ɖ|�󂵂����ꍇ�́A
-             �J���҃��[�����O���X�g�Ŏ������ɃR���^�N�g������Ă��������B
+             質問があればHibernateウェブサイトのユーザフォーラムを活用してください。
+             またバグレポートとフィーチャリクエストのためJIRA課題追跡システムを用意しています。
+             Hibernateの開発に興味があれば、開発者メーリングリストに参加してください。
+             このドキュメントをあなたの国の言葉に翻訳したい場合は、
+             開発者メーリングリストで私たちにコンタクトを取ってください。
          </para>
 
          <para>
-             ���p�J���̃T�|�[�g�A���i�̃T�|�[�g�AHibernate�̃g���[�j���O��JBoss Inc.���񋟂��Ă��܂�
-             �ihttp://www.hibernate.org/SupportTraining/�����Ă��������j�B
-             Hibernate��Professional Open Source�v���W�F�N�g�A
-             ������JBoss Enterprise Middleware System�iJEMS�j�v���_�N�g�X�C�[�g�̃N���e�B�J���R���|�[�l���g�ł��B
+             商用開発のサポート、製品のサポート、HibernateのトレーニングはJBoss Inc.が提供しています
+             （http://www.hibernate.org/SupportTraining/を見てください）。
+             HibernateはProfessional Open Sourceプロジェクト、
+             そしてJBoss Enterprise Middleware System（JEMS）プロダクトスイートのクリティカルコンポーネントです。
          </para>
 <!--
            <sect1 id="preface-s1" revision="-1">
 
-               <title>���{���ɂ���</title>
+               <title>日本語訳について</title>
 
                <para id="preface-s1-p1" revision="-1">
-                   ���̓��{���Hibernate Reference Document�i�ȉ��A���{��Łj�́A
-                   Hibernate�v���W�F�N�g�̖|��v���Z�X�Ɋ�Â��č쐬����Ă��܂��B
-                   ���{��łȂ�тɌ�����LGPL���C�Z���X�ɏ����܂��B
+                   この日本語版Hibernate Reference Document（以下、日本語版）は、
+                   Hibernateプロジェクトの翻訳プロセスに基づいて作成されています。
+                   日本語版ならびに原文はLGPLライセンスに準じます。
                </para>
 
                <para id="preface-s1-p2" revision="-1">
-                   ���{��ł̗��p�ɂ���đ�O�҂���邠����s���v�ɑ΂��āA
-                   �����ҁA�|��҂Ȃ�тɂ��̑g�D�͈�؂̕ۏ؂����������˂܂��B
-                   ���{��ł͌����܂މ\�������邱�Ƃ�F��������ł����p���������B
-                   ���e�̐��m�ȈӖ���c�����邽�߂ɂ́A������ǂނ��Ƃ��������߂��܂��B
-                   �܂��A�������{��łɌ���������ꂽ�ꍇ�́A�|��҂ɂ��A������������΍K���ł��B
-                   ���������e�Ɋւ��Ă̂��₢���킹�ɂ͉������˂܂��̂ŁA���������������B
+                   日本語版の利用によって第三者が被るあらゆる不利益に対して、
+                   原著者、翻訳者ならびにその組織は一切の保証をいたしかねます。
+                   日本語版は誤りを含む可能性があることを認識した上でご利用ください。
+                   内容の正確な意味を把握するためには、原文を読むことをおすすめします。
+                   また、もし日本語版に誤りを見つけられた場合は、翻訳者にご連絡いただければ幸いです。
+                   ただし内容に関してのお問い合わせには応じかねますので、ご了承ください。
                </para>
 
                <sect2 id="preface-s1-1" revision="-1">
 
-                   <title>���{��Ŗ|��҂ɂ���</title>
+                   <title>日本語版翻訳者について</title>
 
                    <para id="preface-s1-1-p4" revision="-1">
-                       ���{��Ńo�[�W����3.2 cr3�̖|��͊�����ЃG�N�T
-                       �i<ulink url="http://www.exa-corp.co.jp">�z�[���y�[�W�͂�����</ulink>�j
-                       �̈ȉ��̃����o�[�ōs���܂����B
-                       �{�ԗ́i6,18,19,21,22,23�͒S���j�A
-                       �L�˗T��i�O����,2,5,13,14,24,25�͒S���j�A
-                       ���s���l�i7,8,9,10�͒S���j�A
-                       �ߐ{�G�j�i12,16,17�͒S���j�A
-                       ��֒m���i1,3,11�͒S���j�A
-                       �ѓc�_�i�i4,15�͒S���j�A
-                       ���Ԍ���i20�͒S���j�A
-                       �X����i���r���[�S���j�B
-                       �Ȃ���󓙂̂��w�E�͖{�ԁA�L�˂܂ł��肢�������܂��B
+                       日本語版バージョン3.2 cr3の翻訳は株式会社エクサ
+                       （<ulink url="http://www.exa-corp.co.jp">ホームページはこちら</ulink>）
+                       の以下のメンバーで行いました。
+                       本間力（6,18,19,21,22,23章担当）、
+                       広戸裕介（前書き,2,5,13,14,24,25章担当）、
+                       武市正人（7,8,9,10章担当）、
+                       那須秀男（12,16,17章担当）、
+                       井関知文（1,3,11章担当）、
+                       飯田浩司（4,15章担当）、
+                       平間健一（20章担当）、
+                       森龍二（レビュー担当）。
+                       なお誤訳等のご指摘は本間、広戸までお願いいたします。
 
         <mediaobject>
             <imageobject role="fo">

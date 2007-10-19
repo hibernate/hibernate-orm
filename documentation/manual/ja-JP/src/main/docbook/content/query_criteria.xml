@@ -1,18 +1,20 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="querycriteria">
-    <title>Criteria�N�G��</title>
+    <title>Criteriaクエリ</title>
 
     <para>
-        Hibernate�ɂ́A�����I�Ŋg���\��criteria�N�G��API���p�ӂ���Ă��܂��B
+        Hibernateには、直感的で拡張可能なcriteriaクエリAPIが用意されています。
     </para>
     
     <sect1 id="querycriteria-creating">
-        <title> <literal>Criteria</literal> �C���X�^���X�̍쐬</title>
+        <title> <literal>Criteria</literal> インスタンスの作成</title>
 
         <para>
             <literal>org.hibernate.Criteria</literal>
-            �C���^�[�t�F�C�X�͓���̉i�����N���X�ɑ΂���N�G����\�����܂��B
-            <literal>Session</literal> �� <literal>Criteria</literal> �C���X�^���X�̃t�@�N�g���ł��B
+            インターフェイスは特定の永続性クラスに対するクエリを表現します。
+            <literal>Session</literal> は <literal>Criteria</literal> インスタンスのファクトリです。
         </para>
 
         <programlisting><![CDATA[Criteria crit = sess.createCriteria(Cat.class);
@@ -22,14 +24,14 @@ List cats = crit.list();]]></programlisting>
     </sect1>
      
     <sect1 id="querycriteria-narrowing">
-        <title>���U���g�Z�b�g�̍i����</title>
+        <title>リザルトセットの絞込み</title>
 
         <para>
-            <literal>org.hibernate.criterion.Criterion</literal> �C���^�[�t�F�C�X�̃C���X�^���X�́A
-            �ʂ̃N�G���N���C�e���I���i�₢���킹�̔����j��\���܂��B
+            <literal>org.hibernate.criterion.Criterion</literal> インターフェイスのインスタンスは、
+            個別のクエリクライテリオン（問い合わせの判定基準）を表します。
             <literal>org.hibernate.criterion.Restrictions</literal>
-            �N���X�́A����g�ݍ��݂� <literal>Criterion</literal>
-            �^���擾���邽�߂̃t�@�N�g�����\�b�h�������Ă��܂��B
+            クラスは、ある組み込みの <literal>Criterion</literal>
+            型を取得するためのファクトリメソッドを持っています。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -38,7 +40,7 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            Restriction�i����j�́A�_���I�ɃO���[�v���ł��܂��B
+            Restriction（限定）は、論理的にグループ化できます。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -60,8 +62,8 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            ���X����Criterion�^�i<literal>Restrictions</literal> �̃T�u�N���X�j
-            �͂��Ȃ�͈̔͂ɋy�т܂����A���ɗL�p�Ȃ̂�SQL�𒼐ڎw��ł�����̂ł��B
+            元々あるCriterion型（<literal>Restrictions</literal> のサブクラス）
+            はかなりの範囲に及びますが、特に有用なのはSQLを直接指定できるものです。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -69,15 +71,15 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            <literal>{alias}</literal> �Ƃ����v���[�X�z���_�́A
-            �₢���킹���󂯂��G���e�B�e�B�̍s�̕ʖ��ɂ���Ēu���������܂��B
+            <literal>{alias}</literal> というプレースホルダは、
+            問い合わせを受けたエンティティの行の別名によって置き換えられます。
         </para>
         
         <para>
-            criterion�𓾂�ʂ̎�i�́A
-            <literal>Property</literal> �C���X�^���X����擾���邱�Ƃł��B
-            <literal>Property.forName()</literal> ���Ăяo���āA
-            <literal>Property</literal> �C���X�^���X���쐬�ł��܂��B
+            criterionを得る別の手段は、
+            <literal>Property</literal> インスタンスから取得することです。
+            <literal>Property.forName()</literal> を呼び出して、
+            <literal>Property</literal> インスタンスを作成できます。
         </para>
     
         <programlisting><![CDATA[
@@ -95,11 +97,11 @@ List cats = sess.createCriteria(Cat.class)
    </sect1>
      
     <sect1 id="querycriteria-ordering">
-        <title>���ʂ̐���</title>
+        <title>結果の整列</title>
 
         <para>
             <literal>org.hibernate.criterion.Order</literal>
-            ���g���Č��ʂ���ёւ��邱�Ƃ��ł��܂��B
+            を使って結果を並び替えることができます。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -119,11 +121,11 @@ List cats = sess.createCriteria(Cat.class)
     </sect1>
     
     <sect1 id="querycriteria-associations" revision="2">
-        <title>�֘A</title>
+        <title>関連</title>
 
         <para>
-            <literal>createCriteria()</literal> ���g���A�֘A���i�r�Q�[�g���邱�ƂŁA
-            �e�ՂɊ֌W����G���e�B�e�B�ɐ�����w��ł��܂��B
+            <literal>createCriteria()</literal> を使い、関連をナビゲートすることで、
+            容易に関係するエンティティに制約を指定できます。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -133,13 +135,13 @@ List cats = sess.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            2�Ԗڂ� <literal>createCriteria()</literal> �́A<literal>kittens</literal>
-            �R���N�V�����̗v�f���Q�Ƃ���V���� <literal>Criteria</literal>
-            �C���X�^���X��Ԃ����Ƃɒ��ӂ��Ă��������B
+            2番目の <literal>createCriteria()</literal> は、<literal>kittens</literal>
+            コレクションの要素を参照する新しい <literal>Criteria</literal>
+            インスタンスを返すことに注意してください。
         </para>
 
         <para>
-            �ȉ��̂悤�ȕ��@���A�󋵂ɂ��L�p�ł��B
+            以下のような方法も、状況により有用です。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -149,17 +151,17 @@ List cats = sess.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            �i<literal>createAlias()</literal> �͐V����
-            <literal>Criteria</literal> �C���X�^���X���쐬���܂���B�j
+            （<literal>createAlias()</literal> は新しい
+            <literal>Criteria</literal> インスタンスを作成しません。）
         </para>
 
         <para>
-            �O��2�̃N�G���ɂ���ĕԂ���� <literal>Cat</literal>
-            �C���X�^���X�ɂ���ĕێ������kittens�R���N�V�����́A
-            criteria�ɂ���Ď��O�Ƀt�B���^�����O <emphasis>����Ȃ�</emphasis>
-            ���Ƃɒ��ӂ��Ă��������B
-            ����criteria�ɓK������kitten���擾�������Ȃ�A
-            <literal>ResultTransformer</literal> ���g��Ȃ���΂Ȃ�܂���B
+            前の2つのクエリによって返される <literal>Cat</literal>
+            インスタンスによって保持されるkittensコレクションは、
+            criteriaによって事前にフィルタリング <emphasis>されない</emphasis>
+            ことに注意してください。
+            もしcriteriaに適合するkittenを取得したいなら、
+            <literal>ResultTransformer</literal> を使わなければなりません。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -177,11 +179,11 @@ while ( iter.hasNext() ) {
     </sect1>
     
     <sect1 id="querycriteria-dynamicfetching" revision="1">
-        <title>�֘A�̓��I�t�F�b�`</title>
+        <title>関連の動的フェッチ</title>
 
         <para>
-            <literal>setFetchMode()</literal> ���g���A
-            ���s���Ɋ֘A�̕������@���w�肵�Ă��悢�ł��B
+            <literal>setFetchMode()</literal> を使い、
+            実行時に関連の復元方法を指定してもよいです。
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -191,19 +193,19 @@ while ( iter.hasNext() ) {
     .list();]]></programlisting>
     
         <para>
-            ���̃N�G���͊O�������ɂ�� <literal>mate</literal> ��
-            <literal>kittens</literal> �̗������t�F�b�`���܂��B
-            ��葽���̏��� <xref linkend="performance-fetching"/> ���Q�Ƃ��Ă��������B
+            このクエリは外部結合により <literal>mate</literal> と
+            <literal>kittens</literal> の両方をフェッチします。
+            より多くの情報は <xref linkend="performance-fetching"/> を参照してください。
         </para>
     
     </sect1>
      
     <sect1 id="querycriteria-examples">
-        <title>�N�G���̗�</title>
+        <title>クエリの例</title>
 
         <para>
-            <literal>org.hibernate.criterion.Example</literal> �N���X�́A
-            �^����ꂽ�C���X�^���X����N�G���N���C�e���I�����\�z�ł��܂��B
+            <literal>org.hibernate.criterion.Example</literal> クラスは、
+            与えられたインスタンスからクエリクライテリオンを構築できます。
         </para>
 
         <programlisting><![CDATA[Cat cat = new Cat();
@@ -214,13 +216,13 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-           �o�[�W�����v���p�e�B�A���ʎq�A�֘A�͖�������܂��B
-           �f�t�H���g�ł�null�l�̃v���p�e�B�͏��O����܂��B
+           バージョンプロパティ、識別子、関連は無視されます。
+           デフォルトではnull値のプロパティは除外されます。
         </para>
 
         <para>
-           �ǂ̂悤�� <literal>Example</literal> ��K�p���邩
-           �������邱�Ƃ��ł��܂��B
+           どのように <literal>Example</literal> を適用するか
+           調整することができます。
         </para>
 
         <programlisting><![CDATA[Example example = Example.create(cat)
@@ -233,7 +235,7 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            �֘A�I�u�W�F�N�g��criteria���w�肷�邽�߂ɁAExample���g�����Ƃ��\�ł��B
+            関連オブジェクトにcriteriaを指定するために、Exampleを使うことも可能です。
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -245,12 +247,12 @@ List results = session.createCriteria(Cat.class)
     </sect1>
     
     <sect1 id="querycriteria-projection">
-        <title>�ˉe�A�W��A�O���[�v��</title>
+        <title>射影、集約、グループ化</title>
         <para>
-            <literal>org.hibernate.criterion.Projections</literal> �N���X��
-            <literal>Projection</literal> �C���X�^���X�̃t�@�N�g���ł��B
-            <literal>setProjection()</literal> ���Ăяo�����ƂŁA
-            �N�G���Ɏˉe��K�p���܂��B
+            <literal>org.hibernate.criterion.Projections</literal> クラスは
+            <literal>Projection</literal> インスタンスのファクトリです。
+            <literal>setProjection()</literal> を呼び出すことで、
+            クエリに射影を適用します。
         </para>
         
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -268,14 +270,14 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            �K�v�ł����Ă��Acriteria�N�G���Ɂugroup by�v�𖾎�����K�v�͂���܂���B
-            ������Projection�^�� <emphasis>�O���[�v���ˉe</emphasis> �Ƃ��Ē�`����A
-            SQL�� <literal>group by</literal> �߂ɂ�����܂��B
+            必要であっても、criteriaクエリに「group by」を明示する必要はありません。
+            ある種のProjection型は <emphasis>グループ化射影</emphasis> として定義され、
+            SQLの <literal>group by</literal> 節にも現れます。
         </para>
     
         <para>
-            �C�ӂŎˉe�ɕʖ���t�����邽�߁A�ˉe�����l��restriction��ordering������Q�Ƃł��܂��B
-            �ʖ�������Q�̈قȂ���@�������܂��B
+            任意で射影に別名を付けられるため、射影される値はrestrictionやordering内から参照できます。
+            別名をつける２つの異なる方法を示します。
         </para>
 
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -289,10 +291,10 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            <literal>alias()</literal> �� <literal>as()</literal> ���\�b�h�́A
-            Projection�C���X�^���X��ʂ̖��O�� <literal>Projection</literal> �C���X�^���X��
-            ���b�v���邾���ł��B
-            �V���[�g�J�b�g�Ƃ��āA�ˉe���ˉe���X�g�ɒǉ�����ۂɁA�ʖ��������܂��B
+            <literal>alias()</literal> と <literal>as()</literal> メソッドは、
+            Projectionインスタンスを別の名前の <literal>Projection</literal> インスタンスで
+            ラップするだけです。
+            ショートカットとして、射影を射影リストに追加する際に、別名をつけられます。
         </para>
 
        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -317,7 +319,7 @@ List results = session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            �ˉe�̎��� <literal>Property.forName()</literal> ���g�p�ł��܂��B
+            射影の式に <literal>Property.forName()</literal> も使用できます。
         </para>
     
         <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
@@ -339,11 +341,11 @@ List results = session.createCriteria(Cat.class)
     </sect1>
     
     <sect1 id="querycriteria-detachedqueries">
-        <title>�N�G������уT�u�N�G���̕���</title>
+        <title>クエリおよびサブクエリの分離</title>
         <para>
-            <literal>DetachedCriteria</literal> �N���X�ɂ��A
-            �Z�b�V�����X�R�[�v�O�ɃN�G�����쐬�ł��܂��B
-            ��ŁA�C�ӂ� <literal>Session</literal> ���g���āA���s�ł��܂��B
+            <literal>DetachedCriteria</literal> クラスにより、
+            セッションスコープ外にクエリを作成できます。
+            後で、任意の <literal>Session</literal> を使って、実行できます。
         </para>
         
         <programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
@@ -356,9 +358,9 @@ txn.commit();
 session.close();]]></programlisting>
 
         <para>
-            <literal>DetachedCriteria</literal> �́A�T�u�N�G����\�����邽�߂ɂ��g���܂��B
-            �T�u�N�G���𔺂�Criterion�C���X�^���X�́A
-            <literal>Subqueries</literal> �������� <literal>Property</literal> ���瓾���܂��B
+            <literal>DetachedCriteria</literal> は、サブクエリを表現するためにも使えます。
+            サブクエリを伴うCriterionインスタンスは、
+            <literal>Subqueries</literal> もしくは <literal>Property</literal> から得られます。
         </para>
         
         <programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
@@ -374,7 +376,7 @@ session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            ���݊֌W������T�u�N�G���ł������\�ł��B
+            相互関係があるサブクエリでさえも可能です。
         </para>
         
         <programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
@@ -391,23 +393,23 @@ session.createCriteria(Cat.class, "cat")
                   could also be explained. -->
                
     <sect1 id="query-criteria-naturalid">
-        <title>���R���ʎq�ɂ��N�G��</title>
+        <title>自然識別子によるクエリ</title>
         
         <para>
-            criteria�N�G�����܂ނ����Ă��̃N�G���ɂƂ��āA
-            �N�G���L���b�V���͂��܂�������悭�Ȃ��ł��B
-            �Ȃ��Ȃ�A�N�G���L���b�V�����p�ɂɖ����ɂȂ邽�߂ł��B
-            �������Ȃ���A�L���b�V���𖳌��ɂ���A���S���Y�����œK���ł���
-            ���ʂȃN�G���̎�ނ��P����܂��B
-            �X�V����Ȃ����R�L�[�ɂ�錟���ł��B
-            �������̃A�v���P�[�V�����ł́A���̎�ނ̃N�G�����p�ɂɌ���܂��B
-            ���̂悤�Ȏg�����̂��߂ɁAcriteria API�͓��ʂȑ΍��񋟂��܂��B
+            criteriaクエリを含むたいていのクエリにとって、
+            クエリキャッシュはあまり効率がよくないです。
+            なぜなら、クエリキャッシュが頻繁に無効になるためです。
+            しかしながら、キャッシュを無効にするアルゴリズムを最適化できる
+            特別なクエリの種類が１つあります。
+            更新されない自然キーによる検索です。
+            いくつかのアプリケーションでは、この種類のクエリが頻繁に現れます。
+            このような使われ方のために、criteria APIは特別な対策を提供します。
         </para>
         
         <para>
-            �ŏ��ɁA<literal>&lt;natural-id&gt;</literal> ���g���āA
-            �G���e�B�e�B�̎��R�L�[���}�b�v���Ă��������B
-            �����āA�񎟃L���b�V����L���ɂ��܂��B
+            最初に、<literal>&lt;natural-id&gt;</literal> を使って、
+            エンティティの自然キーをマップしてください。
+            そして、二次キャッシュを有効にします。
         </para>
 
         <programlisting><![CDATA[<class name="User">
@@ -423,17 +425,17 @@ session.createCriteria(Cat.class, "cat")
 </class>]]></programlisting>
     
         <para>
-            ���ӁF <emphasis>�ύX�����</emphasis> ���R�L�[�����G���e�B�e�B��
-            ���̋@�\���g���̂́A�Ӑ}����Ă��Ȃ��g�����ł��B
+            注意： <emphasis>変更される</emphasis> 自然キーを持つエンティティに
+            この機能を使うのは、意図されていない使い方です。
         </para>
         
         <para>
-            ���ɁAHibernate�N�G���L���b�V����L���ɂ��܂��B
+            次に、Hibernateクエリキャッシュを有効にします。
         </para>
         
         <para>
-            ����ŁA<literal>Restrictions.naturalId()</literal> �ɂ��A
-            �������I�ȃL���b�V���A���S���Y�����g�p�ł��܂��B
+            これで、<literal>Restrictions.naturalId()</literal> により、
+            より効率的なキャッシュアルゴリズムを使用できます。
         </para>
        
         <programlisting><![CDATA[session.createCriteria(User.class)

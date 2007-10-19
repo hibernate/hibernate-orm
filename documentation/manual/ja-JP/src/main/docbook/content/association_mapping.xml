@@ -1,39 +1,41 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="associations">
 
-    <title>�֘A�}�b�s���O</title>
+    <title>関連マッピング</title>
 
     <sect1 id="assoc-intro" revision="1">
-        <title>�C���g���_�N�V����</title>
+        <title>イントロダクション</title>
         
         <para>
-            �֘A�}�b�s���O�͂��΂��Η������ł�������̂ɂȂ�܂��B
-            ���̏͂ł́A��{�I�Ȉ��̃P�[�X�ɂ��ďq�ׂ܂��B
-            �P�����̃}�b�s���O����n�߁A���ꂩ��o�����̃P�[�X�ɂ��čl���Ă����܂��B
-            ��Ƃ��āA<literal>Person</literal> �� <literal>Address</literal> ��p���܂��B
+            関連マッピングはしばしば理解が最も難しいものになります。
+            この章では、基本的な一つ一つのケースについて述べます。
+            単方向のマッピングから始め、それから双方向のケースについて考えていきます。
+            例として、<literal>Person</literal> と <literal>Address</literal> を用います。
         </para>
         
         <para>
-                �֘A�́A�����e�[�u�������邩���ǂ����ƁA
-                ���d�x�ɂ���ĕ��ނ��邱�Ƃɂ��܂��B
+                関連は、結合テーブルを入れるかかどうかと、
+                多重度によって分類することにします。
         </para>
         
         <para>
-                ���ׂĂ̗��not null�̊O���L�[���g�p���܂��B
-                �����Hibernate�̗v���ł͂���܂���B
-                not null������O�����Ƃ��Ă��A�}�b�s���O�͖��Ȃ����삵�܂��B
+                すべての例でnot nullの外部キーを使用します。
+                これはHibernateの要件ではありません。
+                not null制約を外したとしても、マッピングは問題なく動作します。
         </para>
         
     </sect1>
 
     <sect1 id="assoc-unidirectional" revision="1">
-        <title>�P�����֘A</title>
+        <title>単方向関連</title>
         
         <sect2 id="assoc-unidirectional-m21">
-        <title>���Έ�</title>
+        <title>多対一</title>
         
         <para>
-            <emphasis>�P�������Έ�֘A</emphasis> �͒P�����֘A�̒��ōł���ʓI�Ȃ��̂ł��B
+            <emphasis>単方向多対一関連</emphasis> は単方向関連の中で最も一般的なものです。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -58,11 +60,11 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
 
         <sect2 id="assoc-unidirectional-121">
-        <title>��Έ�</title>
+        <title>一対一</title>
         
         <para>
-            <emphasis>�O���L�[�̒P������Έ�֘A</emphasis> �͂قƂ�Ǔ������̂ł��B
-            �B��Ⴄ�̂́A�J�����̃��j�[�N�Ȑ���ł��B
+            <emphasis>外部キーの単方向一対一関連</emphasis> はほとんど同じものです。
+            唯一違うのは、カラムのユニークな制約です。
         </para>
         
        <programlisting><![CDATA[<class name="Person">
@@ -86,8 +88,8 @@ create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
         <para>
-            <emphasis>��L�[�̒P������Έ�֘A</emphasis> �͒ʏ�A���ʂ�ID�W�F�l���[�^���g���܂��B
-            �i���̗�ł͊֘A�̕������t�ɂȂ��Ă��邱�Ƃɒ��ӂ��Ă��������j
+            <emphasis>主キーの単方向一対一関連</emphasis> は通常、特別なIDジェネレータを使います。
+            （この例では関連の方向が逆になっていることに注意してください）
         </para>
         
        <programlisting><![CDATA[<class name="Person">
@@ -112,11 +114,11 @@ create table Address ( personId bigint not null primary key )
         </sect2>
         
         <sect2 id="assoc-unidirectional-12m">
-        <title>��Α�</title>
+        <title>一対多</title>
         
         <para>
-            <emphasis>�O���L�[�̒P������Α��֘A</emphasis> �͂ƂĂ�����ȃP�[�X�ŁA
-            ���܂萄������Ă��܂���B
+            <emphasis>外部キーの単方向一対多関連</emphasis> はとても特殊なケースで、
+            あまり推奨されていません。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -141,7 +143,7 @@ create table Address ( addressId bigint not null primary key, personId bigint no
         ]]></programlisting>
         
         <para>
-            ���̂悤�Ȋ֘A�̂��߂Ɍ����e�[�u�����g�����Ƃ����E�߂��܂��B
+            このような関連のために結合テーブルを使うことをお薦めします。
         </para>
         
         </sect2>
@@ -149,16 +151,16 @@ create table Address ( addressId bigint not null primary key, personId bigint no
     </sect1>
 
     <sect1 id="assoc-unidirectional-join" revision="1">
-        <title>�����e�[�u�����g�����P�����֘A</title>
+        <title>結合テーブルを使った単方向関連</title>
         
         <sect2 id="assoc-unidirectional-join-12m">
-        <title>��Α�</title>
+        <title>一対多</title>
         
         <para>
-            <emphasis>�����e�[�u�����g�����P������Α��֘A</emphasis> 
-            �͂��D�܂����ł��B
-            <literal>unique="true"</literal> �̎w��ɂ��A���d�x�����Α������Α�
-            �ɕς�������Ƃɒ��ӂ��ĉ������B
+            <emphasis>結合テーブルを使った単方向一対多関連</emphasis> 
+            はより好ましいです。
+            <literal>unique="true"</literal> の指定により、多重度が多対多から一対多
+            に変わったことに注意して下さい。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -187,11 +189,11 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
 
         <sect2 id="assoc-unidirectional-join-m21">
-        <title>���Έ�</title>
+        <title>多対一</title>
         
         <para>
-            <emphasis>�����e�[�u���̒P�������Έ�֘A</emphasis> ��
-            �֘A���C�ӂł���Ƃ��ɔ��Ɉ�ʓI�Ȃ��̂ł��B
+            <emphasis>結合テーブルの単方向多対一関連</emphasis> は
+            関連が任意であるときに非常に一般的なものです。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -221,11 +223,11 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
 
         <sect2 id="assoc-unidirectional-join-121">
-        <title>��Έ�</title>
+        <title>一対一</title>
         
         <para>
-            <emphasis>�����e�[�u���̒P������Έ�֘A</emphasis> �́A�{���ɓ���ł���
-            �s�\�ł͂���܂���B
+            <emphasis>結合テーブルの単方向一対一関連</emphasis> は、本当に特殊ですが
+            不可能ではありません。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -257,10 +259,10 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
 
         <sect2 id="assoc-unidirectional-join-m2m">
-        <title>���Α�</title>
+        <title>多対多</title>
         
         <para>
-            �Ō�ɁA<emphasis>�P�������Α��֘A</emphasis> �������܂��B
+            最後に、<emphasis>単方向多対多関連</emphasis> を示します。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -290,14 +292,14 @@ create table Address ( addressId bigint not null primary key )
     </sect1>
 
     <sect1 id="assoc-bidirectional" revision="1">
-        <title>�o�����֘A</title>
+        <title>双方向関連</title>
         
         <sect2 id="assoc-bidirectional-m21" revision="2">
-        <title>��Α�/���Έ�</title>
+        <title>一対多/多対一</title>
         
         <para>
-            <emphasis>�o�������Έ�֘A</emphasis> �͍ł���ʓI�Ȋ֘A�ł��B
-            �i�W���I�Ȑe�q�֌W�ł��j
+            <emphasis>双方向多対一関連</emphasis> は最も一般的な関連です。
+            （標準的な親子関係です）
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -325,12 +327,12 @@ create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
         <para>
-            <literal>List</literal> �i�܂��͑��̃C���f�b�N�X�t���̃R���N�V�����j���g���Ȃ�A
-            �O���L�[�� <literal>key</literal> �J������ <literal>not null</literal> �ɐݒ肵�A
-            �R���N�V���������e�v�f�̃C���f�b�N�X�������e�i���X����悤�ɁA
-            �֘A�������K�v������܂�
-            �i<literal>update="false"</literal> ���� <literal>insert="false"</literal> 
-            �Ɛݒ肵�āA���Α������z�I��inverse�ɂ��܂��j�F
+            <literal>List</literal> （または他のインデックス付きのコレクション）を使うなら、
+            外部キーの <literal>key</literal> カラムを <literal>not null</literal> に設定し、
+            コレクション側が各要素のインデックスをメンテナンスするように、
+            関連を扱う必要があります
+            （<literal>update="false"</literal> かつ <literal>insert="false"</literal> 
+            と設定して、反対側を仮想的にinverseにします）：
         </para>
 
         <programlisting><![CDATA[<class name="Person">
@@ -354,21 +356,21 @@ create table Address ( addressId bigint not null primary key )
 </class>]]></programlisting>
 
             <para>
-                �����O���L�[�J������ <literal>NOT NULL</literal> �ł���Ȃ�΁A
-                �R���N�V�����}�b�s���O�� <literal>&lt;key&gt;</literal> �v�f�� 
-                <literal>not-null="true"</literal> �ɂ��邱�Ƃ͏d�v�ł��B
-                ����q�ɂȂ��� <literal>&lt;column&gt;</literal> �v�f�����ł͂Ȃ��A
-                <literal>&lt;key&gt;</literal> �v�f�� <literal>not-null="true"</literal> 
-                �ƒ�`���Ȃ��悤�ɂ��Ă��������B
+                もし外部キーカラムが <literal>NOT NULL</literal> であるならば、
+                コレクションマッピングの <literal>&lt;key&gt;</literal> 要素を 
+                <literal>not-null="true"</literal> にすることは重要です。
+                入れ子になった <literal>&lt;column&gt;</literal> 要素だけではなく、
+                <literal>&lt;key&gt;</literal> 要素も <literal>not-null="true"</literal> 
+                と定義しないようにしてください。
             </para>
 
         </sect2>
         
         <sect2 id="assoc-bidirectional-121">
-        <title>��Έ�</title>
+        <title>一対一</title>
         
         <para>
-            <emphasis>�O���L�[�̑o������Έ�֘A</emphasis> �͔��Ɉ�ʓI�ł��B
+            <emphasis>外部キーの双方向一対一関連</emphasis> は非常に一般的です。
         </para>
         
        <programlisting><![CDATA[<class name="Person">
@@ -394,7 +396,7 @@ create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
         <para>
-            <emphasis>��L�[�̑o������Έ�֘A</emphasis> �͓����ID�W�F�l���[�^���g���܂��B
+            <emphasis>主キーの双方向一対一関連</emphasis> は特殊なIDジェネレータを使います。
         </para>
         
        <programlisting><![CDATA[<class name="Person">
@@ -423,15 +425,15 @@ create table Address ( personId bigint not null primary key )
     </sect1>
 
     <sect1 id="assoc-bidirectional-join" revision="1">
-        <title>�����e�[�u�����g�����o�����֘A</title>
+        <title>結合テーブルを使った双方向関連</title>
         
         <sect2 id="assoc-bidirectional-join-12m">
-        <title>��Α�/���Έ�</title>
+        <title>一対多/多対一</title>
         
         <para>
-            <emphasis>�����e�[�u���̑o������Α��֘A</emphasis> �ł��B
-            <literal>inverse="true"</literal> ���֘A�[�A�R���N�V�����A�����̂����ꂩ��
-            �ݒ�ł��邱�Ƃɒ��ӂ��Ă��������B
+            <emphasis>結合テーブルの双方向一対多関連</emphasis> です。
+            <literal>inverse="true"</literal> が関連端、コレクション、結合のいずれかに
+            設定できることに注意してください。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -469,11 +471,11 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
 
          <sect2 id="assoc-bidirectional-join-121">
-        <title>��Έ�</title>
+        <title>一対一</title>
         
         <para>
-            <emphasis>�����e�[�u���̑o������Έ�֘A</emphasis> 
-            �͔��ɓ���ł����A�\�ł��B
+            <emphasis>結合テーブルの双方向一対一関連</emphasis> 
+            は非常に特殊ですが、可能です。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -515,10 +517,10 @@ create table Address ( addressId bigint not null primary key )
         </sect2>
         
         <sect2 id="assoc-bidirectional-join-m2m" revision="1">
-        <title>���Α�</title>
+        <title>多対多</title>
         
         <para>
-            �Ō�ɁA<emphasis>�o�������Α��֘A</emphasis> �������܂��B
+            最後に、<emphasis>双方向多対多関連</emphasis> を示します。
         </para>
         
         <programlisting><![CDATA[<class name="Person">
@@ -554,15 +556,15 @@ create table Address ( addressId bigint not null primary key )
     </sect1>
 
     <sect1 id="assoc-complex">
-        <title>��蕡�G�Ȋ֘A�}�b�s���O</title>
+        <title>より複雑な関連マッピング</title>
         
         <para>
-            ��蕡�G�Ȋ֘A������ <emphasis>�ɂ߂�</emphasis> �H�ł��B
-            �}�b�s���O�h�L�������g��SQL���𖄂ߍ��ނ��ƂŁA
-            ����ɕ��G�ȏ󋵂��������Ƃ��ł��܂��B
-            �Ⴆ�΁A<literal>accountNumber</literal>, <literal>effectiveEndDate</literal>, 
-            <literal>effectiveStartDate</literal> �J����������account�i�����j���̗����������e�[�u���́A
-            �ȉ��̂悤�Ƀ}�b�s���O���܂��B
+            より複雑な関連結合は <emphasis>極めて</emphasis> 稀です。
+            マッピングドキュメントにSQL文を埋め込むことで、
+            さらに複雑な状況を扱うことができます。
+            例えば、<literal>accountNumber</literal>, <literal>effectiveEndDate</literal>, 
+            <literal>effectiveStartDate</literal> カラムを持つaccount（口座）情報の履歴を扱うテーブルは、
+            以下のようにマッピングします。
         </para>
         
         <programlisting><![CDATA[<properties name="currentAccountKey">
@@ -575,9 +577,9 @@ create table Address ( addressId bigint not null primary key )
 <property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
 
         <para>
-            �����āA�֘A�� <emphasis>�����_��</emphasis> �C���X�^���X
-            �i<literal>effectiveEndDate</literal> ��null�ł�����́j�Ƀ}�b�s���O���܂��B
-            �ȉ��̂悤�ɂȂ�܂��F
+            そして、関連を <emphasis>現時点の</emphasis> インスタンス
+            （<literal>effectiveEndDate</literal> がnullであるもの）にマッピングします。
+            以下のようになります：
         </para>
         
         <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
@@ -588,11 +590,11 @@ create table Address ( addressId bigint not null primary key )
 </many-to-one>]]></programlisting>
 
         <para>
-            ����ɕ��G�ȗ�ł́A<literal>Employee�i�]�ƈ��j</literal> �� <literal>Organization�i�g�D�j</literal> 
-            �Ԃ̊֘A�� <literal>Employment�i�ٗp�j</literal> �e�[�u���ŕێ������ꍇ��z�����Ă��������B
-            ���̃e�[�u���ɂ͌ٗp�f�[�^�̗��������ׂĊ܂܂�܂��B
-            ����Ə]�ƈ��� <emphasis>�ł��ŋ߂�</emphasis> �ٗp�҂�\���֘A
-            �i�ł��ŋ߂� <literal>startDate</literal> �������́j�́A���̂悤�Ƀ}�b�s���O�ł��܂��F
+            さらに複雑な例では、<literal>Employee（従業員）</literal> と <literal>Organization（組織）</literal> 
+            間の関連が <literal>Employment（雇用）</literal> テーブルで保持される場合を想像してください。
+            このテーブルには雇用データの履歴がすべて含まれます。
+            すると従業員の <emphasis>最も最近の</emphasis> 雇用者を表す関連
+            （最も最近の <literal>startDate</literal> を持つもの）は、このようにマッピングできます：
         </para>
         
         <programlisting><![CDATA[<join>
@@ -609,8 +611,8 @@ create table Address ( addressId bigint not null primary key )
 </join>]]></programlisting>
 
         <para>
-            ���̋@�\�͔��ɋ��͂ł��B
-            ���������̂悤�ȏꍇ�A���ʂ�HQL��criteria�N�G�����g�����������H�I�ł��B
+            この機能は非常に強力です。
+            しかしこのような場合、普通はHQLやcriteriaクエリを使う方がより実践的です。
         </para>
 
     </sect1>

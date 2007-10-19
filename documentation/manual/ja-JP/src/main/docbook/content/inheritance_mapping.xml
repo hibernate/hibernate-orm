@@ -1,67 +1,69 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="inheritance">
-    <title>�p���}�b�s���O</title>
+    <title>継承マッピング</title>
 
     <sect1 id="inheritance-strategies" revision="3">
-        <title>3�̐헪</title>
+        <title>3つの戦略</title>
 
         <para>
-            Hibernate��3�̊�{�I�Ȍp���̃}�b�s���O�헪���T�|�[�g���܂��B
-        </para>
-
-        <itemizedlist>
-        <listitem>
-        <para>
-            �N���X�K�w���Ƃ̃e�[�u���itable-per-class-hierarchy�j
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            �T�u�N���X���Ƃ̃e�[�u���itable-per-subclass�j
-        </para>
-        </listitem>
-        <listitem>
-        <para>
-            ��ۃN���X���Ƃ̃e�[�u���itable-per-concrete-class�j
-        </para>
-        </listitem>
-        </itemizedlist>
-        
-        <para>
-            ������4�ڂɁAHibernate�͂킸���ɈقȂ鐫�����������|�����[�t�B�Y�����T�|�[�g���܂��B
+            Hibernateは3つの基本的な継承のマッピング戦略をサポートします。
         </para>
 
         <itemizedlist>
         <listitem>
         <para>
-            �ÖٓI�|�����[�t�B�Y��
+            クラス階層ごとのテーブル（table-per-class-hierarchy）
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            サブクラスごとのテーブル（table-per-subclass）
+        </para>
+        </listitem>
+        <listitem>
+        <para>
+            具象クラスごとのテーブル（table-per-concrete-class）
         </para>
         </listitem>
         </itemizedlist>
         
         <para>
-            ����̌p���K�w�̈قȂ�u�����`�ɑ΂��ĈقȂ�}�b�s���O�헪���g�����Ƃ��ł��܂��B
-            ���̏ꍇ�ɂ͑S�̂̊K�w�ɓn��|�����[�t�B�Y�����������邽�߂ɈÖٓI�|�����[�t�B�Y�����g�p���܂��B
-            �������AHibernate�͓������[�g <literal>&lt;class&gt;</literal> �v�f����
-            <literal>&lt;subclass&gt;</literal> �}�b�s���O�A<literal>&lt;joined-subclass&gt;</literal> �}�b�s���O�A
-            <literal>&lt;union-subclass&gt;</literal> �}�b�s���O�̓����g�p���T�|�[�g���Ă��܂���B
-            <literal>&lt;subclass&gt;</literal> �v�f�� <literal>&lt;join&gt;</literal> �v�f��g�ݍ��킹�邱�ƂŁA
-            ���� <literal>&lt;class&gt;</literal> �v�f���ł� table-per-hierarchy �헪��
-            table-per-subclass �헪�̓����g�p�͉\�ł��B���̗�����Ă��������B
+            加えて4つ目に、Hibernateはわずかに異なる性質を持ったポリモーフィズムをサポートします。
+        </para>
+
+        <itemizedlist>
+        <listitem>
+        <para>
+            暗黙的ポリモーフィズム
+        </para>
+        </listitem>
+        </itemizedlist>
+        
+        <para>
+            同一の継承階層の異なるブランチに対して異なるマッピング戦略を使うことができます。
+            その場合には全体の階層に渡るポリモーフィズムを実現するために暗黙的ポリモーフィズムを使用します。
+            しかし、Hibernateは同じルート <literal>&lt;class&gt;</literal> 要素内で
+            <literal>&lt;subclass&gt;</literal> マッピング、<literal>&lt;joined-subclass&gt;</literal> マッピング、
+            <literal>&lt;union-subclass&gt;</literal> マッピングの同時使用をサポートしていません。
+            <literal>&lt;subclass&gt;</literal> 要素と <literal>&lt;join&gt;</literal> 要素を組み合わせることで、
+            同一 <literal>&lt;class&gt;</literal> 要素内での table-per-hierarchy 戦略と
+            table-per-subclass 戦略の同時使用は可能です。次の例を見てください。
         </para>
 
         <para>
-             <literal>subclass</literal>, <literal>union-subclass</literal> �� 
-             <literal>joined-subclass</literal> �}�b�s���O�𕡐��̃}�b�s���O�h�L�������g�ɒ�`���邱�Ƃ��o���A
-             <literal>hibernate-mapping</literal> �̒����ɔz�u���܂��B
-             ����͐V�����}�b�s���O�t�@�C����ǉ����邾���ŁA�N���X�K�w���g���ł���Ƃ������Ƃł��B
-             ���炩���߃}�b�v�����X�[�p�[�N���X���w�肵�āA�T�u�N���X�}�b�s���O�� <literal>extends</literal> 
-             �������L�q���Ȃ���΂Ȃ�܂���B
-             ���ӁF���̓����ɂ��A�ȑO�̓}�b�s���O�E�h�L�������g�̏��Ԃ��d�v�ł����B
-             Hibernate3����́Aextends�L�[���[�h���g���ꍇ�A�}�b�s���O�h�L�������g�̏��Ԃ͖��ɂȂ�܂���B
+             <literal>subclass</literal>, <literal>union-subclass</literal> と 
+             <literal>joined-subclass</literal> マッピングを複数のマッピングドキュメントに定義することが出来、
+             <literal>hibernate-mapping</literal> の直下に配置します。
+             これは新しいマッピングファイルを追加するだけで、クラス階層を拡張できるということです。
+             あらかじめマップしたスーパークラスを指定して、サブクラスマッピングに <literal>extends</literal> 
+             属性を記述しなければなりません。
+             注意：この特徴により、以前はマッピング・ドキュメントの順番が重要でした。
+             Hibernate3からは、extendsキーワードを使う場合、マッピングドキュメントの順番は問題になりません。
              
-             �P�̃}�b�s���O�t�@�C�����ŏ��ԕt�����s���Ƃ��́A
-             �ˑR�Ƃ��āA�T�u�N���X���`����O�ɃX�[�p�[�N���X���`����K�v������܂��B)
+             １つのマッピングファイル内で順番付けを行うときは、
+             依然として、サブクラスを定義する前にスーパークラスを定義する必要があります。)
          </para>
 
          <programlisting><![CDATA[
@@ -73,13 +75,13 @@
 
 
         <sect2 id="inheritance-tableperclass" >
-        <title>�N���X�K�w���Ƃ̃e�[�u���itable-per-class-hierarchy�j</title>
+        <title>クラス階層ごとのテーブル（table-per-class-hierarchy）</title>
 
         <para>
-            �Ⴆ�΁A�C���^�[�t�F�C�X <literal>Payment</literal> �ƁA�������������
-            <literal>CreditCardPayment</literal>�A<literal>CashPayment</literal>�A
-            <literal>ChequePayment</literal> ������Ƃ��܂��B�K�w���Ƃ̃e�[�u���}�b�s���O��
-            �ȉ��̂悤�ɂȂ�܂��B
+            例えば、インターフェイス <literal>Payment</literal> と、それを実装した
+            <literal>CreditCardPayment</literal>、<literal>CashPayment</literal>、
+            <literal>ChequePayment</literal> があるとします。階層ごとのテーブルマッピングは
+            以下のようになります。
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -102,19 +104,19 @@
 </class>]]></programlisting>
 
         <para>
-            ���傤�ǈ�̃e�[�u�����K�v�ł��B
-            ���̃}�b�s���O�헪�ɂ͈�傫�Ȑ���������܂��B
-            <literal>CCTYPE</literal> �̂悤�ȁA�T�u�N���X�Ő錾���ꂽ�J������ <literal>NOT NULL</literal> 
-            ��������Ă܂���B
+            ちょうど一つのテーブルが必要です。
+            このマッピング戦略には一つ大きな制限があります。
+            <literal>CCTYPE</literal> のような、サブクラスで宣言されたカラムは <literal>NOT NULL</literal> 
+            制約を持てません。
         </para>
         
         </sect2>
 
         <sect2 id="inheritance-tablepersubclass">
-        <title>�T�u�N���X���Ƃ̃e�[�u���itable-per-subclass�j</title>
+        <title>サブクラスごとのテーブル（table-per-subclass）</title>
 
         <para>
-            table-per-subclass �}�b�s���O�͈ȉ��̂悤�ɂȂ�܂��B
+            table-per-subclass マッピングは以下のようになります。
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -139,24 +141,24 @@
 </class>]]></programlisting>
 
         <para>
-            ���̃}�b�s���O�ɂ�4�̃e�[�u�����K�v�ł��B3�̃T�u�N���X�e�[�u����
-            �X�[�p�[�N���X�e�[�u���Ƃ̊֘A��������L�[�������Ă��܂�
-            �i���ہA�֌W���f����͈�Έ�֘A�ł��j�B
+            このマッピングには4つのテーブルが必要です。3つのサブクラステーブルは
+            スーパークラステーブルとの関連を示す主キーを持っています
+            （実際、関係モデル上は一対一関連です）。
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
-        <title>�ٕʎq��p���� table-per-subclass</title>
+        <title>弁別子を用いた table-per-subclass</title>
 
         <para>
-            Hibernate�� table-per-subclass �����́Adiscriminator�J������K�v�Ƃ��Ȃ����Ƃ��o���Ă����Ă��������B
-            Hibernate�ȊO��O/R�}�b�p�[�́Atable-per-subclass �ɈقȂ������p���܂��B
-            ����́A�X�[�p�[�N���X�̃e�[�u���Ƀ^�C�vdiscriminator�J������K�v�Ƃ��܂��B
-            ���̃A�v���[�`�͎���������ɂȂ�܂����A�֌W�̎��_���猩��ƁA��萳�m�Ȃ��̂ł��B
-            table-per-subclass �헪��discriminator�J�������g��������΁A
-            <literal>&lt;subclass&gt;</literal> �� <literal>&lt;join&gt;</literal> 
-            ���ȉ��̂悤�ɑg�ݍ��킹�Ďg���Ă��������B
+            Hibernateの table-per-subclass 実装は、discriminatorカラムを必要としないことを覚えておいてください。
+            Hibernate以外のO/Rマッパーは、table-per-subclass に異なる実装を用います。
+            それは、スーパークラスのテーブルにタイプdiscriminatorカラムを必要とします。
+            このアプローチは実装が困難になりますが、関係の視点から見ると、より正確なものです。
+            table-per-subclass 戦略でdiscriminatorカラムを使いたければ、
+            <literal>&lt;subclass&gt;</literal> と <literal>&lt;join&gt;</literal> 
+            を以下のように組み合わせて使ってください。
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -188,19 +190,19 @@
 </class>]]></programlisting>
 
         <para>
-            �I�v�V������ <literal>fetch="select"</literal> �錾�́A
-            �X�[�p�[�N���X�̃N�G�����s���ɊO���������g���āA
-            �T�u�N���X�� <literal>ChequePayment</literal> �f�[�^���擾���Ȃ��悤�Ɏw�肷�邽�߂̂��̂ł��B
+            オプションの <literal>fetch="select"</literal> 宣言は、
+            スーパークラスのクエリ実行時に外部結合を使って、
+            サブクラスの <literal>ChequePayment</literal> データを取得しないように指定するためのものです。
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-mixing-tableperclass-tablepersubclass">
-        <title>table-per-subclass �� table-per-class-hierarchy �̍���</title>
+        <title>table-per-subclass と table-per-class-hierarchy の混合</title>
 
         <para>
-            ���̃A�v���[�`���g�p����ƁAtable-per-hierarchy �� table-per-subclass �헪��
-            �g�ݍ��킹�鎖���\�ł��B
+            このアプローチを使用すると、table-per-hierarchy と table-per-subclass 戦略を
+            組み合わせる事も可能です。
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -225,8 +227,8 @@
 </class>]]></programlisting>
 
         <para>
-            ������̃}�b�s���O�헪�ł����Ă��A���[�g�ł��� <literal>Payment</literal> �N���X�ւ�
-            �|�����[�t�B�b�N�Ȋ֘A�� <literal>&lt;many-to-one&gt;</literal> ���g���ă}�b�s���O���܂��B
+            いずれのマッピング戦略であっても、ルートである <literal>Payment</literal> クラスへの
+            ポリモーフィックな関連は <literal>&lt;many-to-one&gt;</literal> を使ってマッピングします。
         </para>
 
         <programlisting><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
@@ -234,11 +236,11 @@
         </sect2>
 
         <sect2 id="inheritance-tableperconcrete" revision="2">
-        <title>��ۃN���X���Ƃ̃e�[�u���itable-per-concrete-class�j</title>
+        <title>具象クラスごとのテーブル（table-per-concrete-class）</title>
 
         <para>
-            table-per-concrete-class �헪�̃}�b�s���O�ɑ΂���A�v���[�`�́A2����܂��B
-            1�ڂ� <literal>&lt;union-subclass&gt;</literal> �𗘗p������@�ł��B
+            table-per-concrete-class 戦略のマッピングに対するアプローチは、2つあります。
+            1つ目は <literal>&lt;union-subclass&gt;</literal> を利用する方法です。
         </para>
 
         <programlisting><![CDATA[<class name="Payment">
@@ -260,32 +262,32 @@
 </class>]]></programlisting>
 
         <para>
-            �T�u�N���X���Ƃ�3�̃e�[�u�����K�v�ł��B���ꂼ��̃e�[�u���́A�p���v���p�e�B���܂񂾁A
-            �N���X�̑S�Ẵv���p�e�B�ɑ΂���J�������`���܂��B
+            サブクラスごとに3つのテーブルが必要です。それぞれのテーブルは、継承プロパティを含んだ、
+            クラスの全てのプロパティに対するカラムを定義します。
         </para>
         
         <para>
-            ���̃A�v���[�`�ɂ͐���������܂��B
-            ����́A�v���p�e�B���X�[�p�[�N���X�Ƀ}�b�s���O����Ă����ꍇ�A
-            �S�ẴT�u�N���X�ɂ����ăJ�������������łȂ���΂Ȃ�Ȃ��Ƃ������̂ł��B
-           �iHibernate�̍���̃����[�X�Ŋɘa����邩������܂���j�B
-            &lt;union-subclass&gt; ���g���� table-per-concrete-class �헪�ł͎��ʎq�����헪���g�p�ł��܂���B
-            ��L�[�𐶐����邽�߂̃V�[�h�́A�S�Ă� union subclass �̊K�w���ŋ��L����K�v�����邩��ł��B
+            このアプローチには制限があります。
+            それは、プロパティがスーパークラスにマッピングされていた場合、
+            全てのサブクラスにおいてカラム名が同じでなければならないというものです。
+           （Hibernateの今後のリリースで緩和されるかもしれません）。
+            &lt;union-subclass&gt; を使った table-per-concrete-class 戦略では識別子生成戦略を使用できません。
+            主キーを生成するためのシードは、全ての union subclass の階層内で共有する必要があるからです。
         </para>
 
         <para>
-            �����X�[�p�[�N���X�����ۃN���X�Ȃ�A<literal>abstract="true"</literal>�ƃ}�b�s���O���܂��B
-            �������A�X�[�p�[�N���X�����ۃN���X�łȂ��Ȃ�A�X�[�p�[�N���X�̃C���X�^���X��
-            �ێ����邽�߂̃e�[�u���̒ǉ����K�v�ƂȂ�܂�(��̗�ł̃f�t�H���g�� <literal>PAYMENT</literal> )�B
+            もしスーパークラスが抽象クラスなら、<literal>abstract="true"</literal>とマッピングします。
+            もちろん、スーパークラスが抽象クラスでないなら、スーパークラスのインスタンスを
+            保持するためのテーブルの追加が必要となります(上の例でのデフォルトは <literal>PAYMENT</literal> )。
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-tableperconcreate-polymorphism">
-        <title>�ÖٓI�|�����[�t�B�Y����p���� table-per-concrete-class</title>
+        <title>暗黙的ポリモーフィズムを用いた table-per-concrete-class</title>
 
         <para>
-            ������̃A�v���[�`�͈ÖٓI�|�����[�t�B�Y���̎g�p�ł��B
+            もう一つのアプローチは暗黙的ポリモーフィズムの使用です。
         </para>
 
         <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
@@ -313,21 +315,21 @@
 </class>]]></programlisting>
            
         <para>
-            <literal>Payment</literal> �C���^�[�t�F�C�X���ǂ��ɂ������I�Ɏ�����Ă��Ȃ����Ƃɒ��ӂ��Ă��������B
-            �����āA<literal>Payment</literal> �v���p�e�B�����ꂼ��̃T�u�N���X�Ƀ}�b�s���O����Ă��邱�Ƃɂ����ӂ��Ă��������B
-            �����d������������̂ł���΁AXML�G���e�B�e�B�̗��p���l���Ă��������B
-            �i��F <literal>DOCTYPE</literal> �錾�ɂ����� <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
-              �ƁA�}�b�s���O�ɂ����� <literal>&amp;allproperties;</literal>�j
+            <literal>Payment</literal> インターフェイスがどこにも明示的に示されていないことに注意してください。
+            そして、<literal>Payment</literal> プロパティがそれぞれのサブクラスにマッピングされていることにも注意してください。
+            もし重複を避けたいのであれば、XMLエンティティの利用を考えてください。
+            （例： <literal>DOCTYPE</literal> 宣言における <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
+              と、マッピングにおける <literal>&amp;allproperties;</literal>）
         </para>
         
         <para>
-            ���̃A�v���[�`�̌��_�́AHibernate���|�����[�t�B�b�N�ȃN�G���̎��s����SQL <literal>UNION</literal> 
-            �𐶐����Ȃ��_�ł��B
+            このアプローチの欠点は、Hibernateがポリモーフィックなクエリの実行時にSQL <literal>UNION</literal> 
+            を生成しない点です。
         </para>
 
         <para>
-            ���̃}�b�s���O�헪�ɑ΂��ẮA<literal>Payment</literal> �ւ̃|�����[�t�B�b�N�Ȋ֘A��
-            �ʏ�A<literal>&lt;any&gt;</literal> ���g���ă}�b�s���O����܂��B
+            このマッピング戦略に対しては、<literal>Payment</literal> へのポリモーフィックな関連は
+            通常、<literal>&lt;any&gt;</literal> を使ってマッピングされます。
         </para>
 
         <programlisting><![CDATA[<any name="payment" meta-type="string" id-type="long">
@@ -341,15 +343,15 @@
         </sect2>
 
         <sect2 id="inheritace-mixingpolymorphism">
-        <title>���̌p���}�b�s���O�ƈÖٓI�|�����[�t�B�Y���̑g�ݍ��킹</title>
+        <title>他の継承マッピングと暗黙的ポリモーフィズムの組み合わせ</title>
 
         <para>
-            ���̃}�b�s���O�ɂ��Ă̍X�Ȃ钍�ӓ_������܂��B
-            �T�u�N���X�����g�� <literal>&lt;class&gt;</literal> �v�f�Ƃ��ă}�b�s���O���Ă���̂ŁA
-            �i���� <literal>Payment</literal> �͒P�Ȃ�C���^�[�t�F�C�X�Ȃ̂Łj�A
-            ���ꂼ��̃T�u�N���X�͊ȒP�ɂ��̑��̌p���K�w�̈ꕔ�ƂȂ�܂��B
-            �i�������A���܂łǂ��� <literal>Payment</literal> �C���^�[�t�F�C�X�ɑ΂���|�����[�t�B�b�N�ȃN�G��
-            ���g�p���邱�Ƃ��ł��܂��j
+            このマッピングについての更なる注意点があります。
+            サブクラスが自身を <literal>&lt;class&gt;</literal> 要素としてマッピングしているので、
+            （かつ <literal>Payment</literal> は単なるインターフェイスなので）、
+            それぞれのサブクラスは簡単にその他の継承階層の一部となります。
+            （しかも、今までどおり <literal>Payment</literal> インターフェイスに対するポリモーフィックなクエリ
+            を使用することができます）
        </para>
 
         <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
@@ -381,14 +383,14 @@
 </class>]]></programlisting>
 
         <para>
-            ������x�q�ׂ܂����A<literal>Payment</literal> �͖����I�ɒ�`����܂���B
-            �����A<literal>Payment</literal> �C���^�[�t�F�C�X�ɑ΂��ăN�G�������s����Ȃ�
-            �i�Ⴆ�� <literal>from Payment</literal> �߂��g���āj�A
-            Hibernate�͎����I�� <literal>CreditCardPayment</literal> 
-            �i��CreditCardPayment�̃T�u�N���X�A<literal>Payment</literal> �̎����ł��邽�߁j�A
-            ����сA<literal>CashPayment</literal> �A<literal>ChequePayment</literal> 
-            �̃C���X�^���X��Ԃ��܂��B
-            <literal>NonelectronicTransaction</literal> �C���X�^���X�͕Ԃ��܂���B
+            もう一度述べますが、<literal>Payment</literal> は明示的に定義されません。
+            もし、<literal>Payment</literal> インターフェイスに対してクエリを実行するなら
+            （例えば <literal>from Payment</literal> 節を使って）、
+            Hibernateは自動的に <literal>CreditCardPayment</literal> 
+            （とCreditCardPaymentのサブクラス、<literal>Payment</literal> の実装であるため）、
+            および、<literal>CashPayment</literal> 、<literal>ChequePayment</literal> 
+            のインスタンスを返します。
+            <literal>NonelectronicTransaction</literal> インスタンスは返しません。
         </para>
         
         </sect2>
@@ -396,21 +398,21 @@
     </sect1>
 
     <sect1 id="inheritance-limitations">
-        <title>����</title>
+        <title>制限</title>
 
         <para>
-            table-per-concrete-class �}�b�s���O�헪�ւ́u�ÖٓI�|�����[�t�B�Y���v�A�v���[�`�ɂ�
-            �������̐���������܂��B<literal>&lt;union-subclass&gt;</literal> �}�b�s���O�ɑ΂��Ă�
-            ������߂̐���������܂��B
+            table-per-concrete-class マッピング戦略への「暗黙的ポリモーフィズム」アプローチには
+            いくつかの制限があります。<literal>&lt;union-subclass&gt;</literal> マッピングに対しても
+            少し弱めの制限があります。
         </para>
 
         <para>
-            ���̃e�[�u���ɁAHibernate�ɂ�����table-per-concrete-class�}�b�s���O��
-            ������ÖٓI�|�����[�t�B�Y���̐����������܂��B
+            次のテーブルに、Hibernateにおけるtable-per-concrete-classマッピングの
+            制限や暗黙的ポリモーフィズムの制限を示します。
         </para>
             
         <table frame="topbot">
-            <title>�p���}�b�s���O�̋@�\</title>
+            <title>継承マッピングの機能</title>
             <tgroup cols='8' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="1*"/>
@@ -422,15 +424,15 @@
             <colspec colname='c8' colwidth="1*"/>
             <thead>
             <row>
-              <entry>�p���헪</entry>
-              <entry>���Έ�̃|�����[�t�B�Y��</entry>
-              <entry>��Έ�̃|�����[�t�B�Y��</entry>
-              <entry>��Α��̃|�����[�t�B�Y��</entry>
-              <entry>���Α��̃|�����[�t�B�Y��</entry>
-              <entry>�|�����[�t�B�Y�����g����<literal>load()/get()</literal></entry>
-              <entry>�|�����[�t�B�Y�����g�����N�G��</entry>
-              <entry>�|�����[�t�B�Y�����g��������</entry>
-              <entry>�O�������ɂ��t�F�b�`</entry>
+              <entry>継承戦略</entry>
+              <entry>多対一のポリモーフィズム</entry>
+              <entry>一対一のポリモーフィズム</entry>
+              <entry>一対多のポリモーフィズム</entry>
+              <entry>多対多のポリモーフィズム</entry>
+              <entry>ポリモーフィズムを使った<literal>load()/get()</literal></entry>
+              <entry>ポリモーフィズムを使ったクエリ</entry>
+              <entry>ポリモーフィズムを使った結合</entry>
+              <entry>外部結合によるフェッチ</entry>
             </row>
             </thead>
             <tbody>
@@ -443,7 +445,7 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>�T�|�[�g</emphasis></entry>
+                <entry><emphasis>サポート</emphasis></entry>
             </row>
             <row>
                 <entry>table per subclass</entry>
@@ -454,7 +456,7 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>�T�|�[�g</emphasis></entry>
+                <entry><emphasis>サポート</emphasis></entry>
             </row>
             <row>
                 <entry>table per concrete-class (union-subclass)</entry>
@@ -465,18 +467,18 @@
                 <entry><literal>s.get(Payment.class, id)</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
                 <entry><literal>from Order o join o.payment p</literal></entry>
-                <entry><emphasis>�T�|�[�g</emphasis></entry>
+                <entry><emphasis>サポート</emphasis></entry>
             </row>
             <row>
                 <entry>table per concrete class (implicit polymorphism)</entry>
                 <entry><literal>&lt;any&gt;</literal></entry>
-                <entry><emphasis>�T�|�[�g���Ă��܂���</emphasis></entry>
-                <entry><emphasis>�T�|�[�g���Ă��܂���</emphasis></entry>
+                <entry><emphasis>サポートしていません</emphasis></entry>
+                <entry><emphasis>サポートしていません</emphasis></entry>
                 <entry><literal>&lt;many-to-any&gt;</literal></entry>
                 <entry><literal>s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()</literal></entry>
                 <entry><literal>from Payment p</literal></entry>
-                <entry><emphasis>�T�|�[�g���Ă��܂���</emphasis></entry>
-                <entry><emphasis>�T�|�[�g���Ă��܂���</emphasis></entry>
+                <entry><emphasis>サポートしていません</emphasis></entry>
+                <entry><emphasis>サポートしていません</emphasis></entry>
             </row>
             </tbody>
             </tgroup>

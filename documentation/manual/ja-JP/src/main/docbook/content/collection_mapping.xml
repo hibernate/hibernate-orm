@@ -1,14 +1,16 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="collections">
-    <title>�R���N�V�����̃}�b�s���O</title>
+    <title>コレクションのマッピング</title>
 
     <sect1 id="collections-persistent" revision="3">
-        <title>�R���N�V�����̉i����</title>
+        <title>コレクションの永続化</title>
         
         <para>
-            �R���N�V�����^�̃t�B�[���h���i��������ɂ́A
-            ���̃R���N�V�����^���C���^�[�t�F�C�X�^�ł���K�v������܂��B
-            �Ⴆ�΁A
+            コレクション型のフィールドを永続化するには、
+            そのコレクション型がインターフェイス型である必要があります。
+            例えば、
         </para>
         
         <programlisting><![CDATA[public class Product {
@@ -22,25 +24,25 @@
 }]]></programlisting>
         
         <para>
-            ���݂���C���^�[�t�F�C�X�ɂ� <literal>java.util.Set</literal>�A
-            <literal>java.util.Collection</literal>�A<literal>java.util.List</literal>�A
-            <literal>java.util.Map</literal>�A<literal>java.util.SortedSet</literal>�A
-            <literal>java.util.SortedMap</literal> �Ȃǂ�����܂��B
-            �܂��́A�C�ӂ̃C���^�[�t�F�C�X���g���܂��I
-            �i�������A�C�ӂ̃C���^�[�t�F�C�X���g�p����ꍇ�́A
+            実在するインターフェイスには <literal>java.util.Set</literal>、
+            <literal>java.util.Collection</literal>、<literal>java.util.List</literal>、
+            <literal>java.util.Map</literal>、<literal>java.util.SortedSet</literal>、
+            <literal>java.util.SortedMap</literal> などがあります。
+            または、任意のインターフェイスが使えます！
+            （ただし、任意のインターフェイスを使用する場合は、
             <literal>org.hibernate.usertype.UserCollectionType</literal>
-            �̎����N���X���쐬����K�v������܂��B�j
+            の実装クラスを作成する必要があります。）
         </para>
         
         <para>
-            <literal>HashSet</literal> �̃C���X�^���X�����C���X�^���X�ϐ���
-            �ǂ̂悤�ɏ���������邩�ɒ��ڂ��Ă݂܂��傤�B
-            ����͐V���ɐ������ꂽ�i�i��������Ă��Ȃ��j�R���N�V�����^�̃v���p�e�B��
-            ����������œK�ȕ��@�ł��B
-            �i�Ⴆ�� <literal>persist()</literal> �ɂ��j�C���X�^���X���i�������悤�Ƃ����Ƃ��A
-            Hibernate�� <literal>HashSet</literal> ��Hibernate�Ǝ��� <literal>Set</literal>
-            �̎����N���X�ɒu�������܂��B
-            ���̂��߁A���̂悤�ȃG���[�ɂ͒��ӂ��K�v�ł��B
+            <literal>HashSet</literal> のインスタンスを持つインスタンス変数が
+            どのように初期化されるかに注目してみましょう。
+            これは新たに生成された（永続化されていない）コレクション型のプロパティを
+            初期化する最適な方法です。
+            （例えば <literal>persist()</literal> により）インスタンスを永続化しようとしたとき、
+            Hibernateは <literal>HashSet</literal> をHibernate独自の <literal>Set</literal>
+            の実装クラスに置き換えます。
+            このため、次のようなエラーには注意が必要です。
         </para>
         
         <programlisting><![CDATA[Cat cat = new DomesticCat();
@@ -54,39 +56,39 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 (HashSet) cat.getKittens(); // Error!]]></programlisting>
 
         <para>
-            Hibernate�ɂ�蒍�����ꂽ�i�����R���N�V�����́A�C���^�[�t�F�C�X�^�ɉ����āA
-            <literal>HashMap</literal> �� <literal>HashSet</literal>�A
-            <literal>TreeMap</literal>�A <literal>TreeSet</literal>�A
-            <literal>ArrayList</literal> �̂悤�ɐU�����܂��B
+            Hibernateにより注入された永続性コレクションは、インターフェイス型に応じて、
+            <literal>HashMap</literal> や <literal>HashSet</literal>、
+            <literal>TreeMap</literal>、 <literal>TreeSet</literal>、
+            <literal>ArrayList</literal> のように振舞います。
          </para>
 
         <para>
-            �R���N�V�����C���X�^���X�́A�l�^�Ƃ��ĕ��ʂɐU�����܂��B
-            �i�����I�u�W�F�N�g�ɎQ�Ƃ��ꂽ�Ƃ��Ɏ����I�ɉi��������A
-            �Q�Ƃ��Ȃ��Ȃ����Ƃ��Ɏ����I�ɍ폜����܂��B
-            ��������i�����I�u�W�F�N�g����ʂ̉i�����I�u�W�F�N�g�ɓn���ꂽ��A
-            ���̗v�f�͌��݂̃e�[�u������ʂ̃e�[�u���Ɉړ����邩������܂���B
-            �Q�̃G���e�B�e�B�������R���N�V�����C���X�^���X�����L���Ă͂����܂���B
-            �����[�V���i�����f�����x�[�X�ɂ��Ă��邽�߁A�R���N�V�����^�̃v���p�e�B��
-            null�l�������Ă��Ӗ�������܂���B
-            �܂�Hibernate�͎Q�Ɛ�̂Ȃ��R���N�V�����Ƌ�̃R���N�V��������ʂ��܂���B
+            コレクションインスタンスは、値型として普通に振舞います。
+            永続化オブジェクトに参照されたときに自動的に永続化され、
+            参照がなくなったときに自動的に削除されます。
+            もしある永続化オブジェクトから別の永続化オブジェクトに渡されたら、
+            その要素は現在のテーブルから別のテーブルに移動するかもしれません。
+            ２つのエンティティが同じコレクションインスタンスを共有してはいけません。
+            リレーショナルモデルをベースにしているため、コレクション型のプロパティに
+            null値を代入しても意味がありません。
+            つまりHibernateは参照先のないコレクションと空のコレクションを区別しません。
         </para>
 
         <para>
-            ����������قǐS�z���Ȃ��Ă��\���܂���B
-            ���i�g���Ă���Java�̃R���N�V�����Ɠ����悤�ɁA�i�����R���N�V�������g���Ă��������B
-            �o�����֘A�̈Ӗ��𗝉�����΂悢�̂ł��i����͌�قǐ������܂��j�B
+            しかしそれほど心配しなくても構いません。
+            普段使っているJavaのコレクションと同じように、永続化コレクションを使ってください。
+            双方向関連の意味を理解すればよいのです（これは後ほど説明します）。
         </para>
 
     </sect1>
 
     <sect1 id="collections-mapping" revision="4">
-        <title>�R���N�V�����̃}�b�s���O</title>
+        <title>コレクションのマッピング</title>
 
         <para>
-            �R���N�V�������}�b�s���O���邽�߂̃}�b�s���O�v�f�́A�C���^�[�t�F�C�X�̌^�Ɉˑ����܂��B
-            �Ⴆ�΁A<literal>&lt;set&gt;</literal> �v�f�� <literal>Set</literal> �^��
-            �}�b�s���O���邽�߂Ɏg���܂��B
+            コレクションをマッピングするためのマッピング要素は、インターフェイスの型に依存します。
+            例えば、<literal>&lt;set&gt;</literal> 要素は <literal>Set</literal> 型を
+            マッピングするために使います。
         </para>
         
         <programlisting><![CDATA[<class name="Product">
@@ -98,10 +100,10 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </class>]]></programlisting>
 
         <para>
-            �}�b�s���O�v�f�ɂ� <literal>&lt;set&gt;</literal> �̑��� <literal>&lt;list&gt;</literal>�A
-            <literal>&lt;map&gt;</literal>�A<literal>&lt;bag&gt;</literal>�A
-            <literal>&lt;array&gt;</literal>�A<literal>&lt;primitive-array&gt;</literal> ������܂��B
-            ��\�Ƃ��āA<literal>&lt;map&gt;</literal> �v�f�����L�Ɏ����܂��B
+            マッピング要素には <literal>&lt;set&gt;</literal> の他に <literal>&lt;list&gt;</literal>、
+            <literal>&lt;map&gt;</literal>、<literal>&lt;bag&gt;</literal>、
+            <literal>&lt;array&gt;</literal>、<literal>&lt;primitive-array&gt;</literal> があります。
+            代表として、<literal>&lt;map&gt;</literal> 要素を下記に示します。
         </para>
 
         <programlistingco>
@@ -147,171 +149,171 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="mappingcollection1">
                     <para>
-                        <literal>name</literal> �R���N�V�����^�ł���v���p�e�B�̖��O
+                        <literal>name</literal> コレクション型であるプロパティの名前
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection2">
                     <para>
-                        <literal>table</literal> �i�I�v�V���� - �f�t�H���g�̓v���p�e�B���j�R���N�V�����e�[�u���̖��O
-                       �i��Α��֘A�ł͎g�p���܂���j�B
+                        <literal>table</literal> （オプション - デフォルトはプロパティ名）コレクションテーブルの名前
+                       （一対多関連では使用しません）。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection3">
                     <para>
-                        <literal>schema</literal> �i�I�v�V�����j�e�[�u���X�L�[�}�̖��O�B
-                        ���[�g�v�f�Ő錾����Ă���X�L�[�}���D�悳��܂��B
+                        <literal>schema</literal> （オプション）テーブルスキーマの名前。
+                        ルート要素で宣言されているスキーマより優先されます。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection4">
                     <para>
-                        <literal>lazy</literal> �i�I�v�V���� - �f�t�H���g�� <literal>true</literal>�j
-                        �x���t�F�b�`�𖳌��ɂ��A�֘A����ɑ����Ƀt�F�b�`�ɂ��邽�߂Ɏg�p���܂��B
-                        �܂��́A�uextra-lazy�v�t�F�b�`��L���ɂ��邽�߂Ɏg�p���܂��B
-                        �uextra-lazy�v�t�F�b�`�́A�قƂ�ǂ̑���ł̓R���N�V���������������܂���
-                        �i���ɑ傫�ȃR���N�V�����ɓK���Ă��܂��j�B
+                        <literal>lazy</literal> （オプション - デフォルトは <literal>true</literal>）
+                        遅延フェッチを無効にし、関連を常に即時にフェッチにするために使用します。
+                        または、「extra-lazy」フェッチを有効にするために使用します。
+                        「extra-lazy」フェッチは、ほとんどの操作ではコレクションを初期化しません
+                        （非常に大きなコレクションに適しています）。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
                     <para>
-                        <literal>inverse</literal> �i�I�v�V���� - �f�t�H���g�� <literal>false</literal>�j
-                        ���̃R���N�V�������o�����֘A�́u�t�v���ł���ƃ}�[�N���܂��B
+                        <literal>inverse</literal> （オプション - デフォルトは <literal>false</literal>）
+                        このコレクションが双方向関連の「逆」側であるとマークします。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection6">
                     <para>
-                        <literal>cascade</literal> �i�I�v�V���� - �f�t�H���g�� <literal>none</literal>�j
-                        �q�G���e�B�e�B�ւ̃J�X�P�[�h�����L���ɂ��܂��B
+                        <literal>cascade</literal> （オプション - デフォルトは <literal>none</literal>）
+                        子エンティティへのカスケード操作を有効にします。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection7">
                     <para>
-                        <literal>sort</literal> �i�I�v�V�����j�R���N�V���������R�ȏ����Ń\�[�g����ꍇ��
-                        <literal>natural</literal> ���w�肵�܂��B
-                        ���邢��Comparator�N���X���w�肵�܂��B
+                        <literal>sort</literal> （オプション）コレクションを自然な順序でソートする場合は
+                        <literal>natural</literal> を指定します。
+                        あるいはComparatorクラスを指定します。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection8">
                     <para>
-                        <literal>order-by</literal> �i�I�v�V�����AJDK1.4�̂݁j
-                        <literal>Map</literal>�A<literal>Set</literal>�Abag�̃C�e���[�V�����������`����
-                        �e�[�u���J�������w�肷��Ƌ��ɁA
-                        �I�v�V�����Ƃ��� <literal>asc</literal>�A<literal>desc</literal> ���w�肵�܂��B
+                        <literal>order-by</literal> （オプション、JDK1.4のみ）
+                        <literal>Map</literal>、<literal>Set</literal>、bagのイテレーション順序を定義する
+                        テーブルカラムを指定すると共に、
+                        オプションとして <literal>asc</literal>、<literal>desc</literal> を指定します。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection9">
                     <para>
-                        <literal>where</literal> �i�I�v�V�����j�R���N�V�����̌�����폜�̍ۂɎg��
-                        �C�ӂ�SQL��<literal>WHERE</literal> �������w�肵�܂�
-                        �i���p�\�ȃf�[�^�̈ꕔ���������R���N�V�������܂ނׂ��Ƃ��ɁA����͗L�p�ł��j�B
+                        <literal>where</literal> （オプション）コレクションの検索や削除の際に使う
+                        任意のSQLの<literal>WHERE</literal> 条件を指定します
+                        （利用可能なデータの一部分だけをコレクションが含むべきときに、これは有用です）。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection10">
                     <para>
-                        <literal>fetch</literal>�i�I�v�V���� - �f�t�H���g�� <literal>select</literal>�j
-                        �O�������ɂ��t�F�b�`�A�����I���t�F�b�`�isequential select fetch�j�A
-                        �����T�u�Z���N�g�t�F�b�`�isequential subselect fetch�j�̂ǂꂩ��I�����Ă��������B
+                        <literal>fetch</literal>（オプション - デフォルトは <literal>select</literal>）
+                        外部結合によるフェッチ、順次選択フェッチ（sequential select fetch）、
+                        順次サブセレクトフェッチ（sequential subselect fetch）のどれかを選択してください。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">
                     <para>
-                        <literal>batch-size</literal> �i�I�v�V���� - �f�t�H���g�� <literal>1</literal>�j
-                        �R���N�V�����̃C���X�^���X�̒x���t�F�b�`�̂��߂́u�o�b�`�T�C�Y�v���w�肵�܂��B
+                        <literal>batch-size</literal> （オプション - デフォルトは <literal>1</literal>）
+                        コレクションのインスタンスの遅延フェッチのための「バッチサイズ」を指定します。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection12">
                     <para>
-                        <literal>access</literal> �i�I�v�V���� - �f�t�H���g�� <literal>property</literal>�j
-                        �R���N�V�����^�v���p�e�B�̒l�ɃA�N�Z�X���邽�߂Ɏg�p����헪�ł��B
+                        <literal>access</literal> （オプション - デフォルトは <literal>property</literal>）
+                        コレクション型プロパティの値にアクセスするために使用する戦略です。
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection13">
                     <para>
-                        <literal>optimistic-lock</literal>�i�I�v�V���� - �f�t�H���g�� <literal>true</literal>�j
-                        �R���N�V�����̏�Ԃ�ς��邱�Ƃɂ���āA
-                        ���̃I�[�i�[�ł���G���e�B�e�B�̃o�[�W�������C���N�������g����邩���w�肵�܂��B
-                        �i��Α��֘A�ł́A�قƂ�ǂ̏ꍇ�ɂ����Ė����ɐݒ肷��̂��Ó��ł��B�j
+                        <literal>optimistic-lock</literal>（オプション - デフォルトは <literal>true</literal>）
+                        コレクションの状態を変えることによって、
+                        そのオーナーであるエンティティのバージョンがインクリメントされるかを指定します。
+                        （一対多関連では、ほとんどの場合において無効に設定するのが妥当です。）
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection14">
                     <para>
-                        <literal>mutable</literal>�i�I�v�V���� - �f�t�H���g�� <literal>true</literal>�j
-                        <literal>false</literal> �l�́A�R���N�V�����̗v�f���ύX����Ȃ����Ƃ�\���܂�
-                        �i����ꍇ�ɂ́A�����p�t�H�[�}���X�����߂܂��j�B
+                        <literal>mutable</literal>（オプション - デフォルトは <literal>true</literal>）
+                        <literal>false</literal> 値は、コレクションの要素が変更されないことを表します
+                        （ある場合には、少しパフォーマンスを高めます）。
                     </para>
                 </callout>
             </calloutlist>
         </programlistingco>
 
         <sect2 id="collections-foreignkeys" >
-           <title>�R���N�V�����̊O���L�[</title>
+           <title>コレクションの外部キー</title>
     
             <para>
-                �R���N�V�����̃C���X�^���X�́A�f�[�^�x�[�X���ł́A
-                ���̃R���N�V���������L����G���e�B�e�B�̊O���L�[�ɂ���Ď��ʂ���܂��B
-                ���̊O���L�[�̓R���N�V�����e�[�u���� <emphasis>�R���N�V�����L�[�J����</emphasis> �ƌĂ΂�܂��B
-                �R���N�V�����L�[�J������ <literal>&lt;key&gt;</literal> �v�f�ɂ��}�b�s���O���܂��B
+                コレクションのインスタンスは、データベース内では、
+                そのコレクションを所有するエンティティの外部キーによって識別されます。
+                この外部キーはコレクションテーブルの <emphasis>コレクションキーカラム</emphasis> と呼ばれます。
+                コレクションキーカラムは <literal>&lt;key&gt;</literal> 要素によりマッピングします。
             </para>
     
             <para>
-                �O���L�[�J�����ɂ�null�ݒ萧�񂪂��邩������܂���B
-                �قƂ�ǂ̃R���N�V�����ɓ��Ă͂܂�ł��傤�B
-                �P�����̈�Α��֘A�ɂ����āA�O���L�[�J�����̓f�t�H���g��null�������ݒ�ɂȂ��Ă��܂��B
-                ����āA<literal>not-null="true"</literal> ���w�肷��K�v�����邩������܂���B
+                外部キーカラムにはnull設定制約があるかもしれません。
+                ほとんどのコレクションに当てはまるでしょう。
+                単方向の一対多関連において、外部キーカラムはデフォルトでnullを許す設定になっています。
+                よって、<literal>not-null="true"</literal> を指定する必要があるかもしれません。
             </para>
     
             <programlisting><![CDATA[<key column="productSerialNumber" not-null="true"/>]]></programlisting>
     
             <para>
-                �O���L�[�̐��� <literal>ON DELETE CASCADE</literal> ���g����������܂���B
+                外部キーの制約が <literal>ON DELETE CASCADE</literal> を使うかもしれません。
             </para>
     
             <programlisting><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
             
             <para>
-                <literal>&lt;key&gt;</literal> �v�f�̂��ׂĂ̒�`�ɂ��Ă͑O�̏͂��Q�Ƃ��Ă��������B
+                <literal>&lt;key&gt;</literal> 要素のすべての定義については前の章を参照してください。
             </para>
             
         </sect2>
         
         <sect2 id="collections-elements" >
-            <title>�R���N�V�����̗v�f</title>
+            <title>コレクションの要素</title>
     
             <para>
-                �R���N�V�����͑���Hibernate�̌^�̂قƂ�ǁi���ׂĂ̊�{�^�A�J�X�^���^�A�R���|�[�l���g�A
-                ���̃G���e�B�e�B�ւ̎Q�Ɓj���i�[���邱�Ƃ��ł��܂��B
-                ���̓_�͏d�v�ȈႢ�ɂȂ�܂��B
-                �R���N�V�����Ɋi�[���ꂽ�I�u�W�F�N�g���u�l�v�Z�}���e�B�N�X�Ƃ��Ĉ�����̂�
-                �i���C�t�T�C�N���̓R���N�V�����̃I�[�i�[�Ɋ��S�Ɉˑ����܂��j�A
-                �������͂��ꎩ�g�̃��C�t�T�C�N�����������ʂ̃G���e�B�e�B�ւ̎Q�Ƃł��邩�̂��Ƃ����Ⴂ�ł��B
-                ��҂́A2�̃I�u�W�F�N�g�Ԃ́u�����N�v���R���N�V�����ɕێ����Ă���ƌ��Ȃ��Ă��邾���ł��B
+                コレクションは他のHibernateの型のほとんど（すべての基本型、カスタム型、コンポーネント、
+                他のエンティティへの参照）を格納することができます。
+                次の点は重要な違いになります。
+                コレクションに格納されたオブジェクトが「値」セマンティクスとして扱われるのか
+                （ライフサイクルはコレクションのオーナーに完全に依存します）、
+                もしくはそれ自身のライフサイクルを持った別のエンティティへの参照であるかのかという違いです。
+                後者は、2つのオブジェクト間の「リンク」をコレクションに保持していると見なしているだけです。
             </para>
                 
             <para>
-                �i�[�����^�� <emphasis>�R���N�V�����v�f�^</emphasis> �ƌĂ΂�܂��B
-                �R���N�V�����v�f�́A<literal>&lt;element&gt;</literal> �܂��� <literal>&lt;composite-element&gt;</literal>
-                �ɂ��}�b�s���O����A�G���e�B�e�B�ւ̎Q�Ƃ̏ꍇ�ɂ�
-                <literal>&lt;one-to-many&gt;</literal> �܂��� <literal>&lt;many-to-many&gt;</literal>
-                �ɂ��}�b�s���O����܂��B
-                �ŏ��̓�͒l�Ƃ��ėv�f���}�b�s���O���A���̓�̓G���e�B�e�B�̊֘A���}�b�s���O����̂Ɏg���܂��B
+                格納される型は <emphasis>コレクション要素型</emphasis> と呼ばれます。
+                コレクション要素は、<literal>&lt;element&gt;</literal> または <literal>&lt;composite-element&gt;</literal>
+                によりマッピングされ、エンティティへの参照の場合には
+                <literal>&lt;one-to-many&gt;</literal> または <literal>&lt;many-to-many&gt;</literal>
+                によりマッピングされます。
+                最初の二つは値として要素をマッピングし、次の二つはエンティティの関連をマッピングするのに使われます。
             </para>
             
         </sect2>
         
         <sect2 id="collections-indexed">
-            <title>�C���f�b�N�X�t���̃R���N�V����</title>
+            <title>インデックス付きのコレクション</title>
     
             <para>
-                set��bag�������S�ẴR���N�V�����}�b�s���O�ɂ́A
-                �R���N�V�����e�[�u���̒��� <emphasis>�C���f�b�N�X�p�̃J����</emphasis> ���K�v�ł��B
-                ���̃J�����ɁA�z��� <literal>List</literal> �̃C���f�b�N�X�A
-                �������� <literal>Map</literal> �̃L�[���}�b�s���O���܂��B
-                <literal>Map</literal> �̃C���f�b�N�X�́A
-                <literal>&lt;map-key&gt;</literal> �ɂ��}�b�s���O���ꂽ��{�^���A
-                <literal>&lt;map-key-many-to-many&gt;</literal> �ɂ��}�b�s���O���ꂽ�G���e�B�e�B�̊֘A���A
-                ���邢�� <literal>&lt;composite-map-key&gt;</literal> �ɂ��}�b�s���O���ꂽ�R���|�W�b�g�^�ɂȂ�܂��B
-                �z�񂩃��X�g�̃C���f�b�N�X�́A��� <literal>integer</literal> �^�ŁA
-                <literal>&lt;list-index&gt;</literal> �v�f�ɂ��}�b�s���O���܂��B
-                �}�b�s���O���ꂽ�J�����ɂ̓V�[�P���V�����Ȑ������i�[���܂��i�f�t�H���g�ł�0����ԍ����t�����܂��j�B
+                setとbagを除く全てのコレクションマッピングには、
+                コレクションテーブルの中に <emphasis>インデックス用のカラム</emphasis> が必要です。
+                そのカラムに、配列や <literal>List</literal> のインデックス、
+                もしくは <literal>Map</literal> のキーをマッピングします。
+                <literal>Map</literal> のインデックスは、
+                <literal>&lt;map-key&gt;</literal> によりマッピングされた基本型か、
+                <literal>&lt;map-key-many-to-many&gt;</literal> によりマッピングされたエンティティの関連か、
+                あるいは <literal>&lt;composite-map-key&gt;</literal> によりマッピングされたコンポジット型になります。
+                配列かリストのインデックスは、常に <literal>integer</literal> 型で、
+                <literal>&lt;list-index&gt;</literal> 要素によりマッピングします。
+                マッピングされたカラムにはシーケンシャルな整数を格納します（デフォルトでは0から番号が付けられます）。
             </para>
 
         <programlistingco>
@@ -325,13 +327,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="index1">
                     <para>
-                        <literal>column_name</literal>�i�K�{�j:�R���N�V�����C���f�b�N�X�̒l��ێ�����J�����̖��O�B
+                        <literal>column_name</literal>（必須）:コレクションインデックスの値を保持するカラムの名前。
                     </para>
                 </callout>
                 <callout arearefs="index2">
                     <para>
-                        <literal>base</literal>�i�I�v�V�����A�f�t�H���g�� <literal>0</literal>�j:
-                        ���X�g�������͔z��̍ŏ��̗v�f�ɊY������C���f�b�N�X�J�����̒l�B
+                        <literal>base</literal>（オプション、デフォルトは <literal>0</literal>）:
+                        リストもしくは配列の最初の要素に該当するインデックスカラムの値。
                     </para>
                 </callout>
             </calloutlist>
@@ -352,17 +354,17 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="mapkey1">
                     <para>
-                        <literal>column</literal>�i�I�v�V�����j: �R���N�V�����C���f�b�N�X�̒l��ێ�����J�����̖��O�B
+                        <literal>column</literal>（オプション）: コレクションインデックスの値を保持するカラムの名前。
                     </para>
                 </callout>
                 <callout arearefs="mapkey2">
                     <para>
-                        <literal>formula</literal>�i�I�v�V�����j: Map�̃L�[��]������̂Ɏg����SQL���B
+                        <literal>formula</literal>（オプション）: Mapのキーを評価するのに使われるSQL式。
                     </para>
                 </callout>
                 <callout arearefs="mapkey3">
                     <para>
-                        <literal>type</literal>�i�K�{�j: Map�̃L�[�̌^�B
+                        <literal>type</literal>（必須）: Mapのキーの型。
                     </para>
                 </callout>
             </calloutlist>
@@ -382,20 +384,20 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="indexmanytomany1">
                     <para>
-                        <literal>column</literal> �i�I�v�V�����j:
-                        �R���N�V�����C���f�b�N�X�̒l�̂��߂̊O���L�[�J�����̖��O�B
+                        <literal>column</literal> （オプション）:
+                        コレクションインデックスの値のための外部キーカラムの名前。
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany2">
                     <para>
-                        <literal>formula</literal> �i�I�v�V�����j:
-                        Map�̃L�[�̂��߂̊O���L�[��]�����邽�߂Ɏg��SQL���B
+                        <literal>formula</literal> （オプション）:
+                        Mapのキーのための外部キーを評価するために使うSQL式。
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany3">
                     <para>
-                        <literal>class</literal> �i�K�{�j:
-                        Map�̃L�[�Ƃ��Ďg����G���e�B�e�B�N���X�B
+                        <literal>class</literal> （必須）:
+                        Mapのキーとして使われるエンティティクラス。
                     </para>
                 </callout>
             </calloutlist>
@@ -403,33 +405,33 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
 
             <para>
-                �����e�[�u���ɃC���f�b�N�X�J�������Ȃ��Ă��A�v���p�e�B�^�Ƃ��� <literal>List</literal> ���g��������΁A
-                Hibernate�� <emphasis>&lt;bag&gt;</emphasis> �Ƃ��ăv���p�e�B���}�b�s���O���܂��B
-                bag�̓f�[�^�x�[�X���畜������鎞�A������ێ����܂���B
-                �������A�i��������Łj�\�[�g������A�iSQL�Łj�����t��������iorder by�j���邱�Ƃ��ł��܂��B
+                もしテーブルにインデックスカラムがなくても、プロパティ型として <literal>List</literal> を使いたければ、
+                Hibernateの <emphasis>&lt;bag&gt;</emphasis> としてプロパティをマッピングします。
+                bagはデータベースから復元される時、順序を保持しません。
+                しかし、（メモリ上で）ソートしたり、（SQLで）順序付けしたり（order by）することもできます。
             </para>
             
         </sect2>
 
         <para>
-            �����̈�ʓI�ȃ����[�V���i�����f�����J�o�[�������߂ɁA
-            �R���N�V�����̂��߂ɗ��p�ł���}�b�s���O�ɂ͂��Ȃ�̕�������܂��B
-            �l�X�ȃ}�b�s���O�錾���ǂ̂悤�Ƀf�[�^�x�[�X�e�[�u���ɕϊ�����邩��m�邽�߂ɁA
-            �X�L�[�}�����c�[�����g���Ă݂�Ɨǂ��ł��傤�B
+            多くの一般的なリレーショナルモデルをカバーしたために、
+            コレクションのために利用できるマッピングにはかなりの幅があります。
+            様々なマッピング宣言がどのようにデータベーステーブルに変換されるかを知るために、
+            スキーマ生成ツールを使ってみると良いでしょう。
         </para>
 
     <sect2 id="collections-ofvalues" revision="2">
-        <title>�l�̃R���N�V�����Ƒ��Α��֘A</title>
+        <title>値のコレクションと多対多関連</title>
 
         <para>
-            �l�̃R���N�V�����⑽�Α��֘A�́A��p�� <emphasis>�R���N�V�����e�[�u��</emphasis> ���K�v�ł��B
-            ���̃e�[�u���́A�O���L�[�J�����ƁA
-            <emphasis>�R���N�V�����v�f�̃J����</emphasis> �ƁA
-            �ꍇ�ɂ���Ă̓C���f�b�N�X�J�����������܂��B
+            値のコレクションや多対多関連は、専用の <emphasis>コレクションテーブル</emphasis> が必要です。
+            このテーブルは、外部キーカラムと、
+            <emphasis>コレクション要素のカラム</emphasis> と、
+            場合によってはインデックスカラムを持ちます。
         </para>
 
         <para>
-            �l�̃R���N�V�����̂��߂ɁA<literal>&lt;element&gt;</literal>�^�O���g�p���܂��B
+            値のコレクションのために、<literal>&lt;element&gt;</literal>タグを使用します。
         </para>
 
         <programlistingco>
@@ -452,24 +454,24 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="element1b">
                     <para>
-                        <literal>column</literal> �i�I�v�V�����j: �R���N�V�����̗v�f�̒l��ێ�����J�����̖��O�B
+                        <literal>column</literal> （オプション）: コレクションの要素の値を保持するカラムの名前。
                     </para>
                 </callout>
                 <callout arearefs="element2b">
                     <para>
-                        <literal>formula</literal> �i�I�v�V�����j: �v�f��]�����邽�߂Ɏg��SQL���B
+                        <literal>formula</literal> （オプション）: 要素を評価するために使うSQL式。
                     </para>
                 </callout>
                 <callout arearefs="element3b">
                     <para>
-                        <literal>type</literal> �i�K�{�j�R���N�V�����̗v�f�̌^�B
+                        <literal>type</literal> （必須）コレクションの要素の型。
                     </para>
                 </callout>
             </calloutlist>
         </programlistingco>
 
         <para>
-            <emphasis>���Α��֘A</emphasis> �� <literal>&lt;many-to-many&gt;</literal> �v�f�Ŏw�肵�܂��B
+            <emphasis>多対多関連</emphasis> は <literal>&lt;many-to-many&gt;</literal> 要素で指定します。
         </para>
 
         <programlistingco>
@@ -498,64 +500,64 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="manytomany1">
                     <para>
-                        <literal>column</literal> �i�I�v�V�����j: �O���L�[�J�����̗v�f�̖��O�B
+                        <literal>column</literal> （オプション）: 外部キーカラムの要素の名前。
                     </para>
                 </callout>
                 <callout arearefs="manytomany2">
                     <para>
-                        <literal>formula</literal> �i�I�v�V�����j: �O���L�[�l�̗v�f��]�����邽�߂Ɏg��SQL���B
+                        <literal>formula</literal> （オプション）: 外部キー値の要素を評価するために使うSQL式。
                     </para>
                 </callout>
                 <callout arearefs="manytomany3">
                     <para>
-                        <literal>class</literal> �i�K�{�j: �֘A�N���X�̖��O�B
+                        <literal>class</literal> （必須）: 関連クラスの名前。
                     </para>
                 </callout>
                 <callout arearefs="manytomany4">
                     <para>
-                        <literal>fetch</literal> (�I�v�V���� - �f�t�H���g�� <literal>join</literal>):
-                        �֘A�̂��߂ɁA�O�������������I���t�F�b�`��L���ɂ��܂��B
-                        ����͓���ȃP�[�X�ł����A�G���e�B�e�B�Ƒ��̃G���e�B�e�B�Ƃ̑��Α��֌W��
-                        �i�P�� <literal>SELECT</literal> �ɂ��j���S�ɑ����Ƀt�F�b�`���邽�߂ɂ́A
-                        ���̃R���N�V�������̂����łȂ��A
-                        �l�X�g�����v�f�ł��� <literal>&lt;many-to-many&gt;</literal> �̂��̑����ɂ��Ă�
-                        <literal>join</literal> �t�F�b�`��L������K�v������܂��B
+                        <literal>fetch</literal> (オプション - デフォルトは <literal>join</literal>):
+                        関連のために、外部結合か順次選択フェッチを有効にします。
+                        これは特殊なケースですが、エンティティと他のエンティティとの多対多関係を
+                        （１つの <literal>SELECT</literal> により）完全に即時にフェッチするためには、
+                        そのコレクション自体だけでなく、
+                        ネストした要素である <literal>&lt;many-to-many&gt;</literal> のこの属性についても
+                        <literal>join</literal> フェッチを有効する必要があります。
                     </para>
                 </callout>
                 <callout arearefs="manytomany5">
                     <para>
-                        <literal>unique</literal> �i�I�v�V�����j:
-                        �O���L�[�J�����̃��j�[�N�����DDL������L���ɂ��܂��B
-                        ����́A�֘A�̑��d�x���������Α��ɂ��܂��B
+                        <literal>unique</literal> （オプション）:
+                        外部キーカラムのユニーク制約のDDL生成を有効にします。
+                        これは、関連の多重度を事実上一対多にします。
                     </para>
                 </callout>
                     <callout arearefs="manytomany6">
                         <para>
-                            <literal>not-found</literal> �i�I�v�V���� - �f�t�H���g�� <literal>exception</literal>�j
-                            �Q�Ɛ�̍s���Ȃ��O���L�[���ǂ̂悤�Ɉ��������w�肵�܂��B
-                            <literal>ignore</literal> �ɂ���ƁA�s���Ȃ����Ƃ��֘A���������̂Ƃ��Ĉ����܂��B
+                            <literal>not-found</literal> （オプション - デフォルトは <literal>exception</literal>）
+                            参照先の行がない外部キーをどのように扱うかを指定します。
+                            <literal>ignore</literal> にすると、行がないことを関連が無いものとして扱います。
                         </para>
                     </callout>
                 <callout arearefs="manytomany7">
                     <para>
-                        <literal>entity-name</literal> �i�I�v�V�����j:
-                        <literal>class</literal> �̑�ւł���֘A�N���X�̃G���e�B�e�B���B
-                        <literal>class</literal> �̑���Ɏw�肷��A�֘A�N���X�̃G���e�B�e�B���B
+                        <literal>entity-name</literal> （オプション）:
+                        <literal>class</literal> の代替である関連クラスのエンティティ名。
+                        <literal>class</literal> の代わりに指定する、関連クラスのエンティティ名。
                     </para>
                 </callout>
                 <callout arearefs="manytomany8">
                     <para>
-                        <literal>property-ref</literal>: �i�I�v�V�����j
-                        ���̊O���L�[�Ɍ�������֘A�N���X�̃v���p�e�B���B
-                        �w�肵�Ȃ������ꍇ�́A�֘A�N���X�̎�L�[���g���܂��B
+                        <literal>property-ref</literal>: （オプション）
+                        この外部キーに結合する関連クラスのプロパティ名。
+                        指定しなかった場合は、関連クラスの主キーを使います。
                     </para>                
                 </callout>                   
             </calloutlist>
         </programlistingco>
 
         <para>
-            �ȉ��ɂ�������������܂��B
-            �܂���String��set�Ɋւ��Ă̗�ł��B
+            以下にいくつか例を示します。
+            まずはStringのsetに関しての例です。
         </para>
 
         <programlisting><![CDATA[<set name="names" table="person_names">
@@ -564,7 +566,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </set>]]></programlisting>
 
         <para>
-            �����l���܂�bag�ibag�� <literal>order-by</literal> �����ɂ���Ĕ�����������`����Ă��܂��j
+            整数値を含むbag（bagは <literal>order-by</literal> 属性によって反復順序が定義されています）
         </para>
 
         <programlisting><![CDATA[<bag name="sizes" 
@@ -575,7 +577,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </bag>]]></programlisting>
 
         <para>
-            �G���e�B�e�B�̔z�� - ���̏ꍇ�A���Α��̊֘A�ł��B
+            エンティティの配列 - この場合、多対多の関連です。
         </para>
 
         <programlisting><![CDATA[<array name="addresses" 
@@ -587,7 +589,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </array>]]></programlisting>
 
         <para>
-            ������Ɠ��t��map
+            文字列と日付のmap
         </para>
 
         <programlisting><![CDATA[<map name="holidays" 
@@ -600,7 +602,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </map>]]></programlisting>
 
         <para>
-            �R���|�[�l���g��list�i���̏͂ŏڂ����������܂��j
+            コンポーネントのlist（次の章で詳しく説明します）
         </para>
 
         <programlisting><![CDATA[<list name="carComponents" 
@@ -617,33 +619,33 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     </sect2>
 
     <sect2 id="collections-onetomany">
-        <title>��Α��֘A</title>
+        <title>一対多関連</title>
 
         <para>
-            <emphasis>��Α��֘A</emphasis> �́A�R���N�V������e�[�u��������A
-            �O���L�[�ɂ��2�̃N���X�̃e�[�u�����֘A�t���܂��B
-            ���̃}�b�s���O�͕W���I��Java�̃R���N�V�����̃Z�}���e�B�N�X�������������܂��B
+            <emphasis>一対多関連</emphasis> は、コレクション･テーブルを介さず、
+            外部キーにより2つのクラスのテーブルを関連付けます。
+            このマッピングは標準的なJavaのコレクションのセマンティクスをいくつか失います。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    �G���e�B�e�B�N���X�̃C���X�^���X�́A
-                    2�ȏ�̃R���N�V�����̃C���X�^���X�ɑ����Ă͂����܂���B
+                    エンティティクラスのインスタンスは、
+                    2つ以上のコレクションのインスタンスに属してはいけません。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �R���N�V�����Ɋ܂܂��G���e�B�e�B�N���X�̃C���X�^���X�́A
-                    �R���N�V�����C���f�b�N�X�̒l�Ƃ���2�x�ȏ㌻��Ă͂����܂���B
+                    コレクションに含まれるエンティティクラスのインスタンスは、
+                    コレクションインデックスの値として2度以上現れてはいけません。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            <literal>Product</literal> ���� <literal>Part</literal> �ւ̊֘A�́A
-            <literal>Part</literal> �e�[�u���ւ̊O���L�[�J�����ƁA�ꍇ�ɂ���Ă̓C���f�b�N�X�J�������K�v�ł��B
-            <literal>&lt;one-to-many&gt;</literal> �^�O�́A���ꂪ��Α��֘A�ł��邱�Ƃ�\���Ă��܂��B
+            <literal>Product</literal> から <literal>Part</literal> への関連は、
+            <literal>Part</literal> テーブルへの外部キーカラムと、場合によってはインデックスカラムが必要です。
+            <literal>&lt;one-to-many&gt;</literal> タグは、これが一対多関連であることを表しています。
         </para>
 
         <programlistingco>
@@ -662,44 +664,44 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="onetomany1">
                     <para>
-                        <literal>class</literal> �i�K�{�j: �֘A�N���X�̖��O�B
+                        <literal>class</literal> （必須）: 関連クラスの名前。
                     </para>
                 </callout>
                         <callout arearefs="onetomany2">
                             <para>
-                                <literal>not-found</literal> �i�I�v�V���� - �f�t�H���g�� <literal>exception</literal>�j:
-                                �Q�Ɛ�̍s���Ȃ��L���b�V�����ꂽ���ʎq���ǂ̂悤�Ɉ��������w�肵�܂��B
-                                <literal>ignore</literal> ���w�肷��ƁA�s���Ȃ����Ƃ��֘A���Ȃ����̂Ƃ��Ĉ����܂��B
+                                <literal>not-found</literal> （オプション - デフォルトは <literal>exception</literal>）:
+                                参照先の行がないキャッシュされた識別子をどのように扱うかを指定します。
+                                <literal>ignore</literal> を指定すると、行がないことを関連がないものとして扱います。
                             </para>
                         </callout>
                 <callout arearefs="onetomany3">
                     <para>
-                        <literal>entity-name</literal> �i�I�v�V�����j:
-                        <literal>class</literal> �̑�ւł���֘A�N���X�̃G���e�B�e�B���B
-                        <literal>class</literal> �̑���Ɏw�肷��A�֘A�N���X�̃G���e�B�e�B���B
+                        <literal>entity-name</literal> （オプション）:
+                        <literal>class</literal> の代替である関連クラスのエンティティ名。
+                        <literal>class</literal> の代わりに指定する、関連クラスのエンティティ名。
                     </para>
                 </callout>
             </calloutlist>
        </programlistingco>
   
         <para>
-            <literal>&lt;one-to-many&gt;</literal> �v�f�̓J������錾����K�v���Ȃ����Ƃɒ��ӂ��Ă��������B
-            ���l�� <literal>�e�[�u��</literal> �����w�肷��K�v������܂���B
+            <literal>&lt;one-to-many&gt;</literal> 要素はカラムを宣言する必要がないことに注意してください。
+            同様に <literal>テーブル</literal> 名を指定する必要もありません。
         </para>
 
         <para>
-            <emphasis>�ƂĂ��d�v�Ȓ���:</emphasis> ���� <literal>&lt;one-to-many&gt;</literal>
-            �֘A�̊O���L�[�J������ <literal>NOT NULL</literal>�Ɛ錾���ꂽ�ꍇ�A
-            <literal>&lt;key&gt;</literal> �}�b�s���O�� <literal>not-null="true"</literal> ��錾���邩�A
-            �R���N�V�����}�b�s���O�� <literal>inverse="true"</literal> ��t������ŁA
-            <emphasis>�o�����֘A���g��</emphasis> �K�v������܂��B
-            �o�����֘A�ɂ��Ă͂��̏͂̌�̂ق��Ő������܂��B
+            <emphasis>とても重要な注意:</emphasis> もし <literal>&lt;one-to-many&gt;</literal>
+            関連の外部キーカラムが <literal>NOT NULL</literal>と宣言された場合、
+            <literal>&lt;key&gt;</literal> マッピングに <literal>not-null="true"</literal> を宣言するか、
+            コレクションマッピングに <literal>inverse="true"</literal> を付けた上で、
+            <emphasis>双方向関連を使う</emphasis> 必要があります。
+            双方向関連についてはこの章の後のほうで説明します。
         </para>
         
         <para>
-            ���̗�́A���́i<literal>Part</literal> �̉i���I�ȃv���p�e�B�ł��� <literal>partName</literal>�j
-            �ɂ�� <literal>Part</literal> �G���e�B�e�B��map��\���Ă��܂��B
-            formula�ɂ��C���f�b�N�X���g���Ă��邱�Ƃɒ��ӂ��Ă��������B
+            次の例は、名称（<literal>Part</literal> の永続的なプロパティである <literal>partName</literal>）
+            による <literal>Part</literal> エンティティのmapを表しています。
+            formulaによるインデックスを使っていることに注意してください。
         </para>
 
         <programlisting><![CDATA[<map name="parts"
@@ -713,15 +715,15 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     </sect1>
 
     <sect1 id="collections-advancedmappings">
-        <title>���x�ȃR���N�V������}�b�s���O</title>
+        <title>高度なコレクション･マッピング</title>
 
     <sect2 id="collections-sorted" revision="2">
-        <title>�\�[�g���ꂽ�R���N�V����</title>
+        <title>ソートされたコレクション</title>
 
         <para>
-            Hibernate�� <literal>java.util.SortedMap</literal> �� <literal>java.util.SortedSet</literal>
-            �����������R���N�V�������T�|�[�g���Ă��܂��B
-            �J���҂̓}�b�s���O��`�t�@�C���ɃR���p���[�^���w�肵�Ȃ���΂Ȃ�܂���B
+            Hibernateは <literal>java.util.SortedMap</literal> と <literal>java.util.SortedSet</literal>
+            を実装したコレクションをサポートしています。
+            開発者はマッピング定義ファイルにコンパレータを指定しなければなりません。
         </para>
 
         <programlisting><![CDATA[<set name="aliases" 
@@ -738,22 +740,22 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </map>]]></programlisting>
 
         <para>
-            <literal>sort</literal> �����ɐݒ�ł���l�� <literal>unsorted</literal> �� <literal>natural</literal>
-            ����сA<literal>java.util.Comparator</literal> �����������N���X�̖��O�ł��B
+            <literal>sort</literal> 属性に設定できる値は <literal>unsorted</literal> と <literal>natural</literal>
+            および、<literal>java.util.Comparator</literal> を実装したクラスの名前です。
         </para>
 
         <para>
-            �\�[�g���ꂽ�R���N�V�����͎����I�ɂ� <literal>java.util.TreeSet</literal> ��
-            <literal>java.util.TreeMap</literal> �̂悤�ɐU�����܂��B
+            ソートされたコレクションは実質的には <literal>java.util.TreeSet</literal> や
+            <literal>java.util.TreeMap</literal> のように振舞います。
         </para>
 
         <para>
-            �����f�[�^�x�[�X���g�ɃR���N�V�����̗v�f����ׂ��������Ȃ�A
-            <literal>set</literal> �� <literal>bag</literal>�A<literal>map</literal> ��
-            <literal>order-by</literal> �������g���܂��B
-            ���̉����@��JDK1.4�A�������͂���ȏ�̃o�[�W�����ŗ��p�\�ł�
-            �i<literal>LinkedHashSet</literal> �܂��� <literal>LinkedHashMap</literal>���g���Ď�������Ă��܂��j�B
-            ����̓�������ł͂Ȃ��ASQL�N�G�����Ŏ��s����܂��B
+            もしデータベース自身にコレクションの要素を並べさせたいなら、
+            <literal>set</literal> や <literal>bag</literal>、<literal>map</literal> の
+            <literal>order-by</literal> 属性を使います。
+            この解決法はJDK1.4、もしくはそれ以上のバージョンで利用可能です
+            （<literal>LinkedHashSet</literal> または <literal>LinkedHashMap</literal>を使って実装されています）。
+            整列はメモリ上ではなく、SQLクエリ内で実行されます。
         </para>
 
         <programlisting><![CDATA[<set name="aliases" table="person_aliases" order-by="lower(name) asc">
@@ -768,12 +770,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </map>]]></programlisting>
 
         <para>
-            <literal>order-by</literal> �����̒l��SQL���߂ł����āAHQL���߂ł͂Ȃ����Ƃɒ��ӂ��Ă��������I
+            <literal>order-by</literal> 属性の値がSQL命令であって、HQL命令ではないことに注意してください！
         </para>
 
         <para>
-            �֘A�́A�R���N�V������ <literal>filter()</literal> ���g�����ƂŁA
-            ���s���ɔC�ӂ�criteria�ɂ���ă\�[�g���邱�Ƃ��\�ł��B
+            関連は、コレクションの <literal>filter()</literal> を使うことで、
+            実行時に任意のcriteriaによってソートすることも可能です。
         </para>
 
         <programlisting><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
@@ -781,18 +783,18 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     </sect2>
 
      <sect2 id="collections-bidirectional" revision="1">
-        <title>�o�����֘A</title>
+        <title>双方向関連</title>
 
         <para>
-            <emphasis>�o�����֘A</emphasis> �͊֘A�̂ǂ���u���v����ł��i�r�Q�[�V�����ł��܂��B
-            2��ނ̑o�����֘A���T�|�[�g����Ă��܂��B
+            <emphasis>双方向関連</emphasis> は関連のどちら「側」からでもナビゲーションできます。
+            2種類の双方向関連がサポートされています。
 
             <variablelist>
                 <varlistentry>
                     <term>one-to-many</term>
                     <listitem>
                         <para>
-                            �Б���set��bag�A�����Е����P��l�ł��B
+                            片側がsetかbag、もう片方が単一値です。
                        </para>
                     </listitem>
                 </varlistentry>
@@ -800,7 +802,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                     <term>many-to-many</term>
                     <listitem>
                         <para>
-                            ������set��bag�ł��B
+                            両側がsetかbagです。
                         </para>
                     </listitem>
                 </varlistentry>
@@ -809,15 +811,15 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         </para>
 
         <para>
-            2�̑��Α��֘A�œ����f�[�^�x�[�X�e�[�u�����}�b�s���O���A
-            �Е��� <emphasis>inverse</emphasis> �Ƃ��Đ錾���邱�ƂŁA
-            �o�����̑��Α��֘A���w�肷�邱�Ƃ��o���܂�
-            �i�ǂ����inverse�ɑI�񂾂Ƃ��Ă��A�����瑤�ɂ̓C���f�b�N�X�t���̃R���N�V�����͎g���܂���j�B
+            2つの多対多関連で同じデータベーステーブルをマッピングし、
+            片方を <emphasis>inverse</emphasis> として宣言することで、
+            双方向の多対多関連を指定することが出来ます
+            （どちらをinverseに選んだとしても、そちら側にはインデックス付きのコレクションは使えません）。
         </para>
 
         <para>
-            ���ɑo�����̑��Α��֘A�̗�������܂��B
-            �e�J�e�S���͑����̃A�C�e���������Ƃ��ł��A�e�A�C�e���͑����̃J�e�S���ɑ����邱�Ƃ��o���܂��B
+            次に双方向の多対多関連の例を示します。
+            各カテゴリは多数のアイテムを持つことができ、各アイテムは多くのカテゴリに属することが出来ます。
         </para>
 
         <programlisting><![CDATA[<class name="Category">
@@ -841,11 +843,11 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </class>]]></programlisting>
 
         <para>
-            �֘A��inverse���ɂ̂ݍs��ꂽ�ύX�͉i���� <emphasis>����܂���</emphasis>�B
-            ����́AHibernate�͑S�Ă̑o�����֘A�ɂ��āA��������ɂQ�̕\���������Ă���Ƃ����Ӗ��ł��B
-            �܂���A����B�ւ̃����N�ŁA�������B����A�ւ̃����N�Ƃ������Ƃł��B
-            Java�̃I�u�W�F�N�g���f���ɂ��čl���AJava�őo�����֌W���ǂ�����č�邩���l����΁A
-            ����͗������₷���ł��B���L�ɁAJava�ł̑o�����֘A�������܂��B
+            関連のinverse側にのみ行われた変更は永続化 <emphasis>されません</emphasis>。
+            これは、Hibernateは全ての双方向関連について、メモリ上に２つの表現を持っているという意味です。
+            つまり一つはAからBへのリンクで、もう一つはBからAへのリンクということです。
+            Javaのオブジェクトモデルについて考え、Javaで双方向関係をどうやって作るかを考えれば、
+            これは理解しやすいです。下記に、Javaでの双方向関連を示します。
         </para>
 
         <programlisting><![CDATA[
@@ -856,13 +858,13 @@ session.persist(item);                   // The relationship won't be saved!
 session.persist(category);               // The relationship will be saved]]></programlisting>
 
         <para>
-            �֘A��inverse�ł͂Ȃ����́A��������̕\�����f�[�^�x�[�X�ɕۑ�����̂Ɏg���܂��B
+            関連のinverseではない側は、メモリ上の表現をデータベースに保存するのに使われます。
         </para>
 
         <para>
-            �o�����̈�Α��֘A���`����ɂ́A
-            ��Α��֘A�𑽑Έ�֘A�Ɠ����e�[�u���̃J�����Ƀ}�b�s���O���A
-            ������ <literal>inverse="true"</literal> �Ɛ錾���܂��B
+            双方向の一対多関連を定義するには、
+            一対多関連を多対一関連と同じテーブルのカラムにマッピングし、
+            多側に <literal>inverse="true"</literal> と宣言します。
         </para>
 
         <programlisting><![CDATA[<class name="Parent">
@@ -884,19 +886,19 @@ session.persist(category);               // The relationship will be saved]]></p
 </class>]]></programlisting>
 
         <para>
-            �֘A�̕Б��� <literal>inverse="true"</literal> ��ݒ肵�Ă��A
-            �J�X�P�[�h����ɉe����^���܂���B�����͒��������T�O�ł��I
+            関連の片側に <literal>inverse="true"</literal> を設定しても、
+            カスケード操作に影響を与えません。これらは直交した概念です！
         </para>
 
     </sect2>
 
     <sect2 id="collections-indexedbidirectional">
-        <title>�C���f�b�N�X�t���R���N�V�����Ƒo�����֘A</title>
+        <title>インデックス付きコレクションと双方向関連</title>
         <para>
-            �Б��� <literal>&lt;list&gt;</literal> �� <literal>&lt;map&gt;</literal> �ł���
-            �o�����֘A�́A���ɂ悭�l����K�v������܂��B
-            �C���f�b�N�X�J�����Ƀ}�b�v�����q�N���X�̃v���p�e�B������ꍇ�́A���Ȃ��ł��B
-            �R���N�V�����̃}�b�s���O�� <literal>inverse="true"</literal> ���g���������܂��B
+            片側が <literal>&lt;list&gt;</literal> や <literal>&lt;map&gt;</literal> である
+            双方向関連は、特によく考える必要があります。
+            インデックスカラムにマップされる子クラスのプロパティがある場合は、問題ないです。
+            コレクションのマッピングで <literal>inverse="true"</literal> を使い続けられます。
         </para>
         
         <programlisting><![CDATA[<class name="Parent">
@@ -922,11 +924,11 @@ session.persist(category);               // The relationship will be saved]]></p
 </class>]]></programlisting>
 
         <para>
-            �������A�q�N���X�ɂ��̂悤�ȃv���p�e�B���Ȃ��ꍇ�́A
-            �֘A��^�ɑo�����ł���ƍl���邱�Ƃ��ł��܂���
-            �i�֘A�̕Б��ɗ��p�ł����񂪂���܂����A��������ɂ͂���܂���j�B
-            ���̏ꍇ�́A�R���N�V������ <literal>inverse="true"</literal> ���}�b�s���O�ł��܂���B
-            ����ɁA���̂悤�ȃ}�b�s���O���g���܂��B
+            しかし、子クラスにそのようなプロパティがない場合は、
+            関連を真に双方向であると考えることができません
+            （関連の片側に利用できる情報がありますが、もう一方にはありません）。
+            この場合は、コレクションに <literal>inverse="true"</literal> をマッピングできません。
+            代わりに、次のようなマッピングが使えます。
         </para>
 
         <programlisting><![CDATA[<class name="Parent">
@@ -953,19 +955,19 @@ session.persist(category);               // The relationship will be saved]]></p
 </class>]]></programlisting>
 
        <para>
-           ���ӁF ���̃}�b�s���O�ł́A�֘A�̃R���N�V�����l�̑��́A
-           �O���L�[���A�b�v�f�[�g����ӔC������܂��B
+           注意： このマッピングでは、関連のコレクション値の側は、
+           外部キーをアップデートする責任があります。
            <!-- TODO: Does this really result in some unnecessary update statements? -->
        </para>
 
     </sect2>
 
     <sect2 id="collections-ternary">
-        <title>3���֘A</title>
+        <title>3項関連</title>
 
         <para>
-            3���֘A�̃}�b�s���O�ɂ�3�̃A�v���[�`������܂��B
-            1�ڂ͊֘A���C���f�b�N�X�Ƃ��� <literal>Map</literal> ���g�p����A�v���[�`�ł��B
+            3項関連のマッピングには3つのアプローチがあります。
+            1つ目は関連をインデックスとして <literal>Map</literal> を使用するアプローチです。
         </para>
 
         <programlisting><![CDATA[<map name="contracts">
@@ -981,32 +983,32 @@ session.persist(category);               // The relationship will be saved]]></p
 </map>]]></programlisting>
             
         <para>
-            2�ڂ͒P���Ɋ֘A���G���e�B�e�B��N���X�Ƃ��ă��f������蒼���A�v���[�`�ŁA
-            �p�ɂɎg���܂��B
+            2つ目は単純に関連をエンティティ･クラスとしてモデルを作り直すアプローチで、
+            頻繁に使われます。
         </para>
         
         <para>
-            �Ō��composite�v�f���g���A�v���[�`�ł��B����Ɋւ���c�_�͌�قǍs���܂��B
+            最後はcomposite要素を使うアプローチです。これに関する議論は後ほど行います。
         </para>
         
     </sect2>
     
     <sect2 id="collections-idbag" revision="1">
-        <title><literal>&lt;idbag&gt;</literal>�̎g�p</title>
+        <title><literal>&lt;idbag&gt;</literal>の使用</title>
 
         <para>
-            �����L�[�͈������̂ŁA�G���e�B�e�B�͐l�H�̎��ʎq(�㗝�L�[)�����ׂ��ł���Ƃ����l��������́A
-            ���Α��֘A�ƒl�̃R���N�V�����𕡍��L�[��p�����e�[�u���փ}�b�s���O����̂͏�����Ɋ����邩������܂���I
-            �m���ɂ��̍l�����ɂ͋c�_�̗]�n������܂��B
-            �����Ȋ֘A�e�[�u���͑㗝�L�[���g���Ă����v�𓾂��Ȃ��悤�Ɏv���邩��ł�
-            �i�����l�̃R���N�V�����͗��v������ <emphasis>����</emphasis> ����܂��񂪁j�B
-            �Ƃ͂����AHibernate�͑㗝�L�[�����e�[�u���֑��Α��֘A�ƒl�̃R���N�V������
-            �}�b�s���O����@�\�������Ă��܂��B
+            複合キーは悪いもので、エンティティは人工の識別子(代理キー)を持つべきであるという考え方からは、
+            多対多関連と値のコレクションを複合キーを用いたテーブルへマッピングするのは少し奇妙に感じるかもしれません！
+            確かにこの考え方には議論の余地があります。
+            純粋な関連テーブルは代理キーを使っても利益を得られないように思えるからです
+            （合成値のコレクションは利益がある <emphasis>かも</emphasis> しれませんが）。
+            とはいえ、Hibernateは代理キーを持つテーブルへ多対多関連と値のコレクションを
+            マッピングする機能も備えています。
         </para>
 
         <para>
-            bag�̃Z�}���e�B�b�N�X�������� <literal>List</literal>�i�܂��� <literal>Collection</literal>�j��
-            <literal>&lt;idbag&gt;</literal> �v�f�Ƀ}�b�s���O�ł��܂��B
+            bagのセマンティックスを持った <literal>List</literal>（または <literal>Collection</literal>）を
+            <literal>&lt;idbag&gt;</literal> 要素にマッピングできます。
         </para>
 
 <programlisting><![CDATA[<idbag name="lovers" table="LOVERS">
@@ -1018,22 +1020,22 @@ session.persist(category);               // The relationship will be saved]]></p
 </idbag>]]></programlisting>
 
         <para>
-            �����m�̂悤�� <literal>&lt;idbag&gt;</literal> �̓G���e�B�e�B��N���X�̂悤��
-            �l�H�I��id�W�F�l���[�^�������Ă��܂��I
-            �قȂ�㗝�L�[�����ꂼ��̃R���N�V�����̗�Ɋ��蓖�Ă܂��B
-            �������Ȃ���AHibernate�͂���s�̑㗝�L�[�̒l�������o���@�\�������Ă��܂���B
+            ご存知のように <literal>&lt;idbag&gt;</literal> はエンティティ･クラスのように
+            人工的なidジェネレータを持っています！
+            異なる代理キーをそれぞれのコレクションの列に割り当てます。
+            しかしながら、Hibernateはある行の代理キーの値を見つけ出す機構を持っていません。
         </para>
 
         <para>
-            <literal>&lt;idbag&gt;</literal> ���X�V����p�t�H�[�}���X��
-            �ʏ�� <literal>&lt;bag&gt;</literal> �����ǂ����Ƃɒ��ڂ��Ă��������I
-            Hibernate�͌X�̍s�����ʓI�Ɍ����邱�Ƃ��ł��A
-            list��map�Aset�̂悤�Ɍʂɂ��̍s���X�V�A�폜�ł��܂��B
+            <literal>&lt;idbag&gt;</literal> を更新するパフォーマンスは
+            通常の <literal>&lt;bag&gt;</literal> よりも良いことに注目してください！
+            Hibernateは個々の行を効果的に見つけることができ、
+            listやmap、setのように個別にその行を更新、削除できます。
         </para>
 
         <para>
-            ���݂̎����ł́A<literal>native</literal> �Ƃ���id�����헪��
-            <literal>&lt;idbag&gt;</literal> �R���N�V�����̎��ʎq�ɑ΂��Ďg���܂���B
+            現在の実装では、<literal>native</literal> というid生成戦略を
+            <literal>&lt;idbag&gt;</literal> コレクションの識別子に対して使えません。
         </para>
 
     </sect2>
@@ -1055,10 +1057,10 @@ session.persist(category);               // The relationship will be saved]]></p
     </sect1-->
 
     <sect1 id="collections-example" revision="1">
-        <title>�R���N�V�����̗�</title>
+        <title>コレクションの例</title>
 
         <para>
-            ����܂ł̐߂̐����ł͗������ɂ����̂ŁA�ȉ��̗�����Ă��������B
+            これまでの節の説明では理解しにくいので、以下の例を見てください。
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -1079,8 +1081,8 @@ public class Parent {
 }]]></programlisting>
 
         <para>
-            ���̃N���X�� <literal>Child</literal> �C���X�^���X�̃R���N�V�����������Ă��܂��B
-            �����e�X��child���ő�ł����parent�������Ă���Ȃ�΁A�ł����R�ȃ}�b�s���O�͈�Α��֘A�ł��B
+            このクラスは <literal>Child</literal> インスタンスのコレクションを持っています。
+            もし各々のchildが最大でも一つのparentを持っているならば、最も自然なマッピングは一対多関連です。
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1105,7 +1107,7 @@ public class Parent {
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            ����͈ȉ��̃e�[�u����`�Ƀ}�b�s���O���܂��B
+            これは以下のテーブル定義にマッピングします。
         </para>
 
         <programlisting><![CDATA[create table parent ( id bigint not null primary key )
@@ -1113,7 +1115,7 @@ create table child ( id bigint not null primary key, name varchar(255), parent_i
 alter table child add constraint childfk0 (parent_id) references parent]]></programlisting>
 
         <para>
-            ����parent�� <emphasis>�v��</emphasis> �����Ȃ�A�o�����̈�Α��֘A���g�p���Ă��������B
+            もしparentが <emphasis>要求</emphasis> されるなら、双方向の一対多関連を使用してください。
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1139,7 +1141,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            <literal>NOT NULL</literal> ����ɒ��ӂ��Ă��������B
+            <literal>NOT NULL</literal> 制約に注意してください。
         </para>
 
         <programlisting><![CDATA[create table parent ( id bigint not null primary key )
@@ -1150,8 +1152,8 @@ create table child ( id bigint not null
 alter table child add constraint childfk0 (parent_id) references parent]]></programlisting>
 
         <para>
-            ���邢�́A�������̊֘A�͒P�����ł���ׂ��Ƌ����咣����̂ł���΁A
-            <literal>&lt;key&gt;</literal> �� <literal>NOT NULL</literal> �����錾�ł��܂��B
+            あるいは、もしこの関連は単方向であるべきと強く主張するのであれば、
+            <literal>&lt;key&gt;</literal> に <literal>NOT NULL</literal> 制約を宣言できます。
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1176,7 +1178,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            ����ŁA����child��������parent�����Ă�Ȃ�΁A���Α��֘A���Ó��ł��B
+            一方で、もしchildが複数のparentを持てるならば、多対多関連が妥当です。
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1201,7 +1203,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            �e�[�u����`�͈ȉ��̂悤�ɂȂ�܂��B
+            テーブル定義は以下のようになります。
         </para>
 
         <programlisting><![CDATA[create table parent ( id bigint not null primary key )
@@ -1213,12 +1215,12 @@ alter table childset add constraint childsetfk0 (parent_id) references parent
 alter table childset add constraint childsetfk1 (child_id) references child]]></programlisting>
 
         <para>
-            parent/child�֌W�̃}�b�s���O�ɂ��Ă̂�葽���̗�⊮�S�Ȏ菇���K�v�ł���΁A
-            <xref linkend="example-parentchild"/> ���������������B
+            parent/child関係のマッピングについてのより多くの例や完全な手順が必要であれば、
+            <xref linkend="example-parentchild"/> をご覧ください。
         </para>
         
         <para>
-            �܂��A����ɓ���Ȋ֘A�}�b�s���O���\�ł��B���̏͂ŏڂ����q�ׂ܂��B
+            また、さらに特殊な関連マッピングも可能です。次の章で詳しく述べます。
         </para>
 
     </sect1>

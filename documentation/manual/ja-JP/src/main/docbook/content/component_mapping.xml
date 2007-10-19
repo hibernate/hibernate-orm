@@ -1,20 +1,22 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="components">
-    <title>�R���|�[�l���g�̃}�b�s���O</title>
+    <title>コンポーネントのマッピング</title>
 
     <para>
-        <emphasis>�R���|�[�l���g</emphasis> �̊T�O�́AHibernate��ʂ��ėl�X�ȏ󋵂̒���
-        �قȂ�ړI�̂��߂ɍė��p����܂��B
+        <emphasis>コンポーネント</emphasis> の概念は、Hibernateを通して様々な状況の中で
+        異なる目的のために再利用されます。
     </para>
 
     <sect1 id="components-dependentobjects" revision="2" >
-        <title>�ˑ��I�u�W�F�N�g</title>
+        <title>依存オブジェクト</title>
 
         <para>
-            �R���|�[�l���g�́A�G���e�B�e�B�̎Q�Ƃł͂Ȃ��l�^�Ƃ��ĉi�������ꂽ�A
-            ��܂��ꂽ�I�u�W�F�N�g�ł��B�R���|�[�l���g�Ƃ������t�ɂ��ẮA�R���|�W�V�����Ƃ���
-            �I�u�W�F�N�g�w���̊T�O���Q�Ƃ��Ă��������i�A�[�L�e�N�`�����x���̃R���|�[�l���g�ł͂���܂���j�B
-            �Ⴆ�΁A�ȉ���Person���f���̂悤�Ȃ��̂ł��B
+            コンポーネントは、エンティティの参照ではなく値型として永続化された、
+            包含されたオブジェクトです。コンポーネントという言葉については、コンポジションという
+            オブジェクト指向の概念を参照してください（アーキテクチャレベルのコンポーネントではありません）。
+            例えば、以下のPersonモデルのようなものです。
         </para>
 
         <programlisting><![CDATA[public class Person {
@@ -68,14 +70,14 @@
 }]]></programlisting>
 
         <para>
-            ���܁A<literal>Name</literal> �� <literal>Person</literal> �̃R���|�[�l���g�Ƃ���
-            �i�������邱�Ƃ��o���܂��B������ <literal>Name</literal> �͉i���������ɑ΂���getter�A
-            setter���\�b�h���`���܂����A�C���^�[�t�F�C�X�⎯�ʎq�v���p�e�B���`����K�v��
-            �Ȃ����Ƃɒ��ӂ��ĉ������B
+            いま、<literal>Name</literal> は <literal>Person</literal> のコンポーネントとして
+            永続化することが出来ます。ここで <literal>Name</literal> は永続化属性に対してgetter、
+            setterメソッドを定義しますが、インターフェイスや識別子プロパティを定義する必要が
+            ないことに注意して下さい。
         </para>
 
         <para>
-            �}�b�s���O��`�͈ȉ��̂悤�ɂȂ�܂��B
+            マッピング定義は以下のようになります。
         </para>
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
@@ -91,33 +93,33 @@
 </class>]]></programlisting>
 
         <para>
-            Person�e�[�u���� <literal>pid</literal>�A
-            <literal>birthday</literal>�A
-            <literal>initial</literal>�A
-            <literal>first</literal>�A
-            <literal>last</literal> �J�����������܂��B
+            Personテーブルは <literal>pid</literal>、
+            <literal>birthday</literal>、
+            <literal>initial</literal>、
+            <literal>first</literal>、
+            <literal>last</literal> カラムを持ちます。
         </para>
 
         <para>
-            �S�Ă̒l�^�̂悤�ɁA�R���|�[�l���g�͎Q�Ƃ̋��L�����邱�Ƃ��ł��܂���B
-            ����������ƁA��l��Person�͓������O�������Ƃ��ł��܂����A���Person�I�u�W�F�N�g��
-            "�l����������"�̕ʁX��name�I�u�W�F�N�g���܂�ł���Ƃ������Ƃł��B
-            �R���|�[�l���g��null�l�̃Z�}���e�B�N�X�� <emphasis>�A�h�z�b�N</emphasis> �ł��B
-            �R���|�[�l���g�̃I�u�W�F�N�g���ēǂݍ��݂���ہAHibernate�̓R���|�[�l���g�̂��ׂẴJ������
-            null�ł���Ȃ�R���|�[�l���g���̂�null�ł���ƍl���܂��B
-            ����͑��̏ꍇ��肠��܂���B
+            全ての値型のように、コンポーネントは参照の共有をすることができません。
+            言い換えると、二人のPersonは同じ名前を持つことができますが、二つのPersonオブジェクトは
+            "値が同じだけ"の別々のnameオブジェクトを含んでいるということです。
+            コンポーネントのnull値のセマンティクスは <emphasis>アドホック</emphasis> です。
+            コンポーネントのオブジェクトを再読み込みする際、Hibernateはコンポーネントのすべてのカラムが
+            nullであるならコンポーネント自体がnullであると考えます。
+            これは大抵の場合問題ありません。
 
         </para>
 
         <para>
-            �R���|�[�l���g�̑����͂ǂ��Hibernate�̌^�ł��\���܂���i�R���N�V�����Amany-to-one�֘A�A
-            ���̃R���|�[�l���g�Ȃǁj�B�l�X�g���ꂽ�R���|�[�l���g�͖ő��Ɏg��Ȃ��ƍl����ׂ��ł�
-             <emphasis>����܂���</emphasis> �BHibernate�͔��ɂ��߂ׂ̍����I�u�W�F�N�g���f�����T�|�[�g����悤�ɈӐ}����Ă��܂��B
+            コンポーネントの属性はどんなHibernateの型でも構いません（コレクション、many-to-one関連、
+            他のコンポーネントなど）。ネストされたコンポーネントは滅多に使わないと考えるべきでは
+             <emphasis>ありません</emphasis> 。Hibernateは非常にきめの細かいオブジェクトモデルをサポートするように意図されています。
         </para>
 
         <para>
-            <literal>&lt;component&gt;</literal> �v�f�͐e�G���e�B�e�B�ւ̋t�Q�ƂƂ��āA�R���|�[�l���g�N���X��
-            �������}�b�s���O���� <literal>&lt;parent&gt;</literal> �T�u�v�f���g�p�ł��܂��B
+            <literal>&lt;component&gt;</literal> 要素は親エンティティへの逆参照として、コンポーネントクラスの
+            属性をマッピングする <literal>&lt;parent&gt;</literal> サブ要素を使用できます。
         </para>
 
         <programlisting><![CDATA[<class name="eg.Person" table="person">
@@ -137,12 +139,12 @@
 
     <sect1 id="components-incollections" revision="1">
         
-        <title>�]������I�u�W�F�N�g�̃R���N�V����</title>
+        <title>従属するオブジェクトのコレクション</title>
 
         <para>
-            Hibernate�̓R���|�[�l���g�̃R���N�V�������T�|�[�g���Ă��܂��i�Ⴆ�� <literal>Name</literal> �^�̔z��j�B
-            <literal>&lt;element&gt;</literal> �^�O�� <literal>&lt;composite-element&gt;</literal> �^�O�Ɏ��ւ��邱�Ƃɂ��
-            �R���|�[�l���g�R���N�V������錾���Ă��������B
+            Hibernateはコンポーネントのコレクションをサポートしています（例えば <literal>Name</literal> 型の配列）。
+            <literal>&lt;element&gt;</literal> タグを <literal>&lt;composite-element&gt;</literal> タグに取り替えることにより
+            コンポーネントコレクションを宣言してください。
         </para>
 
         <programlisting><![CDATA[<set name="someNames" table="some_names" lazy="true">
@@ -155,35 +157,35 @@
 </set>]]></programlisting>
 
         <para>
-            ����: �R���|�W�b�g�G�������g�� <literal>Set</literal> ���`�����Ȃ�A
-            <literal>equals()</literal> �� <literal>hashCode()</literal> �𐳂����������邱�Ƃ��d�v�ł��B
+            注意: コンポジットエレメントの <literal>Set</literal> を定義したなら、
+            <literal>equals()</literal> と <literal>hashCode()</literal> を正しく実装することが重要です。
         </para>
 
         <para>
-            �R���|�W�b�g�G�������g�̓R���N�V�������܂܂��A�R���|�[�l���g���܂ނ��Ƃ�����܂��B
-            �R���|�W�b�g�G�������g���g���R���|�[�l���g���܂�ł���ꍇ�� <literal>&lt;nested-composite-element&gt;</literal> ��
-            �g�p���Ă��������B�R���|�[�l���g�̃R���N�V�������g���R���|�[�l���g�����Ƃ����P�[�X�͂߂����ɂ���܂���B
-            ���̒i�K�܂łɁAone-to-many�֘A�̕������K�؂łȂ����Ən�l���Ă��������B
-            �R���|�W�b�g�G�������g���G���e�B�e�B�Ƃ��čēx���f�����O���Ă݂Ă��������B
-            �����������Java�̃��f���Ƃ��Ă͓����ł����A�����[�V���i�����f���Ɖi������͂܂��኱�قȂ邱�Ƃɒ��ӂ��Ă��������B
+            コンポジットエレメントはコレクションを含まず、コンポーネントを含むこともあります。
+            コンポジットエレメント自身がコンポーネントを含んでいる場合は <literal>&lt;nested-composite-element&gt;</literal> を
+            使用してください。コンポーネントのコレクション自身がコンポーネントを持つというケースはめったにありません。
+            この段階までに、one-to-many関連の方がより適切でないかと熟考してください。
+            コンポジットエレメントをエンティティとして再度モデリングしてみてください。
+            しかしこれはJavaのモデルとしては同じですが、リレーショナルモデルと永続動作はまだ若干異なることに注意してください。
         </para>
 
         <para>
-            ���� <literal>&lt;set&gt;</literal> ���g�p����̂ł���΁A�R���|�W�b�g�G�������g�̃}�b�s���O��null�l���\��
-            �������T�|�[�g���Ă��Ȃ����Ƃɒ��ӂ��Ă��������BHibernate�̓I�u�W�F�N�g���폜����Ƃ��A
-            ���R�[�h�����ʂ��邽�߂ɂ��ꂼ��̃J�����̒l���g�p����K�v�����邽�߁Anull�l�������Ƃ��o���܂���
-            �i�R���|�W�b�g�G�������g�e�[�u���ɂ͕ʂ̎�L�[�J�����͂���܂���j�B
-            �R���|�W�b�g�G�������g��not-null�̑����݂̂��g�p���邩�A�܂��� <literal>&lt;list&gt;</literal>�A<literal>&lt;map&gt;</literal>�A
-            <literal>&lt;bag&gt;</literal>�A<literal>&lt;idbag&gt;</literal> ��I������K�v������܂��B
+            もし <literal>&lt;set&gt;</literal> を使用するのであれば、コンポジットエレメントのマッピングがnull値が可能な
+            属性をサポートしていないことに注意してください。Hibernateはオブジェクトを削除するとき、
+            レコードを識別するためにそれぞれのカラムの値を使用する必要があるため、null値を持つことが出来ません
+            （コンポジットエレメントテーブルには別の主キーカラムはありません）。
+            コンポジットエレメントにnot-nullの属性のみを使用するか、または <literal>&lt;list&gt;</literal>、<literal>&lt;map&gt;</literal>、
+            <literal>&lt;bag&gt;</literal>、<literal>&lt;idbag&gt;</literal> を選択する必要があります。
         </para>
 
         <para>
-            �R���|�W�b�g�G�������g�̓��ʂȃP�[�X�Ƃ��āA�l�X�g���ꂽ <literal>&lt;many-to-one&gt;</literal> ����������
-            �R���|�W�b�g�G�������g������܂��B
-            ���̃}�b�s���O�́A�R���|�W�b�g�G�������g�N���X�𑽑Α��֘A�e�[�u����
-            �]���ȃJ�����փ}�b�s���O���܂��B
-            ���̗�� <literal>Order</literal> ����A<literal>Item</literal> �ւ̑��Α��֘A�ł��B
-             <literal>purchaseDate</literal>�A<literal>price</literal>�A<literal>quantity</literal> �͊֘A�̑����ƂȂ�܂��B
+            コンポジットエレメントの特別なケースとして、ネストされた <literal>&lt;many-to-one&gt;</literal> 属性を持つ
+            コンポジットエレメントがあります。
+            このマッピングは、コンポジットエレメントクラスを多対多関連テーブルの
+            余分なカラムへマッピングします。
+            次の例は <literal>Order</literal> から、<literal>Item</literal> への多対多関連です。
+             <literal>purchaseDate</literal>、<literal>price</literal>、<literal>quantity</literal> は関連の属性となります。
         </para>
 
         <programlisting><![CDATA[<class name="eg.Order" .... >
@@ -200,14 +202,14 @@
 </class>]]></programlisting>
 
         <para>
-            �������A�o�����֘A�̃i�r�Q�[�V�����̂��߂ɔ��Α�����purchase�ւ̎Q�Ƃ���邱�Ƃ͏o���܂���B
-            �R���|�[�l���g�͒l�^�ł���A�Q�Ƃ����L�ł��Ȃ����Ƃ��o���Ă����Ă��������B
-            ��� <literal>Purchase</literal> �͈�� <literal>Order</literal> ��set�ɑ��݂ł��܂����A
-            ������ <literal>Item</literal> ����Q�Ƃ��邱�Ƃ͏o���܂���B
+            もちろん、双方向関連のナビゲーションのために反対側からpurchaseへの参照を作ることは出来ません。
+            コンポーネントは値型であり、参照を共有できないことを覚えておいてください。
+            一つの <literal>Purchase</literal> は一つの <literal>Order</literal> のsetに存在できますが、
+            同時に <literal>Item</literal> から参照することは出来ません。
         </para>
 
         <para>
-              3���֘A�i���邢��4���Ȃǁj���\�ł��B
+              3項関連（あるいは4項など）も可能です。
         </para>
 
         <programlisting><![CDATA[<class name="eg.Order" .... >
@@ -222,61 +224,61 @@
 </class>]]></programlisting>
 
         <para>
-            �R���|�W�b�g�G�������g�͑��̃G���e�B�e�B�ւ̊֘A�Ƃ��āA
-            �����V���^�b�N�X���g���Ă���N�G�����Ŏg�p�ł��܂��B
+            コンポジットエレメントは他のエンティティへの関連として、
+            同じシンタックスを使っているクエリ内で使用できます。
         </para>
 
     </sect1>
 
     <sect1 id="components-asmapindex">
-        <title>Map�̃C���f�b�N�X�Ƃ��ẴR���|�[�l���g</title>
+        <title>Mapのインデックスとしてのコンポーネント</title>
 
         <para>
-            <literal>&lt;composite-map-key&gt;</literal> �v�f�� <literal>Map</literal> �̃L�[�Ƃ��ăR���|�[�l���g�N���X��
-            �}�b�s���O���܂��B�R���|�[�l���g�N���X��� <literal>hashCode()</literal> �� <literal>equals()</literal>
-            �𐳊m�ɃI�[�o�[���C�h���Ă��������B
+            <literal>&lt;composite-map-key&gt;</literal> 要素は <literal>Map</literal> のキーとしてコンポーネントクラスを
+            マッピングします。コンポーネントクラス上で <literal>hashCode()</literal> と <literal>equals()</literal>
+            を正確にオーバーライドしてください。
         </para>
     </sect1>
 
     <sect1 id="components-compositeid" revision="1">
-        <title>�������ʎq�Ƃ��ẴR���|�[�l���g</title>
+        <title>複合識別子としてのコンポーネント</title>
 
         <para>
-            �R���|�[�l���g���G���e�B�e�B�N���X�̎��ʎq�Ƃ��Ďg�����Ƃ��ł��܂��B
-            �R���|�[�l���g�N���X�͈ȉ��̏����𖞂����K�v������܂��B
+            コンポーネントをエンティティクラスの識別子として使うことができます。
+            コンポーネントクラスは以下の条件を満たす必要があります。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>java.io.Serializable</literal> ���������Ȃ���΂Ȃ�܂���B
+                    <literal>java.io.Serializable</literal> を実装しなければなりません。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �f�[�^�x�[�X��̕����L�[�̓������Ɩ����̂Ȃ��悤�ɁA<literal>equals()</literal> 
-                    �� <literal>hashCode()</literal> ���Ď������Ȃ���΂Ȃ�܂���B
+                    データベース上の複合キーの等価性と矛盾のないように、<literal>equals()</literal> 
+                    と <literal>hashCode()</literal> を再実装しなければなりません。
                 </para>
             </listitem>
         </itemizedlist>
         
         <para>
-            <emphasis>����: Hibernate3�ɂ����āA2�Ԗڂ̏����͐�ΓI�ȏ����ł͂���܂���B
-                  �������Ƃɂ��������𖞂����Ă��������B
+            <emphasis>注意: Hibernate3において、2番目の条件は絶対的な条件ではありません。
+                  しかしとにかく条件を満たしてください。
             </emphasis> 
 
         </para>
 
         <para>
-            �����L�[�𐶐����邽�߂� <literal>IdentifierGenerator</literal> ���g�p���邱�Ƃ͂ł��܂���B
-            ����ɃA�v���P�[�V���������ʎq�����蓖�ĂȂ��Ă͂Ȃ�܂���B
+            複合キーを生成するために <literal>IdentifierGenerator</literal> を使用することはできません。
+            代わりにアプリケーションが識別子を割り当てなくてはなりません。
         </para>
 
         <para>
-            �ʏ�� <literal>&lt;id&gt;</literal> �錾�̑���� <literal>&lt;composite-id&gt;</literal> �^�O��
-            �i�l�X�g���ꂽ <literal>&lt;key-property&gt;</literal> �����Ƌ��Ɂj�g���܂��B
-            �ȉ��̗�ł́A<literal>OrderLine</literal> �N���X�� <literal>Order</literal> �́i�����j��L�[��
-            �ˑ�������L�[�������Ă��܂��B
+            通常の <literal>&lt;id&gt;</literal> 宣言の代わりに <literal>&lt;composite-id&gt;</literal> タグを
+            （ネストされた <literal>&lt;key-property&gt;</literal> 属性と共に）使います。
+            以下の例では、<literal>OrderLine</literal> クラスは <literal>Order</literal> の（複合）主キーに
+            依存した主キーを持っています。
         </para>
 
         <programlisting><![CDATA[<class name="OrderLine">
@@ -299,9 +301,9 @@
 </class>]]></programlisting>
 
         <para>
-            ���̂Ƃ��A<literal>OrderLine</literal> �e�[�u���֊֘A����O���L�[���܂������ł��B
-            ���̃N���X�̃}�b�s���O�ł����錾���Ȃ���΂Ȃ�܂���B
-            <literal>OrderLine</literal> �ւ̊֘A�͎��̂悤�Ƀ}�b�s���O����܂��B
+            このとき、<literal>OrderLine</literal> テーブルへ関連する外部キーもまた複合です。
+            他のクラスのマッピングでこれを宣言しなければなりません。
+            <literal>OrderLine</literal> への関連は次のようにマッピングされます。
         </para>
 
         <programlisting><![CDATA[<many-to-one name="orderLine" class="OrderLine">
@@ -312,13 +314,13 @@
 </many-to-one>]]></programlisting>
 
         <para>
-            �i<literal>&lt;column&gt;</literal> �^�O�͂ǂ��ł����Ă� <literal>column</literal> ������
-              ����ɂȂ�܂��B�j
+            （<literal>&lt;column&gt;</literal> タグはどこであっても <literal>column</literal> 属性の
+              代わりになります。）
         </para>
         
         <para>
-            <literal>OrderLine</literal> �ւ� <literal>many-to-many</literal> �֘A��
-            �����O���L�[���g���܂��B
+            <literal>OrderLine</literal> への <literal>many-to-many</literal> 関連も
+            複合外部キーを使います。
         </para>
     
     <programlisting><![CDATA[<set name="undeliveredOrderLines">
@@ -331,8 +333,8 @@
 </set>]]></programlisting>
 
         <para>
-            <literal>Order</literal> �ɂ��� <literal>OrderLine</literal> �̃R���N�V������
-            ���̂��̂��g�p���܂��B
+            <literal>Order</literal> にある <literal>OrderLine</literal> のコレクションは
+            次のものを使用します。
         </para>
 
     <programlisting><![CDATA[<set name="orderLines" inverse="true">
@@ -344,12 +346,12 @@
 </set>]]></programlisting>
 
         <para>
-            �i<literal>&lt;one-to-many&gt;</literal> �����́A��ɂ���ăJ������錾���܂���j
+            （<literal>&lt;one-to-many&gt;</literal> 属性は、例によってカラムを宣言しません）
         </para>
         
         <para>
-            <literal>OrderLine</literal> ���g���R���N�V�����������Ă���ꍇ�A
-            �����ɕ����O���L�[�������Ă��܂��B
+            <literal>OrderLine</literal> 自身がコレクションを持っている場合、
+            同時に複合外部キーも持っています。
         </para>
 
         <programlisting><![CDATA[<class name="OrderLine">
@@ -371,10 +373,10 @@
     </sect1>
 
     <sect1 id="components-dynamic" revision="1">
-        <title>���I�R���|�[�l���g</title>
+        <title>動的コンポーネント</title>
 
         <para>
-            <literal>Map</literal> �^�̃v���p�e�B�̃}�b�s���O���\�ł��B
+            <literal>Map</literal> 型のプロパティのマッピングも可能です。
         </para>
 
     <programlisting><![CDATA[<dynamic-component name="userAttributes">
@@ -384,11 +386,11 @@
 </dynamic-component>]]></programlisting>
 
         <para>
-            <literal>&lt;dynamic-component&gt;</literal> �}�b�s���O�̃Z�}���e�B�N�X�� <literal>&lt;component&gt;</literal> 
-            �Ɠ���̂��̂ł��B���̎�̃}�b�s���O�̗��_�́A�}�b�s���O�h�L�������g�̕ҏW�ɂ��A�z�u����bean�̑�����
-            ����ł���_�ł��B�܂��ADOM�p�[�T�𗘗p���āA�}�b�s���O�h�L�������g�̃����^�C�����삪�\�ł��B
-            ����ɁA<literal>Configuration</literal> �I�u�W�F�N�g�o�R��Hibernate�̃R���t�B�O���[�V�������̃��^���f����
-            �A�N�Z�X�i�܂��͕ύX�j���\�ł��B
+            <literal>&lt;dynamic-component&gt;</literal> マッピングのセマンティクスは <literal>&lt;component&gt;</literal> 
+            と同一のものです。この種のマッピングの利点は、マッピングドキュメントの編集により、配置時にbeanの属性を
+            決定できる点です。また、DOMパーサを利用して、マッピングドキュメントのランタイム操作が可能です。
+            さらに、<literal>Configuration</literal> オブジェクト経由でHibernateのコンフィグレーション時のメタモデルに
+            アクセス（または変更）が可能です。
         </para>
 
     </sect1>

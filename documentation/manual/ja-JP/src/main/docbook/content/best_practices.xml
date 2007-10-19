@@ -1,246 +1,248 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="best-practices" revision="3">
-    <title>�x�X�g�v���N�e�B�X</title>
+    <title>ベストプラクティス</title>
 
     <variablelist spacing="compact">
         <varlistentry>
             <term>
-            �N���X�ׂ͍������x�ŏ��� <literal>&lt;component&gt;</literal> �Ń}�b�s���O���܂��傤�B</term>
+            クラスは細かい粒度で書き <literal>&lt;component&gt;</literal> でマッピングしましょう。</term>
             <listitem>
                 <para>
-                    <literal>street</literal>�i�ʂ�j, <literal>suburb</literal>
-                    �i�s�s�j, <literal>state</literal>�i�B�j, <literal>postcode</literal> 
-                    �i�X�֔ԍ��j���J�v�Z�������� <literal>Address</literal>�i�Z���j�N���X���g���܂��傤�B
-                    ��������΃R�[�h���ė��p���₷���Ȃ�A���t�@�N�^�����O���ȒP�ɂȂ�܂��B
+                    <literal>street</literal>（通り）, <literal>suburb</literal>
+                    （都市）, <literal>state</literal>（州）, <literal>postcode</literal> 
+                    （郵便番号）をカプセル化する <literal>Address</literal>（住所）クラスを使いましょう。
+                    そうすればコードが再利用しやすくなり、リファクタリングも簡単になります。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
             <term>
-            �i���N���X�ɂ͎��ʎq�v���p�e�B���`���܂��傤�B</term>
+            永続クラスには識別子プロパティを定義しましょう。</term>
             <listitem>
                 <para>
-                    Hibernate�ł͎��ʎq�v���p�e�B�̓I�v�V�����ł����A
-                    �g�p���ׂ����R���������񂠂�܂��B
-                    ���ʎq�́u�l�H�I�v�i�������ꂽ�A�Ɩ��I�ȈӖ��������Ȃ��j
-                    �Ȃ��̂ɂ��邱�Ƃ��������߂��܂��B
+                    Hibernateでは識別子プロパティはオプションですが、
+                    使用すべき理由がたくさんあります。
+                    識別子は「人工的」（生成された、業務的な意味を持たない）
+                    なものにすることをおすすめします。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>���R�L�[�������܂��傤�B</term>
+            <term>自然キーを見つけましょう。</term>
             <listitem>
                 <para>
-                    ���ׂẴG���e�B�e�B�ɑ΂��Ď��R�L�[�������āA
-                    <literal>&lt;natural-id&gt;</literal> �Ń}�b�s���O���܂��傤�B
-                    ���R�L�[���\������v���p�e�B���r���邽�߂ɁA
-                    <literal>equals()</literal> �� <literal>hashCode()</literal> ���������܂��傤�B
+                    すべてのエンティティに対して自然キーを見つけて、
+                    <literal>&lt;natural-id&gt;</literal> でマッピングしましょう。
+                    自然キーを構成するプロパティを比較するために、
+                    <literal>equals()</literal> と <literal>hashCode()</literal> を実装しましょう。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�N���X�̃}�b�s���O�͂��ꂼ��̃N���X��p�̃t�@�C���ɏ����܂��傤�B</term>
+            <term>クラスのマッピングはそれぞれのクラス専用のファイルに書きましょう。</term>
             <listitem>
                 <para>
-                     �P��̋���ȃ}�b�s���O�h�L�������g���g�p���Ȃ��ł��������B
-                     <literal>com.eg.Foo</literal> �N���X�Ȃ� 
-                     <literal>com/eg/Foo.hbm.xml</literal> �t�@�C���Ƀ}�b�s���O���܂��傤�B
-                     ���̂��Ƃ́A���Ƀ`�[���ł̊J���ɈӖ�������܂��B
+                     単一の巨大なマッピングドキュメントを使用しないでください。
+                     <literal>com.eg.Foo</literal> クラスなら 
+                     <literal>com/eg/Foo.hbm.xml</literal> ファイルにマッピングしましょう。
+                     このことは、特にチームでの開発に意味があります。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>���\�[�X�Ƃ��ă}�b�s���O�����[�h���܂��傤�B</term>
+            <term>リソースとしてマッピングをロードしましょう。</term>
             <listitem>
                 <para>
-                    �}�b�s���O���A����炪�}�b�s���O���邷��N���X�ƈꏏ�ɔz�u���܂��傤�B
+                    マッピングを、それらがマッピングするするクラスと一緒に配置しましょう。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�N�G����������O���ɒu�����Ƃ��l���܂��傤</term>
+            <term>クエリ文字列を外部に置くことを考えましょう</term>
             <listitem>
                 <para>
-                    �N�G����ANSI�W���łȂ�SQL�֐����Ă�ł���Ȃ�A����͂悢�v���N�e�B�X�ł��B
-                    �N�G����������}�b�s���O�t�@�C���֊O�o������΃A�v���P�[�V�������|�[�^�u���ɂȂ�܂��B
+                    クエリがANSI標準でないSQL関数を呼んでいるなら、これはよいプラクティスです。
+                    クエリ文字列をマッピングファイルへ外出しすればアプリケーションがポータブルになります。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�o�C���h�ϐ����g���܂��傤�B</term>
+            <term>バインド変数を使いましょう。</term>
             <listitem>
                 <para>
-                     JDBC�̏ꍇ�Ɠ����悤�ɁA�萔�łȂ��l�͕K��"?"�Œu�������܂��傤�B
-                     �萔�łȂ��l���o�C���h���邽�߂ɁA�N�G���ŕ����񑀍���g���Ă͂����܂���B
-                     ���O�t���̃p�����[�^���g���悤�ɂ���Ƃ���ɗǂ��ł��B
+                     JDBCの場合と同じように、定数でない値は必ず"?"で置き換えましょう。
+                     定数でない値をバインドするために、クエリで文字列操作を使ってはいけません。
+                     名前付きのパラメータを使うようにするとさらに良いです。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>JDBC�R�l�N�V�������Ǘ����Ă͂����܂���B</term>
+            <term>JDBCコネクションを管理してはいけません。</term>
             <listitem>
                 <para>
-                    Hibernate�ł̓A�v���P�[�V������JDBC�R�l�N�V�������Ǘ����邱�Ƃ�������Ă��܂��B
-                    ����������͍ŏI��i���Ǝv���Ă��������B
-                    �g�ݍ��݂̃R�l�N�V�����v���o�C�_���g�����Ƃ��ł��Ȃ���΁A
-                    <literal>org.hibernate.connection.ConnectionProvider</literal> ���������邱�Ƃ��l���Ă��������B
+                    HibernateではアプリケーションがJDBCコネクションを管理することが許されています。
+                    しかしこれは最終手段だと思ってください。
+                    組み込みのコネクションプロバイダを使うことができなければ、
+                    <literal>org.hibernate.connection.ConnectionProvider</literal> を実装することを考えてください。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�J�X�^���^�̎g�p���l���܂��傤�B</term>
+            <term>カスタム型の使用を考えましょう。</term>
             <listitem>
                 <para>
-                    ���郉�C�u�������玝���Ă���Java�^���i��������K�v������Ƃ��܂��傤�B
-                    ���������̌^�ɂ́A�R���|�[�l���g�Ƃ��ă}�b�s���O���邽�߂ɕK�v�ȃA�N�Z�T���Ȃ��Ƃ��܂��B
-                    ���̂悤�ȏꍇ�� <literal>org.hibernate.UserType</literal> �̎������l����ׂ��ł��B
-                    ���������Hibernate�^�Ƃ̎����ϊ���S�z�����ɃA�v���P�[�V�����̃R�[�h�������܂��B
+                    あるライブラリから持ってきたJava型を永続化する必要があるとしましょう。
+                    しかしその型には、コンポーネントとしてマッピングするために必要なアクセサがないとします。
+                    このような場合は <literal>org.hibernate.UserType</literal> の実装を考えるべきです。
+                    そうすればHibernate型との実装変換を心配せずにアプリケーションのコードを扱えます。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�{�g���l�b�N����������ɂ�JDBC���n���h�R�[�h���܂��傤�B</term>
+            <term>ボトルネックを解消するにはJDBCをハンドコードしましょう。</term>
             <listitem>
                 <para>
-                    �V�X�e���̃p�t�H�[�}���X�N���e�B�J���ȗ̈�ł́A
-                    �����̑����JDBC�𒼐ڎg���Ɨǂ���������܂���B
-                    �����������{�g���l�b�N�ɂȂ��Ă��邩 <emphasis>�͂����肷��</emphasis> �܂ł͑҂��Ă��������B
-                    �܂�JDBC�𒼐ڎg������Ƃ����āA�K�����������Ȃ�Ƃ͌���Ȃ����Ƃ��������Ă��������B
-                    JDBC�𒼐ڎg���K�v������΁AHibernate�� <literal>Session</literal> ���I�[�v�����āA
-                    JDBC�R�l�N�V�������g���Ɨǂ���������܂���B
-                    �ˑR�Ƃ��ē����g�����U�N�V�����헪�ƃR�l�N�V�����v���o�C�_���g���邩��ł��B
+                    システムのパフォーマンスクリティカルな領域では、
+                    ある種の操作にJDBCを直接使うと良いかもしれません。
+                    しかし何がボトルネックになっているか <emphasis>はっきりする</emphasis> までは待ってください。
+                    またJDBCを直接使うからといって、必ずしも速くなるとは限らないことも理解してください。
+                    JDBCを直接使う必要があれば、Hibernateの <literal>Session</literal> をオープンして、
+                    JDBCコネクションを使うと良いかもしれません。
+                    依然として同じトランザクション戦略とコネクションプロバイダが使えるからです。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term><literal>Session</literal> �̃t���b�V���𗝉����܂��傤�B</term>
+            <term><literal>Session</literal> のフラッシュを理解しましょう。</term>
             <listitem>
                 <para>
-                    Session���i����Ԃ��f�[�^�x�[�X�Ɠ��������邱�Ƃ��Ƃ��ǂ�����܂��B
-                    ���������ꂪ���܂�ɕp�ɂɋN����悤���ƁA�p�t�H�[�}���X�ɉe�����o�Ă��܂��B
-                    �����t���b�V���𖳌��ɂ�����A����̃g�����U�N�V�����̃N�G���⑀��̏��Ԃ�ύX���邱�ƂŁA
-                    �s�K�v�ȃt���b�V�����ŏ����ɂł��܂��B
+                    Sessionが永続状態をデータベースと同期させることがときどきあります。
+                    しかしこれがあまりに頻繁に起こるようだと、パフォーマンスに影響が出てきます。
+                    自動フラッシュを無効にしたり、特定のトランザクションのクエリや操作の順番を変更することで、
+                    不必要なフラッシュを最小限にできます。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>3�w�A�[�L�e�N�`���ł͕����I�u�W�F�N�g�̎g�p���l���܂��傤�B</term>
+            <term>3層アーキテクチャでは分離オブジェクトの使用を考えましょう。</term>
             <listitem>
                 <para>
-                    �T�[�u���b�g / �Z�b�V�����r�[���A�[�L�e�N�`�����g���Ƃ��A
-                    �T�[�u���b�g�w / JSP�w�ԂŃZ�b�V�����r�[���Ń��[�h�����i���I�u�W�F�N�g�������ł��܂��B
-                    ���̍ۃ��N�G�X�g���ƂɐV����Session���g���Ă��������B
-                    �܂� <literal>Session.merge()</literal> �� <literal>Session.saveOrUpdate()</literal> 
-                    ���g���āA�I�u�W�F�N�g�ƃf�[�^�x�[�X�𓯊������Ă��������B
+                    サーブレット / セッションビーンアーキテクチャを使うとき、
+                    サーブレット層 / JSP層間でセッションビーンでロードした永続オブジェクトをやり取りできます。
+                    その際リクエストごとに新しいSessionを使ってください。
+                    また <literal>Session.merge()</literal> や <literal>Session.saveOrUpdate()</literal> 
+                    を使って、オブジェクトとデータベースを同期させてください。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>2�w�A�[�L�e�N�`���ł͒����i���R���e�L�X�g�̎g�p���l���܂��傤�B</term>
+            <term>2層アーキテクチャでは長い永続コンテキストの使用を考えましょう。</term>
             <listitem>
                 <para>
-                    �ō��̃X�P�[���r���e�B�𓾂�ɂ́A
-                    �f�[�^�x�[�X�g�����U�N�V�������ł��邾���Z�����Ȃ���΂Ȃ�܂���B
-                    �����������Ԏ��s���� <emphasis>�A�v���P�[�V�����g�����U�N�V����</emphasis> 
-                    �̎������K�v�Ȃ��Ƃ͂��΂��΂ł��B
-                    ����̓��[�U�̎��_�����1�̍�ƒP�ʁiunit of work�j�ɂȂ�܂��B
-                    �A�v���P�[�V�����g�����U�N�V�����͂������̃N���C�A���g�̃��N�G�X�g/���X�|���X�T�C�N���ɂ܂�����܂��B
-                    �A�v���P�[�V�����g�����U�N�V�����̎����ɕ����I�u�W�F�N�g���g���͈̂�ʓI�ł��B
+                    最高のスケーラビリティを得るには、
+                    データベーストランザクションをできるだけ短くしなければなりません。
+                    しかし長い間実行する <emphasis>アプリケーショントランザクション</emphasis> 
+                    の実装が必要なことはしばしばです。
+                    これはユーザの視点からは1個の作業単位（unit of work）になります。
+                    アプリケーショントランザクションはいくつかのクライアントのリクエスト/レスポンスサイクルにまたがります。
+                    アプリケーショントランザクションの実装に分離オブジェクトを使うのは一般的です。
                     
-                    �����łȂ���΁A2�w�A�[�L�e�N�`���̏ꍇ�͓��ɓK�؂Ȃ��Ƃł����A
-                    �A�v���P�[�V�����g�����U�N�V�����̃��C�t�T�C�N���S�̂ɑ΂���
-                    �P��̃I�[�v���ȉi�����R���e�L�X�g�i�Z�b�V�����j���ێ����Ă��������B
-                    �����ĒP���Ƀ��N�G�X�g�̍Ō��JDBC�R�l�N�V��������ؒf���A
-                    ���̃��N�G�X�g�̍ŏ��ɍĐڑ����܂��B
+                    そうでなければ、2層アーキテクチャの場合は特に適切なことですが、
+                    アプリケーショントランザクションのライフサイクル全体に対して
+                    単一のオープンな永続化コンテキスト（セッション）を維持してください。
+                    そして単純にリクエストの最後にJDBCコネクションから切断し、
+                    次のリクエストの最初に再接続します。
                     
-                    �����ĕ����̃A�v���P�[�V�����g�����U�N�V�������[�X�P�[�X�ɓn����
-                    1��Session���g���񂳂Ȃ��ł��������B
-                    �����łȂ���΁A�Â��f�[�^�ō�Ƃ��邱�ƂɂȂ�܂��B
+                    決して複数のアプリケーショントランザクションユースケースに渡って
+                    1個のSessionを使い回さないでください。
+                    そうでなければ、古いデータで作業することになります。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>��O�𕜋A�\�Ȃ��̂Ƃ��Ĉ����Ă͂����܂���B</term>
+            <term>例外を復帰可能なものとして扱ってはいけません。</term>
             <listitem>
                 <para>
-                    ����́u�x�X�g�v�v���N�e�B�X�ȏ�́A�K�{�̃v���N�e�B�X�ł��B
-                    ��O�����������Ƃ��� <literal>Transaction</literal> �����[���o�b�N���āA
-                    <literal>Session</literal> ���N���[�Y���Ă��������B
-                    �������Ȃ���Hibernate�̓������̏�Ԃ��i����Ԃ𐳊m�ɕ\�����Ă��邱�Ƃ�ۏ؂ł��܂���B
-                    ���̓��ʂȏꍇ�Ƃ��āA�^����ꂽ���ʎq�����C���X�^���X���f�[�^�x�[�X�ɑ��݂��邩�ǂ����𔻒肷�邽�߂ɁA
-                    <literal>Session.load()</literal> ���g�����Ƃ͂�߂Ă��������B
-                    ���̑���� <literal>Session.get()</literal> ���N�G�����g���Ă��������B
+                    これは「ベスト」プラクティス以上の、必須のプラクティスです。
+                    例外が発生したときは <literal>Transaction</literal> をロールバックして、
+                    <literal>Session</literal> をクローズしてください。
+                    そうしないとHibernateはメモリの状態が永続状態を正確に表現していることを保証できません。
+                    この特別な場合として、与えられた識別子を持つインスタンスがデータベースに存在するかどうかを判定するために、
+                    <literal>Session.load()</literal> を使うことはやめてください。
+                    その代わりに <literal>Session.get()</literal> かクエリを使ってください。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�֘A�ɂ͂Ȃ�ׂ��x���t�F�b�`���g���܂��傤�B</term>
+            <term>関連にはなるべく遅延フェッチを使いましょう。</term>
             <listitem>
                 <para>
-                    �����t�F�b�`�͍T���߂ɂ��܂��傤�B
-                    �񎟃L���b�V���ɂ͊��S�ɕێ�����Ȃ��悤�ȃN���X�̊֘A�ɂ́A
-                    �v���L�V�ƒx���R���N�V�������g���Ă��������B
-                    �L���b�V�������N���X�̊֘A�A�܂�L���b�V�����q�b�g����\�������ɍ����֘A�́A
-                    <literal>lazy="false"</literal> �ŐϋɓI�ȃt�F�b�`�𖾎��I�ɖ����ɂ��Ă��������B
-                    �����t�F�b�`���K�؂ȓ���̃��[�X�P�[�X�ɂ́A
-                    �N�G���� <literal>left join fetch</literal> ���g���Ă��������B
+                    即時フェッチは控えめにしましょう。
+                    二次キャッシュには完全に保持されないようなクラスの関連には、
+                    プロキシと遅延コレクションを使ってください。
+                    キャッシュされるクラスの関連、つまりキャッシュがヒットする可能性が非常に高い関連は、
+                    <literal>lazy="false"</literal> で積極的なフェッチを明示的に無効にしてください。
+                    結合フェッチが適切な特定のユースケースには、
+                    クエリで <literal>left join fetch</literal> を使ってください。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
             <term>
-                �t�F�b�`����Ă��Ȃ��f�[�^�Ɋւ���������邽�߂ɁA
-                <emphasis>�r���[�̒��ŃI�[�v���Z�b�V�������g��(open session in view)</emphasis> 
-                �p�^�[�����A�������ꂽ <emphasis>�g�ݗ��ăt�F�[�Y(assembly phase)</emphasis> ���g���܂��傤�B
+                フェッチされていないデータに関わる問題を避けるために、
+                <emphasis>ビューの中でオープンセッションを使う(open session in view)</emphasis> 
+                パターンか、統制された <emphasis>組み立てフェーズ(assembly phase)</emphasis> を使いましょう。
             </term>
             <listitem>
                 <para>
-                    Hibernate�� <emphasis>Data Transfer Objects</emphasis> (DTO)�������ދ��ȍ�Ƃ���J���҂�������܂��B
-                    �`���I��EJB�A�[�L�e�N�`���ł�DTO�͓�ړI������܂��F
-                    1�ڂ́A�G���e�B�e�B�r�[�����V���A���C�Y����Ȃ����ւ̑΍�ł��B
-                    2�ڂ́A�v���[���e�[�V�����w�ɐ��䂪�߂�O�ɁA
-                    �r���[�Ɏg���邷�ׂẴf�[�^���t�F�b�`����āADTO�ɕ��������悤�ȑg�ݗ��ăt�F�[�Y���ÖٓI�ɒ�`���܂��B
-                    Hibernate�ł�1�ڂ̖ړI���s�v�ɂȂ�܂��B
-                    �������r���[�̃����_�����O�����̊ԁA�i���R���e�L�X�g�i�Z�b�V�����j���I�[�v���ɂ����܂܂ɂ��Ȃ���΁A
-                    �g�ݗ��ăt�F�[�Y�͂܂��K�v�ł��i�����I�u�W�F�N�g�̒��̂ǂ̃f�[�^�����p�\���ɂ��āA
-                    �v���[���e�[�V�����w�ƌ����Ȏ�茈�߂����Ă���r�W�l�X���\�b�h���l���Ă݂Ă��������j�B
-                    �����Hibernate���̖��ł͂���܂���B
-                    �g�����U�N�V�������ň��S�Ƀf�[�^�A�N�Z�X���邽�߂̊�{�I�ȗv���ł��B
+                    Hibernateは <emphasis>Data Transfer Objects</emphasis> (DTO)を書く退屈な作業から開発者を解放します。
+                    伝統的なEJBアーキテクチャではDTOは二つ目的があります：
+                    1つ目は、エンティティビーンがシリアライズされない問題への対策です。
+                    2つ目は、プレゼンテーション層に制御が戻る前に、
+                    ビューに使われるすべてのデータがフェッチされて、DTOに復元されるような組み立てフェーズを暗黙的に定義します。
+                    Hibernateでは1つ目の目的が不要になります。
+                    しかしビューのレンダリング処理の間、永続コンテキスト（セッション）をオープンにしたままにしなければ、
+                    組み立てフェーズはまだ必要です（分離オブジェクトの中のどのデータが利用可能かについて、
+                    プレゼンテーション層と厳密な取り決めをしているビジネスメソッドを考えてみてください）。
+                    これはHibernate側の問題ではありません。
+                    トランザクション内で安全にデータアクセスするための基本的な要件です。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>Hibernate����r�W�l�X���W�b�N�𒊏ۉ����邱�Ƃ��l���܂��傤�B</term>
+            <term>Hibernateからビジネスロジックを抽象化することを考えましょう。</term>
             <listitem>
                 <para>
-                    �C���^�[�t�F�C�X�ŁiHibernate�́j�f�[�^�A�N�Z�X�R�[�h���B�����܂��傤�B
-                    <emphasis>DAO</emphasis> �� <emphasis>Thread Local Session</emphasis> �p�^�[����g�ݍ��킹�܂��傤�B
-                    <literal>UserType</literal> ��Hibernate�Ɋ֘A�t����ƁA
-                    �n���h�R�[�h����JDBC�ŉi��������N���X�������Ƃ��ł��܂��B
-                    �i���̃A�h�o�C�X�́u�\���傫�ȁv�A�v���P�[�V�����ɑ΂��Ă̂��̂ł��B
-                    �e�[�u����5�����Ȃ��悤�ȃA�v���P�[�V�����ɂ͓��Ă͂܂�܂���B�j
+                    インターフェイスで（Hibernateの）データアクセスコードを隠蔽しましょう。
+                    <emphasis>DAO</emphasis> と <emphasis>Thread Local Session</emphasis> パターンを組み合わせましょう。
+                    <literal>UserType</literal> でHibernateに関連付けると、
+                    ハンドコードしたJDBCで永続化するクラスを持つこともできます。
+                    （このアドバイスは「十分大きな」アプリケーションに対してのものです。
+                    テーブルが5個しかないようなアプリケーションには当てはまりません。）
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�������֘A�}�b�s���O�͎g��Ȃ��悤�ɂ��܂��傤�B</term>
+            <term>珍しい関連マッピングは使わないようにしましょう。</term>
             <listitem>
                 <para>
-                    �悢���[�X�P�[�X�ɖ{���̑��Α��֘A�����邱�Ƃ͋H�i�܂�j�ł��B
-                    �قƂ�ǂ̏ꍇ�u�����N�e�[�u���v�̕t���I�ȏ�񂪕K�v�ɂȂ�܂��B
-                    ���̏ꍇ�A�����N�N���X��2��1�Α��֘A���g�����������Ɨǂ��ł��B
-                    ���ۂقƂ�ǂ̏ꍇ�֘A��1�Α��Ƒ���1�Ȃ̂ŁA
-                    ���̃X�^�C���̊֘A���g���Ƃ��͖{���ɕK�v���ǂ������l���Ă݂Ă��������B
+                    よいユースケースに本当の多対多関連があることは稀（まれ）です。
+                    ほとんどの場合「リンクテーブル」の付加的な情報が必要になります。
+                    この場合、リンククラスに2つの1対多関連を使う方がずっと良いです。
+                    実際ほとんどの場合関連は1対多と多対1なので、
+                    他のスタイルの関連を使うときは本当に必要かどうかを考えてみてください。
                 </para>
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term>�Ȃ�ׂ��o�����֘A�ɂ��܂��傤�B</term>
+            <term>なるべく双方向関連にしましょう。</term>
             <listitem>
                 <para>
-                    �P�����֘A�͑o�����ɔ�ׂČ���������Ȃ�܂��B
-                    �傫�ȃA�v���P�[�V�����ł́A
-                    �قƂ�ǂ��ׂĂ̊֘A���o�����Ƀi�r�Q�[�V�����ł��Ȃ���΂Ȃ�܂���B
+                    単方向関連は双方向に比べて検索が難しくなります。
+                    大きなアプリケーションでは、
+                    ほとんどすべての関連が双方向にナビゲーションできなければなりません。
                 </para>
             </listitem>
         </varlistentry>

@@ -1,28 +1,30 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="persistent-classes" revision="2">
-    <title>�i���N���X</title>
+    <title>永続クラス</title>
 
     <para>
-        �i���N���X�̓r�W�l�X��̖��̃G���e�B�e�B�i�Ⴆ�΁AE�R�}�[�X�A�v���P�[�V�����̌ڋq�⒍���j
-        ����������A�v���P�[�V�����̃N���X�ł��B
-        �i���N���X�̂��ׂẴC���X�^���X���i����Ԃł���ƌ��Ȃ����킯�ł͂���܂���B
-        �C���X�^���X�͋t�Ɉꎞ�I�itransient�j�ł�������A������ԁidetached�j�ł������肷�邩������܂���B
+        永続クラスはビジネス上の問題のエンティティ（例えば、Eコマースアプリケーションの顧客や注文）
+        を実装するアプリケーションのクラスです。
+        永続クラスのすべてのインスタンスが永続状態であると見なされるわけではありません。
+        インスタンスは逆に一時的（transient）であったり、分離状態（detached）であったりするかもしれません。
     </para>
 
     <para>
-        Plain Old Java Object (POJO)�v���O���~���O���f���Ƃ��Ă��m����
-        �������̒P���ȃ��[���ɏ]���Ȃ�AHibernate�͍ł��悭�����܂��B
-        �����������̃��[���͓�����̂ł͂���܂���B
-        ����Hibernate3�͉i���I�u�W�F�N�g�̐����ɂقƂ�ǉ��̑O����u���Ă��܂���B
-        �h���C�����f���͑��̕��@�ŕ\�����邱�Ƃ��ł��܂��B
-        �Ⴆ�� <literal>Map</literal> �C���X�^���X�̃c���[���g�����@������܂��B
+        Plain Old Java Object (POJO)プログラミングモデルとしても知られる
+        いくつかの単純なルールに従うなら、Hibernateは最もよく働きます。
+        しかしこれらのルールは難しいものではありません。
+        実際Hibernate3は永続オブジェクトの性質にほとんど何の前提も置いていません。
+        ドメインモデルは他の方法で表現することもできます。
+        例えば <literal>Map</literal> インスタンスのツリーを使う方法があります。
     </para>
 
     <sect1 id="persistent-classes-pojo">
-        <title>�P����POJO�̗�</title>
+        <title>単純なPOJOの例</title>
 
         <para>
-            �قƂ�ǂ�Java�A�v���P�[�V�����ɂ̓l�R�Ȃ̓�����\������i���N���X���K�v�ł��B
+            ほとんどのJavaアプリケーションにはネコ科の動物を表現する永続クラスが必要です。
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -105,51 +107,51 @@ public class Cat {
 }]]></programlisting>
 
         <para>
-            �]���ׂ�4�̃��[��������܂��F
+            従うべき4つのルールがあります：
         </para>
         
         <sect2 id="persistent-classes-pojo-constructor" revision="1">
-            <title>�����̂Ȃ��R���X�g���N�^����������</title>
+            <title>引数のないコンストラクタを実装する</title>
 
             <para>
-                <literal>Cat</literal> �ɂ͈����̂Ȃ��R���X�g���N�^������܂��B
-                Hibernate�� <literal>Constructor.newInstance()</literal> ���g���ĉi���N���X��
-                �C���X�^���X�����s����悤�ɁA���ׂẲi���N���X�ɂ̓f�t�H���g�R���X�g���N�^
-                �ipublic�łȂ��Ă��\���܂���j���Ȃ���΂Ȃ�܂���B
-                Hibernate�̎��s���v���L�V�����̂��߂ɁA���Ȃ��Ƃ� <emphasis>package</emphasis> 
-                �̉��������f�t�H���g�R���X�g���N�^�����������߂��܂��B
+                <literal>Cat</literal> には引数のないコンストラクタがあります。
+                Hibernateが <literal>Constructor.newInstance()</literal> を使って永続クラスの
+                インスタンス化を行えるように、すべての永続クラスにはデフォルトコンストラクタ
+                （publicでなくても構いません）がなければなりません。
+                Hibernateの実行時プロキシ生成のために、少なくとも <emphasis>package</emphasis> 
+                の可視性を持つデフォルトコンストラクタを強くお勧めします。
             </para>
         </sect2>
 
         <sect2 id="persistent-classes-pojo-identifier" revision="2">
-            <title>���ʎq�v���p�e�B��p�ӂ���i�I�v�V�����j</title>
+            <title>識別子プロパティを用意する（オプション）</title>
 
             <para>
-                <literal>Cat</literal> �ɂ� <literal>id</literal> �Ƃ����v���p�e�B������܂��B
-                ���̃v���p�e�B�̓f�[�^�x�[�X�e�[�u���̎�L�[�J�����փ}�b�s���O����܂��B
-                ���̃v���p�e�B�̖��O�͉��ł��\���܂��񂵁A�^�͂ǂ̂悤�ȃv���~�e�B�u�^�ł��A
-                �v���~�e�B�u�́u���b�p�[�v�^�ł��A<literal>java.lang.String</literal> �� 
-                <literal>java.util.Date</literal> �ł��\���܂���B
-                �i�������K�V�[�f�[�^�x�[�X�e�[�u���������L�[�����Ȃ�΁A
-                ���q�ׂ��悤�Ȍ^�̃v���p�e�B�������[�U��`�̃N���X���g�����Ƃ����\�ł��B
-                ��ŕ������ʎq�̐߂����Ă��������B�j
+                <literal>Cat</literal> には <literal>id</literal> というプロパティがあります。
+                このプロパティはデータベーステーブルの主キーカラムへマッピングされます。
+                このプロパティの名前は何でも構いませんし、型はどのようなプリミティブ型でも、
+                プリミティブの「ラッパー」型でも、<literal>java.lang.String</literal> や 
+                <literal>java.util.Date</literal> でも構いません。
+                （もしレガシーデータベーステーブルが複合キーを持つならば、
+                今述べたような型のプロパティを持つユーザ定義のクラスを使うことさえ可能です。
+                後で複合識別子の節を見てください。）
             </para>
 
             <para>
-                ���ʎq�v���p�e�B�͌����ɂ̓I�v�V�����ł��B
-                ������ȗ����āAHibernate�ɓ����I�ɃI�u�W�F�N�g�̎��ʎq��ǐՂ����邱�Ƃ͉\�ł��B
-                �������������߂͂��܂���B
+                識別子プロパティは厳密にはオプションです。
+                これを省略して、Hibernateに内部的にオブジェクトの識別子を追跡させることは可能です。
+                しかしおすすめはしません。
             </para>
 
             <para>
-                ���ۂɁA���ʎq�v���p�e�B��錾����N���X���������p�\�ȋ@�\������������܂��F
+                実際に、識別子プロパティを宣言するクラスだけが利用可能な機能がいくつかあります：
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        �����I�u�W�F�N�g�̘A���I�ȍĒǉ��i�J�X�P�[�h�X�V��J�X�P�[�h�}�[�W�j�B
-                         <xref linkend="objectstate-transitive"/> ���Q�Ƃ��Ă��������B
+                        分離オブジェクトの連鎖的な再追加（カスケード更新やカスケードマージ）。
+                         <xref linkend="objectstate-transitive"/> を参照してください。
                     </para>
                 </listitem>
                 <listitem>
@@ -165,47 +167,47 @@ public class Cat {
             </itemizedlist>
 
             <para>
-                �i���N���X�ɂ́A��т������O�̎��ʎq�v���p�e�B���`���邱�Ƃ������߂��܂��B
-                �����null�l������(�܂�v���~�e�B�u�ł͂Ȃ�)�^���g���������悢�ł��傤�B
+                永続クラスには、一貫した名前の識別子プロパティを定義することをお勧めします。
+                さらにnull値を取れる(つまりプリミティブではない)型を使った方がよいでしょう。
             </para>
         </sect2>
 
         <sect2 id="persistent-classes-pojo-final">
-            <title>final�N���X�ɂ��Ȃ��i�I�v�V�����j</title>
+            <title>finalクラスにしない（オプション）</title>
             <para>
-                Hibernate�̒��S�I�ȓ����ł��� <emphasis>�v���L�V</emphasis> �́A
-                �i���N���X��final�łȂ����ƁA�܂��̓��\�b�h��S��public�Ő錾���Ă���
-                �C���^�[�t�F�C�X����������Ă��邩�Ɉˑ����Ă��܂��B
+                Hibernateの中心的な特徴である <emphasis>プロキシ</emphasis> は、
+                永続クラスがfinalでないこと、またはメソッドを全部publicで宣言している
+                インターフェイスが実装されているかに依存しています。
             </para>
             <para>
-                Hibernate�ŃC���^�[�t�F�C�X���������Ă��Ȃ� <literal>final</literal> �N���X���i�������邱�Ƃ͂ł��܂����A
-                �x���֘A�t�F�b�`�ɑ΂��ăv���L�V���g�����Ƃ͂ł��Ȃ��Ȃ�܂��B
-                ����̓p�t�H�[�}���X�`���[�j���O�ւ̑I���������߂邱�ƂɂȂ�܂��B
+                Hibernateでインターフェイスを実装していない <literal>final</literal> クラスを永続化することはできますが、
+                遅延関連フェッチに対してプロキシを使うことはできなくなります。
+                これはパフォーマンスチューニングへの選択肢を狭めることになります。
             </para>
             <para>
-                final�ł͂Ȃ��N���X�� <literal>public final</literal> ���\�b�h���`���邱�Ƃ�������ׂ��ł��B
-                <literal>public final</literal> ���\�b�h�����N���X���g��������΁A
-                <literal>lazy="false"</literal> �Ɛݒ肵�Ė����I�Ƀv���L�V�𖳌��ɂ��Ȃ���΂Ȃ�܂���B
+                finalではないクラスで <literal>public final</literal> メソッドを定義することも避けるべきです。
+                <literal>public final</literal> メソッドを持つクラスを使いたければ、
+                <literal>lazy="false"</literal> と設定して明示的にプロキシを無効にしなければなりません。
             </para>
         </sect2>
 
         <sect2 id="persistent-classes-pojo-accessors" revision="2">
-            <title>�i���t�B�[���h�ɑ΂���A�N�Z�T�ƃ~���[�e�[�^���`����i�I�v�V�����j</title>
+            <title>永続フィールドに対するアクセサとミューテータを定義する（オプション）</title>
 
             <para>
-                <literal>Cat</literal> �ł͂��ׂẲi���t�B�[���h�ɑ΂��ăA�N�Z�T���\�b�h���`���Ă��܂��B
-                ���̑�����ORM�c�[���́A�i���C���X�^���X�ϐ��𒼐ډi�������܂��B
-                �������̓����[�V���i���X�L�[�}�ƃN���X�̓����\���𕪗���������ǂ��ƐM���Ă��܂��B
-                �f�t�H���g�ł́AHibernate��JavaBean�X�^�C���̃v���p�e�B���i�������A
+                <literal>Cat</literal> ではすべての永続フィールドに対してアクセサメソッドを定義しています。
+                他の多くのORMツールは、永続インスタンス変数を直接永続化します。
+                私たちはリレーショナルスキーマとクラスの内部構造を分離する方が良いと信じています。
+                デフォルトでは、HibernateはJavaBeanスタイルのプロパティを永続化し、
                 <literal>getFoo</literal>, <literal>isFoo</literal>, <literal>setFoo</literal> 
-                �`���̃��\�b�h����F�����܂��B
-                �������K�v�Ȃ�A����̃v���p�e�B�ɑ΂��āA���ڂ̃t�B�[���h�A�N�Z�X�ɐ؂�ւ��邱�Ƃ͉\�ł��B
+                形式のメソッド名を認識します。
+                しかし必要なら、特定のプロパティに対して、直接のフィールドアクセスに切り替えることは可能です。
             </para>
 
             <para>
-                �v���p�e�B��public�Ő錾����K�v�� <emphasis>����܂���</emphasis> �B
-                Hibernate�̓f�t�H���g�A<literal>protected</literal> �������� <literal>private</literal> 
-                ��get / set�̃y�A�����v���p�e�B���i�������邱�Ƃ��ł��܂��B
+                プロパティはpublicで宣言する必要は <emphasis>ありません</emphasis> 。
+                Hibernateはデフォルト、<literal>protected</literal> もしくは <literal>private</literal> 
+                のget / setのペアを持つプロパティを永続化することができます。
             </para>
 
         </sect2>
@@ -213,11 +215,11 @@ public class Cat {
     </sect1>
 
     <sect1 id="persistent-classes-inheritance">
-        <title>�p���̎���</title>
+        <title>継承の実装</title>
 
         <para>
-            �T�u�N���X��1�Ԗڂ�2�Ԗڂ̃��[�������Ȃ���΂Ȃ�܂���B
-            �T�u�N���X�̓X�[�p�[�N���X <literal>Cat</literal> ���环�ʎq�v���p�e�B���p�����܂��B
+            サブクラスも1番目と2番目のルールを守らなければなりません。
+            サブクラスはスーパークラス <literal>Cat</literal> から識別子プロパティを継承します。
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -235,60 +237,60 @@ public class DomesticCat extends Cat {
     </sect1>
 
     <sect1 id="persistent-classes-equalshashcode" revision="1">
-        <title><literal>equals()</literal> �� <literal>hashCode()</literal> �̎���</title>
+        <title><literal>equals()</literal> と <literal>hashCode()</literal> の実装</title>
 
         <para>
-            �ȉ��̏����̏ꍇ�A
-            <literal>equals()</literal> �� <literal>hashCode()</literal> ���\�b�h���I�[�o�[���C�h���Ȃ���΂Ȃ�܂���A
+            以下の条件の場合、
+            <literal>equals()</literal> と <literal>hashCode()</literal> メソッドをオーバーライドしなければなりません、
         </para>
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    �i���N���X�̃C���X�^���X�� <literal>Set</literal> �ɒu���ꍇ�B
-                    �i����͑��l�̊֘A��\�����邨�����߂̕��@�ł��j
-                    <emphasis>�����ē�����</emphasis>
+                    永続クラスのインスタンスを <literal>Set</literal> に置く場合。
+                    （これは多値の関連を表現するおすすめの方法です）
+                    <emphasis>そして同時に</emphasis>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �����C���X�^���X���Z�b�V�����֍Ēǉ�����ꍇ�B
+                    分離インスタンスをセッションへ再追加する場合。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            Hibernate�́A�i��ID�i�f�[�^�x�[�X�̍s�j�ƁA����̃Z�b�V�����X�R�[�v����
-            ����ł���JavaID�Ƃ������ł��邱�Ƃ�ۏ؂��܂��B
-            �ł�����قȂ�Z�b�V�����Ō��������C���X�^���X��g�ݍ��킹��ꍇ�A
-            <literal>Set</literal> �ɈӖ��̂���Z�}���e�B�N�X���������悤�Ǝv���Ă���Ȃ�
-            ������<literal>equals()</literal> �� <literal>hashCode()</literal> 
-            ���������Ȃ���΂Ȃ�܂���B
+            Hibernateは、永続ID（データベースの行）と、特定のセッションスコープ内に
+            限定ですがJavaIDとが等価であることを保証します。
+            ですから異なるセッションで検索したインスタンスを組み合わせる場合、
+            <literal>Set</literal> に意味のあるセマンティクスを持たせようと思っているなら
+            すぐに<literal>equals()</literal> と <literal>hashCode()</literal> 
+            を実装しなければなりません。
         </para>
 
         <para>
-            �ł������ȕ��@�́A�����̃I�u�W�F�N�g�̎��ʎq�̒l�̔�r�ɂ���� <literal>equals()</literal>��
-            <literal>hashCode()</literal> ������������@�ł��B
-            �l�������Ȃ�A���҂̓f�[�^�x�[�X�̓����s�łȂ���΂Ȃ�Ȃ����ߓ������Ȃ�܂��B
-            �i���҂� <literal>Set</literal> �ɒǉ�����Ă��A
-            <literal>Set</literal> �ɂ�1�̗v�f�����Ȃ����ƂɂȂ�܂��j
-            �c�O�Ȃ��ƂɁA�������ꂽ���ʎq�ɂ͂��̃A�v���[�`���g�����Ƃ��ł��܂���B
-            Hibernate�͉i�������ꂽ�I�u�W�F�N�g�֎��ʎq�̒l�������邾���ł���A
-            �V�����쐬���ꂽ�C���X�^���X�͂ǂ̂悤�Ȏ��ʎq�̒l�������Ă��܂���B
-            ����ɁA�C���X�^���X���Z�[�u����Ă��炸�A���� <literal>Set</literal> �̒��ɂ���΁A
-            �Z�[�u����ƃI�u�W�F�N�g�֎��ʎq�̒l�������邱�ƂɂȂ�܂��B
-            ���� <literal>equals()</literal> �� <literal>hashCode()</literal> �����ʎq�̒l�Ɋ�Â��Ă���Ȃ�A
-            �n�b�V���R�[�h���ύX������ <literal>Set</literal> �̋K�񂪔j���܂��B
-            ���̖��ɂ��Ă̊��S�ȋc�_�́AHibernate�̃E�F�u�T�C�g�����Ă��������B
-            �����Hibernate�̖��ł͂Ȃ��A�I�u�W�F�N�g�̓��ꐫ�Ɠ������ɂ��ẮA
-            �ʏ��Java�̃Z�}���e�B�N�X�ł��邱�Ƃɒ��ӂ��Ă��������B
+            最も明白な方法は、両方のオブジェクトの識別子の値の比較によって <literal>equals()</literal>と
+            <literal>hashCode()</literal> を実装する方法です。
+            値が同じなら、両者はデータベースの同じ行でなければならないため等しくなります。
+            （両者が <literal>Set</literal> に追加されても、
+            <literal>Set</literal> には1個の要素しかないことになります）
+            残念なことに、生成された識別子にはこのアプローチを使うことができません。
+            Hibernateは永続化されたオブジェクトへ識別子の値を代入するだけであり、
+            新しく作成されたインスタンスはどのような識別子の値も持っていません。
+            さらに、インスタンスがセーブされておらず、現在 <literal>Set</literal> の中にあれば、
+            セーブするとオブジェクトへ識別子の値を代入することになります。
+            もし <literal>equals()</literal> と <literal>hashCode()</literal> が識別子の値に基づいているなら、
+            ハッシュコードが変更されると <literal>Set</literal> の規約が破られます。
+            この問題についての完全な議論は、Hibernateのウェブサイトを見てください。
+            これはHibernateの問題ではなく、オブジェクトの同一性と等価性についての、
+            通常のJavaのセマンティクスであることに注意してください。
         </para>
 
         <para>
-            <emphasis>�r�W�l�X�L�[�̓�����</emphasis> ���g���āA
-            <literal>equals()</literal> �� <literal>hashCode()</literal> ���������邱�Ƃ������߂��܂��B
-            �r�W�l�X�L�[�̓������Ƃ́A<literal>equals()</literal> ���\�b�h���A�r�W�l�X�L�[�A
-            �܂茻���̐��E�ɂ����ăC���X�^���X����肷��L�[�i<emphasis>���R</emphasis> ���L�[�j
-            ���`������v���p�e�B�������r���邱�Ƃ��Ӗ����܂��B
+            <emphasis>ビジネスキーの等価性</emphasis> を使って、
+            <literal>equals()</literal> と <literal>hashCode()</literal> を実装することをお勧めします。
+            ビジネスキーの等価性とは、<literal>equals()</literal> メソッドが、ビジネスキー、
+            つまり現実の世界においてインスタンスを特定するキー（<emphasis>自然</emphasis> 候補キー）
+            を形成するプロパティだけを比較することを意味します。
         </para>
 
         <programlisting><![CDATA[public class Cat {
@@ -316,39 +318,39 @@ public class DomesticCat extends Cat {
 }]]></programlisting>
 
         <para>
-            �r�W�l�X�L�[�̓f�[�^�x�[�X�̎�L�[���قǈ���ł���K�v�͂Ȃ����Ƃɒ��ӂ��Ă�������
-            �i<xref linkend="transactions-basics-identity"/> �����Ă��������j�B
-            �X�V�s�ȃv���p�e�B�⃆�j�[�N�ȃv���p�e�B�́A�ʏ�r�W�l�X�L�[�̂悢���ł��B
+            ビジネスキーはデータベースの主キー候補ほど安定である必要はないことに注意してください
+            （<xref linkend="transactions-basics-identity"/> を見てください）。
+            更新不可なプロパティやユニークなプロパティは、通常ビジネスキーのよい候補です。
         </para>
 
     </sect1>
 
     <sect1 id="persistent-classes-dynamicmodels">
-        <title>���I���f��</title>
+        <title>動的モデル</title>
 
         <para>
-            <emphasis>�ȉ��̋@�\�͌��ݎ����i�K�ɂ���ƌ��Ȃ���Ă���A
-            �߂������ύX�����\�������邱�Ƃɒ��ӂ��Ă��������B</emphasis>
+            <emphasis>以下の機能は現在実験段階にあると見なされており、
+            近い将来変更される可能性があることに注意してください。</emphasis>
         </para>
 
         <para>
-            �i���G���e�B�e�B�́A�K���������s����POJO�N���X��JavaBean�I�u�W�F�N�g�ŕ\������K�v�͂���܂���B
-            Hibernate�́i���s���� <literal>Map</literal> �� <literal>Map</literal> ���g���j���I���f���ƁA
-            DOM4J�c���[�Ƃ��ẴG���e�B�e�B�̕\�����T�|�[�g���܂��B
-            ���̃A�v���[�`���g���Ɖi���N���X���������A�}�b�s���O�t�@�C���������������ƂɂȂ�܂��B
+            永続エンティティは、必ずしも実行時にPOJOクラスやJavaBeanオブジェクトで表現する必要はありません。
+            Hibernateは（実行時に <literal>Map</literal> の <literal>Map</literal> を使う）動的モデルと、
+            DOM4Jツリーとしてのエンティティの表現もサポートします。
+            このアプローチを使うと永続クラスを書かず、マッピングファイルだけを書くことになります。
         </para>
 
         <para>
-            �f�t�H���g�ł́AHibernate�͒ʏ��POJO���[�h�œ��삵�܂��B
-            <literal>default_entity_mode</literal> �ݒ�I�v�V�������g���āA
-            ����� <literal>SessionFactory</literal> �ɑ΂���f�t�H���g�̃G���e�B�e�B�\�����[�h��ݒ肷�邱�Ƃ��ł��܂�
-            �i<xref linkend="configuration-optional-properties"/> �����Ă��������j�B
+            デフォルトでは、Hibernateは通常のPOJOモードで動作します。
+            <literal>default_entity_mode</literal> 設定オプションを使って、
+            特定の <literal>SessionFactory</literal> に対するデフォルトのエンティティ表現モードを設定することができます
+            （<xref linkend="configuration-optional-properties"/> を見てください）。
         </para>
 
         <para>
-            �ȉ��̗�ł� <literal>Map</literal> ���g�����\�����Љ�܂��B
-            �܂��}�b�s���O�t�@�C���ŁA�N���X���̑���Ɂi�܂��͂���ɉ����āj
-            <literal>entity-name</literal> ���`���Ȃ���΂Ȃ�܂���F
+            以下の例では <literal>Map</literal> を使った表現を紹介します。
+            まずマッピングファイルで、クラス名の代わりに（またはそれに加えて）
+            <literal>entity-name</literal> を定義しなければなりません：
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -386,14 +388,14 @@ public class DomesticCat extends Cat {
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            �֘A���^�[�Q�b�g�̃N���X�����g���Ē�`���Ă����Ƃ��Ă��A
-            �֘A�̃^�[�Q�b�g�^��POJO�ł͂Ȃ����I�ȃG���e�B�e�B�ł��\��Ȃ����Ƃɒ��ӂ��Ă��������B
+            関連がターゲットのクラス名を使って定義していたとしても、
+            関連のターゲット型もPOJOではなく動的なエンティティでも構わないことに注意してください。
         </para>
 
         <para>
-            <literal>SessionFactory</literal> �ɑ΂��ăf�t�H���g�̃G���e�B�e�B���[�h�� 
-            <literal>dynamic-map</literal> �ɐݒ肵����A
-            ���s���� <literal>Map</literal> �� <literal>Map</literal> ���g�����Ƃ��ł��܂��F
+            <literal>SessionFactory</literal> に対してデフォルトのエンティティモードを 
+            <literal>dynamic-map</literal> に設定した後、
+            実行時に <literal>Map</literal> の <literal>Map</literal> を使うことができます：
         </para>
 
         <programlisting><![CDATA[Session s = openSession();
@@ -419,15 +421,15 @@ tx.commit();
 s.close();]]></programlisting>
 
         <para>
-            ���I�ȃ}�b�s���O�̗��_�́A�G���e�B�e�B�N���X�̎�����K�v�Ƃ��Ȃ����߁A
-            �v���g�^�C�s���O�ɗv����^�[���A���E���h�^�C���������Ƃ������Ƃł��B
-            �������R���p�C�����̌^�`�F�b�N���Ȃ��̂ŁA���s���ɔ��ɑ����̗�O����������Ȃ���΂Ȃ�Ȃ��ł��傤�B
-            Hibernate�}�b�s���O�̂������ŁA�f�[�^�x�[�X�X�L�[�}�͗e�Ղɐ��K���ł��A���S�ɂȂ�A
-            ��œK�؂ȃh���C�����f���̎�����ǉ����邱�Ƃ��\�ɂȂ�܂��B
+            動的なマッピングの利点は、エンティティクラスの実装を必要としないため、
+            プロトタイピングに要するターンアラウンドタイムが早いということです。
+            しかしコンパイル時の型チェックがないので、実行時に非常に多くの例外処理を扱わなければならないでしょう。
+            Hibernateマッピングのおかげで、データベーススキーマは容易に正規化でき、健全になり、
+            後で適切なドメインモデルの実装を追加することが可能になります。
         </para>
 
         <para>
-            �G���e�B�e�B�\�����[�h�� <literal>Session</literal> ���Ƃɐݒ肷�邱�Ƃ��\�ł��B
+            エンティティ表現モードは <literal>Session</literal> ごとに設定することも可能です。
         </para>
 
         <programlisting><![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
@@ -445,18 +447,18 @@ dynamicSession.close()
 
 
         <para>
-            <literal>EntityMode</literal> ���g���� <literal>getSession()</literal> 
-            �̌Ăяo���� <literal>SessionFactory</literal> �ł͂Ȃ� <literal>Session</literal> 
-            API�ɂ��邱�Ƃɒ��ӂ��Ă��������B
-            ���̕��@�ł́A�V���� <literal>Session</literal> �́A�x�[�X�ƂȂ�JDBC�R�l�N�V�����A
-            �g�����U�N�V�����A���̑��̃R���e�L�X�g�������L���܂��B
-            �����2�Ԗڂ� <literal>Session</literal> �ł� <literal>flush()</literal> �� <literal>close()</literal> 
-            ���ĂԕK�v���Ȃ��Ƃ������ƁA���̂��߃g�����U�N�V�����ƃR�l�N�V�����̊Ǘ���
-            1�Ԗڂ̍�ƒP��(Unit of Work)�ɔC���邱�Ƃ��ł���Ƃ������Ƃł��B
+            <literal>EntityMode</literal> を使った <literal>getSession()</literal> 
+            の呼び出しは <literal>SessionFactory</literal> ではなく <literal>Session</literal> 
+            APIにあることに注意してください。
+            その方法では、新しい <literal>Session</literal> は、ベースとなるJDBCコネクション、
+            トランザクション、その他のコンテキスト情報を共有します。
+            これは2番目の <literal>Session</literal> では <literal>flush()</literal> と <literal>close()</literal> 
+            を呼ぶ必要がないということ、そのためトランザクションとコネクションの管理を
+            1番目の作業単位(Unit of Work)に任せることができるということです。
         </para>
 
         <para>
-            XML�\���̔\�͂ɂ��Ă̂���Ȃ���� <xref linkend="xml"/> �Ō�����܂��B
+            XML表現の能力についてのさらなる情報は <xref linkend="xml"/> で見つかります。
         </para>
 
     </sect1>
@@ -465,30 +467,30 @@ dynamicSession.close()
         <title>Tuplizer</title>
 
         <para>
-            <literal>org.hibernate.tuple.Tuplizer</literal> �Ƃ��̃T�u�C���^�[�t�F�C�X�́A
-            �\���� <literal>org.hibernate.EntityMode</literal> �𗘗p���āA
-            �f�[�^�f�Ђ̂���\���̊Ǘ��ɐӔC�������܂��B
-            �^����ꂽ�f�[�^�f�Ђ��f�[�^�\���Ƃ��čl����Ȃ�ATuplizer�͂��̂悤�ȃf�[�^�\����
-            �ǂ̂悤�ɍ쐬���邩��m��A���̂悤�ȃf�[�^�\������ǂ̂悤�ɒl�𒊏o���A
-            �������邩��m���Ă��܂��B
-            �Ⴆ��POJO�G���e�B�e�B���[�h�ł́A�Ή�����Tuplizer�̓R���X�g���N�^��ʂ��āA
-            POJO���ǂ̂悤�ɍ쐬���邩�A��`���ꂽ�v���p�e�B�A�N�Z�T���g���A
-            POJO�v���p�e�B�ɂǂ̂悤�ɃA�N�Z�X���邩��m��܂��B
-            Tuplizer�ɂ͓�̃n�C���x���̌^������܂��B
-            �����́A<literal>org.hibernate.tuple.EntityTuplizer</literal> �� 
-            <literal>org.hibernate.tuple.ComponentTuplizer</literal> �C���^�[�t�F�C�X�ŕ\������܂��B
-            <literal>EntityTuplizer</literal> �͏�ŏq�ׂ��悤�ȃG���e�B�e�B�Ɋւ���_��̊Ǘ��ɐӔC�������܂��B
-            ����A<literal>ComponentTuplizer</literal> �̓R���|�[�l���g�Ɋւ���_��̊Ǘ��ɐӔC�������܂��B
+            <literal>org.hibernate.tuple.Tuplizer</literal> とそのサブインターフェイスは、
+            表現の <literal>org.hibernate.EntityMode</literal> を利用して、
+            データ断片のある表現の管理に責任を持ちます。
+            与えられたデータ断片をデータ構造として考えるなら、Tuplizerはそのようなデータ構造を
+            どのように作成するかを知り、そのようなデータ構造からどのように値を抽出し、
+            注入するかを知っています。
+            例えばPOJOエンティティモードでは、対応するTuplizerはコンストラクタを通して、
+            POJOをどのように作成するか、定義されたプロパティアクセサを使い、
+            POJOプロパティにどのようにアクセスするかを知ります。
+            Tuplizerには二つのハイレベルの型があります。
+            それらは、<literal>org.hibernate.tuple.EntityTuplizer</literal> と 
+            <literal>org.hibernate.tuple.ComponentTuplizer</literal> インターフェイスで表現されます。
+            <literal>EntityTuplizer</literal> は上で述べたようなエンティティに関する契約の管理に責任を持ちます。
+            一方、<literal>ComponentTuplizer</literal> はコンポーネントに関する契約の管理に責任を持ちます。
         </para>
 
         <para>
-            ���[�U�͓Ǝ���Tuplizer�ɍ����ւ��邱�Ƃ��\�ł��B
-            �����炭dynamic-map entity-mode�̍ۂ� <literal>java.util.HashMap</literal> ���g���̂ł͂Ȃ��A
-            <literal>java.util.Map</literal> �̎������K�v�ł��傤�B
-            �������́A�����炭�f�t�H���g�̂��̂ł͂Ȃ��A�ʂ̃v���L�V�����헪�̒�`���K�v�ł��傤�B
-            ���҂Ƃ��A�J�X�^����Tuplizer�������`���邱�ƂŒB������܂��B
-            Tuplizer�̒�`�́A�Ǘ����悤�Ƃ���G���e�B�e�B��R���|�[�l���g�̃}�b�s���O�Ɍ��ѕt�����܂��B
-            �ڋq�G���e�B�e�B�̗�ɖ߂�ƁF
+            ユーザは独自のTuplizerに差し替えることも可能です。
+            おそらくdynamic-map entity-modeの際に <literal>java.util.HashMap</literal> を使うのではなく、
+            <literal>java.util.Map</literal> の実装が必要でしょう。
+            もしくは、おそらくデフォルトのものではなく、別のプロキシ生成戦略の定義が必要でしょう。
+            両者とも、カスタムのTuplizer実装を定義することで達成されます。
+            Tuplizerの定義は、管理しようとするエンティティやコンポーネントのマッピングに結び付けられます。
+            顧客エンティティの例に戻ると：
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -531,7 +533,7 @@ public class CustomMapTuplizerImpl
     </sect1>
 
     <para>
-        TODO: �v���p�e�B�ƃv���L�V�p�b�P�[�W�̃��[�U�g���t���[�����[�N�𕶏������邱��
+        TODO: プロパティとプロキシパッケージのユーザ拡張フレームワークを文書化すること
     </para>
 
 </chapter>

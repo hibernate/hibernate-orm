@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="batch">
-    <title>�o�b�`����</title>
+    <title>バッチ処理</title>
     
     <para>
-        Hibernate���g���ăf�[�^�x�[�X��100,000�s��}������𒼂ȕ��@�́A���̂悤�Ȃ��̂ł��F
+        Hibernateを使ってデータベースに100,000行を挿入する愚直な方法は、このようなものです：
     </para>
 
 <programlisting><![CDATA[Session session = sessionFactory.openSession();
@@ -16,42 +18,42 @@ tx.commit();
 session.close();]]></programlisting>
 
     <para>
-        �����50,000�Ԗڂ̍s�̂������ <literal>OutOfMemoryException</literal> �Ŏ��s����ł��傤�B
-        Hibernate���Z�b�V�������x���L���b�V���ŁA
-        �V�����}�����ꂽ���ׂĂ� <literal>Customer</literal> 
-        �C���X�^���X���L���b�V�����邩��ł��B
+        これは50,000番目の行のあたりで <literal>OutOfMemoryException</literal> で失敗するでしょう。
+        Hibernateがセッションレベルキャッシュで、
+        新しく挿入されたすべての <literal>Customer</literal> 
+        インスタンスをキャッシュするからです。
     </para>
 
     <para>
-        ���̏͂ł́A���̖������������@���Љ�܂��B
-        �������o�b�`����������Ȃ�AJDBC�o�b�`���g�p�\�ł��邱�Ƃ����ɏd�v�ł��B
-        �����łȂ���Ύ荠�ȃp�t�H�[�}���X�������܂���B
-        JDBC�o�b�`�T�C�Y���荠�Ȑ��l�i�Ⴆ�΁A10����50�j�ɐݒ肵�Ă��������F
+        この章では、この問題を回避する方法を紹介します。
+        しかしバッチ処理をするなら、JDBCバッチが使用可能であることが非常に重要です。
+        そうでなければ手頃なパフォーマンスが得られません。
+        JDBCバッチサイズを手頃な数値（例えば、10から50）に設定してください：
     </para>
     
 <programlisting><![CDATA[hibernate.jdbc.batch_size 20]]></programlisting>
 
     <para>
-        �܂��񎟃L���b�V�����S�������Ȃ��v���Z�X�ŁA
-        ���̂悤�ȍ�Ƃ��������Ǝv����������܂���F
+        また二次キャッシュが全く効かないプロセスで、
+        このような作業をしたいと思うかもしれません：
     </para>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
 
     <para>
-        �������A����͐�΂ɕK�v�Ƃ����킯�ł͂���܂���B
-        �Ȃ��Ȃ疾���I�� <literal>CacheMode</literal> ��ݒ肵�āA
-        �񎟃L���b�V���Ƃ̑��ݍ�p�𖳌��ɂ��邱�Ƃ��ł��邩��ł��B
+        しかし、これは絶対に必要というわけではありません。
+        なぜなら明示的に <literal>CacheMode</literal> を設定して、
+        二次キャッシュとの相互作用を無効にすることができるからです。
        
     </para>
 
     <sect1 id="batch-inserts">
-        <title>�o�b�`�}��</title>
+        <title>バッチ挿入</title>
 
         <para>
-            �V�����I�u�W�F�N�g���i��������Ƃ��A�ꎟ�L���b�V���̃T�C�Y�𐧌����邽�߁A
-            �Z�b�V������ <literal>flush()</literal> ���� <literal>clear()</literal> 
-            ���Ȃ���΂Ȃ�܂���B
+            新しいオブジェクトを永続化するとき、一次キャッシュのサイズを制限するため、
+            セッションを <literal>flush()</literal> して <literal>clear()</literal> 
+            しなければなりません。
         </para>
 
 <programlisting><![CDATA[Session session = sessionFactory.openSession();
@@ -73,13 +75,13 @@ session.close();]]></programlisting>
     </sect1>
 
     <sect1 id="batch-update" >
-        <title>�o�b�`�X�V</title>
+        <title>バッチ更新</title>
 
         <para>
-            �f�[�^�𕜌�������X�V�����肷��ɂ͓����A�C�f�B�A��K�p���܂��B
-            ����ɉ����āA�f�[�^�̍s�𑽂��Ԃ��N�G���ɑ΂��ėL����
-            �T�[�o�[�T�C�h�̃J�[�\���̗��_�𐶂���������� 
-            <literal>scroll()</literal> ���g���K�v������܂��B
+            データを復元したり更新したりするには同じアイディアを適用します。
+            それに加えて、データの行を多く返すクエリに対して有効な
+            サーバーサイドのカーソルの利点を生かしたければ 
+            <literal>scroll()</literal> を使う必要があります。
         </para>
 
 <programlisting><![CDATA[Session session = sessionFactory.openSession();
@@ -106,26 +108,26 @@ session.close();]]></programlisting>
 
     <sect1 id="batch-statelesssession">
         <title>
-        StatelessSession�C���^�[�t�F�C�X
+        StatelessSessionインターフェイス
         </title>
         
         <para>
-            �܂��ʂ̕��@�Ƃ��āAHibernate�̓R�}���h�w����API��p�ӂ��Ă��܂��B
-            ����͕����I�u�W�F�N�g�̌`�ŁA
-            �f�[�^�x�[�X�Ƃ̃f�[�^�X�g���[���̂����Ɏg�����Ƃ��ł��܂��B
-            <literal>StatelessSession</literal> �͊֘A����i���R���e�L�X�g���������A
-            �����x���̃��C�t�T�C�N���Z�}���e�B�N�X�̑�����񋟂��܂���B
-            ���ɃX�e�[�g���X�Z�b�V�����́A�ꎞ�L���b�V�������������A
-            �܂��ǂ̂悤�ȓ񎟃L���b�V����N�G���L���b�V���Ƃ����ݍ�p���܂���B
-            �g�����U�N�V���i����write-behind�⎩���_�[�e�B�`�F�b�N���������܂���B
-            �X�e�[�g���X�Z�b�V�������g���čs���鑀�삪�A
-            �֘A����C���X�^���X�փJ�X�P�[�h����邱�Ƃ͌����Ă���܂���B
-            �R���N�V�����́A�X�e�[�g���X�Z�b�V��������͖�������܂��B
-            �X�e�[�g���X�Z�b�V������ʂ��čs���鑀��́A
-            Hibernate�̃C�x���g���f����C���^�[�Z�v�^�̉e�����󂯂܂���B
-            �ꎞ�L���b�V���������Ȃ����߁A
-            �X�e�[�g���X�Z�b�V�����͕ʖ������f�[�^�ɏ�肭�Ώ��ł��܂���B
-            �X�e�[�g���X�Z�b�V�����͒჌�x���̒��ۉ��ł���AJDBC�ɔ��ɂ悭���Ă��܂��B
+            また別の方法として、Hibernateはコマンド指向のAPIを用意しています。
+            これは分離オブジェクトの形で、
+            データベースとのデータストリームのやり取りに使うことができます。
+            <literal>StatelessSession</literal> は関連する永続コンテキストを持たず、
+            高レベルのライフサイクルセマンティクスの多くを提供しません。
+            特にステートレスセッションは、一時キャッシュを実装せず、
+            またどのような二次キャッシュやクエリキャッシュとも相互作用しません。
+            トランザクショナルなwrite-behindや自動ダーティチェックも実装しません。
+            ステートレスセッションを使って行われる操作が、
+            関連するインスタンスへカスケードされることは決してありません。
+            コレクションは、ステートレスセッションからは無視されます。
+            ステートレスセッションを通して行われる操作は、
+            Hibernateのイベントモデルやインターセプタの影響を受けません。
+            一時キャッシュを持たないため、
+            ステートレスセッションは別名を持つデータに上手く対処できません。
+            ステートレスセッションは低レベルの抽象化であり、JDBCに非常によく似ています。
             
         </para>
 
@@ -144,20 +146,20 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            ���̃R�[�h��ł́A�N�G�����Ԃ� <literal>Customer</literal> 
-            �C���X�^���X�͑����Ɂi�Z�b�V��������j��������邱�Ƃɒ��ӂ��Ă��������B
-            ����́A�ǂ̂悤�ȉi���R���e�L�X�g�Ƃ������Ċ֘A���܂���B
+            このコード例では、クエリが返す <literal>Customer</literal> 
+            インスタンスは即座に（セッションから）分離されることに注意してください。
+            これは、どのような永続コンテキストとも決して関連しません。
             
         </para>
         
         <para>
-            <literal>StatelessSession</literal> �C���^�[�t�F�C�X�Œ�`����Ă��� 
-            <literal>insert(), update(), delete()</literal> �́A
-            �჌�x���̒��ړI�ȃf�[�^�x�[�X����ƍl�����܂��B
-            ���ʂƂ��āASQL�� <literal>INSERT, UPDATE, DELETE</literal> �����ꂼ�ꑦ���Ɏ��s����܂��B
-            ���̂悤�ɁA������ <literal>Session</literal> �C���^�[�t�F�C�X�Œ�`����Ă��� 
+            <literal>StatelessSession</literal> インターフェイスで定義されている 
+            <literal>insert(), update(), delete()</literal> は、
+            低レベルの直接的なデータベース操作と考えられます。
+            結果として、SQLの <literal>INSERT, UPDATE, DELETE</literal> がそれぞれ即座に実行されます。
+            このように、これらは <literal>Session</literal> インターフェイスで定義されている 
             <literal>save(), saveOrUpdate(), delete()</literal> 
-            �Ƃ͔��ɈقȂ�Ӗ��������܂��B
+            とは非常に異なる意味を持ちます。
             
         </para>
 
@@ -165,68 +167,68 @@ session.close();]]></programlisting>
 
     <sect1 id="batch-direct" revision="3">
         <title>
-        DML�X�^�C���̑���
+        DMLスタイルの操作
         </title>
 
         <para>
-            ���łɋc�_�����悤�ɁA�����I�����ߓI�ȃI�u�W�F�N�g/�����[�V���i���}�b�s���O�́A
-            �I�u�W�F�N�g�̏�Ԃ̊Ǘ��ł���ƍl�����܂��B
-            ����̓��������̃I�u�W�F�N�g�̏�Ԃ𗘗p�ł���Ƃ������Ƃł��B
-            ���̂��߁iSQL�� <literal>�f�[�^���쌾��</literal> (DML) ���F
+            すでに議論したように、自動的かつ透過的なオブジェクト/リレーショナルマッピングは、
+            オブジェクトの状態の管理であると考えられます。
+            これはメモリ内のオブジェクトの状態を利用できるということです。
+            そのため（SQLの <literal>データ操作言語</literal> (DML) 文：
             <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal> 
-            ���g���āj�f�[�^�x�[�X���̃f�[�^�𒼐ڑ��삵�Ă��A
-            ���������̏�Ԃɂ͉e����^���܂���B
-            ������Hibernate�́A�o���NSQL�X�^�C����DML�����s�ɑΉ����郁�\�b�h��p�ӂ��Ă��܂��B
-            �����Hibernate�N�G������i<xref linkend="queryhql">HQL</xref>�j
-            ��ʂ��Ď��s����܂��B
+            を使って）データベース内のデータを直接操作しても、
+            メモリ内の状態には影響を与えません。
+            しかしHibernateは、バルクSQLスタイルのDML文実行に対応するメソッドを用意しています。
+            これはHibernateクエリ言語（<xref linkend="queryhql">HQL</xref>）
+            を通して実行されます。
             
         </para>
 
         <para>
-            <literal>UPDATE</literal> �� <literal>DELETE</literal> ���̋^���\���́F
-            <literal>( UPDATE | DELETE ) FROM? �G���e�B�e�B�� (WHERE ������)?</literal> �ł��B
-            ���ӂ��ׂ��_������������܂��F
+            <literal>UPDATE</literal> と <literal>DELETE</literal> 文の疑似構文は：
+            <literal>( UPDATE | DELETE ) FROM? エンティティ名 (WHERE 条件節)?</literal> です。
+            注意すべき点がいくつかあります：
             
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    from�߂ɂ����āAFROM�L�[���[�h�̓I�v�V�����ł��B
+                    from節において、FROMキーワードはオプションです。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    from�߂ł͒P��̃G���e�B�e�B���������\�ŁA
-                    �C�ӂŕʖ���t���邱�Ƃ��ł��܂��B
-                    �G���e�B�e�B���ɕʖ����^������ƁA�ǂ̂悤�ȃv���p�e�B�Q�Ƃ��A
-                    ���̕ʖ����g���ďC�����Ȃ���΂Ȃ�܂���B
-                    �����G���e�B�e�B���ɕʖ����^�����Ȃ���΁A
-                    �ǂ̂悤�ȃv���p�e�B�Q�Ƃ��C�����Ă͂Ȃ�܂���B
+                    from節では単一のエンティティ名だけが可能で、
+                    任意で別名を付けることができます。
+                    エンティティ名に別名が与えられると、どのようなプロパティ参照も、
+                    その別名を使って修飾しなければなりません。
+                    もしエンティティ名に別名が与えられなければ、
+                    どのようなプロパティ参照も修飾してはなりません。
                     
                 </para>
             </listitem>
             <listitem>
                 <para>
-                �i�ÖٓI�ł��ꖾ���I�ł���j<xref linkend="queryhql-joins-forms">����</xref> 
-                ���o���NHQL�N�G�����Ŏw�肷�邱�Ƃ͂ł��܂���B
-                �T�u�N�G����where�߂Ŏg�����Ƃ��ł��܂�
-                �T�u�N�G�����̂��̂́A�������܂߂��܂��B
+                （暗黙的であれ明示的であれ）<xref linkend="queryhql-joins-forms">結合</xref> 
+                をバルクHQLクエリ内で指定することはできません。
+                サブクエリはwhere節で使うことができます
+                サブクエリそのものは、結合を含められます。
                 
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    where�߂̓I�v�V�����ł��B
+                    where節はオプションです。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            ��Ƃ��āAHQL�� <literal>UPDATE</literal> �����s����ɂ́A
-            <literal>Query.executeUpdate()</literal> ���\�b�h���g���Ă��������B
-            �i���̃��\�b�h�͂��Ȃ��݂�JDBC <literal>PreparedStatement.executeUpdate()</literal> 
-            ���疼�t�����܂����j�F
+            例として、HQLの <literal>UPDATE</literal> を実行するには、
+            <literal>Query.executeUpdate()</literal> メソッドを使ってください。
+            （このメソッドはおなじみのJDBC <literal>PreparedStatement.executeUpdate()</literal> 
+            から名付けられました）：
             d
         </para>
 
@@ -243,16 +245,16 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            HQL�� <literal>UPDATE</literal> ���́A�f�t�H���g�ł́A��p����G���e�B�e�B�� 
-            <xref linkend="mapping-declaration-version">version</xref> �� 
+            HQLの <literal>UPDATE</literal> 文は、デフォルトでは、作用するエンティティの 
+            <xref linkend="mapping-declaration-version">version</xref> や 
             <xref linkend="mapping-declaration-timestamp">timestamp</xref> 
-            �v���p�e�B�̒l�ɂ͉e�����܂���B
-            �����EJB3�̎d�l�ɂ��󂯌p����Ă��܂��B
-            ������ <literal>versioned update</literal> ���g���āA
-            <literal>version</literal> �� <literal>timestamp</literal> 
-            �v���p�e�B�̒l�������I�Ƀ��Z�b�g�����邱�Ƃ��ł��܂��B
-            ����� <literal>UPDATE</literal> �L�[���[�h�̌�� <literal>VERSIONED</literal> 
-            �L�[���[�h��ǉ����邱�Ƃōs���܂��B
+            プロパティの値には影響しません。
+            これはEJB3の仕様にも受け継がれています。
+            しかし <literal>versioned update</literal> を使って、
+            <literal>version</literal> や <literal>timestamp</literal> 
+            プロパティの値を強制的にリセットさせることができます。
+            これは <literal>UPDATE</literal> キーワードの後に <literal>VERSIONED</literal> 
+            キーワードを追加することで行えます。
             
         </para>
 <programlisting><![CDATA[Session session = sessionFactory.openSession();
@@ -266,13 +268,13 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            �J�X�^���o�[�W�����^�i<literal>org.hibernate.usertype.UserVersionType</literal>�j
-            �� <literal>update versioned</literal> ���ƈꏏ�Ɏg���Ȃ����Ƃɒ��ӂ��Ă��������B
+            カスタムバージョン型（<literal>org.hibernate.usertype.UserVersionType</literal>）
+            は <literal>update versioned</literal> 文と一緒に使えないことに注意してください。
         </para>
 
         <para>
-            HQL�� <literal>DELETE</literal> �����s����ɂ́A
-            ���� <literal>Query.executeUpdate()</literal> ���\�b�h���g���Ă��������F
+            HQLの <literal>DELETE</literal> を実行するには、
+            同じ <literal>Query.executeUpdate()</literal> メソッドを使ってください：
             
         </para>
 
@@ -288,87 +290,87 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            <literal>Query.executeUpdate()</literal> ���\�b�h���Ԃ� <literal>int</literal> 
-            �̒l�́A���̑��삪�e�����y�ڂ����G���e�B�e�B�̐��ł��B
-            ���ꂪ�e������f�[�^�x�[�X���̍s���ƁA���݂Ɋ֌W���邩�ǂ������l���Ă݂Ă��������B
-            HQL�o���N����́A���ʂƂ��āA���ۂ�SQL�����������s����邱�ƂɂȂ�܂��B
-            �Ⴆ��joined-subclass�ł��B
-            �Ԃ���鐔�́A���̕��ɂ���ĉe�����ꂽ���ۂ̃G���e�B�e�B�̐��������܂��B
-            joined-subclass�̗�ɖ߂�ƁA�T�u�N���X�̈�ɑ΂���폜�́A
-            ���̃T�u�N���X���}�b�s���O���ꂽ�e�[�u�������ł͂Ȃ��A
-            �u���[�g�v�e�[�u���ƌp���K�w������ɉ�����joined-subclass�̃e�[�u���̍폜�ɂȂ�܂��B
+            <literal>Query.executeUpdate()</literal> メソッドが返す <literal>int</literal> 
+            の値は、この操作が影響を及ぼしたエンティティの数です。
+            これが影響するデータベース内の行数と、相互に関係するかどうかを考えてみてください。
+            HQLバルク操作は、結果として、実際のSQL文が複数実行されることになります。
+            例えばjoined-subclassです。
+            返される数は、その文によって影響された実際のエンティティの数を示します。
+            joined-subclassの例に戻ると、サブクラスの一つに対する削除は、
+            そのサブクラスがマッピングされたテーブルだけではなく、
+            「ルート」テーブルと継承階層をさらに下ったjoined-subclassのテーブルの削除になります。
         </para>
 
         <para>
-            <literal>INSERT</literal> ���̋^���\���́F
-            <literal>INSERT INTO �G���e�B�e�B�� �v���p�e�B���X�g select��</literal> �ł��B
-            ���ӂ��ׂ��_������������܂��F
+            <literal>INSERT</literal> 文の疑似構文は：
+            <literal>INSERT INTO エンティティ名 プロパティリスト select文</literal> です。
+            注意すべき点がいくつかあります：
             
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    INSERT INTO ... SELECT ... �̌`���������T�|�[�g����Ă��܂��B
-                    INSERT INTO ... VALUES ... �̌`���̓T�|�[�g����Ă��܂���B
+                    INSERT INTO ... SELECT ... の形式だけがサポートされています。
+                    INSERT INTO ... VALUES ... の形式はサポートされていません。
                 </para>
                 <para>
-                    �v���p�e�B���X�g�́ASQL�� <literal>INSERT</literal> ���ɂ����� <literal>�J�����̎d�l</literal> 
-                    �ɗގ����Ă��܂��B
-                    �p���̃}�b�s���O�Ɋ܂܂��G���e�B�e�B�ɑ΂��āA
-                    �N���X���x���Œ��ڒ�`���ꂽ�v���p�e�B�������A�v���p�e�B���X�g�Ɏg���܂��B
-                    �X�[�p�[�N���X�̃v���p�e�B�͔F�߂�ꂸ�A�T�u�N���X�̃v���p�e�B�͌��ʂ�����܂���B
-                    ����������� <literal>INSERT</literal> ���́A�{���I�Ƀ|�����[�t�B�b�N�ł͂���܂���B
+                    プロパティリストは、SQLの <literal>INSERT</literal> 文における <literal>カラムの仕様</literal> 
+                    に類似しています。
+                    継承のマッピングに含まれるエンティティに対して、
+                    クラスレベルで直接定義されたプロパティだけが、プロパティリストに使えます。
+                    スーパークラスのプロパティは認められず、サブクラスのプロパティは効果がありません。
+                    言い換えると <literal>INSERT</literal> 文は、本質的にポリモーフィックではありません。
                     
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    select���̕Ԃ�l�̌^��insert�������҂���^�ƃ}�b�`���Ă���΁A
-                    ����select���͑Ó���HQL select�N�G���ƂȂ肦�܂��B
-                    ���݂��̃`�F�b�N���f�[�^�x�[�X�֔C����̂ł͂Ȃ��A�N�G���̃R���p�C�����Ƀ`�F�b�N���܂��B
-                    ���̂��Ƃ́A<emphasis>equal</emphasis>�Ƃ͈Ⴂ�A
-                    Hibernate�� <literal>Type</literal> �Ԃ� <emphasis>equivalent</emphasis> �Ɋւ���
-                    ���������N�������Ƃɒ��ӂ��Ă��������B
-                    ����� <literal>org.hibernate.type.DataType</literal> �Ƃ��Ē�`���ꂽ�v���p�e�B�ƁA
+                    select文の返り値の型がinsert文が期待する型とマッチしていれば、
+                    そのselect文は妥当なHQL selectクエリとなりえます。
+                    現在このチェックをデータベースへ任せるのではなく、クエリのコンパイル時にチェックします。
+                    このことは、<emphasis>equal</emphasis>とは違い、
+                    Hibernateの <literal>Type</literal> 間の <emphasis>equivalent</emphasis> に関する
+                    問題を引き起こすことに注意してください。
+                    これは <literal>org.hibernate.type.DataType</literal> として定義されたプロパティと、
                     <literal>org.hibernate.type.TimestampType</literal> 
-                    �Ƃ��Ē�`���ꂽ�v���p�e�B�̊Ԃ̃~�X�}�b�`�̖��������N�����܂��B
-                    �f�[�^�x�[�X����������ʂł��Ȃ��Ă��A�ϊ����邱�Ƃ��ł��Ă��A���̖��͔������܂��B
+                    として定義されたプロパティの間のミスマッチの問題を引き起こします。
+                    データベースがそれらを区別できなくても、変換することができても、この問題は発生します。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    id�v���p�e�B�ɑ΂��āAinsert���ɂ͓�̑I����������܂��B
-                    �v���p�e�B���X�g�Ŗ����I��id�v���p�e�B���w�肷�邩
-                    �i���̏ꍇ�A�Ή�����select������l������܂��j�A
-                    �v���p�e�B���X�g���珜�O���邩
-                    �i���̏ꍇ�A���������l���g���܂��j�̂����ꂩ�ł��B
-                    ��҂̑I�����́A�f�[�^�x�[�X���𑀍삷��id�W�F�l���[�^���g���Ƃ��̂݁A���p�\�ł��B
-                    ���̑I�������̂�ꍇ�A�u�C���������v�^�̃W�F�l���[�^���g���ƁA�\����͎��ɗ�O���������܂��B
-                    ���̋c�_�ł́A�C���f�[�^�x�[�X�^�W�F�l���[�^�� <literal>org.hibernate.id.SequenceGenerator</literal> 
-                    �i�Ƃ��̃T�u�N���X�j�ƁA<literal>org.hibernate.id.PostInsertIdentifierGenerator</literal> 
-                    �̎����ł���ƍl���Ă��܂��B
-                    �����ōł����ӂ��ׂ���O�́A<literal>org.hibernate.id.TableHiLoGenerator</literal> �ł��B
-                    �l���擾����I���\�ȕ��@���Ȃ����߁A���̃W�F�l���[�^���g�����Ƃ͂ł��܂���B
+                    idプロパティに対して、insert文には二つの選択肢があります。
+                    プロパティリストで明示的にidプロパティを指定するか
+                    （この場合、対応するselect式から値が取られます）、
+                    プロパティリストから除外するか
+                    （この場合、生成される値が使われます）のいずれかです。
+                    後者の選択肢は、データベース内を操作するidジェネレータを使うときのみ、利用可能です。
+                    この選択肢を採る場合、「インメモリ」型のジェネレータを使うと、構文解析時に例外が発生します。
+                    この議論では、インデータベース型ジェネレータは <literal>org.hibernate.id.SequenceGenerator</literal> 
+                    （とそのサブクラス）と、<literal>org.hibernate.id.PostInsertIdentifierGenerator</literal> 
+                    の実装であると考えています。
+                    ここで最も注意すべき例外は、<literal>org.hibernate.id.TableHiLoGenerator</literal> です。
+                    値を取得する選択可能な方法がないため、このジェネレータを使うことはできません。
                     
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>version</literal> �� <literal>timestamp</literal> �Ƃ��ă}�b�s���O�����v���p�e�B�ɑ΂��āA
-                    insert���ɂ͓�̑I����������܂��B
-                    �v���p�e�B���X�g�Ŗ����I�Ƀv���p�e�B���w�肷�邩
-                    �i���̏ꍇ�A�Ή�����select������l������܂��j�A
-                    �v���p�e�B���X�g���珜�O���邩
-                    �i���̏ꍇ�A<literal>org.hibernate.type.VersionType</literal> �Œ�`���ꂽ 
-                    <literal>�V�[�h�l</literal> ���g���܂��j�̂����ꂩ�ł��B
+                    <literal>version</literal> や <literal>timestamp</literal> としてマッピングされるプロパティに対して、
+                    insert文には二つの選択肢があります。
+                    プロパティリストで明示的にプロパティを指定するか
+                    （この場合、対応するselect式から値が取られます）、
+                    プロパティリストから除外するか
+                    （この場合、<literal>org.hibernate.type.VersionType</literal> で定義された 
+                    <literal>シード値</literal> が使われます）のいずれかです。
                     
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            HQL�� <literal>INSERT</literal> ���̎��s��ł��F
+            HQLの <literal>INSERT</literal> 文の実行例です：
             
         </para>
 

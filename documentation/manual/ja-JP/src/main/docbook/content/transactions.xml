@@ -1,299 +1,301 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="transactions" revision="2">
-    <title>�g�����U�N�V�����ƕ��s��</title>
+    <title>トランザクションと並行性</title>
 
     <para>
-        Hibernate�Ɠ������s����ɂ��čł��d�v�ȓ_�́A�e�Ղɗ����ł��邱�Ƃł��B
-        Hibernate�͐V���ȃ��b�N�̐U�镑����ǉ����Ă��炸�A����JDBC�R�l�N�V������JTA���\�[�X���g�p���܂��B
-        JDBC�AANSI�A����уf�[�^�x�[�X�Ǘ��V�X�e���iDBMS�j�̃g�����U�N�V���������̎d�l��
-        �������Ԃ������ĕ׋����邱�Ƃ������������܂��B
+        Hibernateと同時実行制御について最も重要な点は、容易に理解できることです。
+        Hibernateは新たなロックの振る舞いを追加しておらず、直接JDBCコネクションとJTAリソースを使用します。
+        JDBC、ANSI、およびデータベース管理システム（DBMS）のトランザクション分離の仕様を
+        少し時間をかけて勉強することを強く推奨します。
     </para>
 
     <para>
-        Hibernate�̓��������̃I�u�W�F�N�g�����b�N���܂���B
-        �A�v���P�[�V�����́A�f�[�^�x�[�X�g�����U�N�V�����̕������x����
-        ��`�����U�镑�������҂ł��܂��B
-        �g�����U�N�V�����X�R�[�v�̃L���b�V���ł����� <literal>Session</literal> �̂��A�ŁA
-        ���ʎq��N�G���ɂ�茟�������G���e�B�e�B�̓��s�[�^�u�����[�h�ɂȂ�܂�
-        �i�X�J���[�l��Ԃ��悤�ȃ��|�[�g�N�G���͈Ⴂ�܂��j�B
+        Hibernateはメモリ内のオブジェクトをロックしません。
+        アプリケーションは、データベーストランザクションの分離レベルで
+        定義した振る舞いを期待できます。
+        トランザクションスコープのキャッシュでもある <literal>Session</literal> のお陰で、
+        識別子やクエリにより検索したエンティティはリピータブルリードになります
+        （スカラー値を返すようなレポートクエリは違います）。
     </para>
 
     <para>
-        �o�[�W���j���O�ɂ�鎩���I�Ȋy�ϓI�������s����ɉ����āA
-        <literal>SELECT FOR UPDATE</literal> �����g�p���āA
-        �s��ߊϓI���b�N���邽�߂́i�}�C�i�[�ȁjAPI���񋟂��܂��B
-        �y�ϓI�������s����Ƃ���API�ɂ��ẮA���̏͂̌�̂ق��ŋc�_���܂��B
+        バージョニングによる自動的な楽観的同時実行制御に加えて、
+        <literal>SELECT FOR UPDATE</literal> 文を使用して、
+        行を悲観的ロックするための（マイナーな）APIも提供します。
+        楽観的同時実行制御とこのAPIについては、この章の後のほうで議論します。
     </para>
 
     <para>
-        �f�[�^�x�[�X�g�����U�N�V�����Ⓑ���Θb�iconversation�A�����O�g�����U�N�V�����j�����łȂ��A
-        <literal>Configuration</literal>�A<literal>SessionFactory</literal>�A�����
+        データベーストランザクションや長い対話（conversation、ロングトランザクション）だけでなく、
+        <literal>Configuration</literal>、<literal>SessionFactory</literal>、および
         <literal>Session</literal>
-        �Ƃ������x��Hibernate���s���������s����̋c�_���n�߂܂��B
+        という粒度でHibernateが行う同時実行制御の議論を始めます。
     </para>
 
     <sect1 id="transactions-basics" revision="1">
-        <title>session�X�R�[�v��transaction�X�R�[�v</title>
+        <title>sessionスコープとtransactionスコープ</title>
 
         <para>
-            <literal>SessionFactory</literal> �͐������邱�Ƃ������ŁA
-            �X���b�h�Z�[�t�ȃI�u�W�F�N�g�ł��B
-            ����āA�A�v���P�[�V�����̂��ׂẴX���b�h�ŋ��L���ׂ��ł��B
-            �ʏ�A�A�v���P�[�V�����̋N�����ɁA
-            <literal>Configuration</literal> �C���X�^���X����P�x�����������܂��B
+            <literal>SessionFactory</literal> は生成することが高価で、
+            スレッドセーフなオブジェクトです。
+            よって、アプリケーションのすべてのスレッドで共有すべきです。
+            通常、アプリケーションの起動時に、
+            <literal>Configuration</literal> インスタンスから１度だけ生成します。
         </para>
 
         <para>
-            <literal>Session</literal> �͍����ł͂Ȃ��A�X���b�h�Z�[�t�ȃI�u�W�F�N�g�ł�����܂���B
-            ����āA�P�̗v����P�̑Θb�A�P�̍�ƒP�ʁiunit of work�j�ɑ΂��ĂP�x�����g���A
-            ���̌�Ŏ̂Ă�ׂ��ł��B
-            <literal>Session</literal> �͕K�v�ɂȂ�܂ŁA
-            JDBC <literal>Connection</literal>�i�������� <literal>DataSource</literal>�j���l�����܂���B
-            �䂦�ɁA���ۂɎg�p����Ƃ��܂Ń��\�[�X������܂���B
+            <literal>Session</literal> は高価ではなく、スレッドセーフなオブジェクトでもありません。
+            よって、１つの要求や１つの対話、１つの作業単位（unit of work）に対して１度だけ使い、
+            その後で捨てるべきです。
+            <literal>Session</literal> は必要になるまで、
+            JDBC <literal>Connection</literal>（もしくは <literal>DataSource</literal>）を獲得しません。
+            ゆえに、実際に使用するときまでリソースを消費しません。
         </para>
 
         <para>
-            ���̏󋵂����������邽�߂ɁA �f�[�^�x�[�X�g�����U�N�V�����ɂ��Ă��l���Ȃ���΂Ȃ�܂���B
-            �f�[�^�x�[�X���̃��b�N�̋��������Ȃ����邽�߂ɁA
-            �f�[�^�x�[�X�g�����U�N�V�����͉\�Ȍ���Z������ׂ��ł��B
-            �����f�[�^�x�[�X�g�����U�N�V�����́A�A�v���P�[�V�����̍���������s����j�Q���܂��B
-            �䂦�ɁA���[�U�[���l���Ă���ԁi��ƒP�ʂ���������܂Łj�f�[�^�x�[�X�g�����U�N�V������
-            �J�����܂܂ɂ���̂́A�����Ă��̏ꍇ�悢�݌v�Ƃ͂����܂���B
+            この状況を完了させるために、 データベーストランザクションについても考えなければなりません。
+            データベース内のロックの競合を少なくするために、
+            データベーストランザクションは可能な限り短くするべきです。
+            長いデータベーストランザクションは、アプリケーションの高い並列実行性を阻害します。
+            ゆえに、ユーザーが考えている間（作業単位が完了するまで）データベーストランザクションを
+            開いたままにするのは、たいていの場合よい設計とはいえません。
         </para>
 
         <para>
-            ��ƒP�ʂƂ����X�R�[�v�Ƃ͉��ł��傤���H
-            �P��Hibernate <literal>Session</literal> �́A
-            �������̃f�[�^�x�[�X�g�����U�N�V�������܂����邱�Ƃ��ł���ł��傤���H
-            �܂��́A�X�R�[�v�ƈ�Έ�̊֌W�ł��傤���H
-            ���� <literal>Session</literal> ���J���A����ׂ��ł��傤���H
-            �����āA�f�[�^�x�[�X�g�����U�N�V�������E���ǂ̂悤�ɕ�����̂ł��傤���H
+            作業単位というスコープとは何でしょうか？
+            １つのHibernate <literal>Session</literal> は、
+            いくつかのデータベーストランザクションをまたがることができるでしょうか？
+            または、スコープと一対一の関係でしょうか？
+            いつ <literal>Session</literal> を開き、閉じるべきでしょうか？
+            そして、データベーストランザクション境界をどのように分けるのでしょうか？
         </para>
 
         <sect2 id="transactions-basics-uow" revision="1">
-            <title>��ƒP�ʁiUnit of work�j</title>
+            <title>作業単位（Unit of work）</title>
 
             <para>
-                �P�ڂ́A<emphasis>session-per-operation</emphasis> �A���`�p�^�[�����g���Ă͂����܂���B
-                ���Ȃ킿�A�P�̃X���b�h�̒��ŁA�P���ȃf�[�^�x�[�X�Ăяo���̂��т�
-                <literal>Session</literal> ���J���āA���Ă͂����܂���I
-                �������A�f�[�^�x�[�X�g�����U�N�V�����ɂ��Ă����l�ł��B
-                �A�v���P�[�V�������̃f�[�^�x�[�X�Ăяo���́A
-                �v�悳�ꂽ�V�[�P���X�iplanned sequence�j���g���A
-                �A�g�~�b�N�ȍ�ƒP�ʂɕ��ނ���܂��B
-                �i�P��SQL�����ƂɃR�~�b�g���鎩���R�~�b�g���A
-                �g���Ȃ��Ƃ����Ӗ��ł����邱�Ƃɒ��ӂ��Ă��������B
-                �����R�~�b�g�́ASQL�R���\�[���ŃA�h�z�b�N�ȍ�Ƃ�����ۂɎg�����̂ł��B
-                Hibernate�͒����Ɏ����R�~�b�g���[�h�𖳌��ɂ��܂��B
-                �������́A�A�v���P�[�V�����T�[�o�[�����������邱�Ƃ����҂��܂��B�j
-                �f�[�^�x�[�X�g�����U�N�V�����̓I�v�V�����ł͂���܂���B
-                �f�[�^�x�[�X�Ƃ̂��ׂĂ̒ʐM�́A�f�[�^�̓ǂݍ��݂ł����Ă��A�������݂ł����Ă��A
-                �g�����U�N�V�����̒��ōs��Ȃ���΂Ȃ�܂���B
-                ��������ƁA�f�[�^�ǂݍ��݂ɑ΂��āA�����R�~�b�g�͔�����ׂ��ł��B
-                �Ȃ��Ȃ�A�����̏����ȃg�����U�N�V�����́A���m�ɒ�`���ꂽ�P�̍�ƒP�ʂƔ�ׂāA
-                �p�t�H�[�}���X���悭�Ȃ邱�Ƃ͂���܂���B
-                ��҂͕ێ琫��g��������肷����Ă��܂��B
+                １つ目は、<emphasis>session-per-operation</emphasis> アンチパターンを使ってはいけません。
+                すなわち、１つのスレッドの中で、単純なデータベース呼び出しのたびに
+                <literal>Session</literal> を開いて、閉じてはいけません！
+                もちろん、データベーストランザクションについても同様です。
+                アプリケーション中のデータベース呼び出しは、
+                計画されたシーケンス（planned sequence）を使い、
+                アトミックな作業単位に分類されます。
+                （１つのSQL文ごとにコミットする自動コミットが、
+                使われないという意味でもあることに注意してください。
+                自動コミットは、SQLコンソールでアドホックな作業をする際に使うものです。
+                Hibernateは直ちに自動コミットモードを無効にします。
+                もしくは、アプリケーションサーバーが無効化することを期待します。）
+                データベーストランザクションはオプションではありません。
+                データベースとのすべての通信は、データの読み込みであっても、書き込みであっても、
+                トランザクションの中で行わなければなりません。
+                説明すると、データ読み込みに対して、自動コミットは避けるべきです。
+                なぜなら、多数の小さなトランザクションは、明確に定義された１つの作業単位と比べて、
+                パフォーマンスがよくなることはありません。
+                後者は保守性や拡張性もよりすぐれています。
             </para>
 
             <para>
-                �}���`���[�U�[�̃N���C�A���g�^�T�[�o�[�A�v���P�[�V�����̒��ŁA
-                �ł��悭�g����p�^�[���́A<emphasis>session-per-request</emphasis> �ł��B
-                ���̃��f���̒��ł́A
-                �N���C�A���g����iHibernate�i�����w�����삷��j�T�[�o�[�փ��N�G�X�g�������A
-                �V����Hibernate <literal>Session</literal> ���J����܂��B
-                �����āA���̍�ƒP�ʂ̒��ł��ׂẴf�[�^�x�[�X���������s����܂��B
-                ��Ƃ����������i�����āA�N���C�A���g�ւ̃��X�|���X�������ł����j���_�ŁA
-                session ���t���b�V�����A���܂��B
-                �N���C�A���g�̗v�����������邽�߂ɁA�P�̃f�[�^�x�[�X�g�����U�N�V�������g�p����ł��傤�B
-                <literal>Session</literal> ���J���A����ۂɁA
-                �f�[�^�x�[�X�g�����U�N�V�������J�n���A�R�~�b�g���܂��B
-                ��̊֌W�͈�Έ�ł��B
-                ���̃��f���͑����̃A�v���P�[�V�����Ɋ��S�ɓK�����܂��B
+                マルチユーザーのクライアント／サーバーアプリケーションの中で、
+                最もよく使われるパターンは、<emphasis>session-per-request</emphasis> です。
+                このモデルの中では、
+                クライアントから（Hibernate永続化層が動作する）サーバーへリクエストが送られ、
+                新しいHibernate <literal>Session</literal> が開かれます。
+                そして、この作業単位の中ですべてのデータベース処理が実行されます。
+                作業が完了した（そして、クライアントへのレスポンスが準備できた）時点で、
+                session をフラッシュし、閉じます。
+                クライアントの要求を処理するために、１つのデータベーストランザクションを使用するでしょう。
+                <literal>Session</literal> を開き、閉じる際に、
+                データベーストランザクションを開始し、コミットします。
+                二つの関係は一対一です。
+                このモデルは多くのアプリケーションに完全に適合します。
             </para>
 
             <para>
-                �ȍ~�̎����Ƀ`�������W���Ă��������B
-                <literal>Session</literal> �������A�g�����U�N�V�����𐳊m�ɊJ�n���A�I��点�邾���łȂ��A
-                �f�[�^�A�N�Z�X��������₷������K�v������܂��B
-                ���N�G�X�g���T�[�o�[�Ƀq�b�g�����ۂƁA���X�|���X�𑗐M����O�ɁA���s�����interceptor
-                �i�Ⴆ�΁A<literal>ServletFilter</literal>�j���g���āA��ƒP�ʂ̋��E����������̂����z�I�ł��B
-                <literal>ThreadLocal</literal> �ϐ����g���āA
-                ���N�G�X�g����������X���b�h�� <literal>Session</literal> �����т��邱�Ƃ𐄏����܂��B
-                ����ɂ��A�X���b�h���Ŏ��s����邷�ׂẴR�[�h�ŁA
-                �istatic�ϐ��ɃA�N�Z�X����悤�Ɂj�ȒP�� <literal>Session</literal> �ɃA�N�Z�X�ł���悤�ɂȂ�܂��B
-                �I�������f�[�^�x�[�X�g�����U�N�V�������E�̋@�\����ŁA<literal>ThreadLocal</literal>
-                �ϐ��̒��Ƀg�����U�N�V�����R���e�L�X�g��ێ����邩������܂���B
-                ���̎����p�^�[���́A<emphasis>ThreadLocal Session</emphasis> �����
-                <emphasis>Open Session in View</emphasis> �Ƃ������O�Œm���Ă��܂��B
-                �{�h�L�������g�Ő�Ɍ����� <literal>HibernateUtil</literal> �w���p�[�N���X���g�����邱�ƂŁA
-                ���̃p�^�[����e�ՂɎ����ł��܂��B
-                �������Ainterceptor ������������@�������A�����Z�b�g�A�b�v����K�v������܂��B
-                Hibernate��Web�T�C�g�ɂ���tips�Ɨ���Q�Ƃ��Ă��������B
+                以降の実装にチャレンジしてください。
+                <literal>Session</literal> を持ち、トランザクションを正確に開始し、終わらせるだけでなく、
+                データアクセス操作も得やすくする必要があります。
+                リクエストがサーバーにヒットした際と、レスポンスを送信する前に、実行されるinterceptor
+                （例えば、<literal>ServletFilter</literal>）を使って、作業単位の境界を実装するのが理想的です。
+                <literal>ThreadLocal</literal> 変数を使って、
+                リクエストを処理するスレッドに <literal>Session</literal> を結びつけることを推奨します。
+                これにより、スレッド内で実行されるすべてのコードで、
+                （static変数にアクセスするように）簡単に <literal>Session</literal> にアクセスできるようになります。
+                選択したデータベーストランザクション境界の機構次第で、<literal>ThreadLocal</literal>
+                変数の中にトランザクションコンテキストを保持するかもしれません。
+                この実装パターンは、<emphasis>ThreadLocal Session</emphasis> および
+                <emphasis>Open Session in View</emphasis> という名前で知られています。
+                本ドキュメントで先に見せた <literal>HibernateUtil</literal> ヘルパークラスを拡張することで、
+                このパターンを容易に実装できます。
+                もちろん、interceptor を実装する方法を見つけ、環境をセットアップする必要があります。
+                HibernateのWebサイトにあるtipsと例を参照してください。
              </para>
 
             <para>
-                �ȍ~�̎����Ƀ`�������W���Ă��������B
-                Hibernate�͒P���Ȃ��̃p�^�[���̂��߂ɁA�\�ߑg�ݍ��܂ꂽ
-                �ucurrent session�v�̊Ǘ���񋟂��܂��B
-                �T�[�o�[���N�G�X�g����������ۂ̓g�����U�N�V�������J�n���Ȃ���΂Ȃ�܂���B
-                �����āA���X�|���X���N���C�A���g�ɑ��M����O�Ƀg�����U�N�V�������I��点�܂��B
-                �D���ȕ��@�Ŏ����ł��܂��B��ʓI�ȉ������ <literal>ServletFilter</literal> ��
-                �T�[�r�X���\�b�h���|�C���g�J�b�g����AOP�C���^�[�Z�v�^�[�A
-                proxy/interception �R���e�i�ł��B
-                EJB�R���e�i��EJB�Z�b�V�����r�[�����g�����U�N�V�������E�Ƃ���
-                �A�X�y�N�g���N���X�J�b�g��������̕W���I�ȕ��@�ł��iCMT�ɂ��錾�I�j�B
-                �v���O�����ɂ��g�����U�N�V�������E���g���ƌ��߂��ꍇ�A
-                �ȒP�Ɏg�����߁A�݊����̂���R�[�h�ɂ��邽�߂ɁA
-                ���̏͂̌�̂ق��ɂ���Hibernate <literal>Transaction</literal> API�̂ق����悢�ł��B
+                以降の実装にチャレンジしてください。
+                Hibernateは単純なこのパターンのために、予め組み込まれた
+                「current session」の管理を提供します。
+                サーバーリクエストを処理する際はトランザクションを開始しなければなりません。
+                そして、レスポンスをクライアントに送信する前にトランザクションを終わらせます。
+                好きな方法で実現できます。一般的な解決策は <literal>ServletFilter</literal> や
+                サービスメソッドをポイントカットしてAOPインターセプター、
+                proxy/interception コンテナです。
+                EJBコンテナはEJBセッションビーンをトランザクション境界として
+                アスペクトをクロスカットする実装の標準的な方法です（CMTによる宣言的）。
+                プログラムによるトランザクション境界を使うと決めた場合、
+                簡単に使うため、互換性のあるコードにするために、
+                この章の後のほうにあるHibernate <literal>Transaction</literal> APIのほうがよいです。
             </para>
 
             <para>
-                �A�v���P�[�V�����̃R�[�h�́A�K�v�ȂƂ��ɂǂ��ł��A����ł��A
-                �P�� <literal>sessionFactory.getCurrentSession()</literal> ���Ăяo��������
-                �u���݂̃Z�b�V�����v�ɃA�N�Z�X�ł��܂��B
-                ���݂̃f�[�^�x�[�X�g�����U�N�V�����ւ� <literal>�Z�b�V����</literal> ����Ɏ擾���܂��B
-                ���\�[�X�E���[�J���Ȋ��A��������JTA�����\�����Ȃ���΂Ȃ�܂���
-                �i<xref linkend="architecture-current-session"/> ���Q�Ƃ��Ă��������j�B
+                アプリケーションのコードは、必要なときにどこでも、何回でも、
+                単に <literal>sessionFactory.getCurrentSession()</literal> を呼び出すだけで
+                「現在のセッション」にアクセスできます。
+                現在のデータベーストランザクションへの <literal>セッション</literal> を常に取得します。
+                リソース・ローカルな環境、もしくはJTA環境を構成しなければなりません
+                （<xref linkend="architecture-current-session"/> を参照してください）。
             </para>
 
             <para>
-                �Ƃ��ǂ��A�u�r���[��`�悷��v�܂� <literal>�Z�b�V����</literal>
-                �ƃf�[�^�x�[�X�g�����U�N�V�����̃X�R�[�v���g������ƕ֗��Ȃ��Ƃ�����܂��B
-                ����́A�v���̏����ƕ`��̃t�F�[�Y�𕪂��Ă���
-                �T�[�u���b�g�A�v���P�[�V�����ɂ����ē��ɖ𗧂��܂��B
-                �Ǝ��̃C���^�[�Z�v�^����������΁A
-                �r���[��`�悷��܂Ńf�[�^�x�[�X�g�����U�N�V�������g������̂͊ȒP�ł��B
-                �������A�R���e�i�Ǘ��g�����U�N�V������EJB�ɗ���ꍇ�́A�ȒP�ɂ͂ł��܂���B
-                �Ȃ��Ȃ�A�r���[�̕`����J�n����O�ɁAEJB�̃��\�b�h�����^�[�������ۂɁA
-                �g�����U�N�V�������������邽�߂ł��B
-                ���� <emphasis>Open Session in View</emphasis> �p�^�[���Ɋ֘A����q���g�Ɨ�ɂ��ẮA
-                Hibernate��Web�T�C�g��t�H�[�������Q�Ƃ��Ă��������B
+                ときどき、「ビューを描画する」まで <literal>セッション</literal>
+                とデータベーストランザクションのスコープを拡張すると便利なことがあります。
+                これは、要求の処理と描画のフェーズを分けている
+                サーブレットアプリケーションにおいて特に役立ちます。
+                独自のインターセプタを実装すれば、
+                ビューを描画するまでデータベーストランザクションを拡張するのは簡単です。
+                しかし、コンテナ管理トランザクションのEJBに頼る場合は、簡単にはできません。
+                なぜなら、ビューの描画を開始する前に、EJBのメソッドがリターンした際に、
+                トランザクションが完了するためです。
+                この <emphasis>Open Session in View</emphasis> パターンに関連するヒントと例については、
+                HibernateのWebサイトやフォーラムを参照してください。
              </para>
 
         </sect2>
 
         <sect2 id="transactions-basics-apptx" revision="1">
-            <title>�����Θb</title>
+            <title>長い対話</title>
 
             <para>
-                session-per-request�p�^�[���́A��ƒP�ʂ�݌v����ۂɖ𗧂l���Ƃ��������ł͂���܂���B
-                �����̃r�W�l�X�v���Z�X�́A���[�U�[�Ƃ̈�A�̑��ݍ�p�S�̂�v�����܂��B
-                ���̑��ݍ�p�ɂ́A�f�[�^�x�[�X�A�N�Z�X���܂܂�܂��B
+                session-per-requestパターンは、作業単位を設計する際に役立つ考えというだけではありません。
+                多くのビジネスプロセスは、ユーザーとの一連の相互作用全体を要求します。
+                その相互作用には、データベースアクセスが含まれます。
                 
-                Web�ƃG���^�[�v���C�Y�A�v���P�[�V�����ł́A�f�[�^�x�[�X�g�����U�N�V������
-                ���[�U�Ƃ̑��ݍ�p�ɂ܂œn�邱�Ƃ͋�����܂���B
+                Webとエンタープライズアプリケーションでは、データベーストランザクションが
+                ユーザとの相互作用にまで渡ることは許されません。
                 
-                ���̗���悭�l���Ă݂Ă��������B
+                次の例をよく考えてみてください。
             </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
-                        �_�C�A���O�̍ŏ��̉�ʂ��J���A�X�� <literal>Session</literal>
-                        �ƃf�[�^�x�[�X�g�����U�N�V�����̒��Ń��[�h���ꂽ�f�[�^�����[�U�[�Ɍ����܂��B
-                        ���[�U�[�̓I�u�W�F�N�g�����R�ɏC���ł��܂��B
+                        ダイアログの最初の画面が開き、個々の <literal>Session</literal>
+                        とデータベーストランザクションの中でロードされたデータをユーザーに見せます。
+                        ユーザーはオブジェクトを自由に修正できます。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        5����Ƀ��[�U�[�́uSave�v���N���b�N���A�C�����i���������̂����҂��܂��B
-                        �܂��A���̏���ҏW�����͎̂����P�l�����ŁA
-                        �C���̃R���t���N�g�͔������Ȃ��Ɗ��҂��܂��B
+                        5分後にユーザーは「Save」をクリックし、修正が永続化されるのを期待します。
+                        また、この情報を編集したのは自分１人だけで、
+                        修正のコンフリクトは発生しないと期待します。
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                ���̍�ƒP�ʂ��i���[�U�[�̎��_�Łj������ <emphasis>�Θb</emphasis>
-                �i�������́A<emphasis>�A�v���P�[�V�����g�����U�N�V����</emphasis> �j�ƌĂт܂��B
-                �A�v���P�[�V�����ɂ��������������@�͂������񂠂�܂��B
+                この作業単位を（ユーザーの視点で）長期の <emphasis>対話</emphasis>
+                （もしくは、<emphasis>アプリケーショントランザクション</emphasis> ）と呼びます。
+                アプリケーションにこれを実装する方法はたくさんあります。
             </para>
 
             <para>
-                �ŏ��Ɏv���������́A���[�U�[���l���Ă���ԁA<literal>Session</literal>
-                �ƃf�[�^�x�[�X�g�����U�N�V�������J�����܂܂ɂ��Ă������Ƃł��B
-                �����ɏC�����ꂸ�A�����ƌ��q�����ۏ؂����悤�ɁA
-                �f�[�^�x�[�X���̃��b�N�͕ێ������܂܂ɂ��܂��B
-                �������A����̓A���`�p�^�[���ł��B
-                �Ȃ��Ȃ�A���b�N�̋�������������ƁA
-                �A�v���P�[�V�������������[�U�[���ɉ����ăX�P�[���A�b�v�ł��Ȃ��Ȃ邩��ł��B
+                最初に思いつく実装は、ユーザーが考えている間、<literal>Session</literal>
+                とデータベーストランザクションを開いたままにしておくことです。
+                同時に修正されず、分離と原子性が保証されるように、
+                データベース内のロックは保持したままにします。
+                もちろん、これはアンチパターンです。
+                なぜなら、ロックの競合が発生すると、
+                アプリケーションが同時ユーザー数に応じてスケールアップできなくなるからです。
             </para>
 
             <para>
-                ���炩�ɁA�Θb���������邽�߂ɂ́A
-                �������̃f�[�^�x�[�X�g�����U�N�V�������g�p����ׂ��ł��B
-                ���̏ꍇ�A�r�W�l�X�v���Z�X�̕������ێ����邱�Ƃ́A
-                �A�v���P�[�V�����w�̐Ӗ��̂P�ɂȂ�܂��B
-                �P�̑Θb�́A
-                �ʏ킢�����̃f�[�^�x�[�X�g�����U�N�V�����ɋy�т܂��B
-                �f�[�^�x�[�X�g�����U�N�V�����̂P�̂݁i�Ō�̂P�j���X�V�����f�[�^��ۑ����A
-                ���̓f�[�^��ǂނ����ł���΁A����̓A�g�~�b�N�ł�
-                �i�Ⴆ�΁A�������̗v���^�������J��Ԃ��E�B�U�[�h�`���̃_�C�A���O�j�B
-                ����͕������A���������ق����ȒP�ł��B
-                Hibernate�̋@�\���g���̂ł���΁A���ɊȒP�ł��B
+                明らかに、対話を実装するためには、
+                いくつかのデータベーストランザクションを使用するべきです。
+                この場合、ビジネスプロセスの分離を維持することは、
+                アプリケーション層の責務の１つになります。
+                １つの対話は、
+                通常いくつかのデータベーストランザクションに及びます。
+                データベーストランザクションの１つのみ（最後の１つ）が更新したデータを保存し、
+                他はデータを読むだけであれば、それはアトミックです
+                （例えば、いくつかの要求／応答を繰り返すウィザード形式のダイアログ）。
+                これは聞くより、実装したほうが簡単です。
+                Hibernateの機能を使うのであれば、特に簡単です。
             </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
-                        <emphasis>�����o�[�W���j���O</emphasis>
-                        - Hibernate�͎����I�Ɋy�ϓI�������s���䂪�ł��܂��B
-                        ���[�U�[���l���Ă���Ԃɓ����ɏC�����������ꍇ�A�����I�Ɍ��o�ł��܂��B
-                        �ʏ�A�Θb�̏I�����Ƀ`�F�b�N���邾���ł��B
+                        <emphasis>自動バージョニング</emphasis>
+                        - Hibernateは自動的に楽観的同時実行制御ができます。
+                        ユーザーが考えている間に同時に修正がおきた場合、自動的に検出できます。
+                        通常、対話の終了時にチェックするだけです。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <emphasis>�����iDetached�j�I�u�W�F�N�g</emphasis> - ���łɋc�_����
-                        <emphasis>session-per-request</emphasis> �p�^�[�����g���ƌ��肵���ꍇ�A
-                        ���[�h���ꂽ���ׂẴC���X�^���X�́A���[�U���l���Ă���Ԃ́A
-                        �Z�b�V�������番�����ꂽ��ԂɂȂ�܂��B
-                        �I�u�W�F�N�g���Z�b�V�����ɍĒǉ����A�C�����i�����ł��܂��B
-                        ����� <emphasis>session-per-request-with-detached-objects</emphasis>
-                        �p�^�[���ƌĂт܂��B
-                        �����o�[�W���j���O���g�����ƂŁA�����ɍs����C���𕪗��ł��܂��B
+                        <emphasis>分離（Detached）オブジェクト</emphasis> - すでに議論した
+                        <emphasis>session-per-request</emphasis> パターンを使うと決定した場合、
+                        ロードされたすべてのインスタンスは、ユーザが考えている間は、
+                        セッションから分離された状態になります。
+                        オブジェクトをセッションに再追加し、修正を永続化できます。
+                        これを <emphasis>session-per-request-with-detached-objects</emphasis>
+                        パターンと呼びます。
+                        自動バージョニングを使うことで、同時に行われる修正を分離できます。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <emphasis>�g���i�������́A�����j�Z�b�V����</emphasis>
-                        - Hibernate�� <literal>Session</literal> �́A
-                        �f�[�^�x�[�X�g�����U�N�V�������R�~�b�g������A
-                        ���Ō��т��Ă���JDBC�R�l�N�V������ؒf�ł��܂��B
-                        �����āA�N���C�A���g����̐V�����v�������������ۂɁA�Đڑ��ł��܂��B
-                        ���̃p�^�[���́A<emphasis>session-per-conversation</emphasis>
-                        �Ƃ������Œm���Ă���A�I�u�W�F�N�g���Z�b�V�����֍Ēǉ����邱�Ƃ����s�v�ɂ��܂��B
-                        �����o�[�W���j���O���g�����ƂŁA�����ɍs����C���𕪗��ł��܂��B
+                        <emphasis>拡張（もしくは、長い）セッション</emphasis>
+                        - Hibernateの <literal>Session</literal> は、
+                        データベーストランザクションをコミットした後、
+                        裏で結びついているJDBCコネクションを切断できます。
+                        そして、クライアントからの新しい要求が発生した際に、再接続できます。
+                        このパターンは、<emphasis>session-per-conversation</emphasis>
+                        という名で知られており、オブジェクトをセッションへ再追加することさえ不要にします。
+                        自動バージョニングを使うことで、同時に行われる修正を分離できます。
                         
-                        �ʏ� <literal>Session</literal> �������I�Ƀt���b�V���������A
-                        �����I�Ƀt���b�V�����܂��B
+                        通常 <literal>Session</literal> を自動的にフラッシュさせず、
+                        明示的にフラッシュします。
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                <emphasis>session-per-request-with-detached-objects</emphasis> ��
-                <emphasis>session-per-conversation</emphasis> �̂Q�́A
-                ���_�ƌ��_�������Ă��܂��B
-                ����ɂ��ẮA���̏͂̌�̂ق��ŁA�y�ϓI�������s����̕����̒��ŋc�_���܂��B
+                <emphasis>session-per-request-with-detached-objects</emphasis> と
+                <emphasis>session-per-conversation</emphasis> の２つは、
+                利点と欠点を持っています。
+                これについては、この章の後のほうで、楽観的同時実行制御の文脈の中で議論します。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-basics-identity">
-            <title>�I�u�W�F�N�g���ʎq���l����</title>
+            <title>オブジェクト識別子を考える</title>
 
             <para>
-                �A�v���P�[�V�����́A�Q�̈قȂ� <literal>Session</literal> ����
-                �����i����Ԃɓ����ɃA�N�Z�X�ł��܂��B
-                �������A�Q�� <literal>Session</literal> �C���X�^���X��
-                �i�����N���X�̂P�̃C���X�^���X�����L���邱�Ƃ͂ł��܂���B
-                �䂦�ɁA���ʎq�ɂ͂Q�̈قȂ�T�O������Ƃ������ƂɂȂ�܂��B
+                アプリケーションは、２つの異なる <literal>Session</literal> から
+                同じ永続状態に同時にアクセスできます。
+                しかし、２つの <literal>Session</literal> インスタンスが
+                永続性クラスの１つのインスタンスを共有することはできません。
+                ゆえに、識別子には２つの異なる概念があるということになります。
             </para>
 
             <variablelist spacing="compact">
                 <varlistentry>
-                    <term>�f�[�^�x�[�X���ʎq</term>
+                    <term>データベース識別子</term>
                     <listitem>
                         <para>
                             <literal>foo.getId().equals( bar.getId() )</literal>
@@ -301,7 +303,7 @@
                     </listitem>
                 </varlistentry>
                 <varlistentry>
-                    <term>JVM���ʎq</term>
+                    <term>JVM識別子</term>
                     <listitem>
                         <para>
                             <literal>foo==bar</literal>
@@ -311,105 +313,105 @@
             </variablelist>
 
             <para>
-                <emphasis>�X��</emphasis> <literal>Session</literal> �ɒǉ����ꂽ�I�u�W�F�N�g�ɂƂ���
-                �i���Ȃ킿�A�P�� <literal>Session</literal> �̃X�R�[�v�̒��ł́j�A�Q�̊T�O�͓����ł��B
-                �f�[�^�x�[�X���ꐫ��JVM���ꐫ����v���邱�Ƃ��AHibernate���ۏ؂��܂��B
-                �������A�A�v���P�[�V�������Q�̈قȂ�Z�b�V��������
-                �u�����v�i�i�������ʎq�́j�r�W�l�X�I�u�W�F�N�g�ɓ����ɃA�N�Z�X�������A
-                �Q�̃C���X�^���X�͎��ۂɁiJVM���ʎq���j�u�قȂ�v�܂��B
-                �y�ϓI�A�v���[�`�ɂ���āA�i�����o�[�W���j���O�́j�t���b�V���^�R�~�b�g����
-                �R���t���N�g����������܂��B
+                <emphasis>個々の</emphasis> <literal>Session</literal> に追加されたオブジェクトにとって
+                （すなわち、１つの <literal>Session</literal> のスコープの中では）、２つの概念は同じです。
+                データベース同一性とJVM同一性が一致することを、Hibernateが保証します。
+                しかし、アプリケーションが２つの異なるセッションから
+                「同じ」（永続性識別子の）ビジネスオブジェクトに同時にアクセスする限り、
+                ２つのインスタンスは実際に（JVM識別子が）「異なり」ます。
+                楽観的アプローチによって、（自動バージョニングの）フラッシュ／コミット時に
+                コンフリクトが解決されます。
             </para>
 
             <para>
-                ���̃A�v���[�`�ł́AHibernate�ƃf�[�^�x�[�X�ɓ������s�ɂ��Ă̐S�z���c��܂��B
-                ����ŁA�ō��̃X�P�[���r���e�B���񋟂���܂��B
-                �Ȃ��Ȃ�A�P�X���b�h�̍�ƒP�ʂ̒��ň�Ӑ����ۏ؂����΁A
-                �����ȃ��b�N�⓯�������s�v�ɂȂ邽�߂ł��B
-                <literal>Session</literal> ���ƂɂP�̃X���b�h��\��t�������A
-                �A�v���P�[�V�����̓r�W�l�X�I�u�W�F�N�g��synchronize����K�v�͂���܂���B
-                <literal>Session</literal> ���ł́A�A�v���P�[�V�����̓I�u�W�F�N�g���r���邽�߂ɁA
-                <literal>==</literal> �����S�Ɏg�p�ł��܂��B
+                このアプローチでは、Hibernateとデータベースに同時実行についての心配が残ります。
+                一方で、最高のスケーラビリティが提供されます。
+                なぜなら、１スレッドの作業単位の中で一意性が保証されれば、
+                高価なロックや同期化が不要になるためです。
+                <literal>Session</literal> ごとに１つのスレッドを貼り付ける限り、
+                アプリケーションはビジネスオブジェクトをsynchronizeする必要はありません。
+                <literal>Session</literal> 内では、アプリケーションはオブジェクトを比較するために、
+                <literal>==</literal> を安全に使用できます。
             </para>
 
             <para>
-                ����ǂ��A<literal>Session</literal> �̊O�� <literal>==</literal>
-                ���g���A�v���P�[�V�����́A�\�����Ȃ����ʂɑ������܂��B
-                ����͗\�����Ȃ��ꏊ�ŋN���肦�܂��B
-                �Ⴆ�΁A�Q�̕����C���X�^���X�𓯂� <literal>Set</literal> ��
-                put�����Ƃ��Ȃǂł��B
-                �����Ƃ������f�[�^�x�[�X���ʎq�������܂��i���Ȃ킿�A�����s��\���܂��j�B
-                �������A������Ԃ̃C���X�^���X��JVM���ʎq�͓��R�ۏ؂���܂���B
-                �J���҂́A�i�����N���X�� <literal>equals()</literal> �� <literal>hashCode()</literal>
-                ���\�b�h���I�[�o�[���C�h���A�I�u�W�F�N�g�������̊T�O���������ׂ��ł��B
-                �x�����P����܂��B�������̎����Ƀf�[�^�x�[�X���ʎq���g��Ȃ��ł��������B
-                ���j�[�N�ȁi���ʂ͕s�ς́j�����̑g�ݍ��킹�ł���r�W�l�X�L�[���g���Ă��������B
-                �����A�ꎞ�I�u�W�F�N�g���i�������ꂽ�ꍇ�A�f�[�^�x�[�X���ʎq���ς��܂��B
-                �ꎞ�I�u�W�F�N�g���i�ʏ핪���C���X�^���X�Ƌ��Ɂj <literal>Set</literal>
-                �ɕێ�����ꍇ�A�n�b�V���R�[�h���ς��Ƃ������Ƃ́A<literal>Set</literal>
-                �̌_���j��Ƃ������Ƃł��B
-                �r�W�l�X�L�[�̂��߂̑����́A�f�[�^�x�[�X�̎�L�[�قǈ��肷�ׂ��ł͂Ȃ��ł��B
-                �I�u�W�F�N�g������ <literal>Set</literal> �̒��ɂ���Ԃ����A�����ۏ؂��ׂ��ł��B
-                ���̖��̂��O��I�ȋc�_�́AHibernate��Web�T�C�g���Q�Ƃ��Ă��������B
-                �܂��A�����Hibernate�̖��ł͂Ȃ��A�P��Java�I�u�W�F�N�g�̎��ʎq�ⓙ������
-                �ǂ̂悤�Ɏ������ׂ����Ƃ������Ƃł��B
+                けれども、<literal>Session</literal> の外で <literal>==</literal>
+                を使うアプリケーションは、予期しない結果に遭遇します。
+                これは予期しない場所で起こりえます。
+                例えば、２つの分離インスタンスを同じ <literal>Set</literal> に
+                putしたときなどです。
+                両方とも同じデータベース識別子を持ちます（すなわち、同じ行を表します）。
+                しかし、分離状態のインスタンスのJVM識別子は当然保証されません。
+                開発者は、永続性クラスの <literal>equals()</literal> と <literal>hashCode()</literal>
+                メソッドをオーバーライドし、オブジェクト等価性の概念を実装すべきです。
+                警告が１つあります。等価性の実装にデータベース識別子を使わないでください。
+                ユニークな（普通は不変の）属性の組み合わせであるビジネスキーを使ってください。
+                もし、一時オブジェクトが永続化された場合、データベース識別子が変わります。
+                一時オブジェクトを（通常分離インスタンスと共に） <literal>Set</literal>
+                に保持する場合、ハッシュコードが変わるということは、<literal>Set</literal>
+                の契約を破るということです。
+                ビジネスキーのための属性は、データベースの主キーほど安定すべきではないです。
+                オブジェクトが同じ <literal>Set</literal> の中にいる間だけ、安定を保証すべきです。
+                この問題のより徹底的な議論は、HibernateのWebサイトを参照してください。
+                また、これはHibernateの問題ではなく、単にJavaオブジェクトの識別子や等価性を
+                どのように実装すべきかということです。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-basics-issues">
-            <title>��ʓI�Ȗ��</title>
+            <title>一般的な問題</title>
 
              <para>
-                 <emphasis>session-per-user-session</emphasis> ��
-                 <emphasis>session-per-application</emphasis> �A���`�p�^�[��
-                 �͎g���Ă͂����܂���i�������A�܂�ɗ�O������܂��j�B
-                 ���ӁF���L�̖��̂������́A���������p�^�[���Ƃ��Ă��o�����܂��B
-                 �݌v�����肷��O�ɁA���̈Ӗ��𗝉�����悤�ɂ��Ă��������B
+                 <emphasis>session-per-user-session</emphasis> と
+                 <emphasis>session-per-application</emphasis> アンチパターン
+                 は使ってはいけません（もちろん、まれに例外があります）。
+                 注意：下記の問題のいくつかは、推奨されるパターンとしても出現します。
+                 設計を決定する前に、裏の意味を理解するようにしてください。
              </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
-                        <literal>Session</literal> �̓X���b�h�Z�[�t�ł͂���܂���B
-                        HTTP���N�G�X�g�A�Z�b�V����Bean�ASwing���[�J�[�̂悤�ɁA
-                        �������s���\�Ȃ��̂� <literal>Session</literal> �C���X�^���X�����L����ƁA
-                        ������Ԃ������N�����܂��B
-                        �i��ŋc�_����j<literal>HttpSession</literal> �̒���
-                        Hibernate <literal>Session</literal> ��ێ�����ꍇ�A
-                        HttpSession�ւ̃A�N�Z�X�𓯊������邱�Ƃ��l�����ׂ��ł��B
-                        �����Ȃ���΁A���[�U�[���\�����������[�h���N���b�N����ƁA
-                        �����ɑ���Q�̃X���b�h�̒��ŁA���� <literal>Session</literal> ���g���܂��B
+                        <literal>Session</literal> はスレッドセーフではありません。
+                        HTTPリクエスト、セッションBean、Swingワーカーのように、
+                        同時実行が可能なものが <literal>Session</literal> インスタンスを共有すると、
+                        競合状態を引き起こします。
+                        （後で議論する）<literal>HttpSession</literal> の中で
+                        Hibernate <literal>Session</literal> を保持する場合、
+                        HttpSessionへのアクセスを同期化することを考慮すべきです。
+                        さもなければ、ユーザーが十分早くリロードをクリックすると、
+                        同時に走る２つのスレッドの中で、同じ <literal>Session</literal> が使われます。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        Hibernate����O�𓊂����ꍇ�́A�f�[�^�x�[�X�g�����U�N�V���������[���o�b�N���A
-                        ������ <literal>Session</literal> �����ׂ��ł��i�ڍׂ���ŋc�_���܂��j�B
-                        <literal>Session</literal> ���A�v���P�[�V�����Ɍ��ѕt�����Ă���̂ł���΁A
-                        �A�v���P�[�V�������~���ׂ��ł��B
-                        �f�[�^�x�[�X�g�����U�N�V���������[���o�b�N���Ă��A�r�W�l�X�I�u�W�F�N�g��
-                        �g�����U�N�V�������J�n�����Ƃ��̏�Ԃɖ߂�܂���B
-                        ����́A�f�[�^�x�[�X�̏�Ԃƃr�W�l�X�I�u�W�F�N�g�͓������Ă��Ȃ����Ƃ��Ӗ����܂��B
-                        �ʏ킱��͖��ɂȂ�܂���B
-                        �Ȃ��Ȃ�A��O�͉񕜂ł��Ȃ�����ł��B
-                        �Ƃɂ������[���o�b�N������ɂ�蒼���ׂ��ł��B
+                        Hibernateが例外を投げた場合は、データベーストランザクションをロールバックし、
+                        直ちに <literal>Session</literal> を閉じるべきです（詳細を後で議論します）。
+                        <literal>Session</literal> がアプリケーションに結び付けられているのであれば、
+                        アプリケーションを停止すべきです。
+                        データベーストランザクションをロールバックしても、ビジネスオブジェクトは
+                        トランザクションを開始したときの状態に戻りません。
+                        これは、データベースの状態とビジネスオブジェクトは同期していないことを意味します。
+                        通常これは問題になりません。
+                        なぜなら、例外は回復できないからです。
+                        とにかくロールバックした後にやり直すべきです。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>Session</literal> �͉i���ipersistent�j��Ԃ̂��ׂẴI�u�W�F�N�g��
-                        �L���b�V�����܂��iHibernate�͊Ď����A�_�[�e�B��Ԃ��`�F�b�N���܂��j�B
-                        ����́A�����ԃZ�b�V�������J�����܂܂ɂ��邩�A
-                        ���ɑ����̃f�[�^�����[�h�������邩�����ꍇ�́A
-                        OutOfMemoryException����������܂Ŗ����ɑ傫���Ȃ邱�Ƃ��Ӗ����܂��B
-                        ������̂P�́A<literal>Session</literal> �L���b�V�����Ǘ����邽�߂ɁA
-                        <literal>clear()</literal> �� <literal>evict()</literal> ���ĂԂ��Ƃł��B
-                        �������A�傫�ȃf�[�^����������K�v������Ȃ�A
-                        ���Ԃ�X�g�A�h�v���V�[�W�����l������ׂ��ł��傤�B
-                        �������̉�����́A<xref linkend="batch"/> �ŏЉ��Ă��܂��B
-                        ���[�U�[�Z�b�V�����̊ԁA<literal>Session</literal> ���J�����܂܂ɂ���Ƃ������Ƃ́A
-                        �f�[�^���V�N�łȂ��Ȃ�m���������Ȃ邱�Ƃ��Ӗ����܂��B
+                        <literal>Session</literal> は永続（persistent）状態のすべてのオブジェクトを
+                        キャッシュします（Hibernateは監視し、ダーティ状態かチェックします）。
+                        これは、長い間セッションを開いたままにするか、
+                        非常に多くのデータをロードし続けるかした場合は、
+                        OutOfMemoryExceptionが発生するまで無限に大きくなることを意味します。
+                        解決策の１つは、<literal>Session</literal> キャッシュを管理するために、
+                        <literal>clear()</literal> か <literal>evict()</literal> を呼ぶことです。
+                        しかし、大きなデータを処理する必要があるなら、
+                        たぶんストアドプロシージャを考慮するべきでしょう。
+                        いくつかの解決策は、<xref linkend="batch"/> で紹介されています。
+                        ユーザーセッションの間、<literal>Session</literal> を開いたままにするということは、
+                        データが新鮮でなくなる確率が高くなることを意味します。
                     </para>
                 </listitem>
             </itemizedlist>
@@ -419,90 +421,90 @@
     </sect1>
 
     <sect1 id="transactions-demarcation">
-        <title>�f�[�^�x�[�X�g�����U�N�V�������E</title>
+        <title>データベーストランザクション境界</title>
 
         <para>
-            �f�[�^�x�[�X�i�������̓V�X�e���j�g�����U�N�V�����̋��E�́A��ɕK�v�ł��B
-            �f�[�^�x�[�X�g�����U�N�V�����̊O�ŁA�f�[�^�x�[�X�Ƃ̒ʐM�͋N���܂���
-            �i����͎����R�~�b�g���[�h�Ɋ���Ă��鑽���̊J���҂����������邩������܂���j�B
-            �ǂݍ��ނ����̑���ɂł��A�������m�ȃg�����U�N�V�������E���g�p���Ă��������B
-            �������x���ƃf�[�^�x�[�X�̔\�͎���ŁA����͕K�v�Ȃ���������܂��񂪁A
-            ��Ƀg�����U�N�V�������E�𖾎��I�Ɏw�肵�Ă��A�}�C�i�X�ʂ͑S������܂���B
+            データベース（もしくはシステム）トランザクションの境界は、常に必要です。
+            データベーストランザクションの外で、データベースとの通信は起きません
+            （これは自動コミットモードに慣れている多くの開発者を混乱させるかもしれません）。
+            読み込むだけの操作にでも、いつも明確なトランザクション境界を使用してください。
+            分離レベルとデータベースの能力次第で、これは必要ないかもしれませんが、
+            常にトランザクション境界を明示的に指定しても、マイナス面は全くありません。
             
-            �m���ɁA�P�̃f�[�^�x�[�X�g�����U�N�V�����͑����̏����ȃg�����U�N�V�������
-            �i�f�[�^�̓ǂݍ��݂ł����Ă��j�p�t�H�[�}���X��������Ă��܂��B
+            確かに、１つのデータベーストランザクションは多数の小さなトランザクションより
+            （データの読み込みであっても）パフォーマンスがすぐれています。
         </para>
 
         <para>
-            J2EE���ɊǗ�����Ă��Ȃ����
-            �i���Ȃ킿�A�X�^���h�A�����A�P����Web��Swing�A�v���P�[�V�����j�ł��A
-            �Ǘ����ꂽ��Ԃł��AHibernate�A�v���P�[�V���������s�ł��܂��B
-            �Ǘ�����Ă��Ȃ����ł́AHiberante���f�[�^�x�[�X�̃R�l�N�V�����v�[����񋟂��܂��B
-            �A�v���P�[�V�����J���҂́A�g�����U�N�V�������E���蓮�Őݒ肵�Ȃ���΂Ȃ�܂���B
-            ����������ƁA�f�[�^�x�[�X�g�����U�N�V�����̊J�n�A�R�~�b�g�A���[���o�b�N��
-            �J���Ҏ��g���ݒ肷��K�v������Ƃ������Ƃł��B
+            J2EE環境に管理されていない状態
+            （すなわち、スタンドアロン、単純なWebやSwingアプリケーション）でも、
+            管理された状態でも、Hibernateアプリケーションを実行できます。
+            管理されていない環境では、Hiberanteがデータベースのコネクションプールを提供します。
+            アプリケーション開発者は、トランザクション境界を手動で設定しなければなりません。
+            言い換えると、データベーストランザクションの開始、コミット、ロールバックを
+            開発者自身が設定する必要があるということです。
             
-            �ʏ�A�Ǘ����ꂽ���ł́A�R���e�i�Ǘ��ɂ��g�����U�N�V�����iCMT�j���񋟂���܂��B
-            �Ⴆ�΁A�Z�b�V����Bean�̃f�v���C�����g�f�B�X�N���v�^�Ő錾�I�ɒ�`���A
-            �g�����U�N�V������g�ݗ��Ă܂��B
-            �v���O�����ɂ��g�����U�N�V�������E�͂����K�v����܂���B
+            通常、管理された環境では、コンテナ管理によるトランザクション（CMT）が提供されます。
+            例えば、セッションBeanのデプロイメントディスクリプタで宣言的に定義し、
+            トランザクションを組み立てます。
+            プログラムによるトランザクション境界はもう必要ありません。
         </para>
 
         <para>
-            �������Ȃ���A�Ǘ�����Ă��Ȃ����\�[�X�E���[�J���Ȋ���
-            JTA�Ɉˑ������V�X�e���iCMT�ł͂Ȃ�BMT�j�̗����ɁA
-            �i�����w���|�[�^�u���ɕۂ̂́A���΂��Ζ]�܂������Ƃł��B
+            しかしながら、管理されていないリソース・ローカルな環境と
+            JTAに依存したシステム（CMTではなくBMT）の両方に、
+            永続化層をポータブルに保つのは、しばしば望ましいことです。
             
-            �f�v���C���̃l�C�e�B�u�̃g�����U�N�V�����V�X�e�����Ăяo��
-            <literal>Transaction</literal> �Ƃ������b�p�[API��Hibernate���񋟂��܂��B
-            ����API���g�����͔C�ӂł����ACMT�̃Z�b�V����Bean���g��Ȃ��̂ł���΁A�g�����Ƃ������������܂��B
+            デプロイ環境のネイティブのトランザクションシステムを呼び出す
+            <literal>Transaction</literal> というラッパーAPIをHibernateが提供します。
+            このAPIを使うかは任意ですが、CMTのセッションBeanを使わないのであれば、使うことを強く推奨します。
         </para>
 
         <para>
-            �ʏ�A<literal>Session</literal> �I���́A�S�̈قȂ�t�F�[�Y���܂݂܂��B
+            通常、<literal>Session</literal> 終了は、４つの異なるフェーズを含みます。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    �Z�b�V�����̃t���b�V��
+                    セッションのフラッシュ
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �g�����U�N�V�����̃R�~�b�g
+                    トランザクションのコミット
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �Z�b�V�����̃N���[�Y
+                    セッションのクローズ
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    ��O�̃n���h�����O
+                    例外のハンドリング
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            �Z�b�V�����̃t���b�V���ɂ��ẮA�O�̂ق��ł��łɋc�_���܂����B
-            �Ǘ����ꂽ���ƊǗ�����Ă��Ȃ����̗����ɂ��āA
-            �g�����U�N�V�������E�Ɨ�O�n���h�����O�������Əڂ������Ă����܂��傤�B
+            セッションのフラッシュについては、前のほうですでに議論しました。
+            管理された環境と管理されていない環境の両方について、
+            トランザクション境界と例外ハンドリングをもっと詳しく見ていきましょう。
         </para>
 
 
         <sect2 id="transactions-demarcation-nonmanaged" revision="2">
-            <title>�Ǘ�����Ă��Ȃ���</title>
+            <title>管理されていない環境</title>
 
             <para>
-                Hibernate�i�����w���Ǘ�����Ă��Ȃ����Ŏ�������ꍇ�́A
+                Hibernate永続化層を管理されていない環境で実装する場合は、
                 
-                �ʏ�P���ȃR�l�N�V�����v�[���i���Ȃ킿DataSource�ł͂Ȃ��j�ɂ���āA
-                �f�[�^�x�[�X�R�l�N�V�����𐧌䂵�܂��B
-                Hibernate�͂��̃R�l�N�V�����v�[������K�v�ȃR�l�N�V�������擾���܂��B
+                通常単純なコネクションプール（すなわちDataSourceではない）によって、
+                データベースコネクションを制御します。
+                Hibernateはそのコネクションプールから必要なコネクションを取得します。
                 
-                �Z�b�V�����^�g�����U�N�V��������̃C�f�B�I���͎��̂悤�ɂȂ�܂��B
+                セッション／トランザクション制御のイディオムは次のようになります。
             </para>
 
             <programlisting><![CDATA[// Non-managed environment idiom
@@ -525,21 +527,21 @@ finally {
 }]]></programlisting>
 
             <para>
-                �����I�� <literal>Session</literal> �� <literal>flush()</literal> ���Ăяo���ׂ��ł͂Ȃ��A
-                <literal>commit()</literal> ���Ăяo�����Ƃɂ��A�����I�ɓ��������������s����܂�
-                �i�Z�b�V������ <xref linkend="objectstate-flushing">FlushMode</xref> �Ɉˑ����Ă���j�B
+                明示的に <literal>Session</literal> の <literal>flush()</literal> を呼び出すべきではなく、
+                <literal>commit()</literal> を呼び出すことにより、自動的に同期化処理が実行されます
+                （セッションの <xref linkend="objectstate-flushing">FlushMode</xref> に依存している）。
                 
-                <literal>close()</literal> ���Ăяo�����Ƃɂ��A�Z�b�V�����̏I���𖾊m�ɂ��܂��B
-                <literal>close()</literal> ���ÖٓI�ɍs����Ȃ��Ƃ́A
-                �Z�b�V������JDBC�R�l�N�V�������J�����邱�Ƃł��B
+                <literal>close()</literal> を呼び出すことにより、セッションの終わりを明確にします。
+                <literal>close()</literal> が暗黙的に行う主なことは、
+                セッションがJDBCコネクションを開放することです。
                 
-                ��L��Java�R�[�h�̓|�[�^�u���ł���A�Ǘ�����Ă��Ȃ�����JTA���̗����Ŏ��s�ł��܂��B
+                上記のJavaコードはポータブルであり、管理されていない環境とJTA環境の両方で実行できます。
             </para>
 
            <para>
-                ���K�����̂��������́AHibernate�ɗ\�ߑg�ݍ��܂�Ă���
-                �ucurrent session�v�R���e�L�X�g�Ǘ��ł��B
-                ���t�Ő��������艺�L�������ق��������ł��傤�B
+                より適応性のある解決策は、Hibernateに予め組み込まれている
+                「current session」コンテキスト管理です。
+                言葉で説明するより下記を見たほうが速いでしょう。
             </para>
 
             <programlisting><![CDATA[// Non-managed environment idiom with getCurrentSession()
@@ -557,43 +559,43 @@ catch (RuntimeException e) {
 }]]></programlisting>
 
             <para>
-                ���K�̃A�v���P�[�V�����̒��ł́A���̂悤�ȃR�[�h�̐؂�[�������Č��Ȃ��ł��傤�B
-                �v���I�ȁi�V�X�e���j��O�́A��Ɂu�ŏ�ʁv�ŃL���b�`���ׂ��ł��B
-                ����������΁A�i�i�����w�ŁjHibernate�Ăяo�������s����R�[�h�ƁA
-                <literal>RuntimeException</literal> �𐧌䂷��
-                �i�ʏ�̓N���[���A�b�v�ƏI���̂ݍs�����Ƃ��ł���j�R�[�h�́A�ʁX�̑w�̒��ɂ���܂��B
-                Hibernate�ɂ��J�����g�R���e�L�X�g�Ǘ��́A���̐݌v�����Ȃ�P���ɂ��܂��B
-                �K�v�Ȃ̂́A<literal>SessionFactory</literal> �ɃA�N�Z�X���邱�Ƃ����ł��B
-                ��O�����́A���̏͂̌�̂ق��ŋc�_���܂��B
+                正規のアプリケーションの中では、このようなコードの切れ端を決して見ないでしょう。
+                致命的な（システム）例外は、常に「最上位」でキャッチすべきです。
+                言い換えれば、（永続化層で）Hibernate呼び出しを実行するコードと、
+                <literal>RuntimeException</literal> を制御する
+                （通常はクリーンアップと終了のみ行うことができる）コードは、別々の層の中にあります。
+                Hibernateによるカレントコンテキスト管理は、この設計をかなり単純にします。
+                必要なのは、<literal>SessionFactory</literal> にアクセスすることだけです。
+                例外処理は、この章の後のほうで議論します。
             </para>
 
            <para>
-                ���ӁF�i�f�t�H���g�ł����j
+                注意：（デフォルトですが）
                 <literal>org.hibernate.transaction.JDBCTransactionFactory</literal>
-                ��I������ׂ��ł��B
-                ��2�̗p��Ƃ��ẮA
-                <literal>hibernate.current_session_context_class</literal> ��
-                <literal>"thread"</literal> �Ƃ���Ƃ悢�ł��傤�B
+                を選択するべきです。
+                第2の用例としては、
+                <literal>hibernate.current_session_context_class</literal> を
+                <literal>"thread"</literal> とするとよいでしょう。
             </para>
             
         </sect2>
 
         <sect2 id="transactions-demarcation-jta" revision="3">
-            <title>JTA���g�p����</title>
+            <title>JTAを使用する</title>
 
             <para>
-                �i�����w���A�v���P�[�V�����T�[�o�[�i�Ⴆ�΁AEJB�Z�b�V����Bean�̔w��j�Ŏ��s����ꍇ�A
-                Hibernate����擾���邷�ׂẴf�[�^�\�[�X�R�l�N�V�����́A
-                �����I�ɃO���[�o��JTA�g�����U�N�V�����̈ꕔ�ɂȂ�܂��B
+                永続化層をアプリケーションサーバー（例えば、EJBセッションBeanの背後）で実行する場合、
+                Hibernateから取得するすべてのデータソースコネクションは、
+                自動的にグローバルJTAトランザクションの一部になります。
                 
-                EJB���g�킸�ɁA�X�^���h�A������JTA�����𓱓����邱�Ƃ��ł��܂��B
-                JTA�����̂��߂ɁAHibernate�͂Q�̐헪��񋟂��܂��B
+                EJBを使わずに、スタンドアロンのJTA実装を導入することもできます。
+                JTA統合のために、Hibernateは２つの戦略を提供します。
             </para>
 
             <para>
-                Bean�Ǘ��g�����U�N�V�����iBMT�j���g���A<literal>Transaction</literal> API���g���ꍇ�A
-                Hibernate�̓A�v���P�[�V�����T�[�o�[��BMT�g�����U�N�V�����̊J�n�ƏI���������܂��B
-                ���Ȃ킿�A�g�����U�N�V�����Ǘ��̃R�[�h�́A�Ǘ�����Ȃ����Ɠ����ɂȂ�܂��B
+                Bean管理トランザクション（BMT）を使い、<literal>Transaction</literal> APIを使う場合、
+                HibernateはアプリケーションサーバーにBMTトランザクションの開始と終わりを告げます。
+                すなわち、トランザクション管理のコードは、管理されない環境と同じになります。
             </para>
             
            <programlisting><![CDATA[// BMT idiom
@@ -616,9 +618,9 @@ finally {
 }]]></programlisting>
 
            <para>
-               �g�����U�N�V�������E�Ƃ��� <literal>Session</literal> ���g�������ꍇ�A
-               �ȒP�ɃR���e�L�X�g��`�d����@�\�ł��� <literal>getCurrentSession()</literal> ������̂ŁA
-               JTA�� <literal>UserTransaction</literal> API�𒼐ڎg�p���ׂ��ł��傤�B
+               トランザクション境界として <literal>Session</literal> を使いたい場合、
+               簡単にコンテキストを伝播する機能である <literal>getCurrentSession()</literal> があるので、
+               JTAの <literal>UserTransaction</literal> APIを直接使用すべきでしょう。
             </para>
 
             <programlisting><![CDATA[// BMT idiom with getCurrentSession()
@@ -640,9 +642,9 @@ catch (RuntimeException e) {
 }]]></programlisting>
 
             <para>
-                CMT�ł́A�g�����U�N�V�������E���Z�b�V����Bean�̃f�v���C�����g�f�B�X�N���v�^�Œ�`���A
-                �v���O�����ł͍s���܂���B
-                �䂦�ɁA�R�[�h�͎��̂悤�ɏ��Ȃ��Ȃ�܂��B
+                CMTでは、トランザクション境界をセッションBeanのデプロイメントディスクリプタで定義し、
+                プログラムでは行いません。
+                ゆえに、コードは次のように少なくなります。
             </para>
 
             <programlisting><![CDATA[// CMT idiom
@@ -653,121 +655,121 @@ catch (RuntimeException e) {
 ]]></programlisting>
 
             <para>
-                CMT/EJB�̒��ł́A��Ƀ��[���o�b�N�������I�Ɏ��{����܂��B
-                �Ȃ��Ȃ�A�Z�b�V�����r�[���̃��\�b�h�ɂ�蓊����ꂽ���䂳��Ă��Ȃ�
-                <literal>RuntimeException</literal> �́A�O���[�o���g�����U�N�V������
-                ���[���o�b�N����悤�ɃR���e�i�ɓ`���邽�߂ł��B
-                <emphasis>����́ABMT��������CMT�Ƃ��������Hibernate <literal>Transaction</literal>
-                API���g���K�v�͏������Ȃ��Ƃ����Ӗ��ł��B</emphasis>
+                CMT/EJBの中では、常にロールバックが自動的に実施されます。
+                なぜなら、セッションビーンのメソッドにより投げられた制御されていない
+                <literal>RuntimeException</literal> は、グローバルトランザクションを
+                ロールバックするようにコンテナに伝えるためです。
+                <emphasis>これは、BMTもしくはCMTといっしょにHibernate <literal>Transaction</literal>
+                APIを使う必要は少しもないという意味です。</emphasis>
             </para>
 
             <para>
-                Hibernate�̃g�����U�N�V�����t�@�N�g����ݒ肷��ۂɁA
-                JTA�𒼐ڎg���iBMT�́j�ꍇ�� <literal>org.hibernate.transaction.JTATransactionFactory</literal> ���A
-                CMT�Z�b�V�����r�[���̒��ł� <literal>org.hibernate.transaction.CMTTransactionFactory</literal> ��
-                �I�����ׂ����Ƃ������Ƃɒ��ӂ��Ă��������B
+                Hibernateのトランザクションファクトリを設定する際に、
+                JTAを直接使う（BMTの）場合は <literal>org.hibernate.transaction.JTATransactionFactory</literal> を、
+                CMTセッションビーンの中では <literal>org.hibernate.transaction.CMTTransactionFactory</literal> を
+                選択すべきだということに注意してください。
                 <literal>hibernate.transaction.manager_lookup_class</literal>
-                ���Z�b�g���邱�Ƃ��v���o���Ă��������B
-                �Ȃ��A<literal>hibernate.current_session_context_class</literal> �́A
-                �Z�b�g���Ȃ����i����݊��j�A<literal>"jta"</literal> ���Z�b�g���Ă��������B
+                をセットすることも思い出してください。
+                なお、<literal>hibernate.current_session_context_class</literal> は、
+                セットしないか（後方互換）、<literal>"jta"</literal> をセットしてください。
             </para>
             
             <para>
-                <literal>getCurrentSession()</literal> �I�y���[�V�����́AJTA���ł͂P�̌��_�������܂��B
+                <literal>getCurrentSession()</literal> オペレーションは、JTA環境では１つの欠点を持ちます。
                 
-                �f�t�H���g�Ŏg���� <literal>after_statement</literal> �R�l�N�V���������[�X���[�h���g�p�����ŁA
-                �x�����P����܂��B
+                デフォルトで使われる <literal>after_statement</literal> コネクションリリースモードを使用する上で、
+                警告が１つあります。
                 
-                JTA�d�l�̋����Ȑ���̂��߂ɁA
-                <literal>scroll()</literal> �܂��� <literal>iterate()</literal> ���Ԃ����A
-                �����Ă��Ȃ� <literal>ScrollableResults</literal> �܂��� <literal>Iterator</literal>
-                �C���X�^���X��Hibernate�������I�ɃN���[���A�b�v���邱�Ƃ͂ł��܂���B
+                JTA仕様の愚かな制約のために、
+                <literal>scroll()</literal> または <literal>iterate()</literal> が返した、
+                閉じられていない <literal>ScrollableResults</literal> または <literal>Iterator</literal>
+                インスタンスをHibernateが自動的にクリーンアップすることはできません。
                 
-                <literal>finally</literal> �u���b�N�̒��ŁA
-                <literal>ScrollableResults.close()</literal> �܂���
-                <literal>Hibernate.close(Iterator)</literal> �𖾎��I�ɌĂяo���āA
-                ���ɐ��񂾃f�[�^�x�[�X�J�[�\������� <emphasis>���Ȃ���΂Ȃ�܂���</emphasis>�B
+                <literal>finally</literal> ブロックの中で、
+                <literal>ScrollableResults.close()</literal> または
+                <literal>Hibernate.close(Iterator)</literal> を明示的に呼び出して、
+                裏に潜んだデータベースカーソルを解放 <emphasis>しなければなりません</emphasis>。
                 
-                �i�������A�����̃A�v���P�[�V�����ł́AJTA��CMT�R�[�h�� <literal>scroll()</literal>
-                �� <literal>iterate()</literal> �̎g�p�������̂͗e�Ղł��B�j
+                （もちろん、多くのアプリケーションでは、JTAかCMTコードで <literal>scroll()</literal>
+                や <literal>iterate()</literal> の使用を避けるのは容易です。）
             </para>
 
         </sect2>
 
         <sect2 id="transactions-demarcation-exceptions">
-            <title>��O�n���h�����O</title>
+            <title>例外ハンドリング</title>
 
             <para>
-                <literal>Session</literal> ����O�i<literal>SQLException</literal>���܂ށj�𓊂����ꍇ�A
-                �����ɁA�f�[�^�x�[�X�g�����U�N�V���������[���o�b�N���A<literal>Session.close()</literal>
-                ���ĂсA<literal>Session</literal> �C���X�^���X��j�����ׂ��ł��B
-                <literal>Session</literal> �̂������̃��\�b�h�́A
-                �Z�b�V�����̏�Ԃ� <emphasis>���������܂�</emphasis> �ɂ��܂��B
-                Hibernate����������O���A�񕜂ł�����̂Ƃ��Ĉ������Ƃ͂ł��܂���B
-                <literal>finally</literal> �u���b�N�̒��� <literal>close()</literal> ���Ă�ŁA
-                <literal>Session</literal> ���m���ɕ��Ă��������B
+                <literal>Session</literal> が例外（<literal>SQLException</literal>を含む）を投げた場合、
+                直ちに、データベーストランザクションをロールバックし、<literal>Session.close()</literal>
+                を呼び、<literal>Session</literal> インスタンスを破棄すべきです。
+                <literal>Session</literal> のいくつかのメソッドは、
+                セッションの状態を <emphasis>矛盾したまま</emphasis> にします。
+                Hibernateが投げた例外を、回復できるものとして扱うことはできません。
+                <literal>finally</literal> ブロックの中で <literal>close()</literal> を呼んで、
+                <literal>Session</literal> を確実に閉じてください。
             </para>
 
             <para>
-                <literal>HibernateException</literal> �́AHibernate�i�����w�̒��Ŕ������鑽���̃G���[��
-                ���b�v����A��������Ȃ���O�ł��iHibernate�̌Â��o�[�W�����͈Ⴂ�܂����j�B
-                �������̈ӌ��́A�A�v���P�[�V�����J���҂ɉ񕜕s�\�ȗ�O��
-                ���w�ŃL���b�`���邱�Ƃ����v���ׂ��ł͂Ȃ��Ƃ������Ƃł��B
-                �����̃V�X�e���ł́A��������Ȃ���O�ƒv���I�ȗ�O�́A
-                �R�[���X�^�b�N�̍ŏ��̃t���[���̂P�i�Ⴆ�΁A�ŏ�ʂ̑w�Łj�Ńn���h�����O���A
-                �G���[���b�Z�[�W���A�v���P�[�V�������[�U�[�ɕ\�����܂�
-                �i�������́A���̓K�؂ȏ��������{���܂��j�B
-                Hibernate�́A<literal>HibernateException</literal> �ȊO�̌�������Ȃ���O��
-                �����邱�Ƃɒ��ӂ��Ă��������B
-                �������܂��A�񕜕s�\�ł���A�K�؂ȏ��������{���ׂ��ł��B
+                <literal>HibernateException</literal> は、Hibernate永続化層の中で発生する多くのエラーを
+                ラップする、検査されない例外です（Hibernateの古いバージョンは違いました）。
+                私たちの意見は、アプリケーション開発者に回復不可能な例外を
+                下層でキャッチすることを強要すべきではないということです。
+                多くのシステムでは、検査されない例外と致命的な例外は、
+                コールスタックの最初のフレームの１つ（例えば、最上位の層で）でハンドリングし、
+                エラーメッセージをアプリケーションユーザーに表示します
+                （もしくは、他の適切な処理を実施します）。
+                Hibernateは、<literal>HibernateException</literal> 以外の検査されない例外も
+                投げることに注意してください。
+                これらもまた、回復不可能であり、適切な処理を実施すべきです。
             </para>
 
             <para>
-                Hibernate�́A�f�[�^�x�[�X�Ƃ̑Θb���ɓ�����ꂽ <literal>SQLException</literal> ��
-                <literal>JDBCException</literal> �Ń��b�v���܂��B
-                ���́A��O�����Ӗ��̂��� <literal>JDBCException</literal> �̃T�u�N���X��
-                �ϊ����悤�Ǝ��݂܂��B
-                ���� <literal>SQLException</literal> �́A<literal>JDBCException.getCause()</literal>
-                �ɂ�肢�ł������܂��B
-                Hibernate�́A<literal>SessionFactory</literal> �ɒǉ�����Ă���
-                <literal>SQLExceptionConverter</literal> ���g���A<literal>SQLException</literal> ��
-                �K���� <literal>JDBCException</literal> �T�u�N���X�ɕϊ����܂��B
-                �f�t�H���g�ł́A<literal>SQLExceptionConverter</literal> �͐ݒ肳��Ă���SQL�����ɂ��
-                ��`����܂��B
-                ����ŁA�Ǝ��̎����ɍ����ւ��邱�Ƃ��ł��܂�
-                �i�ڍׂ́A<literal>SQLExceptionConverterFactory</literal> �N���X��Javadoc���Q�Ƃ��Ă��������j�B
-                �W���I�� <literal>JDBCException</literal> �̃T�u�^�C�v�����L�Ɏ����܂��B
+                Hibernateは、データベースとの対話中に投げられた <literal>SQLException</literal> を
+                <literal>JDBCException</literal> でラップします。
+                実は、例外をより意味のある <literal>JDBCException</literal> のサブクラスに
+                変換しようと試みます。
+                元の <literal>SQLException</literal> は、<literal>JDBCException.getCause()</literal>
+                によりいつでも得られます。
+                Hibernateは、<literal>SessionFactory</literal> に追加されている
+                <literal>SQLExceptionConverter</literal> を使い、<literal>SQLException</literal> を
+                適当な <literal>JDBCException</literal> サブクラスに変換します。
+                デフォルトでは、<literal>SQLExceptionConverter</literal> は設定されているSQL方言により
+                定義されます。
+                一方で、独自の実装に差し替えることもできます
+                （詳細は、<literal>SQLExceptionConverterFactory</literal> クラスのJavadocを参照してください）。
+                標準的な <literal>JDBCException</literal> のサブタイプを下記に示します。
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
                         <literal>JDBCConnectionException</literal> -
-                        ��b�ƂȂ�JDBC�ʐM�̃G���[��\���܂��B
+                        基礎となるJDBC通信のエラーを表します。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>SQLGrammarException</literal> -
-                        ���s����SQL�̕��@�������͍\���̖���\���܂��B
+                        発行するSQLの文法もしくは構文の問題を表します。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>ConstraintViolationException</literal> -
-                        ���炩�̌`���̊��S������ᔽ��\���܂��B
+                        何らかの形式の完全性制約違反を表します。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>LockAcquisitionException</literal> -
-                        �v�����ꂽ��������{����̂ɕK�v�ȃ��b�N���x���𓾂�ۂ̃G���[��\���܂��B
+                        要求された操作を実施するのに必要なロックレベルを得る際のエラーを表します。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>GenericJDBCException</literal> -
-                        ���̃J�e�S���Ɉ�v���Ȃ�������ʓI�ȗ�O�ł��B
+                        他のカテゴリに一致しなかった一般的な例外です。
                     </para>
                 </listitem>
             </itemizedlist>
@@ -775,22 +777,22 @@ catch (RuntimeException e) {
         </sect2>
 
         <sect2 id="transactions-demarcation-timeout">
-            <title>�g�����U�N�V�����̃^�C���A�E�g</title>
+            <title>トランザクションのタイムアウト</title>
 
             <para>
-                EJB�̂悤�ȊǗ����ꂽ�����񋟂��邫��߂ďd�v�ȓ����̂P�́A
-                �g�����U�N�V�����̃^�C���A�E�g�ł��B
-                ����͊Ǘ�����Ă��Ȃ��R�[�h�ɂ͒񋟂ł��܂���B
-                �g�����U�N�V�����^�C���A�E�g�́A�s�i�s�ȃg�����U�N�V������
-                ���[�U�[�Ƀ��X�|���X��Ԃ��Ȃ��܂܁A�������Ƀ��\�[�X���g�������Ȃ�
-                ���Ƃ�ۏႵ�܂��B
-                �Ǘ����ꂽ���iJTA�j�̊O�ł́AHibernate�͂��̋@�\���t���ɒ񋟂ł��܂���B
-                �������Ȃ���AHibernate�͎��̂悤�ȃf�[�^�A�N�Z�X����̐��䂭�炢�͂ł��܂��B
-                �f�[�^�x�[�X���x���̃f�b�h���b�N��傫�ȃ��U���g�Z�b�g��Ԃ��N�G����
-                ��`���ꂽ�^�C���A�E�g�ɂ���Ċm���ɐ������܂��B
-                �Ǘ����ꂽ���ł́AHibernate�̓g�����U�N�V�����^�C���A�E�g��JTA�ɈϏ����܂��B
-                ���̋@�\�́AHibernate�� <literal>Transaction</literal> �I�u�W�F�N�g��
-                ����Ē��ۉ�����Ă��܂��B
+                EJBのような管理された環境が提供するきわめて重要な特徴の１つは、
+                トランザクションのタイムアウトです。
+                これは管理されていないコードには提供できません。
+                トランザクションタイムアウトは、不品行なトランザクションが
+                ユーザーにレスポンスを返さないまま、無期限にリソースを使い続けない
+                ことを保障します。
+                管理された環境（JTA）の外では、Hibernateはこの機能をフルに提供できません。
+                しかしながら、Hibernateは次のようなデータアクセス操作の制御くらいはできます。
+                データベースレベルのデッドロックや大きなリザルトセットを返すクエリを
+                定義されたタイムアウトによって確実に制限します。
+                管理された環境では、HibernateはトランザクションタイムアウトをJTAに委譲します。
+                この機能は、Hibernateの <literal>Transaction</literal> オブジェクトに
+                よって抽象化されています。
             </para>
             
             <programlisting><![CDATA[
@@ -814,9 +816,9 @@ finally {
 }]]></programlisting>
 
             <para>
-                CMT�r�[���̒��ł� <literal>setTimeout()</literal> ��
-                �Ăяo���Ȃ����Ƃɒ��ӂ��Ă��������B
-                �g�����U�N�V�����^�C���A�E�g�͐錾�I�ɒ�`�����ׂ��ł��B
+                CMTビーンの中では <literal>setTimeout()</literal> を
+                呼び出せないことに注意してください。
+                トランザクションタイムアウトは宣言的に定義されるべきです。
             </para>
             
         </sect2>
@@ -824,32 +826,32 @@ finally {
     </sect1>
 
     <sect1 id="transactions-optimistic">
-        <title>�y�ϓI�������s����</title>
+        <title>楽観的同時実行制御</title>
 
         <para>
-            �������񐫂ƍ����X�P�[���r���e�B�̗�������������A�v���[�`�́A
-            �o�[�W���j���O���g�����y�ϓI�������s����݂̂ł��B
-            �X�V�̏Փ˂������邽�߂Ɂi����сA�X�V��������̂�h�����߂Ɂj�A
-            �o�[�W�����ԍ��������̓^�C���X�^���v���g���āA�o�[�W�������`�F�b�N���܂��B
-            Hibernate�́A�y�ϓI�������s���s���A�v���P�[�V�����R�[�h���������߂�
-            �A�v���[�`���R�񋟂��܂��B
-            �������������郆�[�X�P�[�X�́A�����Θb�������܂����A
-            �o�[�W�����`�F�b�N�͂܂��P�̃f�[�^�x�[�X�g�����U�N�V�����̒��ōX�V���������Ƃ�h��
-            ���_�������Ă��܂��B
+            高い並列性と高いスケーラビリティの両方を実現するアプローチは、
+            バージョニングを使った楽観的同時実行制御のみです。
+            更新の衝突を見つけるために（および、更新が失われるのを防ぐために）、
+            バージョン番号もしくはタイムスタンプを使って、バージョンをチェックします。
+            Hibernateは、楽観的同時実行を行うアプリケーションコードを書くための
+            アプローチを３つ提供します。
+            私たちが見せるユースケースは、長い対話を持ちますが、
+            バージョンチェックはまだ１つのデータベーストランザクションの中で更新を失うことを防ぐ
+            利点も持っています。
         </para>
 
         <sect2 id="transactions-optimistic-manual">
-            <title>�A�v���P�[�V�����ɂ��o�[�W�����`�F�b�N</title>
+            <title>アプリケーションによるバージョンチェック</title>
 
             <para>
-                Hibernate�ɂقƂ�Ǐ����Ă���킸�Ɏ�������P�[�X�ł��B
-                �f�[�^�x�[�X�Ƃ̂����́A���ꂼ��V���� <literal>Session</literal> �̒��ŋN����܂��B
-                �J���҂́A���ׂẲi�����C���X�^���X�𑀍삷��O�ɁA
-                �f�[�^�x�[�X����ēǂݍ��݂���Ӗ�������܂��B
-                ���̃A�v���[�`�ł́A�Θb�g�����U�N�V�����̕�������邽�߂ɁA
-                �A�v���P�[�V�������g���o�[�W�����`�F�b�N���s���K�v������܂��B
-                ���̃A�v���[�`�́A�f�[�^�x�[�X�A�N�Z�X�̒��ł́A�ł�������ł��B
-                �G���e�B�e�BEJB�ƍł����Ă���A�v���[�`�ł��B
+                Hibernateにほとんど助けてもらわずに実装するケースです。
+                データベースとのやり取りは、それぞれ新しい <literal>Session</literal> の中で起こります。
+                開発者は、すべての永続性インスタンスを操作する前に、
+                データベースから再読み込みする責務があります。
+                このアプローチでは、対話トランザクションの分離を守るために、
+                アプリケーション自身がバージョンチェックを行う必要があります。
+                このアプローチは、データベースアクセスの中では、最も非効率です。
+                エンティティEJBと最も似ているアプローチです。
             </para>
 
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
@@ -865,54 +867,54 @@ t.commit();
 session.close();]]></programlisting>
 
             <para>
-                <literal>&lt;version&gt;</literal> ���g���āA<literal>version</literal>
-                �v���p�e�B���}�b�s���O���܂��B
-                Hibernate�́A�G���e�B�e�B���_�[�e�B�ł���ꍇ�A�t���b�V�����A
-                ���̊Ԃ� <literal>version</literal> �v���p�e�B�������I�ɃC���N�������g���܂��B
+                <literal>&lt;version&gt;</literal> を使って、<literal>version</literal>
+                プロパティをマッピングします。
+                Hibernateは、エンティティがダーティである場合、フラッシュし、
+                その間に <literal>version</literal> プロパティを自動的にインクリメントします。
             </para>
 
             <para>
-                �������A�f�[�^�̕��񐫂��Ⴂ���ŉ^�p���Ă���A�o�[�W�����`�F�b�N���s�v�Ȃ�A
-                ���̃A�v���[�`���g���A�o�[�W�����`�F�b�N���X�L�b�v���邾���ł��B
-                ���̏ꍇ�́A�����Θb�ɂ́A
-                <emphasis>�u�Ō�ɃR�~�b�g�������̂����v</emphasis> ���f�t�H���g�̐헪�ł��傤�B
-                ���̃A�v���[�`�́A�A�v���P�[�V�����̃��[�U�[�����������邩������Ȃ����Ƃ�
-                �S�ɗ��߂Ēu���Ă��������B����́A�G���[���b�Z�[�W�⋣�������ύX���}�[�W����@�
-                �Ȃ��܂܁A�X�V�������o�������邽�߂ł��B
+                もちろん、データの並列性が低い環境で運用しており、バージョンチェックが不要なら、
+                このアプローチを使い、バージョンチェックをスキップするだけです。
+                その場合は、長い対話には、
+                <emphasis>「最後にコミットしたものが勝つ」</emphasis> がデフォルトの戦略でしょう。
+                このアプローチは、アプリケーションのユーザーを混乱させるかもしれないことを
+                心に留めて置いてください。それは、エラーメッセージや競合した変更をマージする機会が
+                ないまま、更新を失う経験をするためです。
             </para>
 
             <para>
-                �m���ɁA�}�j���A���ɂ��o�[�W�����`�F�b�N�́A���ׂȋV�������Ŏ��s�ł��܂����A
-                �����̃A�v���P�[�V�����ɂƂ��Ď��p�I�ł͂���܂���B
-                ���΂��΁A�P�̃C���X�^���X�����łȂ��A
-                �C�����ꂽ�I�u�W�F�N�g�̊��S�ȃO���t���`�F�b�N���Ȃ���΂Ȃ�܂���B
-                Hibernate�́A�݌v�p���_�C���Ƃ��āA�g�� <literal>Session</literal> ��
-                �������ꂽ�C���X�^���X�������I�Ƀo�[�W�����`�F�b�N���܂��B
+                確かに、マニュアルによるバージョンチェックは、些細な儀式だけで実行できますが、
+                多くのアプリケーションにとって実用的ではありません。
+                しばしば、１つのインスタンスだけでなく、
+                修正されたオブジェクトの完全なグラフをチェックしなければなりません。
+                Hibernateは、設計パラダイムとして、拡張 <literal>Session</literal> か
+                分離されたインスタンスを自動的にバージョンチェックします。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-optimistic-longsession">
-            <title>�g���Z�b�V�����Ǝ����o�[�W���j���O</title>
+            <title>拡張セッションと自動バージョニング</title>
 
             <para>
-                �P�� <literal>Session</literal> �C���X�^���X�Ƃ��̉i�����C���X�^���X�́A
-                <emphasis>session-per-conversation</emphasis> �Ƃ��Ēm����A
-                �Θb�S�̂Ŏg���܂��B
-                Hibernate�̓t���b�V������ۂɁA�C���X�^���X�̃o�[�W�������`�F�b�N���܂��B
-                �����ɏC�����ꂽ���Ƃ����o����ƁA��O�𓊂��܂��B
-                ���̗�O���L���b�`���Ĉ����̂́A�J���҂̐ӔC�ł�
-                �i��ʓI�ȑI�����́A�ύX���}�[�W���邩�Â��Ȃ��f�[�^�Ńr�W�l�X�Θb��
-                �ăX�^�[�g����@������[�U�[�ɒ񋟂��邱�Ƃł��j�B
+                １つの <literal>Session</literal> インスタンスとその永続性インスタンスは、
+                <emphasis>session-per-conversation</emphasis> として知られる、
+                対話全体で使われます。
+                Hibernateはフラッシュする際に、インスタンスのバージョンをチェックします。
+                同時に修正されたことを検出すると、例外を投げます。
+                この例外をキャッチして扱うのは、開発者の責任です
+                （一般的な選択肢は、変更をマージするか古くないデータでビジネス対話を
+                再スタートする機会をユーザーに提供することです）。
             </para>
 
             <para>
-                ���[�U�[�̑Θb��҂��Ă���Ƃ��́A
-                <literal>Session</literal> ����b�ƂȂ�JDBC�R�l�N�V��������؂藣���܂��B
-                ���̃A�v���[�`�́A�f�[�^�x�[�X�A�N�Z�X�̒��ł́A�ł������I�ł��B
-                �A�v���P�[�V�����́A�o�[�W�����`�F�b�N�╪�����ꂽ�C���X�^���X���Ēǉ����邱��
-                �Ɋ֐S�����K�v�͂���܂���B�܂��A������f�[�^�x�[�X�g�����U�N�V�����̒���
-                �C���X�^���X���ēǂݍ��݂���K�v�͂���܂���B
+                ユーザーの対話を待っているときは、
+                <literal>Session</literal> を基礎となるJDBCコネクションから切り離します。
+                このアプローチは、データベースアクセスの中では、最も効率的です。
+                アプリケーションは、バージョンチェックや分離されたインスタンスを再追加すること
+                に関心を持つ必要はありません。また、あらゆるデータベーストランザクションの中で
+                インスタンスを再読み込みする必要はありません。
             </para>
 
             <programlisting><![CDATA[// foo is an instance loaded earlier by the old session
@@ -925,74 +927,74 @@ t.commit();         // Also return JDBC connection
 session.close();    // Only for last transaction in conversation]]></programlisting>
 
             <para>
-                <literal>foo</literal> �I�u�W�F�N�g�́A���������[�h���� <literal>Session</literal>
-                ���܂��m���Ă��܂��B
-                �Â��Z�b�V�����̏�ŐV�����f�[�^�x�[�X�g�����U�N�V�������J�n���邱�ƂŁA
-                �V�����R�l�N�V�������擾���A���̃Z�b�V�������ĊJ����܂��B
-                �f�[�^�x�[�X�g�����U�N�V�������R�~�b�g���邱�ƂŁA
-                �Z�b�V��������JDBC�R�l�N�V������ؒf���A�R�l�N�V�������v�[���ɕԂ��܂��B
-                �Đڑ�������A�X�V���Ă��Ȃ��f�[�^�̃o�[�W�����`�F�b�N���������邽�߂ɁA
-                ���̃g�����U�N�V�����ɂ��X�V����Ă��邩������Ȃ��I�u�W�F�N�g�Ɋւ��āA
-                <literal>LockMode.READ</literal> ������ <literal>Session.lock()</literal>
-                ���Ăяo�����Ƃ��ł��܂��B
-                �X�V���� <emphasis>����</emphasis> �f�[�^�����b�N����K�v�͂���܂���B
+                <literal>foo</literal> オブジェクトは、自分をロードした <literal>Session</literal>
+                をまだ知っています。
+                古いセッションの上で新しいデータベーストランザクションを開始することで、
+                新しいコネクションを取得し、そのセッションが再開されます。
+                データベーストランザクションをコミットすることで、
+                セッションからJDBCコネクションを切断し、コネクションをプールに返します。
+                再接続した後、更新していないデータのバージョンチェックを強制するために、
+                他のトランザクションにより更新されているかもしれないオブジェクトに関して、
+                <literal>LockMode.READ</literal> をつけて <literal>Session.lock()</literal>
+                を呼び出すことができます。
+                更新して <emphasis>いる</emphasis> データをロックする必要はありません。
                 
-                �ʏ�A�g�� <literal>Session</literal> �� <literal>FlushMode.MANUAL</literal>
-                ���Z�b�g���܂��B
-                �Ō�̃f�[�^�x�[�X�g�����U�N�V�����̎����ł̂݁A
-                �Θb�̒��ŕύX���ꂽ���ׂĂ����ۂɉi���������邽�߂ł��B
-                �䂦�ɁA�Ō�̃f�[�^�x�[�X�g�����U�N�V�����̂� <literal>flush()</literal>
-                �I�y���[�V�������܂݂܂��B�����āA�Θb���I��点�邽�߂ɁA
-                �Z�b�V������ <literal>close()</literal> ���܂��B
+                通常、拡張 <literal>Session</literal> に <literal>FlushMode.MANUAL</literal>
+                をセットします。
+                最後のデータベーストランザクションの周期でのみ、
+                対話の中で変更されたすべてを実際に永続化させるためです。
+                ゆえに、最後のデータベーストランザクションのみ <literal>flush()</literal>
+                オペレーションを含みます。そして、対話を終わらせるために、
+                セッションも <literal>close()</literal> します。
             </para>
 
             <para>
-                ���[�U�[���l�����ɁA�i�[���邱�Ƃ��ł��Ȃ����炢 <literal>Session</literal>
-                ���傫���̂ł���΁A���̃p�^�[���͖�肪����܂��B
-                �Ⴆ�΁A<literal>HttpSession</literal> �͉\�Ȍ��菬�����ۂׂ��ł��B
-                <literal>Session</literal> �́i�����I�Ɂj�P���L���b�V���ł�����A
-                ���[�h�����I�u�W�F�N�g�����ׂĕێ����܂��B
-                �����炭�A���N�G�X�g�^���X�|���X�̃T�C�N��������ł���΁A���̐헪���g���܂��B
+                ユーザーが考慮中に、格納することができないくらい <literal>Session</literal>
+                が大きいのであれば、このパターンは問題があります。
+                例えば、<literal>HttpSession</literal> は可能な限り小さく保つべきです。
+                <literal>Session</literal> は（強制的に）１次キャッシュでもあり、
+                ロードしたオブジェクトをすべて保持します。
+                おそらく、リクエスト／レスポンスのサイクルが数回であれば、この戦略が使えます。
                 
-                �P�̑Θb�̂��߂����� <literal>Session</literal> ���g���ׂ��ł��B
-                �Ȃ��Ȃ�A�����ɐV�N�łȂ��f�[�^�������߂ł��B
+                １つの対話のためだけに <literal>Session</literal> を使うべきです。
+                なぜなら、すぐに新鮮でないデータを持つためです。
             </para>
 
             <para>
-                �iHibernate�̈ȑO�̃o�[�W�����́A�����I�� <literal>Session</literal> ��
-                �ؒf�ƍĐڑ����K�v���������Ƃɒ��ӂ��Ă��������B
-                �����̃��\�b�h�͔񐄏��ɂȂ�܂����B
-                �Ȃ��Ȃ�A�g�����U�N�V�����̊J�n�ƏI���͓������ʂ����邽�߂ł��B�j
+                （Hibernateの以前のバージョンは、明示的な <literal>Session</literal> の
+                切断と再接続が必要だったことに注意してください。
+                これらのメソッドは非推奨になりました。
+                なぜなら、トランザクションの開始と終了は同じ効果があるためです。）
             </para>
 
             <para>
-                �ؒf���� <literal>Session</literal> ���i�����w�̋߂��ŕێ����ׂ��ł��邱�Ƃ�
-                ���ӂ��Ă��������B
-                ����������ƁA�R�w���̒��� <literal>Session</literal> ��ێ����邽�߂ɁA
-                EJB�X�e�[�g�t���Z�b�V����Bean���g���Ă��������B
-                <literal>HttpSession</literal> �Ɋi�[���邽�߂ɁAWeb�w�ɓ]�����Ȃ��ł�������
-                �i�ʂ̑w�ւ̃V���A���C�Y�����Ȃ��ł��������j�B
+                切断した <literal>Session</literal> を永続化層の近くで保持すべきであることに
+                注意してください。
+                言い換えると、３層環境の中で <literal>Session</literal> を保持するために、
+                EJBステートフルセッションBeanを使ってください。
+                <literal>HttpSession</literal> に格納するために、Web層に転送しないでください
+                （別の層へのシリアライズもしないでください）。
             </para>
 
             <para>
-                �g���Z�b�V�����p�^�[���i�������́A<emphasis>session-per-conversation</emphasis>�j�́A
-                �����I�ȃJ�����g�Z�b�V�����R���e�L�X�g�Ǘ������{���������B
-                ���̂��߂ɁA���Ȃ��� <literal>CurrentSessionContext</literal> �̎�������������K�v������܂��B
-                Hibernate Wiki�ɂ������Q�Ƃ��Ă��������B
+                拡張セッションパターン（もしくは、<emphasis>session-per-conversation</emphasis>）は、
+                自動的なカレントセッションコンテキスト管理を実施するより難しい。
+                このために、あなたは <literal>CurrentSessionContext</literal> の実装を供給する必要があります。
+                Hibernate Wikiにある例を参照してください。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-optimistic-detached">
-            <title>�f�^�b�`���ꂽ�I�u�W�F�N�g�Ǝ����o�[�W���j���O</title>
+            <title>デタッチされたオブジェクトと自動バージョニング</title>
 
             <para>
-                �V���� <literal>Session</literal>�ɂ��A�i�����X�g�A�i�󒍁F�c�a�j�Ƃ̑Θb���������܂��B
-                �܂�����A�����i�����C���X�^���X���A�f�[�^�x�[�X�Ƃ̑Θb���Ƃɍė��p����܂��B
-                �A�v���P�[�V�����́A���X�͑��� <literal>Session</literal> �Ń��[�h����A
-                �f�^�b�`���ꂽ�C���X�^���X�̏�Ԃ𑀍삵�܂��B
-                �����āA<literal>Session.update()</literal> �������́A<literal>Session.saveOrUpdate()</literal>�A
-                <literal>Session.merge()</literal> ���g���āA�����̃C���X�^���X���Ēǉ����܂��B
+                新しい <literal>Session</literal>により、永続化ストア（訳注：ＤＢ）との対話が発生します。
+                また一方、同じ永続性インスタンスが、データベースとの対話ごとに再利用されます。
+                アプリケーションは、元々は他の <literal>Session</literal> でロードされ、
+                デタッチされたインスタンスの状態を操作します。
+                そして、<literal>Session.update()</literal> もしくは、<literal>Session.saveOrUpdate()</literal>、
+                <literal>Session.merge()</literal> を使って、それらのインスタンスを再追加します。
             </para>
 
             <programlisting><![CDATA[// foo is an instance loaded by a previous Session
@@ -1004,66 +1006,66 @@ t.commit();
 session.close();]]></programlisting>
 
             <para>
-                ���̏ꍇ����͂�AHibernate�̓t���b�V������ۂɁA�C���X�^���X�̃o�[�W�������`�F�b�N���܂��B
-                �X�V�̋��������������ꍇ�ɂ́A��O�𓊂��܂��B
+                この場合もやはり、Hibernateはフラッシュする際に、インスタンスのバージョンをチェックします。
+                更新の競合が発生した場合には、例外を投げます。
             </para>
 
             <para>
-                �I�u�W�F�N�g���C������Ă��Ȃ����Ƃ��m�M���Ă���ꍇ�́A
-                <literal>update()</literal> �̑���ɁA<literal>LockMode.READ</literal> ���g���āA
-                <literal>lock()</literal> ���Ăяo�����Ƃ��ł��܂�
-                �i���ׂẴL���b�V�����I�񂵁A�o�[�W�����`�F�b�N�����{���܂��j�B
+                オブジェクトが修正されていないことを確信している場合は、
+                <literal>update()</literal> の代わりに、<literal>LockMode.READ</literal> を使って、
+                <literal>lock()</literal> を呼び出すこともできます
+                （すべてのキャッシュを迂回し、バージョンチェックを実施します）。
             </para>
 
         </sect2>
 
         <sect2 id="transactions-optimistic-customizing">
-            <title>�����o�[�W���j���O�̃J�X�^�}�C�Y</title>
+            <title>自動バージョニングのカスタマイズ</title>
 
             <para>
-                �}�b�s���O�� <literal>optimistic-lock</literal> ������ <literal>false</literal>
-                ��ݒ肷�邱�Ƃɂ��A����̃v���p�e�B��R���N�V�����̂��߂�
-                �����o�[�W�����C���N�������g�𖳌��ɂł��܂��B
-                �v���p�e�B���_�[�e�B�ł����Ă��A�o�[�W�������C���N�������g���܂���B
+                マッピングの <literal>optimistic-lock</literal> 属性に <literal>false</literal>
+                を設定することにより、特定のプロパティやコレクションのために
+                自動バージョンインクリメントを無効にできます。
+                プロパティがダーティであっても、バージョンをインクリメントしません。
             </para>
 
             <para>
-                ���K�V�[�̃f�[�^�x�[�X�X�L�[�}�́A���΂��ΌŒ�I�ł���A�ύX�ł��܂���B
-                �܂��́A���̃A�v���P�[�V�����������f�[�^�x�[�X�ɃA�N�Z�X���Ȃ���΂Ȃ炸�A
-                ���̃A�v���P�[�V�����̓o�[�W�����ԍ���^�C���X�^���v�������삷����@��m��܂���B
-                �ǂ���̏ꍇ���A�e�[�u���̓���̃J�����𓖂Ăɂ��āA�o�[�W���j���O���s���܂���B
-                �o�[�W������^�C���X�^���v�̃v���p�e�B���}�b�s���O�����ɁA�o�[�W�����`�F�b�N�����邽�߂ɁA
-                <literal>&lt;class&gt;</literal> �}�b�s���O�� <literal>optimistic-lock="all"</literal> ��
-                �w�肵�Ă��������B
-                �s�̂��ׂẴt�B�[���h�̏�Ԃ��r����悤�ɂȂ�܂��B
-                ����́AHibernate���Â���ԂƐV������Ԃ��r�ł���ꍇ�ɁA
-                ���_�I�ɓ��삷�邾���ł��邱�Ƃɒ��ӂ��Ă��������B
-                �Ⴆ�΁Asession-per-request-with-detached-objects �ł͂Ȃ��A
-                �P�̒��� <literal>Session</literal> ���g���ꍇ�ł��B
+                レガシーのデータベーススキーマは、しばしば固定的であり、変更できません。
+                または、他のアプリケーションが同じデータベースにアクセスしなければならず、
+                そのアプリケーションはバージョン番号やタイムスタンプさえ操作する方法を知りません。
+                どちらの場合も、テーブルの特定のカラムを当てにして、バージョニングを行えません。
+                バージョンやタイムスタンプのプロパティをマッピングせずに、バージョンチェックさせるために、
+                <literal>&lt;class&gt;</literal> マッピングに <literal>optimistic-lock="all"</literal> を
+                指定してください。
+                行のすべてのフィールドの状態を比較するようになります。
+                これは、Hibernateが古い状態と新しい状態を比較できる場合に、
+                理論的に動作するだけであることに注意してください。
+                例えば、session-per-request-with-detached-objects ではなく、
+                １つの長い <literal>Session</literal> を使う場合です。
             </para>
 
             <para>
-                �Ƃ��ǂ��A�s��ꂽ�ύX���d�Ȃ�Ȃ�����A�����ɍs��ꂽ�ύX���󂯓���邱�Ƃ��ł��܂��B
-                <literal>&lt;class&gt;</literal> �}�b�s���O�� <literal>optimistic-lock="dirty"</literal>
-                ��ݒ肵���ꍇ�A�t���b�V������ۂɁAHibernate�̓_�[�e�B�t�B�[���h�݂̂��r���܂��B
+                ときどき、行われた変更が重ならない限り、同時に行われた変更を受け入れることができます。
+                <literal>&lt;class&gt;</literal> マッピングに <literal>optimistic-lock="dirty"</literal>
+                を設定した場合、フラッシュする際に、Hibernateはダーティフィールドのみを比較します。
             </para>
 
             <para>
-                ��p�̃o�[�W�����^�^�C���X�^���v�̃J�������g���ꍇ�A
-                �������͂��ׂā^�_�[�e�B�̃t�B�[���h���r����ꍇ�ǂ���ł����Ă��A
-                Hibernate�̓G���e�B�e�B���Ƃ�1�� <literal>UPDATE</literal> ����
-                �i�K�؂� <literal>WHERE</literal> �߂Ƌ��Ɂj�g���A
-                �o�[�W�����`�F�b�N�Ə��̍X�V���s���܂��B
-                �֘A����G���e�B�e�B�̍Ēǉ����J�X�P�[�h���邽�߂ɁA
-                �A���I�ȉi�������g�p�����ꍇ�A�s�K�v�ȍX�V�����s���邩������܂���B
-                ����͒ʏ���ɂȂ�܂���B
-                �������A���������C���X�^���X��ύX���Ă��Ȃ��Ƃ��A
-                �f�[�^�x�[�X�� <emphasis>on update</emphasis> �g���K�[�����s����邩������܂���B
-                <literal>&lt;class&gt;</literal> �}�b�s���O��
-                <literal>select-before-update="true"</literal> ��ݒ肷�邱�Ƃɂ���āA
-                ���̐U�镑�����J�X�^�}�C�Y�ł��܂��B
-                �m���ɕύX���ꂽ�����m�F���邽�߂ɁA�s���X�V����O�ɁA
-                �K���C���X�^���X�� <literal>SELECT</literal> ���܂��B
+                専用のバージョン／タイムスタンプのカラムを使う場合、
+                もしくはすべて／ダーティのフィールドを比較する場合どちらであっても、
+                Hibernateはエンティティごとに1つの <literal>UPDATE</literal> 文を
+                （適切な <literal>WHERE</literal> 節と共に）使い、
+                バージョンチェックと情報の更新を行います。
+                関連するエンティティの再追加をカスケードするために、
+                連鎖的な永続化を使用した場合、不必要な更新を実行するかもしれません。
+                これは通常問題になりません。
+                しかし、分離したインスタンスを変更していなくとも、
+                データベースの <emphasis>on update</emphasis> トリガーが実行されるかもしれません。
+                <literal>&lt;class&gt;</literal> マッピングに
+                <literal>select-before-update="true"</literal> を設定することによって、
+                この振る舞いをカスタマイズできます。
+                確実に変更されたかを確認するために、行を更新する前に、
+                必ずインスタンスを <literal>SELECT</literal> します。
             </para>
 
         </sect2>
@@ -1071,202 +1073,202 @@ session.close();]]></programlisting>
     </sect1>
 
     <sect1 id="transactions-locking">
-        <title>�ߊϓI���b�N</title>
+        <title>悲観的ロック</title>
 
         <para>
-            ���[�U�����b�N�헪�ɔY�ނ̂ɑ����̎��Ԃ��₷���Ƃ��Ӑ}���Ă��܂���B
-            �ʏ�́AJDBC�R�l�N�V�����ɕ������x�����w�肵�A
-            �P�Ƀf�[�^�x�[�X�ɂ��ׂĂ̎d����������Ώ\���ł��B
-            �������Ȃ���A���x�ȃ��[�U�́A�r���I�ȔߊϓI���b�N���l�����邱�Ƃ��A
-            �V�����g�����U�N�V�������J�n�����ۂɃ��b�N���Ċl�����邱�Ƃ�
-            �Ƃ��ǂ��]�ނ�������܂���B
+            ユーザがロック戦略に悩むのに多くの時間を費やすことを意図していません。
+            通常は、JDBCコネクションに分離レベルを指定し、
+            単にデータベースにすべての仕事をさせれば十分です。
+            しかしながら、高度なユーザは、排他的な悲観的ロックを獲得することか、
+            新しいトランザクションが開始される際にロックを再獲得することを
+            ときどき望むかもしれません。
         </para>
 
         <para>
-            Hibernate�͂����f�[�^�x�[�X�̃��b�N�̎d�g�݂��g���܂��B
-            ���������̃I�u�W�F�N�g�������ă��b�N���܂���I
+            Hibernateはいつもデータベースのロックの仕組みを使います。
+            メモリ内のオブジェクトを決してロックしません！
         </para>
 
         <para>
-            <literal>LockMode</literal> �N���X�́AHibernate���l���ł���قȂ郍�b�N���x�����`���܂��B
-            �ȉ��̎d�g�݂ɂ��A���b�N���l���ł��܂��B
+            <literal>LockMode</literal> クラスは、Hibernateが獲得できる異なるロックレベルを定義します。
+            以下の仕組みにより、ロックを獲得できます。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>LockMode.WRITE</literal> �́A
-                    Hibernate���s���X�V�������͑}������ۂɎ����I�ɓ����܂��B
+                    <literal>LockMode.WRITE</literal> は、
+                    Hibernateが行を更新もしくは挿入する際に自動的に得られます。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>LockMode.UPGRADE</literal> �́A
-                    �f�[�^�x�[�X�ŃT�|�[�g����Ă��镶�@ <literal>SELECT ... FOR UPDATE</literal>
-                    ���g�����A�����I�ȃ��[�U�[�v���ɂ�蓾���邩������܂���B
+                    <literal>LockMode.UPGRADE</literal> は、
+                    データベースでサポートされている文法 <literal>SELECT ... FOR UPDATE</literal>
+                    を使った、明示的なユーザー要求により得られるかもしれません。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>LockMode.UPGRADE_NOWAIT</literal> �́A
-                    Oracle �� <literal>SELECT ... FOR UPDATE NOWAIT</literal> ���g�����A
-                    �����I�ȃ��[�U�[�v���ɂ�蓾���邩������܂���B
+                    <literal>LockMode.UPGRADE_NOWAIT</literal> は、
+                    Oracle で <literal>SELECT ... FOR UPDATE NOWAIT</literal> を使った、
+                    明示的なユーザー要求により得られるかもしれません。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>LockMode.READ</literal> �́A
-                    Repeatable Read��������Serializable�̕������x���ŁA�f�[�^��ǂ񂾍ۂɎ����I�ɓ����܂��B
-                    �����炭�A�����I�ȃ��[�U�[�v���ɂ��A�Ď擾����܂��B
+                    <literal>LockMode.READ</literal> は、
+                    Repeatable ReadもしくはSerializableの分離レベルで、データを読んだ際に自動的に得られます。
+                    おそらく、明示的なユーザー要求により、再取得されます。
                 </para>
             </listitem>
         <listitem>
         <para>
-            <literal>LockMode.NONE</literal> �́A���b�N���Ȃ����Ƃ�\���܂��B
-            <literal>Transaction</literal> �̏I���ɁA
-            ���ׂẴI�u�W�F�N�g�͂��̃��b�N���[�h�ɐ؂�ւ��܂��B
-            <literal>update()</literal> �� <literal>saveOrUpdate()</literal> ���Ăяo�����Ƃɂ���āA
-            �Z�b�V�����Ɋ֘A�t����ꂽ�I�u�W�F�N�g���A���̃��b�N���[�h�ŏo�����܂��B
+            <literal>LockMode.NONE</literal> は、ロックしないことを表します。
+            <literal>Transaction</literal> の終わりに、
+            すべてのオブジェクトはこのロックモードに切り替わります。
+            <literal>update()</literal> や <literal>saveOrUpdate()</literal> を呼び出すことによって、
+            セッションに関連付けられたオブジェクトも、このロックモードで出発します。
         </para>
         </listitem>
         </itemizedlist>
 
         <para>
-            �u�����I�ȃ��[�U�[�v���v�Ƃ́A���L�̕��@�̂P�Ō����\���܂��B
+            「明示的なユーザー要求」とは、下記の方法の１つで言い表せます。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>LockMode</literal> ���w�肵�� <literal>Session.load()</literal> �̌Ăяo���B
+                    <literal>LockMode</literal> を指定した <literal>Session.load()</literal> の呼び出し。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>Session.lock()</literal> �̌Ăяo���B
+                    <literal>Session.lock()</literal> の呼び出し。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>Query.setLockMode()</literal> �̌Ăяo���B
+                    <literal>Query.setLockMode()</literal> の呼び出し。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            <literal>UPGRADE</literal> �������� <literal>UPGRADE_NOWAIT</literal> ���w�肳�ꂽ
-            <literal>Session.load()</literal> ���Ăяo����A
-            ���v�����ꂽ�I�u�W�F�N�g���Z�b�V�����ɂ���Ă܂����[�h����Ă��Ȃ������ꍇ�́A
-            <literal>SELECT ... FOR UPDATE</literal> ���g���āA�I�u�W�F�N�g�����[�h����܂��B
-            <literal>load()</literal> �ŌĂяo���ꂽ�I�u�W�F�N�g���A
-            �v������Ă����萧�������Ȃ����b�N�ł��łɃ��[�h����Ă����ꍇ�́A
-            Hibernate�͂��̃I�u�W�F�N�g�̂��߂ɁA<literal>lock()</literal> ���Ăяo���܂��B
+            <literal>UPGRADE</literal> もしくは <literal>UPGRADE_NOWAIT</literal> が指定された
+            <literal>Session.load()</literal> が呼び出され、
+            かつ要求されたオブジェクトがセッションによってまだロードされていなかった場合は、
+            <literal>SELECT ... FOR UPDATE</literal> を使って、オブジェクトがロードされます。
+            <literal>load()</literal> で呼び出されたオブジェクトが、
+            要求されているより制限が少ないロックですでにロードされていた場合は、
+            Hibernateはそのオブジェクトのために、<literal>lock()</literal> を呼び出します。
         </para>
 
         <para>
-            �w�肳�ꂽ���b�N���[�h�� <literal>READ</literal> �������́A<literal>UPGRADE</literal>�A
-            <literal>UPGRADE_NOWAIT</literal> �������ꍇ�A<literal>Session.lock()</literal>
-            �́A�o�[�W�����ԍ��̃`�F�b�N�����{���܂��B
-            �i<literal>UPGRADE</literal> �������� <literal>UPGRADE_NOWAIT</literal> �̏ꍇ�A
-            <literal>SELECT ... FOR UPDATE</literal> ���g���܂��B�j
+            指定されたロックモードが <literal>READ</literal> もしくは、<literal>UPGRADE</literal>、
+            <literal>UPGRADE_NOWAIT</literal> だった場合、<literal>Session.lock()</literal>
+            は、バージョン番号のチェックを実施します。
+            （<literal>UPGRADE</literal> もしくは <literal>UPGRADE_NOWAIT</literal> の場合、
+            <literal>SELECT ... FOR UPDATE</literal> が使われます。）
         </para>
 
         <para>
-            �f�[�^�x�[�X���v�����ꂽ���b�N���[�h���T�|�[�g���Ă��Ȃ��ꍇ�A
-            Hibernate�́i��O�𓊂������ɁA�j�K�؂ȑ���̃��[�h���g���܂��B
-            ����́A�A�v���P�[�V�������|�[�^�u���ł��邱�Ƃ�ۏ؂��܂��B
+            データベースが要求されたロックモードをサポートしていない場合、
+            Hibernateは（例外を投げる代わりに、）適切な代わりのモードを使います。
+            これは、アプリケーションがポータブルであることを保証します。
         </para>
 
     </sect1>
 
     <sect1 id="transactions-connection-release">
-        <title>�R�l�N�V�����J�����[�h</title>
+        <title>コネクション開放モード</title>
 
         <para>
-            Hibernate�̃��K�V�[�i2.x�j��JDBC�R�l�N�V�����Ǘ��Ɋւ���U�镑���́A
-            �ŏ��ɕK�v�Ƃ����ۂ� <literal>Session</literal> ���R�l�N�V�����𓾂�Ƃ������̂ł����B
-            �����āA�Z�b�V������������܂ŁA���̃R�l�N�V������ێ����܂����B
-            Hibernate 3.x�́A�Z�b�V������JDBC�R�l�N�V�������ǂ̂悤�ɐ��䂷�邩��`����
-            �R�l�N�V�����J�����[�h�Ƃ����T�O�𓱓����܂����B
-            �ȍ~�̋c�_�́A�\�����ꂽ <literal>ConnectionProvider</literal> ��ʂ��Ē񋟂����
-            �R�l�N�V�����ɓK�؂ł��邱�Ƃɒ��ӂ��Ă��������B
-            �قȂ�J�����[�h�́A<literal>org.hibernate.ConnectionReleaseMode</literal> ��
-            �񋓂��ꂽ�l�ɂ��m�F����܂��B
+            Hibernateのレガシー（2.x）のJDBCコネクション管理に関する振る舞いは、
+            最初に必要とした際に <literal>Session</literal> がコネクションを得るというものでした。
+            そして、セッションが閉じられるまで、そのコネクションを保持しました。
+            Hibernate 3.xは、セッションにJDBCコネクションをどのように制御するかを伝える
+            コネクション開放モードという概念を導入しました。
+            以降の議論は、構成された <literal>ConnectionProvider</literal> を通して提供される
+            コネクションに適切であることに注意してください。
+            異なる開放モードは、<literal>org.hibernate.ConnectionReleaseMode</literal> に
+            列挙された値により確認されます。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>ON_CLOSE</literal> - �{���I�ɏ�L�ŏq�ׂ����K�V�[�̐U�镑���ł��B
-                    Hibernate�Z�b�V�����͍ŏ���JDBC�A�N�Z�X�����s����K�v������ۂɃR�l�N�V�����𓾂܂��B
-                    �����āA�Z�b�V������������܂ŁA�R�l�N�V������ێ����܂��B
+                    <literal>ON_CLOSE</literal> - 本質的に上記で述べたレガシーの振る舞いです。
+                    Hibernateセッションは最初にJDBCアクセスを実行する必要がある際にコネクションを得ます。
+                    そして、セッションが閉じられるまで、コネクションを保持します。
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>AFTER_TRANSACTION</literal> - 
-                    <literal>org.hibernate.Transaction</literal> ������������A
-                    �R�l�N�V�������J�����܂��B
+                    <literal>org.hibernate.Transaction</literal> が完了した後、
+                    コネクションを開放します。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>AFTER_STATEMENT</literal> �i�ϋɓI�ȊJ���Ƃ��Ă΂��j -
-                    ���ׂẴX�e�[�g�����g�����ꂼ����s���ꂽ��A�R�l�N�V�������J������܂��B
-                    �X�e�[�g�����g���Z�b�V�����Ɋ֘A���郊�\�[�X���J�����܂܂ɂ���ꍇ�́A
-                    ���̐ϋɓI�ȊJ���̓X�L�b�v����܂��B
-                    ���̂Ƃ���A���ꂪ�N����̂� <literal>org.hibernate.ScrollableResults</literal>
-                    ���g����ꍇ�݂̂ł��B
+                    <literal>AFTER_STATEMENT</literal> （積極的な開放とも呼ばれる） -
+                    すべてのステートメントがそれぞれ実行された後、コネクションが開放されます。
+                    ステートメントがセッションに関連するリソースを開いたままにする場合は、
+                    この積極的な開放はスキップされます。
+                    今のところ、これが起こるのは <literal>org.hibernate.ScrollableResults</literal>
+                    が使われる場合のみです。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            �R���t�B�O���[�V�����p�����[�^�� <literal>hibernate.connection.release_mode</literal>
-            �́A�g�p����J�����[�h���w�肷�邽�߂Ɏg���܂��B
-            �w��ł���l�͎��̒ʂ�ł��B
+            コンフィグレーションパラメータの <literal>hibernate.connection.release_mode</literal>
+            は、使用する開放モードを指定するために使います。
+            指定できる値は次の通りです。
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>auto</literal> �i�f�t�H���g�j - �����I�������
+                    <literal>auto</literal> （デフォルト） - これを選択すると
                     <literal>org.hibernate.transaction.TransactionFactory.getDefaultReleaseMode()</literal>
-                    ���\�b�h�ɂ���ĕԂ����J�����[�h�ɈϏ�����܂��B
-                    ���̃��\�b�h�́A
-                    JTATransactionFactory�ɂ�ConnectionReleaseMode.AFTER_STATEMENT��Ԃ��A
-                    JDBCTransactionFactory�ɂ�ConnectionReleaseMode.AFTER_TRANSACTION��Ԃ��܂��B
-                    ���̃f�t�H���g�̐U�镑����ς��Ă��܂�����������������܂���B
-                    ����́A���̐ݒ�l�������ŋN�����Q�́A
-                    ���[�U�R�[�h�̒��Ńo�O��Ԉ���������ɂȂ�₷������ł��B
+                    メソッドによって返される開放モードに委譲されます。
+                    このメソッドは、
+                    JTATransactionFactoryにはConnectionReleaseMode.AFTER_STATEMENTを返し、
+                    JDBCTransactionFactoryにはConnectionReleaseMode.AFTER_TRANSACTIONを返します。
+                    このデフォルトの振る舞いを変えてうまくいった試しがありません。
+                    それは、この設定値が原因で起こる障害は、
+                    ユーザコードの中でバグや間違った条件になりやすいからです。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>on_close</literal> - ConnectionReleaseMode.ON_CLOSE���g���܂��B
-                    ���̐ݒ�͌���݊��̂��߂Ɏc����Ă��܂����A�g��Ȃ����Ƃ��������߂܂��B
+                    <literal>on_close</literal> - ConnectionReleaseMode.ON_CLOSEを使います。
+                    この設定は後方互換のために残されていますが、使わないことを強く勧めます。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>after_transaction</literal> - ConnectionReleaseMode.AFTER_TRANSACTION���g���܂��B
-                    ���̐ݒ��JTA���̒��ł͎g���ׂ��ł͂���܂���B
-                    ConnectionReleaseMode.AFTER_TRANSACTION���w�肵�A�����R�~�b�g���[�h�̒��ł́A
-                    �J�����[�h��AFTER_STATEMENT�ł��邩�̂悤�ɁA�R�l�N�V�����͊J������邱�Ƃɒ��ӂ��Ă��������B
+                    <literal>after_transaction</literal> - ConnectionReleaseMode.AFTER_TRANSACTIONを使います。
+                    この設定はJTA環境の中では使うべきではありません。
+                    ConnectionReleaseMode.AFTER_TRANSACTIONを指定し、自動コミットモードの中では、
+                    開放モードがAFTER_STATEMENTであるかのように、コネクションは開放されることに注意してください。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>after_statement</literal> - ConnectionReleaseMode.AFTER_STATEMENT���g���܂��B
-                    ����ɁA�ݒ肳�ꂽ <literal>ConnectionProvider</literal> �́A
-                    ���̐ݒ� (<literal>supportsAggressiveRelease()</literal>) ���T�|�[�g���邩�ǂ���
-                    �𒲂ׂ邽�߂Ɏg�p���܂��B
-                    ���������łȂ��ꍇ�A�J�����[�h��ConnectionReleaseMode.AFTER_TRANSACTION
-                    �Ƀ��Z�b�g����܂��B
-                    ���̐ݒ�͎��̊��ł݈̂��S�ł��B
-                    ����́A<literal>ConnectionProvider.getConnection()</literal> ���Ăяo�����т�
-                    ��ՂƂȂ�JDBC�R�l�N�V�������������̂��擾�ł��邩�A
-                    �����R�l�N�V�����������邱�Ƃ����ƂȂ�Ȃ������R�~�b�g���̒��ł��B
+                    <literal>after_statement</literal> - ConnectionReleaseMode.AFTER_STATEMENTを使います。
+                    さらに、設定された <literal>ConnectionProvider</literal> は、
+                    この設定 (<literal>supportsAggressiveRelease()</literal>) をサポートするかどうか
+                    を調べるために使用します。
+                    もしそうでない場合、開放モードはConnectionReleaseMode.AFTER_TRANSACTION
+                    にリセットされます。
+                    この設定は次の環境でのみ安全です。
+                    それは、<literal>ConnectionProvider.getConnection()</literal> を呼び出すたびに
+                    基盤となるJDBCコネクションが同じものを取得できるか、
+                    同じコネクションが得られることが問題とならない自動コミット環境の中です。
                 </para>
             </listitem>
         </itemizedlist>

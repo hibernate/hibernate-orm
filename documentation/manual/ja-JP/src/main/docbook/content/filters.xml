@@ -1,32 +1,34 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="filters">
-    <title>�f�[�^�̃t�B���^�����O</title>
+    <title>データのフィルタリング</title>
     
     <para>
-        Hibernate3�ł́u�����v���[���Ɋ�Â��ăf�[�^���������߂̉���I�ȕ��@��p�ӂ��Ă��܂��B
-        <emphasis>Hibernate filter</emphasis> �̓O���[�o���ŁA���O�t���ŁA�p�����[�^�����ꂽ�t�B���^�ł��B
-        �����Hibernate�Z�b�V�������ƂɗL��������؂�ւ����܂��B
+        Hibernate3では「可視性」ルールに基づいてデータを扱うための画期的な方法を用意しています。
+        <emphasis>Hibernate filter</emphasis> はグローバルで、名前付きで、パラメータ化されたフィルタです。
+        これはHibernateセッションごとに有効無効を切り替えられます。
     </para>
 
     <sect1 id="objectstate-filters">
-        <title>Hibernate�̃t�B���^</title>
+        <title>Hibernateのフィルタ</title>
 
         <para>
-            Hibernate3�̓t�B���^�N���C�e���A�����炩���ߒ�`���A
-            �����̃t�B���^���N���X��R���N�V�������x���ɉ�����@�\�������܂����B
-            �t�B���^�N���C�e���A�͐���߂��`����@�\�ł��B
-            �����̃t�B���^�����̓p�����[�^���ł���Ƃ������Ƃ������A
-            �N���X�₳�܂��܂ȃR���N�V�����v�f�ŗ��p�\�Ȣwhere���ɔ��ɂ悭���Ă��܂��B
-            �A�v���P�[�V�����́A�^����ꂽ�t�B���^���\�ɂ��ׂ����A
-            �����Ă��̃p�����[�^�l�����ɂ��ׂ��������s���Ɍ��肷�邱�Ƃ��ł��܂��B
-            �t�B���^�̓f�[�^�x�[�X�r���[�̂悤�Ɏg�p����܂����A�A�v���P�[�V�������ł̓p�����[�^������܂��B
+            Hibernate3はフィルタクライテリアをあらかじめ定義し、
+            これらのフィルタをクラスやコレクションレベルに加える機能を加えました。
+            フィルタクライテリアは制約節を定義する機能です。
+            これらのフィルタ条件はパラメータ化できるということを除き、
+            クラスやさまざまなコレクション要素で利用可能な｢where｣句に非常によく似ています。
+            アプリケーションは、与えられたフィルタを可能にすべきか、
+            そしてそのパラメータ値を何にすべきかを実行時に決定することができます。
+            フィルタはデータベースビューのように使用されますが、アプリケーション内ではパラメータ化されます。
             
         </para>
 
         <para>
-            �t�B���^���g�����߂ɂ͂܂��A�K�؂ȃ}�b�s���O�v�f�ɒ�`�A�ǉ����Ȃ��Ă͂Ȃ�܂���B
-            �t�B���^���`���邽�߂ɂ́A
-            <literal>&lt;hibernate-mapping/&gt;</literal> �v�f���� <literal>&lt;filter-def/&gt;</literal> �v�f���g�p���܂��B�F
+            フィルタを使うためにはまず、適切なマッピング要素に定義、追加しなくてはなりません。
+            フィルタを定義するためには、
+            <literal>&lt;hibernate-mapping/&gt;</literal> 要素内で <literal>&lt;filter-def/&gt;</literal> 要素を使用します。：
         </para>
 
         <programlisting><![CDATA[<filter-def name="myFilter">
@@ -34,7 +36,7 @@
 </filter-def>]]></programlisting>
 
         <para>
-            �������ăt�B���^�̓N���X�ւƌ��ѕt�����܂��B�F
+            そうしてフィルタはクラスへと結び付けられます。：
         </para>
 
         <programlisting><![CDATA[<class name="myClass" ...>
@@ -43,7 +45,7 @@
 </class>]]></programlisting>
 
         <para>
-            �܂��A�R���N�V�����ɑ΂��Ă͎��̂悤�ɂȂ�܂��B�F
+            また、コレクションに対しては次のようになります。：
         </para>
 
         <programlisting><![CDATA[<set ...>
@@ -51,27 +53,27 @@
 </set>]]></programlisting>
 
         <para>
-            �ǂ���ɑ΂��Ă�(�܂��A���ꂼ��𕡐�)�����ɐݒ肷�邱�Ƃ��ł��܂��B
+            どちらに対しても(また、それぞれを複数)同時に設定することもできます。
         </para>
 
         <para>
-            <literal>Session</literal> ��̃��\�b�h�� <literal>enableFilter(String filterName)</literal>,
-            <literal>getEnabledFilter(String filterName)</literal>, <literal>disableFilter(String filterName)</literal> �ł��B
-            �f�t�H���g�ł́A�t�B���^�͗^����ꂽ�Z�b�V�����ɑ΂��Ďg�p <emphasis>�ł��܂���</emphasis> �B
-            <literal>Filter</literal> �C���X�^���X��Ԃ�l�Ƃ��� <literal>Session.enabledFilter()</literal> ���\�b�h���g�����ƂŁA
-            �t�B���^�͖����I�Ɏg�p�\�ƂȂ�܂��B
-            ��Œ�`�����P���ȃt�B���^�̎g�p�́A���̂悤�ɂȂ�܂��B�F
+            <literal>Session</literal> 上のメソッドは <literal>enableFilter(String filterName)</literal>,
+            <literal>getEnabledFilter(String filterName)</literal>, <literal>disableFilter(String filterName)</literal> です。
+            デフォルトでは、フィルタは与えられたセッションに対して使用 <emphasis>できません</emphasis> 。
+            <literal>Filter</literal> インスタンスを返り値とする <literal>Session.enabledFilter()</literal> メソッドを使うことで、
+            フィルタは明示的に使用可能となります。
+            上で定義した単純なフィルタの使用は、このようになります。：
         </para>
 
         <programlisting><![CDATA[session.enableFilter("myFilter").setParameter("myFilterParam", "some-value");]]></programlisting>
 
         <para>
-            org.hibernate.Filter�C���^�[�t�F�C�X�̃��\�b�h�́A
-            Hibernate�̑����ɋ��ʂ��Ă��郁�\�b�h�A���������Ă��邱�Ƃɒ��ӂ��Ă��������B
+            org.hibernate.Filterインターフェイスのメソッドは、
+            Hibernateの多くに共通しているメソッド連鎖を許していることに注意してください。
         </para>
 
         <para>
-            �L���ȃ��R�[�h�f�[�^�p�^�[�������ꎞ�f�[�^���g�������S�ȗ�ł��F
+            有効なレコードデータパターンを持つ一時データを使った完全な例です：
         </para>
 
         <programlisting><![CDATA[<filter-def name="effectiveDate">
@@ -105,8 +107,8 @@
 </class>]]></programlisting>
 
         <para>
-            ��Ɍ��݂̗L�����R�[�h��ԋp���邱�Ƃ�ۏ؂��邽�߂ɁA
-            �P���ɁA�Ј��f�[�^�̌������O�ɃZ�b�V������̃t�B���^��L���ɂ��܂��B
+            常に現在の有効レコードを返却することを保証するために、
+            単純に、社員データの検索より前にセッション上のフィルタを有効にします。
             
             
         </para>
@@ -119,16 +121,16 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
 ]]></programlisting>
 
         <para>
-            ��L��HQL�ł́A���ʂ̋����̐���ɂ��Ė����I�ɐG�ꂽ�����ł����A
-            �L���ɂȂ��Ă���t�B���^�̂������ŁA���̃N�G���͋�����100���h���ȏ�̌����̎Ј�������Ԃ��܂��B
+            上記のHQLでは、結果の給料の制約について明示的に触れただけですが、
+            有効になっているフィルタのおかげで、このクエリは給料が100万ドル以上の現役の社員だけを返します。
         </para>
 
         <para>
-            (HQL�����[�h�t�F�b�`�Łj�O�����������t�B���^���g������Ȃ�A
-            �������̕����ɒ��ӂ��Ă��������B
+            (HQLかロードフェッチで）外部結合を持つフィルタを使うつもりなら、
+            条件式の方向に注意してください。
             
-            ����͍��O�������̂��߂ɐݒ肷��̂��ł����S�ł��B
-            ��ʓI�ɁA���Z�q�̌�J�������ɑ����čŏ��̃p�����[�^��z�u���Ă��������B
+            これは左外部結合のために設定するのが最も安全です。
+            一般的に、演算子の後カラム名に続けて最初のパラメータを配置してください。
         </para>
 
     </sect1>

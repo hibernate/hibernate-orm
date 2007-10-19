@@ -1,87 +1,89 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="queryhql">
     <title>HQL: The Hibernate Query Language</title>
     
     <para>
-        Hibernate��SQL�ɔ��ɂ悭����(�Ӑ}�I�Ɏ�����)���͂Ȗ₢���킹���������Ă��܂��B
-        ������SQL�Ɏ����\���ɘf�킳��Ȃ��ł��������BHQL�͊��S�ɃI�u�W�F�N�g�w���ł���A
-        �p���A�|�����[�t�B�Y���A�֘A�Ƃ������T�O�𗝉����܂��B
+        HibernateはSQLに非常によく似た(意図的に似せた)強力な問い合わせ言語を備えています。
+        しかしSQLに似た構文に惑わされないでください。HQLは完全にオブジェクト指向であり、
+        継承、ポリモーフィズム、関連といった概念を理解します。
     </para>
 
     <sect1 id="queryhql-casesensitivity">
-        <title>�啶���Ə������̋��</title>
+        <title>大文字と小文字の区別</title>
 
         <para>
-            �N�G����Java�̃N���X���ƃv���p�e�B���������đ啶���A����������ʂ��܂���B
-            �]���� <literal>SeLeCT</literal> ��
-            <literal>sELEct</literal> �Ɠ����ŁA����
-            <literal>SELECT</literal> �Ƃ������ł���
-            <literal>net.sf.hibernate.eg.FOO</literal> ��
-            <literal>net.sf.hibernate.eg.Foo</literal> �Ƃ͈Ⴂ�A����
-            <literal>foo.barSet</literal> ��
-            <literal>foo.BARSET</literal> �Ƃ��Ⴂ�܂��B
+            クエリはJavaのクラス名とプロパティ名を除いて大文字、小文字を区別しません。
+            従って <literal>SeLeCT</literal> は
+            <literal>sELEct</literal> と同じで、かつ
+            <literal>SELECT</literal> とも同じですが
+            <literal>net.sf.hibernate.eg.FOO</literal> は
+            <literal>net.sf.hibernate.eg.Foo</literal> とは違い、かつ
+            <literal>foo.barSet</literal> は
+            <literal>foo.BARSET</literal> とも違います。
         </para>
         
         <para>
-            ���̃}�j���A���ł͏�������HQL�L�[���[�h���g�p���܂��B
-            �啶���̃L�[���[�h�̃N�G���̕����ǂ݂₷���Ɗ����郆�[�U�[������Ǝv���܂��B
-            �ł����AJava�R�[�h���ɖ��ߍ��܂ꂽ�Ƃ��ɂ͌��Â炢�Ǝv���܂��B
+            このマニュアルでは小文字のHQLキーワードを使用します。
+            大文字のキーワードのクエリの方が読みやすいと感じるユーザーもいると思います。
+            ですが、Javaコード内に埋め込まれたときには見づらいと思います。
         </para>
         
     </sect1>
 
     <sect1 id="queryhql-from">
-        <title>from��</title>
+        <title>from節</title>
 
         <para>
-            �����Ƃ��P����Hibernate�N�G���͎��̌`���ł��B
+            もっとも単純なHibernateクエリは次の形式です。
         </para>
         
         <programlisting><![CDATA[from eg.Cat]]></programlisting>
         
         <para>
-            ����͒P���Ɂ@<literal>eg.Cat</literal>�@�N���X�̃C���X�^���X�����ׂĕԂ��܂��B
-            �K�������N���X�����C������i�N���X�Ƀp�b�P�[�W����t����j�K�v�͂���܂���B
-            �Ƃ����̂��A<literal>auto-import</literal> ���f�t�H���g�ɂȂ��Ă��邩��ł��B
-            ���̂��߂قƂ�ǂ̏ꍇ�A���̂悤�ɏ��������ŏ\���ł��B
+            これは単純に　<literal>eg.Cat</literal>　クラスのインスタンスをすべて返します。
+            必ずしもクラス名を修飾する（クラスにパッケージ名を付ける）必要はありません。
+            というのも、<literal>auto-import</literal> がデフォルトになっているからです。
+            そのためほとんどの場合、このように書くだけで十分です。
         </para>
         
         <programlisting><![CDATA[from Cat]]></programlisting>
         
         <para>
-            �قƂ�ǂ̏ꍇ�N�G���̂ق��̕����Ł@<literal>Cat</literal>�@���Q�Ƃ���̂ŁA�ʖ������蓖�Ă�K�v������ł��傤�B
+            ほとんどの場合クエリのほかの部分で　<literal>Cat</literal>　を参照するので、別名を割り当てる必要があるでしょう。
         </para>
 
         <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
-            ���̃N�G���ł� <literal>Cat</literal> �C���X�^���X�� <literal>cat</literal> 
-            �Ƃ����ʖ���t���Ă��܂��B
-            ���̂��߁A��ł��̃N�G�����ŁA���̕ʖ����g�����Ƃ��ł��܂��B
-            <literal>as</literal> �L�[���[�h�̓I�v�V�����ł��B�܂肱�̂悤�ɏ������Ƃ��ł��܂��F
+            このクエリでは <literal>Cat</literal> インスタンスに <literal>cat</literal> 
+            という別名を付けています。
+            そのため、後でこのクエリ内で、この別名を使うことができます。
+            <literal>as</literal> キーワードはオプションです。つまりこのように書くこともできます：
         </para>
         
         <programlisting><![CDATA[from Cat cat]]></programlisting>
         
         <para>
-            ���ρA���邢�̓N���X�����ɂ���đ����̃N���X���o�����邱�Ƃ�����܂��B
+            直積、あるいはクロス結合によって多数のクラスが出現することもあります。
         </para>
         
         <programlisting><![CDATA[from Formula, Parameter]]></programlisting>
         <programlisting><![CDATA[from Formula as form, Parameter as param]]></programlisting>
         
         <para>
-            ���[�J���ϐ���Java�̃l�[�~���O��ƈ�v�����A
-            �������ɏ��������g�����N�G���̕ʖ���t���邱�Ƃ͂����K���ł�(�Ⴆ�� <literal>domesticCat</literal> )�B
+            ローカル変数のJavaのネーミング基準と一致した、
+            頭文字に小文字を使ったクエリの別名を付けることはいい習慣です(例えば <literal>domesticCat</literal> )。
         </para>
         
     </sect1>
 
     <sect1 id="queryhql-joins" revision="2">
-        <title>�֘A�ƌ���</title>
+        <title>関連と結合</title>
 
         <para>
-            �֘A����G���e�B�e�B���邢�͒l�R���N�V�����̗v�f�ɂ��A<literal>����</literal> ���g���ĕʖ������蓖�Ă邱�Ƃ��o���܂��B
+            関連するエンティティあるいは値コレクションの要素にも、<literal>結合</literal> を使って別名を割り当てることが出来ます。
         </para>
 
         <programlisting><![CDATA[from Cat as cat 
@@ -93,7 +95,7 @@
         <programlisting><![CDATA[from Formula form full join form.parameter param]]></programlisting>
 
         <para>
-            �T�|�[�g���Ă��錋���̃^�C�v��ANSI SQL�Ɠ����ł��B
+            サポートしている結合のタイプはANSI SQLと同じです。
         </para>
 
         <itemizedlist spacing="compact">
@@ -114,13 +116,13 @@
             </listitem>
             <listitem>
                 <para>
-                    <literal>full join</literal> (�����Ă��̏ꍇ�g���Â炢)
+                    <literal>full join</literal> (たいていの場合使いづらい)
                 </para>
             </listitem>
         </itemizedlist>
     
         <para>
-            <literal>inner join</literal>�A<literal>left outer join</literal>�A<literal>right outer join</literal>�ɂ͏ȗ��`���g�����Ƃ��ł��܂��B
+            <literal>inner join</literal>、<literal>left outer join</literal>、<literal>right outer join</literal>には省略形を使うこともできます。
         </para>
 
         <programlisting><![CDATA[from Cat as cat 
@@ -128,7 +130,7 @@
     left join cat.kittens as kitten]]></programlisting>
     
         <para>
-            HQL�� <literal>with</literal> �L�[���[�h���g���ƁA����������t�������邱�Ƃ��ł��܂��B
+            HQLの <literal>with</literal> キーワードを使うと、結合条件を付け加えることができます。
         </para>
 
         <programlisting><![CDATA[from Cat as cat 
@@ -136,10 +138,10 @@
         with kitten.bodyWeight > 10.0]]></programlisting>
 
         <para>
-            �����āA�u�t�F�b�`�v�����͊֘A��l�̃R���N�V������e�I�u�W�F�N�g�ƈꏏ��1�x��select��ŏ��������܂��B
-            ����͓��ɃR���N�V�����̏ꍇ�ɗL�p�ł��B����͎�����A�֘A�ƃR���N�V�����ɑ΂���}�b�s���O��`�t�@�C���̊O��������lazy�������̒�`���㏑�����邱�ƂɂȂ�܂��B
+            加えて、「フェッチ」結合は関連や値のコレクションを親オブジェクトと一緒に1度のselect句で初期化します。
+            これは特にコレクションの場合に有用です。これは実質上、関連とコレクションに対するマッピング定義ファイルの外部結合とlazy初期化の定義を上書きすることになります。
             
-            <xref linkend="performance-fetching"/> �ɂ�葽���̏�񂪂���܂��B
+            <xref linkend="performance-fetching"/> により多くの情報があります。
         </para>
     
         <programlisting><![CDATA[from Cat as cat 
@@ -147,10 +149,10 @@
     left join fetch cat.kittens]]></programlisting>
     
         <para>
-            �����ɂ��t�F�b�`�͊֘A����I�u�W�F�N�g�� <literal>where</literal> ��(�܂��͑��̂ǂ�Ȑ߂ł�)
-            �Ŏg���Ă͂Ȃ�Ȃ��̂ŁA�ʏ�ʖ������蓖�Ă�K�v������܂���B�܂��֘A�I�u�W�F�N�g�͖₢���킹���ʂƂ���
-            ���ڕԂ���܂���B����ɐe�I�u�W�F�N�g��ʂ��ăA�N�Z�X�ł��܂��B
-            �R���N�V�������ċA�I�Ɍ����t�F�b�`����ꍇ�̂݁A�ʖ����K�v�ɂȂ�܂��B
+            結合によるフェッチは関連するオブジェクトが <literal>where</literal> 節(または他のどんな節でも)
+            で使われてはならないので、通常別名を割り当てる必要がありません。また関連オブジェクトは問い合わせ結果として
+            直接返されません。代わりに親オブジェクトを通してアクセスできます。
+            コレクションを再帰的に結合フェッチする場合のみ、別名が必要になります。
         </para>
         
         <programlisting><![CDATA[from Cat as cat 
@@ -159,28 +161,28 @@
     left join fetch child.kittens]]></programlisting>
     
         <para>
-            <literal>fetch</literal> �\���� <literal>iterate()</literal> 
-            ���g�����N�G���Ăяo���Ŏg�p�ł��Ȃ����Ƃɒ��ӂ��Ă�������
-            �i����� <literal>scroll()</literal> �͎g�p�ł��܂��j�B
+            <literal>fetch</literal> 構文は <literal>iterate()</literal> 
+            を使ったクエリ呼び出しで使用できないことに注意してください
+            （一方で <literal>scroll()</literal> は使用できます）。
             
-            �܂��A�����̑���͌��ʂ̍s�Ɋ�Â��Ă��邽�߁A
-            <literal>fetch</literal> �� <literal>setMaxResults()</literal> �� <literal>setFirstResult()</literal> 
-            �ƈꏏ�Ɏg�p���ׂ��ł͂���܂���B
-            �ʏ�eager�ȃR���N�V�����t�F�b�`������Əd�����o�Ă��܂����߁A���Ȃ������҂���悤�ȍs���ɂ͂Ȃ�Ȃ��̂ł��B
+            また、これらの操作は結果の行に基づいているため、
+            <literal>fetch</literal> は <literal>setMaxResults()</literal> や <literal>setFirstResult()</literal> 
+            と一緒に使用すべきではありません。
+            通常eagerなコレクションフェッチをすると重複が出てしまうため、あなたが期待するような行数にはならないのです。
                              
-            �����Ă܂� <literal>fetch</literal> �́A�A�h�z�b�N�� <literal>with</literal> ������
-            �ꏏ�Ɏg�����Ƃ��ł��܂���B
-            ��̃N�G���ŕ����̃R���N�V�����������t�F�b�`���邱�Ƃɂ�蒼�ς��쐬�ł���̂ŁA���̏ꍇ���ӂ��Ă��������B
-            �܂��A�����̃R���N�V�����ɑ΂��錋���t�F�b�`��bag�}�b�s���O�ɑ΂��ė\�����ʌ��ʂ������炷���Ƃ�����̂ŁA
-            ���̏ꍇ�̃N�G���̍쐬�ɂ͒��ӂ��Ă��������B
-            �Ō�� <literal>�S�O�������ɂ��t�F�b�`</literal> ��
-            <literal>�E�O�������ɂ��t�F�b�`</literal> �͗L�p�ł͂Ȃ����Ƃɒ��ӂ��Ă��������B
+            そしてまた <literal>fetch</literal> は、アドホックな <literal>with</literal> 条件を
+            一緒に使うこともできません。
+            一つのクエリで複数のコレクションを結合フェッチすることにより直積を作成できるので、この場合注意してください。
+            また、複数のコレクションに対する結合フェッチはbagマッピングに対して予期せぬ結果をもたらすことがあるので、
+            この場合のクエリの作成には注意してください。
+            最後に <literal>全外部結合によるフェッチ</literal> と
+            <literal>右外部結合によるフェッチ</literal> は有用ではないことに注意してください。
         </para>
         
         <para>
-            �����v���p�e�B���x���̒x���t�F�b�`���g���ꍇ�i�����I�Ƀo�C�g�R�[�h����������ꍇ�j�A
-            <literal>fetch all properties</literal> ���g�����Ƃ�
-            Hibernate�ɒx���v���p�e�B�𑬂₩�Ɂi�ŏ��̃N�G���Łj�t�F�b�`�����邱�Ƃ��ł��܂��B
+            もしプロパティレベルの遅延フェッチを使う場合（内部的にバイトコード処理をする場合）、
+            <literal>fetch all properties</literal> を使うことで
+            Hibernateに遅延プロパティを速やかに（最初のクエリで）フェッチさせることができます。
         </para>
         
         <programlisting><![CDATA[from Document fetch all properties order by name]]></programlisting>
@@ -189,32 +191,32 @@
     </sect1>
 
     <sect1 id="queryhql-joins-forms">
-        <title>�����\���̌`��</title>
+        <title>結合構文の形式</title>
 
         <para>
-            HQL�͂Q�̊֘A�����`�����T�|�[�g���܂��F<literal>�ÖٓI</literal> �� <literal>�����I</literal>�B
+            HQLは２つの関連結合形式をサポートします：<literal>暗黙的</literal> と <literal>明示的</literal>。
         </para>
 
         <para>
-            ����܂ł̃Z�N�V�����ł����������g�����͂��ׂ� <literal>�����I��</literal> �`���ŁA
-            from�߂Ŗ����I��join�L�[���[�h���g���Ă��܂��B
-            ���̌`�����������߂��܂��B
+            これまでのセクションでお見せした使い方はすべて <literal>明示的な</literal> 形式で、
+            from節で明示的にjoinキーワードを使っています。
+            この形式をおすすめします。
         </para>
 
         <para>
-            <literal>�ÖٓI</literal> �t�H�[���́Ajoin�L�[���[�h���g���܂���B����ɁA�Q�Ƃ���֘A��
-            �h�b�g�\�L���g���܂��B<literal>�ÖٓI</literal> �����́A���܂��܂�HQL�ɏo�Ă��܂��B
-            <literal>�ÖٓI</literal> �����̌��ʂ́ASQL�X�e�[�g�����g�̓����������ʂł��B
+            <literal>暗黙的</literal> フォームは、joinキーワードを使いません。代わりに、参照する関連に
+            ドット表記を使います。<literal>暗黙的</literal> 結合は、さまざまなHQLに出てきます。
+            <literal>暗黙的</literal> 結合の結果は、SQLステートメントの内部結合結果です。
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
     </sect1>
 
     <sect1 id="queryhql-select">
-        <title>Select��</title>
+        <title>Select節</title>
 
         <para>
-            <literal>select</literal> �߂͈ȉ��̂悤�ɂǂ̃I�u�W�F�N�g�Ƒ������N�G�����U���g�Z�b�g�ɕԂ�����I�����܂��B:
+            <literal>select</literal> 節は以下のようにどのオブジェクトと属性をクエリリザルトセットに返すかを選択します。:
         </para>
 
         <programlisting><![CDATA[select mate 
@@ -222,14 +224,14 @@ from Cat as cat
     inner join cat.mate as mate]]></programlisting>
 
         <para>
-            ��L�̃N�G���͑��� <literal>Cat</literal> �� <literal>mate</literal> ��I�����܂��B
-            ���ۂɂ͎��̂悤�ɁA���Ȍ��ɕ\���ł��܂��B: 
+            上記のクエリは他の <literal>Cat</literal> の <literal>mate</literal> を選択します。
+            実際には次のように、より簡潔に表現できます。: 
         </para>
 
         <programlisting><![CDATA[select cat.mate from Cat cat]]></programlisting>
 
         <para>
-            �N�G���̓R���|�[�l���g�^�̃v���p�e�B���܂ށA������l�^�̃v���p�e�B���Ԃ��܂��B:
+            クエリはコンポーネント型のプロパティを含む、あらゆる値型のプロパティも返せます。:
         </para>
 
         <programlisting><![CDATA[select cat.name from DomesticCat cat
@@ -238,7 +240,7 @@ where cat.name like 'fri%']]></programlisting>
         <programlisting><![CDATA[select cust.name.firstName from Customer as cust]]></programlisting>
 
         <para>
-            �N�G���͕����̃I�u�W�F�N�g��(�܂���)�v���p�e�B�� <literal>Object[]</literal> �^�̔z��Ƃ��ĕԂ��܂��B
+            クエリは複数のオブジェクトと(または)プロパティを <literal>Object[]</literal> 型の配列として返せます。
         </para>
 
         <programlisting><![CDATA[select mother, offspr, mate.name 
@@ -247,7 +249,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
     
         <para>
-            �������� <literal>List</literal> �Ƃ��āA
+            もしくは <literal>List</literal> として、
         </para>
         
         <programlisting><![CDATA[select new list(mother, offspr, mate.name)
@@ -256,7 +258,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
     
         <para>
-            �܂��́A�^�C�v�Z�[�t��Java�I�u�W�F�N�g��Ԃ��܂��B
+            または、タイプセーフなJavaオブジェクトを返せます。
         </para>
         
         <programlisting><![CDATA[select new Family(mother, mate, offspr)
@@ -265,34 +267,34 @@ from DomesticCat as mother
     left join mother.kittens as offspr]]></programlisting>
         
         <para>
-            ���邢�� <literal>Family</literal> �N���X���K�؂ȃR���X�g���N�^�������Ă���Ƃ���Ȃ�΁A
+            あるいは <literal>Family</literal> クラスが適切なコンストラクタを持っているとするならば、
         </para>
         
         <para>
-            select�߂� <literal>as</literal> ���g���ĕʖ������邱�Ƃ��ł��܂��B
+            select節に <literal>as</literal> を使って別名をつけることもできます。
         </para>
 
         <programlisting><![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n
 from Cat cat]]></programlisting>
 
         <para>
-            <literal>select new map</literal> �ƈꏏ�Ɏg���Ƃ��ɍł��𗧂��܂��F
+            <literal>select new map</literal> と一緒に使うときに最も役立ちます：
         </para>
             
         <programlisting><![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )
 from Cat cat]]></programlisting>
 
         <para>
-            ���̃N�G���͕ʖ�����select�����l�� <literal>Map</literal> ��Ԃ��܂��B
+            このクエリは別名からselectした値へ <literal>Map</literal> を返します。
         </para>
          
     </sect1>
 
     <sect1 id="queryhql-aggregation">
-        <title>�W��֐�</title>
+        <title>集約関数</title>
 
         <para>
-            HQL�̃N�G���̓v���p�e�B�̏W��֐��̌��ʂ��Ԃ��܂��F
+            HQLのクエリはプロパティの集約関数の結果も返せます：
         </para>
 
         <programlisting><![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
@@ -309,7 +311,7 @@ from Cat cat group by cat]]></programlisting>
 -->
 
         <para>
-            �T�|�[�g���Ă���W��֐��͈ȉ��̂��̂ł��B
+            サポートしている集約関数は以下のものです。
         </para>
 
         <itemizedlist spacing="compact">
@@ -331,7 +333,7 @@ from Cat cat group by cat]]></programlisting>
         </itemizedlist>
     
         <para>
-            select�߂ɂ����ĎZ�p����A�A���Ə��F���ꂽSQL�֐����g�����Ƃ��ł��܂��B
+            select節において算術操作、連結と承認されたSQL関数を使うことができます。
         </para>
         
         <programlisting><![CDATA[select cat.weight + sum(kitten.weight) 
@@ -342,7 +344,7 @@ group by cat.id, cat.weight]]></programlisting>
         <programlisting><![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]></programlisting>
     
         <para>
-            SQL�Ɠ����Ӗ������� <literal>distinct</literal> �� <literal>all</literal> �L�[���[�h���g�����Ƃ��ł��܂��B
+            SQLと同じ意味を持つ <literal>distinct</literal> と <literal>all</literal> キーワードを使うことができます。
         </para>
 
         <programlisting><![CDATA[select distinct cat.name from Cat cat
@@ -352,56 +354,56 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
     </sect1>
     
     <sect1 id="queryhql-polymorphism">
-        <title>�|�����[�t�B�b�N�ȃN�G��</title>
+        <title>ポリモーフィックなクエリ</title>
 
         <para>
-            ���̂悤�ȃN�G���F
+            次のようなクエリ：
         </para>
 
         <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
-            <literal>Cat</literal> �C���X�^���X�����ł͂Ȃ��A<literal>DomesticCat</literal> 
-            �̂悤�ȃT�u�N���X���Ԃ���܂��BHibernate�N�G���� <emphasis>�ǂ��</emphasis>
-            Java�N���X��C���^�[�t�F�C�X�� <literal>from</literal> �߂ɓ���邱�Ƃ��ł��܂��B
-            �N�G���͂��̃N���X���g�������A�������̓C���^�[�t�F�C�X�����������S�Ẳi���N���X��Ԃ��܂��B
-            ���̃N�G���͉i���I�u�W�F�N�g�����ׂĕԂ��܂�:
+            <literal>Cat</literal> インスタンスだけではなく、<literal>DomesticCat</literal> 
+            のようなサブクラスも返されます。Hibernateクエリは <emphasis>どんな</emphasis>
+            Javaクラスやインターフェイスも <literal>from</literal> 節に入れることができます。
+            クエリはそのクラスを拡張した、もしくはインターフェイスを実装した全ての永続クラスを返します。
+            次のクエリは永続オブジェクトをすべて返します:
         </para>
         
         <programlisting><![CDATA[from java.lang.Object o]]></programlisting>
         
         <para>
-            <literal>Named</literal> �C���^�[�t�F�C�X�͗l�X�ȉi���N���X�ɂ���Ď�������܂��B: 
+            <literal>Named</literal> インターフェイスは様々な永続クラスによって実装されます。: 
         </para>
         
         <programlisting><![CDATA[from Named n, Named m where n.name = m.name]]></programlisting>
         
         <para>
-            �Ō�̓�̃N�G���́A��ȏ��SQL <literal>SELECT</literal> ��v�����Ă��邱�Ƃɒ��ӂ��Ă��������B
-            ���̂��Ƃ� <literal>order by</literal> �߂����U���g�Z�b�g�S�̂𐳊m�ɂ͐��񂵂Ȃ����Ƃ��Ӗ����܂�
-            (����ɂ���́A<literal>Query.scroll()</literal> ���g�p���Ă����̃N�G�����ĂԂ��Ƃ��ł��Ȃ����Ƃ��Ӗ����܂��B)�B 
+            最後の二つのクエリは、二つ以上のSQL <literal>SELECT</literal> を要求していることに注意してください。
+            このことは <literal>order by</literal> 節がリザルトセット全体を正確には整列しないことを意味します
+            (さらにそれは、<literal>Query.scroll()</literal> を使用してこれらのクエリを呼ぶことができないことを意味します。)。 
         </para>
         
     </sect1>
 
     <sect1 id="queryhql-where">
-        <title>where��</title>
+        <title>where節</title>
 
         <para>
-            <literal>where</literal> �߂͕Ԃ����C���X�^���X�̃��X�g���i�邱�Ƃ��ł��܂��B
-            �����ʖ����Ȃ��ꍇ�A���O�Ńv���p�e�B���Q�Ƃ��܂��B
+            <literal>where</literal> 節は返されるインスタンスのリストを絞ることができます。
+            もし別名がない場合、名前でプロパティを参照します。
         </para>
 
         <programlisting><![CDATA[from Cat where name='Fritz']]></programlisting>
         
         <para>
-            �����ʖ�������ꍇ�A�C�������g���Ă��������B
+            もし別名がある場合、修飾名を使ってください。
         </para>
         
         <programlisting><![CDATA[from Cat as cat where cat.name='Fritz']]></programlisting>
 
         <para>
-            ���O��'Fritz'�Ƃ��� <literal>Cat</literal> �̃C���X�^���X��Ԃ��܂��B
+            名前が'Fritz'という <literal>Cat</literal> のインスタンスを返します。
         </para>
 
         <programlisting><![CDATA[select foo 
@@ -409,28 +411,28 @@ from Foo foo, Bar bar
 where foo.startDate = bar.date]]></programlisting>
 
         <para>
-            ���HQL�́A<literal>Foo</literal> �� <literal>startDate</literal> �v���p�e�B�Ɠ�����
-            <literal>date</literal> �v���p�e�B�������� <literal>bar</literal> �C���X�^���X�����݂���A
-            ���ׂĂ� <literal>Foo</literal> �C���X�^���X��Ԃ��܂��B
-            �R���p�E���h�p�X���i�Ⴆ�΁ucat.mate.name�v�j�� <literal>where</literal> �߂���ɋ��͂ɂ��܂��B���ځF
+            上のHQLは、<literal>Foo</literal> の <literal>startDate</literal> プロパティと等しい
+            <literal>date</literal> プロパティを持った <literal>bar</literal> インスタンスが存在する、
+            すべての <literal>Foo</literal> インスタンスを返します。
+            コンパウンドパス式（例えば「cat.mate.name」）は <literal>where</literal> 節を非常に強力にします。注目：
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.mate.name is not null]]></programlisting>
 
         <para>
-            ���̃N�G���̓e�[�u�������i���������j������SQL�N�G���ɕϊ�����܂��B
-            ���̑���Ɉȉ��̂悤�ɏ����ƁA
+            このクエリはテーブル結合（内部結合）を持つSQLクエリに変換されます。
+            その代わりに以下のように書くと、
         </para>
 
         <programlisting><![CDATA[from Foo foo  
 where foo.bar.baz.customer.address.city is not null]]></programlisting>
 
         <para>
-            ������̃N�G�����L�q������N�G������4�̃e�[�u��������K�v�Ƃ���SQL�N�G���ɕϊ�����܂��B
+            もし上のクエリを記述したらクエリ内に4つのテーブル結合を必要とするSQLクエリに変換されます。
         </para>
 
         <para>
-            <literal>=</literal> ���Z�q�͈ȉ��̂悤�ɁA�v���p�e�B�����łȂ��C���X�^���X���r���邽�߂ɂ��g���܂��B�F
+            <literal>=</literal> 演算子は以下のように、プロパティだけでなくインスタンスを比較するためにも使われます。：
         </para>
 
         <programlisting><![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]></programlisting>
@@ -440,8 +442,8 @@ from Cat cat, Cat mate
 where cat.mate = mate]]></programlisting>
 
         <para>
-            <literal>id</literal> (������)�͓��ʂȃv���p�e�B�ł���A
-            �I�u�W�F�N�g�̃��j�[�N�Ȏ��ʎq���Q�Ƃ��邽�߂Ɏg�p�ł��܂��B(����ɁA���̃v���p�e�B�����g�p�ł��܂��B) 
+            <literal>id</literal> (小文字)は特別なプロパティであり、
+            オブジェクトのユニークな識別子を参照するために使用できます。(さらに、そのプロパティ名を使用できます。) 
         </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.id = 123
@@ -449,12 +451,12 @@ where cat.mate = mate]]></programlisting>
 from Cat as cat where cat.mate.id = 69]]></programlisting>
 
         <para>
-            2�Ԗڂ̃N�G���͌����I�ł��B�e�[�u���������K�v����܂���I
+            2番目のクエリは効率的です。テーブル結合が必要ありません！
         </para>
 
         <para>
-            �܂��������ʎq�̃v���p�e�B���g�p�ł��܂��B������ <literal>Person</literal> ��
-            <literal>country</literal> �� <literal>medicareNumber</literal> ����Ȃ镡�����ʎq�����Ɖ��肵�܂��B 
+            また複合識別子のプロパティも使用できます。ここで <literal>Person</literal> が
+            <literal>country</literal> と <literal>medicareNumber</literal> からなる複合識別子を持つと仮定します。 
         </para>
 
         <programlisting><![CDATA[from bank.Person person
@@ -466,70 +468,70 @@ where account.owner.id.country = 'AU'
     and account.owner.id.medicareNumber = 123456]]></programlisting>
 
         <para>
-            ������x�����܂����A2�Ԗڂ̃N�G���ɂ̓e�[�u���������K�v����܂���B
+            もう一度言いますが、2番目のクエリにはテーブル結合が必要ありません。
         </para>
             
         <para>
-            ���l�� <literal>class</literal> �͓��ʂȃv���p�e�B�ł���A
-            �|�����[�t�B�b�N�ȉi�����ɂ�����C���X�^���X��discriminator�l�ɃA�N�Z�X���܂��B
-            where�߂ɖ��ߍ��܂ꂽJava�̃N���X���͂���discriminator�l�ɕϊ�����܂��B
+            同様に <literal>class</literal> は特別なプロパティであり、
+            ポリモーフィックな永続化におけるインスタンスのdiscriminator値にアクセスします。
+            where節に埋め込まれたJavaのクラス名はそのdiscriminator値に変換されます。
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.class = DomesticCat]]></programlisting>
         
         <para>
-            �܂��R���|�[�l���g�╡�����[�U�^(�܂����̃R���|�[�l���g�̃R���|�[�l���g�Ȃ�)�̃v���p�e�B���w��ł��܂��B
+            またコンポーネントや複合ユーザ型(またそのコンポーネントのコンポーネントなど)のプロパティも指定できます。
             
-            �����������āi�R���|�[�l���g�̃v���p�e�B�ł͂Ȃ��j�R���|�[�l���g�^�̃v���p�e�B�ŏI������p�X�����g��Ȃ��ł��������B
-            �Ⴆ�΂��� <literal>store.owner</literal> �� <literal>address</literal> 
-            �R���|�[�l���g�����G���e�B�e�B�Ȃ�Έȉ��̂悤�Ȍ��ʂƂȂ�܂��B
+            しかし決して（コンポーネントのプロパティではなく）コンポーネント型のプロパティで終了するパス式を使わないでください。
+            例えばもし <literal>store.owner</literal> が <literal>address</literal> 
+            コンポーネントを持つエンティティならば以下のような結果となります。
         </para>
 
         <programlisting><![CDATA[store.owner.address.city    // okay
 store.owner.address         // error!]]></programlisting>
 
         <para>
-            "any"�^�͓��ʂȃv���p�e�B�ł��� <literal>id</literal> �� <literal>class</literal> �������A
-            �ȉ��̕��@�Ō�����\�����邱�Ƃ��\�ɂ��܂�(<literal>AuditLog.item</literal> ��
-            <literal>&lt;any&gt;</literal> �Ń}�b�s���O���ꂽ�v���p�e�B�ł�)�B 
+            "any"型は特別なプロパティである <literal>id</literal> と <literal>class</literal> を持ち、
+            以下の方法で結合を表現することを可能にします(<literal>AuditLog.item</literal> は
+            <literal>&lt;any&gt;</literal> でマッピングされたプロパティです)。 
         </para>
        
         <programlisting><![CDATA[from AuditLog log, Payment payment 
 where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting>
     
         <para>
-            <literal>log.item.class</literal> �� <literal>payment.class</literal> ��
-            ��L�̃N�G�����őS���قȂ�f�[�^�x�[�X�J�����̒l���Q�Ƃ���Ƃ������Ƃɒ��ӂ��Ă��������B
+            <literal>log.item.class</literal> と <literal>payment.class</literal> が
+            上記のクエリ中で全く異なるデータベースカラムの値を参照するということに注意してください。
         </para>
         
     </sect1>
 
     <sect1 id="queryhql-expressions">
-        <title>Expressions ��</title>
+        <title>Expressions 式</title>
 
         <para>
-            SQL�� <literal>where</literal> �߂ŋL�q���邱�Ƃ��o���鎮�̂قƂ�ǂ�HQL�ł��L�q�ł��܂��B:
+            SQLの <literal>where</literal> 節で記述することが出来る式のほとんどをHQLでも記述できます。:
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    �Z�p���Z�q�F<literal>+, -, *, /</literal>
+                    算術演算子：<literal>+, -, *, /</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    2����r���Z�q�F<literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
+                    2項比較演算子：<literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �_�����Z�q�F<literal>and, or, not</literal>
+                    論理演算子：<literal>and, or, not</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �O���[�v������\�����ʁF<literal>( )</literal>
+                    グループ分けを表す括弧：<literal>( )</literal>
                 </para>
             </listitem>
             <listitem>
@@ -547,13 +549,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    "�V���v��"��case <literal>case ... when ... then ... else ... end</literal>�A
-                    "�T���I"��case <literal>case when ... then ... else ... end</literal> 
+                    "シンプル"なcase <literal>case ... when ... then ... else ... end</literal>、
+                    "探索的"なcase <literal>case when ... then ... else ... end</literal> 
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �X�g�����O�̘A�� <literal>...||...</literal> �܂��� <literal>concat(...,...)</literal>
+                    ストリングの連結 <literal>...||...</literal> または <literal>concat(...,...)</literal>
                 </para>
             </listitem>
             <listitem>
@@ -571,74 +573,74 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    EJB-QL 3.0�Œ�`����Ă���֐��≉�Z�q: <literal>substring(), trim(),
+                    EJB-QL 3.0で定義されている関数や演算子: <literal>substring(), trim(),
                     lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>coalesce()</literal> �� <literal>nullif()</literal>
+                    <literal>coalesce()</literal> と <literal>nullif()</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �����⎞�Ԃ̒l��String�ɃR���o�[�g���� <literal>str()</literal>�j
+                    数字や時間の値をStringにコンバートする <literal>str()</literal>）
                 </para>
             </listitem>
 
             <listitem>
                 <para>
-                    2�Ԗڂ̈�����Hibernate�^�̖��O�ł��� <literal>cast(... as ...)</literal> �� 
-                    <literal>extract(... from ...)</literal>�B
-                    �������g�p����f�[�^�x�[�X��ANSI <literal>cast()</literal> �� <literal>extract()</literal> 
-                    ���T�|�[�g����ꍇ�Ɍ���܂��B
+                    2番目の引数がHibernate型の名前である <literal>cast(... as ...)</literal> と 
+                    <literal>extract(... from ...)</literal>。
+                    ただし使用するデータベースがANSI <literal>cast()</literal> と <literal>extract()</literal> 
+                    をサポートする場合に限ります。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    ���������C���f�b�N�X�t���̃R���N�V�����̕ʖ��ɓK�p�����HQL�� 
-                    <literal>index()</literal> �֐��B
+                    結合したインデックス付きのコレクションの別名に適用されるHQLの 
+                    <literal>index()</literal> 関数。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    �R���N�V�����l�̃p�X�������HQL�֐��F <literal>size(), minelement(), maxelement(), 
-                    minindex(), maxindex()</literal> �B
-                    <literal>some, all, exists, any, in</literal> ���g���ďC�����邱�Ƃ��ł�����ʂ� 
-                    <literal>elements()</literal> �� <literal>indices</literal> �֐��ƈꏏ�Ɏg���܂��B
+                    コレクション値のパス式を取るHQL関数： <literal>size(), minelement(), maxelement(), 
+                    minindex(), maxindex()</literal> 。
+                    <literal>some, all, exists, any, in</literal> を使って修飾することができる特別な 
+                    <literal>elements()</literal> と <literal>indices</literal> 関数と一緒に使います。
                 </para>
             </listitem>
             <listitem>
                 <para>
                     <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal> 
-                    �̂悤�ȃf�[�^�x�[�X���T�|�[�g����SQL�X�J���֐��B
+                    のようなデータベースがサポートするSQLスカラ関数。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    JDBC�X�^�C���̈ʒu�p�����[�^ <literal>?</literal>
+                    JDBCスタイルの位置パラメータ <literal>?</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    ���O�t���p�����[�^: <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>
+                    名前付きパラメータ: <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    SQL���e�����F<literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>,
+                    SQLリテラル：<literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>,
                     <literal>'1970-01-01 10:00:01.0'</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Java�� <literal>public static final</literal> �萔�F<literal>eg.Color.TABBY</literal>
+                    Javaの <literal>public static final</literal> 定数：<literal>eg.Color.TABBY</literal>
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            <literal>in</literal> �� <literal>between</literal> �͈ȉ��̂悤�Ɏg�p�ł��܂��B: 
+            <literal>in</literal> と <literal>between</literal> は以下のように使用できます。: 
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]></programlisting>
@@ -646,7 +648,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            �܂��A�ے�`�ŋL�q���邱�Ƃ��ł��܂��B
+            また、否定形で記述することもできます。
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]></programlisting>
@@ -654,25 +656,25 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            ���l�� <literal>is null</literal> �� <literal>is not null</literal> ��null�l���e�X�g���邽�߂Ɏg�p�ł��܂��B
+            同様に <literal>is null</literal> や <literal>is not null</literal> はnull値をテストするために使用できます。
         </para>
 
         <para>
-            Hibernate�ݒ�t�@�C����HQL query substitutions���`����΁Aboolean�l�����̒��ŊȒP�Ɏg�p�ł��܁B�F
+            Hibernate設定ファイルでHQL query substitutionsを定義すれば、boolean値を式の中で簡単に使用できま。：
         </para>
 
         <programlisting><![CDATA[<property name="hibernate.query.substitutions">true 1, false 0</property>]]></programlisting>
 
         <para>
-            �������邱�Ƃŉ��L��HQL��SQL�ɕϊ�����Ƃ��� <literal>true</literal> ,
-             <literal>false</literal> �L�[���[�h�� <literal>1</literal> , <literal>0</literal> �ɒu���������܂��B:
+            こうすることで下記のHQLをSQLに変換するときに <literal>true</literal> ,
+             <literal>false</literal> キーワードは <literal>1</literal> , <literal>0</literal> に置き換えられます。:
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.alive = true]]></programlisting>
 
         <para>
-            ���ʂȃv���p�e�B <literal>size</literal>�A�܂��͓��ʂȊ֐� <literal>size()</literal> 
-            ���g���ăR���N�V�����̃T�C�Y���e�X�g�ł��܂��B:
+            特別なプロパティ <literal>size</literal>、または特別な関数 <literal>size()</literal> 
+            を使ってコレクションのサイズをテストできます。:
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.kittens.size > 0]]></programlisting>
@@ -680,10 +682,10 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Cat cat where size(cat.kittens) > 0]]></programlisting>
 
         <para>
-            �C���f�b�N�X�t���̃R���N�V�����ł́A<literal>minindex</literal> �� <literal>maxindex</literal> 
-            �֐����g���āA�C���f�b�N�X�̍ŏ��l�ƍő�l���Q�Ƃł��܂��B
-            ���l�ɁA<literal>minelement</literal> �� <literal>maxelement</literal> ���g���āA
-            ��{�^�̃R���N�V�����v�f�̍ŏ��l�ƍő�l���Q�Ƃł��܂��B
+            インデックス付きのコレクションでは、<literal>minindex</literal> と <literal>maxindex</literal> 
+            関数を使って、インデックスの最小値と最大値を参照できます。
+            同様に、<literal>minelement</literal> と <literal>maxelement</literal> を使って、
+            基本型のコレクション要素の最小値と最大値を参照できます。
         </para>
         
         <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]></programlisting>
@@ -693,9 +695,9 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Order order where minelement(order.items) > 10000]]></programlisting>
         
         <para>
-            �R���N�V�����̗v�f��C���f�b�N�X�̃Z�b�g�i<literal>elements</literal> �� <literal>indices</literal> 
-            �֐��j�A�܂��͕��₢���킹�i��q�j�̌��ʂ��󂯎���Ƃ��́A
-            SQL�֐� <literal>any, some, all, exists, in</literal> ���T�|�[�g����܂��B
+            コレクションの要素やインデックスのセット（<literal>elements</literal> と <literal>indices</literal> 
+            関数）、または副問い合わせ（後述）の結果が受け取れるときは、
+            SQL関数 <literal>any, some, all, exists, in</literal> がサポートされます。
         </para>
 
         <programlisting><![CDATA[select mother from Cat as mother, Cat as kit
@@ -713,12 +715,12 @@ where p.name = some elements(list.names)]]></programlisting>
         <para>
             <literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, 
             <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, 
-            <literal>maxelement</literal> ��Hibernate3��where�߂����ŗ��p�\�ł��邱�Ƃɒ��ӂ��Ă��������B
+            <literal>maxelement</literal> はHibernate3のwhere節だけで利用可能であることに注意してください。
         </para>
         
         <para>
-            �C���f�b�N�X�t���̃R���N�V�����iarrays, lists, maps�j�̗v�f�́A
-            �C���f�b�N�X�ŎQ�Ƃł��܂��iwhere�ߓ��ł̂݁j�B
+            インデックス付きのコレクション（arrays, lists, maps）の要素は、
+            インデックスで参照できます（where節内でのみ）。
         </para>
         
         <programlisting><![CDATA[from Order order where order.items[0].id = 1234]]></programlisting>
@@ -734,14 +736,14 @@ where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]></
 where order.items[ maxindex(order.items) ] = item and order.id = 11]]></programlisting>
 
         <para>
-            <literal>[]</literal> �����̎��́A�Z�p���ł��\���܂���B
+            <literal>[]</literal> 内部の式は、算術式でも構いません。
         </para>
         
         <programlisting><![CDATA[select item from Item item, Order order
 where order.items[ size(order.items) - 1 ] = item]]></programlisting>
         
         <para>
-            ��Α��֘A��l�̃R���N�V�����̗v�f�ɑ΂��ẮAHQL�͑g�ݍ��݂� <literal>index()</literal> �֐����p�ӂ��Ă��܂��B
+            一対多関連や値のコレクションの要素に対しては、HQLは組み込みの <literal>index()</literal> 関数も用意しています。
         </para>
 
         <programlisting><![CDATA[select item, index(item) from Order order 
@@ -749,13 +751,13 @@ where order.items[ size(order.items) - 1 ] = item]]></programlisting>
 where index(item) < 5]]></programlisting>
 
         <para>
-            �x�[�X�ƂȂ�f�[�^�x�[�X���T�|�[�g���Ă���X�J���[SQL�֐����g�p�ł��܂�
+            ベースとなるデータベースがサポートしているスカラーSQL関数が使用できます
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]></programlisting>
 
         <para>
-            �����܂��S�Ă𗝉����Ă��Ȃ��Ȃ�A���̃N�G����SQL�łǂꂾ�������A�ǂ݂Â炭�o���邩�l���Ă��������B: 
+            もしまだ全てを理解していないなら、下のクエリをSQLでどれだけ長く、読みづらく出来るか考えてください。: 
             
         </para>
 
@@ -768,7 +770,7 @@ where prod.name = 'widget'
     and prod = all elements(cust.currentOrder.lineItems)]]></programlisting>
 
         <para>
-            <emphasis>�q���g:</emphasis> �Ⴆ�΂��̂悤�ɏo���܂��B
+            <emphasis>ヒント:</emphasis> 例えばこのように出来ます。
         </para>
 
         <programlisting><![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order
@@ -792,25 +794,25 @@ WHERE prod.name = 'widget'
     </sect1>
 
     <sect1 id="queryhql-ordering">
-        <title>order by��</title>
+        <title>order by節</title>
 
         <para>
-            �N�G�����Ԃ�list�́A�Ԃ����N���X��R���|�[�l���g�̔C�ӂ̑����ɂ���ĕ��בւ����܂��B�F
+            クエリが返すlistは、返されるクラスやコンポーネントの任意の属性によって並べ替えられます。：
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat
 order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
 
         <para>
-            �I�v�V������ <literal>asc</literal> �� <literal>desc</literal> �͂��ꂼ�ꏸ�����~���̐���������܂��B
+            オプションの <literal>asc</literal> と <literal>desc</literal> はそれぞれ昇順か降順の整列を示します。
         </para>
     </sect1>
 
     <sect1 id="queryhql-grouping">
-        <title>group by��</title>
+        <title>group by節</title>
 
         <para>
-           �W��l��Ԃ��N�G���́A�Ԃ����N���X��R���|�[�l���g�̔C�ӂ̃v���p�e�B�ɂ���ăO���[�v���ł��܂��B:
+           集約値を返すクエリは、返されるクラスやコンポーネントの任意のプロパティによってグループ化できます。:
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat) 
@@ -822,7 +824,7 @@ from Foo foo join foo.names name
 group by foo.id]]></programlisting>
 
         <para>
-            <literal>having</literal> �߂��g���܂��B
+            <literal>having</literal> 節も使えます。
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat) 
@@ -831,9 +833,9 @@ group by cat.color
 having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
-            �����g�p����f�[�^�x�[�X���T�|�[�g���Ă���Ȃ�A
-            <literal>having</literal> �� <literal>order by</literal> �߂�SQL�֐��ƏW��֐����g���܂�
-            �i�Ⴆ��MySQL�ɂ͂���܂���j�B
+            もし使用するデータベースがサポートしているなら、
+            <literal>having</literal> と <literal>order by</literal> 節でSQL関数と集約関数が使えます
+            （例えばMySQLにはありません）。
         </para>
 
         <programlisting><![CDATA[select cat
@@ -844,19 +846,19 @@ having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
-            <literal>group by</literal> �߂� <literal>order by</literal> �߂�
-            �Z�p�����܂ނ��Ƃ��ł��Ȃ����Ƃɒ��ӂ��Ă��������B
+            <literal>group by</literal> 節や <literal>order by</literal> 節に
+            算術式を含むことができないことに注意してください。
         </para>
 
     </sect1>
     
     <sect1 id="queryhql-subqueries" revision="2">
-        <title>���₢���킹</title>
+        <title>副問い合わせ</title>
         
         <para>
-            �T�u�Z���N�g���T�|�[�g����f�[�^�x�[�X�̂��߁AHibernate�͕��₢���킹���T�|�[�g���Ă��܂��B
-            ���₢���킹�͊��ʂň͂܂Ȃ���΂Ȃ�܂���iSQL�̏W��֐��Ăяo���ɂ�鎖�������ł��j�B
-            �֘A���₢���킹(�O���N�G�����̕ʖ����Q�Ƃ��镛�₢���킹�̂���)����������܂��B 
+            サブセレクトをサポートするデータベースのため、Hibernateは副問い合わせをサポートしています。
+            副問い合わせは括弧で囲まなければなりません（SQLの集約関数呼び出しによる事が多いです）。
+            関連副問い合わせ(外部クエリ中の別名を参照する副問い合わせのこと)さえ許可されます。 
         </para>
 
         <programlisting><![CDATA[from Cat as fatcat 
@@ -883,11 +885,11 @@ where cat.name not in (
 from Cat as cat]]></programlisting>
 
         <para>
-            HQL���₢���킹�́Aselect�܂���where�߂����Ŏg���邱�Ƃɒ��ӂ��Ă��������B
+            HQL副問い合わせは、selectまたはwhere節だけで使われることに注意してください。
         </para>
 
         <para>
-            select���X�g�ɕ����̎��������₢���킹�ɂ́A�^�v�����g�����Ƃ��ł��܂��B
+            selectリストに複数の式を持つ副問い合わせには、タプルを使うことができます。
         </para>
         
         <programlisting><![CDATA[from Cat as cat 
@@ -896,43 +898,43 @@ where not ( cat.name, cat.color ) in (
 )]]></programlisting>
 
         <para>
-            �������̃f�[�^�x�[�X�iOracle��HSQL�ɂ͂���܂���j�ł́A
-            ���̃R���e�L�X�g�ł��^�v�����g���܂��B
-            �Ⴆ�΁A�N�G���R���|�[�l���g�╡�����[�U�^�ɂ����Ăł��B
+            いくつかのデータベース（OracleやHSQLにはありません）では、
+            他のコンテキストでもタプルが使えます。
+            例えば、クエリコンポーネントや複合ユーザ型においてです。
         </para>
 
         <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
         
         <para>
-            �����ł����A���璷�ȃN�G���ł��F
+            同等ですが、より冗長なクエリです：
         </para>
         
         <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
 
         <para>
-            ���̂悤�Ȃ��Ƃ��������Ȃ��̂ɂ�2�̗��R������܂��F
-            1�ڂ́A�f�[�^�x�[�X�v���b�g�t�H�[���ԂŊ��S�Ȍ݊����͂Ȃ�����ł��B
-            2�ڂ́A�N�G�����}�b�s���O�h�L�������g�̃v���p�e�B�̏����Ɉˑ����邩��ł��B
+            このようなことをしたくないのには2つの理由があります：
+            1つ目は、データベースプラットフォーム間で完全な互換性はないからです。
+            2つ目は、クエリがマッピングドキュメントのプロパティの順序に依存するからです。
         </para>
         
     </sect1>
 
     <sect1 id="queryhql-examples">
-        <title>HQL�̗�</title>
+        <title>HQLの例</title>
         
         <para>
-            Hibernate�N�G���͔��ɋ��͂ŕ��G�ɂł��܂��B���ہA�N�G������̈З͂�Hibernate�̎�v�ȃZ�[���X�|�C���g�̈�ł��B
-            �����ɍŋ߂̃v���W�F�N�g�Ŏg�p�����N�G���Ɣ��ɂ悭�����Ⴊ����܂��B
-            �قƂ�ǂ̃N�G���͂����̗���ȒP�ɋL�q�ł��邱�Ƃɒ��ӂ��Ă�������!
+            Hibernateクエリは非常に強力で複雑にできます。実際、クエリ言語の威力はHibernateの主要なセールスポイントの一つです。
+            ここに最近のプロジェクトで使用したクエリと非常によく似た例があります。
+            ほとんどのクエリはこれらの例より簡単に記述できることに注意してください!
         </para>
         
         <para>
-            �ȉ��̃N�G���͓���̌ڋq�Ɨ^����ꂽ�ŏ��̍��v�l�ɑ΂��関���������̒���ID�A
-            ���i�̐��A�����̍��v�����v�l�Ő��񂵂ĕԂ��܂��B
-            ���i�����肷��ہA���݂̃J�^���O���g���܂��B���ʂƂ��ĕԂ����SQL�N�G����
+            以下のクエリは特定の顧客と与えられた最小の合計値に対する未払い注文の注文ID、
+            商品の数、注文の合計を合計値で整列して返します。
+            価格を決定する際、現在のカタログを使います。結果として返されるSQLクエリは
             <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>,
-            <literal>CATALOG</literal> ����� <literal>PRICE</literal> �e�[�u���ɑ΂�4�̓���������
-            (�֘A���Ȃ�)���₢���킹�������܂��B
+            <literal>CATALOG</literal> および <literal>PRICE</literal> テーブルに対し4つの内部結合と
+            (関連しない)副問い合わせを持ちます。
         </para>
         
         <programlisting><![CDATA[select order.id, sum(price.amount), count(item)
@@ -955,7 +957,7 @@ having sum(price.amount) > :minAmount
 order by sum(price.amount) desc]]></programlisting>
         
         <para>
-            ���ċ���ȃN�G���Ȃ̂ł��傤! ���i���͕��₢���킹�����܂�g���܂���B���������Ď��̃N�G���͎��ۂɂ͈ȉ��̂悤�ɂȂ�܂��B:
+            何て巨大なクエリなのでしょう! 普段私は副問い合わせをあまり使いません。したがって私のクエリは実際には以下のようになります。:
         </para>
         
         <programlisting><![CDATA[select order.id, sum(price.amount), count(item)
@@ -973,10 +975,10 @@ having sum(price.amount) > :minAmount
 order by sum(price.amount) desc]]></programlisting>
         
         <para>
-            ���̃N�G���͊e�X�e�[�^�X�̎x�������𐔂��܂��B���������ׂĂ̎x���������݂̗��p�҂ɂ��
-            �ŐV�̃X�e�[�^�X�ύX�ł��� <literal>AWAITING_APPROVAL</literal> �ł���ꍇ�������܂��B
-            ���̃N�G����2�̓��������� <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> ����� 
-            <literal>PAYMENT_STATUS_CHANGE</literal> �e�[�u���ɑ΂���֘A���₢���킹�������SQL�N�G���ɕϊ�����܂��B
+            次のクエリは各ステータスの支払い数を数えます。ただしすべての支払いが現在の利用者による
+            最新のステータス変更である <literal>AWAITING_APPROVAL</literal> である場合を除きます。
+            このクエリは2つの内部結合と <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> および 
+            <literal>PAYMENT_STATUS_CHANGE</literal> テーブルに対する関連副問い合わせを備えたSQLクエリに変換されます。
         </para>
 
         <programlisting><![CDATA[select count(payment), status.name 
@@ -996,8 +998,8 @@ group by status.name, status.sortOrder
 order by status.sortOrder]]></programlisting>
 
         <para>
-            ��������set�̑����list�Ƃ��� <literal>statusChanges</literal> �R���N�V������
-            �}�b�s���O�����Ȃ�΁A�͂邩�ɊȒP�ɃN�G�����L�q�ł���ł��傤�B
+            もし私がsetの代わりにlistとして <literal>statusChanges</literal> コレクションを
+            マッピングしたならば、はるかに簡単にクエリを記述できるでしょう。
         </para>
     
         <programlisting><![CDATA[select count(payment), status.name 
@@ -1009,13 +1011,13 @@ group by status.name, status.sortOrder
 order by status.sortOrder]]></programlisting>
 
         <para>
-            ���̃N�G���͌��݂̃��[�U����������g�D�ɑ΂���A�J�E���g����і������̎x������
-            ���ׂĕԂ�MS SQL Server
-            �� <literal>isNull()</literal> �֐����g�p���Ă��܂��B
-            ���̃N�G����3�̓���������1�̊O������ �A
-            ������ <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>,
-            <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> ����� 
-            <literal>ORG_USER</literal> �e�[�u���ɑ΂��镛�₢���킹������SQL�ɕϊ�����܂��B
+            次のクエリは現在のユーザが所属する組織に対するアカウントおよび未払いの支払いを
+            すべて返すMS SQL Server
+            の <literal>isNull()</literal> 関数を使用しています。
+            このクエリは3つの内部結合と1つの外部結合 、
+            そして <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>,
+            <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> および 
+            <literal>ORG_USER</literal> テーブルに対する副問い合わせ持ったSQLに変換されます。
         </para>
 
         <programlisting><![CDATA[select account, payment
@@ -1026,7 +1028,7 @@ where :currentUser in elements(account.holder.users)
 order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></programlisting>
 
         <para>
-            �������̃f�[�^�x�[�X�ɂ��ẮA(�֘A������ꂽ)���₢���킹�̎g�p�������K�v������ł��傤�B
+            いくつかのデータベースについては、(関連させられた)副問い合わせの使用を避ける必要があるでしょう。
         </para>
 
         <programlisting><![CDATA[select account, payment
@@ -1040,12 +1042,12 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
    </sect1>
 
     <sect1 id="queryhql-bulk" revision="2">
-        <title>��ʂ�UPDATE��DELETE</title>
+        <title>大量のUPDATEとDELETE</title>
 
         <para>
-            HQL�͍��� <literal>update</literal> �� <literal>delete</literal>�A<literal>insert ... select ...</literal>
-            �X�e�[�g�����g��HQL�ɓ���邱�Ƃ��T�|�[�g���Ă��܂��B
-            <xref linkend="batch-direct"/> �ɏڍׂ�����܂��B
+            HQLは今は <literal>update</literal> と <literal>delete</literal>、<literal>insert ... select ...</literal>
+            ステートメントをHQLに入れることをサポートしています。
+            <xref linkend="batch-direct"/> に詳細があります。
         </para>
     </sect1>
 
@@ -1053,13 +1055,13 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
         <title>Tips &amp; Tricks</title>
 
         <para>
-            ���ۂɌ��ʂ�Ԃ��Ȃ��Ă��N�G���̌��ʐ��𐔂��邱�Ƃ��ł��܂��B:
+            実際に結果を返さなくてもクエリの結果数を数えることができます。:
         </para>
 
         <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
-            �R���N�V�����̃T�C�Y�ɂ�茋�ʂ���בւ��邽�߂ɂ͈ȉ��̃N�G�����g�p���܂��B:
+            コレクションのサイズにより結果を並べ替えるためには以下のクエリを使用します。:
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1069,13 +1071,13 @@ group by usr.id, usr.name
 order by count(msg)]]></programlisting>
 
         <para>
-            �g�p���Ă���f�[�^�x�[�X���T�u�Z���N�g���T�|�[�g����ꍇ�A�N�G����where�߂ŃT�C�Y�ɂ��I��������ݒ�ł��܂�:
+            使用しているデータベースがサブセレクトをサポートする場合、クエリのwhere節でサイズによる選択条件を設定できます:
         </para>
 
         <programlisting><![CDATA[from User usr where size(usr.messages) >= 1]]></programlisting>
 
         <para>
-            �g�p���Ă���f�[�^�x�[�X���T�u�Z���N�g���T�|�[�g���Ȃ��ꍇ�́A���̃N�G�����g�p���Ă�������:  
+            使用しているデータベースがサブセレクトをサポートしない場合は、次のクエリを使用してください:  
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1085,8 +1087,8 @@ group by usr.id, usr.name
 having count(msg) >= 1]]></programlisting>
 
         <para>
-            �������������Ă��邹���ŏ�̉����@��message�̌�����
-            �[���� <literal>User</literal> ��Ԃ����Ƃ��ł��Ȃ��Ȃ�΁A�ȉ��̌`�����g���܂��B
+            内部結合をしているせいで上の解決法がmessageの件数が
+            ゼロの <literal>User</literal> を返すことができないならば、以下の形式が使えます。
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1096,7 +1098,7 @@ group by usr.id, usr.name
 having count(msg) = 0]]></programlisting>
 
         <para>
-            JavaBean�̃v���p�e�B�́A���O�t���̃N�G���p�����[�^�Ɍ��т��邱�Ƃ��o���܂��B�F
+            JavaBeanのプロパティは、名前付きのクエリパラメータに結びつけることが出来ます。：
         </para>
 
         <programlisting><![CDATA[Query q = s.createQuery("from foo Foo as foo where foo.name=:name and foo.size=:size");
@@ -1104,7 +1106,7 @@ q.setProperties(fooBean); // fooBean has getName() and getSize()
 List foos = q.list();]]></programlisting>
 
         <para>
-            �R���N�V�����̓t�B���^�t�� <literal>Query</literal> �C���^�[�t�F�C�X���g�p���邱�ƂŃy�[�W�����邱�Ƃ��ł��܂��B:
+            コレクションはフィルタ付き <literal>Query</literal> インターフェイスを使用することでページをつけることができます。:
         </para>
 
         <programlisting><![CDATA[Query q = s.createFilter( collection, "" ); // the trivial filter
@@ -1113,14 +1115,14 @@ q.setFirstResult(PAGE_SIZE * pageNumber);
 List page = q.list();]]></programlisting>
 
         <para>
-            �R���N�V�����̗v�f�̓N�G���t�B���^���g���āA���בւ���O���[�v�������o���܂��B:
+            コレクションの要素はクエリフィルタを使って、並べ替えやグループ分けが出来ます。:
         </para>
         
         <programlisting><![CDATA[Collection orderedCollection = s.filter( collection, "order by this.amount" );
 Collection counts = s.filter( collection, "select this.type, count(this) group by this.type" );]]></programlisting>
 
         <para>
-            �R���N�V�����������������ɃR���N�V�����̃T�C�Y�𓾂邱�Ƃ��ł��܂��B: 
+            コレクションを初期化せずにコレクションのサイズを得ることができます。: 
         </para>
 
         <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>

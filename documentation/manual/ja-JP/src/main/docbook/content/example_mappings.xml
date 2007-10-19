@@ -1,22 +1,22 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="example-mappings">
-    <title>��F���낢��ȃ}�b�s���O</title>
+    <title>例：いろいろなマッピング</title>
     
     <para>
-        ���̏͂ł́A��蕡�G�Ȋ֘A�̃}�b�s���O���������Љ�܂��B
+        この章では、より複雑な関連のマッピングをいくつか紹介します。
     </para>
     
     <sect1 id="example-mappings-emp">
-        <title>�ٗp��/�]�ƈ�</title>
+        <title>雇用者/従業員</title>
 
         <para>
-            <literal>Employer</literal> �� <literal>Employee</literal> �̊֌W��\���ȉ��̃��f���́A
-            �֘A�̕\���Ɏ��ۂ̃G���e�B�e�B�N���X�i <literal>Employment</literal> �j
-            ���g���܂��B
-            �Ȃ��Ȃ�A����2�̃p�[�e�B�ɕ����̊��Ԍٗp�����Ƃ������Ƃ����肦�邩��ł��B
-            �����̒l�Ə]�ƈ��̖��O�����f�������邽�߂ɃR���|�[�l���g���g���Ă��܂��B
+            <literal>Employer</literal> と <literal>Employee</literal> の関係を表す以下のモデルは、
+            関連の表現に実際のエンティティクラス（ <literal>Employment</literal> ）
+            を使います。
+            なぜなら、同じ2つのパーティに複数の期間雇用されるということがありえるからです。
+            お金の値と従業員の名前をモデル化するためにコンポーネントを使っています。
         </para>
 
         <mediaobject>
@@ -29,7 +29,7 @@
         </mediaobject>
         
         <para>
-            �}�b�s���O�h�L�������g�̈��ł��F
+            マッピングドキュメントの一例です：
         </para>
         
         <programlisting><![CDATA[<hibernate-mapping>
@@ -82,7 +82,7 @@
 </hibernate-mapping>]]></programlisting>
 
     <para>
-        <literal>SchemaExport</literal> �Ő��������e�[�u���X�L�[�}�ł��B
+        <literal>SchemaExport</literal> で生成したテーブルスキーマです。
     </para>
 
     <programlisting><![CDATA[create table employers (
@@ -122,14 +122,14 @@ create sequence employer_id_seq]]></programlisting>
     </sect1>
     
     <sect1 id="example-mappings-authorwork">
-        <title>���/��i</title>
+        <title>作者/作品</title>
 
         <para>
-            <literal>Work</literal> , <literal>Author</literal> ������ <literal>Person</literal> 
-            �̊֌W��\���ȉ��̃��f�����l���Ă݂Ă��������B
-            <literal>Work</literal> �� <literal>Author</literal> �̊֌W�𑽑Α��֘A�ŕ\���Ă��܂��B
-            <literal>Author</literal> �� <literal>Person</literal> �̊֌W�͈�Έ�֘A�Ƃ��ĕ\���Ă��܂��B
-            ���ɂ� <literal>Author</literal> �� <literal>Person</literal> ���g������Ƃ������@������܂��B
+            <literal>Work</literal> , <literal>Author</literal> そして <literal>Person</literal> 
+            の関係を表す以下のモデルを考えてみてください。
+            <literal>Work</literal> と <literal>Author</literal> の関係を多対多関連で表しています。
+            <literal>Author</literal> と <literal>Person</literal> の関係は一対一関連として表しています。
+            他には <literal>Author</literal> が <literal>Person</literal> を拡張するという方法もあります。
         </para>
 
         <mediaobject>
@@ -142,7 +142,7 @@ create sequence employer_id_seq]]></programlisting>
         </mediaobject>
         
         <para>
-            �ȉ��̃}�b�s���O�h�L�������g�͂��̂悤�Ȋ֌W�𐳊m�ɕ\�����Ă��܂��B
+            以下のマッピングドキュメントはこのような関係を正確に表現しています。
         </para>
         
         <programlisting><![CDATA[<hibernate-mapping>
@@ -198,11 +198,11 @@ create sequence employer_id_seq]]></programlisting>
 </hibernate-mapping>]]></programlisting>
 
     <para>
-        ���̃}�b�s���O�ɂ�4�̃e�[�u��������܂��B
+        このマッピングには4つのテーブルがあります。
         <literal>works</literal> , <literal>authors</literal> , <literal>persons</literal> 
-        �͂��ꂼ��A�d���A��ҁA�l�̃f�[�^��ێ����܂��B
-        <literal>author_work</literal> �͍�҂ƍ�i�������N����֘A�e�[�u���ł��B
-        �ȉ��� <literal>SchemaExport</literal> �Ő��������e�[�u���X�L�[�}�ł��B
+        はそれぞれ、仕事、作者、人のデータを保持します。
+        <literal>author_work</literal> は作者と作品をリンクする関連テーブルです。
+        以下は <literal>SchemaExport</literal> で生成したテーブルスキーマです。
     </para>
 
     <programlisting><![CDATA[create table works (
@@ -243,17 +243,17 @@ alter table author_work
     </sect1>
 
     <sect1 id="example-mappings-customerorderproduct">
-        <title>�ڋq/����/���i</title>
+        <title>顧客/注文/製品</title>
 
         <para>
-            ���āA <literal>Customer</literal> , <literal>Order</literal> , <literal>LineItem</literal> 
-            <literal>Product</literal> �̊֌W��\�����f�����l���Ă݂܂��傤�B
-            <literal>Customer</literal> �� <literal>Order</literal> �͈�Α��̊֘A�ł����A
+            さて、 <literal>Customer</literal> , <literal>Order</literal> , <literal>LineItem</literal> 
+            <literal>Product</literal> の関係を表すモデルを考えてみましょう。
+            <literal>Customer</literal> と <literal>Order</literal> は一対多の関連ですが、
             <literal>Order</literal> / <literal>LineItem</literal> / <literal>Product</literal> 
-            �͂ǂ̂悤�ɕ\������ׂ��ł��傤���H
-            <literal>LineItem</literal> ���A<literal>Order</literal> �� <literal>Product</literal> 
-            �̑��Α��֘A��\������֘A�N���X�Ƃ��ă}�b�s���O���܂����B
-            Hibernate�ł͂�����R���|�W�b�g�v�f�ƌĂт܂��B
+            はどのように表現するべきでしょうか？
+            <literal>LineItem</literal> を、<literal>Order</literal> と <literal>Product</literal> 
+            の多対多関連を表現する関連クラスとしてマッピングしました。
+            Hibernateではこれをコンポジット要素と呼びます。
         </para>
 
         <mediaobject>
@@ -266,7 +266,7 @@ alter table author_work
         </mediaobject>
         
         <para>
-            �}�b�s���O�h�L�������g�F
+            マッピングドキュメント：
         </para>
         
         <programlisting><![CDATA[<hibernate-mapping>
@@ -309,8 +309,8 @@ alter table author_work
 
     <para>
         <literal>customers</literal> , <literal>orders</literal> , <literal>line_items</literal> , 
-        <literal>products</literal> �͂��ꂼ��A�ڋq�A�����A�������ׁA���i�̃f�[�^��ێ����܂��B
-        <literal>line_items</literal> �͒����Ɛ��i�������N����֘A�e�[�u���Ƃ��Ă������܂��B
+        <literal>products</literal> はそれぞれ、顧客、注文、注文明細、製品のデータを保持します。
+        <literal>line_items</literal> は注文と製品をリンクする関連テーブルとしても働きます。
     </para>
 
     <programlisting><![CDATA[create table customers (
@@ -350,18 +350,18 @@ alter table line_items
     </sect1>
     
     <sect1 id="misc">
-        <title>��X�G���ȃ}�b�s���O��</title>
+        <title>種々雑多なマッピング例</title>
         
         <para>
-            �����ɂ����͂��ׂ�Hibernate�̃e�X�g�X�C�[�g������܂����B
-            �����ɂ́A���ɂ���������̃}�b�s���O�̗Ⴊ����܂��B
-            Hibernate�f�B�X�g���r���[�V������ <literal>test</literal> �t�H���_�����Ă��������B
+            ここにある例はすべてHibernateのテストスイートから取りました。
+            そこには、他にもたくさんのマッピングの例があります。
+            Hibernateディストリビューションの <literal>test</literal> フォルダを見てください。
         </para>
         
-        <para>TODO: �����ɕ��͂𖄂߂�</para>
+        <para>TODO: ここに文章を埋める</para>
         
         <sect2 id="example-mappings-typed-onetone">
-            <title>�u�^�t�����ꂽ�v��Έ�֘A</title>
+            <title>「型付けされた」一対一関連</title>
 <programlisting><![CDATA[<class name="Person">
     <id name="name"/>
     <one-to-one name="address" 
@@ -391,7 +391,7 @@ alter table line_items
         </sect2>
         
         <sect2 id="example-mappings-composite-key">
-            <title>�����L�[�̗�</title>
+            <title>複合キーの例</title>
 <programlisting><![CDATA[<class name="Customer">
 
     <id name="customerId"
@@ -508,7 +508,7 @@ alter table line_items
         </sect2>
         
         <sect2 id="example-mappings-composite-key-manytomany">
-            <title>�����L�[���������L���鑽�Α�</title>
+            <title>複合キー属性を共有する多対多</title>
 <programlisting><![CDATA[<class name="User" table="`User`">
     <composite-id>
         <key-property name="name"/>
@@ -547,7 +547,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-content-discrimination">
-            <title>discrimination�Ɋ�Â����e</title>
+            <title>discriminationに基づく内容</title>
 <programlisting><![CDATA[<class name="Person"
     discriminator-value="P">
     
@@ -601,7 +601,7 @@ alter table line_items
         </sect2>
 
         <sect2 id="example-mappings-association-alternatekeys" revision="2">
-            <title>��փL�[�̊֘A</title>
+            <title>代替キーの関連</title>
 <programlisting><![CDATA[<class name="Person">
     
     <id name="id">

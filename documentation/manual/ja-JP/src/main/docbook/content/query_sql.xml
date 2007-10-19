@@ -1,41 +1,43 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="querysql" revision="2">
-  <title>�l�C�e�B�uSQL</title>
+  <title>ネイティブSQL</title>
 
-  <para>�f�[�^�x�[�X�̃l�C�e�B�uSQL�������g���ăN�G����\�����邱�Ƃ��ł��܂��B
-  �N�G���q���g��Oracle�� <literal>CONNECT</literal> �L�[���[�h�̂悤�ɁA
-  �f�[�^�x�[�X�Ǝ��̋@�\�𗘗p�������Ƃ��Ɏg���܂��B
-  SQL/JDBC�𒼐ڎg�p���Ă���A�v���P�[�V��������Hibernate�ւ̈ڍs���e�Ղɂ��Ă��܂��B</para>
+  <para>データベースのネイティブSQL方言を使ってクエリを表現することもできます。
+  クエリヒントやOracleの <literal>CONNECT</literal> キーワードのように、
+  データベース独自の機能を利用したいときに使えます。
+  SQL/JDBCを直接使用しているアプリケーションからHibernateへの移行も容易にしています。</para>
 
-  <para>Hibernate3�ł́A�����A�X�V�A�폜�A�ǂݍ��ݏ����̂悤�Ȃ��ׂĂ�
-  SQL�i�X�g�A�h�v���V�[�W�����܂ށj���菑���ł��܂��B</para>
+  <para>Hibernate3では、生成、更新、削除、読み込み処理のようなすべての
+  SQL（ストアドプロシージャを含む）を手書きできます。</para>
 
   <sect1 id="querysql-creating" revision="4">
-    <title><literal>SQLQuery</literal> �̎g�p</title>
+    <title><literal>SQLQuery</literal> の使用</title>
 
-    <para>�l�C�e�B�u��SQL�N�G���̎��s�� <literal>SQLQuery</literal>
-    �C���^�[�t�F�C�X��ʂ��Đ��䂵�܂��B
-    <literal>SQLQuery</literal> �C���^�[�t�F�C�X��
-    <literal>Session.createSQLQuery()</literal> ���Ăяo���Ď擾���܂��B
-    ����API���g���Ė₢���킹������@���ȉ��Ő������܂��B</para>
+    <para>ネイティブなSQLクエリの実行は <literal>SQLQuery</literal>
+    インターフェイスを通して制御します。
+    <literal>SQLQuery</literal> インターフェイスは
+    <literal>Session.createSQLQuery()</literal> を呼び出して取得します。
+    このAPIを使って問い合わせする方法を以下で説明します。</para>
 
     <sect2>
-      <title>�X�J���[�̃N�G��</title>
+      <title>スカラーのクエリ</title>
 
-      <para>�ł���{�I��SQL�N�G���̓X�J���[�i�l�j�̃��X�g�𓾂邱�Ƃł��B</para>
+      <para>最も基本的なSQLクエリはスカラー（値）のリストを得ることです。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").list();
 sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
 ]]></programlisting>
 
-      <para>�����͂ǂ�����ACATS�e�[�u���̊e�J�����̃X�J���[�l���܂�
-      Object�z��iObject[]�j�̃��X�g��Ԃ��܂��B
-      �Ԃ��X�J���[�l�̎��ۂ̏��Ԃƌ^�𐄒肷�邽�߂ɁA
-      Hibernate��ResultSetMetadata���g�p���܂��B</para>
+      <para>これらはどちらも、CATSテーブルの各カラムのスカラー値を含む
+      Object配列（Object[]）のリストを返します。
+      返すスカラー値の実際の順番と型を推定するために、
+      HibernateはResultSetMetadataを使用します。</para>
 
-      <para><literal>ResultSetMetadata</literal> ���g�p����I�[�o�[�w�b�h������邽�߁A
-      �������͒P�ɉ����Ԃ���邩���m�ɂ��邽�߁A<literal>addScalar()</literal>
-      ���g���܂��B</para>
+      <para><literal>ResultSetMetadata</literal> を使用するオーバーヘッドを避けるため、
+      もしくは単に何が返されるか明確にするため、<literal>addScalar()</literal>
+      を使えます。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
  .addScalar("ID", Hibernate.LONG)
@@ -43,28 +45,28 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
  .addScalar("BIRTHDATE", Hibernate.DATE)
 ]]></programlisting>
 
-      <para>���̃N�G���Ŏw�肳��Ă�����̂����L�Ɏ����܂��B</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
       <itemizedlist>
         <listitem>
-          <para>SQL�N�G��������</para>
+          <para>SQLクエリ文字列</para>
         </listitem>
 
         <listitem>
-          <para>�Ԃ����J�����ƌ^</para>
+          <para>返されるカラムと型</para>
         </listitem>
       </itemizedlist>
 
-      <para>����͂܂�Object�z���Ԃ��܂����A
-      <literal>ResultSetMetdata</literal> ���g�p���܂���B
-      �������A���̑���Ɋ�b�ɂ��郊�U���g�Z�b�g����
-      ID�ANAME�ABIRTHDATE �J���������ꂼ��
-      Long�AString�AShort �Ƃ��Ė����I�Ɏ擾���܂��B
-      ����͂R�̃J������Ԃ��݂̂ł��邱�Ƃ��Ӗ����܂��B
-      ���Ƃ��A�N�G���� <literal>*</literal> ���g�p���A
-      �񋓂����R��葽���̃J������Ԃ���Ƃ��Ă��ł��B</para>
+      <para>これはまだObject配列を返しますが、
+      <literal>ResultSetMetdata</literal> を使用しません。
+      ただし、その代わりに基礎にあるリザルトセットから
+      ID、NAME、BIRTHDATE カラムをそれぞれ
+      Long、String、Short として明示的に取得します。
+      これは３つのカラムを返すのみであることも意味します。
+      たとえ、クエリが <literal>*</literal> を使用し、
+      列挙した３つより多くのカラムを返せるとしてもです。</para>
 
-      <para>�X�J���[�̌^�����Ȃ����Ƃ��ł��܂��B</para>
+      <para>スカラーの型情報を省くこともできます。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
  .addScalar("ID", Hibernate.LONG)
@@ -73,68 +75,68 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
 ]]></programlisting>
 
       <para>
-      ����͖{���I�ɑO�Ɠ����N�G���ł����A�A
-      NAME �� BIRTHDATE �̌^�����߂邽�߂� <literal>ResultSetMetaData</literal>
-      ���g�p���܂��B����AID �̌^�͖����I�Ɏw�肳��Ă��܂��B
+      これは本質的に前と同じクエリですが、、
+      NAME と BIRTHDATE の型を決めるために <literal>ResultSetMetaData</literal>
+      を使用します。一方、ID の型は明示的に指定されています。
       </para>
 
       <para>
-      ResultSetMetaData ����Ԃ���� java.sql.Types �� Hibernate �̌^��
-      �}�b�s���O���邱�Ƃ́ADialect �����䂵�܂��B
-      �������ꂽ�^���}�b�s���O����Ă��Ȃ����A���ʂ̌^�����҂������̂ƈقȂ�ꍇ�A
-      Dialect �� <literal>registerHibernateType</literal> ���Ăяo���A
-      �J�X�^�}�C�Y�ł��܂��B
+      ResultSetMetaData から返される java.sql.Types を Hibernate の型に
+      マッピングすることは、Dialect が制御します。
+      明示された型がマッピングされていないか、結果の型が期待したものと異なる場合、
+      Dialect の <literal>registerHibernateType</literal> を呼び出し、
+      カスタマイズできます。
       </para>
     </sect2>
 
     <sect2>
-      <title>�G���e�B�e�B�̃N�G��</title>
+      <title>エンティティのクエリ</title>
 
-      <para>�����܂ł̃N�G���́A���ׂăX�J���[�l��Ԃ����̂ł����B
-      ��{�I�ɁA���U���g�Z�b�g����u�����H�v�̒l��Ԃ��܂��B
-      �ȍ~�ł́A<literal>addEntity()</literal> �ɂ��A�l�C�e�B�uSQL�N�G������
-      �G���e�B�e�B�I�u�W�F�N�g���擾������@�������܂��B</para>
+      <para>ここまでのクエリは、すべてスカラー値を返すものでした。
+      基本的に、リザルトセットから「未加工」の値を返します。
+      以降では、<literal>addEntity()</literal> により、ネイティブSQLクエリから
+      エンティティオブジェクトを取得する方法を示します。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
 sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class);
 ]]></programlisting>
 
-      <para>���̃N�G���Ŏw�肳��Ă�����̂����L�Ɏ����܂��B</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
       <itemizedlist>
         <listitem>
-          <para>SQL�N�G��������</para>
+          <para>SQLクエリ文字列</para>
         </listitem>
 
         <listitem>
-          <para>�N�G�����Ԃ��G���e�B�e�B��SQL�e�[�u���̕ʖ�
+          <para>クエリが返すエンティティとSQLテーブルの別名
           </para>
         </listitem>
       </itemizedlist>
 
-      <para>Cat��ID, NAME, BIRTHDATE�̃J�������g���ăN���X�Ƀ}�b�s���O�����ꍇ�A
-      ��L�̃N�G���͂ǂ�����A�v�f��Cat�G���e�B�e�B�ł��郊�X�g��Ԃ��܂��B</para>
+      <para>CatがID, NAME, BIRTHDATEのカラムを使ってクラスにマッピングされる場合、
+      上記のクエリはどちらも、要素がCatエンティティであるリストを返します。</para>
 
-      <para>�G���e�B�e�B��ʂ̃G���e�B�e�B�� <literal>���Έ�</literal> �Ń}�b�s���O���Ă���ꍇ�́A
-      �l�C�e�B�u�N�G�������s����ۂɁA���̕ʂ̃G���e�B�e�B��Ԃ����Ƃ��v�����܂��B
-      �����Ȃ���΁A�f�[�^�x�[�X�ŗL�́ucolumn not found(�J������������܂���)�v�G���[���������܂��B
-      * �\�L���g�p�����ۂ́A�ǉ��̃J�����������I�ɕԂ���܂����A
-      ���̗�̂悤�ɁA<literal>Dog</literal> �� <literal>���Έ�</literal> �ł��邱�Ƃ�
-      �������邱�Ƃ��������͍D�݂܂��B</para>
+      <para>エンティティを別のエンティティに <literal>多対一</literal> でマッピングしている場合は、
+      ネイティブクエリを実行する際に、この別のエンティティを返すことも要求します。
+      さもなければ、データベース固有の「column not found(カラムが見つかりません)」エラーが発生します。
+      * 表記を使用した際は、追加のカラムが自動的に返されますが、
+      次の例のように、<literal>Dog</literal> に <literal>多対一</literal> であることを
+      明示することを私たちは好みます。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
 ]]></programlisting>
 
-      <para>����ɂ�� cat.getDog() ���������@�\���܂��B</para>
+      <para>これにより cat.getDog() が正しく機能します。</para>
     </sect2>
 
     <sect2>
-      <title>�֘A�ƃR���N�V�����̑���</title>
+      <title>関連とコレクションの操作</title>
 
-      <para>�v���L�V�����������邽�߂̗]���ȏ���������邽�߁A
-      <literal>Dog</literal> �̒��ő��������ł��܂��B
-      ����� <literal>addJoin()</literal> ���\�b�h�ɂ��s���܂��B
-      �֘A�������̓R���N�V�����Ɍ����ł��܂��B
+      <para>プロキシを初期化するための余分な処理を避けるため、
+      <literal>Dog</literal> の中で即時結合できます。
+      これは <literal>addJoin()</literal> メソッドにより行います。
+      関連もしくはコレクションに結合できます。
       </para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
@@ -142,79 +144,79 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
  .addJoin("cat.dog");
 ]]></programlisting>
 
-      <para>���̗�̒��ŁA�Ԃ���� <literal>Cat</literal> �́A
-      �f�[�^�x�[�X�ւ̗]�������Ȃ��ŁA
-      ���S�ɏ��������ꂽ <literal>dog</literal> �v���p�e�B�������܂��B
-      �����Ώۂ̃v���p�e�B�ւ̃p�X���w��ł���悤�ɁA
-      �ʖ��i�ucat�v�j��ǉ��������Ƃɒ��ӂ��Ă��������B
-      �R���N�V�����̑��������������悤�ɂł��܂��B
-      ���Ƃ��΁A<literal>Cat</literal> ����Α��� <literal>Dog</literal>
-      �������Ă����ꍇ�A���̂悤�ɂȂ�܂��B</para>
+      <para>この例の中で、返される <literal>Cat</literal> は、
+      データベースへの余分処理なしで、
+      完全に初期化された <literal>dog</literal> プロパティを持ちます。
+      結合対象のプロパティへのパスを指定できるように、
+      別名（「cat」）を追加したことに注意してください。
+      コレクションの即時結合も同じようにできます。
+      たとえば、<literal>Cat</literal> が一対多で <literal>Dog</literal>
+      を持っていた場合、次のようになります。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
  .addEntity("cat", Cat.class)
  .addJoin("cat.dogs");
 ]]></programlisting>
 
-      <para>���݂̂Ƃ���A
-      Hibernate�Ŏg���₷�����邽�߂�SQL�N�G���̊g���Ȃ��ɁA
-      �l�C�e�B�u�N�G���ŉ������\�ɂ�����E�ɗ��Ă��܂��B
-      �����^�̃G���e�B�e�B�𕡐��Ԃ��ۂ�A�f�t�H���g�̕ʖ���񖼂ŏ\���ł͂Ȃ��ꍇ�ɁA
-      ���͋N����n�߂܂��B      
+      <para>現在のところ、
+      Hibernateで使いやすくするためのSQLクエリの拡張なしに、
+      ネイティブクエリで何かを可能にする限界に来ています。
+      同じ型のエンティティを複数返す際や、デフォルトの別名や列名で十分ではない場合に、
+      問題は起こり始めます。      
       </para>
     </sect2>
 
     <sect2>
-      <title>�����G���e�B�e�B�̎擾</title>
+      <title>複数エンティティの取得</title>
 
-      <para>�����܂ł́A���U���g�Z�b�g�̃J�������́A
-      �}�b�s���O�t�@�C���Ŏw�肳�ꂽ�J�������Ɠ����ł���Ɖ��肵�Ă��܂����B
-      �����̃e�[�u���������J�����������ꍇ�����邽�߁A
-      �����e�[�u������������SQL�N�G���Ŗ��ƂȂ�ꍇ������܂��B</para>
+      <para>ここまでは、リザルトセットのカラム名は、
+      マッピングファイルで指定されたカラム名と同じであると仮定していました。
+      複数のテーブルが同じカラム名を持つ場合があるため、
+      複数テーブルを結合するSQLクエリで問題となる場合があります。</para>
 
-      <para>���L�̂悤�ȁi���s�������ȁj�N�G���ł́A
-      �J�����ʖ��C���W�F�N�V�����icolumn alias injection�j���K�v�ł��B</para>
+      <para>下記のような（失敗しそうな）クエリでは、
+      カラム別名インジェクション（column alias injection）が必要です。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
  .addEntity("cat", Cat.class)
  .addEntity("mother", Cat.class)
 ]]></programlisting>
 
-      <para>���̃N�G���̈Ӑ}�́A
-      �P�s���ƂɂQ��Cat�C���X�^���X�A�܂�L�Ƃ��̕�e��Ԃ��Ƃ������Ƃł��B
-      �����J�������Ƀ}�b�s���O���邱�Ƃɂ�薼�O���Փ˂��邽�߁A���̃N�G���͎��s���܂��B
-      �x�[�^�x�[�X�ɂ���ẮA�Ԃ����J�����̕ʖ��� "c.ID"�A"c.NAME" �Ȃǂ̌`���ł���A
-      �}�b�s���O�Ŏw�肳�ꂽ�J�����i"ID" �� "NAME"�j�Ɠ������Ȃ����߁A���s���܂��B</para>
+      <para>このクエリの意図は、
+      １行ごとに２つのCatインスタンス、つまり猫とその母親を返すということです。
+      同じカラム名にマッピングすることにより名前が衝突するため、このクエリは失敗します。
+      ベータベースによっては、返されるカラムの別名が "c.ID"、"c.NAME" などの形式であり、
+      マッピングで指定されたカラム（"ID" と "NAME"）と等しくないため、失敗します。</para>
 
 
-      <para>���L�̌`���́A�J���������d�����Ă����v�ł��B</para>
+      <para>下記の形式は、カラム名が重複しても大丈夫です。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
  .addEntity("cat", Cat.class)
  .addEntity("mother", Cat.class)
 ]]></programlisting>
 
-      <para>���̃N�G���Ŏw�肳��Ă�����̂����L�Ɏ����܂��B</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
       <itemizedlist>
         <listitem>
-          <para>SQL�N�G��������
-                �iHibernate���J�����̕ʖ���}�����邽�߂̃v���[�X�z���_���܂ށj</para>
+          <para>SQLクエリ文字列
+                （Hibernateがカラムの別名を挿入するためのプレースホルダを含む）</para>
         </listitem>
 
         <listitem>
-          <para>�N�G���ɂ���ĕԂ����G���e�B�e�B</para>
+          <para>クエリによって返されるエンティティ</para>
         </listitem>
       </itemizedlist>
 
-      <para>��L�Ŏg�p���Ă��� {cat.*} �� {mother.*} �Ƃ����\�L�́A
-      �u���ׂẴv���p�e�B�v��\���ȗ��`�ł��B
-      ����ɁA�����I�ɃJ������񋓂��Ă��悢�ł����A
-      ���̏ꍇ�́AHibernate�Ɋe�v���p�e�B�ɑΉ�����SQL�J�����̕ʖ���}��������ׂ��ł��傤�B
-      �J�����̕ʖ��̂��߂̃v���[�X�z���_�́A�e�[�u���̕ʖ��ɂ���ďC�����ꂽ�v���p�e�B���ł��B
-      ���L�̗�ł́A�ʂ̃e�[�u�� cat_log ����
-      �}�b�s���O���^�f�[�^�Œ�`���ꂽ Cat �Ƃ��̕�e�𕜌����܂��B
-      �����D�ނȂ�Awhere�߂̒��ł��A�v���p�e�B�̕ʖ����g���܂��B</para>
+      <para>上記で使用している {cat.*} と {mother.*} という表記は、
+      「すべてのプロパティ」を表す省略形です。
+      代わりに、明示的にカラムを列挙してもよいですが、
+      その場合は、Hibernateに各プロパティに対応するSQLカラムの別名を挿入させるべきでしょう。
+      カラムの別名のためのプレースホルダは、テーブルの別名によって修飾されたプロパティ名です。
+      下記の例では、別のテーブル cat_log から
+      マッピングメタデータで定義された Cat とその母親を復元します。
+      もし好むなら、where節の中でも、プロパティの別名を使えます。</para>
 
       <programlisting><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
          "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
@@ -226,19 +228,19 @@ List loggedCats = sess.createSQLQuery(sql)
 ]]></programlisting>
 
       <sect3 id="querysql-aliasreferences" revision="2">
-        <title>�ʖ��ƃv���p�e�B�̃��t�@�����X</title>
+        <title>別名とプロパティのリファレンス</title>
 
-        <para>�����̏ꍇ�A��L�̂悤�ȕʖ��C���W�F�N�V�������K�v�ł��B
-        �������A�����v���p�e�B�A�p�����ʎq�A�R���N�V�����Ȃǂ̂悤��
-        ��蕡�G�ȃ}�b�s���O�Ɗ֘A����N�G�����Ȃ���΂ł��B
-        �������̕ʖ����g�p���邱�Ƃɂ��AHibernate�͓K�؂ȕʖ���}���ł��܂��B</para>
+        <para>多くの場合、上記のような別名インジェクションが必要です。
+        ただし、複合プロパティ、継承識別子、コレクションなどのような
+        より複雑なマッピングと関連するクエリがなければです。
+        ある特定の別名を使用することにより、Hibernateは適切な別名を挿入できます。</para>
 
-        <para>�ʖ��C���W�F�N�V�����Ƃ��Ďg�p�ł�����̂����\�Ɏ����܂��B
-        ���ӁF���\�̕ʖ��͈��ł��B
-        ���ꂼ��̕ʖ��͈�ӂł���A�g�p����ۂɂ͂����炭�قȂ閼�O�������܂��B</para>
+        <para>別名インジェクションとして使用できるものを下表に示します。
+        注意：下表の別名は一例です。
+        それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ちます。</para>
  
         <table frame="topbot" id="aliasinjection-summary">
-          <title>�ʖ��ɑ}�����閼�O</title>
+          <title>別名に挿入する名前</title>
 
           <tgroup cols="3">
             <colspec colwidth="1*" />
@@ -249,60 +251,60 @@ List loggedCats = sess.createSQLQuery(sql)
 
             <thead>
               <row>
-                <entry>����</entry>
-                <entry>�\��</entry>
-                <entry>��</entry>
+                <entry>説明</entry>
+                <entry>構文</entry>
+                <entry>例</entry>
               </row>
             </thead>
             <tbody>
               <row>
-                <entry>�P���ȃv���p�e�B</entry>
+                <entry>単純なプロパティ</entry>
                 <entry><literal>{[aliasname].[propertyname]}</literal></entry>
                 <entry><literal>A_NAME as {item.name}</literal></entry>
               </row>
               <row>
-                <entry>�����v���p�e�B</entry>
+                <entry>複合プロパティ</entry>
                 <entry><literal>{[aliasname].[componentname].[propertyname]}</literal></entry>
                 <entry><literal>CURRENCY as {item.amount.currency}, VALUE as
                 {item.amount.value}</literal></entry>
               </row>
               <row>
-                <entry>�G���e�B�e�B�̃N���X�����ʂ���l</entry>
+                <entry>エンティティのクラスを識別する値</entry>
                 <entry><literal>{[aliasname].class}</literal></entry>
                 <entry><literal>DISC as {item.class}</literal></entry>
               </row>
               <row>
-                <entry>�G���e�B�e�B�̑S�v���p�e�B</entry>
+                <entry>エンティティの全プロパティ</entry>
                 <entry><literal>{[aliasname].*}</literal></entry>
                 <entry><literal>{item.*}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V�����̃L�[</entry>
+                <entry>コレクションのキー</entry>
                 <entry><literal>{[aliasname].key}</literal></entry>
                 <entry><literal>ORGID as {coll.key}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V������ID</entry>
+                <entry>コレクションのID</entry>
                 <entry><literal>{[aliasname].id}</literal></entry>
                 <entry><literal>EMPID as {coll.id}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V�����̗v�f</entry>
+                <entry>コレクションの要素</entry>
                 <entry><literal>{[aliasname].element}</literal></entry>
                 <entry><literal>XID as {coll.element}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V�����̗v�f�̃v���p�e�B</entry>
+                <entry>コレクションの要素のプロパティ</entry>
                 <entry><literal>{[aliasname].element.[propertyname]}</literal></entry>
                 <entry><literal>NAME as {coll.element.name}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V�����̗v�f�̑S�v���p�e�B</entry>
+                <entry>コレクションの要素の全プロパティ</entry>
                 <entry><literal>{[aliasname].element.*}</literal></entry>
                 <entry><literal>{coll.element.*}</literal></entry>
               </row>
               <row>
-                <entry>�R���N�V�����̑S�v���p�e�B</entry>
+                <entry>コレクションの全プロパティ</entry>
                 <entry><literal>{[aliasname].*}</literal></entry>
                 <entry><literal>{coll.*}</literal></entry>
               </row>
@@ -313,43 +315,43 @@ List loggedCats = sess.createSQLQuery(sql)
     </sect2>
 
     <sect2>
-      <title>�Ǘ�����Ă��Ȃ��G���e�B�e�B�̎擾</title>
+      <title>管理されていないエンティティの取得</title>
 
-      <para>�l�C�e�B�uSQL�N�G���� ResultTransformer ��K�p�ł��܂��B
-      ���L�̂悤�ɁA�Ⴆ�΁A�Ǘ�����Ă��Ȃ��G���e�B�e�B��Ԃ��܂��B</para>
+      <para>ネイティブSQLクエリに ResultTransformer を適用できます。
+      下記のように、例えば、管理されていないエンティティを返します。</para>
 
       <programlisting><![CDATA[sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
         .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]></programlisting>
 
-      <para>���̃N�G���Ŏw�肳��Ă�����̂����L�Ɏ����܂��B</para>
+      <para>このクエリで指定されているものを下記に示します。</para>
 
       <itemizedlist>
         <listitem>
-          <para>SQL�N�G��������</para>
+          <para>SQLクエリ文字列</para>
         </listitem>
 
         <listitem>
-          <para>���ʂ�ϊ���������</para>
+          <para>結果を変換したもの</para>
         </listitem>
       </itemizedlist>
 
-      <para>��L�̃N�G���́A�C���X�^���X�����ANAME �� BIRTHDATE �̒l��
-      �Ή�����v���p�e�B�������̓t�B�[���h�ɑ}������ <literal>CatDTO</literal>
-      �̃��X�g��Ԃ��܂��B</para>
+      <para>上記のクエリは、インスタンス化し、NAME と BIRTHDATE の値を
+      対応するプロパティもしくはフィールドに挿入した <literal>CatDTO</literal>
+      のリストを返します。</para>
     </sect2>
 
     <sect2>
-      <title>�p���̐���</title>
+      <title>継承の制御</title>
 
-      <para>�p���̈ꕔ�Ƃ��ă}�b�s���O���ꂽ�G���e�B�e�B��₢���킹��l�C�e�B�uSQL�N�G���́A
-      �x�[�X�̃N���X�Ƃ��̂��ׂẴT�u�N���X�̃v���p�e�B���ׂĂ��܂܂Ȃ���΂Ȃ�܂���B</para>
+      <para>継承の一部としてマッピングされたエンティティを問い合わせるネイティブSQLクエリは、
+      ベースのクラスとそのすべてのサブクラスのプロパティすべてを含まなければなりません。</para>
     </sect2>
 
     <sect2>
-      <title>�p�����[�^</title>
+      <title>パラメータ</title>
 
-      <para>�l�C�e�B�uSQL�N�G���́A�ȉ��̂悤�ɁA
-      ���O�t���p�����[�^�i:name�j�Ɠ��l�Ɉʒu�p�����[�^���T�|�[�g���܂��B</para>
+      <para>ネイティブSQLクエリは、以下のように、
+      名前付きパラメータ（:name）と同様に位置パラメータをサポートします。</para>
 
       <programlisting><![CDATA[Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
 List pusList = query.setString(0, "Pus%").list();
@@ -361,11 +363,11 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
   </sect1>
 
   <sect1 id="querysql-namedqueries" revision="3">
-    <title>���O�t��SQL�N�G��</title>
+    <title>名前付きSQLクエリ</title>
 
-    <para>���O�t��SQL�N�G���̓}�b�s���O�h�L�������g�Œ�`���邱�Ƃ��ł��A
-    ���O�t��HQL�N�G���ƑS���������@�ŌĂԂ��Ƃ��ł��܂��B
-    ���̏ꍇ�A<literal>addEntity()</literal> ���Ăяo���K�v�� <emphasis>�Ȃ�</emphasis> �ł��B</para>
+    <para>名前付きSQLクエリはマッピングドキュメントで定義することができ、
+    名前付きHQLクエリと全く同じ方法で呼ぶことができます。
+    この場合、<literal>addEntity()</literal> を呼び出す必要は <emphasis>ない</emphasis> です。</para>
 
     <programlisting><![CDATA[<sql-query name="persons">
     <return alias="person" class="eg.Person"/>
@@ -381,9 +383,9 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     .setMaxResults(50)
     .list();]]></programlisting>
 
-    <para>�֘A���������邽�߂ƃR���N�V����������������N�G�����`���邽�߂ɁA���ꂼ��
-    <literal>&lt;return-join&gt;</literal> �� <literal>&lt;load-collection&gt;</literal>
-    �v�f���g���܂��B</para>
+    <para>関連を結合するためとコレクションを初期化するクエリを定義するために、それぞれ
+    <literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</literal>
+    要素を使います。</para>
 
     <programlisting><![CDATA[<sql-query name="personsWith">
     <return alias="person" class="eg.Person"/>
@@ -401,9 +403,9 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
-    <para>���O�t��SQL�N�G���̓X�J���l��Ԃ����Ƃ��ł��܂��B
-    <literal>&lt;return-scalar&gt;</literal> �v�f���g���āA
-    ��̕ʖ���Hibernate�̌^��錾���Ȃ���΂Ȃ�܂���B</para>
+    <para>名前付きSQLクエリはスカラ値を返すこともできます。
+    <literal>&lt;return-scalar&gt;</literal> 要素を使って、
+    列の別名とHibernateの型を宣言しなければなりません。</para>
 
     <programlisting><![CDATA[<sql-query name="mySqlQuery">
     <return-scalar column="name" type="string"/>
@@ -414,10 +416,10 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
 </sql-query>]]></programlisting>
 
 
-    <para>���U���g�Z�b�g�̃}�b�s���O���� <literal>&lt;resultset&gt;</literal>
-    �ɊO�o�����邱�Ƃ��ł��܂��B
-    �����̖��O�t���N�G���ōė��p������A<literal>setResultSetMapping()</literal>
-    API��ʂ��čė��p������ł��܂��B
+    <para>リザルトセットのマッピング情報を <literal>&lt;resultset&gt;</literal>
+    に外出しすることができます。
+    複数の名前付きクエリで再利用したり、<literal>setResultSetMapping()</literal>
+    APIを通して再利用したりできます。
     </para>
 
     <programlisting><![CDATA[<resultset name="personAddress">
@@ -439,8 +441,8 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
-    <para>����ɁAhbm�t�@�C�����̃��U���g�Z�b�g�̃}�b�s���O����
-    ����Java�R�[�h�̒��Ŏg�p�ł��܂��B</para>
+    <para>代わりに、hbmファイル内のリザルトセットのマッピング情報を
+    直接Javaコードの中で使用できます。</para>
 
     <programlisting><![CDATA[List cats = sess.createSQLQuery(
         "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
@@ -449,11 +451,11 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     .list();]]></programlisting>
 
     <sect2 id="propertyresults">
-      <title>��Ɨ�̕ʖ��𖾎��I�Ɏw�肷�邽�߂� return-property ���g��</title>
+      <title>列と列の別名を明示的に指定するために return-property を使う</title>
 
-      <para>�ʖ���}�����邽�߂� <literal>{}</literal> �\�����g������ɁA
-      <literal>&lt;return-property&gt;</literal> ���g���A
-      �ǂ̗�̕ʖ����g���̂��𖾎��ł��܂��B</para>
+      <para>別名を挿入するために <literal>{}</literal> 構文を使う代わりに、
+      <literal>&lt;return-property&gt;</literal> を使い、
+      どの列の別名を使うのかを明示できます。</para>
 
       <programlisting><![CDATA[<sql-query name="mySqlQuery">
     <return alias="person" class="eg.Person">
@@ -468,9 +470,9 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
 </sql-query>
 ]]></programlisting>
 
-      <para><literal>&lt;return-property&gt;</literal> �͕����̗�������܂��B
-      ����́A������̃v���p�e�B�����ߍׂ�������ł��Ȃ��Ƃ����A
-      <literal>{}</literal> �\���̐������������܂��B</para>
+      <para><literal>&lt;return-property&gt;</literal> は複数の列も扱えます。
+      これは、複数列のプロパティをきめ細かく制御できないという、
+      <literal>{}</literal> 構文の制限を解決します。</para>
 
       <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
     <return alias="emp" class="Employment">
@@ -488,24 +490,24 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
         ORDER BY STARTDATE ASC
 </sql-query>]]></programlisting>
 
-      <para>���̗�ł́A�}���̂��߂� <literal>{}</literal> �\���Ƃ�������ɁA
-      <literal>&lt;return-property&gt;</literal> ���g���Ă��邱�Ƃɒ��ӂ��Ă��������B
-      ��ƃv���p�e�B���ǂ̂悤�ɎQ�Ƃ��邩��I�ׂ܂��B</para>
+      <para>この例では、挿入のための <literal>{}</literal> 構文といっしょに、
+      <literal>&lt;return-property&gt;</literal> を使っていることに注意してください。
+      列とプロパティをどのように参照するかを選べます。</para>
 
-      <para>�}�b�s���O�� discriminator ���܂܂�Ă���ꍇ�A
-      discriminator �̗���w�肷�邽�߂ɁA&lt;return-discriminator&gt;
-      ���g��Ȃ���΂Ȃ�܂���B</para>
+      <para>マッピングに discriminator が含まれている場合、
+      discriminator の列を指定するために、&lt;return-discriminator&gt;
+      を使わなければなりません。</para>
     </sect2>
 
     <sect2 id="sp_query" revision="1">
-      <title>�₢���킹���邽�߂ɃX�g�A�h�v���V�[�W�����g��</title>
+      <title>問い合わせするためにストアドプロシージャを使う</title>
 
-      <para>Hibernate�̓o�[�W����3����A�X�g�A�h�v���V�[�W���ƃX�g�A�h�֐��o�R�̖₢���킹��
-      �T�|�[�g����܂����B
-      �ȍ~�̕����̑����́A�����ɓ��Ă͂܂�܂��B
-      �X�g�A�h�v���V�[�W����X�g�A�h�֐���Hibernate�Ŏg�����߂ɂ́A
-      1�Ԗڂ̏o�̓p�����[�^�Ƃ��ă��U���g�Z�b�g��Ԃ��Ȃ���΂Ȃ�܂���B
-      Oracle 9�i�������͂���ȏ�̃o�[�W�����j�̃X�g�A�h�v���V�[�W���̗���ȉ��Ɏ����܂��B</para>
+      <para>Hibernateはバージョン3から、ストアドプロシージャとストアド関数経由の問い合わせが
+      サポートされました。
+      以降の文書の多くは、両方に当てはまります。
+      ストアドプロシージャやストアド関数をHibernateで使うためには、
+      1番目の出力パラメータとしてリザルトセットを返さなければなりません。
+      Oracle 9（もしくはそれ以上のバージョン）のストアドプロシージャの例を以下に示します。</para>
 
       <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
     RETURN SYS_REFCURSOR
@@ -520,8 +522,8 @@ BEGIN
       RETURN  st_cursor;
  END;]]></programlisting>
 
-      <para>Hibernate�ł��̃N�G�����g�����߂ɂ́A
-      ���O�t���N�G���Ń}�b�s���O����K�v������܂��B</para>
+      <para>Hibernateでこのクエリを使うためには、
+      名前付きクエリでマッピングする必要があります。</para>
 
       <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
     <return alias="emp" class="Employment">
@@ -539,57 +541,57 @@ BEGIN
     { ? = call selectAllEmployments() }
 </sql-query>]]></programlisting>
 
-      <para>���ӁF���̂Ƃ���A�X�g�A�h�v���V�[�W���̓X�J���ƃG���e�B�e�B��Ԃ��݂̂ł��B
-      <literal>&lt;return-join&gt;</literal> �� <literal>&lt;load-collection&gt;</literal>
-      �̓T�|�[�g����Ă��܂���B</para>
+      <para>注意：今のところ、ストアドプロシージャはスカラとエンティティを返すのみです。
+      <literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</literal>
+      はサポートされていません。</para>
 
       <sect3 id="querysql-limits-storedprocedures" revision="1">
-        <title>�X�g�A�h�v���V�[�W�����g����ł̃��[���Ɛ���</title>
+        <title>ストアドプロシージャを使う上でのルールと制限</title>
 
-        <para>Hibernate�ŃX�g�A�h�v���V�[�W����֐����g�����߂ɂ́A
-        ���̃v���V�[�W���͂������̃��[���ɏ�������K�v������܂��B
-        ���[���ɏ������Ă��Ȃ��v���V�[�W���́AHibernate�Ŏg�����Ƃ͂ł��܂���B
-        ����ł��A�������Ă��Ȃ��v���V�[�W�����g�������̂ł���΁A
-        <literal>session.connection()</literal> ��ʂ��Ď��s���Ȃ���΂Ȃ�܂���B
-        ���[���̓f�[�^�x�[�X���ƂɈقȂ�܂��B
-        �X�g�A�h�v���V�[�W���̃Z�}���e�B�b�N�X�ƃV���^�b�N�X�́A
-        �f�[�^�x�[�X�x���_���ƂɈقȂ邽�߂ł��B</para>
+        <para>Hibernateでストアドプロシージャや関数を使うためには、
+        そのプロシージャはいくつかのルールに準拠する必要があります。
+        ルールに準拠していないプロシージャは、Hibernateで使うことはできません。
+        それでも、準拠していないプロシージャを使いたいのであれば、
+        <literal>session.connection()</literal> を通じて実行しなければなりません。
+        ルールはデータベースごとに異なります。
+        ストアドプロシージャのセマンティックスとシンタックスは、
+        データベースベンダごとに異なるためです。</para>
 
-        <para><literal>setFirstResult()/setMaxResults()</literal> ���g���āA
-        �X�g�A�h�v���V�[�W���N�G�����y�[�W�������邱�Ƃ͂ł��܂���B</para>
+        <para><literal>setFirstResult()/setMaxResults()</literal> を使って、
+        ストアドプロシージャクエリをページ分けすることはできません。</para>
 
-        <para>��������Ăяo�����́A�W���ł���SQL92�ɏ]�����Ƃł��B
-        <literal>{ ? = call functionName(&lt;parameters&gt;) }</literal> ��
-        <literal>{ ? = call procedureName(&lt;parameters&gt;) }</literal> �ł��B
-        �l�C�e�B�u�ȌĂяo���\���̓T�|�[�g����Ă��܂���B</para>
+        <para>推奨する呼び出し方は、標準であるSQL92に従うことです。
+        <literal>{ ? = call functionName(&lt;parameters&gt;) }</literal> や
+        <literal>{ ? = call procedureName(&lt;parameters&gt;) }</literal> です。
+        ネイティブな呼び出し構文はサポートされていません。</para>
 
-        <para>Oracle�ɂ͉��L�̃��[�����K�p����܂��B</para>
+        <para>Oracleには下記のルールが適用されます。</para>
 
         <itemizedlist spacing="compact">
           <listitem>
-            <para>�֐��̓��U���g�Z�b�g��Ԃ��Ȃ���΂Ȃ�܂���B
-            �v���V�[�W���̑������̓��U���g�Z�b�g��Ԃ����߁A
-            <literal>OUT</literal> �łȂ���΂Ȃ�܂���B
-            Oracle 9��10�ł́A<literal>SYS_REFCURSOR</literal> ���g�����Ƃɂ���Ăł��܂��B
-            Oracle�ł� <literal>REF CURSOR</literal> �^���`����K�v������܂��B
-            Oracle�̕������Q�Ƃ��Ă��������B</para>
+            <para>関数はリザルトセットを返さなければなりません。
+            プロシージャの第一引数はリザルトセットを返すため、
+            <literal>OUT</literal> でなければなりません。
+            Oracle 9と10では、<literal>SYS_REFCURSOR</literal> を使うことによってできます。
+            Oracleでは <literal>REF CURSOR</literal> 型を定義する必要があります。
+            Oracleの文献を参照してください。</para>
           </listitem>
         </itemizedlist>
 
-        <para>Sybase��MS SQL�T�[�o�[�ɓK�p����郋�[�������L�Ɏ����܂��B</para>
+        <para>SybaseとMS SQLサーバーに適用されるルールを下記に示します。</para>
 
         <itemizedlist spacing="compact">
           <listitem>
-            <para>�v���V�[�W���̓��U���g�Z�b�g��Ԃ��Ȃ���΂Ȃ�܂���B
-            �T�[�o�[�͕����̃��U���g�Z�b�g�ƍX�V�J�E���g��Ԃ��܂����A
-            Hibernate��1�ڂ̃��U���g�Z�b�g������Ԃ����Ƃɒ��ӂ��Ă��������B
-            ���̑��͂��ׂĎ̂Ă��܂��B</para>
+            <para>プロシージャはリザルトセットを返さなければなりません。
+            サーバーは複数のリザルトセットと更新カウントを返しますが、
+            Hibernateは1つ目のリザルトセットだけを返すことに注意してください。
+            その他はすべて捨てられます。</para>
           </listitem>
 
           <listitem>
-            <para>�v���V�[�W���̒��� <literal>SET NOCOUNT ON</literal> ��L���ɂł���΁A
-            �����炭�������悭�Ȃ�ł��傤�B
-            �������A����͕K�v�����ł͂���܂���B</para>
+            <para>プロシージャの中で <literal>SET NOCOUNT ON</literal> を有効にできれば、
+            おそらく効率がよくなるでしょう。
+            しかし、これは必要条件ではありません。</para>
           </listitem>
         </itemizedlist>
       </sect3>
@@ -597,15 +599,15 @@ BEGIN
   </sect1>
 
   <sect1 id="querysql-cud">
-    <title>�쐬�A�X�V�A�폜�̂��߂̃J�X�^��SQL</title>
+    <title>作成、更新、削除のためのカスタムSQL</title>
 
-    <para>Hibernate3�͍쐬�A�X�V�A�폜�����̂��߂̃J�X�^��SQL�����g�p�ł��܂��B
-    �N���X�ƃR���N�V�����̉i�����@�\�́A�R���t�B�O���[�V�������ɐ������ꂽ������
-    �iinsertsql�Adeletesql�Aupdatesql�Ȃǁj�̃Z�b�g�����łɕێ����Ă��܂��B
-    �����̕�������A
-    <literal>&lt;sql-insert&gt;</literal>�A
-    <literal>&lt;sql-delete&gt;</literal>�A
-    <literal>&lt;sql-update&gt;</literal> �Ƃ����}�b�s���O�^�O���D�悳��܂��B</para>
+    <para>Hibernate3は作成、更新、削除処理のためのカスタムSQL文を使用できます。
+    クラスとコレクションの永続化機構は、コンフィグレーション時に生成された文字列
+    （insertsql、deletesql、updatesqlなど）のセットをすでに保持しています。
+    これらの文字列より、
+    <literal>&lt;sql-insert&gt;</literal>、
+    <literal>&lt;sql-delete&gt;</literal>、
+    <literal>&lt;sql-update&gt;</literal> というマッピングタグが優先されます。</para>
 
     <programlisting><![CDATA[<class name="Person">
     <id name="id">
@@ -617,11 +619,11 @@ BEGIN
     <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>
 </class>]]></programlisting>
 
-    <para>SQL�𒼐ڃf�[�^�x�[�X�Ŏ��s���邽�߁A�D�݂̕��������R�Ɏg�p�ł��܂��B
-    �f�[�^�x�[�X�Ǝ���SQL���g���΁A���R�}�b�s���O�̃|�[�^�r���e�B��������܂��B</para>
+    <para>SQLを直接データベースで実行するため、好みの方言を自由に使用できます。
+    データベース独自のSQLを使えば、当然マッピングのポータビリティが下がります。</para>
 
-    <para><literal>callable</literal> �������Z�b�g����΁A
-    �X�g�A�h�v���V�[�W�����g�p�ł��܂��B</para>
+    <para><literal>callable</literal> 属性をセットすれば、
+    ストアドプロシージャを使用できます。</para>
 
     <programlisting><![CDATA[<class name="Person">
     <id name="id">
@@ -633,21 +635,21 @@ BEGIN
     <sql-update callable="true">{? = call updatePerson (?, ?)}</sql-update>
 </class>]]></programlisting>
 
-    <para>���̂Ƃ���A�ʒu�p�����[�^�̏��Ԃ͂ƂĂ��d�v�ł��B
-    ���Ȃ킿�AHibernate�����҂��鏇���łȂ���΂Ȃ�܂���B</para>
+    <para>今のところ、位置パラメータの順番はとても重要です。
+    すなわち、Hibernateが期待する順序でなければなりません。</para>
 
-    <para><literal>org.hiberante.persister.entity</literal> ���x���̃f�o�b�O���O��
-    �L���ɂ��邱�Ƃɂ���āA���҂���鏇�Ԃ��m���߂��܂��B
-    ���̃��x����L���ɂ��邱�Ƃɂ��A�G���e�B�e�B�̍쐬�A�X�V�A�폜�Ȃǂ�
-    �g�p�����ÓI��SQL���o�͂���܂��B
-    �i���҂���鏇�����m�F���邽�߂ɂ́AHibernate����������ÓI��SQL���I�[�o�[���C�h����
-    �J�X�^��SQL���}�b�s���O�t�@�C���Ɋ܂߂Ȃ����Ƃ�Y��Ȃ��ł��������B�j</para>
+    <para><literal>org.hiberante.persister.entity</literal> レベルのデバッグログを
+    有効にすることによって、期待される順番を確かめられます。
+    このレベルを有効にすることにより、エンティティの作成、更新、削除などで
+    使用される静的なSQLが出力されます。
+    （期待される順序を確認するためには、Hibernateが生成する静的なSQLをオーバーライドする
+    カスタムSQLをマッピングファイルに含めないことを忘れないでください。）</para>
 
-    <para>�X�g�A�h�v���V�[�W���͑}��/�X�V/�폜���ꂽ�s����Ԃ��K�v������܂�
-    �i�ǂݍ��݂̏ꍇ�́A�Ԃ��Ȃ����͕Ԃ������悢�ł��j�B
-    ���s����Hibernate��SQL���̐������`�F�b�N���邩��ł��B
-    Hibernate�́ACUD�����̂��߂̐��l�̏o�̓p�����[�^�Ƃ��āA
-    SQL���̍ŏ��̃p�����[�^�������L�^���܂��B</para>
+    <para>ストアドプロシージャは挿入/更新/削除された行数を返す必要があります
+    （読み込みの場合は、返さないよりは返す方がよいです）。
+    実行時にHibernateがSQL文の成功をチェックするからです。
+    Hibernateは、CUD処理のための数値の出力パラメータとして、
+    SQL文の最初のパラメータをいつも記録します。</para>
 
     <programlisting><![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
     RETURN NUMBER IS
@@ -665,9 +667,9 @@ END updatePerson;]]></programlisting>
   </sect1>
 
   <sect1 id="querysql-load">
-    <title>���[�h�̂��߂̃J�X�^��SQL</title>
+    <title>ロードのためのカスタムSQL</title>
 
-    <para>�G���e�B�e�B��ǂݍ��ނ��߂̓Ǝ���SQL�i��������HQL�j�N�G�����錾�ł��܂��B</para>
+    <para>エンティティを読み込むための独自のSQL（もしくはHQL）クエリも宣言できます。</para>
 
     <programlisting><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person" lock-mode="upgrade"/>
@@ -677,8 +679,8 @@ END updatePerson;]]></programlisting>
     FOR UPDATE
 </sql-query>]]></programlisting>
 
-    <para>����́A�܂��Ɂi�ȑO�c�_�����j���O�t���N�G���̐錾�ł��B
-    ���̖��O�t���N�G�����N���X�̃}�b�s���O����Q�Ƃł��܂��B</para>
+    <para>これは、まさに（以前議論した）名前付きクエリの宣言です。
+    この名前付きクエリをクラスのマッピングから参照できます。</para>
 
     <programlisting><![CDATA[<class name="Person">
     <id name="id">
@@ -689,9 +691,9 @@ END updatePerson;]]></programlisting>
 </class>]]></programlisting>
     
 
-    <para>����̓X�g�A�h�v���V�[�W���ł��������삵�܂��B</para>
+    <para>これはストアドプロシージャでさえも動作します。</para>
 
-    <para>���̂悤�ɁA�R���N�V���������[�h���邽�߂̃N�G��������`���Ă悢�ł��B</para>
+    <para>次のように、コレクションをロードするためのクエリさえ定義してよいです。</para>
 
     <programlisting><![CDATA[<set name="employments" inverse="true">
     <key/>
@@ -707,8 +709,8 @@ END updatePerson;]]></programlisting>
     ORDER BY STARTDATE ASC, EMPLOYEE ASC
 </sql-query>]]></programlisting>
 
-    <para>���̂悤�ɁA�����t�F�b�`�ɂ��R���N�V���������[�h����
-    �G���e�B�e�B���[�_�[���`�ł��܂��B</para>
+    <para>次のように、結合フェッチによりコレクションをロードする
+    エンティティローダーを定義できます。</para>
 
     <programlisting><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person"/>

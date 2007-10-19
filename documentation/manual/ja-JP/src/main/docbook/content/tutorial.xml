@@ -1,53 +1,55 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="tutorial">
-    <title>Hibernate�̓���</title>
+    <title>Hibernateの導入</title>
     
     <sect1 id="tutorial-intro" revision="1">
-        <title>�O����</title>
+        <title>前書き</title>
         
         <para>
-            ���̏͂�Hibernate�����߂Ďg�����[�U�����̓���I�ȃ`���[�g���A���ł��B
-            �C���������f�[�^�x�[�X���g���ȒP�ȃR�}���h���C���A�v���P�[�V��������n�߁A
-            �������킩��₷�������ŊJ����i�߂܂��B
+            この章はHibernateを初めて使うユーザ向けの入門的なチュートリアルです。
+            インメモリデータベースを使う簡単なコマンドラインアプリケーションから始め、
+            一歩一歩わかりやすいやり方で開発を進めます。
         </para>
 
         <para>
-            ���̃`���[�g���A����Hibernate�����߂Ďg�����[�U��z�肵�Ă��܂����A
-            ��������ɂ�Java��SQL�ɂ��Ă̒m�����K�v�ł��B
-            �����Michael Gloegl�̎�ɂ��`���[�g���A�������~���ɂ��Ă��܂����A
-            �����ŃT�[�h�p�[�e�B���C�u�����ƌ����Ă���̂́AJDK 1.4��5.0�p�̂��̂ł��B
-            JDK 1.3�𗘗p����̂ł���Α��̃��C�u�������K�v��������܂���B
+            このチュートリアルはHibernateを初めて使うユーザを想定していますが、
+            理解するにはJavaとSQLについての知識が必要です。
+            これはMichael Gloeglの手によるチュートリアルを下敷きにしていますが、
+            ここでサードパーティライブラリと言っているのは、JDK 1.4と5.0用のものです。
+            JDK 1.3を利用するのであれば他のライブラリが必要かもしれません。
         </para>
 
         <para>
-             �`���[�g���A���̃\�[�X�R�[�h��Hibernate�f�B�X�g���r���[�V������ 
-             <literal>doc/reference/tutorial/</literal> �ɂ���܂��B
+             チュートリアルのソースコードはHibernateディストリビューションの 
+             <literal>doc/reference/tutorial/</literal> にあります。
         </para>
 
     </sect1>
     
     <sect1 id="tutorial-firstapp" revision="2">
-        <title>�p�[�g1 - ���߂Ă�Hibernate�A�v���P�[�V����</title>
+        <title>パート1 - 初めてのHibernateアプリケーション</title>
 
         <para>
-            �ŏ��ɃR���\�[���x�[�X�̊ȒP��Hibernate�A�v���P�[�V�������쐬���܂��B
-            Java�f�[�^�x�[�X�iHSQL DB�j�𗘗p����̂ŁA
-            �f�[�^�x�[�X�T�[�o���C���X�g�[������K�v�͂���܂���B
+            最初にコンソールベースの簡単なHibernateアプリケーションを作成します。
+            Javaデータベース（HSQL DB）を利用するので、
+            データベースサーバをインストールする必要はありません。
         </para>
 
         <para>
-            ���ɏ����ȃf�[�^�x�[�X�A�v���P�[�V�������K�v���Ƃ��܂��傤�B
-            ���̃A�v���P�[�V�����ɂ͏o�Ȃ������C�x���g�ƁA
-            ���̃C�x���g�̃z�X�g�ɂ��Ă̏����i�[������̂Ƃ��܂��B
+            仮に小さなデータベースアプリケーションが必要だとしましょう。
+            そのアプリケーションには出席したいイベントと、
+            そのイベントのホストについての情報を格納するものとします。
         </para>
             
         <para>
-            �܂��ŏ��ɂ��邱�Ƃ͊J���p�̃f�B���N�g�����Z�b�g�A�b�v���āA
-            �K�v�ƂȂ邷�ׂĂ�Java���C�u������z�u���邱�Ƃł��B
-            Hibernate�E�F�u�T�C�g����Hibernate�f�B�X�g���r���[�V�������_�E�����[�h���Ă��������B
-            �t�@�C�����𓀂��� <literal>/lib</literal> �ɂ���K�v�ȃ��C�u�����̂��ׂĂ��A
-            �V�����J���p�f�B���N�g���� <literal>/lib</literal> �f�B���N�g���ɔz�u���Ă��������B
-            ���̂悤�ɂȂ��Ă���͂��ł��F
+            まず最初にすることは開発用のディレクトリをセットアップして、
+            必要となるすべてのJavaライブラリを配置することです。
+            HibernateウェブサイトからHibernateディストリビューションをダウンロードしてください。
+            ファイルを解凍して <literal>/lib</literal> にある必要なライブラリのすべてを、
+            新しい開発用ディレクトリの <literal>/lib</literal> ディレクトリに配置してください。
+            このようになっているはずです：
         </para>
             
         <programlisting><![CDATA[.
@@ -64,24 +66,24 @@
   log4j.jar ]]></programlisting>
 
         <para>
-            ���ꂪ <emphasis>�{�h�L�������g���M���_�ł�</emphasis> Hibernate�̕K�v�Œ���̃��C�u�����ł�
-            �i���C���A�[�J�C�u��hibernate3.jar���R�s�[���Ă��邱�Ƃɒ��ӂ��Ă��������j�B
-            Hibernate�̃o�[�W�����ɂ���Ă͂���ɕK�v�ȃ��C�u������A�s�v�ȃ��C�u���������邩������܂���B
-            Hibernate�f�B�X�g���r���[�V������ <literal>lib/</literal> �f�B���N�g���ɂ��� 
-            <literal>README.txt</literal> �t�@�C�������Ă��������B
-            �K�{�܂��̓I�v�V�����̃T�[�h�p�[�e�B���C�u�����ɂ��Ă̏����ڂ��Ă��܂�
-            �i����Log4j�͕K�{�ł͂���܂��񂪁A�����̊J���҂��D��ł��܂��j�B
+            これが <emphasis>本ドキュメント執筆時点での</emphasis> Hibernateの必要最低限のライブラリです
+            （メインアーカイブのhibernate3.jarもコピーしていることに注意してください）。
+            Hibernateのバージョンによってはさらに必要なライブラリや、不要なライブラリがあるかもしれません。
+            Hibernateディストリビューションの <literal>lib/</literal> ディレクトリにある 
+            <literal>README.txt</literal> ファイルを見てください。
+            必須またはオプションのサードパーティライブラリについての情報を載せています
+            （実際Log4jは必須ではありませんが、多くの開発者が好んでいます）。
         </para>
 
         <para>
-            ���Ƀf�[�^�x�[�X�Ɋi�[����C�x���g��\���N���X���쐬���܂��B
+            次にデータベースに格納するイベントを表すクラスを作成します。
         </para>
       
         <sect2 id="tutorial-firstapp-firstclass" revision="1">
-            <title>�ŏ��̃N���X</title>
+            <title>最初のクラス</title>
             
             <para>
-				�ŏ��̉i���N���X�́A�v���p�e�B�����������V���v����JavaBean�ł��F
+				最初の永続クラスは、プロパティをいくつか持つシンプルなJavaBeanです：
             </para>
 
             <programlisting><![CDATA[package events;
@@ -122,42 +124,42 @@ public class Event {
 }]]></programlisting>
 
             <para>
-                �����̂Ƃ���A���̃N���X�̓t�B�[���h��private�̉����������Ă���̂Ɠ����ɁA
-                JavaBean�W���̃Q�b�^�[�A�Z�b�^�[���\�b�h�̖����K��ɏ]���Ă��܂��B
-                ���̂悤�Ȑ݌v�͐�������Ă��܂����K�{�ł͂���܂���B
-                �A�N�Z�T���\�b�h��݂���̂̓��t�@�N�^�����O���l�����挒���̂��߂ŁA
-                Hibernate�̓t�B�[���h�ɒ��ڃA�N�Z�X���邱�Ƃ��\�ł��B
-                �����̂Ȃ��R���X�g���N�^�́A���t���N�V�����ł��̃N���X�̃C���X�^���X���쐬���邽�߂�
-                �K�v�ł��B
+                ご覧のとおり、このクラスはフィールドがprivateの可視性を持っているのと同時に、
+                JavaBean標準のゲッター、セッターメソッドの命名規約に従っています。
+                このような設計は推奨されていますが必須ではありません。
+                アクセサメソッドを設けるのはリファクタリングを考えた頑健性のためで、
+                Hibernateはフィールドに直接アクセスすることも可能です。
+                引数のないコンストラクタは、リフレクションでこのクラスのインスタンスを作成するために
+                必要です。
             </para>
 
             <para>
-                <literal>id</literal> �v���p�e�B�́A�������̃C�x���g�ɑ΂��郆�j�[�N�Ȏ��ʎq�̒l��ێ����܂��B
-                Hibernate�̊��S�ȋ@�\���g��������΁A���ׂẲi���G���e�B�e�B�N���X
-                �i����قǏd�v�ł͂Ȃ��ˑ��N���X�Ƃ������̂�����܂��j
-                �ɂ��̂悤�Ȏ��ʎq�v���p�e�B���K�v�ɂȂ�܂��B
-                ������قƂ�ǂ̃A�v���P�[�V�����i����web�A�v���P�[�V�����j�ł́A
-                ���ʎq�ŃI�u�W�F�N�g����ʂ���K�v�����邽�߁A����͐����Ƃ������������ł���ƍl����ׂ��ł��B
-                �������ʏ�I�u�W�F�N�g��ID�𑀍삷��悤�Ȃ��Ƃ͂��܂���B
-                ���̂��߃Z�b�^�[���\�b�h��private�ɂ���ׂ��ł��B
-                Hibernate�������I�u�W�F�N�g���Z�[�u���ꂽ�Ƃ��Ɏ��ʎq�֒l�������܂��B
-                Hibernate���ipublic, private, protected�j�t�B�[���h�ɒ��ڃA�N�Z�X�ł���̂Ɠ��l�ɁA
-                public, private, protected�̃A�N�Z�T���\�b�h�ɃA�N�Z�X�ł���Ƃ������Ƃ��킩��ł��傤�B
-                �I���͂��Ȃ��ɔC����Ă���̂ŁA���Ȃ��̃A�v���P�[�V�����̐݌v�ɍ��킹�邱�Ƃ��ł��܂��B
+                <literal>id</literal> プロパティは、ある特定のイベントに対するユニークな識別子の値を保持します。
+                Hibernateの完全な機能を使いたければ、すべての永続エンティティクラス
+                （それほど重要ではない依存クラスというものもあります）
+                にこのような識別子プロパティが必要になります。
+                事実上ほとんどのアプリケーション（特にwebアプリケーション）では、
+                識別子でオブジェクトを区別する必要があるため、これは制限というよりも特徴であると考えるべきです。
+                しかし通常オブジェクトのIDを操作するようなことはしません。
+                そのためセッターメソッドはprivateにするべきです。
+                Hibernateだけがオブジェクトがセーブされたときに識別子へ値を代入します。
+                Hibernateが（public, private, protected）フィールドに直接アクセスできるのと同様に、
+                public, private, protectedのアクセサメソッドにアクセスできるということがわかるでしょう。
+                選択はあなたに任されているので、あなたのアプリケーションの設計に合わせることができます。
             </para>
 
             <para>
-                �����̂Ȃ��R���X�g���N�^�͂��ׂẲi���N���X�ɕK�{�ł��B
-                �����Hibernate��Java�̃��t���N�V�������g���āA�I�u�W�F�N�g���쐬���Ȃ���΂Ȃ�Ȃ����߂ł��B
-                �R���X�g���N�^��private�ɂ��邱�Ƃ͉\�ł����A
-                ���s���̃v���L�V�����ƁA�o�C�g�R�[�h����Ȃ��̌����I�ȃf�[�^�̒��o�ɂ́A
-                package�������K�v�ł��B
+                引数のないコンストラクタはすべての永続クラスに必須です。
+                これはHibernateがJavaのリフレクションを使って、オブジェクトを作成しなければならないためです。
+                コンストラクタをprivateにすることは可能ですが、
+                実行時のプロキシ生成と、バイトコード操作なしの効率的なデータの抽出には、
+                package可視性が必要です。
             </para>
 
             <para>
-                �J���t�H���_�� <literal>src</literal> �Ƃ����f�B���N�g���̓K�؂ȃp�b�P�[�W�ɁA
-                ����Java�\�[�X�t�@�C����z�u���Ă��������B
-                ���̎��_�Ńf�B���N�g���͈ȉ��̂悤�ɂȂ��Ă���͂��ł��F
+                開発フォルダの <literal>src</literal> というディレクトリの適切なパッケージに、
+                このJavaソースファイルを配置してください。
+                この時点でディレクトリは以下のようになっているはずです：
             </para>
 
             <programlisting><![CDATA[.
@@ -168,23 +170,23 @@ public class Event {
     Event.java]]></programlisting>
 
             <para>
-                ���̃X�e�b�v�ł́AHibernate�ɂ��̉i���N���X�̏��������܂��B
+                次のステップでは、Hibernateにこの永続クラスの情報を教えます。
             </para>
                 
         </sect2>
 
         <sect2 id="tutorial-firstapp-mapping" revision="1">
-            <title>�}�b�s���O�t�@�C��</title>
+            <title>マッピングファイル</title>
 
             <para>
-                Hibernate�́A�ǂ̂悤�ɉi���N���X�̃I�u�W�F�N�g�����[�h���i�[����΂悢����m��K�v������܂��B
-                ������Hibernate�}�b�s���O�t�@�C�����o�ꂵ�܂��B
-                �}�b�s���O�t�@�C���́A�f�[�^�x�[�X���̂ǂ̃e�[�u���ɃA�N�Z�X���Ȃ���΂Ȃ�Ȃ����A
-                ���̃e�[�u���̂ǂ̃J�������g���ׂ������AHibernate�ɋ����܂��B
+                Hibernateは、どのように永続クラスのオブジェクトをロードし格納すればよいかを知る必要があります。
+                ここでHibernateマッピングファイルが登場します。
+                マッピングファイルは、データベース内のどのテーブルにアクセスしなければならないか、
+                そのテーブルのどのカラムを使うべきかを、Hibernateに教えます。
             </para>
 
             <para>
-                �}�b�s���O�t�@�C���̊�{�I�ȍ\���͂��̂悤�ɂȂ�܂��F
+                マッピングファイルの基本的な構造はこのようになります：
             </para>
 
             <programlisting><![CDATA[<?xml version="1.0"?>
@@ -197,28 +199,28 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                Hibernate DTD�����ɐ�������Ă��邱�Ƃɒ��ڂ��Ă��������B
-                ����DTD�́A�G�f�B�^��IDE�ł�XML�}�b�s���O�v�f�Ƒ����̃I�[�g�R���v���[�V�����@�\�ɗ��p�ł��܂��B
-                �܂�DTD�t�@�C�����e�L�X�g�G�f�B�^�ŊJ���Ă݂Ă��������B
-                �Ƃ����̂��A���ׂĂ̗v�f�Ƒ������T�ς��A
-                �R�����g��f�t�H���g�̒l������ɂ͈�ԊȒP�ȕ��@������ł��B
-                Hibernate�́Aweb����DTD�t�@�C�������[�h�����ɁA
-                �܂��A�v���P�[�V�����̃N���X�p�X���炱���T���o�����Ƃ��邱�Ƃɒ��ӂ��Ă��������B
-                DTD�t�@�C����Hibernate�f�B�X�g���r���[�V������ <literal>src/</literal> 
-                �f�B���N�g���Ɠ��l�A<literal>hibernate3.jar</literal> �ɂ��܂܂�Ă��܂��B
+                Hibernate DTDが非常に洗練されていることに注目してください。
+                このDTDは、エディタやIDEでのXMLマッピング要素と属性のオートコンプリーション機能に利用できます。
+                またDTDファイルをテキストエディタで開けてみてください。
+                というのも、すべての要素と属性を概観し、
+                コメントやデフォルトの値を見るには一番簡単な方法だからです。
+                Hibernateは、webからDTDファイルをロードせずに、
+                まずアプリケーションのクラスパスからこれを探し出そうとすることに注意してください。
+                DTDファイルはHibernateディストリビューションの <literal>src/</literal> 
+                ディレクトリと同様、<literal>hibernate3.jar</literal> にも含まれています。
             </para>
 
             <para>
-                �ȍ~�̗�ł̓R�[�h��Z�����邽�߂�DTD�錾���ȗ����܂��B
-                ���R�ł�������̓I�v�V�����ł͂���܂���B
+                以降の例ではコードを短くするためにDTD宣言を省略します。
+                当然ですがこれはオプションではありません。
             </para>
 
             <para>
-                2�� <literal>hibernate-mapping</literal> �^�O�̊Ԃ�
-                <literal>class</literal> �v�f���܂߂Ă��������B
-                ���ׂẲi���G���e�B�e�B�N���X�i�O�������܂����A
-                �t�@�[�X�g�N���X�̃G���e�B�e�B�ł͂Ȃ��ˑ��N���X�Ƃ������̂���قǓo�ꂵ�܂��j
-                ��SQL�f�[�^�x�[�X���̃e�[�u���ւ̂��̂悤�ȃ}�b�s���O��K�v�Ƃ��܂��B
+                2つの <literal>hibernate-mapping</literal> タグの間に
+                <literal>class</literal> 要素を含めてください。
+                すべての永続エンティティクラス（念を押しますが、
+                ファーストクラスのエンティティではない依存クラスというものが後ほど登場します）
+                はSQLデータベース内のテーブルへのこのようなマッピングを必要とします。
             </para>
 
             <programlisting><![CDATA[<hibernate-mapping>
@@ -230,12 +232,12 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                ����܂Ŏ������́A<literal>Event</literal> �N���X�̃I�u�W�F�N�g��
-                <literal>EVENTS</literal> �e�[�u���ɑ΂��āA�ǂ̂悤�ɉi���������胍�[�h�����肷��̂���
-                Hibernate�ɋ����Ă��܂����B�����ČX�̃C���X�^���X�̓e�[�u���̍s�Ƃ��ĕ\������܂��B
-                ����ł͈��������e�[�u���̎�L�[�ɑ΂��郆�j�[�N�Ȏ��ʎq�v���p�e�B���}�b�s���O���Ă����܂��B
-                ����ɁA���̎��ʎq�̈����ɋC���g�������Ȃ������̂Ɠ��l�ɁA
-                �㗝�̎�L�[�J�����ɑ΂���Hibernate�̎��ʎq�����헪��ݒ肵�܂��B
+                これまで私たちは、<literal>Event</literal> クラスのオブジェクトを
+                <literal>EVENTS</literal> テーブルに対して、どのように永続化したりロードしたりするのかを
+                Hibernateに教えてきました。そして個々のインスタンスはテーブルの行として表現されます。
+                それでは引き続きテーブルの主キーに対するユニークな識別子プロパティをマッピングしていきます。
+                さらに、この識別子の扱いに気を使いたくなかったのと同様に、
+                代理の主キーカラムに対するHibernateの識別子生成戦略を設定します。
             </para>
 
             <programlisting><![CDATA[<hibernate-mapping>
@@ -249,21 +251,21 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                <literal>id</literal> �v�f�͎��ʎq�v���p�e�B�̐錾�ł���A
-                <literal>name="id"</literal> ��Java�v���p�e�B�̖��O��錾���܂��B
-                Hibernate�͂��̃v���p�e�B�փA�N�Z�X���邽�߂ɃQ�b�^�[�A�Z�b�^�[���\�b�h���g���܂��B
-                �J���������ł� <literal>EVENTS</literal> �e�[�u���̂ǂ̃J��������L�[�Ƃ��Ďg���̂���
-                Hibernate�ɋ����܂��B
-                ����q�ɂȂ��Ă��� <literal>generator</literal> �v�f�́A���ʎq�𐶐����鎞�̐헪���w�肵�܂��B
-                �i���̗�ł� <literal>native</literal> ��p���܂����j�B
-                ���̗v�f�́A�ݒ肵���f�[�^�x�[�X�idialect�j�ɑ΂���ŗǂȎ��ʎq�����헪��I�肷����̂ł��B
-                Hibernate�́A�A�v���P�[�V�����Œl�����蓖�Ă�헪�i�������͓Ǝ��Ɋg�������헪�j�Ɠ��l�ɁA
-                �O���[�o���Ƀ��j�[�N�Ȓl���f�[�^�x�[�X�ɐ���������헪���T�|�[�g���Ă��܂��B
+                <literal>id</literal> 要素は識別子プロパティの宣言であり、
+                <literal>name="id"</literal> でJavaプロパティの名前を宣言します。
+                Hibernateはこのプロパティへアクセスするためにゲッター、セッターメソッドを使います。
+                カラム属性では <literal>EVENTS</literal> テーブルのどのカラムを主キーとして使うのかを
+                Hibernateに教えます。
+                入れ子になっている <literal>generator</literal> 要素は、識別子を生成する時の戦略を指定します。
+                （この例では <literal>native</literal> を用いました）。
+                この要素は、設定したデータベース（dialect）に対する最良な識別子生成戦略を選定するものです。
+                Hibernateは、アプリケーションで値を割り当てる戦略（もしくは独自に拡張した戦略）と同様に、
+                グローバルにユニークな値をデータベースに生成させる戦略もサポートしています。
             </para>
 
             <para>
-                �Ō�ɃN���X�̉i���v���p�e�B�̐錾���}�b�s���O�t�@�C���Ɋ܂߂܂��B
-                �f�t�H���g�ł́A�N���X�̃v���p�e�B�͉i���ƌ��Ȃ���܂���F
+                最後にクラスの永続プロパティの宣言をマッピングファイルに含めます。
+                デフォルトでは、クラスのプロパティは永続と見なされません：
             </para>
             
             <programlisting><![CDATA[
@@ -280,45 +282,45 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
             
             <para>
-                <literal>id</literal> �v�f�̏ꍇ�Ɠ��l�ɁA <literal>property</literal> �v�f�� 
-                <literal>name</literal> �����ŁA�ǂ̃Q�b�^�[�ƃZ�b�^�[���\�b�h���g���ׂ�����Hibernate�ɋ����܂��B
-                ���̗�ł́AHibernate�� <literal>getDate()/setDate()</literal> �� <literal>getTitle()/setTitle()</literal> ��
-                �T���܂��B
+                <literal>id</literal> 要素の場合と同様に、 <literal>property</literal> 要素の 
+                <literal>name</literal> 属性で、どのゲッターとセッターメソッドを使うべきかをHibernateに教えます。
+                この例では、Hibernateは <literal>getDate()/setDate()</literal> と <literal>getTitle()/setTitle()</literal> を
+                探します。
             </para>
 
             <para>
-                �Ȃ� <literal>date</literal> �v���p�e�B�̃}�b�s���O�ɂ� <literal>column</literal> 
-                ����������A<literal>title</literal> �v���p�e�B�ɂ͂Ȃ��̂ł��傤���H
-                <literal>column</literal> �������Ȃ���΁AHibernate�̓v���p�e�B�����J�������Ƃ��Ďg���܂��B
-                ����� <literal>title</literal> �ł͏�肭�s���܂��B
-                ������ <literal>date</literal> �͂قƂ�ǂ̃f�[�^�x�[�X�ŗ\���Ȃ̂ŁA
-                �Ⴄ���O�Ń}�b�s���O���������悢�̂ł��B
+                なぜ <literal>date</literal> プロパティのマッピングには <literal>column</literal> 
+                属性があり、<literal>title</literal> プロパティにはないのでしょうか？
+                <literal>column</literal> 属性がなければ、Hibernateはプロパティ名をカラム名として使います。
+                これは <literal>title</literal> では上手く行きます。
+                しかし <literal>date</literal> はほとんどのデータベースで予約語なので、
+                違う名前でマッピングした方がよいのです。
             </para>
 
             <para>
-                ���ɋ����[���̂� <literal>title</literal> �}�b�s���O�� <literal>type</literal> 
-                �������������Ă���_�ł��B
-                �}�b�s���O�t�@�C���Ő錾���Ďg��type�́A���킩�肩������܂���Java�̃f�[�^�^�ł͂���܂���B
-                SQL�f�[�^�x�[�X�̌^�ł�����܂���B
-                ����� <emphasis>Hibernate�}�b�s���O�^</emphasis> �ƌĂ΂��A
-                Java����SQL�f�[�^�̌^�ւ܂���SQL����Java�f�[�^�^�֖|�󂷂�R���o�[�^�ł��B
-                �J��Ԃ��ɂȂ�܂����AHibernate�� <literal>type</literal> �������}�b�s���O�t�@�C�����ɂȂ���΁A
-                �������R���o�[�W�����ƃ}�b�s���O�^�������ŉ������悤�Ƃ��܂��B
-                �iJava�N���X�̃��t���N�V�������g�����j���̎������m�́A
-                �ꍇ�ɂ���Ă͂��Ȃ������҂܂��͕K�v�Ƃ���f�t�H���g�l�ɂȂ�Ȃ���������܂���B
-                <literal>date</literal> �v���p�e�B�̏ꍇ�������ł����B
-                Hibernate�͂��́i <literal>java.util.Date</literal> �́j�v���p�e�B��
-                SQL�� <literal>date</literal> , <literal>timestamp</literal> , 
-                <literal>time</literal> �̂����A�ǂ̃J�����Ƀ}�b�s���O����ׂ��Ȃ̂��킩��܂���B
-                <literal>timestamp</literal> �R���o�[�^�Ńv���p�e�B���}�b�s���O���邱�Ƃɂ��A���S�ȓ�����ۑ����܂��B
+                次に興味深いのは <literal>title</literal> マッピングが <literal>type</literal> 
+                属性をも欠いている点です。
+                マッピングファイルで宣言して使うtypeは、おわかりかもしれませんがJavaのデータ型ではありません。
+                SQLデータベースの型でもありません。
+                これは <emphasis>Hibernateマッピング型</emphasis> と呼ばれる、
+                JavaからSQLデータの型へまたはSQLからJavaデータ型へ翻訳するコンバータです。
+                繰り返しになりますが、Hibernateは <literal>type</literal> 属性がマッピングファイル内になければ、
+                正しいコンバージョンとマッピング型を自分で解決しようとします。
+                （Javaクラスのリフレクションを使った）この自動検知は、
+                場合によってはあなたが期待または必要とするデフォルト値にならないかもしれません。
+                <literal>date</literal> プロパティの場合がそうでした。
+                Hibernateはこの（ <literal>java.util.Date</literal> の）プロパティを
+                SQLの <literal>date</literal> , <literal>timestamp</literal> , 
+                <literal>time</literal> のうち、どのカラムにマッピングするべきなのかわかりません。
+                <literal>timestamp</literal> コンバータでプロパティをマッピングすることにより、完全な日時を保存します。
             </para>
 
             <para>
-                ���̃}�b�s���O�t�@�C���́A<literal>Event.hbm.xml</literal> �Ƃ��� <literal>Event</literal> 
-                Java�N���X�\�[�X�t�@�C���̂����ׂɃZ�[�u����ׂ��ł��B
-                �}�b�s���O�t�@�C���̖������@�͔C�ӂł����A<literal>hbm.xml</literal> 
-                �T�t�B�b�N�X��Hibernate�̊J���҂̃R�~���j�e�B���ł̏K���ƂȂ��Ă��܂��B
-                ���݃f�B���N�g���\���͂��̂悤�ɂȂ��Ă���͂��ł��F
+                このマッピングファイルは、<literal>Event.hbm.xml</literal> として <literal>Event</literal> 
+                Javaクラスソースファイルのすぐ隣にセーブするべきです。
+                マッピングファイルの命名方法は任意ですが、<literal>hbm.xml</literal> 
+                サフィックスがHibernateの開発者のコミュニティ内での習慣となっています。
+                現在ディレクトリ構造はこのようになっているはずです：
             </para>
 
             <programlisting><![CDATA[.
@@ -330,51 +332,51 @@ public class Event {
     Event.hbm.xml]]></programlisting>
 
              <para>
-                 Hibernate�̎�v�Ȑݒ�𑱂��܂��B
+                 Hibernateの主要な設定を続けます。
              </para>
 
         </sect2>
 
         <sect2 id="tutorial-firstapp-configuration" revision="2">
-            <title>Hibernate�̐ݒ�</title>
+            <title>Hibernateの設定</title>
 
             <para>
-                �����܂łŉi���N���X�ƃ}�b�s���O�t�@�C���������܂����B���ꂩ��Hibernate�̐ݒ���s���܂����A
-                ���̑O�Ƀf�[�^�x�[�X���K�v�ł��B
-                HSQL DB��Java�x�[�X�̃C��������SQL DBMS�ł���AHSQL DB�E�F�u�T�C�g����_�E�����[�h�ł��܂��B
-                ���ۂɂ̓_�E�����[�h�������� <literal>hsqldb.jar</literal> �������K�v�ł��B
-                ���̃t�@�C�����J���t�H���_�� <literal>lib/</literal> �f�B���N�g���ɔz�u���Ă��������B
+                ここまでで永続クラスとマッピングファイルが揃いました。これからHibernateの設定を行いますが、
+                その前にデータベースが必要です。
+                HSQL DBはJavaベースのインメモリSQL DBMSであり、HSQL DBウェブサイトからダウンロードできます。
+                実際にはダウンロードした中の <literal>hsqldb.jar</literal> だけが必要です。
+                このファイルを開発フォルダの <literal>lib/</literal> ディレクトリに配置してください。
             </para>
 
             <para>
-                <literal>data</literal> �Ƃ����f�B���N�g�����J���f�B���N�g���̃��[�g�ɍ쐬���Ă��������B
-                HSQL DB�͂����Ƀf�[�^�t�@�C�����i�[���܂��B
-                ���̃f�[�^�f�B���N�g���ɂ����� <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> �����s���A
-                �f�[�^�x�[�X���N�������Ă��������B
-                ����̊J�n�ƁATCP/IP�\�P�b�g�̃o�C���h���m�F�ł��܂��B
-                ��قǍ쐬����A�v���P�[�V�����͂����ɐڑ����܂��B
-                �������̃`���[�g���A�����Ƀf�[�^�x�[�X����������������΁A
-                HSQL DB���V���b�g�_�E�����āi��ƃE�B���h�E�� <literal>CTRL + C</literal> �������܂��j
-                <literal>data/</literal> �f�B���N�g�����̃t�@�C����S�ď���������A
-                HSQL DB���ċN�����܂��B
+                <literal>data</literal> というディレクトリを開発ディレクトリのルートに作成してください。
+                HSQL DBはここにデータファイルを格納します。
+                このデータディレクトリにおいて <literal>java -classpath lib/hsqldb.jar org.hsqldb.Server</literal> を実行し、
+                データベースを起動させてください。
+                動作の開始と、TCP/IPソケットのバインドが確認できます。
+                後ほど作成するアプリケーションはここに接続します。
+                もしこのチュートリアル中にデータベースを初期化したければ、
+                HSQL DBをシャットダウンして（作業ウィンドウで <literal>CTRL + C</literal> を押します）
+                <literal>data/</literal> ディレクトリ内のファイルを全て消去した後、
+                HSQL DBを再起動します。
             </para>
 
             <para>
-                Hibernate�̓A�v���P�[�V�����̃f�[�^�x�[�X�ɐڑ�����w�Ȃ̂ŁA
-                �R�l�N�V�����̏�񂪕K�v�ɂȂ�܂��B
-                �R�l�N�V������JDBC�R�l�N�V�����v�[����ʂ��čs���܂����A������ݒ肷��K�v������܂��B
-                Hibernate�f�B�X�g���r���[�V�����ɂ͂������̃I�[�v���\�[�X��JDBC�R�l�N�V�����v�[���c�[�����܂܂�Ă��܂����A
-                ���̃`���[�g���A���ł�Hibernate�ɑg�ݍ��܂ꂽ�R�l�N�V�����v�[�����g���܂��B
-                �������i���x���̕i���̃T�[�h�p�[�e�BJDBC�R�l�N�V�����v�[���\�t�g�E�F�A���g��������΁A
-                �N���X�p�X�ɕK�v�ȃ��C�u�������R�s�[���āA�قȂ�R�l�N�V�����v�[����ݒ肵�Ȃ����
-                �Ȃ�Ȃ����Ƃɒ��ӂ��Ă��������B
+                Hibernateはアプリケーションのデータベースに接続する層なので、
+                コネクションの情報が必要になります。
+                コネクションはJDBCコネクションプールを通じて行われますが、これも設定する必要があります。
+                HibernateディストリビューションにはいくつかのオープンソースのJDBCコネクションプールツールが含まれていますが、
+                このチュートリアルではHibernateに組み込まれたコネクションプールを使います。
+                もし製品レベルの品質のサードパーティJDBCコネクションプールソフトウェアを使いたければ、
+                クラスパスに必要なライブラリをコピーして、異なるコネクションプールを設定しなければ
+                ならないことに注意してください。
             </para>
 
             <para>
-                Hibernate�̐ݒ�ł́A�P���� <literal>hibernate.properties</literal> �t�@�C���A
-                �����菭����������Ă��� <literal>hibernate.cfg.xml</literal> �t�@�C���A
-                �܂��͊��S�Ƀv���O������ŃZ�b�g�A�b�v������@�����p�ł��܂��B
-                �قƂ�ǂ̃��[�U���D�ނ̂�XML�ݒ�t�@�C���ł��F
+                Hibernateの設定では、単純な <literal>hibernate.properties</literal> ファイル、
+                それより少し洗練されている <literal>hibernate.cfg.xml</literal> ファイル、
+                または完全にプログラム上でセットアップする方法が利用できます。
+                ほとんどのユーザが好むのはXML設定ファイルです：
             </para>
 
             <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
@@ -417,51 +419,51 @@ public class Event {
 </hibernate-configuration>]]></programlisting>
 
             <para>
-                ����XML�̐ݒ肪�قȂ�DTD���g�����Ƃɒ��ӂ��Ă��������B
-                ����̃f�[�^�x�[�X���󂯎��O���[�o���t�@�N�g���ł���Hibernate�� 
-                <literal>SessionFactory</literal> ��ݒ肵�܂��B
-                ���������̃f�[�^�x�[�X������ꍇ�ɂ́A
-                �i�X�^�[�g�A�b�v���ȒP�ɂ��邽�߁j�ʏ킢�����̐ݒ�t�@�C�����ŁA
-                �������� <literal>&lt;session-factory&gt;</literal> ���g���ݒ�ɂ��Ă��������B
+                このXMLの設定が異なるDTDを使うことに注意してください。
+                特定のデータベースを受け持つグローバルファクトリであるHibernateの 
+                <literal>SessionFactory</literal> を設定します。
+                もし複数のデータベースがある場合には、
+                （スタートアップを簡単にするため）通常いくつかの設定ファイル内で、
+                いくつかの <literal>&lt;session-factory&gt;</literal> を使う設定にしてください。
             </para>
 
             <para>
-                �ŏ���4�� <literal>property</literal> �v�f��JDBC�R�l�N�V�����ɕK�v�Ȑݒ���܂�ł��܂��B
-                dialect�Ƃ������O�� <literal>property</literal> �v�f�́AHibernate��������������SQL�������w�肵�܂��B
-                �i���I�ȃR���e�L�X�g�ɑ΂���Hibernate�̃Z�b�V�����̎����Ǘ��́A��̗�ł����ɂ킩��悤�ɁA���ɗ����Ƃł��傤�B
-                <literal>hbm2ddl.auto</literal> �I�v�V�����̓f�[�^�x�[�X�X�L�[�}�̎���������on�ɂ��܂��B
-                ����͒��ڃf�[�^�x�[�X�ɑ΂��Đ�������܂��B
-                ���R�iconfig�I�v�V�������폜���ājoff�ɂ�����A
-                <literal>SchemaExport</literal> �Ƃ���Ant�^�X�N�̏������؂�ăt�@�C���Ƀ��_�C���N�g������ł��܂��B
-                �Ō�ɉi���N���X�̂��߂̃}�b�s���O�t�@�C����ݒ�ɒǉ����܂��B
+                最初の4つの <literal>property</literal> 要素はJDBCコネクションに必要な設定を含んでいます。
+                dialectという名前の <literal>property</literal> 要素は、Hibernateが生成する特定のSQL方言を指定します。
+                永続的なコンテキストに対するHibernateのセッションの自動管理は、後の例ですぐにわかるように、役に立つことでしょう。
+                <literal>hbm2ddl.auto</literal> オプションはデータベーススキーマの自動生成をonにします。
+                これは直接データベースに対して生成されます。
+                当然（configオプションを削除して）offにしたり、
+                <literal>SchemaExport</literal> というAntタスクの助けを借りてファイルにリダイレクトしたりできます。
+                最後に永続クラスのためのマッピングファイルを設定に追加します。
             </para>
 
             <para>
-                ���̃t�@�C�����\�[�X�f�B���N�g���ɃR�s�[���Ă��������B
-                ����Ƃ���̓N���X�p�X�̃��[�g�ɂ��邱�ƂɂȂ�܂��B
-                Hibernate�́A�X�^�[�g�A�b�v���ɃN���X�p�X�̃��[�g�� <literal>hibernate.cfg.xml</literal> 
-                �Ƃ����t�@�C���������I�ɒT���܂��B
+                このファイルをソースディレクトリにコピーしてください。
+                するとこれはクラスパスのルートにあることになります。
+                Hibernateは、スタートアップ時にクラスパスのルートで <literal>hibernate.cfg.xml</literal> 
+                というファイルを自動的に探します。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-firstapp-ant" revision="1">
-            <title>Ant�ɂ��r���h</title>
+            <title>Antによるビルド</title>
 
             <para>
-                ����ł�Ant���g���ă`���[�g���A�����r���h���܂��傤�B
-                ����ɂ�Ant���C���X�g�[������Ă��Ȃ���΂Ȃ�܂���B
-                <ulink url="http://ant.apache.org/bindownload.cgi">Ant�_�E�����[�h�y�[�W</ulink> 
-                ����_�E�����[�h���Ă��������B
-                Ant�̃C���X�g�[�����@�͂����ł͐������܂���̂ŁA
-                <ulink url="http://ant.apache.org/manual/index.html">Ant�}�j���A��</ulink> 
-                ���Q�Ƃ��Ă��������B
-                Ant���C���X�g�[������΁A�r���h�t�@�C���̍쐬���J�n�ł��܂��B
-                ���̃t�@�C���� <literal>build.xml</literal> �ƌĂ΂�A�J���f�B���N�g���ɒ��ڔz�u���܂��B
+                それではAntを使ってチュートリアルをビルドしましょう。
+                それにはAntがインストールされていなければなりません。
+                <ulink url="http://ant.apache.org/bindownload.cgi">Antダウンロードページ</ulink> 
+                からダウンロードしてください。
+                Antのインストール方法はここでは説明しませんので、
+                <ulink url="http://ant.apache.org/manual/index.html">Antマニュアル</ulink> 
+                を参照してください。
+                Antをインストールすれば、ビルドファイルの作成を開始できます。
+                このファイルは <literal>build.xml</literal> と呼ばれ、開発ディレクトリに直接配置します。
             </para>
 
             <para>
-                ��{�I�ȃr���h�t�@�C���͂��̂悤�ɂȂ�܂��F
+                基本的なビルドファイルはこのようになります：
             </para>
 
             <programlisting><![CDATA[<project name="hibernate-tutorial" default="compile">
@@ -498,21 +500,21 @@ public class Event {
 </project>]]></programlisting>
 
             <para>
-                ����� <literal>.jar</literal> �ŏI���lib�f�B���N�g���̂��ׂẴt�@�C�����A
-                �R���p�C���Ɏg�p����N���X�p�X�ɒǉ����邱�Ƃ�Ant�ɋ����܂��B
-                �܂��AJava�\�[�X�t�@�C���łȂ����ׂẴt�@�C�����^�[�Q�b�g�f�B���N�g���ɃR�s�[����Ƃ������Ƃł�����܂��B
-                �Ⴆ�ΐݒ�t�@�C����Hibernate�}�b�s���O�t�@�C���Ȃǂł��B
-                ��Ant�����s����ƁA���̂悤�ȏo�͂�����͂��ł��F
+                これは <literal>.jar</literal> で終わるlibディレクトリのすべてのファイルを、
+                コンパイルに使用するクラスパスに追加することをAntに教えます。
+                また、Javaソースファイルでないすべてのファイルをターゲットディレクトリにコピーするということでもあります。
+                例えば設定ファイルやHibernateマッピングファイルなどです。
+                今Antを実行すると、このような出力があるはずです：
             </para>
 
-            <programlisting><![CDATA[C:\hibernateTutorial\>ant
+            <programlisting><![CDATA[C:¥hibernateTutorial¥>ant
 Buildfile: build.xml
 
 copy-resources:
-     [copy] Copying 2 files to C:\hibernateTutorial\bin
+     [copy] Copying 2 files to C:¥hibernateTutorial¥bin
 
 compile:
-    [javac] Compiling 1 source file to C:\hibernateTutorial\bin
+    [javac] Compiling 1 source file to C:¥hibernateTutorial¥bin
 
 BUILD SUCCESSFUL
 Total time: 1 second ]]></programlisting>
@@ -520,24 +522,24 @@ Total time: 1 second ]]></programlisting>
         </sect2>
 
         <sect2 id="tutorial-firstapp-helpers" revision="3">
-            <title>�X�^�[�g�A�b�v�ƃw���p</title>
+            <title>スタートアップとヘルパ</title>
 
             <para>
-                ���� <literal>Event</literal> �I�u�W�F�N�g�����[�h������i�[�����肷�鏀�����ł��܂����B
-                �������܂��̓C���t���X�g���N�`���̃R�[�h�������āA�Z�b�g�A�b�v����������K�v������܂��B
-                �܂���Hibernate���X�^�[�g�A�b�v���Ȃ���΂Ȃ�܂���B
-                ���̃X�^�[�g�A�b�v�ɂ́A�O���[�o���� <literal>SessionFactory</literal> �I�u�W�F�N�g�𐶐����āA
-                ������A�v���P�[�V�����̃R�[�h�ŃA�N�Z�X���₷���ꏊ�Ɋi�[���邱�Ƃ��܂܂�܂��B
-                <literal>SessionFactory</literal> �͐V���� <literal>Session</literal> ���I�[�v�����邱�Ƃ��ł��܂��B
-                <literal>Session</literal> �̓V���O���X���b�h�̍�ƒP��(Unit of Work)��\�����܂��B
-                ����ɑ΂�<literal>SessionFactory</literal> �̓X���b�h�Z�[�t�̃O���[�o���I�u�W�F�N�g�ł���A
-                ��x�����C���X�^���X������܂��B
+                さて <literal>Event</literal> オブジェクトをロードしたり格納したりする準備ができました。
+                しかしまずはインフラストラクチャのコードを書いて、セットアップを完了する必要があります。
+                まずはHibernateをスタートアップしなければなりません。
+                このスタートアップには、グローバルの <literal>SessionFactory</literal> オブジェクトを生成して、
+                それをアプリケーションのコードでアクセスしやすい場所に格納することが含まれます。
+                <literal>SessionFactory</literal> は新しく <literal>Session</literal> をオープンすることができます。
+                <literal>Session</literal> はシングルスレッドの作業単位(Unit of Work)を表現します。
+                それに対し<literal>SessionFactory</literal> はスレッドセーフのグローバルオブジェクトであり、
+                一度だけインスタンス化されます。
             </para>
 
             <para>
-                �����ŃX�^�[�g�A�b�v���s���A �֗��� <literal>SessionFactory</literal> �փA�N�Z�X����
-                <literal>HibernateUtil</literal> �w���p�N���X���쐬���܂��B
-                ���������Ă݂܂��傤�F
+                ここでスタートアップを行い、 便利に <literal>SessionFactory</literal> へアクセスする
+                <literal>HibernateUtil</literal> ヘルパクラスを作成します。
+                実装を見てみましょう：
             </para>
 
             <programlisting><![CDATA[package util;
@@ -567,26 +569,26 @@ public class HibernateUtil {
 }]]></programlisting>
 
             <para>
-                ���̃N���X�͐ÓI�������u���b�N�i�N���X�����[�h�����Ƃ���JVM�ɂ���Ĉ�x�����Ă΂��j
-                �ŃO���[�o���� <literal>SessionFactory</literal> �𐶐����邾���ł͂Ȃ��A
-                �ÓI�V���O���g���̎g�p���B�����܂��B
-                �A�v���P�[�V�����T�[�o�[��JNDI���� <literal>SessionFactory</literal> ��
-                ���b�N�A�b�v����̂Ɠ��l�ł��B
+                このクラスは静的初期化ブロック（クラスがロードされるときにJVMによって一度だけ呼ばれる）
+                でグローバルの <literal>SessionFactory</literal> を生成するだけではなく、
+                静的シングルトンの使用を隠蔽します。
+                アプリケーションサーバーのJNDIから <literal>SessionFactory</literal> を
+                ルックアップするのと同様です。
            </para>
 
             <para>
-                �ݒ�t�@�C������ <literal>SessionFactory</literal> �ɖ��O��^����ƁA
-                Hibernate�� <literal>SessionFactory</literal> �\�z���JNDI�ɑ΂��o�C���h���s�����Ƃ��܂��B
-                ���̃R�[�h�����S�ɔr�����邽�߂ɂ́A
-                JMX�f�v���C�����g�𗘗p����
-                JMX�𗘗p�ł���R���e�i���C���X�^���X�����A
-                <literal>HibernateService</literal> ��JNDI�փo�C���h���邱�Ƃ��ł��܂��B
-                �����̍��x�ȃI�v�V�����́AHibernate�̃��t�@�����X�h�L�������g�Ő�������Ă��܂��B
+                設定ファイル内で <literal>SessionFactory</literal> に名前を与えると、
+                Hibernateは <literal>SessionFactory</literal> 構築後にJNDIに対しバインドを行おうとします。
+                このコードを完全に排除するためには、
+                JMXデプロイメントを利用して
+                JMXを利用できるコンテナをインスタンス化し、
+                <literal>HibernateService</literal> をJNDIへバインドすることもできます。
+                これらの高度なオプションは、Hibernateのリファレンスドキュメントで説明されています。
             </para>
 
             <para>
-                <literal>HibernateUtil.java</literal> ���J���\�[�X�f�B���N�g���ɂ��� <literal>events</literal> �p�b�P�[�W��
-                �ׂɔz�u���Ă��������B
+                <literal>HibernateUtil.java</literal> を開発ソースディレクトリにある <literal>events</literal> パッケージの
+                隣に配置してください。
             </para>
 
             <programlisting><![CDATA[.
@@ -603,31 +605,31 @@ public class HibernateUtil {
 build.xml]]></programlisting>
 
             <para>
-                ����͖��Ȃ��ăR���p�C���ł���͂��ł��B
-                �Ō�Ƀ��M���O�V�X�e����ݒ肷��K�v������܂��B
-                Hibernate��commons logging���g�����߁ALog4j��JDK 1.4 logging�̑I��������K�v������܂���B
-                �قƂ�ǂ̊J���҂��D�ނ̂�Log4j�ł��B
-                Hibernate�f�B�X�g���r���[�V�����i��<literal>etc/</literal> �f�B���N�g���j���� 
-                <literal>log4j.properties</literal> �����Ȃ��� <literal>src</literal> �f�B���N�g������
-                <literal>hibernate.cfg.xml</literal> �ׂ̗ɃR�s�[���Ă��������B
-                �ݒ������āA�璷�ȏo�͂��悯��ΐݒ��ύX���Ă��������B
-                �f�t�H���g�ł�Hibernate�̃X�^�[�g�A�b�v���b�Z�[�W�������W���o�͂ɕ\������܂��B
+                これは問題なく再コンパイルできるはずです。
+                最後にロギングシステムを設定する必要があります。
+                Hibernateはcommons loggingを使うため、Log4jとJDK 1.4 loggingの選択をする必要がありません。
+                ほとんどの開発者が好むのはLog4jです。
+                Hibernateディストリビューション（の<literal>etc/</literal> ディレクトリ）から 
+                <literal>log4j.properties</literal> をあなたの <literal>src</literal> ディレクトリ内の
+                <literal>hibernate.cfg.xml</literal> の隣にコピーしてください。
+                設定例を見て、冗長な出力がよければ設定を変更してください。
+                デフォルトではHibernateのスタートアップメッセージだけが標準出力に表示されます。
             </para>
 
             <para>
-                �`���[�g���A���̃C���t���͊��S�ł��B
-                Hibernate���g���Ď��ۂ̍�Ƃ����鏀���������܂����B
+                チュートリアルのインフラは完全です。
+                Hibernateを使って実際の作業をする準備が整いました。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-firstapp-workingpersistence" revision="4">
-            <title>�I�u�W�F�N�g�̃��[�h�Ɗi�[</title>
+            <title>オブジェクトのロードと格納</title>
 
             <para>
-                ���ɃI�u�W�F�N�g�̃��[�h�Ɗi�[��Hibernate���g�����Ƃ��ł��܂��B
-                <literal>main()</literal> ���\�b�h������ <literal>EventManager</literal> 
-                �N���X�������܂��F
+                ついにオブジェクトのロードと格納にHibernateを使うことができます。
+                <literal>main()</literal> メソッドを持つ <literal>EventManager</literal> 
+                クラスを書きます：
             </para>
 
             <programlisting><![CDATA[package events;
@@ -667,48 +669,48 @@ public class EventManager {
 }]]></programlisting>
 
             <para>
-                �V���� <literal>Event</literal> �I�u�W�F�N�g�𐶐����A�����Hibernate�ɓn���܂��B
-                ���ł�Hibernate��SQL���������A�f�[�^�x�[�X�� <literal>INSERT</literal> �����s���܂��B
-                ���s�O�� <literal>Session</literal> �� <literal>Transaction</literal> 
-                ����������R�[�h���m�F���Ă��������B
+                新しい <literal>Event</literal> オブジェクトを生成し、それをHibernateに渡します。
+                今ではHibernateがSQLを処理し、データベースで <literal>INSERT</literal> を実行します。
+                実行前に <literal>Session</literal> と <literal>Transaction</literal> 
+                を処理するコードを確認してください。
             </para>
 
             <para>
-                <literal>Session</literal> ��1�̍�ƒP��(Unit of Work)�ł��B
-                �����̊ԁA�b���ȒP�ɂ��邽�߂ɁA
-                <literal>Session</literal> �� <literal>Transaction</literal> �̑Ή�����Έ�Ɖ��肵�܂��B
-                �g�p���Ă���g�����U�N�V�����E�V�X�e���i���̃P�[�X�ł�JTA�Ƌ����ł���P����JDBC�j����R�[�h��ی삷�邽�߂ɁA
-                Hibernate <literal>Session</literal> ��ŗ��p�\�� <literal>Transaction</literal> API���g�p���܂��B
+                <literal>Session</literal> は1つの作業単位(Unit of Work)です。
+                当分の間、話を簡単にするために、
+                <literal>Session</literal> と <literal>Transaction</literal> の対応を一対一と仮定します。
+                使用しているトランザクション・システム（このケースではJTAと共存できる単純なJDBC）からコードを保護するために、
+                Hibernate <literal>Session</literal> 上で利用可能な <literal>Transaction</literal> APIを使用します。
             </para>
 
             <para>
-                <literal>sessionFactory.getCurrentSession()</literal> �͂Ȃɂ�����̂ł��傤���H
-                �܂��A�������� <literal>SessionFactory</literal> ���擾���ێ������
-                �i <literal>HibernateUtil</literal> �̂������ŊȒP�ł��j�A���̃��\�b�h�����x�ł��A
-                �ǂ�����ł��Ăяo�����Ƃ��o���܂��B
-                <literal>getCurrentSession()</literal> ���\�b�h�͏�Ɂu���݂́v��ƒP��(Unit of Work)��Ԃ��܂��B
-                <literal>hibernate.cfg.xml</literal> �̂��̋@�\�̐ݒ�ŁA"thread"���w�肵�����Ƃ��v���o���Ă��������B
-                ���̂��ߌ��݂̍�ƒP�ʂ̃X�R�[�v�́A���̃A�v���P�[�V���������s���錻�݂�Java�X���b�h�ł��B
-                ����������őS�Ăł͂���܂���B
-                <literal>Session</literal> �͍ŏ��ɕK�v�ƂȂ����Ƃ��A�܂�ŏ��� <literal>getCurrentSession()</literal> ��
-                �Ă΂ꂽ�Ƃ��ɊJ�n���܂��B
-                ���̂Ƃ�Hibernate�ɂ�茻�݂̃X���b�h�Ɍ��ѕt�����܂��B
-                �g�����U�N�V�������I���i�R�~�b�g�������̓��[���o�b�N�j�����Ƃ��A
-                Hibernate���X���b�h���� <literal>Session</literal> ��؂藣���A�N���[�Y���܂��B
-                �Ă� <literal>getCurrentSession()</literal> ���ĂԂƁA
-                �V���� <literal>Session</literal> ���擾���ĐV������ƒP�ʂ��X�^�[�g�ł��܂��B
-                ���� <emphasis>thread-bound</emphasis> �v���O���~���O�E���f����Hibernate�𗘗p�����ōł��l�C������܂��B
+                <literal>sessionFactory.getCurrentSession()</literal> はなにをするのでしょうか？
+                まず、いったん <literal>SessionFactory</literal> を取得し保持すれば
+                （ <literal>HibernateUtil</literal> のおかげで簡単です）、このメソッドを何度でも、
+                どこからでも呼び出すことが出来ます。
+                <literal>getCurrentSession()</literal> メソッドは常に「現在の」作業単位(Unit of Work)を返します。
+                <literal>hibernate.cfg.xml</literal> のこの機能の設定で、"thread"を指定したことを思い出してください。
+                このため現在の作業単位のスコープは、このアプリケーションを実行する現在のJavaスレッドです。
+                しかしこれで全てではありません。
+                <literal>Session</literal> は最初に必要となったとき、つまり最初に <literal>getCurrentSession()</literal> が
+                呼ばれたときに開始します。
+                そのときHibernateにより現在のスレッドに結び付けられます。
+                トランザクションが終了（コミットもしくはロールバック）したとき、
+                Hibernateもスレッドから <literal>Session</literal> を切り離し、クローズします。
+                再び <literal>getCurrentSession()</literal> を呼ぶと、
+                新しい <literal>Session</literal> を取得して新しい作業単位をスタートできます。
+                この <emphasis>thread-bound</emphasis> プログラミング・モデルはHibernateを利用する上で最も人気があります。
             </para>
 
             <para>
-                �g�����U�N�V�����̈����Ƌ��E�̏ڂ������ɂ��ẮA
-                <xref linkend="transactions"/> �����Ă��������B
-                ���̗�ł̓G���[�����⃍�[���o�b�N���������܂��B
+                トランザクションの扱いと境界の詳しい情報については、
+                <xref linkend="transactions"/> を見てください。
+                この例ではエラー処理やロールバックも割愛します。
             </para>
 
             <para>
-                ���̍ŏ��̃��[�`�������s����ɂ́AAnt�̃r���h�t�@�C���ɌĂяo���\�ȃ^�[�Q�b�g��
-                �ǉ����Ȃ���΂Ȃ�܂���F
+                この最初のルーチンを実行するには、Antのビルドファイルに呼び出し可能なターゲットを
+                追加しなければなりません：
             </para>
 
             <programlisting><![CDATA[<target name="run" depends="compile">
@@ -719,29 +721,29 @@ public class EventManager {
 </target>]]></programlisting>
 
             <para>
-                <literal>action</literal> �����̒l�́A�^�[�Q�b�g���ĂԂƂ��ɃR�}���h���C���Őݒ肵�܂��F
+                <literal>action</literal> 引数の値は、ターゲットを呼ぶときにコマンドラインで設定します：
             </para>
 
-            <programlisting><![CDATA[C:\hibernateTutorial\>ant run -Daction=store]]></programlisting>
+            <programlisting><![CDATA[C:¥hibernateTutorial¥>ant run -Daction=store]]></programlisting>
 
             <para>
-                �R���p�C������ƁAHibernate���X�^�[�g���A���Ȃ��̐ݒ�ɂ��܂����A
-                �����̃��O�o�͂�����͂��ł��B
-                ���̍Ō�ɂ͈ȉ��̍s������ł��傤�F
+                コンパイルすると、Hibernateがスタートし、あなたの設定によりますが、
+                多くのログ出力があるはずです。
+                その最後には以下の行があるでしょう：
             </para>
 
             <programlisting><![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) values (?, ?, ?)]]></programlisting>
 
             <para>
-                �����Hibernate�����s���� <literal>INSERT</literal> �ŁA
-                �N�G�X�`�����}�[�N��JDBC�o�C���h�p�����[�^��\���Ă��܂��B
-                �����Ƃ��ăo�C���h�����l�����邽�߁A���邢�̓��O�̏璷�������炷���߂ɂ́A
-                <literal>log4j.properties</literal> ���`�F�b�N���Ă��������B
+                これはHibernateが実行する <literal>INSERT</literal> で、
+                クエスチョンマークはJDBCバインドパラメータを表しています。
+                引数としてバインドされる値を見るため、あるいはログの冗長性を減らすためには、
+                <literal>log4j.properties</literal> をチェックしてください。
             </para>
 
             <para>
-                ����ł͓����悤�Ɋi�[���ꂽ�C�x���g�̈ꗗ�����悤�Ǝv���܂��B
-                ���̂��߃��C�����\�b�h�ɃI�v�V������ǉ����܂��F
+                それでは同じように格納されたイベントの一覧を見ようと思います。
+                そのためメインメソッドにオプションを追加します：
             </para>
 
             <programlisting><![CDATA[if (args[0].equals("store")) {
@@ -757,7 +759,7 @@ else if (args[0].equals("list")) {
 }]]></programlisting>
 
             <para>
-                �V���� <literal>listEvents()���\�b�h</literal> ���ǉ����܂��B
+                新しい <literal>listEvents()メソッド</literal> も追加します。
             </para>
 
             <programlisting><![CDATA[private List listEvents() {
@@ -774,47 +776,47 @@ else if (args[0].equals("list")) {
 }]]></programlisting>
 
             <para>
-                �����ł��邱�Ƃ́A�f�[�^�x�[�X���瑶�݂��邷�ׂĂ� <literal>Event</literal> 
-                �I�u�W�F�N�g�����[�h����HQL (Hibernate Query Language) �N�G�����g�����Ƃł��B
-                Hibernate�͓K�؂�SQL�𐶐����A������f�[�^�x�[�X�ɑ���A
-                ���̃f�[�^���g���� <literal>Event</literal> �I�u�W�F�N�g�𐶐����܂��B
-                ���RHQL�ł���ɕ��G�ȃN�G�����쐬�ł��܂��B
+                ここですることは、データベースから存在するすべての <literal>Event</literal> 
+                オブジェクトをロードするHQL (Hibernate Query Language) クエリを使うことです。
+                Hibernateは適切なSQLを生成し、それをデータベースに送り、
+                そのデータを使って <literal>Event</literal> オブジェクトを生成します。
+                当然HQLでさらに複雑なクエリを作成できます。
             </para>
 
             <para>
-                 �ȉ��̃X�e�b�v�ŁA���ׂĂ̎��s�ƃe�X�g���s���܂��B
+                 以下のステップで、すべての実行とテストを行います。
             </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
-                        hbm2ddl��ʂ��O�Ƀf�[�^�x�[�X�̃f�[�^���쐬���A�f�[�^�x�[�X�X�L�[�}�𐶐����邽�߂ɁA
-                         <literal>ant run -Daction=store</literal> �����s���Ă��������B
+                        hbm2ddlを通す前にデータベースのデータを作成し、データベーススキーマを生成するために、
+                         <literal>ant run -Daction=store</literal> を実行してください。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        ���� <literal>hibernate.cfg.xml</literal> �t�@�C���̃v���p�e�B���R�����g�A�E�g����hbm2ddl�𖳌��ɂ��Ă��������B
-                        �ʏ�͌p���I�ɒP�̃e�X�g�����Ă���Ԃ�hbm2ddl��L���ɂ��Ă����̂ł����A
-                        ����ȊO�̏ꍇ��hbm2ddl���N������Ɗi�[���Ă������S�Ẵf�[�^�� <emphasis>�h���b�v</emphasis> ����ł��傤�B
-                        �ݒ�� <literal>create</literal> �ɂ���ƁA���ʂƂ���
-                       �uSessionFactory�����̍ہA�X�L�[�}����S�Ẵe�[�u�����h���b�v���čč쐬����v�Ƃ����ݒ�ɂȂ�܂��B
+                        今は <literal>hibernate.cfg.xml</literal> ファイルのプロパティをコメントアウトしてhbm2ddlを無効にしてください。
+                        通常は継続的に単体テストをしている間はhbm2ddlを有効にしておくのですが、
+                        それ以外の場合にhbm2ddlを起動すると格納しておいた全てのデータを <emphasis>ドロップ</emphasis> するでしょう。
+                        設定を <literal>create</literal> にすると、結果として
+                       「SessionFactory生成の際、スキーマから全てのテーブルをドロップして再作成する」という設定になります。
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                �� <literal>-Daction=list</literal> �Ǝw�肵��Ant���ĂԂƁA
-                ����܂Ŋi�[�����C�x���g��������͂��ł��B
-                <literal>store</literal> �A�N�V�����𐔉�ȏ�ĂԂ��Ƃ��\�ł��B
+                今 <literal>-Daction=list</literal> と指定してAntを呼ぶと、
+                これまで格納したイベントが見えるはずです。
+                <literal>store</literal> アクションを数回以上呼ぶことも可能です。
             </para>
 
             <para>
-                ���ӁF���߂�Hibernate�ɐG���l�X�̑����������Ŏ��s���邽�߁A<emphasis>Table not found</emphasis> �G���[���b�Z�[�W��
-                �ւ��鎿������I�Ɍ������܂��B
-                ��������L�̃X�e�b�v�ɏ]���΁Ahbm2ddl���ŏ��Ɏ��s���ꂽ�Ƃ��Ƀf�[�^�x�[�X�X�L�[�}���쐬���A
-                ���̌�̎��s�ɂ����Ă����̃X�L�[�}���g�p����̂ŁA���͋N����Ȃ��ł��傤�B
-                �}�b�s���O��f�[�^�x�[�X�X�L�[�}��ύX�����Ƃ��́A������xhbm2ddl��L���ɂ��Ă��������B
+                注意：初めてHibernateに触れる人々の多くがここで失敗するため、<emphasis>Table not found</emphasis> エラーメッセージに
+                関する質問を定期的に見かけます。
+                しかし上記のステップに従えば、hbm2ddlが最初に実行されたときにデータベーススキーマを作成し、
+                その後の実行においてもこのスキーマを使用するので、問題は起こらないでしょう。
+                マッピングやデータベーススキーマを変更したときは、もう一度hbm2ddlを有効にしてください。
             </para>
 
         </sect2>
@@ -822,19 +824,19 @@ else if (args[0].equals("list")) {
     </sect1>
 
     <sect1 id="tutorial-associations">
-        <title>�p�[�g2 - �֘A�̃}�b�s���O</title>
+        <title>パート2 - 関連のマッピング</title>
 
         <para>
-            �i���G���e�B�e�B�N���X���e�[�u���Ƀ}�b�s���O���܂����B
-            ����ɂ��̏�ɂ������̃N���X�̊֘A��ǉ����܂��傤�B
-            �܂����߂ɃA�v���P�[�V�����ɐl�X��ǉ����A�ނ炪�Q������C�x���g�̃��X�g���i�[���܂��B
+            永続エンティティクラスをテーブルにマッピングしました。
+            さらにこの上にいくつかのクラスの関連を追加しましょう。
+            まず初めにアプリケーションに人々を追加し、彼らが参加するイベントのリストを格納します。
         </para>
 
         <sect2 id="tutorial-associations-mappinguser" revision="1">
-            <title>Person�N���X�̃}�b�s���O</title>
+            <title>Personクラスのマッピング</title>
 
             <para>
-                �ŏ��� <literal>Person</literal> �N���X�͒P���ł��F
+                最初の <literal>Person</literal> クラスは単純です：
             </para>
 
             <programlisting><![CDATA[package events;
@@ -853,8 +855,8 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                <literal>Person.hbm.xml</literal> �Ƃ����V�����}�b�s���O�t�@�C�����쐬���Ă�������
-                �i�t�@�C���̍ŏ���DTD�ւ̎Q�Ƃ�Y�ꂸ�ɓ���Ă��������j�F
+                <literal>Person.hbm.xml</literal> という新しいマッピングファイルを作成してください
+                （ファイルの最初にDTDへの参照を忘れずに入れてください）：
             </para>
 
             <programlisting><![CDATA[<hibernate-mapping>
@@ -871,33 +873,33 @@ public class Person {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                �Ō��Hibernate�̐ݒ�ɐV�����}�b�s���O��ǉ����Ă��������F
+                最後にHibernateの設定に新しいマッピングを追加してください：
             </para>
 
             <programlisting><![CDATA[<mapping resource="events/Event.hbm.xml"/>
 <mapping resource="events/Person.hbm.xml"/>]]></programlisting>
 
             <para>
-                ����ł͂����2�̃G���e�B�e�B�Ԃ̊֘A���쐬���܂��B
-                �l�X���C�x���g�ɎQ���ł��A�C�x���g���Q���҂����͖̂��炩�ł��B
-                ����Ȃ���΂Ȃ�Ȃ��݌v�̖��́A�����A���d�x�A�R���N�V�����̐U�镑���ł��B
+                それではこれら2つのエンティティ間の関連を作成します。
+                人々がイベントに参加でき、イベントが参加者を持つのは明らかです。
+                扱わなければならない設計の問題は、方向、多重度、コレクションの振る舞いです。
             </para>
         </sect2>
 
         <sect2 id="tutorial-associations-unidirset" revision="3">
-            <title>�P����Set�x�[�X�֘A</title>
+            <title>単方向Setベース関連</title>
 
             <para>
-                �C�x���g�̃R���N�V������ <literal>Person</literal> �N���X�ɒǉ����܂��B
-                �������Ă����ƁA�����I�ȃN�G���A�܂�킴�킴<literal>aPerson.getEvents()</literal>���Ăяo�����ɁA
-                ����̐l�ɕR�t���C�x���g���ȒP�Ƀi�r�Q�[�g���邱�Ƃ��ł��܂��B
-                ��������Java�̃R���N�V�����A<literal>Set</literal> ���g���܂��B
-                �R���N�V�����͏d���v�f�������Ȃ����A���Ԃ͎������ɂ͈Ӗ����Ȃ�����ł��B
+                イベントのコレクションを <literal>Person</literal> クラスに追加します。
+                こうしておくと、明示的なクエリ、つまりわざわざ<literal>aPerson.getEvents()</literal>を呼び出さずに、
+                特定の人に紐付くイベントを簡単にナビゲートすることができます。
+                私たちはJavaのコレクション、<literal>Set</literal> を使います。
+                コレクションは重複要素を持たないし、順番は私たちには意味がないからです。
             </para>
 
             <para>
-                <literal>Set</literal> �Ŏ��������P�����A���l�֘A���K�v�ł��B
-                Java�N���X���ɑΉ�����R�[�h�������ă}�b�s���O���܂��傤�F
+                <literal>Set</literal> で実装される単方向、多値関連が必要です。
+                Javaクラス内に対応するコードを書いてマッピングしましょう：
             </para>
 
             <programlisting><![CDATA[public class Person {
@@ -914,16 +916,16 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                ���̊֘A���}�b�s���O����O�ɁA���Α��ɂ��čl���Ă��������B
-                ���炩�Ȃ��Ƃł����A���͂����P�����ɂ��������ł��B
-                �t�ɁA <literal>Event</literal> ���ɂ��ʂ̃R���N�V��������邱�Ƃ��ł��܂��B
-                �Ⴆ�� <literal>anEvent.getParticipants()</literal> �̂悤�ɁA
-                �o�����Ƀi�r�Q�[�g��������΁A�������邱�Ƃ��ł��܂��B
-                ����͋@�\�I�ɂ݂ĕK�v�ł͂���܂���B
-                ����̃C�x���g�Ɋ֌W����f�[�^���擾���閾�m�ȃN�G�����A���ł����s���邱�Ƃ��o���܂����B
-                ���̐݌v�̑I���͊J���҂ɔC����Ă��āA���̋c�_�ɂ�薾�炩�Ȃ̂͊֘A�̑��d�x�ł��B
-                �܂藼�����u���v�l�ɂ���A <emphasis>���Α�</emphasis> �ƌĂ΂��֘A�ł��B
-                ���̂���Hibernate��many-to-many�}�b�s���O���g���܂��F
+                この関連をマッピングする前に、反対側について考えてください。
+                明らかなことですが、今はこれを単方向にしただけです。
+                逆に、 <literal>Event</literal> 側にも別のコレクションを作ることもできます。
+                例えば <literal>anEvent.getParticipants()</literal> のように、
+                双方向にナビゲートしたければ、そうすることもできます。
+                これは機能的にみて必要ではありません。
+                特定のイベントに関係するデータを取得する明確なクエリを、いつでも実行することが出来ました。
+                この設計の選択は開発者に任されていて、この議論により明らかなのは関連の多重度です。
+                つまり両側を「多」値にする、 <emphasis>多対多</emphasis> と呼ばれる関連です。
+                そのためHibernateのmany-to-manyマッピングを使います：
             </para>
 
             <programlisting><![CDATA[<class name="events.Person" table="PERSON">
@@ -942,21 +944,21 @@ public class Person {
 </class>]]></programlisting>
 
             <para>
-                Hibernate�͂���Ƃ������ނ̃R���N�V�����}�b�s���O���T�|�[�g���Ă��܂����A
-                �ł���ʓI�Ȃ��̂� <literal>&lt;set&gt;</literal> �ł��B
-                ���Α��֘A�i�܂��� <emphasis>n:m</emphasis> �G���e�B�e�B�����[�V�����V�b�v�j�ɂ́A
-                �֘A�e�[�u�����K�v�ł��B
-                ���̃e�[�u���̂��ꂼ��̍s�́A�l�ƃC�x���g�Ԃ̃����N��\�����܂��B
-                �e�[�u������ <literal>set</literal> �v�f�� <literal>table</literal> �����Őݒ肵�܂��B
-                �l���̊֘A�̎��ʎq�J�������� <literal>&lt;key&gt;</literal> �v�f�ŁA
-                �C�x���g���̃J�������� <literal>&lt;many-to-many&gt;</literal> �� <literal>column</literal> 
-                �����Œ�`���܂��B
-                Hibernate�ɃR���N�V�����̃I�u�W�F�N�g�̃N���X
-                �i���m�ɂ́A�Q�Ƃ̃R���N�V�����̔��Α��̃N���X�j�������Ȃ���΂Ȃ�܂���B
+                Hibernateはありとあらゆる種類のコレクションマッピングをサポートしていますが、
+                最も一般的なものが <literal>&lt;set&gt;</literal> です。
+                多対多関連（または <emphasis>n:m</emphasis> エンティティリレーションシップ）には、
+                関連テーブルが必要です。
+                このテーブルのそれぞれの行は、人とイベント間のリンクを表現します。
+                テーブル名は <literal>set</literal> 要素の <literal>table</literal> 属性で設定します。
+                人側の関連の識別子カラム名は <literal>&lt;key&gt;</literal> 要素で、
+                イベント側のカラム名は <literal>&lt;many-to-many&gt;</literal> の <literal>column</literal> 
+                属性で定義します。
+                Hibernateにコレクションのオブジェクトのクラス
+                （正確には、参照のコレクションの反対側のクラス）を教えなければなりません。
             </para>
 
             <para>
-                ���̂��߂��̃}�b�s���O�̃f�[�^�x�[�X�X�L�[�}�͈ȉ��̂悤�ɂȂ�܂��B�F
+                そのためこのマッピングのデータベーススキーマは以下のようになります。：
             </para>
 
             <programlisting><![CDATA[
@@ -976,10 +978,10 @@ public class Person {
         </sect2>
 
         <sect2 id="tutorial-associations-working" revision="2">
-            <title>�֘A�𓭂�����</title>
+            <title>関連を働かせる</title>
 
             <para>
-                <literal>EventManager</literal> �̐V�������\�b�h�Ől�X�ƃC�x���g���ꏏ�ɂ��܂��傤�F
+                <literal>EventManager</literal> の新しいメソッドで人々とイベントを一緒にしましょう：
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
@@ -996,28 +998,28 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                <literal>Person</literal> �� <literal>Event</literal> �����[�h������A
-                ���ʂ̃R���N�V�������\�b�h���g���ĒP���ɂ��̃R���N�V�������C�����Ă��������B
-                �����̂Ƃ��� <literal>update()</literal> �� <literal>save()</literal> 
-                �̖����I�ȌĂяo���͂���܂���B
-                Hibernate�́A�C�����ꂽ���Ƃɂ��X�V����K�v�̂���R���N�V�����������I�Ɍ��m���܂��B
-                ����� <emphasis>�����_�[�e�B�`�F�b�N</emphasis> �ƌĂ΂�A
-                �I�u�W�F�N�g�̖��O��date�v���p�e�B���C�����邱�ƂŎ������Ƃ��\�ł��B
-                ����炪 <emphasis>�i��</emphasis> ��Ԃɂ������A
-                �܂�����Hibernate <literal>Session</literal> �Ƀo�C���h����Ă������
-                �i�Ⴆ�΍�ƒP��(Unit of Work)�̒��ŒP�Ƀ��[�h�܂��̓Z�[�u���ꂽ�j�A
-                Hibernate�͂ǂ�ȕύX�����j�^�[���A�x����������(write-behind)��SQL�����s���܂��B
-                �ʏ�A��ƒP��(Unit of Work)�̍Ō�ɂ����s����f�[�^�x�[�X�ƃ������̏�Ԃ𓯊������鏈���́A
-                <emphasis>�t���b�V��</emphasis> �ƌĂ΂�܂��B
-                ���̃R�[�h�ł́A��ƒP��(Unit of Work)�̓f�[�^�x�[�X�g�����U�N�V�����̃R�~�b�g�i�������̓��[���o�b�N�j�ŏI�����܂��B
-                ����́A <literal>CurrentSessionContext</literal> �N���X�ɑ΂��� <literal>thread</literal> ��ݒ肵�����߂ł��B
+                <literal>Person</literal> と <literal>Event</literal> をロードした後、
+                普通のコレクションメソッドを使って単純にそのコレクションを修正してください。
+                ご覧のとおり <literal>update()</literal> や <literal>save()</literal> 
+                の明示的な呼び出しはありません。
+                Hibernateは、修正されたことにより更新する必要のあるコレクションを自動的に検知します。
+                これは <emphasis>自動ダーティチェック</emphasis> と呼ばれ、
+                オブジェクトの名前やdateプロパティを修正することで試すことも可能です。
+                それらが <emphasis>永続</emphasis> 状態にある限り、
+                つまり特定のHibernate <literal>Session</literal> にバインドされている限り
+                （例えば作業単位(Unit of Work)の中で単にロードまたはセーブされた）、
+                Hibernateはどんな変更もモニターし、遅延書き込み(write-behind)でSQLを実行します。
+                通常、作業単位(Unit of Work)の最後にだけ行われるデータベースとメモリの状態を同期させる処理は、
+                <emphasis>フラッシュ</emphasis> と呼ばれます。
+                このコードでは、作業単位(Unit of Work)はデータベーストランザクションのコミット（もしくはロールバック）で終了します。
+                これは、 <literal>CurrentSessionContext</literal> クラスに対して <literal>thread</literal> を設定したためです。
             </para>
 
             <para>
-                �قȂ��ƒP��(Unit of Work)�Ől�X�ƃC�x���g�����[�h���邱�Ƃ����R�ł��܂��B
-                �����łȂ���΁A�i����ԂɂȂ��Ƃ��i�ȑO�ɉi���ł������Ȃ�A���̏�Ԃ� <emphasis>�����idetached�j</emphasis> 
-                �ƌĂт܂��j�A <literal>Session</literal> �̊O���ŃI�u�W�F�N�g���C�����܂��B
-                ���������Ƃ��ɂ̓R���N�V������ύX���邱�Ƃ��\�ł��F
+                異なる作業単位(Unit of Work)で人々とイベントをロードすることも当然できます。
+                そうでなければ、永続状態にないとき（以前に永続であったなら、この状態を <emphasis>分離（detached）</emphasis> 
+                と呼びます）、 <literal>Session</literal> の外部でオブジェクトを修正します。
+                分離されるときにはコレクションを変更することも可能です：
             </para>
 
             <programlisting><![CDATA[private void addPersonToEvent(Long personId, Long eventId) {
@@ -1049,20 +1051,20 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                <literal>update</literal> �̌Ăяo���͕����I�u�W�F�N�g���Ăщi�������܂��B
-                ����́A�V������ƒP��(Unit of Work)�Ƀo�C���h����ƌ�����ł��傤�B
-                ���̂��ߕ����̊Ԃɉ�����ꂽ�ǂ̂悤�ȏC�����f�[�^�x�[�X�ɃZ�[�u�ł��܂��B
-                �G���e�B�e�B�I�u�W�F�N�g�̃R���N�V�����ւ̏C���i�ǉ���폜�j�����l�ɃZ�[�u�ł��܂��B
+                <literal>update</literal> の呼び出しは分離オブジェクトを再び永続化します。
+                これは、新しい作業単位(Unit of Work)にバインドすると言えるでしょう。
+                そのため分離の間に加えられたどのような修正もデータベースにセーブできます。
+                エンティティオブジェクトのコレクションへの修正（追加･削除）も同様にセーブできます。
             </para>
 
             <para>
-                ����͍��͂��܂�g���݂�������܂��񂪁A
-                �����̃A�v���P�[�V�����̐݌v�ɑg�ݍ��ނ��Ƃ��ł���d�v�ȃR���Z�v�g�ł��B
-                ����ł͂��̃G�N�T�T�C�Y�̍Ō�ɁA
-                <literal>EventManager</literal> �̃��C�����\�b�h�ɐV�����A�N�V������ǉ�����
-                �R�}���h���C������Ăяo���Ă݂܂��傤�B
-                �l��C�x���g�̎��ʎq���K�v�Ȃ�A <literal>save()</literal> ���\�b�h���Ԃ��Ă���܂�
-                �i�ꍇ�ɂ���Ă͎��ʎq��Ԃ����߂Ƀ��\�b�h���C������K�v�����邩������܂���j�B
+                これは今はあまり使いみちがありませんが、
+                自分のアプリケーションの設計に組み込むことができる重要なコンセプトです。
+                それではこのエクササイズの最後に、
+                <literal>EventManager</literal> のメインメソッドに新しいアクションを追加して
+                コマンドラインから呼び出してみましょう。
+                人やイベントの識別子が必要なら、 <literal>save()</literal> メソッドが返してくれます
+                （場合によっては識別子を返すためにメソッドを修正する必要があるかもしれません）。
             </para>
 
             <programlisting><![CDATA[else if (args[0].equals("addpersontoevent")) {
@@ -1073,36 +1075,36 @@ public class Person {
 }]]></programlisting>
 
             <para>
-                ����͓����悤�ɏd�v��2�̃N���X�A�܂�2�̃G���e�B�e�B�Ԃ̊֘A�̗�ł����B
-                �O�ɏq�ׂ��悤�ɁA�T�^�I�ȃ��f���ɂ́A���ʁu��r�I�d�v�ł͂Ȃ��v���̃N���X�ƌ^������܂��B
-                ����܂łɌ����悤�� <literal>int</literal> �� <literal>String</literal> �̂悤�Ȃ��̂ł��B
-                ���̂悤�ȃN���X�� <emphasis>�l�^</emphasis> �ƌ����܂��B
-                ���̃C���X�^���X�͓���̃G���e�B�e�B�� <emphasis>�ˑ�</emphasis> ���܂��B
-                ���̌^�̃C���X�^���X�͓Ǝ���ID�������܂��񂵁A
-                �G���e�B�e�B�Ԃŋ��L����邱�Ƃ�����܂���
-                �i�t�@�[�X�g�l�[���������������Ƃ��Ă��A2�l�̐l�͓��� <literal>firstname</literal> 
-                �I�u�W�F�N�g���Q�Ƃ��܂���j�B
-                �l�^�͂������JDK���Ɍ�����܂����A���ꂾ���ł͂Ȃ�
-                �i���ہAHibernate�A�v���P�[�V�����ɂ����Ă��ׂĂ�JDK�N���X�͒l�^�ƌ��Ȃ��܂��j�A
-                �Ⴆ�� <literal>Address</literal> �� <literal>MonetaryAmount</literal> 
-                �̂悤�ȓƎ��̈ˑ��N���X���������Ƃ��ł��܂��B
+                これは同じように重要な2つのクラス、つまり2つのエンティティ間の関連の例でした。
+                前に述べたように、典型的なモデルには、普通「比較的重要ではない」他のクラスと型があります。
+                これまでに見たような <literal>int</literal> や <literal>String</literal> のようなものです。
+                このようなクラスを <emphasis>値型</emphasis> と言います。
+                このインスタンスは特定のエンティティに <emphasis>依存</emphasis> します。
+                この型のインスタンスは独自のIDを持ちませんし、
+                エンティティ間で共有されることもありません
+                （ファーストネームが同じだったとしても、2人の人は同じ <literal>firstname</literal> 
+                オブジェクトを参照しません）。
+                値型はもちろんJDK内に見つかりますが、それだけではなく
+                （実際、HibernateアプリケーションにおいてすべてのJDKクラスは値型と見なせます）、
+                例えば <literal>Address</literal> や <literal>MonetaryAmount</literal> 
+                のような独自の依存クラスを書くこともできます。
             </para>
 
             <para>
-                �l�^�̃R���N�V������݌v���邱�Ƃ��ł��܂��B
-                ����͑��̃G���e�B�e�B�ւ̎Q�Ƃ̃R���N�V�����Ƃ͊T�O�I�ɔ��ɈقȂ�܂����A
-                Java�ł͂قƂ�Ǔ����悤�Ɍ����܂��B
+                値型のコレクションを設計することもできます。
+                これは他のエンティティへの参照のコレクションとは概念的に非常に異なりますが、
+                Javaではほとんど同じように見えます。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-associations-valuecollections">
-            <title>�l�̃R���N�V����</title>
+            <title>値のコレクション</title>
 
             <para>
-                �l�^�I�u�W�F�N�g�̃R���N�V������ <literal>Person</literal> �G���e�B�e�B�֒ǉ����܂��B
-                E���[���A�h���X���i�[�������̂ł����A<literal>String</literal> �^���g���Ă���̂ŁA
-                �R���N�V�����͍Ă� <literal>Set</literal> �ł��F
+                値型オブジェクトのコレクションを <literal>Person</literal> エンティティへ追加します。
+                Eメールアドレスを格納したいのですが、<literal>String</literal> 型を使っているので、
+                コレクションは再び <literal>Set</literal> です：
             </para>
             <programlisting><![CDATA[private Set emailAddresses = new HashSet();
 
@@ -1115,7 +1117,7 @@ public void setEmailAddresses(Set emailAddresses) {
 }]]></programlisting>
 
             <para>
-                ���� <literal>Set</literal> �̃}�b�s���O�ł��F
+                この <literal>Set</literal> のマッピングです：
             </para>
 
             <programlisting><![CDATA[<set name="emailAddresses" table="PERSON_EMAIL_ADDR">
@@ -1124,19 +1126,19 @@ public void setEmailAddresses(Set emailAddresses) {
 </set>]]></programlisting>
 
             <para>
-                �O�̃}�b�s���O�Ɣ�ׂĈႤ�̂� <literal>element</literal> �̕����ł����A
-                Hibernate�ɂ��̃R���N�V���������̃G���e�B�e�B�ւ̎Q�Ƃ��܂܂��A
-                <literal>String</literal> �^�̗v�f�̃R���N�V�������܂ނ��Ƃ������܂��B
-                �i�������̖��O(string)��Hibernate�̃}�b�s���O�^�܂��̓R���o�[�^�ł���Ƃ������Ƃł��j�B
-                �J��Ԃ��܂����A<literal>set</literal> �v�f�� <literal>table</literal> �����́A
-                �R���N�V�����̂��߂̃e�[�u�������w�肵�܂��B
-                <literal>key</literal> �v�f�̓R���N�V�����e�[�u���̊O���L�[�J���������`���܂��B
-                <literal>element</literal> �v�f�� <literal>column</literal> ������ <literal>String</literal> 
-                �̒l�����ۂɊi�[�����J�����̖��O���`���܂��B
+                前のマッピングと比べて違うのは <literal>element</literal> の部分ですが、
+                Hibernateにこのコレクションが他のエンティティへの参照を含まず、
+                <literal>String</literal> 型の要素のコレクションを含むことを教えます。
+                （小文字の名前(string)はHibernateのマッピング型またはコンバータであるということです）。
+                繰り返しますが、<literal>set</literal> 要素の <literal>table</literal> 属性は、
+                コレクションのためのテーブル名を指定します。
+                <literal>key</literal> 要素はコレクションテーブルの外部キーカラム名を定義します。
+                <literal>element</literal> 要素の <literal>column</literal> 属性は <literal>String</literal> 
+                の値が実際に格納されるカラムの名前を定義します。
             </para>
 
             <para>
-                �X�V�����X�L�[�}�����Ă��������F
+                更新したスキーマを見てください：
             </para>
 
             <programlisting><![CDATA[
@@ -1154,15 +1156,15 @@ public void setEmailAddresses(Set emailAddresses) {
  ]]></programlisting>
 
             <para>
-                �R���N�V�����e�[�u���̎�L�[�́A���ۂ͗����̃J�������g���������L�[�ł��邱�Ƃ��킩��܂��B
-                ����͐l���Ƃ�E���[���A�h���X���d���ł��Ȃ��Ƃ������ƂŁA
-                Java��set�ɗv�������Z�}���e�B�N�X���̂��̂ł��B
+                コレクションテーブルの主キーは、実際は両方のカラムを使った複合キーであることがわかります。
+                これは人ごとにEメールアドレスが重複できないということで、
+                Javaのsetに要求されるセマンティクスそのものです。
             </para>
 
             <para>
-                �ȑO�l�ƃC�x���g���֘A�Â����Ƃ��ƑS�������悤�ɁA
-                ���⎎���ɃR���N�V�����ɗv�f��ǉ����邱�Ƃ��ł���悤�ɂȂ�܂����B
-                �����Ƃ�Java�ł͓����R�[�h�ł��B
+                以前人とイベントを関連づけたときと全く同じように、
+                今や試しにコレクションに要素を追加することができるようになりました。
+                両方ともJavaでは同じコードです。
             </para>
 
             <programlisting><![CDATA[private void addEmailToPerson(Long personId, String emailAddress) {
@@ -1179,28 +1181,28 @@ public void setEmailAddresses(Set emailAddresses) {
 }]]></programlisting>
 
             <para>
-                ����A�R���N�V�����̏������� <emphasis>fetch</emphasis> �N�G�����g�p���܂���ł����B
-                ���̂��߁Agetter���\�b�h�̌Ăяo���ɂ���ăR���N�V���������������邽�߂�SELECT��
-                ���s�����̂ŁA�R���N�V�����ɗv�f��ǉ��ł��܂��B
-                SQL�̃��O���Ď����āA�����t�F�b�`���g���čœK�����Ă��������B
+                今回、コレクションの初期化に <emphasis>fetch</emphasis> クエリを使用しませんでした。
+                そのため、getterメソッドの呼び出しによってコレクションを初期化するためのSELECTが
+                実行されるので、コレクションに要素を追加できます。
+                SQLのログを監視して、即時フェッチを使って最適化してください。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-associations-bidirectional" revision="1">
-            <title>�o�����֘A</title>
+            <title>双方向関連</title>
 
             <para>
-                ���ɑo�����֘A���}�b�s���O���܂��B
-                Java�ŗ�������l�ƃC�x���g�̊֘A�𓮍삳���܂��B
-                �������A�f�[�^�x�[�X�X�L�[�}�͕ς��܂��񂪁A���d�x�͑��Α��̂܂܂ł��B
-                �����[�V���i���f�[�^�x�[�X�̓l�b�g���[�N�v���O���~���O��������_��Ȃ̂ŁA
-                �i�r�Q�[�V�����̕����̂悤�Ȃ��̂�K�v�Ƃ��܂���B
-                �f�[�^�͂�����̕��@�Ō����蕜���ł���Ƃ������Ƃł��B
+                次に双方向関連をマッピングします。
+                Javaで両側から人とイベントの関連を動作させます。
+                もちろん、データベーススキーマは変わりませんが、多重度は多対多のままです。
+                リレーショナルデータベースはネットワークプログラミング言語よりも柔軟なので、
+                ナビゲーションの方向のようなものを必要としません。
+                データはあらゆるの方法で見たり復元できるということです。
             </para>
 
             <para>
-                �܂� <literal>Event</literal> �C�x���g�N���X�ɎQ���҂̃R���N�V������ǉ����܂��F
+                まず <literal>Event</literal> イベントクラスに参加者のコレクションを追加します：
             </para>
 
             <programlisting><![CDATA[private Set participants = new HashSet();
@@ -1214,7 +1216,7 @@ public void setParticipants(Set participants) {
 }]]></programlisting>
 
             <para>
-                ����ł� <literal>Event.hbm.xml</literal> �Ŋ֘A�̂����瑤���}�b�s���O���Ă��������B
+                それでは <literal>Event.hbm.xml</literal> で関連のこちら側をマッピングしてください。
             </para>
 
             <programlisting><![CDATA[<set name="participants" table="PERSON_EVENT" inverse="true">
@@ -1223,43 +1225,43 @@ public void setParticipants(Set participants) {
 </set>]]></programlisting>
 
             <para>
-                �����̂Ƃ���A������̃}�b�s���O�h�L�������g(XML�t�@�C��)�ł��A���ʂ� <literal>set</literal> 
-                �}�b�s���O���g���Ă��܂��B
-                <literal>key</literal> �� <literal>many-to-many</literal> �̃J���������A
-                �����̃}�b�s���O�h�L�������g�œ���ւ��ɂȂ��Ă��邱�Ƃɒ��ڂ��Ă��������B
-                �����ōł��d�v�Ȓǉ����ڂ́A <literal>Event</literal> �̃R���N�V�����}�b�s���O�� <literal>set</literal> 
-                �v�f�ɂ��� <literal>inverse="true"</literal> �����ł��B
+                ご覧のとおり、いずれのマッピングドキュメント(XMLファイル)でも、普通の <literal>set</literal> 
+                マッピングを使っています。
+                <literal>key</literal> と <literal>many-to-many</literal> のカラム名が、
+                両方のマッピングドキュメントで入れ替えになっていることに注目してください。
+                ここで最も重要な追加項目は、 <literal>Event</literal> のコレクションマッピングの <literal>set</literal> 
+                要素にある <literal>inverse="true"</literal> 属性です。
             </para>
 
             <para>
-                ���̎w��̈Ӗ��́A2�̊Ԃ̃G���e�B�e�B�Ԃ̃����N�ɂ��Ă̏���T���K�v������Ƃ��A
-                Hibernate�͔��Α��̃G���e�B�e�B�A�܂� <literal>Person</literal> �N���X����T���Ƃ������Ƃł��B
-                ��x2�̃G���e�B�e�B�Ԃ̑o���������N���ǂ̂悤�ɍ쐬����邩���킩��΁A
-                ����𗝉����邱�Ƃ͂ƂĂ��ȒP�ł��B
+                この指定の意味は、2つの間のエンティティ間のリンクについての情報を探す必要があるとき、
+                Hibernateは反対側のエンティティ、つまり <literal>Person</literal> クラスから探すということです。
+                一度2つのエンティティ間の双方向リンクがどのように作成されるかがわかれば、
+                これを理解することはとても簡単です。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-associations-usingbidir">
-            <title>�o���������N�̓���</title>
+            <title>双方向リンクの動作</title>
 
             <para>
-                �܂��AHibernate���ʏ��Java�̃Z�}���e�B�N�X�ɉe�����y�ڂ��Ȃ����Ƃ�S�ɗ��߂Ă����Ă��������B
-                �������́A�P�����̗�Ƃ��Ăǂ̂悤�� <literal>Person</literal> �� <literal>Event</literal> 
-                �̊Ԃ̃����N���쐬�����ł��傤���H
-                <literal>Person</literal> �̃C���X�^���X�̃C�x���g�ւ̎Q�Ƃ̃R���N�V������
-                <literal>Event</literal> �̃C���X�^���X��ǉ����܂����B
-                ���̂��߂��̃����N��o�����ɂ�������΁A
-                ������O�ł������Α��ɂ��������Ƃ����Ȃ���΂Ȃ�܂���B
-                <literal>Event</literal> �̃R���N�V������ <literal>Person</literal> �ւ�
-                �Q�Ƃ�ǉ�����Ƃ������Ƃł��B
-                ���́u�����Ń����N��ݒ肷�邱�Ɓv�͐�΂ɕK�v�Ȃ̂ŁA�����ĖY��Ȃ��ł��������B
+                まず、Hibernateが通常のJavaのセマンティクスに影響を及ぼさないことを心に留めておいてください。
+                私たちは、単方向の例としてどのように <literal>Person</literal> と <literal>Event</literal> 
+                の間のリンクを作成したでしょうか？
+                <literal>Person</literal> のインスタンスのイベントへの参照のコレクションに
+                <literal>Event</literal> のインスタンスを追加しました。
+                そのためこのリンクを双方向にしたければ、
+                当たり前ですが反対側にも同じことをしなければなりません。
+                <literal>Event</literal> のコレクションに <literal>Person</literal> への
+                参照を追加するということです。
+                この「両側でリンクを設定すること」は絶対に必要なので、決して忘れないでください。
             </para>
 
             <para>
-                �����̊J���҂͐T�d�Ƀv���O��������̂ŁA
-                �G���e�B�e�B�̗����ɐ������֘A��ݒ肷�郊���N�Ǘ����\�b�h���쐬���܂��B
-                �Ⴆ�� <literal>Person</literal> �ł͈ȉ��̂悤�ɂȂ�܂��B�F
+                多くの開発者は慎重にプログラムするので、
+                エンティティの両側に正しく関連を設定するリンク管理メソッドを作成します。
+                例えば <literal>Person</literal> では以下のようになります。：
             </para>
 
             <programlisting><![CDATA[protected Set getEvents() {
@@ -1281,52 +1283,52 @@ public void removeFromEvent(Event event) {
 }]]></programlisting>
 
             <para>
-                �R���N�V�����̃Q�b�g�ƃZ�b�g���\�b�h������protected�ɂȂ��Ă��邱�Ƃɒ��ӂ��Ă��������B
-                ����͓����p�b�P�[�W�̃N���X��T�u�N���X�̃��\�b�h�͈ˑR�A�N�Z�X���\�ł����A
-                �i�قƂ�ǁj���̃p�b�P�[�W�O�̂ǂ̃N���X�ł����ڂ��̃R���N�V������䖳���ɂ��邱�Ƃ�h���܂��B
-                �����炭���Α��̃R���N�V�����ɂ��������Ƃ��������������ł��傤�B
+                コレクションのゲットとセットメソッドが現在protectedになっていることに注意してください。
+                これは同じパッケージのクラスやサブクラスのメソッドは依然アクセスが可能ですが、
+                （ほとんど）そのパッケージ外のどのクラスでも直接そのコレクションを台無しにすることを防ぎます。
+                おそらく反対側のコレクションにも同じことをした方がいいでしょう。
             </para>
 
             <para>
-                <literal>inverse</literal> �}�b�s���O�����Ƃ͂����������ł��傤���H
-                �J���҂�Java�ɂƂ��ẮA�o���������N�͒P�ɗ����̎Q�Ƃ𐳂����ݒ肷��Ƃ������Ƃł��B
-                ������Hibernate�́i����ᔽ������邽�߂ɁjSQL�� <literal>INSERT</literal> �� <literal>UPDATE</literal> 
-                ���𐳊m�ɕύX���邽�߂̏\���ȏ��������Ă��Ȃ��̂ŁA
-                �o�����֘A�v���p�e�B���������߂̉��炩�̏�����K�v�Ƃ��܂��B
-                �֘A�̕Б��� <literal>inverse</literal> �ɐݒ肷�邱�ƂŁAHibernate�͊�{�I�ɂ͐ݒ肵�����𖳎����A
-                ���Α��� <emphasis>��</emphasis> �Ƃ��čl���܂��B
-                ���ꂾ���ŁAHibernate�͕��������i�r�Q�[�V�������f����SQL�f�[�^�x�[�X�X�L�[�}�֕ϊ�����Ƃ���
-                ���ׂĂ̖��ɂ��܂��Ώ��ł��܂��B
-                �o���Ă����Ȃ���΂Ȃ�Ȃ����[���͊ȒP�ł��B
-                �o�����֘A�͕K���Б��� <literal>inverse</literal> �ɂ���K�v������Ƃ������Ƃł��B
-                ��Α��֘A�ł͂���͑����łȂ���΂Ȃ�܂���B
-                ���Α��֘A�ł͂ǂ��瑤�ł��\���܂���B�ǂ���ł��Ⴂ�͂���܂���B
+                <literal>inverse</literal> マッピング属性とはいったい何でしょうか？
+                開発者とJavaにとっては、双方向リンクは単に両側の参照を正しく設定するということです。
+                しかしHibernateは（制約違反を避けるために）SQLの <literal>INSERT</literal> と <literal>UPDATE</literal> 
+                文を正確に変更するための十分な情報を持っていないので、
+                双方向関連プロパティを扱うための何らかの助けを必要とします。
+                関連の片側を <literal>inverse</literal> に設定することで、Hibernateは基本的には設定した側を無視し、
+                反対側の <emphasis>鏡</emphasis> として考えます。
+                これだけで、Hibernateは方向を持つナビゲーションモデルをSQLデータベーススキーマへ変換するときの
+                すべての問題にうまく対処できます。
+                覚えておかなければならないルールは簡単です。
+                双方向関連は必ず片側を <literal>inverse</literal> にする必要があるということです。
+                一対多関連ではそれは多側でなければなりません。
+                多対多関連ではどちら側でも構いません。どちらでも違いはありません。
             </para>
 
         </sect2>
 
         <para>
-             �ł͂����������Web�A�v���P�[�V�����ɂ��Ă݂܂��傤�B
+             ではこれを小さなWebアプリケーションにしてみましょう。
         </para>
 
     </sect1>
 
     <sect1 id="tutorial-webapp">
-        <title>�p�[�g3 - EventManager Web�A�v���P�[�V����</title>
+        <title>パート3 - EventManager Webアプリケーション</title>
 
         <para>
-             Hibernate��Web�A�v���P�[�V�����́A�X�^���h�A���[���̃A�v���P�[�V�����̂悤��
-             <literal>Session</literal> �� <literal>Transaction</literal> ���g�p���܂��B
-             �������������̈�ʓI�ȃp�^�[�����𗧂��܂��B
-             ������ <literal>EventManagerServlet</literal> ���쐬���܂��B���̃T�[�u���b�g�́A
-             �f�[�^�x�[�X�Ɋi�[�����S�ẴC�x���g�����X�g�ɂł��A�����HTML�t�H�[������V�����C�x���g����͂ł�����̂ł��B
+             HibernateのWebアプリケーションは、スタンドアローンのアプリケーションのように
+             <literal>Session</literal> と <literal>Transaction</literal> を使用します。
+             しかしいくつかの一般的なパターンが役立ちます。
+             ここで <literal>EventManagerServlet</literal> を作成します。このサーブレットは、
+             データベースに格納した全てのイベントをリストにでき、さらにHTMLフォームから新しいイベントを入力できるものです。
         </para>
 
         <sect2 id="tutorial-webapp-servlet" revision="1">
-            <title>��{�I��Servlet�̋L�q</title>
+            <title>基本的なServletの記述</title>
 
             <para>
-                �V�����N���X���A�\�[�X�f�B���N�g���� <literal>events</literal> �p�b�P�[�W�ɍ쐬���Ă��������B
+                新しいクラスを、ソースディレクトリの <literal>events</literal> パッケージに作成してください。
             </para>
 
             <programlisting><![CDATA[package events;
@@ -1339,8 +1341,8 @@ public class EventManagerServlet extends HttpServlet {
 }]]></programlisting>
 
             <para>
-                Servlet��HTTP�� <literal>GET</literal> ���N�G�X�g�݂̂���������̂ŁA
-                 <literal>doGet()</literal> ���������܂��B
+                ServletはHTTPの <literal>GET</literal> リクエストのみを処理するので、
+                 <literal>doGet()</literal> を実装します。
             </para>
 
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
@@ -1369,37 +1371,37 @@ public class EventManagerServlet extends HttpServlet {
 }]]></programlisting>
 
             <para>
-                ����� <emphasis>session-per-request</emphasis> �Ƃ����p�^�[���ł��B
-                Servlet�����N�G�X�g���󂯎��ƁA <literal>SessionFactory</literal> ��
-                <literal>getCurrentSession()</literal> �̍ŏ��̌Ăяo���ŁA
-                Hibernate�̐V���� <literal>Session</literal> ���J����܂��B
-                ���̂Ƃ��f�[�^�x�[�X�g�����U�N�V�������J�n����܂��B
-                �f�[�^�̓ǂݏ����Ɋւ�炸�A���ׂẴf�[�^�A�N�Z�X�̓g�����U�N�V�������ōs���܂��B
-                �i�A�v���P�[�V�������ł̓I�[�g�R�~�b�g���[�h���g�p���܂���j�B
+                これは <emphasis>session-per-request</emphasis> というパターンです。
+                Servletがリクエストを受け取ると、 <literal>SessionFactory</literal> の
+                <literal>getCurrentSession()</literal> の最初の呼び出しで、
+                Hibernateの新しい <literal>Session</literal> が開かれます。
+                そのときデータベーストランザクションが開始されます。
+                データの読み書きに関わらず、すべてのデータアクセスはトランザクション内で行います。
+                （アプリケーション内ではオートコミットモードを使用しません）。
             </para>
 
             <para>
-                ���ɁA���N�G�X�g�̃A�N�V�����͏�������A���X�|���X�ł���HTML���`�悳��܂��B
-                ����ɂ��Ă͂����ɐ������܂��B
+                次に、リクエストのアクションは処理され、レスポンスであるHTMLが描画されます。
+                これについてはすぐに説明します。
             </para>
 
             <para>
-                �Ō�Ƀ��N�G�X�g�̏�����HTML�`�悪���������Ƃ��ɁA��ƒP��(Unit of Work)���I�����܂��B
-                ����������`�撆�ɖ�肪���������ꍇ�Aexception���������ăf�[�^�x�[�X�g�����U�N�V���������[���o�b�N���܂��B
-                ����� <literal>session-per-request</literal> �p�^�[�����������܂��B
-                �S�ẴT�[�u���b�g�Ƀg�����U�N�V�������E�̃R�[�h����������ɁA�T�[�u���b�g�t�B���^�ɋL�q���邱�Ƃ��\�ł��B
-                <emphasis>Open Session in View</emphasis> �ƌĂ΂�邱�̃p�^�[���ɂ��ẮA
-                Hibernate��Web�T�C�g��Wiki���Q�Ƃ��Ă��������B
-                �T�[�u���b�g�ł͂Ȃ�JSP��HTML�`������悤�Ƃ���ƁA�����ɂ��̃p�^�[���ɂ��Ă̏�񂪕K�v�ɂȂ�ł��傤�B
+                最後にリクエストの処理とHTML描画が完了したときに、作業単位(Unit of Work)を終了します。
+                もし処理や描画中に問題が発生した場合、exceptionが投げられてデータベーストランザクションをロールバックします。
+                これで <literal>session-per-request</literal> パターンが完了します。
+                全てのサーブレットにトランザクション境界のコードを書く代わりに、サーブレットフィルタに記述することも可能です。
+                <emphasis>Open Session in View</emphasis> と呼ばれるこのパターンについては、
+                HibernateのWebサイトやWikiを参照してください。
+                サーブレットではなくJSPでHTML描画をしようとすると、すぐにこのパターンについての情報が必要になるでしょう。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-webapp-processing" revision="1">
-            <title>�����ƕ`��</title>
+            <title>処理と描画</title>
 
             <para>
-                 �ł́A���N�G�X�g�̏����ƃy�[�W�̕`����������܂��B
+                 では、リクエストの処理とページの描画を実装します。
             </para>
 
 <programlisting><![CDATA[// Write HTML header
@@ -1430,11 +1432,11 @@ out.flush();
 out.close();]]></programlisting>
 
             <para>
-                Java��HTML�����݂���R�[�f�B���O�X�^�C���́A��蕡�G�ȃA�v���P�[�V�����ɂ͓K���Ă��Ȃ��ł��傤
-                �i���̃`���[�g���A���ł́A��{�I��Hibernate�̃R���Z�v�g�������Ă��邾���ł��邱�Ƃ��o���Ă����Ă��������j�B
-                ���̃R�[�h��HTML�̃w�b�_�[�ƃt�b�^�[�̋L�q�ł��B
-                ���̃y�[�W�ɂ́A�C�x���g����͂���HTML�t�H�[���ƁA�f�[�^�x�[�X�ɂ���S�ẴC�x���g�̃��X�g���\������܂��B
-                �ŏ��̃��\�b�h�͂����P����HTML�o�͂ł��B
+                JavaとHTMLが混在するコーディングスタイルは、より複雑なアプリケーションには適していないでしょう
+                （このチュートリアルでは、基本的なHibernateのコンセプトを示しているだけであることを覚えておいてください）。
+                このコードはHTMLのヘッダーとフッターの記述です。
+                このページには、イベントを入力するHTMLフォームと、データベースにある全てのイベントのリストが表示されます。
+                最初のメソッドはごく単純なHTML出力です。
             </para>
 
             <programlisting><![CDATA[private void printEventForm(PrintWriter out) {
@@ -1447,8 +1449,8 @@ out.close();]]></programlisting>
 }]]></programlisting>
 
             <para>
-                 <literal>listEvents()</literal> ���\�b�h�́A���݂̃X���b�h�Ɍ��т�
-                 Hibernate�� <literal>Session</literal> ���g�p���āA�N�G�������s���܂��B
+                 <literal>listEvents()</literal> メソッドは、現在のスレッドに結びつく
+                 Hibernateの <literal>Session</literal> を使用して、クエリを実行します。
             </para>
 
             <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
@@ -1474,8 +1476,8 @@ out.close();]]></programlisting>
 }]]></programlisting>
 
             <para>
-                �Ō�ɁA <literal>store</literal> �A�N�V������ <literal>createAndStoreEvent()</literal> ���\�b�h��
-                �Ăяo���܂��B���̃��\�b�h�ł����݂̃X���b�h�� <literal>Session</literal> �𗘗p���܂��B
+                最後に、 <literal>store</literal> アクションが <literal>createAndStoreEvent()</literal> メソッドを
+                呼び出します。このメソッドでも現在のスレッドの <literal>Session</literal> を利用します。
             </para>
 
             <programlisting><![CDATA[protected void createAndStoreEvent(String title, Date theDate) {
@@ -1488,26 +1490,26 @@ out.close();]]></programlisting>
 }]]></programlisting>
 
             <para>
-                ����ŃT�[�u���b�g�̊����ł��B
-                �T�[�u���b�g�ւ̃��N�G�X�g�́A��� <literal>Session</literal> �� 
-                <literal>Transaction</literal> �ŏ��������ł��傤�B
-                �ŏ��̃X�^���h�A���[���̃A�v���P�[�V�����̂悤�ɁA
-                Hibernate�͎����I�ɂ����̃I�u�W�F�N�g�����s����X���b�h�Ɍ��ѕt���邱�Ƃ��ł��܂��B
-                ����ɂ��A�J���҂����R�ɃR�[�h�����C���[�����ł��A
-                �D���ȕ��@�� <literal>SessionFactory</literal> �ւ̃A�N�Z�X���ł���悤�ɂȂ�܂��B
-                �ʏ�A�J���҂͂��������ꂽ�f�U�C�����g�p���āA�f�[�^�A�N�Z�X�̃R�[�h��
-                �f�[�^�A�N�Z�X�I�u�W�F�N�g�Ɉړ�����ł��傤�iDAO�p�^�[���j�B
-                ��葽���̗�́AHibernate��Wiki���Q�Ƃ��Ă��������B
+                これでサーブレットの完成です。
+                サーブレットへのリクエストは、一つの <literal>Session</literal> と 
+                <literal>Transaction</literal> で処理されるでしょう。
+                最初のスタンドアローンのアプリケーションのように、
+                Hibernateは自動的にこれらのオブジェクトを実行するスレッドに結び付けることができます。
+                これにより、開発者が自由にコードをレイヤー分けでき、
+                好きな方法で <literal>SessionFactory</literal> へのアクセスができるようになります。
+                通常、開発者はより洗練されたデザインを使用して、データアクセスのコードを
+                データアクセスオブジェクトに移動するでしょう（DAOパターン）。
+                より多くの例は、HibernateのWikiを参照してください。
             </para>
 
         </sect2>
 
         <sect2 id="tutorial-webapp-deploy">
-            <title>�f�v���C�ƃe�X�g</title>
+            <title>デプロイとテスト</title>
 
             <para>
-                ���̃A�v���P�[�V�����̃f�v���C�̂��߂ɁAWeb�A�[�J�C�u�iWAR�j���쐬���Ă��������B
-                �ȉ���Ant�^�[�Q�b�g�� <literal>build.xml</literal> �ɉ����Ă��������B
+                このアプリケーションのデプロイのために、Webアーカイブ（WAR）を作成してください。
+                以下のAntターゲットを <literal>build.xml</literal> に加えてください。
             </para>
 
 <programlisting><![CDATA[<target name="war" depends="compile">
@@ -1521,10 +1523,10 @@ out.close();]]></programlisting>
 </target>]]></programlisting>
 
             <para>
-                ���̃^�[�Q�b�g�� <literal>hibernate-tutorial.war</literal> �Ƃ����t�@�C����
-                �v���W�F�N�g�f�B���N�g���ɍ쐬���܂��B
-                ���̃t�@�C���͂��ׂẴ��C�u������ <literal>web.xml</literal> �L�q�q���܂�ł���A
-                �v���W�F�N�g�̃x�[�X�f�B���N�g���ɒu����邱�Ƃ����҂���܂��B
+                このターゲットは <literal>hibernate-tutorial.war</literal> というファイルを
+                プロジェクトディレクトリに作成します。
+                このファイルはすべてのライブラリと <literal>web.xml</literal> 記述子を含んでおり、
+                プロジェクトのベースディレクトリに置かれることを期待されます。
             </para>
 
             <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -1545,29 +1547,29 @@ out.close();]]></programlisting>
 </web-app>]]></programlisting>
 
             <para>
-                Web�A�v���P�[�V�����̃R���p�C���ƃf�v���C�̑O�ɁA <literal>jsdk.jar</literal> �Ƃ���
-                �ǉ��̃��C�u�������K�v�Ȃ��Ƃɒ��ӂ��Ă��������B
-                �����Java�T�[�u���b�g�̊J���L�b�g�ł��B
-                �����܂����̃��C�u�����������Ă��Ȃ��Ȃ�ASun�̃E�F�u�T�C�g�œ��肵�āA
-                ���C�u�����f�B���N�g���ɃR�s�[���Ă��������B
-                �������A����̓R���p�C���ɂ̂ݎg�p����AWAR�p�b�P�[�W����͏��O����܂��B
+                Webアプリケーションのコンパイルとデプロイの前に、 <literal>jsdk.jar</literal> という
+                追加のライブラリが必要なことに注意してください。
+                これはJavaサーブレットの開発キットです。
+                もしまだこのライブラリを持っていないなら、Sunのウェブサイトで入手して、
+                ライブラリディレクトリにコピーしてください。
+                しかし、これはコンパイルにのみ使用され、WARパッケージからは除外されます。
             </para>
 
             <para>
-                �r���h�ƃf�v���C�̂��߂ɁA�v���W�F�N�g�f�B���N�g���� <literal>ant war</literal> ���Ăяo���A
-                <literal>hibernate-tutorial.war</literal> �t�@�C����Tomcat�� <literal>webapp</literal> 
-                �f�B���N�g���ɃR�s�[���Ă��������B
-                �܂�Tomcat���C���X�g�[�����Ă��Ȃ���΁A�_�E�����[�h���āA�ȉ��̃C���X�g�[���K�C�h�ɏ]���Ă��������B
-                �������A���̃A�v���P�[�V�����̃f�v���C���邽�߂ɁATomcat�̐ݒ��ύX����K�v�͂���܂���B
+                ビルドとデプロイのために、プロジェクトディレクトリで <literal>ant war</literal> を呼び出し、
+                <literal>hibernate-tutorial.war</literal> ファイルをTomcatの <literal>webapp</literal> 
+                ディレクトリにコピーしてください。
+                まだTomcatをインストールしていなければ、ダウンロードして、以下のインストールガイドに従ってください。
+                しかし、このアプリケーションのデプロイするために、Tomcatの設定を変更する必要はありません。
             </para>
 
             <para>
-                ��x�f�v���C����Tomcat���N������΁A <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal> ��
-                �A�v���P�[�V�����ւ̃A�N�Z�X���\�ł��B
-                �ŏ��̃��N�G�X�g���쐬�����T�[�u���b�g�ɓn�����Ƃ��ɁATomcat�̃��O��
-                Hibernate�̏������������m�F���Ă�������
-               �i <literal>HibernateUtil</literal> ���̐ÓI�������u���b�N���Ă΂�Ă��܂��j�B
-                �܂��Aexception�����������Ȃ�ڍׂ��m�F���Ă��������B
+                一度デプロイしてTomcatを起動すれば、 <literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal> で
+                アプリケーションへのアクセスが可能です。
+                最初のリクエストが作成したサーブレットに渡ったときに、Tomcatのログで
+                Hibernateの初期化処理を確認してください
+               （ <literal>HibernateUtil</literal> 内の静的初期化ブロックが呼ばれています）。
+                また、exceptionが発生したなら詳細を確認してください。
             </para>
 
         </sect2>
@@ -1575,24 +1577,24 @@ out.close();]]></programlisting>
     </sect1>
 
     <sect1 id="tutorial-summary" revision="1">
-        <title>�v��</title>
+        <title>要約</title>
 
         <para>
-            ���̃`���[�g���A���ł́A�ȒP�ȃX�^���h�A���[����Hibernate�A�v���P�[�V������
-            ���K�͂�Web�A�v���P�[�V�������������߂̊�{���Љ�܂����B
+            このチュートリアルでは、簡単なスタンドアローンのHibernateアプリケーションと
+            小規模のWebアプリケーションを書くための基本を紹介しました。
         </para>
 
         <para>
-            ����Hibernate�Ɏ��M������΁A���t�@�����X�h�L�������g�̖ڎ��ɖڂ�ʂ��āA
-            �ʔ��������Ǝv���g�s�b�N��T���Ă��������B
-            �ł��p�ɂɎ��₪����̂́A�g�����U�N�V���������i<xref linkend="transactions"/>�j�A
-            �t�F�b�`�̃p�t�H�[�}���X�i<xref linkend="performance"/>�j�A
-            API�̎g�����i<xref linkend="objectstate"/>�j�ƃN�G��
-            �i<xref linkend="objectstate-querying"/>�j�ł��B
+            もうHibernateに自信があれば、リファレンスドキュメントの目次に目を通して、
+            面白そうだと思うトピックを探してください。
+            最も頻繁に質問があるのは、トランザクション処理（<xref linkend="transactions"/>）、
+            フェッチのパフォーマンス（<xref linkend="performance"/>）、
+            APIの使い方（<xref linkend="objectstate"/>）とクエリ
+            （<xref linkend="objectstate-querying"/>）です。
         </para>
 
         <para>
-            ����Ɂi���ʂȁj�`���[�g���A�����K�v�Ȃ�AHibernate�E�F�u�T�C�g��Y�ꂸ�Ƀ`�F�b�N���Ă��������B
+            さらに（特別な）チュートリアルが必要なら、Hibernateウェブサイトを忘れずにチェックしてください。
         </para>
 
     </sect1>

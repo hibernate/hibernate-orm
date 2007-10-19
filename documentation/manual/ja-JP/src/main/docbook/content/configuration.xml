@@ -1,30 +1,32 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="session-configuration" revision="1">
 
-    <title>�ݒ�</title>
+    <title>設定</title>
     
     <para>
-        Hibernate�͂��܂��܂Ȋ��œ��삷��悤�Ƀf�U�C������Ă��邽�߁A���ɑ����̐ݒ�v�f������܂��B
-        �K���Ȃ��ƂɁAHibernate�́A���J����Ă���p�b�P�[�W�� <literal>etc/</literal> �t�H���_�� <literal>hibernate.properties</literal> 
-        �ɁA�قƂ�ǂ̐ݒ�v�f�̓K�؂ȃf�t�H���g�l���L�q����Ă��܂��B
-        ���� <literal>hibernate.properties</literal> ���N���X�p�X�ɐݒ肵�A�ݒ�v�f���J�X�^�}�C�Y���邾���ł��B
+        Hibernateはさまざまな環境で動作するようにデザインされているため、非常に多くの設定要素があります。
+        幸いなことに、Hibernateは、公開されているパッケージの <literal>etc/</literal> フォルダの <literal>hibernate.properties</literal> 
+        に、ほとんどの設定要素の適切なデフォルト値が記述されています。
+        この <literal>hibernate.properties</literal> をクラスパスに設定し、設定要素をカスタマイズするだけです。
     </para>
 
     <sect1 id="configuration-programmatic" revision="1">
-        <title>�v���O������̐ݒ�</title>
+        <title>プログラム上の設定</title>
 
         <para>
-             <literal>org.hibernate.cfg.Configuration</literal> �̃C���X�^���X�́A
-            Java�̌^��SQL�f�[�^�x�[�X�̃}�b�s���O�������ׂĎ����Ă��܂��B
-            The  <literal>Configuration</literal> �́A�i�s�ς́j <literal>SessionFactory</literal> 
-            �𐶐�����Ƃ��Ɏg�p���܂��B
-            ������XML�}�b�s���O�t�@�C����ϊ����A�}�b�s���O���ɂ��܂��B
+             <literal>org.hibernate.cfg.Configuration</literal> のインスタンスは、
+            Javaの型とSQLデータベースのマッピング情報をすべて持っています。
+            The  <literal>Configuration</literal> は、（不変の） <literal>SessionFactory</literal> 
+            を生成するときに使用します。
+            複数のXMLマッピングファイルを変換し、マッピング情報にします。
         </para>
 
         <para>
-            �ʏ�A<literal>Configuration</literal> �C���X�^���X�́A�����XML�}�b�s���O�t�@�C��
-            �ɂ���Ē��ڏ���������܂��B�����A�}�b�s���O�t�@�C�����N���X�p�X�ɐݒ肳��Ă���ꍇ�A
-            ���̃��\�b�h���g���Ă��������B <literal>addResource()</literal> :
+            通常、<literal>Configuration</literal> インスタンスは、特定のXMLマッピングファイル
+            によって直接初期化されます。もし、マッピングファイルがクラスパスに設定されている場合、
+            次のメソッドを使ってください。 <literal>addResource()</literal> :
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -32,8 +34,8 @@
     .addResource("Bid.hbm.xml");]]></programlisting>
 
         <para>
-            ��ֈ�(������̂ق����ǂ��Ƃ�������܂�)�Ƃ��ă}�b�s���O�N���X���w�肷����@������܂��BHibernate�ɁA�}�b�s���O�t�@�C����
-            ���������Ă��������F
+            代替案(こちらのほうが良いときもあります)としてマッピングクラスを指定する方法もあります。Hibernateに、マッピングファイルを
+            見つけさせてください：
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -41,14 +43,14 @@
     .addClass(org.hibernate.auction.Bid.class);]]></programlisting>
 
         <para>
-            Hibernate�́A�N���X�p�X�ɂ���ȉ��̂悤�Ȗ��O�̃}�b�s���O�t�@�C���������܂��B
-            <literal>/org/hibernate/auction/Item.hbm.xml</literal> �A
-            <literal>/org/hibernate/auction/Bid.hbm.xml</literal> �B
-            ���̕��@���ƁA�n�[�h�R�[�f�B���O���ꂽ�t�@�C������r���ł��܂��B
+            Hibernateは、クラスパスにある以下のような名前のマッピングファイルを見つけます。
+            <literal>/org/hibernate/auction/Item.hbm.xml</literal> 、
+            <literal>/org/hibernate/auction/Bid.hbm.xml</literal> 。
+            この方法だと、ハードコーディングされたファイル名を排除できます。
         </para>
         
         <para>
-            <literal>Configuration</literal> �́A�ݒ�v���p�e�B���w�肷�邱�Ƃ��ł��܂��F
+            <literal>Configuration</literal> は、設定プロパティを指定することもできます：
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -59,103 +61,103 @@
     .setProperty("hibernate.order_updates", "true");]]></programlisting>
     
         <para>
-            Hibernate�ɐݒ�v���p�e�B��ʂ����@��1�ł͂���܂���B
-            ���܂��܂ȃI�v�V������p�ӂ��Ă��܂��F
+            Hibernateに設定プロパティを通す方法は1つではありません。
+            さまざまなオプションを用意しています：
         </para>
 
         <orderedlist spacing="compact">
             <listitem>
                 <para>
-                    <literal>java.util.Properties</literal> �C���X�^���X��
-                    <literal>Configuration.setProperties()</literal> �ɓn���܂��B
+                    <literal>java.util.Properties</literal> インスタンスを
+                    <literal>Configuration.setProperties()</literal> に渡します。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>hibernate.properties</literal> ��
-                    �N���X�p�X�̃��[�g�f�B���N�g���ɒu���܂��B
+                    <literal>hibernate.properties</literal> を
+                    クラスパスのルートディレクトリに置きます。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>System</literal> �v���p�e�B��
-                    <literal>java -Dproperty=value</literal> ���g���悤�ɐݒ肵�܂��B
+                    <literal>System</literal> プロパティが
+                    <literal>java -Dproperty=value</literal> を使うように設定します。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>&lt;property&gt;</literal> �v�f��
-                    <literal>hibernate.cfg.xml</literal> �i��q�j�ɐݒ肵�܂��B
+                    <literal>&lt;property&gt;</literal> 要素を
+                    <literal>hibernate.cfg.xml</literal> （後述）に設定します。
                 </para>
             </listitem>
         </orderedlist>
 
         <para>
-            �������n�߂����̂Ȃ�A<literal>hibernate.properties</literal> 
-            ���g���̂���Ԃ̋ߓ��ł��B
+            今すぐ始めたいのなら、<literal>hibernate.properties</literal> 
+            を使うのが一番の近道です。
         </para>
 
         <para>
-            <literal>Configuration</literal> �́A�N�����ɂ�������I�u�W�F�N�g�ł���A
-            ��x <literal>SessionFactory</literal> �𐶐�������́A�j������邱�Ƃ��Ӑ}���Ă��܂��B
+            <literal>Configuration</literal> は、起動時にだけあるオブジェクトであり、
+            一度 <literal>SessionFactory</literal> を生成した後は、破棄されることを意図しています。
         </para>
 
     </sect1>
     
     <sect1 id="configuration-sessionfactory">
-        <title>SessionFactory���擾����</title>
+        <title>SessionFactoryを取得する</title>
 
         <para>
-            <literal>Configuration</literal> �����ׂẴ}�b�s���O������͂�����A
-            �A�v���P�[�V�����́A <literal>Session</literal> �t�@�N�g���C���X�^���X���擾���܂��B
-            ����SessionFactory�́AHibernate���g�p���邷�ׂẴX���b�h�ŋ��L�����ׂ��ł��B
+            <literal>Configuration</literal> がすべてのマッピング情報を解析したら、
+            アプリケーションは、 <literal>Session</literal> ファクトリインスタンスを取得します。
+            このSessionFactoryは、Hibernateを使用するすべてのスレッドで共有されるべきです。
         </para>
 
         <programlisting><![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]></programlisting>
 
         <para>
-            Hibernate�́A <literal>SessionFactory</literal> �𕡐��������邱�Ƃ��ł��܂��B
-            ����́A�����̃f�[�^�x�[�X���g�p����ꍇ�ɕ֗��ł��B
+            Hibernateは、 <literal>SessionFactory</literal> を複数生成することができます。
+            これは、複数のデータベースを使用する場合に便利です。
         </para>
 
     </sect1>
 
     <sect1 id="configuration-hibernatejdbc" revision="1">
-        <title>JDBC�R�l�N�V����</title>
+        <title>JDBCコネクション</title>
 
         <para>
-            �ʏ�A�J���҂� <literal>SessionFactory</literal> �𐶐����ASessionFactory��JDBC�R�l�N�V�������v�[�����O�������ƍl���܂��B
-            ���̃A�v���[�`���̗p����ꍇ�A�P���� <literal>Session</literal> ���I�[�v�����Ă��������F
+            通常、開発者は <literal>SessionFactory</literal> を生成し、SessionFactoryでJDBCコネクションをプーリングしたいと考えます。
+            そのアプローチを採用する場合、単純に <literal>Session</literal> をオープンしてください：
         </para>
 
         <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
         
         <para>
-            ���ꂾ���ŁA�v�[�����O����JDBC�R�l�N�V�������g���ĖړI�̃f�[�^�x�[�X
-            �ɃA�N�Z�X���邱�Ƃ��ł��܂��B
+            これだけで、プーリングしたJDBCコネクションを使って目的のデータベース
+            にアクセスすることができます。
         </para>
 
         <para>
-            ���̂��߂ɂ́AJDBC�R�l�N�V�����̃v���p�e�B��Hibernate�ɐݒ肷��K�v������܂��B
-            ���ׂĂ�Hibernate�v���p�e�B���ƃZ�}���e�B�N�X��
-            <literal>org.hibernate.cfg.Environment</literal> �N���X�ɒ�`����Ă��܂��B
-            ���̐ݒ��JDBC�R�l�N�V�����ݒ�̒��ň�ԏd�v�Ȃ��̂ł��B
+            そのためには、JDBCコネクションのプロパティをHibernateに設定する必要があります。
+            すべてのHibernateプロパティ名とセマンティクスは
+            <literal>org.hibernate.cfg.Environment</literal> クラスに定義されています。
+            この設定はJDBCコネクション設定の中で一番重要なものです。
         </para>
 
         <para>
-            �����A�ȉ��̃v���p�e�B��ݒ肷��ƁAHibernate�̓R�l�N�V�������擾����i�v�[�����j���߂�
-            <literal>java.sql.DriverManager</literal> ���g���܂��B
+            もし、以下のプロパティを設定すると、Hibernateはコネクションを取得する（プールも）ために
+            <literal>java.sql.DriverManager</literal> を使います。
         </para>
 
         <table frame="topbot">
-            <title>Hibernate JDBC�v���p�e�B</title>
+            <title>Hibernate JDBCプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
             <tbody>
@@ -164,7 +166,7 @@
                     <literal>hibernate.connection.driver_class</literal>
                 </entry>
                 <entry>
-                    <emphasis>JDBC�h���C�o�N���X</emphasis>
+                    <emphasis>JDBCドライバクラス</emphasis>
                 </entry>
             </row>
             <row>
@@ -196,7 +198,7 @@
                     <literal>hibernate.connection.pool_size</literal>
                 </entry>
                 <entry>
-                    <emphasis>�v�[������R�l�N�V�����̍ő吔</emphasis>
+                    <emphasis>プールするコネクションの最大数</emphasis>
                 </entry>
             </row>
             </tbody>
@@ -204,26 +206,26 @@
         </table>
 
         <para>
-            Hibernate�̃R�l�N�V�����v�[���A���S���Y���͔��ɏ����I�Ȃ��̂ł��B
-            ����͂����Ɏn�߂���悤�ɂƗp�ӂ��ꂽ���̂ŁA<emphasis>���i�Ƃ��Ďg�p���邱�Ƃ��Ӑ}���Ă��܂���</emphasis> �B
-            �܂��A�p�t�H�[�}���X�̃e�X�g�̂��߂̂��̂ł�����܂���B
-            �ō��̃p�t�H�[�}���X�ƈ��萫���������v�[����������������΁A�T�[�h�p�[�e�B�̃c�[���������߂��܂��B
-            <literal>hibernate.connection.pool_size</literal> �v���p�e�B��
-            �K�؂ȃR�l�N�V�����v�[���T�C�Y���L�q���Ă��������B
-            ���̂܂܂���Hibernate�̃R�l�N�V�����v�[�����g���܂��B
-            �Ⴆ�Ύ��̂悤��C3P0���g���܂��B
+            Hibernateのコネクションプールアルゴリズムは非常に初歩的なものです。
+            これはすぐに始められるようにと用意されたもので、<emphasis>製品として使用することを意図していません</emphasis> 。
+            また、パフォーマンスのテストのためのものでもありません。
+            最高のパフォーマンスと安定性を持ったプールを実現したければ、サードパーティのツールをお勧めします。
+            <literal>hibernate.connection.pool_size</literal> プロパティに
+            適切なコネクションプールサイズを記述してください。
+            このままだとHibernateのコネクションプールを使います。
+            例えば次のようにC3P0を使います。
         </para>
 
         <para>
-            C3P0�̓I�[�v���\�[�XJDBC�R�l�N�V�����v�[���ŁAHibernate�� <literal>lib</literal> 
-            �f�B���N�g���ɂ���܂��B�����A<literal>hibernate.c3p0.*</literal> �v���p�e�B��
-            �Z�b�g����΁AHibernate�́A <literal>C3P0ConnectionProvider</literal> ���g���܂��B
-            ����Proxool���g�������ꍇ�́A <literal>hibernate.properties</literal> �p�b�P�[�W��
-            �Q�Ƃ�����AHibernate��Web�T�C�g�ł�葽���̏����擾���Ă��������B
+            C3P0はオープンソースJDBCコネクションプールで、Hibernateの <literal>lib</literal> 
+            ディレクトリにあります。もし、<literal>hibernate.c3p0.*</literal> プロパティを
+            セットすれば、Hibernateは、 <literal>C3P0ConnectionProvider</literal> を使います。
+            もしProxoolを使いたい場合は、 <literal>hibernate.properties</literal> パッケージを
+            参照したり、HibernateのWebサイトでより多くの情報を取得してください。
         </para>
 
         <para>
-            C3P0�p�� <literal>hibernate.properties</literal> �t�@�C�����Ƃ��Ď����܂��F
+            C3P0用の <literal>hibernate.properties</literal> ファイルを例として示します：
         </para>
 
         <programlisting id="c3p0-configuration" revision="1"><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
@@ -237,21 +239,21 @@ hibernate.c3p0.max_statements=50
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            �A�v���P�[�V�����T�[�o��Ŏg���ꍇ�́AHibernate��ݒ肵�A
-            �A�v���P�[�V�����T�[�o����R�l�N�V�������擾����悤�ɂ��Ă��������B
-            <literal>Datasource</literal> ��JNDI�ɓo�^���܂��B������
-            �v���p�e�B���ȉ��̂悤�ɐݒ肵�Ă��������B
+            アプリケーションサーバ上で使う場合は、Hibernateを設定し、
+            アプリケーションサーバからコネクションを取得するようにしてください。
+            <literal>Datasource</literal> をJNDIに登録します。そして
+            プロパティを以下のように設定してください。
         </para>
 
         <table frame="topbot">
-            <title>Hibernate �f�[�^�\�[�X�v���p�e�B</title>
+            <title>Hibernate データソースプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
             <tbody>
@@ -260,7 +262,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.connection.datasource</literal>
                 </entry>
                 <entry>
-                    <emphasis>�f�[�^�\�[�X��JNDI��</emphasis>
+                    <emphasis>データソースのJNDI名</emphasis>
                 </entry>
             </row>
             <row>
@@ -268,7 +270,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.jndi.url</literal>
                 </entry>
                 <entry>
-                    <emphasis>JNDI�v���o�C�_��URL</emphasis> (�I�v�V����)
+                    <emphasis>JNDIプロバイダのURL</emphasis> (オプション)
                 </entry>
             </row>
             <row>
@@ -276,7 +278,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.jndi.class</literal>
                 </entry>
                 <entry>
-                    <emphasis>JNDI�N���X <literal>InitialContextFactory</literal> </emphasis> (�I�v�V����) 
+                    <emphasis>JNDIクラス <literal>InitialContextFactory</literal> </emphasis> (オプション) 
                 </entry>
             </row>
             <row>
@@ -284,7 +286,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.connection.username</literal>
                 </entry>
                 <entry>
-                    <emphasis>database user</emphasis> (�I�v�V����)
+                    <emphasis>database user</emphasis> (オプション)
                 </entry>
             </row>
             <row>
@@ -292,7 +294,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <literal>hibernate.connection.password</literal>
                 </entry>
                 <entry>
-                    <emphasis>database user password</emphasis> (�I�v�V����)
+                    <emphasis>database user password</emphasis> (オプション)
                 </entry>
             </row>
             </tbody>
@@ -300,61 +302,61 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <para>
-            �A�v���P�[�V�����T�[�o����񋟂��ꂽJNDI�f�[�^�\�[�X���g��
-            <literal>hibernate.properties</literal> �t�@�C���̗�������܂��F
+            アプリケーションサーバから提供されたJNDIデータソースを使う
+            <literal>hibernate.properties</literal> ファイルの例を示します：
         </para>
 
         <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test
-hibernate.transaction.factory_class = \
+hibernate.transaction.factory_class = ¥
     org.hibernate.transaction.JTATransactionFactory
-hibernate.transaction.manager_lookup_class = \
+hibernate.transaction.manager_lookup_class = ¥
     org.hibernate.transaction.JBossTransactionManagerLookup
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            JNDI�f�[�^�\�[�X����擾����JDBC�R�l�N�V�����́A�A�v���P�[�V�����T�[�o��
-            �R���e�i�Ǘ��g�����U�N�V�����Ɏ����I�ɎQ�����܂��B
+            JNDIデータソースから取得したJDBCコネクションは、アプリケーションサーバの
+            コンテナ管理トランザクションに自動的に参加します。
         </para>
 
         <para>
-            �C�ӂ̃R�l�N�V�����v���p�e�B�́A�^����ꂽ�h <literal>hibernate.connnection</literal> �h
-            �v���p�e�B���ɂ���ė^�����܂��B�Ⴆ�΁A <literal>charSet</literal> ��ݒ肵�����ꍇ�́A
-            <literal>hibernate.connection.charSet</literal> ���g���܂��B
+            任意のコネクションプロパティは、与えられた” <literal>hibernate.connnection</literal> ”
+            プロパティ名によって与えられます。例えば、 <literal>charSet</literal> を設定したい場合は、
+            <literal>hibernate.connection.charSet</literal> を使います。
         </para>
 
         <para>
-            JDBC�R�l�N�V�������擾����헪�����Ǝ��̃v���O�C�����`����ꍇ�́A
-            <literal>org.hibernate.connection.ConnectionProvider</literal> �C���^�[�t�F�C�X��
-            �������Ă��������B�����āA�����N���X�� <literal>hibernate.connection.provider_class</literal> 
-            �ɐݒ肵�Ă��������B
+            JDBCコネクションを取得する戦略を持つ独自のプラグインを定義する場合は、
+            <literal>org.hibernate.connection.ConnectionProvider</literal> インターフェイスを
+            実装してください。そして、実装クラスを <literal>hibernate.connection.provider_class</literal> 
+            に設定してください。
         </para>
 
     </sect1>
 
     <sect1 id="configuration-optional" revision="1">
-        <title>�I�v�V�����ݒ�v���p�e�B</title>
+        <title>オプション設定プロパティ</title>
         
         <para>
-            �����̃v���p�e�B��Hibernate�̋����𐧌䂷����̂ł��B
-            �����̃v���p�e�B�͂��ׂđÓ��ȃf�t�H���g�l������A�C�ӂŐݒ肵�܂��B
+            これらのプロパティはHibernateの挙動を制御するものです。
+            これらのプロパティはすべて妥当なデフォルト値があり、任意で設定します。
         </para>
 
         <para>
-            <emphasis>���ӁF�����̃v���p�e�B��"�V�X�e�����x��"�݂̂ł��B</emphasis> 
-            �V�X�e�����x���v���p�e�B�� <literal>java -Dproperty=value</literal>  �A��������
-            <literal>hibernate.properties</literal> �ł̂ݐݒ�\�ł��B
-            ����ȊO�̐ݒ���@�� <emphasis>����܂���</emphasis> �B
+            <emphasis>注意：これらのプロパティは"システムレベル"のみです。</emphasis> 
+            システムレベルプロパティは <literal>java -Dproperty=value</literal>  、もしくは
+            <literal>hibernate.properties</literal> でのみ設定可能です。
+            それ以外の設定方法は <emphasis>ありません</emphasis> 。
         </para>
 
         <table frame="topbot" id="configuration-optional-properties" revision="8">
-            <title>Hibernate�ݒ�v���p�e�B</title>
+            <title>Hibernate設定プロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
                 <tbody>
@@ -363,10 +365,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.dialect</literal>
                         </entry>
                         <entry>
-                            Hibernate <literal>Dialect</literal> �N���X��������܂��B
-                            ����̓����[�V���i���f�[�^�x�[�X���ƂɍœK�����ꂽSQL�𐶐����܂��B
+                            Hibernate <literal>Dialect</literal> クラス名が入ります。
+                            これはリレーショナルデータベースごとに最適化されたSQLを生成します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>full.classname.of.Dialect</literal>
                             </para>
                         </entry>
@@ -376,11 +378,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.show_sql</literal>
                         </entry>
                         <entry>
-                            ���s���ꂽ���ׂĂ�SQL���R���\�[���ɏo�͂��܂��B
-                            ����̓��O�J�e�S���� <literal>org.hibernate.SQL</literal> 
-                            �� <literal>debug</literal> ��ݒ肷����@�̑�֎�i�ł��B
+                            発行されたすべてのSQLをコンソールに出力します。
+                            これはログカテゴリの <literal>org.hibernate.SQL</literal> 
+                            に <literal>debug</literal> を設定する方法の代替手段です。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -390,9 +392,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.format_sql</literal>
                         </entry>
                         <entry>
-                            ���O�ƃR���\�[����SQL��������\�����܂��B
+                            ログとコンソールのSQLを美しく表示します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -402,9 +404,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_schema</literal>
                         </entry>
                         <entry>
-                            ���������SQL���̃e�[�u���ɐݒ肷��X�L�[�}/�e�[�u���X�y�[�X�ł��B
+                            生成されるSQL文のテーブルに設定するスキーマ/テーブルスペースです。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>SCHEMA_NAME</literal>
                             </para>
                         </entry>
@@ -414,9 +416,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_catalog</literal>
                         </entry>
                         <entry>
-                            ���������SQL���̃e�[�u���ɐݒ肷��J�^���O�ł��B
+                            生成されるSQL文のテーブルに設定するカタログです。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>CATALOG_NAME</literal>
                             </para>
                         </entry>
@@ -426,9 +428,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.session_factory_name</literal>
                         </entry>
                         <entry>
-                            <literal>SessionFactory</literal> �͐�����A���̖��O��JNDI�ɓo�^����܂��B
+                            <literal>SessionFactory</literal> は生成後、この名前でJNDIに登録されます。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>jndi/composite/name</literal>
                             </para>
                         </entry>
@@ -438,12 +440,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.max_fetch_depth</literal>
                         </entry>
                         <entry>
-                            �O�������t�F�b�`�̍ő�[�x��ݒ肵�܂��B��������֘A��
-                            �Έ�֘A�̂݁i��Έ�A���Έ�j�ł��B
-                            <literal>0</literal> ���w�肷��ƊO�������t�F�b�`�͖����ɂȂ�܂��B
+                            外部結合フェッチの最大深度を設定します。結合する関連は
+                            対一関連のみ（一対一、多対一）です。
+                            <literal>0</literal> を指定すると外部結合フェッチは無効になります。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
-                                ��������l�� <literal>0</literal> ���� <literal>3</literal> �ł��B
+                                <emphasis role="strong">例：</emphasis> 
+                                推奨する値は <literal>0</literal> から <literal>3</literal> です。
                             </para>
                         </entry>
                     </row>
@@ -452,10 +454,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_batch_fetch_size</literal>
                         </entry>
                         <entry>
-                            �֘A�t�F�b�`�̃f�t�H���g�o�b�`�T�C�Y���w�肵�܂��B
+                            関連フェッチのデフォルトバッチサイズを指定します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
-                                ��������l�� <literal>4</literal> , <literal>8</literal> , <literal>16</literal> �ł��B
+                                <emphasis role="strong">例：</emphasis> 
+                                推奨する値は <literal>4</literal> , <literal>8</literal> , <literal>16</literal> です。
                             </para>
                         </entry>
                     </row>
@@ -464,8 +466,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.default_entity_mode</literal>
                         </entry>
                         <entry>
-                            <literal>SessionFactory</literal> ����Z�b�V�������I�[�v�������Ƃ���
-                            �g�p����G���e�B�e�B�̃f�t�H���g���[�h��ݒ肵�܂��B
+                            <literal>SessionFactory</literal> からセッションをオープンしたときに
+                            使用するエンティティのデフォルトモードを設定します。
                             <para>
                                 <literal>dynamic-map</literal>, <literal>dom4j</literal>,
                                 <literal>pojo</literal>
@@ -477,10 +479,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.order_updates</literal>
                         </entry>
                         <entry>
-                            ���ڂ��X�V���ꂽ�Ƃ��ɁA�ʂ�SQL�Ŏ�L�[���X�V���邱�Ƃ��������܂��B
-                            ���̏ꍇ�A�������s�\�ȃV�X�e���ł́A�܂�Ƀf�b�h���b�N����������\��������܂��B
+                            項目が更新されたときに、別のSQLで主キーを更新することを強制します。
+                            この場合、同時実行可能なシステムでは、まれにデッドロックが発生する可能性があります。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -490,10 +492,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.generate_statistics</literal>
                         </entry>
                         <entry>
-                            �L���̏ꍇ�AHibernate�̓p�t�H�[�}���X�`���[�j���O��
-                            �L���ȓ��v�������W���܂��B
+                            有効の場合、Hibernateはパフォーマンスチューニングに
+                            有効な統計情報を収集します。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -503,10 +505,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.use_identifer_rollback</literal>
                         </entry>
                         <entry>
-                            �L���̏ꍇ�A�I�u�W�F�N�g���폜���ꂽ�Ƃ���
-                            ���ʎq�v���p�e�B�����Z�b�g���A�f�t�H���g�l�ɂ������̂𐶐����܂��B
+                            有効の場合、オブジェクトが削除されたときに
+                            識別子プロパティをリセットし、デフォルト値にしたものを生成します。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -516,10 +518,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.use_sql_comments</literal>
                         </entry>
                         <entry>
-                            �L���̏ꍇ�ASQL���ɃR�����g�𐶐����܂��B����̓f�o�b�N��e�Ղɂ��܂��B
-                            �f�t�H���g�̒l�� <literal>false</literal> �ł��B
+                            有効の場合、SQL内にコメントを生成します。これはデバックを容易にします。
+                            デフォルトの値は <literal>false</literal> です。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -529,14 +531,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-jdbc-properties" revision="8">
-            <title>Hibernate JDBC �ƃR�l�N�V�����v���p�e�B</title>
+            <title>Hibernate JDBC とコネクションプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
                 <tbody>
@@ -545,8 +547,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.fetch_size</literal>
                         </entry>
                         <entry>
-                            �l��0�łȂ��ꍇ�AJDBC�t�F�b�`�T�C�Y�����肵�܂�
-                            ( <literal>Statement.setFetchSize()</literal> ���Ăт܂�)�B
+                            値が0でない場合、JDBCフェッチサイズを決定します
+                            ( <literal>Statement.setFetchSize()</literal> を呼びます)。
                         </entry>
                     </row>
                     <row>
@@ -554,10 +556,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.batch_size</literal>
                         </entry>
                         <entry>
-                            �l��0�łȂ��ꍇ�AHibernate��JDBC2�o�b�`�X�V���g�p���܂��B
+                            値が0でない場合、HibernateがJDBC2バッチ更新を使用します。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
-                                ��������l�� <literal>5</literal> ���� <literal>30</literal> �ł��B
+                                <emphasis role="strong">例：</emphasis>
+                                推奨する値は <literal>5</literal> から <literal>30</literal> です。
                             </para>
                         </entry>
                     </row>
@@ -566,13 +568,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.batch_versioned_data</literal>
                         </entry>
                         <entry>
-                            ����JDBC�h���C�o�� <literal>executeBatch()</literal> �ɂ���Đ��m�ȍs����
-                            �Ԃ��ꍇ�A���̃v���p�e�B�� <literal>true</literal> �ɂ��Ă�������
-                            �i�ʏ�͂��̃I�v�V������ON�ɂ��܂��j�B
-                            Hibernate�́A�����o�[�W�����f�[�^�̂��߃o�b�`DML���g���܂��B
-                            �f�t�H���g�̒l�� <literal>false</literal> �ł��B
+                            もしJDBCドライバが <literal>executeBatch()</literal> によって正確な行数を
+                            返す場合、このプロパティを <literal>true</literal> にしてください
+                            （通常はこのオプションをONにします）。
+                            Hibernateは、自動バージョンデータのためバッチDMLを使います。
+                            デフォルトの値は <literal>false</literal> です。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -582,10 +584,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.factory_class</literal>
                         </entry>
                         <entry>
-                            �J�X�^�� <literal>Batcher</literal> ��I�т܂��B
-                            �قƂ�ǂ̃A�v���P�[�V�����ɁA���̐ݒ�͕K�v����܂���B
+                            カスタム <literal>Batcher</literal> を選びます。
+                            ほとんどのアプリケーションに、この設定は必要ありません。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>classname.of.BatcherFactory</literal>
                             </para>
                         </entry>
@@ -595,11 +597,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.use_scrollable_resultset</literal>
                         </entry>
                         <entry>
-                            �X�N���[���\�ȃ��U���g�Z�b�g���AHibernate���g�p���܂��B
-                            ���̃v���p�e�B�́AJDBC�R�l�N�V�������R�l�N�V�������^�f�[�^��
-                            �T�|�[�g���Ă��邱�Ƃ��K�{�����ɂȂ�܂��B
+                            スクロール可能なリザルトセットを、Hibernateが使用します。
+                            このプロパティは、JDBCコネクションがコネクションメタデータを
+                            サポートしていることが必須条件になります。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -609,10 +611,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.use_streams_for_binary</literal>
                         </entry>
                         <entry>
-                            JDBC��/���� <literal>binary</literal> �� <literal>serializable</literal> 
-                            �̏�������/�ǂݍ��݃X�g���[�����g���܂�(�V�X�e�����x���̃v���p�e�B)�B
+                            JDBCへ/から <literal>binary</literal> や <literal>serializable</literal> 
+                            の書き込み/読み込みストリームを使います(システムレベルのプロパティ)。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -622,13 +624,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.use_get_generated_keys</literal>
                         </entry>
                         <entry>
-                            �}���̌�Ɏ����������ꂽ��L�[���擾���邽�߂� 
-                            JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal> �̎g�p��L���ɂ��܂��B
-                            �����JDBC3+�h���C�o��JRE1.4+��K�v�Ƃ��A
-                            ����Hibernate�̎��ʎq�W�F�l���[�^�ɖ�肪��������悤�Ȃ�false�ɐݒ肵�Ă��������B
-                            �f�t�H���g�ł̓R�l�N�V�������^�f�[�^���g���h���C�o�̔\�͂����肵�܂��B
+                            挿入の後に自動生成された主キーを取得するための 
+                            JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal> の使用を有効にします。
+                            これはJDBC3+ドライバとJRE1.4+を必要とし、
+                            もしHibernateの識別子ジェネレータに問題が発生するようならfalseに設定してください。
+                            デフォルトではコネクションメタデータを使いドライバの能力を決定します。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true|false</literal>
                             </para>
                         </entry>
@@ -638,10 +640,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.provider_class</literal>
                         </entry>
                         <entry>
-                            JDBC�R�l�N�V������Hibernate�ɒ񋟂���Ǝ��� <literal>ConnectionProvider</literal> ��
-                            ���O���w�肵�܂��B
+                            JDBCコネクションをHibernateに提供する独自の <literal>ConnectionProvider</literal> の
+                            名前を指定します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>classname.of.ConnectionProvider</literal>
                             </para>
                         </entry>
@@ -651,11 +653,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <literal>hibernate.connection.isolation</literal>
                     </entry>
                     <entry>
-                        JDBC�g�����U�N�V�����������x����ݒ肵�܂��B
-                        �Ó��Ȓl�𒲂ׂ邽�߂ɂ� <literal>java.sql.Connection</literal> ���`�F�b�N���Ă��������B
-                        �������g�p����f�[�^�x�[�X���A���ׂĂ̕������x�����T�|�[�g���Ă���Ƃ͌���܂���B
+                        JDBCトランザクション分離レベルを設定します。
+                        妥当な値を調べるためには <literal>java.sql.Connection</literal> をチェックしてください。
+                        しかし使用するデータベースが、すべての分離レベルをサポートしているとは限りません。
                         <para>
-                            <emphasis role="strong">��F</emphasis> 
+                            <emphasis role="strong">例：</emphasis> 
                             <literal>1, 2, 4, 8</literal>
                         </para>
                     </entry>
@@ -665,9 +667,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.autocommit</literal>
                         </entry>
                         <entry>
-                            �v�[������Ă���JDBC�R�l�N�V�����̎����R�~�b�g��L���ɂ���i�񐄏��j�B
+                            プールされているJDBCコネクションの自動コミットを有効にする（非推奨）。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -677,28 +679,28 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.connection.release_mode</literal>
                         </entry>
                         <entry>
-                            Hibernate��JDBC�R�l�N�V�����������[�X���邩���w�肵�܂��B�f�t�H���g�ł�
-                            �Z�b�V�����������I�ɃN���[�Y�܂��͐ؒf����Ă��R�l�N�V�����͕ێ����܂��B
-                            �A�v���P�[�V�����T�[�o��JTA�f�[�^�\�[�X�̏ꍇ�A
-                            ���ׂĂ�JDBC�R�[���̌�A�����I�ɃR�l�N�V�����������[�X���邽�߂� <literal>after_statement</literal> ��
-                            �g���Ă��������B
-                            ��JTA�R�l�N�V�����̏ꍇ�A�e�g�����U�N�V�������I�������Ƃ��� <literal>after_transaction</literal> 
-                            ���g���A�R�l�N�V�����������[�X���Ă��������B
-                            <literal>auto</literal> �ɂ���ƁA
-                            JTA��CMT�g�����U�N�V�����̏ꍇ�A <literal>after_statement</literal> �ŃN���[�Y���A
-                            JDBC�g�����U�N�V�����̏ꍇ�A <literal>after_transaction</literal> �ŃN���[�Y���܂��B
+                            HibernateがJDBCコネクションをリリースするかを指定します。デフォルトでは
+                            セッションが明示的にクローズまたは切断されてもコネクションは保持します。
+                            アプリケーションサーバのJTAデータソースの場合、
+                            すべてのJDBCコールの後、強制的にコネクションをリリースするために <literal>after_statement</literal> を
+                            使ってください。
+                            非JTAコネクションの場合、各トランザクションが終了したときに <literal>after_transaction</literal> 
+                            を使い、コネクションをリリースしてください。
+                            <literal>auto</literal> にすると、
+                            JTAやCMTトランザクションの場合、 <literal>after_statement</literal> でクローズし、
+                            JDBCトランザクションの場合、 <literal>after_transaction</literal> でクローズします。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>auto</literal> (default) | <literal>on_close</literal> |
                                 <literal>after_transaction</literal> | <literal>after_statement</literal>
                             </para>
                             <para>
-                                ���ӂ��Ă��������B���̐ݒ�� <literal>SessionFactory.openSession</literal> ����
-                                �擾���� <literal>Session</literal> �����Ɍ��ʂ�����܂��B
-                                <literal>SessionFactory.getCurrentSession</literal> ��ʂ��Ď擾����
-                                <literal>Session</literal> �ł́A<literal>CurrentSessionContext</literal> 
-                                �̎����ɂ���āA�R�l�N�V�����̃����[�X���[�h��ݒ肵�܂��B
-                                <xref linkend="architecture-current-session"/> ���Q�Ƃ��Ă��������B
+                                注意してください。この設定は <literal>SessionFactory.openSession</literal> から
+                                取得した <literal>Session</literal> だけに効果があります。
+                                <literal>SessionFactory.getCurrentSession</literal> を通じて取得した
+                                <literal>Session</literal> では、<literal>CurrentSessionContext</literal> 
+                                の実装によって、コネクションのリリースモードを設定します。
+                                <xref linkend="architecture-current-session"/> を参照してください。
                             </para>
                         </entry>
                     </row>
@@ -707,8 +709,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                     </entry>
                     <entry>
-                        JDBC�� <literal>propertyName</literal> �v���p�e�B���A
-                        <literal>DriverManager.getConnection()</literal> �ɓn���܂��B
+                        JDBCの <literal>propertyName</literal> プロパティを、
+                        <literal>DriverManager.getConnection()</literal> に渡します。
                     </entry>
                     </row>
                     <row>
@@ -716,8 +718,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
                         </entry>
                         <entry>
-                            <literal>propertyName</literal> �v���p�e�B���A
-                            JNDI <literal>InitialContextFactory</literal> �ɓn���܂��B
+                            <literal>propertyName</literal> プロパティを、
+                            JNDI <literal>InitialContextFactory</literal> に渡します。
                         </entry>
                     </row>
                 </tbody>
@@ -725,14 +727,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-cache-properties" revision="7">
-            <title>Hibernate �L���b�V���v���p�e�B</title>
+            <title>Hibernate キャッシュプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
                 <tbody>
@@ -741,9 +743,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.provider_class</literal>
                         </entry>
                         <entry>
-                            �J�X�^�� <literal>CacheProvider</literal> �̃N���X���ł��B
+                            カスタム <literal>CacheProvider</literal> のクラス名です。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>classname.of.CacheProvider</literal> 
                             </para>
                         </entry>
@@ -753,12 +755,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_minimal_puts</literal>
                         </entry>
                         <entry>
-                            �������݂��ŏ����ɂ��邽�߂ɁA�񎟃L���b�V���̑�����œK�����܂��B
-                            ���̑���ɁA�ǂݍ��݂����p�ɂɔ�������悤�ɂȂ�܂��B
-                            ���̃Z�b�e�B���O�̓N���X�^�L���b�V���Ŗ��ɗ����܂��B
-                            Hibernate3�ł̓N���X�^�L���b�V�������p�Ƀf�t�H���g�ł͗L���ɂȂ��Ă��܂��B
+                            書き込みを最小限にするために、二次キャッシュの操作を最適化します。
+                            その代わりに、読み込みがより頻繁に発生するようになります。
+                            このセッティングはクラスタキャッシュで役に立ちます。
+                            Hibernate3ではクラスタキャッシュ実装用にデフォルトでは有効になっています。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true|false</literal>
                             </para>
                         </entry>
@@ -768,9 +770,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_query_cache</literal>
                         </entry>
                         <entry>
-                            ����̃N�G�����L���b�V���\�ȏꍇ�ɁA�N�G���L���b�V����L���ɂ��܂��B
+                            特定のクエリがキャッシュ可能な場合に、クエリキャッシュを有効にします。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true|false</literal>
                             </para>
                         </entry>
@@ -780,11 +782,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_second_level_cache</literal>
                         </entry>
                         <entry>
-                            �񎟃L���b�V�������S�ɖ����ɂ���ꍇ�Ɏg���܂��B
-                            �f�t�H���g�ł͗L���ŁA�N���X�� <literal>&lt;cache&gt;</literal> �}�b�s���O
-                            �Ő��䂵�܂��B
+                            二次キャッシュを完全に無効にする場合に使います。
+                            デフォルトでは有効で、クラスの <literal>&lt;cache&gt;</literal> マッピング
+                            で制御します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true|false</literal>
                             </para>
                         </entry>
@@ -794,10 +796,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.query_cache_factory</literal>
                         </entry>
                         <entry>
-                            �J�X�^�� <literal>QueryCache</literal> �C���^�[�t�F�C�X�̃N���X����
-                            �w�肵�܂��B�f�t�H���g�ł� <literal>StandardQueryCache</literal> �ɂȂ�܂��B
+                            カスタム <literal>QueryCache</literal> インターフェイスのクラス名を
+                            指定します。デフォルトでは <literal>StandardQueryCache</literal> になります。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>classname.of.QueryCache</literal>
                             </para>
                         </entry>
@@ -807,9 +809,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.region_prefix</literal>
                         </entry>
                         <entry>
-                            �񎟃L���b�V���̗̈於�̐ړ����ł��B
+                            二次キャッシュの領域名の接頭辞です。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>prefix</literal>
                             </para>
                         </entry>
@@ -819,9 +821,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_structured_entries</literal>
                         </entry>
                         <entry>
-                            �񎟃L���b�V���Ɋi�[����f�[�^���A�l���������₷���t�H�[�}�b�g�ɂ��܂��B
+                            二次キャッシュに格納するデータを、人が理解しやすいフォーマットにします。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>true|false</literal>
                             </para>
                         </entry>
@@ -831,14 +833,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-transaction-properties" revision="9">
-            <title>Hibernate �g�����U�N�V�����v���p�e�B</title>
+            <title>Hibernate トランザクションプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
                 <tbody>
@@ -847,11 +849,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.factory_class</literal>
                         </entry>
                         <entry>
-                            Hibernate  <literal>Transaction</literal> API�ƈꏏ�Ɏg���� 
-                            <literal>TransactionFactory</literal> �̃N���X���ł��B
-                            �i�f�t�H���g�ł� <literal>JDBCTransactionFactory</literal> �ł��j�B
+                            Hibernate  <literal>Transaction</literal> APIと一緒に使われる 
+                            <literal>TransactionFactory</literal> のクラス名です。
+                            （デフォルトでは <literal>JDBCTransactionFactory</literal> です）。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>classname.of.TransactionFactory</literal>
                             </para>
                         </entry>
@@ -861,10 +863,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>jta.UserTransaction</literal>
                         </entry>
                         <entry>
-                            �A�v���P�[�V�����T�[�o����JTA <literal>UserTransaction</literal> ���擾���邽�߂� 
-                            <literal>JTATransactionFactory</literal> �Ɏg����JNDI���ł��B
+                            アプリケーションサーバからJTA <literal>UserTransaction</literal> を取得するために 
+                            <literal>JTATransactionFactory</literal> に使われるJNDI名です。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>jndi/composite/name</literal>
                             </para>
                         </entry>
@@ -874,10 +876,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.manager_lookup_class</literal>
                         </entry>
                         <entry>
-                            <literal>TransactionManagerLookup</literal>  �̃N���X���ł��B
-                            JTA���ɂ����āAJVM���x���̃L���b�V����L���ɂ��邽�߂ɕK�v�ł��B
+                            <literal>TransactionManagerLookup</literal>  のクラス名です。
+                            JTA環境において、JVMレベルのキャッシュを有効にするために必要です。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>classname.of.TransactionManagerLookup</literal>
                             </para>
                         </entry>
@@ -887,11 +889,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.flush_before_completion</literal>
                         </entry>
                         <entry>
-                            �L���̏ꍇ�A�g�����U�N�V������completion�t�F�[�Y�̑O�Ɏ����I��
-                            �Z�b�V�������t���b�V�����܂��B�����̎����Z�b�V�����R���e�L�X�g�Ǘ��ɓK���Ă��܂��B
-                            <xref linkend="architecture-current-session"/>���Q�Ƃ��Ă��������B
+                            有効の場合、トランザクションのcompletionフェーズの前に自動的に
+                            セッションをフラッシュします。内臓の自動セッションコンテキスト管理に適しています。
+                            <xref linkend="architecture-current-session"/>を参照してください。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -901,11 +903,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.transaction.auto_close_session</literal>
                         </entry>
                         <entry>
-                            �L���̏ꍇ�A�g�����U�N�V������completion�t�F�[�Y�̌��
-                            �Z�b�V�����������I�ɃN���[�Y���܂��B�����̎����Z�b�V�����R���e�L�X�g�Ǘ��ɓK���Ă��܂��B
-                            <xref linkend="architecture-current-session"/>���Q�Ƃ��Ă��������B
+                            有効の場合、トランザクションのcompletionフェーズの後に
+                            セッションを自動的にクローズします。内臓の自動セッションコンテキスト管理に適しています。
+                            <xref linkend="architecture-current-session"/>を参照してください。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -915,14 +917,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <table frame="topbot" id="configuration-misc-properties" revision="10">
-            <title>���̑��̃v���p�e�B</title>
+            <title>その他のプロパティ</title>
             <tgroup cols="2">
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>�v���p�e�B��</entry>
-                        <entry>�Ӗ�</entry>
+                        <entry>プロパティ名</entry>
+                        <entry>意味</entry>
                     </row>
                 </thead>
                 <tbody>
@@ -931,11 +933,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.current_session_context_class</literal>
                         </entry>
                         <entry>
-                            �u���݂́v<literal>Session</literal> �̂��߂́i�J�X�^���j�헪��񋟂��܂��B
-                            �r���g�C���X�g���e�W�[�Ɋւ��邻�̑��̏��ɂ��Ă�
-                            <xref linkend="architecture-current-session"/>���Q�Ƃ��Ă��������B
+                            「現在の」<literal>Session</literal> のための（カスタム）戦略を提供します。
+                            ビルトインストラテジーに関するその他の情報については
+                            <xref linkend="architecture-current-session"/>を参照してください。
                             <para>
-                                <emphasis role="strong">��F</emphasis>
+                                <emphasis role="strong">例：</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
                                 <literal>managed</literal> | <literal>custom.Class</literal>
                             </para>
@@ -946,9 +948,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.query.factory_class</literal>
                         </entry>
                         <entry>
-                            HQL�p�[�T�[�̎�����I�����܂��B
+                            HQLパーサーの実装を選択します。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> or
                                 <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal>
                             </para>
@@ -959,10 +961,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.query.substitutions</literal>
                         </entry>
                         <entry>
-                            HQL��SQL�̃g�[�N�����}�b�s���O���܂��B
-                            �i�Ⴆ�΁A�g�[�N���͊֐��⃊�e�������ł��j�B
+                            HQLとSQLのトークンをマッピングします。
+                            （例えば、トークンは関数やリテラル名です）。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>
                             </para>
                         </entry>
@@ -972,12 +974,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.hbm2ddl.auto</literal>
                         </entry>
                         <entry>
-                            <literal>SessionFactory</literal> �𐶐������Ƃ��ɁA
-                            �����I�ɃX�L�[�}DDL��DB�ɏo�͂��܂��B
-                            <literal>create-drop</literal> �̏ꍇ�A <literal>SessionFactory</literal> ��
-                            �N���[�Y�����Ƃ��ɁA�f�[�^�x�[�X�X�L�[�}���h���b�v���܂��B
+                            <literal>SessionFactory</literal> を生成したときに、
+                            自動的にスキーマDDLをDBに出力します。
+                            <literal>create-drop</literal> の場合、 <literal>SessionFactory</literal> を
+                            クローズしたときに、データベーススキーマをドロップします。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>validate</literal> | <literal>update</literal> | 
                                 <literal>create</literal> | <literal>create-drop</literal>
                             </para>
@@ -988,14 +990,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cglib.use_reflection_optimizer</literal>
                         </entry>
                         <entry>
-                            ���s�����t���N�V�����̑����CGLIB�̎g�p��L���ɂ��܂�
-                            �i�V�X�e�����x���̃v���p�e�B�j
-                            ���t���N�V�����̓g���u���V���[�e�B���O�̂Ƃ��ɖ𗧂��Ƃ�����܂��B
-                            �I�v�e�B�}�C�U���I�t�ɂ��Ă���Ƃ��ł����A
-                            Hibernate�ɂ͕K��CGLIB���K�v�Ȃ��Ƃɒ��ӂ��Ă��������B
-                            ���̃v���p�e�B�� <literal>hibernate.cfg.xml</literal> �Őݒ�ł��܂���B
+                            実行時リフレクションの代わりのCGLIBの使用を有効にします
+                            （システムレベルのプロパティ）
+                            リフレクションはトラブルシューティングのときに役立つことがあります。
+                            オプティマイザをオフにしているときでさえ、
+                            Hibernateには必ずCGLIBが必要なことに注意してください。
+                            このプロパティは <literal>hibernate.cfg.xml</literal> で設定できません。
                             <para>
-                                <emphasis role="strong">��F</emphasis> 
+                                <emphasis role="strong">例：</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
@@ -1005,15 +1007,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <sect2 id="configuration-optional-dialects" revision="1">
-            <title>SQL �����iDialect�j</title>
+            <title>SQL 方言（Dialect）</title>
 
             <para>
-                <literal>hibernate.dialect</literal> �v���p�e�B�ɂ́A
-                �g�p����f�[�^�x�[�X�̐����� <literal>org.hibernate.dialect.Dialect</literal> �̃T�u�N���X���A
-                �K���w�肷�ׂ��ł��B
-                �������������w�肷��΁AHibernate�͏�q�����v���p�e�B�̂������ɂ��āA
-                ���K�؂ȃf�t�H���g�l���g���܂��B
-                ��������΁A���������ƂŐݒ肷���Ԃ��Ȃ��܂��B
+                <literal>hibernate.dialect</literal> プロパティには、
+                使用するデータベースの正しい <literal>org.hibernate.dialect.Dialect</literal> のサブクラスを、
+                必ず指定すべきです。
+                しかし方言を指定すれば、Hibernateは上述したプロパティのいくつかについて、
+                より適切なデフォルト値を使います。
+                そうすれば、それらを手作業で設定する手間が省けます。
             </para>
 
             <table frame="topbot" id="sql-dialects" revision="2">
@@ -1101,21 +1103,21 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </sect2>
 
         <sect2 id="configuration-optional-outerjoin" revision="4">
-            <title>�O�������t�F�b�`</title>
+            <title>外部結合フェッチ</title>
 
             <para>
-                ����DB��ANSI���AOracle��Sybase�X�^�C���̊O���������T�|�[�g���Ă���ꍇ�A
-                <emphasis>outer join fetching</emphasis> �́ADB��SQL���s�񐔂�ߖ�
-                �p�t�H�[�}���X��ǂ����܂��B�iDB���ł�葽���̏����R�X�g���������܂��j
-                �O�������t�F�b�`�́A���Έ�A��Α��A���Α��A��Έ�̃I�u�W�F�N�g�֘A��
-                �O���[�v�I�u�W�F�N�g��1��SQL�� <literal>SELECT</literal> ���܂��B
+                もしDBがANSIか、OracleかSybaseスタイルの外部結合をサポートしている場合、
+                <emphasis>outer join fetching</emphasis> は、DBのSQL発行回数を節約し
+                パフォーマンスを良くします。（DB内でより多くの処理コストが発生します）
+                外部結合フェッチは、多対一、一対多、多対多、一対一のオブジェクト関連で
+                グループオブジェクトを1つのSQLで <literal>SELECT</literal> します。
             </para>
 
             <para>
-                <literal>hibernate.max_fetch_depth</literal> �v���p�e�B�̒l�� <literal>0</literal> �ɂ����
-                Outer join fetching�� <emphasis>���ׂ�</emphasis> �����ɂ��邱�ƂɂȂ�܂��B
-                <literal>1</literal> �₻��ȏ�̒l��ݒ肷��ƁA�O�������t�F�b�`���L���ɂȂ�A
-                ��Έ�Ƒ��Έ�֘A�� <literal>fetch="join"</literal> �Ƃ��ă}�b�s���O����܂��B
+                <literal>hibernate.max_fetch_depth</literal> プロパティの値を <literal>0</literal> にすると
+                Outer join fetchingを <emphasis>すべて</emphasis> 無効にすることになります。
+                <literal>1</literal> やそれ以上の値を設定すると、外部結合フェッチが有効になり、
+                一対一と多対一関連が <literal>fetch="join"</literal> としてマッピングされます。
             </para>
 
             <para>
@@ -1125,146 +1127,146 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </sect2>
 
         <sect2 id="configuration-optional-binarystreams" revision="1">
-            <title>�o�C�i���X�g���[��</title>
+            <title>バイナリストリーム</title>
 
             <para>
-                Oracle��JDBC�h���C�o�Ƃ̊Ԃł��Ƃ肳��� <literal>byte</literal>  �z��̃T�C�Y�𐧌����܂��B
-                <literal>binary</literal> �� <literal>serializable</literal> �^�̑傫�ȃC���X�^���X���g��������΁A
-                <literal>hibernate.jdbc.use_streams_for_binary</literal> ��L���ɂ��Ă��������B
-                ������ <emphasis>����̓V�X�e�����x���̐ݒ肾���ł�</emphasis> �B
+                OracleはJDBCドライバとの間でやりとりされる <literal>byte</literal>  配列のサイズを制限します。
+                <literal>binary</literal> や <literal>serializable</literal> 型の大きなインスタンスを使いたければ、
+                <literal>hibernate.jdbc.use_streams_for_binary</literal> を有効にしてください。
+                ただし <emphasis>これはシステムレベルの設定だけです</emphasis> 。
             </para>
 
         </sect2>
 
         <sect2 id="configuration-optional-cacheprovider" revision="2">
-            <title>2���L���b�V���ƃN�G���[�L���b�V��</title>
+            <title>2次キャッシュとクエリーキャッシュ</title>
 
             <para>
-                <literal>hibernate.cache</literal> �v���p�e�B�ړ�����
-                Hibernate�Ńv���Z�X��N���X�^�񎟃L���b�V�����g���Ƃ��Ƃ������܂��B
-                <xref linkend="performance-cache"/>�ɂ�葽���̏ڍׂ�����܂��B
+                <literal>hibernate.cache</literal> プロパティ接頭辞は
+                Hibernateでプロセスやクラスタ二次キャッシュを使うとことを許可します。
+                <xref linkend="performance-cache"/>により多くの詳細があります。
             </para>
 
         </sect2>
 
         <sect2 id="configuration-optional-querysubstitution">
-            <title>�N�G���[����̒u������</title>
+            <title>クエリー言語の置き換え</title>
 
             <para>
-                <literal>hibernate.query.substitutions</literal> ���g�����ƂŁA
-                �V����Hibernate�N�G���g�[�N�����`�ł��܂��B
-                ��F
+                <literal>hibernate.query.substitutions</literal> を使うことで、
+                新しいHibernateクエリトークンを定義できます。
+                例：
             </para>
 
             <programlisting>hibernate.query.substitutions true=1, false=0</programlisting>
 
             <para>
-                ����̓g�[�N�� <literal>true</literal> �� <literal>false</literal> ���A
-                ���������SQL�ɂ����Đ������e�����ɖ|�󂵂܂��B                
+                これはトークン <literal>true</literal> と <literal>false</literal> を、
+                生成されるSQLにおいて整数リテラルに翻訳します。                
             </para>
 
             <programlisting>hibernate.query.substitutions toLowercase=LOWER</programlisting>
 
             <para>
-                �����SQL�� <literal>LOWER</literal> �֐��̖��O�̕t���ւ����\�ɂ��܂��B
+                これはSQLの <literal>LOWER</literal> 関数の名前の付け替えを可能にします。
             </para>
 
         </sect2>
 
         <sect2 id="configuration-optional-statistics" revision="2">
-            <title>Hibernate ���v</title>
+            <title>Hibernate 統計</title>
 
             <para>
-                <literal>hibernate.generate_statistics</literal> ��L���ɂ����ꍇ�A
-                ���삵�Ă���V�X�e�����`���[�j���O����Ƃ��ɁA<literal>SessionFactory.getStatistics()</literal> 
-                ���o�R���āAHibernate�͕֗��ȓ��v�����o�͂��܂��B
-                JMX���o�R���ē��v�����o�͂��邱�Ƃ��\�ł��B
-                Javadoc�� <literal>org.hibernate.stats</literal> �p�b�P�[�W����
-                �C���^�[�t�F�C�X�ɂ͂�葽���̏�񂪂���܂��B
+                <literal>hibernate.generate_statistics</literal> を有効にした場合、
+                動作しているシステムをチューニングするときに、<literal>SessionFactory.getStatistics()</literal> 
+                を経由して、Hibernateは便利な統計情報を出力します。
+                JMXを経由して統計情報を出力することも可能です。
+                Javadocの <literal>org.hibernate.stats</literal> パッケージ内の
+                インターフェイスにはより多くの情報があります。
             </para>
 
         </sect2>
     </sect1>
 
     <sect1 id="configuration-logging">
-        <title>���M���O</title>
+        <title>ロギング</title>
 
         <para>
-            Hibernate��Apache commons-loggin���g���āA���܂��܂ȃC�x���g�����O�Ƃ���
-            �o�͂��܂��B
+            HibernateはApache commons-logginを使って、さまざまなイベントをログとして
+            出力します。
         </para>
 
         <para>
-            commons-logging�T�[�r�X�́i�N���X�p�X�� <literal>log4j.jar</literal> ���܂߂�΁jApache Log4j�ɁA
-            �܂��iJDK1.4������ȏ�Ŏ��s������΁jJDK1.4 logging�ɒ��ڏo�͂��܂��B
-            Log4j��  <literal>http://jakarta.apache.org</literal> ����_�E�����[�h�ł��܂��B
-            Log4j���g�����߂ɂ́A�N���X�p�X��  <literal>log4j.properties</literal> �t�@�C����z�u����K�v������܂��B
-            ��̃v���p�e�B�t�@�C����Hibernate�ƈꏏ�ɔz�z����A����� <literal>src/</literal> �f�B���N�g���ɂ���܂��B
+            commons-loggingサービスは（クラスパスに <literal>log4j.jar</literal> を含めれば）Apache Log4jに、
+            また（JDK1.4かそれ以上で実行させれば）JDK1.4 loggingに直接出力します。
+            Log4jは  <literal>http://jakarta.apache.org</literal> からダウンロードできます。
+            Log4jを使うためには、クラスパスに  <literal>log4j.properties</literal> ファイルを配置する必要があります。
+            例のプロパティファイルはHibernateと一緒に配布され、それは <literal>src/</literal> ディレクトリにあります。
         </para>
         
         <para>
-            Hibernate�̃��O���b�Z�[�W�Ɋ���邱�Ƃ������������߂��܂��B
-            Hibernate�̃��O�͓ǂ݂₷���A�ł������ڍׂɂȂ�悤�ɓw�͂���Ă��܂��B
-            ����͕K�{�̃g���u���V���[�e�B���O�f�o�C�X�ł��B
-            �ȉ��ɏd�v�ȃ��O�̃J�e�S���������܂��B
+            Hibernateのログメッセージに慣れることを強くおすすめします。
+            Hibernateのログは読みやすく、できる限り詳細になるように努力されています。
+            これは必須のトラブルシューティングデバイスです。
+            以下に重要なログのカテゴリを示します。
         </para>
         
             <table frame="topbot" id="log-categories" revision="2">
-                <title>Hibernate ���O�J�e�S��</title>
+                <title>Hibernate ログカテゴリ</title>
                 <tgroup cols="2">
                     <colspec colwidth="1*"/>
                     <colspec colwidth="2.5*"/>
                     <thead>
                         <row>
-                            <entry>�J�e�S��</entry>
-                            <entry>�@�\</entry>
+                            <entry>カテゴリ</entry>
+                            <entry>機能</entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
                             <entry><literal>org.hibernate.SQL</literal></entry>
-                            <entry>���s�������ׂĂ�SQL�iDDL�j�X�e�[�g�����g�����M���O���܂��B</entry>
+                            <entry>実行したすべてのSQL（DDL）ステートメントをロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.type</literal></entry>
-                            <entry>���ׂĂ�JDBC�p�����[�^�����M���O���܂��B</entry>
+                            <entry>すべてのJDBCパラメータをロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.tool.hbm2ddl</literal></entry>
-                            <entry>���s�������ׂĂ�SQL�iDDL�j�X�e�[�g�����g�����M���O���܂��B</entry>
+                            <entry>実行したすべてのSQL（DDL）ステートメントをロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.pretty</literal></entry>
                             <entry>
-                                session�Ɋ֘A���邷�ׂẴG���e�B�e�B�i�ő�Q�O�j�̃t���b�V�����Ԃ����M���O���܂��B
+                                sessionに関連するすべてのエンティティ（最大２０）のフラッシュ時間をロギングします。
                             </entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.cache</literal></entry>
-                            <entry>���ׂĂ̂Q���L���b�V���̓�������M���O���܂��B</entry>
+                            <entry>すべての２次キャッシュの動作をロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.transaction</literal></entry>
-                            <entry>�g�����U�N�V�����Ɋ֘A���铮������M���O���܂��B</entry>
+                            <entry>トランザクションに関連する動作をロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.jdbc</literal></entry>
-                            <entry>JDBC���\�[�X�擾�����M���O���܂��B</entry>
+                            <entry>JDBCリソース取得をロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.hql.ast.AST</literal></entry>
                             <entry>
-                                HQL��SQL��AST�̃N�G���[�p�[�X�����M���O���܂��B
+                                HQLとSQLのASTのクエリーパースをロギングします。
                             </entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate.secure</literal></entry>
-                            <entry>���ׂĂ�JAAS���͂����M���O���܂��B</entry>
+                            <entry>すべてのJAAS分析をロギングします。</entry>
                         </row>
                         <row>
                             <entry><literal>org.hibernate</literal></entry>
                             <entry>
-                                ���ׂĂ����M���O���܂��B�i��񂪑�ʂɂȂ�܂����A�g���u���V���[�e�B���O�ɂ͕֗��ł��j
+                                すべてをロギングします。（情報が大量になりますが、トラブルシューティングには便利です）
                             </entry>
                         </row>
                     </tbody>
@@ -1272,34 +1274,34 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </table>
             
         <para>
-            Hibernate�ŃA�v���P�[�V�������쐬����Ƃ��́A<literal>org.hibernate.SQL</literal>
-            �J�e�S���� <literal>debug</literal> ����ɗL���ɂ��Ă������ق����ǂ��ł��傤�B
-            ��֕��@�Ƃ��āA<literal>hibernate.show_sql</literal> ��L���ɂ�����@������܂��B
+            Hibernateでアプリケーションを作成するときは、<literal>org.hibernate.SQL</literal>
+            カテゴリの <literal>debug</literal> を常に有効にしておいたほうが良いでしょう。
+            代替方法として、<literal>hibernate.show_sql</literal> を有効にする方法があります。
         </para>
                        
         
     </sect1>
 
     <sect1 id="configuration-namingstrategy">
-        <title><literal>NamingStrategy</literal> �̎���</title>
+        <title><literal>NamingStrategy</literal> の実装</title>
 
         <para>
-            �C���^�[�t�F�C�X <literal>net.sf.hibernate.cfg.NamingStrategy</literal> ���g����
-            �f�[�^�x�[�X�I�u�W�F�N�g�ƃX�L�[�}�v�f�̂��߂́u�����W���v���w��ł��܂��B
+            インターフェイス <literal>net.sf.hibernate.cfg.NamingStrategy</literal> を使うと
+            データベースオブジェクトとスキーマ要素のための「命名標準」を指定できます。
         </para>
 
         <para>
-            Java�̎��ʎq����f�[�^�x�[�X�̎��ʎq�������������邽�߂̃��[����A
-            �}�b�s���O�t�@�C���ŗ^�����u�_���I�ȁv�J�����ƃe�[�u��������
-            �u�����I�ȁv�e�[�u���ƃJ�������𐶐����邽�߂̃��[����p�ӂ��邱�Ƃ��ł��܂��B
-            ���̋@�\�͌J��Ԃ��̎G���i�Ⴆ�� <literal>TBL_</literal> �v���t�B�b�N�X�j����菜���A
-            �}�b�s���O�h�L�������g�̏璷�������炷���Ƃɖ𗧂��܂��B
-            Hibernate���g���f�t�H���g�̐헪�͂��Ȃ�ŏ����ɋ߂����̂ł��B
+            Javaの識別子からデータベースの識別子を自動生成するためのルールや、
+            マッピングファイルで与えた「論理的な」カラムとテーブル名から
+            「物理的な」テーブルとカラム名を生成するためのルールを用意することができます。
+            この機能は繰り返しの雑音（例えば <literal>TBL_</literal> プリフィックス）を取り除き、
+            マッピングドキュメントの冗長さを減らすことに役立ちます。
+            Hibernateが使うデフォルトの戦略はかなり最小限に近いものです。
         </para>
 
         <para>
-            �}�b�s���O��ǉ�����O�� <literal>Configuration.setNamingStrategy()</literal> ���ĂԂ��Ƃ�
-            �ȉ��̂悤�ɈقȂ�헪���w�肷�邱�Ƃ��ł��܂��F
+            マッピングを追加する前に <literal>Configuration.setNamingStrategy()</literal> を呼ぶことで
+            以下のように異なる戦略を指定することができます：
         </para>
 
         <programlisting><![CDATA[SessionFactory sf = new Configuration()
@@ -1309,25 +1311,25 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
     .buildSessionFactory();]]></programlisting>
     
         <para>
-            <literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> �͑g�ݍ��݂̐헪�ł��B
-            ����͂������̃A�v���P�[�V�����ɂƂ��ėL�p�ȊJ�n�_�ƂȂ邩������܂���B
+            <literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> は組み込みの戦略です。
+            これはいくつかのアプリケーションにとって有用な開始点となるかもしれません。
         </para>
 
     </sect1>
 
     <sect1 id="configuration-xmlconfig" revision="2">
-        <title>XML�ݒ�t�@�C��</title>
+        <title>XML設定ファイル</title>
 
         <para>
-            ����1�̕��@�� <literal>hibernate.cfg.xml</literal> �Ƃ������O�̃t�@�C����
-            �\���Ȑݒ���w�肷����@�ł��B
-            ���̃t�@�C���� <literal>hibernate.properties</literal> �t�@�C���̑���ƂȂ�܂��B
-            ���������̃t�@�C��������΁A�v���p�e�B���u���������܂��B
+            もう1つの方法は <literal>hibernate.cfg.xml</literal> という名前のファイルで
+            十分な設定を指定する方法です。
+            このファイルは <literal>hibernate.properties</literal> ファイルの代わりとなります。
+            もし両方のファイルがあれば、プロパティが置き換えられます。
         </para>
 
         <para>
-            XML�ݒ�t�@�C���͏����ݒ�� <literal>CLASSPATH</literal> �ɔz�u���Ă��������B
-            ���ꂪ��ł��F
+            XML設定ファイルは初期設定で <literal>CLASSPATH</literal> に配置してください。
+            これが例です：
         </para>
 
         <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
@@ -1338,7 +1340,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 <hibernate-configuration>
 
     <!-- a SessionFactory instance listed as /jndi/name -->
-    <!-- /jndi/name�̂悤�Ƀ��X�g�A�b�v���ꂽSessionFactory�C���X�^���X -->
+    <!-- /jndi/nameのようにリストアップされたSessionFactoryインスタンス -->
     <session-factory
         name="java:hibernate/SessionFactory">
 
@@ -1365,22 +1367,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 </hibernate-configuration>]]></programlisting>
 
         <para>
-            ���Ă̂Ƃ���A���̕��@�̗D�ʐ��͐ݒ�̂��߂̃}�b�s���O�t�@�C�������O�o���ɂł��邱�Ƃł��B
-            Hibernate�L���b�V�����`���[�j���O���Ȃ���΂Ȃ�Ȃ��̂ł���΁A
-            <literal>hibernate.cfg.xml</literal> �͂��֗��ł��B
-            <literal>hibernate.properties</literal> �� <literal>hibernate.cfg.xml</literal> ��
-            �ǂ��炩���g���邱�Ƃ��o���Ă����Ă��������B
-            ��͓������̂ŁA�Ⴄ�Ƃ���Ƃ�����XML�\�����g�����Ƃ̗��_�����ł��B
+            見てのとおり、この方法の優位性は設定のためのマッピングファイル名を外出しにできることです。
+            Hibernateキャッシュをチューニングしなければならないのであれば、
+            <literal>hibernate.cfg.xml</literal> はより便利です。
+            <literal>hibernate.properties</literal> と <literal>hibernate.cfg.xml</literal> の
+            どちらかを使えることを覚えておいてください。
+            二つは同じもので、違うところといえばXML構文を使うことの利点だけです。
         </para>
 
        <para>
-           XML�ݒ���g�����ƂŁAHibernate�͈ȉ��̂悤�ɃV���v���ɂȂ�܂��B
+           XML設定を使うことで、Hibernateは以下のようにシンプルになります。
        </para>
 
        <programlisting><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>
 
        <para>
-           �ႤXML�ݒ�t�@�C�����g�����Ƃ��ł��܂��B
+           違うXML設定ファイルを使うこともできます。
        </para>
 
        <programlisting><![CDATA[SessionFactory sf = new Configuration()
@@ -1390,23 +1392,23 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
     </sect1>
 
     <sect1 id="configuration-j2ee" revision="1">
-        <title>J2EE�A�v���P�[�V�����T�[�o�Ƃ̓���</title>
+        <title>J2EEアプリケーションサーバとの統合</title>
 
         <para>
-            Hibernate��J2EE�\���Ɠ�������|�C���g���T�|�[�g���Ă��܂��B
+            HibernateはJ2EE構造と統合するポイントをサポートしています。
         </para>
 
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>�R���e�i�Ǘ��f�[�^�\�[�X</emphasis>�FHibernate��
-                JNDI���񋟂��A�R���e�i���Ǘ�����JDBC�R�l�N�V�������g�p�ł��܂��B
-                �ʏ�AJTA������ <literal>TransactionManager</literal> ��
-                <literal>ResourceManager</literal> ���g�����U�N�V�����Ǘ�(CMT)�A
-                ���ɗl�X�ȃf�[�^�\�[�X�ɂ܂����镪�U�g�����U�N�V�����������܂��B
-                ���R�v���O�����Ńg�����U�N�V�������E���w��ł��܂�(BMT)�B
-                ���邢�́A�L�q�����R�[�h�̃|�[�^�r���e�B��ۂ��߂ɁA
-                �I�v�V������Hibernate�� <literal>Transaction</literal> API���g�������Ȃ邩������܂���B
+                <emphasis>コンテナ管理データソース</emphasis>：Hibernateは
+                JNDIが提供し、コンテナが管理するJDBCコネクションを使用できます。
+                通常、JTA準拠の <literal>TransactionManager</literal> と
+                <literal>ResourceManager</literal> がトランザクション管理(CMT)、
+                特に様々なデータソースにまたがる分散トランザクションを扱います。
+                当然プログラムでトランザクション境界を指定できます(BMT)。
+                あるいは、記述したコードのポータビリティを保つために、
+                オプションのHibernateの <literal>Transaction</literal> APIを使いたくなるかもしれません。
                 </para>
             </listitem>
         </itemizedlist>
@@ -1414,8 +1416,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>����JNDI�o�C���f�B���O</emphasis>�FHibernate��JNDI�������オ�������
-                <literal>SessionFactory</literal> �𐶐����܂��B
+                <emphasis>自動JNDIバインディング</emphasis>：HibernateはJNDIが立ち上がった後に
+                <literal>SessionFactory</literal> を生成します。
                 </para>
             </listitem>
         </itemizedlist>
@@ -1423,12 +1425,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>JTA�Z�b�V�����o�C���f�B���O</emphasis> �F
-                Hibernate <literal>Session</literal> �̃g�����U�N�V�������E��JTA�g�����U�N�V�����Ɠ����ɂȂ�܂��B
-                �P���� <literal>SessionFactory</literal> ��JNDI����lookup���āA
-                ���݂� <literal>Session</literal> ���擾���܂��B
-                JTA�g�����U�N�V���������������Ƃ��ɁAHibernate�� <literal>Session</literal> ���t���b�V�����A�N���[�Y���܂��B
-                EJB�f�v���C�����g�f�B�X�N���v�^�̒��ɁA�g�����U�N�V�������E��錾���܂��B
+                <emphasis>JTAセッションバインディング</emphasis> ：
+                Hibernate <literal>Session</literal> のトランザクション境界はJTAトランザクションと同じになります。
+                単純に <literal>SessionFactory</literal> をJNDIからlookupして、
+                現在の <literal>Session</literal> を取得します。
+                JTAトランザクションが完了したときに、Hibernateが <literal>Session</literal> をフラッシュし、クローズします。
+                EJBデプロイメントディスクリプタの中に、トランザクション境界を宣言します。
                 </para>
             </listitem>
         </itemizedlist>
@@ -1436,85 +1438,85 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <itemizedlist>
             <listitem>
                 <para>
-                <emphasis>JMX�f�v���C:</emphasis> ����JMX���g�p�\�ȃA�v���P�[�V�����T�[�o�i�Ⴆ��JBOSS�j
-                ������ꍇ�AHibernate��MBean�Ƃ��ăf�v���C���邱�Ƃ�I�ׂ܂��B
-                ����� <literal>Configuration</literal> ���� <literal>SessionFactory</literal> ��
-                ��������R�[�h�𖳂������Ƃ��ł��܂��B
-                �R���e�i�� <literal>HibernateService</literal> ���N�����A
-                �T�[�r�X�̈ˑ��𗝑z�I�ɊǗ����܂��i�f�[�^�\�[�X��Hibernate�₻�̑����N������O��
-                �g�p�ł���悤�ɂ��Ȃ���΂Ȃ�܂���j�B
+                <emphasis>JMXデプロイ:</emphasis> もしJMXが使用可能なアプリケーションサーバ（例えばJBOSS）
+                がある場合、HibernateをMBeanとしてデプロイすることを選べます。
+                これは <literal>Configuration</literal> から <literal>SessionFactory</literal> を
+                生成するコードを無くすことができます。
+                コンテナは <literal>HibernateService</literal> を起動し、
+                サービスの依存を理想的に管理します（データソースはHibernateやその他が起動する前に
+                使用できるようにしなければなりません）。
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            ���Ɉˑ����܂����A�����A�A�v���P�[�V�����T�[�o��"connection containment"�̗�O���X���[����Ȃ�
-            �ݒ�̃I�v�V���� <literal>hibernate.connection.aggressive_release</literal> 
-            ��true�ɂ��Ă��������B
+            環境に依存しますが、もし、アプリケーションサーバが"connection containment"の例外をスローするなら
+            設定のオプション <literal>hibernate.connection.aggressive_release</literal> 
+            をtrueにしてください。
         </para>
 
         <sect2 id="configuration-optional-transactionstrategy" revision="3">
-            <title>�g�����U�N�V�����헪�ݒ�</title>
+            <title>トランザクション戦略設定</title>
 
             <para>
-                Hibernate  <literal>Session</literal> API�́A�A�[�L�e�N�`�����̃V�X�e���̊Ǌ��ł���
-                ������g�����U�N�V�����Ɉˑ����܂���B
-                �����R�l�N�V�����v�[����JDBC�𒼐ڎg�������ꍇ�AJDBC API����
-                �g�����U�N�V�������ĂԂ��Ƃ��ł��܂��B
-                �����AJ2EE�A�v���P�[�V�����T�[�o�œ��삳����Ȃ�ABean�Ǘ��g�����U�N�V�������g���A
-                �K�v�ɉ����� <literal>UserTransaction</literal> ��JTA API����ĂԂ��ƂɂȂ�ł��傤�B
+                Hibernate  <literal>Session</literal> APIは、アーキテクチャ内のシステムの管轄である
+                あらゆるトランザクションに依存しません。
+                もしコネクションプールのJDBCを直接使いたい場合、JDBC APIから
+                トランザクションを呼ぶことができます。
+                もし、J2EEアプリケーションサーバで動作させるなら、Bean管理トランザクションを使い、
+                必要に応じて <literal>UserTransaction</literal> をJTA APIから呼ぶことになるでしょう。
             </para>
 
             <para>
-                2�i����ȏ�j�̊��Ō݊����̂���R�[�h���ێ����邽�߂ɁA�I�v�V�����Ƃ��č��{�I�ȃV�X�e����
-                ���b�s���O����Hibernate <literal>Transaction</literal> API�𐄏����܂��B
-                Hibernate�ݒ�v���p�e�B�� <literal>hibernate.transaction.factory_class</literal> ��ݒ肷�邱�Ƃ�
-                �������� <literal>Transaction</literal> �N���X�̃C���X�^���X�������Ƃ��ł��܂��B
+                2つ（それ以上）の環境で互換性のあるコードを維持するために、オプションとして根本的なシステムを
+                ラッピングするHibernate <literal>Transaction</literal> APIを推奨します。
+                Hibernate設定プロパティの <literal>hibernate.transaction.factory_class</literal> を設定することで
+                ある特定の <literal>Transaction</literal> クラスのインスタンスを持つことができます。
             </para>
 
             <para>
-                3�̊�{�I�ȁi���ɂ���j�I���������܂��F
+                3つの基本的な（既にある）選択を挙げます：
             </para>
 
             <variablelist spacing="compact">
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.JDBCTransactionFactory</literal></term>
                     <listitem>
-                        <para>�f�[�^�x�[�X(JDBC)�g�����U�N�V�����ɈϏ����܂��i�f�t�H���g�j</para>
+                        <para>データベース(JDBC)トランザクションに委譲します（デフォルト）</para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.JTATransactionFactory</literal></term>
                     <listitem>
                         <para>
-                            �����A���̃R���e�L�X�g�i�Ⴆ�΁AEJB�Z�b�V����Bean���\�b�h�j�Ői�s���̃g�����U�N�V���������݂���A��������
-                            �V�����g�����U�N�V�������J�n����Ă���ABean�Ǘ��g�����U�N�V�������g���Ă���ꍇ�A
-                            �R���e�i�Ǘ��g�����U�N�V�����ɈϏ����܂��B
+                            もし、このコンテキスト（例えば、EJBセッションBeanメソッド）で進行中のトランザクションが存在する、もしくは
+                            新しいトランザクションが開始されており、Bean管理トランザクションが使われている場合、
+                            コンテナ管理トランザクションに委譲します。
                         </para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
                     <term><literal>org.hibernate.transaction.CMTTransactionFactory</literal></term>
                     <listitem>
-                        <para>�R���e�i�Ǘ�JTA�g�����U�N�V�����ɈϏ����܂�</para>
+                        <para>コンテナ管理JTAトランザクションに委譲します</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
 
             <para>
-                �������g�̃g�����U�N�V�����헪�i�Ⴆ�΁ACORBA�g�����U�N�V�����T�[�r�X�j���`���邱�Ƃ��ł��܂��B
+                自分自身のトランザクション戦略（例えば、CORBAトランザクションサービス）を定義することもできます。
             </para>
 
             <para>
-                Hibernate�̂������̋@�\�i�Ⴆ�΁A�񎟃L���b�V���AJTA�ɂ��R���e�L�X�g�Z�b�V���� ���j��
-                �Ǘ����ꂽ���̒���JTA <literal>TransactionManager</literal> �ւ̃A�N�Z�X��v�����܂��B
-                J2EE���ЂƂ̃��J�j�Y���ɋK�i������Ă��Ȃ��̂ŁA
-                �A�v���P�[�V�����T�[�o�ɂ����āAHibernate�� <literal>TransactionManager</literal> �̃��t�@�����X
-                ���擾������@�𖾊m�ɂ���K�v������܂��B
+                Hibernateのいくつかの機能（例えば、二次キャッシュ、JTAによるコンテキストセッション 等）は
+                管理された環境の中のJTA <literal>TransactionManager</literal> へのアクセスを要求します。
+                J2EEがひとつのメカニズムに規格化されていないので、
+                アプリケーションサーバにおいて、Hibernateが <literal>TransactionManager</literal> のリファレンス
+                を取得する方法を明確にする必要があります。
             </para>
 
             <table frame="topbot" id="jtamanagerlookup" revision="1">
-                <title>JTA �g�����U�N�V�����}�l�[�W��</title>
+                <title>JTA トランザクションマネージャ</title>
                 <tgroup cols="2">
                     <colspec colwidth="2.5*"/>
                     <colspec colwidth="1*"/>
@@ -1572,95 +1574,95 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </sect2>
 
         <sect2 id="configuration-optional-jndi" revision="3">
-            <title><literal>SessionFactory</literal> ��JNDI�ւ̓o�^</title>
+            <title><literal>SessionFactory</literal> のJNDIへの登録</title>
 
             <para>
-                JNDI�ɓo�^����Hibernate <literal>SessionFactory</literal> �͒P����
-                �t�@�N�g�������b�N�A�b�v���A�V���� <literal>Session</literal> �����܂��B
-                �����JNDI�ɓo�^���ꂽ <literal>Datasource</literal> �ɂ͊֘A�����A
-                ���݂��ɃV���v���ɂ����̓o�^���g�����Ƃɒ��ӂ��Ă��������B
+                JNDIに登録したHibernate <literal>SessionFactory</literal> は単純に
+                ファクトリをルックアップし、新しい <literal>Session</literal> を作ります。
+                これはJNDIに登録された <literal>Datasource</literal> には関連せず、
+                お互いにシンプルにこれらの登録を使うことに注意してください。
             </para>
 
             <para>
-                ���� <literal>SessionFactory</literal> ��JNDI�l�[���X�y�[�X�ɓo�^�������ꍇ�A
-                ���ʂȖ��O�i�Ⴆ�΁A <literal>java:hibernate/SessionFactory</literal> �j��
-                <literal>hibernate.session_factory_name</literal> �v���p�e�B�Ɏg���Ă�������
-                �������̃v���p�e�B���ȗ������ꍇ�A <literal>SessionFactory</literal> ��
-                JNDI�ɓo�^����܂���B�i�����Tomcat�̂悤�ȃf�t�H���g������JNDI���ǂ݂���p�̊��̏ꍇ���ɕ֗��ł��B�j
+                もし <literal>SessionFactory</literal> をJNDIネームスペースに登録したい場合、
+                特別な名前（例えば、 <literal>java:hibernate/SessionFactory</literal> ）を
+                <literal>hibernate.session_factory_name</literal> プロパティに使ってください
+                もしこのプロパティを省略した場合、 <literal>SessionFactory</literal> は
+                JNDIに登録されません。（これはTomcatのようなデフォルト実装でJNDIが読みより専用の環境の場合特に便利です。）
             </para>
 
             <para>
-                <literal>SessionFactory</literal> ��JNDI�ɓo�^����Ƃ��AHibernate��
-                <literal>hibernate.jndi.url</literal> �̒l���g�p���A<literal>hibernate.jndi.class</literal> 
-                ���C�j�V�����R���e�L�X�g�Ƃ��ċ�̉����܂��B
-                ���������ݒ肵�Ȃ��ꍇ�́A�f�t�H���g�� <literal>InitialContext</literal> ���g�p���܂��B
+                <literal>SessionFactory</literal> をJNDIに登録するとき、Hibernateは
+                <literal>hibernate.jndi.url</literal> の値を使用し、<literal>hibernate.jndi.class</literal> 
+                をイニシャルコンテキストとして具体化します。
+                もし何も設定しない場合は、デフォルトの <literal>InitialContext</literal> を使用します。
             </para>
 
             <para>
-                <literal>cfg.buildSessionFactory()</literal> ���R�[����
-                Hibernate�͎����I�� <literal>SessionFactory</literal> ��JNDI�ɔz�u���܂��B
-                <literal>HibernateService</literal> �ƈꏏ��JMX�f�v���C�����g���g��Ȃ�����A
-                ����͂��̌Ăяo�����A�v���P�[�V�������̉��炩�̃X�^�[�g�A�b�v�R�[�h�i�������̓��[�e�B���e�B�N���X�j
-                �ɔz�u���Ȃ���΂Ȃ�Ȃ����Ƃ��Ӗ����܂��B�i��ŋc�_���܂��j
+                <literal>cfg.buildSessionFactory()</literal> をコール後
+                Hibernateは自動的に <literal>SessionFactory</literal> をJNDIに配置します。
+                <literal>HibernateService</literal> と一緒にJMXデプロイメントを使わない限り、
+                これはこの呼び出しをアプリケーション内の何らかのスタートアップコード（もしくはユーティリティクラス）
+                に配置しなければならないことを意味します。（後で議論します）
             </para>
 
             <para>
-                ����JNDI <literal>SessionFactory</literal> ���g���ꍇ�AEJB�⑼�̃N���X��
-                JNDI���b�N�A�b�v���g���� <literal>SessionFactory</literal> ���擾���܂��B
+                もしJNDI <literal>SessionFactory</literal> を使う場合、EJBや他のクラスは
+                JNDIルックアップを使って <literal>SessionFactory</literal> を取得します。
             </para>
 
             <para>
-                �Ǘ����ꂽ���ł� <literal>SessionFactory</literal> ��JNDI�Ƀo�C���h���A
-                �����łȂ���� <literal>static</literal> �V���O���g�����g�����Ƃ𐄏����܂��B
-                �����������ڍׂ���A�v���P�[�V�����R�[�h��ی삷�邽�߂ɁA
-                <literal>HibernateUtil.getSessionFactory()</literal> �̂悤�ȃw���p�[�N���X�̒��ɁA
-                <literal>SessionFactory</literal> �����b�N�A�b�v����R�[�h���B�����Ƃ𐄏����܂��B
-                ���̂悤�ȃw���p�[�N���X��Hibernate���J�n����֗��Ȏ�i�ł�����܂��B
-                &mdash;�P�͂��Q�Ƃ��Ă��������B
+                管理された環境では <literal>SessionFactory</literal> をJNDIにバインドし、
+                そうでなければ <literal>static</literal> シングルトンを使うことを推奨します。
+                こういった詳細からアプリケーションコードを保護するために、
+                <literal>HibernateUtil.getSessionFactory()</literal> のようなヘルパークラスの中に、
+                <literal>SessionFactory</literal> をルックアップするコードを隠すことを推奨します。
+                このようなヘルパークラスはHibernateを開始する便利な手段でもあります。
+                &mdash;１章を参照してください。
             </para>
 
         </sect2>
 
         <sect2 id="configuration-j2ee-currentsession" revision="4">
-            <title>JTA�ɂ�錻�݂̃Z�b�V�����R���e�L�X�g�}�l�[�W�����g</title>
+            <title>JTAによる現在のセッションコンテキストマネージメント</title>
 
             <para>
-                �����Ƃ��ȒP�� <literal>Session</literal> �ƃg�����U�N�V�������������@�́A
-                Hibernate�������I�Ɂu���݂́v <literal>Session</literal> ���Ǘ����邱�Ƃł��B
-                <xref linkend="architecture-current-session">�J�����g�Z�b�V����</xref> �̐������Q�Ƃ��Ă��������B
-                ���� <literal>�uJTA�v</literal> �Z�b�V�����R���e�L�X�g���g������ŁA
-                ���݂�JTA�g�����U�N�V������Hibernate <literal>Session</literal> ���֘A���Ă��Ȃ��ꍇ�́A
-                �ŏ��� <literal>sessionFactory.getCurrentSession()</literal> ���R�[�����A
-                JTA�g�����U�N�V�����Ƃ̊֘A�t�����s���Ă��������B
-                <literal>�uJTA�v</literal> �R���e�L�X�g�� <literal>getCurrentSession()</literal> ��
-                �ʂ��Ď擾���� <literal>Session</literal> �́A�g�����U�N�V��������������O��
-                �����I�Ƀt���b�V�����A����������ɂ͎����I�ɃN���[�Y���܂��B
-                �܂��A�e�X�e�[�g�����g���JDBC�R�l�N�V������ϋɓI�Ƀ����[�X���܂��B
-                ����ɂ��JTA�g�����U�N�V�����̃��C�t�T�C�N���� <literal>Session</literal> ���Ǘ����邱�Ƃ��ł��A
-                ���[�U�[�̃R�[�h���炻�̂悤�ȊǗ�������R�[�h��r���ł��܂��B
-                <literal>UserTransaction</literal> ��ʂ���JTA���v���O�����ŊǗ����邱�Ƃ��ł��܂��B
-                �܂��́A�i�|�[�^�u���ȃR�[�h�ł���΁jHibernate <literal>Transaction</literal> API��
-                �g�����U�N�V�������E�Ƃ��Ďg�����Ƃ��ł��܂��B
-                EJB�R���e�i���g���Ƃ��́ACMT�ɂ��錾�I�g�����U�N�V�������E���D�܂����ł��B
+                もっとも簡単に <literal>Session</literal> とトランザクションを扱う方法は、
+                Hibernateが自動的に「現在の」 <literal>Session</literal> を管理することです。
+                <xref linkend="architecture-current-session">カレントセッション</xref> の説明を参照してください。
+                もし <literal>「JTA」</literal> セッションコンテキストを使った上で、
+                現在のJTAトランザクションとHibernate <literal>Session</literal> が関連していない場合は、
+                最初に <literal>sessionFactory.getCurrentSession()</literal> をコールし、
+                JTAトランザクションとの関連付けを行ってください。
+                <literal>「JTA」</literal> コンテキストの <literal>getCurrentSession()</literal> を
+                通じて取得した <literal>Session</literal> は、トランザクションが完了する前に
+                自動的にフラッシュし、完了した後には自動的にクローズします。
+                また、各ステートメント後にJDBCコネクションを積極的にリリースします。
+                これによりJTAトランザクションのライフサイクルで <literal>Session</literal> を管理することができ、
+                ユーザーのコードからそのような管理をするコードを排除できます。
+                <literal>UserTransaction</literal> を通じてJTAをプログラムで管理することができます。
+                または、（ポータブルなコードであれば）Hibernate <literal>Transaction</literal> APIを
+                トランザクション境界として使うこともできます。
+                EJBコンテナを使うときは、CMTによる宣言的トランザクション境界が好ましいです。
             </para>
 
         </sect2>
 
         <sect2 id="configuration-j2ee-jmx" revision="1">
-            <title>JMX�f�v���C�����g</title>
+            <title>JMXデプロイメント</title>
 
             <para>
-                <literal>SessionFactory</literal> ��JNDI����擾���邽�߂ɂ�
-                <literal>cfg.buildSessionFactory()</literal> �s���ǂ����Ŏ��s���Ă��Ȃ���΂Ȃ�܂���B
-                ���Ȃ��͂�����A<literal>static</literal> �������u���b�N���i <literal>HibernateUtil</literal> �̂悤�ȁj��
-                <emphasis>managed service</emphasis> �Ƃ���Hibernate���f�v���C���邩�A�ǂ��炩�Ŏ��s�ł��܂��B
+                <literal>SessionFactory</literal> をJNDIから取得するためには
+                <literal>cfg.buildSessionFactory()</literal> 行をどこかで実行していなければなりません。
+                あなたはこれを、<literal>static</literal> 初期化ブロック内（ <literal>HibernateUtil</literal> のような）か
+                <emphasis>managed service</emphasis> としてHibernateをデプロイするか、どちらかで実行できます。
             </para>
 
             <para>
-               JBOSS�̂悤��JMX�̋@�\�ŃA�v���P�[�V�����T�[�o�Ƀf�v���C���邽�߂�
-               <literal>org.hibernate.jmx.HibernateService</literal> ���g���āA�z�u���܂��B
-               ���ۂ̃f�v���C�����g�Ɛݒ�̓x���_�[���L�ł��B
-               �����ŗ�Ƃ���JBOSS 4.0.x�p�� <literal>jboss-service.xml</literal> �������܂��B
+               JBOSSのようなJMXの機能でアプリケーションサーバにデプロイするために
+               <literal>org.hibernate.jmx.HibernateService</literal> を使って、配置します。
+               実際のデプロイメントと設定はベンダー特有です。
+               ここで例としてJBOSS 4.0.x用の <literal>jboss-service.xml</literal> を示します。
             </para>
 
             <programlisting><![CDATA[<?xml version="1.0"?>
@@ -1707,14 +1709,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 </server>]]></programlisting>
 
             <para>
-                ���̃t�@�C���� <literal>META-INF</literal> �f�B���N�g���ɔz�u����A
-                JAR�t�@�C�����g������ <literal>.sar</literal>  (service archive)�Ńp�b�P�[�W������܂��B
-                ���l��Hibernate�p�b�P�[�W���K�v�ł��B�܂��AHibernate�̓T�[�h�p�[�e�B�̃��C�u�������v�����܂��B
-                �R���p�C�������i�����N���X�Ƃ��̃}�b�s���O�t�@�C�������l�ɃA�[�J�C�u�i.sar�t�@�C���j�ɓ���܂��B
-                �G���^�[�v���C�Ybean�i�ʏ�̓Z�b�V����bean�j�͎��g��JAR�t�@�C����ێ����܂����A
-                1��Łi�z�b�g�j�f�v���C�\�ȃ��j�b�g�̂��߂Ƀ��C���T�[�r�X�A�[�J�C�u�Ƃ��Ă���EJB JAR�t�@�C�����C���N���[�h����
-                ���Ƃ��ł��܂��BJBoss�A�v���P�[�V�����T�[�o�̃h�L�������g��JXM�T�[�r�X��
-                EJB�f�v���C�����g�̂�葽���̏�񂪂���܂��B
+                このファイルは <literal>META-INF</literal> ディレクトリに配置され、
+                JARファイルを拡張した <literal>.sar</literal>  (service archive)でパッケージ化されます。
+                同様にHibernateパッケージも必要です。また、Hibernateはサードパーティのライブラリも要求します。
+                コンパイルした永続化クラスとそのマッピングファイルも同様にアーカイブ（.sarファイル）に入れます。
+                エンタープライズbean（通常はセッションbean）は自身のJARファイルを保持しますが、
+                1回で（ホット）デプロイ可能なユニットのためにメインサービスアーカイブとしてこのEJB JARファイルをインクルードする
+                ことができます。JBossアプリケーションサーバのドキュメントにJXMサービスと
+                EJBデプロイメントのより多くの情報があります。
             </para>
 
         </sect2>

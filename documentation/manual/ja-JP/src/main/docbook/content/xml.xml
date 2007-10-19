@@ -1,48 +1,50 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
-<chapter id="xml">
-    <title>XML�}�b�s���O</title>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-    <para><emphasis>XML�}�b�s���O��Hibernate3.0�ł͎����I�ȋ@�\�ł���A���Ɋ����I�ɊJ�����ł��B</emphasis></para>
+<chapter id="xml">
+    <title>XMLマッピング</title>
+
+    <para><emphasis>XMLマッピングはHibernate3.0では試験的な機能であり、非常に活動的に開発中です。</emphasis></para>
 
     <sect1 id="xml-intro" revision="1">
-        <title>XML�f�[�^�ł̍��</title>
+        <title>XMLデータでの作業</title>
 
         <para>
-            Hibernate�ł͉i������POJO���g���č�Ƃ���̂Ƃقړ����悤�Ȃ����ŁA
-            �i������XML�f�[�^���g���č�Ƃł��܂��B
+            Hibernateでは永続性のPOJOを使って作業するのとほぼ同じようなやり方で、
+            永続性のXMLデータを使って作業できます。
         </para>
 
         <para>
-            Hibernate��XML�c���[�𑀍삷�邽�߂�API�Ƃ���dom4j���T�|�[�g���Ă��܂��B
-            �f�[�^�x�[�X����dom4j�̃c���[�𕜌�����N�G�����������Ƃ��ł��A
-            �c���[�ɑ΂��čs�����C���͎����I�Ƀf�[�^�x�[�X�Ɠ�������܂��B
+            HibernateはXMLツリーを操作するためのAPIとしてdom4jをサポートしています。
+            データベースからdom4jのツリーを復元するクエリを書くことができ、
+            ツリーに対して行った修正は自動的にデータベースと同期されます。
             
-            �܂�XML�h�L�������g���擾���邱�Ƃ��ł��Adom4j���g���ăh�L�������g���p�[�X���A
-            Hibernate�̔C�ӂ̊�{������g���ăf�[�^�x�[�X�֏������ނ��Ƃ��ł��܂��B�F
-            �܂�A<literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal>
-            ����ł�(�}�[�W�͂܂��T�|�[�g���Ă��܂���)�B
+            またXMLドキュメントを取得することができ、dom4jを使ってドキュメントをパースし、
+            Hibernateの任意の基本操作を使ってデータベースへ書き込むことができます。：
+            つまり、<literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal>
+            操作です(マージはまだサポートしていません)。
            
         </para>
 
         <para>
-            �f�[�^�̃C���|�[�g/�G�N�X�|�[�g�A
-            JMS�ɂ��G���e�B�e�B�f�[�^�̊O������SOAP�AXSLT�x�[�X�̃��|�[�g�ȂǁA
-            ���̋@�\�ɂ͑����̗p�r������܂��B
+            データのインポート/エクスポート、
+            JMSによるエンティティデータの外部化やSOAP、XSLTベースのレポートなど、
+            この機能には多くの用途があります。
         </para>
         
         <para>
-            �P��̃}�b�s���O�́A�N���X�̃v���p�e�B��XML�h�L�������g�̃m�[�h��
-            �����Ƀf�[�^�x�[�X�փ}�b�s���O���邽�߂Ɏg�����Ƃ��ł��܂��B
-            �܂��}�b�s���O����N���X���Ȃ���΁A
-            XML�������}�b�s���O���邽�߂Ɏg�����Ƃ��ł��܂��B
+            単一のマッピングは、クラスのプロパティとXMLドキュメントのノードを
+            同時にデータベースへマッピングするために使うことができます。
+            またマッピングするクラスがなければ、
+            XMLだけをマッピングするために使うことができます。
             
         </para>
         
         <sect2 id="xml-intro-mapping">
-            <title>XML�ƃN���X�̃}�b�s���O�𓯎��Ɏw�肷��</title>
+            <title>XMLとクラスのマッピングを同時に指定する</title>
 
             <para>
-                �����POJO��XML�𓯎��Ƀ}�b�s���O�����ł��B�F
+                これはPOJOとXMLを同時にマッピングする例です。：
             </para>
             
             <programlisting><![CDATA[<class name="Account" 
@@ -68,10 +70,10 @@
         </sect2>
         
         <sect2 id="xml-onlyxml">
-            <title>XML�}�b�s���O�������w�肷��</title>
+            <title>XMLマッピングだけを指定する</title>
 
             <para>
-                �����POJO�N���X���Ȃ��}�b�s���O�̗�ł��B�F
+                これはPOJOクラスがないマッピングの例です。：
             </para>
             
             <programlisting><![CDATA[<class entity-name="Account" 
@@ -99,11 +101,11 @@
 </class>]]></programlisting>
         
             <para>
-                ���̃}�b�s���O�ɂ��Adom4j�c���[���A
-                �v���p�e�B��/�l�̑g�̃O���t�ijava�� <literal>Map</literal>�j�Ƃ���
-                �f�[�^�ɃA�N�Z�X�ł��܂��B
+                このマッピングにより、dom4jツリーか、
+                プロパティ名/値の組のグラフ（javaの <literal>Map</literal>）として
+                データにアクセスできます。
                 
-                �v���p�e�B�̖��O�́AHQL�N�G���[���ŎQ�Ƃł��鏃���Ș_���\���ł��B
+                プロパティの名前は、HQLクエリー内で参照できる純粋な論理構造です。
             </para>
 
         </sect2>
@@ -111,53 +113,53 @@
      </sect1>
      
     <sect1 id="xml-mapping" revision="1">
-        <title>XML�}�b�s���O�̃��^�f�[�^</title>
+        <title>XMLマッピングのメタデータ</title>
 
         <para>
-            ������Hibernate�̃}�b�s���O�v�f�́@<literal>node</literal>�@�������g�p�ł��܂��B
-            ����ɂ��XML�����̖��O��v���p�e�B��G���e�B�e�B�f�[�^��ێ�����v�f���w��ł��܂��B
-            <literal>node</literal>�@�����̃t�H�[�}�b�g�͈ȉ��̒���1�łȂ���΂Ȃ�܂���B�F
+            多くのHibernateのマッピング要素は　<literal>node</literal>　属性が使用できます。
+            これによりXML属性の名前やプロパティやエンティティデータを保持する要素を指定できます。
+            <literal>node</literal>　属性のフォーマットは以下の中の1つでなければなりません。：
         </para>
         
         <itemizedlist spacing="compact">
         <listitem>
             <para>
-            <literal>"element-name"</literal> - �w�肵��XML�v�f�փ}�b�s���O���܂�
+            <literal>"element-name"</literal> - 指定したXML要素へマッピングします
             </para>
         </listitem>
         <listitem>
             <para>
-            <literal>"@attribute-name"</literal> - �w�肵��XML�����փ}�b�s���O���܂�
+            <literal>"@attribute-name"</literal> - 指定したXML属性へマッピングします
             </para>
         </listitem>
         <listitem>
             <para>
-            <literal>"."</literal> -�@�e�v�f�փ}�b�s���O���܂�
+            <literal>"."</literal> -　親要素へマッピングします
             </para>
         </listitem>
         <listitem>
             <para>
                 <literal>"element-name/@attribute-name"</literal> - 
-                �w�肵���G�������g�̎w�肵�������փ}�b�s���O���܂�
+                指定したエレメントの指定した属性へマッピングします
             </para>
         </listitem>
         </itemizedlist>
         
         <para>
-            �R���N�V�����ƒP��̒l�̊֘A�ɑ΂��āA
-            ���܂��� <literal>embed-xml</literal> ����������܂��B
-            �f�t�H���g�� <literal>embed-xml="true"</literal> �Ɛݒ肵���ꍇ�A
-            �֘A����G���e�B�e�B(�l�^�̃R���N�V����)��XML�c���[�́A
-            ���ڊ֘A�����L����G���e�B�e�B��XML�c���[���ɖ��ߍ��܂�܂��B
-            ���΂ɁA<literal>embed-xml="false"</literal> �Ɛݒ肵���ꍇ�A
-            �Q�Ƃ���鎯�ʎq�̒l���������d�x�P���̊֘A�ɑ΂���XML�Ɍ���A
-            �P���ɃR���N�V�����͂܂���������Ȃ��Ȃ�܂��B
+            コレクションと単一の値の関連に対して、
+            おまけの <literal>embed-xml</literal> 属性があります。
+            デフォルトの <literal>embed-xml="true"</literal> と設定した場合、
+            関連するエンティティ(値型のコレクション)のXMLツリーは、
+            直接関連を所有するエンティティのXMLツリー内に埋め込まれます。
+            反対に、<literal>embed-xml="false"</literal> と設定した場合、
+            参照される識別子の値だけが多重度１側の関連に対するXMLに現れ、
+            単純にコレクションはまったく現れなくなります。
         </para>
         
         <para>
-            ���܂�ɑ����̊֘A�ɑ΂���
-            <literal>embed-xml="true"</literal> �Ƃ����܂܂ɂ���̂͒��ӂ��ׂ��ł��B
-            XML�͏z�����܂������܂���B
+            あまりに多くの関連に対して
+            <literal>embed-xml="true"</literal> としたままにするのは注意すべきです。
+            XMLは循環をうまく扱えません。
         </para>
         
         <programlisting><![CDATA[<class name="Customer" 
@@ -196,15 +198,15 @@
 </class>]]></programlisting>
 
         <para>
-            ���̗�ł́A���ۂ�account�̃f�[�^�ł͂Ȃ��A
-            account��id�̃R���N�V�����𖄂ߍ��ނ��Ƃɂ��܂����B
-            ������HQL�N�G���ł��F
+            この例では、実際のaccountのデータではなく、
+            accountのidのコレクションを埋め込むことにしました。
+            続きのHQLクエリです：
         </para>
         
         <programlisting><![CDATA[from Customer c left join fetch c.accounts where c.lastName like :lastName]]></programlisting>
         
         <para>
-            ���̂悤�ȃf�[�^�Z�b�g��Ԃ��ł��傤
+            このようなデータセットを返すでしょう
         </para>
         
         <programlisting><![CDATA[<customer id="123456789">
@@ -219,9 +221,9 @@
 </customer>]]></programlisting>
 
         <para>
-            <literal>&lt;one-to-many&gt;</literal> �}�b�s���O��
-            <literal>embed-xml="true"</literal> �Ɛݒ肵���ꍇ�A
-            �f�[�^�͂��̂悤�ɂȂ�ł��傤�B
+            <literal>&lt;one-to-many&gt;</literal> マッピングで
+            <literal>embed-xml="true"</literal> と設定した場合、
+            データはこのようになるでしょう。
         </para>
         
         <programlisting><![CDATA[<customer id="123456789">
@@ -245,11 +247,11 @@
     
     
     <sect1 id="xml-manipulation" revision="1">
-        <title>XML�f�[�^������</title>
+        <title>XMLデータを扱う</title>
         
         <para>
-            XML�h�L�������g���A�A�v���P�[�V�������ōēǂݍ��݂�X�V�����Ă݂܂��傤�B
-            �ȉ��ł�dom4j�̃Z�b�V�������擾���邱�Ƃōs���܂��B�F
+            XMLドキュメントを、アプリケーション内で再読み込みや更新をしてみましょう。
+            以下ではdom4jのセッションを取得することで行います。：
         </para>
         
        <programlisting><![CDATA[Document doc = ....;
@@ -288,9 +290,9 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            XML�x�[�X�̃f�[�^�̃C���|�[�g/�G�N�X�|�[�g���������邽�߂ɁA
-            Hibernate�� <literal>replicate()</literal> ��������̋@�\�����т���̂�
-            �ɂ߂ėL���ł��B
+            XMLベースのデータのインポート/エクスポートを実装するために、
+            Hibernateの <literal>replicate()</literal> 操作をこの機能を結びつけるのは
+            極めて有効です。
         </para>
        
     </sect1>

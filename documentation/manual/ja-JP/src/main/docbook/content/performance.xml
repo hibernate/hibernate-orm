@@ -1,133 +1,135 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <chapter id="performance">
-    <title>�p�t�H�[�}���X�̉��P</title>
+    <title>パフォーマンスの改善</title>
 
     <sect1 id="performance-fetching" revision="2">
-        <title>�t�F�b�`�헪</title>
+        <title>フェッチ戦略</title>
 
         <para>
-            <emphasis>�t�F�b�`�헪</emphasis> �́A�A�v���P�[�V�������֘A���i�r�Q�[�g����K�v������
-            �Ƃ��ɁAHibernate���֘A�I�u�W�F�N�g�𕜌����邽�߂Ɏg�p����헪�ł��B�t�F�b�`�헪��O/R�}�b�s���O��
-            ���^�f�[�^�ɐ錾���邩�A�����HQL�A <literal>Criteria</literal> �N�G���ŃI�[�o�[���C�h���܂��B
+            <emphasis>フェッチ戦略</emphasis> は、アプリケーションが関連をナビゲートする必要がある
+            ときに、Hibernateが関連オブジェクトを復元するために使用する戦略です。フェッチ戦略はO/Rマッピングの
+            メタデータに宣言するか、特定のHQL、 <literal>Criteria</literal> クエリでオーバーライドします。
         </para>
 
         <para>
-            Hibernate3�͎��Ɏ����t�F�b�`�헪���`���Ă��܂��B
-        </para>
-
-        <itemizedlist>
-             <listitem>
-                <para>
-                    <emphasis>�����t�F�b�`</emphasis> - Hibernate�� <literal>OUTER JOIN</literal> ���g���āA
-                    �֘A����C���X�^���X��R���N�V�������P�� <literal>SELECT</literal> 
-                    �ŕ������܂��B
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <emphasis>�Z���N�g�t�F�b�`</emphasis> - 2��ڂ� <literal>SELECT</literal>
-                    �Ŋ֘A����G���e�B�e�B��R���N�V�����𕜌����܂��B <literal>lazy="false"</literal> 
-                    �Ŗ����I�ɒx���t�F�b�`�𖳌��ɂ��Ȃ���΁A����2��ڂ�select�͎��ۂ�
-                    �֘A�ɃA�N�Z�X�����Ƃ��̂ݎ��s�����ł��傤�B
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <emphasis>�T�u�Z���N�g�t�F�b�`</emphasis> - 2��ڂ� <literal>SELECT</literal> 
-                    �ŁA���O�̃N�G����t�F�b�`�ŕ����������ׂĂ̗v�f�Ɋ֘A����R���N�V������
-                    �������܂��B <literal>lazy="false"</literal> 
-                    �Ŗ����I�ɒx���t�F�b�`�𖳌��ɂ��Ȃ���΁A����2��ڂ�select�͎��ۂ�
-                    �֘A�ɃA�N�Z�X�����Ƃ��̂ݎ��s�����ł��傤�B
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <emphasis>�o�b�`�t�F�b�`</emphasis> - �Z���N�g�t�F�b�`�̂��߂̍œK�����ꂽ�헪
-                     - Hibernate�̓G���e�B�e�B�̃C���X�^���X��R���N�V�����̈�Q��1���
-                    <literal>SELECT</literal> �ŕ������܂��B����͎�L�[��O���L�[�̃��X�g���w�肷�邱�Ƃ�
-                    �ɂ��s���܂��B
-                </para>
-            </listitem>
-        </itemizedlist>
-        
-        <para>
-            Hibernate�͎��Ɏ����헪�Ƃ���ʂ����܂��B
+            Hibernate3は次に示すフェッチ戦略を定義しています。
         </para>
 
         <itemizedlist>
              <listitem>
                 <para>
-                    <emphasis>�����t�F�b�`</emphasis> - ���L�҂̃I�u�W�F�N�g�����[�h���ꂽ�Ƃ��ɁA
-                    �֘A�A�R���N�V�����͑����Ƀt�F�b�`����܂��B
+                    <emphasis>結合フェッチ</emphasis> - Hibernateは <literal>OUTER JOIN</literal> を使って、
+                    関連するインスタンスやコレクションを１つの <literal>SELECT</literal> 
+                    で復元します。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>�x���R���N�V�����t�F�b�`</emphasis> - �A�v���P�[�V�������R���N�V������
-                    �΂��đ�����s�����Ƃ��ɃR���N�V�������t�F�b�`���܂��B
-                    (����̓R���N�V�����ɑ΂���f�t�H���g�̓���ł�)
+                    <emphasis>セレクトフェッチ</emphasis> - 2回目の <literal>SELECT</literal>
+                    で関連するエンティティやコレクションを復元します。 <literal>lazy="false"</literal> 
+                    で明示的に遅延フェッチを無効にしなければ、この2回目のselectは実際に
+                    関連にアクセスしたときのみ実行されるでしょう。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>"���ʂȒx��"�R���N�V�����t�F�b�`</emphasis> - �R���N�V�����̗v�f
-                    �P�P���Ɨ����āA�K�v�ȂƂ��Ƀf�[�^�x�[�X����擾����܂��B
-                    Hibernate�͕K�v�Ȃ��Ȃ�΁A�R���N�V�����S�̂��������Ƀt�F�b�`���邱�Ƃ�
-                    �����܂��i�ƂĂ��傫�ȃR���N�V�����ɓK���Ă��܂��j�B
+                    <emphasis>サブセレクトフェッチ</emphasis> - 2回目の <literal>SELECT</literal> 
+                    で、直前のクエリやフェッチで復元したすべての要素に関連するコレクションを
+                    復元します。 <literal>lazy="false"</literal> 
+                    で明示的に遅延フェッチを無効にしなければ、この2回目のselectは実際に
+                    関連にアクセスしたときのみ実行されるでしょう。
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>�v���L�V�t�F�b�`</emphasis> - �P��l�֘A�́A���ʎq��getter�ȊO��
-                    ���\�b�h���֘A�I�u�W�F�N�g�ŌĂяo�����Ƃ��Ƀt�F�b�`����܂��B
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <emphasis>"�v���L�V�Ȃ�"�t�F�b�`</emphasis> - �P��l�֘A�́A�C���X�^���X�ϐ���
-                    �A�N�Z�X���ꂽ�Ƃ��Ƀt�F�b�`����܂��B�v���L�V�t�F�b�`�Ɣ�r����ƁA���̕��@��
-                    �x���̓x���������Ȃ��i�֘A�͎��ʎq�ɃA�N�Z�X���������ł��t�F�b�`����܂��j
-                    �ł����A��蓧�ߓI�ŁA�A�v���P�[�V�����Ƀv���L�V�����݂��Ȃ��悤�Ɍ����܂��B
-                    ���̕��@�̓r���h���̃o�C�g�R�[�h�g�ݍ��݂��K�v�ɂȂ�A�g����ʂ͂܂�ł��B
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <emphasis>�x�������t�F�b�`</emphasis> - ������P��l�֘A�́A�C���X�^���X�ϐ��ɃA�N�Z�X����
-                    �Ƃ��Ƀt�F�b�`����܂��B���̕��@�̓r���h���̃o�C�g�R�[�h�g�ݍ��݂��K�v�ɂȂ�A
-                    �g����ʂ͂܂�ł��B
+                    <emphasis>バッチフェッチ</emphasis> - セレクトフェッチのための最適化された戦略
+                     - Hibernateはエンティティのインスタンスやコレクションの一群を1回の
+                    <literal>SELECT</literal> で復元します。これは主キーや外部キーのリストを指定することに
+                    により行います。
                 </para>
             </listitem>
         </itemizedlist>
         
         <para>
-            ��̒��s����T�O������܂�: <emphasis>����</emphasis> �֘A���t�F�b�`���邩�A
-            �����āA <emphasis>�ǂ������</emphasis> �t�F�b�`���邩�i�ǂ��SQL���g���āj�B
-            �������������Ȃ��ł��������I <literal>fetch</literal> �̓p�t�H�[�}���X�`���[�j���O�Ɏg���܂��B
-            <literal>lazy</literal> �͂���N���X�̕������ꂽ�C���X�^���X�̂����A�ǂ̃f�[�^�����
-            �g�p�\�ɂ��邩�̎�茈�߂��`���܂��B
+            Hibernateは次に示す戦略とも区別をします。
+        </para>
+
+        <itemizedlist>
+             <listitem>
+                <para>
+                    <emphasis>即時フェッチ</emphasis> - 所有者のオブジェクトがロードされたときに、
+                    関連、コレクションは即時にフェッチされます。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>遅延コレクションフェッチ</emphasis> - アプリケーションがコレクションに
+                    対して操作を行ったときにコレクションをフェッチします。
+                    (これはコレクションに対するデフォルトの動作です)
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>"特別な遅延"コレクションフェッチ</emphasis> - コレクションの要素
+                    １つ１つが独立して、必要なときにデータベースから取得されます。
+                    Hibernateは必要ないならば、コレクション全体をメモリにフェッチすることは
+                    避けます（とても大きなコレクションに適しています）。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>プロキシフェッチ</emphasis> - 単一値関連は、識別子のgetter以外の
+                    メソッドが関連オブジェクトで呼び出されるときにフェッチされます。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>"プロキシなし"フェッチ</emphasis> - 単一値関連は、インスタンス変数に
+                    アクセスされたときにフェッチされます。プロキシフェッチと比較すると、この方法は
+                    遅延の度合いが少ない（関連は識別子にアクセスしただけでもフェッチされます）
+                    ですが、より透過的で、アプリケーションにプロキシが存在しないように見せます。
+                    この方法はビルド時のバイトコード組み込みが必要になり、使う場面はまれです。
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>遅延属性フェッチ</emphasis> - 属性や単一値関連は、インスタンス変数にアクセスした
+                    ときにフェッチされます。この方法はビルド時のバイトコード組み込みが必要になり、
+                    使う場面はまれです。
+                </para>
+            </listitem>
+        </itemizedlist>
+        
+        <para>
+            二つの直行する概念があります: <emphasis>いつ</emphasis> 関連をフェッチするか、
+            そして、 <emphasis>どうやって</emphasis> フェッチするか（どんなSQLを使って）。
+            これらを混同しないでください！ <literal>fetch</literal> はパフォーマンスチューニングに使います。
+            <literal>lazy</literal> はあるクラスの分離されたインスタンスのうち、どのデータを常に
+            使用可能にするかの取り決めを定義します。
         </para>
  
         <sect2 id="performance-fetching-lazy">
-            <title>�x���֘A�̓���</title>
+            <title>遅延関連の働き</title>
             
             <para>
-                �f�t�H���g�ł́AHibernate3�̓R���N�V�����ɑ΂��Ă͒x���Z���N�g�t�F�b�`���g���A
-                �P��l�֘A�ɂ͒x���v���L�V�t�F�b�`���g���܂��B�����̃f�t�H���g����͂قڂ��ׂĂ�
-                �A�v���P�[�V�����̂قڂ��ׂĂ̊֘A�ňӖ�������܂��B
+                デフォルトでは、Hibernate3はコレクションに対しては遅延セレクトフェッチを使い、
+                単一値関連には遅延プロキシフェッチを使います。これらのデフォルト動作はほぼすべての
+                アプリケーションのほぼすべての関連で意味があります。
             </para>
             
             <para>
-                <emphasis>��:</emphasis>
-                <literal>hibernate.default_batch_fetch_size</literal> ���Z�b�g�����Ƃ��́AHibernate��
-                �x���t�F�b�`�̂��߂̃o�b�`�t�F�b�`�œK�����g���ł��傤
-                �i���̍œK���͂��ׂ������x���ŗL���ɂ��邱�Ƃ��o���܂��j�B
+                <emphasis>注:</emphasis>
+                <literal>hibernate.default_batch_fetch_size</literal> をセットしたときは、Hibernateは
+                遅延フェッチのためのバッチフェッチ最適化を使うでしょう
+                （この最適化はより細かいレベルで有効にすることも出来ます）。
             </para>
             
             <para>
-                �������A�x���t�F�b�`�͒m���Ă����Ȃ���΂Ȃ�Ȃ���̖�肪����܂��B
-                Hibernate��session���I�[�v�����Ă���R���e�L�X�g�̊O����x���֘A�ɃA�N�Z�X����ƁA
-                ��O���������܂��B��F
+                しかし、遅延フェッチは知っておかなければならない一つの問題があります。
+                Hibernateのsessionをオープンしているコンテキストの外から遅延関連にアクセスすると、
+                例外が発生します。例：
             </para>
         
             <programlisting><![CDATA[s = sessions.openSession();
@@ -143,38 +145,38 @@ s.close();
 Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></programlisting>
 
             <para>
-                <literal>Session</literal> ���N���[�Y���ꂽ�Ƃ��Apermissions�R���N�V������
-                ����������Ă��Ȃ����߁A���̃R���N�V�����͎��g�̏�Ԃ����[�h�ł��܂���B
-                <emphasis>Hibernate�͐؂藣���ꂽ�I�u�W�F�N�g�̒x���������̓T�|�[�g
-                ���Ă��܂���</emphasis> �B�C�����@�Ƃ��āA�R���N�V��������ǂݍ��݂��s���R�[�h��
-                �g�����U�N�V�������R�~�b�g���钼�O�Ɉړ������܂��B
+                <literal>Session</literal> がクローズされたとき、permissionsコレクションは
+                初期化されていないため、このコレクションは自身の状態をロードできません。
+                <emphasis>Hibernateは切り離されたオブジェクトの遅延初期化はサポート
+                していません</emphasis> 。修正方法として、コレクションから読み込みを行うコードを
+                トランザクションをコミットする直前に移動させます。
             </para>
     
             <para>
-                ����ŁA <literal>lazy="false"</literal> ���֘A�}�b�s���O�Ɏw�肷�邱�ƂŁA
-                �x�����������Ȃ��R���N�V������֘A���g�����Ƃ��o���܂��B 
-                �������Ȃ���A�x���������͂قڂ��ׂẴR���N�V������֘A�Ŏg���邱�Ƃ�
-                �Ӑ}���Ă��܂��B�������Ȃ��̃I�u�W�F�N�g���f���̒��ɒx�����������Ȃ��֘A��
-                ������`���Ă��܂��ƁAHibernate�͍ŏI�I�ɂ̓g�����U�N�V��������
-                �قڊ��S�ȃf�[�^�x�[�X���������̒��Ƀt�F�b�`���邱�ƂɂȂ�ł��傤�I
+                一方で、 <literal>lazy="false"</literal> を関連マッピングに指定することで、
+                遅延処理をしないコレクションや関連を使うことが出来ます。 
+                しかしながら、遅延初期化はほぼすべてのコレクションや関連で使われることを
+                意図しています。もしあなたのオブジェクトモデルの中に遅延処理をしない関連を
+                多く定義してしまうと、Hibernateは最終的にはトランザクション毎に
+                ほぼ完全なデータベースをメモリの中にフェッチすることになるでしょう！
             </para>
     
             <para>
-                �����ł́A����̃g�����U�N�V�����ɂ����ăZ���N�g�t�F�b�`�̑����
-                �����t�F�b�`�i���R����͒x�������ł͂Ȃ��Ȃ�܂��j��I�����������Ƃ�
-                ���X����܂��B���ꂩ��t�F�b�`�헪���J�X�^�}�C�Y������@�����������܂��B
-                Hibernate3�ł́A�t�F�b�`�헪��I������d�g�݂͒P��l�֘A�ƃR���N�V������
-                �ς��͂���܂���B
+                他方では、特定のトランザクションにおいてセレクトフェッチの代わりに
+                結合フェッチ（当然これは遅延処理ではなくなります）を選択したいことが
+                時々あります。これからフェッチ戦略をカスタマイズする方法をお見せします。
+                Hibernate3では、フェッチ戦略を選択する仕組みは単一値関連とコレクションで
+                変わりはありません。
             </para>
         
         </sect2>
         
         <sect2 id="performance-fetching-custom" revision="4">
-            <title>�t�F�b�`�헪�̃`���[�j���O</title>
+            <title>フェッチ戦略のチューニング</title>
             
             <para>
-                �Z���N�g�t�F�b�`�i�f�t�H���g�j��N+1�Z���N�g���Ƃ����傫�Ȏ�_�����邽�߁A
-                �}�b�s���O��`�Ō����t�F�b�`��L���ɂ��邱�Ƃ��ł��܂��B
+                セレクトフェッチ（デフォルト）はN+1セレクト問題という大きな弱点があるため、
+                マッピング定義で結合フェッチを有効にすることができます。
             </para>
             
             <programlisting><![CDATA[<set name="permissions" 
@@ -186,52 +188,52 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
            <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
-                �}�b�s���O��`�Œ�`���� <literal>�t�F�b�`</literal> �헪�͎��̂��̂ɉe�����܂��B
+                マッピング定義で定義した <literal>フェッチ</literal> 戦略は次のものに影響します。
             </para>
             
         <itemizedlist>
              <listitem>
                 <para>
-                    <literal>get()</literal> �� <literal>load()</literal> �ɂ�镜��
+                    <literal>get()</literal> や <literal>load()</literal> による復元
                 </para>
             </listitem>
             <listitem>
                 <para>
 
-                    �֘A�Ƀi�r�Q�[�g�����Ƃ��ɔ�������ÖٓI�ȕ���
+                    関連にナビゲートしたときに発生する暗黙的な復元
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>Criteria</literal> �N�G��
+                    <literal>Criteria</literal> クエリ
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>�T�u�Z���N�g</literal> �t�F�b�`���g��HQL�N�G��
+                    <literal>サブセレクト</literal> フェッチを使うHQLクエリ
                 </para>
             </listitem>
         </itemizedlist>
 
             <para>
-                ���Ƃ��ǂ�ȃt�F�b�`�헪���g�����Ƃ��Ă��A�x���ł͂Ȃ��O���t�̓������ɓǂݍ��܂�邱�Ƃ�
-                �ۏ؂���܂��B�܂�A�����HQL�N�G�������s���邽�߂ɂ�������SELECT�����������s�����
-                ���Ƃ�����̂Œ��ӂ��Ă��������B
+                たとえどんなフェッチ戦略を使ったとしても、遅延ではないグラフはメモリに読み込まれることが
+                保証されます。つまり、特定のHQLクエリを実行するためにいくつかのSELECT文が即時実行される
+                ことがあるので注意してください。
             </para>
 
             <para>
-                �ʏ�́A�}�b�s���O��`�Ńt�F�b�`�̃J�X�^�}�C�Y�͍s���܂���B
-                ����ɁA�f�t�H���g�̓���̂܂܂ɂ��Ă����āAHQL�� <literal>left join fetch</literal> ��
-                �w�肷�邱�Ƃœ���̃g�����U�N�V�����œ�����I�[�o�[���C�h���܂��B
-                �����Hibernate�ɏ���̃Z���N�g�ŊO���������g���Ċ֘A���Ƀt�F�b�`����悤�Ɏw�肵�Ă��܂��B
-                <literal>Criteria</literal> �N�G����API�ł́A
-                <literal>setFetchMode(FetchMode.JOIN)</literal> ���g�����Ƃ��o���܂��B
+                通常は、マッピング定義でフェッチのカスタマイズは行いません。
+                代わりに、デフォルトの動作のままにしておいて、HQLで <literal>left join fetch</literal> を
+                指定することで特定のトランザクションで動作をオーバーライドします。
+                これはHibernateに初回のセレクトで外部結合を使って関連を先にフェッチするように指定しています。
+                <literal>Criteria</literal> クエリのAPIでは、
+                <literal>setFetchMode(FetchMode.JOIN)</literal> を使うことが出来ます。
             </para>
             
             <para>
-                ���� <literal>get()</literal> �� <literal>load()</literal> �Ŏg����
-                �t�F�b�`�헪��ς������Ɗ������Ƃ��ɂ́A�P����
-                <literal>Criteria</literal> �N�G�����g���Ă��������B��F
+                もし <literal>get()</literal> や <literal>load()</literal> で使われる
+                フェッチ戦略を変えたいと感じたときには、単純に
+                <literal>Criteria</literal> クエリを使ってください。例：
             </para>
             
             <programlisting><![CDATA[User user = (User) session.createCriteria(User.class)
@@ -240,42 +242,42 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 .uniqueResult();]]></programlisting>
                 
             <para>
-                �i����͂�������ORM�\�����[�V������"fetch plan"�ƌĂ�ł�����̂Ɠ����ł��B�j
+                （これはいくつかのORMソリューションが"fetch plan"と呼んでいるものと同じです。）
             </para>
 
             <para>
-                N+1�Z���N�g��������邽�߂̂܂������Ⴄ���@�́A��2���x���L���b�V�����g�����Ƃł��B
+                N+1セレクト問題を避けるためのまったく違う方法は、第2レベルキャッシュを使うことです。
             </para>
 
         </sect2>
 
         <sect2 id="performance-fetching-proxies" revision="2">
-            <title>�P��[�֘A�v���L�V</title>
+            <title>単一端関連プロキシ</title>
 
             <para>
-                �R���N�V�����̒x���t�F�b�`�́AHibernate���g�̎����ɂ��i���R���N�V�������g����
-                �������Ă��܂��B�������A�P��[�֘A�ɂ�����x�������ł́A�Ⴄ�d�g�݂�
-                �K�v�ł��B�Ώۂ̊֘A�G���e�B�e�B�̓v���L�V�łȂ���΂Ȃ�܂���BHibernate��
-                �i���΂炵��CGLIB���C�u�����ɂ��j���s���̃o�C�g�R�[�h�g����
-                �g���ĉi���I�u�W�F�N�g�̒x���������v���L�V���������Ă��܂��B
+                コレクションの遅延フェッチは、Hibernate自身の実装による永続コレクションを使って
+                実現しています。しかし、単一端関連における遅延処理では、違う仕組みが
+                必要です。対象の関連エンティティはプロキシでなければなりません。Hibernateは
+                （すばらしいCGLIBライブラリによる）実行時のバイトコード拡張を
+                使って永続オブジェクトの遅延初期化プロキシを実現しています。
             </para>
 
             <para>
-                �f�t�H���g�ł́AHibernate3�́i�J�n���Ɂj���ׂẲi���N���X�̃v���L�V�𐶐����A
-                �������g���āA <literal>many-to-one</literal> �� <literal>one-to-one</literal> �֘A��
-                �x���t�F�b�`���\�ɂ��Ă��܂��B
+                デフォルトでは、Hibernate3は（開始時に）すべての永続クラスのプロキシを生成し、
+                それらを使って、 <literal>many-to-one</literal> や <literal>one-to-one</literal> 関連の
+                遅延フェッチを可能にしています。
             </para>
 
             <para>
-                �}�b�s���O�t�@�C���� <literal>proxy</literal> �����ɂ���āA�N���X�̃v���L�V�C���^�[�t�F�C�X�Ƃ���
-                �g���C���^�[�t�F�C�X��錾�ł��܂��B�f�t�H���g�ł́AHibernate�͂��̃N���X�̃T�u�N���X���g���܂��B
-                <emphasis>�v���L�V�N���X�͏��Ȃ��Ƃ��p�b�P�[�W���Ńf�t�H���g�R���X�g���N�^���������Ȃ����
-                �Ȃ�Ȃ����Ƃɒ��ӂ��Ă��������B���ׂẲi���N���X�ɂ��̃R���X�g���N�^�𐄏����܂��I</emphasis>
+                マッピングファイルで <literal>proxy</literal> 属性によって、クラスのプロキシインターフェイスとして
+                使うインターフェイスを宣言できます。デフォルトでは、Hibernateはそのクラスのサブクラスを使います。
+                <emphasis>プロキシクラスは少なくともパッケージ可視でデフォルトコンストラクタを実装しなければ
+                ならないことに注意してください。すべての永続クラスにこのコンストラクタを推奨します！</emphasis>
             </para>
 
             <para>
-                �|�����[�t�B�Y���̃N���X�ɑ΂��Ă��̕��@��K�p����Ƃ��ɂ������l�����邱�Ƃ�����܂��B
-                ��F
+                ポリモーフィズムのクラスに対してこの方法を適用するときにいくつか考慮することがあります。
+                例：
             </para>
 
             <programlisting><![CDATA[<class name="Cat" proxy="Cat">
@@ -286,9 +288,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
 </class>]]></programlisting>
 
             <para>
-                ���ɁA <literal>Cat</literal> �̃C���X�^���X�� <literal>DomesticCat</literal> 
-                �ɃL���X�g�ł��܂���B���Ƃ���ƂȂ�C���X�^���X�� <literal>DomesticCat</literal> 
-                �ł������Ƃ��Ă��ł��B
+                第一に、 <literal>Cat</literal> のインスタンスは <literal>DomesticCat</literal> 
+                にキャストできません。たとえ基となるインスタンスが <literal>DomesticCat</literal> 
+                であったとしてもです。
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
@@ -298,7 +300,7 @@ if ( cat.isDomesticCat() ) {                  // hit the db to initialize the pr
 }]]></programlisting>
 
             <para>
-                ���ɁA�v���L�V�� <literal>==</literal> �͐������Ȃ����Ƃ�����܂��B
+                第二に、プロキシの <literal>==</literal> は成立しないことがあります。
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
@@ -307,28 +309,28 @@ DomesticCat dc =
 System.out.println(cat==dc);                            // false]]></programlisting>
 
             <para>
-                �������A����͌������قǈ����󋵂Ƃ����킯�ł͂���܂���B���Ƃ��قȂ����v���L�V�I�u�W�F�N�g�ւ�
-                ��̎Q�Ƃ��������Ƃ��Ă��A��ƂȂ�C���X�^���X�͓����I�u�W�F�N�g�ł��B
+                しかし、これは見かけほど悪い状況というわけではありません。たとえ異なったプロキシオブジェクトへの
+                二つの参照があったとしても、基となるインスタンスは同じオブジェクトです。
             </para>
 
             <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
 System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 
             <para>
-                ��O�ɁA <literal>final</literal> �N���X�� <literal>final</literal> ���\�b�h�����N���X��
-                CGLIB�v���L�V���g���܂���B
+                第三に、 <literal>final</literal> クラスや <literal>final</literal> メソッドを持つクラスに
+                CGLIBプロキシを使えません。
             </para>
 
             <para>
-                �Ō�ɁA�����i���I�u�W�F�N�g�̃C���X�^���X����(�Ⴆ�΁A������������f�t�H���g�R���X�g���N�^�̒���)
-                �ɂȂ�炩�̃��\�[�X���K�v�ƂȂ�Ȃ�A���̃��\�[�X���܂��v���L�V��ʂ��Ď擾����܂��B
-                ���ۂɂ́A�v���L�V�N���X�͉i���N���X�̃T�u�N���X�ł��B 
+                最後に、もし永続オブジェクトのインスタンス化時(例えば、初期化処理やデフォルトコンストラクタの中で)
+                になんらかのリソースが必要となるなら、そのリソースもまたプロキシを通して取得されます。
+                実際には、プロキシクラスは永続クラスのサブクラスです。 
             </para>
 
             <para>
-                �����̖���Java�̒P��p�����f���̌�����̐����̂��߂ł��B���������̖�����������̂Ȃ�A
-                �r�W�l�X���\�b�h��錾�����C���^�[�t�F�C�X�����ꂼ��i���N���X�Ŏ������Ȃ���΂Ȃ�܂���B
-                �}�b�s���O�t�@�C���ł����̃C���^�[�t�F�C�X���w�肷��K�v������܂��B��F
+                これらの問題はJavaの単一継承モデルの原理上の制限のためです。もしこれらの問題を避けたいのなら、
+                ビジネスメソッドを宣言したインターフェイスをそれぞれ永続クラスで実装しなければなりません。
+                マッピングファイルでこれらのインターフェイスを指定する必要があります。例：
             </para>
 
             <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
@@ -339,11 +341,11 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                <literal>CatImpl</literal> �� <literal>Cat</literal> �C���^�[�t�F�C�X����������̂ɑ΂��A
-                <literal>DomesticCatImpl</literal> �� <literal>DomesticCat</literal> ���������܂��B
-                ����ƁA <literal>load()</literal> �� <literal>iterate()</literal> �́A
-                <literal>Cat</literal> �� <literal>DomesticCat</literal> �̃C���X�^���X�̃v���L�V��
-                �Ԃ��܂��B�i <literal>list()</literal> �͒ʏ�̓v���L�V��Ԃ��Ȃ����Ƃɒ��ӂ��Ă��������B�j
+                <literal>CatImpl</literal> は <literal>Cat</literal> インターフェイスを実装するのに対し、
+                <literal>DomesticCatImpl</literal> は <literal>DomesticCat</literal> を実装します。
+                すると、 <literal>load()</literal> や <literal>iterate()</literal> は、
+                <literal>Cat</literal> や <literal>DomesticCat</literal> のインスタンスのプロキシを
+                返します。（ <literal>list()</literal> は通常はプロキシを返さないことに注意してください。）
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
@@ -351,136 +353,136 @@ Iterator iter = session.createQuery("from CatImpl as cat where cat.name='fritz'"
 Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
-                �֘A���x������������܂��B����̓v���p�e�B�� <literal>Cat</literal> �^�Ő錾���Ȃ����
-                �Ȃ�Ȃ����Ƃ��Ӗ����܂��B <literal>CatImpl</literal> �ł͂���܂���B
+                関連も遅延初期化されます。これはプロパティを <literal>Cat</literal> 型で宣言しなければ
+                ならないことを意味します。 <literal>CatImpl</literal> ではありません。
             </para>
 
             <para>
-                �v���L�V�̏������� <emphasis>�K�v�Ƃ��Ȃ�</emphasis> ��������݂��܂��B
+                プロキシの初期化を <emphasis>必要としない</emphasis> 操作も存在します。
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>equals()</literal> �i�i���N���X�� <literal>equals()</literal> ��
-                        �I�[�o�[���C�h���Ȃ��Ƃ��j
+                        <literal>equals()</literal> （永続クラスが <literal>equals()</literal> を
+                        オーバーライドしないとき）
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>hashCode()</literal> �i�i���N���X�� <literal>hashCode()</literal> ��
-                        �I�[�o�[���C�h���Ȃ��Ƃ��j
+                        <literal>hashCode()</literal> （永続クラスが <literal>hashCode()</literal> を
+                        オーバーライドしないとき）
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        ���ʎq��getter���\�b�h
+                        識別子のgetterメソッド
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                Hibernate�� <literal>equals()</literal> �� <literal>hashCode()</literal> ���I�[�o�[���C�h����
-                �i���N���X�����o���܂��B
+                Hibernateは <literal>equals()</literal> や <literal>hashCode()</literal> をオーバーライドした
+                永続クラスを検出します。
             </para>
 
             <para>
-                �f�t�H���g�� <literal>lazy="proxy"</literal> �̑���ɁA <literal>lazy="no-proxy"</literal> ��
-                �I�񂾂��ƂŁA�^�ϊ��Ɋ֘A�������������邱�Ƃ��o���܂��B
-                �������A�r���h���̃o�C�g�R�[�h�g�ݍ��݂��K�v�ɂȂ�A�ǂ̂悤�ȑ���ł����Ă��A
-                �������Ƀv���L�V�̏��������s�����ƂɂȂ�ł��傤�B
+                デフォルトの <literal>lazy="proxy"</literal> の代わりに、 <literal>lazy="no-proxy"</literal> を
+                選んだことで、型変換に関連する問題を回避することが出来ます。
+                しかし、ビルド時のバイトコード組み込みが必要になり、どのような操作であっても、
+                ただちにプロキシの初期化を行うことになるでしょう。
             </para>
 
         </sect2>
 
         <sect2 id="performance-fetching-initialization" revision="1">
-            <title>�R���N�V�����ƃv���L�V�̏�����</title>
+            <title>コレクションとプロキシの初期化</title>
 
             <para>
-                <literal>LazyInitializationException</literal> �́A <literal>Session</literal> �̃X�R�[�v�O����
-                ���������Ă��Ȃ��R���N�V������v���L�V�ɃA�N�Z�X���ꂽ�Ƃ��ɁAHibernate�ɂ���ăX���[����܂��B
-                ���Ȃ킿�A�R���N�V������v���L�V�ւ̎Q�Ƃ����G���e�B�e�B���������ꂽ��Ԃ̎��ł��B
+                <literal>LazyInitializationException</literal> は、 <literal>Session</literal> のスコープ外から
+                初期化していないコレクションやプロキシにアクセスされたときに、Hibernateによってスローされます。
+                すなわち、コレクションやプロキシへの参照を持つエンティティが分離された状態の時です。
             </para>
 
             <para>
-                <literal>Session</literal> ���N���[�Y����O�Ƀv���L�V��R���N�V�����̏��������m����
-                �s�������Ƃ�������܂��B�������A <literal>cat.getSex()</literal> 
-                �� <literal>cat.getKittens().size()</literal> �Ȃǂ���ɌĂяo�����Ƃŏ��������������邱�Ƃ͂ł��܂��B
-                ����������̓R�[�h��ǂސl�����������A�ėp�I�ȃR�[�h�Ƃ����_������s�ւł��B
+                <literal>Session</literal> をクローズする前にプロキシやコレクションの初期化を確実に
+                行いたいときがあります。もちろん、 <literal>cat.getSex()</literal> 
+                や <literal>cat.getKittens().size()</literal> などを常に呼び出すことで初期化を強制することはできます。
+                しかしこれはコードを読む人を混乱させ、汎用的なコードという点からも不便です。
             </para>
 
             <para>
-                static���\�b�h�� <literal>Hibernate.initialize()</literal> �� <literal>Hibernate.isInitialized()</literal> 
-                �͒x���������̃R���N�V������v���L�V�������Ƃ��ɕ֗��ȕ��@���A�v���P�[�V�����ɒ񋟂��܂��B
-                <literal>Hibernate.initialize(cat)</literal> �́A <literal>Session</literal> ���I�[�v�����Ă�������
-                <literal>cat</literal> �v���L�V�������I�ɏ��������܂��B
-                <literal>Hibernate.initialize( cat.getKittens() )</literal> ��kittens�R���N�V�����ɑ΂��ē��l��
-                ���ʂ�����܂��B
+                staticメソッドの <literal>Hibernate.initialize()</literal> や <literal>Hibernate.isInitialized()</literal> 
+                は遅延初期化のコレクションやプロキシを扱うときに便利な方法をアプリケーションに提供します。
+                <literal>Hibernate.initialize(cat)</literal> は、 <literal>Session</literal> がオープンしている限りは
+                <literal>cat</literal> プロキシを強制的に初期化します。
+                <literal>Hibernate.initialize( cat.getKittens() )</literal> はkittensコレクションに対して同様の
+                効果があります。
             </para>
 
             <para>
-                �ʂ̑I�����Ƃ��āA�K�v�Ȃ��ׂẴR���N�V������v���L�V�����[�h�����܂�
-                <literal>Session</literal> ���I�[�v���ɂ��Ă������@������܂��B�������̃A�v���P�[�V������
-                �A�[�L�e�N�`���ł́A����Hibernate�ɂ��f�[�^�A�N�Z�X���s���R�[�h�ƁA������g��
-                �R�[�h���قȂ�A�v���P�[�V�����̃��C���[��A�����I�ɈقȂ�v���Z�b�T�̂Ƃ��ɂ́A
-                �R���N�V�����������������Ƃ��� <literal>Session</literal> ���I�[�v�����Ă��邱�Ƃ�
-                �ۏ؂����肪����܂��B���̖��ɑ΂��Ă�2�̊�{�I�ȕ��@������܂��B
+                別の選択肢として、必要なすべてのコレクションやプロキシがロードされるまで
+                <literal>Session</literal> をオープンにしておく方法があります。いくつかのアプリケーションの
+                アーキテクチャでは、特にHibernateによるデータアクセスを行うコードと、それを使う
+                コードが異なるアプリケーションのレイヤーや、物理的に異なるプロセッサのときには、
+                コレクションが初期化されるときに <literal>Session</literal> がオープンしていることを
+                保証する問題があります。この問題に対しては2つの基本的な方法があります。
             </para>
 
             <itemizedlist>
                 <listitem>
                     <para>
 
-                        Web�x�[�X�̃A�v���P�[�V�����ł́A
-                        �r���[�̃����_�����O���������A���N�G�X�g���I����ԍŌ�� <literal>Session</literal> 
-                        ���N���[�Y���邽�߂ɁA�T�[�u���b�g�t�B���^���g�����Ƃ��ł��܂��i <emphasis>Open Session in View</emphasis> 
-                        �p�^�[���ł��j�B�������A�A�v���P�[�V������Ղ̗�O�����̐��m�������ɏd�v�ɂȂ�܂��B
-                        �r���[�̃����_�����O���ɗ�O�����������Ƃ��ł����A���[�U�ɏ������߂�O��
-                        <literal>Session</literal> �̃N���[�Y�ƃg�����U�N�V�����̏I�����s��
-                        ���Ƃ��s���ɂȂ�܂��B
-                        Hibernate��Wiki�ɍڂ��Ă���"Open Session in View"�p�^�[���̗���Q�Ƃ��Ă��������B
+                        Webベースのアプリケーションでは、
+                        ビューのレンダリングが完了し、リクエストが終わる一番最後で <literal>Session</literal> 
+                        をクローズするために、サーブレットフィルタを使うことができます（ <emphasis>Open Session in View</emphasis> 
+                        パターンです）。もちろん、アプリケーション基盤の例外処理の正確性が非常に重要になります。
+                        ビューのレンダリング中に例外が発生したときでさえ、ユーザに処理が戻る前に
+                        <literal>Session</literal> のクローズとトランザクションの終了を行う
+                        ことが不可欠になります。
+                        HibernateのWikiに載っている"Open Session in View"パターンの例を参照してください。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        �r�W�l�X�w���������Ă���A�v���P�[�V�����ł́A�r�W�l�X���W�b�N��
-                        Web�w�ŕK�v�ɂȂ邷�ׂẴR���N�V���������O��"����"����K�v������܂��B
-                        ����͓���̃��[�X�P�[�X�ŕK�v�ƂȂ�v���[���e�[�V����/Web�w�ɑ΂��A
-                        �r�W�l�X�w�����ׂẴf�[�^�����[�h���A���ׂẴf�[�^�����������ĕԂ��ׂ���
-                        �������Ƃ��Ӗ����Ă��܂��B�ʏ�́A�A�v���P�[�V������Web�w�ŕK�v�ȃR���N�V����
-                        ���ꂼ��ɑ΂��� <literal>Hibernate.initialize()</literal> ���Ăяo����
-                        �i���̌Ăяo���̓Z�b�V�������N���[�Y����O�ɍs���K�v������܂��j�A
-                        Hibernate�N�G���� <literal>FETCH</literal> �߂� <literal>Criteria</literal> 
-                        �� <literal>FetchMode.JOIN</literal> ���g���ăR���N�V�������ɕ������܂��B
-                        ���ʂ� <emphasis>Session Facade</emphasis> �p�^�[���̑����
-                        <emphasis>Command</emphasis> �p�^�[�����̗p����ق������ȒP�ł��B
+                        ビジネス層が分離しているアプリケーションでは、ビジネスロジックは
+                        Web層で必要になるすべてのコレクションを事前に"準備"する必要があります。
+                        これは特定のユースケースで必要となるプレゼンテーション/Web層に対し、
+                        ビジネス層がすべてのデータをロードし、すべてのデータを初期化して返すべきと
+                        いうことを意味しています。通常は、アプリケーションはWeb層で必要なコレクション
+                        それぞれに対して <literal>Hibernate.initialize()</literal> を呼び出すか
+                        （この呼び出しはセッションをクローズする前に行う必要があります）、
+                        Hibernateクエリの <literal>FETCH</literal> 節や <literal>Criteria</literal> 
+                        の <literal>FetchMode.JOIN</literal> を使ってコレクションを先に復元します。
+                        普通は <emphasis>Session Facade</emphasis> パターンの代わりに
+                        <emphasis>Command</emphasis> パターンを採用するほうがより簡単です。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        ����������Ă��Ȃ��R���N�V�����i�������͑��̃v���L�V�j�ɃA�N�Z�X����O�ɁA
-                        <literal>merge()</literal> �� <literal>lock()</literal> ���g���ĐV����
-                        <literal>Session</literal> �ɈȑO�Ƀ��[�h���ꂽ�I�u�W�F�N�g��ǉ����邱�Ƃ��o���܂��B
-                        �A�h�z�b�N�ȃg�����U�N�V�����̃Z�}���e�B�N�X�𓱓������̂ŁAHibernate��
-                        ����������I�ɍs�킸�A <emphasis>�s���ׂ��ł�����܂���</emphasis> �I
+                        初期化されていないコレクション（もしくは他のプロキシ）にアクセスする前に、
+                        <literal>merge()</literal> や <literal>lock()</literal> を使って新しい
+                        <literal>Session</literal> に以前にロードされたオブジェクトを追加することも出来ます。
+                        アドホックなトランザクションのセマンティクスを導入したので、Hibernateは
+                        これを自動的に行わず、 <emphasis>行うべきでもありません</emphasis> ！
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                �傫�ȃR���N�V�������������������͂Ȃ����A�R���N�V�����ɂ��Ă̂Ȃ�炩�̏��i�T�C�Y�̂悤�ȁj
-                ��f�[�^�̃T�u�Z�b�g��K�v�Ƃ��邱�Ƃ�����܂��B
+                大きなコレクションを初期化したくはないが、コレクションについてのなんらかの情報（サイズのような）
+                やデータのサブセットを必要とすることがあります。
             </para>
 
             <para>
-                �R���N�V�����t�B���^���g�����ƂŁA�����������ɃR���N�V�����̃T�C�Y���擾���邱�Ƃ��o���܂��B
+                コレクションフィルタを使うことで、初期化せずにコレクションのサイズを取得することが出来ます。
             </para>
 
             <programlisting><![CDATA[( (Integer) s.createFilter( collection, "select count(*)" ).list().get(0) ).intValue()]]></programlisting>
 
             <para>
-                <literal>createFilter()</literal> ���\�b�h�́A�R���N�V�����S�̂�����������K�v�Ȃ��ɁA�R���N�V������
-                �T�u�Z�b�g�𕜌����邽�߂Ɍ��ʓI�Ɏg���܂��B
+                <literal>createFilter()</literal> メソッドは、コレクション全体を初期化する必要なしに、コレクションの
+                サブセットを復元するために効果的に使えます。
             </para>
 
             <programlisting><![CDATA[s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();]]></programlisting>
@@ -488,39 +490,39 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </sect2>
 
         <sect2 id="performance-fetching-batch">
-            <title>�o�b�`�t�F�b�`�̎g�p</title>
+            <title>バッチフェッチの使用</title>
 
             <para>
-                Hibernate�̓o�b�`�t�F�b�`�������I�Ɏg�p�ł��܂��B��̃v���L�V�i�������̓R���N�V�����j���A�N�Z�X
-                �����ƁAHibernate�͂������̏��������Ă��Ȃ��v���L�V�����[�h���邱�Ƃ��ł��܂��B�o�b�`�t�F�b�`��
-                �x���Z���N�g�t�F�b�`�헪�ɑ΂���œK���ł��B�o�b�`�t�F�b�`�̒����ɂ͂Q�̕��@������܂��B
-                �N���X���x���ƃR���N�V�������x���ł��B
+                Hibernateはバッチフェッチを効率的に使用できます。一つのプロキシ（もしくはコレクション）がアクセス
+                されると、Hibernateはいくつかの初期化していないプロキシをロードすることができます。バッチフェッチは
+                遅延セレクトフェッチ戦略に対する最適化です。バッチフェッチの調整には２つの方法があります。
+                クラスレベルとコレクションレベルです。
             </para>
 
             <para>
-                �N���X�A�v�f�̃o�b�`�t�F�b�`�͗������ȒP�ł��B���s���̎��̏�ʂ�z�����Ă��������B
-                <literal>Session</literal> �Ƀ��[�h���ꂽ25�� <literal>Cat</literal> �C���X�^���X�����݂��A
-                ���ꂼ��� <literal>Cat</literal> �� <literal>owner</literal> �ł��� <literal>Person</literal> �ւ̊֘A�������܂��B
-                <literal>Person</literal> �N���X�� <literal>lazy="true"</literal> �̃v���L�V�Ń}�b�s���O����Ă��܂��B
-                ���������ׂĂ�Cat�ɑ΂��ČJ��Ԃ� <literal>getOwner()</literal> ���Ăяo���ƁAHibernate��
-                �f�t�H���g�ł�25��� <literal>SELECT</literal> �����s���Aowner�v���L�V�̕��������܂��B
-                ���̐U�镑���� <literal>Person</literal> �̃}�b�s���O�� <literal>batch-size</literal> 
-                �̎w��Œ����ł��܂��B
+                クラス、要素のバッチフェッチは理解が簡単です。実行時の次の場面を想像してください。
+                <literal>Session</literal> にロードされた25個の <literal>Cat</literal> インスタンスが存在し、
+                それぞれの <literal>Cat</literal> は <literal>owner</literal> である <literal>Person</literal> への関連を持ちます。
+                <literal>Person</literal> クラスは <literal>lazy="true"</literal> のプロキシでマッピングされています。
+                もし今すべてのCatに対して繰り返し <literal>getOwner()</literal> を呼び出すと、Hibernateは
+                デフォルトでは25回の <literal>SELECT</literal> を実行し、ownerプロキシの復元をします。
+                この振る舞いを <literal>Person</literal> のマッピングの <literal>batch-size</literal> 
+                の指定で調整できます。
             </para>
 
             <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
 
             <para>
-                Hibernate�̓N�G�����R�񂾂������s����悤�ɂȂ�܂��B�p�^�[����10, 10, 5�ł��B
+                Hibernateはクエリを３回だけを実行するようになります。パターンは10, 10, 5です。
             </para>
 
             <para>
-                �R���N�V�����̃o�b�`�t�F�b�`���L���ɂ��邱�Ƃ��o���܂��B��Ƃ��āA���ꂼ���
-                <literal>Person</literal> �� <literal>Cat</literal> �̒x���R���N�V�����������Ă���A
-                10��Person�� <literal>Sesssion</literal> �Ƀ��[�h���ꂽ�Ƃ���ƁA���ׂĂ�Person��
-                �΂��ČJ��Ԃ� <literal>getCats()</literal> ���Ăяo�����ƂŁA�v10��� <literal>SELECT</literal> 
-                ���������܂��B���� <literal>Person</literal> �̃}�b�s���O�� <literal>cats</literal> 
-                �R���N�V�����̃o�b�`�t�F�b�`��L���ɂ���΁AHibernate�̓R���N�V�����̎��O�t�F�b�`���o���܂��B
+                コレクションのバッチフェッチも有効にすることが出来ます。例として、それぞれの
+                <literal>Person</literal> が <literal>Cat</literal> の遅延コレクションを持っており、
+                10個のPersonが <literal>Sesssion</literal> にロードされたとすると、すべてのPersonに
+                対して繰り返し <literal>getCats()</literal> を呼び出すことで、計10回の <literal>SELECT</literal> 
+                が発生します。もし <literal>Person</literal> のマッピングで <literal>cats</literal> 
+                コレクションのバッチフェッチを有効にすれば、Hibernateはコレクションの事前フェッチが出来ます。
             </para>
 
             <programlisting><![CDATA[<class name="Person">
@@ -530,47 +532,47 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                <literal>batch-size</literal> ��3�Ȃ̂ŁAHibernate��4��� <literal>SELECT</literal> 
-                ��3�A3�A3�A1�����[�h���܂��B�J��Ԃ��ƁA�����̒l�͓���� <literal>Session</literal> 
-                �̒��̏���������Ă��Ȃ��R���N�V�����̊��Ґ��Ɉˑ����܂��B
+                <literal>batch-size</literal> が3なので、Hibernateは4回の <literal>SELECT</literal> 
+                で3個、3個、3個、1個をロードします。繰り返すと、属性の値は特定の <literal>Session</literal> 
+                の中の初期化されていないコレクションの期待数に依存します。
             </para>
 
             <para>
-                �R���N�V�����̃o�b�`�t�F�b�`�̓A�C�e���̃l�X�g�����c���[�A ���Ȃ킿�A��\�I�ȕ��i�\�̃p�^�[����
-                ����ꍇ�ɓ��ɗL�p�ł��B�i�������A�ǂݍ��݂������c���[�ł� <emphasis>�l�X�g����set</emphasis> 
-                �� <emphasis>��̉������p�X</emphasis> �����悢�I���ɂȂ�܂��B�j
+                コレクションのバッチフェッチはアイテムのネストしたツリー、 すなわち、代表的な部品表のパターンが
+                ある場合に特に有用です。（しかし、読み込みが多いツリーでは <emphasis>ネストしたset</emphasis> 
+                や <emphasis>具体化したパス</emphasis> がよりよい選択になります。）
             </para>
 
         </sect2>
 
         <sect2 id="performance-fetching-subselect">
-            <title>�T�u�Z���N�g�t�F�b�`�̎g�p</title>
+            <title>サブセレクトフェッチの使用</title>
 
             <para>
-                ��̒x���R���N�V������P��l�v���L�V���t�F�b�`����Ȃ���΂����Ȃ��Ƃ��AHibernate��
-                ����炷�ׂĂ����[�h���A�T�u�Z���N�g�̃I���W�i���N�G�����ēx���s����܂��B�����
-                �o�b�`�t�F�b�`�Ɠ������@�œ����A�������̃��[�h�͍s���܂���B
+                一つの遅延コレクションや単一値プロキシがフェッチされなければいけないとき、Hibernateは
+                それらすべてをロードし、サブセレクトのオリジナルクエリが再度実行されます。これは
+                バッチフェッチと同じ方法で動き、少しずつのロードは行いません。
             </para>
             
             <!-- TODO: Write more about this -->
-            <!-- ���������� -->
+            <!-- 早く書けよ -->
         </sect2>
         
         <sect2 id="performance-fetching-lazyproperties">
-            <title>�x���v���p�e�B�t�F�b�`�̎g�p</title>
+            <title>遅延プロパティフェッチの使用</title>
 
             <para>
-                Hibernate3�̓v���p�e�B���Ƃ̒x���t�F�b�`���T�|�[�g���Ă��܂��B���̍œK����@��
-                <emphasis>�O���[�v�̃t�F�b�`</emphasis> �Ƃ��Ă��m���Ă��܂��B����͂قƂ��
-                �v�]����o���@�\�ł��邱�Ƃɒ��ӂ��Ă��������B���ۂɂ͗�ǂݍ��݂̍œK�������A
-                �s�ǂݍ��݂̍œK�������ɏd�v�ł��B
-                �������A�N���X�̂������̃v���p�e�B������ǂݍ��ނ��Ƃ́A�����̃e�[�u�������S���̗�������A
-                �f�[�^���f�������P�ł��Ȃ��Ȃǂ̋ɒ[�ȏꍇ�ɂ͗L�p�ł��B
+                Hibernate3はプロパティごとの遅延フェッチをサポートしています。この最適化手法は
+                <emphasis>グループのフェッチ</emphasis> としても知られています。これはほとんど
+                要望から出た機能であることに注意してください。実際には列読み込みの最適化よりも、
+                行読み込みの最適化が非常に重要です。
+                しかし、クラスのいくつかのプロパティだけを読み込むことは、既存のテーブルが何百もの列を持ち、
+                データモデルを改善できないなどの極端な場合には有用です。
             </para>
 
             <para>
-                �x���v���p�e�B�ǂݍ��݂�L���ɂ���ɂ́A�Ώۂ̃v���p�e�B�̃}�b�s���O�� <literal>lazy</literal> 
-                �������Z�b�g���Ă��������B
+                遅延プロパティ読み込みを有効にするには、対象のプロパティのマッピングで <literal>lazy</literal> 
+                属性をセットしてください。
             </para>
 
             <programlisting><![CDATA[<class name="Document">
@@ -583,13 +585,13 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                �x���v���p�e�B�ǂݍ��݂̓r���h���̃o�C�g�R�[�h�g�ݍ��݂�K�v�Ƃ��܂��I����
-                �i���N���X�ɑg�ݍ��݂�����Ă��Ȃ��Ȃ�AHibernate�͖ق��Ēx���v���p�e�B�̐ݒ�𖳎����āA
-                �����t�F�b�`�ɖ߂��܂��B
+                遅延プロパティ読み込みはビルド時のバイトコード組み込みを必要とします！もし
+                永続クラスに組み込みがされていないなら、Hibernateは黙って遅延プロパティの設定を無視して、
+                即時フェッチに戻します。
             </para>
 
             <para>
-                �o�C�g�R�[�h�g�ݍ��݂͈ȉ���Ant�^�X�N���g���Ă��������B
+                バイトコード組み込みは以下のAntタスクを使ってください。
             </para>
 
             <programlisting><![CDATA[<target name="instrument" depends="compile">
@@ -607,15 +609,15 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </target>]]></programlisting>
 
             <para>
-                �s�v�ȗ��ǂݍ��܂Ȃ����߂́A�ʂ́i���悢�H�j���@�́A���Ȃ��Ƃ�
-                �ǂݍ��݂݂̂̃g�����U�N�V�����ɂ����ẮAHQL��Criteria�N�G���̎ˉe
-                �@�\���g�����Ƃł��B���̕��@�̓r���h���̃o�C�g�R�[�h�g�ݍ��݂��s�v�ɂȂ�A
-                ���ǂ��������@�ł��B
+                不要な列を読み込まないための、別の（よりよい？）方法は、少なくとも
+                読み込みのみのトランザクションにおいては、HQLやCriteriaクエリの射影
+                機能を使うことです。この方法はビルド時のバイトコード組み込みが不要になり、
+                より良い解決方法です。
             </para>
             
             <para>
-                HQL�� <literal>fetch all properties</literal> ���g�����ƂŁA���ʂǂ����
-                �v���p�e�B�̑����t�F�b�`���O���������邱�Ƃ��o���܂��B
+                HQLで <literal>fetch all properties</literal> を使うことで、普通どおりの
+                プロパティの即時フェッチングを強制することが出来ます。
             </para>
 
         </sect2>
@@ -623,28 +625,28 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     </sect1>
 
     <sect1 id="performance-cache" revision="1">
-        <title>��2���x���L���b�V��</title>
+        <title>第2レベルキャッシュ</title>
 
         <para>
-            Hibernate�� <literal>Session</literal> �͉i���f�[�^�̃g�����U�N�V�������x���̃L���b�V���ł��B
-            class-by-class��collection-by-collection���Ƃ́A�N���X�^���x����JVM���x��
-            �i <literal>SessionFactory</literal> ���x���j�̃L���b�V����ݒ肷�邱�Ƃ��o���܂��B
-            �N���X�^�����ꂽ�L���b�V���ɂȂ����Ƃ����o���܂��B���������ӂ��Ă��������B
-            �L���b�V���͑��̃A�v���P�[�V�����ɂ��i���w�̕ύX��
-            �l�����܂���i�L���b�V���f�[�^�����I�Ɋ����؂�ɂ���ݒ�͏o���܂��j�B
+            Hibernateの <literal>Session</literal> は永続データのトランザクションレベルのキャッシュです。
+            class-by-classとcollection-by-collectionごとの、クラスタレベルやJVMレベル
+            （ <literal>SessionFactory</literal> レベル）のキャッシュを設定することが出来ます。
+            クラスタ化されたキャッシュにつなぐことさえ出来ます。しかし注意してください。
+            キャッシュは他のアプリケーションによる永続層の変更を
+            考慮しません（キャッシュデータを定期的に期限切れにする設定は出来ます）。
         </para>
         
         <para revision="1">
-            Hibernate���g�p����L���b�V�������́A<literal>hibernate.cache.provider_class</literal> �v���p�e�B��
-            <literal>org.hibernate.cache.CacheProvider</literal> �����������N���X�����w�肷�邱�ƂŕύX�ł��܂��B
-            Hibernate�͑����̃I�[�v���\�[�X�̃L���b�V���v���o�C�_���r���g�C�������Ŏ����Ă��܂��i��Ƀ��X�g������܂��j�B
-            �����āA�O�ɐ��������悤�ɁA���Ȃ����g���Ǝ��̎��������āA�����g�ݍ��ނ��Ƃ��o���܂��B
-            �o�[�W����3.2���O�ł�EhCache���f�t�H���g�̃L���b�V���v���o�C�_�ł��邱�Ƃɒ��ӂ��Ă��������B
-            �o�[�W����3.2�ł͂���͓��Ă͂܂�܂���B
+            Hibernateが使用するキャッシュ実装は、<literal>hibernate.cache.provider_class</literal> プロパティに
+            <literal>org.hibernate.cache.CacheProvider</literal> を実装したクラス名を指定することで変更できます。
+            Hibernateは多くのオープンソースのキャッシュプロバイダをビルトイン実装で持っています（後にリストがあります）。
+            加えて、前に説明したように、あなた自身が独自の実装をして、それを組み込むことも出来ます。
+            バージョン3.2より前ではEhCacheがデフォルトのキャッシュプロバイダであることに注意してください。
+            バージョン3.2ではこれは当てはまりません。
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">
-            <title>�L���b�V���v���o�C�_</title>
+            <title>キャッシュプロバイダ</title>
             <tgroup cols='5' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="3*"/>
@@ -653,58 +655,58 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <colspec colname='c5' colwidth="1*"/>
             <thead>
             <row>
-              <entry>�L���b�V��</entry>
-              <entry>�v���o�C�_�N���X</entry>
-              <entry>�^�C�v</entry>
-              <entry>�N���X�^�Z�[�t</entry>
-              <entry>�N�G���L���b�V���̃T�|�[�g</entry>
+              <entry>キャッシュ</entry>
+              <entry>プロバイダクラス</entry>
+              <entry>タイプ</entry>
+              <entry>クラスタセーフ</entry>
+              <entry>クエリキャッシュのサポート</entry>
             </row>
             </thead>
             <tbody>
             <row>
-                <entry>Hashtable�i���i�p�Ƃ��ĈӐ}���Ă��܂���j</entry>
+                <entry>Hashtable（製品用として意図していません）</entry>
                 <entry><literal>org.hibernate.cache.HashtableCacheProvider</literal></entry>
-                <entry>������</entry>
+                <entry>メモリ</entry>
                 <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>EHCache</entry>
                 <entry><literal>org.hibernate.cache.EhCacheProvider</literal></entry>
-                <entry>�������A�f�B�X�N</entry>
+                <entry>メモリ、ディスク</entry>
                 <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
-                <entry>�������A�f�B�X�N</entry>
-                <entry>yes�i�N���X�^�������j</entry>
+                <entry>メモリ、ディスク</entry>
+                <entry>yes（クラスタ無効化）</entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>SwarmCache</entry>
                 <entry><literal>org.hibernate.cache.SwarmCacheProvider</literal></entry>
-                <entry>�N���X�^�iip�}���`�L���X�g�j</entry>
-                <entry>yes�i�N���X�^�������j</entry>
+                <entry>クラスタ（ipマルチキャスト）</entry>
+                <entry>yes（クラスタ無効化）</entry>
                 <entry></entry>
             </row>
             <row>
                 <entry>JBoss TreeCache</entry>
                 <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
-                <entry>�N���X�^�iip�}���`�L���X�g�j�A�g�����U�N�V���i��</entry>
-                <entry>yes�i�����j</entry>
-                <entry>yes�i�����������K�v�j</entry>
+                <entry>クラスタ（ipマルチキャスト）、トランザクショナル</entry>
+                <entry>yes（複製）</entry>
+                <entry>yes（時刻同期が必要）</entry>
             </row>
             </tbody>
             </tgroup>
         </table>
 
         <sect2 id="performance-cache-mapping" revision="2">
-            <title>�L���b�V���̃}�b�s���O</title>
+            <title>キャッシュのマッピング</title>
 
             <para>
-                �N���X��R���N�V�����̃}�b�s���O�� <literal>&lt;cache&gt;</literal> �v�f�͈ȉ��̌`���ł��B
+                クラスやコレクションのマッピングの <literal>&lt;cache&gt;</literal> 要素は以下の形式です。
             </para>
 
             <programlistingco>
@@ -747,23 +749,23 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </programlistingco>
             
             <para>
-                �܂��́i���悢���@�Ƃ��āH�j�A <literal>hibernate.cfg.xml</literal> �� <literal>&lt;class-cache&gt;</literal> 
-                �� <literal>&lt;collection-cache&gt;</literal> �v�f���w�肷�邱�Ƃ��o���܂��B
+                または（よりよい方法として？）、 <literal>hibernate.cfg.xml</literal> に <literal>&lt;class-cache&gt;</literal> 
+                と <literal>&lt;collection-cache&gt;</literal> 要素を指定することも出来ます。
             </para>
             
             <para>
-                <literal>usage</literal> ������ <emphasis>�L���b�V���̕��񐫐헪</emphasis> ���w�肵�܂��B
+                <literal>usage</literal> 属性は <emphasis>キャッシュの並列性戦略</emphasis> を指定します。
             </para>
 
         </sect2>
 
         <sect2 id="performance-cache-readonly">
-            <title>read only�헪</title>
+            <title>read only戦略</title>
 
             <para>
-                �����A�v���P�[�V�������ǂݍ��݂̂ݕK�v�ŁA�i���N���X�̃C���X�^���X��ύX���Ȃ��Ȃ�A
-                <literal>read-only</literal> �L���b�V�����g�����Ƃ��o���܂��B����͂����Ƃ��P����
-                �����Ƃ��p�t�H�[�}���X�̗ǂ��헪�ł��B�N���X�^�ł̎g�p�����S�Ɉ��S�ł��B
+                もしアプリケーションが読み込みのみ必要で、永続クラスのインスタンスを変更しないなら、
+                <literal>read-only</literal> キャッシュを使うことが出来ます。これはもっとも単純で
+                もっともパフォーマンスの良い戦略です。クラスタでの使用も完全に安全です。
             </para>
 
             <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
@@ -775,19 +777,19 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
 
         <sect2 id="performance-cache-readwrite">
-            <title>read/write�헪</title>
+            <title>read/write戦略</title>
 
             <para>
-                �A�v���P�[�V�������f�[�^���X�V����K�v������Ȃ�A <literal>read-write</literal> �L���b�V�����K������
-                ����܂���B���̃L���b�V���헪�́A�V���A���C�U�u���ȃg�����U�N�V�����������x�����v�������Ȃ�A
-                �����Ďg���ׂ��ł͂���܂���B�����L���b�V����JTA���Ŏg����Ȃ�AJTA <literal>TransactionManager</literal> 
-                ���擾���邽�߂̕��@������ <literal>hibernate.transaction.manager_lookup_class</literal> 
-                �v���p�e�B���w�肵�Ȃ���΂Ȃ�܂���B���̊��ł́A <literal>Session.close()</literal> 
-                �� <literal>Session.disconnect()</literal> ���Ă΂ꂽ�Ƃ��ɁA�m���Ƀg�����U�N�V����������
-                ���Ă��Ȃ���΂Ȃ�܂���B
-                �����N���X�^�ł��̐헪���g�������Ȃ�A��ƂȂ�L���b�V���̎��������b�N���T�|�[�g
-                ���Ă��邱�Ƃ�ۏ؂��Ȃ���΂Ȃ�܂���B
-                �g�ݍ��݂̃L���b�V���v���o�C�_�� <emphasis>�T�|�[�g���Ă��܂���</emphasis> �B
+                アプリケーションがデータを更新する必要があるなら、 <literal>read-write</literal> キャッシュが適当かも
+                しれません。このキャッシュ戦略は、シリアライザブルなトランザクション分離レベルが要求されるなら、
+                決して使うべきではありません。もしキャッシュがJTA環境で使われるなら、JTA <literal>TransactionManager</literal> 
+                を取得するための方法を示す <literal>hibernate.transaction.manager_lookup_class</literal> 
+                プロパティを指定しなければなりません。他の環境では、 <literal>Session.close()</literal> 
+                や <literal>Session.disconnect()</literal> が呼ばれたときに、確実にトランザクションが完了
+                していなければなりません。
+                もしクラスタでこの戦略を使いたいなら、基となるキャッシュの実装がロックをサポート
+                していることを保証しなければなりません。
+                組み込みのキャッシュプロバイダは <emphasis>サポートしていません</emphasis> 。
             </para>
 
             <programlisting><![CDATA[<class name="eg.Cat" .... >
@@ -802,39 +804,39 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         </sect2>
 
         <sect2 id="performance-cache-nonstrict">
-            <title>�����ł͂Ȃ�read/write�헪</title>
+            <title>厳密ではないread/write戦略</title>
 
             <para>
-                �A�v���P�[�V���������܂ɂ����f�[�^���X�V����K�v�͂Ȃ��i���Ȃ킿��̃g�����U�N�V������
-                �����ɓ����A�C�e�����X�V���悤�Ƃ��邱�Ƃ͂قƂ�ǋN����Ȃ��j�A�����ȃg�����U�N�V����������
-                �v������Ȃ��Ȃ�A <literal>nonstrict-read-write</literal> �L���b�V�����K����������܂���B
-                �����L���b�V����JTA���Ŏg����Ȃ�A <literal>hibernate.transaction.manager_lookup_class</literal> 
-                ���w�肵�Ȃ���΂Ȃ�܂���B���̊��ł́A <literal>Session.close()</literal> 
-                �� <literal>Session.disconnect()</literal> ���Ă΂ꂽ�Ƃ��ɁA�m���Ƀg�����U�N�V����������
-                ���Ă��Ȃ���΂Ȃ�܂���B
+                アプリケーションがたまにしかデータを更新する必要はなく（すなわち二つのトランザクションが
+                同時に同じアイテムを更新しようとすることはほとんど起こらない）、厳密なトランザクション分離が
+                要求されないなら、 <literal>nonstrict-read-write</literal> キャッシュが適当かもしれません。
+                もしキャッシュがJTA環境で使われるなら、 <literal>hibernate.transaction.manager_lookup_class</literal> 
+                を指定しなければなりません。他の環境では、 <literal>Session.close()</literal> 
+                や <literal>Session.disconnect()</literal> が呼ばれたときに、確実にトランザクションが完了
+                していなければなりません。
             </para>
 
         </sect2>
 
         <sect2 id="performance-cache-transactional">
-            <title>transactional�헪</title>
+            <title>transactional戦略</title>
 
             <para>
-                <literal>transactional</literal> �L���b�V���헪��JBoss TreeCache�̂悤�Ȋ��S�ȃg�����U�N�V���i��
-                �L���b�V���v���o�C�_�̃T�|�[�g��񋟂��܂��B
-                ���̂悤�ȃL���b�V����JTA���ł̂ݎg�p�\�ŁA <literal>hibernate.transaction.manager_lookup_class</literal> 
-                ���w�肵�Ȃ���΂Ȃ�܂���B
+                <literal>transactional</literal> キャッシュ戦略はJBoss TreeCacheのような完全なトランザクショナル
+                キャッシュプロバイダのサポートを提供します。
+                このようなキャッシュはJTA環境でのみ使用可能で、 <literal>hibernate.transaction.manager_lookup_class</literal> 
+                を指定しなければなりません。
             </para>
 
         </sect2>
         
         <para>
-            ���ׂĂ̓������s���L���b�V���헪���T�|�[�g���Ă���L���b�V���v���o�C�_�͂���܂���B
-            �ȉ��̕\�͂ǂ̃v���o�C�_���ǂ̓������񐫐헪�ɑΉ����邩��\���Ă��܂��B
+            すべての同時並行性キャッシュ戦略をサポートしているキャッシュプロバイダはありません。
+            以下の表はどのプロバイダがどの同時並列性戦略に対応するかを表しています。
         </para>
 
         <table frame="topbot">
-            <title>�������s���L���b�V���헪�̃T�|�[�g</title>
+            <title>同時並行性キャッシュ戦略のサポート</title>
             <tgroup cols='5' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="1*"/>
@@ -843,16 +845,16 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <colspec colname='c5' colwidth="1*"/>
             <thead>
             <row>
-              <entry>�L���b�V��</entry>
+              <entry>キャッシュ</entry>
               <entry>read-only</entry>
-              <entry>�����ł͂Ȃ�read-write</entry>
+              <entry>厳密ではないread-write</entry>
               <entry>read-write</entry>
               <entry>transactional</entry>
             </row>
             </thead>
             <tbody>
             <row>
-                <entry>Hashtable�i���i�p�Ƃ��ĈӐ}���Ă��܂���j</entry>
+                <entry>Hashtable（製品用として意図していません）</entry>
                 <entry>yes</entry>
                 <entry>yes</entry>
                 <entry>yes</entry>
@@ -893,19 +895,19 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     </sect1>
 
     <sect1 id="performance-sessioncache" revision="2">
-        <title>�L���b�V���̊Ǘ�</title>
+        <title>キャッシュの管理</title>
 
         <para>
-            �I�u�W�F�N�g�� <literal>save()</literal> �A <literal>update()</literal> �A <literal>saveOrUpdate()</literal> 
-            �ɓn���Ƃ��A������ <literal>load()</literal> �A <literal>get()</literal> �A <literal>list()</literal> �A
-            <literal>iterate()</literal> �A <literal>scroll()</literal> ���g���ăI�u�W�F�N�g�𕜌�����Ƃ��ɂ͏�ɁA
-            ���̃I�u�W�F�N�g�� <literal>Session</literal> �̓����L���b�V���ɒǉ�����܂��B
+            オブジェクトを <literal>save()</literal> 、 <literal>update()</literal> 、 <literal>saveOrUpdate()</literal> 
+            に渡すとき、そして <literal>load()</literal> 、 <literal>get()</literal> 、 <literal>list()</literal> 、
+            <literal>iterate()</literal> 、 <literal>scroll()</literal> を使ってオブジェクトを復元するときには常に、
+            そのオブジェクトは <literal>Session</literal> の内部キャッシュに追加されます。
         </para>
         <para>
-            ���� <literal>flush()</literal> ���Ă΂��ƁA�I�u�W�F�N�g�̏�Ԃ̓f�[�^�x�[�X�Ɠ���������܂��B
-            �������̓������N���邱�Ƃ�]�܂Ȃ��Ƃ���A�c��Ȑ��̃I�u�W�F�N�g���������Ă��ă������������I��
-            �����K�v������Ƃ��́A <literal>evict()</literal> ���\�b�h���g���Ĉꎟ�L���b�V������
-            �I�u�W�F�N�g��R���N�V�������폜���邱�Ƃ��o���܂��B
+            次に <literal>flush()</literal> が呼ばれると、オブジェクトの状態はデータベースと同期化されます。
+            もしこの同期が起こることを望まないときや、膨大な数のオブジェクトを処理していてメモリを効率的に
+            扱う必要があるときは、 <literal>evict()</literal> メソッドを使って一次キャッシュから
+            オブジェクトやコレクションを削除することが出来ます。
         </para>
         
         <programlisting><![CDATA[ScrollableResult cats = sess.createQuery("from Cat as cat").scroll(); //a huge result set
@@ -916,19 +918,19 @@ while ( cats.next() ) {
 }]]></programlisting>
         
         <para>
-            <literal>Session</literal> �̓C���X�^���X���Z�b�V�����L���b�V���Ɋ܂܂�邩�ǂ����𔻒f���邽�߂�
-            <literal>contains()</literal> ���\�b�h���񋟂��܂��B
+            <literal>Session</literal> はインスタンスがセッションキャッシュに含まれるかどうかを判断するための
+            <literal>contains()</literal> メソッドも提供します。
         </para>
         
         <para>
-            ���ׂẴI�u�W�F�N�g���Z�b�V�����L���b�V�����犮�S�Ɏ�菜���ɂ́A<literal>Session.clear()</literal> 
-            ���Ăяo���Ă��������B
+            すべてのオブジェクトをセッションキャッシュから完全に取り除くには、<literal>Session.clear()</literal> 
+            を呼び出してください。
         </para>
         
         <para>
-            �񎟃L���b�V���̂��߂ɁA <literal>SessionFactory</literal> �ɂ�
-            �C���X�^���X�A�N���X�S�́A�R���N�V�����̃C���X�^���X�A�R���N�V�����S�̂��L���b�V������
-            �폜���邽�߂̃��\�b�h�����ꂼ���`����Ă��܂��B
+            二次キャッシュのために、 <literal>SessionFactory</literal> には
+            インスタンス、クラス全体、コレクションのインスタンス、コレクション全体をキャッシュから
+            削除するためのメソッドがそれぞれ定義されています。
         </para>
         
         <programlisting><![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat
@@ -937,40 +939,40 @@ sessionFactory.evictCollection("Cat.kittens", catId); //evict a particular colle
 sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]></programlisting>
 
         <para>
-            <literal>CacheMode</literal> �͓���̃Z�b�V�������񎟃L���b�V���Ƃǂ̂悤�ɑ��ݍ�p���邩��
-            �w�肵�܂��B
+            <literal>CacheMode</literal> は特定のセッションが二次キャッシュとどのように相互作用するかを
+            指定します。
         </para>
         
         <itemizedlist>
         <listitem>
         <para>
-            <literal>CacheMode.NORMAL</literal> - �A�C�e���̓ǂݍ��݂Ə������݂œ񎟃L���b�V�����g���܂�
+            <literal>CacheMode.NORMAL</literal> - アイテムの読み込みと書き込みで二次キャッシュを使います
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.GET</literal> - �ǂݍ��݂͓񎟃L���b�V������s���܂����A�f�[�^��
-            �X�V�����ꍇ�������ē񎟃L���b�V���ɏ������݂����܂���B
+            <literal>CacheMode.GET</literal> - 読み込みは二次キャッシュから行いますが、データを
+            更新した場合を除いて二次キャッシュに書き込みをしません。
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.PUT</literal> - �񎟃L���b�V���ɃA�C�e�����������݂܂����A�ǂݍ��݂ɂ�
-            �񎟃L���b�V�����g���܂���B
+            <literal>CacheMode.PUT</literal> - 二次キャッシュにアイテムを書き込みますが、読み込みには
+            二次キャッシュを使いません。
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.REFRESH</literal> - �񎟃L���b�V���ɃA�C�e�����������݂܂����A�ǂݍ��݂ɂ�
-            �񎟃L���b�V�����g�킸�A <literal>hibernate.cache.use_minimal_puts</literal> 
-            �̉e�����󂯂��ɁA�f�[�^�x�[�X����ǂݍ��ނ��ׂẴA�C�e���̓񎟃L���b�V���������I�Ƀ��t���b�V�����܂��B
+            <literal>CacheMode.REFRESH</literal> - 二次キャッシュにアイテムを書き込みますが、読み込みには
+            二次キャッシュを使わず、 <literal>hibernate.cache.use_minimal_puts</literal> 
+            の影響を受けずに、データベースから読み込むすべてのアイテムの二次キャッシュを強制的にリフレッシュします。
         </para>
         </listitem>
         </itemizedlist>
         
         <para>
-            �񎟃L���b�V���̓��e��N�G���L���b�V���̈�����邽�߂ɁA <literal>Statistics</literal> API��
-            �g���Ă��������B
+            二次キャッシュの内容やクエリキャッシュ領域を見るために、 <literal>Statistics</literal> APIを
+            使ってください。
         </para>
         
         <programlisting><![CDATA[Map cacheEntries = sessionFactory.getStatistics()
@@ -978,8 +980,8 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         .getEntries();]]></programlisting>
         
         <para>
-            ���v����L���ɂ��āA����ɃI�v�V�����Ƃ��āA�L���b�V���G���g����
-            �l����藝���\�Ȍ`���ŕێ����邱�Ƃ�Hibernate�ɋ������܂��B
+            統計情報を有効にして、さらにオプションとして、キャッシュエントリを
+            人がより理解可能な形式で保持することをHibernateに強制します。
         </para>
         
         <programlisting><![CDATA[hibernate.generate_statistics true
@@ -988,35 +990,35 @@ hibernate.cache.use_structured_entries true]]></programlisting>
     </sect1>
     
     <sect1 id="performance-querycache" revision="1">
-        <title>�N�G���L���b�V��</title>
+        <title>クエリキャッシュ</title>
 
         <para>
-            �N�G���̃��U���g�Z�b�g���L���b�V���o���܂��B����͓����p�����[�^�ŉ��x�����s�����
-            �N�G���ɑ΂��Ă̂ݗL�p�ł��B�N�G���L���b�V�����g���ɂ́A�܂��ݒ�ŗL���ɂ��Ȃ��Ă͂Ȃ�܂���B
+            クエリのリザルトセットもキャッシュ出来ます。これは同じパラメータで何度も実行される
+            クエリに対してのみ有用です。クエリキャッシュを使うには、まず設定で有効にしなくてはなりません。
         </para>
 
         <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>       
         
         <para>
-            ���̐ݒ�͐V���ɓ�̃L���b�V���̈�̍쐬���s���܂��B��̓N�G���̃��U���g�Z�b�g��
-            �L���b�V���i <literal>org.hibernate.cache.StandardQueryCache</literal> �j��ێ����A
-            ����1�̓N�G���\�ȃe�[�u���ւ̍ŐV�̍X�V�^�C���X�^���v
-           �i <literal>org.hibernate.cache.UpdateTimestampsCache</literal> �j��ێ����܂��B
-            �N�G���L���b�V���̓��U���g�Z�b�g�̎��ۂ̗v�f�̏�Ԃ̓L���b�V�����Ȃ����Ƃ�
-            ���ӂ��Ă��������B�L���b�V������͎̂��ʎq�̒l�ƁA�l�^�̌��ʂ݂̂ł��B
-            ���̂��߁A�N�G���L���b�V���͏�ɓ񎟃L���b�V���ƈꏏ�Ɏg���ׂ��ł��B
+            この設定は新たに二つのキャッシュ領域の作成を行います。一つはクエリのリザルトセットの
+            キャッシュ（ <literal>org.hibernate.cache.StandardQueryCache</literal> ）を保持し、
+            もう1つはクエリ可能なテーブルへの最新の更新タイムスタンプ
+           （ <literal>org.hibernate.cache.UpdateTimestampsCache</literal> ）を保持します。
+            クエリキャッシュはリザルトセットの実際の要素の状態はキャッシュしないことに
+            注意してください。キャッシュするのは識別子の値と、値型の結果のみです。
+            そのため、クエリキャッシュは常に二次キャッシュと一緒に使うべきです。
         </para>
         
         <para>
-            �قƂ�ǂ̃N�G���̓L���b�V���̉��b���󂯂Ȃ��̂ŁA�f�t�H���g�ł̓N�G���̓L���b�V������܂���B
-            �L���b�V����L���ɂ���ɂ́A <literal>Query.setCacheable(true)</literal> ���Ăяo���Ă��������B
-            ��������΃N�G���������̃L���b�V�����ʂ�T���A�N�G�����s���ɂ��̌��ʂ��L���b�V���ɒǉ�����
-            �悤�ɂȂ�܂��B
+            ほとんどのクエリはキャッシュの恩恵を受けないので、デフォルトではクエリはキャッシュされません。
+            キャッシュを有効にするには、 <literal>Query.setCacheable(true)</literal> を呼び出してください。
+            そうすればクエリが既存のキャッシュ結果を探し、クエリ実行時にその結果をキャッシュに追加する
+            ようになります。
         </para>
         
         <para>
-            �N�G���L���b�V���̔j���|���V�[���ׂ������䂵�����Ƃ��́A <literal>Query.setCacheRegion()</literal> 
-            ���Ăяo���ē���̃N�G���ɑ΂���L���b�V���̈���w�肷�邱�Ƃ��o���܂��B
+            クエリキャッシュの破棄ポリシーを細かく制御したいときは、 <literal>Query.setCacheRegion()</literal> 
+            を呼び出して特定のクエリに対するキャッシュ領域を指定することが出来ます。
         </para>
         
         <programlisting><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
@@ -1027,52 +1029,52 @@ hibernate.cache.use_structured_entries true]]></programlisting>
     .list();]]></programlisting>
 
         <para>
-            �N�G�������g�̃N�G���L���b�V���̈�̃��t���b�V�����������Ȃ���΂Ȃ�Ȃ��Ȃ�A
-            <literal>Query.setCacheMode(CacheMode.REFRESH)</literal> ���Ăяo���ׂ��ł��B�����
-            ���ƂȂ�f�[�^���ʂ̃v���Z�X�ɂ���čX�V���ꂽ��i���Ȃ킿Hibernate��ʂ��čX�V����Ȃ��j�A
-            �A�v���P�[�V�����ɓ���̃N�G�����U���g�Z�b�g��I�����ă��t���b�V��������ꍇ�ɓ��ɗL�p�ł��B
-            ����ɗL�p�Ȃ�����̕��@�́A <literal>SessionFactory.evictQueries()</literal> 
-            �ɂ���ăN�G���L���b�V���̈���������邱�Ƃł��B
+            クエリが自身のクエリキャッシュ領域のリフレッシュを強制しなければならないなら、
+            <literal>Query.setCacheMode(CacheMode.REFRESH)</literal> を呼び出すべきです。これは
+            元となるデータが別のプロセスによって更新されたり（すなわちHibernateを通じて更新されない）、
+            アプリケーションに特定のクエリリザルトセットを選択してリフレッシュさせる場合に特に有用です。
+            さらに有用なもう一つの方法は、 <literal>SessionFactory.evictQueries()</literal> 
+            によってクエリキャッシュ領域を消去することです。
         </para>
 
     </sect1>
-��14.1
+☆14.1
     <sect1 id="performance-collections">
-        <title>�R���N�V�����̃p�t�H�[�}���X�̗���</title>
+        <title>コレクションのパフォーマンスの理解</title>
 
         <para>
-            �R���N�V�����̘b��ɂ͂��łɑ����̎��Ԃ��g���܂����B���̐߂ł�
-            �R���N�V���������s���ɂǂ̂悤�ɐU�������ɂ��Ă̘b���2�A3���グ�܂��B
+            コレクションの話題にはすでに多くの時間を使いました。この節では
+            コレクションが実行時にどのように振舞うかについての話題を2、3取り上げます。
         </para>
 
         <sect2 id="performance-collections-taxonomy">
-            <title>����</title>
+            <title>分類</title>
 
-            <para>Hibernate��3�̊�{�I�ȃR���N�V�����̎�ނ��`���Ă��܂��B
+            <para>Hibernateは3つの基本的なコレクションの種類を定義しています。
                   </para>
 
             <itemizedlist>
             <listitem>
-                <para>�l�̃R���N�V����</para>
+                <para>値のコレクション</para>
             </listitem>
             <listitem>
-                <para>��Α��֘A</para>
+                <para>一対多関連</para>
             </listitem>
             <listitem>
-                <para>���Α��֘A</para>
+                <para>多対多関連</para>
             </listitem>
             </itemizedlist>
 
             <para>
-                ���̕��ނ͂��܂��܂ȃe�[�u����O���L�[�֘A����ʂ��܂����A���������m��K�v�̂���
-                �֘A���f���ɂ��ĂقƂ�ǂȂɂ������Ă���܂���B�֘A�\����p�t�H�[�}���X�̓�����
-                ���S�ɗ�������ɂ́AHibernate���R���N�V�����̍s���X�V�A�폜���邽�߂Ɏg����L�[��
-                �\�����܂��l���Ȃ���΂Ȃ�܂���B����͈ȉ��̕��ނ�񎦂��܂��B
+                この分類はさまざまなテーブルや外部キー関連を区別しますが、私たちが知る必要のある
+                関連モデルについてほとんどなにも教えてくれません。関連構造やパフォーマンスの特徴を
+                完全に理解するには、Hibernateがコレクションの行を更新、削除するために使う主キーの
+                構造もまた考えなければなりません。これは以下の分類を提示します。
             </para>
 
             <itemizedlist>
             <listitem>
-                <para>�C���f�b�N�X�t���R���N�V����</para>
+                <para>インデックス付きコレクション</para>
             </listitem>
             <listitem>
                 <para>set</para>
@@ -1083,86 +1085,86 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             </itemizedlist>
 
             <para>
-                ���ׂẴC���f�b�N�X�t���R���N�V�����imap�Alist�A�z��j�� <literal>&lt;key&gt;</literal> 
-                �� <literal>&lt;index&gt;</literal> �J��������Ȃ��L�[�������Ă��܂��B���̏ꍇ��
-                �R���N�V�����̍X�V�͔��Ɍ����I�ł��B��L�[�͗L�p�ȃC���f�b�N�X�ɂȂ�AHibernate��
-                ����̍s���X�V�܂��͍폜����Ƃ��ɁA���̍s�������I�Ɍ����邱�Ƃ��ł��܂��B
+                すべてのインデックス付きコレクション（map、list、配列）は <literal>&lt;key&gt;</literal> 
+                と <literal>&lt;index&gt;</literal> カラムからなる主キーを持っています。この場合は
+                コレクションの更新は非常に効率的です。主キーは有用なインデックスになり、Hibernateが
+                特定の行を更新または削除するときに、その行を効率的に見つけることができます。
             </para>
                         
             <para>
-                set�� <literal>&lt;key&gt;</literal> ����Ȃ��L�[�Ɨv�f�̃J�����������Ă��܂��B
-                ����̓R���N�V�����v�f�̂������̌^�ɂ��Ă͌����I�ł͂Ȃ���������܂���B
-                ���ɕ����v�f�A�傫�ȃe�L�X�g�A�o�C�i���t�B�[���h�ł͔�����ł��B�f�[�^�x�[�X��
-                ������L�[�Ɍ����I�ɃC���f�b�N�X��t���邱�Ƃ��ł��Ȃ�����ł��B����A1�Α��⑽�Α��֘A�ɂ����āA
-                ���ɐl�H���ʎq�̏ꍇ�͓������炢�����I�ł��B�i�]�k�F <literal>SchemaExport</literal> 
-                �Ŏ��ۂ� <literal>&lt;set&gt;</literal> �̎�L�[����肽���Ȃ�A���ׂẴJ������
-                 <literal>not-null="true"</literal> ��錾���Ȃ���΂Ȃ�܂���B�j
+                setは <literal>&lt;key&gt;</literal> からなる主キーと要素のカラムを持っています。
+                これはコレクション要素のいくつかの型については効率的ではないかもしれません。
+                特に複合要素、大きなテキスト、バイナリフィールドでは非効率です。データベースは
+                複合主キーに効率的にインデックスを付けることができないからです。一方、1対多や多対多関連において、
+                特に人工識別子の場合は同じぐらい効率的です。（余談： <literal>SchemaExport</literal> 
+                で実際に <literal>&lt;set&gt;</literal> の主キーを作りたいなら、すべてのカラムで
+                 <literal>not-null="true"</literal> を宣言しなければなりません。）
             </para>
 
             <para>
-                <literal>&lt;idbag&gt;</literal> �}�b�s���O�͑㗝�L�[���`���܂��B���̂���
-                �X�V�͏�ɔ��Ɍ����I�ł��B������A����͍őP�̃P�[�X�ł��B
+                <literal>&lt;idbag&gt;</literal> マッピングは代理キーを定義します。そのため
+                更新は常に非常に効率的です。事実上、これは最善のケースです。
             </para>
             
             <para>
-                bag�͍ň��̃P�[�X�ł��Bbag�͗v�f�̒l�̏d�����\�ŁA�C���f�b�N�X�J�����������Ȃ����߁A
-                ��L�[�͒�`����Ȃ���������܂���BHibernate�ɂ͏d�������s����ʂ�����@������܂���B
-                Hibernate�͂��̖��̉����̂��߂ɁA�ύX���������Ƃ��ɂ͏�Ɋ��S�ȍ폜
-                �i��� <literal>DELETE</literal> �ɂ��j���s���A�R���N�V�����̍č쐬���s���܂��B
-                ����͔��ɔ�����I��������܂���B
+                bagは最悪のケースです。bagは要素の値の重複が可能で、インデックスカラムを持たないため、
+                主キーは定義されないかもしれません。Hibernateには重複した行を区別する方法がありません。
+                Hibernateはこの問題の解決のために、変更があったときには常に完全な削除
+                （一つの <literal>DELETE</literal> による）を行い、コレクションの再作成を行います。
+                これは非常に非効率的かもしれません。
             </para>
 
             <para>
-                1�Α��֘A�ł́A�u��L�[�v�̓f�[�^�x�[�X�̃e�[�u���̕����I��
-                ��L�[�ł͂Ȃ���������Ȃ����Ƃɒ��ӂ��Ă��������B���������̏ꍇ�ł����A��L�̕��ނ͂܂��L�p�ł��B
-                �iHibernate���R���N�V�����̌X�̍s���ǂ�����āu�����邩�v��\���Ă��܂��B�j
+                1対多関連では、「主キー」はデータベースのテーブルの物理的な
+                主キーではないかもしれないことに注意してください。しかしこの場合でさえ、上記の分類はまだ有用です。
+                （Hibernateがコレクションの個々の行をどうやって「見つけるか」を表しています。）
             </para>
 
         </sect2>
 
         <sect2 id="performance-collections-mostefficientupdate">
-            <title>�X�V�ɂ����Ƃ������I�ȃR���N�V���� list�Amap�Aidbag�Aset</title>
+            <title>更新にもっとも効率的なコレクション list、map、idbag、set</title>
 
             <para>
-                ��ł̋c�_����A�C���f�b�N�X�t���R���N�V�����Ɓi���ʂ́jset�͗v�f�̒ǉ��A�폜�A
-                �X�V�ł����Ƃ������I�ȑ��삪�o���邱�Ƃ͖��炩�ł��B
+                上での議論から、インデックス付きコレクションと（普通の）setは要素の追加、削除、
+                更新でもっとも効率的な操作が出来ることは明らかです。
             </para>
 
             <para>
-                �قڊԈႢ�Ȃ��A���Α��֘A��l�̃R���N�V�����ɂ����āA�C���f�b�N�X�t���R���N�V������
-                set�����D��Ă���_����ȏ゠��܂��B <literal>Set</literal> �͂���
-                �\���̂��߂ɁAHibernate�͗v�f���u�ύX�v���ꂽ�Ƃ��ɍs�������� <literal>UPDATE</literal> 
-                ���܂���B <literal>Set</literal> �ւ̕ύX�͏�Ɂi�X�̍s�́j<literal>INSERT</literal> 
-                �� <literal>DELETE</literal> �ɂ���čs���܂��B�J��Ԃ��܂����A����͈�Α��֘A�ɂ�
-                ���Ă͂܂�܂���B
+                ほぼ間違いなく、多対多関連や値のコレクションにおいて、インデックス付きコレクションが
+                setよりも優れている点が一つ以上あります。 <literal>Set</literal> はその
+                構造のために、Hibernateは要素が「変更」されたときに行を決して <literal>UPDATE</literal> 
+                しません。 <literal>Set</literal> への変更は常に（個々の行の）<literal>INSERT</literal> 
+                と <literal>DELETE</literal> によって行います。繰り返しますが、これは一対多関連には
+                当てはまりません。
             </para>
 
             <para>
-                �z��͒x���������ł��Ȃ��Ƃ������܂�Ȃ̂ŁA���_�Ƃ��āAlist�Amap�Aidbag�������Ƃ�
-                �p�t�H�[�}���X�̗ǂ��iinverse�ł͂Ȃ��j�R���N�V�����^�C�v�ƂȂ�܂��Bset��
-                ����قǈႢ�͂���܂���BHibernate�̃A�v���P�[�V�����ł́Aset�̓R���N�V�����̂����Ƃ�
-                ���ʂ̎�ނƂ��Ċ��҂���܂��Bset�̕\���͊֘A���f���ł͂����Ƃ����R������ł��B
+                配列は遅延処理ができないという決まりなので、結論として、list、map、idbagがもっとも
+                パフォーマンスの良い（inverseではない）コレクションタイプとなります。setも
+                それほど違いはありません。Hibernateのアプリケーションでは、setはコレクションのもっとも
+                共通の種類として期待されます。setの表現は関連モデルではもっとも自然だからです。
             </para>
 
             <para>
-                �������A�悭�f�U�C�����ꂽHibernate�̃h���C�����f���ł́A�ʏ�����Ƃ������R���N�V������
-                ������ <literal>inverse="true"</literal> ���w�肵��1�Α��֘A�ł��B�����̊֘A�ł́A
-                �X�V�͑��Έ�̊֘A�[�ň����A�R���N�V�����̍X�V�p�t�H�[�}���X�̖��͓��Ă͂܂�܂���B
+                しかし、よくデザインされたHibernateのドメインモデルでは、通常もっとも多いコレクションは
+                事実上 <literal>inverse="true"</literal> を指定した1対多関連です。これらの関連では、
+                更新は多対一の関連端で扱われ、コレクションの更新パフォーマンスの問題は当てはまりません。
             </para>
 
         </sect2>
 
         <sect2 id="performance-collections-mostefficentinverse">
-            <title>inverse�R���N�V�����ɂ����Ƃ��œK��bag��list</title>
+            <title>inverseコレクションにもっとも最適なbagとlist</title>
 
             <para>
-                bag���������Ă��܂��O�ɁAbag�i������list���j��set���������ƃp�t�H�[�}���X���ǂ����ʂȃP�[�X��
-                �Љ�܂��B <literal>inverse="true"</literal> �̃R���N�V�����i��ʓI��1�Α��֘A�̎g�����Ȃǁj�ŁA
-                bag�̗v�f���������i�t�F�b�`�j����K�v�Ȃ�bag��list�ɗv�f��ǉ��ł��܂��I
-                ����� <literal>Collection.add()</literal> �� <literal>Collection.addAll()</literal> 
-                ��bag�� <literal>List</literal> �ł͏��true��Ԃ��Ȃ���΂Ȃ�Ȃ�����ł�
-                �i <literal>Set</literal> �Ƃ͈قȂ�܂��j�B
-                ����͈ȉ��̋��ʏ�������葬�����邱�Ƃ��ł��܂��B
+                bagを見放してしまう前に、bag（そしてlistも）がsetよりもずっとパフォーマンスが良い特別なケースを
+                紹介します。 <literal>inverse="true"</literal> のコレクション（一般的な1対多関連の使い方など）で、
+                bagの要素を初期化（フェッチ）する必要なくbagやlistに要素を追加できます！
+                これは <literal>Collection.add()</literal> や <literal>Collection.addAll()</literal> 
+                はbagや <literal>List</literal> では常にtrueを返さなければならないからです
+                （ <literal>Set</literal> とは異なります）。
+                これは以下の共通処理をより速くすることができます。
             </para>
 
             <programlisting><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
@@ -1174,54 +1176,54 @@ sess.flush();]]></programlisting>
         </sect2>
 
         <sect2 id="performance-collections-oneshotdelete">
-            <title>�ꊇ�폜</title>
+            <title>一括削除</title>
 
             <para>
-                ���X�A�R���N�V�����̗v�f�����폜���邱�Ƃ͋ɂ߂Ĕ�����I�ɂȂ邱�Ƃ�����܂��B
-                Hibernate�͋����ł͂Ȃ��̂ŁA�V������̃R���N�V�����̏ꍇ�i <literal>list.clear()</literal> 
-                ���Ăяo�����ꍇ�Ȃǁj�ł͂�������ׂ��łȂ����Ƃ�m���Ă��܂��B���̏ꍇ�́AHibernate��
-                 <literal>DELETE</literal> ����񔭍s���āA����ł��ׂďI���܂��I
+                時々、コレクションの要素を一つ一つ削除することは極めて非効率的になることがあります。
+                Hibernateは愚かではないので、新しい空のコレクションの場合（ <literal>list.clear()</literal> 
+                を呼び出した場合など）ではこれをすべきでないことを知っています。この場合は、Hibernateは
+                 <literal>DELETE</literal> を一回発行して、それですべて終わります！
             </para>
 
             <para>
-                �T�C�Y20�̃R���N�V�����Ɉ�̗v�f��ǉ����A���ꂩ���̗v�f���폜����Ƃ��܂��B
-                Hibernate�͈�� <literal>INSERT</literal> ���Ɠ�� <literal>DELETE</literal> ���𔭍s���܂�
-                �i�R���N�V������bag�łȂ���΁j�B����͊m���ɖ]�܂�������ł��B
+                サイズ20のコレクションに一つの要素を追加し、それから二つの要素を削除するとします。
+                Hibernateは一つの <literal>INSERT</literal> 文と二つの <literal>DELETE</literal> 文を発行します
+                （コレクションがbagでなければ）。これは確かに望ましい動作です。
             </para>
 
             <para>
-                �������A18�̗v�f���폜����2���c���A���ꂩ��3�V�����v�f��ǉ�����Ƃ��܂��B
-                ���̂Ƃ���̕��@������܂��B
+                しかし、18個の要素を削除して2つを残し、それから3つ新しい要素を追加するとします。
+                このとき二つの方法があります。
             </para>
 
             <itemizedlist>
             <listitem>
                 <para>
-                18�s�����폜���āA3�s��ǉ�����
+                18行を一つ一つ削除して、3行を追加する
                 </para>
             </listitem>
             <listitem>
                 <para>
-                �R���N�V�����S�̂��폜�i <literal>DELETE</literal> ��SQL�����j���A������5�̗v�f���ׂĂ�
-                �i����j�ǉ�����
+                コレクション全体を削除（ <literal>DELETE</literal> のSQLを一回）し、そして5つの要素すべてを
+                （一つずつ）追加する
                 </para>
             </listitem>
             </itemizedlist>
 
             <para>
-                Hibernate�͂��̏ꍇ��2�Ԗڂ̕��@����葬�����낤�Ƃ킩��قǌ����͂���܂���B
-                �i������Hibernate�����̂悤�Ɍ������Ƃ��]�܂����Ȃ��ł��傤�B���̂悤�ȐU�镑����
-                �f�[�^�x�[�X�̃g���K�Ȃǂ����������邩������܂���B�j
+                Hibernateはこの場合に2番目の方法がより速いだろうとわかるほど賢くはありません。
+                （そしてHibernateがこのように賢いことも望ましくないでしょう。このような振る舞いは
+                データベースのトリガなどを混乱させるかもしれません。）
             </para>
 
             <para>
-                �K���ɂ��A���̃R���N�V�������̂āi�܂�Q�Ƃ���߂āj�A���݂̗v�f�����ׂĎ��V�����R���N�V������
-                �C���X�^���X��Ԃ����ƂŁA���ł����̐U�镑���i2�Ԗڂ̐헪�j���������邱�Ƃ��o���܂��B
-                ���ɂ���͂ƂĂ��֗��ŋ��͂ł��B
+                幸いにも、元のコレクションを捨て（つまり参照をやめて）、現在の要素をすべて持つ新しいコレクションの
+                インスタンスを返すことで、いつでもこの振る舞い（2番目の戦略）を強制することが出来ます。
+                時にこれはとても便利で強力です。
             </para>
             
             <para>
-                �������A�ꊇ�폜�� <literal>inverse="true"</literal> ���w�肵���R���N�V�����ɂ͍s���܂���B
+                もちろん、一括削除は <literal>inverse="true"</literal> を指定したコレクションには行いません。
             </para>
 
         </sect2>
@@ -1229,28 +1231,28 @@ sess.flush();]]></programlisting>
     </sect1>
 
     <sect1 id="performance-monitoring" revision="1">
-        <title>�p�t�H�[�}���X�̃��j�^�����O</title>
+        <title>パフォーマンスのモニタリング</title>
 
         <para>
-            �œK���̓��j�^�����O��p�t�H�[�}���X���������l���Ȃ���Ώ\���ɍs���܂���B
-            Hibernate�͓��������̂��ׂĂ͈̔͂̐��l��񋟂��܂��B
-            Hibernate�̓��v���� <literal>SessionFactory</literal> �P�ʂŎ擾�\�ł��B
+            最適化はモニタリングやパフォーマンスを示す数値がなければ十分に行えません。
+            Hibernateは内部処理のすべての範囲の数値を提供します。
+            Hibernateの統計情報は <literal>SessionFactory</literal> 単位で取得可能です。
         </para>
 
         <sect2 id="performance-monitoring-sf" revision="2">
-            <title>SessionFactory�̃��j�^�����O</title>
+            <title>SessionFactoryのモニタリング</title>
 
             <para>
-                <literal>SessionFactory</literal> �̃��g���N�X�ɃA�N�Z�X����ɂ�2�̕��@������܂��B
-                �ŏ��̕��@�́A <literal>sessionFactory.getStatistics()</literal> ���Ăяo���A
-                ������ <literal>Statistics</literal> �̓ǂݍ��݂�\�����s���܂��B
+                <literal>SessionFactory</literal> のメトリクスにアクセスするには2つの方法があります。
+                最初の方法は、 <literal>sessionFactory.getStatistics()</literal> を呼び出し、
+                自分で <literal>Statistics</literal> の読み込みや表示を行います。
             </para>
 
             <para>
-                <literal>StatisticsService</literal> MBean��L���ɂ��Ă���΁AHibernate��JMX���g����
-                ���g���N�X�𔭍s���邱�Ƃ��ł��܂��B1��MBean�����ׂĂ� <literal>SessionFactory</literal> 
-                �ɑ΂��ėL���ɂ��邩�ASessionFactory���ƂɈ��MBean��L���ɂ��邱�Ƃ��o���܂��B
-                �ŏ����̐ݒ��ł���ȉ��̃R�[�h�����Ă��������B
+                <literal>StatisticsService</literal> MBeanを有効にしていれば、HibernateはJMXを使って
+                メトリクスを発行することもできます。1つのMBeanをすべての <literal>SessionFactory</literal> 
+                に対して有効にするか、SessionFactoryごとに一つのMBeanを有効にすることが出来ます。
+                最小限の設定例である以下のコードを見てください。
             </para>
 
             <programlisting><![CDATA[// MBean service registration for a specific SessionFactory
@@ -1274,77 +1276,77 @@ StatisticsService stats = new StatisticsService(); // MBean implementation
 server.registerMBean(stats, on); // Register the MBean on the server]]></programlisting>
 
             <para>
-                TODO: ����͈Ӗ�������܂���B�ŏ��̃P�[�X�́AMBean�𒼐ڕ������Ďg�p���܂��B2�Ԗڂ̃P�[�X�́A
-                �g���O��session factory�������Ă���JNDI����n���Ȃ���΂Ȃ�܂���B
-                <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal> ���g���Ă��������B
+                TODO: これは意味がありません。最初のケースは、MBeanを直接復元して使用します。2番目のケースは、
+                使う前にsession factoryが持っているJNDI名を渡さなければなりません。
+                <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal> を使ってください。
             </para>
             <para>
-                <literal>SessionFactory</literal> �ɑ΂��ă��j�^�����O�̊J�n�i�I���j���s�����Ƃ��o���܂��B
+                <literal>SessionFactory</literal> に対してモニタリングの開始（終了）を行うことが出来ます。
             </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                        �ݒ莞�ɂ́A <literal>hibernate.generate_statistics</literal> �� <literal>false</literal> �ɂ��܂�
+                        設定時には、 <literal>hibernate.generate_statistics</literal> を <literal>false</literal> にします
                     </para>
                 </listitem>
             </itemizedlist>
             <itemizedlist>
                 <listitem>
                     <para>
-                        ���s���ɁA <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> �܂���
-                         <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal> ���Ăяo���܂�
+                        実行時に、 <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> または
+                         <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal> を呼び出します
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                ���v�� <literal>clear()</literal> ���\�b�h���g���Ď蓮�Ń��Z�b�g���邱�Ƃ��o���܂��B
-                �T�}���� <literal>logSummary()</literal> ���\�b�h���g����logger�ɑ��邱�Ƃ��o���܂�
-                �iinfo���x���ł��j�B
+                統計は <literal>clear()</literal> メソッドを使って手動でリセットすることが出来ます。
+                サマリは <literal>logSummary()</literal> メソッドを使ってloggerに送ることが出来ます
+                （infoレベルです）。
             </para>
 
         </sect2>
 
         <sect2 id="performance-monitoring-metrics" revision="1">
-            <title>���g���N�X</title>
+            <title>メトリクス</title>
 
             <para>
-                �����̂��̂�����܂��B���ׂĂ̎g�p�\�ȃJ�E���^�� <literal>Statistics</literal> 
-                �C���^�[�t�F�C�X��API�ɏ�����Ă���A3�̕��ނ�����܂��B
+                多くのものがあります。すべての使用可能なカウンタは <literal>Statistics</literal> 
+                インターフェイスのAPIに書かれており、3つの分類があります。
             </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                        ���g���N�X�͈�ʓI�� <literal>Session</literal> �̎g�����Ɗ֌W���Ă��܂��B
-                        �I�[�v�������Z�b�V�����̐���JDBC�R�l�N�V�����Ɗ֘A���Ă���̂Ɠ����ł��B
+                        メトリクスは一般的な <literal>Session</literal> の使い方と関係しています。
+                        オープンしたセッションの数がJDBCコネクションと関連しているのと同じです。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        ���g���N�X�͗v�f�A�R���N�V�����A�N�G����L���b�V���ȂǑS�̂�
-                        �֌W���Ă��܂��i�ʖ��̓O���[�o�����g���N�X�ł��j�B
+                        メトリクスは要素、コレクション、クエリやキャッシュなど全体に
+                        関係しています（別名はグローバルメトリクスです）。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        ���g���N�X�̏ڍׂ͓���̃G���e�B�e�B�A�R���N�V�����A�N�G���A�L���b�V���̈�Ɋ֌W���Ă��܂��B
+                        メトリクスの詳細は特定のエンティティ、コレクション、クエリ、キャッシュ領域に関係しています。
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                ��Ƃ��āA�L���b�V���̃q�b�g�A�q�b�g�~�X��A�v�f�A�R���N�V�����A�N�G���̊����A�N�G���̎��s��
-                �K�v�ȕ��ώ��Ԃ��m�F�ł��܂��B�~���b�̐��l��Java�̋ߎ����󂯂邱�Ƃɒ��ӂ��Ă��������B
-                Hibernate��JVM�̐��x�ɐ�������A�v���b�g�t�H�[���ɂ���Ă�10�b�P�ʂł������m�łȂ���������܂���B
+                例として、キャッシュのヒット、ヒットミスや、要素、コレクション、クエリの割合、クエリの実行に
+                必要な平均時間を確認できます。ミリ秒の数値はJavaの近似を受けることに注意してください。
+                HibernateはJVMの精度に制限され、プラットフォームによっては10秒単位でしか正確でないかもしれません。
             </para>
 
             <para>
-                �P����getter�̓O���[�o�����g���N�X�i���Ȃ킿����̃G���e�B�e�B�A�R���N�V�����A�L���b�V���̈�Ȃǂɔ����Ȃ��j
-                �ɃA�N�Z�X���邽�߂Ɏg���܂��B����̃G���e�B�e�B�A�R���N�V�����A�L���b�V���̈�̃��g���N�X�́A
-                �����̖��O��A�N�G����HQL�ASQL�\���ɂ���ăA�N�Z�X���邱�Ƃ��o���܂��B����ɏڂ������́A
-                <literal>Statistics</literal> �A <literal>EntityStatistics</literal> �A <literal>CollectionStatistics</literal> 
-                �A <literal>SecondLevelCacheStatistics</literal> �A <literal>QueryStatistics</literal> API��javadoc��
-                �Q�Ƃ��Ă��������B�ȉ��̃R�[�h�͊ȒP�ȗ�ł��B
+                単純なgetterはグローバルメトリクス（すなわち特定のエンティティ、コレクション、キャッシュ領域などに縛られない）
+                にアクセスするために使います。特定のエンティティ、コレクション、キャッシュ領域のメトリクスは、
+                それらの名前や、クエリのHQL、SQL表現によってアクセスすることが出来ます。さらに詳しい情報は、
+                <literal>Statistics</literal> 、 <literal>EntityStatistics</literal> 、 <literal>CollectionStatistics</literal> 
+                、 <literal>SecondLevelCacheStatistics</literal> 、 <literal>QueryStatistics</literal> APIのjavadocを
+                参照してください。以下のコードは簡単な例です。
             </para>
 
             <programlisting><![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();
@@ -1365,10 +1367,10 @@ long changes =
 log.info(Cat.class.getName() + " changed " + changes + "times"  );]]></programlisting>
 
             <para>
-                ���ׂẴG���e�B�e�B�A�R���N�V�����A�N�G���A�L���b�V���̈�ɑ΂��čs���ꍇ�́A
-                <literal>getQueries()</literal> �A <literal>getEntityNames()</literal>�A 
-                <literal>getCollectionRoleNames()</literal> �A <literal>getSecondLevelCacheRegionNames()</literal> ���\�b�h��
-                ���ꂼ��̖��O�̃��X�g���擾���邱�Ƃ��o���܂��B
+                すべてのエンティティ、コレクション、クエリ、キャッシュ領域に対して行う場合は、
+                <literal>getQueries()</literal> 、 <literal>getEntityNames()</literal>、 
+                <literal>getCollectionRoleNames()</literal> 、 <literal>getSecondLevelCacheRegionNames()</literal> メソッドで
+                それぞれの名前のリストを取得することが出来ます。
             </para>
 
         </sect2>

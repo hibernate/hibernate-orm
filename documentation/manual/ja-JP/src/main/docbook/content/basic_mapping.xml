@@ -1,25 +1,26 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="mapping">
-    <title>��{�I��O/R�}�b�s���O</title>
+    <title>基本的なO/Rマッピング</title>
 
     <sect1 id="mapping-declaration" revision="1">
-        <title>�}�b�s���O��`</title>
+        <title>マッピング定義</title>
 
         <para>
-            �I�u�W�F�N�g/�����[�V���i���}�b�s���O�͒ʏ�XML�h�L�������g�Œ�`���܂��B
-            �}�b�s���O�h�L�������g�́A�ǂ݂₷�����ƂŕҏW���₷���悤�Ƀf�U�C������Ă��܂��B
-            �}�b�s���O�����Java���S�A�܂�e�[�u����`�ł͂Ȃ��i���N���X�̒�`�Ɋ�Â��č\�z����Ă��܂��B
+            オブジェクト/リレーショナルマッピングは通常XMLドキュメントで定義します。
+            マッピングドキュメントは、読みやすく手作業で編集しやすいようにデザインされています。
+            マッピング言語はJava中心、つまりテーブル定義ではなく永続クラスの定義に基づいて構築されています。
         </para>
         
         <para>
-            ������Hibernate���[�U��XML�}�b�s���O�̋L�q�����Ƃōs���܂����A
-            XDoclet, Middlegen, AndroMDA�Ƃ����悤�ȃ}�b�s���O�h�L�������g�𐶐�����c�[����
-            ���������݂��܂��B
+            多くのHibernateユーザはXMLマッピングの記述を手作業で行いますが、
+            XDoclet, Middlegen, AndroMDAというようなマッピングドキュメントを生成するツールが
+            いくつか存在します。
         </para>
 
         <para>
-            �T���v���̃}�b�s���O����n�߂܂��傤�F
+            サンプルのマッピングから始めましょう：
         </para>
 
         <programlisting id="mapping-declaration-ex1" revision="1"><![CDATA[<?xml version="1.0"?>
@@ -82,16 +83,16 @@
         </class>
 
         <class name="Dog">
-                <!-- ������Dog�p�̃}�b�s���O�����܂� -->
+                <!-- ここにDog用のマッピング書きます -->
         </class>
 
 </hibernate-mapping>]]></programlisting>
 
         <para>
-             �}�b�s���O�h�L�������g�̓��e��������܂��B�B
-            �������A�����ł�Hibernate�����s���Ɏg���h�L�������g�v�f�Ƒ����ɂ��Ă̂ݐ������܂��B
-            �}�b�s���O�h�L�������g�́A�������̃I�v�V���������Ɨv�f���܂�ł��܂��i�Ⴆ�� <literal>not-null</literal> �����j�B
-            �����̓X�L�[�}�G�N�X�|�[�g�c�[�����o�͂���f�[�^�x�[�X�X�L�[�}�ɉe����^������̂ł��B
+             マッピングドキュメントの内容を説明します。。
+            ただし、ここではHibernateが実行時に使うドキュメント要素と属性についてのみ説明します。
+            マッピングドキュメントは、いくつかのオプション属性と要素を含んでいます（例えば <literal>not-null</literal> 属性）。
+            それらはスキーマエクスポートツールが出力するデータベーススキーマに影響を与えるものです。
             
         </para>
 
@@ -101,51 +102,51 @@
             <title>Doctype</title>
 
             <para>
-                XML�}�b�s���O�ł́A�����������悤�ȃh�L�������g�^��K����`���ׂ��ł��B
-                ���ۂ�DTD�́A��L��URL�� <literal>hibernate-x.x.x/src/org/hibernate</literal> �f�B���N�g���A �܂��� 
-                <literal>hibernate.jar</literal> ���ɂ���܂��B
-                Hibernate�͏�ɁA���̃N���X�p�X����DTD��T���n�߂܂��B
-                �C���^�[�l�b�g�ɂ���DTD�t�@�C����T�����Ƃ����Ȃ�A
-                �N���X�p�X�̓��e�����āADTD�錾���m�F���Ă��������B
+                XMLマッピングでは、お見せしたようなドキュメント型を必ず定義すべきです。
+                実際のDTDは、上記のURLの <literal>hibernate-x.x.x/src/org/hibernate</literal> ディレクトリ、 または 
+                <literal>hibernate.jar</literal> 内にあります。
+                Hibernateは常に、そのクラスパス内でDTDを探し始めます。
+                インターネットにあるDTDファイルを探そうとしたなら、
+                クラスパスの内容を見て、DTD宣言を確認してください。
             </para>
             
             
             
             <sect3 id="mapping-declaration-entity-resolution">
                 <title>
-                �G���e�B�e�B�E���]���o
+                エンティティ・リゾルバ
                 </title>
                 <para>
-                    �O�q�����悤�ɁAHibernate�͂܂��N���X�p�X����DTD���������悤�Ƃ��܂��B
-                    <literal>org.xml.sax.EntityResolver</literal> �̃J�X�^��������
-                    XML�t�@�C����ǂݍ��ނ��߂�SAXReader�ɓo�^���邱�Ƃɂ���āADTD���������܂��B
-                    ���̃J�X�^���� <literal>EntityResolver</literal> ��2�̈قȂ�V�X�e��ID���O��Ԃ�F�����܂��B
+                    前述したように、Hibernateはまずクラスパス内でDTDを解決しようとします。
+                    <literal>org.xml.sax.EntityResolver</literal> のカスタム実装を
+                    XMLファイルを読み込むためのSAXReaderに登録することによって、DTDを解決します。
+                    このカスタムの <literal>EntityResolver</literal> は2つの異なるシステムID名前空間を認識します。
                     
                 </para>
                 <itemizedlist>
                     <listitem>
                         <para>
-                            <literal>Hibernate���O���</literal> �́A���]���o�� 
-                            <literal>http://hibernate.sourceforge.net/</literal> �Ŏn�܂�V�X�e��ID�ɓ��B�����Ƃ��ɁA
-                            �F������܂��B
-                            �����ă��]���o�́AHibernate�̃N���X�����[�h�����N���X���[�_��p���āA
-                            �����̃G���e�B�e�B���������悤�Ƃ��܂��B
+                            <literal>Hibernate名前空間</literal> は、リゾルバが 
+                            <literal>http://hibernate.sourceforge.net/</literal> で始まるシステムIDに到達したときに、
+                            認識されます。
+                            そしてリゾルバは、Hibernateのクラスをロードしたクラスローダを用いて、
+                            これらのエンティティを解決しようとします。
                         
                         </para>
                     </listitem>
                     <listitem>
                         <para>
-                          <literal>���[�U���O���</literal> �́A���]���o��
-                          URL�v���g�R���� <literal>classpath://</literal> ���g�����V�X�e��ID�ɓ��B�����Ƃ��ɁA
-                          �F������܂��B�����ă��]���o�́A(1)�J�����g�X���b�h�̃R���e�L�X�g�N���X���[�_�[�A
-                          �܂���(2)Hibernate�̃N���X�����[�h�����N���X���[�_���g���āA
-                          �����̃G���e�B�e�B���������悤�Ƃ��܂��B
+                          <literal>ユーザ名前空間</literal> は、リゾルバが
+                          URLプロトコルの <literal>classpath://</literal> を使ったシステムIDに到達したときに、
+                          認識されます。そしてリゾルバは、(1)カレントスレッドのコンテキストクラスローダー、
+                          または(2)Hibernateのクラスをロードしたクラスローダを使って、
+                          これらのエンティティを解決しようとします。
                         
                         </para>
                     </listitem>
                 </itemizedlist>
                 <para>
-                ���L�́A���[�U���O��Ԃ��g������ł��F
+                下記は、ユーザ名前空間を使った例です：
                 
                 </para>
                 <programlisting><![CDATA[<?xml version="1.0"?>
@@ -164,8 +165,8 @@
     &types;
 </hibernate-mapping>]]></programlisting>
                 <para>
-                ������ <literal>types.xml</literal> �� <literal>your.domain</literal> �p�b�P�[�W���̃��\�[�X�ł���A
-                �J�X�^�� <xref linkend="mapping-types-custom">typedef</xref> ���܂ނ܂��B
+                ここで <literal>types.xml</literal> は <literal>your.domain</literal> パッケージ内のリソースであり、
+                カスタム <xref linkend="mapping-types-custom">typedef</xref> を含むます。
                 </para>
             </sect3>            
             
@@ -176,14 +177,14 @@
             <title>hibernate-mapping</title>
 
             <para>
-                ���̗v�f�ɂ͂������I�v�V��������������܂��B<literal>schema</literal> ������ <literal>catalog</literal> �����́A
-                ���̃}�b�s���O���Q�Ƃ���e�[�u�����A���̑����ɂ���Ďw�肳�ꂽ�X�L�[�}��(�܂���)�J�^���O�ɑ����邱�Ƃ��w�肵�܂��B
-                ���̑������w�肳���ƁA�e�[�u�����͗^����ꂽ�X�L�[�}���ƃJ�^���O���ŏC������܂��B�����̑������w�肳��Ă��Ȃ���΁A
-                �e�[�u�����͏C������܂���B<literal>default-cascade</literal> �����́A
-                <literal>cascade</literal> �������w�肵�Ă��Ȃ��v���p�e�B��R���N�V�����ɁA
-                �ǂ̃J�X�P�[�h�X�^�C�������蓖�Ă邩���w�肵�܂��B
-                <literal>auto-import</literal> �����́A
-                �N�G��������ŏC������Ă��Ȃ��N���X�����A�f�t�H���g�Ŏg����悤�ɂ��܂��B
+                この要素にはいくつかオプション属性があります。<literal>schema</literal> 属性と <literal>catalog</literal> 属性は、
+                このマッピングが参照するテーブルが、この属性によって指定されたスキーマと(または)カタログに属することを指定します。
+                この属性が指定されると、テーブル名は与えられたスキーマ名とカタログ名で修飾されます。これらの属性が指定されていなければ、
+                テーブル名は修飾されません。<literal>default-cascade</literal> 属性は、
+                <literal>cascade</literal> 属性を指定していないプロパティやコレクションに、
+                どのカスケードスタイルを割り当てるかを指定します。
+                <literal>auto-import</literal> 属性は、
+                クエリ言語内で修飾されていないクラス名を、デフォルトで使えるようにします。
             </para>
  
              <programlistingco>
@@ -208,62 +209,62 @@
                  <calloutlist>
                      <callout arearefs="hm1">
                          <para>
-                             <literal>schema</literal>�i�I�v�V�����j�F�f�[�^�x�[�X�X�L�[�}�̖��O�B
+                             <literal>schema</literal>（オプション）：データベーススキーマの名前。
                          </para>
                      </callout>
                      <callout arearefs="hm2">
                          <para>
-                             <literal>catalog</literal> �i�I�v�V�����j�F�f�[�^�x�[�X�J�^���O�̖��O�B
+                             <literal>catalog</literal> （オプション）：データベースカタログの名前。
                          </para>
                      </callout>
                      <callout arearefs="hm3">
                          <para>
-                            <literal>default-cascade</literal> �i�I�v�V���� - �f�t�H���g�� <literal>none</literal>�j�F
-                             �f�t�H���g�̃J�X�P�[�h�X�^�C���B
+                            <literal>default-cascade</literal> （オプション - デフォルトは <literal>none</literal>）：
+                             デフォルトのカスケードスタイル。
                          </para>
                      </callout>
                      <callout arearefs="hm4">
                          <para>
-                             <literal>default-access</literal> (�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                             Hibernate���v���p�e�B�ɃA�N�Z�X����ۂɍ̂�ׂ��헪�B <literal>PropertyAccessor</literal> 
-                             ���������邱�ƂŃJ�X�^�}�C�Y�\�B
+                             <literal>default-access</literal> (オプション - デフォルトは <literal>property</literal> ）：
+                             Hibernateがプロパティにアクセスする際に採るべき戦略。 <literal>PropertyAccessor</literal> 
+                             を実装することでカスタマイズ可能。
                              
                          </para>
                      </callout>
                      <callout arearefs="hm5">
                          <para>
-                             <literal>default-lazy</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> )�F
-                              <literal>lazy</literal> �������w�肳��Ă��Ȃ��N���X��R���N�V�����}�b�s���O�ɑ΂���f�t�H���g�l�B
+                             <literal>default-lazy</literal> (オプション - デフォルトは <literal>true</literal> )：
+                              <literal>lazy</literal> 属性が指定されていないクラスやコレクションマッピングに対するデフォルト値。
                          </para>
                      </callout>
                      <callout arearefs="hm6">
                          <para>
-                             <literal>auto-import</literal> �i�I�v�V���� - �f�t�H���g�� <literal>true</literal>�j�F
-                             �N�G��������ŁA�i���̃}�b�s���O���̃N���X�́j�C������Ă��Ȃ��N���X�����g���邩�ǂ������w�肵�܂��B
+                             <literal>auto-import</literal> （オプション - デフォルトは <literal>true</literal>）：
+                             クエリ言語内で、（このマッピング内のクラスの）修飾されていないクラス名を使えるかどうかを指定します。
                          </para>
                      </callout>
                      <callout arearefs="hm7">
                          <para>
-                             <literal>package</literal> (�I�v�V����): �}�b�s���O�h�L�������g���ŏC������Ă��Ȃ��N���X���ɑ΂��Ċ��蓖�Ă�A
-                             �p�b�P�[�W�̐ړ���(prefix)���w�肵�܂��B
+                             <literal>package</literal> (オプション): マッピングドキュメント内で修飾されていないクラス名に対して割り当てる、
+                             パッケージの接頭辞(prefix)を指定します。
                          </para>
                      </callout>
                  </calloutlist>
              </programlistingco>
              
              <para>
-                 �i�C������Ă��Ȃ��j�������O�̉i���N���X��2����Ȃ�A
-                 <literal>auto-import="false"</literal> ��ݒ肷�ׂ��ł��B
-                 2�̃N���X�Ɂh�C���|�[�g���ꂽ�h�������O�����蓖�Ă悤�Ƃ���ƁAHibernate�͗�O�𓊂��܂��B
+                 （修飾されていない）同じ名前の永続クラスが2つあるなら、
+                 <literal>auto-import="false"</literal> を設定すべきです。
+                 2つのクラスに”インポートされた”同じ名前を割り当てようとすると、Hibernateは例外を投げます。
              </para>
 
              <para>
-                 <literal>hibernate-mapping</literal> �v�f�́A�ŏ��̗�Ŏ������悤�ɂ������̉i�� <literal>&lt;class&gt;</literal> 
-                 �}�b�s���O���l�X�g�ł��܂��B
-                 �������A�P�̃}�b�s���O�t�@�C���ł͂����ЂƂ̉i���N���X(�܂��͂ЂƂ̃N���X�K�w)�Ƀ}�b�s���O����悤�ɂ��A
-                 ����ɉi���X�[�p�[�N���X�̌�Ŏw�肷��ׂ��ł��傤(�������̃c�[���͂��̂悤�ȃ}�b�s���O�t�@�C����z�肵�Ă��܂�)�B
-                 �Ⴆ�Ύ��̂悤�ɂȂ�܂��B�F <literal>Cat.hbm.xml</literal> ,
-                  <literal>Dog.hbm.xml</literal> , �܂��͌p�����g���Ȃ� <literal>Animal.hbm.xml</literal> �B
+                 <literal>hibernate-mapping</literal> 要素は、最初の例で示したようにいくつかの永続 <literal>&lt;class&gt;</literal> 
+                 マッピングをネストできます。
+                 しかし、１つのマッピングファイルではただひとつの永続クラス(またはひとつのクラス階層)にマッピングするようにし、
+                 さらに永続スーパークラスの後で指定するべきでしょう(いくつかのツールはこのようなマッピングファイルを想定しています)。
+                 例えば次のようになります。： <literal>Cat.hbm.xml</literal> ,
+                  <literal>Dog.hbm.xml</literal> , または継承を使うなら <literal>Animal.hbm.xml</literal> 。
              </para>
  
         </sect2>
@@ -272,7 +273,7 @@
             <title>class</title>
 
             <para>
-                <literal>class</literal> �v�f���g���āA�i���N���X��錾�ł��܂��B
+                <literal>class</literal> 要素を使って、永続クラスを宣言できます。
             </para>
             
             <programlistingco>
@@ -328,140 +329,140 @@
                 <calloutlist>
                     <callout arearefs="class1">
                         <para>
-                            <literal>name</literal> (�I�v�V����)�F�i���N���X�i�܂��̓C���^�[�t�F�C�X�j�̊��S�C��Java�N���X���B
-                            �������̑������w�肵�Ȃ���΁APOJO�ł͂Ȃ��G���e�B�e�B�ɑ΂���}�b�s���O�Ƃ��Ĉ����܂��B
+                            <literal>name</literal> (オプション)：永続クラス（またはインターフェイス）の完全修飾Javaクラス名。
+                            もしこの属性を指定しなければ、POJOではないエンティティに対するマッピングとして扱われます。
                             
                         </para>
                     </callout>
                     <callout arearefs="class2">
                         <para>
-                           <literal>table</literal> (�I�v�V���� - �f�t�H���g�͏C������Ă��Ȃ��N���X��)�F�f�[�^�x�[�X�e�[�u���̖��O
+                           <literal>table</literal> (オプション - デフォルトは修飾されていないクラス名)：データベーステーブルの名前
                         </para>
                     </callout>
                     <callout arearefs="class3">
                         <para>
-                            <literal>discriminator-value</literal> (�I�v�V���� - �f�t�H���g�̓N���X��)�F
-                            �|�����[�t�B�b�N�ȐU�镑���Ɏg����X�̃T�u�N���X�����ʂ��邽�߂̒l�B
-                            �l�� <literal>null</literal> �� <literal>not null</literal> �̂����ꂩ�����܂��B
+                            <literal>discriminator-value</literal> (オプション - デフォルトはクラス名)：
+                            ポリモーフィックな振る舞いに使われる個々のサブクラスを識別するための値。
+                            値は <literal>null</literal> か <literal>not null</literal> のいずれかを取ります。
                         </para>
                     </callout>
                     <callout arearefs="class4">
                         <para>
-                            <literal>mutable</literal> (�I�v�V�����A �f�t�H���g�� <literal>true</literal> )�F
-                            ���̃N���X�̃C���X�^���X���X�V�\�i�܂��͕s�\�j�ł��邱�Ƃ��w�肵�܂��B
+                            <literal>mutable</literal> (オプション、 デフォルトは <literal>true</literal> )：
+                            そのクラスのインスタンスが更新可能（または不可能）であることを指定します。
                         </para>
                     </callout>    
                     <callout arearefs="class5">
                         <para>
-                            <literal>schema</literal> �i�I�v�V�����j�F
-                            ���[�g�� <literal>&lt;hibernate-mapping&gt;</literal> �v�f�Ŏw�肳�ꂽ�X�L�[�}�����I�[�o�[���C�h���܂��B
+                            <literal>schema</literal> （オプション）：
+                            ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定されたスキーマ名をオーバーライドします。
                         </para>
                     </callout>                
                     <callout arearefs="class6">
                         <para>
-                            <literal>catalog</literal> �i�I�v�V�����j�F���[�g�� <literal>&lt;hibernate-mapping&gt;</literal> 
-                            �v�f�Ŏw�肳�ꂽ�J�^���O�����I�[�o�[���C�h���܂��B
+                            <literal>catalog</literal> （オプション）：ルートの <literal>&lt;hibernate-mapping&gt;</literal> 
+                            要素で指定されたカタログ名をオーバーライドします。
                         </para>
                     </callout>                
                     <callout arearefs="class7">
                         <para>
-                            <literal>proxy</literal> �i�I�v�V�����j�F�x���������v���L�V�Ɏg���C���^�[�t�F�C�X���w�肵�܂��B
-                            �i��������N���X�����̂��̂��w�肷�邱�Ƃ��\�ł��B
+                            <literal>proxy</literal> （オプション）：遅延初期化プロキシに使うインターフェイスを指定します。
+                            永続化するクラス名そのものを指定することも可能です。
                         </para>
                     </callout>    
                     <callout arearefs="class8">
                         <para>
-                            <literal>dynamic-update</literal> �i�I�v�V�����A �f�t�H���g�� <literal>false</literal> �j�F
-                            �l���ύX���ꂽ�J�����������܂�SQL�� <literal>UPDATE</literal> �����A���s���ɐ������邱�Ƃ��w�肵�܂��B
+                            <literal>dynamic-update</literal> （オプション、 デフォルトは <literal>false</literal> ）：
+                            値が変更されたカラムだけを含むSQLの <literal>UPDATE</literal> 文を、実行時に生成することを指定します。
                         </para>
                     </callout>    
                     <callout arearefs="class9">
                         <para>
-                            <literal>dynamic-insert</literal> �i�I�v�V����, �f�t�H���g�� <literal>false</literal> �j�F
-                            �l��null�ł͂Ȃ��J�����������܂�SQL�� <literal>INSERT</literal> �����A���s���ɐ������邱�Ƃ��w�肵�܂��B
+                            <literal>dynamic-insert</literal> （オプション, デフォルトは <literal>false</literal> ）：
+                            値がnullではないカラムだけを含むSQLの <literal>INSERT</literal> 文を、実行時に生成することを指定します。
                         </para>
                     </callout>    
                     <callout arearefs="class10">
                         <para>
-                            <literal>select-before-update</literal> (�I�v�V����, �f�t�H���g�� <literal>false</literal>): 
-                            �I�u�W�F�N�g���ύX���ꂽ�̂��m���łȂ��Ȃ�΁AHibernate��SQL�� <literal>UPDATE</literal> �� 
-                            <emphasis>�����Ď��s���Ȃ�</emphasis> ���Ƃ��w�肵�܂��B
-                            �������̏ꍇ(���ۓI�ɂ́A�ꎞ�I�u�W�F�N�g�� <literal>update()</literal> ���g���A
-                            �V�����Z�b�V�����Ɗ֘A�t����ꂽ������)�A<literal>UPDATE</literal> �����ۂɕK�v���ǂ��������肷�邽�߂ɁA
-                            Hibernate���]����SQL�� <literal>SELECT</literal> �������s���邱�Ƃ��Ӗ����܂��B
+                            <literal>select-before-update</literal> (オプション, デフォルトは <literal>false</literal>): 
+                            オブジェクトが変更されたのが確実でないならば、HibernateがSQLの <literal>UPDATE</literal> を 
+                            <emphasis>決して実行しない</emphasis> ことを指定します。
+                            ある特定の場合(実際的には、一時オブジェクトが <literal>update()</literal> を使い、
+                            新しいセッションと関連付けられた時だけ)、<literal>UPDATE</literal> が実際に必要かどうかを決定するために、
+                            Hibernateが余分なSQLの <literal>SELECT</literal> 文を実行することを意味します。
                         </para>
                     </callout>    
                     <callout arearefs="class11">
                         <para>
-                            (optional, �f�t�H���g�ł� <literal>implicit</literal> ): implicit�i�Öفj��explicit�i�����j�́A
-                            �ǂ���̃N�G���|�����[�t�B�Y�����g�������肵�܂��B
+                            (optional, デフォルトでは <literal>implicit</literal> ): implicit（暗黙）かexplicit（明示）の、
+                            どちらのクエリポリモーフィズムを使うか決定します。
                         </para>
                     </callout>    
                     <callout arearefs="class12">
                         <para>
-                            <literal>where</literal> �i�I�v�V�����j�F
-                            ���̃N���X�̃I�u�W�F�N�g����������Ƃ��Ɏg�p����A�C�ӂ�SQL�� <literal>WHERE</literal>  �������w�肵�܂��B
+                            <literal>where</literal> （オプション）：
+                            このクラスのオブジェクトを検索するときに使用する、任意のSQLの <literal>WHERE</literal>  条件を指定します。
                         </para>
                     </callout>                 
                     <callout arearefs="class13">
                         <para>
-                            <literal>persister</literal> �i�I�v�V�����j�F�J�X�^�� <literal>ClassPersister</literal> ���w�肵�܂��B
+                            <literal>persister</literal> （オプション）：カスタム <literal>ClassPersister</literal> を指定します。
                         </para>
                     </callout>                 
                     <callout arearefs="class14">
                         <para>
-                            <literal>batch-size</literal> �i�I�v�V����, �f�t�H���g�� <literal>1</literal> �j�F
-                            ���ʎq�ł��̃N���X�̃C���X�^���X�𕜌�����Ƃ��́u�o�b�`�T�C�Y�v���w�肵�܂��B
+                            <literal>batch-size</literal> （オプション, デフォルトは <literal>1</literal> ）：
+                            識別子でこのクラスのインスタンスを復元するときの「バッチサイズ」を指定します。
                         </para>
                     </callout>                 
                    <callout arearefs="class15">
                         <para>
-                            <literal>optimistic-lock</literal> �i�I�v�V����,�f�t�H���g�� <literal>version</literal> �j�F
-                            �y�σ��b�N�헪�����肵�܂��B
+                            <literal>optimistic-lock</literal> （オプション,デフォルトは <literal>version</literal> ）：
+                            楽観ロック戦略を決定します。
                         </para>
                     </callout>    
                     <callout arearefs="class16">
                         <para>
-                            <literal>lazy</literal> �i�I�v�V�����j�F <literal>lazy="false"</literal> �Ɛݒ肷�邱�ƂŁA
-                            �x���t�F�b�`���ł��Ȃ��Ȃ�܂��B
+                            <literal>lazy</literal> （オプション）： <literal>lazy="false"</literal> と設定することで、
+                            遅延フェッチができなくなります。
                         </para>
                     </callout>    
                     <callout arearefs="class17">
                         <para>
-                            <literal>entity-name</literal> �i�I�v�V�����A�f�t�H���g�̓N���X���j�F
-                            Hibernate3�ł̓N���X��������}�b�s���O�ł��i�ꍇ�ɂ���Ă͈Ⴄ�e�[�u���ɑ΂��Ă��j�A
-                            Java���x����Map��XML�ŕ\�������G���e�B�e�B�}�b�s���O���\�ł��B
-                            �����̏ꍇ�A�G���e�B�e�B�ɑ΂��ĔC�ӂ̖��O���A�����I�ɕt���Ȃ��Ă͂Ȃ�܂���B
-                            �ڂ����� <xref linkend="persistent-classes-dynamicmodels"/> �� <xref linkend="xml"/> ���Q�Ƃ��Ă��������B
+                            <literal>entity-name</literal> （オプション、デフォルトはクラス名）：
+                            Hibernate3ではクラスが複数回マッピングでき（場合によっては違うテーブルに対しても）、
+                            JavaレベルでMapやXMLで表現されるエンティティマッピングが可能です。
+                            これらの場合、エンティティに対して任意の名前を、明示的に付けなくてはなりません。
+                            詳しくは <xref linkend="persistent-classes-dynamicmodels"/> と <xref linkend="xml"/> を参照してください。
                         </para>
                     </callout>
                     <callout arearefs="class18">
                         <para>
-                            <literal>check</literal> �i�I�v�V�����j�F�����I�ɃX�L�[�}�𐶐����邽�߂ɁA
-                            �����s�� <emphasis>check</emphasis> ����𐶐�����SQL���B
+                            <literal>check</literal> （オプション）：自動的にスキーマを生成するために、
+                            複数行の <emphasis>check</emphasis> 制約を生成するSQL式。
                         </para>
                     </callout>
                     <callout arearefs="class19">
                         <para>
-                            <literal>rowid</literal> �i�I�v�V�����j�FHibernate�́A������T�|�[�g���Ă���f�[�^�x�[�X��ROWID��
-                            �Ă΂����̂��g�����Ƃ��ł��܂��B
-                            �Ⴆ��Oracle���g���Ă���Ƃ��A���̃I�v�V������ <literal>rowid</literal> ��ݒ肷��΁A
-                            Hiberante��update�����������邽�߂� <literal>rowid</literal> �Ƃ������ʂȃJ�������g�����Ƃ��ł��܂��B
-                            ROWID�͏ڍׂȎ����ł���A�ۑ����ꂽ�^�v���̕����I�Ȉʒu��\���Ă��܂��B
+                            <literal>rowid</literal> （オプション）：Hibernateは、それをサポートしているデータベースでROWIDと
+                            呼ばれるものを使うことができます。
+                            例えばOracleを使っているとき、このオプションに <literal>rowid</literal> を設定すれば、
+                            Hiberanteはupdateを高速化するために <literal>rowid</literal> という特別なカラムを使うことができます。
+                            ROWIDは詳細な実装であり、保存されたタプルの物理的な位置を表しています。
                         </para>
                     </callout>
                     <callout arearefs="class20">
                         <para>
-                            <literal>subselect</literal> �i�I�v�V�����j�F�s�ς��ǂݎ���p�ł���G���e�B�e�B��
-                            �f�[�^�x�[�X�̕��⍇���isubselect�j�Ƀ}�b�s���O���܂��B
-                            �������̃e�[�u���̑���Ƀr���[������������ΗL�p�ł����A
-                            �����łȂ��̂Ȃ�L�p�ł͂���܂���B���ڂ������͉��L���Q�Ƃ��Ă��������B
+                            <literal>subselect</literal> （オプション）：不変かつ読み取り専用であるエンティティを
+                            データベースの副問合せ（subselect）にマッピングします。
+                            もし元のテーブルの代わりにビューを持ちたければ有用ですが、
+                            そうでないのなら有用ではありません。より詳しい情報は下記を参照してください。
                         </para>
                     </callout>
                     <callout arearefs="class21">
                         <para>
-                            <literal>abstract</literal> �i�I�v�V�����j�F
-                            <literal>&lt;union-subclass&gt;</literal> �K�w���̒��ۃX�[�p�[�N���X�Ƀ}�[�N���邽�߂Ɏg���܂��B
+                            <literal>abstract</literal> （オプション）：
+                            <literal>&lt;union-subclass&gt;</literal> 階層内の抽象スーパークラスにマークするために使います。
                         </para>
                     </callout>
 
@@ -469,102 +470,102 @@
             </programlistingco>
            
             <para>
-                �i���N���X�̖��O�ɃC���^�[�t�F�C�X���w�肵�Ă��܂�������肠��܂���B
-                ���̂Ƃ��� <literal>&lt;subclass&gt;</literal> �v�f���g���āA
-                ���̃C���^�[�t�F�C�X����������N���X���`���Ă��������B
-                <emphasis>static</emphasis> �ȓ����N���X�ł��i�����ł��܂��B
-                ���̂Ƃ��͕W���`���A�Ⴆ�� <literal>eg.Foo$Bar</literal> ���g���ăN���X�����w�肵�Ă��������B
+                永続クラスの名前にインターフェイスを指定してもまったく問題ありません。
+                そのときは <literal>&lt;subclass&gt;</literal> 要素を使って、
+                そのインターフェイスを実装するクラスを定義してください。
+                <emphasis>static</emphasis> な内部クラスでも永続化できます。
+                そのときは標準形式、例えば <literal>eg.Foo$Bar</literal> を使ってクラス名を指定してください。
             </para>
 
             <para>
-                <literal>mutable="false"</literal> �w��������s�σN���X�́A
-                �A�v���P�[�V�����ɂ��X�V��폜���o���Ȃ����Ƃ�����܂��B
-                ����ɂ��AHibernate���p�t�H�[�}���X���������P���܂��B
+                <literal>mutable="false"</literal> 指定をした不変クラスは、
+                アプリケーションによる更新や削除が出来ないことがあります。
+                これにより、Hibernateがパフォーマンスを少し改善します。
             </para>
             
             <para>
-                �I�v�V������ <literal>proxy</literal> �����ɂ��A�N���X�̉i���C���X�^���X�̒x�����������\�ɂȂ�܂��B
-                Hibernate�͍ŏ��ɁA�w�肵���C���^�[�t�F�C�X����������CGLIB�v���L�V��Ԃ��܂��B
-                ���ۂ̉i���I�u�W�F�N�g�̓v���L�V�̃��\�b�h���Ăяo���Ƃ��Ƀ��[�h���܂��B
-                �ȉ��́u�x���������̂��߂̃v���L�V�v���Q�Ƃ��Ă��������B
+                オプションの <literal>proxy</literal> 属性により、クラスの永続インスタンスの遅延初期化が可能になります。
+                Hibernateは最初に、指定したインターフェイスを実装したCGLIBプロキシを返します。
+                実際の永続オブジェクトはプロキシのメソッドを呼び出すときにロードします。
+                以下の「遅延初期化のためのプロキシ」を参照してください。
             </para>
             
             <para>
-                <emphasis>�ÖٓI</emphasis> �|�����[�t�B�Y���Ƃ́A���̓���Ӗ����Ă��܂��B
-                ��̓N���X�̃C���X�^���X���A�X�[�p�[�N���X����������C���^�[�t�F�C�X�A�܂����̃N���X���w�肷��N�G���ɂ���ĕԂ���邱�ƂŁA
-                ������͂��̃N���X�̃T�u�N���X�̃C���X�^���X���A���̃N���X���g���w�肵���N�G���ɂ���ĕԂ���邱�Ƃł��B
-                �܂��A<emphasis>�����I</emphasis> �|�����[�t�B�Y���Ƃ́A���̓���Ӗ����Ă��܂��B
-                ��̓N���X�̃C���X�^���X���A���̃N���X�𖾎��I�Ɏw�肵���N�G���ɂ���Ă̂ݕԂ���邱�ƂŁA
-                ������̓N���X���w�肵���N�G�����A<literal>&lt;class&gt;</literal> �v�f�̒��� <literal>&lt;subclass&gt;</literal> �� 
-                <literal>&lt;joined-subclass&gt;</literal> �ƃ}�b�s���O����Ă���T�u�N���X�̃C���X�^���X������Ԃ����Ƃł��B
-                �قƂ�ǂ̗p�r�ł̓f�t�H���g�� <literal>polymorphism="implicit"</literal> ���K�؂ł��B
-                �����I�ȃ|�����[�t�B�Y���́A2�̈�����N���X�������e�[�u���Ƀ}�b�s���O����Ă���Ƃ��ɗL�p�ł�
-                �i����ɂ���ăe�[�u���J�����̃T�u�Z�b�g���܂ށA�u�y�ʂȁv�N���X���\�ɂȂ�܂��j�B
+                <emphasis>暗黙的</emphasis> ポリモーフィズムとは、次の二つを意味しています。
+                一つはクラスのインスタンスが、スーパークラスや実装したインターフェイス、またそのクラスを指定するクエリによって返されることで、
+                もう一つはそのクラスのサブクラスのインスタンスが、そのクラス自身を指定したクエリによって返されることです。
+                また、<emphasis>明示的</emphasis> ポリモーフィズムとは、次の二つを意味しています。
+                一つはクラスのインスタンスが、そのクラスを明示的に指定したクエリによってのみ返されることで、
+                もう一つはクラスを指定したクエリが、<literal>&lt;class&gt;</literal> 要素の中で <literal>&lt;subclass&gt;</literal> や 
+                <literal>&lt;joined-subclass&gt;</literal> とマッピングされているサブクラスのインスタンスだけを返すことです。
+                ほとんどの用途ではデフォルトの <literal>polymorphism="implicit"</literal> が適切です。
+                明示的なポリモーフィズムは、2つの違ったクラスが同じテーブルにマッピングされているときに有用です
+                （これによってテーブルカラムのサブセットを含む、「軽量な」クラスが可能になります）。
             </para>
             
             <para>
-                <literal>persister</literal> �������w�肷�邱�ƂŁA�N���X�̉i�����헪���J�X�^�}�C�Y�ł��܂��B
-                �Ⴆ�� <literal>org.hibernate.persister.EntityPersister</literal> ���g�̃T�u�N���X���w�肵����A
-                �܂��Ⴆ�΃X�g�A�h�v���V�[�W���R�[���A�t���b�g�t�@�C���փV���A���C�Y�A
-                LDAP�Ȃǂ�ʂ����i�������������� <literal>org.hibernate.persister.ClassPersister</literal> 
-                �C���^�[�t�F�C�X�̊��S�ɐV����������񋟂ł��܂��B�ȒP�ȗ�Ƃ��� <literal>org.hibernate.test.CustomPersister</literal> 
-                �����Ă��������i����� <literal>Hashtable</literal> �́u�i�����v�ł��j�B
+                <literal>persister</literal> 属性を指定することで、クラスの永続化戦略をカスタマイズできます。
+                例えば <literal>org.hibernate.persister.EntityPersister</literal> 自身のサブクラスを指定したり、
+                また例えばストアドプロシージャコール、フラットファイルへシリアライズ、
+                LDAPなどを通した永続性を実装する <literal>org.hibernate.persister.ClassPersister</literal> 
+                インターフェイスの完全に新しい実装を提供できます。簡単な例として <literal>org.hibernate.test.CustomPersister</literal> 
+                を見てください（これは <literal>Hashtable</literal> の「永続化」です）。
                 
             </para>
             
             <para>
-                <literal>dynamic-update</literal> �� <literal>dynamic-insert</literal> �̐ݒ�̓T�u�N���X�Ɍp������܂���B
-                ���̂��� <literal>&lt;subclass&gt;</literal> �� <literal>&lt;joined-subclass&gt;</literal> �v�f���w�肷�邱�Ƃ��o���܂��B
-                �����̐ݒ�̓p�t�H�[�}���X�����コ���鎖������܂����A���Ƃ����Ƃ�����܂��̂ŁA�T�d�Ɏg�p���Ă��������B
+                <literal>dynamic-update</literal> と <literal>dynamic-insert</literal> の設定はサブクラスに継承されません。
+                そのため <literal>&lt;subclass&gt;</literal> や <literal>&lt;joined-subclass&gt;</literal> 要素を指定することも出来ます。
+                これらの設定はパフォーマンスを向上させる事もありますが、落とすこともありますので、慎重に使用してください。
             </para>
             
             <para>
-                <literal>select-before-update</literal> �̎g�p�͒ʏ�p�t�H�[�}���X�𗎂Ƃ��܂��B
-                ���� <literal>Session</literal> �֕����C���X�^���X�̃O���t���Ēǉ�����Ȃ�A
-                �f�[�^�x�[�X�X�V�̃g���K��s�K�v�ɌĂяo���̂������Ƃ����_�ŁA���ɗL�p�ł��B
+                <literal>select-before-update</literal> の使用は通常パフォーマンスを落とします。
+                もし <literal>Session</literal> へ分離インスタンスのグラフを再追加するなら、
+                データベース更新のトリガを不必要に呼び出すのを避けるという点で、非常に有用です。
             </para>
             
             <para>
-                <literal>dynamic-update</literal> ��L���ɂ���΁A�y�σ��b�N�헪��I�Ԃ��ƂɂȂ�܂��B
+                <literal>dynamic-update</literal> を有効にすれば、楽観ロック戦略を選ぶことになります。
             </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                        <literal>version</literal> �o�[�W����/�^�C���X�^���v�J�������`�F�b�N���܂�
+                        <literal>version</literal> バージョン/タイムスタンプカラムをチェックします
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>all</literal> ���ׂẴJ�������`�F�b�N���܂��B
+                        <literal>all</literal> すべてのカラムをチェックします。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>dirty</literal> �ύX�����J�������`�F�b�N���A�����X�V�ł���悤�ɂ��܂��B
+                        <literal>dirty</literal> 変更したカラムをチェックし、同時更新できるようにします。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>none</literal> �y�σ��b�N���g�p���܂���
+                        <literal>none</literal> 楽観ロックを使用しません
                     </para>
                 </listitem>
             </itemizedlist>
             <para>
-                Hibernate�Ŋy�ϓI���b�N�헪���g���Ȃ�A�o�[�W����/�^�C���X�^���v�J�������g�����Ƃ�
-                 <emphasis> ����</emphasis> ���������߂��܂��B
-                �y�ϓI���b�N�̓p�t�H�[�}���X�̊ϓ_������œK�ł���A����ɕ����C���X�^���X�ւ̏C��
-                �i�܂� <literal>Session.marge()</literal> ���g����Ƃ��j
-                �𐳊m�Ɉ������Ƃ̂ł���B��̐헪�ł�����܂��B
+                Hibernateで楽観的ロック戦略を使うなら、バージョン/タイムスタンプカラムを使うことを
+                 <emphasis> 非常に</emphasis> 強くお勧めします。
+                楽観的ロックはパフォーマンスの観点からも最適であり、さらに分離インスタンスへの修正
+                （つまり <literal>Session.marge()</literal> が使われるとき）
+                を正確に扱うことのできる唯一の戦略でもあります。
             </para>
             
             <para>
-                Hibernate�̃}�b�s���O�ɂƂ��ăr���[�ƕ��ʂ̃e�[�u���̊ԂɈႢ�͂Ȃ��A
-                �f�[�^�x�[�X���x���ł͓��ߓI�ł�
-                �i�������r���[�����S�ɂ̓T�|�[�g���Ă��Ȃ�DBMS������܂��B
-                ���ɁA�X�V�̂���r���[�ɑ΂��Ă͂����ł��j�B
-                �r���[���g�������Ă��A�f�[�^�x�[�X�ō쐬�ł��Ȃ����Ƃ�����܂�
-                �i�Ⴆ�΁A���K�V�[�X�L�[�}�̏ꍇ�j�B
-                ���̏ꍇ�ɂ́A�s�ς��ǂݎ���p�̃G���e�B�e�B�ɗ^����ꂽSQL�̕��⍇�������}�b�v�ł��܂��B
+                Hibernateのマッピングにとってビューと普通のテーブルの間に違いはなく、
+                データベースレベルでは透過的です
+                （ただしビューを完全にはサポートしていないDBMSもあります。
+                特に、更新のあるビューに対してはそうです）。
+                ビューを使いたくても、データベースで作成できないことがあります
+                （例えば、レガシースキーマの場合）。
+                この場合には、不変かつ読み取り専用のエンティティに与えられたSQLの副問合せ文をマップできます。
             </para>
 
             <programlisting><![CDATA[<class name="Summary">
@@ -581,10 +582,10 @@
 </class>]]></programlisting>
 
             <para>
-                �e�[�u�������̃G���e�B�e�B�Ɠ�������悤�ɒ�`���Ă��������B
-                �I�[�g�t���b�V�����m���ɋN����悤�ɁA�܂����o�G���e�B�e�B�ɑ΂���N�G�����Â��f�[�^��
-                �Ԃ��Ȃ��悤�ɂ��邽�߂ł��B
-                <literal>&lt;subselect&gt;</literal> �͑����ƃl�X�g�����}�b�s���O�����̂ǂ���ł����p�ł��܂��B
+                テーブルをこのエンティティと同期するように定義してください。
+                オートフラッシュが確実に起こるように、また導出エンティティに対するクエリが古いデータを
+                返さないようにするためです。
+                <literal>&lt;subselect&gt;</literal> は属性とネストしたマッピング属性のどちらでも利用できます。
             </para>
 
         </sect2>
@@ -593,9 +594,9 @@
             <title>id</title>
 
             <para>
-                �}�b�v���ꂽ�N���X�̓f�[�^�x�[�X�e�[�u���̎�L�[�J�������` <emphasis>���Ȃ���΂Ȃ�܂���</emphasis> �B
-                �قƂ�ǂ̃N���X�ɂ̓C���X�^���X�̃��j�[�N�Ȏ��ʎq��ێ�����JavaBeans�X�^�C���̃v���p�e�B������܂��B
-                <literal>&lt;id&gt;</literal> �v�f�́A���̃v���p�e�B�����L�[�J�����ւ̃}�b�s���O���`���܂��B
+                マップされたクラスはデータベーステーブルの主キーカラムを定義 <emphasis>しなければなりません</emphasis> 。
+                ほとんどのクラスにはインスタンスのユニークな識別子を保持するJavaBeansスタイルのプロパティもあります。
+                <literal>&lt;id&gt;</literal> 要素は、そのプロパティから主キーカラムへのマッピングを定義します。
             </para>
             
             <programlistingco>
@@ -619,60 +620,60 @@
                 <calloutlist>
                     <callout arearefs="id1">
                         <para>
-                            <literal>name</literal>�i�I�v�V�����j�F���ʎq�v���p�e�B�̖��O�B
+                            <literal>name</literal>（オプション）：識別子プロパティの名前。
                         </para>
                     </callout>
                     <callout arearefs="id2">
                         <para>
-                            <literal>type</literal>�i�I�v�V�����j�FHibernate�̌^���������O�B
+                            <literal>type</literal>（オプション）：Hibernateの型を示す名前。
                         </para>
                     </callout>
                     <callout arearefs="id3">
                         <para>
-                             <literal>column</literal>�i�I�v�V���� - �f�t�H���g�̓v���p�e�B���j�F
-                            ��L�[�J�����̖��O�B
+                             <literal>column</literal>（オプション - デフォルトはプロパティ名）：
+                            主キーカラムの名前。
                         </para>
                     </callout>
                     <callout arearefs="id4">
                         <para>
-                            <literal>unsaved-value</literal>�i�I�v�V���� - �f�t�H���g�̒l��sensible�j�F
-                            �C���X�^���X���V�����C���X�^���X�����ꂽ
-                            �i�Z�[�u����Ă��Ȃ��j���Ƃ������A���ʎq�v���p�e�B�̒l�B
-                            �ȑO��Session�ŃZ�[�u�܂��̓��[�h���ꂽ�ꎞ�I�C���X�^���X�Ƌ�ʂ��邽�߂�
-                            �g���܂��B
+                            <literal>unsaved-value</literal>（オプション - デフォルトの値はsensible）：
+                            インスタンスが新しくインスタンス化された
+                            （セーブされていない）ことを示す、識別子プロパティの値。
+                            以前のSessionでセーブまたはロードされた一時的インスタンスと区別するために
+                            使います。
                         </para>
                     </callout>            
                    <callout arearefs="id5">
                         <para>
-                            <literal>access</literal>�i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�փA�N�Z�X���邽�߂�Hibernate���g���헪�ł��B
+                            <literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へアクセスするためにHibernateが使う戦略です。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
-                 <literal>name</literal> �������Ȃ���΁A�N���X�ɂ͎��ʎq�v���p�e�B���Ȃ����̂Ƃ݂Ȃ���܂��B
+                 <literal>name</literal> 属性がなければ、クラスには識別子プロパティがないものとみなされます。
             </para>
             
             <para>
-                <literal>unsaved-value</literal> ������Hibernate3�ł͂قƂ�ǂ̏ꍇ�A�K�v�ł͂���܂���B
+                <literal>unsaved-value</literal> 属性はHibernate3ではほとんどの場合、必要ではありません。
             </para>
 
              <para>
-                �����L�[�������K�V�[�f�[�^�ɃA�N�Z�X�ł���悤�ɁA
-                <literal>&lt;composite-id&gt;</literal> �Ƃ�����ւ̃}�b�s���O��`������܂��B
-                ���������̗p�r�ւ̎g�p�͑S���������߂ł��܂���B
+                複合キーを持つレガシーデータにアクセスできるように、
+                <literal>&lt;composite-id&gt;</literal> という代替のマッピング定義があります。
+                しかし他の用途への使用は全くおすすめできません。
             </para>
             
             <sect3 id="mapping-declaration-id-generator" revision="2">
-                <title>�W�F�l���[�^</title>
+                <title>ジェネレータ</title>
 
                 <para>
-                    �I�v�V������ <literal>&lt;generator&gt;</literal> �q�v�f�́A
-                    �i���N���X�̃C���X�^���X�̃��j�[�N�Ȏ��ʎq�𐶐����邽�߂Ɏg���AJava�N���X���w�肵�܂��B
-                    �W�F�l���[�^�C���X�^���X�̐ݒ�A�������͏������Ƀp�����[�^���K�v�ł���΁A<literal>&lt;param&gt;</literal> 
-                    �v�f���g���ēn�����Ƃ��ł��܂��B
+                    オプションの <literal>&lt;generator&gt;</literal> 子要素は、
+                    永続クラスのインスタンスのユニークな識別子を生成するために使う、Javaクラスを指定します。
+                    ジェネレータインスタンスの設定、もしくは初期化にパラメータが必要であれば、<literal>&lt;param&gt;</literal> 
+                    要素を使って渡すことができます。
                 </para>
 
                 <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
@@ -683,11 +684,11 @@
 </id>]]></programlisting>
 
                 <para>
-                    ���ׂẴW�F�l���[�^�́A�C���^�[�t�F�C�X 
-                    <literal>org.hibernate.id.IdentifierGenerator</literal> ���������܂��B
-                    ����͂ƂĂ��P���ȃC���^�[�t�F�C�X�Ȃ̂ŁA���ʂȎ�����Ǝ��ɗp�ӂ���A�v���P�[�V���������邩������܂���B
-                    ������Hibernate�͑g�ݍ��݂̎������������p�ӂ��Ă��܂��B
-                    �g�ݍ��݂̃W�F�l���[�^�ɂ͈ȉ��̃V���[�g�J�b�g��������܂��F
+                    すべてのジェネレータは、インターフェイス 
+                    <literal>org.hibernate.id.IdentifierGenerator</literal> を実装します。
+                    これはとても単純なインターフェイスなので、特別な実装を独自に用意するアプリケーションもあるかもしれません。
+                    しかしHibernateは組み込みの実装をいくつも用意しています。
+                    組み込みのジェネレータには以下のショートカット名があります：
 
                     <variablelist>
                         <varlistentry>
@@ -695,9 +696,9 @@
                         <listitem>
                             <para>
                                 <literal>long</literal> , <literal>short</literal> , 
-                                <literal>int</literal> �^�̎��ʎq�𐶐����܂��B
-                                �����͑��̃v���Z�X�������e�[�u���Ƀf�[�^��}�����Ȃ��Ƃ��������j�[�N�ł��B
-                                <emphasis>�N���X�^���ł͎g��Ȃ��ł�������</emphasis> �B
+                                <literal>int</literal> 型の識別子を生成します。
+                                これらは他のプロセスが同じテーブルにデータを挿入しないときだけユニークです。
+                                <emphasis>クラスタ内では使わないでください</emphasis> 。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -705,10 +706,10 @@
                         <term><literal>identity</literal></term>
                         <listitem>
                             <para>
-                                DB2, MySQL, MS SQL Server, Sybase, HypersonicSQL�̎��ʎq�J������
-                                �T�|�[�g���܂��B
-                                �Ԃ���鎯�ʎq�̌^�� <literal>long</literal> , <literal>short</literal> , 
-                                <literal>int</literal> �̂����ꂩ�ł��B
+                                DB2, MySQL, MS SQL Server, Sybase, HypersonicSQLの識別子カラムを
+                                サポートします。
+                                返される識別子の型は <literal>long</literal> , <literal>short</literal> , 
+                                <literal>int</literal> のいずれかです。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -716,9 +717,9 @@
                         <term><literal>sequence</literal></term>
                         <listitem>
                             <para>
-                                  DB2, PostgreSQL, Oracle, SAP DB, McKoi�̃V�[�P���X��AInterbase�̃W�F�l���[�^���g�p���܂��B
-                                  �Ԃ���鎯�ʎq�̌^�� <literal>long</literal> , <literal>short</literal> , 
-                                <literal>int</literal> �̂����ꂩ�ł��B
+                                  DB2, PostgreSQL, Oracle, SAP DB, McKoiのシーケンスや、Interbaseのジェネレータを使用します。
+                                  返される識別子の型は <literal>long</literal> , <literal>short</literal> , 
+                                <literal>int</literal> のいずれかです。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -727,11 +728,11 @@
                         <listitem>
                             <para id="mapping-declaration-id-hilodescription" revision="1">
                                  <literal>long</literal> , <literal>short</literal> , 
-                                <literal>int</literal> �^�̎��ʎq�������I�ɐ�������hi/lo�A���S���Y�����g���܂��B
-                                hi�l�̃\�[�X�Ƃ��āA�e�[�u���ƃJ������^���܂�(�f�t�H���g�ł͂��ꂼ�� <literal>hibernate_unique_key</literal> �� 
-                                <literal>next_hi</literal> )�B
+                                <literal>int</literal> 型の識別子を効率的に生成するhi/loアルゴリズムを使います。
+                                hi値のソースとして、テーブルとカラムを与えます(デフォルトではそれぞれ <literal>hibernate_unique_key</literal> と 
+                                <literal>next_hi</literal> )。
                                
-                                hi/lo�A���S���Y���͓���̃f�[�^�x�[�X�ɑ΂��Ă̂݃��j�[�N�Ȏ��ʎq�𐶐����܂��B
+                                hi/loアルゴリズムは特定のデータベースに対してのみユニークな識別子を生成します。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -740,8 +741,8 @@
                         <listitem>
                             <para>
                                 <literal>long</literal> , <literal>short</literal> , 
-                                <literal>int</literal> �^�̎��ʎq�������I�ɐ�������hi/lo�A���S���Y�����g���܂��B
-                                �w�肳�ꂽ�f�[�^�x�[�X�V�[�P���X��^���܂��B
+                                <literal>int</literal> 型の識別子を効率的に生成するhi/loアルゴリズムを使います。
+                                指定されたデータベースシーケンスを与えます。
                                 
                             </para>
                         </listitem>
@@ -750,8 +751,8 @@
                         <term><literal>uuid</literal></term>
                         <listitem>
                             <para>
-                                (IP�A�h���X���g�p�����)�l�b�g���[�N���Ń��j�[�N�ȕ�����^�̎��ʎq�𐶐����邽�߂ɁA
-                                128�r�b�g��UUID�A���S���Y�����g�p���܂��BUUID�͒���32��16�i�����̕�����Ƃ��ăG���R�[�h����܂��B
+                                (IPアドレスが使用される)ネットワーク内でユニークな文字列型の識別子を生成するために、
+                                128ビットのUUIDアルゴリズムを使用します。UUIDは長さ32の16進数字の文字列としてエンコードされます。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -759,7 +760,7 @@
                         <term><literal>guid</literal></term>
                         <listitem>
                             <para>
-                                MS SQL�T�[�o��MySQL�Ńf�[�^�x�[�X����������GUID��������g�p���܂��B
+                                MS SQLサーバとMySQLでデータベースが生成するGUID文字列を使用します。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -767,8 +768,8 @@
                         <term><literal>native</literal></term>
                         <listitem>
                             <para>
-                                �g�p����f�[�^�x�[�X�̐��\�ɂ�� <literal>identity</literal> , <literal>sequence</literal> , 
-                                <literal>hilo</literal> �̂����ꂩ���I�΂�܂��B
+                                使用するデータベースの性能により <literal>identity</literal> , <literal>sequence</literal> , 
+                                <literal>hilo</literal> のいずれかが選ばれます。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -776,9 +777,9 @@
                         <term><literal>assigned</literal></term>
                         <listitem>
                             <para>
-                                <literal>save()</literal> ���Ă΂��O�ɁA
-                                �A�v���P�[�V�������I�u�W�F�N�g�Ɏ��ʎq�����ł���悤�ɂ��܂��B
-                                <literal>&lt;generator&gt;</literal> ���w�肳��Ă��Ȃ���΁A���ꂪ�f�t�H���g�̐헪�ɂȂ�܂��B
+                                <literal>save()</literal> が呼ばれる前に、
+                                アプリケーションがオブジェクトに識別子を代入できるようにします。
+                                <literal>&lt;generator&gt;</literal> が指定されていなければ、これがデフォルトの戦略になります。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -786,8 +787,8 @@
                         <term><literal>select</literal></term>
                         <listitem>
                             <para>
-                                ���郆�j�[�N�L�[�ɂ��s�̑I���Ǝ�L�[�̒l�̕����ɂ��A
-                                �f�[�^�x�[�X�g���K�����蓖�Ă���L�[���擾���܂��B
+                                あるユニークキーによる行の選択と主キーの値の復元により、
+                                データベーストリガが割り当てた主キーを取得します。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -795,8 +796,8 @@
                         <term><literal>foreign</literal></term>
                         <listitem>
                             <para>
-                                ���̊֘A�I�u�W�F�N�g�̎��ʎq���g���܂��B
-                                ���ʂ́A<literal>&lt;one-to-one&gt;</literal> ��L�[�֘A�Ƒg�ݍ��킹�Ďg���܂��B
+                                他の関連オブジェクトの識別子を使います。
+                                普通は、<literal>&lt;one-to-one&gt;</literal> 主キー関連と組み合わせて使います。
                             </para>
                         </listitem>
                         </varlistentry>
@@ -806,14 +807,14 @@
             </sect3>
             
             <sect3 id="mapping-declaration-id-hilo" revision="1">
-                <title>Hi/lo �A���S���Y��</title>
+                <title>Hi/lo アルゴリズム</title>
                 <para>
-                    <literal>hilo</literal> �� <literal>seqhilo</literal> �W�F�l���[�^�́A
-                    ���ʎq�����̑�\�I�ȃA�v���[�`�ł���hi/lo�A���S���Y����2�̑�֎�����񋟂��܂��B
+                    <literal>hilo</literal> と <literal>seqhilo</literal> ジェネレータは、
+                    識別子生成の代表的なアプローチであるhi/loアルゴリズムの2つの代替実装を提供します。
                     
-                    1�Ԗڂ̎����́A����ɗ��p�����"hi"�l��ێ�����u���ʂȁv�f�[�^�x�[�X�e�[�u����
-                    �K�v�Ƃ��܂��B
-                    2�Ԗڂ̎����́AOracle�X�^�C���̃V�[�P���X���g���܂��i�T�|�[�g����Ă���ꍇ�j�B
+                    1番目の実装は、次回に利用される"hi"値を保持する「特別な」データベーステーブルを
+                    必要とします。
+                    2番目の実装は、Oracleスタイルのシーケンスを使います（サポートされている場合）。
                 </para>
 
                 <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
@@ -832,31 +833,31 @@
 </id>]]></programlisting>
 
                 <para>
-                    �c�O�Ȃ���Hibernate�ւ̓Ǝ��� <literal>Connection</literal> ��񋟂���Ƃ��ɂ́A<literal>hilo</literal> ���g���܂���B
-                    Hibernate��JTA�Ń��X�g����Ă���ڑ����擾���邽�߂ɃA�v���P�[�V�����T�[�o�[�̃f�[�^�\�[�X���g�p���Ă���Ƃ��ɂ́A
-                    <literal>hibernate.transaction.manager_lookup_class</literal> ��K�؂ɐݒ肵�Ȃ���΂Ȃ�܂���B
+                    残念ながらHibernateへの独自の <literal>Connection</literal> を提供するときには、<literal>hilo</literal> を使えません。
+                    HibernateがJTAでリストされている接続を取得するためにアプリケーションサーバーのデータソースを使用しているときには、
+                    <literal>hibernate.transaction.manager_lookup_class</literal> を適切に設定しなければなりません。
                 </para>
             </sect3>
             
             <sect3 id="mapping-declaration-id-uuid">
-                <title>UUID �A���S���Y��</title>
+                <title>UUID アルゴリズム</title>
                 <para>
-                    UUID�ɂ͈ȉ��̂��̂��܂܂�܂��F
-                    IP�A�h���X�AJVM�̃X�^�[�g�A�b�v�^�C���i4����1�b�̐��m���j�A
-                    �V�X�e�����ԁA�iJVM�ɑ΂��ă��j�[�N�ȁj�J�E���^�l�B
-                    Java�R�[�h����MAC�A�h���X�⃁�����A�h���X���擾���邱�Ƃ͂ł��Ȃ��̂ŁA
-                    JNI���g���Ȃ��Ƃ��̍ŗǂ̕��@�ł��B
+                    UUIDには以下のものが含まれます：
+                    IPアドレス、JVMのスタートアップタイム（4分の1秒の正確さ）、
+                    システム時間、（JVMに対してユニークな）カウンタ値。
+                    JavaコードからMACアドレスやメモリアドレスを取得することはできないので、
+                    JNIが使えないときの最良の方法です。
                 </para>
             </sect3>
 
             <sect3 id="mapping-declaration-id-sequences">
-            <title>���ʎq�J�����ƃV�[�P���X</title>
+            <title>識別子カラムとシーケンス</title>
                 <para>
-                    ���ʎq�J�������T�|�[�g���Ă���f�[�^�x�[�X�iDB2, MySQL, Sybase, MS SQL�j�ł́A
-                    <literal>identity</literal> �L�[�������g���܂��B
-                    �V�[�P���X���T�|�[�g����f�[�^�x�[�X�iDB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB�j�ł́A
-                    <literal>sequence</literal> �X�^�C���̃L�[�������g���܂��B
-                    �ǂ���̐헪���A�V�����I�u�W�F�N�g��}�����邽�߂ɁASQL�N�G����2�K�v�Ƃ��܂��B
+                    識別子カラムをサポートしているデータベース（DB2, MySQL, Sybase, MS SQL）では、
+                    <literal>identity</literal> キー生成を使えます。
+                    シーケンスをサポートするデータベース（DB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB）では、
+                    <literal>sequence</literal> スタイルのキー生成を使えます。
+                    どちらの戦略も、新しいオブジェクトを挿入するために、SQLクエリを2つ必要とします。
                 </para>
 
                 <programlisting><![CDATA[<id name="id" type="long" column="person_id">
@@ -870,36 +871,36 @@
 </id>]]></programlisting>
             
                 <para>
-                    �N���X�v���b�g�t�H�[���̊J���ł́A<literal>native</literal> �헪�� 
+                    クロスプラットフォームの開発では、<literal>native</literal> 戦略は 
                     <literal>identity</literal> , <literal>sequence</literal> , 
-                    <literal>hilo</literal> �헪�̒�����1��I�����܂����A
-                    ����͎g�p���Ă���f�[�^�x�[�X�̔\�͂Ɉˑ����܂��B
+                    <literal>hilo</literal> 戦略の中から1つを選択しますが、
+                    これは使用しているデータベースの能力に依存します。
                 </para>
             </sect3>
             
             <sect3 id="mapping-declaration-id-assigned">
-                <title>���ʎq�̊��蓖��</title>
+                <title>識別子の割り当て</title>
                 <para>
-                   �A�v���P�[�V�����Ɏ��ʎq�����蓖�Ă��������̂ł����(Hibernate������������̂ł͂Ȃ��j�A
-                    <literal>assigned</literal> �W�F�l���[�^���g�����Ƃ��ł��܂��B
-                    ���̓��ʂȃW�F�l���[�^�́A���łɃI�u�W�F�N�g�̎��ʎq�v���p�e�B�ɑ�����ꂽ�l��
-                    ���ʎq�Ɏg���܂��B���̃W�F�l���[�^�͎�L�[���㗝�L�[�̑���Ɏ��R�L�[�ł���ꍇ�Ɏg�p���܂��B
-                    <literal>&lt;generator&gt;</literal> �v�f���w�肵�Ȃ��ꍇ�̃f�t�H���g�̓���ɂȂ�܂��B
+                   アプリケーションに識別子を割り当てさせたいのであれば(Hibernateが生成するものではなく）、
+                    <literal>assigned</literal> ジェネレータを使うことができます。
+                    この特別なジェネレータは、すでにオブジェクトの識別子プロパティに代入された値を
+                    識別子に使います。このジェネレータは主キーが代理キーの代わりに自然キーである場合に使用します。
+                    <literal>&lt;generator&gt;</literal> 要素を指定しない場合のデフォルトの動作になります。
                 </para>
                 
                 <para>
-                    <literal>assigned</literal> �W�F�l���[�^��I������ƁA
-                    Hibernate�� <literal>unsaved-value="undefined"</literal> ���g�p���܂��B
-                    �����āA�o�[�W������^�C���X�^���v�̃v���p�e�B���Ȃ��ꍇ�� <literal>Interceptor.isUnsaved()</literal> 
-                    ���`���Ȃ������ꍇ�ɂ́A�C���X�^���X���ꎞ�I(transient)�Ȃ��̂ł���̂��A
-                    �܂��̓Z�b�V�������番��(detached)�������̂��ǂ��������߂邽�߂ɁA�f�[�^�x�[�X�𒲂ׂ܂��B
+                    <literal>assigned</literal> ジェネレータを選択すると、
+                    Hibernateは <literal>unsaved-value="undefined"</literal> を使用します。
+                    そして、バージョンやタイムスタンプのプロパティがない場合や <literal>Interceptor.isUnsaved()</literal> 
+                    を定義しなかった場合には、インスタンスが一時的(transient)なものであるのか、
+                    またはセッションから分離(detached)したものかどうかを決めるために、データベースを調べます。
                 </para>
             </sect3>
 
             <sect3 id="mapping-declaration-id-select">
-                <title>�g���K�ɂ�芄�蓖�Ă�ꂽ��L�[</title>
+                <title>トリガにより割り当てられた主キー</title>
                 <para>
-                    ���K�V�[�X�L�[�}�̂��߂ɂ̂ݎw�肵�܂�(Hibernate�̓g���K���g����DDL�𐶐����܂���)�B
+                    レガシースキーマのためにのみ指定します(Hibernateはトリガを使ってDDLを生成しません)。
                 </para>
 
                 <programlisting><![CDATA[<id name="id" type="long" column="person_id">
@@ -909,9 +910,9 @@
 </id>]]></programlisting>
 
                 <para>
-                    ��̗�̒��ŁA�N���X�Ŏ��R�L�[�Ƃ��Ē�`���ꂽ
-                    <literal>socialSecurityNumber</literal> �Ƃ������O�̃��j�[�N�Ȓl�̃v���p�e�B�ƁA
-                    �l���g���K�ɂ�萶������� <literal>person_id</literal> �Ƃ������O�̑㗝�L�[������܂��B
+                    上の例の中で、クラスで自然キーとして定義された
+                    <literal>socialSecurityNumber</literal> という名前のユニークな値のプロパティと、
+                    値がトリガにより生成される <literal>person_id</literal> という名前の代理キーがあります。
                 </para>
                 
             </sect3>
@@ -934,11 +935,11 @@
 </composite-id>]]></programlisting>
 
             <para>
-                �����L�[�̂���e�[�u���ɑ΂��A
-                ���ʎq�v���p�e�B�Ƃ��ăN���X�̕����̃v���p�e�B���}�b�s���O���邱�Ƃ��ł��܂��B
-                <literal>&lt;composite-id&gt;</literal> �v�f�́A�q�v�f�Ƃ��� 
-                <literal>&lt;key-property&gt;</literal> �v���p�e�B�}�b�s���O�� 
-                <literal>&lt;key-many-to-one&gt;</literal> �}�b�s���O���󂯓���܂��B
+                複合キーのあるテーブルに対し、
+                識別子プロパティとしてクラスの複数のプロパティをマッピングすることができます。
+                <literal>&lt;composite-id&gt;</literal> 要素は、子要素として 
+                <literal>&lt;key-property&gt;</literal> プロパティマッピングと 
+                <literal>&lt;key-many-to-one&gt;</literal> マッピングを受け入れます。
             </para>
             
             <programlisting><![CDATA[<composite-id>
@@ -947,27 +948,27 @@
 </composite-id>]]></programlisting>
 
             <para>
-                 �������ʎq�̓��������������邽�߂ɂ́A�i���N���X�� <literal>equals()</literal> �� 
-                <literal>hashCode()</literal> ���I�[�o�[���C�h <emphasis>���Ȃ���΂Ȃ�܂���</emphasis> �B
-                �܂� <literal>Serializable</literal> ���������Ȃ���΂����܂���B
+                 複合識別子の等価性を実装するためには、永続クラスが <literal>equals()</literal> と 
+                <literal>hashCode()</literal> をオーバーライド <emphasis>しなければなりません</emphasis> 。
+                また <literal>Serializable</literal> も実装しなければいけません。
             </para>
 
             <para>
-                �c�O�Ȃ��畡�����ʎq�̂��߂̂��̕��@�́A
-                �i���I�u�W�F�N�g�����g�̎��ʎq�ł��邱�Ƃ��Ӗ����Ă��܂��B
-                �I�u�W�F�N�g���g�����ʎq�Ƃ���ȏ�֗̕��ȁu�������v�͂���܂���B
-                �����L�[�Ɋ֘A�����i����Ԃ� <literal>load()</literal> �o����悤�ɂȂ�O�ɁA
-                �i���N���X���g���C���X�^���X�����A���ʎq�v���p�e�B��ݒ肵�Ȃ���΂Ȃ�܂���B
-                <emphasis> �g�ݍ��݂�</emphasis> �������ʎq�ƌĂ΂�邱�̃A�v���[�`�́A
-                �{�i�I�ȃA�v���P�[�V�����ɂ͌����Ă��܂���B
+                残念ながら複合識別子のためのこの方法は、
+                永続オブジェクトが自身の識別子であることを意味しています。
+                オブジェクト自身を識別子とする以上の便利な「扱い方」はありません。
+                複合キーに関連した永続状態を <literal>load()</literal> 出来るようになる前に、
+                永続クラス自身をインスタンス化し、識別子プロパティを設定しなければなりません。
+                <emphasis> 組み込みの</emphasis> 複合識別子と呼ばれるこのアプローチは、
+                本格的なアプリケーションには向いていません。
                 
                 
             </para>
             
             <para>
-                2�ڂ̕��@�� <emphasis> �}�b�v���ꂽ</emphasis> �������ʎq�ƌĂ΂����̂ŁA
-                <literal>&lt;composite-id&gt;</literal>�G�������g���Ŏw�肵�����ʃv���p�e�B��
-                �i���N���X�ƕ����������ʎq�N���X�̗����ɏd�����đ��݂��܂��B
+                2つ目の方法は <emphasis> マップされた</emphasis> 複合識別子と呼ばれるもので、
+                <literal>&lt;composite-id&gt;</literal>エレメント内で指定した識別プロパティが
+                永続クラスと分離した識別子クラスの両方に重複して存在します。
             </para>
                 
             <programlisting><![CDATA[<composite-id class="MedicareId" mapped="true">
@@ -976,65 +977,65 @@
 </composite-id>]]></programlisting>
 
             <para>
-                ���̗�ł́A�������ʎq�N���X�i <literal>MedicareId</literal> �j�ƃG���e�B�e�B�N���X���g�̗������A
-                <literal>medicareNumber</literal> �� <literal>dependent</literal> �Ƃ������O�̃v���p�e�B�������܂��B
-                ���ʎq�N���X�́A<literal>equals()</literal> �� <literal>hashCode()</literal> ���I�[�o���C�h���A
-                <literal>Serializable</literal> ���������Ȃ��Ă͂Ȃ�܂���B
-                ���̕��@�ɂ́A���炩�ɃR�[�h���d������Ƃ����s�s��������܂��B
+                この例では、複合識別子クラス（ <literal>MedicareId</literal> ）とエンティティクラス自身の両方が、
+                <literal>medicareNumber</literal> と <literal>dependent</literal> という名前のプロパティを持ちます。
+                識別子クラスは、<literal>equals()</literal> と <literal>hashCode()</literal> をオーバライドし、
+                <literal>Serializable</literal> を実装しなくてはなりません。
+                この方法には、明らかにコードが重複するという不都合があります。
             </para>
             
             <para>
-                ���̑����̓}�b�s���O�����������ʎq���w�肷�邽�߂Ɏg�p���܂��B
+                次の属性はマッピングした複合識別子を指定するために使用します。
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>mapped</literal> (�I�v�V�����A�f�t�H���g�� <literal>false</literal> ):
-                        �}�b�s���O�����������ʎq���g�p����邱�ƂƁA��܂��ꂽ�v���p�e�B�̃}�b�s���O���A
-                        �G���e�B�e�B�N���X�ƕ������ʎq�N���X�̗������Q�Ƃ��邱�Ƃ������܂��B
+                        <literal>mapped</literal> (オプション、デフォルトは <literal>false</literal> ):
+                        マッピングした複合識別子が使用されることと、包含されたプロパティのマッピングが、
+                        エンティティクラスと複合識別子クラスの両方を参照することを示します。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>class</literal> (�I�v�V����,�������}�b�s���O�����������ʎq�ɂ͕K�{): 
-                        �������ʎq�Ƃ��Ďg�p����N���X�B
+                        <literal>class</literal> (オプション,ただしマッピングした複合識別子には必須): 
+                        複合識別子として使用するクラス。
                         
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                3�ڂ̂���ɕ֗��ȕ��@�́A�������ʎq��<xref linkend="components-compositeid"/>����
-                �R���|�[�l���g�N���X�Ƃ��Ď������邱�Ƃł��B
-                ���ŋL�q���Ă��鑮���́A���̑�֕��@�ɂ̂ݓK�p����܂��B
+                3つ目のさらに便利な方法は、複合識別子を<xref linkend="components-compositeid"/>内の
+                コンポーネントクラスとして実装することです。
+                下で記述している属性は、この代替方法にのみ適用されます。
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>name</literal> (�I�v�V����, ���̃A�v���[�`�ł͕K�{): 
-                        �������ʎq��ێ�����R���|�[�l���g�^�C�v�̃v���p�e�B(9�͂��Q�Ƃ��Ă�������).
+                        <literal>name</literal> (オプション, このアプローチでは必須): 
+                        複合識別子を保持するコンポーネントタイプのプロパティ(9章を参照してください).
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>access</literal> (�I�v�V���� - �f�t�H���g�� <literal>property</literal> ): 
-                        Hibernate���v���p�e�B�̒l�ɃA�N�Z�X���邽�߂Ɏg�p���ׂ��헪�B
+                        <literal>access</literal> (オプション - デフォルトは <literal>property</literal> ): 
+                        Hibernateがプロパティの値にアクセスするために使用すべき戦略。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <literal>class</literal> 
-                        �i�I�v�V���� - �f�t�H���g�̓��t���N�V�����ɂ�茈�肳���v���p�e�B�̌^�j�F
-                        �������ʎq�Ƃ��Ďg����R���|�[�l���g�̃N���X�i���̐߂����Ă��������j�B
+                        （オプション - デフォルトはリフレクションにより決定されるプロパティの型）：
+                        複合識別子として使われるコンポーネントのクラス（次の節を見てください）。
                     </para>
                 </listitem>
             </itemizedlist>
             
             <para>
-                ����3�ڂ̕��@�� <emphasis> ���ʎq�R���|�[�l���g</emphasis> �ƌĂсA
-                �قƂ�ǂ��ׂẴA�v���P�[�V�����ɑ΂��Đ���������@�ł��B
+                この3つ目の方法は <emphasis> 識別子コンポーネント</emphasis> と呼び、
+                ほとんどすべてのアプリケーションに対して推奨する方法です。
             </para>
             
         </sect2>        
@@ -1043,12 +1044,12 @@
             <title>discriminator</title>
 
             <para>
-                <literal>&lt;discriminator&gt;</literal> �v�f�́A
-                table-per-class-hierarchy�}�b�s���O�헪���g���|�����[�t�B�b�N�ȉi�����ɕK�v�ł���A
-                �e�[�u���̎��ʃJ�������`���܂��B
-                ���ʃJ�����́A����s�ɑ΂��ĉi���w���ǂ̃T�u�N���X���C���X�^���X�����邩��
-                �`����}�[�J�[�l���܂�ł��܂��B
-                �ȉ��̂悤�Ȍ^�ɐ�������܂��F <literal>string</literal> , <literal>character</literal> , 
+                <literal>&lt;discriminator&gt;</literal> 要素は、
+                table-per-class-hierarchyマッピング戦略を使うポリモーフィックな永続化に必要であり、
+                テーブルの識別カラムを定義します。
+                識別カラムは、ある行に対して永続層がどのサブクラスをインスタンス化するかを
+                伝えるマーカー値を含んでいます。
+                以下のような型に制限されます： <literal>string</literal> , <literal>character</literal> , 
                 <literal>integer</literal>, 
                 <literal>byte</literal> , <literal>short</literal> , <literal>boolean</literal> , 
                 <literal>yes_no</literal> , <literal>true_false</literal>. 
@@ -1072,56 +1073,56 @@
                 <calloutlist>
                     <callout arearefs="discriminator1">
                         <para>
-                            <literal>column</literal>�i�I�v�V���� - �f�t�H���g�� <literal>class</literal> �j�F
-                            ���ʃJ�����̖��O�B
+                            <literal>column</literal>（オプション - デフォルトは <literal>class</literal> ）：
+                            識別カラムの名前。
                         </para>
                     </callout>
                     <callout arearefs="discriminator2">
                         <para>
                             <literal>type</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>string</literal> �j�FHibernate�̌^���������O�B
+                            （オプション - デフォルトは <literal>string</literal> ）：Hibernateの型を示す名前。
                         </para>
                     </callout>          
                     <callout arearefs="discriminator3">
                         <para>
                             <literal>force</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>false</literal> �j�F
-                            ���[�g�N���X�̂��ׂẴC���X�^���X����������ꍇ�ł����Ă��A
-                            Hibernate���g�p�ł��鎯�ʃJ�����̎w����u�����v���܂��B
+                            （オプション - デフォルトは <literal>false</literal> ）：
+                            ルートクラスのすべてのインスタンスを検索する場合であっても、
+                            Hibernateが使用できる識別カラムの指定を「強制」します。
                         </para>
                     </callout>          
                     <callout arearefs="discriminator4">
                         <para>
                             <literal>insert</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>true</literal> �j�F
-                            �������ʃJ�������}�b�s���O���镡�����ʎq�̈ꕔ�Ȃ�΁A<literal>false</literal> �Ɛݒ肵�Ă��������B
-                            (Hibernate��SQL�� <literal>INSERT</literal> �ɂ͊܂܂�Ȃ����Ƃ�m�点��)
+                            （オプション - デフォルトは <literal>true</literal> ）：
+                            もし識別カラムがマッピングする複合識別子の一部ならば、<literal>false</literal> と設定してください。
+                            (HibernateにSQLの <literal>INSERT</literal> には含まれないことを知らせる)
                             
                         </para>
                     </callout>
                     <callout arearefs="discriminator5">
                         <para>
-                            <literal>formula</literal> (�I�v�V����)�^���]�������Ƃ��Ɏ��s�����C�ӂ�SQL���B
-                            �R���e���c�x�[�X�̎��ʂ��\�ɂ��܂��B
+                            <literal>formula</literal> (オプション)型が評価されるときに実行される任意のSQL式。
+                            コンテンツベースの識別を可能にします。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                ���ʃJ�����̎��ۂ̒l�́A <literal>&lt;class&gt;</literal> �� 
-                <literal>&lt;subclass&gt;</literal> �v�f�� 
-                <literal>discriminator-value</literal> �����Ŏw�肳��܂��B
+                識別カラムの実際の値は、 <literal>&lt;class&gt;</literal> と 
+                <literal>&lt;subclass&gt;</literal> 要素の 
+                <literal>discriminator-value</literal> 属性で指定されます。
             </para>
             
             <para>
-                �i���N���X�փ}�b�s���O����Ȃ���]���ȁv���ʒl�����s��
-                �e�[�u���ɂ���΁A�i���̂Ƃ��Ɍ���j<literal>force</literal> �����͗L���ł��B
-                �������A���ʂ͂����������Ƃ͂���܂���B
+                永続クラスへマッピングされない｢余分な」識別値を持つ行が
+                テーブルにあれば、（そのときに限り）<literal>force</literal> 属性は有効です。
+                ただし、普通はそういうことはありません。
             </para>
 
             <para>
-                <literal>formula</literal> �������g���ƁA�s�̌^��]�����邽�߂ɔC�ӂ�SQL����錾�ł��܂��B
+                <literal>formula</literal> 属性を使うと、行の型を評価するために任意のSQL式を宣言できます。
             </para>
 
             <programlisting><![CDATA[<discriminator
@@ -1131,13 +1132,13 @@
         </sect2>
 
         <sect2 id="mapping-declaration-version" revision="4">
-            <title>version�i�I�v�V�����j</title>
+            <title>version（オプション）</title>
             
             <para>
-                <literal>&lt;version&gt;</literal> �v�f�̓I�v�V�����ł���A
-                �e�[�u�����o�[�W�����f�[�^���܂ނ��Ƃ������܂��B
-                ����� <emphasis>�����O�g�����U�N�V����</emphasis>  
-                ���g������Ȃ�A���ɖ𗧂��܂��i�ȉ������Ă��������j�B
+                <literal>&lt;version&gt;</literal> 要素はオプションであり、
+                テーブルがバージョンデータを含むことを示します。
+                これは <emphasis>ロングトランザクション</emphasis>  
+                を使うつもりなら、特に役立ちます（以下を見てください）。
             </para>
             
             <programlistingco>
@@ -1163,85 +1164,85 @@
                 <calloutlist>
                     <callout arearefs="version1">
                         <para>
-                            <literal>column</literal>�i�I�v�V���� - �f�t�H���g�̓v���p�e�B���j:
-                            �o�[�W�����ԍ���ێ�����J�����̖��O�B
+                            <literal>column</literal>（オプション - デフォルトはプロパティ名）:
+                            バージョン番号を保持するカラムの名前。
                         </para>
                     </callout>          
                     <callout arearefs="version2">
                         <para>
-                            <literal>name</literal> �F�i���N���X�̃v���p�e�B�̖��O�B
+                            <literal>name</literal> ：永続クラスのプロパティの名前。
                         </para>
                     </callout>
                     <callout arearefs="version3">
                         <para>
                             <literal>type</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>integer</literal> �j�F�o�[�W�����ԍ��̌^�B
+                            （オプション - デフォルトは <literal>integer</literal> ）：バージョン番号の型。
                         </para>
                     </callout>          
                    <callout arearefs="version4">
                         <para>
                             <literal>access</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            （オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                    <callout arearefs="version5">
                         <para>
                             <literal>unsaved-value</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>undefined</literal> �j�F
-                            �C���X�^���X���V�����C���X�^���X�����ꂽ���Ƃ�����
-                            �i�Z�[�u����Ă��Ȃ����Ƃ������j�o�[�W�����v���p�e�B�̒l�B
-                            �ȑO��Session�ŃZ�[�u�܂��̓��[�h���ꂽ�ꎞ�I�ȃC���X�^���X�Ƌ�ʂ��邽�߂�
-                            �g���܂��B
-                            �i <literal>undefined</literal> �͎��ʎq�v���p�e�B�̒l���g���邱�Ƃ��w�肵�܂��B�j
+                            （オプション - デフォルトは <literal>undefined</literal> ）：
+                            インスタンスが新しくインスタンス化されたことを示す
+                            （セーブされていないことを示す）バージョンプロパティの値。
+                            以前のSessionでセーブまたはロードされた一時的なインスタンスと区別するために
+                            使います。
+                            （ <literal>undefined</literal> は識別子プロパティの値が使われることを指定します。）
                         </para>
                     </callout>
                     
                     <callout arearefs="version6">
                         <para>
-                            <literal>generated</literal> (�I�v�V���� - �f�t�H���g�� <literal>never</literal> ):
-                            ���̃o�[�W�����̃v���p�e�B�̒l���A�f�[�^�x�[�X�ɂ���Đ������ꂽ���Ƃ��w�肵�܂��B
-                            <xref linkend="mapping-generated">�����v���p�e�B</xref> �̋c�_�����Ă��������B
+                            <literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ):
+                            このバージョンのプロパティの値が、データベースによって生成されたことを指定します。
+                            <xref linkend="mapping-generated">生成プロパティ</xref> の議論を見てください。
                         </para>
                     </callout>
                     <callout arearefs="version7">
                         <para>
-                            <literal>insert</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            SQL��insert���Ƀo�[�W�����E�J�������܂߂�ׂ����ǂ������w�肵�܂��B
-                            �����f�[�^�x�[�X�E�J�����̃f�t�H���g�l�� <literal>0</literal> �ƒ�`�����Ƃ��ɂ́A
-                            <literal>false</literal> �ɐݒ肷��Ɨǂ��ł��傤�B
+                            <literal>insert</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            SQLのinsert文にバージョン・カラムを含めるべきかどうかを指定します。
+                            もしデータベース・カラムのデフォルト値が <literal>0</literal> と定義されるときには、
+                            <literal>false</literal> に設定すると良いでしょう。
                         </para>
                     </callout>                    
                 </calloutlist>
             </programlistingco>
             
             <para>
-                �o�[�W�����ԍ��� Hibernate�� <literal>long</literal> , <literal>integer</literal> , 
+                バージョン番号は Hibernateの <literal>long</literal> , <literal>integer</literal> , 
                 <literal>short</literal> , <literal>timestamp</literal> , 
-                <literal>calendar</literal> �^�̂����ꂩ�ł��B
+                <literal>calendar</literal> 型のいずれかです。
             </para>
             
             <para>
-                �o�[�W������^�C���X�^���v�̃v���p�e�B�́A�������ꂽ�C���X�^���X�ɑ΂���null�ł����Ă͂Ȃ�܂���B
-                ���̂��߂ǂ̂悤�� <literal>unsaved-value</literal> �헪���w�肳��Ă��A
-                Hibernate��null�̃o�[�W������^�C���X�^���v�����������ׂẴC���X�^���X���A
-                �ꎞ�I�Ȃ��̂ł���Ɣ��f���܂��B
+                バージョンやタイムスタンプのプロパティは、分離されたインスタンスに対してnullであってはなりません。
+                そのためどのような <literal>unsaved-value</literal> 戦略が指定されても、
+                Hibernateはnullのバージョンやタイムスタンプを持ったすべてのインスタンスを、
+                一時的なものであると判断します。
                 
-                 <emphasis> null�����e����o�[�W������^�C���X�^���v�̃v���p�e�B���`���邱�Ƃ́A
-                �ߓn�I�Ɉꎞ�I�u�W�F�N�g�Ƃ��邱�Ƃ�h���ȒP�ȕ��@�ł��B
-                ���Ɏ��ʎq�̊��蓖�Ă╡���L�[���g�p���Ă���Ƃ��ɂ͓��ɗL�p�ł��B</emphasis> 
+                 <emphasis> nullを許容するバージョンやタイムスタンプのプロパティを定義することは、
+                過渡的に一時オブジェクトとすることを防ぐ簡単な方法です。
+                特に識別子の割り当てや複合キーを使用しているときには特に有用です。</emphasis> 
             </para>
         </sect2>
         
         <sect2 id="mapping-declaration-timestamp" revision="4">
-            <title>timestamp�i�I�v�V�����j</title>
+            <title>timestamp（オプション）</title>
 
             <para>
-                �I�v�V������ <literal>&lt;timestamp&gt;</literal> �v�f�́A
-                �e�[�u�����^�C���X�^���v�f�[�^���܂ނ��Ƃ������܂��B
-                ����̓o�[�W�����t���̑���̕��@�Ƃ��ėp�ӂ���Ă��܂��B
-                �^�C���X�^���v�͂��Ƃ��Ɗy�ϓI���b�N�ɂ�������S���̒Ⴂ�����ł��B
-                �������A�v���P�[�V�����͈قȂ�p�r�Ŏg�����Ƃ����邩������܂���B
+                オプションの <literal>&lt;timestamp&gt;</literal> 要素は、
+                テーブルがタイムスタンプデータを含むことを示します。
+                これはバージョン付けの代わりの方法として用意されています。
+                タイムスタンプはもともと楽観的ロックにおける安全性の低い実装です。
+                しかしアプリケーションは異なる用途で使うこともあるかもしれません。
             </para>
             
             <programlistingco>
@@ -1265,66 +1266,66 @@
                 <calloutlist>
                     <callout arearefs="timestamp1">
                         <para>
-                            <literal>column</literal>�i�I�v�V���� - �f�t�H���g�̓v���p�e�B���j�F
-                            �^�C���X�^���v��ێ�����J�����̖��O�B
+                            <literal>column</literal>（オプション - デフォルトはプロパティ名）：
+                            タイムスタンプを保持するカラムの名前。
                         </para>
                     </callout>                   
                     <callout arearefs="timestamp2">
                         <para>
-                            <literal>name</literal> �F
-                            �i���N���X�ł���Java �� <literal>Date</literal >�^ �܂��� 
-                            <literal>Timestamp</literal> �^ �́AJavaBeans�X�^�C���v���p�e�B�̖��O�B
+                            <literal>name</literal> ：
+                            永続クラスであるJava の <literal>Date</literal >型 または 
+                            <literal>Timestamp</literal> 型 の、JavaBeansスタイルプロパティの名前。
                         </para>
                     </callout>
                    <callout arearefs="timestamp3">
                         <para>
                             <literal>access</literal>
-                            �i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            （オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                    <callout arearefs="timestamp4">
                         <para>
                             <literal>unsaved-value</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>null</literal> �j�F
-                            �C���X�^���X���V�����C���X�^���X�����ꂽ
-                            �i�Z�[�u����Ă��Ȃ��j���Ƃ������o�[�W�����v���p�e�B�̒l�B
-                            �ȑO��Session�ŃZ�[�u�܂��̓��[�h���ꂽ�ꎞ�I�ȃC���X�^���X��
-                            ��ʂ��邽�߂Ɏg���܂��B
-                            �i <literal>undefined</literal> �Ǝw�肷��ƁA
-                            ���ʎq�v���p�e�B�̒l���g���܂��B�j
+                            （オプション - デフォルトは <literal>null</literal> ）：
+                            インスタンスが新しくインスタンス化された
+                            （セーブされていない）ことを示すバージョンプロパティの値。
+                            以前のSessionでセーブまたはロードされた一時的なインスタンスと
+                            区別するために使われます。
+                            （ <literal>undefined</literal> と指定すると、
+                            識別子プロパティの値が使われます。）
                         </para>
                     </callout>
                     
                     <callout arearefs="timestamp5">
                         <para>
-                            <literal>source</literal> (�I�v�V���� - �f�t�H���g�� <literal>vm</literal> ):
-                            Hibernate�͂ǂ�����^�C���X�^���v�̒l���擾����ׂ��ł��傤���H
-                            �f�[�^�x�[�X����ł��傤���A���݂�JVM����ł��傤���H
-                            �f�[�^�x�[�X�ɂ��^�C���X�^���v�́AHibernate��"���̒l"�����肷�邽�߂�
-                            �f�[�^�x�[�X���q�b�g���Ȃ���΂Ȃ�Ȃ����߁A�I�[�o�w�b�h�������܂��B
-                            �������N���X�^���ł�JVM����擾��������S�ł��B
-                            �f�[�^�x�[�X�̌��݂̃^�C���X�^���v�̎擾���T�|�[�g����
-                            ���ׂĂ� <literal>�f�[�^�x�[�X����</literal> ���m���Ă���킯�ł͂Ȃ����Ƃ�
-                            ���ӂ��Ă��������B�܂�����ŁA���������������߂ɁA
-                            ���b�N�Ŏg�p����ɂ͈��S�łȂ����̂�����܂�(�Ⴆ��Oracle 8)�B
+                            <literal>source</literal> (オプション - デフォルトは <literal>vm</literal> ):
+                            Hibernateはどこからタイムスタンプの値を取得するべきでしょうか？
+                            データベースからでしょうか、現在のJVMからでしょうか？
+                            データベースによるタイムスタンプは、Hibernateが"次の値"を決定するために
+                            データベースをヒットしなければならないため、オーバヘッドを招きます。
+                            しかしクラスタ環境ではJVMから取得するより安全です。
+                            データベースの現在のタイムスタンプの取得をサポートする
+                            すべての <literal>データベース方言</literal> が知られているわけではないことに
+                            注意してください。また一方で、精密さを欠くために、
+                            ロックで使用するには安全でないものもあります(例えばOracle 8)。
                         </para>
                     </callout>
                     <callout arearefs="timestamp6">
                         <para>
-                            <literal>generated</literal> (�I�v�V���� - �f�t�H���g�� <literal>never</literal> ):
-                            ���̃^�C���X�^���v�E�v���p�e�B�̒l���A�f�[�^�x�[�X�ɂ���Đ�������邱�Ƃ��w�肵�܂��B
-                            <xref linkend="mapping-generated">�����v���p�e�B</xref> ���Q�Ƃ��Ă��������B
+                            <literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ):
+                            このタイムスタンプ・プロパティの値が、データベースによって生成されることを指定します。
+                            <xref linkend="mapping-generated">生成プロパティ</xref> を参照してください。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
-                 <literal>&lt;timestamp&gt;</literal> �� 
-                <literal>&lt;version type="timestamp"&gt;</literal> �Ɠ����ł��邱�Ƃɒ��ӂ��Ă��������B
-                <literal>&lt;timestamp source="db"&gt;</literal> ��
-                <literal>&lt;version type="dbtimestamp"&gt;</literal> �Ɠ����ł��邱�Ƃɒ��ӂ��Ă��������B
+                 <literal>&lt;timestamp&gt;</literal> は 
+                <literal>&lt;version type="timestamp"&gt;</literal> と等価であることに注意してください。
+                <literal>&lt;timestamp source="db"&gt;</literal> は
+                <literal>&lt;version type="dbtimestamp"&gt;</literal> と等価であることに注意してください。
             </para>
         </sect2>
         
@@ -1332,7 +1333,7 @@
             <title>property</title>
 
             <para>
-                <literal>&lt;property&gt;</literal> �v�f�́A�N���X�̉i���I��JavaBean�X�^�C���̃v���p�e�B���`���܂��B
+                <literal>&lt;property&gt;</literal> 要素は、クラスの永続的なJavaBeanスタイルのプロパティを定義します。
             </para>
             
             <programlistingco>
@@ -1375,135 +1376,135 @@
                 <calloutlist>
                     <callout arearefs="property1">
                         <para>
-                            <literal>name</literal>�F�������Ŏn�܂�v���p�e�B���B
+                            <literal>name</literal>：小文字で始まるプロパティ名。
                         </para>
                     </callout>                   
                     <callout arearefs="property2">
                         <para>
-                            <literal>column</literal>�i�I�v�V���� - �f�t�H���g�̓v���p�e�B���j�F
-                            �}�b�s���O���ꂽ�f�[�^�x�[�X�e�[�u���̃J�����̖��O�B
-                            �l�X�g���� <literal>&lt;column&gt;</literal> �v�f�ł��w��ł��܂��B
+                            <literal>column</literal>（オプション - デフォルトはプロパティ名）：
+                            マッピングされたデータベーステーブルのカラムの名前。
+                            ネストした <literal>&lt;column&gt;</literal> 要素でも指定できます。
                         </para>
                     </callout>
                     <callout arearefs="property3">
                         <para>
-                            <literal>type</literal>�i�I�v�V�����j�FHibernate�̌^���������O�B
+                            <literal>type</literal>（オプション）：Hibernateの型を示す名前。
                         </para>
                     </callout>
                     <callout arearefs="property4-5">
                         <para>
                             <literal>update, insert</literal> 
-                            �i�I�v�V���� - �f�t�H���g�� <literal>true</literal> �j�F
-                            �}�b�s���O���ꂽ�J������SQL�� 
-                            <literal>UPDATE</literal> �� <literal>INSERT</literal> �Ɋ܂܂�邱�Ƃ��w�肵�܂��B
-                            �����Ƃ� <literal>false</literal> �ɐݒ肷��ƁA
-                            �����J�����Ƀ}�b�s���O���ꂽ���̃v���p�e�B��g���K��
-                            ���̃A�v���P�[�V�����ɂ���ď��������ꂽ�����ȁu���o�v�v���p�e�B���\�ɂȂ�܂��B
+                            （オプション - デフォルトは <literal>true</literal> ）：
+                            マッピングされたカラムがSQLの 
+                            <literal>UPDATE</literal> や <literal>INSERT</literal> に含まれることを指定します。
+                            両方とも <literal>false</literal> に設定すると、
+                            同じカラムにマッピングされた他のプロパティやトリガや
+                            他のアプリケーションによって初期化された純粋な「導出」プロパティが可能になります。
                         </para>
                     </callout>
                     <callout arearefs="property6">
                         <para>
-                            <literal>formula</literal>�i�I�v�V�����j�F
-                            <emphasis>�v�Z</emphasis> �v���p�e�B�̂��߂̒l���`����SQL���B
-                            �v�Z���ꂽ�v���p�e�B�͎��g�̃J�����ւ̃}�b�s���O������܂���B
+                            <literal>formula</literal>（オプション）：
+                            <emphasis>計算</emphasis> プロパティのための値を定義するSQL式。
+                            計算されたプロパティは自身のカラムへのマッピングがありません。
                         </para>
                     </callout>
                     <callout arearefs="property7">
                         <para>
-                            <literal>access</literal>�i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            <literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                     <callout arearefs="property8">
                         <para>
-                            <literal>lazy</literal> (optional - �f�t�H���g�� <literal>false</literal> ):
-                           �C���X�^���X�ϐ��ɍŏ��ɃA�N�Z�X�����Ƃ��ɁA�v���p�e�B��x�����Ď擾����悤�w�肵�܂��B
-                           (�o�C�g�R�[�h�������쐬���鎞�Ԃ��K�v�ɂȂ�܂�)�B
+                            <literal>lazy</literal> (optional - デフォルトは <literal>false</literal> ):
+                           インスタンス変数に最初にアクセスしたときに、プロパティを遅延して取得するよう指定します。
+                           (バイトコード実装を作成する時間が必要になります)。
                         </para>
                     </callout>
                     <callout arearefs="property9">
                         <para>
-                            <literal>unique</literal> (�I�v�V����):�J�����Ƀ��j�[�N���������DDL�̐������\�ɂ��܂��B
-                            �܂��A<literal>property-ref</literal> �̃^�[�Q�b�g�Ƃ��邱�Ƃ��ł��܂��B
+                            <literal>unique</literal> (オプション):カラムにユニーク制約をつけるDDLの生成を可能にします。
+                            また、<literal>property-ref</literal> のターゲットとすることもできます。
                         </para>
                     </callout>
                     <callout arearefs="property10">
                         <para>
-                            <literal>not-null</literal> (�I�v�V����):�J������null�l��������DDL�̐������\�ɂ��܂��B
+                            <literal>not-null</literal> (オプション):カラムにnull値を許可するDDLの生成を可能にします。
                         </para>
                     </callout>
                     <callout arearefs="property11">
                         <para>
-                            <literal>optimistic-lock</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            ���̃v���p�e�B�̍X�V�Ɋy�σ��b�N�̎擾��v�����邩�ǂ������w�肵�܂��B
-                            ����������΁A���̃v���p�e�B���_�[�e�B�ł���Ƃ��Ƀo�[�W�����𑝂₷�ׂ��������肵�܂��B
+                            <literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            このプロパティの更新に楽観ロックの取得を要求するかどうかを指定します。
+                            言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。
                         </para>
                     </callout>
                     <callout arearefs="property12">
                         <para>
-                            <literal>generated</literal> (�I�v�V���� - �f�t�H���g�� <literal>never</literal> ):
-                            �v���p�e�B�̒l���A�f�[�^�x�[�X�ɂ���Đ������ꂽ���Ƃ��w�肵�܂��B
-                            <xref linkend="mapping-generated">�����v���p�e�B</xref> ���Q�Ƃ��Ă��������B
+                            <literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ):
+                            プロパティの値が、データベースによって生成されたことを指定します。
+                            <xref linkend="mapping-generated">生成プロパティ</xref> を参照してください。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                <emphasis>typename</emphasis> �ɂ͈ȉ��̒l���\�ł��F
+                <emphasis>typename</emphasis> には以下の値が可能です：
             </para>
 
             <orderedlist spacing="compact">
                 <listitem>
                     <para>
-                        Hibernate�̊�{�^�̖��O�i��  <literal>integer, string, character,
-                        date, timestamp, float, binary, serializable, object, blob</literal> �j�B
+                        Hibernateの基本型の名前（例  <literal>integer, string, character,
+                        date, timestamp, float, binary, serializable, object, blob</literal> ）。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        �f�t�H���g�̊�{�^��Java�N���X�� �i�� <literal>int, float,
-                        char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal> �j�B
+                        デフォルトの基本型のJavaクラス名 （例 <literal>int, float,
+                        char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal> ）。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        �V���A���C�Y�\��Java�N���X�̖��O�B
+                        シリアライズ可能なJavaクラスの名前。
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        �J�X�^���^�̃N���X���i�� <literal>com.illflow.type.MyCustomType</literal> �j�B
+                        カスタム型のクラス名（例 <literal>com.illflow.type.MyCustomType</literal> ）。
                     </para>
                 </listitem>
             </orderedlist>
 
             <para>
-                �^���w�肵�Ȃ���΁AHibernate�͐�����Hibernate�̌^�𐄑����邽�߂ɁA
-                �w�肳�ꂽ�v���p�e�B�ɑ΂��ă��t���N�V�������g���܂��B
-                Hibernate�̓��[��2, 3, 4�����̏����Ɏg���A
-                getter�v���p�e�B�̕Ԃ�l�̃N���X�̖��O�����߂��悤�Ƃ��܂��B
-                ����������ŏ�ɏ\���ł���Ƃ͌���܂���B
-                �ꍇ�ɂ���ẮA<literal>type</literal> �������K�v�ȏꍇ������܂��B
-                �i�Ⴆ�� <literal>Hibernate.DATE</literal> �� <literal>Hibernate.TIMESTAMP</literal> ����ʂ��邽�߁A
-                �܂��̓J�X�^���^���w�肷�邽�߂Ȃǂł��B�j
+                型を指定しなければ、Hibernateは正しいHibernateの型を推測するために、
+                指定されたプロパティに対してリフレクションを使います。
+                Hibernateはルール2, 3, 4をその順序に使い、
+                getterプロパティの返り値のクラスの名前を解釈しようとします。
+                しかしこれで常に十分であるとは限りません。
+                場合によっては、<literal>type</literal> 属性が必要な場合があります。
+                （例えば <literal>Hibernate.DATE</literal> と <literal>Hibernate.TIMESTAMP</literal> を区別するため、
+                またはカスタム型を指定するためなどです。）
             </para>
             
             <para>
-                <literal>access</literal> �����ŁA
-                ���s����Hibernate���ǂ̂悤�Ƀv���p�e�B�ɃA�N�Z�X���邩�𐧌�ł��܂��B
-                �f�t�H���g�ł�Hibernate�̓v���p�e�B��get/set�̃y�A���R�[�����܂��B
-                <literal>access="field"</literal> �Ǝw�肷��΁A
-                Hibernate�̓��t���N�V�������g��get/set�̃y�A������ɁA���ڃt�B�[���h�ɃA�N�Z�X���܂��B
-                �C���^�[�t�F�C�X <literal>org.hibernate.property.PropertyAccessor</literal> ��
-                ��������N���X���w�肷�邱�ƂŁA�v���p�e�B�ւ̃A�N�Z�X�ɓƎ��̐헪���w�肷�邱�Ƃ��ł��܂��B
+                <literal>access</literal> 属性で、
+                実行時にHibernateがどのようにプロパティにアクセスするかを制御できます。
+                デフォルトではHibernateはプロパティのget/setのペアをコールします。
+                <literal>access="field"</literal> と指定すれば、
+                Hibernateはリフレクションを使いget/setのペアを介さずに、直接フィールドにアクセスします。
+                インターフェイス <literal>org.hibernate.property.PropertyAccessor</literal> を
+                実装するクラスを指定することで、プロパティへのアクセスに独自の戦略を指定することができます。
             </para>
 
             <para>
-                ���ɋ��͂ȓ����͐����v���p�e�B�ł��B
-                �����̃v���p�e�B�͓��R�ǂݎ���p�ł���A�v���p�e�B�̒l�̓��[�h���Ɍv�Z����܂��B
-                �v�Z��SQL���Ƃ��Đ錾����ƁA���̃v���p�e�B��
-                �C���X�^���X�����[�h����SQL�N�G���� <literal>SELECT</literal> ��̃T�u�N�G���ɕϊ�����܂��B
+                特に強力な特徴は生成プロパティです。
+                これらのプロパティは当然読み取り専用であり、プロパティの値はロード時に計算されます。
+                計算をSQL式として宣言すると、このプロパティは
+                インスタンスをロードするSQLクエリの <literal>SELECT</literal> 句のサブクエリに変換されます。
             </para>
 
         <programlisting><![CDATA[
@@ -1514,10 +1515,10 @@
                 AND li.orderNumber = orderNumber )"/>]]></programlisting>
 
             <para>
-                ����̃J����(��ł� <literal>customerId</literal> ������ɂ�����܂�)�̃G�C���A�X��錾���邱�ƂȂ��A
-                �G���e�B�e�B���g�̃e�[�u�����Q�Ƃł��邱�Ƃɒ��ӂ��Ă��������B
-                �����������g�p�������Ȃ���΁A
-                �l�X�g���� <literal>&lt;formula&gt;</literal> �}�b�s���O�v�f���g���邱�Ƃɂ����ӂ��Ă��������B
+                特定のカラム(例では <literal>customerId</literal> がそれにあたります)のエイリアスを宣言することなく、
+                エンティティ自身のテーブルを参照できることに注意してください。
+                もし属性を使用したくなければ、
+                ネストした <literal>&lt;formula&gt;</literal> マッピング要素を使えることにも注意してください。
             </para>
 
         </sect2>
@@ -1526,9 +1527,9 @@
             <title>many-to-one</title>
 
             <para>
-                ���̉i���N���X�ւ̒ʏ�̊֘A�� <literal>many-to-one</literal> �v�f���g���Ē�`���܂��B
-                �����[�V���i�����f���͑��Έ�֘A�ł��B
-                �܂肠��e�[�u���̊O���L�[�́A�^�[�Q�b�g�ƂȂ�e�[�u���̎�L�[�J�������Q�Ƃ��Ă��܂��B
+                他の永続クラスへの通常の関連は <literal>many-to-one</literal> 要素を使って定義します。
+                リレーショナルモデルは多対一関連です。
+                つまりあるテーブルの外部キーは、ターゲットとなるテーブルの主キーカラムを参照しています。
             </para>
 
             <programlistingco>
@@ -1578,156 +1579,156 @@
                 <calloutlist>
                     <callout arearefs="manytoone1">
                         <para>
-                            <literal>name</literal>�F�v���p�e�B���B
+                            <literal>name</literal>：プロパティ名。
                         </para>                    
                     </callout>                   
                     <callout arearefs="manytoone2">
                         <para>
-                            <literal>column</literal> (�I�v�V����):�O���L�[�J�����̖��O�B
-                            �l�X�g���� <literal>&lt;column&gt;</literal> �v�f�ł��w��ł��܂��B
+                            <literal>column</literal> (オプション):外部キーカラムの名前。
+                            ネストした <literal>&lt;column&gt;</literal> 要素でも指定できます。
                         </para>
                     </callout>
                     <callout arearefs="manytoone3">
                         <para>
-                            <literal>class</literal>�i�I�v�V���� - �f�t�H���g�́A
-                            ���t���N�V�����ɂ�茈�肳���v���p�e�B�̌^�j�F�֘A�N���X�̖��O�B
+                            <literal>class</literal>（オプション - デフォルトは、
+                            リフレクションにより決定されるプロパティの型）：関連クラスの名前。
                         </para>
                     </callout>
                     <callout arearefs="manytoone4">
                         <para>
-                            <literal>cascade</literal>�i�I�v�V�����j�F
-                            �ǂ̑�����A�e�I�u�W�F�N�g����֘A�I�u�W�F�N�g�ւƃJ�X�P�[�h�����邩���w�肵�܂��B
+                            <literal>cascade</literal>（オプション）：
+                            どの操作を、親オブジェクトから関連オブジェクトへとカスケードさせるかを指定します。
                         </para>                    
                     </callout>
                     <callout arearefs="manytoone5">
                         <para>
-                            <literal>fetch</literal> (�I�v�V���� - �f�t�H���g�� <literal>select</literal> ): 
-                               �O�������t�F�b�`�������I���t�F�b�`�isequential select fetch�j��I�����܂��B
+                            <literal>fetch</literal> (オプション - デフォルトは <literal>select</literal> ): 
+                               外部結合フェッチか順次選択フェッチ（sequential select fetch）を選択します。
                         </para>                    
                     </callout>
                     <callout arearefs="manytoone6-7">
                         <para>
-                            <literal>update, insert</literal>�i�I�v�V���� - �f�t�H���g�� <literal>true</literal> �j�F
-                            �}�b�s���O���ꂽ�J������SQL�� <literal>UPDATE</literal> �܂��� 
-                            <literal>INSERT</literal> ���Ɋ܂܂�邱�Ƃ��w�肵�܂��B
-                            �����Ƃ� <literal>false</literal> �ɐݒ肷��ƁA
-                            ���̒l�������J�����Ƀ}�b�s���O���ꂽ���̃v���p�e�B��g���K��
-                            ���̃A�v���P�[�V�����ɂ���ď��������ꂽ�����ȁu���o�v�v���p�e�B���\�ɂȂ�܂��B
+                            <literal>update, insert</literal>（オプション - デフォルトは <literal>true</literal> ）：
+                            マッピングされたカラムがSQLの <literal>UPDATE</literal> または 
+                            <literal>INSERT</literal> 文に含まれることを指定します。
+                            両方とも <literal>false</literal> に設定すると、
+                            その値が同じカラムにマッピングされた他のプロパティやトリガや
+                            他のアプリケーションによって初期化された純粋な「導出」プロパティが可能になります。
                         </para>                    
                     </callout>
                     <callout arearefs="manytoone8">
                         <para>
-                            <literal>property-ref</literal>�i�I�v�V�����j�F
-                            ���̊O���L�[�Ɍ������ꂽ�֘A�N���X�̃v���p�e�B���B
-                            �����w�肵�Ȃ���΁A�֘A�N���X�̎�L�[���g���܂��B
+                            <literal>property-ref</literal>（オプション）：
+                            この外部キーに結合された関連クラスのプロパティ名。
+                            何も指定しなければ、関連クラスの主キーが使われます。
                         </para>                
                     </callout>                   
                     <callout arearefs="manytoone9">
                         <para>
-                            <literal>access</literal>�i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            <literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                     <callout arearefs="manytoone10">
                         <para>
-                            <literal>unique</literal>�i�I�v�V�����j�F
-                             �O���L�[�J�����ɑ΂��ă��j�[�N���������DDL�̐������\�ɂ��܂��B
-                             �܂��A<literal>property-ref</literal> �̃^�[�Q�b�g�ɂ��邱�Ƃ��ł��܂��B
-                             ����ɂ��֘A�̑��d�x�����ʓI�Ɉ�Έ�ɂ��܂��B
+                            <literal>unique</literal>（オプション）：
+                             外部キーカラムに対してユニーク制約をつけたDDLの生成を可能にします。
+                             また、<literal>property-ref</literal> のターゲットにすることもできます。
+                             これにより関連の多重度を効果的に一対一にします。
                         </para>
                     </callout>
                     <callout arearefs="manytoone11">
                         <para>
-                            <literal>not-null</literal> (�I�v�V����):�O���L�[�J�����ɑ΂��āA
-                            null�l��������DDL�̐������\�ɂ��܂�
+                            <literal>not-null</literal> (オプション):外部キーカラムに対して、
+                            null値を許可するDDLの生成を可能にします
                         </para>
                     </callout>
                     <callout arearefs="manytoone12">
                         <para>
-                            <literal>optimistic-lock</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            ���̃v���p�e�B�̍X�V�Ɋy�ϓI���b�N�̎擾��v�����邩�ǂ������w�肵�܂��B
-                            ����������΁A���̃v���p�e�B���_�[�e�B�ł���Ƃ��Ƀo�[�W�����𑝂₷�ׂ��������肵�܂��B
+                            <literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            このプロパティの更新に楽観的ロックの取得を要求するかどうかを指定します。
+                            言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。
                         </para>
                     </callout>
                     <callout arearefs="manytoone13">
                         <para>
-                            <literal>lazy</literal> (�I�v�V���� - �f�t�H���g�� <literal>proxy</literal> ): 
-                            �f�t�H���g�ł́A���d�x�P�̊֘A���v���L�V�ƂȂ�܂��B
-                            <literal>lazy="no-proxy"</literal> �́A�C���X�^���X�ϐ��ɍŏ��ɃA�N�Z�X�����Ƃ��ɁA
-                            �v���p�e�B��x���t�F�b�`����悤�w�肵�܂�
-                            (�r���h���Ƀo�C�g�R�[�h�������K�v�ɂȂ�܂�)�B
-                            <literal>lazy="false"</literal> �͊֘A����ɑ����Ƀt�F�b�`����悤�w�肵�܂��B
+                            <literal>lazy</literal> (オプション - デフォルトは <literal>proxy</literal> ): 
+                            デフォルトでは、多重度１の関連がプロキシとなります。
+                            <literal>lazy="no-proxy"</literal> は、インスタンス変数に最初にアクセスしたときに、
+                            プロパティを遅延フェッチするよう指定します
+                            (ビルド時にバイトコード実装が必要になります)。
+                            <literal>lazy="false"</literal> は関連を常に即時にフェッチするよう指定します。
                         </para>
                     </callout>
                     <callout arearefs="manytoone14">
                         <para>
-                            <literal>not-found</literal> (�I�v�V���� - �f�t�H���g�� <literal>exception</literal> ):
-                            ���������s���Q�Ƃ���O���L�[���ǂ̂悤�Ɉ��������w�肵�܂��B
-                            <literal>ignore</literal> �͌��������s��null�֘A�Ƃ��Ĉ����܂��B
+                            <literal>not-found</literal> (オプション - デフォルトは <literal>exception</literal> ):
+                            欠落した行を参照する外部キーをどのように扱うかを指定します。
+                            <literal>ignore</literal> は欠落した行をnull関連として扱います。
                         </para>
                     </callout>
                     <callout arearefs="manytoone15">
                         <para>
-                            <literal>entity-name</literal> (�I�v�V����):�֘A�����N���X�̃G���e�B�e�B���B
+                            <literal>entity-name</literal> (オプション):関連したクラスのエンティティ名。
                         </para>                   
                     </callout>
                 </calloutlist>
                     <callout arearefs="manytoone16">
                         <para>
-                            <literal>formula</literal> (�I�v�V����):
-                             <emphasis> �v�Z���ꂽ</emphasis> �O���L�[�ɑ΂��Ēl���`����SQL��
+                            <literal>formula</literal> (オプション):
+                             <emphasis> 計算された</emphasis> 外部キーに対して値を定義するSQL式
                         </para>
                     </callout>
             </programlistingco>
 
             <para>
-                <literal>cascade</literal> ������ <literal>none</literal> �ȊO�̈Ӗ��̂���l����ݒ肷��ƁA
-                �֘A�I�u�W�F�N�g�ւ��鑀�삪�`�d���邱�ƂɂȂ�܂��B
-                �Ӗ��̂���l�Ƃ�Hibernate�̊�{����̖��O�̂��ƂŁA
-                <literal>delete-orphan</literal> �� <literal>all</literal> �A���얼���J���}�ŋ�؂����g�ݍ��킹
-                �i�Ⴆ�� <literal>cascade="persist,merge,evict"</literal> ��
-                <literal>cascade="all,delete-orphan"</literal>�j�A
-                �܂����ꂾ���łȂ� <literal>persist, merge, delete, save-update, evict, replicate, lock,
-                refresh</literal> �̂��Ƃ��w���܂��B
-                �ڂ��������� <xref linkend="objectstate-transitive"/> �����Ă��������B
-                �l����̊֘A(many-to-one��one-to-one�֘A)�́A
-                �P�Ƃł̍폜�iorphan delete)���T�|�[�g���Ă��Ȃ����Ƃɒ��ӂ��Ă��������B
+                <literal>cascade</literal> 属性に <literal>none</literal> 以外の意味のある値をを設定すると、
+                関連オブジェクトへある操作が伝播することになります。
+                意味のある値とはHibernateの基本操作の名前のことで、
+                <literal>delete-orphan</literal> と <literal>all</literal> 、操作名をカンマで区切った組み合わせ
+                （例えば <literal>cascade="persist,merge,evict"</literal> や
+                <literal>cascade="all,delete-orphan"</literal>）、
+                またそれだけでなく <literal>persist, merge, delete, save-update, evict, replicate, lock,
+                refresh</literal> のことを指します。
+                詳しい説明は <xref linkend="objectstate-transitive"/> を見てください。
+                値が一つの関連(many-to-oneとone-to-one関連)は、
+                単独での削除（orphan delete)をサポートしていないことに注意してください。
             </para>
             
             <para>
-                �T�^�I�� <literal>many-to-one</literal> �錾�͎��̂悤�ɃV���v���ł��B�F
+                典型的な <literal>many-to-one</literal> 宣言は次のようにシンプルです。：
             </para>
 
             <programlisting><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
             
             <para>
-                <literal>property-ref</literal> �����́A�O���L�[���֘A�t����ꂽ�e�[�u���́A��L�[�łȂ�
-                ���j�[�N�L�[���Q�Ƃ��Ă��郌�K�V�[�f�[�^���}�b�v���邽�߂ɂ����g���ׂ��ł��B
-                ����͏X�������[�V���i�����f���ł��B
-                �Ⴆ�� <literal>Product</literal> �N���X���A
-                ��L�[�łȂ����j�[�N�ȃV���A���i���o�[�������Ă���Ɖ��肵�Ă݂Ă��������B
-                �i <literal>unique</literal> ������SchemaExport�c�[�����g����Hibernate��DDL�����𐧌䂵�܂��B�j
+                <literal>property-ref</literal> 属性は、外部キーが関連付けられたテーブルの、主キーでない
+                ユニークキーを参照しているレガシーデータをマップするためにだけ使うべきです。
+                これは醜いリレーショナルモデルです。
+                例えば <literal>Product</literal> クラスが、
+                主キーでないユニークなシリアルナンバーを持っていると仮定してみてください。
+                （ <literal>unique</literal> 属性はSchemaExportツールを使ったHibernateのDDL生成を制御します。）
             </para>
             
             <programlisting><![CDATA[<property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/>]]></programlisting>
             
             <para>
-                �ȉ��̂悤�� <literal>OrderItem</literal> �ɑ΂��ă}�b�s���O���g���܂��F
+                以下のように <literal>OrderItem</literal> に対してマッピングを使えます：
             </para>
             
             <programlisting><![CDATA[<many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/>]]></programlisting>
             
             <para>
-                �������A����͌����Đ����ł��܂���B
+                しかし、これは決して推奨できません。
             </para>
             
             <para>
-                �Q�Ƃ������j�[�N�L�[���A�֘A����G���e�B�e�B�̑����̃v���p�e�B����\�������ꍇ�A
-                �w�肵�� <literal>&lt;properties&gt;</literal> �v�f���ŁA�Q�Ƃ���v���p�e�B���}�b�s���O����ׂ��ł��B
+                参照したユニークキーが、関連するエンティティの多数のプロパティから構成される場合、
+                指定した <literal>&lt;properties&gt;</literal> 要素内で、参照するプロパティをマッピングするべきです。
             </para>
             
             <para>
-                �����Q�Ƃ������j�[�N�L�[���R���|�[�l���g�̃v���p�e�B�ł���ꍇ�́A�v���p�e�B�̃p�X���w��ł��܂��B
+                もし参照したユニークキーがコンポーネントのプロパティである場合は、プロパティのパスを指定できます。
             </para>
             
            <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>           
@@ -1740,7 +1741,7 @@
             <title>one-to-one</title>
 
             <para>
-                ���̉i���N���X�ւ̈�Έ�֘A�́A<literal>one-to-one</literal> �v�f�Œ�`���܂��B
+                他の永続クラスへの一対一関連は、<literal>one-to-one</literal> 要素で定義します。
             </para>
             
             <programlistingco>
@@ -1774,112 +1775,112 @@
                 <calloutlist>
                     <callout arearefs="onetoone1">
                         <para>
-                            <literal>name</literal>�F�v���p�e�B���B
+                            <literal>name</literal>：プロパティ名。
                         </para>                
                     </callout>                   
                     <callout arearefs="onetoone2">
                         <para>
-                            <literal>class</literal>�i�I�v�V���� - 
-                            �f�t�H���g�̓��t���N�V�����ɂ�茈�肳���v���p�e�B�̌^�j�F
-                            �֘A�N���X�̖��O�B
+                            <literal>class</literal>（オプション - 
+                            デフォルトはリフレクションにより決定されるプロパティの型）：
+                            関連クラスの名前。
                         </para>                   
                     </callout>
                     <callout arearefs="onetoone3">
                         <para>
-                            <literal>cascade</literal>�i�I�v�V�����j�F
-                            �e�I�u�W�F�N�g����֘A�I�u�W�F�N�g�ցA�ǂ̑�����J�X�P�[�h���邩���w�肵�܂��B
+                            <literal>cascade</literal>（オプション）：
+                            親オブジェクトから関連オブジェクトへ、どの操作をカスケードするかを指定します。
                         </para>
                     </callout>
                     <callout arearefs="onetoone4">
                         <para>
-                            <literal>constrained</literal>�i�I�v�V�����j�F
-                            �}�b�s���O���ꂽ�e�[�u���̎�L�[�ɑ΂���O���L�[���񂪁A
-                            �֘A�N���X�̃e�[�u�����Q�Ƃ��邱�Ƃ��w�肵�܂��B
-                            ���̃I�v�V������ <literal>save()</literal> �� 
-                            <literal>delete()</literal> ���J�X�P�[�h����鏇���ɉe�����A
-                            �����Ċ֘A���v���L�V����邩�ǂ����ɂ��e�����܂�
-                            �i�����ăX�L�[�}�G�N�X�|�[�g�c�[���ɂ��g���܂��j�B
+                            <literal>constrained</literal>（オプション）：
+                            マッピングされたテーブルの主キーに対する外部キー制約が、
+                            関連クラスのテーブルを参照することを指定します。
+                            このオプションは <literal>save()</literal> と 
+                            <literal>delete()</literal> がカスケードされる順序に影響し、
+                            そして関連がプロキシされるかどうかにも影響します
+                            （そしてスキーマエクスポートツールにも使われます）。
                         </para>                  
                     </callout>
                     <callout arearefs="onetoone5">
                         <para>
-                            <literal>fetch</literal>�i�I�v�V���� - �f�t�H���g�� <literal>select</literal> �j�F
-                            �O�������t�F�b�`�Ə����I���t�F�b�`�isequential select fetch�j�̂ǂ��炩��I�����܂��B
+                            <literal>fetch</literal>（オプション - デフォルトは <literal>select</literal> ）：
+                            外部結合フェッチと順次選択フェッチ（sequential select fetch）のどちらかを選択します。
                         </para>
                     </callout>
                     <callout arearefs="onetoone6">
                         <para>
-                            <literal>property-ref</literal>�i�I�v�V�����j�F
-                            ���̃N���X�̎�L�[�Ɍ������ꂽ�֘A�N���X�̃v���p�e�B���B
-                            �w�肳��Ȃ���΁A�֘A�N���X�̎�L�[���g���܂��B
+                            <literal>property-ref</literal>（オプション）：
+                            このクラスの主キーに結合された関連クラスのプロパティ名。
+                            指定されなければ、関連クラスの主キーが使われます。
                         </para>                
                     </callout>                   
                     <callout arearefs="onetoone7">
                         <para>
-                            <literal>access</literal>�i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            <literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                     <callout arearefs="onetoone8">
                         <para>
-                            <literal>formula</literal> (�I�v�V����):
-                            �قƂ�ǂ��ׂĂ̈�Έ�֘A�̓I�[�i�[�̃G���e�B�e�B�̎�L�[�ւƃ}�b�s���O����܂��B
-                            ����ȊO�̋H�ȏꍇ�́A
-                            ���̃J������A�����̃J�����ASQL�\�����g�����������邽�߂̎����w��ł��܂��B
-                            �i��� <literal>org.hibernate.test.onetooneformula</literal> ���Q�Ƃ��Ă��������B�j
+                            <literal>formula</literal> (オプション):
+                            ほとんどすべての一対一関連はオーナーのエンティティの主キーへとマッピングされます。
+                            これ以外の稀な場合は、
+                            他のカラムや、複数のカラム、SQL構文を使った結合するための式を指定できます。
+                            （例は <literal>org.hibernate.test.onetooneformula</literal> を参照してください。）
                         </para>
                     </callout>
                     <callout arearefs="onetoone9">
                         <para>
-                            <literal>lazy</literal> (�I�v�V���� - �f�t�H���g�� <literal>proxy</literal> ): 
-                            �f�t�H���g�ł́A���d�x�P�̊֘A���v���L�V�ƂȂ�܂��B
-                            <literal>lazy="no-proxy"</literal> �́A�C���X�^���X�ϐ��ɍŏ��ɃA�N�Z�X�����Ƃ��ɁA
-                            �v���p�e�B��x���t�F�b�`����悤�w�肵�܂�
-                            (�r���h���Ƀo�C�g�R�[�h�������K�v�ɂȂ�܂�)�B
-                            <literal>lazy="false"</literal> �͊֘A����ɑ����Ƀt�F�b�`����悤�w�肵�܂��B
-                            <emphasis>���� <literal>constrained="false"</literal> �Ȃ�΁A
-                            �v���L�V�͎g�p�s�\�ƂȂ�A�֘A�𑦎��Ƀt�F�b�`���邱�Ƃɒ��ӂ��Ă��������I</emphasis> 
+                            <literal>lazy</literal> (オプション - デフォルトは <literal>proxy</literal> ): 
+                            デフォルトでは、多重度１の関連がプロキシとなります。
+                            <literal>lazy="no-proxy"</literal> は、インスタンス変数に最初にアクセスしたときに、
+                            プロパティを遅延フェッチするよう指定します
+                            (ビルド時にバイトコード実装が必要になります)。
+                            <literal>lazy="false"</literal> は関連を常に即時にフェッチするよう指定します。
+                            <emphasis>もし <literal>constrained="false"</literal> ならば、
+                            プロキシは使用不可能となり、関連を即時にフェッチすることに注意してください！</emphasis> 
                             
                         </para>
                     </callout>
                     <callout arearefs="onetoone10">
                         <para>
-                            <literal>entity-name</literal> (�I�v�V����):�֘A�N���X�̃G���e�B�e�B��
+                            <literal>entity-name</literal> (オプション):関連クラスのエンティティ名
                         </para>                   
                     </callout>
                 </calloutlist>
             </programlistingco>
         
             <para>
-                ��Έ�֘A�ɂ�2��ނ���܂��F
+                一対一関連には2種類あります：
             </para>
             <itemizedlist>
             <listitem><para>
-                ��L�[�֘A
+                主キー関連
             </para></listitem>
             <listitem><para>
-                ���j�[�N�O���L�[�֘A
+                ユニーク外部キー関連
             </para></listitem>
             </itemizedlist>
             
             <para>
-                ��L�[�֘A�ɂ́A���ʂȃe�[�u���J�����͕K�v����܂���B
-                ����2�̍s���֘A�ɂ��֌W���Ă���΁A2�̃e�[�u���͓�����L�[�̒l�����L���܂��B
-                ���̂���2�̃I�u�W�F�N�g����L�[�֘A�ɂ���Ċ֘A�t�������̂ł���΁A
-                �m���ɓ������ʎq�̒l�������Ȃ���΂Ȃ�܂���B
+                主キー関連には、特別なテーブルカラムは必要ありません。
+                もし2つの行が関連により関係していれば、2つのテーブルは同じ主キーの値を共有します。
+                そのため2つのオブジェクトを主キー関連によって関連付けたいのであれば、
+                確実に同じ識別子の値を代入しなければなりません。
             </para>
             
             <para>
-                 ��L�[�֘A���s�����߂ɂ́A�ȉ��̃}�b�s���O�� <literal>Employee</literal> �� 
-                <literal>Person</literal> �̂��ꂼ��ɒǉ����Ă��������B
+                 主キー関連を行うためには、以下のマッピングを <literal>Employee</literal> と 
+                <literal>Person</literal> のそれぞれに追加してください。
             </para>
 
             <programlisting><![CDATA[<one-to-one name="person" class="Person"/>]]></programlisting>
             <programlisting><![CDATA[<one-to-one name="employee" class="Employee" constrained="true"/>]]></programlisting>
 
             <para>
-                �����ŁAPERSON��EMPLOYEE�e�[�u���̊֌W����s�̎�L�[�������ł��邱�Ƃ��m���ɂ��Ȃ���΂����܂���B
-                �����ł́A<literal>foreign</literal> �Ƃ��������Hibernate���ʎq�����헪���g���܂��F
+                ここで、PERSONとEMPLOYEEテーブルの関係する行の主キーが同じであることを確実にしなければいけません。
+                ここでは、<literal>foreign</literal> という特殊なHibernate識別子生成戦略を使います：
             </para>
 
             <programlisting><![CDATA[<class name="person" table="PERSON">
@@ -1895,25 +1896,25 @@
 </class>]]></programlisting>
 
             <para>
-                <literal>Employee</literal> �C���X�^���X���A<literal>Person</literal> �� 
-                <literal>employee</literal> �v���p�e�B�ŎQ�Ƃ����悤�ɁA
-                �V�����Z�[�u���ꂽ <literal>Person</literal> �̃C���X�^���X�ɂ͓�����L�[�̒l���������܂��B
+                <literal>Employee</literal> インスタンスが、<literal>Person</literal> の 
+                <literal>employee</literal> プロパティで参照されるように、
+                新しくセーブされた <literal>Person</literal> のインスタンスには同じ主キーの値が代入されます。
                 
-                �V�����Z�[�u���� <literal>Person</literal> �C���X�^���X�́A
-                ���� <literal>Person</literal> �� <literal>employee</literal> �v���p�e�B���Q�Ƃ��� 
-                <literal>Employee</literal> �C���X�^���X�Ƃ��ē�����L�[�����蓖�Ă��܂��B
+                新しくセーブする <literal>Person</literal> インスタンスは、
+                その <literal>Person</literal> の <literal>employee</literal> プロパティが参照する 
+                <literal>Employee</literal> インスタンスとして同じ主キーが割り当てられます。
             </para>
 
             <para>
-                ����1�̕��@�Ƃ��āA<literal>Employee</literal> ���� <literal>Person</literal> �ւ�
-                ���j�[�N������g�����O���L�[�֘A�͈ȉ��̂悤�ɕ\������܂��F
+                もう1つの方法として、<literal>Employee</literal> から <literal>Person</literal> への
+                ユニーク制約を使った外部キー関連は以下のように表現されます：
             </para>
             
             <programlisting><![CDATA[<many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/>]]></programlisting>
             
             <para>
-                �����Ă��̊֘A�́A
-                �ȉ��̋L�q�� <literal>Person</literal> �̃}�b�s���O�ɒǉ����邱�Ƃőo�����ɂ��邱�Ƃ��ł��܂��F
+                そしてこの関連は、
+                以下の記述を <literal>Person</literal> のマッピングに追加することで双方向にすることができます：
             </para>
             
            <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
@@ -1930,29 +1931,29 @@
 </natural-id>]]></programlisting>
 
             <para>
-                ��L�[�Ƃ��đ㗝�L�[�̎g�p�𐄏����܂����A
-                ���ׂẴG���e�B�e�B�ɑ΂��Ď��R�L�[�����ʂ���悤�ɂ��ׂ��ł��B
-                ���R�L�[�̓��j�[�N����null�Ȉ�̃v���p�e�B�A�܂��̓v���p�e�B�̘A���ł��B
-                �s�ςł���΂���ɗǂ��ł��B
-                <literal>&lt;natural-id&gt;</literal> �v�f���Ŏ��R�L�[�̃v���p�e�B���}�b�s���O���܂��B
-                Hibernate�͕K�R�I�Ƀ��j�[�N����null�l�������鐧��𐶐����A
-                �������ă}�b�s���O�͂�莩�ȋL�q�I�ɂȂ�܂��B
+                主キーとして代理キーの使用を推奨しますが、
+                すべてのエンティティに対して自然キーを識別するようにすべきです。
+                自然キーはユニークかつ非nullな一つのプロパティ、またはプロパティの連結です。
+                不変であればさらに良いです。
+                <literal>&lt;natural-id&gt;</literal> 要素内で自然キーのプロパティをマッピングします。
+                Hibernateは必然的にユニークかつnull値を許可する制約を生成し、
+                こうしてマッピングはより自己記述的になります。
             </para>
             
             <para>
-                �G���e�B�e�B�̎��R�L�[�v���p�e�B�̔�r�ɂ́A
-                <literal>equals()</literal> �� <literal>hashCode()</literal> �̎��������������߂��܂��B
+                エンティティの自然キープロパティの比較には、
+                <literal>equals()</literal> と <literal>hashCode()</literal> の実装を強くお勧めします。
             </para>
 
             <para>
-                ���̃}�b�s���O�͎��R��L�[���g�����G���e�B�e�B�ł̎g�p���Ӑ}���Ă��܂���B
+                このマッピングは自然主キーを使ったエンティティでの使用を意図していません。
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>mutable</literal> (�I�v�V����, �f�t�H���g�� <literal>false</literal> ): 
-                        �f�t�H���g�ł́A���R���ʎq�v���p�e�B�͕s��(�萔)�Ƒz�肳��Ă��܂��B
+                        <literal>mutable</literal> (オプション, デフォルトは <literal>false</literal> ): 
+                        デフォルトでは、自然識別子プロパティは不変(定数)と想定されています。
                     </para>
                 </listitem>
             </itemizedlist>
@@ -1963,10 +1964,10 @@
             <title>component, dynamic-component</title>
 
             <para>
-                <literal>&lt;component&gt;</literal> �v�f�́A
-                �q�I�u�W�F�N�g�̃v���p�e�B��e�N���X�̃e�[�u���̃J�����փ}�b�s���O���܂��B
-                �R���|�[�l���g�͎����̃v���p�e�B�A�R���|�[�l���g�A�R���N�V�����̏��ɒ�`�ł��܂��B
-                �ȉ��́u�R���|�[�l���g�v�����Ă��������B
+                <literal>&lt;component&gt;</literal> 要素は、
+                子オブジェクトのプロパティを親クラスのテーブルのカラムへマッピングします。
+                コンポーネントは自分のプロパティ、コンポーネント、コレクションの順に定義できます。
+                以下の「コンポーネント」を見てください。
             </para>
 
             <programlistingco>
@@ -1999,72 +2000,72 @@
                 <calloutlist>
                     <callout arearefs="component1">
                         <para>
-                            <literal>name</literal>�F�v���p�e�B���B
+                            <literal>name</literal>：プロパティ名。
                         </para>               
                     </callout>                   
                     <callout arearefs="component2">
                         <para>
                             <literal>class</literal> 
-                            �i�I�v�V���� - �f�t�H���g�̓��t���N�V�����ɂ�茈�肳���v���p�e�B�̌^�j�F
-                            �R���|�[�l���g�i�q�j�N���X�̖��O�B
+                            （オプション - デフォルトはリフレクションにより決定されるプロパティの型）：
+                            コンポーネント（子）クラスの名前。
                         </para>                 
                     </callout>
                     <callout arearefs="component3">
                         <para>
-                            <literal>insert</literal> �F�}�b�s���O���ꂽ�J������SQL�� 
-                            <literal>INSERT</literal> �Ɍ����悤�ɂ���ǂ������w�肵�܂��B
+                            <literal>insert</literal> ：マッピングされたカラムがSQLの 
+                            <literal>INSERT</literal> に現れるようにするどうかを指定します。
                         </para>               
                     </callout>                   
                     <callout arearefs="component4">
                         <para>
-                            <literal>update</literal> : �}�b�s���O���ꂽ�J������SQL �� 
-                            <literal>UPDATE</literal> �Ɍ����悤�ɂ��邩�ǂ������w�肵�܂��B
+                            <literal>update</literal> : マッピングされたカラムがSQL の 
+                            <literal>UPDATE</literal> に現れるようにするかどうかを指定します。
                         </para>               
                     </callout>                   
                     <callout arearefs="component5">
                         <para>
-                             <literal>access</literal> �i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                             <literal>access</literal> （オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                    <callout arearefs="component6">
                         <para>
-                            <literal>lazy</literal> (optional - �f�t�H���g�� <literal>false</literal> ):
-                           �C���X�^���X�ϐ��ɍŏ��ɃA�N�Z�X�����Ƃ��ɁA
-                           �R���|�[�l���g��x�����ăt�F�b�`����悤�w�肵�܂��B
-                           (�o�C�g�R�[�h�������쐬���鎞�Ԃ��K�v�ɂȂ�܂�)
+                            <literal>lazy</literal> (optional - デフォルトは <literal>false</literal> ):
+                           インスタンス変数に最初にアクセスしたときに、
+                           コンポーネントを遅延してフェッチするよう指定します。
+                           (バイトコード実装を作成する時間が必要になります)
                         </para>
                     </callout>
                     <callout arearefs="component7">
                             <para>
-                                <literal>optimistic-lock</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            ���̃v���p�e�B�̍X�V�ɁA�y�σ��b�N�̎擾��v�����邩�ǂ������w�肵�܂��B
-                            ����������΁A���̃v���p�e�B���_�[�e�B�ł���Ƃ��Ƀo�[�W�����𑝂₷�ׂ��������肵�܂��B
+                                <literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            このプロパティの更新に、楽観ロックの取得を要求するかどうかを指定します。
+                            言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。
                             </para>
                     </callout>
                     <callout arearefs="component8">
                             <para>
-                                <literal>unique</literal> (�I�v�V���� - �f�t�H���g�� <literal>false</literal> ):
-                                �R���|�[�l���g�̂��ׂẴ}�b�s���O����J�����ɁA���j�[�N���񂪑��݂��邩���w�肵�܂��B
+                                <literal>unique</literal> (オプション - デフォルトは <literal>false</literal> ):
+                                コンポーネントのすべてのマッピングするカラムに、ユニーク制約が存在するかを指定します。
                             </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                �q�� <literal>&lt;property&gt;</literal> �^�O�ŁA
-                �q�̃N���X�̃v���p�e�B���e�[�u���J�����Ƀ}�b�s���O���܂��B
+                子の <literal>&lt;property&gt;</literal> タグで、
+                子のクラスのプロパティをテーブルカラムにマッピングします。
             </para>
 
             <para>
-                <literal>&lt;component&gt;</literal> �v�f�́A�e�G���e�B�e�B�֖߂�Q�ƂƂ��āA
-                �R���|�[�l���g�̃N���X�̃v���p�e�B���}�b�s���O���� <literal>&lt;parent&gt;</literal> �T�u�v�f�������܂��B
+                <literal>&lt;component&gt;</literal> 要素は、親エンティティへ戻る参照として、
+                コンポーネントのクラスのプロパティをマッピングする <literal>&lt;parent&gt;</literal> サブ要素を許可します。
             </para>
 
             <para>
-                <literal>&lt;dynamic-component&gt;</literal> �v�f�́A
-                <literal>Map</literal> ���R���|�[�l���g�Ƃ��ă}�b�s���O����邱�Ƃ��\�ɂ��܂��B
-                �v���p�e�B����map�̃L�[���Q�Ƃ��܂��B<xref linkend="components-dynamic"/> ���Q�Ƃ��Ă��������B
+                <literal>&lt;dynamic-component&gt;</literal> 要素は、
+                <literal>Map</literal> がコンポーネントとしてマッピングされることを可能にします。
+                プロパティ名はmapのキーを参照します。<xref linkend="components-dynamic"/> を参照してください。
                 
             </para>
             
@@ -2074,11 +2075,11 @@
             <title>properties</title>
 
             <para>
-                <literal>&lt;properties&gt;</literal> �v�f�̓N���X�̃v���p�e�B�̎w�肳�ꂽ�A
-                �_���I�ȃO���[�s���O���\�ɂ��܂��B
-                ���̍\���̍ł��d�v�Ȏg�p���@�́A
-                <literal>property-ref</literal> �̃^�[�Q�b�g�ɂȂ�v���p�e�B�̌����������邱�Ƃł��B
-                ����͂܂��A�����J�����̃��j�[�N������`����ȒP�ȕ��@�ł�����܂��B
+                <literal>&lt;properties&gt;</literal> 要素はクラスのプロパティの指定された、
+                論理的なグルーピングを可能にします。
+                この構造の最も重要な使用方法は、
+                <literal>property-ref</literal> のターゲットになるプロパティの結合を許可することです。
+                それはまた、複数カラムのユニーク制約を定義する簡単な方法でもあります。
             </para>
 
             <programlistingco>
@@ -2104,40 +2105,40 @@
                 <calloutlist>
                     <callout arearefs="properties1">
                         <para>
-                            <literal>name</literal> : �O���[�s���O�̘_�����B
-                            ���ۂ̃v���p�e�B���ł� <emphasis>����܂���</emphasis> �B
+                            <literal>name</literal> : グルーピングの論理名。
+                            実際のプロパティ名では <emphasis>ありません</emphasis> 。
                         </para>               
                     </callout>                   
                     <callout arearefs="properties2">
                         <para>
-                            <literal>insert</literal>�F�}�b�s���O���ꂽ�J������SQL�� 
-                            <literal>INSERT</literal> �Ɍ����悤�ɂ��邩�ǂ������w�肵�܂��B
+                            <literal>insert</literal>：マッピングされたカラムがSQLの 
+                            <literal>INSERT</literal> に現れるようにするかどうかを指定します。
                         </para>               
                     </callout>                   
                     <callout arearefs="properties3">
                         <para>
-                            <literal>update</literal>�F�}�b�s���O���ꂽ�J������SQL�� 
-                            <literal>UPDATE</literal> �Ɍ����悤�ɂ��邩�ǂ������w�肵�܂��B
+                            <literal>update</literal>：マッピングされたカラムがSQLの 
+                            <literal>UPDATE</literal> に現れるようにするかどうかを指定します。
                         </para>               
                     </callout>                   
                     <callout arearefs="properties4">
                             <para>
-                                <literal>optimistic-lock</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            �����̃v���p�e�B�̍X�V�Ɋy�ϓI���b�N�̎擾��v�����邩�ǂ������w�肵�܂��B
-                            ����������΁A���̃v���p�e�B���_�[�e�B�ł���Ƃ��Ƀo�[�W�����𑝂₷�ׂ��������肵�܂��B
+                                <literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            これらのプロパティの更新に楽観的ロックの取得を要求するかどうかを指定します。
+                            言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。
                             </para>
                     </callout>
                     <callout arearefs="properties5">
                             <para>
-                                <literal>unique</literal> (�I�v�V���� - �f�t�H���g�� <literal>false</literal> ):
-                                �R���|�[�l���g�̂��ׂẴ}�b�s���O����J�����ɁA���j�[�N���񂪑��݂��邩���w�肵�܂��B
+                                <literal>unique</literal> (オプション - デフォルトは <literal>false</literal> ):
+                                コンポーネントのすべてのマッピングするカラムに、ユニーク制約が存在するかを指定します。
                             </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
             
             <para>
-                �Ⴆ�΁A�����ȉ��̂悤�� <literal>&lt;properties&gt;</literal> �}�b�s���O���������ꍇ�F
+                例えば、もし以下のような <literal>&lt;properties&gt;</literal> マッピングがあった場合：
             </para>
             
             <programlisting><![CDATA[<class name="Person">
@@ -2152,8 +2153,8 @@
 </class>]]></programlisting>
 
             <para>
-                ��L�[�̑���� <literal>Person</literal> �e�[�u���̃��j�[�N�L�[�ւ̎Q�Ƃ����A
-                ���K�V�[�f�[�^�̊֘A������������܂���B�F
+                主キーの代わりに <literal>Person</literal> テーブルのユニークキーへの参照を持つ、
+                レガシーデータの関連を持つかもしれません。：
             </para>
 
             <programlisting><![CDATA[<many-to-one name="person" 
@@ -2164,7 +2165,7 @@
 </many-to-one>]]></programlisting>
             
             <para>
-                �������A���̂悤�ȃ��K�V�[�f�[�^�}�b�s���O�̃R���e�L�X�g�O�ւ̎g�p�͐������܂���B
+                しかし、このようなレガシーデータマッピングのコンテキスト外への使用は推奨しません。
             </para>
             
         </sect2>
@@ -2173,9 +2174,9 @@
             <title>subclass</title>
 
             <para>
-                �Ō�Ƀ|�����[�t�B�b�N�ȉi�����ɂ́A���[�g�̉i���N���X�̊e�T�u�N���X�̒�`���K�v�ł��B
-                table-per-class-hierarchy�}�b�s���O�헪�ł́A
-                <literal>&lt;subclass&gt;</literal> ��`���g���܂��B
+                最後にポリモーフィックな永続化には、ルートの永続クラスの各サブクラスの定義が必要です。
+                table-per-class-hierarchyマッピング戦略では、
+                <literal>&lt;subclass&gt;</literal> 定義が使われます。
             </para>
             
             <programlistingco>
@@ -2202,37 +2203,37 @@
                 <calloutlist>
                     <callout arearefs="subclass1">
                         <para>
-                            <literal>name</literal>�F�T�u�N���X�̊��S�C�����ꂽ�N���X���B
+                            <literal>name</literal>：サブクラスの完全修飾されたクラス名。
                         </para>              
                     </callout>                   
                     <callout arearefs="subclass2">
                         <para>
-                            <literal>discriminator-value</literal>�i�I�v�V���� - �f�t�H���g�̓N���X���j�F
-                            �X�̃T�u�N���X����ʂ��邽�߂̒l�B
+                            <literal>discriminator-value</literal>（オプション - デフォルトはクラス名）：
+                            個々のサブクラスを区別するための値。
                         </para>               
                     </callout>
                     <callout arearefs="subclass3">
                         <para>
-                            <literal>proxy</literal>�i�I�v�V�����j�F
-                            �x���������v���L�V�Ɏg���N���X��C���^�[�t�F�C�X���w�肵�܂��B
+                            <literal>proxy</literal>（オプション）：
+                            遅延初期化プロキシに使うクラスやインターフェイスを指定します。
                         </para>               
                     </callout>
                     <callout arearefs="subclass4">
                         <para>
-                            <literal>lazy</literal>�i�I�v�V����, �f�t�H���g�� <literal>true</literal> �j�F 
-                            <literal>lazy="false"</literal> �Ɛݒ肷��ƁA�x���t�F�b�`���g�p�ł��܂���B
+                            <literal>lazy</literal>（オプション, デフォルトは <literal>true</literal> ）： 
+                            <literal>lazy="false"</literal> と設定すると、遅延フェッチが使用できません。
                         </para>
                     </callout>    
                 </calloutlist>
             </programlistingco>
 
             <para>
-                �e�T�u�N���X�ł́A�i���v���p�e�B�ƃT�u�N���X���`���܂��B  
-                <literal>&lt;version&gt;</literal> �� <literal>&lt;id&gt;</literal> �v���p�e�B�́A
-                ���[�g�N���X����p�������Ɖ��肳��܂��B
-                �K�w�\���ɂ�����T�u�N���X�́A
-                ���j�[�N�� <literal>discriminator-value</literal> ���`���Ȃ���΂Ȃ�܂���B
-                none���w�肳���ƁA���S�C�����ꂽJava�N���X�����g���܂��B
+                各サブクラスでは、永続プロパティとサブクラスを定義します。  
+                <literal>&lt;version&gt;</literal> と <literal>&lt;id&gt;</literal> プロパティは、
+                ルートクラスから継承されると仮定されます。
+                階層構造におけるサブクラスは、
+                ユニークな <literal>discriminator-value</literal> を定義しなければなりません。
+                noneが指定されると、完全修飾されたJavaクラス名が使われます。
             </para>
             
 <!--
@@ -2246,15 +2247,15 @@
             extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
             before subclasses.
             
-            <literal>subclass</literal> �A<literal>union-subclass</literal> �A
-            <literal>joined-subclass</literal> �}�b�s���O�� 
-            <literal>hibernate-mapping</literal> �����̕ʂ̃}�b�s���O�h�L�������g���Ő錾�ł��܂��B
-            ����ɂ��A�V�����}�b�s���O�t�@�C����ǉ����邾���ŃN���X�K�w���g�����邱�Ƃ��ł��܂��B
-            ���炩���߃}�b�s���O����X�[�p�[�N���X���w�肵���T�u�N���X�}�b�s���O���ŁA
-            <literal>extends</literal> �������w�肵�Ȃ���΂Ȃ�܂���B
-            ���ӁF���̓����̓}�b�s���O�h�L�������g�̏��ԕt�����d�v�ɂȂ�܂��B
-            Hibernate3�ł́A�g���L�[���[�h���g���Ƃ��ɂ́A�}�b�s���O�t�@�C���̏����t���͖��ɂȂ�܂���B
-            ��̃}�b�s���O�t�@�C�����ł̏����t���͖����ɁA�T�u�N���X�̑O�ɃX�[�p�[�N���X�Ƃ��Ē�`����K�v������܂��B
+            <literal>subclass</literal> 、<literal>union-subclass</literal> 、
+            <literal>joined-subclass</literal> マッピングを 
+            <literal>hibernate-mapping</literal> 直下の別のマッピングドキュメント内で宣言できます。
+            これにより、新しいマッピングファイルを追加するだけでクラス階層を拡張することができます。
+            あらかじめマッピングするスーパークラスを指定したサブクラスマッピング内で、
+            <literal>extends</literal> 属性を指定しなければなりません。
+            注意：この特性はマッピングドキュメントの順番付けが重要になります。
+            Hibernate3では、拡張キーワードを使うときには、マッピングファイルの順序付けは問題になりません。
+            一つのマッピングファイル内での順序付けは未だに、サブクラスの前にスーパークラスとして定義する必要があります。
         </para>
         
     
@@ -2267,7 +2268,7 @@
 -->
 
             <para>
-                �p���̃}�b�s���O�Ɋւ������ <xref linkend="inheritance"/> �����Ă��������B
+                継承のマッピングに関する情報は <xref linkend="inheritance"/> を見てください。
             </para>
 
         </sect2>
@@ -2277,10 +2278,10 @@
             <title>joined-subclass</title>
 
             <para>
-                ����1�̕��@�Ƃ��āA�e�T�u�N���X�����g�̃e�[�u���փ}�b�s���O���邱�Ƃ��ł��܂�
-                (table-per-subclass mapping strategy)�B
-                �p��������Ԃ̓X�[�p�[�N���X�̃e�[�u�����g���������Ō������܂��B
-                <literal>&lt;joined-subclass&gt;</literal> �v�f���g�p���܂��B
+                もう1つの方法として、各サブクラスを自身のテーブルへマッピングすることができます
+                (table-per-subclass mapping strategy)。
+                継承した状態はスーパークラスのテーブルを使った結合で検索します。
+                <literal>&lt;joined-subclass&gt;</literal> 要素を使用します。
             </para>
 
             <programlistingco>
@@ -2313,34 +2314,34 @@
                 <calloutlist>
                     <callout arearefs="joinedsubclass1">
                         <para>
-                            <literal>name</literal>�F�T�u�N���X�̊��S�C�����ꂽ�N���X���B
+                            <literal>name</literal>：サブクラスの完全修飾されたクラス名。
                         </para>            
                     </callout>                   
                     <callout arearefs="joinedsubclass2">
                         <para>
-                            <literal>table</literal> :�T�u�N���X�e�[�u���̖��O�B
+                            <literal>table</literal> :サブクラステーブルの名前。
                         </para>            
                     </callout>                   
                     <callout arearefs="joinedsubclass3">
                         <para>
-                            <literal>proxy</literal> (�I�v�V����):
-                            �x���������v���L�V�Ɏg�p����N���X��C���^�[�t�F�C�X���w�肵�܂��B
+                            <literal>proxy</literal> (オプション):
+                            遅延初期化プロキシに使用するクラスやインターフェイスを指定します。
                         </para>              
                     </callout>
                     <callout arearefs="joinedsubclass4">
                         <para>
-                            <literal>lazy</literal> (�I�v�V����, �f�t�H���g�� <literal>true</literal> ): 
-                            <literal>lazy="false"</literal> �Ƃ���ƁA�x���t�F�b�`���g�p�ł��܂���B
+                            <literal>lazy</literal> (オプション, デフォルトは <literal>true</literal> ): 
+                            <literal>lazy="false"</literal> とすると、遅延フェッチが使用できません。
                          </para>
                     </callout>    
                 </calloutlist>
             </programlistingco>
 
             <para>
-                ���̃}�b�s���O�헪�ɂ́A���ʃJ�����͕K�v����܂���B
-                �������e�T�u�N���X�� <literal>&lt;key&gt;</literal> �v�f���g���A
-                �I�u�W�F�N�g���ʎq��ێ�����e�[�u���J�������`���Ȃ���΂Ȃ�܂���B
-                ���̏͂̏��߂̃}�b�s���O�͈ȉ��̂悤�ɏ��������܂��F
+                このマッピング戦略には、識別カラムは必要ありません。
+                しかし各サブクラスは <literal>&lt;key&gt;</literal> 要素を使い、
+                オブジェクト識別子を保持するテーブルカラムを定義しなければなりません。
+                この章の初めのマッピングは以下のように書き直せます：
             </para>
             
         <programlisting><![CDATA[<?xml version="1.0"?>
@@ -2370,13 +2371,13 @@
         </class>
 
         <class name="eg.Dog">
-                <!-- ������Dog�̃}�b�s���O�������܂� -->
+                <!-- ここにDogのマッピングを書きます -->
         </class>
 
 </hibernate-mapping>]]></programlisting>
 
              <para>
-                 �p���̃}�b�s���O�Ɋւ������ <xref linkend="inheritance"/> �����Ă��������B
+                 継承のマッピングに関する情報は <xref linkend="inheritance"/> を見てください。
              </para>
 
         </sect2>
@@ -2385,14 +2386,14 @@
            <title>union-subclass</title>
 
            <para>
-               3�ڂ̑I�����́A�p���K�w�̋�ۃN���X�݂̂��e�[�u���Ƀ}�b�s���O���邱�Ƃł�
-               (the table-per-concrete-class�헪)�B
-               ���ꂼ��̃e�[�u���͌p���̏�Ԃ��܂߂��ׂẴN���X�̉i����Ԃ��`���܂��B
-               Hibernate�ł͂��̗l�Ȍp���K�w���K�������K�v�ł͂���܂���B
-               �P���ɂ��ꂼ��̃N���X���A
-               �ʁX�� <literal>&lt;class&gt;</literal> �錾���g���ă}�b�s���O���邱�Ƃ��ł��܂��B
-               �������|�����[�t�B�b�N�Ȋ֘A(�Ⴆ�� �K�w�̃X�[�p�[�N���X�ւ̊֘A)���g�������Ȃ�A
-               <literal>&lt;union-subclass&gt;</literal> �}�b�s���O���g���K�v������܂��B
+               3つ目の選択肢は、継承階層の具象クラスのみをテーブルにマッピングすることです
+               (the table-per-concrete-class戦略)。
+               それぞれのテーブルは継承の状態を含めすべてのクラスの永続状態を定義します。
+               Hibernateではその様な継承階層が必ずしも必要ではありません。
+               単純にそれぞれのクラスを、
+               別々の <literal>&lt;class&gt;</literal> 宣言を使ってマッピングすることができます。
+               しかしポリモーフィックな関連(例えば 階層のスーパークラスへの関連)を使いたいなら、
+               <literal>&lt;union-subclass&gt;</literal> マッピングを使う必要があります。
                
            </para>
 
@@ -2425,35 +2426,35 @@
                 <calloutlist>
                     <callout arearefs="unionsubclass1">
                         <para>
-                            <literal>name</literal>�F�T�u�N���X�̊��S�C�����ꂽ�N���X���B
+                            <literal>name</literal>：サブクラスの完全修飾されたクラス名。
                         </para>            
                     </callout>                   
                     <callout arearefs="unionsubclass2">
                         <para>
-                            <literal>table</literal> :�T�u�N���X�e�[�u���̖��O�B
+                            <literal>table</literal> :サブクラステーブルの名前。
                         </para>            
                     </callout>                   
                     <callout arearefs="unionsubclass3">
                         <para>
-                            <literal>proxy</literal> (�I�v�V����):
-                            �x���������v���L�V�Ɏg�p����N���X��C���^�[�t�F�C�X���w�肵�܂��B
+                            <literal>proxy</literal> (オプション):
+                            遅延初期化プロキシに使用するクラスやインターフェイスを指定します。
                         </para>              
                     </callout>
                     <callout arearefs="unionsubclass4">
                         <para>
-                            <literal>lazy</literal> (�I�v�V����, �f�t�H���g�� <literal>true</literal> ): 
-                            <literal>lazy="false"</literal> �Ƃ���ƁA�x���t�F�b�`���g�p�ł��܂���B
+                            <literal>lazy</literal> (オプション, デフォルトは <literal>true</literal> ): 
+                            <literal>lazy="false"</literal> とすると、遅延フェッチが使用できません。
                          </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                ���̃}�b�s���O�헪�ł͎��ʃJ������L�[�J�����͕K�v����܂���B
+                このマッピング戦略では識別カラムやキーカラムは必要ありません。
             </para>
 
             <para>
-                �p���̃}�b�s���O�Ɋւ������ <xref linkend="inheritance"/> �����Ă��������B
+                継承のマッピングに関する情報は <xref linkend="inheritance"/> を見てください。
             </para>
 
         </sect2>
@@ -2462,8 +2463,8 @@
             <title>join</title>
 
             <para>
-                <literal>&lt;join&gt;</literal> �v�f���g�����ƂŁA
-                �P�̃N���X�̃v���p�e�B���������̃e�[�u���Ƀ}�b�s���O���邱�Ƃ��ł��܂��B
+                <literal>&lt;join&gt;</literal> 要素を使うことで、
+                １つのクラスのプロパティをいくつものテーブルにマッピングすることができます。
             </para>
 
             <programlistingco>
@@ -2492,58 +2493,58 @@
                 <calloutlist>
                     <callout arearefs="join1">
                         <para>
-                            <literal>table</literal> :���������e�[�u���̖��O
+                            <literal>table</literal> :結合したテーブルの名前
                         </para>
                     </callout>
                     <callout arearefs="join2">
                         <para>
-                           <literal>schema</literal> (�I�v�V����):
-                           ���[�g�� <literal>&lt;hibernate-mapping&gt;</literal> �v�f�Ŏw�肵���X�L�[�}����
-                           �I�[�o�[���C�h���܂��B
+                           <literal>schema</literal> (オプション):
+                           ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定したスキーマ名を
+                           オーバーライドします。
                         </para>
                     </callout>
                     <callout arearefs="join3">
                         <para>
-                            <literal>catalog</literal> (�I�v�V����):
-                            ���[�g�� <literal>&lt;hibernate-mapping&gt;</literal> �v�f�Ŏw�肵���J�^���O����
-                            �I�[�o�[���C�h���܂��B
+                            <literal>catalog</literal> (オプション):
+                            ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定したカタログ名を
+                            オーバーライドします。
                         </para>
                     </callout>
                     <callout arearefs="join4">
                         <para>
-                            <literal>fetch</literal> (�I�v�V���� - �f�t�H���g�� <literal>join</literal> ): 
-                            <literal>join</literal> ��ݒ肵���ꍇ�A
-                            Hibernate�̓f�t�H���g�ŁA�N���X��X�[�p�[�N���X�Œ�`���ꂽ <literal>&lt;join&gt;</literal> 
-                            ����������̂ɓ����������g���A�T�u�N���X�Œ�`���ꂽ <literal>&lt;join&gt;</literal> 
-                            ����������̂ɊO���������g���܂��B
-                            <literal>select</literal> ��ݒ肵���ꍇ�ɂ́A
-                            Hibernate�̓T�u�N���X�Œ�`���ꂽ <literal>&lt;join&gt;</literal> 
-                            �̑I���ɏ����I�����g���܂��B���̏ꍇ�A
-                            �s���T�u�N���X�̃C���X�^���X���\���邱�Ƃ��킩�����ꍇ�ɂ̂ݔ��s����܂��B
-                            ���������̓N���X�₻�̃X�[�p�[�N���X�Œ�`���ꂽ <literal>&lt;join&gt;</literal> ������
-                            ���邽�߂Ɏg�p���܂��B                            
+                            <literal>fetch</literal> (オプション - デフォルトは <literal>join</literal> ): 
+                            <literal>join</literal> を設定した場合、
+                            Hibernateはデフォルトで、クラスやスーパークラスで定義された <literal>&lt;join&gt;</literal> 
+                            を検索するのに内部結合を使い、サブクラスで定義された <literal>&lt;join&gt;</literal> 
+                            を検索するのに外部結合を使います。
+                            <literal>select</literal> を設定した場合には、
+                            Hibernateはサブクラスで定義された <literal>&lt;join&gt;</literal> 
+                            の選択に順次選択を使います。この場合、
+                            行がサブクラスのインスタンスを代表することがわかった場合にのみ発行されます。
+                            内部結合はクラスやそのスーパークラスで定義された <literal>&lt;join&gt;</literal> を検索
+                            するために使用します。                            
                         </para>
                     </callout>
                     <callout arearefs="join5">
                         <para>
-                            <literal>inverse</literal> (�I�v�V���� - �f�t�H���g�� <literal>false</literal> ):
-                            �����\�ł���΁AHibernate�͂��̌����Œ�`����Ă���v���p�e�B�ɑ΂�
-                            �}����X�V���s���܂���B
+                            <literal>inverse</literal> (オプション - デフォルトは <literal>false</literal> ):
+                            もし可能であれば、Hibernateはこの結合で定義されているプロパティに対し
+                            挿入や更新を行いません。
                         </para>
                     </callout>
                     <callout arearefs="join6">
                         <para>
-                            <literal>optional</literal> (�I�v�V���� - �f�t�H���g�� <literal>false</literal> ):
-                            �����\�ł���΁AHibernate�͂��̌����Œ�`���ꂽ�v���p�e�B��null�łȂ��ꍇ�ɂ̂�
-                            �s��}�����A���̃v���p�e�B�̌����ɂ͏�ɊO���������g�p���܂��B
+                            <literal>optional</literal> (オプション - デフォルトは <literal>false</literal> ):
+                            もし可能であれば、Hibernateはこの結合で定義されたプロパティがnullでない場合にのみ
+                            行を挿入し、そのプロパティの検索には常に外部結合を使用します。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                �Ⴆ�ΐl�̃A�h���X�̏��𕪗������e�[�u���Ƀ}�b�s���O���邱�Ƃ��\�ł�
-                (���ׂẴv���p�e�B�ɑ΂��Ēl�^�̃Z�}���e�B�N�X��ێ����܂�)�B
+                例えば人のアドレスの情報を分離したテーブルにマッピングすることが可能です
+                (すべてのプロパティに対して値型のセマンティクスを保持します)。
             </para>
 
             <programlisting><![CDATA[<class name="Person"
@@ -2560,9 +2561,9 @@
     ...]]></programlisting>
 
             <para>
-                ���̓����͂��΂��΃��K�V�[�f�[�^���f���ɑ΂��Ă̂ݗL�p�ł����A
-                �N���X�������Ȃ��e�[�u���ƁA���߂ׂ̍����h���C�����f���𐄏����܂��B
-                ��������Ő�������悤�ɁA�P�̃N���X�K�w�Ōp���̃}�b�s���O�헪��؂�ւ��鎞�ɂ͗L�p�ł��B
+                この特徴はしばしばレガシーデータモデルに対してのみ有用ですが、
+                クラスよりも少ないテーブルと、きめの細かいドメインモデルを推奨します。
+                しかし後で説明するように、１つのクラス階層で継承のマッピング戦略を切り替える時には有用です。
             </para>
 
         </sect2>
@@ -2571,10 +2572,10 @@
             <title>key</title>
 
             <para>
-                ���܂ŉ��x�� <literal>&lt;key&gt;</literal> �v�f���o�Ă��܂����B
-                ���̗v�f�͐V�����e�[�u���ւ̌������`������A
-                �����e�[�u���ŊO���L�[���`�����肷��e�v�f�̂ǂ��ɂł�����A
-                �I���W�i���e�[�u���̎�L�[���Q�Ƃ��܂��B
+                今まで何度か <literal>&lt;key&gt;</literal> 要素が出てきました。
+                この要素は新しいテーブルへの結合を定義したり、
+                結合テーブルで外部キーを定義したりする親要素のどこにでも現れ、
+                オリジナルテーブルの主キーを参照します。
             </para>
 
             <programlistingco>
@@ -2598,72 +2599,72 @@
                 <calloutlist>
                     <callout arearefs="key1">
                         <para>
-                             <literal>column</literal> (�I�v�V����):�O���L�[�J�����̖��O�B
-                             �l�X�g���� <literal>&lt;column&gt;</literal> �J�����ɂ���Ă��w�肳��܂��B
+                             <literal>column</literal> (オプション):外部キーカラムの名前。
+                             ネストした <literal>&lt;column&gt;</literal> カラムによっても指定されます。
                         </para>
                     </callout>
                     <callout arearefs="key2">
                         <para>
-                             <literal>on-delete</literal> (�I�v�V����, �f�t�H���g�� <literal>noaction</literal>):
-                            �O���L�[���񂪃f�[�^�x�[�X���x���ŃJ�X�P�[�h�폜���\���ǂ������w�肵�܂��B
+                             <literal>on-delete</literal> (オプション, デフォルトは <literal>noaction</literal>):
+                            外部キー制約がデータベースレベルでカスケード削除が可能かどうかを指定します。
                         </para>
                     </callout>
                     <callout arearefs="key3">
                         <para>
-                             <literal>property-ref</literal> (�I�v�V����):
-                             �I���W�i���e�[�u���̎�L�[�ł͂Ȃ��J�������Q�Ƃ���O���L�[���w�肵�܂�
-                             (���K�V�[�f�[�^�ɑ΂��Ē񋟂���܂�)�B
+                             <literal>property-ref</literal> (オプション):
+                             オリジナルテーブルの主キーではないカラムを参照する外部キーを指定します
+                             (レガシーデータに対して提供されます)。
                         </para>
                     </callout>
                     <callout arearefs="key4">
                         <para>
-                           <literal>not-null</literal> (�I�v�V����):
-                           �O���L�[�J������null�l�����e���Ȃ����Ƃ��w�肵�܂�
-                           (���̂��Ƃ͊O���L�[����L�[�̈ꕔ�ł��邱�Ƃ��ÖٓI�Ɏ����܂�)�B
+                           <literal>not-null</literal> (オプション):
+                           外部キーカラムがnull値を許容しないことを指定します
+                           (このことは外部キーが主キーの一部であることを暗黙的に示します)。
                         </para>
                     </callout>
                     <callout arearefs="key5">
                         <para>
-                            <literal>update</literal> (�I�v�V����):
-                            �O���L�[�������čX�V���Ă͂Ȃ�Ȃ����Ƃ��w�肵�܂�
-                            (���̂��Ƃ͊O���L�[����L�[�̈ꕔ�ł��邱�Ƃ��ÖٓI�Ɏ����܂�)�B
+                            <literal>update</literal> (オプション):
+                            外部キーを決して更新してはならないことを指定します
+                            (このことは外部キーが主キーの一部であることを暗黙的に示します)。
                             
                         </para>
                     </callout>
                     <callout arearefs="key6">
                         <para>
-                            <literal>unique</literal> (�I�v�V����):
-                            �O���L�[�����j�[�N��������ׂ��ł��邱�Ƃ��w�肵�܂�
-                            (���̂��Ƃ͊O���L�[����L�[�̈ꕔ�ł��邱�Ƃ��ÖٓI�Ɏ����܂�)�B
+                            <literal>unique</literal> (オプション):
+                            外部キーがユニーク制約を持つべきであることを指定します
+                            (このことは外部キーが主キーの一部であることを暗黙的に示します)。
                         </para>
                     </callout>
                 </calloutlist>
             </programlistingco>
 
             <para>
-                �폜�̃p�t�H�[�}���X���d�v�ł���V�X�e���ɂ́A
-                ���ׂẴL�[�� <literal>on-delete="cascade"</literal> �ƒ�`���邱�Ƃ𐄏����܂��B
-                �������邱�Ƃ�Hibernate�́A<literal>DELETE</literal> ���𖈉񔭍s�������ɁA
-                �f�[�^�x�[�X���x���� <literal>ON CASCADE DELETE</literal> ������g�p���܂��B
-                ���̓����̓o�[�W�����t����ꂽ�f�[�^�ɑ΂���Hibernate�̒ʏ�̊y�ϓI���b�N�헪��
-                ��������Ƃ������Ƃɒ��ӂ��Ă��������B
+                削除のパフォーマンスが重要であるシステムには、
+                すべてのキーを <literal>on-delete="cascade"</literal> と定義することを推奨します。
+                そうすることでHibernateは、<literal>DELETE</literal> 文を毎回発行する代わりに、
+                データベースレベルの <literal>ON CASCADE DELETE</literal> 制約を使用します。
+                この特徴はバージョン付けられたデータに対するHibernateの通常の楽観的ロック戦略を
+                無視するということに注意してください。
             </para>
             
             <para>
-                <literal>not-null</literal> �� <literal>update</literal> �����́A�P������Α��֘A�̎��ɂ͗L�p�ł��B
-                �P������Α��֘A��null�����e���Ȃ��O���L�[�Ƀ}�b�s���O����Ƃ��́A
-                <literal>&lt;key not-null="true"&gt;</literal> ���g���ăL�[�J������錾
-                 <emphasis> ���Ȃ��Ă͂Ȃ�܂���</emphasis> �B
+                <literal>not-null</literal> と <literal>update</literal> 属性は、単方向一対多関連の時には有用です。
+                単方向一対多関連をnullを許容しない外部キーにマッピングするときは、
+                <literal>&lt;key not-null="true"&gt;</literal> を使ってキーカラムを宣言
+                 <emphasis> しなくてはなりません</emphasis> 。
             </para>
 
         </sect2>
 
         <sect2 id="mapping-column" revision="4">
-           <title>column �� formula �v�f</title>
+           <title>column と formula 要素</title>
            <para>
-               <literal>column</literal> �������L�q�ł���C�ӂ̃}�b�s���O�v�f�͂܂��A
-               <literal>&lt;column&gt;</literal> �T�u�v�f���L�q�ł��܂��B
-               ���l�� <literal>&lt;formula&gt;</literal> �� <literal>formula</literal> �����̑�֎�i�ł��B
+               <literal>column</literal> 属性を記述できる任意のマッピング要素はまた、
+               <literal>&lt;column&gt;</literal> サブ要素も記述できます。
+               同様に <literal>&lt;formula&gt;</literal> も <literal>formula</literal> 属性の代替手段です。
            </para>
 
            <programlisting><![CDATA[<column
@@ -2682,9 +2683,9 @@
             <programlisting><![CDATA[<formula>SQL expression</formula>]]></programlisting>
         
             <para>
-                �����v���p�e�B��֘A�̃}�b�s���O�̒��ŁA
-                <literal>column</literal> �� <literal>formula</literal> ������g�ݍ��킹�邱�Ƃ��ł��܂��B
-                �Ⴆ�΁A����Ȍ��������Ȃǂł��B
+                同じプロパティや関連のマッピングの中で、
+                <literal>column</literal> と <literal>formula</literal> 属性を組み合わせることができます。
+                例えば、特殊な結合条件などです。
             </para>
 
             <programlisting><![CDATA[<many-to-one name="homeAddress" class="Address"
@@ -2699,11 +2700,11 @@
             <title>import</title>
 
             <para>
-                �A�v���P�[�V�����ɓ������O��2�̉i���N���X������A
-                Hibernate�N�G���Ŋ��S�C�����ꂽ�i�p�b�P�[�W�́j���O���w�肵�����Ȃ��Ɖ��肵�܂��B
-                ���̂悤�ȏꍇ�� <literal>auto-import="true"</literal> �ɗ��炸�A
-                �N���X���u�C���|�[�g�v���ꂽ���̂ł���Ɩ����ł��܂��B
-                �����I�Ƀ}�b�s���O����Ă��Ȃ��N���X��C���^�[�t�F�C�X�ł������C���|�[�g�ł��܂��B
+                アプリケーションに同じ名前の2つの永続クラスがあり、
+                Hibernateクエリで完全修飾された（パッケージの）名前を指定したくないと仮定します。
+                そのような場合は <literal>auto-import="true"</literal> に頼らず、
+                クラスが「インポート」されたものであると明示できます。
+                明示的にマッピングされていないクラスやインターフェイスでさえもインポートできます。
             </para>
             
             <programlisting><![CDATA[<import class="java.lang.Object" rename="Universe"/>]]></programlisting>
@@ -2720,13 +2721,13 @@
                 <calloutlist>
                     <callout arearefs="import1">
                         <para>
-                            <literal>class</literal>�FJava�N���X�̊��S�C�����ꂽ�N���X���B
+                            <literal>class</literal>：Javaクラスの完全修飾されたクラス名。
                         </para>              
                     </callout>                   
                     <callout arearefs="import2">
                         <para>
-                            <literal>rename</literal>�i�I�v�V���� - �f�t�H���g�͏C������Ă��Ȃ��N���X���j�F
-                            �N�G������Ŏg���閼�O�B
+                            <literal>rename</literal>（オプション - デフォルトは修飾されていないクラス名）：
+                            クエリ言語で使われる名前。
                         </para>               
                     </callout>
                 </calloutlist>
@@ -2738,21 +2739,21 @@
             <title>any</title>
             
             <para>
-                �v���p�e�B�}�b�s���O�ɂ͂���ɂ���1�̌^������܂��B
-                <literal>&lt;any&gt;</literal> �}�b�s���O�v�f�́A
-                �����̃e�[�u������N���X�ւ̃|�����[�t�B�b�N�Ȋ֘A���`���܂��B
-                ���̌^�̃}�b�s���O�ɂ͕K�������̃J�������K�v�ł��B1�Ԗڂ̃J�����͊֘A�G���e�B�e�B�̌^��ێ����܂��B
-                �c��̃J�����͎��ʎq��ێ����܂��B���̎�ނ̊֘A�ɂ͊O���L�[������w�肷�邱�Ƃ͂ł��܂���B
-                ���̂��߂���͍ł��g���邱�Ƃ̂Ȃ��i�|�����[�t�B�b�N�ȁj�֘A�̃}�b�s���O���@�ł��B
-                ���ɓ��ʂȏꍇ�i�Ⴆ�΁A�������O�⃆�[�U�Z�b�V�����f�[�^�Ȃ�)�Ɍ����āA������g���ׂ��ł��B
+                プロパティマッピングにはさらにもう1つの型があります。
+                <literal>&lt;any&gt;</literal> マッピング要素は、
+                複数のテーブルからクラスへのポリモーフィックな関連を定義します。
+                この型のマッピングには必ず複数のカラムが必要です。1番目のカラムは関連エンティティの型を保持します。
+                残りのカラムは識別子を保持します。この種類の関連には外部キー制約を指定することはできません。
+                そのためこれは最も使われることのない（ポリモーフィックな）関連のマッピング方法です。
+                非常に特別な場合（例えば、検査ログやユーザセッションデータなど)に限って、これを使うべきです。
             </para>
 
             <para>
-                 <literal>meta-type</literal> �ɂ��A
-                 �A�v���P�[�V�����̓J�X�^���^���w��ł��܂��B���̃J�X�^���^��
-                 �f�[�^�x�[�X�J�����̒l���A<literal>id-type</literal> �Ŏw�肵���^��
-                 ���ʎq�v���p�e�B���������i���N���X�փ}�b�s���O���܂��B
-                 meta-type�̒l����N���X���ւ̃}�b�s���O���w�肵�Ȃ���΂Ȃ�܂���B
+                 <literal>meta-type</literal> により、
+                 アプリケーションはカスタム型を指定できます。このカスタム型は
+                 データベースカラムの値を、<literal>id-type</literal> で指定した型の
+                 識別子プロパティを持った永続クラスへマッピングします。
+                 meta-typeの値からクラス名へのマッピングを指定しなければなりません。
             </para>
 
             <programlisting><![CDATA[<any name="being" id-type="long" meta-type="string">
@@ -2790,37 +2791,37 @@
                 <calloutlist>
                     <callout arearefs="any1">
                         <para>
-                            <literal>name</literal>�F�v���p�e�B���B
+                            <literal>name</literal>：プロパティ名。
                         </para>            
                     </callout>                   
                     <callout arearefs="any2">
                         <para>
-                            <literal>id-type</literal>�F���ʎq�̌^�B
+                            <literal>id-type</literal>：識別子の型。
                         </para>            
                     </callout>                   
                     <callout arearefs="any3">
                         <para>
-                            <literal>meta-type</literal>�i�I�v�V���� - �f�t�H���g�� <literal>string</literal> �j�F
-                            �f�B�X�N���~�l�[�^�}�b�s���O�ŋ����ꂽ�^
+                            <literal>meta-type</literal>（オプション - デフォルトは <literal>string</literal> ）：
+                            ディスクリミネータマッピングで許された型
                         </para>            
                     </callout>                   
                     <callout arearefs="any4">
                         <para>
-                            <literal>cascade</literal>�i�I�v�V���� - �f�t�H���g�� <literal>none</literal> �j�F
-                            �J�X�P�[�h�̃X�^�C���B
+                            <literal>cascade</literal>（オプション - デフォルトは <literal>none</literal> ）：
+                            カスケードのスタイル。
                         </para>            
                     </callout>                   
                     <callout arearefs="any5">
                         <para>
-                            <literal>access</literal>�i�I�v�V���� - �f�t�H���g�� <literal>property</literal> �j�F
-                            �v���p�e�B�̒l�ւ̃A�N�Z�X��Hibernate���g���헪�B
+                            <literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）：
+                            プロパティの値へのアクセスにHibernateが使う戦略。
                         </para>
                     </callout>
                     <callout arearefs="any6">
                         <para>
-                            <literal>optimistic-lock</literal> (�I�v�V���� - �f�t�H���g�� <literal>true</literal> ):
-                            ���̃v���p�e�B�̍X�V�Ɋy�σ��b�N�̎擾��v�����邩�ǂ������w�肵�܂��B
-                            ����������΁A���̃v���p�e�B���_�[�e�B�ł���Ƃ��Ƀo�[�W�����𑝂₷�ׂ������`���܂��B
+                            <literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ):
+                            このプロパティの更新に楽観ロックの取得を要求するかどうかを指定します。
+                            言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを定義します。
                         </para>
                     </callout>
                 </calloutlist>
@@ -2831,87 +2832,87 @@
     </sect1>
 
     <sect1 id="mapping-types">
-        <title>Hibernate�̌^</title>
+        <title>Hibernateの型</title>
 
         <sect2 id="mapping-types-entitiesvalues" revision="1">
-            <title>�G���e�B�e�B�ƒl</title>
+            <title>エンティティと値</title>
 
             <para>
-                �i���T�[�r�X�Ɋւ��l�X��Java���ꃌ�x���̃I�u�W�F�N�g�̐U�镑���𗝉����邽�߂ɂ́A
-                �I�u�W�F�N�g��2�̃O���[�v�ɕ�����K�v������܂��F
+                永続サービスに関わる様々なJava言語レベルのオブジェクトの振る舞いを理解するためには、
+                オブジェクトを2つのグループに分ける必要があります：
             </para>
 
             <para>
-                 <emphasis> �G���e�B�e�B</emphasis> �̓G���e�B�e�B�ւ̎Q�Ƃ�ێ�����A
-                ���̂��ׂẴI�u�W�F�N�g����Ɨ����đ��݂��܂��B
-                �Q�Ƃ���Ȃ��I�u�W�F�N�g���K�x�[�W�R���N�g����Ă��܂����������ʏ��Java���f���ƁA
-                ������ׂĂ݂Ă��������B
-                �i�e�G���e�B�e�B����q�ցA�Z�[�u�ƍ폜�� <emphasis>�J�X�P�[�h</emphasis> ���ꂤ�邱�Ƃ������āj
-                �G���e�B�e�B�͖����I�ɃZ�[�u�܂��͍폜����Ȃ���΂Ȃ�܂���B
-                ����͓��B�\���ɂ��I�u�W�F�N�g�i������ODMG���f���Ƃ͈قȂ��Ă��܂��B
-                ��K�͂ȃV�X�e���ŃA�v���P�[�V�����I�u�W�F�N�g�����ʂǂ̂悤�Ɏg���邩�ɂ�薧�ڂɑΉ����܂��B
-                �G���e�B�e�B�͏z�ƎQ�Ƃ̋��L���T�|�[�g���܂��B
-                �܂������̓o�[�W�����t�����邱�Ƃ��ł��܂��B
+                 <emphasis> エンティティ</emphasis> はエンティティへの参照を保持する、
+                他のすべてのオブジェクトから独立して存在します。
+                参照されないオブジェクトがガベージコレクトされてしまう性質を持つ通常のJavaモデルと、
+                これを比べてみてください。
+                （親エンティティから子へ、セーブと削除が <emphasis>カスケード</emphasis> されうることを除いて）
+                エンティティは明示的にセーブまたは削除されなければなりません。
+                これは到達可能性によるオブジェクト永続化のODMGモデルとは異なっています。
+                大規模なシステムでアプリケーションオブジェクトが普通どのように使われるかにより密接に対応します。
+                エンティティは循環と参照の共有をサポートします。
+                またそれらはバージョン付けすることもできます。
                 
             </para>
 
             <para>
-                �G���e�B�e�B�̉i����Ԃ͑��̃G���e�B�e�B�� <emphasis>�l</emphasis> �^��
-                �C���X�^���X�ւ̎Q�Ƃ���\������܂��B
-                �l�̓v���~�e�B�u�A�R���N�V����(�R���N�V�����̓����ł͂Ȃ�)�A
-                �R���|�[�l���g�A�s�σI�u�W�F�N�g�ł��B
-                �G���e�B�e�B�Ƃ͈Ⴂ�A�l�́i���ɃR���N�V�����ƃR���|�[�l���g�ɂ����āj�A
-                ���B�\���ɂ��i������폜�� <emphasis>�s���܂�</emphasis> �B
-                �l�I�u�W�F�N�g�i�ƃv���~�e�B�u�j�́A��܂���G���e�B�e�B�ƈꏏ�ɉi������폜���s����̂ŁA
-                ������Ɨ��Ƀo�[�W�����t�����邱�Ƃ͂ł��܂���B
-                �l�ɂ͓Ɨ������A�C�f���e�B�e�B���Ȃ��̂ŁA
-                �����̃G���e�B�e�B��R���N�V��������������L���邱�Ƃ͂ł��܂���B
+                エンティティの永続状態は他のエンティティや <emphasis>値</emphasis> 型の
+                インスタンスへの参照から構成されます。
+                値はプリミティブ、コレクション(コレクションの内部ではなく)、
+                コンポーネント、不変オブジェクトです。
+                エンティティとは違い、値は（特にコレクションとコンポーネントにおいて）、
+                到達可能性による永続化や削除が <emphasis>行われます</emphasis> 。
+                値オブジェクト（とプリミティブ）は、包含するエンティティと一緒に永続化や削除が行われるので、
+                それらを独立にバージョン付けすることはできません。
+                値には独立したアイデンティティがないので、
+                複数のエンティティやコレクションがこれを共有することはできません。
             </para>
 
             <para>
-                ����܂Łu�i���N���X�v�Ƃ������t���G���e�B�e�B�̈Ӗ��Ŏg���Ă��܂����B
-                ���ꂩ����������Ă����܂��B
-                �����Ɍ����ƁA�i����Ԃ������[�U��`�̃N���X�̂��ׂĂ�
-                �G���e�B�e�B�Ƃ����킯�ł͂���܂���B
-                <emphasis>�R���|�[�l���g</emphasis> �͒l�̃Z�}���e�B�N�X�������[�U��`�N���X�ł��B
-                <literal>java.lang.String</literal> �^�̃v���p�e�B���܂��l�̃Z�}���e�B�N�X�������܂��B
-                ��`����Ȃ�AJDK�Œ񋟂���Ă��邷�ׂĂ�Java�̌^(�N���X)���l�̃Z�}���e�B�N�X�����Ƃ����܂��B
-                ������[�U��`�^�́A�G���e�B�e�B��l�^�̃Z�}���e�B�N�X�ƂƂ��Ƀ}�b�s���O�ł��܂��B
-                ���̌���̓A�v���P�[�V�����J���Ҏ���ł��B
-                ���̃N���X�̂P�̃C���X�^���X�ւ̋��L�Q�Ƃ́A
-                �h���C�����f�����̃G���e�B�e�B�N���X�ɑ΂���ǂ��q���g�ɂȂ�܂��B
-                ��������W���W��́A�ʏ�l�^�֕ϊ�����܂��B
+                これまで「永続クラス」という言葉をエンティティの意味で使ってきました。
+                これからもそうしていきます。
+                厳密に言うと、永続状態を持つユーザ定義のクラスのすべてが
+                エンティティというわけではありません。
+                <emphasis>コンポーネント</emphasis> は値のセマンティクスを持つユーザ定義クラスです。
+                <literal>java.lang.String</literal> 型のプロパティもまた値のセマンティクスを持ちます。
+                定義するなら、JDKで提供されているすべてのJavaの型(クラス)が値のセマンティクスを持つといえます。
+                一方ユーザ定義型は、エンティティや値型のセマンティクスとともにマッピングできます。
+                この決定はアプリケーション開発者次第です。
+                そのクラスの１つのインスタンスへの共有参照は、
+                ドメインモデル内のエンティティクラスに対する良いヒントになります。
+                一方合成集約や集約は、通常値型へ変換されます。
                 
             </para>
 
             <para>
-                �{�h�L�������g��ʂ��āA���x�����̊T�O�����グ�܂��B
+                本ドキュメントを通して、何度もこの概念を取り上げます。
             </para>
 
             <para>
-                Java�^�̃V�X�e��(�������͊J���҂���`�����G���e�B�e�B�ƒl�^)��
-                SQL/�f�[�^�x�[�X�^�̃V�X�e���Ƀ}�b�s���O���邱�Ƃ͓���ł��B
-                Hibernate�͂Q�̃V�X�e���̉˂�����񋟂��܂��B
-                �G���e�B�e�B�ɑ΂��Ă� 
-                <literal>&lt;class&gt;</literal> �� <literal>&lt;subclass&gt;</literal> �Ȃǂ��g�p���܂��B
-                �l�^�ɑ΂��Ă� <literal>&lt;property&gt;</literal> �� 
-                <literal>&lt;component&gt;</literal> �Ȃǂ��A�ʏ� <literal>type</literal> �ƂƂ��Ɏg���܂��B
-                ���̑����̒l��Hibernate�� <emphasis>�}�b�s���O�^</emphasis> �̖��O�ł��B
-                Hibernate��(�W��JDK�̒l�^�ɑ΂���)�����̎��R�ȃ}�b�s���O��񋟂��܂��B
-                ��Ō���悤�ɁA���g�̃}�b�s���O�^���L�q���A���l�ɃJ�X�^���̕ϊ��헪���������邱�Ƃ��ł��܂��B
+                Java型のシステム(もしくは開発者が定義したエンティティと値型)を
+                SQL/データベース型のシステムにマッピングすることは難しいです。
+                Hibernateは２つのシステムの架け橋を提供します。
+                エンティティに対しては 
+                <literal>&lt;class&gt;</literal> や <literal>&lt;subclass&gt;</literal> などを使用します。
+                値型に対しては <literal>&lt;property&gt;</literal> や 
+                <literal>&lt;component&gt;</literal> などを、通常 <literal>type</literal> とともに使います。
+                この属性の値はHibernateの <emphasis>マッピング型</emphasis> の名前です。
+                Hibernateは(標準JDKの値型に対して)多くの自由なマッピングを提供します。
+                後で見るように、自身のマッピング型を記述し、同様にカスタムの変換戦略を実装することができます。
             </para>
 
             <para>
-                �R���N�V�����������g�ݍ��݂�Hibernate�̌^�͂��ׂāAnull�Z�}���e�B�N�X���T�|�[�g���܂��B
+                コレクションを除く組み込みのHibernateの型はすべて、nullセマンティクスをサポートします。
             </para>
 
         </sect2>
 
         <sect2 id="mapping-types-basictypes" revision="3">
-            <title>��{�I�Ȍ^</title>
+            <title>基本的な型</title>
 
             <para>
-                �g�ݍ��݂� <emphasis>��{�I�ȃ}�b�s���O�^</emphasis> �͑�܂��Ɉȉ��̂悤�ɕ������܂��B
+                組み込みの <emphasis>基本的なマッピング型</emphasis> は大まかに以下のように分けられます。
 
                 <variablelist>
                     <varlistentry>
@@ -2919,11 +2920,11 @@
                             boolean, yes_no, true_false</literal></term>
                         <listitem>
                             <para>
-                                Java�̃v���~�e�B�u�⃉�b�p�[�N���X����K�؂ȁi�x���_�[�ŗL�́j
-                                SQL�J�����^�ւ̌^�}�b�s���O�B
-                                <literal>boolean, yes_no</literal> �� <literal>true_false</literal> �́A
-                                ���ׂ�Java�� <literal>boolean</literal> 
-                                �܂��� <literal>java.lang.Boolean</literal> �̑�փG���R�[�h�ł��B
+                                Javaのプリミティブやラッパークラスから適切な（ベンダー固有の）
+                                SQLカラム型への型マッピング。
+                                <literal>boolean, yes_no</literal> と <literal>true_false</literal> は、
+                                すべてJavaの <literal>boolean</literal> 
+                                または <literal>java.lang.Boolean</literal> の代替エンコードです。
                                 
                             </para>
                         </listitem>
@@ -2932,8 +2933,8 @@
                         <term><literal>string</literal></term>
                         <listitem>
                             <para>
-                                <literal>java.lang.String</literal> ���� <literal>VARCHAR</literal> 
-                                �i�܂���Oracle�� <literal>VARCHAR2</literal> �j�ւ̌^�}�b�s���O�B
+                                <literal>java.lang.String</literal> から <literal>VARCHAR</literal> 
+                                （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2941,9 +2942,9 @@
                         <term><literal>date, time, timestamp</literal></term>
                         <listitem>
                             <para>
-                                 <literal>java.util.Date</literal> �Ƃ��̃T�u�N���X����SQL�^�� <literal>DATE</literal>, 
-                                <literal>TIME</literal> , <literal>TIMESTAMP</literal> �i�܂��͂����Ɠ����Ȃ��́j
-                                �ւ̌^�}�b�s���O�B
+                                 <literal>java.util.Date</literal> とそのサブクラスからSQL型の <literal>DATE</literal>, 
+                                <literal>TIME</literal> , <literal>TIMESTAMP</literal> （またはそれらと等価なもの）
+                                への型マッピング。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2951,8 +2952,8 @@
                         <term><literal>calendar, calendar_date</literal></term>
                         <listitem>
                             <para>
-                                <literal>java.util.Calendar</literal> ����SQL�^ �́u <literal>TIMESTAMP</literal> , 
-                                 <literal>DATE</literal> (�܂��͂����Ɠ����Ȃ��́j�ւ̌^�}�b�s���O�B
+                                <literal>java.util.Calendar</literal> からSQL型 の「 <literal>TIMESTAMP</literal> , 
+                                 <literal>DATE</literal> (またはそれらと等価なもの）への型マッピング。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2960,8 +2961,8 @@
                         <term><literal>big_decimal, big_integer</literal></term>
                         <listitem>
                             <para>
-                                <literal>java.math.BigDecimal</literal> �� <literal>java.math.BigInteger</literal> 
-                                ���� <literal>NUMERIC</literal>�i�܂���Oracle�� <literal>NUMBER</literal> �j�ւ̌^�}�b�s���O�B
+                                <literal>java.math.BigDecimal</literal> と <literal>java.math.BigInteger</literal> 
+                                から <literal>NUMERIC</literal>（またはOracleの <literal>NUMBER</literal> ）への型マッピング。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2970,12 +2971,12 @@
                         <listitem>
                             <para>
                                 <literal>java.util.Locale</literal> , <literal>java.util.TimeZone</literal> , 
-                                <literal>java.util.Currency</literal> ���� <literal>VARCHAR</literal> 
-                                �i�܂���Oracle�� <literal>VARCHAR2</literal> �j�ւ̌^�}�b�s���O�B
-                                <literal>Locale</literal> �� <literal>Currency</literal> �̃C���X�^���X�́A
-                                ������ISO�R�[�h�Ƀ}�b�s���O����܂��B 
-                                <literal>TimeZone</literal> �̃C���X�^���X�́A
-                                ������ <literal>ID</literal> �Ƀ}�b�s���O����܂��B
+                                <literal>java.util.Currency</literal> から <literal>VARCHAR</literal> 
+                                （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。
+                                <literal>Locale</literal> と <literal>Currency</literal> のインスタンスは、
+                                それらのISOコードにマッピングされます。 
+                                <literal>TimeZone</literal> のインスタンスは、
+                                それらの <literal>ID</literal> にマッピングされます。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2983,9 +2984,9 @@
                         <term><literal>class</literal></term>
                         <listitem>
                             <para>
-                                <literal>java.lang.Class</literal> ���� <literal>VARCHAR</literal> 
-                                �i�܂���Oracle�� <literal>VARCHAR2</literal> �j�ւ̌^�}�b�s���O�B
-                                <literal>Class</literal> �͂��̊��S�C�����ꂽ���O�Ƀ}�b�s���O����܂��B
+                                <literal>java.lang.Class</literal> から <literal>VARCHAR</literal> 
+                                （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。
+                                <literal>Class</literal> はその完全修飾された名前にマッピングされます。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -2993,7 +2994,7 @@
                         <term><literal>binary</literal></term>
                         <listitem>
                             <para>
-                                 �o�C�g�z��́A�K�؂�SQL�̃o�C�i���^�Ƀ}�b�s���O����܂��B
+                                 バイト配列は、適切なSQLのバイナリ型にマッピングされます。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -3001,8 +3002,8 @@
                         <term><literal>text</literal></term>
                         <listitem>
                             <para>
-                                ����Java������́ASQL�� <literal>CLOB</literal> �܂��� 
-                                <literal>TEXT</literal> �^�Ƀ}�b�s���O����܂��B
+                                長いJava文字列は、SQLの <literal>CLOB</literal> または 
+                                <literal>TEXT</literal> 型にマッピングされます。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -3010,10 +3011,10 @@
                         <term><literal>serializable</literal></term>
                         <listitem>
                             <para>
-                                �V���A���C�Y�\��Java�^�́A�K�؂�SQL�̃o�C�i���^�Ƀ}�b�s���O����܂��B
-                                �f�t�H���g�Ŋ�{�^�ł͂Ȃ��V���A���C�Y�\��Java�N���X��
-                                �C���^�[�t�F�C�X�̖��O���w�肷�邱�ƂŁA
-                                Hibernate�̌^�� <literal>serializable</literal> �Ƃ��邱�Ƃ��ł��܂��B
+                                シリアライズ可能なJava型は、適切なSQLのバイナリ型にマッピングされます。
+                                デフォルトで基本型ではないシリアライズ可能なJavaクラスや
+                                インターフェイスの名前を指定することで、
+                                Hibernateの型を <literal>serializable</literal> とすることもできます。
                             </para>
                         </listitem>
                     </varlistentry>
@@ -3021,11 +3022,11 @@
                         <term><literal>clob, blob</literal></term>
                         <listitem>
                             <para>
-                                JDBC�N���X <literal>java.sql.Clob</literal> �� <literal>java.sql.Blob</literal> 
-                                �ɑ΂���^�}�b�s���O�B
-                                blob��clob�I�u�W�F�N�g�̓g�����U�N�V�����̊O�ł͍ė��p�ł��Ȃ����߁A
-                                �A�v���P�[�V�����ɂ���Ă͕s�ւ�������܂���B
-                                �i����ɂ̓h���C�o�T�|�[�g����т��Ă��܂���B�j
+                                JDBCクラス <literal>java.sql.Clob</literal> と <literal>java.sql.Blob</literal> 
+                                に対する型マッピング。
+                                blobやclobオブジェクトはトランザクションの外では再利用できないため、
+                                アプリケーションによっては不便かもしれません。
+                                （さらにはドライバサポートが一貫していません。）
                             </para>
                         </listitem>
                     </varlistentry>
@@ -3037,13 +3038,13 @@
                         </term>
                         <listitem>
                             <para>
-                                �قƂ�ǂ̏ꍇ�ɉςł���Java�̌^�ɑ΂���^�}�b�s���O�B
-                                Hibernate�͕s�ς�Java�̌^�ɑ΂��Ă͍œK�����s���A
-                                �A�v���P�[�V�����͂����s�σI�u�W�F�N�g�Ƃ��Ĉ����܂��B
-                                �Ⴆ�� <literal>imm_timestamp</literal> �Ƃ��ă}�b�v�����C���X�^���X�ɑ΂��āA
-                                <literal>Date.setTime()</literal> ���Ăяo���Ă͂Ȃ�܂���B
-                                �v���p�e�B�̒l��ύX�����̕ύX���i�������邽�߂ɂ́A
-                                �A�v���P�[�V�����̓v���p�e�B�ɑ΂��ĐV����(����łȂ�)�I�u�W�F�N�g�����蓖�ĂȂ���΂Ȃ�܂���B
+                                ほとんどの場合に可変であるJavaの型に対する型マッピング。
+                                Hibernateは不変なJavaの型に対しては最適化を行い、
+                                アプリケーションはそれを不変オブジェクトとして扱います。
+                                例えば <literal>imm_timestamp</literal> としてマップしたインスタンスに対して、
+                                <literal>Date.setTime()</literal> を呼び出してはなりません。
+                                プロパティの値を変更しその変更を永続化するためには、
+                                アプリケーションはプロパティに対して新しい(同一でない)オブジェクトを割り当てなければなりません。
                             </para>
                         </listitem>
                     </varlistentry>                    
@@ -3052,41 +3053,41 @@
             </para>
 
             <para>
-                �G���e�B�e�B�ƃR���N�V�����̃��j�[�N�Ȏ��ʎq�́A<literal>binary</literal> , <literal>blob</literal> , 
-                <literal>clob</literal> �������A�ǂ�Ȋ�{�^�ł��\���܂���B
-                �i�������ʎq�ł��\���܂���B�ȉ������Ă��������B�j
+                エンティティとコレクションのユニークな識別子は、<literal>binary</literal> , <literal>blob</literal> , 
+                <literal>clob</literal> を除く、どんな基本型でも構いません。
+                （複合識別子でも構いません。以下を見てください。）
             </para>
             
             <para>
-                ��{�I�Ȓl�^�ɂ́A<literal>org.hibernate.Hibernate</literal> �Œ�`���ꂽ 
-                <literal>Type</literal> �萔�����ꂼ�ꂠ��܂��B
-                �Ⴆ�΁A<literal>Hibernate.STRING</literal> �� <literal>string</literal> �^��\�����Ă��܂��B
+                基本的な値型には、<literal>org.hibernate.Hibernate</literal> で定義された 
+                <literal>Type</literal> 定数がそれぞれあります。
+                例えば、<literal>Hibernate.STRING</literal> は <literal>string</literal> 型を表現しています。
             </para>
 
         </sect2>
         
         <sect2 id="mapping-types-custom" revision="2">
-            <title>�J�X�^���^</title>
+            <title>カスタム型</title>
 
             <para>
-                  �J���҂��Ǝ��̒l�^���쐬���邱�Ƃ́A��r�I�ȒP�ł��B
-                �Ⴆ�΁A<literal>java.lang.BigInteger</literal> �^�̃v���p�e�B�� 
-                <literal>VARCHAR</literal> �J�����ɉi������������������܂���B
-                Hibernate�͂��̂��߂̑g�ݍ��݌^��p�ӂ��Ă��܂���B
-                �������J�X�^���^�́A�v���p�e�B�i�܂��̓R���N�V�����̗v�f�j��1�̃e�[�u���J������
-                �}�b�s���O����̂ɐ����͂���܂���B
-                ���̂��ߗႦ�΁A<literal>java.lang.String</literal> �^�� 
+                  開発者が独自の値型を作成することは、比較的簡単です。
+                例えば、<literal>java.lang.BigInteger</literal> 型のプロパティを 
+                <literal>VARCHAR</literal> カラムに永続化したいかもしれません。
+                Hibernateはこのための組み込み型を用意していません。
+                しかしカスタム型は、プロパティ（またはコレクションの要素）を1つのテーブルカラムに
+                マッピングするのに制限はありません。
+                そのため例えば、<literal>java.lang.String</literal> 型の 
                 <literal>getName()</literal> / <literal>setName()</literal> 
-                Java�v���p�e�B�� <literal>FIRST_NAME</literal> , <literal>INITIAL</literal>, <literal>SURNAME</literal> 
-                �J�����ɉi�����ł��܂��B
+                Javaプロパティを <literal>FIRST_NAME</literal> , <literal>INITIAL</literal>, <literal>SURNAME</literal> 
+                カラムに永続化できます。
             </para>
             
             <para>
-                �J�X�^���^����������ɂ́A<literal>org.hibernate.UserType</literal> �܂��� 
-                <literal>org.hibernate.CompositeUserType</literal> ���������A
-                �^�̊��S�C�����ꂽ���O���g���ăv���p�e�B���`���܂��B
-                �ǂ̂悤�Ȏ�ނ̂��̂��\���𒲂ׂ�ɂ́A
-                <literal>org.hibernate.test.DoubleStringType</literal> ���m�F���Ă��������B
+                カスタム型を実装するには、<literal>org.hibernate.UserType</literal> または 
+                <literal>org.hibernate.CompositeUserType</literal> を実装し、
+                型の完全修飾された名前を使ってプロパティを定義します。
+                どのような種類のものが可能かを調べるには、
+                <literal>org.hibernate.test.DoubleStringType</literal> を確認してください。
             </para>
 
             <programlisting><![CDATA[<property name="twoStrings" type="org.hibernate.test.DoubleStringType">
@@ -3095,22 +3096,22 @@
 </property>]]></programlisting>
 
             <para>
-                <literal>&lt;column&gt;</literal> �^�O�ŁA
-                �v���p�e�B�𕡐��̃J�����փ}�b�s���O�ł��邱�Ƃɒ��ڂ��Ă��������B
+                <literal>&lt;column&gt;</literal> タグで、
+                プロパティを複数のカラムへマッピングできることに注目してください。
             </para>
             
             <para>
                 <literal>CompositeUserType</literal> , <literal>EnhancedUserType</literal> ,
                 <literal>UserCollectionType</literal> , <literal>UserVersionType</literal> 
-                �C���^�[�t�F�C�X�́A������Ȏg�p�@�ɑ΂��ẴT�|�[�g��񋟂��܂��B
+                インターフェイスは、より特殊な使用法に対してのサポートを提供します。
             </para>
             
             <para>
-                �}�b�s���O�t�@�C������ <literal>UserType</literal> �փp�����[�^��񋟂ł��܂��B
-                ���̂��߂ɂ́A<literal>UserType</literal> �� 
-                <literal>org.hibernate.usertype.ParameterizedType</literal> ���������Ȃ��Ă͂Ȃ�܂���B
-                �J�X�^���^�p�����[�^��񋟂��邽�߂ɁA
-                �}�b�s���O�t�@�C������ <literal>&lt;type&gt;</literal> �v�f���g�p�ł��܂��B
+                マッピングファイル内で <literal>UserType</literal> へパラメータを提供できます。
+                このためには、<literal>UserType</literal> は 
+                <literal>org.hibernate.usertype.ParameterizedType</literal> を実装しなくてはなりません。
+                カスタム型パラメータを提供するために、
+                マッピングファイル内で <literal>&lt;type&gt;</literal> 要素を使用できます。
             </para>
             
             <programlisting><![CDATA[<property name="priority">
@@ -3120,17 +3121,17 @@
 </property>]]></programlisting>
 
             <para>
-                <literal>UserType</literal> �́A
-                �����Ƃ��ēn���ꂽ <literal>Properties</literal> �I�u�W�F�N�g����A
-                <literal>default</literal> �Ŏw�肵���p�����[�^�ɑ΂���l���������邱�Ƃ��ł��܂��B
+                <literal>UserType</literal> は、
+                引数として渡された <literal>Properties</literal> オブジェクトから、
+                <literal>default</literal> で指定したパラメータに対する値を検索することができます。
             </para>
             
             <para>
-                ����� <literal>UserType</literal> ��p�ɂɎg�p����Ȃ�΁A�Z�����O���`����ƕ֗��ɂȂ�ł��傤�B
-                <literal>&lt;typedef&gt;</literal> �v�f���g���Ă��̂悤�Ȃ��Ƃ��s���܂��B
-                Typedefs�̓J�X�^���^�ɖ��O�����蓖�Ă܂��B
-                ���̌^���p�����[�^�����Ȃ�΁A
-                �p�����[�^�̃f�t�H���g�l�̃��X�g���܂ނ��Ƃ��ł��܂��B
+                特定の <literal>UserType</literal> を頻繁に使用するならば、短い名前を定義すると便利になるでしょう。
+                <literal>&lt;typedef&gt;</literal> 要素を使ってこのようなことが行えます。
+                Typedefsはカスタム型に名前を割り当てます。
+                その型がパラメータを持つならば、
+                パラメータのデフォルト値のリストを含むこともできます。
             </para>
             
             <programlisting><![CDATA[<typedef class="com.mycompany.usertypes.DefaultValueIntegerType" name="default_zero">
@@ -3140,21 +3141,21 @@
             <programlisting><![CDATA[<property name="priority" type="default_zero"/>]]></programlisting>
 
             <para>
-                �v���p�e�B�̃}�b�s���O�Ō^�p�����[�^���g�����ƂŁA
-                typedef�Œ񋟂��ꂽ�p�����[�^�����̓s�x�I�[�o�[���C�h���邱�Ƃ��\�ł��B
+                プロパティのマッピングで型パラメータを使うことで、
+                typedefで提供されたパラメータをその都度オーバーライドすることが可能です。
                 
             </para>
             
             <para>
-                Hibernate�̕��L���g�ݍ��݌^�ƃR���|�[�l���g�ɑ΂���T�|�[�g�́A
-                �J�X�^���^���߂����� <emphasis>�g��Ȃ�</emphasis> �Ƃ������Ƃ��Ӗ����܂��B
-                ����ł��Ȃ��A�A�v���P�[�V�����ŕp�o����(�G���e�B�e�B�ł͂Ȃ�)�N���X�ɑ΂���J�X�^���^�̎g�p�́A
-                �悢�����ł���Ƃ݂Ȃ���܂��B
-                �Ⴆ�� <literal>MonetaryAmount</literal> �N���X�̓R���|�[�l���g�Ƃ��ĊȒP�Ƀ}�b�s���O�ł��܂����A
-                <literal>CompositeUserType</literal> �̗ǂ����ł��B
-                �J�X�^���^���g�p���铮�@��1�͒��ۉ��ł��B
-                �J�X�^���^���g�����ƂŁA�ʉ݂��ǂ̂悤�ɕ\�����悤�Ƃ�
-                �}�b�s���O�h�L�������g�͋N���肤��ω��ɑΉ��ł��܂��B
+                Hibernateの幅広い組み込み型とコンポーネントに対するサポートは、
+                カスタム型をめったに <emphasis>使わない</emphasis> ということを意味します。
+                それでもなお、アプリケーションで頻出する(エンティティではない)クラスに対するカスタム型の使用は、
+                よいやり方であるとみなされます。
+                例えば <literal>MonetaryAmount</literal> クラスはコンポーネントとして簡単にマッピングできますが、
+                <literal>CompositeUserType</literal> の良い候補です。
+                カスタム型を使用する動機の1つは抽象化です。
+                カスタム型を使うことで、通貨をどのように表現しようとも
+                マッピングドキュメントは起こりうる変化に対応できます。
             </para>
 
         </sect2>
@@ -3163,15 +3164,15 @@
     
     
     <sect1 id="mapping-entityname">
-        <title>�P�̃N���X�ɂP�ȏ�̃}�b�s���O</title>
+        <title>１つのクラスに１つ以上のマッピング</title>
         <para>
-            ����i���N���X�ɁA��ȏ�̃}�b�s���O��񋟂��邱�Ƃ��o���܂��B
-            ���̏ꍇ�A�}�b�s���O����Q�̃G���e�B�e�B�̃C���X�^���X�𖾊m�ɂ��邽�߂ɁA
-            <emphasis>�G���e�B�e�B��</emphasis> ���w�肵�Ȃ���΂Ȃ�܂���
-            (�f�t�H���g�ł̓G���e�B�e�B���̓N���X���Ɠ����ł��B)�B
-            �i���I�u�W�F�N�g�������Ƃ��A�N�G�����������ނƂ��A
-            �w�肳�ꂽ�G���e�B�e�B�ւ̊֘A���}�b�s���O����Ƃ��ɂ́A
-            Hibernate�ł̓G���e�B�e�B�����w�肵�Ȃ���΂Ȃ�܂���B
+            ある永続クラスに、一つ以上のマッピングを提供することが出来ます。
+            この場合、マッピングする２つのエンティティのインスタンスを明確にするために、
+            <emphasis>エンティティ名</emphasis> を指定しなければなりません
+            (デフォルトではエンティティ名はクラス名と同じです。)。
+            永続オブジェクトを扱うとき、クエリを書き込むとき、
+            指定されたエンティティへの関連をマッピングするときには、
+            Hibernateではエンティティ名を指定しなければなりません。
         </para>
         
         <programlisting><![CDATA[<class name="Contract" table="Contracts" 
@@ -3193,19 +3194,19 @@
 </class>]]></programlisting>
 
         <para>
-            �֘A��<literal>class</literal> �̑���� <literal>entity-name</literal> ���g���āA
-            �ǂ̂悤�Ɏw�肳���̂��ɒ��ڂ��Ă��������B
+            関連が<literal>class</literal> の代わりに <literal>entity-name</literal> を使って、
+            どのように指定されるのかに注目してください。
         </para>
 
     </sect1>
 
     <sect1 id="mapping-quotedidentifiers">
-            <title>�o�b�N�N�H�[�g�ň͂� SQL ���ʎq</title>
+            <title>バッククォートで囲んだ SQL 識別子</title>
             <para>
-                �}�b�s���O�h�L�������g�Ńe�[�u����J�����̖��O���o�b�N�N�H�[�g�ň͂ނ��ƂŁA
-                Hibernate�Ő������ꂽSQL���̎��ʎq�����p�����邱�Ƃ��ł��܂��B
-                Hibernate��SQL�� <literal>Dialect</literal> �ɑΉ�����A���������p�X�^�C�����g���܂�
-                �i���ʂ̓_�u���N�H�[�g�ł����ASQL Server�ł͂������ʁAMySQL�ł̓o�b�N�N�H�[�g�ł��j�B
+                マッピングドキュメントでテーブルやカラムの名前をバッククォートで囲むことで、
+                Hibernateで生成されたSQL中の識別子を引用させることができます。
+                HibernateはSQLの <literal>Dialect</literal> に対応する、正しい引用スタイルを使います
+                （普通はダブルクォートですが、SQL Serverではかぎ括弧、MySQLではバッククォートです）。
             </para>
 
             <programlisting><![CDATA[<class name="LineItem" table="`Line Item`">
@@ -3218,21 +3219,21 @@
 
       
        <sect1 id="mapping-alternatives">
-       <title>���^�f�[�^�̑�֎�i</title>
+       <title>メタデータの代替手段</title>
        
        <para>
-            XML�̋L�q�ȊO�ɁA
-            Hibernate�ł�O/R�}�b�s���O�̃��^�f�[�^���`�����֕��@������܂��B
+            XMLの記述以外に、
+            HibernateではO/Rマッピングのメタデータを定義する代替方法があります。
        </para>
 
     <sect2 id="mapping-xdoclet">
-        <title>XDoclet �}�[�N�A�b�v�̎g�p</title>
+        <title>XDoclet マークアップの使用</title>
 
         <para>
-            ������Hibernate���[�U��XDoclet�� <literal>@hibernate.tags</literal> ���g���āA
-            �\�[�X�R�[�h���ɒ��ڃ}�b�s���O���𖄂ߍ��ނ��Ƃ��D�݂܂��B
-            ����͌����Ɍ�����XDoclet�̕���Ȃ̂ŁA�{�h�L�������g�ł͂��̕��@��ΏۂƂ͂��܂���B
-            ������XDoclet���g�����ȉ��� <literal>Cat</literal> �}�b�s���O�̗�������܂��B
+            多くのHibernateユーザはXDocletの <literal>@hibernate.tags</literal> を使って、
+            ソースコード内に直接マッピング情報を埋め込むことを好みます。
+            これは厳密に言えばXDocletの分野なので、本ドキュメントではこの方法を対象とはしません。
+            しかしXDocletを使った以下の <literal>Cat</literal> マッピングの例を示します。
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -3341,30 +3342,30 @@ public class Cat {
 }]]></programlisting>
 
         <para>
-            Hibernate�̃E�F�u�T�C�g�ɂ́AXDoclet��Hibernate�Ɋւ���T���v������������܂��B
+            Hibernateのウェブサイトには、XDocletとHibernateに関するサンプルが多数あります。
         </para>
 
     </sect2>
 
     <sect2 id="mapping-annotations" revision="2">
-        <title>JDK 5.0 �A�m�e�[�V�����̎g�p</title>
+        <title>JDK 5.0 アノテーションの使用</title>
 
         <para>
-            JDK5.0�ł̓^�C�v�Z�[�t���R���p�C�����Ƀ`�F�b�N�ł���A
-            ���ꃌ�x����XDoclet�X�^�C���̃A�m�e�[�V�����𓱓����܂����B
-            ���̃��J�j�Y����XDoclet�̃A�m�e�[�V�����������͂ŁA�c�[����IDE���������T�|�[�g���Ă��܂��B
-            �Ⴆ��IntelliJ IDEA�́AJDK5.0�ɃA�m�e�[�V�����̎����⊮�ƍ\���̋����\�����T�|�[�g���Ă��܂��B
-            EJB�d�l (JSR-220)�̐V�����o�[�W�����ł́A�G���e�B�e�B�r�[���ɑ΂����v�ȃ��^�f�[�^���J�j�Y���Ƃ���
-            JDK5.0�̃A�m�e�[�V�������g�p���Ă��܂��B
-            Hibernate3�ł�JSR-220 (�i����API)�� <literal>EntityManager</literal> ���������A
-            ���^�f�[�^�}�b�s���O�ɑ΂���T�|�[�g�́A
-            �ʃ_�E�����[�h�� <emphasis>Hibernate Annotations</emphasis> �p�b�P�[�W�ɂ�藘�p�\�ł��B
-            �����EJB3(JSR-220)��Hibernate3�̃��^�f�[�^���ǂ�����T�|�[�g���Ă��܂��B
+            JDK5.0ではタイプセーフかつコンパイル時にチェックできる、
+            言語レベルのXDocletスタイルのアノテーションを導入しました。
+            このメカニズムはXDocletのアノテーションよりも強力で、ツールやIDEも多くがサポートしています。
+            例えばIntelliJ IDEAは、JDK5.0にアノテーションの自動補完と構文の強調表示をサポートしています。
+            EJB仕様 (JSR-220)の新しいバージョンでは、エンティティビーンに対する主要なメタデータメカニズムとして
+            JDK5.0のアノテーションを使用しています。
+            Hibernate3ではJSR-220 (永続化API)の <literal>EntityManager</literal> を実装し、
+            メタデータマッピングに対するサポートは、
+            別ダウンロードの <emphasis>Hibernate Annotations</emphasis> パッケージにより利用可能です。
+            これはEJB3(JSR-220)とHibernate3のメタデータをどちらもサポートしています。
             
         </para>
 
         <para>
-            �ȉ���EJB�̃G���e�B�e�B�r�[���Ƃ��Ē��߂��ꂽPOJO�N���X�̗�ł��B
+            以下はEJBのエンティティビーンとして注釈されたPOJOクラスの例です。
         </para>
 
         <programlisting><![CDATA[@Entity(access = AccessType.FIELD)
@@ -3391,8 +3392,8 @@ public class Customer implements Serializable {
 }]]></programlisting>
 
         <para>
-            JDK5.0�̃A�m�e�[�V����(��JSR-220)�̃T�|�[�g�͐i�s���̍�Ƃł���A���S�ł͂Ȃ����Ƃɒ��ӂ��Ă��������B
-            ����ɏڂ�������Hibernate�̃A�m�e�[�V�����E���W���[�����Q�Ƃ��Ă��������B
+            JDK5.0のアノテーション(とJSR-220)のサポートは進行中の作業であり、完全ではないことに注意してください。
+            さらに詳しい情報はHibernateのアノテーション・モジュールを参照してください。
         </para>
     
     </sect2>
@@ -3401,54 +3402,54 @@ public class Customer implements Serializable {
 
 
     <sect1 id="mapping-generated" revision="1">
-        <title>�����v���p�e�B</title>
+        <title>生成プロパティ</title>
         <para>
-            �����v���p�e�B�Ƃ́A�f�[�^�x�[�X�ɂ���Đ������ꂽ�l�����v���p�e�B�ł��B
-            �ʏ�AHibernate�A�v���P�[�V�����́A�f�[�^�x�[�X���l�𐶐������v���p�e�B���܂ރI�u�W�F�N�g��
-            <literal>���t���b�V��</literal> ����K�v������܂����B
-            �������A�v���p�e�B���������ꂽ�Ƃ������Ƃ��}�[�N���邱�ƂŁA
-            �A�v���P�[�V�����̓��t���b�V���̐ӔC��Hibernate�ɈϏ����܂��B
+            生成プロパティとは、データベースによって生成された値を持つプロパティです。
+            通常、Hibernateアプリケーションは、データベースが値を生成したプロパティを含むオブジェクトを
+            <literal>リフレッシュ</literal> する必要がありました。
+            しかし、プロパティが生成されたということをマークすることで、
+            アプリケーションはリフレッシュの責任をHibernateに委譲します。
             
-            ��{�I�ɁA�����v���p�e�B�����ƒ�`�����G���e�B�e�B�ɑ΂���
-            Hibernate��INSERT��UPDATE��SQL�𔭍s�����シ���ɁA
-            �������ꂽ�l��ǂݍ��ނ��߂� SELECT SQL �����s����܂��B
+            基本的に、生成プロパティを持つと定義したエンティティに対して
+            HibernateがINSERTやUPDATEのSQLを発行した後すぐに、
+            生成された値を読み込むための SELECT SQL が発行されます。
         </para>
         <para>
-            �����v���p�e�B�́A�}���s�\���X�V�s�\�łȂ���΂Ȃ�܂���B
-            <xref linkend="mapping-declaration-version">versions</xref> �A
-            <xref linkend="mapping-declaration-timestamp">timestamps</xref> �A
-            <xref linkend="mapping-declaration-property">simple properties</xref> �������������ꂽ�ƃ}�[�N�ł��܂��B
+            生成プロパティは、挿入不可能かつ更新不可能でなければなりません。
+            <xref linkend="mapping-declaration-version">versions</xref> 、
+            <xref linkend="mapping-declaration-timestamp">timestamps</xref> 、
+            <xref linkend="mapping-declaration-property">simple properties</xref> だけが生成されたとマークできます。
         </para>
         <para>
-            <literal>never</literal> (�f�t�H���g) - �^����ꂽ�v���p�e�B�̒l�́A
-            �f�[�^�x�[�X���琶������Ȃ����Ƃ��Ӗ����܂��B
+            <literal>never</literal> (デフォルト) - 与えられたプロパティの値は、
+            データベースから生成されないことを意味します。
         </para>
         <para>
-            <literal>insert</literal> - �^����ꂽ�v���p�e�B�̒l�͑}�����ɐ�������邪�A
-            �����ċN����X�V���ɂ͐�������Ȃ����Ǝ����܂��B
-            �쐬���ꂽ���t�Ȃǂ́A���̃J�e�S���ɕ��ނ���܂��B
-            <xref linkend="mapping-declaration-version">version</xref> ��
-            <xref linkend="mapping-declaration-timestamp">timestamp</xref> ��
-            �v���p�e�B�͐������ꂽ�ƃ}�[�N�ł��܂����A���̃I�v�V�����͗��p�ł��Ȃ����Ƃɒ��ӂ��Ă��������B
+            <literal>insert</literal> - 与えられたプロパティの値は挿入時に生成されるが、
+            続いて起こる更新時には生成されないこと示します。
+            作成された日付などは、このカテゴリに分類されます。
+            <xref linkend="mapping-declaration-version">version</xref> や
+            <xref linkend="mapping-declaration-timestamp">timestamp</xref> の
+            プロパティは生成されたとマークできますが、このオプションは利用できないことに注意してください。
         </para>
         <para>
-            <literal>always</literal> - �}�������X�V�����v���p�e�B�̒l����������邱�Ƃ������܂��B
+            <literal>always</literal> - 挿入時も更新時もプロパティの値が生成されることを示します。
         </para>
     </sect1>
 
     <sect1 id="mapping-database-object" revision="0">
-        <title>�⏕�I�ȃf�[�^�x�[�X�E�I�u�W�F�N�g</title>
+        <title>補助的なデータベース・オブジェクト</title>
         <para>
-            Hibernate�̃X�L�[�}�E�G�{�����[�V�����c�[���ƘA�����邱�ƂŁA
-            �C�ӂ̃f�[�^�x�[�X�E�I�u�W�F�N�g�i�g���K�[��X�g�A�h�v���V�[�W���Ȃǁj��CREATE��DROP�ɂ��A
-            Hibernate�̃}�b�s���O�t�@�C�����̃��[�U�E�X�L�[�}�����ׂĒ�`���邱�Ƃ��o���܂��B
-            ��Ƀg���K��X�g�A�h�v���V�[�W���̂悤�ȃf�[�^�x�[�X�E�I�u�W�F�N�g�𐶐���폜���邱�Ƃ��Ӑ}���Ă��܂����A
-            ���ۂɂ� <literal>java.sql.Statement.execute()</literal> ���\�b�h�ɂ���Ď��s�ł���
-            �C�ӂ�SQL�R�}���h�iALTER�AINSERT�Ȃǁj�����s�ł��܂��B
-            �⏕�I�ȃf�[�^�x�[�X�E�I�u�W�F�N�g���`���邽�߂́A2�̊�{�I�ȕ��@������܂��B
+            Hibernateのスキーマ・エボリューションツールと連動することで、
+            任意のデータベース・オブジェクト（トリガーやストアドプロシージャなど）のCREATEとDROPにより、
+            Hibernateのマッピングファイル内のユーザ・スキーマをすべて定義することが出来ます。
+            主にトリガやストアドプロシージャのようなデータベース・オブジェクトを生成や削除することを意図していますが、
+            実際には <literal>java.sql.Statement.execute()</literal> メソッドによって実行できる
+            任意のSQLコマンド（ALTER、INSERTなど）が実行できます。
+            補助的なデータベース・オブジェクトを定義するための、2つの基本的な方法があります。
         </para>
         <para>
-            1�ڂ̕��@�́ACREATE��DROP�R�}���h���}�b�s���O�t�@�C���̊O�ɁA�����I�ɋL�ڂ��邱�Ƃł��B
+            1つ目の方法は、CREATEとDROPコマンドをマッピングファイルの外に、明示的に記載することです。
         </para>
         <programlisting><![CDATA[<hibernate-mapping>
     ...
@@ -3458,9 +3459,9 @@ public class Customer implements Serializable {
     </database-object>
 </hibernate-mapping>]]></programlisting>
         <para>
-            2�ڂ̕��@�́ACREATE��DROP�R�}���h�̑g�ݗ��ĕ���m���Ă���J�X�^���N���X��񋟂��邱�Ƃł��B
-            ���̃J�X�^���N���X�� <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> �C���^�t�F�[�X��
-            �������Ȃ���΂Ȃ�܂���B
+            2つ目の方法は、CREATEとDROPコマンドの組み立て方を知っているカスタムクラスを提供することです。
+            このカスタムクラスは <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> インタフェースを
+            実装しなければなりません。
         </para>
         <programlisting><![CDATA[<hibernate-mapping>
     ...
@@ -3469,8 +3470,8 @@ public class Customer implements Serializable {
     </database-object>
 </hibernate-mapping>]]></programlisting>
         <para>
-            ����ɁA����f�[�^�x�[�X�������g�p����鎞�ɂ����K�p����Ƃ������悤�ɁA
-            �f�[�^�x�[�X�E�I�u�W�F�N�g���g����P�[�X������ł��܂��B
+            さらに、あるデータベース方言が使用される時にだけ適用するといったように、
+            データベース・オブジェクトが使われるケースを限定できます。
         </para>
         <programlisting><![CDATA[<hibernate-mapping>
     ...

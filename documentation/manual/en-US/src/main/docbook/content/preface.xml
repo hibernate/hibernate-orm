@@ -1,4 +1,6 @@
-<?xml version='1.0'?>
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
 <!--
   ~ Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
   ~
@@ -14,7 +16,6 @@
   ~
   ~ Red Hat Author(s): Steve Ebersole
   -->
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <preface id="preface">
     <title>Preface</title>

@@ -32,7 +32,9 @@ import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.notifications.annotation.CacheListener;
 import org.jboss.cache.notifications.annotation.NodeModified;
+import org.jboss.cache.notifications.annotation.NodeRemoved;
 import org.jboss.cache.notifications.event.NodeModifiedEvent;
+import org.jboss.cache.notifications.event.NodeRemovedEvent;
 
 /**
  * Defines the behavior of the timestamps cache region for JBossCache 2.x.
@@ -81,7 +83,7 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
         // TODO Is this a valid operation on a timestamps cache?
         localCache.remove(key);
         Option opt = getNonLockingDataVersionOption(true);
-        CacheHelper.remove(getCacheInstance(), getRegionFqn(), key, opt);
+        CacheHelper.removeNode(getCacheInstance(), getRegionFqn(), key, opt);
     }
 
     public void evictAll() throws CacheException {
@@ -89,6 +91,8 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
         localCache.clear();
         Option opt = getNonLockingDataVersionOption(true);
         CacheHelper.removeAll(getCacheInstance(), getRegionFqn(), opt);
+        // Restore the region root node
+        CacheHelper.addNode(getCacheInstance(), getRegionFqn(), false, true, null);   
     }
 
     public Object get(Object key) throws CacheException {
@@ -121,11 +125,11 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
             // prevents reads and other updates
             Transaction tx = suspend();
             try {
-                // We ensure ASYNC semantics (JBCACHE-1175)
+                // TODO Why not use the timestamp in a DataVersion?
                 Option opt = getNonLockingDataVersionOption(false);
+                // We ensure ASYNC semantics (JBCACHE-1175)
                 opt.setForceAsynchronous(true);
-                getCacheInstance().getInvocationContext().setOptionOverrides(opt);
-                getCacheInstance().put(new Fqn(regionFqn, key), ITEM, value);
+                CacheHelper.put(getCacheInstance(), getRegionFqn(), key, value, opt);
             } catch (Exception e) {
                 throw new CacheException(e);
             } finally {
@@ -160,6 +164,30 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
         }
     }
 
+    /**
+     * Monitors cache events and updates the local cache
+     * 
+     * @param event
+     */
+    @NodeRemoved
+    public void nodeRemoved(NodeRemovedEvent event) {
+        if (event.isOriginLocal() || event.isPre())
+            return;
+
+        Fqn fqn = event.getFqn();
+        Fqn regFqn = getRegionFqn();
+        if (fqn.size() == regFqn.size() + 1 && fqn.isChildOf(regFqn)) {
+            Object key = fqn.get(regFqn.size());
+            localCache.remove(key);
+        }
+        else if (fqn.equals(regFqn)) {
+            localCache.clear();
+        }
+    }
+
+    /**
+     * Brings all data from the distributed cache into our local cache.
+     */
     private void populateLocalCache() {
         Set children = CacheHelper.getChildrenNames(getCacheInstance(), getRegionFqn());
         for (Object key : children) {
@@ -189,9 +217,10 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
             if (increase) {
                 oldVal = (Long) localCache.put(key, value);
                 // Double check that it was an increase
-                if (oldVal != null && oldVal.longValue() > newVal) {
+                if (oldVal != null && oldVal.longValue() > newVal) {                    
                     // Nope; Restore the old value
-                    increase = updateLocalCache(key, oldVal);
+                    updateLocalCache(key, oldVal);
+                    increase = false;
                 }
             }
         } catch (ClassCastException cce) {

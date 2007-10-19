@@ -71,7 +71,7 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
         Option opt = getNonLockingDataVersionOption(false);
         if (localOnly)
             opt.setCacheModeLocal(true);
-        CacheHelper.remove(getCacheInstance(), getRegionFqn(), key, opt);
+        CacheHelper.removeNode(getCacheInstance(), getRegionFqn(), key, opt);
     }
 
     public void evictAll() throws CacheException {
@@ -79,6 +79,8 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
         if (localOnly)
             opt.setCacheModeLocal(true);
         CacheHelper.removeAll(getCacheInstance(), getRegionFqn(), opt);
+        // Restore the region root node
+        CacheHelper.addNode(getCacheInstance(), getRegionFqn(), false, true, null);    
     }
 
     public Object get(Object key) throws CacheException {

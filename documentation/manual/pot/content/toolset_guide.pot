@@ -1,0 +1,548 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:34-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: toolset_guide.xml:5(title) 
+msgid "Toolset Guide"
+msgstr ""
+
+#: toolset_guide.xml:7(para) 
+msgid "Roundtrip engineering with Hibernate is possible using a set of Eclipse plugins, commandline tools, as well as Ant tasks."
+msgstr ""
+
+#: toolset_guide.xml:12(para) 
+msgid "The <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse IDE as well as Ant tasks for reverse engineering of existing databases:"
+msgstr ""
+
+#: toolset_guide.xml:18(para) 
+msgid "<emphasis>Mapping Editor:</emphasis> An editor for Hibernate XML mapping files, supporting auto-completion and syntax highlighting. It also supports semantic auto-completion for class names and property/field names, making it much more versatile than a normal XML editor."
+msgstr ""
+
+#: toolset_guide.xml:23(para) 
+msgid "<emphasis>Console:</emphasis> The console is a new view in Eclipse. In addition to a tree overview of your console configurations, you also get an interactive view of your persistent classes and their relationships. The console allows you to execute HQL queries against your database and browse the result directly in Eclipse."
+msgstr ""
+
+#: toolset_guide.xml:30(para) 
+msgid "<emphasis>Development Wizards:</emphasis> Several wizards are provided with the Hibernate Eclipse tools; you can use a wizard to quickly generate Hibernate configuration (cfg.xml) files, or you may even completely reverse engineer an existing database schema into POJO source files and Hibernate mapping files. The reverse engineering wizard supports customizable templates."
+msgstr ""
+
+#: toolset_guide.xml:38(emphasis) 
+msgid "Ant Tasks:"
+msgstr ""
+
+#: toolset_guide.xml:43(para) 
+msgid "Please refer to the <emphasis>Hibernate Tools</emphasis> package and it's documentation for more information."
+msgstr ""
+
+#: toolset_guide.xml:48(para) 
+msgid "However, the Hibernate main package comes bundled with an integrated tool (it can even be used from \"inside\" Hibernate on-the-fly): <emphasis>SchemaExport</emphasis> aka <literal>hbm2ddl</literal>."
+msgstr ""
+
+#: toolset_guide.xml:55(title) 
+msgid "Automatic schema generation"
+msgstr ""
+
+#: toolset_guide.xml:57(para) 
+msgid "DDL may be generated from your mapping files by a Hibernate utility. The generated schema includes referential integrity constraints (primary and foreign keys) for entity and collection tables. Tables and sequences are also created for mapped identifier generators."
+msgstr ""
+
+#: toolset_guide.xml:64(para) 
+msgid "You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via the <literal>hibernate.dialect</literal> property when using this tool, as DDL is highly vendor specific."
+msgstr ""
+
+#: toolset_guide.xml:70(para) 
+msgid "First, customize your mapping files to improve the generated schema."
+msgstr ""
+
+#: toolset_guide.xml:75(title) 
+msgid "Customizing the schema"
+msgstr ""
+
+#: toolset_guide.xml:77(para) 
+msgid "Many Hibernate mapping elements define optional attributes named <literal>length</literal>, <literal>precision</literal> and <literal>scale</literal>. You may set the length, precision and scale of a column with this attribute."
+msgstr ""
+
+#: toolset_guide.xml:87(para) 
+msgid "Some tags also accept a <literal>not-null</literal> attribute (for generating a <literal>NOT NULL</literal> constraint on table columns) and a <literal>unique</literal> attribute (for generating <literal>UNIQUE</literal> constraint on table columns)."
+msgstr ""
+
+#: toolset_guide.xml:97(para) 
+msgid "A <literal>unique-key</literal> attribute may be used to group columns in a single unique key constraint. Currently, the specified value of the <literal>unique-key</literal> attribute is <emphasis>not</emphasis> used to name the constraint in the generated DDL, only to group the columns in the mapping file."
+msgstr ""
+
+#: toolset_guide.xml:108(para) 
+msgid "An <literal>index</literal> attribute specifies the name of an index that will be created using the mapped column or columns. Multiple columns may be grouped into the same index, simply by specifying the same index name."
+msgstr ""
+
+#: toolset_guide.xml:117(para) 
+msgid "A <literal>foreign-key</literal> attribute may be used to override the name of any generated foreign key constraint."
+msgstr ""
+
+#: toolset_guide.xml:124(para) 
+msgid "Many mapping elements also accept a child <literal>&lt;column&gt;</literal> element. This is particularly useful for mapping multi-column types:"
+msgstr ""
+
+#: toolset_guide.xml:135(para) 
+msgid "The <literal>default</literal> attribute lets you specify a default value for a column (you should assign the same value to the mapped property before saving a new instance of the mapped class)."
+msgstr ""
+
+#: toolset_guide.xml:149(para) 
+msgid "The <literal>sql-type</literal> attribute allows the user to override the default mapping of a Hibernate type to SQL datatype."
+msgstr ""
+
+#: toolset_guide.xml:158(para) 
+msgid "The <literal>check</literal> attribute allows you to specify a check constraint."
+msgstr ""
+
+#: toolset_guide.xml:173(title) 
+msgid "Summary"
+msgstr ""
+
+#: toolset_guide.xml:180(entry) 
+msgid "Attribute"
+msgstr ""
+
+#: toolset_guide.xml:181(entry) 
+msgid "Values"
+msgstr ""
+
+#: toolset_guide.xml:182(entry) 
+msgid "Interpretation"
+msgstr ""
+
+#: toolset_guide.xml:187(literal) 
+msgid "length"
+msgstr ""
+
+#: toolset_guide.xml:188(entry) toolset_guide.xml:193(entry) toolset_guide.xml:198(entry) 
+msgid "number"
+msgstr ""
+
+#: toolset_guide.xml:189(entry) 
+msgid "column length"
+msgstr ""
+
+#: toolset_guide.xml:192(literal) 
+msgid "precision"
+msgstr ""
+
+#: toolset_guide.xml:194(entry) 
+msgid "column decimal precision"
+msgstr ""
+
+#: toolset_guide.xml:197(literal) 
+msgid "scale"
+msgstr ""
+
+#: toolset_guide.xml:199(entry) 
+msgid "column decimal scale"
+msgstr ""
+
+#: toolset_guide.xml:202(literal) 
+msgid "not-null"
+msgstr ""
+
+#: toolset_guide.xml:203(literal) toolset_guide.xml:208(literal) 
+msgid "true|false"
+msgstr ""
+
+#: toolset_guide.xml:204(entry) 
+msgid "specfies that the column should be non-nullable"
+msgstr ""
+
+#: toolset_guide.xml:207(literal) 
+msgid "unique"
+msgstr ""
+
+#: toolset_guide.xml:209(entry) 
+msgid "specifies that the column should have a unique constraint"
+msgstr ""
+
+#: toolset_guide.xml:212(literal) 
+msgid "index"
+msgstr ""
+
+#: toolset_guide.xml:213(literal) 
+msgid "index_name"
+msgstr ""
+
+#: toolset_guide.xml:214(entry) 
+msgid "specifies the name of a (multi-column) index"
+msgstr ""
+
+#: toolset_guide.xml:217(literal) 
+msgid "unique-key"
+msgstr ""
+
+#: toolset_guide.xml:218(literal) 
+msgid "unique_key_name"
+msgstr ""
+
+#: toolset_guide.xml:219(entry) 
+msgid "specifies the name of a multi-column unique constraint"
+msgstr ""
+
+#: toolset_guide.xml:222(literal) 
+msgid "foreign-key"
+msgstr ""
+
+#: toolset_guide.xml:223(literal) 
+msgid "foreign_key_name"
+msgstr ""
+
+#: toolset_guide.xml:226(literal) 
+msgid "&lt;one-to-one&gt;"
+msgstr ""
+
+#: toolset_guide.xml:227(literal) 
+msgid "&lt;many-to-one&gt;"
+msgstr ""
+
+#: toolset_guide.xml:227(literal) 
+msgid "&lt;key&gt;"
+msgstr ""
+
+#: toolset_guide.xml:228(literal) 
+msgid "&lt;many-to-many&gt;"
+msgstr ""
+
+#: toolset_guide.xml:229(literal) 
+msgid "inverse=\"true\""
+msgstr ""
+
+#: toolset_guide.xml:230(literal) 
+msgid "SchemaExport"
+msgstr ""
+
+#: toolset_guide.xml:224(entry) 
+msgid "specifies the name of the foreign key constraint generated for an association, for a <placeholder-1/>, <placeholder-2/>, <placeholder-3/>, or <placeholder-4/> mapping element. Note that <placeholder-5/> sides will not be considered by <placeholder-6/>."
+msgstr ""
+
+#: toolset_guide.xml:234(literal) 
+msgid "sql-type"
+msgstr ""
+
+#: toolset_guide.xml:235(literal) 
+msgid "SQL column type"
+msgstr ""
+
+#: toolset_guide.xml:238(literal) 
+msgid "&lt;column&gt;"
+msgstr ""
+
+#: toolset_guide.xml:236(entry) 
+msgid "overrides the default column type (attribute of <placeholder-1/> element only)"
+msgstr ""
+
+#: toolset_guide.xml:242(literal) 
+msgid "default"
+msgstr ""
+
+#: toolset_guide.xml:243(entry) toolset_guide.xml:250(entry) 
+msgid "SQL expression"
+msgstr ""
+
+#: toolset_guide.xml:244(entry) 
+msgid "specify a default value for the column"
+msgstr ""
+
+#: toolset_guide.xml:249(literal) 
+msgid "check"
+msgstr ""
+
+#: toolset_guide.xml:251(entry) 
+msgid "create an SQL check constraint on either column or table"
+msgstr ""
+
+#: toolset_guide.xml:259(para) 
+msgid "The <literal>&lt;comment&gt;</literal> element allows you to specify comments for the generated schema."
+msgstr ""
+
+#: toolset_guide.xml:275(para) 
+msgid "This results in a <literal>comment on table</literal> or <literal>comment on column</literal> statement in the generated DDL (where supported)."
+msgstr ""
+
+#: toolset_guide.xml:284(title) 
+msgid "Running the tool"
+msgstr ""
+
+#: toolset_guide.xml:286(para) 
+msgid "The <literal>SchemaExport</literal> tool writes a DDL script to standard out and/or executes the DDL statements."
+msgstr ""
+
+#: toolset_guide.xml:292(literal) toolset_guide.xml:459(literal) toolset_guide.xml:541(literal) 
+msgid "java -cp"
+msgstr ""
+
+#: toolset_guide.xml:292(emphasis) toolset_guide.xml:459(emphasis) toolset_guide.xml:541(emphasis) 
+msgid "hibernate_classpaths"
+msgstr ""
+
+#: toolset_guide.xml:293(literal) 
+msgid "org.hibernate.tool.hbm2ddl.SchemaExport"
+msgstr ""
+
+#: toolset_guide.xml:293(emphasis) toolset_guide.xml:460(emphasis) toolset_guide.xml:542(emphasis) 
+msgid "options mapping_files"
+msgstr ""
+
+#: toolset_guide.xml:297(title) 
+msgid "<literal>SchemaExport</literal> Command Line Options"
+msgstr ""
+
+#: toolset_guide.xml:303(entry) toolset_guide.xml:470(entry) toolset_guide.xml:552(entry) 
+msgid "Option"
+msgstr ""
+
+#: toolset_guide.xml:304(entry) toolset_guide.xml:392(entry) toolset_guide.xml:471(entry) toolset_guide.xml:553(entry) 
+msgid "Description"
+msgstr ""
+
+#: toolset_guide.xml:309(literal) toolset_guide.xml:476(literal) 
+msgid "--quiet"
+msgstr ""
+
+#: toolset_guide.xml:310(entry) toolset_guide.xml:477(entry) 
+msgid "don't output the script to stdout"
+msgstr ""
+
+#: toolset_guide.xml:313(literal) 
+msgid "--drop"
+msgstr ""
+
+#: toolset_guide.xml:314(entry) 
+msgid "only drop the tables"
+msgstr ""
+
+#: toolset_guide.xml:317(literal) 
+msgid "--create"
+msgstr ""
+
+#: toolset_guide.xml:318(entry) 
+msgid "only create the tables"
+msgstr ""
+
+#: toolset_guide.xml:321(literal) toolset_guide.xml:480(literal) 
+msgid "--text"
+msgstr ""
+
+#: toolset_guide.xml:322(entry) 
+msgid "don't export to the database"
+msgstr ""
+
+#: toolset_guide.xml:325(literal) 
+msgid "--output=my_schema.ddl"
+msgstr ""
+
+#: toolset_guide.xml:326(entry) 
+msgid "output the ddl script to a file"
+msgstr ""
+
+#: toolset_guide.xml:329(literal) toolset_guide.xml:484(literal) toolset_guide.xml:558(literal) 
+msgid "--naming=eg.MyNamingStrategy"
+msgstr ""
+
+#: toolset_guide.xml:330(literal) toolset_guide.xml:485(literal) toolset_guide.xml:559(literal) 
+msgid "NamingStrategy"
+msgstr ""
+
+#: toolset_guide.xml:330(entry) toolset_guide.xml:485(entry) toolset_guide.xml:559(entry) 
+msgid "select a <placeholder-1/>"
+msgstr ""
+
+#: toolset_guide.xml:333(literal) toolset_guide.xml:492(literal) toolset_guide.xml:566(literal) 
+msgid "--config=hibernate.cfg.xml"
+msgstr ""
+
+#: toolset_guide.xml:334(entry) 
+msgid "read Hibernate configuration from an XML file"
+msgstr ""
+
+#: toolset_guide.xml:337(literal) toolset_guide.xml:488(literal) toolset_guide.xml:562(literal) 
+msgid "--properties=hibernate.properties"
+msgstr ""
+
+#: toolset_guide.xml:338(entry) toolset_guide.xml:489(entry) toolset_guide.xml:563(entry) 
+msgid "read database properties from a file"
+msgstr ""
+
+#: toolset_guide.xml:341(literal) 
+msgid "--format"
+msgstr ""
+
+#: toolset_guide.xml:342(entry) 
+msgid "format the generated SQL nicely in the script"
+msgstr ""
+
+#: toolset_guide.xml:345(literal) 
+msgid "--delimiter=;"
+msgstr ""
+
+#: toolset_guide.xml:346(entry) 
+msgid "set an end of line delimiter for the script"
+msgstr ""
+
+#: toolset_guide.xml:352(para) 
+msgid "You may even embed <literal>SchemaExport</literal> in your application:"
+msgstr ""
+
+#: toolset_guide.xml:362(title) 
+msgid "Properties"
+msgstr ""
+
+#: toolset_guide.xml:364(para) 
+msgid "Database properties may be specified"
+msgstr ""
+
+#: toolset_guide.xml:370(para) 
+msgid "as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</emphasis>"
+msgstr ""
+
+#: toolset_guide.xml:373(para) 
+msgid "in <literal>hibernate.properties</literal>"
+msgstr ""
+
+#: toolset_guide.xml:376(para) 
+msgid "in a named properties file with <literal>--properties</literal>"
+msgstr ""
+
+#: toolset_guide.xml:380(para) 
+msgid "The needed properties are:"
+msgstr ""
+
+#: toolset_guide.xml:385(title) 
+msgid "SchemaExport Connection Properties"
+msgstr ""
+
+#: toolset_guide.xml:391(entry) 
+msgid "Property Name"
+msgstr ""
+
+#: toolset_guide.xml:397(literal) 
+msgid "hibernate.connection.driver_class"
+msgstr ""
+
+#: toolset_guide.xml:398(entry) 
+msgid "jdbc driver class"
+msgstr ""
+
+#: toolset_guide.xml:401(literal) 
+msgid "hibernate.connection.url"
+msgstr ""
+
+#: toolset_guide.xml:402(entry) 
+msgid "jdbc url"
+msgstr ""
+
+#: toolset_guide.xml:405(literal) 
+msgid "hibernate.connection.username"
+msgstr ""
+
+#: toolset_guide.xml:406(entry) 
+msgid "database user"
+msgstr ""
+
+#: toolset_guide.xml:409(literal) 
+msgid "hibernate.connection.password"
+msgstr ""
+
+#: toolset_guide.xml:410(entry) 
+msgid "user password"
+msgstr ""
+
+#: toolset_guide.xml:413(literal) 
+msgid "hibernate.dialect"
+msgstr ""
+
+#: toolset_guide.xml:414(entry) 
+msgid "dialect"
+msgstr ""
+
+#: toolset_guide.xml:423(title) 
+msgid "Using Ant"
+msgstr ""
+
+#: toolset_guide.xml:425(para) 
+msgid "You can call <literal>SchemaExport</literal> from your Ant build script:"
+msgstr ""
+
+#: toolset_guide.xml:450(title) 
+msgid "Incremental schema updates"
+msgstr ""
+
+#: toolset_guide.xml:452(para) 
+msgid "The <literal>SchemaUpdate</literal> tool will update an existing schema with \"incremental\" changes. Note that <literal>SchemaUpdate</literal> depends heavily upon the JDBC metadata API, so it will not work with all JDBC drivers."
+msgstr ""
+
+#: toolset_guide.xml:460(literal) 
+msgid "org.hibernate.tool.hbm2ddl.SchemaUpdate"
+msgstr ""
+
+#: toolset_guide.xml:464(title) 
+msgid "<literal>SchemaUpdate</literal> Command Line Options"
+msgstr ""
+
+#: toolset_guide.xml:481(entry) 
+msgid "don't export the script to the database"
+msgstr ""
+
+#: toolset_guide.xml:493(literal) toolset_guide.xml:567(literal) 
+msgid ".cfg.xml"
+msgstr ""
+
+#: toolset_guide.xml:493(entry) toolset_guide.xml:567(entry) 
+msgid "specify a <placeholder-1/> file"
+msgstr ""
+
+#: toolset_guide.xml:499(para) 
+msgid "You may embed <literal>SchemaUpdate</literal> in your application:"
+msgstr ""
+
+#: toolset_guide.xml:509(title) 
+msgid "Using Ant for incremental schema updates"
+msgstr ""
+
+#: toolset_guide.xml:511(para) 
+msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
+msgstr ""
+
+#: toolset_guide.xml:532(title) 
+msgid "Schema validation"
+msgstr ""
+
+#: toolset_guide.xml:534(para) 
+msgid "The <literal>SchemaValidator</literal> tool will validate that the existing database schema \"matches\" your mapping documents. Note that <literal>SchemaValidator</literal> depends heavily upon the JDBC metadata API, so it will not work with all JDBC drivers. This tool is extremely useful for testing."
+msgstr ""
+
+#: toolset_guide.xml:542(literal) 
+msgid "org.hibernate.tool.hbm2ddl.SchemaValidator"
+msgstr ""
+
+#: toolset_guide.xml:546(title) 
+msgid "<literal>SchemaValidator</literal> Command Line Options"
+msgstr ""
+
+#: toolset_guide.xml:573(para) 
+msgid "You may embed <literal>SchemaValidator</literal> in your application:"
+msgstr ""
+
+#: toolset_guide.xml:583(title) 
+msgid "Using Ant for schema validation"
+msgstr ""
+
+#: toolset_guide.xml:585(para) 
+msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: toolset_guide.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

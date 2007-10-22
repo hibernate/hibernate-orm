@@ -1,0 +1,108 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:31-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: events.xml:5(title) 
+msgid "Interceptors and events"
+msgstr ""
+
+#: events.xml:7(para) 
+msgid "It is often useful for the application to react to certain events that occur inside Hibernate. This allows implementation of certain kinds of generic functionality, and extension of Hibernate functionality."
+msgstr ""
+
+#: events.xml:14(title) 
+msgid "Interceptors"
+msgstr ""
+
+#: events.xml:16(para) 
+msgid "The <literal>Interceptor</literal> interface provides callbacks from the session to the application allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded. One possible use for this is to track auditing information. For example, the following <literal>Interceptor</literal> automatically sets the <literal>createTimestamp</literal> when an <literal>Auditable</literal> is created and updates the <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is updated."
+msgstr ""
+
+#: events.xml:27(para) 
+msgid "You may either implement <literal>Interceptor</literal> directly or (better) extend <literal>EmptyInterceptor</literal>."
+msgstr ""
+
+#: events.xml:115(para) 
+msgid "Interceptors come in two flavors: <literal>Session</literal>-scoped and <literal>SessionFactory</literal>-scoped."
+msgstr ""
+
+#: events.xml:120(para) 
+msgid "A <literal>Session</literal>-scoped interceptor is specified when a session is opened using one of the overloaded SessionFactory.openSession() methods accepting an <literal>Interceptor</literal>."
+msgstr ""
+
+#: events.xml:128(para) 
+msgid "A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal> object prior to building the <literal>SessionFactory</literal>. In this case, the supplied interceptor will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless a session is opened explicitly specifying the interceptor to use. <literal>SessionFactory</literal>-scoped interceptors must be thread safe, taking care to not store session-specific state since multiple sessions will use this interceptor (potentially) concurrently."
+msgstr ""
+
+#: events.xml:142(title) 
+msgid "Event system"
+msgstr ""
+
+#: events.xml:144(para) 
+msgid "If you have to react to particular events in your persistence layer, you may also use the Hibernate3 <emphasis>event</emphasis> architecture. The event system can be used in addition or as a replacement for interceptors."
+msgstr ""
+
+#: events.xml:150(para) 
+msgid "Essentially all of the methods of the <literal>Session</literal> interface correlate to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal> package for the full list of defined event types). When a request is made of one of these methods, the Hibernate <literal>Session</literal> generates an appropriate event and passes it to the configured event listeners for that type. Out-of-the-box, these listeners implement the same processing in which those methods always resulted. However, you are free to implement a customization of one of the listener interfaces (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation of the <literal>LoadEventListener</literal> interface), in which case their implementation would be responsible for processing any <literal>load()</literal> requests made of the <literal>Session</literal>."
+msgstr ""
+
+#: events.xml:165(para) 
+msgid "The listeners should be considered effectively singletons; meaning, they are shared between requests, and thus should not save any state as instance variables."
+msgstr ""
+
+#: events.xml:170(para) 
+msgid "A custom listener should implement the appropriate interface for the event it wants to process and/or extend one of the convenience base classes (or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose). Custom listeners can either be registered programmatically through the <literal>Configuration</literal> object, or specified in the Hibernate configuration XML (declarative configuration through the properties file is not supported). Here's an example of a custom load event listener:"
+msgstr ""
+
+#: events.xml:190(para) 
+msgid "You also need a configuration entry telling Hibernate to use the listener in addition to the default listener:"
+msgstr ""
+
+#: events.xml:205(para) 
+msgid "Instead, you may register it programmatically:"
+msgstr ""
+
+#: events.xml:213(para) 
+msgid "Listeners registered declaratively cannot share instances. If the same class name is used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will result in a separate instance of that class. If you need the capability to share listener instances between listener types you must use the programmatic registration approach."
+msgstr ""
+
+#: events.xml:221(para) 
+msgid "Why implement an interface and define the specific type during configuration? Well, a listener implementation could implement multiple event listener interfaces. Having the type additionally defined during registration makes it easier to turn custom listeners on or off during configuration."
+msgstr ""
+
+#: events.xml:231(title) 
+msgid "Hibernate declarative security"
+msgstr ""
+
+#: events.xml:232(para) 
+msgid "Usually, declarative security in Hibernate applications is managed in a session facade layer. Now, Hibernate3 allows certain actions to be permissioned via JACC, and authorized via JAAS. This is optional functionality built on top of the event architecture."
+msgstr ""
+
+#: events.xml:238(para) 
+msgid "First, you must configure the appropriate event listeners, to enable the use of JAAS authorization."
+msgstr ""
+
+#: events.xml:248(para) 
+msgid "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is just a shorthand for <literal>&lt;event type=\"...\"&gt;&lt;listener class=\"...\"/&gt;&lt;/event&gt;</literal> when there is exactly one listener for a particular event type."
+msgstr ""
+
+#: events.xml:254(para) 
+msgid "Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:"
+msgstr ""
+
+#: events.xml:261(para) 
+msgid "The role names are the roles understood by your JACC provider."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: events.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

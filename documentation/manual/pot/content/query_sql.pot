@@ -1,0 +1,476 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:34-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: query_sql.xml:5(title) 
+msgid "Native SQL"
+msgstr ""
+
+#: query_sql.xml:7(para) 
+msgid "You may also express queries in the native SQL dialect of your database. This is useful if you want to utilize database specific features such as query hints or the <literal>CONNECT</literal> keyword in Oracle. It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate."
+msgstr ""
+
+#: query_sql.xml:13(para) 
+msgid "Hibernate3 allows you to specify handwritten SQL (including stored procedures) for all create, update, delete, and load operations."
+msgstr ""
+
+#: query_sql.xml:17(title) 
+msgid "Using a <literal>SQLQuery</literal>"
+msgstr ""
+
+#: query_sql.xml:19(para) 
+msgid "Execution of native SQL queries is controlled via the <literal>SQLQuery</literal> interface, which is obtained by calling <literal>Session.createSQLQuery()</literal>. The following describes how to use this API for querying."
+msgstr ""
+
+#: query_sql.xml:25(title) 
+msgid "Scalar queries"
+msgstr ""
+
+#: query_sql.xml:27(para) 
+msgid "The most basic SQL query is to get a list of scalars (values)."
+msgstr ""
+
+#: query_sql.xml:34(para) 
+msgid "These will both return a List of Object arrays (Object[]) with scalar values for each column in the CATS table. Hibernate will use ResultSetMetadata to deduce the actual order and types of the returned scalar values."
+msgstr ""
+
+#: query_sql.xml:39(para) 
+msgid "To avoid the overhead of using <literal>ResultSetMetadata</literal> or simply to be more explicit in what is returned one can use <literal>addScalar()</literal>."
+msgstr ""
+
+#: query_sql.xml:49(para) query_sql.xml:101(para) query_sql.xml:195(para) query_sql.xml:354(para) 
+msgid "This query specified:"
+msgstr ""
+
+#: query_sql.xml:53(para) query_sql.xml:105(para) query_sql.xml:358(para) 
+msgid "the SQL query string"
+msgstr ""
+
+#: query_sql.xml:57(para) 
+msgid "the columns and types to return"
+msgstr ""
+
+#: query_sql.xml:61(para) 
+msgid "This will still return Object arrays, but now it will not use <literal>ResultSetMetdata</literal> but will instead explicitly get the ID, NAME and BIRTHDATE column as respectively a Long, String and a Short from the underlying resultset. This also means that only these three columns will be returned, even though the query is using <literal>*</literal> and could return more than the three listed columns."
+msgstr ""
+
+#: query_sql.xml:69(para) 
+msgid "It is possible to leave out the type information for all or some of the scalars."
+msgstr ""
+
+#: query_sql.xml:78(para) 
+msgid "This is essentially the same query as before, but now <literal>ResultSetMetaData</literal> is used to decide the type of NAME and BIRTHDATE where as the type of ID is explicitly specified."
+msgstr ""
+
+#: query_sql.xml:82(para) 
+msgid "How the java.sql.Types returned from ResultSetMetaData is mapped to Hibernate types is controlled by the Dialect. If a specific type is not mapped or does not result in the expected type it is possible to customize it via calls to <literal>registerHibernateType</literal> in the Dialect."
+msgstr ""
+
+#: query_sql.xml:90(title) 
+msgid "Entity queries"
+msgstr ""
+
+#: query_sql.xml:92(para) 
+msgid "The above queries were all about returning scalar values, basically returning the \"raw\" values from the resultset. The following shows how to get entity objects from a native sql query via <literal>addEntity()</literal>."
+msgstr ""
+
+#: query_sql.xml:109(para) 
+msgid "the entity returned by the query"
+msgstr ""
+
+#: query_sql.xml:113(para) 
+msgid "Assuming that Cat is mapped as a class with the columns ID, NAME and BIRTHDATE the above queries will both return a List where each element is a Cat entity."
+msgstr ""
+
+#: query_sql.xml:117(para) 
+msgid "If the entity is mapped with a <literal>many-to-one</literal> to another entity it is required to also return this when performing the native query, otherwise a database specific \"column not found\" error will occur. The additional columns will automatically be returned when using the * notation, but we prefer to be explicit as in the following example for a <literal>many-to-one</literal> to a <literal>Dog</literal>:"
+msgstr ""
+
+#: query_sql.xml:128(para) 
+msgid "This will allow cat.getDog() to function properly."
+msgstr ""
+
+#: query_sql.xml:132(title) 
+msgid "Handling associations and collections"
+msgstr ""
+
+#: query_sql.xml:134(para) 
+msgid "It is possible to eagerly join in the <literal>Dog</literal> to avoid the possible extra roundtrip for initializing the proxy. This is done via the <literal>addJoin()</literal> method, which allows you to join in an association or collection."
+msgstr ""
+
+#: query_sql.xml:144(para) 
+msgid "In this example the returned <literal>Cat</literal>'s will have their <literal>dog</literal> property fully initialized without any extra roundtrip to the database. Notice that we added a alias name (\"cat\") to be able to specify the target property path of the join. It is possible to do the same eager joining for collections, e.g. if the <literal>Cat</literal> had a one-to-many to <literal>Dog</literal> instead."
+msgstr ""
+
+#: query_sql.xml:157(p) 
+msgid "At this stage we are reaching the limits of what is possible with native queries without starting to enhance the sql queries to make them usable in Hibernate; the problems starts to arise when returning multiple entities of the same type or when the default alias/column names are not enough."
+msgstr ""
+
+#: query_sql.xml:165(title) 
+msgid "Returning multiple entities"
+msgstr ""
+
+#: query_sql.xml:167(para) 
+msgid "Until now the result set column names are assumed to be the same as the column names specified in the mapping document. This can be problematic for SQL queries which join multiple tables, since the same column names may appear in more than one table."
+msgstr ""
+
+#: query_sql.xml:172(para) 
+msgid "Column alias injection is needed in the following query (which most likely will fail):"
+msgstr ""
+
+#: query_sql.xml:180(para) 
+msgid "The intention for this query is to return two Cat instances per row, a cat and its mother. This will fail since there is a conflict of names since they are mapped to the same column names and on some databases the returned column aliases will most likely be on the form \"c.ID\", \"c.NAME\", etc. which are not equal to the columns specificed in the mappings (\"ID\" and \"NAME\")."
+msgstr ""
+
+#: query_sql.xml:187(para) 
+msgid "The following form is not vulnerable to column name duplication:"
+msgstr ""
+
+#: query_sql.xml:199(para) 
+msgid "the SQL query string, with placeholders for Hibernate to inject column aliases"
+msgstr ""
+
+#: query_sql.xml:204(para) 
+msgid "the entities returned by the query"
+msgstr ""
+
+#: query_sql.xml:208(para) 
+msgid "The {cat.*} and {mother.*} notation used above is a shorthand for \"all properties\". Alternatively, you may list the columns explicity, but even in this case we let Hibernate inject the SQL column aliases for each property. The placeholder for a column alias is just the property name qualified by the table alias. In the following example, we retrieve Cats and their mothers from a different table (cat_log) to the one declared in the mapping metadata. Notice that we may even use the property aliases in the where clause if we like."
+msgstr ""
+
+#: query_sql.xml:227(title) 
+msgid "Alias and property references"
+msgstr ""
+
+#: query_sql.xml:229(para) 
+msgid "For most cases the above alias injection is needed, but for queries relating to more complex mappings like composite properties, inheritance discriminators, collections etc. there are some specific aliases to use to allow Hibernate to inject the proper aliases."
+msgstr ""
+
+#: query_sql.xml:234(para) 
+msgid "The following table shows the different possibilities of using the alias injection. Note: the alias names in the result are examples, each alias will have a unique and probably different name when used."
+msgstr ""
+
+#: query_sql.xml:240(title) 
+msgid "Alias injection names"
+msgstr ""
+
+#: query_sql.xml:251(entry) 
+msgid "Description"
+msgstr ""
+
+#: query_sql.xml:253(entry) 
+msgid "Syntax"
+msgstr ""
+
+#: query_sql.xml:255(entry) 
+msgid "Example"
+msgstr ""
+
+#: query_sql.xml:261(entry) 
+msgid "A simple property"
+msgstr ""
+
+#: query_sql.xml:263(literal) 
+msgid "{[aliasname].[propertyname]"
+msgstr ""
+
+#: query_sql.xml:265(literal) 
+msgid "A_NAME as {item.name}"
+msgstr ""
+
+#: query_sql.xml:269(entry) 
+msgid "A composite property"
+msgstr ""
+
+#: query_sql.xml:271(literal) 
+msgid "{[aliasname].[componentname].[propertyname]}"
+msgstr ""
+
+#: query_sql.xml:273(literal) 
+msgid "CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}"
+msgstr ""
+
+#: query_sql.xml:278(entry) 
+msgid "Discriminator of an entity"
+msgstr ""
+
+#: query_sql.xml:280(literal) 
+msgid "{[aliasname].class}"
+msgstr ""
+
+#: query_sql.xml:282(literal) 
+msgid "DISC as {item.class}"
+msgstr ""
+
+#: query_sql.xml:286(entry) 
+msgid "All properties of an entity"
+msgstr ""
+
+#: query_sql.xml:288(literal) query_sql.xml:336(literal) 
+msgid "{[aliasname].*}"
+msgstr ""
+
+#: query_sql.xml:290(literal) 
+msgid "{item.*}"
+msgstr ""
+
+#: query_sql.xml:294(entry) 
+msgid "A collection key"
+msgstr ""
+
+#: query_sql.xml:296(literal) 
+msgid "{[aliasname].key}"
+msgstr ""
+
+#: query_sql.xml:298(literal) 
+msgid "ORGID as {coll.key}"
+msgstr ""
+
+#: query_sql.xml:302(entry) 
+msgid "The id of an collection"
+msgstr ""
+
+#: query_sql.xml:304(literal) 
+msgid "{[aliasname].id}"
+msgstr ""
+
+#: query_sql.xml:306(literal) 
+msgid "EMPID as {coll.id}"
+msgstr ""
+
+#: query_sql.xml:310(entry) 
+msgid "The element of an collection"
+msgstr ""
+
+#: query_sql.xml:312(literal) 
+msgid "{[aliasname].element}"
+msgstr ""
+
+#: query_sql.xml:314(literal) 
+msgid "XID as {coll.element}"
+msgstr ""
+
+#: query_sql.xml:318(entry) 
+msgid "roperty of the element in the collection"
+msgstr ""
+
+#: query_sql.xml:320(literal) 
+msgid "{[aliasname].element.[propertyname]}"
+msgstr ""
+
+#: query_sql.xml:322(literal) 
+msgid "NAME as {coll.element.name}"
+msgstr ""
+
+#: query_sql.xml:326(entry) 
+msgid "All properties of the element in the collection"
+msgstr ""
+
+#: query_sql.xml:328(literal) 
+msgid "{[aliasname].element.*}"
+msgstr ""
+
+#: query_sql.xml:330(literal) 
+msgid "{coll.element.*}"
+msgstr ""
+
+#: query_sql.xml:334(entry) 
+msgid "All properties of the the collection"
+msgstr ""
+
+#: query_sql.xml:338(literal) 
+msgid "{coll.*}"
+msgstr ""
+
+#: query_sql.xml:347(title) 
+msgid "Returning non-managed entities"
+msgstr ""
+
+#: query_sql.xml:349(para) 
+msgid "It is possible to apply a ResultTransformer to native sql queries. Allowing it to e.g. return non-managed entities."
+msgstr ""
+
+#: query_sql.xml:362(para) 
+msgid "a result transformer"
+msgstr ""
+
+#: query_sql.xml:366(para) 
+msgid "The above query will return a list of <literal>CatDTO</literal> which has been instantiated and injected the values of NAME and BIRTHNAME into its corresponding properties or fields."
+msgstr ""
+
+#: query_sql.xml:373(title) 
+msgid "Handling inheritance"
+msgstr ""
+
+#: query_sql.xml:375(para) 
+msgid "Native sql queries which query for entities that is mapped as part of an inheritance must include all properties for the baseclass and all it subclasses."
+msgstr ""
+
+#: query_sql.xml:381(title) 
+msgid "Parameters"
+msgstr ""
+
+#: query_sql.xml:383(para) 
+msgid "Native sql queries support positional as well as named parameters:"
+msgstr ""
+
+#: query_sql.xml:398(title) 
+msgid "Named SQL queries"
+msgstr ""
+
+#: query_sql.xml:400(para) 
+msgid "Named SQL queries may be defined in the mapping document and called in exactly the same way as a named HQL query. In this case, we do <emphasis>not</emphasis> need to call <literal>addEntity()</literal>."
+msgstr ""
+
+#: query_sql.xml:419(para) 
+msgid "The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal> elements are used to join associations and define queries which initialize collections, respectively."
+msgstr ""
+
+#: query_sql.xml:440(para) 
+msgid "A named SQL query may return a scalar value. You must declare the column alias and Hibernate type using the <literal>&lt;return-scalar&gt;</literal> element:"
+msgstr ""
+
+#: query_sql.xml:452(para) 
+msgid "You can externalize the resultset mapping informations in a <literal>&lt;resultset&gt;</literal> element to either reuse them accross several named queries or through the <literal>setResultSetMapping()</literal> API."
+msgstr ""
+
+#: query_sql.xml:476(para) 
+msgid "You can alternatively use the resultset mapping information in your hbm files directly in java code."
+msgstr ""
+
+#: query_sql.xml:486(title) 
+msgid "Using return-property to explicitly specify column/alias names"
+msgstr ""
+
+#: query_sql.xml:489(para) 
+msgid "With <literal>&lt;return-property&gt;</literal> you can explicitly tell Hibernate what column aliases to use, instead of using the <literal>{}</literal>-syntax to let Hibernate inject its own aliases."
+msgstr ""
+
+#: query_sql.xml:507(para) 
+msgid "<literal>&lt;return-property&gt;</literal> also works with multiple columns. This solves a limitation with the <literal>{}</literal>-syntax which can not allow fine grained control of multi-column properties."
+msgstr ""
+
+#: query_sql.xml:528(para) 
+msgid "Notice that in this example we used <literal>&lt;return-property&gt;</literal> in combination with the <literal>{}</literal>-syntax for injection. Allowing users to choose how they want to refer column and properties."
+msgstr ""
+
+#: query_sql.xml:533(para) 
+msgid "If your mapping has a discriminator you must use <literal>&lt;return-discriminator&gt;</literal> to specify the discriminator column."
+msgstr ""
+
+#: query_sql.xml:539(title) 
+msgid "Using stored procedures for querying"
+msgstr ""
+
+#: query_sql.xml:541(para) 
+msgid "Hibernate 3 introduces support for queries via stored procedures and functions. Most of the following documentation is equivalent for both. The stored procedure/function must return a resultset as the first out-parameter to be able to work with Hibernate. An example of such a stored function in Oracle 9 and higher is as follows:"
+msgstr ""
+
+#: query_sql.xml:560(para) 
+msgid "To use this query in Hibernate you need to map it via a named query."
+msgstr ""
+
+#: query_sql.xml:579(para) 
+msgid "Notice stored procedures currently only return scalars and entities. <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal> are not supported."
+msgstr ""
+
+#: query_sql.xml:584(title) 
+msgid "Rules/limitations for using stored procedures"
+msgstr ""
+
+#: query_sql.xml:586(para) 
+msgid "To use stored procedures with Hibernate the procedures/functions have to follow some rules. If they do not follow those rules they are not usable with Hibernate. If you still want to use these procedures you have to execute them via <literal>session.connection()</literal>. The rules are different for each database, since database vendors have different stored procedure semantics/syntax."
+msgstr ""
+
+#: query_sql.xml:593(para) 
+msgid "Stored procedure queries can't be paged with <literal>setFirstResult()/setMaxResults()</literal>."
+msgstr ""
+
+#: query_sql.xml:596(para) 
+msgid "Recommended call form is standard SQL92: <literal>{ ? = call functionName(&lt;parameters&gt;) }</literal> or <literal>{ ? = call procedureName(&lt;parameters&gt;}</literal>. Native call syntax is not supported."
+msgstr ""
+
+#: query_sql.xml:601(para) 
+msgid "For Oracle the following rules apply:"
+msgstr ""
+
+#: query_sql.xml:605(para) 
+msgid "A function must return a result set. The first parameter of a procedure must be an <literal>OUT</literal> that returns a result set. This is done by using a <literal>SYS_REFCURSOR</literal> type in Oracle 9 or 10. In Oracle you need to define a <literal>REF CURSOR</literal> type, see Oracle literature."
+msgstr ""
+
+#: query_sql.xml:614(para) 
+msgid "For Sybase or MS SQL server the following rules apply:"
+msgstr ""
+
+#: query_sql.xml:618(para) 
+msgid "The procedure must return a result set. Note that since these servers can/will return multiple result sets and update counts, Hibernate will iterate the results and take the first result that is a result set as its return value. Everything else will be discarded."
+msgstr ""
+
+#: query_sql.xml:626(para) 
+msgid "If you can enable <literal>SET NOCOUNT ON</literal> in your procedure it will probably be more efficient, but this is not a requirement."
+msgstr ""
+
+#: query_sql.xml:636(title) 
+msgid "Custom SQL for create, update and delete"
+msgstr ""
+
+#: query_sql.xml:638(para) 
+msgid "Hibernate3 can use custom SQL statements for create, update, and delete operations. The class and collection persisters in Hibernate already contain a set of configuration time generated strings (insertsql, deletesql, updatesql etc.). The mapping tags <literal>&lt;sql-insert&gt;</literal>, <literal>&lt;sql-delete&gt;</literal>, and <literal>&lt;sql-update&gt;</literal> override these strings:"
+msgstr ""
+
+#: query_sql.xml:656(para) 
+msgid "The SQL is directly executed in your database, so you are free to use any dialect you like. This will of course reduce the portability of your mapping if you use database specific SQL."
+msgstr ""
+
+#: query_sql.xml:660(para) 
+msgid "Stored procedures are supported if the <literal>callable</literal> attribute is set:"
+msgstr ""
+
+#: query_sql.xml:673(para) 
+msgid "The order of the positional parameters are currently vital, as they must be in the same sequence as Hibernate expects them."
+msgstr ""
+
+#: query_sql.xml:676(para) 
+msgid "You can see the expected order by enabling debug logging for the <literal>org.hibernate.persister.entity</literal> level. With this level enabled Hibernate will print out the static SQL that is used to create, update, delete etc. entities. (To see the expected sequence, remember to not include your custom SQL in the mapping files as that will override the Hibernate generated static sql.)"
+msgstr ""
+
+#: query_sql.xml:683(para) 
+msgid "The stored procedures are in most cases (read: better do it than not) required to return the number of rows inserted/updated/deleted, as Hibernate has some runtime checks for the success of the statement. Hibernate always registers the first statement parameter as a numeric output parameter for the CUD operations:"
+msgstr ""
+
+#: query_sql.xml:705(title) 
+msgid "Custom SQL for loading"
+msgstr ""
+
+#: query_sql.xml:707(para) 
+msgid "You may also declare your own SQL (or HQL) queries for entity loading:"
+msgstr ""
+
+#: query_sql.xml:718(para) 
+msgid "This is just a named query declaration, as discussed earlier. You may reference this named query in a class mapping:"
+msgstr ""
+
+#: query_sql.xml:729(para) 
+msgid "This even works with stored procedures."
+msgstr ""
+
+#: query_sql.xml:731(para) 
+msgid "You may even define a query for collection loading:"
+msgstr ""
+
+#: query_sql.xml:747(para) 
+msgid "You could even define an entity loader that loads a collection by join fetching:"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: query_sql.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

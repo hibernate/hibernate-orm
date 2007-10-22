@@ -1,0 +1,1224 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Improving performance"
+msgstr "パフォーマンスの改善"
+
+#: index.docbook:8
+msgid "Fetching strategies"
+msgstr "フェッチ戦略"
+
+#: index.docbook:10
+msgid "A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use for retrieving associated objects if the application needs to navigate the association. Fetch strategies may be declared in the O/R mapping metadata, or over-ridden by a particular HQL or <literal>Criteria</literal> query."
+msgstr "<emphasis>フェッチ戦略</emphasis> は、アプリケーションが関連をナビゲートする必要がある ときに、Hibernateが関連オブジェクトを復元するために使用する戦略です。フェッチ戦略はO/Rマッピングの メタデータに宣言するか、特定のHQL、 <literal>Criteria</literal> クエリでオーバーライドします。"
+
+#: index.docbook:17
+msgid "Hibernate3 defines the following fetching strategies:"
+msgstr "Hibernate3は次に示すフェッチ戦略を定義しています。"
+
+#: index.docbook:23
+msgid "<emphasis>Join fetching</emphasis> - Hibernate retrieves the associated instance or collection in the same <literal>SELECT</literal>, using an <literal>OUTER JOIN</literal>."
+msgstr "<emphasis>結合フェッチ</emphasis> - Hibernateは <literal>OUTER JOIN</literal> を使って、 関連するインスタンスやコレクションを１つの <literal>SELECT</literal> で復元します。"
+
+#: index.docbook:30
+msgid "<emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal> is used to retrieve the associated entity or collection. Unless you explicitly disable lazy fetching by specifying <literal>lazy=\"false\"</literal>, this second select will only be executed when you actually access the association."
+msgstr "<emphasis>セレクトフェッチ</emphasis> - 2回目の <literal>SELECT</literal> で関連するエンティティやコレクションを復元します。 <literal>lazy=\"false\"</literal> で明示的に遅延フェッチを無効にしなければ、この2回目のselectは実際に 関連にアクセスしたときのみ実行されるでしょう。"
+
+#: index.docbook:39
+msgid "<emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal> is used to retrieve the associated collections for all entities retrieved in a previous query or fetch. Unless you explicitly disable lazy fetching by specifying <literal>lazy=\"false\"</literal>, this second select will only be executed when you actually access the association."
+msgstr "<emphasis>サブセレクトフェッチ</emphasis> - 2回目の <literal>SELECT</literal> で、直前のクエリやフェッチで復元したすべての要素に関連するコレクションを 復元します。 <literal>lazy=\"false\"</literal> で明示的に遅延フェッチを無効にしなければ、この2回目のselectは実際に 関連にアクセスしたときのみ実行されるでしょう。"
+
+#: index.docbook:48
+msgid "<emphasis>Batch fetching</emphasis> - an optimization strategy for select fetching - Hibernate retrieves a batch of entity instances or collections in a single <literal>SELECT</literal>, by specifying a list of primary keys or foreign keys."
+msgstr "<emphasis>バッチフェッチ</emphasis> - セレクトフェッチのための最適化された戦略 - Hibernateはエンティティのインスタンスやコレクションの一群を1回の <literal>SELECT</literal> で復元します。これは主キーや外部キーのリストを指定することに により行います。"
+
+#: index.docbook:57
+msgid "Hibernate also distinguishes between:"
+msgstr "Hibernateは次に示す戦略とも区別をします。"
+
+#: index.docbook:63
+msgid "<emphasis>Immediate fetching</emphasis> - an association, collection or attribute is fetched immediately, when the owner is loaded."
+msgstr "<emphasis>即時フェッチ</emphasis> - 所有者のオブジェクトがロードされたときに、 関連、コレクションは即時にフェッチされます。"
+
+#: index.docbook:69
+msgid "<emphasis>Lazy collection fetching</emphasis> - a collection is fetched when the application invokes an operation upon that collection. (This is the default for collections.)"
+msgstr "<emphasis>遅延コレクションフェッチ</emphasis> - アプリケーションがコレクションに 対して操作を行ったときにコレクションをフェッチします。 (これはコレクションに対するデフォルトの動作です)"
+
+#: index.docbook:76
+msgid "<emphasis>\"Extra-lazy\" collection fetching</emphasis> - individual elements of the collection are accessed from the database as needed. Hibernate tries not to fetch the whole collection into memory unless absolutely needed (suitable for very large collections)"
+msgstr "<emphasis>\"特別な遅延\"コレクションフェッチ</emphasis> - コレクションの要素 １つ１つが独立して、必要なときにデータベースから取得されます。 Hibernateは必要ないならば、コレクション全体をメモリにフェッチすることは 避けます（とても大きなコレクションに適しています）。"
+
+#: index.docbook:84
+msgid "<emphasis>Proxy fetching</emphasis> - a single-valued association is fetched when a method other than the identifier getter is invoked upon the associated object."
+msgstr "<emphasis>プロキシフェッチ</emphasis> - 単一値関連は、識別子のgetter以外の メソッドが関連オブジェクトで呼び出されるときにフェッチされます。"
+
+#: index.docbook:91
+msgid "<emphasis>\"No-proxy\" fetching</emphasis> - a single-valued association is fetched when the instance variable is accessed. Compared to proxy fetching, this approach is less lazy (the association is fetched even when only the identifier is accessed) but more transparent, since no proxy is visible to the application. This approach requires buildtime bytecode instrumentation and is rarely necessary."
+msgstr "<emphasis>\"プロキシなし\"フェッチ</emphasis> - 単一値関連は、インスタンス変数に アクセスされたときにフェッチされます。プロキシフェッチと比較すると、この方法は 遅延の度合いが少ない（関連は識別子にアクセスしただけでもフェッチされます） ですが、より透過的で、アプリケーションにプロキシが存在しないように見せます。 この方法はビルド時のバイトコード組み込みが必要になり、使う場面はまれです。"
+
+#: index.docbook:101
+msgid "<emphasis>Lazy attribute fetching</emphasis> - an attribute or single valued association is fetched when the instance variable is accessed. This approach requires buildtime bytecode instrumentation and is rarely necessary."
+msgstr "<emphasis>遅延属性フェッチ</emphasis> - 属性や単一値関連は、インスタンス変数にアクセスした ときにフェッチされます。この方法はビルド時のバイトコード組み込みが必要になり、 使う場面はまれです。"
+
+#: index.docbook:110
+msgid "We have two orthogonal notions here: <emphasis>when</emphasis> is the association fetched, and <emphasis>how</emphasis> is it fetched (what SQL is used). Don't confuse them! We use <literal>fetch</literal> to tune performance. We may use <literal>lazy</literal> to define a contract for what data is always available in any detached instance of a particular class."
+msgstr "二つの直行する概念があります: <emphasis>いつ</emphasis> 関連をフェッチするか、 そして、 <emphasis>どうやって</emphasis> フェッチするか（どんなSQLを使って）。 これらを混同しないでください！ <literal>fetch</literal> はパフォーマンスチューニングに使います。 <literal>lazy</literal> はあるクラスの分離されたインスタンスのうち、どのデータを常に 使用可能にするかの取り決めを定義します。"
+
+#: index.docbook:119
+msgid "Working with lazy associations"
+msgstr "遅延関連の働き"
+
+#: index.docbook:121
+msgid "By default, Hibernate3 uses lazy select fetching for collections and lazy proxy fetching for single-valued associations. These defaults make sense for almost all associations in almost all applications."
+msgstr "デフォルトでは、Hibernate3はコレクションに対しては遅延セレクトフェッチを使い、 単一値関連には遅延プロキシフェッチを使います。これらのデフォルト動作はほぼすべての アプリケーションのほぼすべての関連で意味があります。"
+
+#: index.docbook:127
+msgid "<emphasis>Note:</emphasis> if you set <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the batch fetch optimization for lazy fetching (this optimization may also be enabled at a more granular level)."
+msgstr "<emphasis>注:</emphasis> <literal>hibernate.default_batch_fetch_size</literal> をセットしたときは、Hibernateは 遅延フェッチのためのバッチフェッチ最適化を使うでしょう （この最適化はより細かいレベルで有効にすることも出来ます）。"
+
+#: index.docbook:134
+msgid "However, lazy fetching poses one problem that you must be aware of. Access to a lazy association outside of the context of an open Hibernate session will result in an exception. For example:"
+msgstr "しかし、遅延フェッチは知っておかなければならない一つの問題があります。 Hibernateのsessionをオープンしているコンテキストの外から遅延関連にアクセスすると、 例外が発生します。例："
+
+#: index.docbook:140
+msgid ""
+      "<![CDATA[s = sessions.openSession();\n"
+      "Transaction tx = s.beginTransaction();\n"
+      "            \n"
+      "User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
+      "    .setString(\"userName\", userName).uniqueResult();\n"
+      "Map permissions = u.getPermissions();\n"
+      "\n"
+      "tx.commit();\n"
+      "s.close();\n"
+      "\n"
+      "Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!]]>"
+msgstr ""
+      "<![CDATA[s = sessions.openSession();\n"
+      "Transaction tx = s.beginTransaction();\n"
+      "            \n"
+      "User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
+      "    .setString(\"userName\", userName).uniqueResult();\n"
+      "Map permissions = u.getPermissions();\n"
+      "\n"
+      "tx.commit();\n"
+      "s.close();\n"
+      "\n"
+      "Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!]]>"
+
+#: index.docbook:142
+msgid "Since the permissions collection was not initialized when the <literal>Session</literal> was closed, the collection will not be able to load its state. <emphasis>Hibernate does not support lazy initialization for detached objects</emphasis>. The fix is to move the code that reads from the collection to just before the transaction is committed."
+msgstr "<literal>Session</literal> がクローズされたとき、permissionsコレクションは 初期化されていないため、このコレクションは自身の状態をロードできません。 <emphasis>Hibernateは切り離されたオブジェクトの遅延初期化はサポート していません</emphasis> 。修正方法として、コレクションから読み込みを行うコードを トランザクションをコミットする直前に移動させます。"
+
+#: index.docbook:150
+msgid "Alternatively, we could use a non-lazy collection or association, by specifying <literal>lazy=\"false\"</literal> for the association mapping. However, it is intended that lazy initialization be used for almost all collections and associations. If you define too many non-lazy associations in your object model, Hibernate will end up needing to fetch the entire database into memory in every transaction!"
+msgstr "一方で、 <literal>lazy=\"false\"</literal> を関連マッピングに指定することで、 遅延処理をしないコレクションや関連を使うことが出来ます。 しかしながら、遅延初期化はほぼすべてのコレクションや関連で使われることを 意図しています。もしあなたのオブジェクトモデルの中に遅延処理をしない関連を 多く定義してしまうと、Hibernateは最終的にはトランザクション毎に ほぼ完全なデータベースをメモリの中にフェッチすることになるでしょう！"
+
+#: index.docbook:159
+msgid "On the other hand, we often want to choose join fetching (which is non-lazy by nature) instead of select fetching in a particular transaction. We'll now see how to customize the fetching strategy. In Hibernate3, the mechanisms for choosing a fetch strategy are identical for single-valued associations and collections."
+msgstr "他方では、特定のトランザクションにおいてセレクトフェッチの代わりに 結合フェッチ（当然これは遅延処理ではなくなります）を選択したいことが 時々あります。これからフェッチ戦略をカスタマイズする方法をお見せします。 Hibernate3では、フェッチ戦略を選択する仕組みは単一値関連とコレクションで 変わりはありません。"
+
+#: index.docbook:170
+msgid "Tuning fetch strategies"
+msgstr "フェッチ戦略のチューニング"
+
+#: index.docbook:172
+msgid "Select fetching (the default) is extremely vulnerable to N+1 selects problems, so we might want to enable join fetching in the mapping document:"
+msgstr "セレクトフェッチ（デフォルト）はN+1セレクト問題という大きな弱点があるため、 マッピング定義で結合フェッチを有効にすることができます。"
+
+#: index.docbook:177
+msgid ""
+      "<![CDATA[<set name=\"permissions\" \n"
+      "            fetch=\"join\">\n"
+      "    <key column=\"userId\"/>\n"
+      "    <one-to-many class=\"Permission\"/>\n"
+      "</set]]>"
+msgstr ""
+      "<![CDATA[<set name=\"permissions\" \n"
+      "            fetch=\"join\">\n"
+      "    <key column=\"userId\"/>\n"
+      "    <one-to-many class=\"Permission\"/>\n"
+      "</set]]>"
+
+#: index.docbook:179
+msgid "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
+msgstr "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
+
+#: index.docbook:181
+msgid "The <literal>fetch</literal> strategy defined in the mapping document affects:"
+msgstr "マッピング定義で定義した <literal>フェッチ</literal> 戦略は次のものに影響します。"
+
+#: index.docbook:187
+msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
+msgstr "<literal>get()</literal> や <literal>load()</literal> による復元"
+
+#: index.docbook:192
+msgid "retrieval that happens implicitly when an association is navigated"
+msgstr "関連にナビゲートしたときに発生する暗黙的な復元"
+
+#: index.docbook:197
+msgid "<literal>Criteria</literal> queries"
+msgstr "<literal>Criteria</literal> クエリ"
+
+#: index.docbook:202
+msgid "HQL queries if <literal>subselect</literal> fetching is used"
+msgstr "<literal>サブセレクト</literal> フェッチを使うHQLクエリ"
+
+#: index.docbook:208
+msgid "No matter what fetching strategy you use, the defined non-lazy graph is guaranteed to be loaded into memory. Note that this might result in several immediate selects being used to execute a particular HQL query."
+msgstr "たとえどんなフェッチ戦略を使ったとしても、遅延ではないグラフはメモリに読み込まれることが 保証されます。つまり、特定のHQLクエリを実行するためにいくつかのSELECT文が即時実行される ことがあるので注意してください。"
+
+#: index.docbook:214
+msgid "Usually, we don't use the mapping document to customize fetching. Instead, we keep the default behavior, and override it for a particular transaction, using <literal>left join fetch</literal> in HQL. This tells Hibernate to fetch the association eagerly in the first select, using an outer join. In the <literal>Criteria</literal> query API, you would use <literal>setFetchMode(FetchMode.JOIN)</literal>."
+msgstr "通常は、マッピング定義でフェッチのカスタマイズは行いません。 代わりに、デフォルトの動作のままにしておいて、HQLで <literal>left join fetch</literal> を 指定することで特定のトランザクションで動作をオーバーライドします。 これはHibernateに初回のセレクトで外部結合を使って関連を先にフェッチするように指定しています。 <literal>Criteria</literal> クエリのAPIでは、 <literal>setFetchMode(FetchMode.JOIN)</literal> を使うことが出来ます。"
+
+#: index.docbook:223
+msgid "If you ever feel like you wish you could change the fetching strategy used by <literal>get()</literal> or <literal>load()</literal>, simply use a <literal>Criteria</literal> query, for example:"
+msgstr "もし <literal>get()</literal> や <literal>load()</literal> で使われる フェッチ戦略を変えたいと感じたときには、単純に <literal>Criteria</literal> クエリを使ってください。例："
+
+#: index.docbook:229
+msgid ""
+      "<![CDATA[User user = (User) session.createCriteria(User.class)\n"
+      "                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
+      "                .add( Restrictions.idEq(userId) )\n"
+      "                .uniqueResult();]]>"
+msgstr ""
+      "<![CDATA[User user = (User) session.createCriteria(User.class)\n"
+      "                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
+      "                .add( Restrictions.idEq(userId) )\n"
+      "                .uniqueResult();]]>"
+
+#: index.docbook:231
+msgid "(This is Hibernate's equivalent of what some ORM solutions call a \"fetch plan\".)"
+msgstr "（これはいくつかのORMソリューションが\"fetch plan\"と呼んでいるものと同じです。）"
+
+#: index.docbook:235
+msgid "A completely different way to avoid problems with N+1 selects is to use the second-level cache."
+msgstr "N+1セレクト問題を避けるためのまったく違う方法は、第2レベルキャッシュを使うことです。"
+
+#: index.docbook:243
+msgid "Single-ended association proxies"
+msgstr "単一端関連プロキシ"
+
+#: index.docbook:245
+msgid "Lazy fetching for collections is implemented using Hibernate's own implementation of persistent collections. However, a different mechanism is needed for lazy behavior in single-ended associations. The target entity of the association must be proxied. Hibernate implements lazy initializing proxies for persistent objects using runtime bytecode enhancement (via the excellent CGLIB library)."
+msgstr "コレクションの遅延フェッチは、Hibernate自身の実装による永続コレクションを使って 実現しています。しかし、単一端関連における遅延処理では、違う仕組みが 必要です。対象の関連エンティティはプロキシでなければなりません。Hibernateは （すばらしいCGLIBライブラリによる）実行時のバイトコード拡張を 使って永続オブジェクトの遅延初期化プロキシを実現しています。"
+
+#: index.docbook:253
+msgid "By default, Hibernate3 generates proxies (at startup) for all persistent classes and uses them to enable lazy fetching of <literal>many-to-one</literal> and <literal>one-to-one</literal> associations."
+msgstr "デフォルトでは、Hibernate3は（開始時に）すべての永続クラスのプロキシを生成し、 それらを使って、 <literal>many-to-one</literal> や <literal>one-to-one</literal> 関連の 遅延フェッチを可能にしています。"
+
+#: index.docbook:259
+msgid "The mapping file may declare an interface to use as the proxy interface for that class, with the <literal>proxy</literal> attribute. By default, Hibernate uses a subclass of the class. <emphasis>Note that the proxied class must implement a default constructor with at least package visibility. We recommend this constructor for all persistent classes!</emphasis>"
+msgstr "マッピングファイルで <literal>proxy</literal> 属性によって、クラスのプロキシインターフェイスとして 使うインターフェイスを宣言できます。デフォルトでは、Hibernateはそのクラスのサブクラスを使います。 <emphasis>プロキシクラスは少なくともパッケージ可視でデフォルトコンストラクタを実装しなければ ならないことに注意してください。すべての永続クラスにこのコンストラクタを推奨します！</emphasis>"
+
+#: index.docbook:266
+msgid "There are some gotchas to be aware of when extending this approach to polymorphic classes, eg."
+msgstr "ポリモーフィズムのクラスに対してこの方法を適用するときにいくつか考慮することがあります。 例："
+
+#: index.docbook:271
+msgid ""
+      "<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
+      "    ......\n"
+      "    <subclass name=\"DomesticCat\">\n"
+      "        .....\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
+      "    ......\n"
+      "    <subclass name=\"DomesticCat\">\n"
+      "        .....\n"
+      "    </subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:273
+msgid "Firstly, instances of <literal>Cat</literal> will never be castable to <literal>DomesticCat</literal>, even if the underlying instance is an instance of <literal>DomesticCat</literal>:"
+msgstr "第一に、 <literal>Cat</literal> のインスタンスは <literal>DomesticCat</literal> にキャストできません。たとえ基となるインスタンスが <literal>DomesticCat</literal> であったとしてもです。"
+
+#: index.docbook:279
+msgid ""
+      "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)\n"
+      "if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy\n"
+      "    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
+      "    ....\n"
+      "}]]>"
+msgstr ""
+      "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)\n"
+      "if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy\n"
+      "    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
+      "    ....\n"
+      "}]]>"
+
+#: index.docbook:281
+msgid "Secondly, it is possible to break proxy <literal>==</literal>."
+msgstr "第二に、プロキシの <literal>==</literal> は成立しないことがあります。"
+
+#: index.docbook:285
+msgid ""
+      "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy\n"
+      "DomesticCat dc = \n"
+      "        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new DomesticCat proxy!\n"
+      "System.out.println(cat==dc);                            // false]]>"
+msgstr ""
+      "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy\n"
+      "DomesticCat dc = \n"
+      "        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new DomesticCat proxy!\n"
+      "System.out.println(cat==dc);                            // false]]>"
+
+#: index.docbook:287
+msgid "However, the situation is not quite as bad as it looks. Even though we now have two references to different proxy objects, the underlying instance will still be the same object:"
+msgstr "しかし、これは見かけほど悪い状況というわけではありません。たとえ異なったプロキシオブジェクトへの 二つの参照があったとしても、基となるインスタンスは同じオブジェクトです。"
+
+#: index.docbook:292
+msgid ""
+      "<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
+      "System.out.println( dc.getWeight() );  // 11.0]]>"
+msgstr ""
+      "<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
+      "System.out.println( dc.getWeight() );  // 11.0]]>"
+
+#: index.docbook:294
+msgid "Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class with any <literal>final</literal> methods."
+msgstr "第三に、 <literal>final</literal> クラスや <literal>final</literal> メソッドを持つクラスに CGLIBプロキシを使えません。"
+
+#: index.docbook:299
+msgid "Finally, if your persistent object acquires any resources upon instantiation (eg. in initializers or default constructor), then those resources will also be acquired by the proxy. The proxy class is an actual subclass of the persistent class."
+msgstr "最後に、もし永続オブジェクトのインスタンス化時(例えば、初期化処理やデフォルトコンストラクタの中で) になんらかのリソースが必要となるなら、そのリソースもまたプロキシを通して取得されます。 実際には、プロキシクラスは永続クラスのサブクラスです。"
+
+#: index.docbook:305
+msgid "These problems are all due to fundamental limitations in Java's single inheritance model. If you wish to avoid these problems your persistent classes must each implement an interface that declares its business methods. You should specify these interfaces in the mapping file. eg."
+msgstr "これらの問題はJavaの単一継承モデルの原理上の制限のためです。もしこれらの問題を避けたいのなら、 ビジネスメソッドを宣言したインターフェイスをそれぞれ永続クラスで実装しなければなりません。 マッピングファイルでこれらのインターフェイスを指定する必要があります。例："
+
+#: index.docbook:311
+msgid ""
+      "<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
+      "    ......\n"
+      "    <subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\">\n"
+      "        .....\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
+      "    ......\n"
+      "    <subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\">\n"
+      "        .....\n"
+      "    </subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:313
+msgid "where <literal>CatImpl</literal> implements the interface <literal>Cat</literal> and <literal>DomesticCatImpl</literal> implements the interface <literal>DomesticCat</literal>. Then proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>list()</literal> does not usually return proxies.)"
+msgstr "<literal>CatImpl</literal> は <literal>Cat</literal> インターフェイスを実装するのに対し、 <literal>DomesticCatImpl</literal> は <literal>DomesticCat</literal> を実装します。 すると、 <literal>load()</literal> や <literal>iterate()</literal> は、 <literal>Cat</literal> や <literal>DomesticCat</literal> のインスタンスのプロキシを 返します。（ <literal>list()</literal> は通常はプロキシを返さないことに注意してください。）"
+
+#: index.docbook:321
+msgid ""
+      "<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
+      "Iterator iter = session.createQuery(\"from CatImpl as cat where cat.name='fritz'\").iterate();\n"
+      "Cat fritz = (Cat) iter.next();]]>"
+msgstr ""
+      "<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
+      "Iterator iter = session.createQuery(\"from CatImpl as cat where cat.name='fritz'\").iterate();\n"
+      "Cat fritz = (Cat) iter.next();]]>"
+
+#: index.docbook:323
+msgid "Relationships are also lazily initialized. This means you must declare any properties to be of type <literal>Cat</literal>, not <literal>CatImpl</literal>."
+msgstr "関連も遅延初期化されます。これはプロパティを <literal>Cat</literal> 型で宣言しなければ ならないことを意味します。 <literal>CatImpl</literal> ではありません。"
+
+#: index.docbook:328
+msgid "Certain operations do <emphasis>not</emphasis> require proxy initialization"
+msgstr "プロキシの初期化を <emphasis>必要としない</emphasis> 操作も存在します。"
+
+#: index.docbook:334
+msgid "<literal>equals()</literal>, if the persistent class does not override <literal>equals()</literal>"
+msgstr "<literal>equals()</literal> （永続クラスが <literal>equals()</literal> を オーバーライドしないとき）"
+
+#: index.docbook:340
+msgid "<literal>hashCode()</literal>, if the persistent class does not override <literal>hashCode()</literal>"
+msgstr "<literal>hashCode()</literal> （永続クラスが <literal>hashCode()</literal> を オーバーライドしないとき）"
+
+#: index.docbook:346
+msgid "The identifier getter method"
+msgstr "識別子のgetterメソッド"
+
+#: index.docbook:352
+msgid "Hibernate will detect persistent classes that override <literal>equals()</literal> or <literal>hashCode()</literal>."
+msgstr "Hibernateは <literal>equals()</literal> や <literal>hashCode()</literal> をオーバーライドした 永続クラスを検出します。"
+
+#: index.docbook:357
+msgid "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default <literal>lazy=\"proxy\"</literal>, we can avoid the problems associated with typecasting. However, we will require buildtime bytecode instrumentation, and all operations will result in immediate proxy initialization."
+msgstr "デフォルトの <literal>lazy=\"proxy\"</literal> の代わりに、 <literal>lazy=\"no-proxy\"</literal> を 選んだことで、型変換に関連する問題を回避することが出来ます。 しかし、ビルド時のバイトコード組み込みが必要になり、どのような操作であっても、 ただちにプロキシの初期化を行うことになるでしょう。"
+
+#: index.docbook:367
+msgid "Initializing collections and proxies"
+msgstr "コレクションとプロキシの初期化"
+
+#: index.docbook:369
+msgid "A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an uninitialized collection or proxy is accessed outside of the scope of the <literal>Session</literal>, ie. when the entity owning the collection or having the reference to the proxy is in the detached state."
+msgstr "<literal>LazyInitializationException</literal> は、 <literal>Session</literal> のスコープ外から 初期化していないコレクションやプロキシにアクセスされたときに、Hibernateによってスローされます。 すなわち、コレクションやプロキシへの参照を持つエンティティが分離された状態の時です。"
+
+#: index.docbook:375
+msgid "Sometimes we need to ensure that a proxy or collection is initialized before closing the <literal>Session</literal>. Of course, we can alway force initialization by calling <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example. But that is confusing to readers of the code and is not convenient for generic code."
+msgstr "<literal>Session</literal> をクローズする前にプロキシやコレクションの初期化を確実に 行いたいときがあります。もちろん、 <literal>cat.getSex()</literal> や <literal>cat.getKittens().size()</literal> などを常に呼び出すことで初期化を強制することはできます。 しかしこれはコードを読む人を混乱させ、汎用的なコードという点からも不便です。"
+
+#: index.docbook:382
+msgid "The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal> provide the application with a convenient way of working with lazily initialized collections or proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy, <literal>cat</literal>, as long as its <literal>Session</literal> is still open. <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection of kittens."
+msgstr "staticメソッドの <literal>Hibernate.initialize()</literal> や <literal>Hibernate.isInitialized()</literal> は遅延初期化のコレクションやプロキシを扱うときに便利な方法をアプリケーションに提供します。 <literal>Hibernate.initialize(cat)</literal> は、 <literal>Session</literal> がオープンしている限りは <literal>cat</literal> プロキシを強制的に初期化します。 <literal>Hibernate.initialize( cat.getKittens() )</literal> はkittensコレクションに対して同様の 効果があります。"
+
+#: index.docbook:391
+msgid "Another option is to keep the <literal>Session</literal> open until all needed collections and proxies have been loaded. In some application architectures, particularly where the code that accesses data using Hibernate, and the code that uses it are in different application layers or different physical processes, it can be a problem to ensure that the <literal>Session</literal> is open when a collection is initialized. There are two basic ways to deal with this issue:"
+msgstr "別の選択肢として、必要なすべてのコレクションやプロキシがロードされるまで <literal>Session</literal> をオープンにしておく方法があります。いくつかのアプリケーションの アーキテクチャでは、特にHibernateによるデータアクセスを行うコードと、それを使う コードが異なるアプリケーションのレイヤーや、物理的に異なるプロセッサのときには、 コレクションが初期化されるときに <literal>Session</literal> がオープンしていることを 保証する問題があります。この問題に対しては2つの基本的な方法があります。"
+
+#: index.docbook:402
+msgid "In a web-based application, a servlet filter can be used to close the <literal>Session</literal> only at the very end of a user request, once the rendering of the view is complete (the <emphasis>Open Session in View</emphasis> pattern). Of course, this places heavy demands on the correctness of the exception handling of your application infrastructure. It is vitally important that the <literal>Session</literal> is closed and the transaction ended before returning to the user, even when an exception occurs during rendering of the view. See the Hibernate Wiki for examples of this \"Open Session in View\" pattern."
+msgstr "Webベースのアプリケーションでは、 ビューのレンダリングが完了し、リクエストが終わる一番最後で <literal>Session</literal> をクローズするために、サーブレットフィルタを使うことができます（ <emphasis>Open Session in View</emphasis> パターンです）。もちろん、アプリケーション基盤の例外処理の正確性が非常に重要になります。 ビューのレンダリング中に例外が発生したときでさえ、ユーザに処理が戻る前に <literal>Session</literal> のクローズとトランザクションの終了を行う ことが不可欠になります。 HibernateのWikiに載っている\"Open Session in View\"パターンの例を参照してください。"
+
+#: index.docbook:415
+msgid "In an application with a separate business tier, the business logic must \"prepare\" all collections that will be needed by the web tier before returning. This means that the business tier should load all the data and return all the data already initialized to the presentation/web tier that is required for a particular use case. Usually, the application calls <literal>Hibernate.initialize()</literal> for each collection that will be needed in the web tier (this call must occur before the session is closed) or retrieves the collection eagerly using a Hibernate query with a <literal>FETCH</literal> clause or a <literal>FetchMode.JOIN</literal> in <literal>Criteria</literal>. This is usually easier if you adopt the <emphasis>Command</emphasis> pattern instead of a <emphasis>Session Facade</emphasis>."
+msgstr "ビジネス層が分離しているアプリケーションでは、ビジネスロジックは Web層で必要になるすべてのコレクションを事前に\"準備\"する必要があります。 これは特定のユースケースで必要となるプレゼンテーション/Web層に対し、 ビジネス層がすべてのデータをロードし、すべてのデータを初期化して返すべきと いうことを意味しています。通常は、アプリケーションはWeb層で必要なコレクション それぞれに対して <literal>Hibernate.initialize()</literal> を呼び出すか （この呼び出しはセッションをクローズする前に行う必要があります）、 Hibernateクエリの <literal>FETCH</literal> 節や <literal>Criteria</literal> の <literal>FetchMode.JOIN</literal> を使ってコレクションを先に復元します。 普通は <emphasis>Session Facade</emphasis> パターンの代わりに <emphasis>Command</emphasis> パターンを採用するほうがより簡単です。"
+
+#: index.docbook:430
+msgid "You may also attach a previously loaded object to a new <literal>Session</literal> with <literal>merge()</literal> or <literal>lock()</literal> before accessing uninitialized collections (or other proxies). No, Hibernate does not, and certainly <emphasis>should</emphasis> not do this automatically, since it would introduce ad hoc transaction semantics!"
+msgstr "初期化されていないコレクション（もしくは他のプロキシ）にアクセスする前に、 <literal>merge()</literal> や <literal>lock()</literal> を使って新しい <literal>Session</literal> に以前にロードされたオブジェクトを追加することも出来ます。 アドホックなトランザクションのセマンティクスを導入したので、Hibernateは これを自動的に行わず、 <emphasis>行うべきでもありません</emphasis> ！"
+
+#: index.docbook:440
+msgid "Sometimes you don't want to initialize a large collection, but still need some information about it (like its size) or a subset of the data."
+msgstr "大きなコレクションを初期化したくはないが、コレクションについてのなんらかの情報（サイズのような） やデータのサブセットを必要とすることがあります。"
+
+#: index.docbook:445
+msgid "You can use a collection filter to get the size of a collection without initializing it:"
+msgstr "コレクションフィルタを使うことで、初期化せずにコレクションのサイズを取得することが出来ます。"
+
+#: index.docbook:449
+msgid "<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" ).list().get(0) ).intValue()]]>"
+msgstr "<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" ).list().get(0) ).intValue()]]>"
+
+#: index.docbook:451
+msgid "The <literal>createFilter()</literal> method is also used to efficiently retrieve subsets of a collection without needing to initialize the whole collection:"
+msgstr "<literal>createFilter()</literal> メソッドは、コレクション全体を初期化する必要なしに、コレクションの サブセットを復元するために効果的に使えます。"
+
+#: index.docbook:456
+msgid "<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0).setMaxResults(10).list();]]>"
+msgstr "<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0).setMaxResults(10).list();]]>"
+
+#: index.docbook:461
+msgid "Using batch fetching"
+msgstr "バッチフェッチの使用"
+
+#: index.docbook:463
+msgid "Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized proxies if one proxy is accessed (or collections. Batch fetching is an optimization of the lazy select fetching strategy. There are two ways you can tune batch fetching: on the class and the collection level."
+msgstr "Hibernateはバッチフェッチを効率的に使用できます。一つのプロキシ（もしくはコレクション）がアクセス されると、Hibernateはいくつかの初期化していないプロキシをロードすることができます。バッチフェッチは 遅延セレクトフェッチ戦略に対する最適化です。バッチフェッチの調整には２つの方法があります。 クラスレベルとコレクションレベルです。"
+
+#: index.docbook:469
+msgid "Batch fetching for classes/entities is easier to understand. Imagine you have the following situation at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>. The <literal>Person</literal> class is mapped with a proxy, <literal>lazy=\"true\"</literal>. If you now iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:"
+msgstr "クラス、要素のバッチフェッチは理解が簡単です。実行時の次の場面を想像してください。 <literal>Session</literal> にロードされた25個の <literal>Cat</literal> インスタンスが存在し、 それぞれの <literal>Cat</literal> は <literal>owner</literal> である <literal>Person</literal> への関連を持ちます。 <literal>Person</literal> クラスは <literal>lazy=\"true\"</literal> のプロキシでマッピングされています。 もし今すべてのCatに対して繰り返し <literal>getOwner()</literal> を呼び出すと、Hibernateは デフォルトでは25回の <literal>SELECT</literal> を実行し、ownerプロキシの復元をします。 この振る舞いを <literal>Person</literal> のマッピングの <literal>batch-size</literal> の指定で調整できます。"
+
+#: index.docbook:479
+msgid "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
+msgstr "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
+
+#: index.docbook:481
+msgid "Hibernate will now execute only three queries, the pattern is 10, 10, 5."
+msgstr "Hibernateはクエリを３回だけを実行するようになります。パターンは10, 10, 5です。"
+
+#: index.docbook:485
+msgid "You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s, one for every call to <literal>getCats()</literal>. If you enable batch fetching for the <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch collections:"
+msgstr "コレクションのバッチフェッチも有効にすることが出来ます。例として、それぞれの <literal>Person</literal> が <literal>Cat</literal> の遅延コレクションを持っており、 10個のPersonが <literal>Sesssion</literal> にロードされたとすると、すべてのPersonに 対して繰り返し <literal>getCats()</literal> を呼び出すことで、計10回の <literal>SELECT</literal> が発生します。もし <literal>Person</literal> のマッピングで <literal>cats</literal> コレクションのバッチフェッチを有効にすれば、Hibernateはコレクションの事前フェッチが出来ます。"
+
+#: index.docbook:494
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <set name=\"cats\" batch-size=\"3\">\n"
+      "        ...\n"
+      "    </set>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <set name=\"cats\" batch-size=\"3\">\n"
+      "        ...\n"
+      "    </set>\n"
+      "</class>]]>"
+
+#: index.docbook:496
+msgid "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 collections in four <literal>SELECT</literal>s. Again, the value of the attribute depends on the expected number of uninitialized collections in a particular <literal>Session</literal>."
+msgstr "<literal>batch-size</literal> が3なので、Hibernateは4回の <literal>SELECT</literal> で3個、3個、3個、1個をロードします。繰り返すと、属性の値は特定の <literal>Session</literal> の中の初期化されていないコレクションの期待数に依存します。"
+
+#: index.docbook:502
+msgid "Batch fetching of collections is particularly useful if you have a nested tree of items, ie. the typical bill-of-materials pattern. (Although a <emphasis>nested set</emphasis> or a <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.)"
+msgstr "コレクションのバッチフェッチはアイテムのネストしたツリー、 すなわち、代表的な部品表のパターンが ある場合に特に有用です。（しかし、読み込みが多いツリーでは <emphasis>ネストしたset</emphasis> や <emphasis>具体化したパス</emphasis> がよりよい選択になります。）"
+
+#: index.docbook:511
+msgid "Using subselect fetching"
+msgstr "サブセレクトフェッチの使用"
+
+#: index.docbook:513
+msgid "If one lazy collection or single-valued proxy has to be fetched, Hibernate loads all of them, re-running the original query in a subselect. This works in the same way as batch-fetching, without the piecemeal loading."
+msgstr "一つの遅延コレクションや単一値プロキシがフェッチされなければいけないとき、Hibernateは それらすべてをロードし、サブセレクトのオリジナルクエリが再度実行されます。これは バッチフェッチと同じ方法で動き、少しずつのロードは行いません。"
+
+#: index.docbook:524
+msgid "Using lazy property fetching"
+msgstr "遅延プロパティフェッチの使用"
+
+#: index.docbook:526
+msgid "Hibernate3 supports the lazy fetching of individual properties. This optimization technique is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a marketing feature, as in practice, optimizing row reads is much more important than optimization of column reads. However, only loading some properties of a class might be useful in extreme cases, when legacy tables have hundreds of columns and the data model can not be improved."
+msgstr "Hibernate3はプロパティごとの遅延フェッチをサポートしています。この最適化手法は <emphasis>グループのフェッチ</emphasis> としても知られています。これはほとんど 要望から出た機能であることに注意してください。実際には列読み込みの最適化よりも、 行読み込みの最適化が非常に重要です。 しかし、クラスのいくつかのプロパティだけを読み込むことは、既存のテーブルが何百もの列を持ち、 データモデルを改善できないなどの極端な場合には有用です。"
+
+#: index.docbook:535
+msgid "To enable lazy property loading, set the <literal>lazy</literal> attribute on your particular property mappings:"
+msgstr "遅延プロパティ読み込みを有効にするには、対象のプロパティのマッピングで <literal>lazy</literal> 属性をセットしてください。"
+
+#: index.docbook:540
+msgid ""
+      "<![CDATA[<class name=\"Document\">\n"
+      "       <id name=\"id\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"name\" not-null=\"true\" length=\"50\"/>\n"
+      "    <property name=\"summary\" not-null=\"true\" length=\"200\" lazy=\"true\"/>\n"
+      "    <property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Document\">\n"
+      "       <id name=\"id\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"name\" not-null=\"true\" length=\"50\"/>\n"
+      "    <property name=\"summary\" not-null=\"true\" length=\"200\" lazy=\"true\"/>\n"
+      "    <property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:542
+msgid "Lazy property loading requires buildtime bytecode instrumentation! If your persistent classes are not enhanced, Hibernate will silently ignore lazy property settings and fall back to immediate fetching."
+msgstr "遅延プロパティ読み込みはビルド時のバイトコード組み込みを必要とします！もし 永続クラスに組み込みがされていないなら、Hibernateは黙って遅延プロパティの設定を無視して、 即時フェッチに戻します。"
+
+#: index.docbook:548
+msgid "For bytecode instrumentation, use the following Ant task:"
+msgstr "バイトコード組み込みは以下のAntタスクを使ってください。"
+
+#: index.docbook:552
+msgid ""
+      "<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
+      "    <taskdef name=\"instrument\" classname=\"org.hibernate.tool.instrument.InstrumentTask\">\n"
+      "        <classpath path=\"${jar.path}\"/>\n"
+      "        <classpath path=\"${classes.dir}\"/>\n"
+      "        <classpath refid=\"lib.class.path\"/>\n"
+      "    </taskdef>\n"
+      "\n"
+      "    <instrument verbose=\"true\">\n"
+      "        <fileset dir=\"${testclasses.dir}/org/hibernate/auction/model\">\n"
+      "            <include name=\"*.class\"/>\n"
+      "        </fileset>\n"
+      "    </instrument>\n"
+      "</target>]]>"
+msgstr ""
+      "<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
+      "    <taskdef name=\"instrument\" classname=\"org.hibernate.tool.instrument.InstrumentTask\">\n"
+      "        <classpath path=\"${jar.path}\"/>\n"
+      "        <classpath path=\"${classes.dir}\"/>\n"
+      "        <classpath refid=\"lib.class.path\"/>\n"
+      "    </taskdef>\n"
+      "\n"
+      "    <instrument verbose=\"true\">\n"
+      "        <fileset dir=\"${testclasses.dir}/org/hibernate/auction/model\">\n"
+      "            <include name=\"*.class\"/>\n"
+      "        </fileset>\n"
+      "    </instrument>\n"
+      "</target>]]>"
+
+#: index.docbook:554
+msgid "A different (better?) way to avoid unnecessary column reads, at least for read-only transactions is to use the projection features of HQL or Criteria queries. This avoids the need for buildtime bytecode processing and is certainly a prefered solution."
+msgstr "不要な列を読み込まないための、別の（よりよい？）方法は、少なくとも 読み込みのみのトランザクションにおいては、HQLやCriteriaクエリの射影 機能を使うことです。この方法はビルド時のバイトコード組み込みが不要になり、 より良い解決方法です。"
+
+#: index.docbook:561
+msgid "You may force the usual eager fetching of properties using <literal>fetch all properties</literal> in HQL."
+msgstr "HQLで <literal>fetch all properties</literal> を使うことで、普通どおりの プロパティの即時フェッチングを強制することが出来ます。"
+
+#: index.docbook:571
+msgid "The Second Level Cache"
+msgstr "第2レベルキャッシュ"
+
+#: index.docbook:573
+msgid "A Hibernate <literal>Session</literal> is a transaction-level cache of persistent data. It is possible to configure a cluster or JVM-level (<literal>SessionFactory</literal>-level) cache on a class-by-class and collection-by-collection basis. You may even plug in a clustered cache. Be careful. Caches are never aware of changes made to the persistent store by another application (though they may be configured to regularly expire cached data)."
+msgstr "Hibernateの <literal>Session</literal> は永続データのトランザクションレベルのキャッシュです。 class-by-classとcollection-by-collectionごとの、クラスタレベルやJVMレベル （ <literal>SessionFactory</literal> レベル）のキャッシュを設定することが出来ます。 クラスタ化されたキャッシュにつなぐことさえ出来ます。しかし注意してください。 キャッシュは他のアプリケーションによる永続層の変更を 考慮しません（キャッシュデータを定期的に期限切れにする設定は出来ます）。"
+
+#: index.docbook:581
+msgid "You have the option to tell Hibernate which caching implementation to use by specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal> using the property <literal>hibernate.cache.provider_class</literal>. Hibernate comes bundled with a number of built-in integrations with open-source cache providers (listed below); additionally, you could implement your own and plug it in as outlined above. Note that versions prior to 3.2 defaulted to use EhCache as the default cache provider; that is no longer the case as of 3.2."
+msgstr "Hibernateが使用するキャッシュ実装は、<literal>hibernate.cache.provider_class</literal> プロパティに <literal>org.hibernate.cache.CacheProvider</literal> を実装したクラス名を指定することで変更できます。 Hibernateは多くのオープンソースのキャッシュプロバイダをビルトイン実装で持っています（後にリストがあります）。 加えて、前に説明したように、あなた自身が独自の実装をして、それを組み込むことも出来ます。 バージョン3.2より前ではEhCacheがデフォルトのキャッシュプロバイダであることに注意してください。 バージョン3.2ではこれは当てはまりません。"
+
+#: index.docbook:592
+msgid "Cache Providers"
+msgstr "キャッシュプロバイダ"
+
+#: index.docbook:601, index.docbook:774
+msgid "Cache"
+msgstr "キャッシュ"
+
+#: index.docbook:602
+msgid "Provider class"
+msgstr "プロバイダクラス"
+
+#: index.docbook:603
+msgid "Type"
+msgstr "<entry>タイプ</entry>"
+
+#: index.docbook:604
+msgid "Cluster Safe"
+msgstr "クラスタセーフ"
+
+#: index.docbook:605
+msgid "Query Cache Supported"
+msgstr "クエリキャッシュのサポート"
+
+#: index.docbook:610, index.docbook:783
+msgid "Hashtable (not intended for production use)"
+msgstr "Hashtable（製品用として意図していません）"
+
+#: index.docbook:611
+msgid "org.hibernate.cache.HashtableCacheProvider"
+msgstr "org.hibernate.cache.HashtableCacheProvider"
+
+#: index.docbook:612
+msgid "memory"
+msgstr "<entry>メモリ</entry>"
+
+#: index.docbook:614, index.docbook:621, index.docbook:628, index.docbook:784, index.docbook:785, index.docbook:786, index.docbook:791, index.docbook:792, index.docbook:793, index.docbook:798, index.docbook:799, index.docbook:800, index.docbook:805, index.docbook:806, index.docbook:812, index.docbook:815
+msgid "<entry>yes</entry>"
+msgstr "<entry>yes</entry>"
+
+#: index.docbook:617, index.docbook:790
+msgid "EHCache"
+msgstr "EHCache"
+
+#: index.docbook:618
+msgid "org.hibernate.cache.EhCacheProvider"
+msgstr "org.hibernate.cache.EhCacheProvider"
+
+#: index.docbook:619, index.docbook:626
+msgid "memory, disk"
+msgstr "メモリ、ディスク"
+
+#: index.docbook:624, index.docbook:797
+msgid "OSCache"
+msgstr "OSCache"
+
+#: index.docbook:625
+msgid "org.hibernate.cache.OSCacheProvider"
+msgstr "org.hibernate.cache.OSCacheProvider"
+
+#: index.docbook:631, index.docbook:804
+msgid "SwarmCache"
+msgstr "<entry>yes</entry>"
+
+#: index.docbook:632
+msgid "org.hibernate.cache.SwarmCacheProvider"
+msgstr "SwarmCache"
+
+#: index.docbook:633
+msgid "clustered (ip multicast)"
+msgstr "org.hibernate.cache.SwarmCacheProvider"
+
+#: index.docbook:634
+msgid "yes (clustered invalidation)"
+msgstr "クラスタ（ipマルチキャスト）"
+
+#: index.docbook:638, index.docbook:811
+msgid "JBoss TreeCache"
+msgstr "yes（クラスタ無効化）"
+
+#: index.docbook:639
+msgid "org.hibernate.cache.TreeCacheProvider"
+msgstr "JBoss TreeCache"
+
+#: index.docbook:640
+msgid "clustered (ip multicast), transactional"
+msgstr "org.hibernate.cache.TreeCacheProvider"
+
+#: index.docbook:641
+msgid "yes (replication)"
+msgstr "クラスタ（ipマルチキャスト）、トランザクショナル"
+
+#: index.docbook:642
+msgid "yes (clock sync req.)"
+msgstr "yes（複製）"
+
+#: index.docbook:649
+msgid "Cache mappings"
+msgstr "yes（時刻同期が必要）"
+
+#: index.docbook:651
+msgid "The <literal>&lt;cache&gt;</literal> element of a class or collection mapping has the following form:"
+msgstr "キャッシュのマッピング"
+
+#: index.docbook:662
+msgid ""
+      "<![CDATA[<cache \n"
+      "    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
+      "    region=\"RegionName\"\n"
+      "    include=\"all|non-lazy\"\n"
+      "/>]]>"
+msgstr "クラスやコレクションのマッピングの <literal>&lt;cache&gt;</literal> 要素は以下の形式です。"
+
+#: index.docbook:665
+msgid "<literal>usage</literal> (required) specifies the caching strategy: <literal>transactional</literal>, <literal>read-write</literal>, <literal>nonstrict-read-write</literal> or <literal>read-only</literal>"
+msgstr ""
+      "<![CDATA[<cache \n"
+      "    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
+      "    region=\"RegionName\"\n"
+      "    include=\"all|non-lazy\"\n"
+      "/>]]>"
+
+#: index.docbook:674
+msgid "<literal>region</literal> (optional, defaults to the class or collection role name) specifies the name of the second level cache region"
+msgstr "<literal>usage</literal> (required) specifies the caching strategy: <literal>transactional</literal>, <literal>read-write</literal>, <literal>nonstrict-read-write</literal> or <literal>read-only</literal>"
+
+#: index.docbook:681
+msgid "<literal>include</literal> (optional, defaults to <literal>all</literal>) <literal>non-lazy</literal> specifies that properties of the entity mapped with <literal>lazy=\"true\"</literal> may not be cached when attribute-level lazy fetching is enabled"
+msgstr "<literal>region</literal> (optional, defaults to the class or collection role name) specifies the name of the second level cache region"
+
+#: index.docbook:691
+msgid "Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</literal> and <literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate.cfg.xml</literal>."
+msgstr "<literal>include</literal> (optional, defaults to <literal>all</literal>) <literal>non-lazy</literal> specifies that properties of the entity mapped with <literal>lazy=\"true\"</literal> may not be cached when attribute-level lazy fetching is enabled"
+
+#: index.docbook:696
+msgid "The <literal>usage</literal> attribute specifies a <emphasis>cache concurrency strategy</emphasis>."
+msgstr "または（よりよい方法として？）、 <literal>hibernate.cfg.xml</literal> に <literal>&lt;class-cache&gt;</literal> と <literal>&lt;collection-cache&gt;</literal> 要素を指定することも出来ます。"
+
+#: index.docbook:703
+msgid "Strategy: read only"
+msgstr "<literal>usage</literal> 属性は <emphasis>キャッシュの並列性戦略</emphasis> を指定します。"
+
+#: index.docbook:705
+msgid "If your application needs to read but never modify instances of a persistent class, a <literal>read-only</literal> cache may be used. This is the simplest and best performing strategy. It's even perfectly safe for use in a cluster."
+msgstr "read only戦略"
+
+#: index.docbook:711
+msgid ""
+      "<![CDATA[<class name=\"eg.Immutable\" mutable=\"false\">\n"
+      "    <cache usage=\"read-only\"/>\n"
+      "    ....\n"
+      "</class>]]>"
+msgstr "もしアプリケーションが読み込みのみ必要で、永続クラスのインスタンスを変更しないなら、 <literal>read-only</literal> キャッシュを使うことが出来ます。これはもっとも単純で もっともパフォーマンスの良い戦略です。クラスタでの使用も完全に安全です。"
+
+#: index.docbook:717
+msgid "Strategy: read/write"
+msgstr ""
+      "<![CDATA[<class name=\"eg.Immutable\" mutable=\"false\">\n"
+      "    <cache usage=\"read-only\"/>\n"
+      "    ....\n"
+      "</class>]]>"
+
+#: index.docbook:719
+msgid "If the application needs to update data, a <literal>read-write</literal> cache might be appropriate. This cache strategy should never be used if serializable transaction isolation level is required. If the cache is used in a JTA environment, you must specify the property <literal>hibernate.transaction.manager_lookup_class</literal>, naming a strategy for obtaining the JTA <literal>TransactionManager</literal>. In other environments, you should ensure that the transaction is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called. If you wish to use this strategy in a cluster, you should ensure that the underlying cache implementation supports locking. The built-in cache providers do <emphasis>not</emphasis>."
+msgstr "read/write戦略"
+
+#: index.docbook:730
+msgid ""
+      "<![CDATA[<class name=\"eg.Cat\" .... >\n"
+      "    <cache usage=\"read-write\"/>\n"
+      "    ....\n"
+      "    <set name=\"kittens\" ... >\n"
+      "        <cache usage=\"read-write\"/>\n"
+      "        ....\n"
+      "    </set>\n"
+      "</class>]]>"
+msgstr "アプリケーションがデータを更新する必要があるなら、 <literal>read-write</literal> キャッシュが適当かも しれません。このキャッシュ戦略は、シリアライザブルなトランザクション分離レベルが要求されるなら、 決して使うべきではありません。もしキャッシュがJTA環境で使われるなら、JTA <literal>TransactionManager</literal> を取得するための方法を示す <literal>hibernate.transaction.manager_lookup_class</literal> プロパティを指定しなければなりません。他の環境では、 <literal>Session.close()</literal> や <literal>Session.disconnect()</literal> が呼ばれたときに、確実にトランザクションが完了 していなければなりません。 もしクラスタでこの戦略を使いたいなら、基となるキャッシュの実装がロックをサポート していることを保証しなければなりません。 組み込みのキャッシュプロバイダは <emphasis>サポートしていません</emphasis> 。"
+
+#: index.docbook:735
+msgid "Strategy: nonstrict read/write"
+msgstr ""
+      "<![CDATA[<class name=\"eg.Cat\" .... >\n"
+      "    <cache usage=\"read-write\"/>\n"
+      "    ....\n"
+      "    <set name=\"kittens\" ... >\n"
+      "        <cache usage=\"read-write\"/>\n"
+      "        ....\n"
+      "    </set>\n"
+      "</class>]]>"
+
+#: index.docbook:737
+msgid "If the application only occasionally needs to update data (ie. if it is extremely unlikely that two transactions would try to update the same item simultaneously) and strict transaction isolation is not required, a <literal>nonstrict-read-write</literal> cache might be appropriate. If the cache is used in a JTA environment, you must specify <literal>hibernate.transaction.manager_lookup_class</literal>. In other environments, you should ensure that the transaction is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called."
+msgstr "厳密ではないread/write戦略"
+
+#: index.docbook:749
+msgid "Strategy: transactional"
+msgstr "アプリケーションがたまにしかデータを更新する必要はなく（すなわち二つのトランザクションが 同時に同じアイテムを更新しようとすることはほとんど起こらない）、厳密なトランザクション分離が 要求されないなら、 <literal>nonstrict-read-write</literal> キャッシュが適当かもしれません。 もしキャッシュがJTA環境で使われるなら、 <literal>hibernate.transaction.manager_lookup_class</literal> を指定しなければなりません。他の環境では、 <literal>Session.close()</literal> や <literal>Session.disconnect()</literal> が呼ばれたときに、確実にトランザクションが完了 していなければなりません。"
+
+#: index.docbook:751
+msgid "The <literal>transactional</literal> cache strategy provides support for fully transactional cache providers such as JBoss TreeCache. Such a cache may only be used in a JTA environment and you must specify <literal>hibernate.transaction.manager_lookup_class</literal>."
+msgstr "transactional戦略"
+
+#: index.docbook:759
+msgid "None of the cache providers support all of the cache concurrency strategies. The following table shows which providers are compatible with which concurrency strategies."
+msgstr "<literal>transactional</literal> キャッシュ戦略はJBoss TreeCacheのような完全なトランザクショナル キャッシュプロバイダのサポートを提供します。 このようなキャッシュはJTA環境でのみ使用可能で、 <literal>hibernate.transaction.manager_lookup_class</literal> を指定しなければなりません。"
+
+#: index.docbook:765
+msgid "Cache Concurrency Strategy Support"
+msgstr "すべての同時並行性キャッシュ戦略をサポートしているキャッシュプロバイダはありません。 以下の表はどのプロバイダがどの同時並列性戦略に対応するかを表しています。"
+
+#: index.docbook:775
+msgid "read-only"
+msgstr "キャッシュ"
+
+#: index.docbook:776
+msgid "nonstrict-read-write"
+msgstr "read-only"
+
+#: index.docbook:777
+msgid "read-write"
+msgstr "厳密ではないread-write"
+
+#: index.docbook:778
+msgid "transactional"
+msgstr "read-write"
+
+#: index.docbook:824
+msgid "Managing the caches"
+msgstr "<entry>yes</entry>"
+
+#: index.docbook:826
+msgid "Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal> or <literal>saveOrUpdate()</literal> and whenever you retrieve an object using <literal>load()</literal>, <literal>get()</literal>, <literal>list()</literal>, <literal>iterate()</literal> or <literal>scroll()</literal>, that object is added to the internal cache of the <literal>Session</literal>."
+msgstr "キャッシュの管理"
+
+#: index.docbook:833
+msgid "When <literal>flush()</literal> is subsequently called, the state of that object will be synchronized with the database. If you do not want this synchronization to occur or if you are processing a huge number of objects and need to manage memory efficiently, the <literal>evict()</literal> method may be used to remove the object and its collections from the first-level cache."
+msgstr "オブジェクトを <literal>save()</literal> 、 <literal>update()</literal> 、 <literal>saveOrUpdate()</literal> に渡すとき、そして <literal>load()</literal> 、 <literal>get()</literal> 、 <literal>list()</literal> 、 <literal>iterate()</literal> 、 <literal>scroll()</literal> を使ってオブジェクトを復元するときには常に、 そのオブジェクトは <literal>Session</literal> の内部キャッシュに追加されます。"
+
+#: index.docbook:841
+msgid ""
+      "<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll(); //a huge result set\n"
+      "while ( cats.next() ) {\n"
+      "    Cat cat = (Cat) cats.get(0);\n"
+      "    doSomethingWithACat(cat);\n"
+      "    sess.evict(cat);\n"
+      "}]]>"
+msgstr "次に <literal>flush()</literal> が呼ばれると、オブジェクトの状態はデータベースと同期化されます。 もしこの同期が起こることを望まないときや、膨大な数のオブジェクトを処理していてメモリを効率的に 扱う必要があるときは、 <literal>evict()</literal> メソッドを使って一次キャッシュから オブジェクトやコレクションを削除することが出来ます。"
+
+#: index.docbook:843
+msgid "The <literal>Session</literal> also provides a <literal>contains()</literal> method to determine if an instance belongs to the session cache."
+msgstr ""
+      "<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll(); //a huge result set\n"
+      "while ( cats.next() ) {\n"
+      "    Cat cat = (Cat) cats.get(0);\n"
+      "    doSomethingWithACat(cat);\n"
+      "    sess.evict(cat);\n"
+      "}]]>"
+
+#: index.docbook:848
+msgid "To completely evict all objects from the session cache, call <literal>Session.clear()</literal>"
+msgstr "<literal>Session</literal> はインスタンスがセッションキャッシュに含まれるかどうかを判断するための <literal>contains()</literal> メソッドも提供します。"
+
+#: index.docbook:852
+msgid "For the second-level cache, there are methods defined on <literal>SessionFactory</literal> for evicting the cached state of an instance, entire class, collection instance or entire collection role."
+msgstr "すべてのオブジェクトをセッションキャッシュから完全に取り除くには、<literal>Session.clear()</literal> を呼び出してください。"
+
+#: index.docbook:858
+msgid ""
+      "<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
+      "sessionFactory.evict(Cat.class);  //evict all Cats\n"
+      "sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a particular collection of kittens\n"
+      "sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten collections]]>"
+msgstr "二次キャッシュのために、 <literal>SessionFactory</literal> には インスタンス、クラス全体、コレクションのインスタンス、コレクション全体をキャッシュから 削除するためのメソッドがそれぞれ定義されています。"
+
+#: index.docbook:860
+msgid "The <literal>CacheMode</literal> controls how a particular session interacts with the second-level cache."
+msgstr ""
+      "<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
+      "sessionFactory.evict(Cat.class);  //evict all Cats\n"
+      "sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a particular collection of kittens\n"
+      "sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten collections]]>"
+
+#: index.docbook:867
+msgid "<literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache"
+msgstr "<literal>CacheMode</literal> は特定のセッションが二次キャッシュとどのように相互作用するかを 指定します。"
+
+#: index.docbook:872
+msgid "<literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to the second-level cache except when updating data"
+msgstr "<literal>CacheMode.NORMAL</literal> - アイテムの読み込みと書き込みで二次キャッシュを使います"
+
+#: index.docbook:878
+msgid "<literal>CacheMode.PUT</literal> - write items to the second-level cache, but don't read from the second-level cache"
+msgstr "<literal>CacheMode.GET</literal> - 読み込みは二次キャッシュから行いますが、データを 更新した場合を除いて二次キャッシュに書き込みをしません。"
+
+#: index.docbook:884
+msgid "<literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from the second-level cache, bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal>, forcing a refresh of the second-level cache for all items read from the database"
+msgstr "<literal>CacheMode.PUT</literal> - 二次キャッシュにアイテムを書き込みますが、読み込みには 二次キャッシュを使いません。"
+
+#: index.docbook:892
+msgid "To browse the contents of a second-level or query cache region, use the <literal>Statistics</literal> API:"
+msgstr "<literal>CacheMode.REFRESH</literal> - 二次キャッシュにアイテムを書き込みますが、読み込みには 二次キャッシュを使わず、 <literal>hibernate.cache.use_minimal_puts</literal> の影響を受けずに、データベースから読み込むすべてのアイテムの二次キャッシュを強制的にリフレッシュします。"
+
+#: index.docbook:897
+msgid ""
+      "<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
+      "        .getSecondLevelCacheStatistics(regionName)\n"
+      "        .getEntries();]]>"
+msgstr "二次キャッシュの内容やクエリキャッシュ領域を見るために、 <literal>Statistics</literal> APIを 使ってください。"
+
+#: index.docbook:899
+msgid "You'll need to enable statistics, and, optionally, force Hibernate to keep the cache entries in a more human-understandable format:"
+msgstr ""
+      "<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
+      "        .getSecondLevelCacheStatistics(regionName)\n"
+      "        .getEntries();]]>"
+
+#: index.docbook:904
+msgid ""
+      "<![CDATA[hibernate.generate_statistics true\n"
+      "hibernate.cache.use_structured_entries true]]>"
+msgstr "統計情報を有効にして、さらにオプションとして、キャッシュエントリを 人がより理解可能な形式で保持することをHibernateに強制します。"
+
+#: index.docbook:909
+msgid "The Query Cache"
+msgstr ""
+      "<![CDATA[hibernate.generate_statistics true\n"
+      "hibernate.cache.use_structured_entries true]]>"
+
+#: index.docbook:911
+msgid "Query result sets may also be cached. This is only useful for queries that are run frequently with the same parameters. To use the query cache you must first enable it:"
+msgstr "クエリキャッシュ"
+
+#: index.docbook:916
+msgid "<![CDATA[hibernate.cache.use_query_cache true]]>"
+msgstr "クエリのリザルトセットもキャッシュ出来ます。これは同じパラメータで何度も実行される クエリに対してのみ有用です。クエリキャッシュを使うには、まず設定で有効にしなくてはなりません。"
+
+#: index.docbook:918
+msgid "This setting causes the creation of two new cache regions - one holding cached query result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other holding timestamps of the most recent updates to queryable tables (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query cache does not cache the state of the actual entities in the result set; it caches only identifier values and results of value type. So the query cache should always be used in conjunction with the second-level cache."
+msgstr "<![CDATA[hibernate.cache.use_query_cache true]]>"
+
+#: index.docbook:928
+msgid "Most queries do not benefit from caching, so by default queries are not cached. To enable caching, call <literal>Query.setCacheable(true)</literal>. This call allows the query to look for existing cache results or add its results to the cache when it is executed."
+msgstr "この設定は新たに二つのキャッシュ領域の作成を行います。一つはクエリのリザルトセットの キャッシュ（ <literal>org.hibernate.cache.StandardQueryCache</literal> ）を保持し、 もう1つはクエリ可能なテーブルへの最新の更新タイムスタンプ （ <literal>org.hibernate.cache.UpdateTimestampsCache</literal> ）を保持します。 クエリキャッシュはリザルトセットの実際の要素の状態はキャッシュしないことに 注意してください。キャッシュするのは識別子の値と、値型の結果のみです。 そのため、クエリキャッシュは常に二次キャッシュと一緒に使うべきです。"
+
+#: index.docbook:935
+msgid "If you require fine-grained control over query cache expiration policies, you may specify a named cache region for a particular query by calling <literal>Query.setCacheRegion()</literal>."
+msgstr "ほとんどのクエリはキャッシュの恩恵を受けないので、デフォルトではクエリはキャッシュされません。 キャッシュを有効にするには、 <literal>Query.setCacheable(true)</literal> を呼び出してください。 そうすればクエリが既存のキャッシュ結果を探し、クエリ実行時にその結果をキャッシュに追加する ようになります。"
+
+#: index.docbook:941
+msgid ""
+      "<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog.blogger = :blogger\")\n"
+      "    .setEntity(\"blogger\", blogger)\n"
+      "    .setMaxResults(15)\n"
+      "    .setCacheable(true)\n"
+      "    .setCacheRegion(\"frontpages\")\n"
+      "    .list();]]>"
+msgstr "クエリキャッシュの破棄ポリシーを細かく制御したいときは、 <literal>Query.setCacheRegion()</literal> を呼び出して特定のクエリに対するキャッシュ領域を指定することが出来ます。"
+
+#: index.docbook:943
+msgid "If the query should force a refresh of its query cache region, you should call <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is particularly useful in cases where underlying data may have been updated via a separate process (i.e., not modified through Hibernate) and allows the application to selectively refresh particular query result sets. This is a more efficient alternative to eviction of a query cache region via <literal>SessionFactory.evictQueries()</literal>."
+msgstr ""
+      "<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog.blogger = :blogger\")\n"
+      "    .setEntity(\"blogger\", blogger)\n"
+      "    .setMaxResults(15)\n"
+      "    .setCacheable(true)\n"
+      "    .setCacheRegion(\"frontpages\")\n"
+      "    .list();]]>"
+
+#: index.docbook:955
+msgid "Understanding Collection performance"
+msgstr "クエリが自身のクエリキャッシュ領域のリフレッシュを強制しなければならないなら、 <literal>Query.setCacheMode(CacheMode.REFRESH)</literal> を呼び出すべきです。これは 元となるデータが別のプロセスによって更新されたり（すなわちHibernateを通じて更新されない）、 アプリケーションに特定のクエリリザルトセットを選択してリフレッシュさせる場合に特に有用です。 さらに有用なもう一つの方法は、 <literal>SessionFactory.evictQueries()</literal> によってクエリキャッシュ領域を消去することです。"
+
+#: index.docbook:957
+msgid "We've already spent quite some time talking about collections. In this section we will highlight a couple more issues about how collections behave at runtime."
+msgstr "☆14.1"
+
+#: index.docbook:964
+msgid "Taxonomy"
+msgstr "コレクションのパフォーマンスの理解"
+
+#: index.docbook:966
+msgid "Hibernate defines three basic kinds of collections:"
+msgstr "コレクションの話題にはすでに多くの時間を使いました。この節では コレクションが実行時にどのように振舞うかについての話題を2、3取り上げます。"
+
+#: index.docbook:970
+msgid "collections of values"
+msgstr "<title>分類</title>"
+
+#: index.docbook:973
+msgid "one to many associations"
+msgstr "Hibernateは3つの基本的なコレクションの種類を定義しています。"
+
+#: index.docbook:976
+msgid "many to many associations"
+msgstr "値のコレクション"
+
+#: index.docbook:980
+msgid "This classification distinguishes the various table and foreign key relationships but does not tell us quite everything we need to know about the relational model. To fully understand the relational structure and performance characteristics, we must also consider the structure of the primary key that is used by Hibernate to update or delete collection rows. This suggests the following classification:"
+msgstr "一対多関連"
+
+#: index.docbook:991
+msgid "indexed collections"
+msgstr "多対多関連"
+
+#: index.docbook:994
+msgid "sets"
+msgstr "この分類はさまざまなテーブルや外部キー関連を区別しますが、私たちが知る必要のある 関連モデルについてほとんどなにも教えてくれません。関連構造やパフォーマンスの特徴を 完全に理解するには、Hibernateがコレクションの行を更新、削除するために使う主キーの 構造もまた考えなければなりません。これは以下の分類を提示します。"
+
+#: index.docbook:997
+msgid "bags"
+msgstr "インデックス付きコレクション"
+
+#: index.docbook:1001
+msgid "All indexed collections (maps, lists, arrays) have a primary key consisting of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal> columns. In this case collection updates are usually extremely efficient - the primary key may be efficiently indexed and a particular row may be efficiently located when Hibernate tries to update or delete it."
+msgstr "<para>set</para>"
+
+#: index.docbook:1009
+msgid "Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element columns. This may be less efficient for some types of collection element, particularly composite elements or large text or binary fields; the database may not be able to index a complex primary key as efficently. On the other hand, for one to many or many to many associations, particularly in the case of synthetic identifiers, it is likely to be just as efficient. (Side-note: if you want <literal>SchemaExport</literal> to actually create the primary key of a <literal>&lt;set&gt;</literal> for you, you must declare all columns as <literal>not-null=\"true\"</literal>.)"
+msgstr "<para>bag</para>"
+
+#: index.docbook:1020
+msgid "<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they are always very efficient to update. In fact, they are the best case."
+msgstr "すべてのインデックス付きコレクション（map、list、配列）は <literal>&lt;key&gt;</literal> と <literal>&lt;index&gt;</literal> カラムからなる主キーを持っています。この場合は コレクションの更新は非常に効率的です。主キーは有用なインデックスになり、Hibernateが 特定の行を更新または削除するときに、その行を効率的に見つけることができます。"
+
+#: index.docbook:1025
+msgid "Bags are the worst case. Since a bag permits duplicate element values and has no index column, no primary key may be defined. Hibernate has no way of distinguishing between duplicate rows. Hibernate resolves this problem by completely removing (in a single <literal>DELETE</literal>) and recreating the collection whenever it changes. This might be very inefficient."
+msgstr "setは <literal>&lt;key&gt;</literal> からなる主キーと要素のカラムを持っています。 これはコレクション要素のいくつかの型については効率的ではないかもしれません。 特に複合要素、大きなテキスト、バイナリフィールドでは非効率です。データベースは 複合主キーに効率的にインデックスを付けることができないからです。一方、1対多や多対多関連において、 特に人工識別子の場合は同じぐらい効率的です。（余談： <literal>SchemaExport</literal> で実際に <literal>&lt;set&gt;</literal> の主キーを作りたいなら、すべてのカラムで <literal>not-null=\"true\"</literal> を宣言しなければなりません。）"
+
+#: index.docbook:1033
+msgid "Note that for a one-to-many association, the \"primary key\" may not be the physical primary key of the database table - but even in this case, the above classification is still useful. (It still reflects how Hibernate \"locates\" individual rows of the collection.)"
+msgstr "<literal>&lt;idbag&gt;</literal> マッピングは代理キーを定義します。そのため 更新は常に非常に効率的です。事実上、これは最善のケースです。"
+
+#: index.docbook:1043
+msgid "Lists, maps, idbags and sets are the most efficient collections to update"
+msgstr "bagは最悪のケースです。bagは要素の値の重複が可能で、インデックスカラムを持たないため、 主キーは定義されないかもしれません。Hibernateには重複した行を区別する方法がありません。 Hibernateはこの問題の解決のために、変更があったときには常に完全な削除 （一つの <literal>DELETE</literal> による）を行い、コレクションの再作成を行います。 これは非常に非効率的かもしれません。"
+
+#: index.docbook:1045
+msgid "From the discussion above, it should be clear that indexed collections and (usually) sets allow the most efficient operation in terms of adding, removing and updating elements."
+msgstr "1対多関連では、「主キー」はデータベースのテーブルの物理的な 主キーではないかもしれないことに注意してください。しかしこの場合でさえ、上記の分類はまだ有用です。 （Hibernateがコレクションの個々の行をどうやって「見つけるか」を表しています。）"
+
+#: index.docbook:1051
+msgid "There is, arguably, one more advantage that indexed collections have over sets for many to many associations or collections of values. Because of the structure of a <literal>Set</literal>, Hibernate doesn't ever <literal>UPDATE</literal> a row when an element is \"changed\". Changes to a <literal>Set</literal> always work via <literal>INSERT</literal> and <literal>DELETE</literal> (of individual rows). Once again, this consideration does not apply to one to many associations."
+msgstr "更新にもっとも効率的なコレクション list、map、idbag、set"
+
+#: index.docbook:1060
+msgid "After observing that arrays cannot be lazy, we would conclude that lists, maps and idbags are the most performant (non-inverse) collection types, with sets not far behind. Sets are expected to be the most common kind of collection in Hibernate applications. This is because the \"set\" semantics are most natural in the relational model."
+msgstr "上での議論から、インデックス付きコレクションと（普通の）setは要素の追加、削除、 更新でもっとも効率的な操作が出来ることは明らかです。"
+
+#: index.docbook:1068
+msgid "However, in well-designed Hibernate domain models, we usually see that most collections are in fact one-to-many associations with <literal>inverse=\"true\"</literal>. For these associations, the update is handled by the many-to-one end of the association, and so considerations of collection update performance simply do not apply."
+msgstr "ほぼ間違いなく、多対多関連や値のコレクションにおいて、インデックス付きコレクションが setよりも優れている点が一つ以上あります。 <literal>Set</literal> はその 構造のために、Hibernateは要素が「変更」されたときに行を決して <literal>UPDATE</literal> しません。 <literal>Set</literal> への変更は常に（個々の行の）<literal>INSERT</literal> と <literal>DELETE</literal> によって行います。繰り返しますが、これは一対多関連には 当てはまりません。"
+
+#: index.docbook:1078
+msgid "Bags and lists are the most efficient inverse collections"
+msgstr "配列は遅延処理ができないという決まりなので、結論として、list、map、idbagがもっとも パフォーマンスの良い（inverseではない）コレクションタイプとなります。setも それほど違いはありません。Hibernateのアプリケーションでは、setはコレクションのもっとも 共通の種類として期待されます。setの表現は関連モデルではもっとも自然だからです。"
+
+#: index.docbook:1080
+msgid "Just before you ditch bags forever, there is a particular case in which bags (and also lists) are much more performant than sets. For a collection with <literal>inverse=\"true\"</literal> (the standard bidirectional one-to-many relationship idiom, for example) we can add elements to a bag or list without needing to initialize (fetch) the bag elements! This is because <literal>Collection.add()</literal> or <literal>Collection.addAll()</literal> must always return true for a bag or <literal>List</literal> (unlike a <literal>Set</literal>). This can make the following common code much faster."
+msgstr "しかし、よくデザインされたHibernateのドメインモデルでは、通常もっとも多いコレクションは 事実上 <literal>inverse=\"true\"</literal> を指定した1対多関連です。これらの関連では、 更新は多対一の関連端で扱われ、コレクションの更新パフォーマンスの問題は当てはまりません。"
+
+#: index.docbook:1090
+msgid ""
+      "<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
+      "Child c = new Child();\n"
+      "c.setParent(p);\n"
+      "p.getChildren().add(c);  //no need to fetch the collection!\n"
+      "sess.flush();]]>"
+msgstr "inverseコレクションにもっとも最適なbagとlist"
+
+#: index.docbook:1095
+msgid "One shot delete"
+msgstr "bagを見放してしまう前に、bag（そしてlistも）がsetよりもずっとパフォーマンスが良い特別なケースを 紹介します。 <literal>inverse=\"true\"</literal> のコレクション（一般的な1対多関連の使い方など）で、 bagの要素を初期化（フェッチ）する必要なくbagやlistに要素を追加できます！ これは <literal>Collection.add()</literal> や <literal>Collection.addAll()</literal> はbagや <literal>List</literal> では常にtrueを返さなければならないからです （ <literal>Set</literal> とは異なります）。 これは以下の共通処理をより速くすることができます。"
+
+#: index.docbook:1097
+msgid "Occasionally, deleting collection elements one by one can be extremely inefficient. Hibernate isn't completely stupid, so it knows not to do that in the case of an newly-empty collection (if you called <literal>list.clear()</literal>, for example). In this case, Hibernate will issue a single <literal>DELETE</literal> and we are done!"
+msgstr ""
+      "<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
+      "Child c = new Child();\n"
+      "c.setParent(p);\n"
+      "p.getChildren().add(c);  //no need to fetch the collection!\n"
+      "sess.flush();]]>"
+
+#: index.docbook:1104
+msgid "Suppose we add a single element to a collection of size twenty and then remove two elements. Hibernate will issue one <literal>INSERT</literal> statement and two <literal>DELETE</literal> statements (unless the collection is a bag). This is certainly desirable."
+msgstr "一括削除"
+
+#: index.docbook:1110
+msgid "However, suppose that we remove eighteen elements, leaving two and then add thee new elements. There are two possible ways to proceed"
+msgstr "時々、コレクションの要素を一つ一つ削除することは極めて非効率的になることがあります。 Hibernateは愚かではないので、新しい空のコレクションの場合（ <literal>list.clear()</literal> を呼び出した場合など）ではこれをすべきでないことを知っています。この場合は、Hibernateは <literal>DELETE</literal> を一回発行して、それですべて終わります！"
+
+#: index.docbook:1117
+msgid "delete eighteen rows one by one and then insert three rows"
+msgstr "サイズ20のコレクションに一つの要素を追加し、それから二つの要素を削除するとします。 Hibernateは一つの <literal>INSERT</literal> 文と二つの <literal>DELETE</literal> 文を発行します （コレクションがbagでなければ）。これは確かに望ましい動作です。"
+
+#: index.docbook:1120
+msgid "remove the whole collection (in one SQL <literal>DELETE</literal>) and insert all five current elements (one by one)"
+msgstr "しかし、18個の要素を削除して2つを残し、それから3つ新しい要素を追加するとします。 このとき二つの方法があります。"
+
+#: index.docbook:1125
+msgid "Hibernate isn't smart enough to know that the second option is probably quicker in this case. (And it would probably be undesirable for Hibernate to be that smart; such behaviour might confuse database triggers, etc.)"
+msgstr "18行を一つ一つ削除して、3行を追加する"
+
+#: index.docbook:1131
+msgid "Fortunately, you can force this behaviour (ie. the second strategy) at any time by discarding (ie. dereferencing) the original collection and returning a newly instantiated collection with all the current elements. This can be very useful and powerful from time to time."
+msgstr "コレクション全体を削除（ <literal>DELETE</literal> のSQLを一回）し、そして5つの要素すべてを （一つずつ）追加する"
+
+#: index.docbook:1137
+msgid "Of course, one-shot-delete does not apply to collections mapped <literal>inverse=\"true\"</literal>."
+msgstr "Hibernateはこの場合に2番目の方法がより速いだろうとわかるほど賢くはありません。 （そしてHibernateがこのように賢いことも望ましくないでしょう。このような振る舞いは データベースのトリガなどを混乱させるかもしれません。）"
+
+#: index.docbook:1146
+msgid "Monitoring performance"
+msgstr "幸いにも、元のコレクションを捨て（つまり参照をやめて）、現在の要素をすべて持つ新しいコレクションの インスタンスを返すことで、いつでもこの振る舞い（2番目の戦略）を強制することが出来ます。 時にこれはとても便利で強力です。"
+
+#: index.docbook:1148
+msgid "Optimization is not much use without monitoring and access to performance numbers. Hibernate provides a full range of figures about its internal operations. Statistics in Hibernate are available per <literal>SessionFactory</literal>."
+msgstr "もちろん、一括削除は <literal>inverse=\"true\"</literal> を指定したコレクションには行いません。"
+
+#: index.docbook:1155
+msgid "Monitoring a SessionFactory"
+msgstr "パフォーマンスのモニタリング"
+
+#: index.docbook:1157
+msgid "You can access <literal>SessionFactory</literal> metrics in two ways. Your first option is to call <literal>sessionFactory.getStatistics()</literal> and read or display the <literal>Statistics</literal> yourself."
+msgstr "最適化はモニタリングやパフォーマンスを示す数値がなければ十分に行えません。 Hibernateは内部処理のすべての範囲の数値を提供します。 Hibernateの統計情報は <literal>SessionFactory</literal> 単位で取得可能です。"
+
+#: index.docbook:1163
+msgid "Hibernate can also use JMX to publish metrics if you enable the <literal>StatisticsService</literal> MBean. You may enable a single MBean for all your <literal>SessionFactory</literal> or one per factory. See the following code for minimalistic configuration examples:"
+msgstr "SessionFactoryのモニタリング"
+
+#: index.docbook:1170
+msgid ""
+      "<![CDATA[// MBean service registration for a specific SessionFactory\n"
+      "Hashtable tb = new Hashtable();\n"
+      "tb.put(\"type\", \"statistics\");\n"
+      "tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
+      "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+      "\n"
+      "StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+      "stats.setSessionFactory(sessionFactory); // Bind the stats to a SessionFactory\n"
+      "server.registerMBean(stats, on); // Register the Mbean on the server]]>"
+msgstr "<literal>SessionFactory</literal> のメトリクスにアクセスするには2つの方法があります。 最初の方法は、 <literal>sessionFactory.getStatistics()</literal> を呼び出し、 自分で <literal>Statistics</literal> の読み込みや表示を行います。"
+
+#: index.docbook:1173
+msgid ""
+      "<![CDATA[// MBean service registration for all SessionFactory's\n"
+      "Hashtable tb = new Hashtable();\n"
+      "tb.put(\"type\", \"statistics\");\n"
+      "tb.put(\"sessionFactory\", \"all\");\n"
+      "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+      "\n"
+      "StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+      "server.registerMBean(stats, on); // Register the MBean on the server]]>"
+msgstr "<literal>StatisticsService</literal> MBeanを有効にしていれば、HibernateはJMXを使って メトリクスを発行することもできます。1つのMBeanをすべての <literal>SessionFactory</literal> に対して有効にするか、SessionFactoryごとに一つのMBeanを有効にすることが出来ます。 最小限の設定例である以下のコードを見てください。"
+
+#: index.docbook:1175
+msgid "TODO: This doesn't make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give the JNDI name in which the session factory is held before using it. Use <literal>hibernateStatsBean.setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal>"
+msgstr ""
+      "<![CDATA[// MBean service registration for a specific SessionFactory\n"
+      "Hashtable tb = new Hashtable();\n"
+      "tb.put(\"type\", \"statistics\");\n"
+      "tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
+      "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+      "\n"
+      "StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+      "stats.setSessionFactory(sessionFactory); // Bind the stats to a SessionFactory\n"
+      "server.registerMBean(stats, on); // Register the Mbean on the server]]>"
+
+#: index.docbook:1180
+msgid "You can (de)activate the monitoring for a <literal>SessionFactory</literal>"
+msgstr ""
+      "<![CDATA[// MBean service registration for all SessionFactory's\n"
+      "Hashtable tb = new Hashtable();\n"
+      "tb.put(\"type\", \"statistics\");\n"
+      "tb.put(\"sessionFactory\", \"all\");\n"
+      "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+      "\n"
+      "StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+      "server.registerMBean(stats, on); // Register the MBean on the server]]>"
+
+#: index.docbook:1185
+msgid "at configuration time, set <literal>hibernate.generate_statistics</literal> to <literal>false</literal>"
+msgstr "TODO: これは意味がありません。最初のケースは、MBeanを直接復元して使用します。2番目のケースは、 使う前にsession factoryが持っているJNDI名を渡さなければなりません。 <literal>hibernateStatsBean.setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal> を使ってください。"
+
+#: index.docbook:1192
+msgid "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> or <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
+msgstr "<literal>SessionFactory</literal> に対してモニタリングの開始（終了）を行うことが出来ます。"
+
+#: index.docbook:1199
+msgid "Statistics can be reset programatically using the <literal>clear()</literal> method. A summary can be sent to a logger (info level) using the <literal>logSummary()</literal> method."
+msgstr "設定時には、 <literal>hibernate.generate_statistics</literal> を <literal>false</literal> にします"
+
+#: index.docbook:1208
+msgid "Metrics"
+msgstr "実行時に、 <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> または <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal> を呼び出します"
+
+#: index.docbook:1210
+msgid "Hibernate provides a number of metrics, from very basic to the specialized information only relevant in certain scenarios. All available counters are described in the <literal>Statistics</literal> interface API, in three categories:"
+msgstr "統計は <literal>clear()</literal> メソッドを使って手動でリセットすることが出来ます。 サマリは <literal>logSummary()</literal> メソッドを使ってloggerに送ることが出来ます （infoレベルです）。"
+
+#: index.docbook:1217
+msgid "Metrics related to the general <literal>Session</literal> usage, such as number of open sessions, retrieved JDBC connections, etc."
+msgstr "メトリクス"
+
+#: index.docbook:1223
+msgid "Metrics related to he entities, collections, queries, and caches as a whole (aka global metrics),"
+msgstr "多くのものがあります。すべての使用可能なカウンタは <literal>Statistics</literal> インターフェイスのAPIに書かれており、3つの分類があります。"
+
+#: index.docbook:1229
+msgid "Detailed metrics related to a particular entity, collection, query or cache region."
+msgstr "メトリクスは一般的な <literal>Session</literal> の使い方と関係しています。 オープンしたセッションの数がJDBCコネクションと関連しているのと同じです。"
+
+#: index.docbook:1236
+msgid "For exampl,e you can check the cache hit, miss, and put ratio of entities, collections and queries, and the average time a query needs. Beware that the number of milliseconds is subject to approximation in Java. Hibernate is tied to the JVM precision, on some platforms this might even only be accurate to 10 seconds."
+msgstr "メトリクスは要素、コレクション、クエリやキャッシュなど全体に 関係しています（別名はグローバルメトリクスです）。"
+
+#: index.docbook:1243
+msgid "Simple getters are used to access the global metrics (i.e. not tied to a particular entity, collection, cache region, etc.). You can access the metrics of a particular entity, collection or cache region through its name, and through its HQL or SQL representation for queries. Please refer to the <literal>Statistics</literal>, <literal>EntityStatistics</literal>, <literal>CollectionStatistics</literal>, <literal>SecondLevelCacheStatistics</literal>, and <literal>QueryStatistics</literal> API Javadoc for more information. The following code shows a simple example:"
+msgstr "メトリクスの詳細は特定のエンティティ、コレクション、クエリ、キャッシュ領域に関係しています。"
+
+#: index.docbook:1253
+msgid ""
+      "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
+      "\n"
+      "double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
+      "double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
+      "double queryCacheHitRatio =\n"
+      "  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
+      "\n"
+      "log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
+      "\n"
+      "EntityStatistics entityStats =\n"
+      "  stats.getEntityStatistics( Cat.class.getName() );\n"
+      "long changes =\n"
+      "        entityStats.getInsertCount()\n"
+      "        + entityStats.getUpdateCount()\n"
+      "        + entityStats.getDeleteCount();\n"
+      "log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );]]>"
+msgstr "例として、キャッシュのヒット、ヒットミスや、要素、コレクション、クエリの割合、クエリの実行に 必要な平均時間を確認できます。ミリ秒の数値はJavaの近似を受けることに注意してください。 HibernateはJVMの精度に制限され、プラットフォームによっては10秒単位でしか正確でないかもしれません。"
+
+#: index.docbook:1255
+msgid "To work on all entities, collections, queries and region caches, you can retrieve the list of names of entities, collections, queries and region caches with the following methods: <literal>getQueries()</literal>, <literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</literal>, and <literal>getSecondLevelCacheRegionNames()</literal>."
+msgstr "単純なgetterはグローバルメトリクス（すなわち特定のエンティティ、コレクション、キャッシュ領域などに縛られない） にアクセスするために使います。特定のエンティティ、コレクション、キャッシュ領域のメトリクスは、 それらの名前や、クエリのHQL、SQL表現によってアクセスすることが出来ます。さらに詳しい情報は、 <literal>Statistics</literal> 、 <literal>EntityStatistics</literal> 、 <literal>CollectionStatistics</literal> 、 <literal>SecondLevelCacheStatistics</literal> 、 <literal>QueryStatistics</literal> APIのjavadocを 参照してください。以下のコードは簡単な例です。"
+
+#: index.docbook:1352
+msgid "appended paragraph 1"
+msgstr ""
+      "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
+      "\n"
+      "double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
+      "double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
+      "double queryCacheHitRatio =\n"
+      "  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
+      "\n"
+      "log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
+      "\n"
+      "EntityStatistics entityStats =\n"
+      "  stats.getEntityStatistics( Cat.class.getName() );\n"
+      "long changes =\n"
+      "        entityStats.getInsertCount()\n"
+      "        + entityStats.getUpdateCount()\n"
+      "        + entityStats.getDeleteCount();\n"
+      "log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );]]>"
+
+#: index.docbook:1369
+msgid "appended paragraph 2"
+msgstr "すべてのエンティティ、コレクション、クエリ、キャッシュ領域に対して行う場合は、 <literal>getQueries()</literal> 、 <literal>getEntityNames()</literal>、 <literal>getCollectionRoleNames()</literal> 、 <literal>getSecondLevelCacheRegionNames()</literal> メソッドで それぞれの名前のリストを取得することが出来ます。"
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

@@ -1,0 +1,208 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:33-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: persistent_classes.xml:5(title) 
+msgid "Persistent Classes"
+msgstr ""
+
+#: persistent_classes.xml:7(para) 
+msgid "Persistent classes are classes in an application that implement the entities of the business problem (e.g. Customer and Order in an E-commerce application). Not all instances of a persistent class are considered to be in the persistent state - an instance may instead be transient or detached."
+msgstr ""
+
+#: persistent_classes.xml:14(para) 
+msgid "Hibernate works best if these classes follow some simple rules, also known as the Plain Old Java Object (POJO) programming model. However, none of these rules are hard requirements. Indeed, Hibernate3 assumes very little about the nature of your persistent objects. You may express a domain model in other ways: using trees of <literal>Map</literal> instances, for example."
+msgstr ""
+
+#: persistent_classes.xml:23(title) 
+msgid "A simple POJO example"
+msgstr ""
+
+#: persistent_classes.xml:25(para) 
+msgid "Most Java applications require a persistent class representing felines."
+msgstr ""
+
+#: persistent_classes.xml:108(para) 
+msgid "There are four main rules to follow here:"
+msgstr ""
+
+#: persistent_classes.xml:114(title) 
+msgid "Implement a no-argument constructor"
+msgstr ""
+
+#: persistent_classes.xml:116(para) 
+msgid "<literal>Cat</literal> has a no-argument constructor. All persistent classes must have a default constructor (which may be non-public) so that Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>. We strongly recommend having a default constructor with at least <emphasis>package</emphasis> visibility for runtime proxy generation in Hibernate."
+msgstr ""
+
+#: persistent_classes.xml:126(title) 
+msgid "Provide an identifier property (optional)"
+msgstr ""
+
+#: persistent_classes.xml:128(para) 
+msgid "<literal>Cat</literal> has a property called <literal>id</literal>. This property maps to the primary key column of a database table. The property might have been called anything, and its type might have been any primitive type, any primitive \"wrapper\" type, <literal>java.lang.String</literal> or <literal>java.util.Date</literal>. (If your legacy database table has composite keys, you can even use a user-defined class with properties of these types - see the section on composite identifiers later.)"
+msgstr ""
+
+#: persistent_classes.xml:137(para) 
+msgid "The identifier property is strictly optional. You can leave them off and let Hibernate keep track of object identifiers internally. We do not recommend this, however."
+msgstr ""
+
+#: persistent_classes.xml:142(para) 
+msgid "In fact, some functionality is available only to classes which declare an identifier property:"
+msgstr ""
+
+#: persistent_classes.xml:149(para) 
+msgid "Transitive reattachment for detached objects (cascade update or cascade merge) - see <xref linkend=\"objectstate-transitive\"/>"
+msgstr ""
+
+#: persistent_classes.xml:156(literal) 
+msgid "Session.saveOrUpdate()"
+msgstr ""
+
+#: persistent_classes.xml:161(literal) 
+msgid "Session.merge()"
+msgstr ""
+
+#: persistent_classes.xml:166(para) 
+msgid "We recommend you declare consistently-named identifier properties on persistent classes. We further recommend that you use a nullable (ie. non-primitive) type."
+msgstr ""
+
+#: persistent_classes.xml:173(title) 
+msgid "Prefer non-final classes (optional)"
+msgstr ""
+
+#: persistent_classes.xml:174(para) 
+msgid "A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon the persistent class being either non-final, or the implementation of an interface that declares all public methods."
+msgstr ""
+
+#: persistent_classes.xml:179(para) 
+msgid "You can persist <literal>final</literal> classes that do not implement an interface with Hibernate, but you won't be able to use proxies for lazy association fetching - which will limit your options for performance tuning."
+msgstr ""
+
+#: persistent_classes.xml:184(para) 
+msgid "You should also avoid declaring <literal>public final</literal> methods on the non-final classes. If you want to use a class with a <literal>public final</literal> method, you must explicitly disable proxying by setting <literal>lazy=\"false\"</literal>."
+msgstr ""
+
+#: persistent_classes.xml:192(title) 
+msgid "Declare accessors and mutators for persistent fields (optional)"
+msgstr ""
+
+#: persistent_classes.xml:194(para) 
+msgid "<literal>Cat</literal> declares accessor methods for all its persistent fields. Many other ORM tools directly persist instance variables. We believe it is better to provide an indirection between the relational schema and internal data structures of the class. By default, Hibernate persists JavaBeans style properties, and recognizes method names of the form <literal>getFoo</literal>, <literal>isFoo</literal> and <literal>setFoo</literal>. You may switch to direct field access for particular properties, if needed."
+msgstr ""
+
+#: persistent_classes.xml:204(para) 
+msgid "Properties need <emphasis>not</emphasis> be declared public - Hibernate can persist a property with a default, <literal>protected</literal> or <literal>private</literal> get / set pair."
+msgstr ""
+
+#: persistent_classes.xml:215(title) 
+msgid "Implementing inheritance"
+msgstr ""
+
+#: persistent_classes.xml:217(para) 
+msgid "A subclass must also observe the first and second rules. It inherits its identifier property from the superclass, <literal>Cat</literal>."
+msgstr ""
+
+#: persistent_classes.xml:237(title) 
+msgid "Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
+msgstr ""
+
+#: persistent_classes.xml:239(para) 
+msgid "You have to override the <literal>equals()</literal> and <literal>hashCode()</literal> methods if you"
+msgstr ""
+
+#: persistent_classes.xml:245(para) 
+msgid "intend to put instances of persistent classes in a <literal>Set</literal> (the recommended way to represent many-valued associations) <emphasis>and</emphasis>"
+msgstr ""
+
+#: persistent_classes.xml:252(para) 
+msgid "intend to use reattachment of detached instances"
+msgstr ""
+
+#: persistent_classes.xml:258(para) 
+msgid "Hibernate guarantees equivalence of persistent identity (database row) and Java identity only inside a particular session scope. So as soon as we mix instances retrieved in different sessions, we must implement <literal>equals()</literal> and <literal>hashCode()</literal> if we wish to have meaningful semantics for <literal>Set</literal>s."
+msgstr ""
+
+#: persistent_classes.xml:266(para) 
+msgid "The most obvious way is to implement <literal>equals()</literal>/<literal>hashCode()</literal> by comparing the identifier value of both objects. If the value is the same, both must be the same database row, they are therefore equal (if both are added to a <literal>Set</literal>, we will only have one element in the <literal>Set</literal>). Unfortunately, we can't use that approach with generated identifiers! Hibernate will only assign identifier values to objects that are persistent, a newly created instance will not have any identifier value! Furthermore, if an instance is unsaved and currently in a <literal>Set</literal>, saving it will assign an identifier value to the object. If <literal>equals()</literal> and <literal>hashCode()</literal> are based on the identifier value, the hash code would change, breaking the contract of the <literal>Set</literal>. See the Hibernate website for a full discussion of this problem. Note that this is not a Hibernate issue, but normal Java semantics of object identity and equality."
+msgstr ""
+
+#: persistent_classes.xml:280(para) 
+msgid "We recommend implementing <literal>equals()</literal> and <literal>hashCode()</literal> using <emphasis>Business key equality</emphasis>. Business key equality means that the <literal>equals()</literal> method compares only the properties that form the business key, a key that would identify our instance in the real world (a <emphasis>natural</emphasis> candidate key):"
+msgstr ""
+
+#: persistent_classes.xml:312(para) 
+msgid "Note that a business key does not have to be as solid as a database primary key candidate (see <xref linkend=\"transactions-basics-identity\"/>). Immutable or unique properties are usually good candidates for a business key."
+msgstr ""
+
+#: persistent_classes.xml:322(title) 
+msgid "Dynamic models"
+msgstr ""
+
+#: persistent_classes.xml:325(emphasis) 
+msgid "Note that the following features are currently considered experimental and may change in the near future."
+msgstr ""
+
+#: persistent_classes.xml:329(para) 
+msgid "Persistent entities don't necessarily have to be represented as POJO classes or as JavaBean objects at runtime. Hibernate also supports dynamic models (using <literal>Map</literal>s of <literal>Map</literal>s at runtime) and the representation of entities as DOM4J trees. With this approach, you don't write persistent classes, only mapping files."
+msgstr ""
+
+#: persistent_classes.xml:337(para) 
+msgid "By default, Hibernate works in normal POJO mode. You may set a default entity representation mode for a particular <literal>SessionFactory</literal> using the <literal>default_entity_mode</literal> configuration option (see <xref linkend=\"configuration-optional-properties\"/>."
+msgstr ""
+
+#: persistent_classes.xml:344(para) 
+msgid "The following examples demonstrates the representation using <literal>Map</literal>s. First, in the mapping file, an <literal>entity-name</literal> has to be declared instead of (or in addition to) a class name:"
+msgstr ""
+
+#: persistent_classes.xml:384(para) 
+msgid "Note that even though associations are declared using target class names, the target type of an associations may also be a dynamic entity instead of a POJO."
+msgstr ""
+
+#: persistent_classes.xml:391(para) 
+msgid "After setting the default entity mode to <literal>dynamic-map</literal> for the <literal>SessionFactory</literal>, we can at runtime work with <literal>Map</literal>s of <literal>Map</literal>s:"
+msgstr ""
+
+#: persistent_classes.xml:419(para) 
+msgid "The advantages of a dynamic mapping are quick turnaround time for prototyping without the need for entity class implementation. However, you lose compile-time type checking and will very likely deal with many exceptions at runtime. Thanks to the Hibernate mapping, the database schema can easily be normalized and sound, allowing to add a proper domain model implementation on top later on."
+msgstr ""
+
+#: persistent_classes.xml:427(para) 
+msgid "Entity representation modes can also be set on a per <literal>Session</literal> basis:"
+msgstr ""
+
+#: persistent_classes.xml:446(para) 
+msgid "Please note that the call to <literal>getSession()</literal> using an <literal>EntityMode</literal> is on the <literal>Session</literal> API, not the <literal>SessionFactory</literal>. That way, the new <literal>Session</literal> shares the underlying JDBC connection, transaction, and other context information. This means you don't have tocall <literal>flush()</literal> and <literal>close()</literal> on the secondary <literal>Session</literal>, and also leave the transaction and connection handling to the primary unit of work."
+msgstr ""
+
+#: persistent_classes.xml:456(para) 
+msgid "More information about the XML representation capabilities can be found in <xref linkend=\"xml\"/>."
+msgstr ""
+
+#: persistent_classes.xml:464(title) 
+msgid "Tuplizers"
+msgstr ""
+
+#: persistent_classes.xml:466(para) 
+msgid "<literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are responsible for managing a particular representation of a piece of data, given that representation's <literal>org.hibernate.EntityMode</literal>. If a given piece of data is thought of as a data structure, then a tuplizer is the thing which knows how to create such a data structure and how to extract values from and inject values into such a data structure. For example, for the POJO entity mode, the correpsonding tuplizer knows how create the POJO through its constructor and how to access the POJO properties using the defined property accessors. There are two high-level types of Tuplizers, represented by the <literal>org.hibernate.tuple.entity.EntityTuplizer</literal> and <literal>org.hibernate.tuple.component.ComponentTuplizer</literal> interfaces. <literal>EntityTuplizer</literal>s are responsible for managing the above mentioned contracts in regards to entities, while <literal>ComponentTuplizer</literal>s do the same for components."
+msgstr ""
+
+#: persistent_classes.xml:481(para) 
+msgid "Users may also plug in their own tuplizers. Perhaps you require that a <literal>java.util.Map</literal> implementation other than <literal>java.util.HashMap</literal> be used while in the dynamic-map entity-mode; or perhaps you need to define a different proxy generation strategy than the one used by default. Both would be achieved by defining a custom tuplizer implementation. Tuplizers definitions are attached to the entity or component mapping they are meant to manage. Going back to the example of our customer entity:"
+msgstr ""
+
+#: persistent_classes.xml:529(para) 
+msgid "TODO: Document user-extension framework in the property and proxy packages"
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: persistent_classes.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

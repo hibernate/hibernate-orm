@@ -1,0 +1,808 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:32-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: performance.xml:5(title) 
+msgid "Improving performance"
+msgstr ""
+
+#: performance.xml:8(title) 
+msgid "Fetching strategies"
+msgstr ""
+
+#: performance.xml:10(para) 
+msgid "A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use for retrieving associated objects if the application needs to navigate the association. Fetch strategies may be declared in the O/R mapping metadata, or over-ridden by a particular HQL or <literal>Criteria</literal> query."
+msgstr ""
+
+#: performance.xml:17(para) 
+msgid "Hibernate3 defines the following fetching strategies:"
+msgstr ""
+
+#: performance.xml:23(para) 
+msgid "<emphasis>Join fetching</emphasis> - Hibernate retrieves the associated instance or collection in the same <literal>SELECT</literal>, using an <literal>OUTER JOIN</literal>."
+msgstr ""
+
+#: performance.xml:30(para) 
+msgid "<emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal> is used to retrieve the associated entity or collection. Unless you explicitly disable lazy fetching by specifying <literal>lazy=\"false\"</literal>, this second select will only be executed when you actually access the association."
+msgstr ""
+
+#: performance.xml:39(para) 
+msgid "<emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal> is used to retrieve the associated collections for all entities retrieved in a previous query or fetch. Unless you explicitly disable lazy fetching by specifying <literal>lazy=\"false\"</literal>, this second select will only be executed when you actually access the association."
+msgstr ""
+
+#: performance.xml:48(para) 
+msgid "<emphasis>Batch fetching</emphasis> - an optimization strategy for select fetching - Hibernate retrieves a batch of entity instances or collections in a single <literal>SELECT</literal>, by specifying a list of primary keys or foreign keys."
+msgstr ""
+
+#: performance.xml:57(para) 
+msgid "Hibernate also distinguishes between:"
+msgstr ""
+
+#: performance.xml:63(para) 
+msgid "<emphasis>Immediate fetching</emphasis> - an association, collection or attribute is fetched immediately, when the owner is loaded."
+msgstr ""
+
+#: performance.xml:69(para) 
+msgid "<emphasis>Lazy collection fetching</emphasis> - a collection is fetched when the application invokes an operation upon that collection. (This is the default for collections.)"
+msgstr ""
+
+#: performance.xml:76(para) 
+msgid "<emphasis>\"Extra-lazy\" collection fetching</emphasis> - individual elements of the collection are accessed from the database as needed. Hibernate tries not to fetch the whole collection into memory unless absolutely needed (suitable for very large collections)"
+msgstr ""
+
+#: performance.xml:84(para) 
+msgid "<emphasis>Proxy fetching</emphasis> - a single-valued association is fetched when a method other than the identifier getter is invoked upon the associated object."
+msgstr ""
+
+#: performance.xml:91(para) 
+msgid "<emphasis>\"No-proxy\" fetching</emphasis> - a single-valued association is fetched when the instance variable is accessed. Compared to proxy fetching, this approach is less lazy (the association is fetched even when only the identifier is accessed) but more transparent, since no proxy is visible to the application. This approach requires buildtime bytecode instrumentation and is rarely necessary."
+msgstr ""
+
+#: performance.xml:101(para) 
+msgid "<emphasis>Lazy attribute fetching</emphasis> - an attribute or single valued association is fetched when the instance variable is accessed. This approach requires buildtime bytecode instrumentation and is rarely necessary."
+msgstr ""
+
+#: performance.xml:110(para) 
+msgid "We have two orthogonal notions here: <emphasis>when</emphasis> is the association fetched, and <emphasis>how</emphasis> is it fetched (what SQL is used). Don't confuse them! We use <literal>fetch</literal> to tune performance. We may use <literal>lazy</literal> to define a contract for what data is always available in any detached instance of a particular class."
+msgstr ""
+
+#: performance.xml:119(title) 
+msgid "Working with lazy associations"
+msgstr ""
+
+#: performance.xml:121(para) 
+msgid "By default, Hibernate3 uses lazy select fetching for collections and lazy proxy fetching for single-valued associations. These defaults make sense for almost all associations in almost all applications."
+msgstr ""
+
+#: performance.xml:127(para) 
+msgid "<emphasis>Note:</emphasis> if you set <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the batch fetch optimization for lazy fetching (this optimization may also be enabled at a more granular level)."
+msgstr ""
+
+#: performance.xml:134(para) 
+msgid "However, lazy fetching poses one problem that you must be aware of. Access to a lazy association outside of the context of an open Hibernate session will result in an exception. For example:"
+msgstr ""
+
+#: performance.xml:152(para) 
+msgid "Since the permissions collection was not initialized when the <literal>Session</literal> was closed, the collection will not be able to load its state. <emphasis>Hibernate does not support lazy initialization for detached objects</emphasis>. The fix is to move the code that reads from the collection to just before the transaction is committed."
+msgstr ""
+
+#: performance.xml:160(para) 
+msgid "Alternatively, we could use a non-lazy collection or association, by specifying <literal>lazy=\"false\"</literal> for the association mapping. However, it is intended that lazy initialization be used for almost all collections and associations. If you define too many non-lazy associations in your object model, Hibernate will end up needing to fetch the entire database into memory in every transaction!"
+msgstr ""
+
+#: performance.xml:169(para) 
+msgid "On the other hand, we often want to choose join fetching (which is non-lazy by nature) instead of select fetching in a particular transaction. We'll now see how to customize the fetching strategy. In Hibernate3, the mechanisms for choosing a fetch strategy are identical for single-valued associations and collections."
+msgstr ""
+
+#: performance.xml:180(title) 
+msgid "Tuning fetch strategies"
+msgstr ""
+
+#: performance.xml:182(para) 
+msgid "Select fetching (the default) is extremely vulnerable to N+1 selects problems, so we might want to enable join fetching in the mapping document:"
+msgstr ""
+
+#: performance.xml:195(para) 
+msgid "The <literal>fetch</literal> strategy defined in the mapping document affects:"
+msgstr ""
+
+#: performance.xml:201(para) 
+msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
+msgstr ""
+
+#: performance.xml:206(para) 
+msgid "retrieval that happens implicitly when an association is navigated"
+msgstr ""
+
+#: performance.xml:211(para) 
+msgid "<literal>Criteria</literal> queries"
+msgstr ""
+
+#: performance.xml:216(para) 
+msgid "HQL queries if <literal>subselect</literal> fetching is used"
+msgstr ""
+
+#: performance.xml:222(para) 
+msgid "No matter what fetching strategy you use, the defined non-lazy graph is guaranteed to be loaded into memory. Note that this might result in several immediate selects being used to execute a particular HQL query."
+msgstr ""
+
+#: performance.xml:228(para) 
+msgid "Usually, we don't use the mapping document to customize fetching. Instead, we keep the default behavior, and override it for a particular transaction, using <literal>left join fetch</literal> in HQL. This tells Hibernate to fetch the association eagerly in the first select, using an outer join. In the <literal>Criteria</literal> query API, you would use <literal>setFetchMode(FetchMode.JOIN)</literal>."
+msgstr ""
+
+#: performance.xml:237(para) 
+msgid "If you ever feel like you wish you could change the fetching strategy used by <literal>get()</literal> or <literal>load()</literal>, simply use a <literal>Criteria</literal> query, for example:"
+msgstr ""
+
+#: performance.xml:248(para) 
+msgid "(This is Hibernate's equivalent of what some ORM solutions call a \"fetch plan\".)"
+msgstr ""
+
+#: performance.xml:252(para) 
+msgid "A completely different way to avoid problems with N+1 selects is to use the second-level cache."
+msgstr ""
+
+#: performance.xml:260(title) 
+msgid "Single-ended association proxies"
+msgstr ""
+
+#: performance.xml:262(para) 
+msgid "Lazy fetching for collections is implemented using Hibernate's own implementation of persistent collections. However, a different mechanism is needed for lazy behavior in single-ended associations. The target entity of the association must be proxied. Hibernate implements lazy initializing proxies for persistent objects using runtime bytecode enhancement (via the excellent CGLIB library)."
+msgstr ""
+
+#: performance.xml:270(para) 
+msgid "By default, Hibernate3 generates proxies (at startup) for all persistent classes and uses them to enable lazy fetching of <literal>many-to-one</literal> and <literal>one-to-one</literal> associations."
+msgstr ""
+
+#: performance.xml:276(para) 
+msgid "The mapping file may declare an interface to use as the proxy interface for that class, with the <literal>proxy</literal> attribute. By default, Hibernate uses a subclass of the class. <emphasis>Note that the proxied class must implement a default constructor with at least package visibility. We recommend this constructor for all persistent classes!</emphasis>"
+msgstr ""
+
+#: performance.xml:283(para) 
+msgid "There are some gotchas to be aware of when extending this approach to polymorphic classes, eg."
+msgstr ""
+
+#: performance.xml:295(para) 
+msgid "Firstly, instances of <literal>Cat</literal> will never be castable to <literal>DomesticCat</literal>, even if the underlying instance is an instance of <literal>DomesticCat</literal>:"
+msgstr ""
+
+#: performance.xml:307(para) 
+msgid "Secondly, it is possible to break proxy <literal>==</literal>."
+msgstr ""
+
+#: performance.xml:316(para) 
+msgid "However, the situation is not quite as bad as it looks. Even though we now have two references to different proxy objects, the underlying instance will still be the same object:"
+msgstr ""
+
+#: performance.xml:324(para) 
+msgid "Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class with any <literal>final</literal> methods."
+msgstr ""
+
+#: performance.xml:329(para) 
+msgid "Finally, if your persistent object acquires any resources upon instantiation (eg. in initializers or default constructor), then those resources will also be acquired by the proxy. The proxy class is an actual subclass of the persistent class."
+msgstr ""
+
+#: performance.xml:335(para) 
+msgid "These problems are all due to fundamental limitations in Java's single inheritance model. If you wish to avoid these problems your persistent classes must each implement an interface that declares its business methods. You should specify these interfaces in the mapping file. eg."
+msgstr ""
+
+#: performance.xml:348(para) 
+msgid "where <literal>CatImpl</literal> implements the interface <literal>Cat</literal> and <literal>DomesticCatImpl</literal> implements the interface <literal>DomesticCat</literal>. Then proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>list()</literal> does not usually return proxies.)"
+msgstr ""
+
+#: performance.xml:360(para) 
+msgid "Relationships are also lazily initialized. This means you must declare any properties to be of type <literal>Cat</literal>, not <literal>CatImpl</literal>."
+msgstr ""
+
+#: performance.xml:365(para) 
+msgid "Certain operations do <emphasis>not</emphasis> require proxy initialization"
+msgstr ""
+
+#: performance.xml:371(para) 
+msgid "<literal>equals()</literal>, if the persistent class does not override <literal>equals()</literal>"
+msgstr ""
+
+#: performance.xml:377(para) 
+msgid "<literal>hashCode()</literal>, if the persistent class does not override <literal>hashCode()</literal>"
+msgstr ""
+
+#: performance.xml:383(para) 
+msgid "The identifier getter method"
+msgstr ""
+
+#: performance.xml:389(para) 
+msgid "Hibernate will detect persistent classes that override <literal>equals()</literal> or <literal>hashCode()</literal>."
+msgstr ""
+
+#: performance.xml:394(para) 
+msgid "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default <literal>lazy=\"proxy\"</literal>, we can avoid the problems associated with typecasting. However, we will require buildtime bytecode instrumentation, and all operations will result in immediate proxy initialization."
+msgstr ""
+
+#: performance.xml:404(title) 
+msgid "Initializing collections and proxies"
+msgstr ""
+
+#: performance.xml:406(para) 
+msgid "A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an uninitialized collection or proxy is accessed outside of the scope of the <literal>Session</literal>, ie. when the entity owning the collection or having the reference to the proxy is in the detached state."
+msgstr ""
+
+#: performance.xml:412(para) 
+msgid "Sometimes we need to ensure that a proxy or collection is initialized before closing the <literal>Session</literal>. Of course, we can alway force initialization by calling <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example. But that is confusing to readers of the code and is not convenient for generic code."
+msgstr ""
+
+#: performance.xml:419(para) 
+msgid "The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal> provide the application with a convenient way of working with lazily initialized collections or proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy, <literal>cat</literal>, as long as its <literal>Session</literal> is still open. <literal>Hibernate.initialize( cat.getKittens() )</literal> has a similar effect for the collection of kittens."
+msgstr ""
+
+#: performance.xml:428(para) 
+msgid "Another option is to keep the <literal>Session</literal> open until all needed collections and proxies have been loaded. In some application architectures, particularly where the code that accesses data using Hibernate, and the code that uses it are in different application layers or different physical processes, it can be a problem to ensure that the <literal>Session</literal> is open when a collection is initialized. There are two basic ways to deal with this issue:"
+msgstr ""
+
+#: performance.xml:439(para) 
+msgid "In a web-based application, a servlet filter can be used to close the <literal>Session</literal> only at the very end of a user request, once the rendering of the view is complete (the <emphasis>Open Session in View</emphasis> pattern). Of course, this places heavy demands on the correctness of the exception handling of your application infrastructure. It is vitally important that the <literal>Session</literal> is closed and the transaction ended before returning to the user, even when an exception occurs during rendering of the view. See the Hibernate Wiki for examples of this \"Open Session in View\" pattern."
+msgstr ""
+
+#: performance.xml:452(para) 
+msgid "In an application with a separate business tier, the business logic must \"prepare\" all collections that will be needed by the web tier before returning. This means that the business tier should load all the data and return all the data already initialized to the presentation/web tier that is required for a particular use case. Usually, the application calls <literal>Hibernate.initialize()</literal> for each collection that will be needed in the web tier (this call must occur before the session is closed) or retrieves the collection eagerly using a Hibernate query with a <literal>FETCH</literal> clause or a <literal>FetchMode.JOIN</literal> in <literal>Criteria</literal>. This is usually easier if you adopt the <emphasis>Command</emphasis> pattern instead of a <emphasis>Session Facade</emphasis>."
+msgstr ""
+
+#: performance.xml:467(para) 
+msgid "You may also attach a previously loaded object to a new <literal>Session</literal> with <literal>merge()</literal> or <literal>lock()</literal> before accessing uninitialized collections (or other proxies). No, Hibernate does not, and certainly <emphasis>should</emphasis> not do this automatically, since it would introduce ad hoc transaction semantics!"
+msgstr ""
+
+#: performance.xml:477(para) 
+msgid "Sometimes you don't want to initialize a large collection, but still need some information about it (like its size) or a subset of the data."
+msgstr ""
+
+#: performance.xml:482(para) 
+msgid "You can use a collection filter to get the size of a collection without initializing it:"
+msgstr ""
+
+#: performance.xml:488(para) 
+msgid "The <literal>createFilter()</literal> method is also used to efficiently retrieve subsets of a collection without needing to initialize the whole collection:"
+msgstr ""
+
+#: performance.xml:498(title) 
+msgid "Using batch fetching"
+msgstr ""
+
+#: performance.xml:500(para) 
+msgid "Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized proxies if one proxy is accessed (or collections. Batch fetching is an optimization of the lazy select fetching strategy. There are two ways you can tune batch fetching: on the class and the collection level."
+msgstr ""
+
+#: performance.xml:506(para) 
+msgid "Batch fetching for classes/entities is easier to understand. Imagine you have the following situation at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>. The <literal>Person</literal> class is mapped with a proxy, <literal>lazy=\"true\"</literal>. If you now iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:"
+msgstr ""
+
+#: performance.xml:518(para) 
+msgid "Hibernate will now execute only three queries, the pattern is 10, 10, 5."
+msgstr ""
+
+#: performance.xml:522(para) 
+msgid "You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s, one for every call to <literal>getCats()</literal>. If you enable batch fetching for the <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch collections:"
+msgstr ""
+
+#: performance.xml:537(para) 
+msgid "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 collections in four <literal>SELECT</literal>s. Again, the value of the attribute depends on the expected number of uninitialized collections in a particular <literal>Session</literal>."
+msgstr ""
+
+#: performance.xml:543(para) 
+msgid "Batch fetching of collections is particularly useful if you have a nested tree of items, ie. the typical bill-of-materials pattern. (Although a <emphasis>nested set</emphasis> or a <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.)"
+msgstr ""
+
+#: performance.xml:552(title) 
+msgid "Using subselect fetching"
+msgstr ""
+
+#: performance.xml:554(para) 
+msgid "If one lazy collection or single-valued proxy has to be fetched, Hibernate loads all of them, re-running the original query in a subselect. This works in the same way as batch-fetching, without the piecemeal loading."
+msgstr ""
+
+#: performance.xml:565(title) 
+msgid "Using lazy property fetching"
+msgstr ""
+
+#: performance.xml:567(para) 
+msgid "Hibernate3 supports the lazy fetching of individual properties. This optimization technique is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a marketing feature, as in practice, optimizing row reads is much more important than optimization of column reads. However, only loading some properties of a class might be useful in extreme cases, when legacy tables have hundreds of columns and the data model can not be improved."
+msgstr ""
+
+#: performance.xml:576(para) 
+msgid "To enable lazy property loading, set the <literal>lazy</literal> attribute on your particular property mappings:"
+msgstr ""
+
+#: performance.xml:590(para) 
+msgid "Lazy property loading requires buildtime bytecode instrumentation! If your persistent classes are not enhanced, Hibernate will silently ignore lazy property settings and fall back to immediate fetching."
+msgstr ""
+
+#: performance.xml:596(para) 
+msgid "For bytecode instrumentation, use the following Ant task:"
+msgstr ""
+
+#: performance.xml:614(para) 
+msgid "A different (better?) way to avoid unnecessary column reads, at least for read-only transactions is to use the projection features of HQL or Criteria queries. This avoids the need for buildtime bytecode processing and is certainly a prefered solution."
+msgstr ""
+
+#: performance.xml:621(para) 
+msgid "You may force the usual eager fetching of properties using <literal>fetch all properties</literal> in HQL."
+msgstr ""
+
+#: performance.xml:631(title) 
+msgid "The Second Level Cache"
+msgstr ""
+
+#: performance.xml:633(para) 
+msgid "A Hibernate <literal>Session</literal> is a transaction-level cache of persistent data. It is possible to configure a cluster or JVM-level (<literal>SessionFactory</literal>-level) cache on a class-by-class and collection-by-collection basis. You may even plug in a clustered cache. Be careful. Caches are never aware of changes made to the persistent store by another application (though they may be configured to regularly expire cached data)."
+msgstr ""
+
+#: performance.xml:641(para) 
+msgid "You have the option to tell Hibernate which caching implementation to use by specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal> using the property <literal>hibernate.cache.provider_class</literal>. Hibernate comes bundled with a number of built-in integrations with open-source cache providers (listed below); additionally, you could implement your own and plug it in as outlined above. Note that versions prior to 3.2 defaulted to use EhCache as the default cache provider; that is no longer the case as of 3.2."
+msgstr ""
+
+#: performance.xml:652(title) 
+msgid "Cache Providers"
+msgstr ""
+
+#: performance.xml:661(entry) performance.xml:848(entry) 
+msgid "Cache"
+msgstr ""
+
+#: performance.xml:662(entry) 
+msgid "Provider class"
+msgstr ""
+
+#: performance.xml:663(entry) 
+msgid "Type"
+msgstr ""
+
+#: performance.xml:664(entry) 
+msgid "Cluster Safe"
+msgstr ""
+
+#: performance.xml:665(entry) 
+msgid "Query Cache Supported"
+msgstr ""
+
+#: performance.xml:670(entry) performance.xml:857(entry) 
+msgid "Hashtable (not intended for production use)"
+msgstr ""
+
+#: performance.xml:671(literal) 
+msgid "org.hibernate.cache.HashtableCacheProvider"
+msgstr ""
+
+#: performance.xml:672(entry) 
+msgid "memory"
+msgstr ""
+
+#: performance.xml:674(entry) performance.xml:681(entry) performance.xml:688(entry) performance.xml:858(entry) performance.xml:859(entry) performance.xml:860(entry) performance.xml:865(entry) performance.xml:866(entry) performance.xml:867(entry) performance.xml:872(entry) performance.xml:873(entry) performance.xml:874(entry) performance.xml:879(entry) performance.xml:880(entry) performance.xml:886(entry) performance.xml:889(entry) 
+msgid "yes"
+msgstr ""
+
+#: performance.xml:677(entry) performance.xml:864(entry) 
+msgid "EHCache"
+msgstr ""
+
+#: performance.xml:678(literal) 
+msgid "org.hibernate.cache.EhCacheProvider"
+msgstr ""
+
+#: performance.xml:679(entry) performance.xml:686(entry) 
+msgid "memory, disk"
+msgstr ""
+
+#: performance.xml:684(entry) performance.xml:871(entry) 
+msgid "OSCache"
+msgstr ""
+
+#: performance.xml:685(literal) 
+msgid "org.hibernate.cache.OSCacheProvider"
+msgstr ""
+
+#: performance.xml:691(entry) performance.xml:878(entry) 
+msgid "SwarmCache"
+msgstr ""
+
+#: performance.xml:692(literal) 
+msgid "org.hibernate.cache.SwarmCacheProvider"
+msgstr ""
+
+#: performance.xml:693(entry) 
+msgid "clustered (ip multicast)"
+msgstr ""
+
+#: performance.xml:694(entry) 
+msgid "yes (clustered invalidation)"
+msgstr ""
+
+#: performance.xml:698(entry) performance.xml:885(entry) 
+msgid "JBoss TreeCache"
+msgstr ""
+
+#: performance.xml:699(literal) 
+msgid "org.hibernate.cache.TreeCacheProvider"
+msgstr ""
+
+#: performance.xml:700(entry) 
+msgid "clustered (ip multicast), transactional"
+msgstr ""
+
+#: performance.xml:701(entry) 
+msgid "yes (replication)"
+msgstr ""
+
+#: performance.xml:702(entry) 
+msgid "yes (clock sync req.)"
+msgstr ""
+
+#: performance.xml:709(title) 
+msgid "Cache mappings"
+msgstr ""
+
+#: performance.xml:711(para) 
+msgid "The <literal>&lt;cache&gt;</literal> element of a class or collection mapping has the following form:"
+msgstr ""
+
+#: performance.xml:729(para) 
+msgid "<literal>usage</literal> (required) specifies the caching strategy: <literal>transactional</literal>, <literal>read-write</literal>, <literal>nonstrict-read-write</literal> or <literal>read-only</literal>"
+msgstr ""
+
+#: performance.xml:738(para) 
+msgid "<literal>region</literal> (optional, defaults to the class or collection role name) specifies the name of the second level cache region"
+msgstr ""
+
+#: performance.xml:745(para) 
+msgid "<literal>include</literal> (optional, defaults to <literal>all</literal>) <literal>non-lazy</literal> specifies that properties of the entity mapped with <literal>lazy=\"true\"</literal> may not be cached when attribute-level lazy fetching is enabled"
+msgstr ""
+
+#: performance.xml:755(para) 
+msgid "Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</literal> and <literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate.cfg.xml</literal>."
+msgstr ""
+
+#: performance.xml:760(para) 
+msgid "The <literal>usage</literal> attribute specifies a <emphasis>cache concurrency strategy</emphasis>."
+msgstr ""
+
+#: performance.xml:767(title) 
+msgid "Strategy: read only"
+msgstr ""
+
+#: performance.xml:769(para) 
+msgid "If your application needs to read but never modify instances of a persistent class, a <literal>read-only</literal> cache may be used. This is the simplest and best performing strategy. It's even perfectly safe for use in a cluster."
+msgstr ""
+
+#: performance.xml:784(title) 
+msgid "Strategy: read/write"
+msgstr ""
+
+#: performance.xml:786(para) 
+msgid "If the application needs to update data, a <literal>read-write</literal> cache might be appropriate. This cache strategy should never be used if serializable transaction isolation level is required. If the cache is used in a JTA environment, you must specify the property <literal>hibernate.transaction.manager_lookup_class</literal>, naming a strategy for obtaining the JTA <literal>TransactionManager</literal>. In other environments, you should ensure that the transaction is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called. If you wish to use this strategy in a cluster, you should ensure that the underlying cache implementation supports locking. The built-in cache providers do <emphasis>not</emphasis>."
+msgstr ""
+
+#: performance.xml:809(title) 
+msgid "Strategy: nonstrict read/write"
+msgstr ""
+
+#: performance.xml:811(para) 
+msgid "If the application only occasionally needs to update data (ie. if it is extremely unlikely that two transactions would try to update the same item simultaneously) and strict transaction isolation is not required, a <literal>nonstrict-read-write</literal> cache might be appropriate. If the cache is used in a JTA environment, you must specify <literal>hibernate.transaction.manager_lookup_class</literal>. In other environments, you should ensure that the transaction is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called."
+msgstr ""
+
+#: performance.xml:823(title) 
+msgid "Strategy: transactional"
+msgstr ""
+
+#: performance.xml:825(para) 
+msgid "The <literal>transactional</literal> cache strategy provides support for fully transactional cache providers such as JBoss TreeCache. Such a cache may only be used in a JTA environment and you must specify <literal>hibernate.transaction.manager_lookup_class</literal>."
+msgstr ""
+
+#: performance.xml:833(para) 
+msgid "None of the cache providers support all of the cache concurrency strategies. The following table shows which providers are compatible with which concurrency strategies."
+msgstr ""
+
+#: performance.xml:839(title) 
+msgid "Cache Concurrency Strategy Support"
+msgstr ""
+
+#: performance.xml:849(entry) 
+msgid "read-only"
+msgstr ""
+
+#: performance.xml:850(entry) 
+msgid "nonstrict-read-write"
+msgstr ""
+
+#: performance.xml:851(entry) 
+msgid "read-write"
+msgstr ""
+
+#: performance.xml:852(entry) 
+msgid "transactional"
+msgstr ""
+
+#: performance.xml:898(title) 
+msgid "Managing the caches"
+msgstr ""
+
+#: performance.xml:900(para) 
+msgid "Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal> or <literal>saveOrUpdate()</literal> and whenever you retrieve an object using <literal>load()</literal>, <literal>get()</literal>, <literal>list()</literal>, <literal>iterate()</literal> or <literal>scroll()</literal>, that object is added to the internal cache of the <literal>Session</literal>."
+msgstr ""
+
+#: performance.xml:907(para) 
+msgid "When <literal>flush()</literal> is subsequently called, the state of that object will be synchronized with the database. If you do not want this synchronization to occur or if you are processing a huge number of objects and need to manage memory efficiently, the <literal>evict()</literal> method may be used to remove the object and its collections from the first-level cache."
+msgstr ""
+
+#: performance.xml:922(para) 
+msgid "The <literal>Session</literal> also provides a <literal>contains()</literal> method to determine if an instance belongs to the session cache."
+msgstr ""
+
+#: performance.xml:927(para) 
+msgid "To completely evict all objects from the session cache, call <literal>Session.clear()</literal>"
+msgstr ""
+
+#: performance.xml:931(para) 
+msgid "For the second-level cache, there are methods defined on <literal>SessionFactory</literal> for evicting the cached state of an instance, entire class, collection instance or entire collection role."
+msgstr ""
+
+#: performance.xml:942(para) 
+msgid "The <literal>CacheMode</literal> controls how a particular session interacts with the second-level cache."
+msgstr ""
+
+#: performance.xml:949(para) 
+msgid "<literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache"
+msgstr ""
+
+#: performance.xml:954(para) 
+msgid "<literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to the second-level cache except when updating data"
+msgstr ""
+
+#: performance.xml:960(para) 
+msgid "<literal>CacheMode.PUT</literal> - write items to the second-level cache, but don't read from the second-level cache"
+msgstr ""
+
+#: performance.xml:966(para) 
+msgid "<literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from the second-level cache, bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal>, forcing a refresh of the second-level cache for all items read from the database"
+msgstr ""
+
+#: performance.xml:974(para) 
+msgid "To browse the contents of a second-level or query cache region, use the <literal>Statistics</literal> API:"
+msgstr ""
+
+#: performance.xml:983(para) 
+msgid "You'll need to enable statistics, and, optionally, force Hibernate to keep the cache entries in a more human-understandable format:"
+msgstr ""
+
+#: performance.xml:994(title) 
+msgid "The Query Cache"
+msgstr ""
+
+#: performance.xml:996(para) 
+msgid "Query result sets may also be cached. This is only useful for queries that are run frequently with the same parameters. To use the query cache you must first enable it:"
+msgstr ""
+
+#: performance.xml:1003(para) 
+msgid "This setting causes the creation of two new cache regions - one holding cached query result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other holding timestamps of the most recent updates to queryable tables (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query cache does not cache the state of the actual entities in the result set; it caches only identifier values and results of value type. So the query cache should always be used in conjunction with the second-level cache."
+msgstr ""
+
+#: performance.xml:1013(para) 
+msgid "Most queries do not benefit from caching, so by default queries are not cached. To enable caching, call <literal>Query.setCacheable(true)</literal>. This call allows the query to look for existing cache results or add its results to the cache when it is executed."
+msgstr ""
+
+#: performance.xml:1020(para) 
+msgid "If you require fine-grained control over query cache expiration policies, you may specify a named cache region for a particular query by calling <literal>Query.setCacheRegion()</literal>."
+msgstr ""
+
+#: performance.xml:1033(para) 
+msgid "If the query should force a refresh of its query cache region, you should call <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is particularly useful in cases where underlying data may have been updated via a separate process (i.e., not modified through Hibernate) and allows the application to selectively refresh particular query result sets. This is a more efficient alternative to eviction of a query cache region via <literal>SessionFactory.evictQueries()</literal>."
+msgstr ""
+
+#: performance.xml:1045(title) 
+msgid "Understanding Collection performance"
+msgstr ""
+
+#: performance.xml:1047(para) 
+msgid "We've already spent quite some time talking about collections. In this section we will highlight a couple more issues about how collections behave at runtime."
+msgstr ""
+
+#: performance.xml:1054(title) 
+msgid "Taxonomy"
+msgstr ""
+
+#: performance.xml:1056(para) 
+msgid "Hibernate defines three basic kinds of collections:"
+msgstr ""
+
+#: performance.xml:1060(para) 
+msgid "collections of values"
+msgstr ""
+
+#: performance.xml:1063(para) 
+msgid "one to many associations"
+msgstr ""
+
+#: performance.xml:1066(para) 
+msgid "many to many associations"
+msgstr ""
+
+#: performance.xml:1070(para) 
+msgid "This classification distinguishes the various table and foreign key relationships but does not tell us quite everything we need to know about the relational model. To fully understand the relational structure and performance characteristics, we must also consider the structure of the primary key that is used by Hibernate to update or delete collection rows. This suggests the following classification:"
+msgstr ""
+
+#: performance.xml:1081(para) 
+msgid "indexed collections"
+msgstr ""
+
+#: performance.xml:1084(para) 
+msgid "sets"
+msgstr ""
+
+#: performance.xml:1087(para) 
+msgid "bags"
+msgstr ""
+
+#: performance.xml:1091(para) 
+msgid "All indexed collections (maps, lists, arrays) have a primary key consisting of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal> columns. In this case collection updates are usually extremely efficient - the primary key may be efficiently indexed and a particular row may be efficiently located when Hibernate tries to update or delete it."
+msgstr ""
+
+#: performance.xml:1099(para) 
+msgid "Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element columns. This may be less efficient for some types of collection element, particularly composite elements or large text or binary fields; the database may not be able to index a complex primary key as efficently. On the other hand, for one to many or many to many associations, particularly in the case of synthetic identifiers, it is likely to be just as efficient. (Side-note: if you want <literal>SchemaExport</literal> to actually create the primary key of a <literal>&lt;set&gt;</literal> for you, you must declare all columns as <literal>not-null=\"true\"</literal>.)"
+msgstr ""
+
+#: performance.xml:1110(para) 
+msgid "<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they are always very efficient to update. In fact, they are the best case."
+msgstr ""
+
+#: performance.xml:1115(para) 
+msgid "Bags are the worst case. Since a bag permits duplicate element values and has no index column, no primary key may be defined. Hibernate has no way of distinguishing between duplicate rows. Hibernate resolves this problem by completely removing (in a single <literal>DELETE</literal>) and recreating the collection whenever it changes. This might be very inefficient."
+msgstr ""
+
+#: performance.xml:1123(para) 
+msgid "Note that for a one-to-many association, the \"primary key\" may not be the physical primary key of the database table - but even in this case, the above classification is still useful. (It still reflects how Hibernate \"locates\" individual rows of the collection.)"
+msgstr ""
+
+#: performance.xml:1133(title) 
+msgid "Lists, maps, idbags and sets are the most efficient collections to update"
+msgstr ""
+
+#: performance.xml:1135(para) 
+msgid "From the discussion above, it should be clear that indexed collections and (usually) sets allow the most efficient operation in terms of adding, removing and updating elements."
+msgstr ""
+
+#: performance.xml:1141(para) 
+msgid "There is, arguably, one more advantage that indexed collections have over sets for many to many associations or collections of values. Because of the structure of a <literal>Set</literal>, Hibernate doesn't ever <literal>UPDATE</literal> a row when an element is \"changed\". Changes to a <literal>Set</literal> always work via <literal>INSERT</literal> and <literal>DELETE</literal> (of individual rows). Once again, this consideration does not apply to one to many associations."
+msgstr ""
+
+#: performance.xml:1150(para) 
+msgid "After observing that arrays cannot be lazy, we would conclude that lists, maps and idbags are the most performant (non-inverse) collection types, with sets not far behind. Sets are expected to be the most common kind of collection in Hibernate applications. This is because the \"set\" semantics are most natural in the relational model."
+msgstr ""
+
+#: performance.xml:1158(para) 
+msgid "However, in well-designed Hibernate domain models, we usually see that most collections are in fact one-to-many associations with <literal>inverse=\"true\"</literal>. For these associations, the update is handled by the many-to-one end of the association, and so considerations of collection update performance simply do not apply."
+msgstr ""
+
+#: performance.xml:1168(title) 
+msgid "Bags and lists are the most efficient inverse collections"
+msgstr ""
+
+#: performance.xml:1170(para) 
+msgid "Just before you ditch bags forever, there is a particular case in which bags (and also lists) are much more performant than sets. For a collection with <literal>inverse=\"true\"</literal> (the standard bidirectional one-to-many relationship idiom, for example) we can add elements to a bag or list without needing to initialize (fetch) the bag elements! This is because <literal>Collection.add()</literal> or <literal>Collection.addAll()</literal> must always return true for a bag or <literal>List</literal> (unlike a <literal>Set</literal>). This can make the following common code much faster."
+msgstr ""
+
+#: performance.xml:1189(title) 
+msgid "One shot delete"
+msgstr ""
+
+#: performance.xml:1191(para) 
+msgid "Occasionally, deleting collection elements one by one can be extremely inefficient. Hibernate isn't completely stupid, so it knows not to do that in the case of an newly-empty collection (if you called <literal>list.clear()</literal>, for example). In this case, Hibernate will issue a single <literal>DELETE</literal> and we are done!"
+msgstr ""
+
+#: performance.xml:1198(para) 
+msgid "Suppose we add a single element to a collection of size twenty and then remove two elements. Hibernate will issue one <literal>INSERT</literal> statement and two <literal>DELETE</literal> statements (unless the collection is a bag). This is certainly desirable."
+msgstr ""
+
+#: performance.xml:1204(para) 
+msgid "However, suppose that we remove eighteen elements, leaving two and then add thee new elements. There are two possible ways to proceed"
+msgstr ""
+
+#: performance.xml:1211(para) 
+msgid "delete eighteen rows one by one and then insert three rows"
+msgstr ""
+
+#: performance.xml:1214(para) 
+msgid "remove the whole collection (in one SQL <literal>DELETE</literal>) and insert all five current elements (one by one)"
+msgstr ""
+
+#: performance.xml:1219(para) 
+msgid "Hibernate isn't smart enough to know that the second option is probably quicker in this case. (And it would probably be undesirable for Hibernate to be that smart; such behaviour might confuse database triggers, etc.)"
+msgstr ""
+
+#: performance.xml:1225(para) 
+msgid "Fortunately, you can force this behaviour (ie. the second strategy) at any time by discarding (ie. dereferencing) the original collection and returning a newly instantiated collection with all the current elements. This can be very useful and powerful from time to time."
+msgstr ""
+
+#: performance.xml:1231(para) 
+msgid "Of course, one-shot-delete does not apply to collections mapped <literal>inverse=\"true\"</literal>."
+msgstr ""
+
+#: performance.xml:1240(title) 
+msgid "Monitoring performance"
+msgstr ""
+
+#: performance.xml:1242(para) 
+msgid "Optimization is not much use without monitoring and access to performance numbers. Hibernate provides a full range of figures about its internal operations. Statistics in Hibernate are available per <literal>SessionFactory</literal>."
+msgstr ""
+
+#: performance.xml:1249(title) 
+msgid "Monitoring a SessionFactory"
+msgstr ""
+
+#: performance.xml:1251(para) 
+msgid "You can access <literal>SessionFactory</literal> metrics in two ways. Your first option is to call <literal>sessionFactory.getStatistics()</literal> and read or display the <literal>Statistics</literal> yourself."
+msgstr ""
+
+#: performance.xml:1257(para) 
+msgid "Hibernate can also use JMX to publish metrics if you enable the <literal>StatisticsService</literal> MBean. You may enable a single MBean for all your <literal>SessionFactory</literal> or one per factory. See the following code for minimalistic configuration examples:"
+msgstr ""
+
+#: performance.xml:1284(para) 
+msgid "TODO: This doesn't make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give the JNDI name in which the session factory is held before using it. Use <literal>hibernateStatsBean.setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal>"
+msgstr ""
+
+#: performance.xml:1289(para) 
+msgid "You can (de)activate the monitoring for a <literal>SessionFactory</literal>"
+msgstr ""
+
+#: performance.xml:1294(para) 
+msgid "at configuration time, set <literal>hibernate.generate_statistics</literal> to <literal>false</literal>"
+msgstr ""
+
+#: performance.xml:1301(para) 
+msgid "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> or <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
+msgstr ""
+
+#: performance.xml:1308(para) 
+msgid "Statistics can be reset programatically using the <literal>clear()</literal> method. A summary can be sent to a logger (info level) using the <literal>logSummary()</literal> method."
+msgstr ""
+
+#: performance.xml:1317(title) 
+msgid "Metrics"
+msgstr ""
+
+#: performance.xml:1319(para) 
+msgid "Hibernate provides a number of metrics, from very basic to the specialized information only relevant in certain scenarios. All available counters are described in the <literal>Statistics</literal> interface API, in three categories:"
+msgstr ""
+
+#: performance.xml:1326(para) 
+msgid "Metrics related to the general <literal>Session</literal> usage, such as number of open sessions, retrieved JDBC connections, etc."
+msgstr ""
+
+#: performance.xml:1332(para) 
+msgid "Metrics related to he entities, collections, queries, and caches as a whole (aka global metrics),"
+msgstr ""
+
+#: performance.xml:1338(para) 
+msgid "Detailed metrics related to a particular entity, collection, query or cache region."
+msgstr ""
+
+#: performance.xml:1345(para) 
+msgid "For exampl,e you can check the cache hit, miss, and put ratio of entities, collections and queries, and the average time a query needs. Beware that the number of milliseconds is subject to approximation in Java. Hibernate is tied to the JVM precision, on some platforms this might even only be accurate to 10 seconds."
+msgstr ""
+
+#: performance.xml:1352(para) 
+msgid "Simple getters are used to access the global metrics (i.e. not tied to a particular entity, collection, cache region, etc.). You can access the metrics of a particular entity, collection or cache region through its name, and through its HQL or SQL representation for queries. Please refer to the <literal>Statistics</literal>, <literal>EntityStatistics</literal>, <literal>CollectionStatistics</literal>, <literal>SecondLevelCacheStatistics</literal>, and <literal>QueryStatistics</literal> API Javadoc for more information. The following code shows a simple example:"
+msgstr ""
+
+#: performance.xml:1379(para) 
+msgid "To work on all entities, collections, queries and region caches, you can retrieve the list of names of entities, collections, queries and region caches with the following methods: <literal>getQueries()</literal>, <literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</literal>, and <literal>getSecondLevelCacheRegionNames()</literal>."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: performance.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

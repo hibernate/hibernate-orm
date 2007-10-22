@@ -1,0 +1,48 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:20
+msgid "Legal Notice"
+msgstr "Legal Notice"
+
+#: index.docbook:22
+msgid "<street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</state><postcode>27606-2072</postcode><country>USA</country> <phone>Phone: +1 919 754 3700</phone> <phone>Phone: 888 733 4281</phone> <fax>Fax: +1 919 754 3701</fax> <pob>PO Box 13588</pob><city>Research Triangle Park</city>, <state>NC</state><postcode>27709</postcode><country>USA</country>"
+msgstr "<street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</state><postcode>27606-2072</postcode><country>USA</country> <phone>Phone: +1 919 754 3700</phone> <phone>Phone: 888 733 4281</phone> <fax>Fax: +1 919 754 3701</fax> <pob>PO Box 13588</pob><city>Research Triangle Park</city>, <state>NC</state><postcode>27709</postcode><country>USA</country>"
+
+#: index.docbook:31
+msgid "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. This material may be distributed only subject to the terms and conditions set forth in the Open Publication License, V1.0 or later (the latest version is presently available at <ulink url=\"http://www.opencontent.org/openpub/\">http://www.opencontent.org/openpub/</ulink>)."
+msgstr "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. This material may be distributed only subject to the terms and conditions set forth in the Open Publication License, V1.0 or later (the latest version is presently available at <ulink url=\"http://www.opencontent.org/openpub/\">http://www.opencontent.org/openpub/</ulink>)."
+
+#: index.docbook:34
+msgid "Distribution of substantively modified versions of this document is prohibited without the explicit permission of the copyright holder."
+msgstr "Distribution of substantively modified versions of this document is prohibited without the explicit permission of the copyright holder."
+
+#: index.docbook:37
+msgid "Distribution of the work or derivative of the work in any standard (paper) book form for commercial purposes is prohibited unless prior permission is obtained from the copyright holder."
+msgstr "Distribution of the work or derivative of the work in any standard (paper) book form for commercial purposes is prohibited unless prior permission is obtained from the copyright holder."
+
+#: index.docbook:40
+msgid "Red Hat and the Red Hat \"Shadow Man\" logo are registered trademarks of Red Hat, Inc. in the United States and other countries."
+msgstr "Red Hat and the Red Hat \"Shadow Man\" logo are registered trademarks of Red Hat, Inc. in the United States and other countries."
+
+#: index.docbook:43
+msgid "All other trademarks referenced herein are the property of their respective owners."
+msgstr "All other trademarks referenced herein are the property of their respective owners."
+
+#: index.docbook:46
+msgid "The GPG fingerprint of the security@redhat.com key is:"
+msgstr "The GPG fingerprint of the security@redhat.com key is:"
+
+#: index.docbook:49
+msgid "CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E"
+msgstr "CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E"
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

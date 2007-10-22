@@ -1,0 +1,44 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:32-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: example_weblog.xml:5(title) 
+msgid "Example: Weblog Application"
+msgstr ""
+
+#: example_weblog.xml:8(title) 
+msgid "Persistent Classes"
+msgstr ""
+
+#: example_weblog.xml:10(para) 
+msgid "The persistent classes represent a weblog, and an item posted in a weblog. They are to be modelled as a standard parent/child relationship, but we will use an ordered bag, instead of a set."
+msgstr ""
+
+#: example_weblog.xml:92(title) 
+msgid "Hibernate Mappings"
+msgstr ""
+
+#: example_weblog.xml:94(para) 
+msgid "The XML mappings should now be quite straightforward."
+msgstr ""
+
+#: example_weblog.xml:185(title) 
+msgid "Hibernate Code"
+msgstr ""
+
+#: example_weblog.xml:187(para) 
+msgid "The following class demonstrates some of the kinds of things we can do with these classes, using Hibernate."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: example_weblog.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

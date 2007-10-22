@@ -1,0 +1,164 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:30-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: component_mapping.xml:5(title) 
+msgid "Component Mapping"
+msgstr ""
+
+#: component_mapping.xml:7(para) 
+msgid "The notion of a <emphasis>component</emphasis> is re-used in several different contexts, for different purposes, throughout Hibernate."
+msgstr ""
+
+#: component_mapping.xml:13(title) 
+msgid "Dependent objects"
+msgstr ""
+
+#: component_mapping.xml:15(para) 
+msgid "A component is a contained object that is persisted as a value type, not an entity reference. The term \"component\" refers to the object-oriented notion of composition (not to architecture-level components). For example, you might model a person like this:"
+msgstr ""
+
+#: component_mapping.xml:71(para) 
+msgid "Now <literal>Name</literal> may be persisted as a component of <literal>Person</literal>. Notice that <literal>Name</literal> defines getter and setter methods for its persistent properties, but doesn't need to declare any interfaces or identifier properties."
+msgstr ""
+
+#: component_mapping.xml:78(para) 
+msgid "Our Hibernate mapping would look like:"
+msgstr ""
+
+#: component_mapping.xml:94(para) 
+msgid "The person table would have the columns <literal>pid</literal>, <literal>birthday</literal>, <literal>initial</literal>, <literal>first</literal> and <literal>last</literal>."
+msgstr ""
+
+#: component_mapping.xml:102(para) 
+msgid "Like all value types, components do not support shared references. In other words, two persons could have the same name, but the two person objects would contain two independent name ojects, only \"the same\" by value. The null value semantics of a component are <emphasis>ad hoc</emphasis>. When reloading the containing object, Hibernate will assume that if all component columns are null, then the entire component is null. This should be okay for most purposes."
+msgstr ""
+
+#: component_mapping.xml:111(para) 
+msgid "The properties of a component may be of any Hibernate type (collections, many-to-one associations, other components, etc). Nested components should <emphasis>not</emphasis> be considered an exotic usage. Hibernate is intended to support a very fine-grained object model."
+msgstr ""
+
+#: component_mapping.xml:118(para) 
+msgid "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;parent&gt;</literal> subelement that maps a property of the component class as a reference back to the containing entity."
+msgstr ""
+
+#: component_mapping.xml:140(title) 
+msgid "Collections of dependent objects"
+msgstr ""
+
+#: component_mapping.xml:142(para) 
+msgid "Collections of components are supported (eg. an array of type <literal>Name</literal>). Declare your component collection by replacing the <literal>&lt;element&gt;</literal> tag with a <literal>&lt;composite-element&gt;</literal> tag."
+msgstr ""
+
+#: component_mapping.xml:158(para) 
+msgid "Note: if you define a <literal>Set</literal> of composite elements, it is very important to implement <literal>equals()</literal> and <literal>hashCode()</literal> correctly."
+msgstr ""
+
+#: component_mapping.xml:164(para) 
+msgid "Composite elements may contain components but not collections. If your composite element itself contains components, use the <literal>&lt;nested-composite-element&gt;</literal> tag. This is a pretty exotic case - a collection of components which themselves have components. By this stage you should be asking yourself if a one-to-many association is more appropriate. Try remodelling the composite element as an entity - but note that even though the Java model is the same, the relational model and persistence semantics are still slightly different."
+msgstr ""
+
+#: component_mapping.xml:176(para) 
+msgid "Please note that a composite element mapping doesn't support null-able properties if you're using a <literal>&lt;set&gt;</literal>. Hibernate has to use each columns value to identify a record when deleting objects (there is no separate primary key column in the composite element table), which is not possible with null values. You have to either use only not-null properties in a composite-element or choose a <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal> or <literal>&lt;idbag&gt;</literal>."
+msgstr ""
+
+#: component_mapping.xml:187(para) 
+msgid "A special case of a composite element is a composite element with a nested <literal>&lt;many-to-one&gt;</literal> element. A mapping like this allows you to map extra columns of a many-to-many association table to the composite element class. The following is a many-to-many association from <literal>Order</literal> to <literal>Item</literal> where <literal>purchaseDate</literal>, <literal>price</literal> and <literal>quantity</literal> are properties of the association:"
+msgstr ""
+
+#: component_mapping.xml:210(para) 
+msgid "Of course, there can't be a reference to the purchae on the other side, for bidirectional association navigation. Remember that components are value types and don't allow shared references. A single <literal>Purchase</literal> can be in the set of an <literal>Order</literal>, but it can't be referenced by the <literal>Item</literal> at the same time."
+msgstr ""
+
+#: component_mapping.xml:218(para) 
+msgid "Even ternary (or quaternary, etc) associations are possible:"
+msgstr ""
+
+#: component_mapping.xml:231(para) 
+msgid "Composite elements may appear in queries using the same syntax as associations to other entities."
+msgstr ""
+
+#: component_mapping.xml:239(title) 
+msgid "Components as Map indices"
+msgstr ""
+
+#: component_mapping.xml:241(para) 
+msgid "The <literal>&lt;composite-map-key&gt;</literal> element lets you map a component class as the key of a <literal>Map</literal>. Make sure you override <literal>hashCode()</literal> and <literal>equals()</literal> correctly on the component class."
+msgstr ""
+
+#: component_mapping.xml:250(title) 
+msgid "Components as composite identifiers"
+msgstr ""
+
+#: component_mapping.xml:252(para) 
+msgid "You may use a component as an identifier of an entity class. Your component class must satisfy certain requirements:"
+msgstr ""
+
+#: component_mapping.xml:259(para) 
+msgid "It must implement <literal>java.io.Serializable</literal>."
+msgstr ""
+
+#: component_mapping.xml:264(para) 
+msgid "It must re-implement <literal>equals()</literal> and <literal>hashCode()</literal>, consistently with the database's notion of composite key equality."
+msgstr ""
+
+#: component_mapping.xml:273(emphasis) 
+msgid "Note: in Hibernate3, the second requirement is not an absolutely hard requirement of Hibernate. But do it anyway."
+msgstr ""
+
+#: component_mapping.xml:277(para) 
+msgid "You can't use an <literal>IdentifierGenerator</literal> to generate composite keys. Instead the application must assign its own identifiers."
+msgstr ""
+
+#: component_mapping.xml:282(para) 
+msgid "Use the <literal>&lt;composite-id&gt;</literal> tag (with nested <literal>&lt;key-property&gt;</literal> elements) in place of the usual <literal>&lt;id&gt;</literal> declaration. For example, the <literal>OrderLine</literal> class has a primary key that depends upon the (composite) primary key of <literal>Order</literal>."
+msgstr ""
+
+#: component_mapping.xml:309(para) 
+msgid "Now, any foreign keys referencing the <literal>OrderLine</literal> table are also composite. You must declare this in your mappings for other classes. An association to <literal>OrderLine</literal> would be mapped like this:"
+msgstr ""
+
+#: component_mapping.xml:322(para) 
+msgid "(Note that the <literal>&lt;column&gt;</literal> tag is an alternative to the <literal>column</literal> attribute everywhere.)"
+msgstr ""
+
+#: component_mapping.xml:327(para) 
+msgid "A <literal>many-to-many</literal> association to <literal>OrderLine</literal> also uses the composite foreign key:"
+msgstr ""
+
+#: component_mapping.xml:341(para) 
+msgid "The collection of <literal>OrderLine</literal>s in <literal>Order</literal> would use:"
+msgstr ""
+
+#: component_mapping.xml:354(para) 
+msgid "(The <literal>&lt;one-to-many&gt;</literal> element, as usual, declares no columns.)"
+msgstr ""
+
+#: component_mapping.xml:358(para) 
+msgid "If <literal>OrderLine</literal> itself owns a collection, it also has a composite foreign key."
+msgstr ""
+
+#: component_mapping.xml:382(title) 
+msgid "Dynamic components"
+msgstr ""
+
+#: component_mapping.xml:384(para) 
+msgid "You may even map a property of type <literal>Map</literal>:"
+msgstr ""
+
+#: component_mapping.xml:394(para) 
+msgid "The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are identical to <literal>&lt;component&gt;</literal>. The advantage of this kind of mapping is the ability to determine the actual properties of the bean at deployment time, just by editing the mapping document. Runtime manipulation of the mapping document is also possible, using a DOM parser. Even better, you can access (and change) Hibernate's configuration-time metamodel via the <literal>Configuration</literal> object."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: component_mapping.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

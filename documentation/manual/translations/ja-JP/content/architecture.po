@@ -1,0 +1,216 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:21
+msgid "Architecture"
+msgstr ""
+
+#: index.docbook:24
+msgid "Overview"
+msgstr ""
+
+#: index.docbook:26
+msgid "A (very) high-level view of the Hibernate architecture:"
+msgstr ""
+
+#: index.docbook:39
+msgid "This diagram shows Hibernate using the database and configuration data to provide persistence services (and persistent objects) to the application."
+msgstr ""
+
+#: index.docbook:44
+msgid "We would like to show a more detailed view of the runtime architecture. Unfortunately, Hibernate is flexible and supports several approaches. We will show the two extremes. The \"lite\" architecture has the application provide its own JDBC connections and manage its own transactions. This approach uses a minimal subset of Hibernate's APIs:"
+msgstr ""
+
+#: index.docbook:61
+msgid "The \"full cream\" architecture abstracts the application away from the underlying JDBC/JTA APIs and lets Hibernate take care of the details."
+msgstr ""
+
+#: index.docbook:75
+msgid "Heres some definitions of the objects in the diagrams:"
+msgstr ""
+
+#: index.docbook:80
+msgid "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
+msgstr ""
+
+#: index.docbook:82
+msgid "A threadsafe (immutable) cache of compiled mappings for a single database. A factory for <literal>Session</literal> and a client of <literal>ConnectionProvider</literal>. Might hold an optional (second-level) cache of data that is reusable between transactions, at a process- or cluster-level."
+msgstr ""
+
+#: index.docbook:92
+msgid "Session (<literal>org.hibernate.Session</literal>)"
+msgstr ""
+
+#: index.docbook:94
+msgid "A single-threaded, short-lived object representing a conversation between the application and the persistent store. Wraps a JDBC connection. Factory for <literal>Transaction</literal>. Holds a mandatory (first-level) cache of persistent objects, used when navigating the object graph or looking up objects by identifier."
+msgstr ""
+
+#: index.docbook:104
+msgid "Persistent objects and collections"
+msgstr ""
+
+#: index.docbook:106
+msgid "Short-lived, single threaded objects containing persistent state and business function. These might be ordinary JavaBeans/POJOs, the only special thing about them is that they are currently associated with (exactly one) <literal>Session</literal>. As soon as the <literal>Session</literal> is closed, they will be detached and free to use in any application layer (e.g. directly as data transfer objects to and from presentation)."
+msgstr ""
+
+#: index.docbook:117
+msgid "Transient and detached objects and collections"
+msgstr ""
+
+#: index.docbook:119
+msgid "Instances of persistent classes that are not currently associated with a <literal>Session</literal>. They may have been instantiated by the application and not (yet) persisted or they may have been instantiated by a closed <literal>Session</literal>."
+msgstr ""
+
+#: index.docbook:128
+msgid "Transaction (<literal>org.hibernate.Transaction</literal>)"
+msgstr ""
+
+#: index.docbook:130
+msgid "(Optional) A single-threaded, short-lived object used by the application to specify atomic units of work. Abstracts application from underlying JDBC, JTA or CORBA transaction. A <literal>Session</literal> might span several <literal>Transaction</literal>s in some cases. However, transaction demarcation, either using the underlying API or <literal>Transaction</literal>, is never optional!"
+msgstr ""
+
+#: index.docbook:141
+msgid "ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</literal>)"
+msgstr ""
+
+#: index.docbook:143
+msgid "(Optional) A factory for (and pool of) JDBC connections. Abstracts application from underlying <literal>Datasource</literal> or <literal>DriverManager</literal>. Not exposed to application, but can be extended/implemented by the developer."
+msgstr ""
+
+#: index.docbook:151
+msgid "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgstr ""
+
+#: index.docbook:153
+msgid "(Optional) A factory for <literal>Transaction</literal> instances. Not exposed to the application, but can be extended/implemented by the developer."
+msgstr ""
+
+#: index.docbook:160
+msgid "Extension Interfaces"
+msgstr ""
+
+#: index.docbook:162
+msgid "Hibernate offers many optional extension interfaces you can implement to customize the behavior of your persistence layer. See the API documentation for details."
+msgstr ""
+
+#: index.docbook:171
+msgid "Given a \"lite\" architecture, the application bypasses the <literal>Transaction</literal>/<literal>TransactionFactory</literal> and/or <literal>ConnectionProvider</literal> APIs to talk to JTA or JDBC directly."
+msgstr ""
+
+#: index.docbook:179
+msgid "Instance states"
+msgstr ""
+
+#: index.docbook:180
+msgid "An instance of a persistent classes may be in one of three different states, which are defined with respect to a <emphasis>persistence context</emphasis>. The Hibernate <literal>Session</literal> object is the persistence context:"
+msgstr ""
+
+#: index.docbook:188
+msgid "transient"
+msgstr ""
+
+#: index.docbook:190
+msgid "The instance is not, and has never been associated with any persistence context. It has no persistent identity (primary key value)."
+msgstr ""
+
+#: index.docbook:198
+msgid "persistent"
+msgstr ""
+
+#: index.docbook:200
+msgid "The instance is currently associated with a persistence context. It has a persistent identity (primary key value) and, perhaps, a corresponding row in the database. For a particular persistence context, Hibernate <emphasis>guarantees</emphasis> that persistent identity is equivalent to Java identity (in-memory location of the object)."
+msgstr ""
+
+#: index.docbook:212
+msgid "detached"
+msgstr ""
+
+#: index.docbook:214
+msgid "The instance was once associated with a persistence context, but that context was closed, or the instance was serialized to another process. It has a persistent identity and, perhaps, a corrsponding row in the database. For detached instances, Hibernate makes no guarantees about the relationship between persistent identity and Java identity."
+msgstr ""
+
+#: index.docbook:229
+msgid "JMX Integration"
+msgstr ""
+
+#: index.docbook:231
+msgid "JMX is the J2EE standard for management of Java components. Hibernate may be managed via a JMX standard service. We provide an MBean implementation in the distribution, <literal>org.hibernate.jmx.HibernateService</literal>."
+msgstr ""
+
+#: index.docbook:237
+msgid "For an example how to deploy Hibernate as a JMX service on the JBoss Application Server, please see the JBoss User Guide. On JBoss AS, you also get these benefits if you deploy using JMX:"
+msgstr ""
+
+#: index.docbook:245
+msgid "<emphasis>Session Management:</emphasis> The Hibernate <literal>Session</literal>'s life cycle can be automatically bound to the scope of a JTA transaction. This means you no longer have to manually open and close the <literal>Session</literal>, this becomes the job of a JBoss EJB interceptor. You also don't have to worry about transaction demarcation in your code anymore (unless you'd like to write a portable persistence layer of course, use the optional Hibernate <literal>Transaction</literal> API for this). You call the <literal>HibernateContext</literal> to access a <literal>Session</literal>."
+msgstr ""
+
+#: index.docbook:257
+msgid "<emphasis>HAR deployment:</emphasis> Usually you deploy the Hibernate JMX service using a JBoss service deployment descriptor (in an EAR and/or SAR file), it supports all the usual configuration options of a Hibernate <literal>SessionFactory</literal>. However, you still have to name all your mapping files in the deployment descriptor. If you decide to use the optional HAR deployment, JBoss will automatically detect all mapping files in your HAR file."
+msgstr ""
+
+#: index.docbook:268
+msgid "Consult the JBoss AS user guide for more information about these options."
+msgstr ""
+
+#: index.docbook:272
+msgid "Another feature available as a JMX service are runtime Hibernate statistics. See <xref linkend=\"configuration-optional-statistics\"/>."
+msgstr ""
+
+#: index.docbook:279
+msgid "JCA Support"
+msgstr ""
+
+#: index.docbook:280
+msgid "Hibernate may also be configured as a JCA connector. Please see the website for more details. Please note that Hibernate JCA support is still considered experimental."
+msgstr ""
+
+#: index.docbook:287
+msgid "Contextual Sessions"
+msgstr ""
+
+#: index.docbook:288
+msgid "Most applications using Hibernate need some form of \"contextual\" sessions, where a given session is in effect throughout the scope of a given context. However, across applications the definition of what constitutes a context is typically different; and different contexts define different scopes to the notion of current. Applications using Hibernate prior to version 3.0 tended to utilize either home-grown <literal>ThreadLocal</literal>-based contextual sessions, helper classes such as <literal>HibernateUtil</literal>, or utilized third-party frameworks (such as Spring or Pico) which provided proxy/interception-based contextual sessions."
+msgstr ""
+
+#: index.docbook:297
+msgid "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory.getCurrentSession()</literal> method. Initially, this assumed usage of <literal>JTA</literal> transactions, where the <literal>JTA</literal> transaction defined both the scope and context of a current session. The Hibernate team maintains that, given the maturity of the numerous stand-alone <literal>JTA TransactionManager</literal> implementations out there, most (if not all) applications should be using <literal>JTA</literal> transaction management whether or not they are deployed into a <literal>J2EE</literal> container. Based on that, the <literal>JTA</literal>-based contextual sessions is all you should ever need to use."
+msgstr ""
+
+#: index.docbook:307
+msgid "However, as of version 3.1, the processing behind <literal>SessionFactory.getCurrentSession()</literal> is now pluggable. To that end, a new extension interface (<literal>org.hibernate.context.CurrentSessionContext</literal>) and a new configuration parameter (<literal>hibernate.current_session_context_class</literal>) have been added to allow pluggability of the scope and context of defining current sessions."
+msgstr ""
+
+#: index.docbook:314
+msgid "See the Javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal> interface for a detailed discussion of its contract. It defines a single method, <literal>currentSession()</literal>, by which the implementation is responsible for tracking the current contextual session. Out-of-the-box, Hibernate comes with three implementations of this interface."
+msgstr ""
+
+#: index.docbook:324
+msgid "<literal>org.hibernate.context.JTASessionContext</literal> - current sessions are tracked and scoped by a <literal>JTA</literal> transaction. The processing here is exactly the same as in the older JTA-only approach. See the Javadocs for details."
+msgstr ""
+
+#: index.docbook:332
+msgid "<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - current sessions are tracked by thread of execution. Again, see the Javadocs for details."
+msgstr ""
+
+#: index.docbook:338
+msgid "<literal>org.hibernate.context.ManagedSessionContext</literal> - current sessions are tracked by thread of execution. However, you are responsible to bind and unbind a <literal>Session</literal> instance with static methods on this class, it does never open, flush, or close a <literal>Session</literal>."
+msgstr ""
+
+#: index.docbook:347
+msgid "The first two implementations provide a \"one session - one database transaction\" programming model, also known and used as <emphasis>session-per-request</emphasis>. The beginning and end of a Hibernate session is defined by the duration of a database transaction. If you use programatic transaction demarcation in plain JSE without JTA, you are adviced to use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system from your code. If you use JTA, use the JTA interfaces to demarcate transactions. If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you don't need any transaction or session demarcation operations in your code. Refer to <xref linkend=\"transactions\"/> for more information and code examples."
+msgstr ""
+
+#: index.docbook:359
+msgid "The <literal>hibernate.current_session_context_class</literal> configuration parameter defines which <literal>org.hibernate.context.CurrentSessionContext</literal> implementation should be used. Note that for backwards compatibility, if this config param is not set but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured, Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>. Typically, the value of this parameter would just name the implementation class to use; for the three out-of-the-box implementations, however, there are three corresponding short names, \"jta\", \"thread\", and \"managed\"."
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

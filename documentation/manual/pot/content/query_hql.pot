@@ -1,0 +1,644 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:34-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: query_hql.xml:5(title) 
+msgid "HQL: The Hibernate Query Language"
+msgstr ""
+
+#: query_hql.xml:7(para) 
+msgid "Hibernate is equipped with an extremely powerful query language that (quite intentionally) looks very much like SQL. But don't be fooled by the syntax; HQL is fully object-oriented, understanding notions like inheritence, polymorphism and association."
+msgstr ""
+
+#: query_hql.xml:14(title) 
+msgid "Case Sensitivity"
+msgstr ""
+
+#: query_hql.xml:16(para) 
+msgid "Queries are case-insensitive, except for names of Java classes and properties. So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as <literal>SELECT</literal> but <literal>org.hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
+msgstr ""
+
+#: query_hql.xml:27(para) 
+msgid "This manual uses lowercase HQL keywords. Some users find queries with uppercase keywords more readable, but we find this convention ugly when embedded in Java code."
+msgstr ""
+
+#: query_hql.xml:35(title) 
+msgid "The from clause"
+msgstr ""
+
+#: query_hql.xml:37(para) 
+msgid "The simplest possible Hibernate query is of the form:"
+msgstr ""
+
+#: query_hql.xml:43(para) 
+msgid "which simply returns all instances of the class <literal>eg.Cat</literal>. We don't usually need to qualify the class name, since <literal>auto-import</literal> is the default. So we almost always just write:"
+msgstr ""
+
+#: query_hql.xml:51(para) 
+msgid "Most of the time, you will need to assign an <emphasis>alias</emphasis>, since you will want to refer to the <literal>Cat</literal> in other parts of the query."
+msgstr ""
+
+#: query_hql.xml:59(para) 
+msgid "This query assigns the alias <literal>cat</literal> to <literal>Cat</literal> instances, so we could use that alias later in the query. The <literal>as</literal> keyword is optional; we could also write:"
+msgstr ""
+
+#: query_hql.xml:67(para) 
+msgid "Multiple classes may appear, resulting in a cartesian product or \"cross\" join."
+msgstr ""
+
+#: query_hql.xml:74(para) 
+msgid "It is considered good practice to name query aliases using an initial lowercase, consistent with Java naming standards for local variables (eg. <literal>domesticCat</literal>)."
+msgstr ""
+
+#: query_hql.xml:83(title) 
+msgid "Associations and joins"
+msgstr ""
+
+#: query_hql.xml:85(para) 
+msgid "We may also assign aliases to associated entities, or even to elements of a collection of values, using a <literal>join</literal>."
+msgstr ""
+
+#: query_hql.xml:98(para) 
+msgid "The supported join types are borrowed from ANSI SQL"
+msgstr ""
+
+#: query_hql.xml:105(literal) 
+msgid "inner join"
+msgstr ""
+
+#: query_hql.xml:110(literal) 
+msgid "left outer join"
+msgstr ""
+
+#: query_hql.xml:115(literal) 
+msgid "right outer join"
+msgstr ""
+
+#: query_hql.xml:119(para) 
+msgid "<literal>full join</literal> (not usually useful)"
+msgstr ""
+
+#: query_hql.xml:125(para) 
+msgid "The <literal>inner join</literal>, <literal>left outer join</literal> and <literal>right outer join</literal> constructs may be abbreviated."
+msgstr ""
+
+#: query_hql.xml:134(para) 
+msgid "You may supply extra join conditions using the HQL <literal>with</literal> keyword."
+msgstr ""
+
+#: query_hql.xml:143(para) 
+msgid "In addition, a \"fetch\" join allows associations or collections of values to be initialized along with their parent objects, using a single select. This is particularly useful in the case of a collection. It effectively overrides the outer join and lazy declarations of the mapping file for associations and collections. See <xref linkend=\"performance-fetching\"/> for more information."
+msgstr ""
+
+#: query_hql.xml:155(para) 
+msgid "A fetch join does not usually need to assign an alias, because the associated objects should not be used in the <literal>where</literal> clause (or any other clause). Also, the associated objects are not returned directly in the query results. Instead, they may be accessed via the parent object. The only reason we might need an alias is if we are recursively join fetching a further collection:"
+msgstr ""
+
+#: query_hql.xml:168(para) 
+msgid "Note that the <literal>fetch</literal> construct may not be used in queries called using <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). Nor should <literal>fetch</literal> be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal> as these operations are based on the result rows, which usually contain duplicates for eager collection fetching, hence, the number of rows is not what you'd expect. Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition. It is possible to create a cartesian product by join fetching more than one collection in a query, so take care in this case. Join fetching multiple collection roles also sometimes gives unexpected results for bag mappings, so be careful about how you formulate your queries in this case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal> are not meaningful."
+msgstr ""
+
+#: query_hql.xml:183(para) 
+msgid "If you are using property-level lazy fetching (with bytecode instrumentation), it is possible to force Hibernate to fetch the lazy properties immediately (in the first query) using <literal>fetch all properties</literal>."
+msgstr ""
+
+#: query_hql.xml:195(title) 
+msgid "Forms of join syntax"
+msgstr ""
+
+#: query_hql.xml:197(para) 
+msgid "HQL supports two forms of association joining: <literal>implicit</literal> and <literal>explicit</literal>."
+msgstr ""
+
+#: query_hql.xml:201(para) 
+msgid "The queries shown in the previous section all use the <literal>explicit</literal> form where the join keyword is explicitly used in the from clause. This is the recommended form."
+msgstr ""
+
+#: query_hql.xml:206(para) 
+msgid "The <literal>implicit</literal> form does not use the join keyword. Instead, the associations are \"dereferenced\" using dot-notation. <literal>implicit</literal> joins can appear in any of the HQL clauses. <literal>implicit</literal> join result in inner joins in the resulting SQL statement."
+msgstr ""
+
+#: query_hql.xml:217(title) 
+msgid "Refering to identifier property"
+msgstr ""
+
+#: query_hql.xml:219(para) 
+msgid "There are, generally speaking, 2 ways to refer to an entity's identifier property:"
+msgstr ""
+
+#: query_hql.xml:224(para) 
+msgid "The special property (lowercase) <literal>id</literal> may be used to reference the identifier property of an entity <emphasis>provided that entity does not define a non-identifier property named id</emphasis>."
+msgstr ""
+
+#: query_hql.xml:231(para) 
+msgid "If the entity defines a named identifier property, you may use that property name."
+msgstr ""
+
+#: query_hql.xml:237(para) 
+msgid "References to composite identifier properties follow the same naming rules. If the entity has a non-identifier property named id, the composite identifier property can only be referenced by its defined named; otherwise, the special <literal>id</literal> property can be used to rerference the identifier property."
+msgstr ""
+
+#: query_hql.xml:244(para) 
+msgid "Note: this has changed significantly starting in version 3.2.2. In previous versions, <literal>id</literal><emphasis>always</emphasis> referred to the identifier property no matter what its actual name. A ramification of that decision was that non-identifier properties named <literal>id</literal> could never be referenced in Hibernate queries."
+msgstr ""
+
+#: query_hql.xml:253(title) 
+msgid "The select clause"
+msgstr ""
+
+#: query_hql.xml:255(para) 
+msgid "The <literal>select</literal> clause picks which objects and properties to return in the query result set. Consider:"
+msgstr ""
+
+#: query_hql.xml:264(para) 
+msgid "The query will select <literal>mate</literal>s of other <literal>Cat</literal>s. Actually, you may express this query more compactly as:"
+msgstr ""
+
+#: query_hql.xml:271(para) 
+msgid "Queries may return properties of any value type including properties of component type:"
+msgstr ""
+
+#: query_hql.xml:280(para) 
+msgid "Queries may return multiple objects and/or properties as an array of type <literal>Object[]</literal>,"
+msgstr ""
+
+#: query_hql.xml:290(para) 
+msgid "or as a <literal>List</literal>,"
+msgstr ""
+
+#: query_hql.xml:299(para) 
+msgid "or as an actual typesafe Java object,"
+msgstr ""
+
+#: query_hql.xml:308(para) 
+msgid "assuming that the class <literal>Family</literal> has an appropriate constructor."
+msgstr ""
+
+#: query_hql.xml:312(para) 
+msgid "You may assign aliases to selected expressions using <literal>as</literal>:"
+msgstr ""
+
+#: query_hql.xml:319(para) 
+msgid "This is most useful when used together with <literal>select new map</literal>:"
+msgstr ""
+
+#: query_hql.xml:326(para) 
+msgid "This query returns a <literal>Map</literal> from aliases to selected values."
+msgstr ""
+
+#: query_hql.xml:333(title) 
+msgid "Aggregate functions"
+msgstr ""
+
+#: query_hql.xml:335(para) 
+msgid "HQL queries may even return the results of aggregate functions on properties:"
+msgstr ""
+
+#. NO LONGER SUPPORTED
+#.         <para>
+#.             Collections may also appear inside aggregate functions in the <literal>select</literal>
+#.             clause.
+#.         </para>
+#. 
+#.         <programlisting><![CDATA[select cat, count( elements(cat.kittens) )
+#. from Cat cat group by cat]]></programlisting>
+#: query_hql.xml:352(para) 
+msgid "The supported aggregate functions are"
+msgstr ""
+
+#: query_hql.xml:359(literal) 
+msgid "avg(...), sum(...), min(...), max(...)"
+msgstr ""
+
+#: query_hql.xml:364(literal) 
+msgid "count(*)"
+msgstr ""
+
+#: query_hql.xml:369(literal) 
+msgid "count(...), count(distinct ...), count(all...)"
+msgstr ""
+
+#: query_hql.xml:374(para) 
+msgid "You may use arithmetic operators, concatenation, and recognized SQL functions in the select clause:"
+msgstr ""
+
+#: query_hql.xml:386(para) 
+msgid "The <literal>distinct</literal> and <literal>all</literal> keywords may be used and have the same semantics as in SQL."
+msgstr ""
+
+#: query_hql.xml:398(title) 
+msgid "Polymorphic queries"
+msgstr ""
+
+#: query_hql.xml:400(para) 
+msgid "A query like:"
+msgstr ""
+
+#: query_hql.xml:406(para) 
+msgid "returns instances not only of <literal>Cat</literal>, but also of subclasses like <literal>DomesticCat</literal>. Hibernate queries may name <emphasis>any</emphasis> Java class or interface in the <literal>from</literal> clause. The query will return instances of all persistent classes that extend that class or implement the interface. The following query would return all persistent objects:"
+msgstr ""
+
+#: query_hql.xml:416(para) 
+msgid "The interface <literal>Named</literal> might be implemented by various persistent classes:"
+msgstr ""
+
+#: query_hql.xml:423(para) 
+msgid "Note that these last two queries will require more than one SQL <literal>SELECT</literal>. This means that the <literal>order by</literal> clause does not correctly order the whole result set. (It also means you can't call these queries using <literal>Query.scroll()</literal>.)"
+msgstr ""
+
+#: query_hql.xml:432(title) 
+msgid "The where clause"
+msgstr ""
+
+#: query_hql.xml:434(para) 
+msgid "The <literal>where</literal> clause allows you to narrow the list of instances returned. If no alias exists, you may refer to properties by name:"
+msgstr ""
+
+#: query_hql.xml:441(para) 
+msgid "If there is an alias, use a qualified property name:"
+msgstr ""
+
+#: query_hql.xml:447(para) 
+msgid "returns instances of <literal>Cat</literal> named 'Fritz'."
+msgstr ""
+
+#: query_hql.xml:455(para) 
+msgid "will return all instances of <literal>Foo</literal> for which there exists an instance of <literal>bar</literal> with a <literal>date</literal> property equal to the <literal>startDate</literal> property of the <literal>Foo</literal>. Compound path expressions make the <literal>where</literal> clause extremely powerful. Consider:"
+msgstr ""
+
+#: query_hql.xml:466(para) 
+msgid "This query translates to an SQL query with a table (inner) join. If you were to write something like"
+msgstr ""
+
+#: query_hql.xml:474(para) 
+msgid "you would end up with a query that would require four table joins in SQL."
+msgstr ""
+
+#: query_hql.xml:478(para) 
+msgid "The <literal>=</literal> operator may be used to compare not only properties, but also instances:"
+msgstr ""
+
+#: query_hql.xml:489(para) 
+msgid "The special property (lowercase) <literal>id</literal> may be used to reference the unique identifier of an object. See <xref linkend=\"queryhql-identifier-property\"/> for more information."
+msgstr ""
+
+#: query_hql.xml:499(para) 
+msgid "The second query is efficient. No table join is required!"
+msgstr ""
+
+#: query_hql.xml:503(para) 
+msgid "Properties of composite identifiers may also be used. Suppose <literal>Person</literal> has a composite identifier consisting of <literal>country</literal> and <literal>medicareNumber</literal>. Again, see <xref linkend=\"queryhql-identifier-property\"/> for more information regarding referencing identifier properties."
+msgstr ""
+
+#: query_hql.xml:518(para) 
+msgid "Once again, the second query requires no table join."
+msgstr ""
+
+#: query_hql.xml:522(para) 
+msgid "Likewise, the special property <literal>class</literal> accesses the discriminator value of an instance in the case of polymorphic persistence. A Java class name embedded in the where clause will be translated to its discriminator value."
+msgstr ""
+
+#: query_hql.xml:530(para) 
+msgid "You may also use components or composite user types, or properties of said component types. See <xref linkend=\"queryhql-coomponents\"/> for more details."
+msgstr ""
+
+#: query_hql.xml:535(para) 
+msgid "An \"any\" type has the special properties <literal>id</literal> and <literal>class</literal>, allowing us to express a join in the following way (where <literal>AuditLog.item</literal> is a property mapped with <literal>&lt;any&gt;</literal>)."
+msgstr ""
+
+#: query_hql.xml:544(para) 
+msgid "Notice that <literal>log.item.class</literal> and <literal>payment.class</literal> would refer to the values of completely different database columns in the above query."
+msgstr ""
+
+#: query_hql.xml:552(title) 
+msgid "Expressions"
+msgstr ""
+
+#: query_hql.xml:554(para) 
+msgid "Expressions allowed in the <literal>where</literal> clause include most of the kind of things you could write in SQL:"
+msgstr ""
+
+#: query_hql.xml:561(para) 
+msgid "mathematical operators <literal>+, -, *, /</literal>"
+msgstr ""
+
+#: query_hql.xml:566(para) 
+msgid "binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
+msgstr ""
+
+#: query_hql.xml:571(para) 
+msgid "logical operations <literal>and, or, not</literal>"
+msgstr ""
+
+#: query_hql.xml:576(para) 
+msgid "Parentheses <literal>( )</literal>, indicating grouping"
+msgstr ""
+
+#: query_hql.xml:581(para) 
+msgid "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
+msgstr ""
+
+#: query_hql.xml:594(para) 
+msgid "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgstr ""
+
+#: query_hql.xml:600(para) 
+msgid "string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>"
+msgstr ""
+
+#: query_hql.xml:605(para) 
+msgid "<literal>current_date()</literal>, <literal>current_time()</literal>, <literal>current_timestamp()</literal>"
+msgstr ""
+
+#: query_hql.xml:611(para) 
+msgid "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, <literal>year(...)</literal>,"
+msgstr ""
+
+#: query_hql.xml:618(para) 
+msgid "Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
+msgstr ""
+
+#: query_hql.xml:624(para) 
+msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
+msgstr ""
+
+#: query_hql.xml:629(para) 
+msgid "<literal>str()</literal> for converting numeric or temporal values to a readable string"
+msgstr ""
+
+#: query_hql.xml:635(para) 
+msgid "<literal>cast(... as ...)</literal>, where the second argument is the name of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI <literal>cast()</literal> and <literal>extract()</literal> is supported by the underlying database"
+msgstr ""
+
+#: query_hql.xml:643(para) 
+msgid "the HQL <literal>index()</literal> function, that applies to aliases of a joined indexed collection"
+msgstr ""
+
+#: query_hql.xml:649(para) 
+msgid "HQL functions that take collection-valued path expressions: <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>, along with the special <literal>elements()</literal> and <literal>indices</literal> functions which may be quantified using <literal>some, all, exists, any, in</literal>."
+msgstr ""
+
+#: query_hql.xml:657(para) 
+msgid "Any database-supported SQL scalar function like <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>"
+msgstr ""
+
+#: query_hql.xml:663(para) 
+msgid "JDBC-style positional parameters <literal>?</literal>"
+msgstr ""
+
+#: query_hql.xml:668(para) 
+msgid "named parameters <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>"
+msgstr ""
+
+#: query_hql.xml:673(para) 
+msgid "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgstr ""
+
+#: query_hql.xml:679(para) 
+msgid "Java <literal>public static final</literal> constants <literal>eg.Color.TABBY</literal>"
+msgstr ""
+
+#: query_hql.xml:685(para) 
+msgid "<literal>in</literal> and <literal>between</literal> may be used as follows:"
+msgstr ""
+
+#: query_hql.xml:693(para) 
+msgid "and the negated forms may be written"
+msgstr ""
+
+#: query_hql.xml:701(para) 
+msgid "Likewise, <literal>is null</literal> and <literal>is not null</literal> may be used to test for null values."
+msgstr ""
+
+#: query_hql.xml:706(para) 
+msgid "Booleans may be easily used in expressions by declaring HQL query substitutions in Hibernate configuration:"
+msgstr ""
+
+#: query_hql.xml:713(para) 
+msgid "This will replace the keywords <literal>true</literal> and <literal>false</literal> with the literals <literal>1</literal> and <literal>0</literal> in the translated SQL from this HQL:"
+msgstr ""
+
+#: query_hql.xml:720(para) 
+msgid "You may test the size of a collection with the special property <literal>size</literal>, or the special <literal>size()</literal> function."
+msgstr ""
+
+#: query_hql.xml:729(para) 
+msgid "For indexed collections, you may refer to the minimum and maximum indices using <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly, you may refer to the minimum and maximum elements of a collection of basic type using the <literal>minelement</literal> and <literal>maxelement</literal> functions."
+msgstr ""
+
+#: query_hql.xml:743(para) 
+msgid "The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element or index set of a collection (<literal>elements</literal> and <literal>indices</literal> functions) or the result of a subquery (see below)."
+msgstr ""
+
+#: query_hql.xml:761(para) 
+msgid "Note that these constructs - <literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal> - may only be used in the where clause in Hibernate3."
+msgstr ""
+
+#: query_hql.xml:768(para) 
+msgid "Elements of indexed collections (arrays, lists, maps) may be referred to by index (in a where clause only):"
+msgstr ""
+
+#: query_hql.xml:785(para) 
+msgid "The expression inside <literal>[]</literal> may even be an arithmetic expression."
+msgstr ""
+
+#: query_hql.xml:792(para) 
+msgid "HQL also provides the built-in <literal>index()</literal> function, for elements of a one-to-many association or collection of values."
+msgstr ""
+
+#: query_hql.xml:801(para) 
+msgid "Scalar SQL functions supported by the underlying database may be used"
+msgstr ""
+
+#: query_hql.xml:807(para) 
+msgid "If you are not yet convinced by all this, think how much longer and less readable the following query would be in SQL:"
+msgstr ""
+
+#: query_hql.xml:820(para) 
+msgid "<emphasis>Hint:</emphasis> something like"
+msgstr ""
+
+#: query_hql.xml:845(title) 
+msgid "The order by clause"
+msgstr ""
+
+#: query_hql.xml:847(para) 
+msgid "The list returned by a query may be ordered by any property of a returned class or components:"
+msgstr ""
+
+#: query_hql.xml:854(para) 
+msgid "The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order respectively."
+msgstr ""
+
+#: query_hql.xml:861(title) 
+msgid "The group by clause"
+msgstr ""
+
+#: query_hql.xml:863(para) 
+msgid "A query that returns aggregate values may be grouped by any property of a returned class or components:"
+msgstr ""
+
+#: query_hql.xml:875(para) 
+msgid "A <literal>having</literal> clause is also allowed."
+msgstr ""
+
+#: query_hql.xml:884(para) 
+msgid "SQL functions and aggregate functions are allowed in the <literal>having</literal> and <literal>order by</literal> clauses, if supported by the underlying database (eg. not in MySQL)."
+msgstr ""
+
+#: query_hql.xml:897(para) 
+msgid "Note that neither the <literal>group by</literal> clause nor the <literal>order by</literal> clause may contain arithmetic expressions. Also note that Hibernate currently does not expand a grouped entity, so you can't write <literal>group by cat</literal> if all properties of <literal>cat</literal> are non-aggregated. You have to list all non-aggregated properties explicitly."
+msgstr ""
+
+#: query_hql.xml:909(title) 
+msgid "Subqueries"
+msgstr ""
+
+#: query_hql.xml:911(para) 
+msgid "For databases that support subselects, Hibernate supports subqueries within queries. A subquery must be surrounded by parentheses (often by an SQL aggregate function call). Even correlated subqueries (subqueries that refer to an alias in the outer query) are allowed."
+msgstr ""
+
+#: query_hql.xml:940(para) 
+msgid "Note that HQL subqueries may occur only in the select or where clauses."
+msgstr ""
+
+#: query_hql.xml:944(para) 
+msgid "Note that subqueries can also utilize <literal>row value constructor</literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+msgstr ""
+
+#: query_hql.xml:952(title) 
+msgid "HQL examples"
+msgstr ""
+
+#: query_hql.xml:954(para) 
+msgid "Hibernate queries can be quite powerful and complex. In fact, the power of the query language is one of Hibernate's main selling points. Here are some example queries very similar to queries that I used on a recent project. Note that most queries you will write are much simpler than these!"
+msgstr ""
+
+#: query_hql.xml:960(para) 
+msgid "The following query returns the order id, number of items and total value of the order for all unpaid orders for a particular customer and given minimum total value, ordering the results by total value. In determining the prices, it uses the current catalog. The resulting SQL query, against the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four inner joins and an (uncorrelated) subselect."
+msgstr ""
+
+#: query_hql.xml:988(para) 
+msgid "What a monster! Actually, in real life, I'm not very keen on subqueries, so my query was really more like this:"
+msgstr ""
+
+#: query_hql.xml:1007(para) 
+msgid "The next query counts the number of payments in each status, excluding all payments in the <literal>AWAITING_APPROVAL</literal> status where the most recent status change was made by the current user. It translates to an SQL query with two inner joins and a correlated subselect against the <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and <literal>PAYMENT_STATUS_CHANGE</literal> tables."
+msgstr ""
+
+#: query_hql.xml:1031(para) 
+msgid "If I would have mapped the <literal>statusChanges</literal> collection as a list, instead of a set, the query would have been much simpler to write."
+msgstr ""
+
+#: query_hql.xml:1044(para) 
+msgid "The next query uses the MS SQL Server <literal>isNull()</literal> function to return all the accounts and unpaid payments for the organization to which the current user belongs. It translates to an SQL query with three inner joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and <literal>ORG_USER</literal> tables."
+msgstr ""
+
+#: query_hql.xml:1060(para) 
+msgid "For some databases, we would need to do away with the (correlated) subselect."
+msgstr ""
+
+#: query_hql.xml:1075(title) 
+msgid "Bulk update and delete"
+msgstr ""
+
+#: query_hql.xml:1077(para) 
+msgid "HQL now supports <literal>update</literal>, <literal>delete</literal> and <literal>insert ... select ...</literal> statements. See <xref linkend=\"batch-direct\"/> for details."
+msgstr ""
+
+#: query_hql.xml:1085(title) 
+msgid "Tips &amp; Tricks"
+msgstr ""
+
+#: query_hql.xml:1087(para) 
+msgid "You can count the number of query results without actually returning them:"
+msgstr ""
+
+#: query_hql.xml:1093(para) 
+msgid "To order a result by the size of a collection, use the following query:"
+msgstr ""
+
+#: query_hql.xml:1103(para) 
+msgid "If your database supports subselects, you can place a condition upon selection size in the where clause of your query:"
+msgstr ""
+
+#: query_hql.xml:1110(para) 
+msgid "If your database doesn't support subselects, use the following query:"
+msgstr ""
+
+#: query_hql.xml:1120(para) 
+msgid "As this solution can't return a <literal>User</literal> with zero messages because of the inner join, the following form is also useful:"
+msgstr ""
+
+#: query_hql.xml:1131(para) 
+msgid "Properties of a JavaBean can be bound to named query parameters:"
+msgstr ""
+
+#: query_hql.xml:1139(para) 
+msgid "Collections are pageable by using the <literal>Query</literal> interface with a filter:"
+msgstr ""
+
+#: query_hql.xml:1148(para) 
+msgid "Collection elements may be ordered or grouped using a query filter:"
+msgstr ""
+
+#: query_hql.xml:1155(para) 
+msgid "You can find the size of a collection without initializing it:"
+msgstr ""
+
+#: query_hql.xml:1164(title) 
+msgid "Components"
+msgstr ""
+
+#: query_hql.xml:1166(para) 
+msgid "Components might be used in just about every way that simple value types can be used in HQL queries. They can appear in the <literal>select</literal> clause:"
+msgstr ""
+
+#: query_hql.xml:1174(para) 
+msgid "where the Person's name property is a component. Components can also be used in the <literal>where</literal> clause:"
+msgstr ""
+
+#: query_hql.xml:1182(para) 
+msgid "Components can also be used in the <literal>order by</literal> clause:"
+msgstr ""
+
+#: query_hql.xml:1189(para) 
+msgid "Another common use of components is in <xref linkend=\"queryhql-tuple\">row value constructors</xref>."
+msgstr ""
+
+#: query_hql.xml:1195(title) 
+msgid "Row value constructor syntax"
+msgstr ""
+
+#: query_hql.xml:1197(para) 
+msgid "HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax (sometimes called <literal>tuple</literal> syntax), even though the underlying database may not support that notion. Here we are generally referring to multi-valued comparisons, typically associated with components. Consider an entity Person which defines a name component:"
+msgstr ""
+
+#: query_hql.xml:1206(para) 
+msgid "That's valid syntax, although a little verbose. It be nice to make this a bit more concise and use <literal>row value constructor</literal> syntax:"
+msgstr ""
+
+#: query_hql.xml:1213(para) 
+msgid "It can also be useful to specify this in the <literal>select</literal> clause:"
+msgstr ""
+
+#: query_hql.xml:1219(para) 
+msgid "Another time using <literal>row value constructor</literal> syntax can be beneficial is when using subqueries needing to compare against multiple values:"
+msgstr ""
+
+#: query_hql.xml:1229(para) 
+msgid "One thing to consider when deciding if you want to use this syntax is that the query will be dependent upon the ordering of the component sub-properties in the metadata."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: query_hql.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

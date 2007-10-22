@@ -1,0 +1,1510 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "HQL: The Hibernate Query Language"
+msgstr "HQL: 하이버네이트 질의 언어(Hibernate Query Language)"
+
+#: index.docbook:7
+msgid "Hibernate is equipped with an extremely powerful query language that (quite intentionally) looks very much like SQL. But don't be fooled by the syntax; HQL is fully object-oriented, understanding notions like inheritence, polymorphism and association."
+msgstr "Hibernate는 (아주 의도적으로) SQL과 매우 흡사하게 보이는 극히 강력한 질의 언어를 구비하고 있다. 그러나 그 구문에 의해 우롱당하지 말라; HQL은 상속, 다형성 그리고 연관과 같은 개념들을 이해하여서, 전체적으로 객체 지향적이다."
+
+#: index.docbook:14
+msgid "Case Sensitivity"
+msgstr "대소문자 구분"
+
+#: index.docbook:16
+msgid "Queries are case-insensitive, except for names of Java classes and properties. So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as <literal>SELECT</literal> but <literal>org.hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
+msgstr "질의들은 Java 클래스들과 프로퍼티들의 이름들을 제외하면 대소문자를 구분하지 않는다. 따라서 <literal>SeLeCT</literal>는 <literal>SELECT</literal>와 같고 <literal>SELECT</literal>와도 같지만 <literal>org.hibernate.eg.FOO</literal>는 <literal>org.hibernate.eg.Foo</literal>과 같지 않고 <literal>foo.barSet</literal>은 <literal>foo.BARSET</literal>과 같지 않다."
+
+#: index.docbook:27
+msgid "This manual uses lowercase HQL keywords. Some users find queries with uppercase keywords more readable, but we find this convention ugly when embedded in Java code."
+msgstr "이 매뉴얼은 소문자 HQL 키워드를 사용한다. 몇몇 사용자들은 보다 나은 가독성을 위해 대문자 키워드들을 가진 질의들을 찾지만, 우리는 자바 코드 속에 삽입될 때 이 컨벤션이 추하다는 점을 발견한다."
+
+#: index.docbook:35
+msgid "The from clause"
+msgstr "from 절"
+
+#: index.docbook:37
+msgid "The simplest possible Hibernate query is of the form:"
+msgstr "가장 간단한 가능한 Hibernate 질의는 다음 형식이다:"
+
+#: index.docbook:41
+msgid "<![CDATA[from eg.Cat]]>"
+msgstr "<![CDATA[from eg.Cat]]>"
+
+#: index.docbook:43
+msgid "which simply returns all instances of the class <literal>eg.Cat</literal>. We don't usually need to qualify the class name, since <literal>auto-import</literal> is the default. So we almost always just write:"
+msgstr "이것은 <literal>eg.Cat</literal> 클래스의 모든 인스턴스들을 간단하게 반환한다. 우리는 대개 클래스 이름을 수식할 필요가 없다. 왜냐하면, <literal>auto-import</literal>가 디폴트이기 때문이다. 따라서 우리는 대개 항상 단지 다음과 같이 작성한다:"
+
+#: index.docbook:49
+msgid "<![CDATA[from Cat]]>"
+msgstr "<![CDATA[from Cat]]>"
+
+#: index.docbook:51
+msgid "Most of the time, you will need to assign an <emphasis>alias</emphasis>, since you will want to refer to the <literal>Cat</literal> in other parts of the query."
+msgstr "대개 당신은 한 개의 <emphasis>alias</emphasis>를 할당할 필요가 있을 것이다. 왜냐하면 당신은 질의의 다른 부분들에서 <literal>Cat</literal>을 참조하고자 원할 것이기 때문이다."
+
+#: index.docbook:57, index.docbook:372
+msgid "<![CDATA[from Cat as cat]]>"
+msgstr "<![CDATA[from Cat as cat]]>"
+
+#: index.docbook:59
+msgid "This query assigns the alias <literal>cat</literal> to <literal>Cat</literal> instances, so we could use that alias later in the query. The <literal>as</literal> keyword is optional; we could also write:"
+msgstr "이 질의는 alias <literal>cat</literal>을 <literal>Cat</literal> 인스턴스들에 할당하여서, 우리는 나중에 질의 속에서 그 alias를 사용할 수 있을 것이다. <literal>as</literal> 키워드는 옵션이다; 우리는 또한 다음과 같이 작성할 수 있다:"
+
+#: index.docbook:65
+msgid "<![CDATA[from Cat cat]]>"
+msgstr "<![CDATA[from Cat cat]]>"
+
+#: index.docbook:67
+msgid "Multiple classes may appear, resulting in a cartesian product or \"cross\" join."
+msgstr "여러 개의 클래스들은 cartesian product(카티젼 곱) 또는 \"크로스\" 조인으로 귀결되어 나타날 수도 있다."
+
+#: index.docbook:71
+msgid "<![CDATA[from Formula, Parameter]]>"
+msgstr "<![CDATA[from Formula, Parameter]]>"
+
+#: index.docbook:72
+msgid "<![CDATA[from Formula as form, Parameter as param]]>"
+msgstr "<![CDATA[from Formula as form, Parameter as param]]>"
+
+#: index.docbook:74
+msgid "It is considered good practice to name query aliases using an initial lowercase, consistent with Java naming standards for local variables (eg. <literal>domesticCat</literal>)."
+msgstr "로컬 변수들에 대한 Java 네이밍 표준들과 일치되게, 첫 소문자를 사용하여 질의 alias들을 명명하는 것은 좋은 습관으로 간주된다 (예를 들면 <literal>domesticCat</literal>)."
+
+#: index.docbook:83
+msgid "Associations and joins"
+msgstr "연관들과 조인들"
+
+#: index.docbook:85
+msgid "We may also assign aliases to associated entities, or even to elements of a collection of values, using a <literal>join</literal>."
+msgstr "우리는 또한 <literal>join</literal>을 사용하여 , 연관된 엔티티들에 또는 값들을 가진 콜렉션의 요소들에도 alias들을 할당할 수도 있다."
+
+#: index.docbook:90
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "    inner join cat.mate as mate\n"
+      "    left outer join cat.kittens as kitten]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat \n"
+      "    inner join cat.mate as mate\n"
+      "    left outer join cat.kittens as kitten]]>"
+
+#: index.docbook:92
+msgid "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
+msgstr "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
+
+#: index.docbook:94
+msgid "<![CDATA[from Formula form full join form.parameter param]]>"
+msgstr "<![CDATA[from Formula form full join form.parameter param]]>"
+
+#: index.docbook:96
+msgid "The supported join types are borrowed from ANSI SQL"
+msgstr "지원되는 join 타입들은 ANSI SQL로부터 빌려왔다"
+
+#: index.docbook:103
+msgid "inner join"
+msgstr "inner join"
+
+#: index.docbook:108
+msgid "left outer join"
+msgstr "left outer join"
+
+#: index.docbook:113
+msgid "right outer join"
+msgstr "right outer join"
+
+#: index.docbook:117
+msgid "<literal>full join</literal> (not usually useful)"
+msgstr "<literal>full join</literal> (대개 유용하지 않음)"
+
+#: index.docbook:123
+msgid "The <literal>inner join</literal>, <literal>left outer join</literal> and <literal>right outer join</literal> constructs may be abbreviated."
+msgstr "<literal>inner join</literal>, <literal>left outer join</literal>, 그리고 <literal>right outer join</literal> 구조체들이 약칭될 수 있다."
+
+#: index.docbook:128
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "    join cat.mate as mate\n"
+      "    left join cat.kittens as kitten]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat \n"
+      "    join cat.mate as mate\n"
+      "    left join cat.kittens as kitten]]>"
+
+#: index.docbook:130
+msgid "You may supply extra join conditions using the HQL <literal>with</literal> keyword."
+msgstr "당신은 HQL <literal>with</literal> 키워드를 사용하여 특별한 조인 조건들을 제공할 수 있다."
+
+#: index.docbook:135
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "    left join cat.kittens as kitten\n"
+      "        with kitten.bodyWeight > 10.0]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat \n"
+      "    left join cat.kittens as kitten \n"
+      "        with kitten.bodyWeight > 10.0]]>"
+
+#: index.docbook:137
+msgid "In addition, a \"fetch\" join allows associations or collections of values to be initialized along with their parent objects, using a single select. This is particularly useful in the case of a collection. It effectively overrides the outer join and lazy declarations of the mapping file for associations and collections. See <xref linkend=\"performance-fetching\"/> for more information."
+msgstr "게다가, \"fetch\" join은 값들을 가진 콜렉션들이나 연관관계들이 한 개의 select를 사용하여, 그것들의 부모 객체들에 따라 초기화 되는 것을 허용해준다. 이것은 콜렉션의 경우에 특히 유용하다. 그것은 연관관계들과 콜렉션들에 대한 매핑 파일의 outer join과 lazy 선언들을 효율적으로 오버라이드 시킨다. 추가 정보는 <xref linkend=\"performance-fetching\"/>을 보라."
+
+#: index.docbook:145
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "    inner join fetch cat.mate\n"
+      "    left join fetch cat.kittens]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat \n"
+      "    inner join fetch cat.mate\n"
+      "    left join fetch cat.kittens]]>"
+
+#: index.docbook:147
+msgid "A fetch join does not usually need to assign an alias, because the associated objects should not be used in the <literal>where</literal> clause (or any other clause). Also, the associated objects are not returned directly in the query results. Instead, they may be accessed via the parent object. The only reason we might need an alias is if we are recursively join fetching a further collection:"
+msgstr "fetch join은 대개 alias를 할당할 필요가 없다. 왜냐하면, 연관된 객체들이 <literal>where</literal> 절(또는 어떤 다른 절) 속에 사용되지 않을 것이기 때문이다. 또한 연관된 객체들은 질의 결과들 속에 직접 반환되지 않는다. 대신 그것들은 부모 객체를 통해 접근될 수 있다. 우리가 alias를 필요로 할 수 있는 유일한 이유는 더 많은 콜렉션들을 재귀적으로 조인 페칭시키는 경우이다:"
+
+#: index.docbook:155
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "    inner join fetch cat.mate\n"
+      "    left join fetch cat.kittens child\n"
+      "    left join fetch child.kittens]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat \n"
+      "    inner join fetch cat.mate\n"
+      "    left join fetch cat.kittens child\n"
+      "    left join fetch child.kittens]]>"
+
+#: index.docbook:157
+msgid "Note that the <literal>fetch</literal> construct may not be used in queries called using <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). Nor should <literal>fetch</literal> be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal> as these operations are based on the result rows, which usually contain duplicates for eager collection fetching, hence, the number of rows is not what you'd expect. Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition. It is possible to create a cartesian product by join fetching more than one collection in a query, so take care in this case. Join fetching multiple collection roles also sometimes gives unexpected results for bag mappings, so be careful about how you formulate your queries in this case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal> are not meaningful."
+msgstr "(비록 <literal>scroll()</literal>이 사용될 수 있을지라도) <literal>fetch</literal> 구조체는 <literal>iterate()</literal>를 사용하여 호출되는 질의들 내에 사용될 수 없음을 노트하라. 이들 오퍼레이션들이 결과 행들에 기초하고 있기 때문에 <literal>fetch</literal>는 <literal>setMaxResults()</literal> 또는 <literal>setFirstResult()</literal>과 함께 사용되지 말아야 하며, 그것들(결과 행들)은 대개 각각의 eager 콜렉션 페칭에 대해 중복들을 포함하므로 많은 행들이 당신이 기대하는 것이 아니다. <literal>fetch</literal>는 특별한 용도의 <literal>with</literal> 조건과도 함께 사용될 수 없다.한 개의 질의 내에 하나 이상의 콜렉션을 조인 페칭시켜 카티젼 곱을 생성시키는 것이 가능한데, 이 경우에 주의하라. 다중 콜렉션 role들을 조인 페칭시키는 것은 또한 때때로 bag 매핑들에 대해 예기치 않은 결과들을 가져다주기 때문에, 당신이 이 경우에 당신의 질의들을 처방하는 방법에 대해 주의하라. 마지막으로 <literal>full join fetch</literal>와 <literal>right join fetch</literal>는 의미가 없다."
+
+#: index.docbook:172
+msgid "If you are using property-level lazy fetching (with bytecode instrumentation), it is possible to force Hibernate to fetch the lazy properties immediately (in the first query) using <literal>fetch all properties</literal>."
+msgstr "만일 당신이 (바이트코드 방편으로) property-레벨 lazy 페칭을 사용할 경우, Hibernate로 하여금 <literal>fetch all properties</literal>를 사용하여 (첫 번째 질의에서) lazy 프로퍼티들을 즉시 페치하도록 강제시키는 것이 가능하다."
+
+#: index.docbook:178
+msgid "<![CDATA[from Document fetch all properties order by name]]>"
+msgstr "<![CDATA[from Document fetch all properties order by name]]>"
+
+#: index.docbook:179
+msgid "<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]>"
+msgstr "<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]>"
+
+#: index.docbook:184
+msgid "Forms of join syntax"
+msgstr "join 구문의 형식들"
+
+#: index.docbook:186
+msgid "HQL supports two forms of association joining: <literal>implicit</literal> and <literal>explicit</literal>."
+msgstr "HQL은 두 가지 형식의 연관 조인을 지원한다: <literal>암묵적</literal> 그리고 <literal>명시적</literal>."
+
+#: index.docbook:190
+msgid "The queries shown in the previous section all use the <literal>explicit</literal> form where the join keyword is explicitly used in the from clause. This is the recommended form."
+msgstr "앞의 절에서 보여진 질의들은 모두 join 키워드가 from 절 내에 명시적으로 사용되는 <literal>명시적인</literal> 형식을 사용한다. 이것은 권장되는 형식이다."
+
+#: index.docbook:195
+msgid "The <literal>implicit</literal> form does not use the join keyword. Instead, the associations are \"dereferenced\" using dot-notation. <literal>implicit</literal> joins can appear in any of the HQL clauses. <literal>implicit</literal> join result in inner joins in the resulting SQL statement."
+msgstr "<literal>함축적인</literal> 형식은 join 키워드를 사용하지 않는다. 대신에, 연관들은 dot(.) 표기를 사용하여 \"dot-참조된다(dereferenced)\". <literal>함축적인</literal> 조인들은 임의의 HQL 절들내에 나타날 수 있다. <literal>함축적인</literal> join은 결과되는 SQL 문장에서 inner join으로 귀결된다."
+
+#: index.docbook:202
+msgid "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+msgstr "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+
+#: index.docbook:206
+msgid "Refering to identifier property"
+msgstr "식별자 속성 참조하기"
+
+#: index.docbook:208
+msgid "There are, generally speaking, 2 ways to refer to an entity's identifier property:"
+msgstr "개략적으로 말하자면, 엔티티의 식별자 속성을 참조하는 2가지 방법들이 존재한다:"
+
+#: index.docbook:213
+msgid "The special property (lowercase) <literal>id</literal> may be used to reference the identifier property of an entity <emphasis>provided that entity does not define a non-identifier property named id</emphasis>."
+msgstr "<emphasis>엔티티가 id로 명명된 비식별자 속성을 정의하지 않는다고 가정하면</emphasis> 특별한 속성(소문자) <literal>id</literal>가 엔티티의 식별자 속성을 참조하는데 사용될 수 있다."
+
+#: index.docbook:220
+msgid "If the entity defines a named identifier property, you may use that property name."
+msgstr "만일 그 엔티티가 명명된 식별자 속성을 정의하는 경우, 당신은 그 속성 이름을 사용할 수도 있다."
+
+#: index.docbook:226
+msgid "References to composite identifier properties follow the same naming rules. If the entity has a non-identifier property named id, the composite identifier property can only be referenced by its defined named; otherwise, the special <literal>id</literal> property can be used to rerference the identifier property."
+msgstr "composite 식별자 속성들에 대한 참조들은 동일한 네이밍 규칙들을 따른다. 만일 그 엔티티가 id로 명명된 비식별자를 갖고 있을 경우, composite 속성은 오직 그것의 정의된 명명에 의해 참조될 수 있다; 그밖의 경우 특별한 <literal>id</literal> 속성이 식별자 속성을 참조하는데 사용될 수 있다."
+
+#: index.docbook:233
+msgid "Note: this has changed significantly starting in version 3.2.2. In previous versions, <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no matter what its actual name. A ramification of that decision was that non-identifier properties named <literal>id</literal> could never be referenced in Hibernate queries."
+msgstr "노트: 이것은 버전 3.2.2에서 시작될 때 현격하게 변경되었다. 이전 버전들에서, <literal>id</literal>는 <emphasis>항상</emphasis> 그것의 실제 이름에 관계없이 식별자 속성을 참조했다. 그 결정의 분기점은 <literal>id</literal>로 명명된 비식별자 속성들이 Hibernate 질의들 내에서 결코 참조될 수 없었다는 점이었다."
+
+#: index.docbook:242
+msgid "The select clause"
+msgstr "select 절"
+
+#: index.docbook:244
+msgid "The <literal>select</literal> clause picks which objects and properties to return in the query result set. Consider:"
+msgstr "<literal>select</literal> 절은 질의 결과 셋 속에 반환할 객체들과 프로퍼티들이 어느 것인지를 골라 내도록 강제한다. 다음을 검토하자:"
+
+#: index.docbook:249
+msgid ""
+      "<![CDATA[select mate\n"
+      "from Cat as cat\n"
+      "    inner join cat.mate as mate]]>"
+msgstr ""
+      "<![CDATA[select mate \n"
+      "from Cat as cat \n"
+      "    inner join cat.mate as mate]]>"
+
+#: index.docbook:251
+msgid "The query will select <literal>mate</literal>s of other <literal>Cat</literal>s. Actually, you may express this query more compactly as:"
+msgstr "질의는 다른 <literal>Cat</literal>들의 <literal>mate</literal>들을 select 할 것이다. 실제로 당신은 이 질의들을 다음과 같이 보다 축약형으로 표현할수도 있다:"
+
+#: index.docbook:256
+msgid "<![CDATA[select cat.mate from Cat cat]]>"
+msgstr "<![CDATA[select cat.mate from Cat cat]]>"
+
+#: index.docbook:258
+msgid "Queries may return properties of any value type including properties of component type:"
+msgstr "질의들은 컴포넌트 타입의 프로퍼티들을 포함하는 임의의 값 타입의 프로퍼티들을 반환할 수도 있다:"
+
+#: index.docbook:262
+msgid ""
+      "<![CDATA[select cat.name from DomesticCat cat\n"
+      "where cat.name like 'fri%']]>"
+msgstr ""
+      "<![CDATA[select cat.name from DomesticCat cat\n"
+      "where cat.name like 'fri%']]>"
+
+#: index.docbook:264
+msgid "<![CDATA[select cust.name.firstName from Customer as cust]]>"
+msgstr "<![CDATA[select cust.name.firstName from Customer as cust]]>"
+
+#: index.docbook:266
+msgid "Queries may return multiple objects and/or properties as an array of type <literal>Object[]</literal>,"
+msgstr "<literal>Family</literal> 클래스가 적당한 생성자를 갖고 있음을 가정하면, 질의들은 여러 객체들 그리고/또는 프로퍼티들을 <literal>Object[]</literal> 타입의 배열로서,"
+
+#: index.docbook:271
+msgid ""
+      "<![CDATA[select mother, offspr, mate.name\n"
+      "from DomesticCat as mother\n"
+      "    inner join mother.mate as mate\n"
+      "    left outer join mother.kittens as offspr]]>"
+msgstr ""
+      "<![CDATA[select mother, offspr, mate.name \n"
+      "from DomesticCat as mother\n"
+      "    inner join mother.mate as mate\n"
+      "    left outer join mother.kittens as offspr]]>"
+
+#: index.docbook:273
+msgid "or as a <literal>List</literal>,"
+msgstr "또는 <literal>List</literal>로서,"
+
+#: index.docbook:277
+msgid ""
+      "<![CDATA[select new list(mother, offspr, mate.name)\n"
+      "from DomesticCat as mother\n"
+      "    inner join mother.mate as mate\n"
+      "    left outer join mother.kittens as offspr]]>"
+msgstr ""
+      "<![CDATA[select new list(mother, offspr, mate.name)\n"
+      "from DomesticCat as mother\n"
+      "    inner join mother.mate as mate\n"
+      "    left outer join mother.kittens as offspr]]>"
+
+#: index.docbook:279
+msgid "or as an actual typesafe Java object,"
+msgstr "또는 실제 typesafe 자바 객체로서,"
+
+#: index.docbook:283
+msgid ""
+      "<![CDATA[select new Family(mother, mate, offspr)\n"
+      "from DomesticCat as mother\n"
+      "    join mother.mate as mate\n"
+      "    left join mother.kittens as offspr]]>"
+msgstr ""
+      "<![CDATA[select new Family(mother, mate, offspr)\n"
+      "from DomesticCat as mother\n"
+      "    join mother.mate as mate\n"
+      "    left join mother.kittens as offspr]]>"
+
+#: index.docbook:285
+msgid "assuming that the class <literal>Family</literal> has an appropriate constructor."
+msgstr "반환할 수도 있다."
+
+#: index.docbook:289
+msgid "You may assign aliases to selected expressions using <literal>as</literal>:"
+msgstr "당신은 <literal>as</literal>를 사용하여 select되는 표현식들에 alias들을 할당할 수 있다:"
+
+#: index.docbook:293
+msgid ""
+      "<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n\n"
+      "from Cat cat]]>"
+msgstr ""
+      "<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n\n"
+      "from Cat cat]]>"
+
+#: index.docbook:295
+msgid "This is most useful when used together with <literal>select new map</literal>:"
+msgstr "다음은 <literal>select new map</literal>과 함께 사용될 때 가장 유용하다:"
+
+#: index.docbook:299
+msgid ""
+      "<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )\n"
+      "from Cat cat]]>"
+msgstr ""
+      "<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )\n"
+      "from Cat cat]]>"
+
+#: index.docbook:301
+msgid "This query returns a <literal>Map</literal> from aliases to selected values."
+msgstr "이 질의는 select된 값들에 대한 alias로부터 한 개의 <literal>Map</literal>을 반환한다."
+
+#: index.docbook:308
+msgid "Aggregate functions"
+msgstr "집계 함수들"
+
+#: index.docbook:310
+msgid "HQL queries may even return the results of aggregate functions on properties:"
+msgstr "HQL 질의들은 프로퍼티들에 대한 집계(aggregate) 함수들의 결과들을 반환할수도 있다:"
+
+#: index.docbook:314
+msgid ""
+      "<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
+      "from Cat cat]]>"
+msgstr ""
+      "<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
+      "from Cat cat]]>"
+
+#: index.docbook:325
+msgid "The supported aggregate functions are"
+msgstr "지원되는 집계 함수들은 다음과 같다"
+
+#: index.docbook:332
+msgid "avg(...), sum(...), min(...), max(...)"
+msgstr "avg(...), sum(...), min(...), max(...)"
+
+#: index.docbook:337
+msgid "count(*)"
+msgstr "count(*)"
+
+#: index.docbook:342
+msgid "count(...), count(distinct ...), count(all...)"
+msgstr "count(...), count(distinct ...), count(all...)"
+
+#: index.docbook:347
+msgid "You may use arithmetic operators, concatenation, and recognized SQL functions in the select clause:"
+msgstr "당신은 select 절 속에 산술 연산자들, 연결 연산자, 그리고 인지된 SQL 함수들을 사용할 수 있다:"
+
+#: index.docbook:352
+msgid ""
+      "<![CDATA[select cat.weight + sum(kitten.weight)\n"
+      "from Cat cat\n"
+      "    join cat.kittens kitten\n"
+      "group by cat.id, cat.weight]]>"
+msgstr ""
+      "<![CDATA[select cat.weight + sum(kitten.weight) \n"
+      "from Cat cat \n"
+      "    join cat.kittens kitten\n"
+      "group by cat.id, cat.weight]]>"
+
+#: index.docbook:354
+msgid "<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+msgstr "<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+
+#: index.docbook:356
+msgid "The <literal>distinct</literal> and <literal>all</literal> keywords may be used and have the same semantics as in SQL."
+msgstr "<literal>distinct</literal> 키워드와 all <literal>all</literal>가 사용될 수 있고 SQL의 경우와 동일한 의미를 갖는다."
+
+#: index.docbook:361
+msgid ""
+      "<![CDATA[select distinct cat.name from Cat cat\n"
+      "\n"
+      "select count(distinct cat.name), count(cat) from Cat cat]]>"
+msgstr ""
+      "<![CDATA[select distinct cat.name from Cat cat\n"
+      "\n"
+      "select count(distinct cat.name), count(cat) from Cat cat]]>"
+
+#: index.docbook:366
+msgid "Polymorphic queries"
+msgstr "Polymorphic(다형성) 질의들"
+
+#: index.docbook:368
+msgid "A query like:"
+msgstr "다음과 같은 질의:"
+
+#: index.docbook:374
+msgid "returns instances not only of <literal>Cat</literal>, but also of subclasses like <literal>DomesticCat</literal>. Hibernate queries may name <emphasis>any</emphasis> Java class or interface in the <literal>from</literal> clause. The query will return instances of all persistent classes that extend that class or implement the interface. The following query would return all persistent objects:"
+msgstr "은 <literal>Cat</literal>의 인스턴스들 뿐만 아니라, 또한 <literal>DomesticCat</literal>과 같은 서브클래스들 또한 반환한다. Hibernate 질의들은 <literal>from</literal> 절 내에 <emphasis>임의의</emphasis> 자바 클래스나 인터페이스를 명명할 수 있다. 질의는 그 클래스를 확장하거나 그 인터페이스를 구현하는 모든 영속 클래스들의 인스턴스들을 반환할 것이다. 다음 질의는 모든 영속 객체들을 반환할 것이다:"
+
+#: index.docbook:382
+msgid "<![CDATA[from java.lang.Object o]]>"
+msgstr "<![CDATA[from java.lang.Object o]]>"
+
+#: index.docbook:384
+msgid "The interface <literal>Named</literal> might be implemented by various persistent classes:"
+msgstr "인터페이스 <literal>Named</literal>는 여러 가지 영속 클래스들에 의해 구현될 수도 있다:"
+
+#: index.docbook:389
+msgid "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+msgstr "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+
+#: index.docbook:391
+msgid "Note that these last two queries will require more than one SQL <literal>SELECT</literal>. This means that the <literal>order by</literal> clause does not correctly order the whole result set. (It also means you can't call these queries using <literal>Query.scroll()</literal>.)"
+msgstr "이들 마지막 두 개의 질의들은 하나 이상의 SQL <literal>SELECT</literal>를 필요로 할 것임을 노트하라. 이것은 <literal>order by</literal> 절이 정확하게 전체 결과 셋을 순서지우지 않음을 의미한다.(그것은 또한 당신이 <literal>Query.scroll()</literal>을 사용하여 이들 질의들을 호출할 수 없음을 의미한다)."
+
+#: index.docbook:400
+msgid "The where clause"
+msgstr "where 절"
+
+#: index.docbook:402
+msgid "The <literal>where</literal> clause allows you to narrow the list of instances returned. If no alias exists, you may refer to properties by name:"
+msgstr "<literal>where</literal> 절은 반환된 인스턴스들의 목록을 제한시키는 것을 당신에게 허용해준다. 만일 alias가 존재하지 않을 경우, 당신은 이름에 의해 프로퍼티들을 참조할 수도 있다:"
+
+#: index.docbook:407
+msgid "<![CDATA[from Cat where name='Fritz']]>"
+msgstr "<![CDATA[from Cat where name='Fritz']]>"
+
+#: index.docbook:409
+msgid "If there is an alias, use a qualified property name:"
+msgstr "만일 한 개의 alias가 존재할 경우, 하나의 수식어가 붙은 프로퍼티 이름을 사용하라:"
+
+#: index.docbook:413
+msgid "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
+msgstr "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
+
+#: index.docbook:415
+msgid "returns instances of <literal>Cat</literal> named 'Fritz'."
+msgstr "는 'Fritz'로 명명된 <literal>Cat</literal>의 인스턴스들을 반환한다."
+
+#: index.docbook:419
+msgid ""
+      "<![CDATA[select foo\n"
+      "from Foo foo, Bar bar\n"
+      "where foo.startDate = bar.date]]>"
+msgstr ""
+      "<![CDATA[select foo \n"
+      "from Foo foo, Bar bar\n"
+      "where foo.startDate = bar.date]]>"
+
+#: index.docbook:421
+msgid "will return all instances of <literal>Foo</literal> for which there exists an instance of <literal>bar</literal> with a <literal>date</literal> property equal to the <literal>startDate</literal> property of the <literal>Foo</literal>. Compound path expressions make the <literal>where</literal> clause extremely powerful. Consider:"
+msgstr "는 <literal>Foo</literal>의 <literal>startDate</literal> 프로퍼티와 동일한 <literal>date</literal> 프로퍼티를 가진 <literal>bar</literal>의 인스턴스가 존재하는 <literal>Foo</literal>의 모든 인스턴스를 반환할 것이다. 합성 경로 표현식들은 <literal>where</literal> 절을 매우 강력하게 만들어준다. 다음을 검토하자:"
+
+#: index.docbook:430
+msgid "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
+msgstr "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
+
+#: index.docbook:432
+msgid "This query translates to an SQL query with a table (inner) join. If you were to write something like"
+msgstr "이 질의는 테이블 (inner) join을 가진 SQL 질의로 번역된다. 만일 당신이 다음과 같은 어떤 것을 작성했다면"
+
+#: index.docbook:437
+msgid ""
+      "<![CDATA[from Foo foo\n"
+      "where foo.bar.baz.customer.address.city is not null]]>"
+msgstr ""
+      "<![CDATA[from Foo foo  \n"
+      "where foo.bar.baz.customer.address.city is not null]]>"
+
+#: index.docbook:439
+msgid "you would end up with a query that would require four table joins in SQL."
+msgstr "당신은 SQL에서 네 개의 테이블 join들을 필요로 하는 하나의 질의로 끝낼 것이다."
+
+#: index.docbook:443
+msgid "The <literal>=</literal> operator may be used to compare not only properties, but also instances:"
+msgstr "<literal>=</literal> 연산자는 프로퍼티들 뿐만 아니라 또한 인스턴스들을 비교하는데 사용될 수 있다:"
+
+#: index.docbook:448
+msgid "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
+msgstr "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
+
+#: index.docbook:450
+msgid ""
+      "<![CDATA[select cat, mate\n"
+      "from Cat cat, Cat mate\n"
+      "where cat.mate = mate]]>"
+msgstr ""
+      "<![CDATA[select cat, mate \n"
+      "from Cat cat, Cat mate\n"
+      "where cat.mate = mate]]>"
+
+#: index.docbook:452
+msgid "The special property (lowercase) <literal>id</literal> may be used to reference the unique identifier of an object. See <xref linkend=\"queryhql-identifier-property\"/> for more information."
+msgstr "특별한 프로퍼티(소문자) <literal>id</literal>는 객체의 유일 식별자를 참조하는데 사용될 수 있다. 추가 정보는 <xref linkend=\"queryhql-identifier-property\"/>를 보라."
+
+#: index.docbook:458
+msgid ""
+      "<![CDATA[from Cat as cat where cat.id = 123\n"
+      "\n"
+      "from Cat as cat where cat.mate.id = 69]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat where cat.id = 123\n"
+      "\n"
+      "from Cat as cat where cat.mate.id = 69]]>"
+
+#: index.docbook:460
+msgid "The second query is efficient. No table join is required!"
+msgstr "두 번째 질의가 효율적이다. 테이블 join이 필요 없다!"
+
+#: index.docbook:464
+msgid "Properties of composite identifiers may also be used. Suppose <literal>Person</literal> has a composite identifier consisting of <literal>country</literal> and <literal>medicareNumber</literal>. Again, see <xref linkend=\"queryhql-identifier-property\"/> for more information regarding referencing identifier properties."
+msgstr "composite(합성) 식별자들의 프로퍼티들이 또한 사용될 수 있다. <literal>Person</literal>이 <literal>country</literal>와 <literal>medicareNumber</literal>로 구성된 composite 식별자를 갖는다고 가정하자. 식별자 속성들을 참조하는 것과 관련된 추가 정보는 다시 <xref linkend=\"queryhql-identifier-property\"/>를 보라."
+
+#: index.docbook:471
+msgid ""
+      "<![CDATA[from bank.Person person\n"
+      "where person.id.country = 'AU'\n"
+      "    and person.id.medicareNumber = 123456]]>"
+msgstr ""
+      "<![CDATA[from bank.Person person\n"
+      "where person.id.country = 'AU'\n"
+      "    and person.id.medicareNumber = 123456]]>"
+
+#: index.docbook:473
+msgid ""
+      "<![CDATA[from bank.Account account\n"
+      "where account.owner.id.country = 'AU'\n"
+      "    and account.owner.id.medicareNumber = 123456]]>"
+msgstr ""
+      "<![CDATA[from bank.Account account\n"
+      "where account.owner.id.country = 'AU'\n"
+      "    and account.owner.id.medicareNumber = 123456]]>"
+
+#: index.docbook:475
+msgid "Once again, the second query requires no table join."
+msgstr "다시 한번, 두 번째 질의는 테이블 join을 필요로 하지 않는다."
+
+#: index.docbook:479
+msgid "Likewise, the special property <literal>class</literal> accesses the discriminator value of an instance in the case of polymorphic persistence. A Java class name embedded in the where clause will be translated to its discriminator value."
+msgstr "마찬가지로, 특별한 프로퍼티 <literal>class</literal>는 다형적인 영속성(polymorphic persistence)의 경우에 인스턴스의 판별자(discriminator) 값에 액세스한다. where 절 속에 삽입된 Java 클래스 이름은 그것의 판별자(discriminator) 값으로 변환될 것이다."
+
+#: index.docbook:485
+msgid "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+msgstr "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+
+#: index.docbook:487
+msgid "You may also use components or composite user types, or properties of said component types. See <xref linkend=\"queryhql-coomponents\"/> for more details."
+msgstr "당신은 또한 컴포넌트들 또는 composite 사용자 타입들, 또는 명명된 컴포넌트 타입들의 속성들을 사용할 수도 있다. 상세한 것은 <xref linkend=\"queryhql-components\"/>를 보라."
+
+#: index.docbook:492
+msgid "An \"any\" type has the special properties <literal>id</literal> and <literal>class</literal>, allowing us to express a join in the following way (where <literal>AuditLog.item</literal> is a property mapped with <literal>&lt;any&gt;</literal>)."
+msgstr "\"임의의\" 타입은 다음 방법으로 join을 표현하는 것을 우리에게 허용해주는, 특별한 프로퍼티들 <literal>id</literal>와 <literal>class</literal>를 갖는다(여기서 <literal>AuditLog.item</literal>은 <literal>&lt;any&gt;</literal>로 매핑된 프로퍼티이다)."
+
+#: index.docbook:498
+msgid ""
+      "<![CDATA[from AuditLog log, Payment payment\n"
+      "where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+msgstr ""
+      "<![CDATA[from AuditLog log, Payment payment \n"
+      "where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+
+#: index.docbook:500
+msgid "Notice that <literal>log.item.class</literal> and <literal>payment.class</literal> would refer to the values of completely different database columns in the above query."
+msgstr "<literal>log.item.class</literal>와 <literal>payment.class</literal>는 위의 질의 내에서 완전히 다른 데이터베이스 컬럼들의 값들을 참조할 것임을 노트하라."
+
+#: index.docbook:508
+msgid "Expressions"
+msgstr "표현식들"
+
+#: index.docbook:510
+msgid "Expressions allowed in the <literal>where</literal> clause include most of the kind of things you could write in SQL:"
+msgstr "<literal>where</literal> 절 속에 허용되는 표현식들은 당신이 SQL로 작성할 수 있는 대부분의 종류의 것들을 포함한다:"
+
+#: index.docbook:517
+msgid "mathematical operators <literal>+, -, *, /</literal>"
+msgstr "산술 연산자들 <literal>+, -, *, /</literal>"
+
+#: index.docbook:522
+msgid "binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
+msgstr "바이너리 비교 연산자들 <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
+
+#: index.docbook:527
+msgid "logical operations <literal>and, or, not</literal>"
+msgstr "논리 연산들 <literal>and, or, not</literal>"
+
+#: index.docbook:532
+msgid "Parentheses <literal>( )</literal>, indicating grouping"
+msgstr "그룹핑을 나타내는 괄호들 <literal>( )</literal>, indicating grouping"
+
+#: index.docbook:537
+msgid "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
+msgstr "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
+
+#: index.docbook:550
+msgid "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgstr "\"간단한\" 경우, <literal>case ... when ... then ... else ... end</literal>, 그리고 \"검색인\" 경우, <literal>case when ... then ... else ... end</literal>"
+
+#: index.docbook:556
+msgid "string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>"
+msgstr "문자열 연결 <literal>...||...</literal> or <literal>concat(...,...)</literal>"
+
+#: index.docbook:561
+msgid "<literal>current_date()</literal>, <literal>current_time()</literal>, <literal>current_timestamp()</literal>"
+msgstr "<literal>current_date()</literal>, <literal>current_time()</literal>, <literal>current_timestamp()</literal>"
+
+#: index.docbook:567
+msgid "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, <literal>year(...)</literal>,"
+msgstr "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, <literal>year(...)</literal>,"
+
+#: index.docbook:574
+msgid "Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
+msgstr "EJB-QL 3.0에 의해 정의된 임의의 함수 또는 오퍼레이터: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
+
+#: index.docbook:580
+msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
+msgstr "<literal>coalesce()</literal> 그리고 <literal>nullif()</literal>"
+
+#: index.docbook:585
+msgid "<literal>str()</literal> for converting numeric or temporal values to a readable string"
+msgstr "numeric 값들이나 temporal 값들을 가독성 있는 문자열로 변환시키는 <literal>str()</literal>"
+
+#: index.docbook:591
+msgid "<literal>cast(... as ...)</literal>, where the second argument is the name of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI <literal>cast()</literal> and <literal>extract()</literal> is supported by the underlying database"
+msgstr "<literal>cast(... as ...)</literal>, 여기서 두번 째 아규먼트는 Hibernate 타입의 이름이고, ANSI <literal>cast()</literal>와 <literal>extract()</literal>가 기반 데이터베이스에 의해 지원될 경우에는 <literal>extract(... from ...)</literal>."
+
+#: index.docbook:599
+msgid "the HQL <literal>index()</literal> function, that applies to aliases of a joined indexed collection"
+msgstr "조인된 인덱싱된 콜렉션의 alias들에 적용되는, HQL <literal>index()</literal> 함수"
+
+#: index.docbook:605
+msgid "HQL functions that take collection-valued path expressions: <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>, along with the special <literal>elements()</literal> and <literal>indices</literal> functions which may be quantified using <literal>some, all, exists, any, in</literal>."
+msgstr "콜렉션 값을 가진 경로 표현식들을 취하는 HQL 함수들 : <literal>some, all, exists, any, in</literal>을 사용하여 정량화 될 수 있는 특별한 <literal>elements()</literal>와 <literal>indices</literal> 함수들과 함께 <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>."
+
+#: index.docbook:613
+msgid "Any database-supported SQL scalar function like <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>"
+msgstr "<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>과 같이 임의의 데이터베이스 지원 SQL 스칼라 함수"
+
+#: index.docbook:619
+msgid "JDBC-style positional parameters <literal>?</literal>"
+msgstr "JDBC-스타일 위치 파라미터들 <literal>?</literal>"
+
+#: index.docbook:624
+msgid "named parameters <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>"
+msgstr "명명된 파라미터들 <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>"
+
+#: index.docbook:629
+msgid "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgstr "SQL 리터럴들 <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+
+#: index.docbook:635
+msgid "Java <literal>public static final</literal> constants <literal>eg.Color.TABBY</literal>"
+msgstr "Java <literal>public static final</literal> 상수들. <literal>eg.Color.TABBY</literal>"
+
+#: index.docbook:641
+msgid "<literal>in</literal> and <literal>between</literal> may be used as follows:"
+msgstr "<literal>in</literal> 과 <literal>between</literal>은 다음과 같이 사용될 수 있다:"
+
+#: index.docbook:645
+msgid "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+msgstr "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+
+#: index.docbook:647
+msgid "<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+msgstr "<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+
+#: index.docbook:649
+msgid "and the negated forms may be written"
+msgstr "그리고 부정형들은 다음과 같이 작성될 수 있다"
+
+#: index.docbook:653
+msgid "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
+msgstr "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
+
+#: index.docbook:655
+msgid "<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]>"
+msgstr "<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]>"
+
+#: index.docbook:657
+msgid "Likewise, <literal>is null</literal> and <literal>is not null</literal> may be used to test for null values."
+msgstr "마찬가지로, <literal>is null</literal>과 <literal>is not null</literal>은 null 값들을 테스트하는데 사용될 수 있다."
+
+#: index.docbook:662
+msgid "Booleans may be easily used in expressions by declaring HQL query substitutions in Hibernate configuration:"
+msgstr "Boolean들은 Hibernate 구성 내에 HQL 질의 치환들을 선언함으로써 표현식들 내에 쉽게 사용될 수 있다:"
+
+#: index.docbook:667
+msgid "<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</property>]]>"
+msgstr "<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</property>]]>"
+
+#: index.docbook:669
+msgid "This will replace the keywords <literal>true</literal> and <literal>false</literal> with the literals <literal>1</literal> and <literal>0</literal> in the translated SQL from this HQL:"
+msgstr "이것은 키워드 <literal>true</literal>와 <literal>false</literal> 키워드들을 이 HQL로부터 번역된 SQL에서 리터럴 <literal>1</literal>과 <literal>0</literal>으로 대체될 것이다:"
+
+#: index.docbook:674
+msgid "<![CDATA[from Cat cat where cat.alive = true]]>"
+msgstr "<![CDATA[from Cat cat where cat.alive = true]]>"
+
+#: index.docbook:676
+msgid "You may test the size of a collection with the special property <literal>size</literal>, or the special <literal>size()</literal> function."
+msgstr "당신은 특별한 프로퍼티 <literal>size</literal>로서 또는 특별한 <literal>size()</literal> 함수로서 콜렉션의 사이즈를 테스트할 수 있다."
+
+#: index.docbook:681
+msgid "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
+msgstr "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
+
+#: index.docbook:683
+msgid "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+msgstr "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+
+#: index.docbook:685
+msgid "For indexed collections, you may refer to the minimum and maximum indices using <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly, you may refer to the minimum and maximum elements of a collection of basic type using the <literal>minelement</literal> and <literal>maxelement</literal> functions."
+msgstr "인덱싱된 콜렉션들에 대해, 당신은<literal>minindex</literal>와 <literal>maxindex</literal> 함수들을 사용하여 최소 인덱스과 최대 인덱스를 참조할 수 있다. 유사하게 당신은 <literal>minelement</literal>와 <literal>maxelement</literal> 함수를 사용하여 기본 타입을 가진 콜렉션의 최소 요소 및 최대 요소를 참조할 수 있다."
+
+#: index.docbook:693
+msgid "<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+msgstr "<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+
+#: index.docbook:695
+msgid "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
+msgstr "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
+
+#: index.docbook:697
+msgid "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+msgstr "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+
+#: index.docbook:699
+msgid "The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element or index set of a collection (<literal>elements</literal> and <literal>indices</literal> functions) or the result of a subquery (see below)."
+msgstr "SQL 함수들 <literal>any, some, all, exists, in</literal>은 콜렉션의 요소 또는 인덱스 세트(<literal>elements</literal> 함수와 <literal>indices</literal> 함수), 또는 서브질의의 결과를 전달했을 때 지원된다(아래를 보라)."
+
+#: index.docbook:705
+msgid ""
+      "<![CDATA[select mother from Cat as mother, Cat as kit\n"
+      "where kit in elements(foo.kittens)]]>"
+msgstr ""
+      "<![CDATA[select mother from Cat as mother, Cat as kit\n"
+      "where kit in elements(foo.kittens)]]>"
+
+#: index.docbook:707
+msgid ""
+      "<![CDATA[select p from NameList list, Person p\n"
+      "where p.name = some elements(list.names)]]>"
+msgstr ""
+      "<![CDATA[select p from NameList list, Person p\n"
+      "where p.name = some elements(list.names)]]>"
+
+#: index.docbook:709
+msgid "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
+msgstr "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
+
+#: index.docbook:711
+msgid "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
+msgstr "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
+
+#: index.docbook:713
+msgid "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
+msgstr "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
+
+#: index.docbook:715
+msgid "Note that these constructs - <literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal> - may only be used in the where clause in Hibernate3."
+msgstr "이들 구조체들-<literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal>-는 Hibernate3에서 where 절 내에서만 사용될 것임을 노트하라."
+
+#: index.docbook:722
+msgid "Elements of indexed collections (arrays, lists, maps) may be referred to by index (in a where clause only):"
+msgstr "인덱싱 된 콜렉션들의 요소들(배열들, 리스트들, map들)은 인덱스에 의해 참조될 수 있다(where 절 안에서만):"
+
+#: index.docbook:727
+msgid "<![CDATA[from Order order where order.items[0].id = 1234]]>"
+msgstr "<![CDATA[from Order order where order.items[0].id = 1234]]>"
+
+#: index.docbook:729
+msgid ""
+      "<![CDATA[select person from Person person, Calendar calendar\n"
+      "where calendar.holidays['national day'] = person.birthDay\n"
+      "    and person.nationality.calendar = calendar]]>"
+msgstr ""
+      "<![CDATA[select person from Person person, Calendar calendar\n"
+      "where calendar.holidays['national day'] = person.birthDay\n"
+      "    and person.nationality.calendar = calendar]]>"
+
+#: index.docbook:731
+msgid ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]>"
+msgstr ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]>"
+
+#: index.docbook:733
+msgid ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+msgstr ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+
+#: index.docbook:735
+msgid "The expression inside <literal>[]</literal> may even be an arithmetic expression."
+msgstr "<literal>[]</literal> 내부의 표현식은 산술 표현실일 수 있다."
+
+#: index.docbook:739
+msgid ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ size(order.items) - 1 ] = item]]>"
+msgstr ""
+      "<![CDATA[select item from Item item, Order order\n"
+      "where order.items[ size(order.items) - 1 ] = item]]>"
+
+#: index.docbook:741
+msgid "HQL also provides the built-in <literal>index()</literal> function, for elements of a one-to-many association or collection of values."
+msgstr "HQL은 또한 one-to-many 연관 또는 값들을 가진 콜렉션의 요소들에 대해 미리 만들어진 <literal>index()</literal> 함수를 제공한다."
+
+#: index.docbook:746
+msgid ""
+      "<![CDATA[select item, index(item) from Order order\n"
+      "    join order.items item\n"
+      "where index(item) < 5]]>"
+msgstr ""
+      "<![CDATA[select item, index(item) from Order order \n"
+      "    join order.items item\n"
+      "where index(item) < 5]]>"
+
+#: index.docbook:748
+msgid "Scalar SQL functions supported by the underlying database may be used"
+msgstr "기본 데이터베이스에 의해 제공되는 Scalar SQL 함수들이 사용될 수도 있다"
+
+#: index.docbook:752
+msgid "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+msgstr "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+
+#: index.docbook:754
+msgid "If you are not yet convinced by all this, think how much longer and less readable the following query would be in SQL:"
+msgstr "당신이 아직 이 모든 것을 납득하지 못한다면, SQL 내에서 다음 질의가 가독성이 얼마나 많고 적은지를 생각해보라:"
+
+#: index.docbook:759
+msgid ""
+      "<![CDATA[select cust\n"
+      "from Product prod,\n"
+      "    Store store\n"
+      "    inner join store.customers cust\n"
+      "where prod.name = 'widget'\n"
+      "    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
+      "    and prod = all elements(cust.currentOrder.lineItems)]]>"
+msgstr ""
+      "<![CDATA[select cust\n"
+      "from Product prod,\n"
+      "    Store store\n"
+      "    inner join store.customers cust\n"
+      "where prod.name = 'widget'\n"
+      "    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
+      "    and prod = all elements(cust.currentOrder.lineItems)]]>"
+
+#: index.docbook:761
+msgid "<emphasis>Hint:</emphasis> something like"
+msgstr "<emphasis>힌트</emphasis> : 다음과 같은 어떤 것"
+
+#: index.docbook:765
+msgid ""
+      "<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order\n"
+      "FROM customers cust,\n"
+      "    stores store,\n"
+      "    locations loc,\n"
+      "    store_customers sc,\n"
+      "    product prod\n"
+      "WHERE prod.name = 'widget'\n"
+      "    AND store.loc_id = loc.id\n"
+      "    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
+      "    AND sc.store_id = store.id\n"
+      "    AND sc.cust_id = cust.id\n"
+      "    AND prod.id = ALL(\n"
+      "        SELECT item.prod_id\n"
+      "        FROM line_items item, orders o\n"
+      "        WHERE item.order_id = o.id\n"
+      "            AND cust.current_order = o.id\n"
+      "    )]]>"
+msgstr ""
+      "<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order\n"
+      "FROM customers cust,\n"
+      "    stores store,\n"
+      "    locations loc,\n"
+      "    store_customers sc,\n"
+      "    product prod\n"
+      "WHERE prod.name = 'widget'\n"
+      "    AND store.loc_id = loc.id\n"
+      "    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
+      "    AND sc.store_id = store.id\n"
+      "    AND sc.cust_id = cust.id\n"
+      "    AND prod.id = ALL(\n"
+      "        SELECT item.prod_id\n"
+      "        FROM line_items item, orders o\n"
+      "        WHERE item.order_id = o.id\n"
+      "            AND cust.current_order = o.id\n"
+      "    )]]>"
+
+#: index.docbook:770
+msgid "The order by clause"
+msgstr "order by 절"
+
+#: index.docbook:772
+msgid "The list returned by a query may be ordered by any property of a returned class or components:"
+msgstr "질의에 의해 반환된 리스트는 반환된 클래스 또는 컴포넌트들의 프로퍼티에 의해 순서(ordering)지워질 수 있다:"
+
+#: index.docbook:776
+msgid ""
+      "<![CDATA[from DomesticCat cat\n"
+      "order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+msgstr ""
+      "<![CDATA[from DomesticCat cat\n"
+      "order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+
+#: index.docbook:778
+msgid "The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order respectively."
+msgstr "<literal>asc</literal> 옵션 또는 <literal>desc</literal> 옵션은 각각 오름차순 또는 내림차순 정렬을 나타낸다."
+
+#: index.docbook:785
+msgid "The group by clause"
+msgstr "group by 절"
+
+#: index.docbook:787
+msgid "A query that returns aggregate values may be grouped by any property of a returned class or components:"
+msgstr "aggregate 값들을 반환하는 질의는 반환된 클래스나 컴포넌트들의 프로퍼티에 의해 그룹지워질 수 있다:"
+
+#: index.docbook:791
+msgid ""
+      "<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+      "from Cat cat\n"
+      "group by cat.color]]>"
+msgstr ""
+      "<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
+      "from Cat cat\n"
+      "group by cat.color]]>"
+
+#: index.docbook:793
+msgid ""
+      "<![CDATA[select foo.id, avg(name), max(name)\n"
+      "from Foo foo join foo.names name\n"
+      "group by foo.id]]>"
+msgstr ""
+      "<![CDATA[select foo.id, avg(name), max(name) \n"
+      "from Foo foo join foo.names name\n"
+      "group by foo.id]]>"
+
+#: index.docbook:795
+msgid "A <literal>having</literal> clause is also allowed."
+msgstr "또한 <literal>having</literal> 절이 허용된다."
+
+#: index.docbook:799
+msgid ""
+      "<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+      "from Cat cat\n"
+      "group by cat.color\n"
+      "having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
+msgstr ""
+      "<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
+      "from Cat cat\n"
+      "group by cat.color \n"
+      "having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
+
+#: index.docbook:801
+msgid "SQL functions and aggregate functions are allowed in the <literal>having</literal> and <literal>order by</literal> clauses, if supported by the underlying database (eg. not in MySQL)."
+msgstr "SQL 함수들과 집계 함수들이 기본 데이터베이스에 의해 지원될 경우(예를 들어 MySQL은 지원되지 않는다) <literal>having</literal> 절과 <literal>order by</literal> 절 속에 허용된다."
+
+#: index.docbook:807
+msgid ""
+      "<![CDATA[select cat\n"
+      "from Cat cat\n"
+      "    join cat.kittens kitten\n"
+      "group by cat.id, cat.name, cat.other, cat.properties\n"
+      "having avg(kitten.weight) > 100\n"
+      "order by count(kitten) asc, sum(kitten.weight) desc]]>"
+msgstr ""
+      "<![CDATA[select cat\n"
+      "from Cat cat\n"
+      "    join cat.kittens kitten\n"
+      "group by cat.id, cat.name, cat.other, cat.properties\n"
+      "having avg(kitten.weight) > 100\n"
+      "order by count(kitten) asc, sum(kitten.weight) desc]]>"
+
+#: index.docbook:809
+msgid "Note that neither the <literal>group by</literal> clause nor the <literal>order by</literal> clause may contain arithmetic expressions. Also note that Hibernate currently does not expand a grouped entity, so you can't write <literal>group by cat</literal> if all properties of <literal>cat</literal> are non-aggregated. You have to list all non-aggregated properties explicitly."
+msgstr "<literal>group by</literal> 절도 <literal>order by</literal> 절 어느 것도 산술 표현식들을 포함할 수 없다는 점을 노트하라. 또한 Hibernate는 현재 그룹지워진 엔티티를 확장하지 않아서 만일 <literal>cat</literal>의 모든 속성들이 집계되지 않을 경우에 당신이 <literal>group by cat</literal>을 쓸수 없음을 노트하라. 당신은 명시적으로 모든 집계되지 않는 속성들을 리스트해야 한다."
+
+#: index.docbook:821
+msgid "Subqueries"
+msgstr "서브질의들"
+
+#: index.docbook:823
+msgid "For databases that support subselects, Hibernate supports subqueries within queries. A subquery must be surrounded by parentheses (often by an SQL aggregate function call). Even correlated subqueries (subqueries that refer to an alias in the outer query) are allowed."
+msgstr "subselect들을 지원하는 데이터베이스들의 경우, Hibernate는 질의들 내에 서브질의들을 지원한다. 서브질의는 괄호로 묶여져야 한다(자주 SQL 집계함수 호출에 의해). 심지어 서로 상관된 서브질의들(외부 질의 내에서 alias를 참조하는 서브질의들)이 허용된다."
+
+#: index.docbook:829
+msgid ""
+      "<![CDATA[from Cat as fatcat\n"
+      "where fatcat.weight > (\n"
+      "    select avg(cat.weight) from DomesticCat cat\n"
+      ")]]>"
+msgstr ""
+      "<![CDATA[from Cat as fatcat\n"
+      "where fatcat.weight > (\n"
+      "    select avg(cat.weight) from DomesticCat cat\n"
+      ")]]>"
+
+#: index.docbook:831
+msgid ""
+      "<![CDATA[from DomesticCat as cat\n"
+      "where cat.name = some (\n"
+      "    select name.nickName from Name as name\n"
+      ")]]>"
+msgstr ""
+      "<![CDATA[from DomesticCat as cat\n"
+      "where cat.name = some (\n"
+      "    select name.nickName from Name as name\n"
+      ")]]>"
+
+#: index.docbook:833
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "where not exists (\n"
+      "    from Cat as mate where mate.mate = cat\n"
+      ")]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat\n"
+      "where not exists (\n"
+      "    from Cat as mate where mate.mate = cat\n"
+      ")]]>"
+
+#: index.docbook:835
+msgid ""
+      "<![CDATA[from DomesticCat as cat\n"
+      "where cat.name not in (\n"
+      "    select name.nickName from Name as name\n"
+      ")]]>"
+msgstr ""
+      "<![CDATA[from DomesticCat as cat\n"
+      "where cat.name not in (\n"
+      "    select name.nickName from Name as name\n"
+      ")]]>"
+
+#: index.docbook:837
+msgid ""
+      "<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
+      "from Cat as cat]]>"
+msgstr ""
+      "<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
+      "from Cat as cat]]>"
+
+#: index.docbook:839
+msgid "Note that HQL subqueries may occur only in the select or where clauses."
+msgstr "HQL 서브질의들이 select 절 또는 where 절 내에서만 일어날 수 있음을 노트하라."
+
+#: index.docbook:843
+msgid "Note that subqueries can also utilize <literal>row value constructor</literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+msgstr "서브질의들은 또한 <literal>row value constructor</literal> 구문을 활용할 수 있다. 상세한 것은 <xref linkend=\"queryhql-tuple\"/>를 보라."
+
+#: index.docbook:851
+msgid "HQL examples"
+msgstr "HQL 예제들"
+
+#: index.docbook:853
+msgid "Hibernate queries can be quite powerful and complex. In fact, the power of the query language is one of Hibernate's main selling points. Here are some example queries very similar to queries that I used on a recent project. Note that most queries you will write are much simpler than these!"
+msgstr "Hibernate 질의들은 매우 강력하고 복잡할 수 있다. 사실, 질의 언어의 힘은 Hibernate의 주요 판매 포인트들 중 하나이다. 다음은 내가 최근의 프로젝트에서 사용했던 질의들과 매우 유사한 몇몇 예제 질의들이다. 당신이 작성하게 될 대부분의 질의들은 이것들보다 훨씬 간단하다는 점을 노트하라!"
+
+#: index.docbook:859
+msgid "The following query returns the order id, number of items and total value of the order for all unpaid orders for a particular customer and given minimum total value, ordering the results by total value. In determining the prices, it uses the current catalog. The resulting SQL query, against the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four inner joins and an (uncorrelated) subselect."
+msgstr "다음 질의는 특정 고객에 대한 모든 지불되지 않은 주문들의 주문 id, 항목들의 개수, 그리고 주문의 전체 합계값 그리고 주어진 최소 전체 합계를 전체 합계값에 따라 결과들을 순서지워서 반환한다. 가격 결정에 있어, 그것은 현재의 카타록을 사용한다. 귀결되는 SQL 질의는 <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal>, <literal>PRICE</literal> 테이블들에 대한 네 개의 inner 조인들과 한 개의(상관지워지지 않은) subselect를 갖고 있다."
+
+#: index.docbook:868
+msgid ""
+      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
+      "from Order as order\n"
+      "    join order.lineItems as item\n"
+      "    join item.product as product,\n"
+      "    Catalog as catalog\n"
+      "    join catalog.prices as price\n"
+      "where order.paid = false\n"
+      "    and order.customer = :customer\n"
+      "    and price.product = product\n"
+      "    and catalog.effectiveDate < sysdate\n"
+      "    and catalog.effectiveDate >= all (\n"
+      "        select cat.effectiveDate\n"
+      "        from Catalog as cat\n"
+      "        where cat.effectiveDate < sysdate\n"
+      "    )\n"
+      "group by order\n"
+      "having sum(price.amount) > :minAmount\n"
+      "order by sum(price.amount) desc]]>"
+msgstr ""
+      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
+      "from Order as order\n"
+      "    join order.lineItems as item\n"
+      "    join item.product as product,\n"
+      "    Catalog as catalog\n"
+      "    join catalog.prices as price\n"
+      "where order.paid = false\n"
+      "    and order.customer = :customer\n"
+      "    and price.product = product\n"
+      "    and catalog.effectiveDate < sysdate\n"
+      "    and catalog.effectiveDate >= all (\n"
+      "        select cat.effectiveDate \n"
+      "        from Catalog as cat\n"
+      "        where cat.effectiveDate < sysdate\n"
+      "    )\n"
+      "group by order\n"
+      "having sum(price.amount) > :minAmount\n"
+      "order by sum(price.amount) desc]]>"
+
+#: index.docbook:870
+msgid "What a monster! Actually, in real life, I'm not very keen on subqueries, so my query was really more like this:"
+msgstr "괴물 같은 것! 실제로 실 생활에서, 나는 서브질의들을 매우 좋아하지 않아서, 나의 질의는 실제로 다음과 같았다:"
+
+#: index.docbook:875
+msgid ""
+      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
+      "from Order as order\n"
+      "    join order.lineItems as item\n"
+      "    join item.product as product,\n"
+      "    Catalog as catalog\n"
+      "    join catalog.prices as price\n"
+      "where order.paid = false\n"
+      "    and order.customer = :customer\n"
+      "    and price.product = product\n"
+      "    and catalog = :currentCatalog\n"
+      "group by order\n"
+      "having sum(price.amount) > :minAmount\n"
+      "order by sum(price.amount) desc]]>"
+msgstr ""
+      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
+      "from Order as order\n"
+      "    join order.lineItems as item\n"
+      "    join item.product as product,\n"
+      "    Catalog as catalog\n"
+      "    join catalog.prices as price\n"
+      "where order.paid = false\n"
+      "    and order.customer = :customer\n"
+      "    and price.product = product\n"
+      "    and catalog = :currentCatalog\n"
+      "group by order\n"
+      "having sum(price.amount) > :minAmount\n"
+      "order by sum(price.amount) desc]]>"
+
+#: index.docbook:877
+msgid "The next query counts the number of payments in each status, excluding all payments in the <literal>AWAITING_APPROVAL</literal> status where the most recent status change was made by the current user. It translates to an SQL query with two inner joins and a correlated subselect against the <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and <literal>PAYMENT_STATUS_CHANGE</literal> tables."
+msgstr "다음 질의는 현재 사용자에 의해 가장 최근의 상태 변경이 행해졌던 <literal>AWAITING_APPROVAL</literal> 상태에 있는 모든 지불들을 제외한, 각각의 상태에 있는 지불들의 개수를 카운트 한다. 그것은 <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>PAYMENT_STATUS_CHANGE</literal> 테이블들에 대한 두 개의 inner 조인들과 하나의 상관관계 지워진 subselect를 가진 SQL 질의로 변환된다."
+
+#: index.docbook:885
+msgid ""
+      "<![CDATA[select count(payment), status.name\n"
+      "from Payment as payment\n"
+      "    join payment.currentStatus as status\n"
+      "    join payment.statusChanges as statusChange\n"
+      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+      "    or (\n"
+      "        statusChange.timeStamp = (\n"
+      "            select max(change.timeStamp)\n"
+      "            from PaymentStatusChange change\n"
+      "            where change.payment = payment\n"
+      "        )\n"
+      "        and statusChange.user <> :currentUser\n"
+      "    )\n"
+      "group by status.name, status.sortOrder\n"
+      "order by status.sortOrder]]>"
+msgstr ""
+      "<![CDATA[select count(payment), status.name \n"
+      "from Payment as payment \n"
+      "    join payment.currentStatus as status\n"
+      "    join payment.statusChanges as statusChange\n"
+      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+      "    or (\n"
+      "        statusChange.timeStamp = ( \n"
+      "            select max(change.timeStamp) \n"
+      "            from PaymentStatusChange change \n"
+      "            where change.payment = payment\n"
+      "        )\n"
+      "        and statusChange.user <> :currentUser\n"
+      "    )\n"
+      "group by status.name, status.sortOrder\n"
+      "order by status.sortOrder]]>"
+
+#: index.docbook:887
+msgid "If I would have mapped the <literal>statusChanges</literal> collection as a list, instead of a set, the query would have been much simpler to write."
+msgstr "만일 내가 <literal>statusChanges</literal> 콜렉션을 set가 아닌 list로 매핑했다면, 그 질의는 작성하기가 훨씬 더 간단했을 것이다."
+
+#: index.docbook:892
+msgid ""
+      "<![CDATA[select count(payment), status.name\n"
+      "from Payment as payment\n"
+      "    join payment.currentStatus as status\n"
+      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+      "    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :currentUser\n"
+      "group by status.name, status.sortOrder\n"
+      "order by status.sortOrder]]>"
+msgstr ""
+      "<![CDATA[select count(payment), status.name \n"
+      "from Payment as payment\n"
+      "    join payment.currentStatus as status\n"
+      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+      "    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :currentUser\n"
+      "group by status.name, status.sortOrder\n"
+      "order by status.sortOrder]]>"
+
+#: index.docbook:894
+msgid "The next query uses the MS SQL Server <literal>isNull()</literal> function to return all the accounts and unpaid payments for the organization to which the current user belongs. It translates to an SQL query with three inner joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and <literal>ORG_USER</literal> tables."
+msgstr "다음 질의는 현재의 사용자가 속해 있는 조직의 모든 계정들과 지불되지 않은 지불들을 반환하는데 MS SQL Server <literal>isNull()</literal> 함수를 사용한다. 그것은 <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal>, <literal>ORG_USER</literal> 테이블들에 대한 세 개의 inner 조인들, 하나의 outer 조인, 그리고 하나의 subselect를 가진 한 개의 SQL 질의로 번역된다."
+
+#: index.docbook:903
+msgid ""
+      "<![CDATA[select account, payment\n"
+      "from Account as account\n"
+      "    left outer join account.payments as payment\n"
+      "where :currentUser in elements(account.holder.users)\n"
+      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
+      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+      "<![CDATA[select account, payment\n"
+      "from Account as account\n"
+      "    left outer join account.payments as payment\n"
+      "where :currentUser in elements(account.holder.users)\n"
+      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
+      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+
+#: index.docbook:905
+msgid "For some databases, we would need to do away with the (correlated) subselect."
+msgstr "몇몇 데이터베이스들의 경우, 우리는 (상관관계 지워진) subselect를 없앨 필요가 있을 것이다."
+
+#: index.docbook:909
+msgid ""
+      "<![CDATA[select account, payment\n"
+      "from Account as account\n"
+      "    join account.holder.users as user\n"
+      "    left outer join account.payments as payment\n"
+      "where :currentUser = user\n"
+      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
+      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+      "<![CDATA[select account, payment\n"
+      "from Account as account\n"
+      "    join account.holder.users as user\n"
+      "    left outer join account.payments as payment\n"
+      "where :currentUser = user\n"
+      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
+      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+
+#: index.docbook:914
+msgid "Bulk update and delete"
+msgstr "대량 update와 delete"
+
+#: index.docbook:916
+msgid "HQL now supports <literal>update</literal>, <literal>delete</literal> and <literal>insert ... select ...</literal> statements. See <xref linkend=\"batch-direct\"/> for details."
+msgstr "HQL은 이제 <literal>update</literal>, <literal>delete</literal> 그리고 <literal>insert ... select ...</literal> 문장들을 지원한다. 상세한 것은 <xref linkend=\"batch-direct\"/>를 보라."
+
+#: index.docbook:924
+msgid "Tips &amp; Tricks"
+msgstr "팁들 &amp; 트릭들"
+
+#: index.docbook:926
+msgid "You can count the number of query results without actually returning them:"
+msgstr "당신은 실제로 질의 결과들을 반환하지 않고서 그것들(질의 결과들)의 개수를 카운트할 수 있다:"
+
+#: index.docbook:930
+msgid "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue()]]>"
+msgstr "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue()]]>"
+
+#: index.docbook:932
+msgid "To order a result by the size of a collection, use the following query:"
+msgstr "콜렉션의 크기에 따라 결과를 순서(ordering)지우려면, 다음 질의를 사용하라:"
+
+#: index.docbook:936
+msgid ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User as usr\n"
+      "    left join usr.messages as msg\n"
+      "group by usr.id, usr.name\n"
+      "order by count(msg)]]>"
+msgstr ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User as usr \n"
+      "    left join usr.messages as msg\n"
+      "group by usr.id, usr.name\n"
+      "order by count(msg)]]>"
+
+#: index.docbook:938
+msgid "If your database supports subselects, you can place a condition upon selection size in the where clause of your query:"
+msgstr "만일 당신의 데이터베이스가 subselect들을 지원할 경우, 당신은 당신의 질의의 where 절 내에 selection 사이즈에 대한 조건을 위치지울 수 있다:"
+
+#: index.docbook:943
+msgid "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
+msgstr "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
+
+#: index.docbook:945
+msgid "If your database doesn't support subselects, use the following query:"
+msgstr "만일 당신의 데이터베이스가 subselect를 지원하지 않을 경우, 다음 질의를 사용하라:"
+
+#: index.docbook:949
+msgid ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User usr.name\n"
+      "    join usr.messages msg\n"
+      "group by usr.id, usr.name\n"
+      "having count(msg) >= 1]]>"
+msgstr ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User usr.name\n"
+      "    join usr.messages msg\n"
+      "group by usr.id, usr.name\n"
+      "having count(msg) >= 1]]>"
+
+#: index.docbook:951
+msgid "As this solution can't return a <literal>User</literal> with zero messages because of the inner join, the following form is also useful:"
+msgstr "이 해결책이 inner 조인 때문에 0개의 메시지를 가진 <literal>User</literal>를 반환할 수 없으므로, 다음 형식이 또한 유용하다:"
+
+#: index.docbook:956
+msgid ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User as usr\n"
+      "    left join usr.messages as msg\n"
+      "group by usr.id, usr.name\n"
+      "having count(msg) = 0]]>"
+msgstr ""
+      "<![CDATA[select usr.id, usr.name\n"
+      "from User as usr\n"
+      "    left join usr.messages as msg\n"
+      "group by usr.id, usr.name\n"
+      "having count(msg) = 0]]>"
+
+#: index.docbook:958
+msgid "Properties of a JavaBean can be bound to named query parameters:"
+msgstr "하나의 JavaBean의 프로퍼티들은 명명된 질의 파라미터들에 바인드될 수 있다:"
+
+#: index.docbook:962
+msgid ""
+      "<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name and foo.size=:size\");\n"
+      "q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
+      "List foos = q.list();]]>"
+msgstr ""
+      "<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name and foo.size=:size\");\n"
+      "q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
+      "List foos = q.list();]]>"
+
+#: index.docbook:964
+msgid "Collections are pageable by using the <literal>Query</literal> interface with a filter:"
+msgstr "콜렉션들은 필터를 가진 <literal>Query</literal> 인터페이스를 사용하여 쪼매김하는 것이 가능하다:"
+
+#: index.docbook:968
+msgid ""
+      "<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial filter\n"
+      "q.setMaxResults(PAGE_SIZE);\n"
+      "q.setFirstResult(PAGE_SIZE * pageNumber);\n"
+      "List page = q.list();]]>"
+msgstr ""
+      "<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial filter\n"
+      "q.setMaxResults(PAGE_SIZE);\n"
+      "q.setFirstResult(PAGE_SIZE * pageNumber);\n"
+      "List page = q.list();]]>"
+
+#: index.docbook:970
+msgid "Collection elements may be ordered or grouped using a query filter:"
+msgstr "콜렉션 요소들은 질의 필터를 사용하여 순서(ordering)지워지거나 그룹지워질 수 도 있다:"
+
+#: index.docbook:974
+msgid ""
+      "<![CDATA[Collection orderedCollection = s.filter( collection, \"order by this.amount\" );\n"
+      "Collection counts = s.filter( collection, \"select this.type, count(this) group by this.type\" );]]>"
+msgstr ""
+      "<![CDATA[Collection orderedCollection = s.filter( collection, \"order by this.amount\" );\n"
+      "Collection counts = s.filter( collection, \"select this.type, count(this) group by this.type\" );]]>"
+
+#: index.docbook:976
+msgid "You can find the size of a collection without initializing it:"
+msgstr "당신은 콜렉션을 초기화 하지 않고서 그것(콜렉션)의 크기를 찾을 수 있다:"
+
+#: index.docbook:980
+msgid "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue();]]>"
+msgstr "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue();]]>"
+
+#: index.docbook:985
+msgid "Components"
+msgstr "컴포넌트들"
+
+#: index.docbook:987
+msgid "Components might be used in just about every way that simple value types can be used in HQL queries. They can appear in the <literal>select</literal> clause:"
+msgstr "컴포넌트들은 단지 간단한 값 유형들이 HQL 질의들 내에 사용될 수 있는 모든 방법으로 사용될 수 있다. 그것들은 <literal>select</literal> 절 내에 나타날 수 있다."
+
+#: index.docbook:992, index.docbook:1038
+msgid "<![CDATA[select p.name from from Person p]]>"
+msgstr "<![CDATA[select p.name from from Person p]]>"
+
+#: index.docbook:993
+msgid "<![CDATA[select p.name.first from from Person p]]>"
+msgstr "<![CDATA[select p.name.first from from Person p]]>"
+
+#: index.docbook:995
+msgid "where the Person's name property is a component. Components can also be used in the <literal>where</literal> clause:"
+msgstr "여기서 Person의 name 속성은 컴포넌트이다. 컴포넌트들은 또한 <literal>where</literal> 절 내에 사용될 수 있다:"
+
+#: index.docbook:1000
+msgid "<![CDATA[from from Person p where p.name = :name]]>"
+msgstr "<![CDATA[from from Person p where p.name = :name]]>"
+
+#: index.docbook:1001
+msgid "<![CDATA[from from Person p where p.name.first = :firstName]]>"
+msgstr "<![CDATA[from from Person p where p.name.first = :firstName]]>"
+
+#: index.docbook:1003
+msgid "Components can also be used in the <literal>order by</literal> clause:"
+msgstr "컴포넌트들은 또한 <literal>order by</literal> 절 내에 사용될 수 있다:"
+
+#: index.docbook:1007
+msgid "<![CDATA[from from Person p order by p.name]]>"
+msgstr "<![CDATA[from from Person p order by p.name]]>"
+
+#: index.docbook:1008
+msgid "<![CDATA[from from Person p order by p.name.first]]>"
+msgstr "<![CDATA[from from Person p order by p.name.first]]>"
+
+#: index.docbook:1010
+msgid "Another common use of components is in <xref linkend=\"queryhql-tuple\"/>row value constructors."
+msgstr "컴포넌트들에 대한 또 다른 공통적인 사용은 <xref linkend=\"queryhql-tuple\"/>row value constructors에 있다."
+
+#: index.docbook:1016
+msgid "Row value constructor syntax"
+msgstr "Row value constructor 구문"
+
+#: index.docbook:1018
+msgid "HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax (sometimes called <literal>tuple</literal> syntax), even though the underlying database may not support that notion. Here we are generally referring to multi-valued comparisons, typically associated with components. Consider an entity Person which defines a name component:"
+msgstr "HQL은 ANSI SQL <literal>row value constructor</literal> 구문(종종 <literal>tuple</literal> 구문이라 명명된다)의 사용을 지원한다. 비록 데이터베이스가 그 개념을 지원하지 않을지라도 그러하다. 여기서 우리는 전형적으로 컴포넌트들과 연관되어 있는 다중-값 비교들을 일반적으로 언급하고 있다. name 컴포넌트를 정의하는 Person 엔티티를 검토하자:"
+
+#: index.docbook:1025
+msgid "<![CDATA[from Person p where p.name.first='John' and p.name.last='Jingleheimer-Schmidt']]>"
+msgstr "<![CDATA[from Person p where p.name.first='John' and p.name.last='Jingleheimer-Schmidt']]>"
+
+#: index.docbook:1027
+msgid "That's valid syntax, although a little verbose. It be nice to make this a bit more concise and use <literal>row value constructor</literal> syntax:"
+msgstr "비록 약간 장황스럽지만 그것은 유효한 구문이다. 이것을 약간 더 간결하게 만들고 <literal>row value constructor</literal> 구문을 사용하는 것이 좋다:"
+
+#: index.docbook:1032
+msgid "<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
+msgstr "<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
+
+#: index.docbook:1034
+msgid "It can also be useful to specify this in the <literal>select</literal> clause:"
+msgstr "<literal>select</literal>절 내에 이것을 지정하는 것이 또한 유용할 수 있다:"
+
+#: index.docbook:1040
+msgid "Another time using <literal>row value constructor</literal> syntax can be beneficial is when using subqueries needing to compare against multiple values:"
+msgstr "<literal>row value constructor</literal> 구문을 사용하는 또 다른 경우는 다중 값들에 대해 비교할 필요가 있는 서브 질의들을 사용할 때이다:"
+
+#: index.docbook:1045
+msgid ""
+      "<![CDATA[from Cat as cat\n"
+      "where not ( cat.name, cat.color ) in (\n"
+      "    select cat.name, cat.color from DomesticCat cat\n"
+      ")]]>"
+msgstr ""
+      "<![CDATA[from Cat as cat\n"
+      "where not ( cat.name, cat.color ) in (\n"
+      "    select cat.name, cat.color from DomesticCat cat\n"
+      ")]]>"
+
+#: index.docbook:1047
+msgid "One thing to consider when deciding if you want to use this syntax is that the query will be dependent upon the ordering of the component sub-properties in the metadata."
+msgstr "만일 당신이 이 구문을 사용하고자 원할 경우에 고려해야 할 한 가지는 질의가 메타데이터 내에 있는 컴포넌트 서브-속성들의 순서에 종속될 것이라는 점이다."
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

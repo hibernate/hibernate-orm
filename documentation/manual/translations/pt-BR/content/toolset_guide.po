@@ -1,0 +1,662 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Toolset Guide"
+msgstr ""
+
+#: index.docbook:7
+msgid "Roundtrip engineering with Hibernate is possible using a set of Eclipse plugins, commandline tools, as well as Ant tasks."
+msgstr ""
+
+#: index.docbook:12
+msgid "The <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse IDE as well as Ant tasks for reverse engineering of existing databases:"
+msgstr ""
+
+#: index.docbook:18
+msgid "<emphasis>Mapping Editor:</emphasis> An editor for Hibernate XML mapping files, supporting auto-completion and syntax highlighting. It also supports semantic auto-completion for class names and property/field names, making it much more versatile than a normal XML editor."
+msgstr ""
+
+#: index.docbook:23
+msgid "<emphasis>Console:</emphasis> The console is a new view in Eclipse. In addition to a tree overview of your console configurations, you also get an interactive view of your persistent classes and their relationships. The console allows you to execute HQL queries against your database and browse the result directly in Eclipse."
+msgstr ""
+
+#: index.docbook:30
+msgid "<emphasis>Development Wizards:</emphasis> Several wizards are provided with the Hibernate Eclipse tools; you can use a wizard to quickly generate Hibernate configuration (cfg.xml) files, or you may even completely reverse engineer an existing database schema into POJO source files and Hibernate mapping files. The reverse engineering wizard supports customizable templates."
+msgstr ""
+
+#: index.docbook:38
+msgid "Ant Tasks:"
+msgstr ""
+
+#: index.docbook:43
+msgid "Please refer to the <emphasis>Hibernate Tools</emphasis> package and it's documentation for more information."
+msgstr ""
+
+#: index.docbook:48
+msgid "However, the Hibernate main package comes bundled with an integrated tool (it can even be used from \"inside\" Hibernate on-the-fly): <emphasis>SchemaExport</emphasis> aka <literal>hbm2ddl</literal>."
+msgstr ""
+
+#: index.docbook:55
+msgid "Automatic schema generation"
+msgstr ""
+
+#: index.docbook:57
+msgid "DDL may be generated from your mapping files by a Hibernate utility. The generated schema includes referential integrity constraints (primary and foreign keys) for entity and collection tables. Tables and sequences are also created for mapped identifier generators."
+msgstr ""
+
+#: index.docbook:64
+msgid "You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via the <literal>hibernate.dialect</literal> property when using this tool, as DDL is highly vendor specific."
+msgstr ""
+
+#: index.docbook:70
+msgid "First, customize your mapping files to improve the generated schema."
+msgstr ""
+
+#: index.docbook:75
+msgid "Customizing the schema"
+msgstr ""
+
+#: index.docbook:77
+msgid "Many Hibernate mapping elements define optional attributes named <literal>length</literal>, <literal>precision</literal> and <literal>scale</literal>. You may set the length, precision and scale of a column with this attribute."
+msgstr ""
+
+#: index.docbook:84
+msgid "<![CDATA[<property name=\"zip\" length=\"5\"/>]]>"
+msgstr ""
+
+#: index.docbook:85
+msgid "<![CDATA[<property name=\"balance\" precision=\"12\" scale=\"2\"/>]]>"
+msgstr ""
+
+#: index.docbook:87
+msgid "Some tags also accept a <literal>not-null</literal> attribute (for generating a <literal>NOT NULL</literal> constraint on table columns) and a <literal>unique</literal> attribute (for generating <literal>UNIQUE</literal> constraint on table columns)."
+msgstr ""
+
+#: index.docbook:93
+msgid "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/>]]>"
+msgstr ""
+
+#: index.docbook:95
+msgid "<![CDATA[<element column=\"serialNumber\" type=\"long\" not-null=\"true\" unique=\"true\"/>]]>"
+msgstr ""
+
+#: index.docbook:97
+msgid "A <literal>unique-key</literal> attribute may be used to group columns in a single unique key constraint. Currently, the specified value of the <literal>unique-key</literal> attribute is <emphasis>not</emphasis> used to name the constraint in the generated DDL, only to group the columns in the mapping file."
+msgstr ""
+
+#: index.docbook:105
+msgid ""
+      "<![CDATA[<many-to-one name=\"org\" column=\"orgId\" unique-key=\"OrgEmployeeId\"/>\n"
+      "<property name=\"employeeId\" unique-key=\"OrgEmployee\"/>]]>"
+msgstr ""
+
+#: index.docbook:107
+msgid "An <literal>index</literal> attribute specifies the name of an index that will be created using the mapped column or columns. Multiple columns may be grouped into the same index, simply by specifying the same index name."
+msgstr ""
+
+#: index.docbook:113
+msgid ""
+      "<![CDATA[<property name=\"lastName\" index=\"CustName\"/>\n"
+      "<property name=\"firstName\" index=\"CustName\"/>]]>"
+msgstr ""
+
+#: index.docbook:115
+msgid "A <literal>foreign-key</literal> attribute may be used to override the name of any generated foreign key constraint."
+msgstr ""
+
+#: index.docbook:120
+msgid "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar\"/>]]>"
+msgstr ""
+
+#: index.docbook:122
+msgid "Many mapping elements also accept a child <literal>&lt;column&gt;</literal> element. This is particularly useful for mapping multi-column types:"
+msgstr ""
+
+#: index.docbook:127
+msgid ""
+      "<![CDATA[<property name=\"name\" type=\"my.customtypes.Name\"/>\n"
+      "    <column name=\"last\" not-null=\"true\" index=\"bar_idx\" length=\"30\"/>\n"
+      "    <column name=\"first\" not-null=\"true\" index=\"bar_idx\" length=\"20\"/>\n"
+      "    <column name=\"initial\"/>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:129
+msgid "The <literal>default</literal> attribute lets you specify a default value for a column (you should assign the same value to the mapped property before saving a new instance of the mapped class)."
+msgstr ""
+
+#: index.docbook:135
+msgid ""
+      "<![CDATA[<property name=\"credits\" type=\"integer\" insert=\"false\">\n"
+      "    <column name=\"credits\" default=\"10\"/>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:137
+msgid ""
+      "<![CDATA[<version name=\"version\" type=\"integer\" insert=\"false\">\n"
+      "    <column name=\"version\" default=\"0\"/>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:139
+msgid "The <literal>sql-type</literal> attribute allows the user to override the default mapping of a Hibernate type to SQL datatype."
+msgstr ""
+
+#: index.docbook:144
+msgid ""
+      "<![CDATA[<property name=\"balance\" type=\"float\">\n"
+      "    <column name=\"balance\" sql-type=\"decimal(13,3)\"/>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:146
+msgid "The <literal>check</literal> attribute allows you to specify a check constraint."
+msgstr ""
+
+#: index.docbook:150
+msgid ""
+      "<![CDATA[<property name=\"foo\" type=\"integer\">\n"
+      "    <column name=\"foo\" check=\"foo > 10\"/>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:152
+msgid ""
+      "<![CDATA[<class name=\"Foo\" table=\"foos\" check=\"bar < 100.0\">\n"
+      "    ...\n"
+      "    <property name=\"bar\" type=\"float\"/>\n"
+      "</class>]]>"
+msgstr ""
+
+#: index.docbook:156
+msgid "Summary"
+msgstr ""
+
+#: index.docbook:163
+msgid "Attribute"
+msgstr ""
+
+#: index.docbook:164
+msgid "Values"
+msgstr ""
+
+#: index.docbook:165
+msgid "Interpretation"
+msgstr ""
+
+#: index.docbook:170
+msgid "length"
+msgstr ""
+
+#: index.docbook:171, index.docbook:176, index.docbook:181
+msgid "number"
+msgstr ""
+
+#: index.docbook:172
+msgid "column length"
+msgstr ""
+
+#: index.docbook:175
+msgid "precision"
+msgstr ""
+
+#: index.docbook:177
+msgid "column decimal precision"
+msgstr ""
+
+#: index.docbook:180
+msgid "scale"
+msgstr ""
+
+#: index.docbook:182
+msgid "column decimal scale"
+msgstr ""
+
+#: index.docbook:185
+msgid "not-null"
+msgstr ""
+
+#: index.docbook:186, index.docbook:191
+msgid "true|false"
+msgstr ""
+
+#: index.docbook:187
+msgid "specfies that the column should be non-nullable"
+msgstr ""
+
+#: index.docbook:190
+msgid "unique"
+msgstr ""
+
+#: index.docbook:192
+msgid "specifies that the column should have a unique constraint"
+msgstr ""
+
+#: index.docbook:195
+msgid "index"
+msgstr ""
+
+#: index.docbook:196
+msgid "index_name"
+msgstr ""
+
+#: index.docbook:197
+msgid "specifies the name of a (multi-column) index"
+msgstr ""
+
+#: index.docbook:200
+msgid "unique-key"
+msgstr ""
+
+#: index.docbook:201
+msgid "unique_key_name"
+msgstr ""
+
+#: index.docbook:202
+msgid "specifies the name of a multi-column unique constraint"
+msgstr ""
+
+#: index.docbook:205
+msgid "foreign-key"
+msgstr ""
+
+#: index.docbook:206
+msgid "foreign_key_name"
+msgstr ""
+
+#: index.docbook:207
+msgid "specifies the name of the foreign key constraint generated for an association, for a <literal>&lt;one-to-one&gt;</literal>, <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that <literal>inverse=\"true\"</literal> sides will not be considered by <literal>SchemaExport</literal>."
+msgstr ""
+
+#: index.docbook:217
+msgid "sql-type"
+msgstr ""
+
+#: index.docbook:218
+msgid "SQL column type"
+msgstr ""
+
+#: index.docbook:219
+msgid "overrides the default column type (attribute of <literal>&lt;column&gt;</literal> element only)"
+msgstr ""
+
+#: index.docbook:225
+msgid "default"
+msgstr ""
+
+#: index.docbook:226, index.docbook:233
+msgid "SQL expression"
+msgstr ""
+
+#: index.docbook:227
+msgid "specify a default value for the column"
+msgstr ""
+
+#: index.docbook:232
+msgid "check"
+msgstr ""
+
+#: index.docbook:234
+msgid "create an SQL check constraint on either column or table"
+msgstr ""
+
+#: index.docbook:242
+msgid "The <literal>&lt;comment&gt;</literal> element allows you to specify comments for the generated schema."
+msgstr ""
+
+#: index.docbook:247
+msgid ""
+      "<![CDATA[<class name=\"Customer\" table=\"CurCust\">\n"
+      "    <comment>Current customers only</comment>\n"
+      "    ...\n"
+      "</class>]]>"
+msgstr ""
+
+#: index.docbook:249
+msgid ""
+      "<![CDATA[<property name=\"balance\">\n"
+      "    <column name=\"bal\">\n"
+      "        <comment>Balance in USD</comment>\n"
+      "    </column>\n"
+      "</property>]]>"
+msgstr ""
+
+#: index.docbook:251
+msgid "This results in a <literal>comment on table</literal> or <literal>comment on column</literal> statement in the generated DDL (where supported)."
+msgstr ""
+
+#: index.docbook:260
+msgid "Running the tool"
+msgstr ""
+
+#: index.docbook:262
+msgid "The <literal>SchemaExport</literal> tool writes a DDL script to standard out and/or executes the DDL statements."
+msgstr ""
+
+#: index.docbook:267
+msgid "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> <literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options mapping_files</emphasis>"
+msgstr ""
+
+#: index.docbook:273
+msgid "<literal>SchemaExport</literal> Command Line Options"
+msgstr ""
+
+#: index.docbook:279, index.docbook:429, index.docbook:498
+msgid "Option"
+msgstr ""
+
+#: index.docbook:280, index.docbook:367, index.docbook:430, index.docbook:499
+msgid "Description"
+msgstr ""
+
+#: index.docbook:285, index.docbook:435
+msgid "--quiet"
+msgstr ""
+
+#: index.docbook:286, index.docbook:436
+msgid "don't output the script to stdout"
+msgstr ""
+
+#: index.docbook:289
+msgid "--drop"
+msgstr ""
+
+#: index.docbook:290
+msgid "only drop the tables"
+msgstr ""
+
+#: index.docbook:293
+msgid "--create"
+msgstr ""
+
+#: index.docbook:294
+msgid "only create the tables"
+msgstr ""
+
+#: index.docbook:297, index.docbook:439
+msgid "--text"
+msgstr ""
+
+#: index.docbook:298
+msgid "don't export to the database"
+msgstr ""
+
+#: index.docbook:301
+msgid "--output=my_schema.ddl"
+msgstr ""
+
+#: index.docbook:302
+msgid "output the ddl script to a file"
+msgstr ""
+
+#: index.docbook:305, index.docbook:443, index.docbook:504
+msgid "--naming=eg.MyNamingStrategy"
+msgstr ""
+
+#: index.docbook:306, index.docbook:444, index.docbook:505
+msgid "select a <literal>NamingStrategy</literal>"
+msgstr ""
+
+#: index.docbook:309, index.docbook:451, index.docbook:512
+msgid "--config=hibernate.cfg.xml"
+msgstr ""
+
+#: index.docbook:310
+msgid "read Hibernate configuration from an XML file"
+msgstr ""
+
+#: index.docbook:313, index.docbook:447, index.docbook:508
+msgid "--properties=hibernate.properties"
+msgstr ""
+
+#: index.docbook:314, index.docbook:448, index.docbook:509
+msgid "read database properties from a file"
+msgstr ""
+
+#: index.docbook:317
+msgid "--format"
+msgstr ""
+
+#: index.docbook:318
+msgid "format the generated SQL nicely in the script"
+msgstr ""
+
+#: index.docbook:321
+msgid "--delimiter=;"
+msgstr ""
+
+#: index.docbook:322
+msgid "set an end of line delimiter for the script"
+msgstr ""
+
+#: index.docbook:328
+msgid "You may even embed <literal>SchemaExport</literal> in your application:"
+msgstr ""
+
+#: index.docbook:332
+msgid ""
+      "<![CDATA[Configuration cfg = ....;\n"
+      "new SchemaExport(cfg).create(false, true);]]>"
+msgstr ""
+
+#: index.docbook:337
+msgid "Properties"
+msgstr ""
+
+#: index.docbook:339
+msgid "Database properties may be specified"
+msgstr ""
+
+#: index.docbook:345
+msgid "as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</emphasis>"
+msgstr ""
+
+#: index.docbook:348
+msgid "in <literal>hibernate.properties</literal>"
+msgstr ""
+
+#: index.docbook:351
+msgid "in a named properties file with <literal>--properties</literal>"
+msgstr ""
+
+#: index.docbook:355
+msgid "The needed properties are:"
+msgstr ""
+
+#: index.docbook:360
+msgid "SchemaExport Connection Properties"
+msgstr ""
+
+#: index.docbook:366
+msgid "Property Name"
+msgstr ""
+
+#: index.docbook:372
+msgid "hibernate.connection.driver_class"
+msgstr ""
+
+#: index.docbook:373
+msgid "jdbc driver class"
+msgstr ""
+
+#: index.docbook:376
+msgid "hibernate.connection.url"
+msgstr ""
+
+#: index.docbook:377
+msgid "jdbc url"
+msgstr ""
+
+#: index.docbook:380
+msgid "hibernate.connection.username"
+msgstr ""
+
+#: index.docbook:381
+msgid "database user"
+msgstr ""
+
+#: index.docbook:384
+msgid "hibernate.connection.password"
+msgstr ""
+
+#: index.docbook:385
+msgid "user password"
+msgstr ""
+
+#: index.docbook:388
+msgid "hibernate.dialect"
+msgstr ""
+
+#: index.docbook:389
+msgid "dialect"
+msgstr ""
+
+#: index.docbook:398
+msgid "Using Ant"
+msgstr ""
+
+#: index.docbook:400
+msgid "You can call <literal>SchemaExport</literal> from your Ant build script:"
+msgstr ""
+
+#: index.docbook:404
+msgid ""
+      "<![CDATA[<target name=\"schemaexport\">\n"
+      "    <taskdef name=\"schemaexport\"\n"
+      "        classname=\"org.hibernate.tool.hbm2ddl.SchemaExportTask\"\n"
+      "        classpathref=\"class.path\"/>\n"
+      "    \n"
+      "    <schemaexport\n"
+      "        properties=\"hibernate.properties\"\n"
+      "        quiet=\"no\"\n"
+      "        text=\"no\"\n"
+      "        drop=\"no\"\n"
+      "        delimiter=\";\"\n"
+      "        output=\"schema-export.sql\">\n"
+      "        <fileset dir=\"src\">\n"
+      "            <include name=\"**/*.hbm.xml\"/>\n"
+      "        </fileset>\n"
+      "    </schemaexport>\n"
+      "</target>]]>"
+msgstr ""
+
+#: index.docbook:409
+msgid "Incremental schema updates"
+msgstr ""
+
+#: index.docbook:411
+msgid "The <literal>SchemaUpdate</literal> tool will update an existing schema with \"incremental\" changes. Note that <literal>SchemaUpdate</literal> depends heavily upon the JDBC metadata API, so it will not work with all JDBC drivers."
+msgstr ""
+
+#: index.docbook:417
+msgid "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> <literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options mapping_files</emphasis>"
+msgstr ""
+
+#: index.docbook:423
+msgid "<literal>SchemaUpdate</literal> Command Line Options"
+msgstr ""
+
+#: index.docbook:440
+msgid "don't export the script to the database"
+msgstr ""
+
+#: index.docbook:452, index.docbook:513
+msgid "specify a <literal>.cfg.xml</literal> file"
+msgstr ""
+
+#: index.docbook:458
+msgid "You may embed <literal>SchemaUpdate</literal> in your application:"
+msgstr ""
+
+#: index.docbook:462
+msgid ""
+      "<![CDATA[Configuration cfg = ....;\n"
+      "new SchemaUpdate(cfg).execute(false);]]>"
+msgstr ""
+
+#: index.docbook:467
+msgid "Using Ant for incremental schema updates"
+msgstr ""
+
+#: index.docbook:469
+msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
+msgstr ""
+
+#: index.docbook:473
+msgid ""
+      "<![CDATA[<target name=\"schemaupdate\">\n"
+      "    <taskdef name=\"schemaupdate\"\n"
+      "        classname=\"org.hibernate.tool.hbm2ddl.SchemaUpdateTask\"\n"
+      "        classpathref=\"class.path\"/>\n"
+      "    \n"
+      "    <schemaupdate\n"
+      "        properties=\"hibernate.properties\"\n"
+      "        quiet=\"no\">\n"
+      "        <fileset dir=\"src\">\n"
+      "            <include name=\"**/*.hbm.xml\"/>\n"
+      "        </fileset>\n"
+      "    </schemaupdate>\n"
+      "</target>]]>"
+msgstr ""
+
+#: index.docbook:478
+msgid "Schema validation"
+msgstr ""
+
+#: index.docbook:480
+msgid "The <literal>SchemaValidator</literal> tool will validate that the existing database schema \"matches\" your mapping documents. Note that <literal>SchemaValidator</literal> depends heavily upon the JDBC metadata API, so it will not work with all JDBC drivers. This tool is extremely useful for testing."
+msgstr ""
+
+#: index.docbook:486
+msgid "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>"
+msgstr ""
+
+#: index.docbook:492
+msgid "<literal>SchemaValidator</literal> Command Line Options"
+msgstr ""
+
+#: index.docbook:519
+msgid "You may embed <literal>SchemaValidator</literal> in your application:"
+msgstr ""
+
+#: index.docbook:523
+msgid ""
+      "<![CDATA[Configuration cfg = ....;\n"
+      "new SchemaValidator(cfg).validate();]]>"
+msgstr ""
+
+#: index.docbook:528
+msgid "Using Ant for schema validation"
+msgstr ""
+
+#: index.docbook:530
+msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
+msgstr ""
+
+#: index.docbook:534
+msgid ""
+      "<![CDATA[<target name=\"schemavalidate\">\n"
+      "    <taskdef name=\"schemavalidator\"\n"
+      "        classname=\"org.hibernate.tool.hbm2ddl.SchemaValidatorTask\"\n"
+      "        classpathref=\"class.path\"/>\n"
+      "    \n"
+      "    <schemavalidator\n"
+      "        properties=\"hibernate.properties\">\n"
+      "        <fileset dir=\"src\">\n"
+      "            <include name=\"**/*.hbm.xml\"/>\n"
+      "        </fileset>\n"
+      "    </schemavalidator>\n"
+      "</target>]]>"
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

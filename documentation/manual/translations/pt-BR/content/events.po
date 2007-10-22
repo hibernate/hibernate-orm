@@ -1,0 +1,245 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Interceptors and events"
+msgstr ""
+
+#: index.docbook:7
+msgid "It is often useful for the application to react to certain events that occur inside Hibernate. This allows implementation of certain kinds of generic functionality, and extension of Hibernate functionality."
+msgstr ""
+
+#: index.docbook:14
+msgid "Interceptors"
+msgstr ""
+
+#: index.docbook:16
+msgid "The <literal>Interceptor</literal> interface provides callbacks from the session to the application allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded. One possible use for this is to track auditing information. For example, the following <literal>Interceptor</literal> automatically sets the <literal>createTimestamp</literal> when an <literal>Auditable</literal> is created and updates the <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is updated."
+msgstr ""
+
+#: index.docbook:27
+msgid "You may either implement <literal>Interceptor</literal> directly or (better) extend <literal>EmptyInterceptor</literal>."
+msgstr ""
+
+#: index.docbook:32
+msgid ""
+      "<![CDATA[package org.hibernate.test;\n"
+      "\n"
+      "import java.io.Serializable;\n"
+      "import java.util.Date;\n"
+      "import java.util.Iterator;\n"
+      "\n"
+      "import org.hibernate.EmptyInterceptor;\n"
+      "import org.hibernate.Transaction;\n"
+      "import org.hibernate.type.Type;\n"
+      "\n"
+      "public class AuditInterceptor extends EmptyInterceptor {\n"
+      "\n"
+      "    private int updates;\n"
+      "    private int creates;\n"
+      "    private int loads;\n"
+      "\n"
+      "    public void onDelete(Object entity,\n"
+      "                         Serializable id,\n"
+      "                         Object[] state,\n"
+      "                         String[] propertyNames,\n"
+      "                         Type[] types) {\n"
+      "        // do nothing\n"
+      "    }\n"
+      "\n"
+      "    public boolean onFlushDirty(Object entity,\n"
+      "                                Serializable id,\n"
+      "                                Object[] currentState,\n"
+      "                                Object[] previousState,\n"
+      "                                String[] propertyNames,\n"
+      "                                Type[] types) {\n"
+      "\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            updates++;\n"
+      "            for ( int i=0; i < propertyNames.length; i++ ) {\n"
+      "                if ( \"lastUpdateTimestamp\".equals( propertyNames[i] ) ) {\n"
+      "                    currentState[i] = new Date();\n"
+      "                    return true;\n"
+      "                }\n"
+      "            }\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public boolean onLoad(Object entity,\n"
+      "                          Serializable id,\n"
+      "                          Object[] state,\n"
+      "                          String[] propertyNames,\n"
+      "                          Type[] types) {\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            loads++;\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public boolean onSave(Object entity,\n"
+      "                          Serializable id,\n"
+      "                          Object[] state,\n"
+      "                          String[] propertyNames,\n"
+      "                          Type[] types) {\n"
+      "\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            creates++;\n"
+      "            for ( int i=0; i<propertyNames.length; i++ ) {\n"
+      "                if ( \"createTimestamp\".equals( propertyNames[i] ) ) {\n"
+      "                    state[i] = new Date();\n"
+      "                    return true;\n"
+      "                }\n"
+      "            }\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public void afterTransactionCompletion(Transaction tx) {\n"
+      "        if ( tx.wasCommitted() ) {\n"
+      "            System.out.println(\"Creations: \" + creates + \", Updates: \" + updates, \"Loads: \" + loads);\n"
+      "        }\n"
+      "        updates=0;\n"
+      "        creates=0;\n"
+      "        loads=0;\n"
+      "    }\n"
+      "\n"
+      "}]]>"
+msgstr ""
+
+#: index.docbook:34
+msgid "Interceptors come in two flavors: <literal>Session</literal>-scoped and <literal>SessionFactory</literal>-scoped."
+msgstr ""
+
+#: index.docbook:39
+msgid "A <literal>Session</literal>-scoped interceptor is specified when a session is opened using one of the overloaded SessionFactory.openSession() methods accepting an <literal>Interceptor</literal>."
+msgstr ""
+
+#: index.docbook:45
+msgid "<![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]>"
+msgstr ""
+
+#: index.docbook:47
+msgid "A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal> object prior to building the <literal>SessionFactory</literal>. In this case, the supplied interceptor will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless a session is opened explicitly specifying the interceptor to use. <literal>SessionFactory</literal>-scoped interceptors must be thread safe, taking care to not store session-specific state since multiple sessions will use this interceptor (potentially) concurrently."
+msgstr ""
+
+#: index.docbook:56
+msgid "<![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]>"
+msgstr ""
+
+#: index.docbook:61
+msgid "Event system"
+msgstr ""
+
+#: index.docbook:63
+msgid "If you have to react to particular events in your persistence layer, you may also use the Hibernate3 <emphasis>event</emphasis> architecture. The event system can be used in addition or as a replacement for interceptors."
+msgstr ""
+
+#: index.docbook:69
+msgid "Essentially all of the methods of the <literal>Session</literal> interface correlate to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal> package for the full list of defined event types). When a request is made of one of these methods, the Hibernate <literal>Session</literal> generates an appropriate event and passes it to the configured event listeners for that type. Out-of-the-box, these listeners implement the same processing in which those methods always resulted. However, you are free to implement a customization of one of the listener interfaces (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation of the <literal>LoadEventListener</literal> interface), in which case their implementation would be responsible for processing any <literal>load()</literal> requests made of the <literal>Session</literal>."
+msgstr ""
+
+#: index.docbook:84
+msgid "The listeners should be considered effectively singletons; meaning, they are shared between requests, and thus should not save any state as instance variables."
+msgstr ""
+
+#: index.docbook:89
+msgid "A custom listener should implement the appropriate interface for the event it wants to process and/or extend one of the convenience base classes (or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose). Custom listeners can either be registered programmatically through the <literal>Configuration</literal> object, or specified in the Hibernate configuration XML (declarative configuration through the properties file is not supported). Here's an example of a custom load event listener:"
+msgstr ""
+
+#: index.docbook:99
+msgid ""
+      "<![CDATA[public class MyLoadListener implements LoadEventListener {\n"
+      "    // this is the single method defined by the LoadEventListener interface\n"
+      "    public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)\n"
+      "            throws HibernateException {\n"
+      "        if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {\n"
+      "            throw MySecurityException(\"Unauthorized access\");\n"
+      "        }\n"
+      "    }\n"
+      "}]]>"
+msgstr ""
+
+#: index.docbook:101
+msgid "You also need a configuration entry telling Hibernate to use the listener in addition to the default listener:"
+msgstr ""
+
+#: index.docbook:106
+msgid ""
+      "<![CDATA[<hibernate-configuration>\n"
+      "    <session-factory>\n"
+      "        ...\n"
+      "        <event type=\"load\">\n"
+      "            <listener class=\"com.eg.MyLoadListener\"/>\n"
+      "            <listener class=\"org.hibernate.event.def.DefaultLoadEventListener\"/>\n"
+      "        </event>\n"
+      "    </session-factory>\n"
+      "</hibernate-configuration>]]>"
+msgstr ""
+
+#: index.docbook:108
+msgid "Instead, you may register it programmatically:"
+msgstr ""
+
+#: index.docbook:112
+msgid ""
+      "<![CDATA[Configuration cfg = new Configuration();\n"
+      "LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };\n"
+      "cfg.EventListeners().setLoadEventListeners(stack);]]>"
+msgstr ""
+
+#: index.docbook:114
+msgid "Listeners registered declaratively cannot share instances. If the same class name is used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will result in a separate instance of that class. If you need the capability to share listener instances between listener types you must use the programmatic registration approach."
+msgstr ""
+
+#: index.docbook:122
+msgid "Why implement an interface and define the specific type during configuration? Well, a listener implementation could implement multiple event listener interfaces. Having the type additionally defined during registration makes it easier to turn custom listeners on or off during configuration."
+msgstr ""
+
+#: index.docbook:132
+msgid "Hibernate declarative security"
+msgstr ""
+
+#: index.docbook:133
+msgid "Usually, declarative security in Hibernate applications is managed in a session facade layer. Now, Hibernate3 allows certain actions to be permissioned via JACC, and authorized via JAAS. This is optional functionality built on top of the event architecture."
+msgstr ""
+
+#: index.docbook:139
+msgid "First, you must configure the appropriate event listeners, to enable the use of JAAS authorization."
+msgstr ""
+
+#: index.docbook:144
+msgid ""
+      "<![CDATA[<listener type=\"pre-delete\" class=\"org.hibernate.secure.JACCPreDeleteEventListener\"/>\n"
+      "<listener type=\"pre-update\" class=\"org.hibernate.secure.JACCPreUpdateEventListener\"/>\n"
+      "<listener type=\"pre-insert\" class=\"org.hibernate.secure.JACCPreInsertEventListener\"/>\n"
+      "<listener type=\"pre-load\" class=\"org.hibernate.secure.JACCPreLoadEventListener\"/>]]>"
+msgstr ""
+
+#: index.docbook:146
+msgid "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is just a shorthand for <literal>&lt;event type=\"...\"&gt;&lt;listener class=\"...\"/&gt;&lt;/event&gt;</literal> when there is exactly one listener for a particular event type."
+msgstr ""
+
+#: index.docbook:152
+msgid "Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:"
+msgstr ""
+
+#: index.docbook:156
+msgid ""
+      "<![CDATA[<grant role=\"admin\" entity-name=\"User\" actions=\"insert,update,read\"/>\n"
+      "<grant role=\"su\" entity-name=\"User\" actions=\"*\"/>]]>"
+msgstr ""
+
+#: index.docbook:158
+msgid "The role names are the roles understood by your JACC provider."
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

@@ -1,0 +1,1286 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Collection Mapping"
+msgstr "콜렉션 매핑"
+
+#: index.docbook:8
+msgid "Persistent collections"
+msgstr "영속 콜렉션들"
+
+#: index.docbook:10
+msgid "Hibernate requires that persistent collection-valued fields be declared as an interface type, for example:"
+msgstr "예를 들어 Hibernate는 영속 콜렉션-값을 가진 필드들이 인터페이스 타입으로서 선언될 것을 필요로 한다:"
+
+#: index.docbook:15
+msgid ""
+      "<![CDATA[public class Product {\n"
+      "    private String serialNumber;\n"
+      "    private Set parts = new HashSet();\n"
+      "    \n"
+      "    public Set getParts() { return parts; }\n"
+      "    void setParts(Set parts) { this.parts = parts; }\n"
+      "    public String getSerialNumber() { return serialNumber; }\n"
+      "    void setSerialNumber(String sn) { serialNumber = sn; }\n"
+      "}]]>"
+msgstr ""
+      "<![CDATA[public class Product {\n"
+      "    private String serialNumber;\n"
+      "    private Set parts = new HashSet();\n"
+      "    \n"
+      "    public Set getParts() { return parts; }\n"
+      "    void setParts(Set parts) { this.parts = parts; }\n"
+      "    public String getSerialNumber() { return serialNumber; }\n"
+      "    void setSerialNumber(String sn) { serialNumber = sn; }\n"
+      "}]]>"
+
+#: index.docbook:17
+msgid "The actual interface might be <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> or ... anything you like! (Where \"anything you like\" means you will have to write an implementation of <literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+msgstr "실제 인터페이스는 <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> 또는 당신이 좋아하는 어떤 것일 수 있다!(여기서 \"당신이 좋아하는 어떤 것\"이란 당신이 <literal>org.hibernate.usertype.UserCollectionType</literal>에 대한 구현을 작성해야 함을 의미한다.)"
+
+#: index.docbook:26
+msgid "Notice how we initialized the instance variable with an instance of <literal>HashSet</literal>. This is the best way to initialize collection valued properties of newly instantiated (non-persistent) instances. When you make the instance persistent - by calling <literal>persist()</literal>, for example - Hibernate will actually replace the <literal>HashSet</literal> with an instance of Hibernate's own implementation of <literal>Set</literal>. Watch out for errors like this:"
+msgstr "우리가 <literal>HashSet</literal>의 인스턴스를 가진 인스턴스 변수를 초기화 시켰던 방법을 주목하라. 이것은 새로이 초기화 된(비-영속) 인스턴스들을 가진 콜렉션 값 프로퍼티들을 초기화 시키는 최선의 방법이다. 당신이 -예를 들어 <literal>persist()</literal>를 호출하여- 인스턴스를 영속화 시킬 때 Hibernate는 실제로 <literal>HashSet</literal>을 <literal>Set</literal>에 대한 Hibernate 자신의 구현의 인스턴스로 대체시킬 것이다. 다음과 같은 오류들을 관찰하라:"
+
+#: index.docbook:36
+msgid ""
+      "<![CDATA[Cat cat = new DomesticCat();\n"
+      "Cat kitten = new DomesticCat();\n"
+      "....\n"
+      "Set kittens = new HashSet();\n"
+      "kittens.add(kitten);\n"
+      "cat.setKittens(kittens);\n"
+      "session.persist(cat);\n"
+      "kittens = cat.getKittens(); // Okay, kittens collection is a Set\n"
+      "(HashSet) cat.getKittens(); // Error!]]>"
+msgstr ""
+      "<![CDATA[Cat cat = new DomesticCat();\n"
+      "Cat kitten = new DomesticCat();\n"
+      "....\n"
+      "Set kittens = new HashSet();\n"
+      "kittens.add(kitten);\n"
+      "cat.setKittens(kittens);\n"
+      "session.persist(cat);\n"
+      "kittens = cat.getKittens(); // Okay, kittens collection is a Set\n"
+      "(HashSet) cat.getKittens(); // Error!]]>"
+
+#: index.docbook:38
+msgid "The persistent collections injected by Hibernate behave like <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, depending upon the interface type."
+msgstr "Hibernate에 의해 도입된 영속 콜렉션들은 인터페이스 타입에 따라 <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> 또는 <literal>ArrayList</literal>와 같이 행위한다."
+
+#: index.docbook:45
+msgid "Collections instances have the usual behavior of value types. They are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced. If a collection is passed from one persistent object to another, its elements might be moved from one table to another. Two entities may not share a reference to the same collection instance. Due to the underlying relational model, collection-valued properties do not support null value semantics; Hibernate does not distinguish between a null collection reference and an empty collection."
+msgstr "콜렉션 인스턴스들은 value 타입들을 가진 통상의 특징을 갖는다. 그것들은 영속 객체에 의해 참조될 때 자동적으로 영속화 되고 참조 해제될 때 자동적으로 삭제된다. 만일 하나의 콜렉션이 하나의 영속 객체로부터 또 다른 영속 객체로 전달될 때, 그것의 요소들은 하나의 테이블로부터 다른 테이블로 이동될 수 있다. 두 개의 엔티티들은 동일한 콜렉션 인스턴스에 대한 참조를 공유하지 않는다. 기본 관계형 모형 때문에 콜렉션 값 프로퍼티들은 null 값 의미들을 지원하지 않는다; Hibernate는 null 콜렉션 참조와 공백의 콜렉션 사이를 구별 짓지 않는다."
+
+#: index.docbook:56
+msgid "You shouldn't have to worry much about any of this. Use persistent collections the same way you use ordinary Java collections. Just make sure you understand the semantics of bidirectional associations (discussed later)."
+msgstr "당신은 이것의 어떤 것에 대해 너무 많이 걱정하지 않아도 될 것이다. 당신이 통상의 자바 콜렉션들을 사용하는 것과 동일한 방법으로 영속 콜렉션들을 사용하라. 단지 당신이 양방향 연관관계들에 대한 의미를 확실히 이해하도록 하라(나중에 논의됨)."
+
+#: index.docbook:65
+msgid "Collection mappings"
+msgstr "콜렉션 매핑들"
+
+#: index.docbook:67
+msgid "The Hibernate mapping element used for mapping a collection depends upon the type of the interface. For example, a <literal>&lt;set&gt;</literal> element is used for mapping properties of type <literal>Set</literal>."
+msgstr "콜렉션을 매핑하는데 사용되는 Hiberante 매핑 요소는 인터페이스의 타입에 의존한다. 예를 들어<literal>&lt;set&gt;</literal> 요소는 <literal>Set</literal> 타입의 매핑 프로퍼티들에 사용된다"
+
+#: index.docbook:73
+msgid ""
+      "<![CDATA[<class name=\"Product\">\n"
+      "    <id name=\"serialNumber\" column=\"productSerialNumber\"/>\n"
+      "    <set name=\"parts\">\n"
+      "        <key column=\"productSerialNumber\" not-null=\"true\"/>\n"
+      "        <one-to-many class=\"Part\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Product\">\n"
+      "    <id name=\"serialNumber\" column=\"productSerialNumber\"/>\n"
+      "    <set name=\"parts\">\n"
+      "        <key column=\"productSerialNumber\" not-null=\"true\"/>\n"
+      "        <one-to-many class=\"Part\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+
+#: index.docbook:75
+msgid "Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> element is representative:"
+msgstr "<literal>&lt;set&gt;</literal>과는 별도로, 또한 <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal>, <literal>&lt;array&gt;</literal>, 그리고 <literal>&lt;map&gt;</literal> 매핑 요소들이 존재한다. <literal>&lt;map&gt;</literal> 요소가 대표적이다:"
+
+#: index.docbook:100
+msgid ""
+      "<![CDATA[<map\n"
+      "    name=\"propertyName\"\n"
+      "    table=\"table_name\"\n"
+      "    schema=\"schema_name\"\n"
+      "    lazy=\"true|extra|false\"\n"
+      "    inverse=\"true|false\"\n"
+      "    cascade=\"all|none|save-update|delete|all-delete-orphan|delete-orphan\"\n"
+      "    sort=\"unsorted|natural|comparatorClass\"\n"
+      "    order-by=\"column_name asc|desc\"\n"
+      "    where=\"arbitrary sql where condition\"\n"
+      "    fetch=\"join|select|subselect\"\n"
+      "    batch-size=\"N\"\n"
+      "    access=\"field|property|ClassName\"\n"
+      "    optimistic-lock=\"true|false\"\n"
+      "    mutable=\"true|false\"\n"
+      "    node=\"element-name|.\"\n"
+      "    embed-xml=\"true|false\"\n"
+      ">\n"
+      "\n"
+      "    <key .... />\n"
+      "    <map-key .... />\n"
+      "    <element .... />\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<map\n"
+      "    name=\"propertyName\"\n"
+      "    table=\"table_name\"\n"
+      "    schema=\"schema_name\"\n"
+      "    lazy=\"true|extra|false\"\n"
+      "    inverse=\"true|false\"\n"
+      "    cascade=\"all|none|save-update|delete|all-delete-orphan|delete-orphan\"\n"
+      "    sort=\"unsorted|natural|comparatorClass\"\n"
+      "    order-by=\"column_name asc|desc\"\n"
+      "    where=\"arbitrary sql where condition\"\n"
+      "    fetch=\"join|select|subselect\"\n"
+      "    batch-size=\"N\"\n"
+      "    access=\"field|property|ClassName\"\n"
+      "    optimistic-lock=\"true|false\"\n"
+      "    mutable=\"true|false\"\n"
+      "    node=\"element-name|.\"\n"
+      "    embed-xml=\"true|false\"\n"
+      ">\n"
+      "\n"
+      "    <key .... />\n"
+      "    <map-key .... />\n"
+      "    <element .... />\n"
+      "</map>]]>"
+
+#: index.docbook:103
+msgid "<literal>name</literal> the collection property name"
+msgstr "<literal>name</literal> 콜렉션 프로퍼티 이름"
+
+#: index.docbook:108
+msgid "<literal>table</literal> (optional - defaults to property name) the name of the collection table (not used for one-to-many associations)"
+msgstr "<literal>table</literal> (옵션 - 디폴트는 프로퍼티 이름) 콜렉션 테이블의 이름(one-to-many 연관관계들에 대해서는 사용되지 않음)"
+
+#: index.docbook:114
+msgid "<literal>schema</literal> (optional) the name of a table schema to override the schema declared on the root element"
+msgstr "<literal>schema</literal> (옵션) 루트 요소 상에 선언된 스키마를 오버라이드 시키는 테이블 스키마의 이름"
+
+#: index.docbook:120
+msgid "<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may be used to disable lazy fetching and specify that the association is always eagerly fetched, or to enable \"extra-lazy\" fetching where most operations do not initialize the collection (suitable for very large collections)"
+msgstr "<literal>lazy</literal> (옵션 - 디폴트는 <literal>true</literal>)는 lazy 페칭을 사용 불가능하도록 하고 그 연관이 항상 eagerly 페치됨을 지정하는데 , 또는 대부분의 연산들이 콜렉션을 초기화시키지 않는 곳에서 \"extra-lazy\" 페칭을 이용 가능하도록 하는데(매우 큰 콜렉션들에 적당함) 사용될 수 있다"
+
+#: index.docbook:129
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>) mark this collection as the \"inverse\" end of a bidirectional association"
+msgstr "<literal>inverse</literal> (옵션 - 디폴트는 <literal>false</literal>) 이 콜렉션을 양방향 연관관계의 \"inverse\" 끝(end)으로 표시한다"
+
+#: index.docbook:135
+msgid "<literal>cascade</literal> (optional - defaults to <literal>none</literal>) enable operations to cascade to child entities"
+msgstr "<literal>cascade</literal> (옵션 - 디폴트는 <literal>none</literal>) 오퍼레이션들이 자식 엔티티들에 대해 케스케이드하는 것을 이용 가능하게 한다"
+
+#: index.docbook:141
+msgid "<literal>sort</literal> (optional) specify a sorted collection with <literal>natural</literal> sort order, or a given comparator class"
+msgstr "<literal>sort</literal> (옵션) <literal>natural</literal> 정렬 순서로 정렬된(sorted) 콜렉션 또는 주어진 comparator 클래스를 지정한다"
+
+#: index.docbook:147
+msgid "<literal>order-by</literal> (optional, JDK1.4 only) specify a table column (or columns) that define the iteration order of the <literal>Map</literal>, <literal>Set</literal> or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>"
+msgstr "<literal>order-by</literal> (옵션, JDK1.4에서만) <literal>asc</literal> 또는 <literal>desc</literal> 옵션과 함께 <literal>Map</literal>, <literal>Set</literal> 또는 bag의 반복 순서를 정의하는 테이블 컬럼(또는 컬럼들)을 지정한다"
+
+#: index.docbook:154
+msgid "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> condition to be used when retrieving or removing the collection (useful if the collection should contain only a subset of the available data)"
+msgstr "<literal>where</literal> (옵션) 콜렉션을 검색하거나 제거할 때 사용될 임의적인 SQL <literal>WHERE</literal> 조건을 지정한다 (콜렉션이 오직 이용 가능한 데이터의 부분집합 만을 포함할 경우에 유용하다)"
+
+#: index.docbook:161
+msgid "<literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose between outer-join fetching, fetching by sequential select, and fetching by sequential subselect."
+msgstr "<literal>fetch</literal> (옵션, 디폴트는 <literal>select</literal>) outer-join 페칭, sequential select 페칭, 그리고 sequential subselect 페칭 사이에서 선택하라."
+
+#: index.docbook:168
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a \"batch size\" for lazily fetching instances of this collection."
+msgstr "<literal>batch-size</literal> (옵션, 디폴트는 <literal>1</literal>) 이 콜렉션의 lazily fetching 인스턴스에 대해 \"배치 사이즈\"를 지정하라."
+
+#: index.docbook:174
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing the collection property value."
+msgstr "<literal>access</literal> (옵션 - 디폴트는 <literal>property</literal>): Hibernate가 콜렉션 프로퍼티 값에 접근하는데 사용할 방도."
+
+#: index.docbook:180
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Species that changes to the state of the collection results in increment of the owning entity's version. (For one to many associations, it is often reasonable to disable this setting.)"
+msgstr "<literal>optimistic-lock</literal> (옵션 - 디폴트는 <literal>true</literal>): 콜렉션의 상태에 대한 변경들이 소유하는 엔티티의 버전의 증가로 귀결될 것인지를 지정한다. (one to many 연관들에 대해, 이 설정을 사용 불가능하게 하는 것이 종종 합당하다.)"
+
+#: index.docbook:188
+msgid "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): A value of <literal>false</literal> specifies that the elements of the collection never change (a minor performance optimization in some cases)."
+msgstr "<literal>mutable</literal> (옵션 - 디폴트는 <literal>true</literal>): <literal>false</literal> 값은 콜렉션의 요소들이 결코 변경되지 않음을 지정한다. (몇몇 경우들에서 마이너 퍼포먼스 최적화)."
+
+#: index.docbook:198
+msgid "Collection foreign keys"
+msgstr "콜렉션 foreign 키들"
+
+#: index.docbook:200
+msgid "Collection instances are distinguished in the database by the foreign key of the entity that owns the collection. This foreign key is referred to as the <emphasis>collection key column</emphasis> (or columns) of the collection table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> element."
+msgstr "콜렉션 인스턴스들은 그 콜렉션을 소유하는 엔티티의 foreign 키에 의해 데이터베이스 내에서 구별지워진다. 이 foreign 키는 그 콜렉션 테이블의 <emphasis>콜렉션 키 컬럼</emphasis> (또는 컬럼들)로서 참조된다. 그 콜렉션 키 컬럼은 <literal>&lt;key&gt;</literal> 요소에 의해 매핑된다."
+
+#: index.docbook:208
+msgid "There may be a nullability constraint on the foreign key column. For most collections, this is implied. For unidirectional one to many associations, the foreign key column is nullable by default, so you might need to specify <literal>not-null=\"true\"</literal>."
+msgstr "foreign 키 컬럼에 대한 null 허용 가능 컨스트레인트가 존재할 수 있다. 대부분의 콜렉션들에 대해, 이것이 당연히 수반된다. 단방향 one to many 연관들의 경우, foreign 키는 디폴트로 null 허용 가능하여서, 당신은 <literal>not-null=\"true\"</literal>를 지정할 필요가 있을 수 있다."
+
+#: index.docbook:215
+msgid "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
+msgstr "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
+
+#: index.docbook:217
+msgid "The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
+msgstr "foreign 키 컨스트레인트는 <literal>ON DELETE CASCADE</literal>를 사용할 수도 있다."
+
+#: index.docbook:221
+msgid "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
+msgstr "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
+
+#: index.docbook:223
+msgid "See the previous chapter for a full definition of the <literal>&lt;key&gt;</literal> element."
+msgstr "<literal>&lt;key&gt;</literal> 요소에 대한 전체 정의는 앞 장을 보라."
+
+#: index.docbook:231
+msgid "Collection elements"
+msgstr "콜렉션 요소들"
+
+#: index.docbook:233
+msgid "Collections may contain almost any other Hibernate type, including all basic types, custom types, components, and of course, references to other entities. This is an important distinction: an object in a collection might be handled with \"value\" semantics (its life cycle fully depends on the collection owner) or it might be a reference to another entity, with its own life cycle. In the latter case, only the \"link\" between the two objects is considered to be state held by the collection."
+msgstr "콜렉션들은 모든 기본 타입들, 컴포넌트들, 그리고 물론 다른 엔티티들에 대한 참조들을 포함하여 거의 대부분의 어떤 다른 Hibernate 타입을 포함할 수도 있다. 이것은 중요한 구분이다: 콜렉션 내에 있는 객체는 \"값(value)\" 의미로 처리될 수도 있거나(그것의 생명주기는 콜렉션 소유자에 의존한다) 그것은 그것 자신의 생명주기를 가진 또 다른 엔티티에 대한 참조일 수 있다. 후자의 경우, 두 개의 객체들 사이의 \"링크\" 만이 그 콜렉션에 의해 소유된 상태로 간주된다."
+
+#: index.docbook:242
+msgid "The contained type is referred to as the <emphasis>collection element type</emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of entity references, with <literal>&lt;one-to-many&gt;</literal> or <literal>&lt;many-to-many&gt;</literal>. The first two map elements with value semantics, the next two are used to map entity associations."
+msgstr "포함된 타입은 콜렉션 요소 타입으로서 불려진다. 콜렉션 요소들은 <literal>&lt;element&gt;</literal> 또는 <literal>&lt;composite-element&gt;</literal>에 의해 매핑되거나, 엔티티 참조들의 경우에 <literal>&lt;one-to-many&gt;</literal> 또는 <literal>&lt;many-to-many&gt;</literal>로서 매핑된다. 앞의 두 개는 value 의미를 가진 요소들을 매핑시키고, 뒤의 두개는 엔티티 연관들을 매핑하는데 사용된다."
+
+#: index.docbook:254
+msgid "Indexed collections"
+msgstr "인덱싱 된 콜렉션들"
+
+#: index.docbook:256
+msgid "All collection mappings, except those with set and bag semantics, need an <emphasis>index column</emphasis> in the collection table - a column that maps to an array index, or <literal>List</literal> index, or <literal>Map</literal> key. The index of a <literal>Map</literal> may be of any basic type, mapped with <literal>&lt;map-key&gt;</literal>, it may be an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it may be a composite type, mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or list is always of type <literal>integer</literal> and is mapped using the <literal>&lt;list-index&gt;</literal> element. The mapped column contains sequential integers (numbered from zero, by default)."
+msgstr "set 과 bag 의미들을 가진 것들을 제외하면, 모든 콜렉션 매핑들은 콜렉션 테이블 내에 <emphasis>인덱스 컬럼</emphasis>- 배열 인덱스, 또는 <literal>List</literal> 인덱스 또는 <literal>Map</literal> 키로 매핑되는 컬럼-을 필요로 한다. <literal>Map</literal>의 인덱스는 <literal>&lt;map-key&gt;</literal>로 매핑된, 어떤 기본 타입일 수 있고, 그것은 <literal>&lt;map-key-many-to-many&gt;</literal>로 매핑된 엔티티 참조일 수 있거나, 그것은 <literal>&lt;composite-map-key&gt;</literal>로 매핑된 composite 타입일 수 있다. 배열 또는 리스트의 인덱스는 항상 <literal>integer</literal> 타입이고 <literal>&lt;list-index&gt;</literal> 요소를 사용하여 매핑된다. 매핑된 컬럼은 순차적인 정수들을 포함한다(디폴트로 0에서 시작하는 번호가 붙여짐)."
+
+#: index.docbook:267
+msgid ""
+      "<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id=\"index2\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<list-index \n"
+      "        column=\"column_name\"\n"
+      "        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout arearefs=\"index1\"> <para> <literal>column_name</literal> (required): The name of the column holding the collection index values. </para> </callout> <callout arearefs=\"index1\"> <para> <literal>base</literal> (optional, defaults to <literal>0</literal>): The value of the index column that corresponds to the first element of the list or array. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area id=\"mapkey3\" coords=\"4 45\"/> </areaspec> <programlisting><![CDATA[<map-key \n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        type=\"type_name\"\n"
+      "        node=\"@attribute-name\"\n"
+      "        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs=\"mapkey1\"> <para> <literal>column</literal> (optional): The name of the column holding the collection index values. </para> </callout> <callout arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): A SQL formula used to evaluate the key of the map. </para> </callout> <callout arearefs=\"mapkey3\"> <para> <literal>type</literal> (reguired): The type of the map keys. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<map-key-many-to-many\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        class=\"ClassName\"\n"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> <para> <literal>column</literal> (optional): The name of the foreign key column for the collection index values. </para> </callout> <callout arearefs=\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): A SQL formula used to evaluate the foreign key of the map key. </para> </callout> <callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> (required): The entity class used as the map key. </para> </callout> </calloutlist> </programlistingco>"
+msgstr ""
+      "<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id=\"index2\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<list-index \n"
+      "        column=\"column_name\"\n"
+      "        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout arearefs=\"index1\"> <para> <literal>column_name</literal> (필수): 콜렉션 인덱스 값들을 보관하는 컬럼의 이름. </para> </callout> <callout arearefs=\"index1\"> <para> <literal>base</literal> (옵션, 디폴트는 <literal>0</literal>): 리스트 또는 배열의 첫 번째 요소에 대응하는 인덱스 컬럼의 값. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area id=\"mapkey3\" coords=\"4 45\"/> </areaspec> <programlisting><![CDATA[<map-key \n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        type=\"type_name\"\n"
+      "        node=\"@attribute-name\"\n"
+      "        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs=\"mapkey1\"> <para> <literal>column</literal> (옵션): 콜렉션 인덱스 값들을 보관하는 컬럼의 이름. </para> </callout> <callout arearefs=\"mapkey2\"> <para> <literal>formula</literal> (옵션): map의 키를 평가하는데 사용되는 SQL formula. </para> </callout> <callout arearefs=\"mapkey3\"> <para> <literal>type</literal> (필수): The type of the map 키들의 타입 </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<map-key-many-to-many\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        class=\"ClassName\"\n"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> <para> <literal>column</literal> (옵션): 콜렉션 인덱스 값들에 대한 foreign 키 컬럼의 이름. </para> </callout> <callout arearefs=\"indexmanytomany2\"> <para> <literal>formula</literal> (옵션): map의 foreign 키를 평가하는데 사용되는 SQL formula. </para> </callout> <callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> (필수): map 키로서 사용되는 엔티티 클래스. </para> </callout> </calloutlist> </programlistingco>"
+
+#: index.docbook:348
+msgid "If your table doesn't have an index column, and you still wish to use <literal>List</literal> as the property type, you should map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order when it is retrieved from the database, but it may be optionally sorted or ordered."
+msgstr "만일 당신의 테이블이 인덱스 컬럼을 가지 않고, 당신이 여전히 프로퍼티 타입으로서 <literal>List</literal>를 사용하고자 원할 경우, 당신은 그 프로퍼티를 Hibernate <emphasis>&lt;bag&gt;</emphasis>으로서 매핑해야 한다. bag이 데이터베이스로부터 검색될 때 그것은 그것의 순서를 보유하지 않지만, 그것은 선택적으로 정렬(sorting)되거나 ordering될 수도 있다."
+
+#: index.docbook:357
+msgid "There are quite a range of mappings that can be generated for collections, covering many common relational models. We suggest you experiment with the schema generation tool to get a feeling for how various mapping declarations translate to database tables."
+msgstr "많은 공통된 관계형 모형들을 다루는, 콜렉션들에 대해 생성될 수 있는 매핑들의 영역이 꽤 존재한다. 여러가지 매핑 선언들이 데이터베이스 테이블들로 변환되는 방법을 당신이 느끼려면 스키마 생성 도구로 실험할 것을 우리는 제안한다."
+
+#: index.docbook:364
+msgid "Collections of values and many-to-many associations"
+msgstr "값들을 가진 콜렉션들과 many-to-many 연관들"
+
+#: index.docbook:366
+msgid "Any collection of values or many-to-many association requires a dedicated <emphasis>collection table</emphasis> with a foreign key column or columns, <emphasis>collection element column</emphasis> or columns and possibly an index column or columns."
+msgstr "어떤 값들을 가진 콜렉션 또는 many-to-many 연관은 foreign 키 컬럼이나 컬럼들, <emphasis>콜렉션 요소 컬럼</emphasis>이나 컬럼들 그리고 가능하면 인덱스 컬럼들이나 컬럼들을 가진 전용 <emphasis>콜렉션 테이블</emphasis>을 필요로 한다."
+
+#: index.docbook:373
+msgid "For a collection of values, we use the <literal>&lt;element&gt;</literal> tag."
+msgstr "값들을 가진 콜렉션의 경우, 우리는 <literal>&lt;element&gt;</literal> 태그를 사용한다."
+
+#: index.docbook:375
+msgid ""
+      "<programlistingco> <areaspec> <area id=\"element1b\" coords=\"2 50\"/> <area id=\"element2b\" coords=\"3 50\"/> <area id=\"element3b\" coords=\"4 50\"/> </areaspec> <programlisting><![CDATA[<element\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        type=\"typename\"\n"
+      "        length=\"L\"\n"
+      "        precision=\"P\"\n"
+      "        scale=\"S\"\n"
+      "        not-null=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        node=\"element-name\"\n"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> <literal>column</literal> (optional): The name of the column holding the collection element values. </para> </callout> <callout arearefs=\"element2b\"> <para> <literal>formula</literal> (optional): An SQL formula used to evaluate the element. </para> </callout> <callout arearefs=\"element3b\"> <para> <literal>type</literal> (required): The type of the collection element. </para> </callout> </calloutlist> </programlistingco> <para> A <emphasis>many-to-many association</emphasis> is specified using the <literal>&lt;many-to-many&gt;</literal> element. </para> <programlistingco> <areaspec> <area id=\"manytomany1\" coords=\"2 60\"/> <area id=\"manytomany2\" coords=\"3 60\"/> <area id=\"manytomany3\" coords=\"4 60\"/> <area id=\"manytomany4\" coords=\"5 60\"/> <area id=\"manytomany5\" coords=\"6 60\"/> <area id=\"manytomany6\" coords=\"7 60\"/> <area id=\"manytomany7\" coords=\"8 60\"/> <area id=\"manytomany8\" coords=\"9 60\"/> </areaspec> <programlisting><![CDATA[<many-to-many\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        class=\"ClassName\"\n"
+      "        fetch=\"select|join\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        node=\"element-name\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> <para> <literal>column</literal> (optional): The name of the element foreign key column. </para> </callout> <callout arearefs=\"manytomany2\"> <para> <literal>formula</literal> (optional): An SQL formula used to evaluate the element foreign key value. </para> </callout> <callout arearefs=\"manytomany3\"> <para> <literal>class</literal> (required): The name of the associated class. </para> </callout> <callout arearefs=\"manytomany4\"> <para> <literal>fetch</literal> (optional - defaults to <literal>join</literal>): enables outer-join or sequential select fetching for this association. This is a special case; for full eager fetching (in a single <literal>SELECT</literal>) of an entity and its many-to-many relationships to other entities, you would enable <literal>join</literal> fetching not only of the collection itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</literal> nested element. </para> </callout> <callout arearefs=\"manytomany5\"> <para> <literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the foreign-key column. This makes the association multiplicity effectively one to many. </para> </callout> <callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association. </para> </callout> <callout arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (optional): The entity name of the associated class, as an alternative to <literal>class</literal>. </para> </callout> <callout arearefs=\"manytomany8\"> <para> <literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used. </para> </callout> </calloutlist> </programlistingco>"
+msgstr ""
+      "<programlistingco> <areaspec> <area id=\"element1b\" coords=\"2 50\"/> <area id=\"element2b\" coords=\"3 50\"/> <area id=\"element3b\" coords=\"4 50\"/> </areaspec> <programlisting><![CDATA[<element\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        type=\"typename\"\n"
+      "        length=\"L\"\n"
+      "        precision=\"P\"\n"
+      "        scale=\"S\"\n"
+      "        not-null=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        node=\"element-name\"\n"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> <literal>column</literal> (옵션): 콜렉션 요소 값들을 소유하는 컬럼의 이름. </para> </callout> <callout arearefs=\"element2b\"> <para> <literal>formula</literal> (옵션): 요소를 평가하는데 사용되는 SQL formula. </para> </callout> <callout arearefs=\"element3b\"> <para> <literal>type</literal> (필수): 콜렉션 요소의 타입. </para> </callout> </calloutlist> </programlistingco> <para> <emphasis>many-to-many association</emphasis> 연관은 <literal>&lt;many-to-many&gt;</literal> 요소를 사용하여 지정된다. </para> <programlistingco> <areaspec> <area id=\"manytomany1\" coords=\"2 60\"/> <area id=\"manytomany2\" coords=\"3 60\"/> <area id=\"manytomany3\" coords=\"4 60\"/> <area id=\"manytomany4\" coords=\"5 60\"/> <area id=\"manytomany5\" coords=\"6 60\"/> <area id=\"manytomany6\" coords=\"7 60\"/> <area id=\"manytomany7\" coords=\"8 60\"/> <area id=\"manytomany8\" coords=\"9 60\"/> </areaspec> <programlisting><![CDATA[<many-to-many\n"
+      "        column=\"column_name\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        class=\"ClassName\"\n"
+      "        fetch=\"select|join\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        node=\"element-name\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> <para> <literal>column</literal> (옵션): 요소 foreign 키 컬럼의 이름. </para> </callout> <callout arearefs=\"manytomany2\"> <para> <literal>formula</literal> (옵션): 요소 foreign 키 값을 평가하는데 사용되는 SQL formula. </para> </callout> <callout arearefs=\"manytomany3\"> <para> <literal>class</literal> (필수): 연관된 클래스의 이름. </para> </callout> <callout arearefs=\"manytomany4\"> <para> <literal>fetch</literal> (옵션 - 디폴트는 <literal>join</literal>): 이 연관에 대해 outer-join 페칭 또는 sequential select 페칭을 이용 가능하게 만든다. 이것은 특별한 경우이다; 엔티티 그리고 다른 엔티티들과 그것의 many-to-many 관계들에 대한 (하나의 <literal>SELECT</literal> 내에서) 전체 eager 페칭의 경우, 당신은 콜렉션 그 자체에 대해서 뿐만 아니라 내포된 요소 <literal>&lt;many-to-many&gt;</literal> 상의 이 속성에 대해 <literal>join</literal> 페칭을 이용 가능하게 할 것이다. </para> </callout> <callout arearefs=\"manytomany5\"> <para> <literal>unique</literal> (옵션): foreign-key 컬럼에 대한 유일 컨스트레인트의 DDL 생성을 가능하도록 한다. 이것은 연관 다중성 (association multiplicity)을 효율적으로 one to many로 만든다. </para> </callout> <callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> (옵션 - 디폴트는 <literal>exception</literal>): 누락된 행들을 참조하는 foreign 키들이 어떻게 처리될 것인지를 지정한다: <literal>ignore</literal>는 누락된 한 행을 한 개의 연관으로 다룰 것이다. </para> </callout> <callout arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (옵션): <literal>class</literal>에 대한 하나의 대안으로서, 연관된 클래스의 엔티티 이름. </para> </callout> <callout arearefs=\"manytomany8\"> <para> <literal>property-ref</literal>: (옵션) 이 foreign 키에 조인된 연관 클래스의 프로퍼티의 이름. 지정되지 않을 경우, 연관 클래스의 프라이머리 키가 사용된다. </para> </callout> </calloutlist> </programlistingco>"
+
+#: index.docbook:480
+msgid "Some examples, first, a set of strings:"
+msgstr "몇몇 예제들, 먼저 문자열들을 가진 set:"
+
+#: index.docbook:484
+msgid ""
+      "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
+      "    <key column=\"person_id\"/>\n"
+      "    <element column=\"person_name\" type=\"string\"/>\n"
+      "</set>]]>"
+msgstr ""
+      "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
+      "    <key column=\"person_id\"/>\n"
+      "    <element column=\"person_name\" type=\"string\"/>\n"
+      "</set>]]>"
+
+#: index.docbook:486
+msgid "A bag containing integers (with an iteration order determined by the <literal>order-by</literal> attribute):"
+msgstr "(<literal>order-by</literal> 속성에 의해 결정되는 반복 순서를 가진) 정수들을 포함하는 bag :"
+
+#: index.docbook:491
+msgid ""
+      "<![CDATA[<bag name=\"sizes\" \n"
+      "        table=\"item_sizes\" \n"
+      "        order-by=\"size asc\">\n"
+      "    <key column=\"item_id\"/>\n"
+      "    <element column=\"size\" type=\"integer\"/>\n"
+      "</bag>]]>"
+msgstr ""
+      "<![CDATA[<bag name=\"sizes\" \n"
+      "        table=\"item_sizes\" \n"
+      "        order-by=\"size asc\">\n"
+      "    <key column=\"item_id\"/>\n"
+      "    <element column=\"size\" type=\"integer\"/>\n"
+      "</bag>]]>"
+
+#: index.docbook:493
+msgid "An array of entities - in this case, a many to many association:"
+msgstr "엔티티들을 가진 배열 - 이 경우에, many to many 연관 :"
+
+#: index.docbook:497
+msgid ""
+      "<![CDATA[<array name=\"addresses\" \n"
+      "        table=\"PersonAddress\" \n"
+      "        cascade=\"persist\">\n"
+      "    <key column=\"personId\"/>\n"
+      "    <list-index column=\"sortOrder\"/>\n"
+      "    <many-to-many column=\"addressId\" class=\"Address\"/>\n"
+      "</array>]]>"
+msgstr ""
+      "<![CDATA[<array name=\"addresses\" \n"
+      "        table=\"PersonAddress\" \n"
+      "        cascade=\"persist\">\n"
+      "    <key column=\"personId\"/>\n"
+      "    <list-index column=\"sortOrder\"/>\n"
+      "    <many-to-many column=\"addressId\" class=\"Address\"/>\n"
+      "</array>]]>"
+
+#: index.docbook:499
+msgid "A map from string indices to dates:"
+msgstr "날짜들에 대한 문자열 인덱스들을 가진 map :"
+
+#: index.docbook:503
+msgid ""
+      "<![CDATA[<map name=\"holidays\" \n"
+      "        table=\"holidays\" \n"
+      "        schema=\"dbo\" \n"
+      "        order-by=\"hol_name asc\">\n"
+      "    <key column=\"id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date\" type=\"date\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<map name=\"holidays\" \n"
+      "        table=\"holidays\" \n"
+      "        schema=\"dbo\" \n"
+      "        order-by=\"hol_name asc\">\n"
+      "    <key column=\"id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date\" type=\"date\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:505
+msgid "A list of components (discussed in the next chapter):"
+msgstr "컴포넌트들의 리스트(다음 장에서 논의됨):"
+
+#: index.docbook:509
+msgid ""
+      "<![CDATA[<list name=\"carComponents\" \n"
+      "        table=\"CarComponents\">\n"
+      "    <key column=\"carId\"/>\n"
+      "    <list-index column=\"sortOrder\"/>\n"
+      "    <composite-element class=\"CarComponent\">\n"
+      "        <property name=\"price\"/>\n"
+      "        <property name=\"type\"/>\n"
+      "        <property name=\"serialNumber\" column=\"serialNum\"/>\n"
+      "    </composite-element>\n"
+      "</list>]]>"
+msgstr ""
+      "<![CDATA[<list name=\"carComponents\" \n"
+      "        table=\"CarComponents\">\n"
+      "    <key column=\"carId\"/>\n"
+      "    <list-index column=\"sortOrder\"/>\n"
+      "    <composite-element class=\"CarComponent\">\n"
+      "        <property name=\"price\"/>\n"
+      "        <property name=\"type\"/>\n"
+      "        <property name=\"serialNumber\" column=\"serialNum\"/>\n"
+      "    </composite-element>\n"
+      "</list>]]>"
+
+#: index.docbook:514
+msgid "One-to-many associations"
+msgstr "One-to-many 연관들"
+
+#: index.docbook:516
+msgid "A <emphasis>one to many association</emphasis> links the tables of two classes via a foreign key, with no intervening collection table. This mapping loses certain semantics of normal Java collections:"
+msgstr "<emphasis>one to many 연관</emphasis>은 중재하는 콜렉션 테이블 없이 foreign 키를 통해 두 개의 클래스들의 테이블들을 연결시킨다. 이 매핑은 통상의 자바 콜렉션들의 어떤 의미를 상실한다:"
+
+#: index.docbook:524
+msgid "An instance of the contained entity class may not belong to more than one instance of the collection"
+msgstr "포함된 엔티티 클래스의 인스턴스는 그 콜렉션의 하나 이상의 인스턴스에 속하지 않을 수 있다"
+
+#: index.docbook:530
+msgid "An instance of the contained entity class may not appear at more than one value of the collection index"
+msgstr "포함된 엔티티 클래스의 인스턴스는 콜렉션 인덱스의 하나 이상의 값에서 나타나지 않을 수 있다"
+
+#: index.docbook:537
+msgid "An association from <literal>Product</literal> to <literal>Part</literal> requires existence of a foreign key column and possibly an index column to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one to many association."
+msgstr "<literal>Product</literal>로부터 <literal>Part</literal>로의 연관은 foreign 키 컬럼과 <literal>Part</literal> 테이블에 대한 인덱스 컬럼의 존재를 필요로 한다. <literal>&lt;one-to-many&gt;</literal> 태그는 이것이 one to many 연관임을 나타낸다."
+
+#: index.docbook:550
+msgid ""
+      "<![CDATA[<one-to-many \n"
+      "        class=\"ClassName\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "    />]]>"
+msgstr ""
+      "<![CDATA[<one-to-many \n"
+      "        class=\"ClassName\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "    />]]>"
+
+#: index.docbook:553
+msgid "<literal>class</literal> (required): The name of the associated class."
+msgstr "<literal>class</literal> (필수): 연관된 클래스의 이름."
+
+#: index.docbook:558
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how cached identifiers that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr "<literal>not-found</literal> (옵션 - 디폴트는 <literal>exception</literal>): 누락된 행들을 참조하는 캐시된 식별자들이 어떻게 처리될 것인지를 지정한다: <literal>ignore</literal>는 누락된 한 행을 한 개의 연관으로 다룰 것이다."
+
+#: index.docbook:565
+msgid "<literal>entity-name</literal> (optional): The entity name of the associated class, as an alternative to <literal>class</literal>."
+msgstr "<literal>entity-name</literal> (옵션): <literal>class</literal>에 대한 대안으로서, 연관된 클래스의 엔티티 이름."
+
+#: index.docbook:573
+msgid "Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need to declare any columns. Nor is it necessary to specify the <literal>table</literal> name anywhere."
+msgstr "<literal>&lt;one-to-many&gt;</literal> 요소는 어떤 컬럼들을 선언하는데 필요하지 않음을 주목하라. 어딘가에 <literal>table</literal> 이름을 지정하는 것도 필수적이지 않다."
+
+#: index.docbook:579
+msgid "<emphasis>Very important note:</emphasis> If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional association</emphasis> with the collection mapping marked <literal>inverse=\"true\"</literal>. See the discussion of bidirectional associations later in this chapter."
+msgstr "<emphasis>매우 중요한 노트</emphasis>: 만일 <literal>&lt;one-to-many&gt;</literal> 연관의 foreign 키 컬럼이 <literal>NOT NULL</literal>로 선언될 경우, 당신은 <literal>&lt;key&gt;</literal> 매핑을 <literal>not-null=\"true\"</literal>로 선언해야 하거나 <literal>inverse=\"true\"</literal>로 마크된 콜렉션 매핑을 가진 <emphasis>양방향 연관을 사용해야 한다</emphasis>. 양방향 연관들에 대한 논의는 이 장의 뒷부분을 보라."
+
+#: index.docbook:588
+msgid "This example shows a map of <literal>Part</literal> entities by name (where <literal>partName</literal> is a persistent property of <literal>Part</literal>). Notice the use of a formula-based index."
+msgstr "이 예제는 name으로 <literal>Part</literal> 엔티티들을 가진 map을 보여준다(여기서 <literal>partName</literal>은 <literal>Part</literal>의 영속 프로퍼티이다). formula-기반 index의 사용을 주목하라."
+
+#: index.docbook:594
+msgid ""
+      "<![CDATA[<map name=\"parts\"\n"
+      "        cascade=\"all\">\n"
+      "    <key column=\"productId\" not-null=\"true\"/>\n"
+      "    <map-key formula=\"partName\"/>\n"
+      "    <one-to-many class=\"Part\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<map name=\"parts\"\n"
+      "        cascade=\"all\">\n"
+      "    <key column=\"productId\" not-null=\"true\"/>\n"
+      "    <map-key formula=\"partName\"/>\n"
+      "    <one-to-many class=\"Part\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:600
+msgid "Advanced collection mappings"
+msgstr "개선된 콜렉션 매핑들"
+
+#: index.docbook:603
+msgid "Sorted collections"
+msgstr "Sorted 콜렉션들"
+
+#: index.docbook:605
+msgid "Hibernate supports collections implementing <literal>java.util.SortedMap</literal> and <literal>java.util.SortedSet</literal>. You must specify a comparator in the mapping file:"
+msgstr "Hibernate는 <literal>java.util.SortedMap</literal>과 <literal>java.util.SortedSet</literal>를 구현하는 콜렉션들을 지원한다. 당신은 매핑 파일 속에 하나의 comparator를 지정해야 한다:"
+
+#: index.docbook:610
+msgid ""
+      "<![CDATA[<set name=\"aliases\" \n"
+      "            table=\"person_aliases\" \n"
+      "            sort=\"natural\">\n"
+      "    <key column=\"person\"/>\n"
+      "    <element column=\"name\" type=\"string\"/>\n"
+      "</set>\n"
+      "\n"
+      "<map name=\"holidays\" sort=\"my.custom.HolidayComparator\">\n"
+      "    <key column=\"year_id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date\" type=\"date\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<set name=\"aliases\" \n"
+      "            table=\"person_aliases\" \n"
+      "            sort=\"natural\">\n"
+      "    <key column=\"person\"/>\n"
+      "    <element column=\"name\" type=\"string\"/>\n"
+      "</set>\n"
+      "\n"
+      "<map name=\"holidays\" sort=\"my.custom.HolidayComparator\">\n"
+      "    <key column=\"year_id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date\" type=\"date\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:612
+msgid "Allowed values of the <literal>sort</literal> attribute are <literal>unsorted</literal>, <literal>natural</literal> and the name of a class implementing <literal>java.util.Comparator</literal>."
+msgstr "<literal>sort</literal> 속성에 허용되는 값들은 <literal>unsorted</literal>, <literal>natural</literal>, 그리고 <literal>java.util.Comparator</literal>를 구현하는 클래스의 이름이다."
+
+#: index.docbook:618
+msgid "Sorted collections actually behave like <literal>java.util.TreeSet</literal> or <literal>java.util.TreeMap</literal>."
+msgstr "Sorted 콜렉션들은 <literal>java.util.TreeSet</literal> 또는 <literal>java.util.TreeMap</literal>처럼 행동한다."
+
+#: index.docbook:623
+msgid "If you want the database itself to order the collection elements use the <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal> or <literal>map</literal> mappings. This solution is only available under JDK 1.4 or higher (it is implemented using <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>). This performs the ordering in the SQL query, not in memory."
+msgstr "만일 당신이 데이터베이스 그 자체가 콜렉션 요소들을 순서지우도록(order)원할 경우 <literal>set</literal>, <literal>bag</literal> 또는<literal>map</literal> 매핑들에 대해 <literal>order-by</literal> 속성을 사용하라. 이 해결책은 JDK 1.4 이상의 버전에서만 이용 가능하다(그것은 <literal>LinkedHashSet</literal> 또는 <literal>LinkedHashMap</literal>을 사용하여 구현된다). 이것은 메모리 내가 아닌, SQL 질의 내에서 순서지움(ordering)을 수행한다."
+
+#: index.docbook:632
+msgid ""
+      "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower(name) asc\">\n"
+      "    <key column=\"person\"/>\n"
+      "    <element column=\"name\" type=\"string\"/>\n"
+      "</set>\n"
+      "\n"
+      "<map name=\"holidays\" order-by=\"hol_date, hol_name\">\n"
+      "    <key column=\"year_id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date type=\"date\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower(name) asc\">\n"
+      "    <key column=\"person\"/>\n"
+      "    <element column=\"name\" type=\"string\"/>\n"
+      "</set>\n"
+      "\n"
+      "<map name=\"holidays\" order-by=\"hol_date, hol_name\">\n"
+      "    <key column=\"year_id\"/>\n"
+      "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+      "    <element column=\"hol_date type=\"date\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:634
+msgid "Note that the value of the <literal>order-by</literal> attribute is an SQL ordering, not a HQL ordering!"
+msgstr "<literal>order-by</literal> 속성의 값은 HQL 순서지움(ordering)이 아니라 SQL 순서지움(ordering)임을 노트하라!"
+
+#: index.docbook:639
+msgid "Associations may even be sorted by some arbitrary criteria at runtime using a collection <literal>filter()</literal>."
+msgstr "연관들은 콜렉션 <literal>filter()</literal>를 사용하여 실행 시에 어떤 임의의 criteria(기준)을 사용하여 정렬(sort)될 수도 있다."
+
+#: index.docbook:644
+msgid "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name\" ).list();]]>"
+msgstr "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name\" ).list();]]>"
+
+#: index.docbook:649
+msgid "Bidirectional associations"
+msgstr "양방향 연관들"
+
+#: index.docbook:651
+msgid "A <emphasis>bidirectional association</emphasis> allows navigation from both \"ends\" of the association. Two kinds of bidirectional association are supported:"
+msgstr "<emphasis>양방향 연관</emphasis>은 연관의 양 \"끝(end)들\"로부터 네비게이션을 허용한다. 두 가지 종류의 양방향 연관들이 지원된다:"
+
+#: index.docbook:658
+msgid "one-to-many"
+msgstr "one-to-many"
+
+#: index.docbook:660
+msgid "set or bag valued at one end, single-valued at the other"
+msgstr "한쪽 끝에 set 또는 bag 값을 갖고, 다른 쪽 긑에 단일 값을 가진 연관"
+
+#: index.docbook:666
+msgid "many-to-many"
+msgstr "many-to-many"
+
+#: index.docbook:668
+msgid "set or bag valued at both ends"
+msgstr "양 끝에서 set 또는 bag 값을 가진 연관"
+
+#: index.docbook:677
+msgid "You may specify a bidirectional many-to-many association simply by mapping two many-to-many associations to the same database table and declaring one end as <emphasis>inverse</emphasis> (which one is your choice, but it can not be an indexed collection)."
+msgstr "당신은 동일한 두 개의 many-to-many 연관들을 동일한 데이터베이스 테이블로 간단하게 매핑하고 한 쪽 끝을 <emphasis>inverse</emphasis>(당신의 선택은 하나이지만, 그것은 인덱싱된 콜렉션일 수 없다)로 선언함으로써 하나의 양방향 many-to-many 연관을 지정할 수도 있다."
+
+#: index.docbook:684
+msgid "Here's an example of a bidirectional many-to-many association; each category can have many items and each item can be in many categories:"
+msgstr "다음은 양방향 many-to-many 연관에 관한 예제이다; 각각의 카테고리는 많은 아이템들을 가질 수 있고 각각의 아이템은 많은 카테고리들 속에 있을 수 있다:"
+
+#: index.docbook:689
+msgid ""
+      "<![CDATA[<class name=\"Category\">\n"
+      "    <id name=\"id\" column=\"CATEGORY_ID\"/>\n"
+      "    ...\n"
+      "    <bag name=\"items\" table=\"CATEGORY_ITEM\">\n"
+      "        <key column=\"CATEGORY_ID\"/>\n"
+      "        <many-to-many class=\"Item\" column=\"ITEM_ID\"/>\n"
+      "    </bag>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Item\">\n"
+      "    <id name=\"id\" column=\"ITEM_ID\"/>\n"
+      "    ...\n"
+      "\n"
+      "    <!-- inverse end -->\n"
+      "    <bag name=\"categories\" table=\"CATEGORY_ITEM\" inverse=\"true\">\n"
+      "        <key column=\"ITEM_ID\"/>\n"
+      "        <many-to-many class=\"Category\" column=\"CATEGORY_ID\"/>\n"
+      "    </bag>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Category\">\n"
+      "    <id name=\"id\" column=\"CATEGORY_ID\"/>\n"
+      "    ...\n"
+      "    <bag name=\"items\" table=\"CATEGORY_ITEM\">\n"
+      "        <key column=\"CATEGORY_ID\"/>\n"
+      "        <many-to-many class=\"Item\" column=\"ITEM_ID\"/>\n"
+      "    </bag>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Item\">\n"
+      "    <id name=\"id\" column=\"ITEM_ID\"/>\n"
+      "    ...\n"
+      "\n"
+      "    <!-- inverse end -->\n"
+      "    <bag name=\"categories\" table=\"CATEGORY_ITEM\" inverse=\"true\">\n"
+      "        <key column=\"ITEM_ID\"/>\n"
+      "        <many-to-many class=\"Category\" column=\"CATEGORY_ID\"/>\n"
+      "    </bag>\n"
+      "</class>]]>"
+
+#: index.docbook:691
+msgid "Changes made only to the inverse end of the association are <emphasis>not</emphasis> persisted. This means that Hibernate has two representations in memory for every bidirectional association, one link from A to B and another link from B to A. This is easier to understand if you think about the Java object model and how we create a many-to-many relationship in Java:"
+msgstr "연관의 inverse 끝(end)에 대해서만 행해진 변경들은 영속화 되지 <emphasis>않는다</emphasis>. 이것은 Hibernate가 모든 양방향 연관에 대해 메모리 내에 두 개의 표상들을 갖는다는 점을 의미한다: A로부터 B로의 하나의 링크와 B로부터 A로의 또 다른 링크. 만일 당신이 자바 객체 모형에 대해 그리고 자바에서 many-to-many 관계를 생성시키는 방법에 대해 생각하면 이것은 이해하기가 더 쉽다:"
+
+#: index.docbook:699
+msgid ""
+      "<![CDATA[\n"
+      "category.getItems().add(item);          // The category now \"knows\" about the relationship\n"
+      "item.getCategories().add(category);     // The item now \"knows\" about the relationship\n"
+      "\n"
+      "session.persist(item);                   // The relationship won't be saved!\n"
+      "session.persist(category);               // The relationship will be saved]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "category.getItems().add(item);          // The category now \"knows\" about the relationship\n"
+      "item.getCategories().add(category);     // The item now \"knows\" about the relationship\n"
+      "\n"
+      "session.persist(item);                   // The relationship won't be saved!\n"
+      "session.persist(category);               // The relationship will be saved]]>"
+
+#: index.docbook:701
+msgid "The non-inverse side is used to save the in-memory representation to the database."
+msgstr "non-inverse 측은 메모리 내 표상을 데이터베이스로 저장하는데 사용된다."
+
+#: index.docbook:705
+msgid "You may define a bidirectional one-to-many association by mapping a one-to-many association to the same table column(s) as a many-to-one association and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgstr "당신은 하나의 one-to-many 연관을 하나의 many-to-one 연관으로서 동일한 테이블 컬럼(들)로 매핑하고 many-값을 가진 끝(end)을 <literal>inverse=\"true\"</literal>로 선언함으로써 하나의 양방향 연관을 정의할 수도 있다."
+
+#: index.docbook:711
+msgid ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <set name=\"children\" inverse=\"true\">\n"
+      "        <key column=\"parent_id\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <set name=\"children\" inverse=\"true\">\n"
+      "        <key column=\"parent_id\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:713
+msgid "Mapping one end of an association with <literal>inverse=\"true\"</literal> doesn't affect the operation of cascades, these are orthogonal concepts!"
+msgstr "연관의 한쪽 끝을 <literal>inverse=\"true\"</literal>로 매핑하는 것은 cascade들을 가진 오퍼레이션에 영향을 주지 않으며, 이것들은 orthogonal(직교) 개념들이다!"
+
+#: index.docbook:721
+msgid "Bidirectional associations with indexed collections"
+msgstr "인덱싱된 콜렉션들을 가진 양방향 연관들"
+
+#: index.docbook:722
+msgid "A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal> requires special consideration. If there is a property of the child class which maps to the index column, no problem, we can continue using <literal>inverse=\"true\"</literal> on the collection mapping:"
+msgstr "한쪽 끝이 하나의 <literal>&lt;list&gt;</literal> 또는 <literal>&lt;map&gt;</literal>으로서 표현되는 양방향 연관은 특별한 검토를 필요로 한다. 만일 인덱스 컬럼으로 매핑되는 child 클래스의 프로퍼티가 하나 존재한다면 문제가 없고, 우리는 콜렉션 매핑 상에 <literal>inverse=\"true\"</literal>를 사용하여 계속할 수 있다:"
+
+#: index.docbook:729
+msgid ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <map name=\"children\" inverse=\"true\">\n"
+      "        <key column=\"parent_id\"/>\n"
+      "        <map-key column=\"name\" \n"
+      "            type=\"string\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </map>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <property name=\"name\" \n"
+      "        not-null=\"true\"/>\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <map name=\"children\" inverse=\"true\">\n"
+      "        <key column=\"parent_id\"/>\n"
+      "        <map-key column=\"name\" \n"
+      "            type=\"string\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </map>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <property name=\"name\" \n"
+      "        not-null=\"true\"/>\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:731
+msgid "But, if there is no such property on the child class, we can't think of the association as truly bidirectional (there is information available at one end of the association that is not available at the other end). In this case, we can't map the collection <literal>inverse=\"true\"</literal>. Instead, we could use the following mapping:"
+msgstr "그러나 만일 child 클래스 상에 그런 프로퍼티가 존재하지 않을 경우, 우리는 그 연관을 진정하게 양방향으로 간주할 수 없다 (다른 쪽 끝에서 이용가능하지 않은 그 연관의 끝에서 이용 가능한 정보가 존재한다). 이 경우에 우리는 그 콜렉션을 <literal>inverse=\"true\"</literal>로 매핑시킬 수 없다. 대신에 우리는 다음 매핑을 사용할 수 있다:"
+
+#: index.docbook:738
+msgid ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <map name=\"children\">\n"
+      "        <key column=\"parent_id\"\n"
+      "            not-null=\"true\"/>\n"
+      "        <map-key column=\"name\" \n"
+      "            type=\"string\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </map>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        insert=\"false\"\n"
+      "        update=\"false\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Parent\">\n"
+      "    <id name=\"id\" column=\"parent_id\"/>\n"
+      "    ....\n"
+      "    <map name=\"children\">\n"
+      "        <key column=\"parent_id\"\n"
+      "            not-null=\"true\"/>\n"
+      "        <map-key column=\"name\" \n"
+      "            type=\"string\"/>\n"
+      "        <one-to-many class=\"Child\"/>\n"
+      "    </map>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Child\">\n"
+      "    <id name=\"id\" column=\"child_id\"/>\n"
+      "    ....\n"
+      "    <many-to-one name=\"parent\" \n"
+      "        class=\"Parent\" \n"
+      "        column=\"parent_id\"\n"
+      "        insert=\"false\"\n"
+      "        update=\"false\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:740
+msgid "Note that in this mapping, the collection-valued end of the association is responsible for updates to the foreign key. TODO: Does this really result in some unnecessary update statements?"
+msgstr "이 매핑에서 그 연관의 콜렉션 값을 가진 끝이 foreign 키에 대한 업데이트 책임이 있음을 노트하라."
+
+#: index.docbook:748
+msgid "Ternary associations"
+msgstr "Ternary associations(세겹 연관들)"
+
+#: index.docbook:750
+msgid "There are three possible approaches to mapping a ternary association. One is to use a <literal>Map</literal> with an association as its index:"
+msgstr "세 겹의 연관을 매핑하는 세 가지 가능한 접근법들이 존재한다. 하나의 접근법은 그것의 인덱스로서 연관관계를 가진 <literal>Map</literal>을 사용하는 것이다:"
+
+#: index.docbook:755
+msgid ""
+      "<![CDATA[<map name=\"contracts\">\n"
+      "    <key column=\"employer_id\" not-null=\"true\"/>\n"
+      "    <map-key-many-to-many column=\"employee_id\" class=\"Employee\"/>\n"
+      "    <one-to-many class=\"Contract\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<map name=\"contracts\">\n"
+      "    <key column=\"employer_id\" not-null=\"true\"/>\n"
+      "    <map-key-many-to-many column=\"employee_id\" class=\"Employee\"/>\n"
+      "    <one-to-many class=\"Contract\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:757
+msgid ""
+      "<![CDATA[<map name=\"connections\">\n"
+      "    <key column=\"incoming_node_id\"/>\n"
+      "    <map-key-many-to-many column=\"outgoing_node_id\" class=\"Node\"/>\n"
+      "    <many-to-many column=\"connection_id\" class=\"Connection\"/>\n"
+      "</map>]]>"
+msgstr ""
+      "<![CDATA[<map name=\"connections\">\n"
+      "    <key column=\"incoming_node_id\"/>\n"
+      "    <map-key-many-to-many column=\"outgoing_node_id\" class=\"Node\"/>\n"
+      "    <many-to-many column=\"connection_id\" class=\"Connection\"/>\n"
+      "</map>]]>"
+
+#: index.docbook:759
+msgid "A second approach is to simply remodel the association as an entity class. This is the approach we use most commonly."
+msgstr "두 번째 접근법은 그 연관을 엔티티 클래스로서 단순하게 리모델링 하는 것이다. 이것은 우리가 가장 공통적으로 사용하는 접근법이다."
+
+#: index.docbook:764
+msgid "A final alternative is to use composite elements, which we will discuss later."
+msgstr "마지막 대안은 우리가 나중에 논의하게 될 composite 요소들을 사용하는 것이다."
+
+#: index.docbook:771
+msgid "Using an &lt;idbag&gt;"
+msgstr "<literal>&lt;idbag&gt;</literal> 사용하기"
+
+#: index.docbook:773
+msgid "If you've fully embraced our view that composite keys are a bad thing and that entities should have synthetic identifiers (surrogate keys), then you might find it a bit odd that the many to many associations and collections of values that we've shown so far all map to tables with composite keys! Now, this point is quite arguable; a pure association table doesn't seem to benefit much from a surrogate key (though a collection of composite values <emphasis>might</emphasis>). Nevertheless, Hibernate provides a feature that allows you to map many to many associations and collections of values to a table with a surrogate key."
+msgstr "만일 당신이 composite 키들이 나쁜 것이고 엔티티들이 합성 식별자들(대용 키들, surrogate keys)을 가져야 한다는 우리의 견해를 전적으로 수용할 경우, 당신은 우리가 지금까지 보여주었던 값들을 가진 콜렉션들과 many to many 연관들이 모두 composite 키들을 가진 테이블들로 매핑된다는 약간 이상한 점을 발견할 수도 있다! 이제 이 점은 꽤 논의의 여지가 있다; 순수한 연관 테이블은 (비록 composite 값들을 가진 콜렉션<emphasis>일 수도</emphasis> 있을지라도) 대용 키로부터 많은 이점을 취하지 않는 것처럼 보인다. 그럼에도 불구하고 Hibernate는 당신이 값들을 가진 콜렉션들과 many to many 연관들을 대용 키를 가진 테이블로 매핑시키는 것을 당신에게 허용해주는 특징을 제공한다."
+
+#: index.docbook:784
+msgid "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal> (or <literal>Collection</literal>) with bag semantics."
+msgstr "<literal>&lt;idbag&gt;</literal> 요소는 bag 의미를 가진 <literal>List</literal>(또는 <literal>Collection</literal>)을 매핑하도록 당신에게 허용해준다."
+
+#: index.docbook:789
+msgid ""
+      "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
+      "    <collection-id column=\"ID\" type=\"long\">\n"
+      "        <generator class=\"sequence\"/>\n"
+      "    </collection-id>\n"
+      "    <key column=\"PERSON1\"/>\n"
+      "    <many-to-many column=\"PERSON2\" class=\"Person\" fetch=\"join\"/>\n"
+      "</idbag>]]>"
+msgstr ""
+      "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
+      "    <collection-id column=\"ID\" type=\"long\">\n"
+      "        <generator class=\"sequence\"/>\n"
+      "    </collection-id>\n"
+      "    <key column=\"PERSON1\"/>\n"
+      "    <many-to-many column=\"PERSON2\" class=\"Person\" fetch=\"join\"/>\n"
+      "</idbag>]]>"
+
+#: index.docbook:791
+msgid "As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like an entity class! A different surrogate key is assigned to each collection row. Hibernate does not provide any mechanism to discover the surrogate key value of a particular row, however."
+msgstr "당신이 볼 수 있듯이, <literal>&lt;idbag&gt;</literal>은 마치 엔티티 클래스인양 synthetic id generator(합성 id 생성기)를 갖는다! 다른 대용 키는 각각의 콜렉션 행에 할당된다. 하지만 Hibernate는 특정 행의 대용 키 값을 발견하는 메커니즘을 제공하지 않는다."
+
+#: index.docbook:798
+msgid "Note that the update performance of an <literal>&lt;idbag&gt;</literal> is <emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</literal>! Hibernate can locate individual rows efficiently and update or delete them individually, just like a list, map or set."
+msgstr "<literal>&lt;idbag&gt;</literal>의 업데이트 퍼포먼스는 정규 <literal>&lt;bag&gt;</literal> 보다 훨씬 좋다는 점을 노트하라! Hibernate는 마치 list, map, 또는 set인양, 개별 행들을 효율적으로 위치지울 수 있고 그것들을 개별적으로 업데이트 하거나 삭제시킬 수 있다."
+
+#: index.docbook:805
+msgid "In the current implementation, the <literal>native</literal> identifier generation strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers."
+msgstr "현재 구현에서, <literal>native</literal> 식별자 생성 방도는 <literal>&lt;idbag&gt;</literal> 콜렉션 식별자들에 대해 지원되지 않는다."
+
+#: index.docbook:829
+msgid "Collection examples"
+msgstr "콜렉션 예제들"
+
+#: index.docbook:831
+msgid "The previous sections are pretty confusing. So lets look at an example. This class:"
+msgstr "앞의 절들은 꽤 혼동스럽다. 따라서 예제를 살펴보자. 다음 클래스:"
+
+#: index.docbook:836
+msgid ""
+      "<![CDATA[package eg;\n"
+      "import java.util.Set;\n"
+      "\n"
+      "public class Parent {\n"
+      "    private long id;\n"
+      "    private Set children;\n"
+      "\n"
+      "    public long getId() { return id; }\n"
+      "    private void setId(long id) { this.id=id; }\n"
+      "\n"
+      "    private Set getChildren() { return children; }\n"
+      "    private void setChildren(Set children) { this.children=children; }\n"
+      "\n"
+      "    ....\n"
+      "    ....\n"
+      "}]]>"
+msgstr ""
+      "<![CDATA[package eg;\n"
+      "import java.util.Set;\n"
+      "\n"
+      "public class Parent {\n"
+      "    private long id;\n"
+      "    private Set children;\n"
+      "\n"
+      "    public long getId() { return id; }\n"
+      "    private void setId(long id) { this.id=id; }\n"
+      "\n"
+      "    private Set getChildren() { return children; }\n"
+      "    private void setChildren(Set children) { this.children=children; }\n"
+      "\n"
+      "    ....\n"
+      "    ....\n"
+      "}]]>"
+
+#: index.docbook:838
+msgid "has a collection of <literal>Child</literal> instances. If each child has at most one parent, the most natural mapping is a one-to-many association:"
+msgstr "는 <literal>Child</literal> 인스턴스들을 가진 하나의 콜렉션을 갖고 있다. 만일 각각의 자식이 최소한 한 개의 부모를 가질 경우, 대부분의 고유한 매핑은 one-to-many 연관이다:"
+
+#: index.docbook:844
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:846
+msgid "This maps to the following table definitions:"
+msgstr "이것은 다음 테이블 정의들로 매핑된다:"
+
+#: index.docbook:850
+msgid ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null primary key, name varchar(255), parent_id bigint )\n"
+      "alter table child add constraint childfk0 (parent_id) references parent]]>"
+msgstr ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null primary key, name varchar(255), parent_id bigint )\n"
+      "alter table child add constraint childfk0 (parent_id) references parent]]>"
+
+#: index.docbook:852
+msgid "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-many association:"
+msgstr "만일 부모가 <emphasis>필수적</emphasis>이라면, 양방향 one-to-many 연관관계를 사용하라:"
+
+#: index.docbook:857
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\" inverse=\"true\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "        <many-to-one name=\"parent\" class=\"Parent\" column=\"parent_id\" not-null=\"true\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\" inverse=\"true\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "        <many-to-one name=\"parent\" class=\"Parent\" column=\"parent_id\" not-null=\"true\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:859
+msgid "Notice the <literal>NOT NULL</literal> constraint:"
+msgstr "<literal>NOT NULL</literal> 컨스트레인트를 주목하라:"
+
+#: index.docbook:863
+msgid ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null\n"
+      "                     primary key,\n"
+      "                     name varchar(255),\n"
+      "                     parent_id bigint not null )\n"
+      "alter table child add constraint childfk0 (parent_id) references parent]]>"
+msgstr ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null\n"
+      "                     primary key,\n"
+      "                     name varchar(255),\n"
+      "                     parent_id bigint not null )\n"
+      "alter table child add constraint childfk0 (parent_id) references parent]]>"
+
+#: index.docbook:865
+msgid "Alternatively, if you absolutely insist that this association should be unidirectional, you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal> mapping:"
+msgstr "대안적으로, 만일 당신이 이 연관관계가 단방향이어야 함을 절대적으로 역설할 경우, 당신은 <literal>&lt;key&gt;</literal> 매핑 상에 <literal>NOT NULL</literal> 컨스트레인트를 선언할 수 있다:"
+
+#: index.docbook:871
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\">\n"
+      "            <key column=\"parent_id\" not-null=\"true\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\">\n"
+      "            <key column=\"parent_id\" not-null=\"true\"/>\n"
+      "            <one-to-many class=\"Child\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:873
+msgid "On the other hand, if a child might have multiple parents, a many-to-many association is appropriate:"
+msgstr "반면에, 만일 자식이 여러 부모들을 가질 수 있을 경우, many-to-many 연관이 적절하다:"
+
+#: index.docbook:878
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\" table=\"childset\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <many-to-many class=\"Child\" column=\"child_id\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "\n"
+      "    <class name=\"Parent\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <set name=\"children\" table=\"childset\">\n"
+      "            <key column=\"parent_id\"/>\n"
+      "            <many-to-many class=\"Child\" column=\"child_id\"/>\n"
+      "        </set>\n"
+      "    </class>\n"
+      "\n"
+      "    <class name=\"Child\">\n"
+      "        <id name=\"id\">\n"
+      "            <generator class=\"sequence\"/>\n"
+      "        </id>\n"
+      "        <property name=\"name\"/>\n"
+      "    </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:880
+msgid "Table definitions:"
+msgstr "테이블 정의들:"
+
+#: index.docbook:884
+msgid ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null primary key, name varchar(255) )\n"
+      "create table childset ( parent_id bigint not null,\n"
+      "                        child_id bigint not null,\n"
+      "                        primary key ( parent_id, child_id ) )\n"
+      "alter table childset add constraint childsetfk0 (parent_id) references parent\n"
+      "alter table childset add constraint childsetfk1 (child_id) references child]]>"
+msgstr ""
+      "<![CDATA[create table parent ( id bigint not null primary key )\n"
+      "create table child ( id bigint not null primary key, name varchar(255) )\n"
+      "create table childset ( parent_id bigint not null,\n"
+      "                        child_id bigint not null,\n"
+      "                        primary key ( parent_id, child_id ) )\n"
+      "alter table childset add constraint childsetfk0 (parent_id) references parent\n"
+      "alter table childset add constraint childsetfk1 (child_id) references child]]>"
+
+#: index.docbook:886
+msgid "For more examples and a complete walk-through a parent/child relationship mapping, see <xref linkend=\"example-parentchild\"/>."
+msgstr "부모/자식 관계 매핑을 연습하는 더 많은 예제들과 전체 리허설은 <xref linkend=\"example-parentchild\"/>를 보라."
+
+#: index.docbook:891
+msgid "Even more exotic association mappings are possible, we will catalog all possibilities in the next chapter."
+msgstr "비록 더 많은 신종 연관 매핑들이 가능할지라도, 우리는 다음 장에서 모든 가능성들을 분류할 것이다."
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

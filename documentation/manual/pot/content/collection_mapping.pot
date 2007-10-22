@@ -1,0 +1,492 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:30-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: collection_mapping.xml:5(title) 
+msgid "Collection Mapping"
+msgstr ""
+
+#: collection_mapping.xml:8(title) 
+msgid "Persistent collections"
+msgstr ""
+
+#: collection_mapping.xml:10(para) 
+msgid "Hibernate requires that persistent collection-valued fields be declared as an interface type, for example:"
+msgstr ""
+
+#: collection_mapping.xml:25(para) 
+msgid "The actual interface might be <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> or ... anything you like! (Where \"anything you like\" means you will have to write an implementation of <literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+msgstr ""
+
+#: collection_mapping.xml:34(para) 
+msgid "Notice how we initialized the instance variable with an instance of <literal>HashSet</literal>. This is the best way to initialize collection valued properties of newly instantiated (non-persistent) instances. When you make the instance persistent - by calling <literal>persist()</literal>, for example - Hibernate will actually replace the <literal>HashSet</literal> with an instance of Hibernate's own implementation of <literal>Set</literal>. Watch out for errors like this:"
+msgstr ""
+
+#: collection_mapping.xml:54(para) 
+msgid "The persistent collections injected by Hibernate behave like <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, depending upon the interface type."
+msgstr ""
+
+#: collection_mapping.xml:61(para) 
+msgid "Collections instances have the usual behavior of value types. They are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced. If a collection is passed from one persistent object to another, its elements might be moved from one table to another. Two entities may not share a reference to the same collection instance. Due to the underlying relational model, collection-valued properties do not support null value semantics; Hibernate does not distinguish between a null collection reference and an empty collection."
+msgstr ""
+
+#: collection_mapping.xml:72(para) 
+msgid "You shouldn't have to worry much about any of this. Use persistent collections the same way you use ordinary Java collections. Just make sure you understand the semantics of bidirectional associations (discussed later)."
+msgstr ""
+
+#: collection_mapping.xml:81(title) 
+msgid "Collection mappings"
+msgstr ""
+
+#: collection_mapping.xml:83(para) 
+msgid "The Hibernate mapping element used for mapping a collection depends upon the type of the interface. For example, a <literal>&lt;set&gt;</literal> element is used for mapping properties of type <literal>Set</literal>."
+msgstr ""
+
+#: collection_mapping.xml:97(para) 
+msgid "Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> element is representative:"
+msgstr ""
+
+#: collection_mapping.xml:147(para) 
+msgid "<literal>name</literal> the collection property name"
+msgstr ""
+
+#: collection_mapping.xml:152(para) 
+msgid "<literal>table</literal> (optional - defaults to property name) the name of the collection table (not used for one-to-many associations)"
+msgstr ""
+
+#: collection_mapping.xml:158(para) 
+msgid "<literal>schema</literal> (optional) the name of a table schema to override the schema declared on the root element"
+msgstr ""
+
+#: collection_mapping.xml:164(para) 
+msgid "<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may be used to disable lazy fetching and specify that the association is always eagerly fetched, or to enable \"extra-lazy\" fetching where most operations do not initialize the collection (suitable for very large collections)"
+msgstr ""
+
+#: collection_mapping.xml:173(para) 
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>) mark this collection as the \"inverse\" end of a bidirectional association"
+msgstr ""
+
+#: collection_mapping.xml:179(para) 
+msgid "<literal>cascade</literal> (optional - defaults to <literal>none</literal>) enable operations to cascade to child entities"
+msgstr ""
+
+#: collection_mapping.xml:185(para) 
+msgid "<literal>sort</literal> (optional) specify a sorted collection with <literal>natural</literal> sort order, or a given comparator class"
+msgstr ""
+
+#: collection_mapping.xml:191(para) 
+msgid "<literal>order-by</literal> (optional, JDK1.4 only) specify a table column (or columns) that define the iteration order of the <literal>Map</literal>, <literal>Set</literal> or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>"
+msgstr ""
+
+#: collection_mapping.xml:198(para) 
+msgid "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> condition to be used when retrieving or removing the collection (useful if the collection should contain only a subset of the available data)"
+msgstr ""
+
+#: collection_mapping.xml:205(para) 
+msgid "<literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose between outer-join fetching, fetching by sequential select, and fetching by sequential subselect."
+msgstr ""
+
+#: collection_mapping.xml:212(para) 
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a \"batch size\" for lazily fetching instances of this collection."
+msgstr ""
+
+#: collection_mapping.xml:218(para) 
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing the collection property value."
+msgstr ""
+
+#: collection_mapping.xml:224(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Species that changes to the state of the collection results in increment of the owning entity's version. (For one to many associations, it is often reasonable to disable this setting.)"
+msgstr ""
+
+#: collection_mapping.xml:232(para) 
+msgid "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): A value of <literal>false</literal> specifies that the elements of the collection never change (a minor performance optimization in some cases)."
+msgstr ""
+
+#: collection_mapping.xml:242(title) 
+msgid "Collection foreign keys"
+msgstr ""
+
+#: collection_mapping.xml:244(para) 
+msgid "Collection instances are distinguished in the database by the foreign key of the entity that owns the collection. This foreign key is referred to as the <emphasis>collection key column</emphasis> (or columns) of the collection table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> element."
+msgstr ""
+
+#: collection_mapping.xml:252(para) 
+msgid "There may be a nullability constraint on the foreign key column. For most collections, this is implied. For unidirectional one to many associations, the foreign key column is nullable by default, so you might need to specify <literal>not-null=\"true\"</literal>."
+msgstr ""
+
+#: collection_mapping.xml:261(para) 
+msgid "The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
+msgstr ""
+
+#: collection_mapping.xml:267(para) 
+msgid "See the previous chapter for a full definition of the <literal>&lt;key&gt;</literal> element."
+msgstr ""
+
+#: collection_mapping.xml:275(title) 
+msgid "Collection elements"
+msgstr ""
+
+#: collection_mapping.xml:277(para) 
+msgid "Collections may contain almost any other Hibernate type, including all basic types, custom types, components, and of course, references to other entities. This is an important distinction: an object in a collection might be handled with \"value\" semantics (its life cycle fully depends on the collection owner) or it might be a reference to another entity, with its own life cycle. In the latter case, only the \"link\" between the two objects is considered to be state held by the collection."
+msgstr ""
+
+#: collection_mapping.xml:286(para) 
+msgid "The contained type is referred to as the <emphasis>collection element type</emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of entity references, with <literal>&lt;one-to-many&gt;</literal> or <literal>&lt;many-to-many&gt;</literal>. The first two map elements with value semantics, the next two are used to map entity associations."
+msgstr ""
+
+#: collection_mapping.xml:298(title) 
+msgid "Indexed collections"
+msgstr ""
+
+#: collection_mapping.xml:300(para) 
+msgid "All collection mappings, except those with set and bag semantics, need an <emphasis>index column</emphasis> in the collection table - a column that maps to an array index, or <literal>List</literal> index, or <literal>Map</literal> key. The index of a <literal>Map</literal> may be of any basic type, mapped with <literal>&lt;map-key&gt;</literal>, it may be an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it may be a composite type, mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or list is always of type <literal>integer</literal> and is mapped using the <literal>&lt;list-index&gt;</literal> element. The mapped column contains sequential integers (numbered from zero, by default)."
+msgstr ""
+
+#: collection_mapping.xml:323(para) 
+msgid "<literal>column_name</literal> (required): The name of the column holding the collection index values."
+msgstr ""
+
+#: collection_mapping.xml:329(para) 
+msgid "<literal>base</literal> (optional, defaults to <literal>0</literal>): The value of the index column that corresponds to the first element of the list or array."
+msgstr ""
+
+#: collection_mapping.xml:351(para) 
+msgid "<literal>column</literal> (optional): The name of the column holding the collection index values."
+msgstr ""
+
+#: collection_mapping.xml:357(para) 
+msgid "<literal>formula</literal> (optional): A SQL formula used to evaluate the key of the map."
+msgstr ""
+
+#: collection_mapping.xml:363(para) 
+msgid "<literal>type</literal> (reguired): The type of the map keys."
+msgstr ""
+
+#: collection_mapping.xml:383(para) 
+msgid "<literal>column</literal> (optional): The name of the foreign key column for the collection index values."
+msgstr ""
+
+#: collection_mapping.xml:389(para) 
+msgid "<literal>formula</literal> (optional): A SQL formula used to evaluate the foreign key of the map key."
+msgstr ""
+
+#: collection_mapping.xml:395(para) 
+msgid "<literal>class</literal> (required): The entity class used as the map key."
+msgstr ""
+
+#: collection_mapping.xml:403(para) 
+msgid "If your table doesn't have an index column, and you still wish to use <literal>List</literal> as the property type, you should map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order when it is retrieved from the database, but it may be optionally sorted or ordered."
+msgstr ""
+
+#: collection_mapping.xml:412(para) 
+msgid "There are quite a range of mappings that can be generated for collections, covering many common relational models. We suggest you experiment with the schema generation tool to get a feeling for how various mapping declarations translate to database tables."
+msgstr ""
+
+#: collection_mapping.xml:419(title) 
+msgid "Collections of values and many-to-many associations"
+msgstr ""
+
+#: collection_mapping.xml:421(para) 
+msgid "Any collection of values or many-to-many association requires a dedicated <emphasis>collection table</emphasis> with a foreign key column or columns, <emphasis>collection element column</emphasis> or columns and possibly an index column or columns."
+msgstr ""
+
+#: collection_mapping.xml:428(para) 
+msgid "For a collection of values, we use the <literal>&lt;element&gt;</literal> tag."
+msgstr ""
+
+#: collection_mapping.xml:451(para) 
+msgid "<literal>column</literal> (optional): The name of the column holding the collection element values."
+msgstr ""
+
+#: collection_mapping.xml:457(para) 
+msgid "<literal>formula</literal> (optional): An SQL formula used to evaluate the element."
+msgstr ""
+
+#: collection_mapping.xml:463(para) 
+msgid "<literal>type</literal> (required): The type of the collection element."
+msgstr ""
+
+#: collection_mapping.xml:470(para) 
+msgid "A <emphasis>many-to-many association</emphasis> is specified using the <literal>&lt;many-to-many&gt;</literal> element."
+msgstr ""
+
+#: collection_mapping.xml:500(para) 
+msgid "<literal>column</literal> (optional): The name of the element foreign key column."
+msgstr ""
+
+#: collection_mapping.xml:505(para) 
+msgid "<literal>formula</literal> (optional): An SQL formula used to evaluate the element foreign key value."
+msgstr ""
+
+#: collection_mapping.xml:511(para) collection_mapping.xml:665(para) 
+msgid "<literal>class</literal> (required): The name of the associated class."
+msgstr ""
+
+#: collection_mapping.xml:516(para) 
+msgid "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): enables outer-join or sequential select fetching for this association. This is a special case; for full eager fetching (in a single <literal>SELECT</literal>) of an entity and its many-to-many relationships to other entities, you would enable <literal>join</literal> fetching not only of the collection itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</literal> nested element."
+msgstr ""
+
+#: collection_mapping.xml:527(para) 
+msgid "<literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the foreign-key column. This makes the association multiplicity effectively one to many."
+msgstr ""
+
+#: collection_mapping.xml:534(para) 
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr ""
+
+#: collection_mapping.xml:541(para) collection_mapping.xml:677(para) 
+msgid "<literal>entity-name</literal> (optional): The entity name of the associated class, as an alternative to <literal>class</literal>."
+msgstr ""
+
+#: collection_mapping.xml:547(para) 
+msgid "<literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used."
+msgstr ""
+
+#: collection_mapping.xml:556(para) 
+msgid "Some examples, first, a set of strings:"
+msgstr ""
+
+#: collection_mapping.xml:565(para) 
+msgid "A bag containing integers (with an iteration order determined by the <literal>order-by</literal> attribute):"
+msgstr ""
+
+#: collection_mapping.xml:577(para) 
+msgid "An array of entities - in this case, a many to many association:"
+msgstr ""
+
+#: collection_mapping.xml:589(para) 
+msgid "A map from string indices to dates:"
+msgstr ""
+
+#: collection_mapping.xml:602(para) 
+msgid "A list of components (discussed in the next chapter):"
+msgstr ""
+
+#: collection_mapping.xml:620(title) 
+msgid "One-to-many associations"
+msgstr ""
+
+#: collection_mapping.xml:622(para) 
+msgid "A <emphasis>one to many association</emphasis> links the tables of two classes via a foreign key, with no intervening collection table. This mapping loses certain semantics of normal Java collections:"
+msgstr ""
+
+#: collection_mapping.xml:630(para) 
+msgid "An instance of the contained entity class may not belong to more than one instance of the collection"
+msgstr ""
+
+#: collection_mapping.xml:636(para) 
+msgid "An instance of the contained entity class may not appear at more than one value of the collection index"
+msgstr ""
+
+#: collection_mapping.xml:643(para) 
+msgid "An association from <literal>Product</literal> to <literal>Part</literal> requires existence of a foreign key column and possibly an index column to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one to many association."
+msgstr ""
+
+#: collection_mapping.xml:670(para) 
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how cached identifiers that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr ""
+
+#: collection_mapping.xml:685(para) 
+msgid "Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need to declare any columns. Nor is it necessary to specify the <literal>table</literal> name anywhere."
+msgstr ""
+
+#: collection_mapping.xml:691(para) 
+msgid "<emphasis>Very important note:</emphasis> If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional association</emphasis> with the collection mapping marked <literal>inverse=\"true\"</literal>. See the discussion of bidirectional associations later in this chapter."
+msgstr ""
+
+#: collection_mapping.xml:700(para) 
+msgid "This example shows a map of <literal>Part</literal> entities by name (where <literal>partName</literal> is a persistent property of <literal>Part</literal>). Notice the use of a formula-based index."
+msgstr ""
+
+#: collection_mapping.xml:717(title) 
+msgid "Advanced collection mappings"
+msgstr ""
+
+#: collection_mapping.xml:720(title) 
+msgid "Sorted collections"
+msgstr ""
+
+#: collection_mapping.xml:722(para) 
+msgid "Hibernate supports collections implementing <literal>java.util.SortedMap</literal> and <literal>java.util.SortedSet</literal>. You must specify a comparator in the mapping file:"
+msgstr ""
+
+#: collection_mapping.xml:740(para) 
+msgid "Allowed values of the <literal>sort</literal> attribute are <literal>unsorted</literal>, <literal>natural</literal> and the name of a class implementing <literal>java.util.Comparator</literal>."
+msgstr ""
+
+#: collection_mapping.xml:746(para) 
+msgid "Sorted collections actually behave like <literal>java.util.TreeSet</literal> or <literal>java.util.TreeMap</literal>."
+msgstr ""
+
+#: collection_mapping.xml:751(para) 
+msgid "If you want the database itself to order the collection elements use the <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal> or <literal>map</literal> mappings. This solution is only available under JDK 1.4 or higher (it is implemented using <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>). This performs the ordering in the SQL query, not in memory."
+msgstr ""
+
+#: collection_mapping.xml:771(para) 
+msgid "Note that the value of the <literal>order-by</literal> attribute is an SQL ordering, not a HQL ordering!"
+msgstr ""
+
+#: collection_mapping.xml:776(para) 
+msgid "Associations may even be sorted by some arbitrary criteria at runtime using a collection <literal>filter()</literal>."
+msgstr ""
+
+#: collection_mapping.xml:786(title) 
+msgid "Bidirectional associations"
+msgstr ""
+
+#: collection_mapping.xml:795(term) 
+msgid "one-to-many"
+msgstr ""
+
+#: collection_mapping.xml:797(para) 
+msgid "set or bag valued at one end, single-valued at the other"
+msgstr ""
+
+#: collection_mapping.xml:803(term) 
+msgid "many-to-many"
+msgstr ""
+
+#: collection_mapping.xml:805(para) 
+msgid "set or bag valued at both ends"
+msgstr ""
+
+#: collection_mapping.xml:788(para) 
+msgid "A <emphasis>bidirectional association</emphasis> allows navigation from both \"ends\" of the association. Two kinds of bidirectional association are supported: <placeholder-1/>"
+msgstr ""
+
+#: collection_mapping.xml:814(para) 
+msgid "You may specify a bidirectional many-to-many association simply by mapping two many-to-many associations to the same database table and declaring one end as <emphasis>inverse</emphasis> (which one is your choice, but it can not be an indexed collection)."
+msgstr ""
+
+#: collection_mapping.xml:821(para) 
+msgid "Here's an example of a bidirectional many-to-many association; each category can have many items and each item can be in many categories:"
+msgstr ""
+
+#: collection_mapping.xml:846(para) 
+msgid "Changes made only to the inverse end of the association are <emphasis>not</emphasis> persisted. This means that Hibernate has two representations in memory for every bidirectional association, one link from A to B and another link from B to A. This is easier to understand if you think about the Java object model and how we create a many-to-many relationship in Java:"
+msgstr ""
+
+#: collection_mapping.xml:861(para) 
+msgid "The non-inverse side is used to save the in-memory representation to the database."
+msgstr ""
+
+#: collection_mapping.xml:865(para) 
+msgid "You may define a bidirectional one-to-many association by mapping a one-to-many association to the same table column(s) as a many-to-one association and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgstr ""
+
+#: collection_mapping.xml:889(para) 
+msgid "Mapping one end of an association with <literal>inverse=\"true\"</literal> doesn't affect the operation of cascades, these are orthogonal concepts!"
+msgstr ""
+
+#: collection_mapping.xml:897(title) 
+msgid "Bidirectional associations with indexed collections"
+msgstr ""
+
+#: collection_mapping.xml:898(para) 
+msgid "A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal> requires special consideration. If there is a property of the child class which maps to the index column, no problem, we can continue using <literal>inverse=\"true\"</literal> on the collection mapping:"
+msgstr ""
+
+#: collection_mapping.xml:927(para) 
+msgid "But, if there is no such property on the child class, we can't think of the association as truly bidirectional (there is information available at one end of the association that is not available at the other end). In this case, we can't map the collection <literal>inverse=\"true\"</literal>. Instead, we could use the following mapping:"
+msgstr ""
+
+#: collection_mapping.xml:957(para) 
+msgid "Note that in this mapping, the collection-valued end of the association is responsible for updates to the foreign key. TODO: Does this really result in some unnecessary update statements?"
+msgstr ""
+
+#: collection_mapping.xml:965(title) 
+msgid "Ternary associations"
+msgstr ""
+
+#: collection_mapping.xml:967(para) 
+msgid "There are three possible approaches to mapping a ternary association. One is to use a <literal>Map</literal> with an association as its index:"
+msgstr ""
+
+#: collection_mapping.xml:984(para) 
+msgid "A second approach is to simply remodel the association as an entity class. This is the approach we use most commonly."
+msgstr ""
+
+#: collection_mapping.xml:989(para) 
+msgid "A final alternative is to use composite elements, which we will discuss later."
+msgstr ""
+
+#: collection_mapping.xml:996(literal) 
+msgid "Using an &lt;idbag&gt;"
+msgstr ""
+
+#: collection_mapping.xml:998(para) 
+msgid "If you've fully embraced our view that composite keys are a bad thing and that entities should have synthetic identifiers (surrogate keys), then you might find it a bit odd that the many to many associations and collections of values that we've shown so far all map to tables with composite keys! Now, this point is quite arguable; a pure association table doesn't seem to benefit much from a surrogate key (though a collection of composite values <emphasis>might</emphasis>). Nevertheless, Hibernate provides a feature that allows you to map many to many associations and collections of values to a table with a surrogate key."
+msgstr ""
+
+#: collection_mapping.xml:1009(para) 
+msgid "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal> (or <literal>Collection</literal>) with bag semantics."
+msgstr ""
+
+#: collection_mapping.xml:1022(para) 
+msgid "As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like an entity class! A different surrogate key is assigned to each collection row. Hibernate does not provide any mechanism to discover the surrogate key value of a particular row, however."
+msgstr ""
+
+#: collection_mapping.xml:1029(para) 
+msgid "Note that the update performance of an <literal>&lt;idbag&gt;</literal> is <emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</literal>! Hibernate can locate individual rows efficiently and update or delete them individually, just like a list, map or set."
+msgstr ""
+
+#: collection_mapping.xml:1036(para) 
+msgid "In the current implementation, the <literal>native</literal> identifier generation strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers."
+msgstr ""
+
+#: collection_mapping.xml:1060(title) 
+msgid "Collection examples"
+msgstr ""
+
+#: collection_mapping.xml:1062(para) 
+msgid "The previous sections are pretty confusing. So lets look at an example. This class:"
+msgstr ""
+
+#: collection_mapping.xml:1084(para) 
+msgid "has a collection of <literal>Child</literal> instances. If each child has at most one parent, the most natural mapping is a one-to-many association:"
+msgstr ""
+
+#: collection_mapping.xml:1111(para) 
+msgid "This maps to the following table definitions:"
+msgstr ""
+
+#: collection_mapping.xml:1119(para) 
+msgid "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-many association:"
+msgstr ""
+
+#: collection_mapping.xml:1146(para) 
+msgid "Notice the <literal>NOT NULL</literal> constraint:"
+msgstr ""
+
+#: collection_mapping.xml:1157(para) 
+msgid "Alternatively, if you absolutely insist that this association should be unidirectional, you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal> mapping:"
+msgstr ""
+
+#: collection_mapping.xml:1184(para) 
+msgid "On the other hand, if a child might have multiple parents, a many-to-many association is appropriate:"
+msgstr ""
+
+#: collection_mapping.xml:1210(para) 
+msgid "Table definitions:"
+msgstr ""
+
+#: collection_mapping.xml:1222(para) 
+msgid "For more examples and a complete walk-through a parent/child relationship mapping, see <xref linkend=\"example-parentchild\"/>."
+msgstr ""
+
+#: collection_mapping.xml:1227(para) 
+msgid "Even more exotic association mappings are possible, we will catalog all possibilities in the next chapter."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: collection_mapping.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

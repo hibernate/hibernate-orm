@@ -1,0 +1,636 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Inheritance Mapping"
+msgstr "Mapeo de Herencia"
+
+#: index.docbook:8
+msgid "The Three Strategies"
+msgstr "Las Tres Estrategias"
+
+#: index.docbook:10
+msgid "Hibernate supports the three basic inheritance mapping strategies:"
+msgstr "Hibernate soporta las tres estrategias b&#x00e1;sicas de mapeo de herencia:"
+
+#: index.docbook:16
+msgid "table per class hierarchy"
+msgstr "<para>tabla por jerarqu&#x00ed;a de clases</para>"
+
+#: index.docbook:21
+msgid "<para>table per subclass</para>"
+msgstr "<para>tabla por subclase</para>"
+
+#: index.docbook:26
+msgid "table per concrete class"
+msgstr "tabla por clase concreta"
+
+#: index.docbook:32
+msgid "In addition, Hibernate supports a fourth, slightly different kind of polymorphism:"
+msgstr "En adici&#x00f3;n, Hibernate soporta un cuarto, ligeramente diferente tipo de polimorfismo:"
+
+#: index.docbook:39
+msgid "implicit polymorphism"
+msgstr "polimorfismo impl&#x00ed;cito"
+
+#: index.docbook:45
+msgid "It is possible to use different mapping strategies for different branches of the same inheritance hierarchy, and then make use of implicit polymorphism to achieve polymorphism across the whole hierarchy. However, Hibernate does not support mixing <literal>&lt;subclass&gt;</literal>, and <literal>&lt;joined-subclass&gt;</literal> and <literal>&lt;union-subclass&gt;</literal> mappings under the same root <literal>&lt;class&gt;</literal> element. It is possible to mix together the table per hierarchy and table per subclass strategies, under the the same <literal>&lt;class&gt;</literal> element, by combining the <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal> elements (see below)."
+msgstr "Es posible usar estrategias de mapeo diferentes para diferentes ramificaciones de la misma jerarqu&#x00ed;a de herencia, y entonces usar polimorfismo impl&#x00ed;cito para conseguir polimorfismo a trav&#x00e9;s de toda la jerarqu&#x00ed;a. Sin embargo, Hibernate no soporta la mezcla de mapeos <literal>&lt;subclass&gt;</literal>, y <literal>&lt;joined-subclass&gt;</literal> y <literal>&lt;union-subclass&gt;</literal> bajo el mismo elemento <literal>&lt;class&gt;</literal> ra&#x00ed;z. Es posible mezclar juntas las estrategias de tabla por jerarqu&#x00ed;a y tabla por subclase, bajo el mismo elemento <literal>&lt;class&gt;</literal>, combinando los elementos <literal>&lt;subclass&gt;</literal> y <literal>&lt;join&gt;</literal> (ver debajo)."
+
+#: index.docbook:59
+msgid "It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>, and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping documents important. Since Hibernate3, the ordering of mapping files does not matter when using the extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses before subclasses."
+msgstr "Tabla por jerarqu&#x00ed;a de clases"
+
+#: index.docbook:70
+msgid ""
+      "<![CDATA[\n"
+      " <hibernate-mapping>\n"
+      "     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D\">\n"
+      "          <property name=\"name\" type=\"string\"/>\n"
+      "     </subclass>\n"
+      " </hibernate-mapping>]]>"
+msgstr "Sup&#x00f3;n que tenemos una interface <literal>Payment</literal>, con los implementadores <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, <literal>ChequePayment</literal>. El mapeo de tabla por jerarqu&#x00ed;a se ver&#x00ed;a as&#x00ed;:"
+
+#: index.docbook:74
+msgid "Table per class hierarchy"
+msgstr ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:76
+msgid "Suppose we have an interface <literal>Payment</literal>, with implementors <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, <literal>ChequePayment</literal>. The table per hierarchy mapping would look like:"
+msgstr "Se requiere exactamente una tabla. Hay una gran limitaci&#x00f3;n de esta estrategia de mapeo: las columnas declaradas por las subclases, como <literal>CCTYPE</literal>, no pueden tener restricciones <literal>NOT NULL</literal>."
+
+#: index.docbook:83
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr "Tabla por subclase"
+
+#: index.docbook:85
+msgid "Exactly one table is required. There is one big limitation of this mapping strategy: columns declared by the subclasses, such as <literal>CCTYPE</literal>, may not have <literal>NOT NULL</literal> constraints."
+msgstr "Un mapeo de tabla por sublclase se ver&#x00ed;a as&#x00ed;:"
+
+#: index.docbook:94
+msgid "Table per subclass"
+msgstr ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:96
+msgid "A table per subclass mapping would look like:"
+msgstr "Se requieren cuatro tablas. Las tres tablas de subclase tienen asociaciones de clave primaria a la tabla de superclase (de modo que en el modelo relacional es realmente una asociaci&#x00f3;n uno-a-uno)."
+
+#: index.docbook:100
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+msgstr "Tabla por subclase, usando un discriminador"
+
+#: index.docbook:102
+msgid "Four tables are required. The three subclass tables have primary key associations to the superclass table (so the relational model is actually a one-to-one association)."
+msgstr "Observa que la implementaci&#x00f3;n de Hibernate de tabla por subclase no requiere ninguna columna discriminadora. Otros mapeadores objeto/relacional usan una implementaci&#x00f3;n diferente de tabla por subclase que requiere una columna discriminadora de tipo en la tabla de superclase. Este enfoque es mucho m&#x00e1;s dif&#x00ed;cil de implementar pero discutiblemente m&#x00e1;s correcto desde un punto de vista relacional. Si quisieras usar una columna discriminadora con la estrategia de tabla por subclase, puedes combinar el uso de <literal>&lt;subclass&gt;</literal> y <literal>&lt;join&gt;</literal>, como sigue:"
+
+#: index.docbook:111
+msgid "Table per subclass, using a discriminator"
+msgstr ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        <join table=\"CASH_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:113
+msgid "Note that Hibernate's implementation of table per subclass requires no discriminator column. Other object/relational mappers use a different implementation of table per subclass which requires a type discriminator column in the superclass table. The approach taken by Hibernate is much more difficult to implement but arguably more correct from a relational point of view. If you would like to use a discriminator column with the table per subclass strategy, you may combine the use of <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal>, as follow:"
+msgstr "la declaraci&#x00f3;n opcional <literal>fetch=\"select\"</literal> dice a Hibernate que no recupere los datos de la subclase <literal>ChequePayment</literal> usando una uni&#x00f3;n externa (outer join) al consultar la superclase."
+
+#: index.docbook:125
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        <join table=\"CASH_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr "Mezclando tabla por jerarqu&#x00ed;a de clases con tabla por subclase"
+
+#: index.docbook:127
+msgid "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate not to fetch the <literal>ChequePayment</literal> subclass data using an outer join when querying the superclass."
+msgstr "Puedes incluso mezclar las estrategias de tabla po jerarqu&#x00ed;a y tabla por subclase usando este enfoque:"
+
+#: index.docbook:136
+msgid "Mixing table per class hierarchy with table per subclass"
+msgstr ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:138
+msgid "You may even mix the table per hierarchy and table per subclass strategies using this approach:"
+msgstr "Para cualquiera de estas estrategias de mapeo, una asociaci&#x00f3;n polim&#x00f3;rfica a la clase ra&#x00ed;z <literal>Payment</literal> es mapeada usando <literal>&lt;many-to-one&gt;</literal>."
+
+#: index.docbook:143
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment\"/>]]>"
+
+#: index.docbook:145
+msgid "For any of these mapping strategies, a polymorphic association to the root <literal>Payment</literal> class is mapped using <literal>&lt;many-to-one&gt;</literal>."
+msgstr "Tabla por clase concreta"
+
+#: index.docbook:151
+msgid "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment\"/>]]>"
+msgstr "Podr&#x00ed;amos ir de dos maneras a la estrategia de mapeo de tabla por clase concreta. La primera es usar <literal>&lt;union-subclass&gt;</literal>."
+
+#: index.docbook:156
+msgid "Table per concrete class"
+msgstr ""
+      "<![CDATA[<class name=\"Payment\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"sequence\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:158
+msgid "There are two ways we could go about mapping the table per concrete class strategy. The first is to use <literal>&lt;union-subclass&gt;</literal>."
+msgstr "Est&#x00e1;n implicadas tres tablas. Cada tabla define columnas para todas las propiedades de la clase, inccluyendo las propiedades heredadas."
+
+#: index.docbook:163
+msgid ""
+      "<![CDATA[<class name=\"Payment\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"sequence\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "</class>]]>"
+msgstr "La limitaci&#x00f3;n de este enfoque es que si una propiedad es mapeada en la superclase, el nombre de columna debe ser el mismo en todas las tablas de subclase. (Podr&#x00ed;amos relajar esto en un lanzamiento futuro de Hibernate.) La estrategia de generador de indentidad no est&#x00e1; permitida en la herencia de uni&#x00f3;n de subclase, de hecho la semilla de clave primaria tiene que ser compartida a trav&#x00e9;s de todas las subclases unidas de una jerarqu&#x00ed;a."
+
+#: index.docbook:165
+msgid "Three tables are involved for the subclasses. Each table defines columns for all properties of the class, including inherited properties."
+msgstr "Tabla por clase concreta, usando polimorfismo impl&#x00ed;cito"
+
+#: index.docbook:170
+msgid "The limitation of this approach is that if a property is mapped on the superclass, the column name must be the same on all subclass tables. (We might relax this in a future release of Hibernate.) The identity generator strategy is not allowed in union subclass inheritance, indeed the primary key seed has to be shared accross all unioned subclasses of a hierarchy."
+msgstr "Un enfoque alternativo es hacer uso de polimorfismo impl&#x00ed;cito:"
+
+#: index.docbook:179
+msgid "If your superclass is abstract, map it with <literal>abstract=\"true\"</literal>. Of course, if it is not abstract, an additional table (defaults to <literal>PAYMENT</literal> in the example above) is needed to hold instances of the superclass."
+msgstr ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+
+#: index.docbook:189
+msgid "Table per concrete class, using implicit polymorphism"
+msgstr "Nota que en ning&#x00fa;n sitio mencionamos la interface <literal>Payment</literal> expl&#x00ed;citamente. Nota adem&#x00e1;s que las propiedades de <literal>Payment</literal> son mapeadas en cada una de las subclases. Si quieres evitar duplicaci&#x00f3;n, considera usar entidades XML. (por ejemplo, <literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</literal> en la declaraci&#x00f3;n <literal>DOCTYPE</literal> y <literal>&amp;allproperties;</literal> en el mapeo)."
+
+#: index.docbook:191
+msgid "An alternative approach is to make use of implicit polymorphism:"
+msgstr "La desventaja de este enfoque es que Hibernate no genera <literal>UNION</literal>s de SQL al realizar consultas polim&#x00f3;rficas."
+
+#: index.docbook:195
+msgid ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+msgstr "Para esta estrategia de mapeo, una asociaci&#x00f3;n polim&#x00f3;rfica a <literal>Payment</literal> es mapeada generalmente usando <literal>&lt;any&gt;</literal>."
+
+#: index.docbook:197
+msgid "Notice that nowhere do we mention the <literal>Payment</literal> interface explicitly. Also notice that properties of <literal>Payment</literal> are mapped in each of the subclasses. If you want to avoid duplication, consider using XML entities (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> declartion and <literal>&amp;allproperties;</literal> in the mapping)."
+msgstr ""
+      "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
+      "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
+      "    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
+      "    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
+      "    <column name=\"PAYMENT_CLASS\"/>\n"
+      "    <column name=\"PAYMENT_ID\"/>\n"
+      "</any>]]>"
+
+#: index.docbook:207
+msgid "The disadvantage of this approach is that Hibernate does not generate SQL <literal>UNION</literal>s when performing polymorphic queries."
+msgstr "Mezclando polimorfismo impl&#x00ed;cito con otros mapeos de herencia"
+
+#: index.docbook:212
+msgid "For this mapping strategy, a polymorphic association to <literal>Payment</literal> is usually mapped using <literal>&lt;any&gt;</literal>."
+msgstr "Hay una cosa m&#x00e1;s por notar acerca de este mapeo. Ya que las subclases se mapean cada una en su propio elemento <literal>&lt;class&gt;</literal> (y ya que <literal>Payment</literal> es s&#x00f3;lo una interface), cada una de las subclases podr&#x00ed;a ser parte de otra jerarqu&#x00ed;a de herencia! (Y todav&#x00ed;a puedes seguir usando consultas polim&#x00f3;rficas contra la interface <literal>Payment</literal>.)"
+
+#: index.docbook:217
+msgid ""
+      "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
+      "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
+      "    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
+      "    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
+      "    <column name=\"PAYMENT_CLASS\"/>\n"
+      "    <column name=\"PAYMENT_ID\"/>\n"
+      "</any>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
+      "    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+
+#: index.docbook:222
+msgid "Mixing implicit polymorphism with other inheritance mappings"
+msgstr "Una vez m&#x00e1;s, no mencionamos a <literal>Payment</literal> expl&#x00ed;citamente. Si ejecutamos una consulta contra la interface <literal>Payment</literal> - por ejemplo, <literal>from Payment</literal> - Hibernate devuelve autom&#x00e1;ticamente instancias de <literal>CreditCardPayment</literal> (y sus subclases, ya que ellas tambi&#x00e9;n implementan <literal>Payment</literal>), <literal>CashPayment</literal> y <literal>ChequePayment</literal> pero no instancias de <literal>NonelectronicTransaction</literal>."
+
+#: index.docbook:224
+msgid "There is one further thing to notice about this mapping. Since the subclasses are each mapped in their own <literal>&lt;class&gt;</literal> element (and since <literal>Payment</literal> is just an interface), each of the subclasses could easily be part of another inheritance hierarchy! (And you can still use polymorphic queries against the <literal>Payment</literal> interface.)"
+msgstr "Limitaciones"
+
+#: index.docbook:232
+msgid ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
+      "    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+msgstr "Existen ciertas limitaciones al enfoque de \"polimorfismo impl&#x00ed;cito\" en la estrategia de mapeo de tabla por clase concreta. Existen limitaciones algo menos restrictivas a los mapeos <literal>&lt;union-subclass&gt;</literal>."
+
+#: index.docbook:234
+msgid "Once again, we don't mention <literal>Payment</literal> explicitly. If we execute a query against the <literal>Payment</literal> interface - for example, <literal>from Payment</literal> - Hibernate automatically returns instances of <literal>CreditCardPayment</literal> (and its subclasses, since they also implement <literal>Payment</literal>), <literal>CashPayment</literal> and <literal>ChequePayment</literal> but not instances of <literal>NonelectronicTransaction</literal>."
+msgstr "La siguiente tabla muestra las limitaciones de mapeos de tabla por clase concreta, y de polmorfismo impl&#x00ed;cito, en Hibernate."
+
+#: index.docbook:249
+msgid "Limitations"
+msgstr "Funcionalidades de mapeo de herencia"
+
+#: index.docbook:251
+msgid "There are certain limitations to the \"implicit polymorphism\" approach to the table per concrete-class mapping strategy. There are somewhat less restrictive limitations to <literal>&lt;union-subclass&gt;</literal> mappings."
+msgstr "Estrategia de herencia"
+
+#: index.docbook:258
+msgid "The following table shows the limitations of table per concrete-class mappings, and of implicit polymorphism, in Hibernate."
+msgstr "muchos-a-uno polim&#x00f3;rfica"
+
+#: index.docbook:264
+msgid "Features of inheritance mappings"
+msgstr "uno-a-uno polim&#x00f3;rfica"
+
+#: index.docbook:276
+msgid "Inheritance strategy"
+msgstr "uno-a-muchos polim&#x00f3;rfica"
+
+#: index.docbook:277
+msgid "Polymorphic many-to-one"
+msgstr "mushos-a-muchos polim&#x00f3;rfica"
+
+#: index.docbook:278
+msgid "Polymorphic one-to-one"
+msgstr "<literal>load()/get()</literal> polim&#x00f3;rficos"
+
+#: index.docbook:279
+msgid "Polymorphic one-to-many"
+msgstr "Consultas polim&#x00f3;rficas"
+
+#: index.docbook:280
+msgid "Polymorphic many-to-many"
+msgstr "Uniones polim&#x00f3;rficas"
+
+#: index.docbook:281
+msgid "Polymorphic <literal>load()/get()</literal>"
+msgstr "Recuperaci&#x00f3;n por uni&#x00f3;n externa (outer join)"
+
+#: index.docbook:282
+msgid "Polymorphic queries"
+msgstr "<entry>tabla por jerarqu&#x00ed;a de clases</entry>"
+
+#: index.docbook:283
+msgid "Polymorphic joins"
+msgstr "&lt;many-to-one&gt;"
+
+#: index.docbook:284
+msgid "Outer join fetching"
+msgstr "&lt;one-to-one&gt;"
+
+#: index.docbook:289
+msgid "table per class-hierarchy"
+msgstr "&lt;one-to-many&gt;"
+
+#: index.docbook:290, index.docbook:301, index.docbook:312
+msgid "&lt;many-to-one&gt;"
+msgstr "&lt;many-to-many&gt;"
+
+#: index.docbook:291, index.docbook:302, index.docbook:313
+msgid "&lt;one-to-one&gt;"
+msgstr "s.get(Payment.class, id)"
+
+#: index.docbook:292, index.docbook:303
+msgid "&lt;one-to-many&gt;"
+msgstr "from Payment p"
+
+#: index.docbook:293, index.docbook:304, index.docbook:315
+msgid "&lt;many-to-many&gt;"
+msgstr "from Order o join o.payment p"
+
+#: index.docbook:294, index.docbook:305, index.docbook:316
+msgid "s.get(Payment.class, id)"
+msgstr "soportada"
+
+#: index.docbook:295, index.docbook:306, index.docbook:317, index.docbook:328
+msgid "from Payment p"
+msgstr "<entry>tabla por subclase</entry>"
+
+#: index.docbook:296, index.docbook:307, index.docbook:318
+msgid "from Order o join o.payment p"
+msgstr "&lt;many-to-one&gt;"
+
+#: index.docbook:297, index.docbook:308, index.docbook:319
+msgid "supported"
+msgstr "&lt;one-to-one&gt;"
+
+#: index.docbook:300
+msgid "<entry>table per subclass</entry>"
+msgstr "&lt;one-to-many&gt;"
+
+#: index.docbook:311
+msgid "table per concrete-class (union-subclass)"
+msgstr "<literal>&lt;one-to-many&gt;</literal> (para <literal>inverse=\"true\"</literal> solamente)"
+
+#: index.docbook:314
+msgid "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</literal> only)"
+msgstr "from Payment p"
+
+#: index.docbook:322
+msgid "table per concrete class (implicit polymorphism)"
+msgstr "no soportada"
+
+#: index.docbook:323
+msgid "&lt;any&gt;"
+msgstr "&lt;many-to-any&gt;"
+
+#: index.docbook:324, index.docbook:325, index.docbook:329, index.docbook:330
+msgid "not supported"
+msgstr "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+
+#: index.docbook:326
+msgid "&lt;many-to-any&gt;"
+msgstr "no suportadas"
+
+#: index.docbook:327
+msgid "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+msgstr "no soportada"
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

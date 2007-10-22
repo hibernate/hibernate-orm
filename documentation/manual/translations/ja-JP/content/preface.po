@@ -1,0 +1,68 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:21
+msgid "Preface"
+msgstr "<title>前書き</title>"
+
+#: index.docbook:23
+msgid "Working with object-oriented software and a relational database can be cumbersome and time consuming in today's enterprise environments. Hibernate is an object/relational mapping tool for Java environments. The term object/relational mapping (ORM) refers to the technique of mapping a data representation from an object model to a relational data model with a SQL-based schema."
+msgstr "今日の企業環境において、オブジェクト指向ソフトウェアとリレーショナルデータベースに関わる作業は 煩雑で膨大な時間を必要とします。 HibernateはJava環境のオブジェクト/リレーショナルマッピングツールです。 オブジェクト/リレーショナルマッピング（ORM）とは、 オブジェクトモデルからSQLベーススキーマのリレーショナルデータモデルへと、 データ表現をマッピングする（対応付ける）技術のことです。"
+
+#: index.docbook:31
+msgid "Hibernate not only takes care of the mapping from Java classes to database tables (and from Java data types to SQL data types), but also provides data query and retrieval facilities and can significantly reduce development time otherwise spent with manual data handling in SQL and JDBC."
+msgstr "HibernateはJavaクラスからデータベーステーブルへ（そしてJavaデータ型からSQLデータ型へ） のマッピングを処理するだけではなく、データのクエリと復元の仕組みも提供します。 このおかげでSQLとJDBCを使った手作業でのデータ処理に費やされていた開発時間を大幅に削減できます。"
+
+#: index.docbook:38
+msgid "Hibernates goal is to relieve the developer from 95 percent of common data persistence related programming tasks. Hibernate may not be the best solution for data-centric applications that only use stored-procedures to implement the business logic in the database, it is most useful with object-oriented domain models and business logic in the Java-based middle-tier. However, Hibernate can certainly help you to remove or encapsulate vendor-specific SQL code and will help with the common task of result set translation from a tabular representation to a graph of objects."
+msgstr "Hibernateの最終目標は、データの永続化に関わる一般的なプログラミング作業の95％から開発者を解放することです。 Hibernateはビジネスロジックの実装にストアドプロシージャを使う データ中心アプリケーションに対してのベストソリューションであるに留まりません。 オブジェクト指向ドメインモデルとJavaベースの中間層でのビジネスロジックに対して最も役に立ちます。 しかしHibernateはベンダ固有のSQLコードを削減またはカプセル化したり、 表形式からオブジェクトのグラフへとリザルトセットを変換するなどの、 一般的なタスクにも役立つでしょう。"
+
+#: index.docbook:48
+msgid "If you are new to Hibernate and Object/Relational Mapping or even Java, please follow these steps:"
+msgstr "Hibernateやオブジェクト/リレーショナルマッピング、 さらにはJavaが初めての方は、以下のステップに従ってください："
+
+#: index.docbook:55
+msgid "Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step instructions. The source code for the tutorial is included in the distribution in the <literal>doc/reference/tutorial/</literal> directory."
+msgstr "を読んでください。 段階的に解説していきます。 チュートリアルのソースコードはディストリビューションの <literal>doc/reference/tutorial</literal> ディレクトリに含まれています。"
+
+#: index.docbook:63
+msgid "Read <xref linkend=\"architecture\"/> to understand the environments where Hibernate can be used."
+msgstr "を読んで、Hibernateが利用可能な環境を理解してください。"
+
+#: index.docbook:69
+msgid "Have a look at the <literal>eg/</literal> directory in the Hibernate distribution, it contains a simple standalone application. Copy your JDBC driver to the <literal>lib/</literal> directory and edit <literal>etc/hibernate.properties</literal>, specifying correct values for your database. From a command prompt in the distribution directory, type <literal>ant eg</literal> (using Ant), or under Windows, type <literal>build eg</literal>."
+msgstr "Hibernateディストリビューションの <literal>eg/</literal> ディレクトリを見てください。 簡単なスタンドアローンのアプリケーションがあります。 JDBCドライバを <literal>lib/</literal> ディレクトリにコピーして、 自分のデータベースに合う正しい値を指定するように <literal>etc/hibernate.properties</literal> を編集してください。 ディストリビューションディレクトリから、コマンドプロンプトで <literal>ant eg</literal> とタイプしてください（Antを使います）。 またWindows環境では <literal>build eg</literal> とタイプしてください。"
+
+#: index.docbook:80
+msgid "Use this reference documentation as your primary source of information. Consider reading <emphasis>Java Persistence with Hibernate</emphasis> (http://www.manning.com/bauer2) if you need more help with application design or if you prefer a step-by-step tutorial. Also visit http://caveatemptor.hibernate.org and download the example application for Java Persistence with Hibernate."
+msgstr "このリファレンスドキュメントを第一の情報源として利用してください。 アプリケーション設計についてのさらなる情報や段階的なチュートリアルを探しているなら、 <emphasis>Java Persistence with Hibernate</emphasis>（http://www.manning.com/bauer2） をおすすめします。 またhttp://caveatemptor.hibernate.orgから Java Persistence with Hibernateの例題のアプリケーションをダウンロードできます。"
+
+#: index.docbook:90
+msgid "FAQs are answered on the Hibernate website."
+msgstr "FAQはHibernateウェブサイトにあります。"
+
+#: index.docbook:95
+msgid "Third party demos, examples, and tutorials are linked on the Hibernate website."
+msgstr "サードパーティのデモ、例、チュートリアルはHibernateウェブサイトにリンクがあります。"
+
+#: index.docbook:101
+msgid "The Community Area on the Hibernate website is a good resource for design patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, etc.)."
+msgstr "Hibernateウェブサイトのコミュニティエリアは、デザインパターンやさまざまな統合ソリューション （Tomcat, JBoss AS, Struts, EJB, 等）についてのよい情報源です。"
+
+#: index.docbook:109
+msgid "If you have questions, use the user forum linked on the Hibernate website. We also provide a JIRA issue trackings system for bug reports and feature requests. If you are interested in the development of Hibernate, join the developer mailing list. If you are interested in translating this documentation into your language, contact us on the developer mailing list."
+msgstr "質問があればHibernateウェブサイトのユーザフォーラムを活用してください。 またバグレポートとフィーチャリクエストのためJIRA課題追跡システムを用意しています。 Hibernateの開発に興味があれば、開発者メーリングリストに参加してください。 このドキュメントをあなたの国の言葉に翻訳したい場合は、 開発者メーリングリストで私たちにコンタクトを取ってください。"
+
+#: index.docbook:117
+msgid "Commercial development support, production support, and training for Hibernate is available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/). Hibernate is a Professional Open Source project and a critical component of the JBoss Enterprise Middleware System (JEMS) suite of products."
+msgstr "商用開発のサポート、製品のサポート、HibernateのトレーニングはJBoss Inc.が提供しています （http://www.hibernate.org/SupportTraining/を見てください）。 HibernateはProfessional Open Sourceプロジェクト、 そしてJBoss Enterprise Middleware System（JEMS）プロダクトスイートのクリティカルコンポーネントです。"
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

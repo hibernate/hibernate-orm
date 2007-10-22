@@ -1,0 +1,3103 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Basic O/R Mapping"
+msgstr "基本的なO/Rマッピング"
+
+#: index.docbook:8
+msgid "Mapping declaration"
+msgstr "マッピング定義"
+
+#: index.docbook:10
+msgid "Object/relational mappings are usually defined in an XML document. The mapping document is designed to be readable and hand-editable. The mapping language is Java-centric, meaning that mappings are constructed around persistent class declarations, not table declarations."
+msgstr "オブジェクト/リレーショナルマッピングは通常XMLドキュメントで定義します。 マッピングドキュメントは、読みやすく手作業で編集しやすいようにデザインされています。 マッピング言語はJava中心、つまりテーブル定義ではなく永続クラスの定義に基づいて構築されています。"
+
+#: index.docbook:17
+msgid "Note that, even though many Hibernate users choose to write the XML by hand, a number of tools exist to generate the mapping document, including XDoclet, Middlegen and AndroMDA."
+msgstr "多くのHibernateユーザはXMLマッピングの記述を手作業で行いますが、 XDoclet, Middlegen, AndroMDAというようなマッピングドキュメントを生成するツールが いくつか存在します。"
+
+#: index.docbook:23
+msgid "Lets kick off with an example mapping:"
+msgstr "サンプルのマッピングから始めましょう："
+
+#: index.docbook:27
+msgid ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<!DOCTYPE hibernate-mapping PUBLIC\n"
+      "      \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
+      "          \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
+      "\n"
+      "<hibernate-mapping package=\"eg\">\n"
+      "\n"
+      "        <class name=\"Cat\"\n"
+      "            table=\"cats\"\n"
+      "            discriminator-value=\"C\">\n"
+      "\n"
+      "                <id name=\"id\">\n"
+      "                        <generator class=\"native\"/>\n"
+      "                </id>\n"
+      "\n"
+      "                <discriminator column=\"subclass\"\n"
+      "                     type=\"character\"/>\n"
+      "\n"
+      "                <property name=\"weight\"/>\n"
+      "\n"
+      "                <property name=\"birthdate\"\n"
+      "                    type=\"date\"\n"
+      "                    not-null=\"true\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"color\"\n"
+      "                    type=\"eg.types.ColorUserType\"\n"
+      "                    not-null=\"true\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"sex\"\n"
+      "                    not-null=\"true\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"litterId\"\n"
+      "                    column=\"litterId\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <many-to-one name=\"mother\"\n"
+      "                    column=\"mother_id\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <set name=\"kittens\"\n"
+      "                    inverse=\"true\"\n"
+      "                    order-by=\"litter_id\">\n"
+      "                        <key column=\"mother_id\"/>\n"
+      "                        <one-to-many class=\"Cat\"/>\n"
+      "                </set>\n"
+      "\n"
+      "                <subclass name=\"DomesticCat\"\n"
+      "                    discriminator-value=\"D\">\n"
+      "\n"
+      "                        <property name=\"name\"\n"
+      "                            type=\"string\"/>\n"
+      "\n"
+      "                </subclass>\n"
+      "\n"
+      "        </class>\n"
+      "\n"
+      "        <class name=\"Dog\">\n"
+      "                <!-- mapping for Dog could go here -->\n"
+      "        </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<!DOCTYPE hibernate-mapping PUBLIC\n"
+      "      \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
+      "          \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
+      "\n"
+      "<hibernate-mapping package=\"eg\">\n"
+      "\n"
+      "        <class name=\"Cat\" \n"
+      "            table=\"cats\"\n"
+      "            discriminator-value=\"C\">\n"
+      "                \n"
+      "                <id name=\"id\">\n"
+      "                        <generator class=\"native\"/>\n"
+      "                </id>\n"
+      "\n"
+      "                <discriminator column=\"subclass\" \n"
+      "                     type=\"character\"/>\n"
+      "\n"
+      "                <property name=\"weight\"/>\n"
+      "\n"
+      "                <property name=\"birthdate\"\n"
+      "                    type=\"date\" \n"
+      "                    not-null=\"true\" \n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"color\"\n"
+      "                    type=\"eg.types.ColorUserType\"\n"
+      "                    not-null=\"true\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"sex\"\n"
+      "                    not-null=\"true\" \n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <property name=\"litterId\"\n"
+      "                    column=\"litterId\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <many-to-one name=\"mother\"\n"
+      "                    column=\"mother_id\"\n"
+      "                    update=\"false\"/>\n"
+      "\n"
+      "                <set name=\"kittens\"\n"
+      "                    inverse=\"true\"\n"
+      "                    order-by=\"litter_id\">\n"
+      "                        <key column=\"mother_id\"/>\n"
+      "                        <one-to-many class=\"Cat\"/>\n"
+      "                </set>\n"
+      "\n"
+      "                <subclass name=\"DomesticCat\"\n"
+      "                    discriminator-value=\"D\">\n"
+      "\n"
+      "                        <property name=\"name\" \n"
+      "                            type=\"string\"/>\n"
+      "\n"
+      "                </subclass>\n"
+      "\n"
+      "        </class>\n"
+      "\n"
+      "        <class name=\"Dog\">\n"
+      "                <!-- ここにDog用のマッピング書きます -->\n"
+      "        </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:29
+msgid "We will now discuss the content of the mapping document. We will only describe the document elements and attributes that are used by Hibernate at runtime. The mapping document also contains some extra optional attributes and elements that affect the database schemas exported by the schema export tool. (For example the <literal> not-null</literal> attribute.)"
+msgstr "マッピングドキュメントの内容を説明します。。 ただし、ここではHibernateが実行時に使うドキュメント要素と属性についてのみ説明します。 マッピングドキュメントは、いくつかのオプション属性と要素を含んでいます（例えば <literal>not-null</literal> 属性）。 それらはスキーマエクスポートツールが出力するデータベーススキーマに影響を与えるものです。"
+
+#: index.docbook:40
+msgid "Doctype"
+msgstr "Doctype"
+
+#: index.docbook:42
+msgid "All XML mappings should declare the doctype shown. The actual DTD may be found at the URL above, in the directory <literal>hibernate-x.x.x/src/org/hibernate </literal> or in <literal>hibernate3.jar</literal>. Hibernate will always look for the DTD in its classpath first. If you experience lookups of the DTD using an Internet connection, check your DTD declaration against the contents of your claspath."
+msgstr "XMLマッピングでは、お見せしたようなドキュメント型を必ず定義すべきです。 実際のDTDは、上記のURLの <literal>hibernate-x.x.x/src/org/hibernate</literal> ディレクトリ、 または <literal>hibernate.jar</literal> 内にあります。 Hibernateは常に、そのクラスパス内でDTDを探し始めます。 インターネットにあるDTDファイルを探そうとしたなら、 クラスパスの内容を見て、DTD宣言を確認してください。"
+
+#: index.docbook:52
+msgid "EntityResolver"
+msgstr "エンティティ・リゾルバ"
+
+#: index.docbook:53
+msgid "As mentioned previously, Hibernate will first attempt to resolve DTDs in its classpath. The manner in which it does this is by registering a custom <literal>org.xml.sax.EntityResolver</literal> implementation with the SAXReader it uses to read in the xml files. This custom <literal>EntityResolver</literal> recognizes two different systemId namespaces."
+msgstr "前述したように、Hibernateはまずクラスパス内でDTDを解決しようとします。 <literal>org.xml.sax.EntityResolver</literal> のカスタム実装を XMLファイルを読み込むためのSAXReaderに登録することによって、DTDを解決します。 このカスタムの <literal>EntityResolver</literal> は2つの異なるシステムID名前空間を認識します。"
+
+#: index.docbook:61
+msgid "a <literal>hibernate namespace</literal> is recognized whenever the resolver encounteres a systemId starting with <literal>http://hibernate.sourceforge.net/</literal>; the resolver attempts to resolve these entities via the classlaoder which loaded the Hibernate classes."
+msgstr "<literal>Hibernate名前空間</literal> は、リゾルバが <literal>http://hibernate.sourceforge.net/</literal> で始まるシステムIDに到達したときに、 認識されます。 そしてリゾルバは、Hibernateのクラスをロードしたクラスローダを用いて、 これらのエンティティを解決しようとします。"
+
+#: index.docbook:70
+msgid "a <literal>user namespace</literal> is recognized whenever the resolver encounteres a systemId using a <literal>classpath://</literal> URL protocol; the resolver will attempt to resolve these entities via (1) the current thread context classloader and (2) the classloader which loaded the Hibernate classes."
+msgstr "<literal>ユーザ名前空間</literal> は、リゾルバが URLプロトコルの <literal>classpath://</literal> を使ったシステムIDに到達したときに、 認識されます。そしてリゾルバは、(1)カレントスレッドのコンテキストクラスローダー、 または(2)Hibernateのクラスをロードしたクラスローダを使って、 これらのエンティティを解決しようとします。"
+
+#: index.docbook:79
+msgid "An example of utilizing user namespacing:"
+msgstr "下記は、ユーザ名前空間を使った例です："
+
+#: index.docbook:82
+msgid ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<!DOCTYPE hibernate-mapping PUBLIC\n"
+      "        \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
+      "        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\" [\n"
+      "    <!ENTITY types SYSTEM \"classpath://your/domain/types.xml\">\n"
+      "]>\n"
+      "\n"
+      "<hibernate-mapping package=\"your.domain\">\n"
+      "    <class name=\"MyEntity\">\n"
+      "        <id name=\"id\" type=\"my-custom-id-type\">\n"
+      "            ...\n"
+      "        </id>\n"
+      "    <class>\n"
+      "    &types;\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<!DOCTYPE hibernate-mapping PUBLIC\n"
+      "        \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
+      "        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\" [\n"
+      "    <!ENTITY types SYSTEM \"classpath://your/domain/types.xml\">\n"
+      "]>\n"
+      "\n"
+      "<hibernate-mapping package=\"your.domain\">\n"
+      "    <class name=\"MyEntity\">\n"
+      "        <id name=\"id\" type=\"my-custom-id-type\">\n"
+      "            ...\n"
+      "        </id>\n"
+      "    <class>\n"
+      "    &types;\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:83
+msgid "Where <literal>types.xml</literal> is a resource in the <literal>your.domain</literal> package and contains a custom <xref linkend=\"mapping-types-custom\"/>typedef."
+msgstr "ここで <literal>types.xml</literal> は <literal>your.domain</literal> パッケージ内のリソースであり、 カスタム <xref linkend=\"mapping-types-custom\"/>typedef を含むます。"
+
+#: index.docbook:91
+msgid "hibernate-mapping"
+msgstr "hibernate-mapping"
+
+#: index.docbook:93
+msgid "This element has several optional attributes. The <literal>schema</literal> and <literal>catalog</literal> attributes specify that tables referred to in this mapping belong to the named schema and/or catalog. If specified, tablenames will be qualified by the given schema and catalog names. If missing, tablenames will be unqualified. The <literal>default-cascade</literal> attribute specifies what cascade style should be assumed for properties and collections which do not specify a <literal>cascade</literal> attribute. The <literal>auto-import</literal> attribute lets us use unqualified class names in the query language, by default."
+msgstr "この要素にはいくつかオプション属性があります。<literal>schema</literal> 属性と <literal>catalog</literal> 属性は、 このマッピングが参照するテーブルが、この属性によって指定されたスキーマと(または)カタログに属することを指定します。 この属性が指定されると、テーブル名は与えられたスキーマ名とカタログ名で修飾されます。これらの属性が指定されていなければ、 テーブル名は修飾されません。<literal>default-cascade</literal> 属性は、 <literal>cascade</literal> 属性を指定していないプロパティやコレクションに、 どのカスケードスタイルを割り当てるかを指定します。 <literal>auto-import</literal> 属性は、 クエリ言語内で修飾されていないクラス名を、デフォルトで使えるようにします。"
+
+#: index.docbook:114
+msgid ""
+      "<![CDATA[<hibernate-mapping\n"
+      "         schema=\"schemaName\"\n"
+      "         catalog=\"catalogName\"\n"
+      "         default-cascade=\"cascade_style\"\n"
+      "         default-access=\"field|property|ClassName\"\n"
+      "         default-lazy=\"true|false\"\n"
+      "         auto-import=\"true|false\"\n"
+      "         package=\"package.name\"\n"
+      " />]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping\n"
+      "         schema=\"schemaName\"\n"
+      "         catalog=\"catalogName\"\n"
+      "         default-cascade=\"cascade_style\"\n"
+      "         default-access=\"field|property|ClassName\"\n"
+      "         default-lazy=\"true|false\"\n"
+      "         auto-import=\"true|false\"\n"
+      "         package=\"package.name\"\n"
+      " />]]>"
+
+#: index.docbook:117
+msgid "<literal>schema</literal> (optional): The name of a database schema."
+msgstr "<literal>schema</literal>（オプション）：データベーススキーマの名前。"
+
+#: index.docbook:122
+msgid "<literal>catalog</literal> (optional): The name of a database catalog."
+msgstr "<literal>catalog</literal> （オプション）：データベースカタログの名前。"
+
+#: index.docbook:127
+msgid "<literal>default-cascade</literal> (optional - defaults to <literal>none</literal>): A default cascade style."
+msgstr "<literal>default-cascade</literal> （オプション - デフォルトは <literal>none</literal>）： デフォルトのカスケードスタイル。"
+
+#: index.docbook:133
+msgid "<literal>default-access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing all properties. Can be a custom implementation of <literal>PropertyAccessor</literal>."
+msgstr "<literal>default-access</literal> (オプション - デフォルトは <literal>property</literal> ）： Hibernateがプロパティにアクセスする際に採るべき戦略。 <literal>PropertyAccessor</literal> を実装することでカスタマイズ可能。"
+
+#: index.docbook:140
+msgid "<literal>default-lazy</literal> (optional - defaults to <literal>true</literal>): The default value for unspecifed <literal>lazy</literal> attributes of class and collection mappings."
+msgstr "<literal>default-lazy</literal> (オプション - デフォルトは <literal>true</literal> )： <literal>lazy</literal> 属性が指定されていないクラスやコレクションマッピングに対するデフォルト値。"
+
+#: index.docbook:147
+msgid "<literal>auto-import</literal> (optional - defaults to <literal>true</literal>): Specifies whether we can use unqualified class names (of classes in this mapping) in the query language."
+msgstr "<literal>auto-import</literal> （オプション - デフォルトは <literal>true</literal>）： クエリ言語内で、（このマッピング内のクラスの）修飾されていないクラス名を使えるかどうかを指定します。"
+
+#: index.docbook:154
+msgid "<literal>package</literal> (optional): Specifies a package prefix to assume for unqualified class names in the mapping document."
+msgstr "<literal>package</literal> (オプション): マッピングドキュメント内で修飾されていないクラス名に対して割り当てる、 パッケージの接頭辞(prefix)を指定します。"
+
+#: index.docbook:162
+msgid "If you have two persistent classes with the same (unqualified) name, you should set <literal>auto-import=\"false\"</literal>. Hibernate will throw an exception if you attempt to assign two classes to the same \"imported\" name."
+msgstr "（修飾されていない）同じ名前の永続クラスが2つあるなら、 <literal>auto-import=\"false\"</literal> を設定すべきです。 2つのクラスに”インポートされた”同じ名前を割り当てようとすると、Hibernateは例外を投げます。"
+
+#: index.docbook:168
+msgid "Note that the <literal>hibernate-mapping</literal> element allows you to nest several persistent <literal>&lt;class&gt;</literal> mappings, as shown above. It is however good practice (and expected by some tools) to map only a single persistent class (or a single class hierarchy) in one mapping file and name it after the persistent superclass, e.g. <literal>Cat.hbm.xml</literal>, <literal>Dog.hbm.xml</literal>, or if using inheritance, <literal>Animal.hbm.xml</literal>."
+msgstr "<literal>hibernate-mapping</literal> 要素は、最初の例で示したようにいくつかの永続 <literal>&lt;class&gt;</literal> マッピングをネストできます。 しかし、１つのマッピングファイルではただひとつの永続クラス(またはひとつのクラス階層)にマッピングするようにし、 さらに永続スーパークラスの後で指定するべきでしょう(いくつかのツールはこのようなマッピングファイルを想定しています)。 例えば次のようになります。： <literal>Cat.hbm.xml</literal> , <literal>Dog.hbm.xml</literal> , または継承を使うなら <literal>Animal.hbm.xml</literal> 。"
+
+#: index.docbook:181
+msgid "<title>class</title>"
+msgstr "<title>class</title>"
+
+#: index.docbook:183
+msgid "You may declare a persistent class using the <literal>class</literal> element:"
+msgstr "<literal>class</literal> 要素を使って、永続クラスを宣言できます。"
+
+#: index.docbook:211
+msgid ""
+      "<![CDATA[<class\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tableName\"\n"
+      "        discriminator-value=\"discriminator_value\"\n"
+      "        mutable=\"true|false\"\n"
+      "        schema=\"owner\"\n"
+      "        catalog=\"catalog\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        select-before-update=\"true|false\"\n"
+      "        polymorphism=\"implicit|explicit\"\n"
+      "        where=\"arbitrary sql where condition\"\n"
+      "        persister=\"PersisterClass\"\n"
+      "        batch-size=\"N\"\n"
+      "        optimistic-lock=\"none|version|dirty|all\"\n"
+      "        lazy=\"true|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        check=\"arbitrary sql check condition\"\n"
+      "        rowid=\"rowid\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        abstract=\"true|false\"\n"
+      "        node=\"element-name\"\n"
+      "/>]]>"
+msgstr ""
+      "<![CDATA[<class\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tableName\"\n"
+      "        discriminator-value=\"discriminator_value\"\n"
+      "        mutable=\"true|false\"\n"
+      "        schema=\"owner\"\n"
+      "        catalog=\"catalog\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        select-before-update=\"true|false\"\n"
+      "        polymorphism=\"implicit|explicit\"\n"
+      "        where=\"arbitrary sql where condition\"\n"
+      "        persister=\"PersisterClass\"\n"
+      "        batch-size=\"N\"\n"
+      "        optimistic-lock=\"none|version|dirty|all\"\n"
+      "        lazy=\"true|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        check=\"arbitrary sql check condition\"\n"
+      "        rowid=\"rowid\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        abstract=\"true|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\"\n"
+      "/>]]>"
+
+#: index.docbook:214
+msgid "<literal>name</literal> (optional): The fully qualified Java class name of the persistent class (or interface). If this attribute is missing, it is assumed that the mapping is for a non-POJO entity."
+msgstr "<literal>name</literal> (オプション)：永続クラス（またはインターフェイス）の完全修飾Javaクラス名。 もしこの属性を指定しなければ、POJOではないエンティティに対するマッピングとして扱われます。"
+
+#: index.docbook:221
+msgid "<literal>table</literal> (optional - defaults to the unqualified class name): The name of its database table."
+msgstr "<literal>table</literal> (オプション - デフォルトは修飾されていないクラス名)：データベーステーブルの名前"
+
+#: index.docbook:227
+msgid "<literal>discriminator-value</literal> (optional - defaults to the class name): A value that distiguishes individual subclasses, used for polymorphic behaviour. Acceptable values include <literal>null</literal> and <literal>not null</literal>."
+msgstr "<literal>discriminator-value</literal> (オプション - デフォルトはクラス名)： ポリモーフィックな振る舞いに使われる個々のサブクラスを識別するための値。 値は <literal>null</literal> か <literal>not null</literal> のいずれかを取ります。"
+
+#: index.docbook:234
+msgid "<literal>mutable</literal> (optional, defaults to <literal>true</literal>): Specifies that instances of the class are (not) mutable."
+msgstr "<literal>mutable</literal> (オプション、 デフォルトは <literal>true</literal> )： そのクラスのインスタンスが更新可能（または不可能）であることを指定します。"
+
+#: index.docbook:240, index.docbook:2204
+msgid "<literal>schema</literal> (optional): Override the schema name specified by the root <literal>&lt;hibernate-mapping&gt;</literal> element."
+msgstr "<literal>schema</literal> （オプション）： ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定されたスキーマ名をオーバーライドします。"
+
+#: index.docbook:246, index.docbook:2210
+msgid "<literal>catalog</literal> (optional): Override the catalog name specified by the root <literal>&lt;hibernate-mapping&gt;</literal> element."
+msgstr "<literal>catalog</literal> （オプション）：ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定されたカタログ名をオーバーライドします。"
+
+#: index.docbook:252
+msgid "<literal>proxy</literal> (optional): Specifies an interface to use for lazy initializing proxies. You may specify the name of the class itself."
+msgstr "<literal>proxy</literal> （オプション）：遅延初期化プロキシに使うインターフェイスを指定します。 永続化するクラス名そのものを指定することも可能です。"
+
+#: index.docbook:258
+msgid "<literal>dynamic-update</literal> (optional, defaults to <literal>false</literal>): Specifies that <literal>UPDATE</literal> SQL should be generated at runtime and contain only those columns whose values have changed."
+msgstr "<literal>dynamic-update</literal> （オプション、 デフォルトは <literal>false</literal> ）： 値が変更されたカラムだけを含むSQLの <literal>UPDATE</literal> 文を、実行時に生成することを指定します。"
+
+#: index.docbook:265
+msgid "<literal>dynamic-insert</literal> (optional, defaults to <literal>false</literal>): Specifies that <literal>INSERT</literal> SQL should be generated at runtime and contain only the columns whose values are not null."
+msgstr "<literal>dynamic-insert</literal> （オプション, デフォルトは <literal>false</literal> ）： 値がnullではないカラムだけを含むSQLの <literal>INSERT</literal> 文を、実行時に生成することを指定します。"
+
+#: index.docbook:272
+msgid "<literal>select-before-update</literal> (optional, defaults to <literal>false</literal>): Specifies that Hibernate should <emphasis>never</emphasis> perform an SQL <literal>UPDATE</literal> unless it is certain that an object is actually modified. In certain cases (actually, only when a transient object has been associated with a new session using <literal>update()</literal>), this means that Hibernate will perform an extra SQL <literal>SELECT</literal> to determine if an <literal>UPDATE</literal> is actually required."
+msgstr "<literal>select-before-update</literal> (オプション, デフォルトは <literal>false</literal>): オブジェクトが変更されたのが確実でないならば、HibernateがSQLの <literal>UPDATE</literal> を <emphasis>決して実行しない</emphasis> ことを指定します。 ある特定の場合(実際的には、一時オブジェクトが <literal>update()</literal> を使い、 新しいセッションと関連付けられた時だけ)、<literal>UPDATE</literal> が実際に必要かどうかを決定するために、 Hibernateが余分なSQLの <literal>SELECT</literal> 文を実行することを意味します。"
+
+#: index.docbook:282
+msgid "<literal>polymorphism</literal> (optional, defaults to <literal>implicit</literal>): Determines whether implicit or explicit query polymorphism is used."
+msgstr "(optional, デフォルトでは <literal>implicit</literal> ): implicit（暗黙）かexplicit（明示）の、 どちらのクエリポリモーフィズムを使うか決定します。"
+
+#: index.docbook:288
+msgid "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> condition to be used when retrieving objects of this class"
+msgstr "<literal>where</literal> （オプション）： このクラスのオブジェクトを検索するときに使用する、任意のSQLの <literal>WHERE</literal> 条件を指定します。"
+
+#: index.docbook:294
+msgid "<literal>persister</literal> (optional): Specifies a custom <literal>ClassPersister</literal>."
+msgstr "<literal>persister</literal> （オプション）：カスタム <literal>ClassPersister</literal> を指定します。"
+
+#: index.docbook:299
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a \"batch size\" for fetching instances of this class by identifier."
+msgstr "<literal>batch-size</literal> （オプション, デフォルトは <literal>1</literal> ）： 識別子でこのクラスのインスタンスを復元するときの「バッチサイズ」を指定します。"
+
+#: index.docbook:305
+msgid "<literal>optimistic-lock</literal> (optional, defaults to <literal>version</literal>): Determines the optimistic locking strategy."
+msgstr "<literal>optimistic-lock</literal> （オプション,デフォルトは <literal>version</literal> ）： 楽観ロック戦略を決定します。"
+
+#: index.docbook:311
+msgid "<literal>lazy</literal> (optional): Lazy fetching may be completely disabled by setting <literal>lazy=\"false\"</literal>."
+msgstr "<literal>lazy</literal> （オプション）： <literal>lazy=\"false\"</literal> と設定することで、 遅延フェッチができなくなります。"
+
+#: index.docbook:317
+msgid "<literal>entity-name</literal> (optional, defaults to the class name): Hibernate3 allows a class to be mapped multiple times (to different tables, potentially), and allows entity mappings that are represented by Maps or XML at the Java level. In these cases, you should provide an explicit arbitrary name for the entity. See <xref linkend=\"persistent-classes-dynamicmodels\"/> and <xref linkend=\"xml\"/> for more information."
+msgstr "<literal>entity-name</literal> （オプション、デフォルトはクラス名）： Hibernate3ではクラスが複数回マッピングでき（場合によっては違うテーブルに対しても）、 JavaレベルでMapやXMLで表現されるエンティティマッピングが可能です。 これらの場合、エンティティに対して任意の名前を、明示的に付けなくてはなりません。 詳しくは <xref linkend=\"persistent-classes-dynamicmodels\"/> と <xref linkend=\"xml\"/> を参照してください。"
+
+#: index.docbook:327
+msgid "<literal>check</literal> (optional): A SQL expression used to generate a multi-row <emphasis>check</emphasis> constraint for automatic schema generation."
+msgstr "<literal>check</literal> （オプション）：自動的にスキーマを生成するために、 複数行の <emphasis>check</emphasis> 制約を生成するSQL式。"
+
+#: index.docbook:333
+msgid "<literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on databases which support. E.g. on Oracle, Hibernate can use the <literal>rowid</literal> extra column for fast updates if you set this option to <literal>rowid</literal>. A ROWID is an implementation detail and represents the physical location of a stored tuple."
+msgstr "<literal>rowid</literal> （オプション）：Hibernateは、それをサポートしているデータベースでROWIDと 呼ばれるものを使うことができます。 例えばOracleを使っているとき、このオプションに <literal>rowid</literal> を設定すれば、 Hiberanteはupdateを高速化するために <literal>rowid</literal> という特別なカラムを使うことができます。 ROWIDは詳細な実装であり、保存されたタプルの物理的な位置を表しています。"
+
+#: index.docbook:341
+msgid "<literal>subselect</literal> (optional): Maps an immutable and read-only entity to a database subselect. Useful if you want to have a view instead of a base table, but don't. See below for more information."
+msgstr "<literal>subselect</literal> （オプション）：不変かつ読み取り専用であるエンティティを データベースの副問合せ（subselect）にマッピングします。 もし元のテーブルの代わりにビューを持ちたければ有用ですが、 そうでないのなら有用ではありません。より詳しい情報は下記を参照してください。"
+
+#: index.docbook:348
+msgid "<literal>abstract</literal> (optional): Used to mark abstract superclasses in <literal>&lt;union-subclass&gt;</literal> hierarchies."
+msgstr "<literal>abstract</literal> （オプション）： <literal>&lt;union-subclass&gt;</literal> 階層内の抽象スーパークラスにマークするために使います。"
+
+#: index.docbook:356
+msgid "It is perfectly acceptable for the named persistent class to be an interface. You would then declare implementing classes of that interface using the <literal>&lt;subclass&gt;</literal> element. You may persist any <emphasis>static</emphasis> inner class. You should specify the class name using the standard form ie. <literal>eg.Foo$Bar</literal>."
+msgstr "永続クラスの名前にインターフェイスを指定してもまったく問題ありません。 そのときは <literal>&lt;subclass&gt;</literal> 要素を使って、 そのインターフェイスを実装するクラスを定義してください。 <emphasis>static</emphasis> な内部クラスでも永続化できます。 そのときは標準形式、例えば <literal>eg.Foo$Bar</literal> を使ってクラス名を指定してください。"
+
+#: index.docbook:363
+msgid "Immutable classes, <literal>mutable=\"false\"</literal>, may not be updated or deleted by the application. This allows Hibernate to make some minor performance optimizations."
+msgstr "<literal>mutable=\"false\"</literal> 指定をした不変クラスは、 アプリケーションによる更新や削除が出来ないことがあります。 これにより、Hibernateがパフォーマンスを少し改善します。"
+
+#: index.docbook:368
+msgid "The optional <literal>proxy</literal> attribute enables lazy initialization of persistent instances of the class. Hibernate will initially return CGLIB proxies which implement the named interface. The actual persistent object will be loaded when a method of the proxy is invoked. See \"Initializing collections and proxies\" below."
+msgstr "オプションの <literal>proxy</literal> 属性により、クラスの永続インスタンスの遅延初期化が可能になります。 Hibernateは最初に、指定したインターフェイスを実装したCGLIBプロキシを返します。 実際の永続オブジェクトはプロキシのメソッドを呼び出すときにロードします。 以下の「遅延初期化のためのプロキシ」を参照してください。"
+
+#: index.docbook:375
+msgid "<emphasis>Implicit</emphasis> polymorphism means that instances of the class will be returned by a query that names any superclass or implemented interface or the class and that instances of any subclass of the class will be returned by a query that names the class itself. <emphasis>Explicit</emphasis> polymorphism means that class instances will be returned only by queries that explicitly name that class and that queries that name the class will return only instances of subclasses mapped inside this <literal>&lt;class&gt;</literal> declaration as a <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal>. For most purposes the default, <literal>polymorphism=\"implicit\"</literal>, is appropriate. Explicit polymorphism is useful when two different classes are mapped to the same table (this allows a \"lightweight\" class that contains a subset of the table columns)."
+msgstr "<emphasis>暗黙的</emphasis> ポリモーフィズムとは、次の二つを意味しています。 一つはクラスのインスタンスが、スーパークラスや実装したインターフェイス、またそのクラスを指定するクエリによって返されることで、 もう一つはそのクラスのサブクラスのインスタンスが、そのクラス自身を指定したクエリによって返されることです。 また、<emphasis>明示的</emphasis> ポリモーフィズムとは、次の二つを意味しています。 一つはクラスのインスタンスが、そのクラスを明示的に指定したクエリによってのみ返されることで、 もう一つはクラスを指定したクエリが、<literal>&lt;class&gt;</literal> 要素の中で <literal>&lt;subclass&gt;</literal> や <literal>&lt;joined-subclass&gt;</literal> とマッピングされているサブクラスのインスタンスだけを返すことです。 ほとんどの用途ではデフォルトの <literal>polymorphism=\"implicit\"</literal> が適切です。 明示的なポリモーフィズムは、2つの違ったクラスが同じテーブルにマッピングされているときに有用です （これによってテーブルカラムのサブセットを含む、「軽量な」クラスが可能になります）。"
+
+#: index.docbook:387
+msgid "The <literal>persister</literal> attribute lets you customize the persistence strategy used for the class. You may, for example, specify your own subclass of <literal>org.hibernate.persister.EntityPersister</literal> or you might even provide a completely new implementation of the interface <literal>org.hibernate.persister.ClassPersister</literal> that implements persistence via, for example, stored procedure calls, serialization to flat files or LDAP. See <literal>org.hibernate.test.CustomPersister</literal> for a simple example (of \"persistence\" to a <literal>Hashtable</literal>)."
+msgstr "<literal>persister</literal> 属性を指定することで、クラスの永続化戦略をカスタマイズできます。 例えば <literal>org.hibernate.persister.EntityPersister</literal> 自身のサブクラスを指定したり、 また例えばストアドプロシージャコール、フラットファイルへシリアライズ、 LDAPなどを通した永続性を実装する <literal>org.hibernate.persister.ClassPersister</literal> インターフェイスの完全に新しい実装を提供できます。簡単な例として <literal>org.hibernate.test.CustomPersister</literal> を見てください（これは <literal>Hashtable</literal> の「永続化」です）。"
+
+#: index.docbook:398
+msgid "Note that the <literal>dynamic-update</literal> and <literal>dynamic-insert</literal> settings are not inherited by subclasses and so may also be specified on the <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal> elements. These settings may increase performance in some cases, but might actually decrease performance in others. Use judiciously."
+msgstr "<literal>dynamic-update</literal> と <literal>dynamic-insert</literal> の設定はサブクラスに継承されません。 そのため <literal>&lt;subclass&gt;</literal> や <literal>&lt;joined-subclass&gt;</literal> 要素を指定することも出来ます。 これらの設定はパフォーマンスを向上させる事もありますが、落とすこともありますので、慎重に使用してください。"
+
+#: index.docbook:406
+msgid "Use of <literal>select-before-update</literal> will usually decrease performance. It is very useful to prevent a database update trigger being called unnecessarily if you reattach a graph of detached instances to a <literal>Session</literal>."
+msgstr "<literal>select-before-update</literal> の使用は通常パフォーマンスを落とします。 もし <literal>Session</literal> へ分離インスタンスのグラフを再追加するなら、 データベース更新のトリガを不必要に呼び出すのを避けるという点で、非常に有用です。"
+
+#: index.docbook:412
+msgid "If you enable <literal>dynamic-update</literal>, you will have a choice of optimistic locking strategies:"
+msgstr "<literal>dynamic-update</literal> を有効にすれば、楽観ロック戦略を選ぶことになります。"
+
+#: index.docbook:418
+msgid "<literal>version</literal> check the version/timestamp columns"
+msgstr "<literal>version</literal> バージョン/タイムスタンプカラムをチェックします"
+
+#: index.docbook:423
+msgid "<literal>all</literal> check all columns"
+msgstr "<literal>all</literal> すべてのカラムをチェックします。"
+
+#: index.docbook:428
+msgid "<literal>dirty</literal> check the changed columns, allowing some concurrent updates"
+msgstr "<literal>dirty</literal> 変更したカラムをチェックし、同時更新できるようにします。"
+
+#: index.docbook:433
+msgid "<literal>none</literal> do not use optimistic locking"
+msgstr "<literal>none</literal> 楽観ロックを使用しません"
+
+#: index.docbook:438
+msgid "We <emphasis>very</emphasis> strongly recommend that you use version/timestamp columns for optimistic locking with Hibernate. This is the optimal strategy with respect to performance and is the only strategy that correctly handles modifications made to detached instances (ie. when <literal>Session.merge()</literal> is used)."
+msgstr "Hibernateで楽観的ロック戦略を使うなら、バージョン/タイムスタンプカラムを使うことを <emphasis> 非常に</emphasis> 強くお勧めします。 楽観的ロックはパフォーマンスの観点からも最適であり、さらに分離インスタンスへの修正 （つまり <literal>Session.marge()</literal> が使われるとき） を正確に扱うことのできる唯一の戦略でもあります。"
+
+#: index.docbook:445
+msgid "There is no difference between a view and a base table for a Hibernate mapping, as expected this is transparent at the database level (note that some DBMS don't support views properly, especially with updates). Sometimes you want to use a view, but can't create one in the database (ie. with a legacy schema). In this case, you can map an immutable and read-only entity to a given SQL subselect expression:"
+msgstr "Hibernateのマッピングにとってビューと普通のテーブルの間に違いはなく、 データベースレベルでは透過的です （ただしビューを完全にはサポートしていないDBMSもあります。 特に、更新のあるビューに対してはそうです）。 ビューを使いたくても、データベースで作成できないことがあります （例えば、レガシースキーマの場合）。 この場合には、不変かつ読み取り専用のエンティティに与えられたSQLの副問合せ文をマップできます。"
+
+#: index.docbook:453
+msgid ""
+      "<![CDATA[<class name=\"Summary\">\n"
+      "    <subselect>\n"
+      "        select item.name, max(bid.amount), count(*)\n"
+      "        from item\n"
+      "        join bid on bid.item_id = item.id\n"
+      "        group by item.name\n"
+      "    </subselect>\n"
+      "    <synchronize table=\"item\"/>\n"
+      "    <synchronize table=\"bid\"/>\n"
+      "    <id name=\"name\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Summary\">\n"
+      "    <subselect>\n"
+      "        select item.name, max(bid.amount), count(*)\n"
+      "        from item\n"
+      "        join bid on bid.item_id = item.id\n"
+      "        group by item.name\n"
+      "    </subselect>\n"
+      "    <synchronize table=\"item\"/>\n"
+      "    <synchronize table=\"bid\"/>\n"
+      "    <id name=\"name\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+
+#: index.docbook:455
+msgid "Declare the tables to synchronize this entity with, ensuring that auto-flush happens correctly, and that queries against the derived entity do not return stale data. The <literal>&lt;subselect&gt;</literal> is available as both as an attribute and a nested mapping element."
+msgstr "テーブルをこのエンティティと同期するように定義してください。 オートフラッシュが確実に起こるように、また導出エンティティに対するクエリが古いデータを 返さないようにするためです。 <literal>&lt;subselect&gt;</literal> は属性とネストしたマッピング属性のどちらでも利用できます。"
+
+#: index.docbook:465
+msgid "<title>id</title>"
+msgstr "<title>id</title>"
+
+#: index.docbook:467
+msgid "Mapped classes <emphasis>must</emphasis> declare the primary key column of the database table. Most classes will also have a JavaBeans-style property holding the unique identifier of an instance. The <literal>&lt;id&gt;</literal> element defines the mapping from that property to the primary key column."
+msgstr "マップされたクラスはデータベーステーブルの主キーカラムを定義 <emphasis>しなければなりません</emphasis> 。 ほとんどのクラスにはインスタンスのユニークな識別子を保持するJavaBeansスタイルのプロパティもあります。 <literal>&lt;id&gt;</literal> 要素は、そのプロパティから主キーカラムへのマッピングを定義します。"
+
+#: index.docbook:482
+msgid ""
+      "<![CDATA[<id\n"
+      "        name=\"propertyName\"\n"
+      "        type=\"typename\"\n"
+      "        column=\"column_name\"\n"
+      "        unsaved-value=\"null|any|none|undefined|id_value\"\n"
+      "        access=\"field|property|ClassName\">\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "\n"
+      "        <generator class=\"generatorClass\"/>\n"
+      "</id>]]>"
+msgstr ""
+      "<![CDATA[<id\n"
+      "        name=\"propertyName\"\n"
+      "        type=\"typename\"\n"
+      "        column=\"column_name\"\n"
+      "        unsaved-value=\"null|any|none|undefined|id_value\"\n"
+      "        access=\"field|property|ClassName\">\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "\n"
+      "        <generator class=\"generatorClass\"/>\n"
+      "</id>]]>"
+
+#: index.docbook:485
+msgid "<literal>name</literal> (optional): The name of the identifier property."
+msgstr "<literal>name</literal>（オプション）：識別子プロパティの名前。"
+
+#: index.docbook:490
+msgid "<literal>type</literal> (optional): A name that indicates the Hibernate type."
+msgstr "<literal>type</literal>（オプション）：Hibernateの型を示す名前。"
+
+#: index.docbook:495
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of the primary key column."
+msgstr "<literal>column</literal>（オプション - デフォルトはプロパティ名）： 主キーカラムの名前。"
+
+#: index.docbook:501
+msgid "<literal>unsaved-value</literal> (optional - defaults to a \"sensible\" value): An identifier property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session."
+msgstr "<literal>unsaved-value</literal>（オプション - デフォルトの値はsensible）： インスタンスが新しくインスタンス化された （セーブされていない）ことを示す、識別子プロパティの値。 以前のSessionでセーブまたはロードされた一時的インスタンスと区別するために 使います。"
+
+#: index.docbook:509, index.docbook:1017, index.docbook:1156, index.docbook:1238, index.docbook:1345, index.docbook:1534, index.docbook:1708, index.docbook:1878, index.docbook:2457
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing the property value."
+msgstr "<literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）： プロパティの値へアクセスするためにHibernateが使う戦略です。"
+
+#: index.docbook:517
+msgid "If the <literal>name</literal> attribute is missing, it is assumed that the class has no identifier property."
+msgstr "<literal>name</literal> 属性がなければ、クラスには識別子プロパティがないものとみなされます。"
+
+#: index.docbook:522
+msgid "The <literal>unsaved-value</literal> attribute is almost never needed in Hibernate3."
+msgstr "<literal>unsaved-value</literal> 属性はHibernate3ではほとんどの場合、必要ではありません。"
+
+#: index.docbook:526
+msgid "There is an alternative <literal>&lt;composite-id&gt;</literal> declaration to allow access to legacy data with composite keys. We strongly discourage its use for anything else."
+msgstr "複合キーを持つレガシーデータにアクセスできるように、 <literal>&lt;composite-id&gt;</literal> という代替のマッピング定義があります。 しかし他の用途への使用は全くおすすめできません。"
+
+#: index.docbook:532
+msgid "Generator"
+msgstr "ジェネレータ"
+
+#: index.docbook:534
+msgid "The optional <literal>&lt;generator&gt;</literal> child element names a Java class used to generate unique identifiers for instances of the persistent class. If any parameters are required to configure or initialize the generator instance, they are passed using the <literal>&lt;param&gt;</literal> element."
+msgstr "オプションの <literal>&lt;generator&gt;</literal> 子要素は、 永続クラスのインスタンスのユニークな識別子を生成するために使う、Javaクラスを指定します。 ジェネレータインスタンスの設定、もしくは初期化にパラメータが必要であれば、<literal>&lt;param&gt;</literal> 要素を使って渡すことができます。"
+
+#: index.docbook:541
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"org.hibernate.id.TableHiLoGenerator\">\n"
+      "                <param name=\"table\">uid_table</param>\n"
+      "                <param name=\"column\">next_hi_value_column</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"org.hibernate.id.TableHiLoGenerator\">\n"
+      "                <param name=\"table\">uid_table</param>\n"
+      "                <param name=\"column\">next_hi_value_column</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+
+#: index.docbook:543
+msgid "All generators implement the interface <literal>org.hibernate.id.IdentifierGenerator</literal>. This is a very simple interface; some applications may choose to provide their own specialized implementations. However, Hibernate provides a range of built-in implementations. There are shortcut names for the built-in generators:"
+msgstr "すべてのジェネレータは、インターフェイス <literal>org.hibernate.id.IdentifierGenerator</literal> を実装します。 これはとても単純なインターフェイスなので、特別な実装を独自に用意するアプリケーションもあるかもしれません。 しかしHibernateは組み込みの実装をいくつも用意しています。 組み込みのジェネレータには以下のショートカット名があります："
+
+#: index.docbook:551
+msgid "increment"
+msgstr "increment"
+
+#: index.docbook:553
+msgid "generates identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal> that are unique only when no other process is inserting data into the same table. <emphasis>Do not use in a cluster.</emphasis>"
+msgstr "<literal>long</literal> , <literal>short</literal> , <literal>int</literal> 型の識別子を生成します。 これらは他のプロセスが同じテーブルにデータを挿入しないときだけユニークです。 <emphasis>クラスタ内では使わないでください</emphasis> 。"
+
+#: index.docbook:562
+msgid "identity"
+msgstr "identity"
+
+#: index.docbook:564
+msgid "supports identity columns in DB2, MySQL, MS SQL Server, Sybase and HypersonicSQL. The returned identifier is of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>."
+msgstr "DB2, MySQL, MS SQL Server, Sybase, HypersonicSQLの識別子カラムを サポートします。 返される識別子の型は <literal>long</literal> , <literal>short</literal> , <literal>int</literal> のいずれかです。"
+
+#: index.docbook:572
+msgid "sequence"
+msgstr "sequence"
+
+#: index.docbook:574
+msgid "uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator in Interbase. The returned identifier is of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>"
+msgstr "DB2, PostgreSQL, Oracle, SAP DB, McKoiのシーケンスや、Interbaseのジェネレータを使用します。 返される識別子の型は <literal>long</literal> , <literal>short</literal> , <literal>int</literal> のいずれかです。"
+
+#: index.docbook:582
+msgid "hilo"
+msgstr "hilo"
+
+#: index.docbook:584
+msgid "uses a hi/lo algorithm to efficiently generate identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>, given a table and column (by default <literal>hibernate_unique_key</literal> and <literal>next_hi</literal> respectively) as a source of hi values. The hi/lo algorithm generates identifiers that are unique only for a particular database."
+msgstr "<literal>long</literal> , <literal>short</literal> , <literal>int</literal> 型の識別子を効率的に生成するhi/loアルゴリズムを使います。 hi値のソースとして、テーブルとカラムを与えます(デフォルトではそれぞれ <literal>hibernate_unique_key</literal> と <literal>next_hi</literal> )。 hi/loアルゴリズムは特定のデータベースに対してのみユニークな識別子を生成します。"
+
+#: index.docbook:594
+msgid "seqhilo"
+msgstr "seqhilo"
+
+#: index.docbook:596
+msgid "uses a hi/lo algorithm to efficiently generate identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>, given a named database sequence."
+msgstr "<literal>long</literal> , <literal>short</literal> , <literal>int</literal> 型の識別子を効率的に生成するhi/loアルゴリズムを使います。 指定されたデータベースシーケンスを与えます。"
+
+#: index.docbook:604
+msgid "uuid"
+msgstr "uuid"
+
+#: index.docbook:606
+msgid "uses a 128-bit UUID algorithm to generate identifiers of type string, unique within a network (the IP address is used). The UUID is encoded as a string of hexadecimal digits of length 32."
+msgstr "(IPアドレスが使用される)ネットワーク内でユニークな文字列型の識別子を生成するために、 128ビットのUUIDアルゴリズムを使用します。UUIDは長さ32の16進数字の文字列としてエンコードされます。"
+
+#: index.docbook:614
+msgid "guid"
+msgstr "guid"
+
+#: index.docbook:616
+msgid "uses a database-generated GUID string on MS SQL Server and MySQL."
+msgstr "MS SQLサーバとMySQLでデータベースが生成するGUID文字列を使用します。"
+
+#: index.docbook:622
+msgid "native"
+msgstr "native"
+
+#: index.docbook:624
+msgid "picks <literal>identity</literal>, <literal>sequence</literal> or <literal>hilo</literal> depending upon the capabilities of the underlying database."
+msgstr "使用するデータベースの性能により <literal>identity</literal> , <literal>sequence</literal> , <literal>hilo</literal> のいずれかが選ばれます。"
+
+#: index.docbook:632
+msgid "assigned"
+msgstr "assigned"
+
+#: index.docbook:634
+msgid "lets the application to assign an identifier to the object before <literal>save()</literal> is called. This is the default strategy if no <literal>&lt;generator&gt;</literal> element is specified."
+msgstr "<literal>save()</literal> が呼ばれる前に、 アプリケーションがオブジェクトに識別子を代入できるようにします。 <literal>&lt;generator&gt;</literal> が指定されていなければ、これがデフォルトの戦略になります。"
+
+#: index.docbook:642
+msgid "select"
+msgstr "select"
+
+#: index.docbook:644
+msgid "retrieves a primary key assigned by a database trigger by selecting the row by some unique key and retrieving the primary key value."
+msgstr "あるユニークキーによる行の選択と主キーの値の復元により、 データベーストリガが割り当てた主キーを取得します。"
+
+#: index.docbook:651
+msgid "foreign"
+msgstr "foreign"
+
+#: index.docbook:653
+msgid "uses the identifier of another associated object. Usually used in conjunction with a <literal>&lt;one-to-one&gt;</literal> primary key association."
+msgstr "他の関連オブジェクトの識別子を使います。 普通は、<literal>&lt;one-to-one&gt;</literal> 主キー関連と組み合わせて使います。"
+
+#: index.docbook:660
+msgid "sequence-identity"
+msgstr "Hi/lo アルゴリズム"
+
+#: index.docbook:662
+msgid "a specialized sequence generation strategy which utilizes a database sequence for the actual value generation, but combines this with JDBC3 getGeneratedKeys to actually return the generated identifier value as part of the insert statement execution. This strategy is only known to be supported on Oracle 10g drivers targetted for JDK 1.4. Note comments on these insert statements are disabled due to a bug in the Oracle drivers."
+msgstr "<literal>hilo</literal> と <literal>seqhilo</literal> ジェネレータは、 識別子生成の代表的なアプローチであるhi/loアルゴリズムの2つの代替実装を提供します。 1番目の実装は、次回に利用される\"hi\"値を保持する「特別な」データベーステーブルを 必要とします。 2番目の実装は、Oracleスタイルのシーケンスを使います（サポートされている場合）。"
+
+#: index.docbook:679
+msgid "Hi/lo algorithm"
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"hilo\">\n"
+      "                <param name=\"table\">hi_value</param>\n"
+      "                <param name=\"column\">next_value</param>\n"
+      "                <param name=\"max_lo\">100</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+
+#: index.docbook:680
+msgid "The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate implementations of the hi/lo algorithm, a favorite approach to identifier generation. The first implementation requires a \"special\" database table to hold the next available \"hi\" value. The second uses an Oracle-style sequence (where supported)."
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"seqhilo\">\n"
+      "                <param name=\"sequence\">hi_value</param>\n"
+      "                <param name=\"max_lo\">100</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+
+#: index.docbook:687
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"hilo\">\n"
+      "                <param name=\"table\">hi_value</param>\n"
+      "                <param name=\"column\">next_value</param>\n"
+      "                <param name=\"max_lo\">100</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+msgstr "残念ながらHibernateへの独自の <literal>Connection</literal> を提供するときには、<literal>hilo</literal> を使えません。 HibernateがJTAでリストされている接続を取得するためにアプリケーションサーバーのデータソースを使用しているときには、 <literal>hibernate.transaction.manager_lookup_class</literal> を適切に設定しなければなりません。"
+
+#: index.docbook:689
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
+      "        <generator class=\"seqhilo\">\n"
+      "                <param name=\"sequence\">hi_value</param>\n"
+      "                <param name=\"max_lo\">100</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+msgstr "UUID アルゴリズム"
+
+#: index.docbook:691
+msgid "Unfortunately, you can't use <literal>hilo</literal> when supplying your own <literal>Connection</literal> to Hibernate. When Hibernate is using an application server datasource to obtain connections enlisted with JTA, you must properly configure the <literal>hibernate.transaction.manager_lookup_class</literal>."
+msgstr "UUIDには以下のものが含まれます： IPアドレス、JVMのスタートアップタイム（4分の1秒の正確さ）、 システム時間、（JVMに対してユニークな）カウンタ値。 JavaコードからMACアドレスやメモリアドレスを取得することはできないので、 JNIが使えないときの最良の方法です。"
+
+#: index.docbook:700
+msgid "UUID algorithm"
+msgstr "識別子カラムとシーケンス"
+
+#: index.docbook:701
+msgid "The UUID contains: IP address, startup time of the JVM (accurate to a quarter second), system time and a counter value (unique within the JVM). It's not possible to obtain a MAC address or memory address from Java code, so this is the best we can do without using JNI."
+msgstr "識別子カラムをサポートしているデータベース（DB2, MySQL, Sybase, MS SQL）では、 <literal>identity</literal> キー生成を使えます。 シーケンスをサポートするデータベース（DB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB）では、 <literal>sequence</literal> スタイルのキー生成を使えます。 どちらの戦略も、新しいオブジェクトを挿入するために、SQLクエリを2つ必要とします。"
+
+#: index.docbook:710
+msgid "Identity columns and sequences"
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
+      "        <generator class=\"sequence\">\n"
+      "                <param name=\"sequence\">person_id_sequence</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+
+#: index.docbook:711
+msgid "For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), you may use <literal>identity</literal> key generation. For databases that support sequences (DB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB) you may use <literal>sequence</literal> style key generation. Both these strategies require two SQL queries to insert a new object."
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\" unsaved-value=\"0\">\n"
+      "        <generator class=\"identity\"/>\n"
+      "</id>]]>"
+
+#: index.docbook:719
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
+      "        <generator class=\"sequence\">\n"
+      "                <param name=\"sequence\">person_id_sequence</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+msgstr "クロスプラットフォームの開発では、<literal>native</literal> 戦略は <literal>identity</literal> , <literal>sequence</literal> , <literal>hilo</literal> 戦略の中から1つを選択しますが、 これは使用しているデータベースの能力に依存します。"
+
+#: index.docbook:721
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\" unsaved-value=\"0\">\n"
+      "        <generator class=\"identity\"/>\n"
+      "</id>]]>"
+msgstr "識別子の割り当て"
+
+#: index.docbook:723
+msgid "For cross-platform development, the <literal>native</literal> strategy will choose from the <literal>identity</literal>, <literal>sequence</literal> and <literal>hilo</literal> strategies, dependant upon the capabilities of the underlying database."
+msgstr "アプリケーションに識別子を割り当てさせたいのであれば(Hibernateが生成するものではなく）、 <literal>assigned</literal> ジェネレータを使うことができます。 この特別なジェネレータは、すでにオブジェクトの識別子プロパティに代入された値を 識別子に使います。このジェネレータは主キーが代理キーの代わりに自然キーである場合に使用します。 <literal>&lt;generator&gt;</literal> 要素を指定しない場合のデフォルトの動作になります。"
+
+#: index.docbook:732
+msgid "Assigned identifiers"
+msgstr "<literal>assigned</literal> ジェネレータを選択すると、 Hibernateは <literal>unsaved-value=\"undefined\"</literal> を使用します。 そして、バージョンやタイムスタンプのプロパティがない場合や <literal>Interceptor.isUnsaved()</literal> を定義しなかった場合には、インスタンスが一時的(transient)なものであるのか、 またはセッションから分離(detached)したものかどうかを決めるために、データベースを調べます。"
+
+#: index.docbook:733
+msgid "If you want the application to assign identifiers (as opposed to having Hibernate generate them), you may use the <literal>assigned</literal> generator. This special generator will use the identifier value already assigned to the object's identifier property. This generator is used when the primary key is a natural key instead of a surrogate key. This is the default behavior if you do no specify a <literal>&lt;generator&gt;</literal> element."
+msgstr "トリガにより割り当てられた主キー"
+
+#: index.docbook:742
+msgid "Choosing the <literal>assigned</literal> generator makes Hibernate use <literal>unsaved-value=\"undefined\"</literal>, forcing Hibernate to go to the database to determine if an instance is transient or detached, unless there is a version or timestamp property, or you define <literal>Interceptor.isUnsaved()</literal>."
+msgstr "レガシースキーマのためにのみ指定します(Hibernateはトリガを使ってDDLを生成しません)。"
+
+#: index.docbook:752
+msgid "Primary keys assigned by triggers"
+msgstr ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
+      "        <generator class=\"select\">\n"
+      "                <param name=\"key\">socialSecurityNumber</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+
+#: index.docbook:753
+msgid "For legacy schemas only (Hibernate does not generate DDL with triggers)."
+msgstr "上の例の中で、クラスで自然キーとして定義された <literal>socialSecurityNumber</literal> という名前のユニークな値のプロパティと、 値がトリガにより生成される <literal>person_id</literal> という名前の代理キーがあります。"
+
+#: index.docbook:757
+msgid ""
+      "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
+      "        <generator class=\"select\">\n"
+      "                <param name=\"key\">socialSecurityNumber</param>\n"
+      "        </generator>\n"
+      "</id>]]>"
+msgstr "composite-id"
+
+#: index.docbook:759
+msgid "In the above example, there is a unique valued property named <literal>socialSecurityNumber</literal> defined by the class, as a natural key, and a surrogate key named <literal>person_id</literal> whose value is generated by a trigger."
+msgstr ""
+      "<![CDATA[<composite-id\n"
+      "        name=\"propertyName\"\n"
+      "        class=\"ClassName\"\n"
+      "        mapped=\"true|false\"\n"
+      "        access=\"field|property|ClassName\">\n"
+      "        node=\"element-name|.\"\n"
+      "\n"
+      "        <key-property name=\"propertyName\" type=\"typename\" column=\"column_name\"/>\n"
+      "        <key-many-to-one name=\"propertyName class=\"ClassName\" column=\"column_name\"/>\n"
+      "        ......\n"
+      "</composite-id>]]>"
+
+#: index.docbook:771
+msgid "Enhanced identifier generators"
+msgstr "複合キーのあるテーブルに対し、 識別子プロパティとしてクラスの複数のプロパティをマッピングすることができます。 <literal>&lt;composite-id&gt;</literal> 要素は、子要素として <literal>&lt;key-property&gt;</literal> プロパティマッピングと <literal>&lt;key-many-to-one&gt;</literal> マッピングを受け入れます。"
+
+#: index.docbook:773
+msgid "Starting with release 3.2.3, there are 2 new generators which represent a re-thinking of 2 different aspects of identifier generation. The first aspect is database portability; the second is optimization (not having to query the database for every request for a new identifier value). These two new generators are intended to take the place of some of the named generators described above (starting in 3.3.x); however, they are included in the current releases and can be referenced by FQN."
+msgstr ""
+      "<![CDATA[<composite-id>\n"
+      "        <key-property name=\"medicareNumber\"/>\n"
+      "        <key-property name=\"dependent\"/>\n"
+      "</composite-id>]]>"
+
+#: index.docbook:781
+msgid "The first of these new generators is <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal> which is intended firstly as a replacement for the <literal>sequence</literal> generator and secondly as a better portability generator than <literal>native</literal> (because <literal>native</literal> (generally) chooses between <literal>identity</literal> and <literal>sequence</literal> which have largely different semantics which can cause subtle isssues in applications eyeing portability). <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal> however achieves portability in a different manner. It chooses between using a table or a sequence in the database to store its incrementing values depending on the capabilities of the dialect being used. The difference between this and <literal>native</literal> is that table-based and sequence-based storage have the same exact semantic (in fact sequences are exactly what Hibernate tries to emmulate with its table-based generators). This generator has a number of configuration parameters:"
+msgstr "複合識別子の等価性を実装するためには、永続クラスが <literal>equals()</literal> と <literal>hashCode()</literal> をオーバーライド <emphasis>しなければなりません</emphasis> 。 また <literal>Serializable</literal> も実装しなければいけません。"
+
+#: index.docbook:795
+msgid "<literal>sequence_name</literal> (optional, defaults to <literal>hibernate_sequence</literal>): The name of the sequence (or table) to be used."
+msgstr "残念ながら複合識別子のためのこの方法は、 永続オブジェクトが自身の識別子であることを意味しています。 オブジェクト自身を識別子とする以上の便利な「扱い方」はありません。 複合キーに関連した永続状態を <literal>load()</literal> 出来るようになる前に、 永続クラス自身をインスタンス化し、識別子プロパティを設定しなければなりません。 <emphasis> 組み込みの</emphasis> 複合識別子と呼ばれるこのアプローチは、 本格的なアプリケーションには向いていません。"
+
+#: index.docbook:801
+msgid "<literal>initial_value</literal> (optional, defaults to <literal>1</literal>): The initial value to be retrieved from the sequence/table. In sequence creation terms, this is analogous to the clause typical named \"STARTS WITH\"."
+msgstr "2つ目の方法は <emphasis> マップされた</emphasis> 複合識別子と呼ばれるもので、 <literal>&lt;composite-id&gt;</literal>エレメント内で指定した識別プロパティが 永続クラスと分離した識別子クラスの両方に重複して存在します。"
+
+#: index.docbook:808
+msgid "<literal>increment_size</literal> (optional, defaults to <literal>1</literal>): The value by which subsequent calls to the sequence/table should differ. In sequence creation terms, this is analogous to the clause typical named \"INCREMENT BY\"."
+msgstr ""
+      "<![CDATA[<composite-id class=\"MedicareId\" mapped=\"true\">\n"
+      "        <key-property name=\"medicareNumber\"/>\n"
+      "        <key-property name=\"dependent\"/>\n"
+      "</composite-id>]]>"
+
+#: index.docbook:815
+msgid "<literal>force_table_use</literal> (optional, defaults to <literal>false</literal>): Should we force the use of a table as the backing structure even though the dialect might support sequence?"
+msgstr "この例では、複合識別子クラス（ <literal>MedicareId</literal> ）とエンティティクラス自身の両方が、 <literal>medicareNumber</literal> と <literal>dependent</literal> という名前のプロパティを持ちます。 識別子クラスは、<literal>equals()</literal> と <literal>hashCode()</literal> をオーバライドし、 <literal>Serializable</literal> を実装しなくてはなりません。 この方法には、明らかにコードが重複するという不都合があります。"
+
+#: index.docbook:822
+msgid "<literal>value_column</literal> (optional, defaults to <literal>next_val</literal>): Only relevant for table structures! The name of the column on the table which is used to hold the value."
+msgstr "次の属性はマッピングした複合識別子を指定するために使用します。"
+
+#: index.docbook:829
+msgid "<literal>optimizer</literal> (optional, defaults to <literal>none</literal>): See"
+msgstr "<literal>mapped</literal> (オプション、デフォルトは <literal>false</literal> ): マッピングした複合識別子が使用されることと、包含されたプロパティのマッピングが、 エンティティクラスと複合識別子クラスの両方を参照することを示します。"
+
+#: index.docbook:836
+msgid "The second of these new generators is <literal>org.hibernate.id.enhanced.TableGenerator</literal> which is intended firstly as a replacement for the <literal>table</literal> generator (although it actually functions much more like <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal>) and secondly as a re-implementation of <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> utilizing the notion of pluggable optimiziers. Essentially this generator defines a table capable of holding a number of different increment values simultaneously by using multiple distinctly keyed rows. This generator has a number of configuration parameters:"
+msgstr "<literal>class</literal> (オプション,ただしマッピングした複合識別子には必須): 複合識別子として使用するクラス。"
+
+#: index.docbook:846
+msgid "<literal>table_name</literal> (optional, defaults to <literal>hibernate_sequences</literal>): The name of the table to be used."
+msgstr "3つ目のさらに便利な方法は、複合識別子を<xref linkend=\"components-compositeid\"/>内の コンポーネントクラスとして実装することです。 下で記述している属性は、この代替方法にのみ適用されます。"
+
+#: index.docbook:852
+msgid "<literal>value_column_name</literal> (optional, defaults to <literal>next_val</literal>): The name of the column on the table which is used to hold the value."
+msgstr "<literal>name</literal> (オプション, このアプローチでは必須): 複合識別子を保持するコンポーネントタイプのプロパティ(9章を参照してください)."
+
+#: index.docbook:858
+msgid "<literal>segment_column_name</literal> (optional, defaults to <literal>sequence_name</literal>): The name of the column on the table which is used to hold the \"segement key\". This is the value which distinctly identifies which increment value to use."
+msgstr "<literal>access</literal> (オプション - デフォルトは <literal>property</literal> ): Hibernateがプロパティの値にアクセスするために使用すべき戦略。"
+
+#: index.docbook:865
+msgid "<literal>segment_value</literal> (optional, defaults to <literal>default</literal>): The \"segment key\" value for the segment from which we want to pull increment values for this generator."
+msgstr "<literal>class</literal> （オプション - デフォルトはリフレクションにより決定されるプロパティの型）： 複合識別子として使われるコンポーネントのクラス（次の節を見てください）。"
+
+#: index.docbook:872
+msgid "<literal>segment_value_length</literal> (optional, defaults to <literal>255</literal>): Used for schema generation; the column size to create this segment key column."
+msgstr "この3つ目の方法は <emphasis> 識別子コンポーネント</emphasis> と呼び、 ほとんどすべてのアプリケーションに対して推奨する方法です。"
+
+#: index.docbook:878
+msgid "<literal>initial_value</literal> (optional, defaults to <literal>1</literal>): The initial value to be retrieved from the table."
+msgstr "discriminator"
+
+#: index.docbook:884
+msgid "<literal>increment_size</literal> (optional, defaults to <literal>1</literal>): The value by which subsequent calls to the table should differ."
+msgstr "<literal>&lt;discriminator&gt;</literal> 要素は、 table-per-class-hierarchyマッピング戦略を使うポリモーフィックな永続化に必要であり、 テーブルの識別カラムを定義します。 識別カラムは、ある行に対して永続層がどのサブクラスをインスタンス化するかを 伝えるマーカー値を含んでいます。 以下のような型に制限されます： <literal>string</literal> , <literal>character</literal> , <literal>integer</literal>, <literal>byte</literal> , <literal>short</literal> , <literal>boolean</literal> , <literal>yes_no</literal> , <literal>true_false</literal>."
+
+#: index.docbook:890
+msgid "<literal>optimizer</literal> (optional, defaults to <literal></literal>): See"
+msgstr ""
+      "<![CDATA[<discriminator\n"
+      "        column=\"discriminator_column\"\n"
+      "        type=\"discriminator_type\"\n"
+      "        force=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        formula=\"arbitrary sql expression\"\n"
+      "/>]]>"
+
+#: index.docbook:900
+msgid "Identifier generator optimization"
+msgstr "<literal>column</literal>（オプション - デフォルトは <literal>class</literal> ）： 識別カラムの名前。"
+
+#: index.docbook:901
+msgid "For identifier generators which store values in the database, it is inefficient for them to hit the database on each and every call to generate a new identifier value. Instead, you'd ideally want to group a bunch of them in memory and only hit the database when you have exhausted your in-memory value group. This is the role of the pluggable optimizers. Currently only the two enhanced generators (<xref linkend=\"mapping-declaration-id-enhanced\"/> support this notion."
+msgstr "<literal>type</literal> （オプション - デフォルトは <literal>string</literal> ）：Hibernateの型を示す名前。"
+
+#: index.docbook:909
+msgid "<literal>none</literal> (generally this is the default if no optimizer was specified): This says to not perform any optimizations, and hit the database each and every request."
+msgstr "<literal>force</literal> （オプション - デフォルトは <literal>false</literal> ）： ルートクラスのすべてのインスタンスを検索する場合であっても、 Hibernateが使用できる識別カラムの指定を「強制」します。"
+
+#: index.docbook:915
+msgid "<literal>hilo</literal>: applies a hi/lo algorithm around the database retrieved values. The values from the database for this optimizer are expected to be sequential. The values retrieved from the database structure for this optimizer indicates the \"group number\"; the <literal>increment_size</literal> is multiplied by that value in memory to define a group \"hi value\"."
+msgstr "<literal>insert</literal> （オプション - デフォルトは <literal>true</literal> ）： もし識別カラムがマッピングする複合識別子の一部ならば、<literal>false</literal> と設定してください。 (HibernateにSQLの <literal>INSERT</literal> には含まれないことを知らせる)"
+
+#: index.docbook:924
+msgid "<literal>pooled</literal>: like was discussed for <literal>hilo</literal>, this optimizers attempts to minimize the number of hits to the database. Here, however, we simply store the starting value for the \"next group\" into the database structure rather than a sequential value in combination with an in-memory grouping algorithm. <literal>increment_size</literal> here refers to the values coming from the database."
+msgstr "<literal>formula</literal> (オプション)型が評価されるときに実行される任意のSQL式。 コンテンツベースの識別を可能にします。"
+
+#: index.docbook:937
+msgid "composite-id"
+msgstr "識別カラムの実際の値は、 <literal>&lt;class&gt;</literal> と <literal>&lt;subclass&gt;</literal> 要素の <literal>discriminator-value</literal> 属性で指定されます。"
+
+#: index.docbook:939
+msgid ""
+      "<![CDATA[<composite-id\n"
+      "        name=\"propertyName\"\n"
+      "        class=\"ClassName\"\n"
+      "        mapped=\"true|false\"\n"
+      "        access=\"field|property|ClassName\">\n"
+      "        node=\"element-name|.\"\n"
+      "\n"
+      "        <key-property name=\"propertyName\" type=\"typename\" column=\"column_name\"/>\n"
+      "        <key-many-to-one name=\"propertyName class=\"ClassName\" column=\"column_name\"/>\n"
+      "        ......\n"
+      "</composite-id>]]>"
+msgstr "永続クラスへマッピングされない｢余分な」識別値を持つ行が テーブルにあれば、（そのときに限り）<literal>force</literal> 属性は有効です。 ただし、普通はそういうことはありません。"
+
+#: index.docbook:941
+msgid "For a table with a composite key, you may map multiple properties of the class as identifier properties. The <literal>&lt;composite-id&gt;</literal> element accepts <literal>&lt;key-property&gt;</literal> property mappings and <literal>&lt;key-many-to-one&gt;</literal> mappings as child elements."
+msgstr "<literal>formula</literal> 属性を使うと、行の型を評価するために任意のSQL式を宣言できます。"
+
+#: index.docbook:948
+msgid ""
+      "<![CDATA[<composite-id>\n"
+      "        <key-property name=\"medicareNumber\"/>\n"
+      "        <key-property name=\"dependent\"/>\n"
+      "</composite-id>]]>"
+msgstr ""
+      "<![CDATA[<discriminator\n"
+      "    formula=\"case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end\"\n"
+      "    type=\"integer\"/>]]>"
+
+#: index.docbook:950
+msgid "Your persistent class <emphasis>must</emphasis> override <literal>equals()</literal> and <literal>hashCode()</literal> to implement composite identifier equality. It must also implements <literal>Serializable</literal>."
+msgstr "version（オプション）"
+
+#: index.docbook:956
+msgid "Unfortunately, this approach to composite identifiers means that a persistent object is its own identifier. There is no convenient \"handle\" other than the object itself. You must instantiate an instance of the persistent class itself and populate its identifier properties before you can <literal>load()</literal> the persistent state associated with a composite key. We call this approach an <emphasis>embedded</emphasis> composite identifier, and discourage it for serious applications."
+msgstr "<literal>&lt;version&gt;</literal> 要素はオプションであり、 テーブルがバージョンデータを含むことを示します。 これは <emphasis>ロングトランザクション</emphasis> を使うつもりなら、特に役立ちます（以下を見てください）。"
+
+#: index.docbook:965
+msgid "A second approach is what we call a <emphasis>mapped</emphasis> composite identifier, where the identifier properties named inside the <literal>&lt;composite-id&gt;</literal> element are duplicated on both the persistent class and a separate identifier class."
+msgstr ""
+      "<![CDATA[<version\n"
+      "        column=\"version_column\"\n"
+      "        name=\"propertyName\"\n"
+      "        type=\"typename\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unsaved-value=\"null|negative|undefined\"\n"
+      "        generated=\"never|always\"\n"
+      "        insert=\"true|false\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "/>]]>"
+
+#: index.docbook:971
+msgid ""
+      "<![CDATA[<composite-id class=\"MedicareId\" mapped=\"true\">\n"
+      "        <key-property name=\"medicareNumber\"/>\n"
+      "        <key-property name=\"dependent\"/>\n"
+      "</composite-id>]]>"
+msgstr "<literal>column</literal>（オプション - デフォルトはプロパティ名）: バージョン番号を保持するカラムの名前。"
+
+#: index.docbook:973
+msgid "In this example, both the composite identifier class, <literal>MedicareId</literal>, and the entity class itself have properties named <literal>medicareNumber</literal> and <literal>dependent</literal>. The identifier class must override <literal>equals()</literal> and <literal>hashCode()</literal> and implement. <literal>Serializable</literal>. The disadvantage of this approach is quite obvious&mdash;code duplication."
+msgstr "<literal>name</literal> ：永続クラスのプロパティの名前。"
+
+#: index.docbook:982
+msgid "The following attributes are used to specify a mapped composite identifier:"
+msgstr "<literal>type</literal> （オプション - デフォルトは <literal>integer</literal> ）：バージョン番号の型。"
+
+#: index.docbook:988
+msgid "<literal>mapped</literal> (optional, defaults to <literal>false</literal>): indicates that a mapped composite identifier is used, and that the contained property mappings refer to both the entity class and the composite identifier class."
+msgstr "<literal>access</literal> （オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:996
+msgid "<literal>class</literal> (optional, but required for a mapped composite identifier): The class used as a composite identifier."
+msgstr "<literal>unsaved-value</literal> （オプション - デフォルトは <literal>undefined</literal> ）： インスタンスが新しくインスタンス化されたことを示す （セーブされていないことを示す）バージョンプロパティの値。 以前のSessionでセーブまたはロードされた一時的なインスタンスと区別するために 使います。 （ <literal>undefined</literal> は識別子プロパティの値が使われることを指定します。）"
+
+#: index.docbook:1003
+msgid "We will describe a third, even more convenient approach where the composite identifier is implemented as a component class in <xref linkend=\"components-compositeid\"/>. The attributes described below apply only to this alternative approach:"
+msgstr "<literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ): このバージョンのプロパティの値が、データベースによって生成されたことを指定します。 <xref linkend=\"mapping-generated\"/>生成プロパティ の議論を見てください。"
+
+#: index.docbook:1011
+msgid "<literal>name</literal> (optional, required for this approach): A property of component type that holds the composite identifier (see chapter 9)."
+msgstr "<literal>insert</literal> (オプション - デフォルトは <literal>true</literal> ): SQLのinsert文にバージョン・カラムを含めるべきかどうかを指定します。 もしデータベース・カラムのデフォルト値が <literal>0</literal> と定義されるときには、 <literal>false</literal> に設定すると良いでしょう。"
+
+#: index.docbook:1023
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The component class used as a composite identifier (see next section)."
+msgstr "バージョンやタイムスタンプのプロパティは、分離されたインスタンスに対してnullであってはなりません。 そのためどのような <literal>unsaved-value</literal> 戦略が指定されても、 Hibernateはnullのバージョンやタイムスタンプを持ったすべてのインスタンスを、 一時的なものであると判断します。 <emphasis> nullを許容するバージョンやタイムスタンプのプロパティを定義することは、 過渡的に一時オブジェクトとすることを防ぐ簡単な方法です。 特に識別子の割り当てや複合キーを使用しているときには特に有用です。</emphasis>"
+
+#: index.docbook:1030
+msgid "This third approach, an <emphasis>identifier component</emphasis> is the one we recommend for almost all applications."
+msgstr "timestamp（オプション）"
+
+#: index.docbook:1038
+msgid "discriminator"
+msgstr "オプションの <literal>&lt;timestamp&gt;</literal> 要素は、 テーブルがタイムスタンプデータを含むことを示します。 これはバージョン付けの代わりの方法として用意されています。 タイムスタンプはもともと楽観的ロックにおける安全性の低い実装です。 しかしアプリケーションは異なる用途で使うこともあるかもしれません。"
+
+#: index.docbook:1040
+msgid "The <literal>&lt;discriminator&gt;</literal> element is required for polymorphic persistence using the table-per-class-hierarchy mapping strategy and declares a discriminator column of the table. The discriminator column contains marker values that tell the persistence layer what subclass to instantiate for a particular row. A restricted set of types may be used: <literal>string</literal>, <literal>character</literal>, <literal>integer</literal>, <literal>byte</literal>, <literal>short</literal>, <literal>boolean</literal>, <literal>yes_no</literal>, <literal>true_false</literal>."
+msgstr ""
+      "<![CDATA[<timestamp\n"
+      "        column=\"timestamp_column\"\n"
+      "        name=\"propertyName\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unsaved-value=\"null|undefined\"\n"
+      "        source=\"vm|db\"\n"
+      "        generated=\"never|always\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "/>]]>"
+
+#: index.docbook:1058
+msgid ""
+      "<![CDATA[<discriminator\n"
+      "        column=\"discriminator_column\"\n"
+      "        type=\"discriminator_type\"\n"
+      "        force=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        formula=\"arbitrary sql expression\"\n"
+      "/>]]>"
+msgstr "<literal>column</literal>（オプション - デフォルトはプロパティ名）： タイムスタンプを保持するカラムの名前。"
+
+#: index.docbook:1061
+msgid "<literal>column</literal> (optional - defaults to <literal>class</literal>) the name of the discriminator column."
+msgstr "<literal>name</literal> ： 永続クラスであるJava の <literal>Date</literal>型 または <literal>Timestamp</literal> 型 の、JavaBeansスタイルプロパティの名前。"
+
+#: index.docbook:1067
+msgid "<literal>type</literal> (optional - defaults to <literal>string</literal>) a name that indicates the Hibernate type"
+msgstr "<literal>access</literal> （オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:1073
+msgid "<literal>force</literal> (optional - defaults to <literal>false</literal>) \"force\" Hibernate to specify allowed discriminator values even when retrieving all instances of the root class."
+msgstr "<literal>unsaved-value</literal> （オプション - デフォルトは <literal>null</literal> ）： インスタンスが新しくインスタンス化された （セーブされていない）ことを示すバージョンプロパティの値。 以前のSessionでセーブまたはロードされた一時的なインスタンスと 区別するために使われます。 （ <literal>undefined</literal> と指定すると、 識別子プロパティの値が使われます。）"
+
+#: index.docbook:1080
+msgid "<literal>insert</literal> (optional - defaults to <literal>true</literal>) set this to <literal>false</literal> if your discriminator column is also part of a mapped composite identifier. (Tells Hibernate to not include the column in SQL <literal>INSERT</literal>s.)"
+msgstr "<literal>source</literal> (オプション - デフォルトは <literal>vm</literal> ): Hibernateはどこからタイムスタンプの値を取得するべきでしょうか？ データベースからでしょうか、現在のJVMからでしょうか？ データベースによるタイムスタンプは、Hibernateが\"次の値\"を決定するために データベースをヒットしなければならないため、オーバヘッドを招きます。 しかしクラスタ環境ではJVMから取得するより安全です。 データベースの現在のタイムスタンプの取得をサポートする すべての <literal>データベース方言</literal> が知られているわけではないことに 注意してください。また一方で、精密さを欠くために、 ロックで使用するには安全でないものもあります(例えばOracle 8)。"
+
+#: index.docbook:1088
+msgid "<literal>formula</literal> (optional) an arbitrary SQL expression that is executed when a type has to be evaluated. Allows content-based discrimination."
+msgstr "<literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ): このタイムスタンプ・プロパティの値が、データベースによって生成されることを指定します。 <xref linkend=\"mapping-generated\"/>生成プロパティ を参照してください。"
+
+#: index.docbook:1096
+msgid "Actual values of the discriminator column are specified by the <literal>discriminator-value</literal> attribute of the <literal>&lt;class&gt;</literal> and <literal>&lt;subclass&gt;</literal> elements."
+msgstr "<literal>&lt;timestamp&gt;</literal> は <literal>&lt;version type=\"timestamp\"&gt;</literal> と等価であることに注意してください。 <literal>&lt;timestamp source=\"db\"&gt;</literal> は <literal>&lt;version type=\"dbtimestamp\"&gt;</literal> と等価であることに注意してください。"
+
+#: index.docbook:1102
+msgid "The <literal>force</literal> attribute is (only) useful if the table contains rows with \"extra\" discriminator values that are not mapped to a persistent class. This will not usually be the case."
+msgstr "property"
+
+#: index.docbook:1108
+msgid "Using the <literal>formula</literal> attribute you can declare an arbitrary SQL expression that will be used to evaluate the type of a row:"
+msgstr "<literal>&lt;property&gt;</literal> 要素は、クラスの永続的なJavaBeanスタイルのプロパティを定義します。"
+
+#: index.docbook:1113
+msgid ""
+      "<![CDATA[<discriminator\n"
+      "    formula=\"case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end\"\n"
+      "    type=\"integer\"/>]]>"
+msgstr ""
+      "<![CDATA[<property\n"
+      "        name=\"propertyName\"\n"
+      "        column=\"column_name\"\n"
+      "        type=\"typename\"\n"
+      "        update=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        formula=\"arbitrary SQL expression\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        lazy=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-null=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        generated=\"never|insert|always\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        index=\"index_name\"\n"
+      "        unique_key=\"unique_key_id\"\n"
+      "        length=\"L\"\n"
+      "        precision=\"P\"\n"
+      "        scale=\"S\"\n"
+      "/>]]>"
+
+#: index.docbook:1118
+msgid "version (optional)"
+msgstr "<literal>name</literal>：小文字で始まるプロパティ名。"
+
+#: index.docbook:1120
+msgid "The <literal>&lt;version&gt;</literal> element is optional and indicates that the table contains versioned data. This is particularly useful if you plan to use <emphasis>long transactions</emphasis> (see below)."
+msgstr "<literal>column</literal>（オプション - デフォルトはプロパティ名）： マッピングされたデータベーステーブルのカラムの名前。 ネストした <literal>&lt;column&gt;</literal> 要素でも指定できます。"
+
+#: index.docbook:1136
+msgid ""
+      "<![CDATA[<version\n"
+      "        column=\"version_column\"\n"
+      "        name=\"propertyName\"\n"
+      "        type=\"typename\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unsaved-value=\"null|negative|undefined\"\n"
+      "        generated=\"never|always\"\n"
+      "        insert=\"true|false\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "/>]]>"
+msgstr "<literal>type</literal>（オプション）：Hibernateの型を示す名前。"
+
+#: index.docbook:1139
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of the column holding the version number."
+msgstr "<literal>update, insert</literal> （オプション - デフォルトは <literal>true</literal> ）： マッピングされたカラムがSQLの <literal>UPDATE</literal> や <literal>INSERT</literal> に含まれることを指定します。 両方とも <literal>false</literal> に設定すると、 同じカラムにマッピングされた他のプロパティやトリガや 他のアプリケーションによって初期化された純粋な「導出」プロパティが可能になります。"
+
+#: index.docbook:1145
+msgid "<literal>name</literal>: The name of a property of the persistent class."
+msgstr "<literal>formula</literal>（オプション）： <emphasis>計算</emphasis> プロパティのための値を定義するSQL式。 計算されたプロパティは自身のカラムへのマッピングがありません。"
+
+#: index.docbook:1150
+msgid "<literal>type</literal> (optional - defaults to <literal>integer</literal>): The type of the version number."
+msgstr "<literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:1162
+msgid "<literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): A version property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session. (<literal>undefined</literal> specifies that the identifier property value should be used.)"
+msgstr "<literal>unique</literal> (オプション):カラムにユニーク制約をつけるDDLの生成を可能にします。 また、<literal>property-ref</literal> のターゲットとすることもできます。"
+
+#: index.docbook:1171
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this version property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\"/>generated properties."
+msgstr "<literal>not-null</literal> (オプション):カラムにnull値を許可するDDLの生成を可能にします。"
+
+#: index.docbook:1178
+msgid "<literal>insert</literal> (optional - defaults to <literal>true</literal>): Specifies whether the version column should be included in SQL insert statements. May be set to <literal>false</literal> if and only if the database column is defined with a default value of <literal>0</literal>."
+msgstr "<literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ): このプロパティの更新に楽観ロックの取得を要求するかどうかを指定します。 言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。"
+
+#: index.docbook:1188
+msgid "Version numbers may be of Hibernate type <literal>long</literal>, <literal>integer</literal>, <literal>short</literal>, <literal>timestamp</literal> or <literal>calendar</literal>."
+msgstr "<literal>generated</literal> (オプション - デフォルトは <literal>never</literal> ): プロパティの値が、データベースによって生成されたことを指定します。 <xref linkend=\"mapping-generated\"/>生成プロパティ を参照してください。"
+
+#: index.docbook:1193
+msgid "A version or timestamp property should never be null for a detached instance, so Hibernate will detect any instance with a null version or timestamp as transient, no matter what other <literal>unsaved-value</literal> strategies are specified. <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid any problems with transitive reattachment in Hibernate, especially useful for people using assigned identifiers or composite keys!</emphasis>"
+msgstr "<emphasis>typename</emphasis> には以下の値が可能です："
+
+#: index.docbook:1204
+msgid "timestamp (optional)"
+msgstr "Hibernateの基本型の名前（例 <literal>integer, string, character, date, timestamp, float, binary, serializable, object, blob</literal> ）。"
+
+#: index.docbook:1206
+msgid "The optional <literal>&lt;timestamp&gt;</literal> element indicates that the table contains timestamped data. This is intended as an alternative to versioning. Timestamps are by nature a less safe implementation of optimistic locking. However, sometimes the application might use the timestamps in other ways."
+msgstr "デフォルトの基本型のJavaクラス名 （例 <literal>int, float, char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal> ）。"
+
+#: index.docbook:1222
+msgid ""
+      "<![CDATA[<timestamp\n"
+      "        column=\"timestamp_column\"\n"
+      "        name=\"propertyName\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unsaved-value=\"null|undefined\"\n"
+      "        source=\"vm|db\"\n"
+      "        generated=\"never|always\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "/>]]>"
+msgstr "シリアライズ可能なJavaクラスの名前。"
+
+#: index.docbook:1225
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of a column holding the timestamp."
+msgstr "カスタム型のクラス名（例 <literal>com.illflow.type.MyCustomType</literal> ）。"
+
+#: index.docbook:1231
+msgid "<literal>name</literal>: The name of a JavaBeans style property of Java type <literal>Date</literal> or <literal>Timestamp</literal> of the persistent class."
+msgstr "型を指定しなければ、Hibernateは正しいHibernateの型を推測するために、 指定されたプロパティに対してリフレクションを使います。 Hibernateはルール2, 3, 4をその順序に使い、 getterプロパティの返り値のクラスの名前を解釈しようとします。 しかしこれで常に十分であるとは限りません。 場合によっては、<literal>type</literal> 属性が必要な場合があります。 （例えば <literal>Hibernate.DATE</literal> と <literal>Hibernate.TIMESTAMP</literal> を区別するため、 またはカスタム型を指定するためなどです。）"
+
+#: index.docbook:1244
+msgid "<literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): A version property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session. (<literal>undefined</literal> specifies that the identifier property value should be used.)"
+msgstr "特に強力な特徴は生成プロパティです。 これらのプロパティは当然読み取り専用であり、プロパティの値はロード時に計算されます。 計算をSQL式として宣言すると、このプロパティは インスタンスをロードするSQLクエリの <literal>SELECT</literal> 句のサブクエリに変換されます。"
+
+#: index.docbook:1253
+msgid "<literal>source</literal> (optional - defaults to <literal>vm</literal>): From where should Hibernate retrieve the timestamp value? From the database, or from the current JVM? Database-based timestamps incur an overhead because Hibernate must hit the database in order to determine the \"next value\", but will be safer for use in clustered environments. Note also, that not all <literal>Dialect</literal>s are known to support retrieving of the database's current timestamp, while others might be unsafe for usage in locking due to lack of precision (Oracle 8 for example)."
+msgstr ""
+      "<![CDATA[\n"
+      "<property name=\"totalPrice\"\n"
+      "    formula=\"( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product p\n"
+      "                WHERE li.productId = p.productId\n"
+      "                AND li.customerId = customerId\n"
+      "                AND li.orderNumber = orderNumber )\"/>]]>"
+
+#: index.docbook:1265
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this timestamp property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\"/>generated properties."
+msgstr "特定のカラム(例では <literal>customerId</literal> がそれにあたります)のエイリアスを宣言することなく、 エンティティ自身のテーブルを参照できることに注意してください。 もし属性を使用したくなければ、 ネストした <literal>&lt;formula&gt;</literal> マッピング要素を使えることにも注意してください。"
+
+#: index.docbook:1274
+msgid "Note that <literal>&lt;timestamp&gt;</literal> is equivalent to <literal>&lt;version type=\"timestamp\"&gt;</literal>. And <literal>&lt;timestamp source=\"db\"&gt;</literal> is equivalent to <literal>&lt;version type=\"dbtimestamp\"&gt;</literal>"
+msgstr "many-to-one"
+
+#: index.docbook:1284
+msgid "property"
+msgstr "他の永続クラスへの通常の関連は <literal>many-to-one</literal> 要素を使って定義します。 リレーショナルモデルは多対一関連です。 つまりあるテーブルの外部キーは、ターゲットとなるテーブルの主キーカラムを参照しています。"
+
+#: index.docbook:1286
+msgid "The <literal>&lt;property&gt;</literal> element declares a persistent, JavaBean style property of the class."
+msgstr ""
+      "<![CDATA[<many-to-one\n"
+      "        name=\"propertyName\"\n"
+      "        column=\"column_name\"\n"
+      "        class=\"ClassName\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        fetch=\"join|select\"\n"
+      "        update=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-null=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        lazy=\"proxy|no-proxy|false\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        formula=\"arbitrary SQL expression\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "        index=\"index_name\"\n"
+      "        unique_key=\"unique_key_id\"\n"
+      "        foreign-key=\"foreign_key_name\"\n"
+      "/>]]>"
+
+#: index.docbook:1308
+msgid ""
+      "<![CDATA[<property\n"
+      "        name=\"propertyName\"\n"
+      "        column=\"column_name\"\n"
+      "        type=\"typename\"\n"
+      "        update=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        formula=\"arbitrary SQL expression\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        lazy=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-null=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        generated=\"never|insert|always\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        index=\"index_name\"\n"
+      "        unique_key=\"unique_key_id\"\n"
+      "        length=\"L\"\n"
+      "        precision=\"P\"\n"
+      "        scale=\"S\"\n"
+      "/>]]>"
+msgstr "<literal>name</literal>：プロパティ名。"
+
+#: index.docbook:1311
+msgid "<literal>name</literal>: the name of the property, with an initial lowercase letter."
+msgstr "<literal>column</literal> (オプション):外部キーカラムの名前。 ネストした <literal>&lt;column&gt;</literal> 要素でも指定できます。"
+
+#: index.docbook:1317
+msgid "<literal>column</literal> (optional - defaults to the property name): the name of the mapped database table column. This may also be specified by nested <literal>&lt;column&gt;</literal> element(s)."
+msgstr "<literal>class</literal>（オプション - デフォルトは、 リフレクションにより決定されるプロパティの型）：関連クラスの名前。"
+
+#: index.docbook:1324
+msgid "<literal>type</literal> (optional): a name that indicates the Hibernate type."
+msgstr "<literal>cascade</literal>（オプション）： どの操作を、親オブジェクトから関連オブジェクトへとカスケードさせるかを指定します。"
+
+#: index.docbook:1329
+msgid "<literal>update, insert</literal> (optional - defaults to <literal>true</literal>) : specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal> allows a pure \"derived\" property whose value is initialized from some other property that maps to the same colum(s) or by a trigger or other application."
+msgstr "<literal>fetch</literal> (オプション - デフォルトは <literal>select</literal> ): 外部結合フェッチか順次選択フェッチ（sequential select fetch）を選択します。"
+
+#: index.docbook:1338
+msgid "<literal>formula</literal> (optional): an SQL expression that defines the value for a <emphasis>computed</emphasis> property. Computed properties do not have a column mapping of their own."
+msgstr "<literal>update, insert</literal>（オプション - デフォルトは <literal>true</literal> ）： マッピングされたカラムがSQLの <literal>UPDATE</literal> または <literal>INSERT</literal> 文に含まれることを指定します。 両方とも <literal>false</literal> に設定すると、 その値が同じカラムにマッピングされた他のプロパティやトリガや 他のアプリケーションによって初期化された純粋な「導出」プロパティが可能になります。"
+
+#: index.docbook:1351
+msgid "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies that this property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation)."
+msgstr "<literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:1358
+msgid "<literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the columns. Also, allow this to be the target of a <literal>property-ref</literal>."
+msgstr "<literal>unique</literal>（オプション）： 外部キーカラムに対してユニーク制約をつけたDDLの生成を可能にします。 また、<literal>property-ref</literal> のターゲットにすることもできます。 これにより関連の多重度を効果的に一対一にします。"
+
+#: index.docbook:1365
+msgid "<literal>not-null</literal> (optional): Enable the DDL generation of a nullability constraint for the columns."
+msgstr "<literal>not-null</literal> (オプション):外部キーカラムに対して、 null値を許可するDDLの生成を可能にします"
+
+#: index.docbook:1371
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when this property is dirty."
+msgstr "<literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ): このプロパティの更新に楽観的ロックの取得を要求するかどうかを指定します。 言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。"
+
+#: index.docbook:1379
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\"/>generated properties."
+msgstr "<literal>lazy</literal> (オプション - デフォルトは <literal>proxy</literal> ): デフォルトでは、多重度１の関連がプロキシとなります。 <literal>lazy=\"no-proxy\"</literal> は、インスタンス変数に最初にアクセスしたときに、 プロパティを遅延フェッチするよう指定します (ビルド時にバイトコード実装が必要になります)。 <literal>lazy=\"false\"</literal> は関連を常に即時にフェッチするよう指定します。"
+
+#: index.docbook:1388
+msgid "<emphasis>typename</emphasis> could be:"
+msgstr "<literal>not-found</literal> (オプション - デフォルトは <literal>exception</literal> ): 欠落した行を参照する外部キーをどのように扱うかを指定します。 <literal>ignore</literal> は欠落した行をnull関連として扱います。"
+
+#: index.docbook:1394
+msgid "The name of a Hibernate basic type (eg. <literal>integer, string, character, date, timestamp, float, binary, serializable, object, blob</literal>)."
+msgstr "<literal>entity-name</literal> (オプション):関連したクラスのエンティティ名。"
+
+#: index.docbook:1400
+msgid "The name of a Java class with a default basic type (eg. <literal>int, float, char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal>)."
+msgstr "<literal>formula</literal> (オプション): <emphasis> 計算された</emphasis> 外部キーに対して値を定義するSQL式"
+
+#: index.docbook:1406
+msgid "The name of a serializable Java class."
+msgstr "<literal>cascade</literal> 属性に <literal>none</literal> 以外の意味のある値をを設定すると、 関連オブジェクトへある操作が伝播することになります。 意味のある値とはHibernateの基本操作の名前のことで、 <literal>delete-orphan</literal> と <literal>all</literal> 、操作名をカンマで区切った組み合わせ （例えば <literal>cascade=\"persist,merge,evict\"</literal> や <literal>cascade=\"all,delete-orphan\"</literal>）、 またそれだけでなく <literal>persist, merge, delete, save-update, evict, replicate, lock, refresh</literal> のことを指します。 詳しい説明は <xref linkend=\"objectstate-transitive\"/> を見てください。 値が一つの関連(many-to-oneとone-to-one関連)は、 単独での削除（orphan delete)をサポートしていないことに注意してください。"
+
+#: index.docbook:1411
+msgid "The class name of a custom type (eg. <literal>com.illflow.type.MyCustomType</literal>)."
+msgstr "典型的な <literal>many-to-one</literal> 宣言は次のようにシンプルです。："
+
+#: index.docbook:1417
+msgid "If you do not specify a type, Hibernate will use reflection upon the named property to take a guess at the correct Hibernate type. Hibernate will try to interpret the name of the return class of the property getter using rules 2, 3, 4 in that order. However, this is not always enough. In certain cases you will still need the <literal>type</literal> attribute. (For example, to distinguish between <literal>Hibernate.DATE</literal> and <literal>Hibernate.TIMESTAMP</literal>, or to specify a custom type.)"
+msgstr "<![CDATA[<many-to-one name=\"product\" class=\"Product\" column=\"PRODUCT_ID\"/>]]>"
+
+#: index.docbook:1427
+msgid "The <literal>access</literal> attribute lets you control how Hibernate will access the property at runtime. By default, Hibernate will call the property get/set pair. If you specify <literal>access=\"field\"</literal>, Hibernate will bypass the get/set pair and access the field directly, using reflection. You may specify your own strategy for property access by naming a class that implements the interface <literal>org.hibernate.property.PropertyAccessor</literal>."
+msgstr "<literal>property-ref</literal> 属性は、外部キーが関連付けられたテーブルの、主キーでない ユニークキーを参照しているレガシーデータをマップするためにだけ使うべきです。 これは醜いリレーショナルモデルです。 例えば <literal>Product</literal> クラスが、 主キーでないユニークなシリアルナンバーを持っていると仮定してみてください。 （ <literal>unique</literal> 属性はSchemaExportツールを使ったHibernateのDDL生成を制御します。）"
+
+#: index.docbook:1436
+msgid "An especially powerful feature are derived properties. These properties are by definition read-only, the property value is computed at load time. You declare the computation as a SQL expression, this translates to a <literal>SELECT</literal> clause subquery in the SQL query that loads an instance:"
+msgstr "<![CDATA[<property name=\"serialNumber\" unique=\"true\" type=\"string\" column=\"SERIAL_NUMBER\"/>]]>"
+
+#: index.docbook:1443
+msgid ""
+      "<![CDATA[\n"
+      "<property name=\"totalPrice\"\n"
+      "    formula=\"( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product p\n"
+      "                WHERE li.productId = p.productId\n"
+      "                AND li.customerId = customerId\n"
+      "                AND li.orderNumber = orderNumber )\"/>]]>"
+msgstr "以下のように <literal>OrderItem</literal> に対してマッピングを使えます："
+
+#: index.docbook:1445
+msgid "Note that you can reference the entities own table by not declaring an alias on a particular column (<literal>customerId</literal> in the given example). Also note that you can use the nested <literal>&lt;formula&gt;</literal> mapping element if you don't like to use the attribute."
+msgstr "<![CDATA[<many-to-one name=\"product\" property-ref=\"serialNumber\" column=\"PRODUCT_SERIAL_NUMBER\"/>]]>"
+
+#: index.docbook:1455
+msgid "many-to-one"
+msgstr "しかし、これは決して推奨できません。"
+
+#: index.docbook:1457
+msgid "An ordinary association to another persistent class is declared using a <literal>many-to-one</literal> element. The relational model is a many-to-one association: a foreign key in one table is referencing the primary key column(s) of the target table."
+msgstr "参照したユニークキーが、関連するエンティティの多数のプロパティから構成される場合、 指定した <literal>&lt;properties&gt;</literal> 要素内で、参照するプロパティをマッピングするべきです。"
+
+#: index.docbook:1485
+msgid ""
+      "<![CDATA[<many-to-one\n"
+      "        name=\"propertyName\"\n"
+      "        column=\"column_name\"\n"
+      "        class=\"ClassName\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        fetch=\"join|select\"\n"
+      "        update=\"true|false\"\n"
+      "        insert=\"true|false\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        unique=\"true|false\"\n"
+      "        not-null=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        lazy=\"proxy|no-proxy|false\"\n"
+      "        not-found=\"ignore|exception\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        formula=\"arbitrary SQL expression\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "        index=\"index_name\"\n"
+      "        unique_key=\"unique_key_id\"\n"
+      "        foreign-key=\"foreign_key_name\"\n"
+      "/>]]>"
+msgstr "もし参照したユニークキーがコンポーネントのプロパティである場合は、プロパティのパスを指定できます。"
+
+#: index.docbook:1488, index.docbook:1669, index.docbook:1855
+msgid "<literal>name</literal>: The name of the property."
+msgstr "<![CDATA[<many-to-one name=\"owner\" property-ref=\"identity.ssn\" column=\"OWNER_SSN\"/>]]>"
+
+#: index.docbook:1493, index.docbook:2284
+msgid "<literal>column</literal> (optional): The name of the foreign key column. This may also be specified by nested <literal>&lt;column&gt;</literal> element(s)."
+msgstr "one-to-one"
+
+#: index.docbook:1500, index.docbook:1674
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The name of the associated class."
+msgstr "他の永続クラスへの一対一関連は、<literal>one-to-one</literal> 要素で定義します。"
+
+#: index.docbook:1506
+msgid "<literal>cascade</literal> (optional): Specifies which operations should be cascaded from the parent object to the associated object."
+msgstr ""
+      "<![CDATA[<one-to-one\n"
+      "        name=\"propertyName\"\n"
+      "        class=\"ClassName\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        constrained=\"true|false\"\n"
+      "        fetch=\"join|select\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        lazy=\"proxy|no-proxy|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "        foreign-key=\"foreign_key_name\"\n"
+      "/>]]>"
+
+#: index.docbook:1512, index.docbook:1695
+msgid "<literal>fetch</literal> (optional - defaults to <literal>select</literal>): Chooses between outer-join fetching or sequential select fetching."
+msgstr "<literal>name</literal>：プロパティ名。"
+
+#: index.docbook:1518
+msgid "<literal>update, insert</literal> (optional - defaults to <literal>true</literal>) specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal> allows a pure \"derived\" association whose value is initialized from some other property that maps to the same colum(s) or by a trigger or other application."
+msgstr "<literal>class</literal>（オプション - デフォルトはリフレクションにより決定されるプロパティの型）： 関連クラスの名前。"
+
+#: index.docbook:1527
+msgid "<literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used."
+msgstr "<literal>cascade</literal>（オプション）： 親オブジェクトから関連オブジェクトへ、どの操作をカスケードするかを指定します。"
+
+#: index.docbook:1540
+msgid "<literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the foreign-key column. Also, allow this to be the target of a <literal>property-ref</literal>. This makes the association multiplicity effectively one to one."
+msgstr "<literal>fetch</literal>（オプション - デフォルトは <literal>select</literal> ）： 外部結合フェッチと順次選択フェッチ（sequential select fetch）のどちらかを選択します。"
+
+#: index.docbook:1548
+msgid "<literal>not-null</literal> (optional): Enable the DDL generation of a nullability constraint for the foreign key columns."
+msgstr "<literal>property-ref</literal>（オプション）： このクラスの主キーに結合された関連クラスのプロパティ名。 指定されなければ、関連クラスの主キーが使われます。"
+
+#: index.docbook:1554
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, dertermines if a version increment should occur when this property is dirty."
+msgstr "<literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:1562
+msgid "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): By default, single point associations are proxied. <literal>lazy=\"no-proxy\"</literal> specifies that the property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation). <literal>lazy=\"false\"</literal> specifies that the association will always be eagerly fetched."
+msgstr "<literal>formula</literal> (オプション): ほとんどすべての一対一関連はオーナーのエンティティの主キーへとマッピングされます。 これ以外の稀な場合は、 他のカラムや、複数のカラム、SQL構文を使った結合するための式を指定できます。 （例は <literal>org.hibernate.test.onetooneformula</literal> を参照してください。）"
+
+#: index.docbook:1572
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr "<literal>lazy</literal> (オプション - デフォルトは <literal>proxy</literal> ): デフォルトでは、多重度１の関連がプロキシとなります。 <literal>lazy=\"no-proxy\"</literal> は、インスタンス変数に最初にアクセスしたときに、 プロパティを遅延フェッチするよう指定します (ビルド時にバイトコード実装が必要になります)。 <literal>lazy=\"false\"</literal> は関連を常に即時にフェッチするよう指定します。 <emphasis>もし <literal>constrained=\"false\"</literal> ならば、 プロキシは使用不可能となり、関連を即時にフェッチすることに注意してください！</emphasis>"
+
+#: index.docbook:1579, index.docbook:1733
+msgid "<literal>entity-name</literal> (optional): The entity name of the associated class."
+msgstr "<literal>entity-name</literal> (オプション):関連クラスのエンティティ名"
+
+#: index.docbook:1585
+msgid "<literal>formula</literal> (optional): an SQL expression that defines the value for a <emphasis>computed</emphasis> foreign key."
+msgstr "一対一関連には2種類あります："
+
+#: index.docbook:1592
+msgid "Setting a value of the <literal>cascade</literal> attribute to any meaningful value other than <literal>none</literal> will propagate certain operations to the associated object. The meaningful values are the names of Hibernate's basic operations, <literal>persist, merge, delete, save-update, evict, replicate, lock, refresh</literal>, as well as the special values <literal>delete-orphan</literal> and <literal>all</literal> and comma-separated combinations of operation names, for example, <literal>cascade=\"persist,merge,evict\"</literal> or <literal>cascade=\"all,delete-orphan\"</literal>. See <xref linkend=\"objectstate-transitive\"/> for a full explanation. Note that single valued associations (many-to-one and one-to-one associations) do not support orphan delete."
+msgstr "主キー関連"
+
+#: index.docbook:1605
+msgid "A typical <literal>many-to-one</literal> declaration looks as simple as this:"
+msgstr "ユニーク外部キー関連"
+
+#: index.docbook:1609
+msgid "<![CDATA[<many-to-one name=\"product\" class=\"Product\" column=\"PRODUCT_ID\"/>]]>"
+msgstr "主キー関連には、特別なテーブルカラムは必要ありません。 もし2つの行が関連により関係していれば、2つのテーブルは同じ主キーの値を共有します。 そのため2つのオブジェクトを主キー関連によって関連付けたいのであれば、 確実に同じ識別子の値を代入しなければなりません。"
+
+#: index.docbook:1611
+msgid "The <literal>property-ref</literal> attribute should only be used for mapping legacy data where a foreign key refers to a unique key of the associated table other than the primary key. This is an ugly relational model. For example, suppose the <literal>Product</literal> class had a unique serial number, that is not the primary key. (The <literal>unique</literal> attribute controls Hibernate's DDL generation with the SchemaExport tool.)"
+msgstr "主キー関連を行うためには、以下のマッピングを <literal>Employee</literal> と <literal>Person</literal> のそれぞれに追加してください。"
+
+#: index.docbook:1620
+msgid "<![CDATA[<property name=\"serialNumber\" unique=\"true\" type=\"string\" column=\"SERIAL_NUMBER\"/>]]>"
+msgstr "<![CDATA[<one-to-one name=\"person\" class=\"Person\"/>]]>"
+
+#: index.docbook:1622
+msgid "Then the mapping for <literal>OrderItem</literal> might use:"
+msgstr "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" constrained=\"true\"/>]]>"
+
+#: index.docbook:1626
+msgid "<![CDATA[<many-to-one name=\"product\" property-ref=\"serialNumber\" column=\"PRODUCT_SERIAL_NUMBER\"/>]]>"
+msgstr "ここで、PERSONとEMPLOYEEテーブルの関係する行の主キーが同じであることを確実にしなければいけません。 ここでは、<literal>foreign</literal> という特殊なHibernate識別子生成戦略を使います："
+
+#: index.docbook:1628
+msgid "This is certainly not encouraged, however."
+msgstr ""
+      "<![CDATA[<class name=\"person\" table=\"PERSON\">\n"
+      "    <id name=\"id\" column=\"PERSON_ID\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">employee</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    ...\n"
+      "    <one-to-one name=\"employee\"\n"
+      "        class=\"Employee\"\n"
+      "        constrained=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:1632
+msgid "If the referenced unique key comprises multiple properties of the associated entity, you should map the referenced properties inside a named <literal>&lt;properties&gt;</literal> element."
+msgstr "<literal>Employee</literal> インスタンスが、<literal>Person</literal> の <literal>employee</literal> プロパティで参照されるように、 新しくセーブされた <literal>Person</literal> のインスタンスには同じ主キーの値が代入されます。 新しくセーブする <literal>Person</literal> インスタンスは、 その <literal>Person</literal> の <literal>employee</literal> プロパティが参照する <literal>Employee</literal> インスタンスとして同じ主キーが割り当てられます。"
+
+#: index.docbook:1637
+msgid "If the referenced unique key is the property of a component, you may specify a property path:"
+msgstr "もう1つの方法として、<literal>Employee</literal> から <literal>Person</literal> への ユニーク制約を使った外部キー関連は以下のように表現されます："
+
+#: index.docbook:1641
+msgid "<![CDATA[<many-to-one name=\"owner\" property-ref=\"identity.ssn\" column=\"OWNER_SSN\"/>]]>"
+msgstr "<![CDATA[<many-to-one name=\"person\" class=\"Person\" column=\"PERSON_ID\" unique=\"true\"/>]]>"
+
+#: index.docbook:1646
+msgid "one-to-one"
+msgstr "そしてこの関連は、 以下の記述を <literal>Person</literal> のマッピングに追加することで双方向にすることができます："
+
+#: index.docbook:1648
+msgid "A one-to-one association to another persistent class is declared using a <literal>one-to-one</literal> element."
+msgstr "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" property-ref=\"person\"/>]]>"
+
+#: index.docbook:1666
+msgid ""
+      "<![CDATA[<one-to-one\n"
+      "        name=\"propertyName\"\n"
+      "        class=\"ClassName\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        constrained=\"true|false\"\n"
+      "        fetch=\"join|select\"\n"
+      "        property-ref=\"propertyNameFromAssociatedClass\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        formula=\"any SQL expression\"\n"
+      "        lazy=\"proxy|no-proxy|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
+      "        embed-xml=\"true|false\"\n"
+      "        foreign-key=\"foreign_key_name\"\n"
+      "/>]]>"
+msgstr "natural-id"
+
+#: index.docbook:1680
+msgid "<literal>cascade</literal> (optional) specifies which operations should be cascaded from the parent object to the associated object."
+msgstr "エンティティの自然キープロパティの比較には、 <literal>equals()</literal> と <literal>hashCode()</literal> の実装を強くお勧めします。"
+
+#: index.docbook:1686
+msgid "<literal>constrained</literal> (optional) specifies that a foreign key constraint on the primary key of the mapped table references the table of the associated class. This option affects the order in which <literal>save()</literal> and <literal>delete()</literal> are cascaded, and determines whether the association may be proxied (it is also used by the schema export tool)."
+msgstr "このマッピングは自然主キーを使ったエンティティでの使用を意図していません。"
+
+#: index.docbook:1701
+msgid "<literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to the primary key of this class. If not specified, the primary key of the associated class is used."
+msgstr "component, dynamic-component"
+
+#: index.docbook:1714
+msgid "<literal>formula</literal> (optional): Almost all one to one associations map to the primary key of the owning entity. In the rare case that this is not the case, you may specify a some other column, columns or expression to join on using an SQL formula. (See <literal>org.hibernate.test.onetooneformula</literal> for an example.)"
+msgstr ""
+      "<![CDATA[<component \n"
+      "        name=\"propertyName\" \n"
+      "        class=\"className\"\n"
+      "        insert=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        lazy=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        node=\"element-name|.\"\n"
+      ">\n"
+      "        \n"
+      "        <property ...../>\n"
+      "        <many-to-one .... />\n"
+      "        ........\n"
+      "</component>]]>"
+
+#: index.docbook:1722
+msgid "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): By default, single point associations are proxied. <literal>lazy=\"no-proxy\"</literal> specifies that the property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation). <literal>lazy=\"false\"</literal> specifies that the association will always be eagerly fetched. <emphasis>Note that if <literal>constrained=\"false\"</literal>, proxying is impossible and Hibernate will eager fetch the association!</emphasis>"
+msgstr "<literal>name</literal>：プロパティ名。"
+
+#: index.docbook:1740
+msgid "There are two varieties of one-to-one association:"
+msgstr "<literal>insert</literal> ：マッピングされたカラムがSQLの <literal>INSERT</literal> に現れるようにするどうかを指定します。"
+
+#: index.docbook:1744
+msgid "primary key associations"
+msgstr "<literal>update</literal> : マッピングされたカラムがSQL の <literal>UPDATE</literal> に現れるようにするかどうかを指定します。"
+
+#: index.docbook:1747
+msgid "unique foreign key associations"
+msgstr "<literal>access</literal> （オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:1752
+msgid "Primary key associations don't need an extra table column; if two rows are related by the association then the two table rows share the same primary key value. So if you want two objects to be related by a primary key association, you must make sure that they are assigned the same identifier value!"
+msgstr "<literal>lazy</literal> (optional - デフォルトは <literal>false</literal> ): インスタンス変数に最初にアクセスしたときに、 コンポーネントを遅延してフェッチするよう指定します。 (バイトコード実装を作成する時間が必要になります)"
+
+#: index.docbook:1759
+msgid "For a primary key association, add the following mappings to <literal>Employee</literal> and <literal>Person</literal>, respectively."
+msgstr "<literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ): このプロパティの更新に、楽観ロックの取得を要求するかどうかを指定します。 言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。"
+
+#: index.docbook:1764
+msgid "<![CDATA[<one-to-one name=\"person\" class=\"Person\"/>]]>"
+msgstr "<literal>unique</literal> (オプション - デフォルトは <literal>false</literal> ): コンポーネントのすべてのマッピングするカラムに、ユニーク制約が存在するかを指定します。"
+
+#: index.docbook:1765
+msgid "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" constrained=\"true\"/>]]>"
+msgstr "子の <literal>&lt;property&gt;</literal> タグで、 子のクラスのプロパティをテーブルカラムにマッピングします。"
+
+#: index.docbook:1767
+msgid "Now we must ensure that the primary keys of related rows in the PERSON and EMPLOYEE tables are equal. We use a special Hibernate identifier generation strategy called <literal>foreign</literal>:"
+msgstr "<literal>&lt;component&gt;</literal> 要素は、親エンティティへ戻る参照として、 コンポーネントのクラスのプロパティをマッピングする <literal>&lt;parent&gt;</literal> サブ要素を許可します。"
+
+#: index.docbook:1773
+msgid ""
+      "<![CDATA[<class name=\"person\" table=\"PERSON\">\n"
+      "    <id name=\"id\" column=\"PERSON_ID\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">employee</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    ...\n"
+      "    <one-to-one name=\"employee\"\n"
+      "        class=\"Employee\"\n"
+      "        constrained=\"true\"/>\n"
+      "</class>]]>"
+msgstr "<literal>&lt;dynamic-component&gt;</literal> 要素は、 <literal>Map</literal> がコンポーネントとしてマッピングされることを可能にします。 プロパティ名はmapのキーを参照します。<xref linkend=\"components-dynamic\"/> を参照してください。"
+
+#: index.docbook:1775
+msgid "A newly saved instance of <literal>Person</literal> is then assigned the same primary key value as the <literal>Employee</literal> instance refered with the <literal>employee</literal> property of that <literal>Person</literal>."
+msgstr "properties"
+
+#: index.docbook:1781
+msgid "Alternatively, a foreign key with a unique constraint, from <literal>Employee</literal> to <literal>Person</literal>, may be expressed as:"
+msgstr "<literal>&lt;properties&gt;</literal> 要素はクラスのプロパティの指定された、 論理的なグルーピングを可能にします。 この構造の最も重要な使用方法は、 <literal>property-ref</literal> のターゲットになるプロパティの結合を許可することです。 それはまた、複数カラムのユニーク制約を定義する簡単な方法でもあります。"
+
+#: index.docbook:1786
+msgid "<![CDATA[<many-to-one name=\"person\" class=\"Person\" column=\"PERSON_ID\" unique=\"true\"/>]]>"
+msgstr ""
+      "<![CDATA[<properties \n"
+      "        name=\"logicalName\" \n"
+      "        insert=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      ">\n"
+      "        \n"
+      "        <property ...../>\n"
+      "        <many-to-one .... />\n"
+      "        ........\n"
+      "</properties>]]>"
+
+#: index.docbook:1788
+msgid "And this association may be made bidirectional by adding the following to the <literal>Person</literal> mapping:"
+msgstr "<literal>name</literal> : グルーピングの論理名。 実際のプロパティ名では <emphasis>ありません</emphasis> 。"
+
+#: index.docbook:1793
+msgid "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" property-ref=\"person\"/>]]>"
+msgstr "<literal>insert</literal>：マッピングされたカラムがSQLの <literal>INSERT</literal> に現れるようにするかどうかを指定します。"
+
+#: index.docbook:1798
+msgid "natural-id"
+msgstr "<literal>update</literal>：マッピングされたカラムがSQLの <literal>UPDATE</literal> に現れるようにするかどうかを指定します。"
+
+#: index.docbook:1800
+msgid ""
+      "<![CDATA[<natural-id mutable=\"true|false\"/>\n"
+      "        <property ... />\n"
+      "        <many-to-one ... />\n"
+      "        ......\n"
+      "</natural-id>]]>"
+msgstr "<literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ): これらのプロパティの更新に楽観的ロックの取得を要求するかどうかを指定します。 言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを決定します。"
+
+#: index.docbook:1802
+msgid "Even though we recommend the use of surrogate keys as primary keys, you should still try to identify natural keys for all entities. A natural key is a property or combination of properties that is unique and non-null. If it is also immutable, even better. Map the properties of the natural key inside the <literal>&lt;natural-id&gt;</literal> element. Hibernate will generate the necessary unique key and nullability constraints, and your mapping will be more self-documenting."
+msgstr "<literal>unique</literal> (オプション - デフォルトは <literal>false</literal> ): コンポーネントのすべてのマッピングするカラムに、ユニーク制約が存在するかを指定します。"
+
+#: index.docbook:1811
+msgid "We strongly recommend that you implement <literal>equals()</literal> and <literal>hashCode()</literal> to compare the natural key properties of the entity."
+msgstr "例えば、もし以下のような <literal>&lt;properties&gt;</literal> マッピングがあった場合："
+
+#: index.docbook:1816
+msgid "This mapping is not intended for use with entities with natural primary keys."
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"personNumber\"/>\n"
+      "    ...\n"
+      "    <properties name=\"name\" \n"
+      "            unique=\"true\" update=\"false\">\n"
+      "        <property name=\"firstName\"/>\n"
+      "        <property name=\"initial\"/>\n"
+      "        <property name=\"lastName\"/>\n"
+      "    </properties>\n"
+      "</class>]]>"
+
+#: index.docbook:1822
+msgid "<literal>mutable</literal> (optional, defaults to <literal>false</literal>): By default, natural identifier properties as assumed to be immutable (constant)."
+msgstr "主キーの代わりに <literal>Person</literal> テーブルのユニークキーへの参照を持つ、 レガシーデータの関連を持つかもしれません。："
+
+#: index.docbook:1832
+msgid "component, dynamic-component"
+msgstr ""
+      "<![CDATA[<many-to-one name=\"person\" \n"
+      "         class=\"Person\" property-ref=\"name\">\n"
+      "    <column name=\"firstName\"/>\n"
+      "    <column name=\"initial\"/>\n"
+      "    <column name=\"lastName\"/>\n"
+      "</many-to-one>]]>"
+
+#: index.docbook:1834
+msgid "The <literal>&lt;component&gt;</literal> element maps properties of a child object to columns of the table of a parent class. Components may, in turn, declare their own properties, components or collections. See \"Components\" below."
+msgstr "しかし、このようなレガシーデータマッピングのコンテキスト外への使用は推奨しません。"
+
+#: index.docbook:1852
+msgid ""
+      "<![CDATA[<component\n"
+      "        name=\"propertyName\"\n"
+      "        class=\"className\"\n"
+      "        insert=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        lazy=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        node=\"element-name|.\"\n"
+      ">\n"
+      "\n"
+      "        <property ...../>\n"
+      "        <many-to-one .... />\n"
+      "        ........\n"
+      "</component>]]>"
+msgstr "subclass"
+
+#: index.docbook:1860
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The name of the component (child) class."
+msgstr ""
+      "<![CDATA[<subclass\n"
+      "        name=\"ClassName\"\n"
+      "        discriminator-value=\"discriminator_value\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\"\n"
+      "        extends=\"SuperclassName\">\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</subclass>]]>"
+
+#: index.docbook:1866, index.docbook:1955
+msgid "<literal>insert</literal>: Do the mapped columns appear in SQL <literal>INSERT</literal>s?"
+msgstr "<literal>name</literal>：サブクラスの完全修飾されたクラス名。"
+
+#: index.docbook:1872, index.docbook:1961
+msgid "<literal>update</literal>: Do the mapped columns appear in SQL <literal>UPDATE</literal>s?"
+msgstr "<literal>discriminator-value</literal>（オプション - デフォルトはクラス名）： 個々のサブクラスを区別するための値。"
+
+#: index.docbook:1884
+msgid "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies that this component should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation)."
+msgstr "<literal>lazy</literal>（オプション, デフォルトは <literal>true</literal> ）： <literal>lazy=\"false\"</literal> と設定すると、遅延フェッチが使用できません。"
+
+#: index.docbook:1891
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this component do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when this property is dirty."
+msgstr "各サブクラスでは、永続プロパティとサブクラスを定義します。 <literal>&lt;version&gt;</literal> と <literal>&lt;id&gt;</literal> プロパティは、 ルートクラスから継承されると仮定されます。 階層構造におけるサブクラスは、 ユニークな <literal>discriminator-value</literal> を定義しなければなりません。 noneが指定されると、完全修飾されたJavaクラス名が使われます。"
+
+#: index.docbook:1899, index.docbook:1975
+msgid "<literal>unique</literal> (optional - defaults to <literal>false</literal>): Specifies that a unique constraint exists upon all mapped columns of the component."
+msgstr "継承のマッピングに関する情報は <xref linkend=\"inheritance\"/> を見てください。"
+
+#: index.docbook:1908
+msgid "The child <literal>&lt;property&gt;</literal> tags map properties of the child class to table columns."
+msgstr "joined-subclass"
+
+#: index.docbook:1913
+msgid "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;parent&gt;</literal> subelement that maps a property of the component class as a reference back to the containing entity."
+msgstr "もう1つの方法として、各サブクラスを自身のテーブルへマッピングすることができます (table-per-subclass mapping strategy)。 継承した状態はスーパークラスのテーブルを使った結合で検索します。 <literal>&lt;joined-subclass&gt;</literal> 要素を使用します。"
+
+#: index.docbook:1919
+msgid "The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal> to be mapped as a component, where the property names refer to keys of the map, see <xref linkend=\"components-dynamic\"/>."
+msgstr ""
+      "<![CDATA[<joined-subclass\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tablename\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        schema=\"schema\"\n"
+      "        catalog=\"catalog\"\n"
+      "        extends=\"SuperclassName\"\n"
+      "        persister=\"ClassName\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\">\n"
+      "\n"
+      "        <key .... >\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</joined-subclass>]]>"
+
+#: index.docbook:1928
+msgid "properties"
+msgstr "<literal>name</literal>：サブクラスの完全修飾されたクラス名。"
+
+#: index.docbook:1930
+msgid "The <literal>&lt;properties&gt;</literal> element allows the definition of a named, logical grouping of properties of a class. The most important use of the construct is that it allows a combination of properties to be the target of a <literal>property-ref</literal>. It is also a convenient way to define a multi-column unique constraint."
+msgstr "<literal>table</literal> :サブクラステーブルの名前。"
+
+#: index.docbook:1946
+msgid ""
+      "<![CDATA[<properties\n"
+      "        name=\"logicalName\"\n"
+      "        insert=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      ">\n"
+      "\n"
+      "        <property ...../>\n"
+      "        <many-to-one .... />\n"
+      "        ........\n"
+      "</properties>]]>"
+msgstr "<literal>proxy</literal> (オプション): 遅延初期化プロキシに使用するクラスやインターフェイスを指定します。"
+
+#: index.docbook:1949
+msgid "<literal>name</literal>: The logical name of the grouping - <emphasis>not</emphasis> an actual property name."
+msgstr "<literal>lazy</literal> (オプション, デフォルトは <literal>true</literal> ): <literal>lazy=\"false\"</literal> とすると、遅延フェッチが使用できません。"
+
+#: index.docbook:1967
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to these properties do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when these properties are dirty."
+msgstr "継承のマッピングに関する情報は <xref linkend=\"inheritance\"/> を見てください。"
+
+#: index.docbook:1984
+msgid "For example, if we have the following <literal>&lt;properties&gt;</literal> mapping:"
+msgstr "3つ目の選択肢は、継承階層の具象クラスのみをテーブルにマッピングすることです (the table-per-concrete-class戦略)。 それぞれのテーブルは継承の状態を含めすべてのクラスの永続状態を定義します。 Hibernateではその様な継承階層が必ずしも必要ではありません。 単純にそれぞれのクラスを、 別々の <literal>&lt;class&gt;</literal> 宣言を使ってマッピングすることができます。 しかしポリモーフィックな関連(例えば 階層のスーパークラスへの関連)を使いたいなら、 <literal>&lt;union-subclass&gt;</literal> マッピングを使う必要があります。"
+
+#: index.docbook:1988
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"personNumber\"/>\n"
+      "    ...\n"
+      "    <properties name=\"name\"\n"
+      "            unique=\"true\" update=\"false\">\n"
+      "        <property name=\"firstName\"/>\n"
+      "        <property name=\"initial\"/>\n"
+      "        <property name=\"lastName\"/>\n"
+      "    </properties>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<union-subclass\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tablename\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        schema=\"schema\"\n"
+      "        catalog=\"catalog\"\n"
+      "        extends=\"SuperclassName\"\n"
+      "        abstract=\"true|false\"\n"
+      "        persister=\"ClassName\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\">\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</union-subclass>]]>"
+
+#: index.docbook:1990
+msgid "Then we might have some legacy data association which refers to this unique key of the <literal>Person</literal> table, instead of to the primary key:"
+msgstr "<literal>name</literal>：サブクラスの完全修飾されたクラス名。"
+
+#: index.docbook:1995
+msgid ""
+      "<![CDATA[<many-to-one name=\"person\"\n"
+      "         class=\"Person\" property-ref=\"name\">\n"
+      "    <column name=\"firstName\"/>\n"
+      "    <column name=\"initial\"/>\n"
+      "    <column name=\"lastName\"/>\n"
+      "</many-to-one>]]>"
+msgstr "<literal>table</literal> :サブクラステーブルの名前。"
+
+#: index.docbook:1997
+msgid "We don't recommend the use of this kind of thing outside the context of mapping legacy data."
+msgstr "<literal>proxy</literal> (オプション): 遅延初期化プロキシに使用するクラスやインターフェイスを指定します。"
+
+#: index.docbook:2005
+msgid "subclass"
+msgstr "<literal>lazy</literal> (オプション, デフォルトは <literal>true</literal> ): <literal>lazy=\"false\"</literal> とすると、遅延フェッチが使用できません。"
+
+#: index.docbook:2007
+msgid "Finally, polymorphic persistence requires the declaration of each subclass of the root persistent class. For the table-per-class-hierarchy mapping strategy, the <literal>&lt;subclass&gt;</literal> declaration is used."
+msgstr "このマッピング戦略では識別カラムやキーカラムは必要ありません。"
+
+#: index.docbook:2020
+msgid ""
+      "<![CDATA[<subclass\n"
+      "        name=\"ClassName\"\n"
+      "        discriminator-value=\"discriminator_value\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\"\n"
+      "        extends=\"SuperclassName\">\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</subclass>]]>"
+msgstr "継承のマッピングに関する情報は <xref linkend=\"inheritance\"/> を見てください。"
+
+#: index.docbook:2023, index.docbook:2081, index.docbook:2144
+msgid "<literal>name</literal>: The fully qualified class name of the subclass."
+msgstr "join"
+
+#: index.docbook:2028
+msgid "<literal>discriminator-value</literal> (optional - defaults to the class name): A value that distiguishes individual subclasses."
+msgstr "<literal>&lt;join&gt;</literal> 要素を使うことで、 １つのクラスのプロパティをいくつものテーブルにマッピングすることができます。"
+
+#: index.docbook:2034, index.docbook:2091, index.docbook:2154
+msgid "<literal>proxy</literal> (optional): Specifies a class or interface to use for lazy initializing proxies."
+msgstr ""
+      "<![CDATA[<join\n"
+      "        table=\"tablename\"\n"
+      "        schema=\"owner\"\n"
+      "        catalog=\"catalog\"\n"
+      "        fetch=\"join|select\"\n"
+      "        inverse=\"true|false\"\n"
+      "        optional=\"true|false\">\n"
+      "        \n"
+      "        <key ... />\n"
+      "        \n"
+      "        <property ... />\n"
+      "        ...\n"
+      "</join>]]>"
+
+#: index.docbook:2040, index.docbook:2097, index.docbook:2160
+msgid "<literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting <literal>lazy=\"false\"</literal> disables the use of lazy fetching."
+msgstr "<literal>table</literal> :結合したテーブルの名前"
+
+#: index.docbook:2048
+msgid "Each subclass should declare its own persistent properties and subclasses. <literal>&lt;version&gt;</literal> and <literal>&lt;id&gt;</literal> properties are assumed to be inherited from the root class. Each subclass in a heirarchy must define a unique <literal>discriminator-value</literal>. If none is specified, the fully qualified Java class name is used."
+msgstr "<literal>schema</literal> (オプション): ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定したスキーマ名を オーバーライドします。"
+
+#: index.docbook:2056, index.docbook:2114, index.docbook:2172
+msgid "For information about inheritance mappings, see <xref linkend=\"inheritance\"/>."
+msgstr "<literal>catalog</literal> (オプション): ルートの <literal>&lt;hibernate-mapping&gt;</literal> 要素で指定したカタログ名を オーバーライドします。"
+
+#: index.docbook:2063
+msgid "joined-subclass"
+msgstr "<literal>fetch</literal> (オプション - デフォルトは <literal>join</literal> ): <literal>join</literal> を設定した場合、 Hibernateはデフォルトで、クラスやスーパークラスで定義された <literal>&lt;join&gt;</literal> を検索するのに内部結合を使い、サブクラスで定義された <literal>&lt;join&gt;</literal> を検索するのに外部結合を使います。 <literal>select</literal> を設定した場合には、 Hibernateはサブクラスで定義された <literal>&lt;join&gt;</literal> の選択に順次選択を使います。この場合、 行がサブクラスのインスタンスを代表することがわかった場合にのみ発行されます。 内部結合はクラスやそのスーパークラスで定義された <literal>&lt;join&gt;</literal> を検索 するために使用します。"
+
+#: index.docbook:2065
+msgid "Alternatively, each subclass may be mapped to its own table (table-per-subclass mapping strategy). Inherited state is retrieved by joining with the table of the superclass. We use the <literal>&lt;joined-subclass&gt;</literal> element."
+msgstr "<literal>inverse</literal> (オプション - デフォルトは <literal>false</literal> ): もし可能であれば、Hibernateはこの結合で定義されているプロパティに対し 挿入や更新を行いません。"
+
+#: index.docbook:2078
+msgid ""
+      "<![CDATA[<joined-subclass\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tablename\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        schema=\"schema\"\n"
+      "        catalog=\"catalog\"\n"
+      "        extends=\"SuperclassName\"\n"
+      "        persister=\"ClassName\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\">\n"
+      "\n"
+      "        <key .... >\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</joined-subclass>]]>"
+msgstr "<literal>optional</literal> (オプション - デフォルトは <literal>false</literal> ): もし可能であれば、Hibernateはこの結合で定義されたプロパティがnullでない場合にのみ 行を挿入し、そのプロパティの検索には常に外部結合を使用します。"
+
+#: index.docbook:2086, index.docbook:2149
+msgid "<literal>table</literal>: The name of the subclass table."
+msgstr ""
+      "<![CDATA[<class name=\"Person\"\n"
+      "    table=\"PERSON\">\n"
+      "\n"
+      "    <id name=\"id\" column=\"PERSON_ID\">...</id>\n"
+      "\n"
+      "    <join table=\"ADDRESS\">\n"
+      "        <key column=\"ADDRESS_ID\"/>\n"
+      "        <property name=\"address\"/>\n"
+      "        <property name=\"zip\"/>\n"
+      "        <property name=\"country\"/>\n"
+      "    </join>\n"
+      "    ...]]>"
+
+#: index.docbook:2105
+msgid "No discriminator column is required for this mapping strategy. Each subclass must, however, declare a table column holding the object identifier using the <literal>&lt;key&gt;</literal> element. The mapping at the start of the chapter would be re-written as:"
+msgstr "今まで何度か <literal>&lt;key&gt;</literal> 要素が出てきました。 この要素は新しいテーブルへの結合を定義したり、 結合テーブルで外部キーを定義したりする親要素のどこにでも現れ、 オリジナルテーブルの主キーを参照します。"
+
+#: index.docbook:2112
+msgid ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<!DOCTYPE hibernate-mapping PUBLIC\n"
+      "        \"-//Hibernate/Hibernate Mapping DTD//EN\"\n"
+      "        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
+      "\n"
+      "<hibernate-mapping package=\"eg\">\n"
+      "\n"
+      "        <class name=\"Cat\" table=\"CATS\">\n"
+      "                <id name=\"id\" column=\"uid\" type=\"long\">\n"
+      "                        <generator class=\"hilo\"/>\n"
+      "                </id>\n"
+      "                <property name=\"birthdate\" type=\"date\"/>\n"
+      "                <property name=\"color\" not-null=\"true\"/>\n"
+      "                <property name=\"sex\" not-null=\"true\"/>\n"
+      "                <property name=\"weight\"/>\n"
+      "                <many-to-one name=\"mate\"/>\n"
+      "                <set name=\"kittens\">\n"
+      "                        <key column=\"MOTHER\"/>\n"
+      "                        <one-to-many class=\"Cat\"/>\n"
+      "                </set>\n"
+      "                <joined-subclass name=\"DomesticCat\" table=\"DOMESTIC_CATS\">\n"
+      "                    <key column=\"CAT\"/>\n"
+      "                    <property name=\"name\" type=\"string\"/>\n"
+      "                </joined-subclass>\n"
+      "        </class>\n"
+      "\n"
+      "        <class name=\"eg.Dog\">\n"
+      "                <!-- mapping for Dog could go here -->\n"
+      "        </class>\n"
+      "\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+      "<![CDATA[<key\n"
+      "        column=\"columnname\"\n"
+      "        on-delete=\"noaction|cascade\"\n"
+      "        property-ref=\"propertyName\"\n"
+      "        not-null=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "/>]]>"
+
+#: index.docbook:2121
+msgid "union-subclass"
+msgstr "<literal>on-delete</literal> (オプション, デフォルトは <literal>noaction</literal>): 外部キー制約がデータベースレベルでカスケード削除が可能かどうかを指定します。"
+
+#: index.docbook:2123
+msgid "A third option is to map only the concrete classes of an inheritance hierarchy to tables, (the table-per-concrete-class strategy) where each table defines all persistent state of the class, including inherited state. In Hibernate, it is not absolutely necessary to explicitly map such inheritance hierarchies. You can simply map each class with a separate <literal>&lt;class&gt;</literal> declaration. However, if you wish use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the <literal>&lt;union-subclass&gt;</literal> mapping."
+msgstr "<literal>property-ref</literal> (オプション): オリジナルテーブルの主キーではないカラムを参照する外部キーを指定します (レガシーデータに対して提供されます)。"
+
+#: index.docbook:2141
+msgid ""
+      "<![CDATA[<union-subclass\n"
+      "        name=\"ClassName\"\n"
+      "        table=\"tablename\"\n"
+      "        proxy=\"ProxyInterface\"\n"
+      "        lazy=\"true|false\"\n"
+      "        dynamic-update=\"true|false\"\n"
+      "        dynamic-insert=\"true|false\"\n"
+      "        schema=\"schema\"\n"
+      "        catalog=\"catalog\"\n"
+      "        extends=\"SuperclassName\"\n"
+      "        abstract=\"true|false\"\n"
+      "        persister=\"ClassName\"\n"
+      "        subselect=\"SQL expression\"\n"
+      "        entity-name=\"EntityName\"\n"
+      "        node=\"element-name\">\n"
+      "\n"
+      "        <property .... />\n"
+      "        .....\n"
+      "</union-subclass>]]>"
+msgstr "<literal>not-null</literal> (オプション): 外部キーカラムがnull値を許容しないことを指定します (このことは外部キーが主キーの一部であることを暗黙的に示します)。"
+
+#: index.docbook:2168
+msgid "No discriminator column or key column is required for this mapping strategy."
+msgstr "column と formula 要素"
+
+#: index.docbook:2179
+msgid "join"
+msgstr ""
+      "<![CDATA[<column\n"
+      "        name=\"column_name\"\n"
+      "        length=\"N\"\n"
+      "        precision=\"N\"\n"
+      "        scale=\"N\"\n"
+      "        not-null=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        unique-key=\"multicolumn_unique_key_name\"\n"
+      "        index=\"index_name\"\n"
+      "        sql-type=\"sql_type_name\"\n"
+      "        check=\"SQL expression\"\n"
+      "        default=\"SQL expression\"/>]]>"
+
+#: index.docbook:2181
+msgid "Using the <literal>&lt;join&gt;</literal> element, it is possible to map properties of one class to several tables, when there's a 1-to-1 relationship between the tables."
+msgstr "<![CDATA[<formula>SQL expression</formula>]]>"
+
+#: index.docbook:2195
+msgid ""
+      "<![CDATA[<join\n"
+      "        table=\"tablename\"\n"
+      "        schema=\"owner\"\n"
+      "        catalog=\"catalog\"\n"
+      "        fetch=\"join|select\"\n"
+      "        inverse=\"true|false\"\n"
+      "        optional=\"true|false\">\n"
+      "\n"
+      "        <key ... />\n"
+      "\n"
+      "        <property ... />\n"
+      "        ...\n"
+      "</join>]]>"
+msgstr "同じプロパティや関連のマッピングの中で、 <literal>column</literal> と <literal>formula</literal> 属性を組み合わせることができます。 例えば、特殊な結合条件などです。"
+
+#: index.docbook:2199
+msgid "<literal>table</literal>: The name of the joined table."
+msgstr ""
+      "<![CDATA[<many-to-one name=\"homeAddress\" class=\"Address\"\n"
+      "        insert=\"false\" update=\"false\">\n"
+      "    <column name=\"person_id\" not-null=\"true\" length=\"10\"/>\n"
+      "    <formula>'MAILING'</formula>\n"
+      "</many-to-one>]]>"
+
+#: index.docbook:2216
+msgid "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): If set to <literal>join</literal>, the default, Hibernate will use an inner join to retrieve a <literal>&lt;join&gt;</literal> defined by a class or its superclasses and an outer join for a <literal>&lt;join&gt;</literal> defined by a subclass. If set to <literal>select</literal> then Hibernate will use a sequential select for a <literal>&lt;join&gt;</literal> defined on a subclass, which will be issued only if a row turns out to represent an instance of the subclass. Inner joins will still be used to retrieve a <literal>&lt;join&gt;</literal> defined by the class and its superclasses."
+msgstr "<![CDATA[<import class=\"java.lang.Object\" rename=\"Universe\"/>]]>"
+
+#: index.docbook:2229
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>): If enabled, Hibernate will not try to insert or update the properties defined by this join."
+msgstr ""
+      "<![CDATA[<import\n"
+      "        class=\"ClassName\"\n"
+      "        rename=\"ShortName\"\n"
+      "/>]]>"
+
+#: index.docbook:2236
+msgid "<literal>optional</literal> (optional - defaults to <literal>false</literal>): If enabled, Hibernate will insert a row only if the properties defined by this join are non-null and will always use an outer join to retrieve the properties."
+msgstr "<literal>class</literal>：Javaクラスの完全修飾されたクラス名。"
+
+#: index.docbook:2245
+msgid "For example, the address information for a person can be mapped to a separate table (while preserving value type semantics for all properties):"
+msgstr "<literal>rename</literal>（オプション - デフォルトは修飾されていないクラス名）： クエリ言語で使われる名前。"
+
+#: index.docbook:2250
+msgid ""
+      "<![CDATA[<class name=\"Person\"\n"
+      "    table=\"PERSON\">\n"
+      "\n"
+      "    <id name=\"id\" column=\"PERSON_ID\">...</id>\n"
+      "\n"
+      "    <join table=\"ADDRESS\">\n"
+      "        <key column=\"ADDRESS_ID\"/>\n"
+      "        <property name=\"address\"/>\n"
+      "        <property name=\"zip\"/>\n"
+      "        <property name=\"country\"/>\n"
+      "    </join>\n"
+      "    ...]]>"
+msgstr "<title>any</title>"
+
+#: index.docbook:2252
+msgid "This feature is often only useful for legacy data models, we recommend fewer tables than classes and a fine-grained domain model. However, it is useful for switching between inheritance mapping strategies in a single hierarchy, as explained later."
+msgstr "プロパティマッピングにはさらにもう1つの型があります。 <literal>&lt;any&gt;</literal> マッピング要素は、 複数のテーブルからクラスへのポリモーフィックな関連を定義します。 この型のマッピングには必ず複数のカラムが必要です。1番目のカラムは関連エンティティの型を保持します。 残りのカラムは識別子を保持します。この種類の関連には外部キー制約を指定することはできません。 そのためこれは最も使われることのない（ポリモーフィックな）関連のマッピング方法です。 非常に特別な場合（例えば、検査ログやユーザセッションデータなど)に限って、これを使うべきです。"
+
+#: index.docbook:2262
+msgid "<title>key</title>"
+msgstr "<literal>meta-type</literal> により、 アプリケーションはカスタム型を指定できます。このカスタム型は データベースカラムの値を、<literal>id-type</literal> で指定した型の 識別子プロパティを持った永続クラスへマッピングします。 meta-typeの値からクラス名へのマッピングを指定しなければなりません。"
+
+#: index.docbook:2264
+msgid "We've seen the <literal>&lt;key&gt;</literal> element crop up a few times now. It appears anywhere the parent mapping element defines a join to a new table, and defines the foreign key in the joined table, that references the primary key of the original table."
+msgstr ""
+      "<![CDATA[<any name=\"being\" id-type=\"long\" meta-type=\"string\">\n"
+      "    <meta-value value=\"TBL_ANIMAL\" class=\"Animal\"/>\n"
+      "    <meta-value value=\"TBL_HUMAN\" class=\"Human\"/>\n"
+      "    <meta-value value=\"TBL_ALIEN\" class=\"Alien\"/>\n"
+      "    <column name=\"table_name\"/>\n"
+      "    <column name=\"id\"/>\n"
+      "</any>]]>"
+
+#: index.docbook:2280
+msgid ""
+      "<![CDATA[<key\n"
+      "        column=\"columnname\"\n"
+      "        on-delete=\"noaction|cascade\"\n"
+      "        property-ref=\"propertyName\"\n"
+      "        not-null=\"true|false\"\n"
+      "        update=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "/>]]>"
+msgstr ""
+      "<![CDATA[<any\n"
+      "        name=\"propertyName\"\n"
+      "        id-type=\"idtypename\"\n"
+      "        meta-type=\"metatypename\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      ">\n"
+      "        <meta-value ... />\n"
+      "        <meta-value ... />\n"
+      "        .....\n"
+      "        <column .... />\n"
+      "        <column .... />\n"
+      "        .....\n"
+      "</any>]]>"
+
+#: index.docbook:2291
+msgid "<literal>on-delete</literal> (optional, defaults to <literal>noaction</literal>): Specifies whether the foreign key constraint has database-level cascade delete enabled."
+msgstr "<literal>id-type</literal>：識別子の型。"
+
+#: index.docbook:2298
+msgid "<literal>property-ref</literal> (optional): Specifies that the foreign key refers to columns that are not the primary key of the orginal table. (Provided for legacy data.)"
+msgstr "<literal>meta-type</literal>（オプション - デフォルトは <literal>string</literal> ）： ディスクリミネータマッピングで許された型"
+
+#: index.docbook:2305
+msgid "<literal>not-null</literal> (optional): Specifies that the foreign key columns are not nullable (this is implied whenever the foreign key is also part of the primary key)."
+msgstr "<literal>cascade</literal>（オプション - デフォルトは <literal>none</literal> ）： カスケードのスタイル。"
+
+#: index.docbook:2312
+msgid "<literal>update</literal> (optional): Specifies that the foreign key should never be updated (this is implied whenever the foreign key is also part of the primary key)."
+msgstr "<literal>access</literal>（オプション - デフォルトは <literal>property</literal> ）： プロパティの値へのアクセスにHibernateが使う戦略。"
+
+#: index.docbook:2319
+msgid "<literal>unique</literal> (optional): Specifies that the foreign key should have a unique constraint (this is implied whenever the foreign key is also the primary key)."
+msgstr "<literal>optimistic-lock</literal> (オプション - デフォルトは <literal>true</literal> ): このプロパティの更新に楽観ロックの取得を要求するかどうかを指定します。 言い換えれば、このプロパティがダーティであるときにバージョンを増やすべきかを定義します。"
+
+#: index.docbook:2327
+msgid "We recommend that for systems where delete performance is important, all keys should be defined <literal>on-delete=\"cascade\"</literal>, and Hibernate will use a database-level <literal>ON CASCADE DELETE</literal> constraint, instead of many individual <literal>DELETE</literal> statements. Be aware that this feature bypasses Hibernate's usual optimistic locking strategy for versioned data."
+msgstr "Hibernateの型"
+
+#: index.docbook:2335
+msgid "The <literal>not-null</literal> and <literal>update</literal> attributes are useful when mapping a unidirectional one to many association. If you map a unidirectional one to many to a non-nullable foreign key, you <emphasis>must</emphasis> declare the key column using <literal>&lt;key not-null=\"true\"&gt;</literal>."
+msgstr "エンティティと値"
+
+#: index.docbook:2345
+msgid "column and formula elements"
+msgstr "永続サービスに関わる様々なJava言語レベルのオブジェクトの振る舞いを理解するためには、 オブジェクトを2つのグループに分ける必要があります："
+
+#: index.docbook:2346
+msgid "Any mapping element which accepts a <literal>column</literal> attribute will alternatively accept a <literal>&lt;column&gt;</literal> subelement. Likewise, <literal>&lt;formula&gt;</literal> is an alternative to the <literal>formula</literal> attribute."
+msgstr "<emphasis> エンティティ</emphasis> はエンティティへの参照を保持する、 他のすべてのオブジェクトから独立して存在します。 参照されないオブジェクトがガベージコレクトされてしまう性質を持つ通常のJavaモデルと、 これを比べてみてください。 （親エンティティから子へ、セーブと削除が <emphasis>カスケード</emphasis> されうることを除いて） エンティティは明示的にセーブまたは削除されなければなりません。 これは到達可能性によるオブジェクト永続化のODMGモデルとは異なっています。 大規模なシステムでアプリケーションオブジェクトが普通どのように使われるかにより密接に対応します。 エンティティは循環と参照の共有をサポートします。 またそれらはバージョン付けすることもできます。"
+
+#: index.docbook:2352
+msgid ""
+      "<![CDATA[<column\n"
+      "        name=\"column_name\"\n"
+      "        length=\"N\"\n"
+      "        precision=\"N\"\n"
+      "        scale=\"N\"\n"
+      "        not-null=\"true|false\"\n"
+      "        unique=\"true|false\"\n"
+      "        unique-key=\"multicolumn_unique_key_name\"\n"
+      "        index=\"index_name\"\n"
+      "        sql-type=\"sql_type_name\"\n"
+      "        check=\"SQL expression\"\n"
+      "        default=\"SQL expression\"/>]]>"
+msgstr "エンティティの永続状態は他のエンティティや <emphasis>値</emphasis> 型の インスタンスへの参照から構成されます。 値はプリミティブ、コレクション(コレクションの内部ではなく)、 コンポーネント、不変オブジェクトです。 エンティティとは違い、値は（特にコレクションとコンポーネントにおいて）、 到達可能性による永続化や削除が <emphasis>行われます</emphasis> 。 値オブジェクト（とプリミティブ）は、包含するエンティティと一緒に永続化や削除が行われるので、 それらを独立にバージョン付けすることはできません。 値には独立したアイデンティティがないので、 複数のエンティティやコレクションがこれを共有することはできません。"
+
+#: index.docbook:2354
+msgid "<![CDATA[<formula>SQL expression</formula>]]>"
+msgstr "これまで「永続クラス」という言葉をエンティティの意味で使ってきました。 これからもそうしていきます。 厳密に言うと、永続状態を持つユーザ定義のクラスのすべてが エンティティというわけではありません。 <emphasis>コンポーネント</emphasis> は値のセマンティクスを持つユーザ定義クラスです。 <literal>java.lang.String</literal> 型のプロパティもまた値のセマンティクスを持ちます。 定義するなら、JDKで提供されているすべてのJavaの型(クラス)が値のセマンティクスを持つといえます。 一方ユーザ定義型は、エンティティや値型のセマンティクスとともにマッピングできます。 この決定はアプリケーション開発者次第です。 そのクラスの１つのインスタンスへの共有参照は、 ドメインモデル内のエンティティクラスに対する良いヒントになります。 一方合成集約や集約は、通常値型へ変換されます。"
+
+#: index.docbook:2356
+msgid "<literal>column</literal> and <literal>formula</literal> attributes may even be combined within the same property or association mapping to express, for example, exotic join conditions."
+msgstr "本ドキュメントを通して、何度もこの概念を取り上げます。"
+
+#: index.docbook:2362
+msgid ""
+      "<![CDATA[<many-to-one name=\"homeAddress\" class=\"Address\"\n"
+      "        insert=\"false\" update=\"false\">\n"
+      "    <column name=\"person_id\" not-null=\"true\" length=\"10\"/>\n"
+      "    <formula>'MAILING'</formula>\n"
+      "</many-to-one>]]>"
+msgstr "Java型のシステム(もしくは開発者が定義したエンティティと値型)を SQL/データベース型のシステムにマッピングすることは難しいです。 Hibernateは２つのシステムの架け橋を提供します。 エンティティに対しては <literal>&lt;class&gt;</literal> や <literal>&lt;subclass&gt;</literal> などを使用します。 値型に対しては <literal>&lt;property&gt;</literal> や <literal>&lt;component&gt;</literal> などを、通常 <literal>type</literal> とともに使います。 この属性の値はHibernateの <emphasis>マッピング型</emphasis> の名前です。 Hibernateは(標準JDKの値型に対して)多くの自由なマッピングを提供します。 後で見るように、自身のマッピング型を記述し、同様にカスタムの変換戦略を実装することができます。"
+
+#: index.docbook:2367
+msgid "import"
+msgstr "コレクションを除く組み込みのHibernateの型はすべて、nullセマンティクスをサポートします。"
+
+#: index.docbook:2369
+msgid "Suppose your application has two persistent classes with the same name, and you don't want to specify the fully qualified (package) name in Hibernate queries. Classes may be \"imported\" explicitly, rather than relying upon <literal>auto-import=\"true\"</literal>. You may even import classes and interfaces that are not explicitly mapped."
+msgstr "基本的な型"
+
+#: index.docbook:2376
+msgid "<![CDATA[<import class=\"java.lang.Object\" rename=\"Universe\"/>]]>"
+msgstr "組み込みの <emphasis>基本的なマッピング型</emphasis> は大まかに以下のように分けられます。"
+
+#: index.docbook:2383
+msgid ""
+      "<![CDATA[<import\n"
+      "        class=\"ClassName\"\n"
+      "        rename=\"ShortName\"\n"
+      "/>]]>"
+msgstr "integer, long, short, float, double, character, byte, boolean, yes_no, true_false"
+
+#: index.docbook:2386
+msgid "<literal>class</literal>: The fully qualified class name of of any Java class."
+msgstr "Javaのプリミティブやラッパークラスから適切な（ベンダー固有の） SQLカラム型への型マッピング。 <literal>boolean, yes_no</literal> と <literal>true_false</literal> は、 すべてJavaの <literal>boolean</literal> または <literal>java.lang.Boolean</literal> の代替エンコードです。"
+
+#: index.docbook:2391
+msgid "<literal>rename</literal> (optional - defaults to the unqualified class name): A name that may be used in the query language."
+msgstr "string"
+
+#: index.docbook:2402
+msgid "<title>any</title>"
+msgstr "<literal>java.lang.String</literal> から <literal>VARCHAR</literal> （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。"
+
+#: index.docbook:2404
+msgid "There is one further type of property mapping. The <literal>&lt;any&gt;</literal> mapping element defines a polymorphic association to classes from multiple tables. This type of mapping always requires more than one column. The first column holds the type of the associated entity. The remaining columns hold the identifier. It is impossible to specify a foreign key constraint for this kind of association, so this is most certainly not meant as the usual way of mapping (polymorphic) associations. You should use this only in very special cases (eg. audit logs, user session data, etc)."
+msgstr "date, time, timestamp"
+
+#: index.docbook:2414
+msgid "The <literal>meta-type</literal> attribute lets the application specify a custom type that maps database column values to persistent classes which have identifier properties of the type specified by <literal>id-type</literal>. You must specify the mapping from values of the meta-type to class names."
+msgstr "<literal>java.util.Date</literal> とそのサブクラスからSQL型の <literal>DATE</literal>, <literal>TIME</literal> , <literal>TIMESTAMP</literal> （またはそれらと等価なもの） への型マッピング。"
+
+#: index.docbook:2421
+msgid ""
+      "<![CDATA[<any name=\"being\" id-type=\"long\" meta-type=\"string\">\n"
+      "    <meta-value value=\"TBL_ANIMAL\" class=\"Animal\"/>\n"
+      "    <meta-value value=\"TBL_HUMAN\" class=\"Human\"/>\n"
+      "    <meta-value value=\"TBL_ALIEN\" class=\"Alien\"/>\n"
+      "    <column name=\"table_name\"/>\n"
+      "    <column name=\"id\"/>\n"
+      "</any>]]>"
+msgstr "calendar, calendar_date"
+
+#: index.docbook:2432
+msgid ""
+      "<![CDATA[<any\n"
+      "        name=\"propertyName\"\n"
+      "        id-type=\"idtypename\"\n"
+      "        meta-type=\"metatypename\"\n"
+      "        cascade=\"cascade_style\"\n"
+      "        access=\"field|property|ClassName\"\n"
+      "        optimistic-lock=\"true|false\"\n"
+      ">\n"
+      "        <meta-value ... />\n"
+      "        <meta-value ... />\n"
+      "        .....\n"
+      "        <column .... />\n"
+      "        <column .... />\n"
+      "        .....\n"
+      "</any>]]>"
+msgstr "<literal>java.util.Calendar</literal> からSQL型 の「 <literal>TIMESTAMP</literal> , <literal>DATE</literal> (またはそれらと等価なもの）への型マッピング。"
+
+#: index.docbook:2435
+msgid "<literal>name</literal>: the property name."
+msgstr "big_decimal, big_integer"
+
+#: index.docbook:2440
+msgid "<literal>id-type</literal>: the identifier type."
+msgstr "<literal>java.math.BigDecimal</literal> と <literal>java.math.BigInteger</literal> から <literal>NUMERIC</literal>（またはOracleの <literal>NUMBER</literal> ）への型マッピング。"
+
+#: index.docbook:2445
+msgid "<literal>meta-type</literal> (optional - defaults to <literal>string</literal>): Any type that is allowed for a discriminator mapping."
+msgstr "locale, timezone, currency"
+
+#: index.docbook:2451
+msgid "<literal>cascade</literal> (optional- defaults to <literal>none</literal>): the cascade style."
+msgstr "<literal>java.util.Locale</literal> , <literal>java.util.TimeZone</literal> , <literal>java.util.Currency</literal> から <literal>VARCHAR</literal> （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。 <literal>Locale</literal> と <literal>Currency</literal> のインスタンスは、 それらのISOコードにマッピングされます。 <literal>TimeZone</literal> のインスタンスは、 それらの <literal>ID</literal> にマッピングされます。"
+
+#: index.docbook:2463
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, define if a version increment should occur if this property is dirty."
+msgstr "<literal>java.lang.Class</literal> から <literal>VARCHAR</literal> （またはOracleの <literal>VARCHAR2</literal> ）への型マッピング。 <literal>Class</literal> はその完全修飾された名前にマッピングされます。"
+
+#: index.docbook:2478
+msgid "Hibernate Types"
+msgstr "binary"
+
+#: index.docbook:2481
+msgid "Entities and values"
+msgstr "バイト配列は、適切なSQLのバイナリ型にマッピングされます。"
+
+#: index.docbook:2483
+msgid "To understand the behaviour of various Java language-level objects with respect to the persistence service, we need to classify them into two groups:"
+msgstr "text"
+
+#: index.docbook:2488
+msgid "An <emphasis>entity</emphasis> exists independently of any other objects holding references to the entity. Contrast this with the usual Java model where an unreferenced object is garbage collected. Entities must be explicitly saved and deleted (except that saves and deletions may be <emphasis>cascaded</emphasis> from a parent entity to its children). This is different from the ODMG model of object persistence by reachablity - and corresponds more closely to how application objects are usually used in large systems. Entities support circular and shared references. They may also be versioned."
+msgstr "長いJava文字列は、SQLの <literal>CLOB</literal> または <literal>TEXT</literal> 型にマッピングされます。"
+
+#: index.docbook:2499
+msgid "An entity's persistent state consists of references to other entities and instances of <emphasis>value</emphasis> types. Values are primitives, collections (not what's inside a collection), components and certain immutable objects. Unlike entities, values (in particular collections and components) <emphasis>are</emphasis> persisted and deleted by reachability. Since value objects (and primitives) are persisted and deleted along with their containing entity they may not be independently versioned. Values have no independent identity, so they cannot be shared by two entities or collections."
+msgstr "serializable"
+
+#: index.docbook:2510
+msgid "Up until now, we've been using the term \"persistent class\" to refer to entities. We will continue to do that. Strictly speaking, however, not all user-defined classes with persistent state are entities. A <emphasis>component</emphasis> is a user defined class with value semantics. A Java property of type <literal>java.lang.String</literal> also has value semantics. Given this definition, we can say that all types (classes) provided by the JDK have value type semantics in Java, while user-defined types may be mapped with entity or value type semantics. This decision is up to the application developer. A good hint for an entity class in a domain model are shared references to a single instance of that class, while composition or aggregation usually translates to a value type."
+msgstr "シリアライズ可能なJava型は、適切なSQLのバイナリ型にマッピングされます。 デフォルトで基本型ではないシリアライズ可能なJavaクラスや インターフェイスの名前を指定することで、 Hibernateの型を <literal>serializable</literal> とすることもできます。"
+
+#: index.docbook:2524
+msgid "We'll revisit both concepts throughout the documentation."
+msgstr "clob, blob"
+
+#: index.docbook:2528
+msgid "The challenge is to map the Java type system (and the developers' definition of entities and value types) to the SQL/database type system. The bridge between both systems is provided by Hibernate: for entities we use <literal>&lt;class&gt;</literal>, <literal>&lt;subclass&gt;</literal> and so on. For value types we use <literal>&lt;property&gt;</literal>, <literal>&lt;component&gt;</literal>, etc, usually with a <literal>type</literal> attribute. The value of this attribute is the name of a Hibernate <emphasis>mapping type</emphasis>. Hibernate provides many mappings (for standard JDK value types) out of the box. You can write your own mapping types and implement your custom conversion strategies as well, as you'll see later."
+msgstr "JDBCクラス <literal>java.sql.Clob</literal> と <literal>java.sql.Blob</literal> に対する型マッピング。 blobやclobオブジェクトはトランザクションの外では再利用できないため、 アプリケーションによっては不便かもしれません。 （さらにはドライバサポートが一貫していません。）"
+
+#: index.docbook:2541
+msgid "All built-in Hibernate types except collections support null semantics."
+msgstr "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, imm_serializable, imm_binary"
+
+#: index.docbook:2548
+msgid "Basic value types"
+msgstr "ほとんどの場合に可変であるJavaの型に対する型マッピング。 Hibernateは不変なJavaの型に対しては最適化を行い、 アプリケーションはそれを不変オブジェクトとして扱います。 例えば <literal>imm_timestamp</literal> としてマップしたインスタンスに対して、 <literal>Date.setTime()</literal> を呼び出してはなりません。 プロパティの値を変更しその変更を永続化するためには、 アプリケーションはプロパティに対して新しい(同一でない)オブジェクトを割り当てなければなりません。"
+
+#: index.docbook:2550
+msgid "The built-in <emphasis>basic mapping types</emphasis> may be roughly categorized into"
+msgstr "エンティティとコレクションのユニークな識別子は、<literal>binary</literal> , <literal>blob</literal> , <literal>clob</literal> を除く、どんな基本型でも構いません。 （複合識別子でも構いません。以下を見てください。）"
+
+#: index.docbook:2555
+msgid "integer, long, short, float, double, character, byte, boolean, yes_no, true_false"
+msgstr "基本的な値型には、<literal>org.hibernate.Hibernate</literal> で定義された <literal>Type</literal> 定数がそれぞれあります。 例えば、<literal>Hibernate.STRING</literal> は <literal>string</literal> 型を表現しています。"
+
+#: index.docbook:2558
+msgid "Type mappings from Java primitives or wrapper classes to appropriate (vendor-specific) SQL column types. <literal>boolean, yes_no</literal> and <literal>true_false</literal> are all alternative encodings for a Java <literal>boolean</literal> or <literal>java.lang.Boolean</literal>."
+msgstr "カスタム型"
+
+#: index.docbook:2567
+msgid "string"
+msgstr "開発者が独自の値型を作成することは、比較的簡単です。 例えば、<literal>java.lang.BigInteger</literal> 型のプロパティを <literal>VARCHAR</literal> カラムに永続化したいかもしれません。 Hibernateはこのための組み込み型を用意していません。 しかしカスタム型は、プロパティ（またはコレクションの要素）を1つのテーブルカラムに マッピングするのに制限はありません。 そのため例えば、<literal>java.lang.String</literal> 型の <literal>getName()</literal> / <literal>setName()</literal> Javaプロパティを <literal>FIRST_NAME</literal> , <literal>INITIAL</literal>, <literal>SURNAME</literal> カラムに永続化できます。"
+
+#: index.docbook:2569
+msgid "A type mapping from <literal>java.lang.String</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>)."
+msgstr "カスタム型を実装するには、<literal>org.hibernate.UserType</literal> または <literal>org.hibernate.CompositeUserType</literal> を実装し、 型の完全修飾された名前を使ってプロパティを定義します。 どのような種類のものが可能かを調べるには、 <literal>org.hibernate.test.DoubleStringType</literal> を確認してください。"
+
+#: index.docbook:2576
+msgid "date, time, timestamp"
+msgstr ""
+      "<![CDATA[<property name=\"twoStrings\" type=\"org.hibernate.test.DoubleStringType\">\n"
+      "    <column name=\"first_string\"/>\n"
+      "    <column name=\"second_string\"/>\n"
+      "</property>]]>"
+
+#: index.docbook:2578
+msgid "Type mappings from <literal>java.util.Date</literal> and its subclasses to SQL types <literal>DATE</literal>, <literal>TIME</literal> and <literal>TIMESTAMP</literal> (or equivalent)."
+msgstr "<literal>&lt;column&gt;</literal> タグで、 プロパティを複数のカラムへマッピングできることに注目してください。"
+
+#: index.docbook:2586
+msgid "calendar, calendar_date"
+msgstr "<literal>CompositeUserType</literal> , <literal>EnhancedUserType</literal> , <literal>UserCollectionType</literal> , <literal>UserVersionType</literal> インターフェイスは、より特殊な使用法に対してのサポートを提供します。"
+
+#: index.docbook:2588
+msgid "Type mappings from <literal>java.util.Calendar</literal> to SQL types <literal>TIMESTAMP</literal> and <literal>DATE</literal> (or equivalent)."
+msgstr "マッピングファイル内で <literal>UserType</literal> へパラメータを提供できます。 このためには、<literal>UserType</literal> は <literal>org.hibernate.usertype.ParameterizedType</literal> を実装しなくてはなりません。 カスタム型パラメータを提供するために、 マッピングファイル内で <literal>&lt;type&gt;</literal> 要素を使用できます。"
+
+#: index.docbook:2596
+msgid "big_decimal, big_integer"
+msgstr ""
+      "<![CDATA[<property name=\"priority\">\n"
+      "    <type name=\"com.mycompany.usertypes.DefaultValueIntegerType\">\n"
+      "        <param name=\"default\">0</param>\n"
+      "    </type>\n"
+      "</property>]]>"
+
+#: index.docbook:2598
+msgid "Type mappings from <literal>java.math.BigDecimal</literal> and <literal>java.math.BigInteger</literal> to <literal>NUMERIC</literal> (or Oracle <literal>NUMBER</literal>)."
+msgstr "<literal>UserType</literal> は、 引数として渡された <literal>Properties</literal> オブジェクトから、 <literal>default</literal> で指定したパラメータに対する値を検索することができます。"
+
+#: index.docbook:2606
+msgid "locale, timezone, currency"
+msgstr "特定の <literal>UserType</literal> を頻繁に使用するならば、短い名前を定義すると便利になるでしょう。 <literal>&lt;typedef&gt;</literal> 要素を使ってこのようなことが行えます。 Typedefsはカスタム型に名前を割り当てます。 その型がパラメータを持つならば、 パラメータのデフォルト値のリストを含むこともできます。"
+
+#: index.docbook:2608
+msgid "Type mappings from <literal>java.util.Locale</literal>, <literal>java.util.TimeZone</literal> and <literal>java.util.Currency</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>). Instances of <literal>Locale</literal> and <literal>Currency</literal> are mapped to their ISO codes. Instances of <literal>TimeZone</literal> are mapped to their <literal>ID</literal>."
+msgstr ""
+      "<![CDATA[<typedef class=\"com.mycompany.usertypes.DefaultValueIntegerType\" name=\"default_zero\">\n"
+      "    <param name=\"default\">0</param>\n"
+      "</typedef>]]>"
+
+#: index.docbook:2620
+msgid "<literal>class</literal>"
+msgstr "<![CDATA[<property name=\"priority\" type=\"default_zero\"/>]]>"
+
+#: index.docbook:2622
+msgid "A type mapping from <literal>java.lang.Class</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>). A <literal>Class</literal> is mapped to its fully qualified name."
+msgstr "プロパティのマッピングで型パラメータを使うことで、 typedefで提供されたパラメータをその都度オーバーライドすることが可能です。"
+
+#: index.docbook:2630
+msgid "binary"
+msgstr "Hibernateの幅広い組み込み型とコンポーネントに対するサポートは、 カスタム型をめったに <emphasis>使わない</emphasis> ということを意味します。 それでもなお、アプリケーションで頻出する(エンティティではない)クラスに対するカスタム型の使用は、 よいやり方であるとみなされます。 例えば <literal>MonetaryAmount</literal> クラスはコンポーネントとして簡単にマッピングできますが、 <literal>CompositeUserType</literal> の良い候補です。 カスタム型を使用する動機の1つは抽象化です。 カスタム型を使うことで、通貨をどのように表現しようとも マッピングドキュメントは起こりうる変化に対応できます。"
+
+#: index.docbook:2632
+msgid "Maps byte arrays to an appropriate SQL binary type."
+msgstr "１つのクラスに１つ以上のマッピング"
+
+#: index.docbook:2638
+msgid "text"
+msgstr "ある永続クラスに、一つ以上のマッピングを提供することが出来ます。 この場合、マッピングする２つのエンティティのインスタンスを明確にするために、 <emphasis>エンティティ名</emphasis> を指定しなければなりません (デフォルトではエンティティ名はクラス名と同じです。)。 永続オブジェクトを扱うとき、クエリを書き込むとき、 指定されたエンティティへの関連をマッピングするときには、 Hibernateではエンティティ名を指定しなければなりません。"
+
+#: index.docbook:2640
+msgid "Maps long Java strings to a SQL <literal>CLOB</literal> or <literal>TEXT</literal> type."
+msgstr ""
+      "<![CDATA[<class name=\"Contract\" table=\"Contracts\" \n"
+      "        entity-name=\"CurrentContract\">\n"
+      "    ...\n"
+      "    <set name=\"history\" inverse=\"true\" \n"
+      "            order-by=\"effectiveEndDate desc\">\n"
+      "        <key column=\"currentContractId\"/>\n"
+      "        <one-to-many entity-name=\"HistoricalContract\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Contract\" table=\"ContractHistory\" \n"
+      "        entity-name=\"HistoricalContract\">\n"
+      "    ...\n"
+      "    <many-to-one name=\"currentContract\" \n"
+      "            column=\"currentContractId\" \n"
+      "            entity-name=\"CurrentContract\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:2647
+msgid "serializable"
+msgstr "関連が<literal>class</literal> の代わりに <literal>entity-name</literal> を使って、 どのように指定されるのかに注目してください。"
+
+#: index.docbook:2649
+msgid "Maps serializable Java types to an appropriate SQL binary type. You may also indicate the Hibernate type <literal>serializable</literal> with the name of a serializable Java class or interface that does not default to a basic type."
+msgstr "バッククォートで囲んだ SQL 識別子"
+
+#: index.docbook:2658
+msgid "clob, blob"
+msgstr "マッピングドキュメントでテーブルやカラムの名前をバッククォートで囲むことで、 Hibernateで生成されたSQL中の識別子を引用させることができます。 HibernateはSQLの <literal>Dialect</literal> に対応する、正しい引用スタイルを使います （普通はダブルクォートですが、SQL Serverではかぎ括弧、MySQLではバッククォートです）。"
+
+#: index.docbook:2660
+msgid "Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and <literal>java.sql.Blob</literal>. These types may be inconvenient for some applications, since the blob or clob object may not be reused outside of a transaction. (Furthermore, driver support is patchy and inconsistent.)"
+msgstr ""
+      "<![CDATA[<class name=\"LineItem\" table=\"`Line Item`\">\n"
+      "    <id name=\"id\" column=\"`Item Id`\"/><generator class=\"assigned\"/></id>\n"
+      "    <property name=\"itemNumber\" column=\"`Item #`\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+
+#: index.docbook:2670
+msgid "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, imm_serializable, imm_binary"
+msgstr "メタデータの代替手段"
+
+#: index.docbook:2674
+msgid "Type mappings for what are usually considered mutable Java types, where Hibernate makes certain optimizations appropriate only for immutable Java types, and the application treats the object as immutable. For example, you should not call <literal>Date.setTime()</literal> for an instance mapped as <literal>imm_timestamp</literal>. To change the value of the property, and have that change made persistent, the application must assign a new (nonidentical) object to the property."
+msgstr "XMLの記述以外に、 HibernateではO/Rマッピングのメタデータを定義する代替方法があります。"
+
+#: index.docbook:2689
+msgid "Unique identifiers of entities and collections may be of any basic type except <literal>binary</literal>, <literal>blob</literal> and <literal>clob</literal>. (Composite identifiers are also allowed, see below.)"
+msgstr "XDoclet マークアップの使用"
+
+#: index.docbook:2695
+msgid "The basic value types have corresponding <literal>Type</literal> constants defined on <literal>org.hibernate.Hibernate</literal>. For example, <literal>Hibernate.STRING</literal> represents the <literal>string</literal> type."
+msgstr "多くのHibernateユーザはXDocletの <literal>@hibernate.tags</literal> を使って、 ソースコード内に直接マッピング情報を埋め込むことを好みます。 これは厳密に言えばXDocletの分野なので、本ドキュメントではこの方法を対象とはしません。 しかしXDocletを使った以下の <literal>Cat</literal> マッピングの例を示します。"
+
+#: index.docbook:2704
+msgid "Custom value types"
+msgstr ""
+      "<![CDATA[package eg;\n"
+      "import java.util.Set;\n"
+      "import java.util.Date;\n"
+      "\n"
+      "/**\n"
+      " * @hibernate.class\n"
+      " *  table=\"CATS\"\n"
+      " */\n"
+      "public class Cat {\n"
+      "    private Long id; // identifier\n"
+      "    private Date birthdate;\n"
+      "    private Cat mother;\n"
+      "    private Set kittens\n"
+      "    private Color color;\n"
+      "    private char sex;\n"
+      "    private float weight;\n"
+      "\n"
+      "    /*\n"
+      "     * @hibernate.id\n"
+      "     *  generator-class=\"native\"\n"
+      "     *  column=\"CAT_ID\"\n"
+      "     */\n"
+      "    public Long getId() {\n"
+      "        return id;\n"
+      "    }\n"
+      "    private void setId(Long id) {\n"
+      "        this.id=id;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.many-to-one\n"
+      "     *  column=\"PARENT_ID\"\n"
+      "     */\n"
+      "    public Cat getMother() {\n"
+      "        return mother;\n"
+      "    }\n"
+      "    void setMother(Cat mother) {\n"
+      "        this.mother = mother;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"BIRTH_DATE\"\n"
+      "     */\n"
+      "    public Date getBirthdate() {\n"
+      "        return birthdate;\n"
+      "    }\n"
+      "    void setBirthdate(Date date) {\n"
+      "        birthdate = date;\n"
+      "    }\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"WEIGHT\"\n"
+      "     */\n"
+      "    public float getWeight() {\n"
+      "        return weight;\n"
+      "    }\n"
+      "    void setWeight(float weight) {\n"
+      "        this.weight = weight;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"COLOR\"\n"
+      "     *  not-null=\"true\"\n"
+      "     */\n"
+      "    public Color getColor() {\n"
+      "        return color;\n"
+      "    }\n"
+      "    void setColor(Color color) {\n"
+      "        this.color = color;\n"
+      "    }\n"
+      "    /**\n"
+      "     * @hibernate.set\n"
+      "     *  inverse=\"true\"\n"
+      "     *  order-by=\"BIRTH_DATE\"\n"
+      "     * @hibernate.collection-key\n"
+      "     *  column=\"PARENT_ID\"\n"
+      "     * @hibernate.collection-one-to-many\n"
+      "     */\n"
+      "    public Set getKittens() {\n"
+      "        return kittens;\n"
+      "    }\n"
+      "    void setKittens(Set kittens) {\n"
+      "        this.kittens = kittens;\n"
+      "    }\n"
+      "    // addKitten not needed by Hibernate\n"
+      "    public void addKitten(Cat kitten) {\n"
+      "        kittens.add(kitten);\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"SEX\"\n"
+      "     *  not-null=\"true\"\n"
+      "     *  update=\"false\"\n"
+      "     */\n"
+      "    public char getSex() {\n"
+      "        return sex;\n"
+      "    }\n"
+      "    void setSex(char sex) {\n"
+      "        this.sex=sex;\n"
+      "    }\n"
+      "}]]>"
+
+#: index.docbook:2706
+msgid "It is relatively easy for developers to create their own value types. For example, you might want to persist properties of type <literal>java.lang.BigInteger</literal> to <literal>VARCHAR</literal> columns. Hibernate does not provide a built-in type for this. But custom types are not limited to mapping a property (or collection element) to a single table column. So, for example, you might have a Java property <literal>getName()</literal>/<literal>setName()</literal> of type <literal>java.lang.String</literal> that is persisted to the columns <literal>FIRST_NAME</literal>, <literal>INITIAL</literal>, <literal>SURNAME</literal>."
+msgstr "Hibernateのウェブサイトには、XDocletとHibernateに関するサンプルが多数あります。"
+
+#: index.docbook:2717
+msgid "To implement a custom type, implement either <literal>org.hibernate.UserType</literal> or <literal>org.hibernate.CompositeUserType</literal> and declare properties using the fully qualified classname of the type. Check out <literal>org.hibernate.test.DoubleStringType</literal> to see the kind of things that are possible."
+msgstr "JDK 5.0 アノテーションの使用"
+
+#: index.docbook:2725
+msgid ""
+      "<![CDATA[<property name=\"twoStrings\" type=\"org.hibernate.test.DoubleStringType\">\n"
+      "    <column name=\"first_string\"/>\n"
+      "    <column name=\"second_string\"/>\n"
+      "</property>]]>"
+msgstr "JDK5.0ではタイプセーフかつコンパイル時にチェックできる、 言語レベルのXDocletスタイルのアノテーションを導入しました。 このメカニズムはXDocletのアノテーションよりも強力で、ツールやIDEも多くがサポートしています。 例えばIntelliJ IDEAは、JDK5.0にアノテーションの自動補完と構文の強調表示をサポートしています。 EJB仕様 (JSR-220)の新しいバージョンでは、エンティティビーンに対する主要なメタデータメカニズムとして JDK5.0のアノテーションを使用しています。 Hibernate3ではJSR-220 (永続化API)の <literal>EntityManager</literal> を実装し、 メタデータマッピングに対するサポートは、 別ダウンロードの <emphasis>Hibernate Annotations</emphasis> パッケージにより利用可能です。 これはEJB3(JSR-220)とHibernate3のメタデータをどちらもサポートしています。"
+
+#: index.docbook:2727
+msgid "Notice the use of <literal>&lt;column&gt;</literal> tags to map a property to multiple columns."
+msgstr "以下はEJBのエンティティビーンとして注釈されたPOJOクラスの例です。"
+
+#: index.docbook:2732
+msgid "The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</literal>, <literal>UserCollectionType</literal>, and <literal>UserVersionType</literal> interfaces provide support for more specialized uses."
+msgstr ""
+      "<![CDATA[@Entity(access = AccessType.FIELD)\n"
+      "public class Customer implements Serializable {\n"
+      "\n"
+      "    @Id;\n"
+      "    Long id;\n"
+      "\n"
+      "    String firstName;\n"
+      "    String lastName;\n"
+      "    Date birthday;\n"
+      "\n"
+      "    @Transient\n"
+      "    Integer age;\n"
+      "\n"
+      "    @Embedded\n"
+      "    private Address homeAddress;\n"
+      "\n"
+      "    @OneToMany(cascade=CascadeType.ALL)\n"
+      "    @JoinColumn(name=\"CUSTOMER_ID\")\n"
+      "    Set<Order> orders;\n"
+      "\n"
+      "    // Getter/setter and business methods\n"
+      "}]]>"
+
+#: index.docbook:2738
+msgid "You may even supply parameters to a <literal>UserType</literal> in the mapping file. To do this, your <literal>UserType</literal> must implement the <literal>org.hibernate.usertype.ParameterizedType</literal> interface. To supply parameters to your custom type, you can use the <literal>&lt;type&gt;</literal> element in your mapping files."
+msgstr "JDK5.0のアノテーション(とJSR-220)のサポートは進行中の作業であり、完全ではないことに注意してください。 さらに詳しい情報はHibernateのアノテーション・モジュールを参照してください。"
+
+#: index.docbook:2746
+msgid ""
+      "<![CDATA[<property name=\"priority\">\n"
+      "    <type name=\"com.mycompany.usertypes.DefaultValueIntegerType\">\n"
+      "        <param name=\"default\">0</param>\n"
+      "    </type>\n"
+      "</property>]]>"
+msgstr "生成プロパティ"
+
+#: index.docbook:2748
+msgid "The <literal>UserType</literal> can now retrieve the value for the parameter named <literal>default</literal> from the <literal>Properties</literal> object passed to it."
+msgstr "生成プロパティとは、データベースによって生成された値を持つプロパティです。 通常、Hibernateアプリケーションは、データベースが値を生成したプロパティを含むオブジェクトを <literal>リフレッシュ</literal> する必要がありました。 しかし、プロパティが生成されたということをマークすることで、 アプリケーションはリフレッシュの責任をHibernateに委譲します。 基本的に、生成プロパティを持つと定義したエンティティに対して HibernateがINSERTやUPDATEのSQLを発行した後すぐに、 生成された値を読み込むための SELECT SQL が発行されます。"
+
+#: index.docbook:2753
+msgid "If you use a certain <literal>UserType</literal> very often, it may be useful to define a shorter name for it. You can do this using the <literal>&lt;typedef&gt;</literal> element. Typedefs assign a name to a custom type, and may also contain a list of default parameter values if the type is parameterized."
+msgstr "生成プロパティは、挿入不可能かつ更新不可能でなければなりません。 <xref linkend=\"mapping-declaration-version\"/>versions 、 <xref linkend=\"mapping-declaration-timestamp\"/>timestamps 、 <xref linkend=\"mapping-declaration-property\"/>simple properties だけが生成されたとマークできます。"
+
+#: index.docbook:2760
+msgid ""
+      "<![CDATA[<typedef class=\"com.mycompany.usertypes.DefaultValueIntegerType\" name=\"default_zero\">\n"
+      "    <param name=\"default\">0</param>\n"
+      "</typedef>]]>"
+msgstr "<literal>never</literal> (デフォルト) - 与えられたプロパティの値は、 データベースから生成されないことを意味します。"
+
+#: index.docbook:2762
+msgid "<![CDATA[<property name=\"priority\" type=\"default_zero\"/>]]>"
+msgstr "<literal>insert</literal> - 与えられたプロパティの値は挿入時に生成されるが、 続いて起こる更新時には生成されないこと示します。 作成された日付などは、このカテゴリに分類されます。 <xref linkend=\"mapping-declaration-version\"/>version や <xref linkend=\"mapping-declaration-timestamp\"/>timestamp の プロパティは生成されたとマークできますが、このオプションは利用できないことに注意してください。"
+
+#: index.docbook:2764
+msgid "It is also possible to override the parameters supplied in a typedef on a case-by-case basis by using type parameters on the property mapping."
+msgstr "<literal>always</literal> - 挿入時も更新時もプロパティの値が生成されることを示します。"
+
+#: index.docbook:2769
+msgid "Even though Hibernate's rich range of built-in types and support for components means you will very rarely <emphasis>need</emphasis> to use a custom type, it is nevertheless considered good form to use custom types for (non-entity) classes that occur frequently in your application. For example, a <literal>MonetaryAmount</literal> class is a good candidate for a <literal>CompositeUserType</literal>, even though it could easily be mapped as a component. One motivation for this is abstraction. With a custom type, your mapping documents would be future-proofed against possible changes in your way of representing monetary values."
+msgstr "補助的なデータベース・オブジェクト"
+
+#: index.docbook:2785
+msgid "Mapping a class more than once"
+msgstr "Hibernateのスキーマ・エボリューションツールと連動することで、 任意のデータベース・オブジェクト（トリガーやストアドプロシージャなど）のCREATEとDROPにより、 Hibernateのマッピングファイル内のユーザ・スキーマをすべて定義することが出来ます。 主にトリガやストアドプロシージャのようなデータベース・オブジェクトを生成や削除することを意図していますが、 実際には <literal>java.sql.Statement.execute()</literal> メソッドによって実行できる 任意のSQLコマンド（ALTER、INSERTなど）が実行できます。 補助的なデータベース・オブジェクトを定義するための、2つの基本的な方法があります。"
+
+#: index.docbook:2786
+msgid "It is possible to provide more than one mapping for a particular persistent class. In this case you must specify an <emphasis>entity name</emphasis> do disambiguate between instances of the two mapped entities. (By default, the entity name is the same as the class name.) Hibernate lets you specify the entity name when working with persistent objects, when writing queries, or when mapping associations to the named entity."
+msgstr "1つ目の方法は、CREATEとDROPコマンドをマッピングファイルの外に、明示的に記載することです。"
+
+#: index.docbook:2794
+msgid ""
+      "<![CDATA[<class name=\"Contract\" table=\"Contracts\"\n"
+      "        entity-name=\"CurrentContract\">\n"
+      "    ...\n"
+      "    <set name=\"history\" inverse=\"true\"\n"
+      "            order-by=\"effectiveEndDate desc\">\n"
+      "        <key column=\"currentContractId\"/>\n"
+      "        <one-to-many entity-name=\"HistoricalContract\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Contract\" table=\"ContractHistory\"\n"
+      "        entity-name=\"HistoricalContract\">\n"
+      "    ...\n"
+      "    <many-to-one name=\"currentContract\"\n"
+      "            column=\"currentContractId\"\n"
+      "            entity-name=\"CurrentContract\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <create>CREATE TRIGGER my_trigger ...</create>\n"
+      "        <drop>DROP TRIGGER my_trigger</drop>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:2796
+msgid "Notice how associations are now specified using <literal>entity-name</literal> instead of <literal>class</literal>."
+msgstr "2つ目の方法は、CREATEとDROPコマンドの組み立て方を知っているカスタムクラスを提供することです。 このカスタムクラスは <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> インタフェースを 実装しなければなりません。"
+
+#: index.docbook:2804
+msgid "SQL quoted identifiers"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <definition class=\"MyTriggerDefinition\"/>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:2805
+msgid "You may force Hibernate to quote an identifier in the generated SQL by enclosing the table or column name in backticks in the mapping document. Hibernate will use the correct quotation style for the SQL <literal>Dialect</literal> (usually double quotes, but brackets for SQL Server and backticks for MySQL)."
+msgstr "さらに、あるデータベース方言が使用される時にだけ適用するといったように、 データベース・オブジェクトが使われるケースを限定できます。"
+
+#: index.docbook:2812
+msgid ""
+      "<![CDATA[<class name=\"LineItem\" table=\"`Line Item`\">\n"
+      "    <id name=\"id\" column=\"`Item Id`\"/><generator class=\"assigned\"/></id>\n"
+      "    <property name=\"itemNumber\" column=\"`Item #`\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <definition class=\"MyTriggerDefinition\"/>\n"
+      "        <dialect-scope name=\"org.hibernate.dialect.Oracle9Dialect\"/>\n"
+      "        <dialect-scope name=\"org.hibernate.dialect.OracleDialect\"/>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+
+#: index.docbook:2818
+msgid "Metadata alternatives"
+msgstr ""
+
+#: index.docbook:2820
+msgid "XML isn't for everyone, and so there are some alternative ways to define O/R mapping metadata in Hibernate."
+msgstr ""
+
+#: index.docbook:2825
+msgid "Using XDoclet markup"
+msgstr ""
+
+#: index.docbook:2827
+msgid "Many Hibernate users prefer to embed mapping information directly in sourcecode using XDoclet <literal>@hibernate.tags</literal>. We will not cover this approach in this document, since strictly it is considered part of XDoclet. However, we include the following example of the <literal>Cat</literal> class with XDoclet mappings."
+msgstr ""
+
+#: index.docbook:2834
+msgid ""
+      "<![CDATA[package eg;\n"
+      "import java.util.Set;\n"
+      "import java.util.Date;\n"
+      "\n"
+      "/**\n"
+      " * @hibernate.class\n"
+      " *  table=\"CATS\"\n"
+      " */\n"
+      "public class Cat {\n"
+      "    private Long id; // identifier\n"
+      "    private Date birthdate;\n"
+      "    private Cat mother;\n"
+      "    private Set kittens\n"
+      "    private Color color;\n"
+      "    private char sex;\n"
+      "    private float weight;\n"
+      "\n"
+      "    /*\n"
+      "     * @hibernate.id\n"
+      "     *  generator-class=\"native\"\n"
+      "     *  column=\"CAT_ID\"\n"
+      "     */\n"
+      "    public Long getId() {\n"
+      "        return id;\n"
+      "    }\n"
+      "    private void setId(Long id) {\n"
+      "        this.id=id;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.many-to-one\n"
+      "     *  column=\"PARENT_ID\"\n"
+      "     */\n"
+      "    public Cat getMother() {\n"
+      "        return mother;\n"
+      "    }\n"
+      "    void setMother(Cat mother) {\n"
+      "        this.mother = mother;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"BIRTH_DATE\"\n"
+      "     */\n"
+      "    public Date getBirthdate() {\n"
+      "        return birthdate;\n"
+      "    }\n"
+      "    void setBirthdate(Date date) {\n"
+      "        birthdate = date;\n"
+      "    }\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"WEIGHT\"\n"
+      "     */\n"
+      "    public float getWeight() {\n"
+      "        return weight;\n"
+      "    }\n"
+      "    void setWeight(float weight) {\n"
+      "        this.weight = weight;\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"COLOR\"\n"
+      "     *  not-null=\"true\"\n"
+      "     */\n"
+      "    public Color getColor() {\n"
+      "        return color;\n"
+      "    }\n"
+      "    void setColor(Color color) {\n"
+      "        this.color = color;\n"
+      "    }\n"
+      "    /**\n"
+      "     * @hibernate.set\n"
+      "     *  inverse=\"true\"\n"
+      "     *  order-by=\"BIRTH_DATE\"\n"
+      "     * @hibernate.collection-key\n"
+      "     *  column=\"PARENT_ID\"\n"
+      "     * @hibernate.collection-one-to-many\n"
+      "     */\n"
+      "    public Set getKittens() {\n"
+      "        return kittens;\n"
+      "    }\n"
+      "    void setKittens(Set kittens) {\n"
+      "        this.kittens = kittens;\n"
+      "    }\n"
+      "    // addKitten not needed by Hibernate\n"
+      "    public void addKitten(Cat kitten) {\n"
+      "        kittens.add(kitten);\n"
+      "    }\n"
+      "\n"
+      "    /**\n"
+      "     * @hibernate.property\n"
+      "     *  column=\"SEX\"\n"
+      "     *  not-null=\"true\"\n"
+      "     *  update=\"false\"\n"
+      "     */\n"
+      "    public char getSex() {\n"
+      "        return sex;\n"
+      "    }\n"
+      "    void setSex(char sex) {\n"
+      "        this.sex=sex;\n"
+      "    }\n"
+      "}]]>"
+msgstr ""
+
+#: index.docbook:2836
+msgid "See the Hibernate web site for more examples of XDoclet and Hibernate."
+msgstr ""
+
+#: index.docbook:2843
+msgid "Using JDK 5.0 Annotations"
+msgstr ""
+
+#: index.docbook:2845
+msgid "JDK 5.0 introduced XDoclet-style annotations at the language level, type-safe and checked at compile time. This mechnism is more powerful than XDoclet annotations and better supported by tools and IDEs. IntelliJ IDEA, for example, supports auto-completion and syntax highlighting of JDK 5.0 annotations. The new revision of the EJB specification (JSR-220) uses JDK 5.0 annotations as the primary metadata mechanism for entity beans. Hibernate3 implements the <literal>EntityManager</literal> of JSR-220 (the persistence API), support for mapping metadata is available via the <emphasis>Hibernate Annotations</emphasis> package, as a separate download. Both EJB3 (JSR-220) and Hibernate3 metadata is supported."
+msgstr ""
+
+#: index.docbook:2856
+msgid "This is an example of a POJO class annotated as an EJB entity bean:"
+msgstr ""
+
+#: index.docbook:2860
+msgid ""
+      "<![CDATA[@Entity(access = AccessType.FIELD)\n"
+      "public class Customer implements Serializable {\n"
+      "\n"
+      "    @Id;\n"
+      "    Long id;\n"
+      "\n"
+      "    String firstName;\n"
+      "    String lastName;\n"
+      "    Date birthday;\n"
+      "\n"
+      "    @Transient\n"
+      "    Integer age;\n"
+      "\n"
+      "    @Embedded\n"
+      "    private Address homeAddress;\n"
+      "\n"
+      "    @OneToMany(cascade=CascadeType.ALL)\n"
+      "    @JoinColumn(name=\"CUSTOMER_ID\")\n"
+      "    Set<Order> orders;\n"
+      "\n"
+      "    // Getter/setter and business methods\n"
+      "}]]>"
+msgstr ""
+
+#: index.docbook:2862
+msgid "Note that support for JDK 5.0 Annotations (and JSR-220) is still work in progress and not completed. Please refer to the Hibernate Annotations module for more details."
+msgstr ""
+
+#: index.docbook:2871
+msgid "Generated Properties"
+msgstr ""
+
+#: index.docbook:2872
+msgid "Generated properties are properties which have their values generated by the database. Typically, Hibernate applications needed to <literal>refresh</literal> objects which contain any properties for which the database was generating values. Marking properties as generated, however, lets the application delegate this responsibility to Hibernate. Essentially, whenever Hibernate issues an SQL INSERT or UPDATE for an entity which has defined generated properties, it immediately issues a select afterwards to retrieve the generated values."
+msgstr ""
+
+#: index.docbook:2881
+msgid "Properties marked as generated must additionally be non-insertable and non-updateable. Only <xref linkend=\"mapping-declaration-version\"/>versions, <xref linkend=\"mapping-declaration-timestamp\"/>timestamps, and <xref linkend=\"mapping-declaration-property\"/>simple properties can be marked as generated."
+msgstr ""
+
+#: index.docbook:2888
+msgid "<literal>never</literal> (the default) - means that the given property value is not generated within the database."
+msgstr ""
+
+#: index.docbook:2892
+msgid "<literal>insert</literal> - states that the given property value is generated on insert, but is not regenerated on subsequent updates. Things like created-date would fall into this category. Note that even thought <xref linkend=\"mapping-declaration-version\"/>version and <xref linkend=\"mapping-declaration-timestamp\"/>timestamp properties can be marked as generated, this option is not available there..."
+msgstr ""
+
+#: index.docbook:2900
+msgid "<literal>always</literal> - states that the property value is generated both on insert and on update."
+msgstr ""
+
+#: index.docbook:2907
+msgid "Auxiliary Database Objects"
+msgstr ""
+
+#: index.docbook:2908
+msgid "Allows CREATE and DROP of arbitrary database objects, in conjunction with Hibernate's schema evolution tools, to provide the ability to fully define a user schema within the Hibernate mapping files. Although designed specifically for creating and dropping things like triggers or stored procedures, really any SQL command that can be run via a <literal>java.sql.Statement.execute()</literal> method is valid here (ALTERs, INSERTS, etc). There are essentially two modes for defining auxiliary database objects..."
+msgstr ""
+
+#: index.docbook:2917
+msgid "The first mode is to explicitly list the CREATE and DROP commands out in the mapping file:"
+msgstr ""
+
+#: index.docbook:2921
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <create>CREATE TRIGGER my_trigger ...</create>\n"
+      "        <drop>DROP TRIGGER my_trigger</drop>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+
+#: index.docbook:2922
+msgid "The second mode is to supply a custom class which knows how to construct the CREATE and DROP commands. This custom class must implement the <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> interface."
+msgstr ""
+
+#: index.docbook:2927
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <definition class=\"MyTriggerDefinition\"/>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+
+#: index.docbook:2928
+msgid "Additionally, these database objects can be optionally scoped such that they only apply when certain dialects are used."
+msgstr ""
+
+#: index.docbook:2932
+msgid ""
+      "<![CDATA[<hibernate-mapping>\n"
+      "    ...\n"
+      "    <database-object>\n"
+      "        <definition class=\"MyTriggerDefinition\"/>\n"
+      "        <dialect-scope name=\"org.hibernate.dialect.Oracle9Dialect\"/>\n"
+      "        <dialect-scope name=\"org.hibernate.dialect.OracleDialect\"/>\n"
+      "    </database-object>\n"
+      "</hibernate-mapping>]]>"
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

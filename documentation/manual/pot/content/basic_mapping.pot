@@ -1,0 +1,1532 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:29-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: basic_mapping.xml:5(title) 
+msgid "Basic O/R Mapping"
+msgstr ""
+
+#: basic_mapping.xml:8(title) 
+msgid "Mapping declaration"
+msgstr ""
+
+#: basic_mapping.xml:10(para) 
+msgid "Object/relational mappings are usually defined in an XML document. The mapping document is designed to be readable and hand-editable. The mapping language is Java-centric, meaning that mappings are constructed around persistent class declarations, not table declarations."
+msgstr ""
+
+#: basic_mapping.xml:17(para) 
+msgid "Note that, even though many Hibernate users choose to write the XML by hand, a number of tools exist to generate the mapping document, including XDoclet, Middlegen and AndroMDA."
+msgstr ""
+
+#: basic_mapping.xml:23(para) 
+msgid "Lets kick off with an example mapping:"
+msgstr ""
+
+#: basic_mapping.xml:92(para) 
+msgid "We will now discuss the content of the mapping document. We will only describe the document elements and attributes that are used by Hibernate at runtime. The mapping document also contains some extra optional attributes and elements that affect the database schemas exported by the schema export tool. (For example the <literal> not-null</literal> attribute.)"
+msgstr ""
+
+#: basic_mapping.xml:103(title) 
+msgid "Doctype"
+msgstr ""
+
+#: basic_mapping.xml:105(para) 
+msgid "All XML mappings should declare the doctype shown. The actual DTD may be found at the URL above, in the directory <literal>hibernate-x.x.x/src/org/hibernate </literal> or in <literal>hibernate3.jar</literal>. Hibernate will always look for the DTD in its classpath first. If you experience lookups of the DTD using an Internet connection, check your DTD declaration against the contents of your claspath."
+msgstr ""
+
+#: basic_mapping.xml:115(title) 
+msgid "EntityResolver"
+msgstr ""
+
+#: basic_mapping.xml:116(para) 
+msgid "As mentioned previously, Hibernate will first attempt to resolve DTDs in its classpath. The manner in which it does this is by registering a custom <literal>org.xml.sax.EntityResolver</literal> implementation with the SAXReader it uses to read in the xml files. This custom <literal>EntityResolver</literal> recognizes two different systemId namespaces."
+msgstr ""
+
+#: basic_mapping.xml:124(para) 
+msgid "a <literal>hibernate namespace</literal> is recognized whenever the resolver encounteres a systemId starting with <literal>http://hibernate.sourceforge.net/</literal>; the resolver attempts to resolve these entities via the classlaoder which loaded the Hibernate classes."
+msgstr ""
+
+#: basic_mapping.xml:133(para) 
+msgid "a <literal>user namespace</literal> is recognized whenever the resolver encounteres a systemId using a <literal>classpath://</literal> URL protocol; the resolver will attempt to resolve these entities via (1) the current thread context classloader and (2) the classloader which loaded the Hibernate classes."
+msgstr ""
+
+#: basic_mapping.xml:142(para) 
+msgid "An example of utilizing user namespacing:"
+msgstr ""
+
+#: basic_mapping.xml:160(para) 
+msgid "Where <literal>types.xml</literal> is a resource in the <literal>your.domain</literal> package and contains a custom <xref linkend=\"mapping-types-custom\">typedef</xref>."
+msgstr ""
+
+#: basic_mapping.xml:168(title) 
+msgid "hibernate-mapping"
+msgstr ""
+
+#: basic_mapping.xml:170(para) 
+msgid "This element has several optional attributes. The <literal>schema</literal> and <literal>catalog</literal> attributes specify that tables referred to in this mapping belong to the named schema and/or catalog. If specified, tablenames will be qualified by the given schema and catalog names. If missing, tablenames will be unqualified. The <literal>default-cascade</literal> attribute specifies what cascade style should be assumed for properties and collections which do not specify a <literal>cascade</literal> attribute. The <literal>auto-import</literal> attribute lets us use unqualified class names in the query language, by default."
+msgstr ""
+
+#: basic_mapping.xml:202(para) 
+msgid "<literal>schema</literal> (optional): The name of a database schema."
+msgstr ""
+
+#: basic_mapping.xml:207(para) 
+msgid "<literal>catalog</literal> (optional): The name of a database catalog."
+msgstr ""
+
+#: basic_mapping.xml:212(para) 
+msgid "<literal>default-cascade</literal> (optional - defaults to <literal>none</literal>): A default cascade style."
+msgstr ""
+
+#: basic_mapping.xml:218(para) 
+msgid "<literal>default-access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing all properties. Can be a custom implementation of <literal>PropertyAccessor</literal>."
+msgstr ""
+
+#: basic_mapping.xml:225(para) 
+msgid "<literal>default-lazy</literal> (optional - defaults to <literal>true</literal>): The default value for unspecifed <literal>lazy</literal> attributes of class and collection mappings."
+msgstr ""
+
+#: basic_mapping.xml:232(para) 
+msgid "<literal>auto-import</literal> (optional - defaults to <literal>true</literal>): Specifies whether we can use unqualified class names (of classes in this mapping) in the query language."
+msgstr ""
+
+#: basic_mapping.xml:239(para) 
+msgid "<literal>package</literal> (optional): Specifies a package prefix to assume for unqualified class names in the mapping document."
+msgstr ""
+
+#: basic_mapping.xml:247(para) 
+msgid "If you have two persistent classes with the same (unqualified) name, you should set <literal>auto-import=\"false\"</literal>. Hibernate will throw an exception if you attempt to assign two classes to the same \"imported\" name."
+msgstr ""
+
+#: basic_mapping.xml:253(para) 
+msgid "Note that the <literal>hibernate-mapping</literal> element allows you to nest several persistent <literal>&lt;class&gt;</literal> mappings, as shown above. It is however good practice (and expected by some tools) to map only a single persistent class (or a single class hierarchy) in one mapping file and name it after the persistent superclass, e.g. <literal>Cat.hbm.xml</literal>, <literal>Dog.hbm.xml</literal>, or if using inheritance, <literal>Animal.hbm.xml</literal>."
+msgstr ""
+
+#: basic_mapping.xml:266(title) basic_mapping.xml:3077(literal) 
+msgid "class"
+msgstr ""
+
+#: basic_mapping.xml:268(para) 
+msgid "You may declare a persistent class using the <literal>class</literal> element:"
+msgstr ""
+
+#: basic_mapping.xml:322(para) 
+msgid "<literal>name</literal> (optional): The fully qualified Java class name of the persistent class (or interface). If this attribute is missing, it is assumed that the mapping is for a non-POJO entity."
+msgstr ""
+
+#: basic_mapping.xml:329(para) 
+msgid "<literal>table</literal> (optional - defaults to the unqualified class name): The name of its database table."
+msgstr ""
+
+#: basic_mapping.xml:335(para) 
+msgid "<literal>discriminator-value</literal> (optional - defaults to the class name): A value that distiguishes individual subclasses, used for polymorphic behaviour. Acceptable values include <literal>null</literal> and <literal>not null</literal>."
+msgstr ""
+
+#: basic_mapping.xml:342(para) 
+msgid "<literal>mutable</literal> (optional, defaults to <literal>true</literal>): Specifies that instances of the class are (not) mutable."
+msgstr ""
+
+#: basic_mapping.xml:348(para) basic_mapping.xml:2605(para) 
+msgid "<literal>schema</literal> (optional): Override the schema name specified by the root <literal>&lt;hibernate-mapping&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:354(para) basic_mapping.xml:2611(para) 
+msgid "<literal>catalog</literal> (optional): Override the catalog name specified by the root <literal>&lt;hibernate-mapping&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:360(para) 
+msgid "<literal>proxy</literal> (optional): Specifies an interface to use for lazy initializing proxies. You may specify the name of the class itself."
+msgstr ""
+
+#: basic_mapping.xml:366(para) 
+msgid "<literal>dynamic-update</literal> (optional, defaults to <literal>false</literal>): Specifies that <literal>UPDATE</literal> SQL should be generated at runtime and contain only those columns whose values have changed."
+msgstr ""
+
+#: basic_mapping.xml:373(para) 
+msgid "<literal>dynamic-insert</literal> (optional, defaults to <literal>false</literal>): Specifies that <literal>INSERT</literal> SQL should be generated at runtime and contain only the columns whose values are not null."
+msgstr ""
+
+#: basic_mapping.xml:380(para) 
+msgid "<literal>select-before-update</literal> (optional, defaults to <literal>false</literal>): Specifies that Hibernate should <emphasis>never</emphasis> perform an SQL <literal>UPDATE</literal> unless it is certain that an object is actually modified. In certain cases (actually, only when a transient object has been associated with a new session using <literal>update()</literal>), this means that Hibernate will perform an extra SQL <literal>SELECT</literal> to determine if an <literal>UPDATE</literal> is actually required."
+msgstr ""
+
+#: basic_mapping.xml:390(para) 
+msgid "<literal>polymorphism</literal> (optional, defaults to <literal>implicit</literal>): Determines whether implicit or explicit query polymorphism is used."
+msgstr ""
+
+#: basic_mapping.xml:396(para) 
+msgid "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> condition to be used when retrieving objects of this class"
+msgstr ""
+
+#: basic_mapping.xml:402(para) 
+msgid "<literal>persister</literal> (optional): Specifies a custom <literal>ClassPersister</literal>."
+msgstr ""
+
+#: basic_mapping.xml:407(para) 
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a \"batch size\" for fetching instances of this class by identifier."
+msgstr ""
+
+#: basic_mapping.xml:413(para) 
+msgid "<literal>optimistic-lock</literal> (optional, defaults to <literal>version</literal>): Determines the optimistic locking strategy."
+msgstr ""
+
+#: basic_mapping.xml:419(para) 
+msgid "<literal>lazy</literal> (optional): Lazy fetching may be completely disabled by setting <literal>lazy=\"false\"</literal>."
+msgstr ""
+
+#: basic_mapping.xml:425(para) 
+msgid "<literal>entity-name</literal> (optional, defaults to the class name): Hibernate3 allows a class to be mapped multiple times (to different tables, potentially), and allows entity mappings that are represented by Maps or XML at the Java level. In these cases, you should provide an explicit arbitrary name for the entity. See <xref linkend=\"persistent-classes-dynamicmodels\"/> and <xref linkend=\"xml\"/> for more information."
+msgstr ""
+
+#: basic_mapping.xml:435(para) 
+msgid "<literal>check</literal> (optional): A SQL expression used to generate a multi-row <emphasis>check</emphasis> constraint for automatic schema generation."
+msgstr ""
+
+#: basic_mapping.xml:441(para) 
+msgid "<literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on databases which support. E.g. on Oracle, Hibernate can use the <literal>rowid</literal> extra column for fast updates if you set this option to <literal>rowid</literal>. A ROWID is an implementation detail and represents the physical location of a stored tuple."
+msgstr ""
+
+#: basic_mapping.xml:449(para) 
+msgid "<literal>subselect</literal> (optional): Maps an immutable and read-only entity to a database subselect. Useful if you want to have a view instead of a base table, but don't. See below for more information."
+msgstr ""
+
+#: basic_mapping.xml:456(para) 
+msgid "<literal>abstract</literal> (optional): Used to mark abstract superclasses in <literal>&lt;union-subclass&gt;</literal> hierarchies."
+msgstr ""
+
+#: basic_mapping.xml:464(para) 
+msgid "It is perfectly acceptable for the named persistent class to be an interface. You would then declare implementing classes of that interface using the <literal>&lt;subclass&gt;</literal> element. You may persist any <emphasis>static</emphasis> inner class. You should specify the class name using the standard form ie. <literal>eg.Foo$Bar</literal>."
+msgstr ""
+
+#: basic_mapping.xml:471(para) 
+msgid "Immutable classes, <literal>mutable=\"false\"</literal>, may not be updated or deleted by the application. This allows Hibernate to make some minor performance optimizations."
+msgstr ""
+
+#: basic_mapping.xml:476(para) 
+msgid "The optional <literal>proxy</literal> attribute enables lazy initialization of persistent instances of the class. Hibernate will initially return CGLIB proxies which implement the named interface. The actual persistent object will be loaded when a method of the proxy is invoked. See \"Initializing collections and proxies\" below."
+msgstr ""
+
+#: basic_mapping.xml:483(para) 
+msgid "<emphasis>Implicit</emphasis> polymorphism means that instances of the class will be returned by a query that names any superclass or implemented interface or the class and that instances of any subclass of the class will be returned by a query that names the class itself. <emphasis>Explicit</emphasis> polymorphism means that class instances will be returned only by queries that explicitly name that class and that queries that name the class will return only instances of subclasses mapped inside this <literal>&lt;class&gt;</literal> declaration as a <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal>. For most purposes the default, <literal>polymorphism=\"implicit\"</literal>, is appropriate. Explicit polymorphism is useful when two different classes are mapped to the same table (this allows a \"lightweight\" class that contains a subset of the table columns)."
+msgstr ""
+
+#: basic_mapping.xml:495(para) 
+msgid "The <literal>persister</literal> attribute lets you customize the persistence strategy used for the class. You may, for example, specify your own subclass of <literal>org.hibernate.persister.EntityPersister</literal> or you might even provide a completely new implementation of the interface <literal>org.hibernate.persister.ClassPersister</literal> that implements persistence via, for example, stored procedure calls, serialization to flat files or LDAP. See <literal>org.hibernate.test.CustomPersister</literal> for a simple example (of \"persistence\" to a <literal>Hashtable</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:506(para) 
+msgid "Note that the <literal>dynamic-update</literal> and <literal>dynamic-insert</literal> settings are not inherited by subclasses and so may also be specified on the <literal>&lt;subclass&gt;</literal> or <literal>&lt;joined-subclass&gt;</literal> elements. These settings may increase performance in some cases, but might actually decrease performance in others. Use judiciously."
+msgstr ""
+
+#: basic_mapping.xml:514(para) 
+msgid "Use of <literal>select-before-update</literal> will usually decrease performance. It is very useful to prevent a database update trigger being called unnecessarily if you reattach a graph of detached instances to a <literal>Session</literal>."
+msgstr ""
+
+#: basic_mapping.xml:520(para) 
+msgid "If you enable <literal>dynamic-update</literal>, you will have a choice of optimistic locking strategies:"
+msgstr ""
+
+#: basic_mapping.xml:526(para) 
+msgid "<literal>version</literal> check the version/timestamp columns"
+msgstr ""
+
+#: basic_mapping.xml:531(para) 
+msgid "<literal>all</literal> check all columns"
+msgstr ""
+
+#: basic_mapping.xml:536(para) 
+msgid "<literal>dirty</literal> check the changed columns, allowing some concurrent updates"
+msgstr ""
+
+#: basic_mapping.xml:541(para) 
+msgid "<literal>none</literal> do not use optimistic locking"
+msgstr ""
+
+#: basic_mapping.xml:546(para) 
+msgid "We <emphasis>very</emphasis> strongly recommend that you use version/timestamp columns for optimistic locking with Hibernate. This is the optimal strategy with respect to performance and is the only strategy that correctly handles modifications made to detached instances (ie. when <literal>Session.merge()</literal> is used)."
+msgstr ""
+
+#: basic_mapping.xml:553(para) 
+msgid "There is no difference between a view and a base table for a Hibernate mapping, as expected this is transparent at the database level (note that some DBMS don't support views properly, especially with updates). Sometimes you want to use a view, but can't create one in the database (ie. with a legacy schema). In this case, you can map an immutable and read-only entity to a given SQL subselect expression:"
+msgstr ""
+
+#: basic_mapping.xml:574(para) 
+msgid "Declare the tables to synchronize this entity with, ensuring that auto-flush happens correctly, and that queries against the derived entity do not return stale data. The <literal>&lt;subselect&gt;</literal> is available as both as an attribute and a nested mapping element."
+msgstr ""
+
+#: basic_mapping.xml:584(title) 
+msgid "id"
+msgstr ""
+
+#: basic_mapping.xml:586(para) 
+msgid "Mapped classes <emphasis>must</emphasis> declare the primary key column of the database table. Most classes will also have a JavaBeans-style property holding the unique identifier of an instance. The <literal>&lt;id&gt;</literal> element defines the mapping from that property to the primary key column."
+msgstr ""
+
+#: basic_mapping.xml:613(para) 
+msgid "<literal>name</literal> (optional): The name of the identifier property."
+msgstr ""
+
+#: basic_mapping.xml:618(para) 
+msgid "<literal>type</literal> (optional): A name that indicates the Hibernate type."
+msgstr ""
+
+#: basic_mapping.xml:623(para) 
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of the primary key column."
+msgstr ""
+
+#: basic_mapping.xml:629(para) 
+msgid "<literal>unsaved-value</literal> (optional - defaults to a \"sensible\" value): An identifier property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session."
+msgstr ""
+
+#: basic_mapping.xml:637(para) basic_mapping.xml:1187(para) basic_mapping.xml:1343(para) basic_mapping.xml:1433(para) basic_mapping.xml:1559(para) basic_mapping.xml:1775(para) basic_mapping.xml:1963(para) basic_mapping.xml:2162(para) basic_mapping.xml:2914(para) 
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing the property value."
+msgstr ""
+
+#: basic_mapping.xml:645(para) 
+msgid "If the <literal>name</literal> attribute is missing, it is assumed that the class has no identifier property."
+msgstr ""
+
+#: basic_mapping.xml:650(para) 
+msgid "The <literal>unsaved-value</literal> attribute is almost never needed in Hibernate3."
+msgstr ""
+
+#: basic_mapping.xml:654(para) 
+msgid "There is an alternative <literal>&lt;composite-id&gt;</literal> declaration to allow access to legacy data with composite keys. We strongly discourage its use for anything else."
+msgstr ""
+
+#: basic_mapping.xml:660(title) 
+msgid "Generator"
+msgstr ""
+
+#: basic_mapping.xml:662(para) 
+msgid "The optional <literal>&lt;generator&gt;</literal> child element names a Java class used to generate unique identifiers for instances of the persistent class. If any parameters are required to configure or initialize the generator instance, they are passed using the <literal>&lt;param&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:684(literal) 
+msgid "increment"
+msgstr ""
+
+#: basic_mapping.xml:686(para) 
+msgid "generates identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal> that are unique only when no other process is inserting data into the same table. <emphasis>Do not use in a cluster.</emphasis>"
+msgstr ""
+
+#: basic_mapping.xml:695(literal) 
+msgid "identity"
+msgstr ""
+
+#: basic_mapping.xml:697(para) 
+msgid "supports identity columns in DB2, MySQL, MS SQL Server, Sybase and HypersonicSQL. The returned identifier is of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>."
+msgstr ""
+
+#: basic_mapping.xml:705(literal) 
+msgid "sequence"
+msgstr ""
+
+#: basic_mapping.xml:707(para) 
+msgid "uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator in Interbase. The returned identifier is of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>"
+msgstr ""
+
+#: basic_mapping.xml:715(literal) 
+msgid "hilo"
+msgstr ""
+
+#: basic_mapping.xml:717(para) 
+msgid "uses a hi/lo algorithm to efficiently generate identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>, given a table and column (by default <literal>hibernate_unique_key</literal> and <literal>next_hi</literal> respectively) as a source of hi values. The hi/lo algorithm generates identifiers that are unique only for a particular database."
+msgstr ""
+
+#: basic_mapping.xml:727(literal) 
+msgid "seqhilo"
+msgstr ""
+
+#: basic_mapping.xml:729(para) 
+msgid "uses a hi/lo algorithm to efficiently generate identifiers of type <literal>long</literal>, <literal>short</literal> or <literal>int</literal>, given a named database sequence."
+msgstr ""
+
+#: basic_mapping.xml:737(literal) 
+msgid "uuid"
+msgstr ""
+
+#: basic_mapping.xml:739(para) 
+msgid "uses a 128-bit UUID algorithm to generate identifiers of type string, unique within a network (the IP address is used). The UUID is encoded as a string of hexadecimal digits of length 32."
+msgstr ""
+
+#: basic_mapping.xml:747(literal) 
+msgid "guid"
+msgstr ""
+
+#: basic_mapping.xml:749(para) 
+msgid "uses a database-generated GUID string on MS SQL Server and MySQL."
+msgstr ""
+
+#: basic_mapping.xml:755(literal) 
+msgid "native"
+msgstr ""
+
+#: basic_mapping.xml:757(para) 
+msgid "picks <literal>identity</literal>, <literal>sequence</literal> or <literal>hilo</literal> depending upon the capabilities of the underlying database."
+msgstr ""
+
+#: basic_mapping.xml:765(literal) 
+msgid "assigned"
+msgstr ""
+
+#: basic_mapping.xml:767(para) 
+msgid "lets the application to assign an identifier to the object before <literal>save()</literal> is called. This is the default strategy if no <literal>&lt;generator&gt;</literal> element is specified."
+msgstr ""
+
+#: basic_mapping.xml:775(literal) 
+msgid "select"
+msgstr ""
+
+#: basic_mapping.xml:777(para) 
+msgid "retrieves a primary key assigned by a database trigger by selecting the row by some unique key and retrieving the primary key value."
+msgstr ""
+
+#: basic_mapping.xml:784(literal) 
+msgid "foreign"
+msgstr ""
+
+#: basic_mapping.xml:786(para) 
+msgid "uses the identifier of another associated object. Usually used in conjunction with a <literal>&lt;one-to-one&gt;</literal> primary key association."
+msgstr ""
+
+#: basic_mapping.xml:793(literal) 
+msgid "sequence-identity"
+msgstr ""
+
+#: basic_mapping.xml:795(para) 
+msgid "a specialized sequence generation strategy which utilizes a database sequence for the actual value generation, but combines this with JDBC3 getGeneratedKeys to actually return the generated identifier value as part of the insert statement execution. This strategy is only known to be supported on Oracle 10g drivers targetted for JDK 1.4. Note comments on these insert statements are disabled due to a bug in the Oracle drivers."
+msgstr ""
+
+#: basic_mapping.xml:676(para) 
+msgid "All generators implement the interface <literal>org.hibernate.id.IdentifierGenerator</literal>. This is a very simple interface; some applications may choose to provide their own specialized implementations. However, Hibernate provides a range of built-in implementations. There are shortcut names for the built-in generators: <placeholder-1/>"
+msgstr ""
+
+#: basic_mapping.xml:812(title) 
+msgid "Hi/lo algorithm"
+msgstr ""
+
+#: basic_mapping.xml:813(para) 
+msgid "The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate implementations of the hi/lo algorithm, a favorite approach to identifier generation. The first implementation requires a \"special\" database table to hold the next available \"hi\" value. The second uses an Oracle-style sequence (where supported)."
+msgstr ""
+
+#: basic_mapping.xml:835(para) 
+msgid "Unfortunately, you can't use <literal>hilo</literal> when supplying your own <literal>Connection</literal> to Hibernate. When Hibernate is using an application server datasource to obtain connections enlisted with JTA, you must properly configure the <literal>hibernate.transaction.manager_lookup_class</literal>."
+msgstr ""
+
+#: basic_mapping.xml:844(title) 
+msgid "UUID algorithm"
+msgstr ""
+
+#: basic_mapping.xml:845(para) 
+msgid "The UUID contains: IP address, startup time of the JVM (accurate to a quarter second), system time and a counter value (unique within the JVM). It's not possible to obtain a MAC address or memory address from Java code, so this is the best we can do without using JNI."
+msgstr ""
+
+#: basic_mapping.xml:854(title) 
+msgid "Identity columns and sequences"
+msgstr ""
+
+#: basic_mapping.xml:855(para) 
+msgid "For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), you may use <literal>identity</literal> key generation. For databases that support sequences (DB2, Oracle, PostgreSQL, Interbase, McKoi, SAP DB) you may use <literal>sequence</literal> style key generation. Both these strategies require two SQL queries to insert a new object."
+msgstr ""
+
+#: basic_mapping.xml:873(para) 
+msgid "For cross-platform development, the <literal>native</literal> strategy will choose from the <literal>identity</literal>, <literal>sequence</literal> and <literal>hilo</literal> strategies, dependant upon the capabilities of the underlying database."
+msgstr ""
+
+#: basic_mapping.xml:882(title) 
+msgid "Assigned identifiers"
+msgstr ""
+
+#: basic_mapping.xml:883(para) 
+msgid "If you want the application to assign identifiers (as opposed to having Hibernate generate them), you may use the <literal>assigned</literal> generator. This special generator will use the identifier value already assigned to the object's identifier property. This generator is used when the primary key is a natural key instead of a surrogate key. This is the default behavior if you do no specify a <literal>&lt;generator&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:892(para) 
+msgid "Choosing the <literal>assigned</literal> generator makes Hibernate use <literal>unsaved-value=\"undefined\"</literal>, forcing Hibernate to go to the database to determine if an instance is transient or detached, unless there is a version or timestamp property, or you define <literal>Interceptor.isUnsaved()</literal>."
+msgstr ""
+
+#: basic_mapping.xml:902(title) 
+msgid "Primary keys assigned by triggers"
+msgstr ""
+
+#: basic_mapping.xml:903(para) 
+msgid "For legacy schemas only (Hibernate does not generate DDL with triggers)."
+msgstr ""
+
+#: basic_mapping.xml:913(para) 
+msgid "In the above example, there is a unique valued property named <literal>socialSecurityNumber</literal> defined by the class, as a natural key, and a surrogate key named <literal>person_id</literal> whose value is generated by a trigger."
+msgstr ""
+
+#: basic_mapping.xml:925(title) 
+msgid "Enhanced identifier generators"
+msgstr ""
+
+#: basic_mapping.xml:927(para) 
+msgid "Starting with release 3.2.3, there are 2 new generators which represent a re-thinking of 2 different aspects of identifier generation. The first aspect is database portability; the second is optimization (not having to query the database for every request for a new identifier value). These two new generators are intended to take the place of some of the named generators described above (starting in 3.3.x); however, they are included in the current releases and can be referenced by FQN."
+msgstr ""
+
+#: basic_mapping.xml:949(para) 
+msgid "<literal>sequence_name</literal> (optional, defaults to <literal>hibernate_sequence</literal>): The name of the sequence (or table) to be used."
+msgstr ""
+
+#: basic_mapping.xml:955(para) 
+msgid "<literal>initial_value</literal> (optional, defaults to <literal>1</literal>): The initial value to be retrieved from the sequence/table. In sequence creation terms, this is analogous to the clause typical named \"STARTS WITH\"."
+msgstr ""
+
+#: basic_mapping.xml:962(para) 
+msgid "<literal>increment_size</literal> (optional, defaults to <literal>1</literal>): The value by which subsequent calls to the sequence/table should differ. In sequence creation terms, this is analogous to the clause typical named \"INCREMENT BY\"."
+msgstr ""
+
+#: basic_mapping.xml:969(para) 
+msgid "<literal>force_table_use</literal> (optional, defaults to <literal>false</literal>): Should we force the use of a table as the backing structure even though the dialect might support sequence?"
+msgstr ""
+
+#: basic_mapping.xml:976(para) 
+msgid "<literal>value_column</literal> (optional, defaults to <literal>next_val</literal>): Only relevant for table structures! The name of the column on the table which is used to hold the value."
+msgstr ""
+
+#: basic_mapping.xml:983(para) 
+msgid "<literal>optimizer</literal> (optional, defaults to <literal>none</literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
+msgstr ""
+
+#: basic_mapping.xml:935(para) 
+msgid "The first of these new generators is <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal> which is intended firstly as a replacement for the <literal>sequence</literal> generator and secondly as a better portability generator than <literal>native</literal> (because <literal>native</literal> (generally) chooses between <literal>identity</literal> and <literal>sequence</literal> which have largely different semantics which can cause subtle isssues in applications eyeing portability). <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal> however achieves portability in a different manner. It chooses between using a table or a sequence in the database to store its incrementing values depending on the capabilities of the dialect being used. The difference between this and <literal>native</literal> is that table-based and sequence-based storage have the same exact semantic (in fact sequences are exactly what Hibernate tries to emmulate with its table-based generators). This generator has a number of configuration parameters: <placeholder-1/>"
+msgstr ""
+
+#: basic_mapping.xml:1000(para) 
+msgid "<literal>table_name</literal> (optional, defaults to <literal>hibernate_sequences</literal>): The name of the table to be used."
+msgstr ""
+
+#: basic_mapping.xml:1006(para) 
+msgid "<literal>value_column_name</literal> (optional, defaults to <literal>next_val</literal>): The name of the column on the table which is used to hold the value."
+msgstr ""
+
+#: basic_mapping.xml:1012(para) 
+msgid "<literal>segment_column_name</literal> (optional, defaults to <literal>sequence_name</literal>): The name of the column on the table which is used to hold the \"segement key\". This is the value which distinctly identifies which increment value to use."
+msgstr ""
+
+#: basic_mapping.xml:1019(para) 
+msgid "<literal>segment_value</literal> (optional, defaults to <literal>default</literal>): The \"segment key\" value for the segment from which we want to pull increment values for this generator."
+msgstr ""
+
+#: basic_mapping.xml:1026(para) 
+msgid "<literal>segment_value_length</literal> (optional, defaults to <literal>255</literal>): Used for schema generation; the column size to create this segment key column."
+msgstr ""
+
+#: basic_mapping.xml:1032(para) 
+msgid "<literal>initial_value</literal> (optional, defaults to <literal>1</literal>): The initial value to be retrieved from the table."
+msgstr ""
+
+#: basic_mapping.xml:1038(para) 
+msgid "<literal>increment_size</literal> (optional, defaults to <literal>1</literal>): The value by which subsequent calls to the table should differ."
+msgstr ""
+
+#: basic_mapping.xml:1044(para) 
+msgid "<literal>optimizer</literal> (optional, defaults to <literal/>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
+msgstr ""
+
+#: basic_mapping.xml:990(para) 
+msgid "The second of these new generators is <literal>org.hibernate.id.enhanced.TableGenerator</literal> which is intended firstly as a replacement for the <literal>table</literal> generator (although it actually functions much more like <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal>) and secondly as a re-implementation of <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> utilizing the notion of pluggable optimiziers. Essentially this generator defines a table capable of holding a number of different increment values simultaneously by using multiple distinctly keyed rows. This generator has a number of configuration parameters: <placeholder-1/>"
+msgstr ""
+
+#: basic_mapping.xml:1054(title) 
+msgid "Identifier generator optimization"
+msgstr ""
+
+#: basic_mapping.xml:1063(para) 
+msgid "<literal>none</literal> (generally this is the default if no optimizer was specified): This says to not perform any optimizations, and hit the database each and every request."
+msgstr ""
+
+#: basic_mapping.xml:1069(para) 
+msgid "<literal>hilo</literal>: applies a hi/lo algorithm around the database retrieved values. The values from the database for this optimizer are expected to be sequential. The values retrieved from the database structure for this optimizer indicates the \"group number\"; the <literal>increment_size</literal> is multiplied by that value in memory to define a group \"hi value\"."
+msgstr ""
+
+#: basic_mapping.xml:1078(para) 
+msgid "<literal>pooled</literal>: like was discussed for <literal>hilo</literal>, this optimizers attempts to minimize the number of hits to the database. Here, however, we simply store the starting value for the \"next group\" into the database structure rather than a sequential value in combination with an in-memory grouping algorithm. <literal>increment_size</literal> here refers to the values coming from the database."
+msgstr ""
+
+#: basic_mapping.xml:1055(para) 
+msgid "For identifier generators which store values in the database, it is inefficient for them to hit the database on each and every call to generate a new identifier value. Instead, you'd ideally want to group a bunch of them in memory and only hit the database when you have exhausted your in-memory value group. This is the role of the pluggable optimizers. Currently only the two enhanced generators (<xref linkend=\"mapping-declaration-id-enhanced\"/> support this notion. <placeholder-1/>"
+msgstr ""
+
+#: basic_mapping.xml:1091(title) 
+msgid "composite-id"
+msgstr ""
+
+#: basic_mapping.xml:1105(para) 
+msgid "For a table with a composite key, you may map multiple properties of the class as identifier properties. The <literal>&lt;composite-id&gt;</literal> element accepts <literal>&lt;key-property&gt;</literal> property mappings and <literal>&lt;key-many-to-one&gt;</literal> mappings as child elements."
+msgstr ""
+
+#: basic_mapping.xml:1117(para) 
+msgid "Your persistent class <emphasis>must</emphasis> override <literal>equals()</literal> and <literal>hashCode()</literal> to implement composite identifier equality. It must also implements <literal>Serializable</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1123(para) 
+msgid "Unfortunately, this approach to composite identifiers means that a persistent object is its own identifier. There is no convenient \"handle\" other than the object itself. You must instantiate an instance of the persistent class itself and populate its identifier properties before you can <literal>load()</literal> the persistent state associated with a composite key. We call this approach an <emphasis>embedded</emphasis> composite identifier, and discourage it for serious applications."
+msgstr ""
+
+#: basic_mapping.xml:1132(para) 
+msgid "A second approach is what we call a <emphasis>mapped</emphasis> composite identifier, where the identifier properties named inside the <literal>&lt;composite-id&gt;</literal> element are duplicated on both the persistent class and a separate identifier class."
+msgstr ""
+
+#: basic_mapping.xml:1143(para) 
+msgid "In this example, both the composite identifier class, <literal>MedicareId</literal>, and the entity class itself have properties named <literal>medicareNumber</literal> and <literal>dependent</literal>. The identifier class must override <literal>equals()</literal> and <literal>hashCode()</literal> and implement. <literal>Serializable</literal>. The disadvantage of this approach is quite obvious&mdash;code duplication."
+msgstr ""
+
+#: basic_mapping.xml:1152(para) 
+msgid "The following attributes are used to specify a mapped composite identifier:"
+msgstr ""
+
+#: basic_mapping.xml:1158(para) 
+msgid "<literal>mapped</literal> (optional, defaults to <literal>false</literal>): indicates that a mapped composite identifier is used, and that the contained property mappings refer to both the entity class and the composite identifier class."
+msgstr ""
+
+#: basic_mapping.xml:1166(para) 
+msgid "<literal>class</literal> (optional, but required for a mapped composite identifier): The class used as a composite identifier."
+msgstr ""
+
+#: basic_mapping.xml:1173(para) 
+msgid "We will describe a third, even more convenient approach where the composite identifier is implemented as a component class in <xref linkend=\"components-compositeid\"/>. The attributes described below apply only to this alternative approach:"
+msgstr ""
+
+#: basic_mapping.xml:1181(para) 
+msgid "<literal>name</literal> (optional, required for this approach): A property of component type that holds the composite identifier (see chapter 9)."
+msgstr ""
+
+#: basic_mapping.xml:1193(para) 
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The component class used as a composite identifier (see next section)."
+msgstr ""
+
+#: basic_mapping.xml:1200(para) 
+msgid "This third approach, an <emphasis>identifier component</emphasis> is the one we recommend for almost all applications."
+msgstr ""
+
+#: basic_mapping.xml:1208(title) 
+msgid "discriminator"
+msgstr ""
+
+#: basic_mapping.xml:1210(para) 
+msgid "The <literal>&lt;discriminator&gt;</literal> element is required for polymorphic persistence using the table-per-class-hierarchy mapping strategy and declares a discriminator column of the table. The discriminator column contains marker values that tell the persistence layer what subclass to instantiate for a particular row. A restricted set of types may be used: <literal>string</literal>, <literal>character</literal>, <literal>integer</literal>, <literal>byte</literal>, <literal>short</literal>, <literal>boolean</literal>, <literal>yes_no</literal>, <literal>true_false</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1237(para) 
+msgid "<literal>column</literal> (optional - defaults to <literal>class</literal>) the name of the discriminator column."
+msgstr ""
+
+#: basic_mapping.xml:1243(para) 
+msgid "<literal>type</literal> (optional - defaults to <literal>string</literal>) a name that indicates the Hibernate type"
+msgstr ""
+
+#: basic_mapping.xml:1249(para) 
+msgid "<literal>force</literal> (optional - defaults to <literal>false</literal>) \"force\" Hibernate to specify allowed discriminator values even when retrieving all instances of the root class."
+msgstr ""
+
+#: basic_mapping.xml:1256(para) 
+msgid "<literal>insert</literal> (optional - defaults to <literal>true</literal>) set this to <literal>false</literal> if your discriminator column is also part of a mapped composite identifier. (Tells Hibernate to not include the column in SQL <literal>INSERT</literal>s.)"
+msgstr ""
+
+#: basic_mapping.xml:1264(para) 
+msgid "<literal>formula</literal> (optional) an arbitrary SQL expression that is executed when a type has to be evaluated. Allows content-based discrimination."
+msgstr ""
+
+#: basic_mapping.xml:1272(para) 
+msgid "Actual values of the discriminator column are specified by the <literal>discriminator-value</literal> attribute of the <literal>&lt;class&gt;</literal> and <literal>&lt;subclass&gt;</literal> elements."
+msgstr ""
+
+#: basic_mapping.xml:1278(para) 
+msgid "The <literal>force</literal> attribute is (only) useful if the table contains rows with \"extra\" discriminator values that are not mapped to a persistent class. This will not usually be the case."
+msgstr ""
+
+#: basic_mapping.xml:1284(para) 
+msgid "Using the <literal>formula</literal> attribute you can declare an arbitrary SQL expression that will be used to evaluate the type of a row:"
+msgstr ""
+
+#: basic_mapping.xml:1296(title) 
+msgid "version (optional)"
+msgstr ""
+
+#: basic_mapping.xml:1298(para) 
+msgid "The <literal>&lt;version&gt;</literal> element is optional and indicates that the table contains versioned data. This is particularly useful if you plan to use <emphasis>long transactions</emphasis> (see below)."
+msgstr ""
+
+#: basic_mapping.xml:1326(para) 
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of the column holding the version number."
+msgstr ""
+
+#: basic_mapping.xml:1332(para) 
+msgid "<literal>name</literal>: The name of a property of the persistent class."
+msgstr ""
+
+#: basic_mapping.xml:1337(para) 
+msgid "<literal>type</literal> (optional - defaults to <literal>integer</literal>): The type of the version number."
+msgstr ""
+
+#: basic_mapping.xml:1349(para) 
+msgid "<literal>unsaved-value</literal> (optional - defaults to <literal>undefined</literal>): A version property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session. (<literal>undefined</literal> specifies that the identifier property value should be used.)"
+msgstr ""
+
+#: basic_mapping.xml:1358(para) 
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this version property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\">generated properties</xref>."
+msgstr ""
+
+#: basic_mapping.xml:1365(para) 
+msgid "<literal>insert</literal> (optional - defaults to <literal>true</literal>): Specifies whether the version column should be included in SQL insert statements. May be set to <literal>false</literal> if and only if the database column is defined with a default value of <literal>0</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1375(para) 
+msgid "Version numbers may be of Hibernate type <literal>long</literal>, <literal>integer</literal>, <literal>short</literal>, <literal>timestamp</literal> or <literal>calendar</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1380(para) 
+msgid "A version or timestamp property should never be null for a detached instance, so Hibernate will detect any instance with a null version or timestamp as transient, no matter what other <literal>unsaved-value</literal> strategies are specified. <emphasis>Declaring a nullable version or timestamp property is an easy way to avoid any problems with transitive reattachment in Hibernate, especially useful for people using assigned identifiers or composite keys!</emphasis>"
+msgstr ""
+
+#: basic_mapping.xml:1391(title) 
+msgid "timestamp (optional)"
+msgstr ""
+
+#: basic_mapping.xml:1393(para) 
+msgid "The optional <literal>&lt;timestamp&gt;</literal> element indicates that the table contains timestamped data. This is intended as an alternative to versioning. Timestamps are by nature a less safe implementation of optimistic locking. However, sometimes the application might use the timestamps in other ways."
+msgstr ""
+
+#: basic_mapping.xml:1420(para) 
+msgid "<literal>column</literal> (optional - defaults to the property name): The name of a column holding the timestamp."
+msgstr ""
+
+#: basic_mapping.xml:1426(para) 
+msgid "<literal>name</literal>: The name of a JavaBeans style property of Java type <literal>Date</literal> or <literal>Timestamp</literal> of the persistent class."
+msgstr ""
+
+#: basic_mapping.xml:1439(para) 
+msgid "<literal>unsaved-value</literal> (optional - defaults to <literal>null</literal>): A version property value that indicates that an instance is newly instantiated (unsaved), distinguishing it from detached instances that were saved or loaded in a previous session. (<literal>undefined</literal> specifies that the identifier property value should be used.)"
+msgstr ""
+
+#: basic_mapping.xml:1448(para) 
+msgid "<literal>source</literal> (optional - defaults to <literal>vm</literal>): From where should Hibernate retrieve the timestamp value? From the database, or from the current JVM? Database-based timestamps incur an overhead because Hibernate must hit the database in order to determine the \"next value\", but will be safer for use in clustered environments. Note also, that not all <literal>Dialect</literal>s are known to support retrieving of the database's current timestamp, while others might be unsafe for usage in locking due to lack of precision (Oracle 8 for example)."
+msgstr ""
+
+#: basic_mapping.xml:1460(para) 
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this timestamp property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\">generated properties</xref>."
+msgstr ""
+
+#: basic_mapping.xml:1469(para) 
+msgid "Note that <literal>&lt;timestamp&gt;</literal> is equivalent to <literal>&lt;version type=\"timestamp\"&gt;</literal>. And <literal>&lt;timestamp source=\"db\"&gt;</literal> is equivalent to <literal>&lt;version type=\"dbtimestamp\"&gt;</literal>"
+msgstr ""
+
+#: basic_mapping.xml:1479(title) 
+msgid "property"
+msgstr ""
+
+#: basic_mapping.xml:1481(para) 
+msgid "The <literal>&lt;property&gt;</literal> element declares a persistent, JavaBean style property of the class."
+msgstr ""
+
+#: basic_mapping.xml:1525(para) 
+msgid "<literal>name</literal>: the name of the property, with an initial lowercase letter."
+msgstr ""
+
+#: basic_mapping.xml:1531(para) 
+msgid "<literal>column</literal> (optional - defaults to the property name): the name of the mapped database table column. This may also be specified by nested <literal>&lt;column&gt;</literal> element(s)."
+msgstr ""
+
+#: basic_mapping.xml:1538(para) 
+msgid "<literal>type</literal> (optional): a name that indicates the Hibernate type."
+msgstr ""
+
+#: basic_mapping.xml:1543(para) 
+msgid "<literal>update, insert</literal> (optional - defaults to <literal>true</literal>) : specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal> allows a pure \"derived\" property whose value is initialized from some other property that maps to the same colum(s) or by a trigger or other application."
+msgstr ""
+
+#: basic_mapping.xml:1552(para) 
+msgid "<literal>formula</literal> (optional): an SQL expression that defines the value for a <emphasis>computed</emphasis> property. Computed properties do not have a column mapping of their own."
+msgstr ""
+
+#: basic_mapping.xml:1565(para) 
+msgid "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies that this property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation)."
+msgstr ""
+
+#: basic_mapping.xml:1572(para) 
+msgid "<literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the columns. Also, allow this to be the target of a <literal>property-ref</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1579(para) 
+msgid "<literal>not-null</literal> (optional): Enable the DDL generation of a nullability constraint for the columns."
+msgstr ""
+
+#: basic_mapping.xml:1585(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when this property is dirty."
+msgstr ""
+
+#: basic_mapping.xml:1593(para) 
+msgid "<literal>generated</literal> (optional - defaults to <literal>never</literal>): Specifies that this property value is actually generated by the database. See the discussion of <xref linkend=\"mapping-generated\">generated properties</xref>."
+msgstr ""
+
+#: basic_mapping.xml:1602(para) 
+msgid "<emphasis>typename</emphasis> could be:"
+msgstr ""
+
+#: basic_mapping.xml:1608(para) 
+msgid "The name of a Hibernate basic type (eg. <literal>integer, string, character, date, timestamp, float, binary, serializable, object, blob</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:1614(para) 
+msgid "The name of a Java class with a default basic type (eg. <literal>int, float, char, java.lang.String, java.util.Date, java.lang.Integer, java.sql.Clob</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:1620(para) 
+msgid "The name of a serializable Java class."
+msgstr ""
+
+#: basic_mapping.xml:1625(para) 
+msgid "The class name of a custom type (eg. <literal>com.illflow.type.MyCustomType</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:1631(para) 
+msgid "If you do not specify a type, Hibernate will use reflection upon the named property to take a guess at the correct Hibernate type. Hibernate will try to interpret the name of the return class of the property getter using rules 2, 3, 4 in that order. However, this is not always enough. In certain cases you will still need the <literal>type</literal> attribute. (For example, to distinguish between <literal>Hibernate.DATE</literal> and <literal>Hibernate.TIMESTAMP</literal>, or to specify a custom type.)"
+msgstr ""
+
+#: basic_mapping.xml:1641(para) 
+msgid "The <literal>access</literal> attribute lets you control how Hibernate will access the property at runtime. By default, Hibernate will call the property get/set pair. If you specify <literal>access=\"field\"</literal>, Hibernate will bypass the get/set pair and access the field directly, using reflection. You may specify your own strategy for property access by naming a class that implements the interface <literal>org.hibernate.property.PropertyAccessor</literal>."
+msgstr ""
+
+#: basic_mapping.xml:1650(para) 
+msgid "An especially powerful feature are derived properties. These properties are by definition read-only, the property value is computed at load time. You declare the computation as a SQL expression, this translates to a <literal>SELECT</literal> clause subquery in the SQL query that loads an instance:"
+msgstr ""
+
+#: basic_mapping.xml:1664(para) 
+msgid "Note that you can reference the entities own table by not declaring an alias on a particular column (<literal>customerId</literal> in the given example). Also note that you can use the nested <literal>&lt;formula&gt;</literal> mapping element if you don't like to use the attribute."
+msgstr ""
+
+#: basic_mapping.xml:1674(title) 
+msgid "many-to-one"
+msgstr ""
+
+#: basic_mapping.xml:1676(para) 
+msgid "An ordinary association to another persistent class is declared using a <literal>many-to-one</literal> element. The relational model is a many-to-one association: a foreign key in one table is referencing the primary key column(s) of the target table."
+msgstr ""
+
+#: basic_mapping.xml:1729(para) basic_mapping.xml:1924(para) basic_mapping.xml:2139(para) 
+msgid "<literal>name</literal>: The name of the property."
+msgstr ""
+
+#: basic_mapping.xml:1734(para) basic_mapping.xml:2703(para) 
+msgid "<literal>column</literal> (optional): The name of the foreign key column. This may also be specified by nested <literal>&lt;column&gt;</literal> element(s)."
+msgstr ""
+
+#: basic_mapping.xml:1741(para) basic_mapping.xml:1929(para) 
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The name of the associated class."
+msgstr ""
+
+#: basic_mapping.xml:1747(para) 
+msgid "<literal>cascade</literal> (optional): Specifies which operations should be cascaded from the parent object to the associated object."
+msgstr ""
+
+#: basic_mapping.xml:1753(para) basic_mapping.xml:1950(para) 
+msgid "<literal>fetch</literal> (optional - defaults to <literal>select</literal>): Chooses between outer-join fetching or sequential select fetching."
+msgstr ""
+
+#: basic_mapping.xml:1759(para) 
+msgid "<literal>update, insert</literal> (optional - defaults to <literal>true</literal>) specifies that the mapped columns should be included in SQL <literal>UPDATE</literal> and/or <literal>INSERT</literal> statements. Setting both to <literal>false</literal> allows a pure \"derived\" association whose value is initialized from some other property that maps to the same colum(s) or by a trigger or other application."
+msgstr ""
+
+#: basic_mapping.xml:1768(para) 
+msgid "<literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used."
+msgstr ""
+
+#: basic_mapping.xml:1781(para) 
+msgid "<literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the foreign-key column. Also, allow this to be the target of a <literal>property-ref</literal>. This makes the association multiplicity effectively one to one."
+msgstr ""
+
+#: basic_mapping.xml:1789(para) 
+msgid "<literal>not-null</literal> (optional): Enable the DDL generation of a nullability constraint for the foreign key columns."
+msgstr ""
+
+#: basic_mapping.xml:1795(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, dertermines if a version increment should occur when this property is dirty."
+msgstr ""
+
+#: basic_mapping.xml:1803(para) 
+msgid "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): By default, single point associations are proxied. <literal>lazy=\"no-proxy\"</literal> specifies that the property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation). <literal>lazy=\"false\"</literal> specifies that the association will always be eagerly fetched."
+msgstr ""
+
+#: basic_mapping.xml:1813(para) 
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr ""
+
+#: basic_mapping.xml:1820(para) basic_mapping.xml:1988(para) 
+msgid "<literal>entity-name</literal> (optional): The entity name of the associated class."
+msgstr ""
+
+#: basic_mapping.xml:1826(para) 
+msgid "<literal>formula</literal> (optional): an SQL expression that defines the value for a <emphasis>computed</emphasis> foreign key."
+msgstr ""
+
+#: basic_mapping.xml:1833(para) 
+msgid "Setting a value of the <literal>cascade</literal> attribute to any meaningful value other than <literal>none</literal> will propagate certain operations to the associated object. The meaningful values are the names of Hibernate's basic operations, <literal>persist, merge, delete, save-update, evict, replicate, lock, refresh</literal>, as well as the special values <literal>delete-orphan</literal> and <literal>all</literal> and comma-separated combinations of operation names, for example, <literal>cascade=\"persist,merge,evict\"</literal> or <literal>cascade=\"all,delete-orphan\"</literal>. See <xref linkend=\"objectstate-transitive\"/> for a full explanation. Note that single valued associations (many-to-one and one-to-one associations) do not support orphan delete."
+msgstr ""
+
+#: basic_mapping.xml:1846(para) 
+msgid "A typical <literal>many-to-one</literal> declaration looks as simple as this:"
+msgstr ""
+
+#: basic_mapping.xml:1852(para) 
+msgid "The <literal>property-ref</literal> attribute should only be used for mapping legacy data where a foreign key refers to a unique key of the associated table other than the primary key. This is an ugly relational model. For example, suppose the <literal>Product</literal> class had a unique serial number, that is not the primary key. (The <literal>unique</literal> attribute controls Hibernate's DDL generation with the SchemaExport tool.)"
+msgstr ""
+
+#: basic_mapping.xml:1863(para) 
+msgid "Then the mapping for <literal>OrderItem</literal> might use:"
+msgstr ""
+
+#: basic_mapping.xml:1869(para) 
+msgid "This is certainly not encouraged, however."
+msgstr ""
+
+#: basic_mapping.xml:1873(para) 
+msgid "If the referenced unique key comprises multiple properties of the associated entity, you should map the referenced properties inside a named <literal>&lt;properties&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:1878(para) 
+msgid "If the referenced unique key is the property of a component, you may specify a property path:"
+msgstr ""
+
+#: basic_mapping.xml:1887(title) 
+msgid "one-to-one"
+msgstr ""
+
+#: basic_mapping.xml:1889(para) 
+msgid "A one-to-one association to another persistent class is declared using a <literal>one-to-one</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:1935(para) 
+msgid "<literal>cascade</literal> (optional) specifies which operations should be cascaded from the parent object to the associated object."
+msgstr ""
+
+#: basic_mapping.xml:1941(para) 
+msgid "<literal>constrained</literal> (optional) specifies that a foreign key constraint on the primary key of the mapped table references the table of the associated class. This option affects the order in which <literal>save()</literal> and <literal>delete()</literal> are cascaded, and determines whether the association may be proxied (it is also used by the schema export tool)."
+msgstr ""
+
+#: basic_mapping.xml:1956(para) 
+msgid "<literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to the primary key of this class. If not specified, the primary key of the associated class is used."
+msgstr ""
+
+#: basic_mapping.xml:1969(para) 
+msgid "<literal>formula</literal> (optional): Almost all one to one associations map to the primary key of the owning entity. In the rare case that this is not the case, you may specify a some other column, columns or expression to join on using an SQL formula. (See <literal>org.hibernate.test.onetooneformula</literal> for an example.)"
+msgstr ""
+
+#: basic_mapping.xml:1977(para) 
+msgid "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): By default, single point associations are proxied. <literal>lazy=\"no-proxy\"</literal> specifies that the property should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation). <literal>lazy=\"false\"</literal> specifies that the association will always be eagerly fetched. <emphasis>Note that if <literal>constrained=\"false\"</literal>, proxying is impossible and Hibernate will eager fetch the association!</emphasis>"
+msgstr ""
+
+#: basic_mapping.xml:1995(para) 
+msgid "There are two varieties of one-to-one association:"
+msgstr ""
+
+#: basic_mapping.xml:1999(para) 
+msgid "primary key associations"
+msgstr ""
+
+#: basic_mapping.xml:2002(para) 
+msgid "unique foreign key associations"
+msgstr ""
+
+#: basic_mapping.xml:2007(para) 
+msgid "Primary key associations don't need an extra table column; if two rows are related by the association then the two table rows share the same primary key value. So if you want two objects to be related by a primary key association, you must make sure that they are assigned the same identifier value!"
+msgstr ""
+
+#: basic_mapping.xml:2014(para) 
+msgid "For a primary key association, add the following mappings to <literal>Employee</literal> and <literal>Person</literal>, respectively."
+msgstr ""
+
+#: basic_mapping.xml:2022(para) 
+msgid "Now we must ensure that the primary keys of related rows in the PERSON and EMPLOYEE tables are equal. We use a special Hibernate identifier generation strategy called <literal>foreign</literal>:"
+msgstr ""
+
+#: basic_mapping.xml:2040(para) 
+msgid "A newly saved instance of <literal>Person</literal> is then assigned the same primary key value as the <literal>Employee</literal> instance refered with the <literal>employee</literal> property of that <literal>Person</literal>."
+msgstr ""
+
+#: basic_mapping.xml:2046(para) 
+msgid "Alternatively, a foreign key with a unique constraint, from <literal>Employee</literal> to <literal>Person</literal>, may be expressed as:"
+msgstr ""
+
+#: basic_mapping.xml:2053(para) 
+msgid "And this association may be made bidirectional by adding the following to the <literal>Person</literal> mapping:"
+msgstr ""
+
+#: basic_mapping.xml:2063(title) 
+msgid "natural-id"
+msgstr ""
+
+#: basic_mapping.xml:2071(para) 
+msgid "Even though we recommend the use of surrogate keys as primary keys, you should still try to identify natural keys for all entities. A natural key is a property or combination of properties that is unique and non-null. If it is also immutable, even better. Map the properties of the natural key inside the <literal>&lt;natural-id&gt;</literal> element. Hibernate will generate the necessary unique key and nullability constraints, and your mapping will be more self-documenting."
+msgstr ""
+
+#: basic_mapping.xml:2080(para) 
+msgid "We strongly recommend that you implement <literal>equals()</literal> and <literal>hashCode()</literal> to compare the natural key properties of the entity."
+msgstr ""
+
+#: basic_mapping.xml:2085(para) 
+msgid "This mapping is not intended for use with entities with natural primary keys."
+msgstr ""
+
+#: basic_mapping.xml:2091(para) 
+msgid "<literal>mutable</literal> (optional, defaults to <literal>false</literal>): By default, natural identifier properties as assumed to be immutable (constant)."
+msgstr ""
+
+#: basic_mapping.xml:2101(title) 
+msgid "component, dynamic-component"
+msgstr ""
+
+#: basic_mapping.xml:2103(para) 
+msgid "The <literal>&lt;component&gt;</literal> element maps properties of a child object to columns of the table of a parent class. Components may, in turn, declare their own properties, components or collections. See \"Components\" below."
+msgstr ""
+
+#: basic_mapping.xml:2144(para) 
+msgid "<literal>class</literal> (optional - defaults to the property type determined by reflection): The name of the component (child) class."
+msgstr ""
+
+#: basic_mapping.xml:2150(para) basic_mapping.xml:2250(para) 
+msgid "<literal>insert</literal>: Do the mapped columns appear in SQL <literal>INSERT</literal>s?"
+msgstr ""
+
+#: basic_mapping.xml:2156(para) basic_mapping.xml:2256(para) 
+msgid "<literal>update</literal>: Do the mapped columns appear in SQL <literal>UPDATE</literal>s?"
+msgstr ""
+
+#: basic_mapping.xml:2168(para) 
+msgid "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): Specifies that this component should be fetched lazily when the instance variable is first accessed (requires build-time bytecode instrumentation)."
+msgstr ""
+
+#: basic_mapping.xml:2175(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this component do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when this property is dirty."
+msgstr ""
+
+#: basic_mapping.xml:2183(para) basic_mapping.xml:2270(para) 
+msgid "<literal>unique</literal> (optional - defaults to <literal>false</literal>): Specifies that a unique constraint exists upon all mapped columns of the component."
+msgstr ""
+
+#: basic_mapping.xml:2192(para) 
+msgid "The child <literal>&lt;property&gt;</literal> tags map properties of the child class to table columns."
+msgstr ""
+
+#: basic_mapping.xml:2197(para) 
+msgid "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;parent&gt;</literal> subelement that maps a property of the component class as a reference back to the containing entity."
+msgstr ""
+
+#: basic_mapping.xml:2203(para) 
+msgid "The <literal>&lt;dynamic-component&gt;</literal> element allows a <literal>Map</literal> to be mapped as a component, where the property names refer to keys of the map, see <xref linkend=\"components-dynamic\"/>."
+msgstr ""
+
+#: basic_mapping.xml:2212(title) 
+msgid "properties"
+msgstr ""
+
+#: basic_mapping.xml:2214(para) 
+msgid "The <literal>&lt;properties&gt;</literal> element allows the definition of a named, logical grouping of properties of a class. The most important use of the construct is that it allows a combination of properties to be the target of a <literal>property-ref</literal>. It is also a convenient way to define a multi-column unique constraint."
+msgstr ""
+
+#: basic_mapping.xml:2244(para) 
+msgid "<literal>name</literal>: The logical name of the grouping - <emphasis>not</emphasis> an actual property name."
+msgstr ""
+
+#: basic_mapping.xml:2262(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to these properties do or do not require acquisition of the optimistic lock. In other words, determines if a version increment should occur when these properties are dirty."
+msgstr ""
+
+#: basic_mapping.xml:2279(para) 
+msgid "For example, if we have the following <literal>&lt;properties&gt;</literal> mapping:"
+msgstr ""
+
+#: basic_mapping.xml:2294(para) 
+msgid "Then we might have some legacy data association which refers to this unique key of the <literal>Person</literal> table, instead of to the primary key:"
+msgstr ""
+
+#: basic_mapping.xml:2306(para) 
+msgid "We don't recommend the use of this kind of thing outside the context of mapping legacy data."
+msgstr ""
+
+#: basic_mapping.xml:2314(title) 
+msgid "subclass"
+msgstr ""
+
+#: basic_mapping.xml:2316(para) 
+msgid "Finally, polymorphic persistence requires the declaration of each subclass of the root persistent class. For the table-per-class-hierarchy mapping strategy, the <literal>&lt;subclass&gt;</literal> declaration is used."
+msgstr ""
+
+#: basic_mapping.xml:2345(para) basic_mapping.xml:2422(para) basic_mapping.xml:2533(para) 
+msgid "<literal>name</literal>: The fully qualified class name of the subclass."
+msgstr ""
+
+#: basic_mapping.xml:2350(para) 
+msgid "<literal>discriminator-value</literal> (optional - defaults to the class name): A value that distiguishes individual subclasses."
+msgstr ""
+
+#: basic_mapping.xml:2356(para) basic_mapping.xml:2432(para) basic_mapping.xml:2543(para) 
+msgid "<literal>proxy</literal> (optional): Specifies a class or interface to use for lazy initializing proxies."
+msgstr ""
+
+#: basic_mapping.xml:2362(para) basic_mapping.xml:2438(para) basic_mapping.xml:2549(para) 
+msgid "<literal>lazy</literal> (optional, defaults to <literal>true</literal>): Setting <literal>lazy=\"false\"</literal> disables the use of lazy fetching."
+msgstr ""
+
+#: basic_mapping.xml:2370(para) 
+msgid "Each subclass should declare its own persistent properties and subclasses. <literal>&lt;version&gt;</literal> and <literal>&lt;id&gt;</literal> properties are assumed to be inherited from the root class. Each subclass in a heirarchy must define a unique <literal>discriminator-value</literal>. If none is specified, the fully qualified Java class name is used."
+msgstr ""
+
+#: basic_mapping.xml:2378(para) basic_mapping.xml:2485(para) basic_mapping.xml:2561(para) 
+msgid "For information about inheritance mappings, see <xref linkend=\"inheritance\"/>."
+msgstr ""
+
+#: basic_mapping.xml:2385(title) 
+msgid "joined-subclass"
+msgstr ""
+
+#: basic_mapping.xml:2387(para) 
+msgid "Alternatively, each subclass may be mapped to its own table (table-per-subclass mapping strategy). Inherited state is retrieved by joining with the table of the superclass. We use the <literal>&lt;joined-subclass&gt;</literal> element."
+msgstr ""
+
+#: basic_mapping.xml:2427(para) basic_mapping.xml:2538(para) 
+msgid "<literal>table</literal>: The name of the subclass table."
+msgstr ""
+
+#: basic_mapping.xml:2446(para) 
+msgid "No discriminator column is required for this mapping strategy. Each subclass must, however, declare a table column holding the object identifier using the <literal>&lt;key&gt;</literal> element. The mapping at the start of the chapter would be re-written as:"
+msgstr ""
+
+#: basic_mapping.xml:2492(title) 
+msgid "union-subclass"
+msgstr ""
+
+#: basic_mapping.xml:2494(para) 
+msgid "A third option is to map only the concrete classes of an inheritance hierarchy to tables, (the table-per-concrete-class strategy) where each table defines all persistent state of the class, including inherited state. In Hibernate, it is not absolutely necessary to explicitly map such inheritance hierarchies. You can simply map each class with a separate <literal>&lt;class&gt;</literal> declaration. However, if you wish use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the <literal>&lt;union-subclass&gt;</literal> mapping."
+msgstr ""
+
+#: basic_mapping.xml:2557(para) 
+msgid "No discriminator column or key column is required for this mapping strategy."
+msgstr ""
+
+#: basic_mapping.xml:2568(title) 
+msgid "join"
+msgstr ""
+
+#: basic_mapping.xml:2570(para) 
+msgid "Using the <literal>&lt;join&gt;</literal> element, it is possible to map properties of one class to several tables, when there's a 1-to-1 relationship between the tables."
+msgstr ""
+
+#: basic_mapping.xml:2600(para) 
+msgid "<literal>table</literal>: The name of the joined table."
+msgstr ""
+
+#: basic_mapping.xml:2617(para) 
+msgid "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): If set to <literal>join</literal>, the default, Hibernate will use an inner join to retrieve a <literal>&lt;join&gt;</literal> defined by a class or its superclasses and an outer join for a <literal>&lt;join&gt;</literal> defined by a subclass. If set to <literal>select</literal> then Hibernate will use a sequential select for a <literal>&lt;join&gt;</literal> defined on a subclass, which will be issued only if a row turns out to represent an instance of the subclass. Inner joins will still be used to retrieve a <literal>&lt;join&gt;</literal> defined by the class and its superclasses."
+msgstr ""
+
+#: basic_mapping.xml:2630(para) 
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>): If enabled, Hibernate will not try to insert or update the properties defined by this join."
+msgstr ""
+
+#: basic_mapping.xml:2637(para) 
+msgid "<literal>optional</literal> (optional - defaults to <literal>false</literal>): If enabled, Hibernate will insert a row only if the properties defined by this join are non-null and will always use an outer join to retrieve the properties."
+msgstr ""
+
+#: basic_mapping.xml:2646(para) 
+msgid "For example, the address information for a person can be mapped to a separate table (while preserving value type semantics for all properties):"
+msgstr ""
+
+#: basic_mapping.xml:2664(para) 
+msgid "This feature is often only useful for legacy data models, we recommend fewer tables than classes and a fine-grained domain model. However, it is useful for switching between inheritance mapping strategies in a single hierarchy, as explained later."
+msgstr ""
+
+#: basic_mapping.xml:2674(title) 
+msgid "key"
+msgstr ""
+
+#: basic_mapping.xml:2676(para) 
+msgid "We've seen the <literal>&lt;key&gt;</literal> element crop up a few times now. It appears anywhere the parent mapping element defines a join to a new table, and defines the foreign key in the joined table, that references the primary key of the original table."
+msgstr ""
+
+#: basic_mapping.xml:2710(para) 
+msgid "<literal>on-delete</literal> (optional, defaults to <literal>noaction</literal>): Specifies whether the foreign key constraint has database-level cascade delete enabled."
+msgstr ""
+
+#: basic_mapping.xml:2717(para) 
+msgid "<literal>property-ref</literal> (optional): Specifies that the foreign key refers to columns that are not the primary key of the orginal table. (Provided for legacy data.)"
+msgstr ""
+
+#: basic_mapping.xml:2724(para) 
+msgid "<literal>not-null</literal> (optional): Specifies that the foreign key columns are not nullable (this is implied whenever the foreign key is also part of the primary key)."
+msgstr ""
+
+#: basic_mapping.xml:2731(para) 
+msgid "<literal>update</literal> (optional): Specifies that the foreign key should never be updated (this is implied whenever the foreign key is also part of the primary key)."
+msgstr ""
+
+#: basic_mapping.xml:2738(para) 
+msgid "<literal>unique</literal> (optional): Specifies that the foreign key should have a unique constraint (this is implied whenever the foreign key is also the primary key)."
+msgstr ""
+
+#: basic_mapping.xml:2746(para) 
+msgid "We recommend that for systems where delete performance is important, all keys should be defined <literal>on-delete=\"cascade\"</literal>, and Hibernate will use a database-level <literal>ON CASCADE DELETE</literal> constraint, instead of many individual <literal>DELETE</literal> statements. Be aware that this feature bypasses Hibernate's usual optimistic locking strategy for versioned data."
+msgstr ""
+
+#: basic_mapping.xml:2754(para) 
+msgid "The <literal>not-null</literal> and <literal>update</literal> attributes are useful when mapping a unidirectional one to many association. If you map a unidirectional one to many to a non-nullable foreign key, you <emphasis>must</emphasis> declare the key column using <literal>&lt;key not-null=\"true\"&gt;</literal>."
+msgstr ""
+
+#: basic_mapping.xml:2764(title) 
+msgid "column and formula elements"
+msgstr ""
+
+#: basic_mapping.xml:2765(para) 
+msgid "Any mapping element which accepts a <literal>column</literal> attribute will alternatively accept a <literal>&lt;column&gt;</literal> subelement. Likewise, <literal>&lt;formula&gt;</literal> is an alternative to the <literal>formula</literal> attribute."
+msgstr ""
+
+#: basic_mapping.xml:2786(para) 
+msgid "<literal>column</literal> and <literal>formula</literal> attributes may even be combined within the same property or association mapping to express, for example, exotic join conditions."
+msgstr ""
+
+#: basic_mapping.xml:2801(title) 
+msgid "import"
+msgstr ""
+
+#: basic_mapping.xml:2803(para) 
+msgid "Suppose your application has two persistent classes with the same name, and you don't want to specify the fully qualified (package) name in Hibernate queries. Classes may be \"imported\" explicitly, rather than relying upon <literal>auto-import=\"true\"</literal>. You may even import classes and interfaces that are not explicitly mapped."
+msgstr ""
+
+#: basic_mapping.xml:2823(para) 
+msgid "<literal>class</literal>: The fully qualified class name of of any Java class."
+msgstr ""
+
+#: basic_mapping.xml:2828(para) 
+msgid "<literal>rename</literal> (optional - defaults to the unqualified class name): A name that may be used in the query language."
+msgstr ""
+
+#: basic_mapping.xml:2839(title) 
+msgid "any"
+msgstr ""
+
+#: basic_mapping.xml:2841(para) 
+msgid "There is one further type of property mapping. The <literal>&lt;any&gt;</literal> mapping element defines a polymorphic association to classes from multiple tables. This type of mapping always requires more than one column. The first column holds the type of the associated entity. The remaining columns hold the identifier. It is impossible to specify a foreign key constraint for this kind of association, so this is most certainly not meant as the usual way of mapping (polymorphic) associations. You should use this only in very special cases (eg. audit logs, user session data, etc)."
+msgstr ""
+
+#: basic_mapping.xml:2851(para) 
+msgid "The <literal>meta-type</literal> attribute lets the application specify a custom type that maps database column values to persistent classes which have identifier properties of the type specified by <literal>id-type</literal>. You must specify the mapping from values of the meta-type to class names."
+msgstr ""
+
+#: basic_mapping.xml:2892(para) 
+msgid "<literal>name</literal>: the property name."
+msgstr ""
+
+#: basic_mapping.xml:2897(para) 
+msgid "<literal>id-type</literal>: the identifier type."
+msgstr ""
+
+#: basic_mapping.xml:2902(para) 
+msgid "<literal>meta-type</literal> (optional - defaults to <literal>string</literal>): Any type that is allowed for a discriminator mapping."
+msgstr ""
+
+#: basic_mapping.xml:2908(para) 
+msgid "<literal>cascade</literal> (optional- defaults to <literal>none</literal>): the cascade style."
+msgstr ""
+
+#: basic_mapping.xml:2920(para) 
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Specifies that updates to this property do or do not require acquisition of the optimistic lock. In other words, define if a version increment should occur if this property is dirty."
+msgstr ""
+
+#: basic_mapping.xml:2935(title) 
+msgid "Hibernate Types"
+msgstr ""
+
+#: basic_mapping.xml:2938(title) 
+msgid "Entities and values"
+msgstr ""
+
+#: basic_mapping.xml:2940(para) 
+msgid "To understand the behaviour of various Java language-level objects with respect to the persistence service, we need to classify them into two groups:"
+msgstr ""
+
+#: basic_mapping.xml:2945(para) 
+msgid "An <emphasis>entity</emphasis> exists independently of any other objects holding references to the entity. Contrast this with the usual Java model where an unreferenced object is garbage collected. Entities must be explicitly saved and deleted (except that saves and deletions may be <emphasis>cascaded</emphasis> from a parent entity to its children). This is different from the ODMG model of object persistence by reachablity - and corresponds more closely to how application objects are usually used in large systems. Entities support circular and shared references. They may also be versioned."
+msgstr ""
+
+#: basic_mapping.xml:2956(para) 
+msgid "An entity's persistent state consists of references to other entities and instances of <emphasis>value</emphasis> types. Values are primitives, collections (not what's inside a collection), components and certain immutable objects. Unlike entities, values (in particular collections and components) <emphasis>are</emphasis> persisted and deleted by reachability. Since value objects (and primitives) are persisted and deleted along with their containing entity they may not be independently versioned. Values have no independent identity, so they cannot be shared by two entities or collections."
+msgstr ""
+
+#: basic_mapping.xml:2967(para) 
+msgid "Up until now, we've been using the term \"persistent class\" to refer to entities. We will continue to do that. Strictly speaking, however, not all user-defined classes with persistent state are entities. A <emphasis>component</emphasis> is a user defined class with value semantics. A Java property of type <literal>java.lang.String</literal> also has value semantics. Given this definition, we can say that all types (classes) provided by the JDK have value type semantics in Java, while user-defined types may be mapped with entity or value type semantics. This decision is up to the application developer. A good hint for an entity class in a domain model are shared references to a single instance of that class, while composition or aggregation usually translates to a value type."
+msgstr ""
+
+#: basic_mapping.xml:2981(para) 
+msgid "We'll revisit both concepts throughout the documentation."
+msgstr ""
+
+#: basic_mapping.xml:2985(para) 
+msgid "The challenge is to map the Java type system (and the developers' definition of entities and value types) to the SQL/database type system. The bridge between both systems is provided by Hibernate: for entities we use <literal>&lt;class&gt;</literal>, <literal>&lt;subclass&gt;</literal> and so on. For value types we use <literal>&lt;property&gt;</literal>, <literal>&lt;component&gt;</literal>, etc, usually with a <literal>type</literal> attribute. The value of this attribute is the name of a Hibernate <emphasis>mapping type</emphasis>. Hibernate provides many mappings (for standard JDK value types) out of the box. You can write your own mapping types and implement your custom conversion strategies as well, as you'll see later."
+msgstr ""
+
+#: basic_mapping.xml:2998(para) 
+msgid "All built-in Hibernate types except collections support null semantics."
+msgstr ""
+
+#: basic_mapping.xml:3005(title) 
+msgid "Basic value types"
+msgstr ""
+
+#: basic_mapping.xml:3012(literal) 
+msgid "integer, long, short, float, double, character, byte, boolean, yes_no, true_false"
+msgstr ""
+
+#: basic_mapping.xml:3015(para) 
+msgid "Type mappings from Java primitives or wrapper classes to appropriate (vendor-specific) SQL column types. <literal>boolean, yes_no</literal> and <literal>true_false</literal> are all alternative encodings for a Java <literal>boolean</literal> or <literal>java.lang.Boolean</literal>."
+msgstr ""
+
+#: basic_mapping.xml:3024(literal) 
+msgid "string"
+msgstr ""
+
+#: basic_mapping.xml:3026(para) 
+msgid "A type mapping from <literal>java.lang.String</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:3033(literal) 
+msgid "date, time, timestamp"
+msgstr ""
+
+#: basic_mapping.xml:3035(para) 
+msgid "Type mappings from <literal>java.util.Date</literal> and its subclasses to SQL types <literal>DATE</literal>, <literal>TIME</literal> and <literal>TIMESTAMP</literal> (or equivalent)."
+msgstr ""
+
+#: basic_mapping.xml:3043(literal) 
+msgid "calendar, calendar_date"
+msgstr ""
+
+#: basic_mapping.xml:3045(para) 
+msgid "Type mappings from <literal>java.util.Calendar</literal> to SQL types <literal>TIMESTAMP</literal> and <literal>DATE</literal> (or equivalent)."
+msgstr ""
+
+#: basic_mapping.xml:3053(literal) 
+msgid "big_decimal, big_integer"
+msgstr ""
+
+#: basic_mapping.xml:3055(para) 
+msgid "Type mappings from <literal>java.math.BigDecimal</literal> and <literal>java.math.BigInteger</literal> to <literal>NUMERIC</literal> (or Oracle <literal>NUMBER</literal>)."
+msgstr ""
+
+#: basic_mapping.xml:3063(literal) 
+msgid "locale, timezone, currency"
+msgstr ""
+
+#: basic_mapping.xml:3065(para) 
+msgid "Type mappings from <literal>java.util.Locale</literal>, <literal>java.util.TimeZone</literal> and <literal>java.util.Currency</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>). Instances of <literal>Locale</literal> and <literal>Currency</literal> are mapped to their ISO codes. Instances of <literal>TimeZone</literal> are mapped to their <literal>ID</literal>."
+msgstr ""
+
+#: basic_mapping.xml:3079(para) 
+msgid "A type mapping from <literal>java.lang.Class</literal> to <literal>VARCHAR</literal> (or Oracle <literal>VARCHAR2</literal>). A <literal>Class</literal> is mapped to its fully qualified name."
+msgstr ""
+
+#: basic_mapping.xml:3087(literal) 
+msgid "binary"
+msgstr ""
+
+#: basic_mapping.xml:3089(para) 
+msgid "Maps byte arrays to an appropriate SQL binary type."
+msgstr ""
+
+#: basic_mapping.xml:3095(literal) 
+msgid "text"
+msgstr ""
+
+#: basic_mapping.xml:3097(para) 
+msgid "Maps long Java strings to a SQL <literal>CLOB</literal> or <literal>TEXT</literal> type."
+msgstr ""
+
+#: basic_mapping.xml:3104(literal) 
+msgid "serializable"
+msgstr ""
+
+#: basic_mapping.xml:3106(para) 
+msgid "Maps serializable Java types to an appropriate SQL binary type. You may also indicate the Hibernate type <literal>serializable</literal> with the name of a serializable Java class or interface that does not default to a basic type."
+msgstr ""
+
+#: basic_mapping.xml:3115(literal) 
+msgid "clob, blob"
+msgstr ""
+
+#: basic_mapping.xml:3117(para) 
+msgid "Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and <literal>java.sql.Blob</literal>. These types may be inconvenient for some applications, since the blob or clob object may not be reused outside of a transaction. (Furthermore, driver support is patchy and inconsistent.)"
+msgstr ""
+
+#: basic_mapping.xml:3127(literal) 
+msgid "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, imm_serializable, imm_binary"
+msgstr ""
+
+#: basic_mapping.xml:3131(para) 
+msgid "Type mappings for what are usually considered mutable Java types, where Hibernate makes certain optimizations appropriate only for immutable Java types, and the application treats the object as immutable. For example, you should not call <literal>Date.setTime()</literal> for an instance mapped as <literal>imm_timestamp</literal>. To change the value of the property, and have that change made persistent, the application must assign a new (nonidentical) object to the property."
+msgstr ""
+
+#: basic_mapping.xml:3007(para) 
+msgid "The built-in <emphasis>basic mapping types</emphasis> may be roughly categorized into <placeholder-1/>"
+msgstr ""
+
+#: basic_mapping.xml:3146(para) 
+msgid "Unique identifiers of entities and collections may be of any basic type except <literal>binary</literal>, <literal>blob</literal> and <literal>clob</literal>. (Composite identifiers are also allowed, see below.)"
+msgstr ""
+
+#: basic_mapping.xml:3152(para) 
+msgid "The basic value types have corresponding <literal>Type</literal> constants defined on <literal>org.hibernate.Hibernate</literal>. For example, <literal>Hibernate.STRING</literal> represents the <literal>string</literal> type."
+msgstr ""
+
+#: basic_mapping.xml:3161(title) 
+msgid "Custom value types"
+msgstr ""
+
+#: basic_mapping.xml:3163(para) 
+msgid "It is relatively easy for developers to create their own value types. For example, you might want to persist properties of type <literal>java.lang.BigInteger</literal> to <literal>VARCHAR</literal> columns. Hibernate does not provide a built-in type for this. But custom types are not limited to mapping a property (or collection element) to a single table column. So, for example, you might have a Java property <literal>getName()</literal>/<literal>setName()</literal> of type <literal>java.lang.String</literal> that is persisted to the columns <literal>FIRST_NAME</literal>, <literal>INITIAL</literal>, <literal>SURNAME</literal>."
+msgstr ""
+
+#: basic_mapping.xml:3174(para) 
+msgid "To implement a custom type, implement either <literal>org.hibernate.UserType</literal> or <literal>org.hibernate.CompositeUserType</literal> and declare properties using the fully qualified classname of the type. Check out <literal>org.hibernate.test.DoubleStringType</literal> to see the kind of things that are possible."
+msgstr ""
+
+#: basic_mapping.xml:3187(para) 
+msgid "Notice the use of <literal>&lt;column&gt;</literal> tags to map a property to multiple columns."
+msgstr ""
+
+#: basic_mapping.xml:3192(para) 
+msgid "The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</literal>, <literal>UserCollectionType</literal>, and <literal>UserVersionType</literal> interfaces provide support for more specialized uses."
+msgstr ""
+
+#: basic_mapping.xml:3198(para) 
+msgid "You may even supply parameters to a <literal>UserType</literal> in the mapping file. To do this, your <literal>UserType</literal> must implement the <literal>org.hibernate.usertype.ParameterizedType</literal> interface. To supply parameters to your custom type, you can use the <literal>&lt;type&gt;</literal> element in your mapping files."
+msgstr ""
+
+#: basic_mapping.xml:3212(para) 
+msgid "The <literal>UserType</literal> can now retrieve the value for the parameter named <literal>default</literal> from the <literal>Properties</literal> object passed to it."
+msgstr ""
+
+#: basic_mapping.xml:3217(para) 
+msgid "If you use a certain <literal>UserType</literal> very often, it may be useful to define a shorter name for it. You can do this using the <literal>&lt;typedef&gt;</literal> element. Typedefs assign a name to a custom type, and may also contain a list of default parameter values if the type is parameterized."
+msgstr ""
+
+#: basic_mapping.xml:3230(para) 
+msgid "It is also possible to override the parameters supplied in a typedef on a case-by-case basis by using type parameters on the property mapping."
+msgstr ""
+
+#: basic_mapping.xml:3235(para) 
+msgid "Even though Hibernate's rich range of built-in types and support for components means you will very rarely <emphasis>need</emphasis> to use a custom type, it is nevertheless considered good form to use custom types for (non-entity) classes that occur frequently in your application. For example, a <literal>MonetaryAmount</literal> class is a good candidate for a <literal>CompositeUserType</literal>, even though it could easily be mapped as a component. One motivation for this is abstraction. With a custom type, your mapping documents would be future-proofed against possible changes in your way of representing monetary values."
+msgstr ""
+
+#: basic_mapping.xml:3251(title) 
+msgid "Mapping a class more than once"
+msgstr ""
+
+#: basic_mapping.xml:3252(para) 
+msgid "It is possible to provide more than one mapping for a particular persistent class. In this case you must specify an <emphasis>entity name</emphasis> do disambiguate between instances of the two mapped entities. (By default, the entity name is the same as the class name.) Hibernate lets you specify the entity name when working with persistent objects, when writing queries, or when mapping associations to the named entity."
+msgstr ""
+
+#: basic_mapping.xml:3278(para) 
+msgid "Notice how associations are now specified using <literal>entity-name</literal> instead of <literal>class</literal>."
+msgstr ""
+
+#: basic_mapping.xml:3286(title) 
+msgid "SQL quoted identifiers"
+msgstr ""
+
+#: basic_mapping.xml:3287(para) 
+msgid "You may force Hibernate to quote an identifier in the generated SQL by enclosing the table or column name in backticks in the mapping document. Hibernate will use the correct quotation style for the SQL <literal>Dialect</literal> (usually double quotes, but brackets for SQL Server and backticks for MySQL)."
+msgstr ""
+
+#: basic_mapping.xml:3304(title) 
+msgid "Metadata alternatives"
+msgstr ""
+
+#: basic_mapping.xml:3306(para) 
+msgid "XML isn't for everyone, and so there are some alternative ways to define O/R mapping metadata in Hibernate."
+msgstr ""
+
+#: basic_mapping.xml:3311(title) 
+msgid "Using XDoclet markup"
+msgstr ""
+
+#: basic_mapping.xml:3313(para) 
+msgid "Many Hibernate users prefer to embed mapping information directly in sourcecode using XDoclet <literal>@hibernate.tags</literal>. We will not cover this approach in this document, since strictly it is considered part of XDoclet. However, we include the following example of the <literal>Cat</literal> class with XDoclet mappings."
+msgstr ""
+
+#: basic_mapping.xml:3425(para) 
+msgid "See the Hibernate web site for more examples of XDoclet and Hibernate."
+msgstr ""
+
+#: basic_mapping.xml:3432(title) 
+msgid "Using JDK 5.0 Annotations"
+msgstr ""
+
+#: basic_mapping.xml:3434(para) 
+msgid "JDK 5.0 introduced XDoclet-style annotations at the language level, type-safe and checked at compile time. This mechnism is more powerful than XDoclet annotations and better supported by tools and IDEs. IntelliJ IDEA, for example, supports auto-completion and syntax highlighting of JDK 5.0 annotations. The new revision of the EJB specification (JSR-220) uses JDK 5.0 annotations as the primary metadata mechanism for entity beans. Hibernate3 implements the <literal>EntityManager</literal> of JSR-220 (the persistence API), support for mapping metadata is available via the <emphasis>Hibernate Annotations</emphasis> package, as a separate download. Both EJB3 (JSR-220) and Hibernate3 metadata is supported."
+msgstr ""
+
+#: basic_mapping.xml:3445(para) 
+msgid "This is an example of a POJO class annotated as an EJB entity bean:"
+msgstr ""
+
+#: basic_mapping.xml:3472(para) 
+msgid "Note that support for JDK 5.0 Annotations (and JSR-220) is still work in progress and not completed. Please refer to the Hibernate Annotations module for more details."
+msgstr ""
+
+#: basic_mapping.xml:3481(title) 
+msgid "Generated Properties"
+msgstr ""
+
+#: basic_mapping.xml:3482(para) 
+msgid "Generated properties are properties which have their values generated by the database. Typically, Hibernate applications needed to <literal>refresh</literal> objects which contain any properties for which the database was generating values. Marking properties as generated, however, lets the application delegate this responsibility to Hibernate. Essentially, whenever Hibernate issues an SQL INSERT or UPDATE for an entity which has defined generated properties, it immediately issues a select afterwards to retrieve the generated values."
+msgstr ""
+
+#: basic_mapping.xml:3491(para) 
+msgid "Properties marked as generated must additionally be non-insertable and non-updateable. Only <xref linkend=\"mapping-declaration-version\">versions</xref>, <xref linkend=\"mapping-declaration-timestamp\">timestamps</xref>, and <xref linkend=\"mapping-declaration-property\">simple properties</xref> can be marked as generated."
+msgstr ""
+
+#: basic_mapping.xml:3498(para) 
+msgid "<literal>never</literal> (the default) - means that the given property value is not generated within the database."
+msgstr ""
+
+#: basic_mapping.xml:3502(para) 
+msgid "<literal>insert</literal> - states that the given property value is generated on insert, but is not regenerated on subsequent updates. Things like created-date would fall into this category. Note that even thought <xref linkend=\"mapping-declaration-version\">version</xref> and <xref linkend=\"mapping-declaration-timestamp\">timestamp</xref> properties can be marked as generated, this option is not available there..."
+msgstr ""
+
+#: basic_mapping.xml:3510(para) 
+msgid "<literal>always</literal> - states that the property value is generated both on insert and on update."
+msgstr ""
+
+#: basic_mapping.xml:3517(title) 
+msgid "Auxiliary Database Objects"
+msgstr ""
+
+#: basic_mapping.xml:3518(para) 
+msgid "Allows CREATE and DROP of arbitrary database objects, in conjunction with Hibernate's schema evolution tools, to provide the ability to fully define a user schema within the Hibernate mapping files. Although designed specifically for creating and dropping things like triggers or stored procedures, really any SQL command that can be run via a <literal>java.sql.Statement.execute()</literal> method is valid here (ALTERs, INSERTS, etc). There are essentially two modes for defining auxiliary database objects..."
+msgstr ""
+
+#: basic_mapping.xml:3527(para) 
+msgid "The first mode is to explicitly list the CREATE and DROP commands out in the mapping file:"
+msgstr ""
+
+#: basic_mapping.xml:3538(para) 
+msgid "The second mode is to supply a custom class which knows how to construct the CREATE and DROP commands. This custom class must implement the <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> interface."
+msgstr ""
+
+#: basic_mapping.xml:3549(para) 
+msgid "Additionally, these database objects can be optionally scoped such that they only apply when certain dialects are used."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: basic_mapping.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

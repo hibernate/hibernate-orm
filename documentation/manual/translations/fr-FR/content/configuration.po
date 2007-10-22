@@ -1,0 +1,1595 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Configuration"
+msgstr "Configuration"
+
+#: index.docbook:7
+msgid "Because Hibernate is designed to operate in many different environments, there are a large number of configuration parameters. Fortunately, most have sensible default values and Hibernate is distributed with an example <literal>hibernate.properties</literal> file in <literal>etc/</literal> that shows the various options. Just put the example file in your classpath and customize it."
+msgstr "Parce qu'Hibernate est conçu pour fonctionner dans différents environnements, il existe beaucoup de paramètres de configuration. Heureusement, la plupart ont des valeurs par défaut appropriées et la distribution d'Hibernate contient un exemple de fichier <literal>hibernate.properties</literal> dans le répertoire <literal>etc/</literal> qui montre les différentes options. Vous n'avez qu'à placer ce fichier dans votre classpath et à l'adapter."
+
+#: index.docbook:16
+msgid "Programmatic configuration"
+msgstr "Configuration par programmation"
+
+#: index.docbook:18
+msgid "An instance of <literal>org.hibernate.cfg.Configuration</literal> represents an entire set of mappings of an application's Java types to an SQL database. The <literal>Configuration</literal> is used to build an (immutable) <literal>SessionFactory</literal>. The mappings are compiled from various XML mapping files."
+msgstr "Une instance de <literal>org.hibernate.cfg.Configuration</literal> représente un ensemble de mappings des classes Java d'une application vers la base de données SQL. La <literal>Configuration</literal> est utilisée pour construire un objet (immuable) <literal>SessionFactory</literal>. Les mappings sont constitués d'un ensemble de fichiers de mapping XML."
+
+#: index.docbook:26
+msgid "You may obtain a <literal>Configuration</literal> instance by instantiating it directly and specifying XML mapping documents. If the mapping files are in the classpath, use <literal>addResource()</literal>:"
+msgstr "Vous pouvez obtenir une instance de <literal>Configuration</literal> en l'instanciant directement et en spécifiant la liste des documents XML de mapping. Si les fichiers de mapping sont dans le classpath, vous pouvez le faire à l'aide de la méthode <literal>addResource()</literal> :"
+
+#: index.docbook:32
+msgid ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addResource(\"Item.hbm.xml\")\n"
+      "    .addResource(\"Bid.hbm.xml\");]]>"
+msgstr ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addResource(\"Item.hbm.xml\")\n"
+      "    .addResource(\"Bid.hbm.xml\");]]>"
+
+#: index.docbook:34
+msgid "An alternative (sometimes better) way is to specify the mapped class, and let Hibernate find the mapping document for you:"
+msgstr "Une alternative (parfois meilleure) est de spécifier les classes mappées et de laisser Hibernate trouver les documents de mapping pour vous :"
+
+#: index.docbook:39
+msgid ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addClass(org.hibernate.auction.Item.class)\n"
+      "    .addClass(org.hibernate.auction.Bid.class);]]>"
+msgstr ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addClass(org.hibernate.auction.Item.class)\n"
+      "    .addClass(org.hibernate.auction.Bid.class);]]>"
+
+#: index.docbook:41
+msgid "Then Hibernate will look for mapping files named <literal>/org/hibernate/auction/Item.hbm.xml</literal> and <literal>/org/hibernate/auction/Bid.hbm.xml</literal> in the classpath. This approach eliminates any hardcoded filenames."
+msgstr "Hibernate va rechercher les fichiers de mappings <literal>/org/hibernate/auction/Item.hbm.xml</literal> et <literal>/org/hibernate/auction/Bid.hbm.xml</literal> dans le classpath. Cette approche élimine les noms de fichiers en dur."
+
+#: index.docbook:48
+msgid "A <literal>Configuration</literal> also allows you to specify configuration properties:"
+msgstr "Une <literal>Configuration</literal> vous permet également de préciser des propriétés de configuration :"
+
+#: index.docbook:53
+msgid ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addClass(org.hibernate.auction.Item.class)\n"
+      "    .addClass(org.hibernate.auction.Bid.class)\n"
+      "    .setProperty(\"hibernate.dialect\", \"org.hibernate.dialect.MySQLInnoDBDialect\")\n"
+      "    .setProperty(\"hibernate.connection.datasource\", \"java:comp/env/jdbc/test\")\n"
+      "    .setProperty(\"hibernate.order_updates\", \"true\");]]>"
+msgstr ""
+      "<![CDATA[Configuration cfg = new Configuration()\n"
+      "    .addClass(org.hibernate.auction.Item.class)\n"
+      "    .addClass(org.hibernate.auction.Bid.class)\n"
+      "    .setProperty(\"hibernate.dialect\", \"org.hibernate.dialect.MySQLInnoDBDialect\")\n"
+      "    .setProperty(\"hibernate.connection.datasource\", \"java:comp/env/jdbc/test\")\n"
+      "    .setProperty(\"hibernate.order_updates\", \"true\");]]>"
+
+#: index.docbook:55
+msgid "This is not the only way to pass configuration properties to Hibernate. The various options include:"
+msgstr "Ce n'est pas le seul moyen de passer des propriétés de configuration à Hibernate. Les différentes options sont :"
+
+#: index.docbook:62
+msgid "Pass an instance of <literal>java.util.Properties</literal> to <literal>Configuration.setProperties()</literal>."
+msgstr "Passer une instance de <literal>java.util.Properties</literal> à <literal>Configuration.setProperties()</literal>."
+
+#: index.docbook:68
+msgid "Place <literal>hibernate.properties</literal> in a root directory of the classpath."
+msgstr "Placer <literal>hibernate.properties</literal> dans un répertoire racine du classpath"
+
+#: index.docbook:74
+msgid "Set <literal>System</literal> properties using <literal>java -Dproperty=value</literal>."
+msgstr "Positionner les propriétés <literal>System</literal> en utilisant <literal>java -Dproperty=value</literal>."
+
+#: index.docbook:80
+msgid "Include <literal>&lt;property&gt;</literal> elements in <literal>hibernate.cfg.xml</literal> (discussed later)."
+msgstr "Inclure des éléments <literal>&lt;property&gt;</literal> dans le fichier <literal>hibernate.cfg.xml</literal> (voir plus loin)."
+
+#: index.docbook:87
+msgid "<literal>hibernate.properties</literal> is the easiest approach if you want to get started quickly."
+msgstr "L'utilisation d'<literal>hibernate.properties</literal> est l'approche la plus simple si vous voulez démarrer rapidement"
+
+#: index.docbook:92
+msgid "The <literal>Configuration</literal> is intended as a startup-time object, to be discarded once a <literal>SessionFactory</literal> is created."
+msgstr "La <literal>Configuration</literal> est un objet de démarrage qui sera supprimé une fois qu'une <literal>SessionFactory</literal> aura été créée."
+
+#: index.docbook:100
+msgid "Obtaining a SessionFactory"
+msgstr "Obtenir une SessionFactory"
+
+#: index.docbook:102
+msgid "When all mappings have been parsed by the <literal>Configuration</literal>, the application must obtain a factory for <literal>Session</literal> instances. This factory is intended to be shared by all application threads:"
+msgstr "Une fois que tous les mappings ont été parsés par la <literal>Configuration</literal>, l'application doit obtenir une fabrique d'instances de <literal>Session</literal>. Cette fabrique sera partagée entre tous les threads de l'application :"
+
+#: index.docbook:108
+msgid "<![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]>"
+msgstr "<![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]>"
+
+#: index.docbook:110
+msgid "Hibernate does allow your application to instantiate more than one <literal>SessionFactory</literal>. This is useful if you are using more than one database."
+msgstr "Hibernate permet à votre application d'instancier plus d'une <literal>SessionFactory</literal>. Cela est pratique lorsque vous utilisez plus d'une base de données."
+
+#: index.docbook:119
+msgid "JDBC connections"
+msgstr "Connexions JDBC"
+
+#: index.docbook:121
+msgid "Usually, you want to have the <literal>SessionFactory</literal> create and pool JDBC connections for you. If you take this approach, opening a <literal>Session</literal> is as simple as:"
+msgstr "Habituellement, vous voulez que la <literal>SessionFactory</literal> crée les connexions JDBC et les mette dans un pool pour vous. Si vous suivez cette approche, ouvrir une <literal>Session</literal> est aussi simple que :"
+
+#: index.docbook:127
+msgid "<![CDATA[Session session = sessions.openSession(); // open a new Session]]>"
+msgstr "<![CDATA[Session session = sessions.openSession(); // open a new Session]]>"
+
+#: index.docbook:129
+msgid "As soon as you do something that requires access to the database, a JDBC connection will be obtained from the pool."
+msgstr "Dès que vous ferez quelquechose qui requiert un accès à la base de données, une connexion JDBC sera récupérée dans le pool."
+
+#: index.docbook:134
+msgid "For this to work, we need to pass some JDBC connection properties to Hibernate. All Hibernate property names and semantics are defined on the class <literal>org.hibernate.cfg.Environment</literal>. We will now describe the most important settings for JDBC connection configuration."
+msgstr "Pour faire cela, il faut passer les propriétés de la connexion JDBC à Hibernate. Tous les noms des propriétés Hibernate et leur signification sont définies dans la classe <literal>org.hibernate.cfg.Environment</literal>. Nous allons maintenant décrire les paramètres de configuration des connexions JDBC les plus importants."
+
+#: index.docbook:141
+msgid "Hibernate will obtain (and pool) connections using <literal>java.sql.DriverManager</literal> if you set the following properties:"
+msgstr "Hibernate obtiendra des connexions (et les mettra dans un pool) en utilisant <literal>java.sql.DriverManager</literal> si vous positionnez les paramètres de la manière suivante :"
+
+#: index.docbook:147
+msgid "Hibernate JDBC Properties"
+msgstr "Propriétés JDBC d'Hibernate"
+
+#: index.docbook:153, index.docbook:241, index.docbook:338, index.docbook:529, index.docbook:725, index.docbook:832, index.docbook:920
+msgid "Property name"
+msgstr "Nom de la propriété"
+
+#: index.docbook:154, index.docbook:242, index.docbook:339, index.docbook:530, index.docbook:726, index.docbook:833, index.docbook:921
+msgid "Purpose"
+msgstr "Fonction"
+
+#: index.docbook:160
+msgid "hibernate.connection.driver_class"
+msgstr "hibernate.connection.driver_class"
+
+#: index.docbook:163
+msgid "JDBC driver class"
+msgstr "Classe du driver jdbc"
+
+#: index.docbook:168
+msgid "hibernate.connection.url"
+msgstr "hibernate.connection.url"
+
+#: index.docbook:171
+msgid "JDBC URL"
+msgstr "URL jdbc"
+
+#: index.docbook:176, index.docbook:272
+msgid "hibernate.connection.username"
+msgstr "hibernate.connection.username"
+
+#: index.docbook:179
+msgid "database user"
+msgstr "utilisateur de la base de données"
+
+#: index.docbook:184, index.docbook:280
+msgid "hibernate.connection.password"
+msgstr "hibernate.connection.password"
+
+#: index.docbook:187
+msgid "database user password"
+msgstr "mot de passe de la base de données"
+
+#: index.docbook:192
+msgid "hibernate.connection.pool_size"
+msgstr "hibernate.connection.pool_size"
+
+#: index.docbook:195
+msgid "maximum number of pooled connections"
+msgstr "nombre maximum de connexions dans le pool"
+
+#: index.docbook:202
+msgid "Hibernate's own connection pooling algorithm is however quite rudimentary. It is intended to help you get started and is <emphasis>not intended for use in a production system</emphasis> or even for performance testing. You should use a third party pool for best performance and stability. Just replace the <literal>hibernate.connection.pool_size</literal> property with connection pool specific settings. This will turn off Hibernate's internal pool. For example, you might like to use C3P0."
+msgstr "L'algorithme natif de pool de connexions d'Hibernate est plutôt rudimentaire. Il a été fait dans le but de vous aider à démarrer et <emphasis>n'est pas prévu pour un système en production</emphasis> ou même pour un test de peformance. Utilisez plutôt un pool tiers pour de meilleures performances et une meilleure stabilité : pour cela, remplacez la propriété <literal>hibernate.connection.pool_size</literal> avec les propriétés spécifique au pool de connexions que vous avez choisi. Cela désactivera le pool de connexions interne d'Hibernate. Vous pouvez par exemple utiliser C3P0."
+
+#: index.docbook:212
+msgid "C3P0 is an open source JDBC connection pool distributed along with Hibernate in the <literal>lib</literal> directory. Hibernate will use its <literal>C3P0ConnectionProvider</literal> for connection pooling if you set <literal>hibernate.c3p0.*</literal> properties. If you'd like to use Proxool refer to the packaged <literal>hibernate.properties</literal> and the Hibernate web site for more information."
+msgstr "C3P0 est un pool de connexions JDBC open source distribué avec Hibernate dans le répertoire <literal>lib</literal>. Hibernate utilisera son provider <literal>C3P0ConnectionProvider</literal> pour le pool de connexions si vous positionnez les propriétés <literal>hibernate.c3p0.*</literal>. Si vous voulez utiliser Proxool, référez vous au groupe de propriétés d'<literal>hibernate.properties</literal> correspondant et regardez sur le site web d'Hibernate pour plus d'informations."
+
+#: index.docbook:221
+msgid "Here is an example <literal>hibernate.properties</literal> file for C3P0:"
+msgstr "Voici un exemple de fichier <literal>hibernate.properties</literal> pour C3P0:"
+
+#: index.docbook:225
+msgid ""
+      "<![CDATA[hibernate.connection.driver_class = org.postgresql.Driver\n"
+      "hibernate.connection.url = jdbc:postgresql://localhost/mydatabase\n"
+      "hibernate.connection.username = myuser\n"
+      "hibernate.connection.password = secret\n"
+      "hibernate.c3p0.min_size=5\n"
+      "hibernate.c3p0.max_size=20\n"
+      "hibernate.c3p0.timeout=1800\n"
+      "hibernate.c3p0.max_statements=50\n"
+      "hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]>"
+msgstr ""
+      "<![CDATA[hibernate.connection.driver_class = org.postgresql.Driver\n"
+      "hibernate.connection.url = jdbc:postgresql://localhost/mydatabase\n"
+      "hibernate.connection.username = myuser\n"
+      "hibernate.connection.password = secret\n"
+      "hibernate.c3p0.min_size=5\n"
+      "hibernate.c3p0.max_size=20\n"
+      "hibernate.c3p0.timeout=1800\n"
+      "hibernate.c3p0.max_statement=50\n"
+      "hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]>"
+
+#: index.docbook:227
+msgid "For use inside an application server, you should almost always configure Hibernate to obtain connections from an application server <literal>Datasource</literal> registered in JNDI. You'll need to set at least one of the following properties:"
+msgstr "Dans le cadre de l'utilisation au sein d'un serveur d'applications, vous devriez quasiment toujours configurer Hibernate pour qu'il obtienne ses connexions de la <literal>DataSource</literal> du serveur d'application enregistrée dans le JNDI. Pour cela vous devrez définir au moins une des propriétés suivantes :"
+
+#: index.docbook:235
+msgid "Hibernate Datasource Properties"
+msgstr "Propriété d'une Datasource Hibernate"
+
+#: index.docbook:248
+msgid "hibernate.connection.datasource"
+msgstr "hibernate.connection.datasource"
+
+#: index.docbook:251
+msgid "datasource JNDI name"
+msgstr "Nom JNDI de la datasource"
+
+#: index.docbook:256
+msgid "hibernate.jndi.url"
+msgstr "hibernate.jndi.url"
+
+#: index.docbook:258
+msgid "<emphasis>URL of the JNDI provider</emphasis> (optional)"
+msgstr "<emphasis>URL du fournisseur JNDI</emphasis> (optionnelle)"
+
+#: index.docbook:264
+msgid "hibernate.jndi.class"
+msgstr "hibernate.jndi.class"
+
+#: index.docbook:266
+msgid "<emphasis>class of the JNDI <literal>InitialContextFactory</literal></emphasis> (optional)"
+msgstr "<emphasis>Classe de l'<literal>InitialContextFactory</literal> du JNDI</emphasis> (optionnelle)"
+
+#: index.docbook:274
+msgid "<emphasis>database user</emphasis> (optional)"
+msgstr "<emphasis>utilisateur de la base de données</emphasis> (optionnelle)"
+
+#: index.docbook:282
+msgid "<emphasis>database user password</emphasis> (optional)"
+msgstr "<emphasis>mot de passe de la base de données</emphasis> (optionnelle)"
+
+#: index.docbook:290
+msgid "Here's an example <literal>hibernate.properties</literal> file for an application server provided JNDI datasource:"
+msgstr "Voici un exemple de fichier <literal>hibernate.properties</literal> pour l'utilisation d'une datasource JNDI fournie par un serveur d'applications :"
+
+#: index.docbook:295
+msgid ""
+      "<![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test\n"
+      "hibernate.transaction.factory_class = \\\n"
+      "    org.hibernate.transaction.JTATransactionFactory\n"
+      "hibernate.transaction.manager_lookup_class = \\\n"
+      "    org.hibernate.transaction.JBossTransactionManagerLookup\n"
+      "hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]>"
+msgstr ""
+      "<![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test\n"
+      "hibernate.transaction.factory_class = \\\n"
+      "    org.hibernate.transaction.JTATransactionFactory\n"
+      "hibernate.transaction.manager_lookup_class = \\\n"
+      "    org.hibernate.transaction.JBossTransactionManagerLookup\n"
+      "hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]>"
+
+#: index.docbook:297
+msgid "JDBC connections obtained from a JNDI datasource will automatically participate in the container-managed transactions of the application server."
+msgstr "Les connexions JDBC obtenues à partir d'une datasource JNDI participeront automatiquement aux transactions gérées par le conteneur du serveur d'applications."
+
+#: index.docbook:302
+msgid "Arbitrary connection properties may be given by prepending \"<literal>hibernate.connection</literal>\" to the property name. For example, you may specify a <literal>charSet</literal> using <literal>hibernate.connection.charSet</literal>."
+msgstr "Des propriétés supplémentaires de connexion peuvent être passées en préfixant le nom de la propriété par \"<literal>hibernate.connnection</literal>\". Par exemple, vous pouvez spécifier un jeu de caractères en utilisant <literal>hibernate.connection.charSet</literal>."
+
+#: index.docbook:308
+msgid "You may define your own plugin strategy for obtaining JDBC connections by implementing the interface <literal>org.hibernate.connection.ConnectionProvider</literal>. You may select a custom implementation by setting <literal>hibernate.connection.provider_class</literal>."
+msgstr "Vous pouvez fournir votre propre stratégie d'obtention des connexions JDBC en implémentant l'interface <literal>org.hibernate.connection.ConnectionProvider</literal>. Vous pouvez sélectionner une implémentation spécifique en positionnant <literal>hibernate.connection.provider_class</literal>."
+
+#: index.docbook:317
+msgid "Optional configuration properties"
+msgstr "Propriétés de configuration optionnelles"
+
+#: index.docbook:319
+msgid "There are a number of other properties that control the behaviour of Hibernate at runtime. All are optional and have reasonable default values."
+msgstr "Il y a un certain nombre d'autres propriétés qui contrôlent le fonctionnement d'Hibernate à l'exécution. Toutes sont optionnelles et ont comme valeurs par défaut des valeurs \"raisonnables\" pour un fonctionnement nominal."
+
+#: index.docbook:324
+msgid "<emphasis>Warning: some of these properties are \"system-level\" only.</emphasis> System-level properties can be set only via <literal>java -Dproperty=value</literal> or <literal>hibernate.properties</literal>. They may <emphasis>not</emphasis> be set by the other techniques described above."
+msgstr "<emphasis>Attention : Certaines de ces propriétés sont uniquement de niveau System.</emphasis> Les propriétés de niveau System ne peuvent être positionnées que via la ligne de commande (<literal>java -Dproperty=value</literal>) ou être définies dans <literal>hibernate.properties</literal>. Elle <emphasis>ne peuvent pas</emphasis> l'être via une des autres techniques décrites ci-dessus."
+
+#: index.docbook:332
+msgid "Hibernate Configuration Properties"
+msgstr "Propriétés de configuration d'Hibernate"
+
+#: index.docbook:345
+msgid "hibernate.dialect"
+msgstr "hibernate.dialect"
+
+#: index.docbook:347
+msgid "The classname of a Hibernate <literal>Dialect</literal> which allows Hibernate to generate SQL optimized for a particular relational database."
+msgstr "Le nom de la classe du <literal>Dialect</literal> Hibernate. qui permet à Hibernate de générer du SQL optimisé pour une base de données relationnelle particulière."
+
+#: index.docbook:351
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>full.classname.of.Dialect</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>nom.complet.de.ma.classe.de.Dialect</literal>"
+
+#: index.docbook:359
+msgid "hibernate.show_sql"
+msgstr "hibernate.show_sql"
+
+#: index.docbook:361
+msgid "Write all SQL statements to console. This is an alternative to setting the log category <literal>org.hibernate.SQL</literal> to <literal>debug</literal>."
+msgstr "Ecrit toutes les requêtes SQL sur la console. Il s'agit d'une alternative au positionnement de la catégorie de log <literal>org.hibernate.SQL</literal> au niveau <literal>debug</literal>."
+
+#: index.docbook:365, index.docbook:377, index.docbook:471, index.docbook:484, index.docbook:497, index.docbook:510, index.docbook:564, index.docbook:591, index.docbook:605, index.docbook:660, index.docbook:888, index.docbook:903, index.docbook:993
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>true</literal> | <literal>false</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true</literal> | <literal>false</literal>"
+
+#: index.docbook:373
+msgid "hibernate.format_sql"
+msgstr "hibernate.format_sql"
+
+#: index.docbook:375
+msgid "Pretty print the SQL in the log and console."
+msgstr "Formate et indente le sql dans la console et dans le log"
+
+#: index.docbook:385
+msgid "hibernate.default_schema"
+msgstr "hibernate.default_schema"
+
+#: index.docbook:387
+msgid "Qualify unqualified table names with the given schema/tablespace in generated SQL."
+msgstr "Positionne dans le SQL généré un schéma/tablespace par défaut pour les noms de table ne l'ayant pas surchargé."
+
+#: index.docbook:390
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>SCHEMA_NAME</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>MON_SCHEMA</literal>"
+
+#: index.docbook:398
+msgid "hibernate.default_catalog"
+msgstr "hibernate.default_catalog"
+
+#: index.docbook:400
+msgid "Qualify unqualified table names with the given catalog in generated SQL."
+msgstr "Qualifie les noms de tables non qualifiées avec ce catalogue dans le SQL généré."
+
+#: index.docbook:403
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>CATALOG_NAME</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>CATALOG_NAME</literal>"
+
+#: index.docbook:411
+msgid "hibernate.session_factory_name"
+msgstr "hibernate.session_factory_name"
+
+#: index.docbook:413
+msgid "The <literal>SessionFactory</literal> will be automatically bound to this name in JNDI after it has been created."
+msgstr "La <literal>SessionFactory</literal> sera automatiquement liée à ce nom dans le JNDI après sa création."
+
+#: index.docbook:416, index.docbook:859
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>jndi/composite/name</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>jndi/nom/hierarchique</literal>"
+
+#: index.docbook:424
+msgid "hibernate.max_fetch_depth"
+msgstr "hibernate.max_fetch_depth"
+
+#: index.docbook:426
+msgid "Set a maximum \"depth\" for the outer join fetch tree for single-ended associations (one-to-one, many-to-one). A <literal>0</literal> disables default outer join fetching."
+msgstr "Définit la profondeur maximale d'un arbre de chargement par jointures ouvertes pour les associations à cardinalité unitaire (un-à-un, plusieurs-à-un). Un <literal>0</literal> désactive le chargement par jointure ouverte."
+
+#: index.docbook:430
+msgid "<emphasis role=\"strong\">eg.</emphasis> recommended values between <literal>0</literal> and <literal>3</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> valeurs recommandées entre <literal>0</literal> et <literal>3</literal>"
+
+#: index.docbook:439
+msgid "hibernate.default_batch_fetch_size"
+msgstr "hibernate.default_batch_fetch_size"
+
+#: index.docbook:441
+msgid "Set a default size for Hibernate batch fetching of associations."
+msgstr "Définit une taille par défaut pour le chargement par lot des associations"
+
+#: index.docbook:443
+msgid "<emphasis role=\"strong\">eg.</emphasis> recommended values <literal>4</literal>, <literal>8</literal>, <literal>16</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> Valeurs recommandées : <literal>4</literal>, <literal>8</literal>, <literal>16</literal>"
+
+#: index.docbook:452
+msgid "hibernate.default_entity_mode"
+msgstr "hibernate.default_entity_mode"
+
+#: index.docbook:454
+msgid "Set a default mode for entity representation for all sessions opened from this <literal>SessionFactory</literal>"
+msgstr "Définit un mode de représentation par défaut des entités pour toutes les sessions ouvertes depuis cette <literal>SessionFactory</literal>"
+
+#: index.docbook:457
+msgid "<literal>dynamic-map</literal>, <literal>dom4j</literal>, <literal>pojo</literal>"
+msgstr "<literal>dynamic-map</literal>, <literal>dom4j</literal>, <literal>pojo</literal>"
+
+#: index.docbook:465
+msgid "hibernate.order_updates"
+msgstr "hibernate.order_updates"
+
+#: index.docbook:467
+msgid "Force Hibernate to order SQL updates by the primary key value of the items being updated. This will result in fewer transaction deadlocks in highly concurrent systems."
+msgstr "Force Hibernate à trier les updates SQL par la valeur de la clé primaire des éléments qui sont mis à jour. Cela permet de limiter les deadlocks de transaction dans les systèmes hautement concurents."
+
+#: index.docbook:479
+msgid "hibernate.generate_statistics"
+msgstr "hibernate.generate_statistics"
+
+#: index.docbook:481
+msgid "If enabled, Hibernate will collect statistics useful for performance tuning."
+msgstr "Si activé, Hibernate va collecter des statistiques utiles pour le réglage des performances."
+
+#: index.docbook:492
+msgid "hibernate.use_identifier_rollback"
+msgstr "hibernate.use_identifer_rollback"
+
+#: index.docbook:494
+msgid "If enabled, generated identifier properties will be reset to default values when objects are deleted."
+msgstr "Si activé, les propriétés correspondant à l'identifiant des objets vont être remises aux valeurs par défaut lorsque les objets seront supprimés."
+
+#: index.docbook:505
+msgid "hibernate.use_sql_comments"
+msgstr "hibernate.use_sql_comments"
+
+#: index.docbook:507
+msgid "If turned on, Hibernate will generate comments inside the SQL, for easier debugging, defaults to <literal>false</literal>."
+msgstr "Si activé, Hibernate va générer des commentaires à l'intérieur des requêtes SQL pour faciliter le debogage., par défaut à <literal>false</literal>."
+
+#: index.docbook:521
+msgid "Hibernate JDBC and Connection Properties"
+msgstr "Propriétés Hibernate liées à JDBC et aux connexions"
+
+#: index.docbook:536
+msgid "hibernate.jdbc.fetch_size"
+msgstr "hibernate.jdbc.fetch_size"
+
+#: index.docbook:538
+msgid "A non-zero value determines the JDBC fetch size (calls <literal>Statement.setFetchSize()</literal>)."
+msgstr "Une valeur non nulle détermine la taille de chargement des statements JDBC (appelle <literal>Statement.setFetchSize()</literal>)."
+
+#: index.docbook:545
+msgid "hibernate.jdbc.batch_size"
+msgstr "hibernate.jdbc.batch_size"
+
+#: index.docbook:547
+msgid "A non-zero value enables use of JDBC2 batch updates by Hibernate."
+msgstr "Une valeur non nulle active l'utilisation par Hibernate des mises à jour par batch de JDBC2."
+
+#: index.docbook:549
+msgid "<emphasis role=\"strong\">eg.</emphasis> recommended values between <literal>5</literal> and <literal>30</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> les valeurs recommandées entre <literal>5</literal> et <literal>30</literal>"
+
+#: index.docbook:557
+msgid "hibernate.jdbc.batch_versioned_data"
+msgstr "hibernate.jdbc.batch_versioned_data"
+
+#: index.docbook:559
+msgid "Set this property to <literal>true</literal> if your JDBC driver returns correct row counts from <literal>executeBatch()</literal> (it is usually safe to turn this option on). Hibernate will then use batched DML for automatically versioned data. Defaults to <literal>false</literal>."
+msgstr "Paramétrez cette propriété à <literal>true</literal> si votre pilote JDBC retourne des row counts corrects depuis <literal>executeBatch()</literal> (il est souvent approprié d'activer cette option). Hibernate utilisera alors le \"batched DML\" pour versionner automatiquement les données. Par défaut = <literal>false</literal>."
+
+#: index.docbook:572
+msgid "hibernate.jdbc.factory_class"
+msgstr "hibernate.jdbc.factory_class"
+
+#: index.docbook:574
+msgid "Select a custom <literal>Batcher</literal>. Most applications will not need this configuration property."
+msgstr "Sélectionne un <literal>Batcher</literal> personnalisé. La plupart des applications n'auront pas besoin de cette propriété de configuration"
+
+#: index.docbook:577
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.BatcherFactory</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>classname.of.BatcherFactory</literal>"
+
+#: index.docbook:585
+msgid "hibernate.jdbc.use_scrollable_resultset"
+msgstr "hibernate.jdbc.use_scrollable_resultset"
+
+#: index.docbook:587
+msgid "Enables use of JDBC2 scrollable resultsets by Hibernate. This property is only necessary when using user supplied JDBC connections, Hibernate uses connection metadata otherwise."
+msgstr "Active l'utilisation par Hibernate des resultsets scrollables de JDBC2. Cette propriété est seulement nécessaire lorsque l'on utilise une connexion JDBC fournie par l'utilisateur. Autrement, Hibernate utilise les métadonnées de la connexion."
+
+#: index.docbook:599
+msgid "hibernate.jdbc.use_streams_for_binary"
+msgstr "hibernate.jdbc.use_streams_for_binary"
+
+#: index.docbook:601
+msgid "Use streams when writing/reading <literal>binary</literal> or <literal>serializable</literal> types to/from JDBC (system-level property)."
+msgstr "Utilise des flux lorsque l'on écrit/lit des types <literal>binary</literal> ou <literal>serializable</literal> vers et à partir de JDBC (propriété de niveau système)."
+
+#: index.docbook:613
+msgid "hibernate.jdbc.use_get_generated_keys"
+msgstr "hibernate.jdbc.use_get_generated_keys"
+
+#: index.docbook:615
+msgid "Enable use of JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal> to retrieve natively generated keys after insert. Requires JDBC3+ driver and JRE1.4+, set to false if your driver has problems with the Hibernate identifier generators. By default, tries to determine the driver capabilities using connection metadata."
+msgstr "Active l'utilisation de <literal>PreparedStatement.getGeneratedKeys()</literal> de JDBC3 pour récupérer nativement les clés générées après insertion. Nécessite un pilote JDBC3+, le mettre à false si votre pilote a des problèmes avec les générateurs d'identifiant Hibernate. Par défaut, essaie de déterminer les possibilités du pilote en utilisant les meta données de connexion."
+
+#: index.docbook:621, index.docbook:751, index.docbook:763, index.docbook:777, index.docbook:815
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>true|false</literal>"
+msgstr "<emphasis role=\"strong\">eg.</emphasis> <literal>true|false</literal>"
+
+#: index.docbook:629
+msgid "hibernate.connection.provider_class"
+msgstr "hibernate.connection.provider_class"
+
+#: index.docbook:631
+msgid "The classname of a custom <literal>ConnectionProvider</literal> which provides JDBC connections to Hibernate."
+msgstr "Le nom de la classe d'un <literal>ConnectionProvider</literal> personnalisé qui fournit des connexions JDBC à Hibernate"
+
+#: index.docbook:634
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.ConnectionProvider</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>classname.of.ConnectionProvider</literal>"
+
+#: index.docbook:642
+msgid "hibernate.connection.isolation"
+msgstr "hibernate.connection.isolation"
+
+#: index.docbook:644
+msgid "Set the JDBC transaction isolation level. Check <literal>java.sql.Connection</literal> for meaningful values but note that most databases do not support all isolation levels."
+msgstr "Définit le niveau d'isolation des transactions JDBC. Regardez <literal>java.sql.Connection</literal> pour connaître le sens des différentes valeurs mais notez également que la plupart des bases de données ne supportent pas tous les niveaux d'isolation."
+
+#: index.docbook:648
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>1, 2, 4, 8</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>1, 2, 4, 8</literal>"
+
+#: index.docbook:656
+msgid "hibernate.connection.autocommit"
+msgstr "hibernate.connection.autocommit"
+
+#: index.docbook:658
+msgid "Enables autocommit for JDBC pooled connections (not recommended)."
+msgstr "Active le mode de commit automatique (autocommit) pour les connexions JDBC du pool (non recommandé)."
+
+#: index.docbook:668
+msgid "hibernate.connection.release_mode"
+msgstr "hibernate.connection.release_mode"
+
+#: index.docbook:670
+msgid "Specify when Hibernate should release JDBC connections. By default, a JDBC connection is held until the session is explicitly closed or disconnected. For an application server JTA datasource, you should use <literal>after_statement</literal> to aggressively release connections after every JDBC call. For a non-JTA connection, it often makes sense to release the connection at the end of each transaction, by using <literal>after_transaction</literal>. <literal>auto</literal> will choose <literal>after_statement</literal> for the JTA and CMT transaction strategies and <literal>after_transaction</literal> for the JDBC transaction strategy."
+msgstr "Spécifie à quel moment Hibernate doit relacher les connexion JDBC. Par défaut une connexion JDBC est conservée jusqu'à ce que la session soit explicitement fermée ou déconnectée. Pour une source de données JTA d'un serveur d'application, vous devriez utiliser <literal>after_statement</literal> pour libérer les connexions de manière plus agressive après chaque appel JDBC. Pour une connexion non JTA, il est souvent préférable de libérer la connexion à la fin de chaque transaction en utilisant <literal>after_transaction</literal>. <literal>auto</literal> choisira <literal>after_statement</literal> pour des transactions JTA et CMT et <literal>after_transaction</literal> pour des transactions JDBC."
+
+#: index.docbook:681
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>auto</literal> (default) | <literal>on_close</literal> | <literal>after_transaction</literal> | <literal>after_statement</literal>"
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>on_close</literal> (default) | <literal>after_transaction</literal> | <literal>after_statement</literal> | <literal>auto</literal>"
+
+#: index.docbook:686
+msgid "Note that this setting only affects <literal>Session</literal>s returned from <literal>SessionFactory.openSession</literal>. For <literal>Session</literal>s obtained through <literal>SessionFactory.getCurrentSession</literal>, the <literal>CurrentSessionContext</literal> implementation configured for use controls the connection release mode for those <literal>Session</literal>s. See"
+msgstr "hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis>"
+
+#: index.docbook:698
+msgid "hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis>"
+msgstr "Passe la propriété JDBC<literal>propertyName</literal> à <literal>DriverManager.getConnection()</literal>."
+
+#: index.docbook:700
+msgid "Pass the JDBC property <literal>propertyName</literal> to <literal>DriverManager.getConnection()</literal>."
+msgstr "hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis>"
+
+#: index.docbook:707
+msgid "hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis>"
+msgstr "Passe la propriété <literal>propertyName</literal> à l'<literal>InitialContextFactory</literal> de JNDI."
+
+#: index.docbook:709
+msgid "Pass the property <literal>propertyName</literal> to the JNDI <literal>InitialContextFactory</literal>."
+msgstr "Propriétés du Cache d'Hibernate"
+
+#: index.docbook:719
+msgid "Hibernate Cache Properties"
+msgstr "Nom de la propriété"
+
+#: index.docbook:732
+msgid "hibernate.cache.provider_class"
+msgstr "Le nom de classe d'un <literal>CacheProvider</literal> spécifique."
+
+#: index.docbook:734
+msgid "The classname of a custom <literal>CacheProvider</literal>."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>nom.de.classe.du.CacheProvider</literal>"
+
+#: index.docbook:736
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.CacheProvider</literal>"
+msgstr "hibernate.cache.use_minimal_puts"
+
+#: index.docbook:744
+msgid "hibernate.cache.use_minimal_puts"
+msgstr "Optimise le cache de second niveau en minimisant les écritures, au prix de plus de lectures. Ce paramètre est surtout utile pour les caches en cluster et est activé par défaut dans hibernate3 pour les implémentations de cache en cluster."
+
+#: index.docbook:746
+msgid "Optimize second-level cache operation to minimize writes, at the cost of more frequent reads. This setting is most useful for clustered caches and, in Hibernate3, is enabled by default for clustered cache implementations."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true|false</literal>"
+
+#: index.docbook:759
+msgid "hibernate.cache.use_query_cache"
+msgstr "Activer le cache de requête, les requêtes individuelles doivent tout de même être déclarées comme pouvant être mise en cache."
+
+#: index.docbook:761
+msgid "Enable the query cache, individual queries still have to be set cachable."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true|false</literal>"
+
+#: index.docbook:771
+msgid "hibernate.cache.use_second_level_cache"
+msgstr "Peut être utilisé pour désactiver complètement le cache de second niveau qui est activé par défaut pour les classes qui spécifient un élément <literal>&lt;cache&gt;</literal> dans leur mapping."
+
+#: index.docbook:773
+msgid "May be used to completely disable the second level cache, which is enabled by default for classes which specify a <literal>&lt;cache&gt;</literal> mapping."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true|false</literal>"
+
+#: index.docbook:785
+msgid "hibernate.cache.query_cache_factory"
+msgstr "Le nom de classe d'une interface <literal>QueryCacheFactory</literal> , par défaut = built-in <literal>StandardQueryCacheFactory</literal>."
+
+#: index.docbook:787
+msgid "The classname of a custom <literal>QueryCache</literal> interface, defaults to the built-in <literal>StandardQueryCache</literal>."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>nom.de.la.classe.de.QueryCacheFactory</literal>"
+
+#: index.docbook:790
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.QueryCache</literal>"
+msgstr "hibernate.cache.region_prefix"
+
+#: index.docbook:798
+msgid "hibernate.cache.region_prefix"
+msgstr "Un préfixe à utiliser pour le nom des régions du cache de second niveau."
+
+#: index.docbook:800
+msgid "A prefix to use for second-level cache region names."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>prefix</literal>"
+
+#: index.docbook:802
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>prefix</literal>"
+msgstr "hibernate.cache.use_structured_entries"
+
+#: index.docbook:810
+msgid "hibernate.cache.use_structured_entries"
+msgstr "Force Hibernate à stocker les données dans le cache de second niveau dans un format plus adapté à la visualisation par un humain."
+
+#: index.docbook:812
+msgid "Forces Hibernate to store data in the second-level cache in a more human-friendly format."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true|false</literal>"
+
+#: index.docbook:826
+msgid "Hibernate Transaction Properties"
+msgstr "Nom de la propriété"
+
+#: index.docbook:839
+msgid "hibernate.transaction.factory_class"
+msgstr "Le nom de classe d'une <literal>TransactionFactory</literal> qui sera utilisée par l'API <literal>Transaction</literal> d'Hibernate (la valeur par défaut est <literal>JDBCTransactionFactory</literal>)."
+
+#: index.docbook:841
+msgid "The classname of a <literal>TransactionFactory</literal> to use with Hibernate <literal>Transaction</literal> API (defaults to <literal>JDBCTransactionFactory</literal>)."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>nom.de.classe.d.une.TransactionFactory</literal>"
+
+#: index.docbook:845
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.TransactionFactory</literal>"
+msgstr "jta.UserTransaction"
+
+#: index.docbook:853
+msgid "jta.UserTransaction"
+msgstr "Le nom JNDI utilisé par la <literal>JTATransactionFactory</literal> pour obtenir la <literal>UserTransaction</literal> JTA du serveur d'applications."
+
+#: index.docbook:855
+msgid "A JNDI name used by <literal>JTATransactionFactory</literal> to obtain the JTA <literal>UserTransaction</literal> from the application server."
+msgstr "<emphasis role=\"strong\">eg.</emphasis> <literal>jndi/nom/compose</literal>"
+
+#: index.docbook:867
+msgid "hibernate.transaction.manager_lookup_class"
+msgstr "Le nom de la classe du <literal>TransactionManagerLookup</literal> - requis lorsque le cache de niveau JVM est activé ou lorsque l'on utilise un générateur hilo dans un environnement JTA."
+
+#: index.docbook:869
+msgid "The classname of a <literal>TransactionManagerLookup</literal> - required when JVM-level caching is enabled or when using hilo generator in a JTA environment."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>nom.de.classe.du.TransactionManagerLookup</literal>"
+
+#: index.docbook:873
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of.TransactionManagerLookup</literal>"
+msgstr "hibernate.transaction.flush_before_completion"
+
+#: index.docbook:881
+msgid "hibernate.transaction.flush_before_completion"
+msgstr "Si activé, la session sera automatiquement vidée durant la phase qui précède la fin de la transaction (before completion). La gestion automatique de contexte fourni par Hibernate est recommandée, voir <xref linkend=\"architecture-current-session\"/>."
+
+#: index.docbook:883
+msgid "If enabled, the session will be automatically flushed during the before completion phase of the transaction. Built-in and automatic session context management is preferred, see <xref linkend=\"architecture-current-session\"/>."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true</literal> | <literal>false</literal>"
+
+#: index.docbook:896
+msgid "hibernate.transaction.auto_close_session"
+msgstr "Si activé, la session sera automatiquement fermé pendant la phase qui suit la fin de la transaction (after completion). La gestion automatique de contexte fourni par Hibernate est recommandée, voir"
+
+#: index.docbook:898
+msgid "If enabled, the session will be automatically closed during the after completion phase of the transaction. Built-in and utomatic session context management is preferred, see <xref linkend=\"architecture-current-session\"/>."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true</literal> | <literal>false</literal>"
+
+#: index.docbook:914
+msgid "Miscellaneous Properties"
+msgstr "Nom de la propriété"
+
+#: index.docbook:927
+msgid "hibernate.current_session_context_class"
+msgstr "Fournit une stratégie particulière pour contextualiser la <literal>Session</literal> courante. Voir <xref linkend=\"architecture-current-session\"/> pour plus d'informations sur les stratégies fournies."
+
+#: index.docbook:929
+msgid "Supply a (custom) strategy for the scoping of the \"current\" <literal>Session</literal>. See <xref linkend=\"architecture-current-session\"/> for more information about the built-in strategies."
+msgstr "<emphasis role=\"strong\">eg.</emphasis> <literal>jta</literal> | <literal>thread</literal> | <literal>custom.Class</literal>"
+
+#: index.docbook:934
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>jta</literal> | <literal>thread</literal> | <literal>managed</literal> | <literal>custom.Class</literal>"
+msgstr "hibernate.query.factory_class"
+
+#: index.docbook:943
+msgid "hibernate.query.factory_class"
+msgstr "Choisi l'implémentation du parseur de requête"
+
+#: index.docbook:945
+msgid "Chooses the HQL parser implementation."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> ou <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal>"
+
+#: index.docbook:947
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> or <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal>"
+msgstr "hibernate.query.substitutions"
+
+#: index.docbook:956
+msgid "hibernate.query.substitutions"
+msgstr "Lien entre les tokens de requêtes Hibernate et les tokens SQL (les tokens peuvent être des fonctions ou des noms littéraux par exemple)."
+
+#: index.docbook:958
+msgid "Mapping from tokens in Hibernate queries to SQL tokens (tokens might be function or literal names, for example)."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>"
+
+#: index.docbook:961
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>"
+msgstr "hibernate.hbm2ddl.auto"
+
+#: index.docbook:969
+msgid "hibernate.hbm2ddl.auto"
+msgstr "Valide ou exporte automatiquement le schéma DDL vers la base de données lorsque la <literal>SessionFactory</literal> est créée. La valeur <literal>create-drop</literal> permet de supprimer le schéma de base de données lorsque la <literal>SessionFactory</literal> est fermée explicitement."
+
+#: index.docbook:971
+msgid "Automatically validate or export schema DDL to the database when the <literal>SessionFactory</literal> is created. With <literal>create-drop</literal>, the database schema will be dropped when the <literal>SessionFactory</literal> is closed explicitly."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>validate</literal> | <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>"
+
+#: index.docbook:977
+msgid "<emphasis role=\"strong\">eg.</emphasis> <literal>validate</literal> | <literal>update</literal> | <literal>create</literal> | <literal>create-drop</literal>"
+msgstr "hibernate.cglib.use_reflection_optimizer"
+
+#: index.docbook:986
+msgid "hibernate.cglib.use_reflection_optimizer"
+msgstr "Active l'utilisation de CGLIB à la place de la réflexion à l'exécution (Propriété de niveau système). La réflexion peut parfois être utile pour résoudre des problèmes. Notez qu'Hibernate a tout de même toujours besoin de CGLIB même si l'optimiseur est désactivé. Cette optimisation ne peut être définie que dans le fichier <literal>hibernate.cfg.xml</literal>."
+
+#: index.docbook:988
+msgid "Enables use of CGLIB instead of runtime reflection (System-level property). Reflection can sometimes be useful when troubleshooting, note that Hibernate always requires CGLIB even if you turn off the optimizer. You can not set this property in <literal>hibernate.cfg.xml</literal>."
+msgstr "<emphasis role=\"strong\">ex.</emphasis> <literal>true</literal> | <literal>false</literal>"
+
+#: index.docbook:1004
+msgid "SQL Dialects"
+msgstr "Vous devriez toujours positionner la propriété <literal>hibernate.dialect</literal> à la sous-classe de <literal>org.hibernate.dialect.Dialect</literal> appropriée à votre base de données. Si vous spécifiez un dialecte, Hibernate utilisera des valeurs adaptées pour certaines autres propriétés listées ci-dessus, vous évitant l'effort de le faire à la main."
+
+#: index.docbook:1006
+msgid "You should always set the <literal>hibernate.dialect</literal> property to the correct <literal>org.hibernate.dialect.Dialect</literal> subclass for your database. If you specify a dialect, Hibernate will use sensible defaults for some of the other properties listed above, saving you the effort of specifying them manually."
+msgstr "Dialectes SQL d'Hibernate (<literal>hibernate.dialect</literal>)"
+
+#: index.docbook:1014
+msgid "Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)"
+msgstr "SGBD"
+
+#: index.docbook:1022
+msgid "RDBMS"
+msgstr "Dialecte"
+
+#: index.docbook:1023
+msgid "Dialect"
+msgstr "<entry>DB2</entry>"
+
+#: index.docbook:1028
+msgid "<entry>DB2</entry>"
+msgstr "org.hibernate.dialect.DB2Dialect"
+
+#: index.docbook:1028
+msgid "org.hibernate.dialect.DB2Dialect"
+msgstr "DB2 AS/400"
+
+#: index.docbook:1031
+msgid "DB2 AS/400"
+msgstr "org.hibernate.dialect.DB2400Dialect"
+
+#: index.docbook:1031
+msgid "org.hibernate.dialect.DB2400Dialect"
+msgstr "DB2 OS390"
+
+#: index.docbook:1034
+msgid "DB2 OS390"
+msgstr "org.hibernate.dialect.DB2390Dialect"
+
+#: index.docbook:1034
+msgid "org.hibernate.dialect.DB2390Dialect"
+msgstr "PostgreSQL"
+
+#: index.docbook:1037
+msgid "PostgreSQL"
+msgstr "org.hibernate.dialect.PostgreSQLDialect"
+
+#: index.docbook:1037
+msgid "org.hibernate.dialect.PostgreSQLDialect"
+msgstr "MySQL"
+
+#: index.docbook:1040
+msgid "MySQL"
+msgstr "org.hibernate.dialect.MySQLDialect"
+
+#: index.docbook:1040
+msgid "org.hibernate.dialect.MySQLDialect"
+msgstr "MySQL with InnoDB"
+
+#: index.docbook:1043
+msgid "MySQL with InnoDB"
+msgstr "org.hibernate.dialect.MySQLInnoDBDialect"
+
+#: index.docbook:1043
+msgid "org.hibernate.dialect.MySQLInnoDBDialect"
+msgstr "MySQL with MyISAM"
+
+#: index.docbook:1046
+msgid "MySQL with MyISAM"
+msgstr "org.hibernate.dialect.MySQLMyISAMDialect"
+
+#: index.docbook:1046
+msgid "org.hibernate.dialect.MySQLMyISAMDialect"
+msgstr "Oracle (any version)"
+
+#: index.docbook:1049
+msgid "Oracle (any version)"
+msgstr "org.hibernate.dialect.OracleDialect"
+
+#: index.docbook:1049
+msgid "org.hibernate.dialect.OracleDialect"
+msgstr "Oracle 9i/10g"
+
+#: index.docbook:1052
+msgid "Oracle 9i/10g"
+msgstr "org.hibernate.dialect.Oracle9Dialect"
+
+#: index.docbook:1052
+msgid "org.hibernate.dialect.Oracle9Dialect"
+msgstr "Sybase"
+
+#: index.docbook:1055
+msgid "Sybase"
+msgstr "org.hibernate.dialect.SybaseDialect"
+
+#: index.docbook:1055
+msgid "org.hibernate.dialect.SybaseDialect"
+msgstr "Sybase Anywhere"
+
+#: index.docbook:1058
+msgid "Sybase Anywhere"
+msgstr "org.hibernate.dialect.SybaseAnywhereDialect"
+
+#: index.docbook:1058
+msgid "org.hibernate.dialect.SybaseAnywhereDialect"
+msgstr "Microsoft SQL Server"
+
+#: index.docbook:1061
+msgid "Microsoft SQL Server"
+msgstr "org.hibernate.dialect.SQLServerDialect"
+
+#: index.docbook:1061
+msgid "org.hibernate.dialect.SQLServerDialect"
+msgstr "SAP DB"
+
+#: index.docbook:1064
+msgid "SAP DB"
+msgstr "org.hibernate.dialect.SAPDBDialect"
+
+#: index.docbook:1064
+msgid "org.hibernate.dialect.SAPDBDialect"
+msgstr "Informix"
+
+#: index.docbook:1067
+msgid "Informix"
+msgstr "org.hibernate.dialect.InformixDialect"
+
+#: index.docbook:1067
+msgid "org.hibernate.dialect.InformixDialect"
+msgstr "HypersonicSQL"
+
+#: index.docbook:1070
+msgid "HypersonicSQL"
+msgstr "org.hibernate.dialect.HSQLDialect"
+
+#: index.docbook:1070
+msgid "org.hibernate.dialect.HSQLDialect"
+msgstr "Ingres"
+
+#: index.docbook:1073
+msgid "Ingres"
+msgstr "org.hibernate.dialect.IngresDialect"
+
+#: index.docbook:1073
+msgid "org.hibernate.dialect.IngresDialect"
+msgstr "Progress"
+
+#: index.docbook:1076
+msgid "Progress"
+msgstr "org.hibernate.dialect.ProgressDialect"
+
+#: index.docbook:1076
+msgid "org.hibernate.dialect.ProgressDialect"
+msgstr "Mckoi SQL"
+
+#: index.docbook:1079
+msgid "Mckoi SQL"
+msgstr "org.hibernate.dialect.MckoiDialect"
+
+#: index.docbook:1079
+msgid "org.hibernate.dialect.MckoiDialect"
+msgstr "Interbase"
+
+#: index.docbook:1082
+msgid "Interbase"
+msgstr "org.hibernate.dialect.InterbaseDialect"
+
+#: index.docbook:1082
+msgid "org.hibernate.dialect.InterbaseDialect"
+msgstr "Pointbase"
+
+#: index.docbook:1085
+msgid "Pointbase"
+msgstr "org.hibernate.dialect.PointbaseDialect"
+
+#: index.docbook:1085
+msgid "org.hibernate.dialect.PointbaseDialect"
+msgstr "FrontBase"
+
+#: index.docbook:1088
+msgid "FrontBase"
+msgstr "org.hibernate.dialect.FrontbaseDialect"
+
+#: index.docbook:1088
+msgid "org.hibernate.dialect.FrontbaseDialect"
+msgstr "Firebird"
+
+#: index.docbook:1091
+msgid "Firebird"
+msgstr "org.hibernate.dialect.FirebirdDialect"
+
+#: index.docbook:1091
+msgid "org.hibernate.dialect.FirebirdDialect"
+msgstr "Chargement par Jointure Ouverte"
+
+#: index.docbook:1100
+msgid "Outer Join Fetching"
+msgstr "Si votre base de données supporte les outer joins de type ANSI, Oracle ou Sybase, <emphasis>le chargement par jointure ouverte</emphasis> devrait améliorer les performances en limitant le nombre d'aller-retour avec la base de données (la base de données effectuant donc potentiellement plus de travail). Le chargement par jointure ouverte permet à un graphe entier d'objets connectés par une relation plusieurs-à-un, un-à-plusieurs ou un-à-un d'être chargé en un seul <literal>SELECT</literal> SQL."
+
+#: index.docbook:1102
+msgid "If your database supports ANSI, Oracle or Sybase style outer joins, <emphasis>outer join fetching</emphasis> will often increase performance by limiting the number of round trips to and from the database (at the cost of possibly more work performed by the database itself). Outer join fetching allows a whole graph of objects connected by many-to-one, one-to-many, many-to-many and one-to-one associations to be retrieved in a single SQL <literal>SELECT</literal>."
+msgstr "Le chargement par jointure ouverte peut être désactiver <emphasis>globalement</emphasis> en mettant la propriété <literal>hibernate.max_fetch_depth</literal> à <literal>0</literal>. Une valeur de <literal>1</literal> ou plus active le chargement par jointure ouverte pour les associatiosn un-à-un et plusieurs-à-un qui ont été mappée avec <literal>fetch=\"join\"</literal>."
+
+#: index.docbook:1111
+msgid "Outer join fetching may be disabled <emphasis>globally</emphasis> by setting the property <literal>hibernate.max_fetch_depth</literal> to <literal>0</literal>. A setting of <literal>1</literal> or higher enables outer join fetching for one-to-one and many-to-one associations which have been mapped with <literal>fetch=\"join\"</literal>."
+msgstr "Reportez vous à <xref linkend=\"performance-fetching\"/> pour plus d'information."
+
+#: index.docbook:1119
+msgid "See <xref linkend=\"performance-fetching\"/> for more information."
+msgstr "Flux binaires"
+
+#: index.docbook:1126
+msgid "Binary Streams"
+msgstr "Oracle limite la taille d'un tableau de <literal>byte</literal> qui peuvent être passées à et vers son pilote JDBC. Si vous souhaitez utiliser des instances larges de type <literal>binary</literal> ou <literal>serializable</literal>, vous devez activer la propriété <literal>hibernate.jdbc.use_streams_for_binary</literal>. <emphasis>C'est une fonctionalité de niveau système uniquement.</emphasis>"
+
+#: index.docbook:1128
+msgid "Oracle limits the size of <literal>byte</literal> arrays that may be passed to/from its JDBC driver. If you wish to use large instances of <literal>binary</literal> or <literal>serializable</literal> type, you should enable <literal>hibernate.jdbc.use_streams_for_binary</literal>. <emphasis>This is a system-level setting only.</emphasis>"
+msgstr "Cache de second niveau et cache de requêtes"
+
+#: index.docbook:1139
+msgid "Second-level and query cache"
+msgstr "Les propriétés préfixées par <literal>hibernate.cache</literal> vous permettent d'utiliser un système de cache de second niveau. Ce cache peut avoir une portée dans le processus ou même être utilisable dans un système distribué. Référez vous au chapitre <xref linkend=\"performance-cache\"/> pour plus de détails."
+
+#: index.docbook:1141
+msgid "The properties prefixed by <literal>hibernate.cache</literal> allow you to use a process or cluster scoped second-level cache system with Hibernate. See the <xref linkend=\"performance-cache\"/> for more details."
+msgstr "Substitution dans le langage de requêtage"
+
+#: index.docbook:1151
+msgid "Query Language Substitution"
+msgstr "Vous pouvez définir de nouveaux tokens dans les requêtes Hibernate en utilisant la propriété <literal>hibernate.query.substitutions</literal>. Par exemple :"
+
+#: index.docbook:1153
+msgid "You may define new Hibernate query tokens using <literal>hibernate.query.substitutions</literal>. For example:"
+msgstr "hibernate.query.substitutions vrai=1, faux=0"
+
+#: index.docbook:1158
+msgid "hibernate.query.substitutions true=1, false=0"
+msgstr "remplacerait les tokens <literal>vrai</literal> et <literal>faux</literal> par des entiers dans le SQL généré."
+
+#: index.docbook:1160
+msgid "would cause the tokens <literal>true</literal> and <literal>false</literal> to be translated to integer literals in the generated SQL."
+msgstr "hibernate.query.substitutions toLowercase=LOWER"
+
+#: index.docbook:1165
+msgid "hibernate.query.substitutions toLowercase=LOWER"
+msgstr "permettrait de renommer la fonction SQL <literal>LOWER</literal> en <literal>toLowercase</literal>"
+
+#: index.docbook:1167
+msgid "would allow you to rename the SQL <literal>LOWER</literal> function."
+msgstr "Statistiques Hibernate"
+
+#: index.docbook:1174
+msgid "Hibernate statistics"
+msgstr "Si vous activez <literal>hibernate.generate_statistics</literal>, Hibernate va fournir un certains nombre de métriques utiles pour régler les performances d'une application qui tourne via <literal>SessionFactory.getStatistics()</literal>. Hibernate peut aussi être configuré pour exposer ces statistiques via JMX. Lisez les Javadoc des interfaces dans le package <literal>org.hibernate.stats</literal> pour plus d'informations."
+
+#: index.docbook:1176
+msgid "If you enable <literal>hibernate.generate_statistics</literal>, Hibernate will expose a number of metrics that are useful when tuning a running system via <literal>SessionFactory.getStatistics()</literal>. Hibernate can even be configured to expose these statistics via JMX. Read the Javadoc of the interfaces in <literal>org.hibernate.stats</literal> for more information."
+msgstr "Tracer"
+
+#: index.docbook:1188
+msgid "Logging"
+msgstr "Hibernate trace divers évènements en utilisant Apache commons-logging."
+
+#: index.docbook:1190
+msgid "Hibernate logs various events using Apache commons-logging."
+msgstr "Le service commons-logging délèguera directement à Apache Log4j (si vous incluez <literal>log4j.jar</literal> dans votre classpath) ou le système de trace du JDK 1.4 (si vous tournez sous le JDK 1.4 et supérieur). Vous pouvez télécharger Log4j à partir de <literal>http://jakarta.apache.org</literal>. Pour utiliser Log4j, vous devrez placer dans votre classpath un fichier <literal>log4j.properties</literal>. Un exemple de fichier est distribué avec Hibernate dans le répertoire <literal>src/</literal>."
+
+#: index.docbook:1194
+msgid "The commons-logging service will direct output to either Apache Log4j (if you include <literal>log4j.jar</literal> in your classpath) or JDK1.4 logging (if running under JDK1.4 or above). You may download Log4j from <literal>http://jakarta.apache.org</literal>. To use Log4j you will need to place a <literal>log4j.properties</literal> file in your classpath, an example properties file is distributed with Hibernate in the <literal>src/</literal> directory."
+msgstr "Nous vous recommandons fortement de vous familiariser avec les messages des traces d'Hibernate. Beaucoup de soins a été apporté pour donner le plus de détails possible sans les rendre illisibles. C'est un outil essentiel en cas de soucis. Les catégories de trace les plus intéressantes sont les suivantes :"
+
+#: index.docbook:1204
+msgid "We strongly recommend that you familiarize yourself with Hibernate's log messages. A lot of work has been put into making the Hibernate log as detailed as possible, without making it unreadable. It is an essential troubleshooting device. The most interesting log categories are the following:"
+msgstr "Catégories de trace d'Hibernate"
+
+#: index.docbook:1213
+msgid "Hibernate Log Categories"
+msgstr "Catégorie"
+
+#: index.docbook:1219
+msgid "Category"
+msgstr "Fonction"
+
+#: index.docbook:1220
+msgid "Function"
+msgstr "org.hibernate.SQL"
+
+#: index.docbook:1225
+msgid "org.hibernate.SQL"
+msgstr "Trace toutes les requêts SQL de type DML (gestion des données) qui sont exécutées"
+
+#: index.docbook:1226
+msgid "Log all SQL DML statements as they are executed"
+msgstr "org.hibernate.type"
+
+#: index.docbook:1229
+msgid "org.hibernate.type"
+msgstr "Trace tous les paramètres JDBC"
+
+#: index.docbook:1230
+msgid "Log all JDBC parameters"
+msgstr "org.hibernate.tool.hbm2ddl"
+
+#: index.docbook:1233
+msgid "org.hibernate.tool.hbm2ddl"
+msgstr "Trace toutes les requêts SQL de type DDL (gestion de la structure de la base) qui sont exécutées"
+
+#: index.docbook:1234
+msgid "Log all SQL DDL statements as they are executed"
+msgstr "org.hibernate.pretty"
+
+#: index.docbook:1237
+msgid "org.hibernate.pretty"
+msgstr "Trace l'état de toutes les entités (20 entités maximum) qui sont associées avec la session hibernate au moment du flush"
+
+#: index.docbook:1238
+msgid "Log the state of all entities (max 20 entities) associated with the session at flush time"
+msgstr "org.hibernate.cache"
+
+#: index.docbook:1244
+msgid "org.hibernate.cache"
+msgstr "Trace toute l'activité du cache de second niveau"
+
+#: index.docbook:1245
+msgid "Log all second-level cache activity"
+msgstr "org.hibernate.transaction"
+
+#: index.docbook:1248
+msgid "org.hibernate.transaction"
+msgstr "Trace toute l'activité relative aux transactions"
+
+#: index.docbook:1249
+msgid "Log transaction related activity"
+msgstr "org.hibernate.jdbc"
+
+#: index.docbook:1252
+msgid "org.hibernate.jdbc"
+msgstr "Trace toute acquisition de ressource JDBC"
+
+#: index.docbook:1253
+msgid "Log all JDBC resource acquisition"
+msgstr "org.hibernate.hql.ast.AST"
+
+#: index.docbook:1256
+msgid "org.hibernate.hql.ast.AST"
+msgstr "Trace l'arbre syntaxique des requêtes HQL et SQL durant l'analyse syntaxique des requêtes"
+
+#: index.docbook:1257
+msgid "Log HQL and SQL ASTs during query parsing"
+msgstr "org.hibernate.secure"
+
+#: index.docbook:1262
+msgid "org.hibernate.secure"
+msgstr "Trace toutes les demandes d'autorisation JAAS"
+
+#: index.docbook:1263
+msgid "Log all JAAS authorization requests"
+msgstr "org.hibernate"
+
+#: index.docbook:1266
+msgid "org.hibernate"
+msgstr "Trace tout (beaucoupe d'informations, mais très utile pour résoudre les problèmes)."
+
+#: index.docbook:1267
+msgid "Log everything (a lot of information, but very useful for troubleshooting)"
+msgstr "Lorsque vous développez des applications avec Hibernate, vous devriez quasiment toujours travailler avec le niveau <literal>debug</literal> activé pour la catégorie <literal>org.hibernate.SQL</literal>, ou sinon avec la propriété <literal>hibernate.show_sql</literal> activée."
+
+#: index.docbook:1276
+msgid "When developing applications with Hibernate, you should almost always work with <literal>debug</literal> enabled for the category <literal>org.hibernate.SQL</literal>, or, alternatively, the property <literal>hibernate.show_sql</literal> enabled."
+msgstr "Implémenter une <literal>NamingStrategy</literal>"
+
+#: index.docbook:1286
+msgid "Implementing a <literal>NamingStrategy</literal>"
+msgstr "L'interface <literal>org.hibernate.cfg.NamingStrategy</literal> vous permet de spécifier une \"stratégie de nommage\" des objets et éléments de la base de données."
+
+#: index.docbook:1288
+msgid "The interface <literal>org.hibernate.cfg.NamingStrategy</literal> allows you to specify a \"naming standard\" for database objects and schema elements."
+msgstr "Vous pouvez fournir des règles pour automatiquement générer les identifiants de base de données à partir des identifiants Java, ou transformer une colonne ou table \"logique\" donnée dans le fichier de mapping en une colonne ou table \"physique\". Cette fonctionnalité aide à réduire la verbosité de documents de mapping, en éliminant le bruit répétitif (les préfixes <literal>TBL_</literal> par exemple). La stratégie par défaut utilisée par Hibernate est minimale."
+
+#: index.docbook:1293
+msgid "You may provide rules for automatically generating database identifiers from Java identifiers or for processing \"logical\" column and table names given in the mapping file into \"physical\" table and column names. This feature helps reduce the verbosity of the mapping document, eliminating repetitive noise (<literal>TBL_</literal> prefixes, for example). The default strategy used by Hibernate is quite minimal."
+msgstr "Vous pouvez définir une stratégie différente en appelant <literal>Configuration.setNamingStrategy()</literal> avant d'ajouter des mappings :"
+
+#: index.docbook:1302
+msgid "You may specify a different strategy by calling <literal>Configuration.setNamingStrategy()</literal> before adding mappings:"
+msgstr ""
+      "<![CDATA[SessionFactory sf = new Configuration()\n"
+      "    .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)\n"
+      "    .addFile(\"Item.hbm.xml\")\n"
+      "    .addFile(\"Bid.hbm.xml\")\n"
+      "    .buildSessionFactory();]]>"
+
+#: index.docbook:1307
+msgid ""
+      "<![CDATA[SessionFactory sf = new Configuration()\n"
+      "    .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)\n"
+      "    .addFile(\"Item.hbm.xml\")\n"
+      "    .addFile(\"Bid.hbm.xml\")\n"
+      "    .buildSessionFactory();]]>"
+msgstr "<literal>net.sf.hibernate.cfg.ImprovedNamingStrategy</literal> est une stratégie fournie qui peut être utile comme point de départ de quelques applications."
+
+#: index.docbook:1309
+msgid "<literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> is a built-in strategy that might be a useful starting point for some applications."
+msgstr "Fichier de configuration XML"
+
+#: index.docbook:1317
+msgid "XML configuration file"
+msgstr "Une approche alternative est de spécifier toute la configuration dans un fichier nommé <literal>hibernate.cfg.xml</literal>. Ce fichier peut être utilisé à la place du fichier <literal>hibernate.properties</literal>, voire même peut servir à surcharger les propriétés si les deux fichiers sont présents."
+
+#: index.docbook:1319
+msgid "An alternative approach to configuration is to specify a full configuration in a file named <literal>hibernate.cfg.xml</literal>. This file can be used as a replacement for the <literal>hibernate.properties</literal> file or, if both are present, to override properties."
+msgstr "Le fichier de configuration XML doit par défaut se placer à la racine du <literal>CLASSPATH</literal>. En voici un exemple :"
+
+#: index.docbook:1326
+msgid "The XML configuration file is by default expected to be in the root o your <literal>CLASSPATH</literal>. Here is an example:"
+msgstr ""
+      "<![CDATA[<?xml version='1.0' encoding='utf-8'?>\n"
+      "<!DOCTYPE hibernate-configuration PUBLIC\n"
+      "    \"-//Hibernate/Hibernate Configuration DTD//EN\"\n"
+      "    \"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd\">\n"
+      "\n"
+      "<hibernate-configuration>\n"
+      "\n"
+      "    <!-- a SessionFactory instance listed as /jndi/name -->\n"
+      "    <session-factory\n"
+      "        name=\"java:hibernate/SessionFactory\">\n"
+      "\n"
+      "        <!-- properties -->\n"
+      "        <property name=\"connection.datasource\">java:/comp/env/jdbc/MyDB</property>\n"
+      "        <property name=\"dialect\">org.hibernate.dialect.MySQLDialect</property>\n"
+      "        <property name=\"show_sql\">false</property>\n"
+      "        <property name=\"transaction.factory_class\">\n"
+      "            org.hibernate.transaction.JTATransactionFactory\n"
+      "        </property>\n"
+      "        <property name=\"jta.UserTransaction\">java:comp/UserTransaction</property>\n"
+      "\n"
+      "        <!-- mapping files -->\n"
+      "        <mapping resource=\"org/hibernate/auction/Item.hbm.xml\"/>\n"
+      "        <mapping resource=\"org/hibernate/auction/Bid.hbm.xml\"/>\n"
+      "\n"
+      "        <!-- cache settings -->\n"
+      "        <class-cache class=\"org.hibernate.auction.Item\" usage=\"read-write\"/>\n"
+      "        <class-cache class=\"org.hibernate.auction.Bid\" usage=\"read-only\"/>\n"
+      "        <collection-cache collection=\"org.hibernate.auction.Item.bids\" usage=\"read-write\"/>\n"
+      "\n"
+      "    </session-factory>\n"
+      "\n"
+      "</hibernate-configuration>]]>"
+
+#: index.docbook:1331
+msgid ""
+      "<![CDATA[<?xml version='1.0' encoding='utf-8'?>\n"
+      "<!DOCTYPE hibernate-configuration PUBLIC\n"
+      "    \"-//Hibernate/Hibernate Configuration DTD//EN\"\n"
+      "    \"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd\">\n"
+      "\n"
+      "<hibernate-configuration>\n"
+      "\n"
+      "    <!-- a SessionFactory instance listed as /jndi/name -->\n"
+      "    <session-factory\n"
+      "        name=\"java:hibernate/SessionFactory\">\n"
+      "\n"
+      "        <!-- properties -->\n"
+      "        <property name=\"connection.datasource\">java:/comp/env/jdbc/MyDB</property>\n"
+      "        <property name=\"dialect\">org.hibernate.dialect.MySQLDialect</property>\n"
+      "        <property name=\"show_sql\">false</property>\n"
+      "        <property name=\"transaction.factory_class\">\n"
+      "            org.hibernate.transaction.JTATransactionFactory\n"
+      "        </property>\n"
+      "        <property name=\"jta.UserTransaction\">java:comp/UserTransaction</property>\n"
+      "\n"
+      "        <!-- mapping files -->\n"
+      "        <mapping resource=\"org/hibernate/auction/Item.hbm.xml\"/>\n"
+      "        <mapping resource=\"org/hibernate/auction/Bid.hbm.xml\"/>\n"
+      "\n"
+      "        <!-- cache settings -->\n"
+      "        <class-cache class=\"org.hibernate.auction.Item\" usage=\"read-write\"/>\n"
+      "        <class-cache class=\"org.hibernate.auction.Bid\" usage=\"read-only\"/>\n"
+      "        <collection-cache collection=\"org.hibernate.auction.Item.bids\" usage=\"read-write\"/>\n"
+      "\n"
+      "    </session-factory>\n"
+      "\n"
+      "</hibernate-configuration>]]>"
+msgstr "Commme vous pouvez le voir, l'avantage de cette approche est l'externalisation des noms des fichiers de mapping de la configuration. Le fichier <literal>hibernate.cfg.xml</literal> est également plus pratique quand on commence à régler le cache d'Hibernate. Notez que vous pouvez choisir entre utiliser <literal>hibernate.properties</literal> ou <literal>hibernate.cfg.xml</literal>, les deux sont équivalents, sauf en ce qui concerne les bénéfices de l'utilisation de la syntaxe XML mentionnés ci-dessus."
+
+#: index.docbook:1333
+msgid "As you can see, the advantage of this approach is the externalization of the mapping file names to configuration. The <literal>hibernate.cfg.xml</literal> is also more convenient once you have to tune the Hibernate cache. Note that is your choice to use either <literal>hibernate.properties</literal> or <literal>hibernate.cfg.xml</literal>, both are equivalent, except for the above mentioned benefits of using the XML syntax."
+msgstr "Avec la configuration XML, démarrer Hibernate devient donc aussi simple que ceci :"
+
+#: index.docbook:1342
+msgid "With the XML configuration, starting Hibernate is then as simple as"
+msgstr "<![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]>"
+
+#: index.docbook:1346
+msgid "<![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]>"
+msgstr "Intégration à un serveur d'application J2EE"
+
+#: index.docbook:1348
+msgid "You can pick a different XML configuration file using"
+msgstr "Hibernate possède les points suivants d'intégration à l'infrastructure J2EE :"
+
+#: index.docbook:1352
+msgid ""
+      "<![CDATA[SessionFactory sf = new Configuration()\n"
+      "    .configure(\"catdb.cfg.xml\")\n"
+      "    .buildSessionFactory();]]>"
+msgstr "<emphasis>Source de données gérée par le conteneur</emphasis> : Hibernate peut utiliser des connexions JDBC gérées par le conteneur et fournie par l'intermédiaire de JNDI. Souvent, un <literal>TransactionManager</literal> compatible JTA et un <literal>ResourceManager</literal> s'occupent de la gestion des transactions (CMT). Ils sont particulièrement prévus pour pouvoir gérer des transactions distribuées sur plusieurs sources de données. Vous pouvez bien sûr également définir vos limites de transaction dans votre programme (BMT) ou vous pouvez sinon aussi utiliser l'API optionnelle <literal>Transaction</literal> d'Hibernate qui vous garantira la portabilité de votre code entre plusieurs serveurs d'application."
+
+#: index.docbook:1357
+msgid "J2EE Application Server integration"
+msgstr "<emphasis>Association JNDI automatique</emphasis>: Hibernate peut associer sa <literal>SessionFactory</literal> à JNDI après le démarrage."
+
+#: index.docbook:1359
+msgid "Hibernate has the following integration points for J2EE infrastructure:"
+msgstr "<emphasis>Association de la Session à JTA:</emphasis> La <literal>Session</literal> Hibernate peut être associée automatiquement à une transaction JTA si vous utilisez les EJBs. Vous avez juste à récupérer la <literal>SessionFactory</literal> depuis JNDI et à récupérer la <literal>Session</literal> courante. Hibernate s'occupe de vider et fermer la <literal>Session</literal> lorsque le transaction JTA se termine. La démarcation des transactions se fait de manière déclarative dans les descripteurs de déploiement."
+
+#: index.docbook:1365
+msgid "<emphasis>Container-managed datasources</emphasis>: Hibernate can use JDBC connections managed by the container and provided through JNDI. Usually, a JTA compatible <literal>TransactionManager</literal> and a <literal>ResourceManager</literal> take care of transaction management (CMT), esp. distributed transaction handling across several datasources. You may of course also demarcate transaction boundaries programmatically (BMT) or you might want to use the optional Hibernate <literal>Transaction</literal> API for this to keep your code portable."
+msgstr "<emphasis>Déploiement JMX :</emphasis>Si vous avez un serveur d'application compatible JMX (JBoss AS par exemple), vous pouvez choisir de déployer Hibernate en temps que MBean géré par le serveur. Cela vous évite de coder la ligne de démarrage qui permet de construire la <literal>SessionFactory</literal> depuis la <literal>Configuration</literal>. Le conteneur va démarrer votre <literal>HibernateService</literal>, et va idéalement s'occuper des dépendances entre les services (la source de données doit être disponible avant qu'Hibernate ne démarre, etc)."
+
+#: index.docbook:1380
+msgid "<emphasis>Automatic JNDI binding</emphasis>: Hibernate can bind its <literal>SessionFactory</literal> to JNDI after startup."
+msgstr "En fonction de votre environnement, vous devrez peut être mettre l'option de configuration <literal>hibernate.connection.aggressive_release</literal> à vrai si le serveur d'application affiche des exceptions de type \"connection containment\"."
+
+#: index.docbook:1389
+msgid "<emphasis>JTA Session binding:</emphasis> The Hibernate <literal>Session</literal> may be automatically bound to the scope of JTA transactions. Simply lookup the <literal>SessionFactory</literal> from JNDI and get the current <literal>Session</literal>. Let Hibernate take care of flushing and closing the <literal>Session</literal> when your JTA transaction completes. Transaction demarcation is either declarative (CMT) or programmatic (BMT/UserTransaction)."
+msgstr "Configuration de la stratégie transactionnelle"
+
+#: index.docbook:1402
+msgid "<emphasis>JMX deployment:</emphasis> If you have a JMX capable application server (e.g. JBoss AS), you can chose to deploy Hibernate as a managed MBean. This saves you the one line startup code to build your <literal>SessionFactory</literal> from a <literal>Configuration</literal>. The container will startup your <literal>HibernateService</literal>, and ideally also take care of service dependencies (Datasource has to be available before Hibernate starts, etc)."
+msgstr "L'API de la <literal>Session</literal> Hibernate est indépendante de tout système de démarcation des transactions qui peut être présent dans votre architecture. Si vous laissez Hibernate utiliser l'API JDBC directement via un pool de connexion, vous devrez commencer et terminer vos transactions en utilisant l'API JDBC. Si votre application tourne à l'intérieur d'un serveur d'application J2EE, vous voudrez peut être utiliser les transactions gérées par les beans (BMT) et appeller l'API JTA et <literal>UserTransaction</literal> lorsque cela est nécessaire."
+
+#: index.docbook:1413
+msgid "Depending on your environment, you might have to set the configuration option <literal>hibernate.connection.aggressive_release</literal> to true if your application server shows \"connection containment\" exceptions."
+msgstr "Pour conserver votre code portable entre ces deux environnements (et d'autres éventuels) nous vous recommandons d'utiliser l'API optionnelle <literal>Transaction</literal> d'Hibernate, qui va encapsuler et masquer le système de transaction sous-jacent. Pour cela, vous devez préciser une classe de fabrique d'instances de <literal>Transaction</literal> en positionnant la propriété <literal>hibernate.transaction.factory_class</literal>."
+
+#: index.docbook:1420
+msgid "Transaction strategy configuration"
+msgstr "Il existe trois choix standards (fournis) :"
+
+#: index.docbook:1422
+msgid "The Hibernate <literal>Session</literal> API is independent of any transaction demarcation system in your architecture. If you let Hibernate use JDBC directly, through a connection pool, you may begin and end your transactions by calling the JDBC API. If you run in a J2EE application server, you might want to use bean-managed transactions and call the JTA API and <literal>UserTransaction</literal> when needed."
+msgstr "net.sf.hibernate.transaction.JDBCTransactionFactory"
+
+#: index.docbook:1430
+msgid "To keep your code portable between these two (and other) environments we recommend the optional Hibernate <literal>Transaction</literal> API, which wraps and hides the underlying system. You have to specify a factory class for <literal>Transaction</literal> instances by setting the Hibernate configuration property <literal>hibernate.transaction.factory_class</literal>."
+msgstr "délègue aux transactions de la base de données (JDBC). Valeur par défaut."
+
+#: index.docbook:1437
+msgid "There are three standard (built-in) choices:"
+msgstr "org.hibernate.transaction.JTATransactionFactory"
+
+#: index.docbook:1443
+msgid "org.hibernate.transaction.JDBCTransactionFactory"
+msgstr "délègue à CMT si une transaction existante est sous ce contexte (ex: méthode d'un EJB session), sinon une nouvelle transaction est entamée et une transaction gérée par le bean est utilisée."
+
+#: index.docbook:1445
+msgid "delegates to database (JDBC) transactions (default)"
+msgstr "org.hibernate.transaction.CMTTransactionFactory"
+
+#: index.docbook:1449
+msgid "org.hibernate.transaction.JTATransactionFactory"
+msgstr "délègue à aux transactions JTA gérées par le conteneur"
+
+#: index.docbook:1451
+msgid "delegates to container-managed transaction if an existing transaction is underway in this context (e.g. EJB session bean method), otherwise a new transaction is started and bean-managed transaction are used."
+msgstr "Vous pouvez également définir votre propre stratégie transactionnelle (pour un service de transaction CORBA par exemple)."
+
+#: index.docbook:1459
+msgid "org.hibernate.transaction.CMTTransactionFactory"
+msgstr "Certaines fonctionnalités d'Hibernate (i.e. le cache de second niveau, l'association automatique des Session à JTA, etc.) nécessitent l'accès au <literal>TransactionManager</literal> JTA dans un environnement \"managé\". Dans un serveur d'application, vous devez indiquer comment Hibernate peut obtenir une référence vers le <literal>TransactionManager</literal>, car J2EE ne fournit pas un seul mécanisme standard."
+
+#: index.docbook:1461
+msgid "delegates to container-managed JTA transactions"
+msgstr "TransactionManagers JTA"
+
+#: index.docbook:1466
+msgid "You may also define your own transaction strategies (for a CORBA transaction service, for example)."
+msgstr "Fabrique de Transaction"
+
+#: index.docbook:1471
+msgid "Some features in Hibernate (i.e. the second level cache, Contextual Sessions with JTA, etc.) require access to the JTA <literal>TransactionManager</literal> in a managed environment. In an application server you have to specify how Hibernate should obtain a reference to the <literal>TransactionManager</literal>, since J2EE does not standardize a single mechanism:"
+msgstr "Serveur d'application"
+
+#: index.docbook:1479
+msgid "JTA TransactionManagers"
+msgstr "org.hibernate.transaction.JBossTransactionManagerLookup"
+
+#: index.docbook:1485
+msgid "Transaction Factory"
+msgstr "JBoss"
+
+#: index.docbook:1486
+msgid "Application Server"
+msgstr "org.hibernate.transaction.WeblogicTransactionManagerLookup"
+
+#: index.docbook:1491
+msgid "org.hibernate.transaction.JBossTransactionManagerLookup"
+msgstr "Weblogic"
+
+#: index.docbook:1492
+msgid "JBoss"
+msgstr "org.hibernate.transaction.WebSphereTransactionManagerLookup"
+
+#: index.docbook:1495
+msgid "org.hibernate.transaction.WeblogicTransactionManagerLookup"
+msgstr "WebSphere"
+
+#: index.docbook:1496
+msgid "Weblogic"
+msgstr "org.hibernate.transaction.WebSphereExtendedJTATransactionLookup"
+
+#: index.docbook:1499
+msgid "org.hibernate.transaction.WebSphereTransactionManagerLookup"
+msgstr "WebSphere 6"
+
+#: index.docbook:1500
+msgid "WebSphere"
+msgstr "org.hibernate.transaction.OrionTransactionManagerLookup"
+
+#: index.docbook:1503
+msgid "org.hibernate.transaction.WebSphereExtendedJTATransactionLookup"
+msgstr "Orion"
+
+#: index.docbook:1504
+msgid "WebSphere 6"
+msgstr "org.hibernate.transaction.ResinTransactionManagerLookup"
+
+#: index.docbook:1507
+msgid "org.hibernate.transaction.OrionTransactionManagerLookup"
+msgstr "Resin"
+
+#: index.docbook:1508
+msgid "Orion"
+msgstr "org.hibernate.transaction.JOTMTransactionManagerLookup"
+
+#: index.docbook:1511
+msgid "org.hibernate.transaction.ResinTransactionManagerLookup"
+msgstr "JOTM"
+
+#: index.docbook:1512
+msgid "Resin"
+msgstr "org.hibernate.transaction.JOnASTransactionManagerLookup"
+
+#: index.docbook:1515
+msgid "org.hibernate.transaction.JOTMTransactionManagerLookup"
+msgstr "JOnAS"
+
+#: index.docbook:1516
+msgid "JOTM"
+msgstr "org.hibernate.transaction.JRun4TransactionManagerLookup"
+
+#: index.docbook:1519
+msgid "org.hibernate.transaction.JOnASTransactionManagerLookup"
+msgstr "JRun4"
+
+#: index.docbook:1520
+msgid "JOnAS"
+msgstr "org.hibernate.transaction.BESTransactionManagerLookup"
+
+#: index.docbook:1523
+msgid "org.hibernate.transaction.JRun4TransactionManagerLookup"
+msgstr "Borland ES"
+
+#: index.docbook:1524
+msgid "JRun4"
+msgstr "<literal>SessionFactory</literal> associée au JNDI"
+
+#: index.docbook:1527
+msgid "org.hibernate.transaction.BESTransactionManagerLookup"
+msgstr "Une <literal>SessionFactory</literal> Hibernate associée au JNDI peut simplifier l'accès à la fabrique et donc la création de nouvelles <literal>Session</literal>s. Notez que cela n'est pas lié avec les <literal>Datasource</literal> associées au JNDI, elles utilisent juste le même registre."
+
+#: index.docbook:1528
+msgid "Borland ES"
+msgstr "Si vous désirez associer la <literal>SessionFactory</literal> à un nom JNDI, spécifiez un nom (ex. <literal>java:hibernate/SessionFactory</literal>) en utilisant la propriété <literal>hibernate.session_factory_name</literal>. Si cette propriété est omise, la <literal>SessionFactory</literal> ne sera pas associée au JNDI (c'est particulièrement pratique dans les environnements ayant une implémentation de JNDI en lecture seule, comme c'est le cas pour Tomcat)."
+
+#: index.docbook:1537
+msgid "JNDI-bound <literal>SessionFactory</literal>"
+msgstr "Lorsqu'il associe la <literal>SessionFactory</literal> au JNDI, Hibernate utilisera les valeurs de <literal>hibernate.jndi.url</literal>, <literal>hibernate.jndi.class</literal> pour instancier un contexte d'initialisation. S'ils ne sont pas spécifiés, l'<literal>InitialContext</literal> par défaut sera utilisé."
+
+#: index.docbook:1539
+msgid "A JNDI bound Hibernate <literal>SessionFactory</literal> can simplify the lookup of the factory and the creation of new <literal>Session</literal>s. Note that this is not related to a JNDI bound <literal>Datasource</literal>, both simply use the same registry!"
+msgstr "Hibernate va automatiquement placer la <literal>SessionFactory</literal> dans JNDI après avoir appelé <literal>cfg.buildSessionFactory()</literal>. Cela signifie que vous devez avoir cet appel dans un code de démarrage (ou dans une classe utilitaire) dans votre application sauf si vous utilisez le déploiement JMX avec le service <literal>HibernateService</literal> présenté plus tard dans ce document."
+
+#: index.docbook:1546
+msgid "If you wish to have the <literal>SessionFactory</literal> bound to a JNDI namespace, specify a name (eg. <literal>java:hibernate/SessionFactory</literal>) using the property <literal>hibernate.session_factory_name</literal>. If this property is omitted, the <literal>SessionFactory</literal> will not be bound to JNDI. (This is especially useful in environments with a read-only JNDI default implementation, e.g. Tomcat.)"
+msgstr "Si vous utilisez <literal>SessionFactory</literal> JNDI, un EJB ou n'importe quelle autre classe peut obtenir la <literal>SessionFactory</literal> en utilisant un lookup JNDI."
+
+#: index.docbook:1554
+msgid "When binding the <literal>SessionFactory</literal> to JNDI, Hibernate will use the values of <literal>hibernate.jndi.url</literal>, <literal>hibernate.jndi.class</literal> to instantiate an initial context. If they are not specified, the default <literal>InitialContext</literal> will be used."
+msgstr "Nous recommandons que vous liiez la <literal>SessionFactory</literal> à JNDI dans les environnements managés et que vous utilisiez un singleton <literal>static</literal> si ce n'est pas le cas. Pour isoler votre application de ces détails, nous vous recommandons aussi de masquer le code de lookup actuel pour une <literal>SessionFactory</literal> dans une classe helper, comme <literal>HibernateUtil.getSessionFactory()</literal>. Notez qu'une telle classe est aussi un moyen efficace de démarrer Hibernate&mdash;voir chapitre 1."
+
+#: index.docbook:1561
+msgid "Hibernate will automatically place the <literal>SessionFactory</literal> in JNDI after you call <literal>cfg.buildSessionFactory()</literal>. This means you will at least have this call in some startup code (or utility class) in your application, unless you use JMX deployment with the <literal>HibernateService</literal> (discussed later)."
+msgstr "Association automatique de la Session à JTA"
+
+#: index.docbook:1568
+msgid "If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may obtain the <literal>SessionFactory</literal> using a JNDI lookup."
+msgstr "Le moyen le plus simple de gérer les <literal>Session</literal>s et transactions est la gestion automatique de session \"courante\" offerte par Hibernate. Voir détail à <xref linkend=\"architecture-current-session\"/>current sessions. En utilisant le contexte de session <literal>\"jta\"</literal> session context, s'il n'y a pas de <literal>Session</literal> associée à la transaction JTA courante, une session sera démarrée et associée à la transaction JTA courante la première fois que vous appelez <literal>sessionFactory.getCurrentSession()</literal>. Les <literal>Session</literal>s obtenue via <literal>getCurrentSession()</literal> dans une contexte <literal>\"jta\"</literal> seront automatiquement flushées avant la validation de la transaction, fermées une fois la transaction complétée, et libéreront les connexions JDBC de manière aggressive après chaque statement. Ceci permet aux <literal>Session</literal>s d'être gérées par le cycle de vie de la transaction JTA à la quelle est sont associées, laissant le code de l'utilisateur propre de ce type de gestion. Votre code peut soit utiliser JTA de manière programmatique via <literal>UserTransaction</literal>, ou (ce qui est recommandé pour la portabilité du code) utiliser l'API <literal>Transaction</literal> API pour marquer les limites. Si vous exécutez sous un conteneur EJB, la démarcation déclarative des transactions avec CMT est recommandée."
+
+#: index.docbook:1573
+msgid "We recommend that you bind the <literal>SessionFactory</literal> to JNDI in a managed environment and use a <literal>static</literal> singleton otherwise. To shield your application code from these details, we also recommend to hide the actual lookup code for a <literal>SessionFactory</literal> in a helper class, such as <literal>HibernateUtil.getSessionFactory()</literal>. Note that such a class is also a convenient way to startup Hibernate&mdash;see chapter 1."
+msgstr "Déploiement JMX"
+
+#: index.docbook:1585
+msgid "Current Session context management with JTA"
+msgstr "La ligne <literal>cfg.buildSessionFactory()</literal> doit toujours être exécutée quelque part pour avoir une <literal>SessionFactory</literal> dans JNDI. Vous pouvez faire cela dans un bloc d'initialisation <literal>static</literal> (comme celui qui se trouve dans la classe <literal>HibernateUtil</literal>) ou vous pouvez déployer Hibernate en temps que <emphasis>service managé</emphasis>."
+
+#: index.docbook:1587
+msgid "The easiest way to handle <literal>Session</literal>s and transactions is Hibernates automatic \"current\" <literal>Session</literal> management. See the discussion of <xref linkend=\"architecture-current-session\"/>current sessions. Using the <literal>\"jta\"</literal> session context, if there is no Hibernate <literal>Session</literal> associated with the current JTA transaction, one will be started and associated with that JTA transaction the first time you call <literal>sessionFactory.getCurrentSession()</literal>. The <literal>Session</literal>s retrieved via <literal>getCurrentSession()</literal> in <literal>\"jta\"</literal> context will be set to automatically flush before the transaction completes, close after the transaction completes, and aggressively release JDBC connections after each statement. This allows the <literal>Session</literal>s to be managed by the life cycle of the JTA transaction to which it is associated, keeping user code clean of such management concerns. Your code can either use JTA programmatically through <literal>UserTransaction</literal>, or (recommended for portable code) use the Hibernate <literal>Transaction</literal> API to set transaction boundaries. If you run in an EJB container, declarative transaction demarcation with CMT is preferred."
+msgstr "Hibernate est distribué avec <literal>org.hibernate.jmx.HibernateService</literal> pour le déploiement sur un serveur d'application avec le support de JMX comme JBoss AS. Le déploiement et la configuration sont spécifiques à chaque vendeur. Voici un fichier <literal>jboss-service.xml</literal> d'exemple pour JBoss 4.0.x:"
+
+#: index.docbook:1610
+msgid "JMX deployment"
+msgstr ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<server>\n"
+      "\n"
+      "<mbean code=\"org.hibernate.jmx.HibernateService\"\n"
+      "    name=\"jboss.jca:service=HibernateFactory,name=HibernateFactory\">\n"
+      "\n"
+      "    <!-- Required services -->\n"
+      "    <depends>jboss.jca:service=RARDeployer</depends>\n"
+      "    <depends>jboss.jca:service=LocalTxCM,name=HsqlDS</depends>\n"
+      "\n"
+      "    <!-- Bind the Hibernate service to JNDI -->\n"
+      "    <attribute name=\"JndiName\">java:/hibernate/SessionFactory</attribute>\n"
+      "\n"
+      "    <!-- Datasource settings -->\n"
+      "    <attribute name=\"Datasource\">java:HsqlDS</attribute>\n"
+      "    <attribute name=\"Dialect\">org.hibernate.dialect.HSQLDialect</attribute>\n"
+      "\n"
+      "    <!-- Transaction integration -->\n"
+      "    <attribute name=\"TransactionStrategy\">\n"
+      "        org.hibernate.transaction.JTATransactionFactory</attribute>\n"
+      "    <attribute name=\"TransactionManagerLookupStrategy\">\n"
+      "        org.hibernate.transaction.JBossTransactionManagerLookup</attribute>\n"
+      "    <attribute name=\"FlushBeforeCompletionEnabled\">true</attribute>\n"
+      "    <attribute name=\"AutoCloseSessionEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Fetching options -->\n"
+      "    <attribute name=\"MaximumFetchDepth\">5</attribute>\n"
+      "\n"
+      "    <!-- Second-level caching -->\n"
+      "    <attribute name=\"SecondLevelCacheEnabled\">true</attribute>\n"
+      "    <attribute name=\"CacheProviderClass\">org.hibernate.cache.EhCacheProvider</attribute>\n"
+      "    <attribute name=\"QueryCacheEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Logging -->\n"
+      "    <attribute name=\"ShowSqlEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Mapping files -->\n"
+      "    <attribute name=\"MapResources\">auction/Item.hbm.xml,auction/Category.hbm.xml</attribute>\n"
+      "\n"
+      "</mbean>\n"
+      "\n"
+      "</server>]]>"
+
+#: index.docbook:1612
+msgid "The line <literal>cfg.buildSessionFactory()</literal> still has to be executed somewhere to get a <literal>SessionFactory</literal> into JNDI. You can do this either in a <literal>static</literal> initializer block (like the one in <literal>HibernateUtil</literal>) or you deploy Hibernate as a <emphasis>managed service</emphasis>."
+msgstr "Ce fichier est déployé dans un répertoire <literal>META-INF</literal> et est packagé dans un fichier JAR avec l'extension <literal>.sar</literal> (service archive). Vous devez également packager Hibernate, les librairies tierces requises, vos classes persistantes compilées et vos fichiers de mapping dans la même archive. Vos beans entreprise (souvent des EJBs session) peuvent rester dans leur propre fichier JAR mais vous pouvez inclure ce fichier JAR dans le jar principal du service pour avoir une seule unité déployable à chaud. Vous pouvez consulter la documentation de JBoss AS pour plus d'information sur les services JMX et le déploiement des EJBs."
+
+#: index.docbook:1620
+msgid "Hibernate is distributed with <literal>org.hibernate.jmx.HibernateService</literal> for deployment on an application server with JMX capabilities, such as JBoss AS. The actual deployment and configuration is vendor specific. Here is an example <literal>jboss-service.xml</literal> for JBoss 4.0.x:"
+msgstr ""
+
+#: index.docbook:1627
+msgid ""
+      "<![CDATA[<?xml version=\"1.0\"?>\n"
+      "<server>\n"
+      "\n"
+      "<mbean code=\"org.hibernate.jmx.HibernateService\"\n"
+      "    name=\"jboss.jca:service=HibernateFactory,name=HibernateFactory\">\n"
+      "\n"
+      "    <!-- Required services -->\n"
+      "    <depends>jboss.jca:service=RARDeployer</depends>\n"
+      "    <depends>jboss.jca:service=LocalTxCM,name=HsqlDS</depends>\n"
+      "\n"
+      "    <!-- Bind the Hibernate service to JNDI -->\n"
+      "    <attribute name=\"JndiName\">java:/hibernate/SessionFactory</attribute>\n"
+      "\n"
+      "    <!-- Datasource settings -->\n"
+      "    <attribute name=\"Datasource\">java:HsqlDS</attribute>\n"
+      "    <attribute name=\"Dialect\">org.hibernate.dialect.HSQLDialect</attribute>\n"
+      "\n"
+      "    <!-- Transaction integration -->\n"
+      "    <attribute name=\"TransactionStrategy\">\n"
+      "        org.hibernate.transaction.JTATransactionFactory</attribute>\n"
+      "    <attribute name=\"TransactionManagerLookupStrategy\">\n"
+      "        org.hibernate.transaction.JBossTransactionManagerLookup</attribute>\n"
+      "    <attribute name=\"FlushBeforeCompletionEnabled\">true</attribute>\n"
+      "    <attribute name=\"AutoCloseSessionEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Fetching options -->\n"
+      "    <attribute name=\"MaximumFetchDepth\">5</attribute>\n"
+      "\n"
+      "    <!-- Second-level caching -->\n"
+      "    <attribute name=\"SecondLevelCacheEnabled\">true</attribute>\n"
+      "    <attribute name=\"CacheProviderClass\">org.hibernate.cache.EhCacheProvider</attribute>\n"
+      "    <attribute name=\"QueryCacheEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Logging -->\n"
+      "    <attribute name=\"ShowSqlEnabled\">true</attribute>\n"
+      "\n"
+      "    <!-- Mapping files -->\n"
+      "    <attribute name=\"MapResources\">auction/Item.hbm.xml,auction/Category.hbm.xml</attribute>\n"
+      "\n"
+      "</mbean>\n"
+      "\n"
+      "</server>]]>"
+msgstr ""
+
+#: index.docbook:1629
+msgid "This file is deployed in a directory called <literal>META-INF</literal> and packaged in a JAR file with the extension <literal>.sar</literal> (service archive). You also need to package Hibernate, its required third-party libraries, your compiled persistent classes, as well as your mapping files in the same archive. Your enterprise beans (usually session beans) may be kept in their own JAR file, but you may include this EJB JAR file in the main service archive to get a single (hot-)deployable unit. Consult the JBoss AS documentation for more information about JMX service and EJB deployment."
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

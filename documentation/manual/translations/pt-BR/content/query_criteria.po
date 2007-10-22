@@ -1,0 +1,484 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:5
+msgid "Criteria Queries"
+msgstr ""
+
+#: index.docbook:7
+msgid "Hibernate features an intuitive, extensible criteria query API."
+msgstr ""
+
+#: index.docbook:12
+msgid "Creating a <literal>Criteria</literal> instance"
+msgstr ""
+
+#: index.docbook:14
+msgid "The interface <literal>org.hibernate.Criteria</literal> represents a query against a particular persistent class. The <literal>Session</literal> is a factory for <literal>Criteria</literal> instances."
+msgstr ""
+
+#: index.docbook:20
+msgid ""
+      "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
+      "crit.setMaxResults(50);\n"
+      "List cats = crit.list();]]>"
+msgstr ""
+
+#: index.docbook:25
+msgid "Narrowing the result set"
+msgstr ""
+
+#: index.docbook:27
+msgid "An individual query criterion is an instance of the interface <literal>org.hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate.criterion.Restrictions</literal> defines factory methods for obtaining certain built-in <literal>Criterion</literal> types."
+msgstr ""
+
+#: index.docbook:35
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+      "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:37
+msgid "Restrictions may be grouped logically."
+msgstr ""
+
+#: index.docbook:41
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+      "    .add( Restrictions.or(\n"
+      "        Restrictions.eq( \"age\", new Integer(0) ),\n"
+      "        Restrictions.isNull(\"age\")\n"
+      "    ) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:43
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
+      "    .add( Restrictions.disjunction()\n"
+      "        .add( Restrictions.isNull(\"age\") )\n"
+      "        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
+      "        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
+      "        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
+      "    ) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:45
+msgid "There are quite a range of built-in criterion types (<literal>Restrictions</literal> subclasses), but one that is especially useful lets you specify SQL directly."
+msgstr ""
+
+#: index.docbook:50
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", \"Fritz%\", Hibernate.STRING) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:52
+msgid "The <literal>{alias}</literal> placeholder with be replaced by the row alias of the queried entity."
+msgstr ""
+
+#: index.docbook:57
+msgid "An alternative approach to obtaining a criterion is to get it from a <literal>Property</literal> instance. You can create a <literal>Property</literal> by calling <literal>Property.forName()</literal>."
+msgstr ""
+
+#: index.docbook:63
+msgid ""
+      "<![CDATA[\n"
+      "Property age = Property.forName(\"age\");\n"
+      "List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.disjunction()\n"
+      "        .add( age.isNull() )\n"
+      "        .add( age.eq( new Integer(0) ) )\n"
+      "        .add( age.eq( new Integer(1) ) )\n"
+      "        .add( age.eq( new Integer(2) ) )\n"
+      "    ) )\n"
+      "    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:68
+msgid "Ordering the results"
+msgstr ""
+
+#: index.docbook:70
+msgid "You may order the results using <literal>org.hibernate.criterion.Order</literal>."
+msgstr ""
+
+#: index.docbook:74
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.like(\"name\", \"F%\")\n"
+      "    .addOrder( Order.asc(\"name\") )\n"
+      "    .addOrder( Order.desc(\"age\") )\n"
+      "    .setMaxResults(50)\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:76
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Property.forName(\"name\").like(\"F%\") )\n"
+      "    .addOrder( Property.forName(\"name\").asc() )\n"
+      "    .addOrder( Property.forName(\"age\").desc() )\n"
+      "    .setMaxResults(50)\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:81
+msgid "Associations"
+msgstr ""
+
+#: index.docbook:83
+msgid "You may easily specify constraints upon related entities by navigating associations using <literal>createCriteria()</literal>."
+msgstr ""
+
+#: index.docbook:88
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.like(\"name\", \"F%\") )\n"
+      "    .createCriteria(\"kittens\")\n"
+      "        .add( Restrictions.like(\"name\", \"F%\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:90
+msgid "note that the second <literal>createCriteria()</literal> returns a new instance of <literal>Criteria</literal>, which refers to the elements of the <literal>kittens</literal> collection."
+msgstr ""
+
+#: index.docbook:96
+msgid "The following, alternate form is useful in certain circumstances."
+msgstr ""
+
+#: index.docbook:100
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .createAlias(\"kittens\", \"kt\")\n"
+      "    .createAlias(\"mate\", \"mt\")\n"
+      "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:102
+msgid "(<literal>createAlias()</literal> does not create a new instance of <literal>Criteria</literal>.)"
+msgstr ""
+
+#: index.docbook:107
+msgid "Note that the kittens collections held by the <literal>Cat</literal> instances returned by the previous two queries are <emphasis>not</emphasis> pre-filtered by the criteria! If you wish to retrieve just the kittens that match the criteria, you must use a <literal>ResultTransformer</literal>."
+msgstr ""
+
+#: index.docbook:114
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .createCriteria(\"kittens\", \"kt\")\n"
+      "        .add( Restrictions.eq(\"name\", \"F%\") )\n"
+      "    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
+      "    .list();\n"
+      "Iterator iter = cats.iterator();\n"
+      "while ( iter.hasNext() ) {\n"
+      "    Map map = (Map) iter.next();\n"
+      "    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
+      "    Cat kitten = (Cat) map.get(\"kt\");\n"
+      "}]]>"
+msgstr ""
+
+#: index.docbook:119
+msgid "Dynamic association fetching"
+msgstr ""
+
+#: index.docbook:121
+msgid "You may specify association fetching semantics at runtime using <literal>setFetchMode()</literal>."
+msgstr ""
+
+#: index.docbook:126
+msgid ""
+      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+      "    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
+      "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:128
+msgid "This query will fetch both <literal>mate</literal> and <literal>kittens</literal> by outer join. See <xref linkend=\"performance-fetching\"/> for more information."
+msgstr ""
+
+#: index.docbook:136
+msgid "Example queries"
+msgstr ""
+
+#: index.docbook:138
+msgid "The class <literal>org.hibernate.criterion.Example</literal> allows you to construct a query criterion from a given instance."
+msgstr ""
+
+#: index.docbook:143
+msgid ""
+      "<![CDATA[Cat cat = new Cat();\n"
+      "cat.setSex('F');\n"
+      "cat.setColor(Color.BLACK);\n"
+      "List results = session.createCriteria(Cat.class)\n"
+      "    .add( Example.create(cat) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:145
+msgid "Version properties, identifiers and associations are ignored. By default, null valued properties are excluded."
+msgstr ""
+
+#: index.docbook:150
+msgid "You can adjust how the <literal>Example</literal> is applied."
+msgstr ""
+
+#: index.docbook:154
+msgid ""
+      "<![CDATA[Example example = Example.create(cat)\n"
+      "    .excludeZeroes()           //exclude zero valued properties\n"
+      "    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
+      "    .ignoreCase()              //perform case insensitive string comparisons\n"
+      "    .enableLike();             //use like for string comparisons\n"
+      "List results = session.createCriteria(Cat.class)\n"
+      "    .add(example)\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:156
+msgid "You can even use examples to place criteria upon associated objects."
+msgstr ""
+
+#: index.docbook:160
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .add( Example.create(cat) )\n"
+      "    .createCriteria(\"mate\")\n"
+      "        .add( Example.create( cat.getMate() ) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:165
+msgid "Projections, aggregation and grouping"
+msgstr ""
+
+#: index.docbook:166
+msgid "The class <literal>org.hibernate.criterion.Projections</literal> is a factory for <literal>Projection</literal> instances. We apply a projection to a query by calling <literal>setProjection()</literal>."
+msgstr ""
+
+#: index.docbook:172
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.rowCount() )\n"
+      "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:174
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.projectionList()\n"
+      "        .add( Projections.rowCount() )\n"
+      "        .add( Projections.avg(\"weight\") )\n"
+      "        .add( Projections.max(\"weight\") )\n"
+      "        .add( Projections.groupProperty(\"color\") )\n"
+      "    )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:176
+msgid "There is no explicit \"group by\" necessary in a criteria query. Certain projection types are defined to be <emphasis>grouping projections</emphasis>, which also appear in the SQL <literal>group by</literal> clause."
+msgstr ""
+
+#: index.docbook:182
+msgid "An alias may optionally be assigned to a projection, so that the projected value may be referred to in restrictions or orderings. Here are two different ways to do this:"
+msgstr ""
+
+#: index.docbook:188
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), \"colr\" ) )\n"
+      "    .addOrder( Order.asc(\"colr\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:190
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
+      "    .addOrder( Order.asc(\"colr\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:192
+msgid "The <literal>alias()</literal> and <literal>as()</literal> methods simply wrap a projection instance in another, aliased, instance of <literal>Projection</literal>. As a shortcut, you can assign an alias when you add the projection to a projection list:"
+msgstr ""
+
+#: index.docbook:199
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.projectionList()\n"
+      "        .add( Projections.rowCount(), \"catCountByColor\" )\n"
+      "        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
+      "        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
+      "        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
+      "    )\n"
+      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+      "    .addOrder( Order.desc(\"avgWeight\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:201
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
+      "    .createAlias(\"kittens\", \"kit\")\n"
+      "    .setProjection( Projections.projectionList()\n"
+      "        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
+      "        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
+      "    )\n"
+      "    .addOrder( Order.asc(\"catName\") )\n"
+      "    .addOrder( Order.asc(\"kitName\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:203
+msgid "You can also use <literal>Property.forName()</literal> to express projections:"
+msgstr ""
+
+#: index.docbook:207
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Property.forName(\"name\") )\n"
+      "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:209
+msgid ""
+      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+      "    .setProjection( Projections.projectionList()\n"
+      "        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
+      "        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
+      "        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
+      "        .add( Property.forName(\"color\").group().as(\"color\" )\n"
+      "    )\n"
+      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+      "    .addOrder( Order.desc(\"avgWeight\") )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:214
+msgid "Detached queries and subqueries"
+msgstr ""
+
+#: index.docbook:215
+msgid "The <literal>DetachedCriteria</literal> class lets you create a query outside the scope of a session, and then later execute it using some arbitrary <literal>Session</literal>."
+msgstr ""
+
+#: index.docbook:220
+msgid ""
+      "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
+      "    .add( Property.forName(\"sex\").eq('F') );\n"
+      "    \n"
+      "Session session = ....;\n"
+      "Transaction txn = session.beginTransaction();\n"
+      "List results = query.getExecutableCriteria(session).setMaxResults(100).list();\n"
+      "txn.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#: index.docbook:222
+msgid "A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion instances involving subqueries may be obtained via <literal>Subqueries</literal> or <literal>Property</literal>."
+msgstr ""
+
+#: index.docbook:228
+msgid ""
+      "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
+      "    .setProjection( Property.forName(\"weight\").avg() );\n"
+      "session.createCriteria(Cat.class)\n"
+      "    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:230
+msgid ""
+      "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
+      "    .setProjection( Property.forName(\"weight\") );\n"
+      "session.createCriteria(Cat.class)\n"
+      "    .add( Subqueries.geAll(\"weight\", weights) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:232
+msgid "Even correlated subqueries are possible:"
+msgstr ""
+
+#: index.docbook:236
+msgid ""
+      "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, \"cat2\")\n"
+      "    .setProjection( Property.forName(\"weight\").avg() )\n"
+      "    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
+      "session.createCriteria(Cat.class, \"cat\")\n"
+      "    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
+      "    .list();]]>"
+msgstr ""
+
+#: index.docbook:245
+msgid "Queries by natural identifier"
+msgstr ""
+
+#: index.docbook:247
+msgid "For most queries, including criteria queries, the query cache is not very efficient, because query cache invalidation occurs too frequently. However, there is one special kind of query where we can optimize the cache invalidation algorithm: lookups by a constant natural key. In some applications, this kind of query occurs frequently. The criteria API provides special provision for this use case."
+msgstr ""
+
+#: index.docbook:255
+msgid "First, you should map the natural key of your entity using <literal>&lt;natural-id&gt;</literal>, and enable use of the second-level cache."
+msgstr ""
+
+#: index.docbook:260
+msgid ""
+      "<![CDATA[<class name=\"User\">\n"
+      "    <cache usage=\"read-write\"/>\n"
+      "    <id name=\"id\">\n"
+      "        <generator class=\"increment\"/>\n"
+      "    </id>\n"
+      "    <natural-id>\n"
+      "        <property name=\"name\"/>\n"
+      "        <property name=\"org\"/>\n"
+      "    </natural-id>\n"
+      "    <property name=\"password\"/>\n"
+      "</class>]]>"
+msgstr ""
+
+#: index.docbook:262
+msgid "Note that this functionality is not intended for use with entities with <emphasis>mutable</emphasis> natural keys."
+msgstr ""
+
+#: index.docbook:267
+msgid "Next, enable the Hibernate query cache."
+msgstr ""
+
+#: index.docbook:271
+msgid "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of the more efficient cache algorithm."
+msgstr ""
+
+#: index.docbook:276
+msgid ""
+      "<![CDATA[session.createCriteria(User.class)\n"
+      "    .add( Restrictions.naturalId()\n"
+      "        .set(\"name\", \"gavin\")\n"
+      "        .set(\"org\", \"hb\") \n"
+      "    ).setCacheable(true)\n"
+      "    .uniqueResult();]]>"
+msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

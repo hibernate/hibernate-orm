@@ -1,0 +1,184 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2007-10-19 10:33-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: query_criteria.xml:5(title) 
+msgid "Criteria Queries"
+msgstr ""
+
+#: query_criteria.xml:7(para) 
+msgid "Hibernate features an intuitive, extensible criteria query API."
+msgstr ""
+
+#: query_criteria.xml:12(title) 
+msgid "Creating a <literal>Criteria</literal> instance"
+msgstr ""
+
+#: query_criteria.xml:14(para) 
+msgid "The interface <literal>org.hibernate.Criteria</literal> represents a query against a particular persistent class. The <literal>Session</literal> is a factory for <literal>Criteria</literal> instances."
+msgstr ""
+
+#: query_criteria.xml:27(title) 
+msgid "Narrowing the result set"
+msgstr ""
+
+#: query_criteria.xml:29(para) 
+msgid "An individual query criterion is an instance of the interface <literal>org.hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate.criterion.Restrictions</literal> defines factory methods for obtaining certain built-in <literal>Criterion</literal> types."
+msgstr ""
+
+#: query_criteria.xml:42(para) 
+msgid "Restrictions may be grouped logically."
+msgstr ""
+
+#: query_criteria.xml:64(para) 
+msgid "There are quite a range of built-in criterion types (<literal>Restrictions</literal> subclasses), but one that is especially useful lets you specify SQL directly."
+msgstr ""
+
+#: query_criteria.xml:73(para) 
+msgid "The <literal>{alias}</literal> placeholder with be replaced by the row alias of the queried entity."
+msgstr ""
+
+#: query_criteria.xml:78(para) 
+msgid "An alternative approach to obtaining a criterion is to get it from a <literal>Property</literal> instance. You can create a <literal>Property</literal> by calling <literal>Property.forName()</literal>."
+msgstr ""
+
+#: query_criteria.xml:99(title) 
+msgid "Ordering the results"
+msgstr ""
+
+#: query_criteria.xml:101(para) 
+msgid "You may order the results using <literal>org.hibernate.criterion.Order</literal>."
+msgstr ""
+
+#: query_criteria.xml:122(title) 
+msgid "Associations"
+msgstr ""
+
+#: query_criteria.xml:124(para) 
+msgid "You may easily specify constraints upon related entities by navigating associations using <literal>createCriteria()</literal>."
+msgstr ""
+
+#: query_criteria.xml:135(para) 
+msgid "note that the second <literal>createCriteria()</literal> returns a new instance of <literal>Criteria</literal>, which refers to the elements of the <literal>kittens</literal> collection."
+msgstr ""
+
+#: query_criteria.xml:141(para) 
+msgid "The following, alternate form is useful in certain circumstances."
+msgstr ""
+
+#: query_criteria.xml:151(para) 
+msgid "(<literal>createAlias()</literal> does not create a new instance of <literal>Criteria</literal>.)"
+msgstr ""
+
+#: query_criteria.xml:156(para) 
+msgid "Note that the kittens collections held by the <literal>Cat</literal> instances returned by the previous two queries are <emphasis>not</emphasis> pre-filtered by the criteria! If you wish to retrieve just the kittens that match the criteria, you must use a <literal>ResultTransformer</literal>."
+msgstr ""
+
+#: query_criteria.xml:178(title) 
+msgid "Dynamic association fetching"
+msgstr ""
+
+#: query_criteria.xml:180(para) 
+msgid "You may specify association fetching semantics at runtime using <literal>setFetchMode()</literal>."
+msgstr ""
+
+#: query_criteria.xml:191(para) 
+msgid "This query will fetch both <literal>mate</literal> and <literal>kittens</literal> by outer join. See <xref linkend=\"performance-fetching\"/> for more information."
+msgstr ""
+
+#: query_criteria.xml:199(title) 
+msgid "Example queries"
+msgstr ""
+
+#: query_criteria.xml:201(para) 
+msgid "The class <literal>org.hibernate.criterion.Example</literal> allows you to construct a query criterion from a given instance."
+msgstr ""
+
+#: query_criteria.xml:213(para) 
+msgid "Version properties, identifiers and associations are ignored. By default, null valued properties are excluded."
+msgstr ""
+
+#: query_criteria.xml:218(para) 
+msgid "You can adjust how the <literal>Example</literal> is applied."
+msgstr ""
+
+#: query_criteria.xml:231(para) 
+msgid "You can even use examples to place criteria upon associated objects."
+msgstr ""
+
+#: query_criteria.xml:244(title) 
+msgid "Projections, aggregation and grouping"
+msgstr ""
+
+#: query_criteria.xml:245(para) 
+msgid "The class <literal>org.hibernate.criterion.Projections</literal> is a factory for <literal>Projection</literal> instances. We apply a projection to a query by calling <literal>setProjection()</literal>."
+msgstr ""
+
+#: query_criteria.xml:265(para) 
+msgid "There is no explicit \"group by\" necessary in a criteria query. Certain projection types are defined to be <emphasis>grouping projections</emphasis>, which also appear in the SQL <literal>group by</literal> clause."
+msgstr ""
+
+#: query_criteria.xml:271(para) 
+msgid "An alias may optionally be assigned to a projection, so that the projected value may be referred to in restrictions or orderings. Here are two different ways to do this:"
+msgstr ""
+
+#: query_criteria.xml:287(para) 
+msgid "The <literal>alias()</literal> and <literal>as()</literal> methods simply wrap a projection instance in another, aliased, instance of <literal>Projection</literal>. As a shortcut, you can assign an alias when you add the projection to a projection list:"
+msgstr ""
+
+#: query_criteria.xml:315(para) 
+msgid "You can also use <literal>Property.forName()</literal> to express projections:"
+msgstr ""
+
+#: query_criteria.xml:338(title) 
+msgid "Detached queries and subqueries"
+msgstr ""
+
+#: query_criteria.xml:339(para) 
+msgid "The <literal>DetachedCriteria</literal> class lets you create a query outside the scope of a session, and then later execute it using some arbitrary <literal>Session</literal>."
+msgstr ""
+
+#: query_criteria.xml:353(para) 
+msgid "A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion instances involving subqueries may be obtained via <literal>Subqueries</literal> or <literal>Property</literal>."
+msgstr ""
+
+#: query_criteria.xml:371(para) 
+msgid "Even correlated subqueries are possible:"
+msgstr ""
+
+#: query_criteria.xml:389(title) 
+msgid "Queries by natural identifier"
+msgstr ""
+
+#: query_criteria.xml:391(para) 
+msgid "For most queries, including criteria queries, the query cache is not very efficient, because query cache invalidation occurs too frequently. However, there is one special kind of query where we can optimize the cache invalidation algorithm: lookups by a constant natural key. In some applications, this kind of query occurs frequently. The criteria API provides special provision for this use case."
+msgstr ""
+
+#: query_criteria.xml:399(para) 
+msgid "First, you should map the natural key of your entity using <literal>&lt;natural-id&gt;</literal>, and enable use of the second-level cache."
+msgstr ""
+
+#: query_criteria.xml:416(para) 
+msgid "Note that this functionality is not intended for use with entities with <emphasis>mutable</emphasis> natural keys."
+msgstr ""
+
+#: query_criteria.xml:421(para) 
+msgid "Next, enable the Hibernate query cache."
+msgstr ""
+
+#: query_criteria.xml:425(para) 
+msgid "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of the more efficient cache algorithm."
+msgstr ""
+
+#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
+#: query_criteria.xml:0(None) 
+msgid "translator-credits"
+msgstr ""
+

@@ -1,0 +1,952 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+#: index.docbook:6
+msgid "Association Mappings"
+msgstr "関連マッピング"
+
+#: index.docbook:9
+msgid "Introduction"
+msgstr "イントロダクション"
+
+#: index.docbook:11
+msgid "Association mappings are the often most difficult thing to get right. In this section we'll go through the canonical cases one by one, starting with unidirectional mappings, and then considering the bidirectional cases. We'll use <literal>Person</literal> and <literal>Address</literal> in all the examples."
+msgstr "関連マッピングはしばしば理解が最も難しいものになります。 この章では、基本的な一つ一つのケースについて述べます。 単方向のマッピングから始め、それから双方向のケースについて考えていきます。 例として、<literal>Person</literal> と <literal>Address</literal> を用います。"
+
+#: index.docbook:19
+msgid "We'll classify associations by whether or not they map to an intervening join table, and by multiplicity."
+msgstr "関連は、結合テーブルを入れるかかどうかと、 多重度によって分類することにします。"
+
+#: index.docbook:24
+msgid "Nullable foreign keys are not considered good practice in traditional data modelling, so all our examples use not null foreign keys. This is not a requirement of Hibernate, and the mappings will all work if you drop the nullability constraints."
+msgstr "すべての例でnot nullの外部キーを使用します。 これはHibernateの要件ではありません。 not null制約を外したとしても、マッピングは問題なく動作します。"
+
+#: index.docbook:34
+msgid "Unidirectional associations"
+msgstr "単方向関連"
+
+#: index.docbook:37, index.docbook:108
+msgid "many to one"
+msgstr "<title>多対一</title>"
+
+#: index.docbook:39
+msgid "A <emphasis>unidirectional many-to-one association</emphasis> is the most common kind of unidirectional association."
+msgstr "<emphasis>単方向多対一関連</emphasis> は単方向関連の中で最も一般的なものです。"
+
+#: index.docbook:44
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:45, index.docbook:161
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key, addressId bigint not null )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key, addressId bigint not null )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:50, index.docbook:121, index.docbook:185, index.docbook:225
+msgid "one to one"
+msgstr "<title>一対一</title>"
+
+#: index.docbook:52
+msgid "A <emphasis>unidirectional one-to-one association on a foreign key</emphasis> is almost identical. The only difference is the column unique constraint."
+msgstr "<emphasis>外部キーの単方向一対一関連</emphasis> はほとんど同じものです。 唯一違うのは、カラムのユニークな制約です。"
+
+#: index.docbook:57
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\" \n"
+      "        unique=\"true\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\" \n"
+      "        unique=\"true\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:58, index.docbook:193
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key, addressId bigint not null unique )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key, addressId bigint not null unique )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:60
+msgid "A <emphasis>unidirectional one-to-one association on a primary key</emphasis> usually uses a special id generator. (Notice that we've reversed the direction of the association in this example.)"
+msgstr "<emphasis>主キーの単方向一対一関連</emphasis> は通常、特別なIDジェネレータを使います。 （この例では関連の方向が逆になっていることに注意してください）"
+
+#: index.docbook:66
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">person</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"person\" constrained=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">person</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"person\" constrained=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:67, index.docbook:201
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table Address ( personId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table Address ( personId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:72, index.docbook:94
+msgid "one to many"
+msgstr "<title>一対多</title>"
+
+#: index.docbook:74
+msgid "A <emphasis>unidirectional one-to-many association on a foreign key</emphasis> is a very unusual case, and is not really recommended."
+msgstr "<emphasis>外部キーの単方向一対多関連</emphasis> はとても特殊なケースで、 あまり推奨されていません。"
+
+#: index.docbook:79
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\">\n"
+      "        <key column=\"personId\" \n"
+      "            not-null=\"true\"/>\n"
+      "        <one-to-many class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\">\n"
+      "        <key column=\"personId\" \n"
+      "            not-null=\"true\"/>\n"
+      "        <one-to-many class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:80
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key, personId bigint not null )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key, personId bigint not null )\n"
+      "        ]]>"
+
+#: index.docbook:82
+msgid "We think it's better to use a join table for this kind of association."
+msgstr "このような関連のために結合テーブルを使うことをお薦めします。"
+
+#: index.docbook:91
+msgid "Unidirectional associations with join tables"
+msgstr "結合テーブルを使った単方向関連"
+
+#: index.docbook:96
+msgid "A <emphasis>unidirectional one-to-many association on a join table</emphasis> is much preferred. Notice that by specifying <literal>unique=\"true\"</literal>, we have changed the multiplicity from many-to-many to one-to-many."
+msgstr "<emphasis>結合テーブルを使った単方向一対多関連</emphasis> はより好ましいです。 <literal>unique=\"true\"</literal> の指定により、多重度が多対多から一対多 に変わったことに注意して下さい。"
+
+#: index.docbook:102
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            unique=\"true\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            unique=\"true\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:103
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId not null, addressId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId not null, addressId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:110
+msgid "A <emphasis>unidirectional many-to-one association on a join table</emphasis> is quite common when the association is optional."
+msgstr "<emphasis>結合テーブルの単方向多対一関連</emphasis> は 関連が任意であるときに非常に一般的なものです。"
+
+#: index.docbook:115
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:116
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null primary key, addressId bigint not null )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null primary key, addressId bigint not null )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:123
+msgid "A <emphasis>unidirectional one-to-one association on a join table</emphasis> is extremely unusual, but possible."
+msgstr "<emphasis>結合テーブルの単方向一対一関連</emphasis> は、本当に特殊ですが 不可能ではありません。"
+
+#: index.docbook:128
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:129, index.docbook:233
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:134, index.docbook:238
+msgid "many to many"
+msgstr "<title>多対多</title>"
+
+#: index.docbook:136
+msgid "Finally, we have a <emphasis>unidirectional many-to-many association</emphasis>."
+msgstr "最後に、<emphasis>単方向多対多関連</emphasis> を示します。"
+
+#: index.docbook:140
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "</class>]]>"
+
+#: index.docbook:141, index.docbook:246
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:148
+msgid "Bidirectional associations"
+msgstr "双方向関連"
+
+#: index.docbook:151, index.docbook:211
+msgid "one to many / many to one"
+msgstr "一対多/多対一"
+
+#: index.docbook:153
+msgid "A <emphasis>bidirectional many-to-one association</emphasis> is the most common kind of association. (This is the standard parent/child relationship.)"
+msgstr "<emphasis>双方向多対一関連</emphasis> は最も一般的な関連です。 （標準的な親子関係です）"
+
+#: index.docbook:159
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"people\" inverse=\"true\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <one-to-many class=\"Person\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"people\" inverse=\"true\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <one-to-many class=\"Person\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+
+#: index.docbook:163
+msgid "If you use a <literal>List</literal> (or other indexed collection) you need to set the <literal>key</literal> column of the foreign key to <literal>not null</literal>, and let Hibernate manage the association from the collections side to maintain the index of each element (making the other side virtually inverse by setting <literal>update=\"false\"</literal> and <literal>insert=\"false\"</literal>):"
+msgstr "<literal>List</literal> （または他のインデックス付きのコレクション）を使うなら、 外部キーの <literal>key</literal> カラムを <literal>not null</literal> に設定し、 コレクション側が各要素のインデックスをメンテナンスするように、 関連を扱う必要があります （<literal>update=\"false\"</literal> かつ <literal>insert=\"false\"</literal> と設定して、反対側を仮想的にinverseにします）："
+
+#: index.docbook:171
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "   <id name=\"id\"/>\n"
+      "   ...\n"
+      "   <many-to-one name=\"address\"\n"
+      "      column=\"addressId\"\n"
+      "      not-null=\"true\"\n"
+      "      insert=\"false\"\n"
+      "      update=\"false\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "   <id name=\"id\"/>\n"
+      "   ...\n"
+      "   <list name=\"people\">\n"
+      "      <key column=\"addressId\" not-null=\"true\"/>\n"
+      "      <list-index column=\"peopleIdx\"/>\n"
+      "      <one-to-many class=\"Person\"/>\n"
+      "   </list>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "   <id name=\"id\"/>\n"
+      "   ...\n"
+      "   <many-to-one name=\"address\"\n"
+      "      column=\"addressId\"\n"
+      "      not-null=\"true\"\n"
+      "      insert=\"false\"\n"
+      "      update=\"false\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "   <id name=\"id\"/>\n"
+      "   ...\n"
+      "   <list name=\"people\">\n"
+      "      <key column=\"addressId\" not-null=\"true\"/>\n"
+      "      <list-index column=\"peopleIdx\"/>\n"
+      "      <one-to-many class=\"Person\"/>\n"
+      "   </list>\n"
+      "</class>]]>"
+
+#: index.docbook:173
+msgid "It is important that you define <literal>not-null=\"true\"</literal> on the <literal>&lt;key&gt;</literal> element of the collection mapping if the underlying foreign key column is <literal>NOT NULL</literal>. Don't only declare <literal>not-null=\"true\"</literal> on a possible nested <literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</literal> element."
+msgstr "もし外部キーカラムが <literal>NOT NULL</literal> であるならば、 コレクションマッピングの <literal>&lt;key&gt;</literal> 要素を <literal>not-null=\"true\"</literal> にすることは重要です。 入れ子になった <literal>&lt;column&gt;</literal> 要素だけではなく、 <literal>&lt;key&gt;</literal> 要素も <literal>not-null=\"true\"</literal> と定義しないようにしてください。"
+
+#: index.docbook:187
+msgid "A <emphasis>bidirectional one-to-one association on a foreign key</emphasis> is quite common."
+msgstr "<emphasis>外部キーの双方向一対一関連</emphasis> は非常に一般的です。"
+
+#: index.docbook:192
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\" \n"
+      "        unique=\"true\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "   <one-to-one name=\"person\" \n"
+      "        property-ref=\"address\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <many-to-one name=\"address\" \n"
+      "        column=\"addressId\" \n"
+      "        unique=\"true\"\n"
+      "        not-null=\"true\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "   <one-to-one name=\"person\" \n"
+      "        property-ref=\"address\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:195
+msgid "A <emphasis>bidirectional one-to-one association on a primary key</emphasis> uses the special id generator."
+msgstr "<emphasis>主キーの双方向一対一関連</emphasis> は特殊なIDジェネレータを使います。"
+
+#: index.docbook:200
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"address\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">person</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"person\" \n"
+      "        constrained=\"true\"/>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"address\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"foreign\">\n"
+      "            <param name=\"property\">person</param>\n"
+      "        </generator>\n"
+      "    </id>\n"
+      "    <one-to-one name=\"person\" \n"
+      "        constrained=\"true\"/>\n"
+      "</class>]]>"
+
+#: index.docbook:208
+msgid "Bidirectional associations with join tables"
+msgstr "結合テーブルを使った双方向関連"
+
+#: index.docbook:213
+msgid "A <emphasis>bidirectional one-to-many association on a join table</emphasis>. Note that the <literal>inverse=\"true\"</literal> can go on either end of the association, on the collection, or on the join."
+msgstr "<emphasis>結合テーブルの双方向一対多関連</emphasis> です。 <literal>inverse=\"true\"</literal> が関連端、コレクション、結合のいずれかに 設定できることに注意してください。"
+
+#: index.docbook:219
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" \n"
+      "        table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            unique=\"true\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        inverse=\"true\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <many-to-one name=\"person\"\n"
+      "            column=\"personId\"\n"
+      "            not-null=\"true\"/>\n"
+      "    </join>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" \n"
+      "        table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            unique=\"true\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        inverse=\"true\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <many-to-one name=\"person\"\n"
+      "            column=\"personId\"\n"
+      "            not-null=\"true\"/>\n"
+      "    </join>\n"
+      "</class>]]>"
+
+#: index.docbook:220
+msgid ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null, addressId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+msgstr ""
+      "<![CDATA[\n"
+      "create table Person ( personId bigint not null primary key )\n"
+      "create table PersonAddress ( personId bigint not null, addressId bigint not null primary key )\n"
+      "create table Address ( addressId bigint not null primary key )\n"
+      "        ]]>"
+
+#: index.docbook:227
+msgid "A <emphasis>bidirectional one-to-one association on a join table</emphasis> is extremely unusual, but possible."
+msgstr "<emphasis>結合テーブルの双方向一対一関連</emphasis> は非常に特殊ですが、可能です。"
+
+#: index.docbook:232
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\"\n"
+      "        inverse=\"true\">\n"
+      "        <key column=\"addressId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"person\"\n"
+      "            column=\"personId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\">\n"
+      "        <key column=\"personId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"addressId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <join table=\"PersonAddress\" \n"
+      "        optional=\"true\"\n"
+      "        inverse=\"true\">\n"
+      "        <key column=\"addressId\" \n"
+      "            unique=\"true\"/>\n"
+      "        <many-to-one name=\"address\"\n"
+      "            column=\"personId\" \n"
+      "            not-null=\"true\"\n"
+      "            unique=\"true\"/>\n"
+      "    </join>\n"
+      "</class>]]>"
+
+#: index.docbook:240
+msgid "Finally, we have a <emphasis>bidirectional many-to-many association</emphasis>."
+msgstr "最後に、<emphasis>双方向多対多関連</emphasis> を示します。"
+
+#: index.docbook:244
+msgid ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"people\" inverse=\"true\" table=\"PersonAddress\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <many-to-many column=\"personId\"\n"
+      "            class=\"Person\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+msgstr ""
+      "<![CDATA[<class name=\"Person\">\n"
+      "    <id name=\"id\" column=\"personId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+      "        <key column=\"personId\"/>\n"
+      "        <many-to-many column=\"addressId\"\n"
+      "            class=\"Address\"/>\n"
+      "    </set>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"Address\">\n"
+      "    <id name=\"id\" column=\"addressId\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <set name=\"people\" inverse=\"true\" table=\"PersonAddress\">\n"
+      "        <key column=\"addressId\"/>\n"
+      "        <many-to-many column=\"personId\"\n"
+      "            class=\"Person\"/>\n"
+      "    </set>\n"
+      "</class>]]>"
+
+#: index.docbook:253
+msgid "More complex association mappings"
+msgstr "より複雑な関連マッピング"
+
+#: index.docbook:255
+msgid "More complex association joins are <emphasis>extremely</emphasis> rare. Hibernate makes it possible to handle more complex situations using SQL fragments embedded in the mapping document. For example, if a table with historical account information data defines <literal>accountNumber</literal>, <literal>effectiveEndDate</literal> and <literal>effectiveStartDate</literal>columns, mapped as follows:"
+msgstr "より複雑な関連結合は <emphasis>極めて</emphasis> 稀です。 マッピングドキュメントにSQL文を埋め込むことで、 さらに複雑な状況を扱うことができます。 例えば、<literal>accountNumber</literal>, <literal>effectiveEndDate</literal>, <literal>effectiveStartDate</literal> カラムを持つaccount（口座）情報の履歴を扱うテーブルは、 以下のようにマッピングします。"
+
+#: index.docbook:264
+msgid ""
+      "<![CDATA[<properties name=\"currentAccountKey\">\n"
+      "    <property name=\"accountNumber\" type=\"string\" not-null=\"true\"/>\n"
+      "    <property name=\"currentAccount\" type=\"boolean\">\n"
+      "        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>\n"
+      "    </property>\n"
+      "</properties>\n"
+      "<property name=\"effectiveEndDate\" type=\"date\"/>\n"
+      "<property name=\"effectiveStateDate\" type=\"date\" not-null=\"true\"/>]]>"
+msgstr ""
+      "<![CDATA[<properties name=\"currentAccountKey\">\n"
+      "    <property name=\"accountNumber\" type=\"string\" not-null=\"true\"/>\n"
+      "    <property name=\"currentAccount\" type=\"boolean\">\n"
+      "        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>\n"
+      "    </property>\n"
+      "</properties>\n"
+      "<property name=\"effectiveEndDate\" type=\"date\"/>\n"
+      "<property name=\"effectiveStateDate\" type=\"date\" not-null=\"true\"/>]]>"
+
+#: index.docbook:266
+msgid "Then we can map an association to the <emphasis>current</emphasis> instance (the one with null <literal>effectiveEndDate</literal>) using:"
+msgstr "そして、関連を <emphasis>現時点の</emphasis> インスタンス （<literal>effectiveEndDate</literal> がnullであるもの）にマッピングします。 以下のようになります："
+
+#: index.docbook:271
+msgid ""
+      "<![CDATA[<many-to-one name=\"currentAccountInfo\" \n"
+      "        property-ref=\"currentAccountKey\"\n"
+      "        class=\"AccountInfo\">\n"
+      "    <column name=\"accountNumber\"/>\n"
+      "    <formula>'1'</formula>\n"
+      "</many-to-one>]]>"
+msgstr ""
+      "<![CDATA[<many-to-one name=\"currentAccountInfo\" \n"
+      "        property-ref=\"currentAccountKey\"\n"
+      "        class=\"AccountInfo\">\n"
+      "    <column name=\"accountNumber\"/>\n"
+      "    <formula>'1'</formula>\n"
+      "</many-to-one>]]>"
+
+#: index.docbook:273
+msgid "In a more complex example, imagine that the association between <literal>Employee</literal> and <literal>Organization</literal> is maintained in an <literal>Employment</literal> table full of historical employment data. Then an association to the employee's <emphasis>most recent</emphasis> employer (the one with the most recent <literal>startDate</literal>) might be mapped this way:"
+msgstr "さらに複雑な例では、<literal>Employee（従業員）</literal> と <literal>Organization（組織）</literal> 間の関連が <literal>Employment（雇用）</literal> テーブルで保持される場合を想像してください。 このテーブルには雇用データの履歴がすべて含まれます。 すると従業員の <emphasis>最も最近の</emphasis> 雇用者を表す関連 （最も最近の <literal>startDate</literal> を持つもの）は、このようにマッピングできます："
+
+#: index.docbook:281
+msgid ""
+      "<![CDATA[<join>\n"
+      "    <key column=\"employeeId\"/>\n"
+      "    <subselect>\n"
+      "        select employeeId, orgId \n"
+      "        from Employments \n"
+      "        group by orgId \n"
+      "        having startDate = max(startDate)\n"
+      "    </subselect>\n"
+      "    <many-to-one name=\"mostRecentEmployer\" \n"
+      "            class=\"Organization\" \n"
+      "            column=\"orgId\"/>\n"
+      "</join>]]>"
+msgstr ""
+      "<![CDATA[<join>\n"
+      "    <key column=\"employeeId\"/>\n"
+      "    <subselect>\n"
+      "        select employeeId, orgId \n"
+      "        from Employments \n"
+      "        group by orgId \n"
+      "        having startDate = max(startDate)\n"
+      "    </subselect>\n"
+      "    <many-to-one name=\"mostRecentEmployer\" \n"
+      "            class=\"Organization\" \n"
+      "            column=\"orgId\"/>\n"
+      "</join>]]>"
+
+#: index.docbook:283
+msgid "You can get quite creative with this functionality, but it is usually more practical to handle these kinds of cases using HQL or a criteria query."
+msgstr "この機能は非常に強力です。 しかしこのような場合、普通はHQLやcriteriaクエリを使う方がより実践的です。"
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+

@@ -529,7 +529,7 @@ where account.owner.id.country = 'AU'
 
         <para>
             You may also use components or composite user types, or properties of said
-            component types. See <xref linkend="queryhql-coomponents"/> for more details.
+            component types. See <xref linkend="queryhql-components"/> for more details.
         </para>
 
         <para>
@@ -1187,7 +1187,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <programlisting><![CDATA[from from Person p order by p.name.first]]></programlisting>
 
         <para>
-            Another common use of components is in <xref linkend="queryhql-tuple">row value constructors</xref>.
+            Another common use of components is in <link linkend="queryhql-tuple">row value constructors</link>.
         </para>
     </sect1>
 

@@ -167,7 +167,7 @@ session.close();]]></programlisting>
             (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>)
             data directly in the database will not affect in-memory state. However, Hibernate provides methods
             for bulk SQL-style DML statement execution which are performed through the
-            Hibernate Query Language (<xref linkend="queryhql">HQL</xref>).
+            Hibernate Query Language (<link linkend="queryhql">HQL</link>).
         </para>
 
 	    <para>
@@ -192,7 +192,7 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    No <xref linkend="queryhql-joins-forms">joins</xref> (either implicit or explicit)
+                    No <link linkend="queryhql-joins-forms">joins</link> (either implicit or explicit)
 	                can be specified in a bulk HQL query.  Sub-queries may be used in the where-clause;
 	                the subqueries, themselves, may contain joins.
                 </para>
@@ -224,8 +224,8 @@ session.close();]]></programlisting>
 
         <para>
             HQL <literal>UPDATE</literal> statements, by default do not effect the
-            <xref linkend="mapping-declaration-version">version</xref>
-            or the <xref linkend="mapping-declaration-timestamp">timestamp</xref> property values
+            <link linkend="mapping-declaration-version">version</link>
+            or the <link linkend="mapping-declaration-timestamp">timestamp</link> property values
             for the affected entities; this is in keeping with the EJB3 specification.  However,
             you can force Hibernate to properly reset the <literal>version</literal> or
             <literal>timestamp</literal> property values through the use of a <literal>versioned update</literal>.

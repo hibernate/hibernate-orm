@@ -717,19 +717,19 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                     <entry>
-                        <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
+                        <literal>hibernate.connection.</literal><emphasis>&lt;propertyName&gt;</emphasis>
                     </entry>
                     <entry>
-                        Pass the JDBC property <literal>propertyName</literal>
+                        Pass the JDBC property <emphasis>&lt;propertyName&gt;</emphasis>
                         to <literal>DriverManager.getConnection()</literal>.
                     </entry>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
+                            <literal>hibernate.jndi.</literal><emphasis>&lt;propertyName&gt;</emphasis>
                         </entry>
                         <entry>
-                            Pass the property <literal>propertyName</literal> to
+                            Pass the property <emphasis>&lt;propertyName&gt;</emphasis> to
                             the JNDI <literal>InitialContextFactory</literal>.
                         </entry>
                     </row>
@@ -1646,7 +1646,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <para>
                 The easiest way to handle <literal>Session</literal>s and transactions is
                 Hibernates automatic "current" <literal>Session</literal> management.
-                See the discussion of <xref linkend="architecture-current-session">current sessions</xref>.
+                See the discussion of <link linkend="architecture-current-session">current sessions</link>.
                 Using the <literal>"jta"</literal> session context, if there is no Hibernate
                 <literal>Session</literal> associated with the current JTA transaction, one will
 	            be started and associated with that JTA transaction the first time you call

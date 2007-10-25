@@ -441,7 +441,7 @@ finally {
             <para>
                 You don't have to <literal>flush()</literal> the <literal>Session</literal> explicitly -
                 the call to <literal>commit()</literal> automatically triggers the synchronization (depending
-	            upon the <xref linkend="objectstate-flushing">FlushMode</xref> for the session.
+	            upon the <link linkend="objectstate-flushing">FlushMode</link> for the session.
                 A call to <literal>close()</literal> marks the end of a session. The main implication
                 of <literal>close()</literal> is that the JDBC connection will be relinquished by the
                 session. This Java code is portable and runs in both non-managed and JTA environments.

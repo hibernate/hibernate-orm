@@ -154,11 +154,11 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
  .addJoin("cat.dogs");
 ]]></programlisting>
 
-      <p>At this stage we are reaching the limits of what is possible with
-      native queries without starting to enhance the sql queries to make them
-      usable in Hibernate; the problems starts to arise when returning
-      multiple entities of the same type or when the default alias/column
-      names are not enough.</p>
+        <para>
+            At this stage we are reaching the limits of what is possible with native queries without starting to
+            enhance the sql queries to make them usable in Hibernate; the problems starts to arise when returning
+            multiple entities of the same type or when the default alias/column names are not enough.
+        </para>
     </sect2>
 
     <sect2>

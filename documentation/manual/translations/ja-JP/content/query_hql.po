@@ -1,1512 +1,2399 @@
-#, fuzzy
 msgid ""
 msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
-#: index.docbook:5
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: query_hql.xml:5
+#, no-c-format
 msgid "HQL: The Hibernate Query Language"
 msgstr "HQL: The Hibernate Query Language"
 
-#: index.docbook:7
-msgid "Hibernate is equipped with an extremely powerful query language that (quite intentionally) looks very much like SQL. But don't be fooled by the syntax; HQL is fully object-oriented, understanding notions like inheritence, polymorphism and association."
-msgstr "HibernateはSQLに非常によく似た(意図的に似せた)強力な問い合わせ言語を備えています。 しかしSQLに似た構文に惑わされないでください。HQLは完全にオブジェクト指向であり、 継承、ポリモーフィズム、関連といった概念を理解します。"
+#. Tag: para
+#: query_hql.xml:7
+#, no-c-format
+msgid ""
+"Hibernate is equipped with an extremely powerful query language that (quite "
+"intentionally) looks very much like SQL. But don't be fooled by the syntax; "
+"HQL is fully object-oriented, understanding notions like inheritence, "
+"polymorphism and association."
+msgstr ""
+"HibernateはSQLに非常によく似た(意図的に似せた)強力な問い合わせ言語を備えてい"
+"ます。 しかしSQLに似た構文に惑わされないでください。HQLは完全にオブジェクト指"
+"向であり、 継承、ポリモーフィズム、関連といった概念を理解します。"
 
-#: index.docbook:14
+#. Tag: title
+#: query_hql.xml:14
+#, no-c-format
 msgid "Case Sensitivity"
 msgstr "大文字と小文字の区別"
 
-#: index.docbook:16
-msgid "Queries are case-insensitive, except for names of Java classes and properties. So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as <literal>SELECT</literal> but <literal>org.hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
-msgstr "クエリはJavaのクラス名とプロパティ名を除いて大文字、小文字を区別しません。 従って <literal>SeLeCT</literal> は <literal>sELEct</literal> と同じで、かつ <literal>SELECT</literal> とも同じですが <literal>net.sf.hibernate.eg.FOO</literal> は <literal>net.sf.hibernate.eg.Foo</literal> とは違い、かつ <literal>foo.barSet</literal> は <literal>foo.BARSET</literal> とも違います。"
+#. Tag: para
+#: query_hql.xml:16
+#, no-c-format
+msgid ""
+"Queries are case-insensitive, except for names of Java classes and "
+"properties. So <literal>SeLeCT</literal> is the same as <literal>sELEct</"
+"literal> is the same as <literal>SELECT</literal> but <literal>org.hibernate."
+"eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and "
+"<literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
+msgstr ""
+"クエリはJavaのクラス名とプロパティ名を除いて大文字、小文字を区別しません。 "
+"従って <literal>SeLeCT</literal> は <literal>sELEct</literal> と同じで、かつ "
+"<literal>SELECT</literal> とも同じですが <literal>net.sf.hibernate.eg.FOO</"
+"literal> は <literal>net.sf.hibernate.eg.Foo</literal> とは違い、かつ "
+"<literal>foo.barSet</literal> は <literal>foo.BARSET</literal> とも違います。"
 
-#: index.docbook:27
-msgid "This manual uses lowercase HQL keywords. Some users find queries with uppercase keywords more readable, but we find this convention ugly when embedded in Java code."
-msgstr "このマニュアルでは小文字のHQLキーワードを使用します。 大文字のキーワードのクエリの方が読みやすいと感じるユーザーもいると思います。 ですが、Javaコード内に埋め込まれたときには見づらいと思います。"
+#. Tag: para
+#: query_hql.xml:27
+#, no-c-format
+msgid ""
+"This manual uses lowercase HQL keywords. Some users find queries with "
+"uppercase keywords more readable, but we find this convention ugly when "
+"embedded in Java code."
+msgstr ""
+"このマニュアルでは小文字のHQLキーワードを使用します。 大文字のキーワードのク"
+"エリの方が読みやすいと感じるユーザーもいると思います。 ですが、Javaコード内に"
+"埋め込まれたときには見づらいと思います。"
 
-#: index.docbook:35
+#. Tag: title
+#: query_hql.xml:35
+#, no-c-format
 msgid "The from clause"
 msgstr "from節"
 
-#: index.docbook:37
+#. Tag: para
+#: query_hql.xml:37
+#, no-c-format
 msgid "The simplest possible Hibernate query is of the form:"
 msgstr "もっとも単純なHibernateクエリは次の形式です。"
 
-#: index.docbook:41
+#. Tag: programlisting
+#: query_hql.xml:41
+#, no-c-format
 msgid "<![CDATA[from eg.Cat]]>"
-msgstr "<![CDATA[from eg.Cat]]>"
+msgstr ""
 
-#: index.docbook:43
-msgid "which simply returns all instances of the class <literal>eg.Cat</literal>. We don't usually need to qualify the class name, since <literal>auto-import</literal> is the default. So we almost always just write:"
-msgstr "これは単純に　<literal>eg.Cat</literal>　クラスのインスタンスをすべて返します。 必ずしもクラス名を修飾する（クラスにパッケージ名を付ける）必要はありません。 というのも、<literal>auto-import</literal> がデフォルトになっているからです。 そのためほとんどの場合、このように書くだけで十分です。"
+#. Tag: para
+#: query_hql.xml:43
+#, no-c-format
+msgid ""
+"which simply returns all instances of the class <literal>eg.Cat</literal>. "
+"We don't usually need to qualify the class name, since <literal>auto-import</"
+"literal> is the default. So we almost always just write:"
+msgstr ""
+"これは単純に　<literal>eg.Cat</literal>　クラスのインスタンスをすべて返しま"
+"す。 必ずしもクラス名を修飾する（クラスにパッケージ名を付ける）必要はありませ"
+"ん。 というのも、<literal>auto-import</literal> がデフォルトになっているから"
+"です。 そのためほとんどの場合、このように書くだけで十分です。"
 
-#: index.docbook:49
+#. Tag: programlisting
+#: query_hql.xml:49
+#, no-c-format
 msgid "<![CDATA[from Cat]]>"
-msgstr "<![CDATA[from Cat]]>"
+msgstr ""
 
-#: index.docbook:51
-msgid "Most of the time, you will need to assign an <emphasis>alias</emphasis>, since you will want to refer to the <literal>Cat</literal> in other parts of the query."
-msgstr "ほとんどの場合クエリのほかの部分で　<literal>Cat</literal>　を参照するので、別名を割り当てる必要があるでしょう。"
+#. Tag: para
+#: query_hql.xml:51
+#, no-c-format
+msgid ""
+"Most of the time, you will need to assign an <emphasis>alias</emphasis>, "
+"since you will want to refer to the <literal>Cat</literal> in other parts of "
+"the query."
+msgstr ""
+"ほとんどの場合クエリのほかの部分で　<literal>Cat</literal>　を参照するので、"
+"別名を割り当てる必要があるでしょう。"
 
-#: index.docbook:57, index.docbook:372
+#. Tag: programlisting
+#: query_hql.xml:57 query_hql.xml:372
+#, no-c-format
 msgid "<![CDATA[from Cat as cat]]>"
-msgstr "<![CDATA[from Cat as cat]]>"
+msgstr ""
 
-#: index.docbook:59
-msgid "This query assigns the alias <literal>cat</literal> to <literal>Cat</literal> instances, so we could use that alias later in the query. The <literal>as</literal> keyword is optional; we could also write:"
-msgstr "このクエリでは <literal>Cat</literal> インスタンスに <literal>cat</literal> という別名を付けています。 そのため、後でこのクエリ内で、この別名を使うことができます。 <literal>as</literal> キーワードはオプションです。つまりこのように書くこともできます："
+#. Tag: para
+#: query_hql.xml:59
+#, no-c-format
+msgid ""
+"This query assigns the alias <literal>cat</literal> to <literal>Cat</"
+"literal> instances, so we could use that alias later in the query. The "
+"<literal>as</literal> keyword is optional; we could also write:"
+msgstr ""
+"このクエリでは <literal>Cat</literal> インスタンスに <literal>cat</literal> "
+"という別名を付けています。 そのため、後でこのクエリ内で、この別名を使うことが"
+"できます。 <literal>as</literal> キーワードはオプションです。つまりこのように"
+"書くこともできます："
 
-#: index.docbook:65
+#. Tag: programlisting
+#: query_hql.xml:65
+#, no-c-format
 msgid "<![CDATA[from Cat cat]]>"
-msgstr "<![CDATA[from Cat cat]]>"
+msgstr ""
 
-#: index.docbook:67
-msgid "Multiple classes may appear, resulting in a cartesian product or \"cross\" join."
+#. Tag: para
+#: query_hql.xml:67
+#, no-c-format
+msgid ""
+"Multiple classes may appear, resulting in a cartesian product or \"cross\" "
+"join."
 msgstr "直積、あるいはクロス結合によって多数のクラスが出現することもあります。"
 
-#: index.docbook:71
+#. Tag: programlisting
+#: query_hql.xml:71
+#, no-c-format
 msgid "<![CDATA[from Formula, Parameter]]>"
-msgstr "<![CDATA[from Formula, Parameter]]>"
+msgstr ""
 
-#: index.docbook:72
+#. Tag: programlisting
+#: query_hql.xml:72
+#, no-c-format
 msgid "<![CDATA[from Formula as form, Parameter as param]]>"
-msgstr "<![CDATA[from Formula as form, Parameter as param]]>"
+msgstr ""
 
-#: index.docbook:74
-msgid "It is considered good practice to name query aliases using an initial lowercase, consistent with Java naming standards for local variables (eg. <literal>domesticCat</literal>)."
-msgstr "ローカル変数のJavaのネーミング基準と一致した、 頭文字に小文字を使ったクエリの別名を付けることはいい習慣です(例えば <literal>domesticCat</literal> )。"
+#. Tag: para
+#: query_hql.xml:74
+#, no-c-format
+msgid ""
+"It is considered good practice to name query aliases using an initial "
+"lowercase, consistent with Java naming standards for local variables (eg. "
+"<literal>domesticCat</literal>)."
+msgstr ""
+"ローカル変数のJavaのネーミング基準と一致した、 頭文字に小文字を使ったクエリの"
+"別名を付けることはいい習慣です(例えば <literal>domesticCat</literal> )。"
 
-#: index.docbook:83
+#. Tag: title
+#: query_hql.xml:83
+#, no-c-format
 msgid "Associations and joins"
 msgstr "関連と結合"
 
-#: index.docbook:85
-msgid "We may also assign aliases to associated entities, or even to elements of a collection of values, using a <literal>join</literal>."
-msgstr "関連するエンティティあるいは値コレクションの要素にも、<literal>結合</literal> を使って別名を割り当てることが出来ます。"
-
-#: index.docbook:90
+#. Tag: para
+#: query_hql.xml:85
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "    inner join cat.mate as mate\n"
-      "    left outer join cat.kittens as kitten]]>"
+"We may also assign aliases to associated entities, or even to elements of a "
+"collection of values, using a <literal>join</literal>."
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "    inner join cat.mate as mate\n"
-      "    left outer join cat.kittens as kitten]]>"
+"関連するエンティティあるいは値コレクションの要素にも、<literal>結合</"
+"literal> を使って別名を割り当てることが出来ます。"
 
-#: index.docbook:92
+#. Tag: programlisting
+#: query_hql.xml:90
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join cat.mate as mate\n"
+"    left outer join cat.kittens as kitten]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:92
+#, no-c-format
 msgid "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
-msgstr "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
+msgstr ""
 
-#: index.docbook:94
+#. Tag: programlisting
+#: query_hql.xml:94
+#, no-c-format
 msgid "<![CDATA[from Formula form full join form.parameter param]]>"
-msgstr "<![CDATA[from Formula form full join form.parameter param]]>"
+msgstr ""
 
-#: index.docbook:96
+#. Tag: para
+#: query_hql.xml:96
+#, no-c-format
 msgid "The supported join types are borrowed from ANSI SQL"
 msgstr "サポートしている結合のタイプはANSI SQLと同じです。"
 
-#: index.docbook:103
+#. Tag: literal
+#: query_hql.xml:103
+#, no-c-format
 msgid "inner join"
 msgstr "inner join"
 
-#: index.docbook:108
+#. Tag: literal
+#: query_hql.xml:108
+#, no-c-format
 msgid "left outer join"
 msgstr "left outer join"
 
-#: index.docbook:113
+#. Tag: literal
+#: query_hql.xml:113
+#, no-c-format
 msgid "right outer join"
 msgstr "right outer join"
 
-#: index.docbook:117
+#. Tag: para
+#: query_hql.xml:117
+#, no-c-format
 msgid "<literal>full join</literal> (not usually useful)"
 msgstr "<literal>full join</literal> (たいていの場合使いづらい)"
 
-#: index.docbook:123
-msgid "The <literal>inner join</literal>, <literal>left outer join</literal> and <literal>right outer join</literal> constructs may be abbreviated."
-msgstr "<literal>inner join</literal>、<literal>left outer join</literal>、<literal>right outer join</literal>には省略形を使うこともできます。"
-
-#: index.docbook:128
+#. Tag: para
+#: query_hql.xml:123
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "    join cat.mate as mate\n"
-      "    left join cat.kittens as kitten]]>"
+"The <literal>inner join</literal>, <literal>left outer join</literal> and "
+"<literal>right outer join</literal> constructs may be abbreviated."
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "    join cat.mate as mate\n"
-      "    left join cat.kittens as kitten]]>"
+"<literal>inner join</literal>、<literal>left outer join</literal>、"
+"<literal>right outer join</literal>には省略形を使うこともできます。"
 
-#: index.docbook:130
-msgid "You may supply extra join conditions using the HQL <literal>with</literal> keyword."
-msgstr "HQLの <literal>with</literal> キーワードを使うと、結合条件を付け加えることができます。"
-
-#: index.docbook:135
+#. Tag: programlisting
+#: query_hql.xml:128
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "    left join cat.kittens as kitten\n"
-      "        with kitten.bodyWeight > 10.0]]>"
+"<![CDATA[from Cat as cat\n"
+"    join cat.mate as mate\n"
+"    left join cat.kittens as kitten]]>"
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "    left join cat.kittens as kitten \n"
-      "        with kitten.bodyWeight > 10.0]]>"
 
-#: index.docbook:137
-msgid "In addition, a \"fetch\" join allows associations or collections of values to be initialized along with their parent objects, using a single select. This is particularly useful in the case of a collection. It effectively overrides the outer join and lazy declarations of the mapping file for associations and collections. See <xref linkend=\"performance-fetching\"/> for more information."
-msgstr "加えて、「フェッチ」結合は関連や値のコレクションを親オブジェクトと一緒に1度のselect句で初期化します。 これは特にコレクションの場合に有用です。これは実質上、関連とコレクションに対するマッピング定義ファイルの外部結合とlazy初期化の定義を上書きすることになります。 <xref linkend=\"performance-fetching\"/> により多くの情報があります。"
-
-#: index.docbook:145
+#. Tag: para
+#: query_hql.xml:130
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "    inner join fetch cat.mate\n"
-      "    left join fetch cat.kittens]]>"
+"You may supply extra join conditions using the HQL <literal>with</literal> "
+"keyword."
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "    inner join fetch cat.mate\n"
-      "    left join fetch cat.kittens]]>"
+"HQLの <literal>with</literal> キーワードを使うと、結合条件を付け加えることが"
+"できます。"
 
-#: index.docbook:147
-msgid "A fetch join does not usually need to assign an alias, because the associated objects should not be used in the <literal>where</literal> clause (or any other clause). Also, the associated objects are not returned directly in the query results. Instead, they may be accessed via the parent object. The only reason we might need an alias is if we are recursively join fetching a further collection:"
-msgstr "結合によるフェッチは関連するオブジェクトが <literal>where</literal> 節(または他のどんな節でも) で使われてはならないので、通常別名を割り当てる必要がありません。また関連オブジェクトは問い合わせ結果として 直接返されません。代わりに親オブジェクトを通してアクセスできます。 コレクションを再帰的に結合フェッチする場合のみ、別名が必要になります。"
-
-#: index.docbook:155
+#. Tag: programlisting
+#: query_hql.xml:135
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "    inner join fetch cat.mate\n"
-      "    left join fetch cat.kittens child\n"
-      "    left join fetch child.kittens]]>"
+"<![CDATA[from Cat as cat\n"
+"    left join cat.kittens as kitten\n"
+"        with kitten.bodyWeight > 10.0]]>"
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "    inner join fetch cat.mate\n"
-      "    left join fetch cat.kittens child\n"
-      "    left join fetch child.kittens]]>"
 
-#: index.docbook:157
-msgid "Note that the <literal>fetch</literal> construct may not be used in queries called using <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). Nor should <literal>fetch</literal> be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal> as these operations are based on the result rows, which usually contain duplicates for eager collection fetching, hence, the number of rows is not what you'd expect. Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition. It is possible to create a cartesian product by join fetching more than one collection in a query, so take care in this case. Join fetching multiple collection roles also sometimes gives unexpected results for bag mappings, so be careful about how you formulate your queries in this case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal> are not meaningful."
-msgstr "<literal>fetch</literal> 構文は <literal>iterate()</literal> を使ったクエリ呼び出しで使用できないことに注意してください （一方で <literal>scroll()</literal> は使用できます）。 また、これらの操作は結果の行に基づいているため、 <literal>fetch</literal> は <literal>setMaxResults()</literal> や <literal>setFirstResult()</literal> と一緒に使用すべきではありません。 通常eagerなコレクションフェッチをすると重複が出てしまうため、あなたが期待するような行数にはならないのです。 そしてまた <literal>fetch</literal> は、アドホックな <literal>with</literal> 条件を 一緒に使うこともできません。 一つのクエリで複数のコレクションを結合フェッチすることにより直積を作成できるので、この場合注意してください。 また、複数のコレクションに対する結合フェッチはbagマッピングに対して予期せぬ結果をもたらすことがあるので、 この場合のクエリの作成には注意してください。 最後に <literal>全外部結合によるフェッチ</literal> と <literal>右外部結合によるフェッチ</literal> は有用ではないことに注意してください。"
+#. Tag: para
+#: query_hql.xml:137
+#, no-c-format
+msgid ""
+"In addition, a \"fetch\" join allows associations or collections of values "
+"to be initialized along with their parent objects, using a single select. "
+"This is particularly useful in the case of a collection. It effectively "
+"overrides the outer join and lazy declarations of the mapping file for "
+"associations and collections. See <xref linkend=\"performance-fetching\"/> "
+"for more information."
+msgstr ""
+"加えて、「フェッチ」結合は関連や値のコレクションを親オブジェクトと一緒に1度の"
+"select句で初期化します。 これは特にコレクションの場合に有用です。これは実質"
+"上、関連とコレクションに対するマッピング定義ファイルの外部結合とlazy初期化の"
+"定義を上書きすることになります。 <xref linkend=\"performance-fetching\"/> に"
+"より多くの情報があります。"
 
-#: index.docbook:172
-msgid "If you are using property-level lazy fetching (with bytecode instrumentation), it is possible to force Hibernate to fetch the lazy properties immediately (in the first query) using <literal>fetch all properties</literal>."
-msgstr "もしプロパティレベルの遅延フェッチを使う場合（内部的にバイトコード処理をする場合）、 <literal>fetch all properties</literal> を使うことで Hibernateに遅延プロパティを速やかに（最初のクエリで）フェッチさせることができます。"
+#. Tag: programlisting
+#: query_hql.xml:145
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens]]>"
+msgstr ""
 
-#: index.docbook:178
+#. Tag: para
+#: query_hql.xml:147
+#, no-c-format
+msgid ""
+"A fetch join does not usually need to assign an alias, because the "
+"associated objects should not be used in the <literal>where</literal> clause "
+"(or any other clause). Also, the associated objects are not returned "
+"directly in the query results. Instead, they may be accessed via the parent "
+"object. The only reason we might need an alias is if we are recursively join "
+"fetching a further collection:"
+msgstr ""
+"結合によるフェッチは関連するオブジェクトが <literal>where</literal> 節(または"
+"他のどんな節でも) で使われてはならないので、通常別名を割り当てる必要がありま"
+"せん。また関連オブジェクトは問い合わせ結果として 直接返されません。代わりに親"
+"オブジェクトを通してアクセスできます。 コレクションを再帰的に結合フェッチする"
+"場合のみ、別名が必要になります。"
+
+#. Tag: programlisting
+#: query_hql.xml:155
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens child\n"
+"    left join fetch child.kittens]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:157
+#, no-c-format
+msgid ""
+"Note that the <literal>fetch</literal> construct may not be used in queries "
+"called using <literal>iterate()</literal> (though <literal>scroll()</"
+"literal> can be used). Nor should <literal>fetch</literal> be used together "
+"with <literal>setMaxResults()</literal> or <literal>setFirstResult()</"
+"literal> as these operations are based on the result rows, which usually "
+"contain duplicates for eager collection fetching, hence, the number of rows "
+"is not what you'd expect. Nor may <literal>fetch</literal> be used together "
+"with an ad hoc <literal>with</literal> condition. It is possible to create a "
+"cartesian product by join fetching more than one collection in a query, so "
+"take care in this case. Join fetching multiple collection roles also "
+"sometimes gives unexpected results for bag mappings, so be careful about how "
+"you formulate your queries in this case. Finally, note that <literal>full "
+"join fetch</literal> and <literal>right join fetch</literal> are not "
+"meaningful."
+msgstr ""
+"<literal>fetch</literal> 構文は <literal>iterate()</literal> を使ったクエリ呼"
+"び出しで使用できないことに注意してください （一方で <literal>scroll()</"
+"literal> は使用できます）。 また、これらの操作は結果の行に基づいているため、 "
+"<literal>fetch</literal> は <literal>setMaxResults()</literal> や "
+"<literal>setFirstResult()</literal> と一緒に使用すべきではありません。 通常"
+"eagerなコレクションフェッチをすると重複が出てしまうため、あなたが期待するよう"
+"な行数にはならないのです。 そしてまた <literal>fetch</literal> は、アドホック"
+"な <literal>with</literal> 条件を 一緒に使うこともできません。 一つのクエリで"
+"複数のコレクションを結合フェッチすることにより直積を作成できるので、この場合"
+"注意してください。 また、複数のコレクションに対する結合フェッチはbagマッピン"
+"グに対して予期せぬ結果をもたらすことがあるので、 この場合のクエリの作成には注"
+"意してください。 最後に <literal>全外部結合によるフェッチ</literal> と "
+"<literal>右外部結合によるフェッチ</literal> は有用ではないことに注意してくだ"
+"さい。"
+
+#. Tag: para
+#: query_hql.xml:172
+#, no-c-format
+msgid ""
+"If you are using property-level lazy fetching (with bytecode "
+"instrumentation), it is possible to force Hibernate to fetch the lazy "
+"properties immediately (in the first query) using <literal>fetch all "
+"properties</literal>."
+msgstr ""
+"もしプロパティレベルの遅延フェッチを使う場合（内部的にバイトコード処理をする"
+"場合）、 <literal>fetch all properties</literal> を使うことで Hibernateに遅延"
+"プロパティを速やかに（最初のクエリで）フェッチさせることができます。"
+
+#. Tag: programlisting
+#: query_hql.xml:178
+#, no-c-format
 msgid "<![CDATA[from Document fetch all properties order by name]]>"
-msgstr "<![CDATA[from Document fetch all properties order by name]]>"
+msgstr ""
 
-#: index.docbook:179
-msgid "<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]>"
-msgstr "<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]>"
+#. Tag: programlisting
+#: query_hql.xml:179
+#, no-c-format
+msgid ""
+"<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%"
+"cats%']]>"
+msgstr ""
 
-#: index.docbook:184
+#. Tag: title
+#: query_hql.xml:184
+#, no-c-format
 msgid "Forms of join syntax"
 msgstr "結合構文の形式"
 
-#: index.docbook:186
-msgid "HQL supports two forms of association joining: <literal>implicit</literal> and <literal>explicit</literal>."
-msgstr "HQLは２つの関連結合形式をサポートします：<literal>暗黙的</literal> と <literal>明示的</literal>。"
+#. Tag: para
+#: query_hql.xml:186
+#, no-c-format
+msgid ""
+"HQL supports two forms of association joining: <literal>implicit</literal> "
+"and <literal>explicit</literal>."
+msgstr ""
+"HQLは２つの関連結合形式をサポートします：<literal>暗黙的</literal> と "
+"<literal>明示的</literal>。"
 
-#: index.docbook:190
-msgid "The queries shown in the previous section all use the <literal>explicit</literal> form where the join keyword is explicitly used in the from clause. This is the recommended form."
-msgstr "これまでのセクションでお見せした使い方はすべて <literal>明示的な</literal> 形式で、 from節で明示的にjoinキーワードを使っています。 この形式をおすすめします。"
+#. Tag: para
+#: query_hql.xml:190
+#, no-c-format
+msgid ""
+"The queries shown in the previous section all use the <literal>explicit</"
+"literal> form where the join keyword is explicitly used in the from clause. "
+"This is the recommended form."
+msgstr ""
+"これまでのセクションでお見せした使い方はすべて <literal>明示的な</literal> 形"
+"式で、 from節で明示的にjoinキーワードを使っています。 この形式をおすすめしま"
+"す。"
 
-#: index.docbook:195
-msgid "The <literal>implicit</literal> form does not use the join keyword. Instead, the associations are \"dereferenced\" using dot-notation. <literal>implicit</literal> joins can appear in any of the HQL clauses. <literal>implicit</literal> join result in inner joins in the resulting SQL statement."
-msgstr "<literal>暗黙的</literal> フォームは、joinキーワードを使いません。代わりに、参照する関連に ドット表記を使います。<literal>暗黙的</literal> 結合は、さまざまなHQLに出てきます。 <literal>暗黙的</literal> 結合の結果は、SQLステートメントの内部結合結果です。"
+#. Tag: para
+#: query_hql.xml:195
+#, no-c-format
+msgid ""
+"The <literal>implicit</literal> form does not use the join keyword. Instead, "
+"the associations are \"dereferenced\" using dot-notation. <literal>implicit</"
+"literal> joins can appear in any of the HQL clauses. <literal>implicit</"
+"literal> join result in inner joins in the resulting SQL statement."
+msgstr ""
+"<literal>暗黙的</literal> フォームは、joinキーワードを使いません。代わりに、"
+"参照する関連に ドット表記を使います。<literal>暗黙的</literal> 結合は、さまざ"
+"まなHQLに出てきます。 <literal>暗黙的</literal> 結合の結果は、SQLステートメン"
+"トの内部結合結果です。"
 
-#: index.docbook:202
+#. Tag: programlisting
+#: query_hql.xml:202
+#, no-c-format
 msgid "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
-msgstr "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+msgstr ""
 
-#: index.docbook:206
+#. Tag: title
+#: query_hql.xml:206
+#, no-c-format
 msgid "Refering to identifier property"
+msgstr "Refering to identifier property"
+
+#. Tag: para
+#: query_hql.xml:208
+#, no-c-format
+msgid ""
+"There are, generally speaking, 2 ways to refer to an entity's identifier "
+"property:"
+msgstr ""
+"There are, generally speaking, 2 ways to refer to an entity's identifier "
+"property:"
+
+#. Tag: para
+#: query_hql.xml:213
+#, no-c-format
+msgid ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the identifier property of an entity <emphasis>provided that "
+"entity does not define a non-identifier property named id</emphasis>."
+msgstr ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the identifier property of an entity <emphasis>provided that "
+"entity does not define a non-identifier property named id</emphasis>."
+
+#. Tag: para
+#: query_hql.xml:220
+#, no-c-format
+msgid ""
+"If the entity defines a named identifier property, you may use that property "
+"name."
+msgstr ""
+"If the entity defines a named identifier property, you may use that property "
+"name."
+
+#. Tag: para
+#: query_hql.xml:226
+#, no-c-format
+msgid ""
+"References to composite identifier properties follow the same naming rules. "
+"If the entity has a non-identifier property named id, the composite "
+"identifier property can only be referenced by its defined named; otherwise, "
+"the special <literal>id</literal> property can be used to rerference the "
+"identifier property."
+msgstr ""
+"References to composite identifier properties follow the same naming rules. "
+"If the entity has a non-identifier property named id, the composite "
+"identifier property can only be referenced by its defined named; otherwise, "
+"the special <literal>id</literal> property can be used to rerference the "
+"identifier property."
+
+#. Tag: para
+#: query_hql.xml:233
+#, fuzzy, no-c-format
+msgid ""
+"Note: this has changed significantly starting in version 3.2.2. In previous "
+"versions, <literal>id</literal> <emphasis>always</emphasis> referred to the "
+"identifier property no matter what its actual name. A ramification of that "
+"decision was that non-identifier properties named <literal>id</literal> "
+"could never be referenced in Hibernate queries."
+msgstr ""
+"Note: this has changed significantly starting in version 3.2.2. In previous "
+"versions, <literal>id</literal><emphasis>always</emphasis> referred to the "
+"identifier property no matter what its actual name. A ramification of that "
+"decision was that non-identifier properties named <literal>id</literal> "
+"could never be referenced in Hibernate queries."
+
+#. Tag: title
+#: query_hql.xml:242
+#, no-c-format
+msgid "The select clause"
 msgstr "Select節"
 
-#: index.docbook:208
-msgid "There are, generally speaking, 2 ways to refer to an entity's identifier property:"
-msgstr "<literal>select</literal> 節は以下のようにどのオブジェクトと属性をクエリリザルトセットに返すかを選択します。:"
-
-#: index.docbook:213
-msgid "The special property (lowercase) <literal>id</literal> may be used to reference the identifier property of an entity <emphasis>provided that entity does not define a non-identifier property named id</emphasis>."
-msgstr ""
-      "<![CDATA[select mate \n"
-      "from Cat as cat \n"
-      "    inner join cat.mate as mate]]>"
-
-#: index.docbook:220
-msgid "If the entity defines a named identifier property, you may use that property name."
-msgstr "上記のクエリは他の <literal>Cat</literal> の <literal>mate</literal> を選択します。 実際には次のように、より簡潔に表現できます。:"
-
-#: index.docbook:226
-msgid "References to composite identifier properties follow the same naming rules. If the entity has a non-identifier property named id, the composite identifier property can only be referenced by its defined named; otherwise, the special <literal>id</literal> property can be used to rerference the identifier property."
-msgstr "<![CDATA[select cat.mate from Cat cat]]>"
-
-#: index.docbook:233
-msgid "Note: this has changed significantly starting in version 3.2.2. In previous versions, <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no matter what its actual name. A ramification of that decision was that non-identifier properties named <literal>id</literal> could never be referenced in Hibernate queries."
-msgstr "クエリはコンポーネント型のプロパティを含む、あらゆる値型のプロパティも返せます。:"
-
-#: index.docbook:242
-msgid "The select clause"
-msgstr ""
-      "<![CDATA[select cat.name from DomesticCat cat\n"
-      "where cat.name like 'fri%']]>"
-
-#: index.docbook:244
-msgid "The <literal>select</literal> clause picks which objects and properties to return in the query result set. Consider:"
-msgstr "<![CDATA[select cust.name.firstName from Customer as cust]]>"
-
-#: index.docbook:249
+#. Tag: para
+#: query_hql.xml:244
+#, no-c-format
 msgid ""
-      "<![CDATA[select mate\n"
-      "from Cat as cat\n"
-      "    inner join cat.mate as mate]]>"
-msgstr "クエリは複数のオブジェクトと(または)プロパティを <literal>Object[]</literal> 型の配列として返せます。"
-
-#: index.docbook:251
-msgid "The query will select <literal>mate</literal>s of other <literal>Cat</literal>s. Actually, you may express this query more compactly as:"
+"The <literal>select</literal> clause picks which objects and properties to "
+"return in the query result set. Consider:"
 msgstr ""
-      "<![CDATA[select mother, offspr, mate.name \n"
-      "from DomesticCat as mother\n"
-      "    inner join mother.mate as mate\n"
-      "    left outer join mother.kittens as offspr]]>"
+"<literal>select</literal> 節は以下のようにどのオブジェクトと属性をクエリリザ"
+"ルトセットに返すかを選択します。:"
 
-#: index.docbook:256
+#. Tag: programlisting
+#: query_hql.xml:249
+#, no-c-format
+msgid ""
+"<![CDATA[select mate\n"
+"from Cat as cat\n"
+"    inner join cat.mate as mate]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:251
+#, no-c-format
+msgid ""
+"The query will select <literal>mate</literal>s of other <literal>Cat</"
+"literal>s. Actually, you may express this query more compactly as:"
+msgstr ""
+"上記のクエリは他の <literal>Cat</literal> の <literal>mate</literal> を選択し"
+"ます。 実際には次のように、より簡潔に表現できます。:"
+
+#. Tag: programlisting
+#: query_hql.xml:256
+#, no-c-format
 msgid "<![CDATA[select cat.mate from Cat cat]]>"
-msgstr "もしくは <literal>List</literal> として、"
-
-#: index.docbook:258
-msgid "Queries may return properties of any value type including properties of component type:"
 msgstr ""
-      "<![CDATA[select new list(mother, offspr, mate.name)\n"
-      "from DomesticCat as mother\n"
-      "    inner join mother.mate as mate\n"
-      "    left outer join mother.kittens as offspr]]>"
 
-#: index.docbook:262
+#. Tag: para
+#: query_hql.xml:258
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat.name from DomesticCat cat\n"
-      "where cat.name like 'fri%']]>"
-msgstr "または、タイプセーフなJavaオブジェクトを返せます。"
+"Queries may return properties of any value type including properties of "
+"component type:"
+msgstr ""
+"クエリはコンポーネント型のプロパティを含む、あらゆる値型のプロパティも返せま"
+"す。:"
 
-#: index.docbook:264
+#. Tag: programlisting
+#: query_hql.xml:262
+#, no-c-format
+msgid ""
+"<![CDATA[select cat.name from DomesticCat cat\n"
+"where cat.name like 'fri%']]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:264
+#, no-c-format
 msgid "<![CDATA[select cust.name.firstName from Customer as cust]]>"
 msgstr ""
-      "<![CDATA[select new Family(mother, mate, offspr)\n"
-      "from DomesticCat as mother\n"
-      "    join mother.mate as mate\n"
-      "    left join mother.kittens as offspr]]>"
 
-#: index.docbook:266
-msgid "Queries may return multiple objects and/or properties as an array of type <literal>Object[]</literal>,"
-msgstr "あるいは <literal>Family</literal> クラスが適切なコンストラクタを持っているとするならば、"
-
-#: index.docbook:271
+#. Tag: para
+#: query_hql.xml:266
+#, no-c-format
 msgid ""
-      "<![CDATA[select mother, offspr, mate.name\n"
-      "from DomesticCat as mother\n"
-      "    inner join mother.mate as mate\n"
-      "    left outer join mother.kittens as offspr]]>"
+"Queries may return multiple objects and/or properties as an array of type "
+"<literal>Object[]</literal>,"
+msgstr ""
+"クエリは複数のオブジェクトと(または)プロパティを <literal>Object[]</literal> "
+"型の配列として返せます。"
+
+#. Tag: programlisting
+#: query_hql.xml:271
+#, no-c-format
+msgid ""
+"<![CDATA[select mother, offspr, mate.name\n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:273
+#, no-c-format
+msgid "or as a <literal>List</literal>,"
+msgstr "もしくは <literal>List</literal> として、"
+
+#. Tag: programlisting
+#: query_hql.xml:277
+#, no-c-format
+msgid ""
+"<![CDATA[select new list(mother, offspr, mate.name)\n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:279
+#, no-c-format
+msgid "or as an actual typesafe Java object,"
+msgstr "または、タイプセーフなJavaオブジェクトを返せます。"
+
+#. Tag: programlisting
+#: query_hql.xml:283
+#, no-c-format
+msgid ""
+"<![CDATA[select new Family(mother, mate, offspr)\n"
+"from DomesticCat as mother\n"
+"    join mother.mate as mate\n"
+"    left join mother.kittens as offspr]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:285
+#, no-c-format
+msgid ""
+"assuming that the class <literal>Family</literal> has an appropriate "
+"constructor."
+msgstr ""
+"あるいは <literal>Family</literal> クラスが適切なコンストラクタを持っていると"
+"するならば、"
+
+#. Tag: para
+#: query_hql.xml:289
+#, no-c-format
+msgid ""
+"You may assign aliases to selected expressions using <literal>as</literal>:"
 msgstr "select節に <literal>as</literal> を使って別名をつけることもできます。"
 
-#: index.docbook:273
-msgid "or as a <literal>List</literal>,"
-msgstr ""
-      "<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n\n"
-      "from Cat cat]]>"
-
-#: index.docbook:277
+#. Tag: programlisting
+#: query_hql.xml:293
+#, no-c-format
 msgid ""
-      "<![CDATA[select new list(mother, offspr, mate.name)\n"
-      "from DomesticCat as mother\n"
-      "    inner join mother.mate as mate\n"
-      "    left outer join mother.kittens as offspr]]>"
+"<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as "
+"n\n"
+"from Cat cat]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:295
+#, no-c-format
+msgid ""
+"This is most useful when used together with <literal>select new map</"
+"literal>:"
 msgstr "<literal>select new map</literal> と一緒に使うときに最も役立ちます："
 
-#: index.docbook:279
-msgid "or as an actual typesafe Java object,"
-msgstr ""
-      "<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )\n"
-      "from Cat cat]]>"
-
-#: index.docbook:283
+#. Tag: programlisting
+#: query_hql.xml:299
+#, no-c-format
 msgid ""
-      "<![CDATA[select new Family(mother, mate, offspr)\n"
-      "from DomesticCat as mother\n"
-      "    join mother.mate as mate\n"
-      "    left join mother.kittens as offspr]]>"
+"<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, "
+"count(*) as n )\n"
+"from Cat cat]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:301
+#, no-c-format
+msgid ""
+"This query returns a <literal>Map</literal> from aliases to selected values."
 msgstr "このクエリは別名からselectした値へ <literal>Map</literal> を返します。"
 
-#: index.docbook:285
-msgid "assuming that the class <literal>Family</literal> has an appropriate constructor."
+#. Tag: title
+#: query_hql.xml:308
+#, no-c-format
+msgid "Aggregate functions"
 msgstr "集約関数"
 
-#: index.docbook:289
-msgid "You may assign aliases to selected expressions using <literal>as</literal>:"
+#. Tag: para
+#: query_hql.xml:310
+#, no-c-format
+msgid ""
+"HQL queries may even return the results of aggregate functions on properties:"
 msgstr "HQLのクエリはプロパティの集約関数の結果も返せます："
 
-#: index.docbook:293
+#. Tag: programlisting
+#: query_hql.xml:314
+#, no-c-format
 msgid ""
-      "<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n\n"
-      "from Cat cat]]>"
+"<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count"
+"(cat)\n"
+"from Cat cat]]>"
 msgstr ""
-      "<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
-      "from Cat cat]]>"
 
-#: index.docbook:295
-msgid "This is most useful when used together with <literal>select new map</literal>:"
+#. Tag: para
+#: query_hql.xml:325
+#, no-c-format
+msgid "The supported aggregate functions are"
 msgstr "サポートしている集約関数は以下のものです。"
 
-#: index.docbook:299
-msgid ""
-      "<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )\n"
-      "from Cat cat]]>"
+#. Tag: literal
+#: query_hql.xml:332
+#, no-c-format
+msgid "avg(...), sum(...), min(...), max(...)"
 msgstr "avg(...), sum(...), min(...), max(...)"
 
-#: index.docbook:301
-msgid "This query returns a <literal>Map</literal> from aliases to selected values."
+#. Tag: literal
+#: query_hql.xml:337
+#, no-c-format
+msgid "count(*)"
 msgstr "count(*)"
 
-#: index.docbook:308
-msgid "Aggregate functions"
+#. Tag: literal
+#: query_hql.xml:342
+#, no-c-format
+msgid "count(...), count(distinct ...), count(all...)"
 msgstr "count(...), count(distinct ...), count(all...)"
 
-#: index.docbook:310
-msgid "HQL queries may even return the results of aggregate functions on properties:"
-msgstr "select節において算術操作、連結と承認されたSQL関数を使うことができます。"
-
-#: index.docbook:314
+#. Tag: para
+#: query_hql.xml:347
+#, no-c-format
 msgid ""
-      "<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
-      "from Cat cat]]>"
+"You may use arithmetic operators, concatenation, and recognized SQL "
+"functions in the select clause:"
 msgstr ""
-      "<![CDATA[select cat.weight + sum(kitten.weight) \n"
-      "from Cat cat \n"
-      "    join cat.kittens kitten\n"
-      "group by cat.id, cat.weight]]>"
+"select節において算術操作、連結と承認されたSQL関数を使うことができます。"
 
-#: index.docbook:325
-msgid "The supported aggregate functions are"
-msgstr "<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
-
-#: index.docbook:332
-msgid "avg(...), sum(...), min(...), max(...)"
-msgstr "SQLと同じ意味を持つ <literal>distinct</literal> と <literal>all</literal> キーワードを使うことができます。"
-
-#: index.docbook:337
-msgid "count(*)"
+#. Tag: programlisting
+#: query_hql.xml:352
+#, no-c-format
+msgid ""
+"<![CDATA[select cat.weight + sum(kitten.weight)\n"
+"from Cat cat\n"
+"    join cat.kittens kitten\n"
+"group by cat.id, cat.weight]]>"
 msgstr ""
-      "<![CDATA[select distinct cat.name from Cat cat\n"
-      "\n"
-      "select count(distinct cat.name), count(cat) from Cat cat]]>"
 
-#: index.docbook:342
-msgid "count(...), count(distinct ...), count(all...)"
+#. Tag: programlisting
+#: query_hql.xml:354
+#, no-c-format
+msgid ""
+"<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:356
+#, no-c-format
+msgid ""
+"The <literal>distinct</literal> and <literal>all</literal> keywords may be "
+"used and have the same semantics as in SQL."
+msgstr ""
+"SQLと同じ意味を持つ <literal>distinct</literal> と <literal>all</literal> "
+"キーワードを使うことができます。"
+
+#. Tag: programlisting
+#: query_hql.xml:361
+#, no-c-format
+msgid ""
+"<![CDATA[select distinct cat.name from Cat cat\n"
+"\n"
+"select count(distinct cat.name), count(cat) from Cat cat]]>"
+msgstr ""
+
+#. Tag: title
+#: query_hql.xml:366
+#, no-c-format
+msgid "Polymorphic queries"
 msgstr "ポリモーフィックなクエリ"
 
-#: index.docbook:347
-msgid "You may use arithmetic operators, concatenation, and recognized SQL functions in the select clause:"
+#. Tag: para
+#: query_hql.xml:368
+#, no-c-format
+msgid "A query like:"
 msgstr "次のようなクエリ："
 
-#: index.docbook:352
+#. Tag: para
+#: query_hql.xml:374
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat.weight + sum(kitten.weight)\n"
-      "from Cat cat\n"
-      "    join cat.kittens kitten\n"
-      "group by cat.id, cat.weight]]>"
-msgstr "<![CDATA[from Cat as cat]]>"
+"returns instances not only of <literal>Cat</literal>, but also of subclasses "
+"like <literal>DomesticCat</literal>. Hibernate queries may name "
+"<emphasis>any</emphasis> Java class or interface in the <literal>from</"
+"literal> clause. The query will return instances of all persistent classes "
+"that extend that class or implement the interface. The following query would "
+"return all persistent objects:"
+msgstr ""
+"<literal>Cat</literal> インスタンスだけではなく、<literal>DomesticCat</"
+"literal> のようなサブクラスも返されます。Hibernateクエリは <emphasis>どんな</"
+"emphasis> Javaクラスやインターフェイスも <literal>from</literal> 節に入れるこ"
+"とができます。 クエリはそのクラスを拡張した、もしくはインターフェイスを実装し"
+"た全ての永続クラスを返します。 次のクエリは永続オブジェクトをすべて返します:"
 
-#: index.docbook:354
-msgid "<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
-msgstr "<literal>Cat</literal> インスタンスだけではなく、<literal>DomesticCat</literal> のようなサブクラスも返されます。Hibernateクエリは <emphasis>どんな</emphasis> Javaクラスやインターフェイスも <literal>from</literal> 節に入れることができます。 クエリはそのクラスを拡張した、もしくはインターフェイスを実装した全ての永続クラスを返します。 次のクエリは永続オブジェクトをすべて返します:"
-
-#: index.docbook:356
-msgid "The <literal>distinct</literal> and <literal>all</literal> keywords may be used and have the same semantics as in SQL."
-msgstr "<![CDATA[from java.lang.Object o]]>"
-
-#: index.docbook:361
-msgid ""
-      "<![CDATA[select distinct cat.name from Cat cat\n"
-      "\n"
-      "select count(distinct cat.name), count(cat) from Cat cat]]>"
-msgstr "<literal>Named</literal> インターフェイスは様々な永続クラスによって実装されます。:"
-
-#: index.docbook:366
-msgid "Polymorphic queries"
-msgstr "<![CDATA[from Named n, Named m where n.name = m.name]]>"
-
-#: index.docbook:368
-msgid "A query like:"
-msgstr "最後の二つのクエリは、二つ以上のSQL <literal>SELECT</literal> を要求していることに注意してください。 このことは <literal>order by</literal> 節がリザルトセット全体を正確には整列しないことを意味します (さらにそれは、<literal>Query.scroll()</literal> を使用してこれらのクエリを呼ぶことができないことを意味します。)。"
-
-#: index.docbook:374
-msgid "returns instances not only of <literal>Cat</literal>, but also of subclasses like <literal>DomesticCat</literal>. Hibernate queries may name <emphasis>any</emphasis> Java class or interface in the <literal>from</literal> clause. The query will return instances of all persistent classes that extend that class or implement the interface. The following query would return all persistent objects:"
-msgstr "<literal>where</literal> 節は返されるインスタンスのリストを絞ることができます。 もし別名がない場合、名前でプロパティを参照します。"
-
-#: index.docbook:382
+#. Tag: programlisting
+#: query_hql.xml:382
+#, no-c-format
 msgid "<![CDATA[from java.lang.Object o]]>"
-msgstr "<![CDATA[from Cat where name='Fritz']]>"
+msgstr ""
 
-#: index.docbook:384
-msgid "The interface <literal>Named</literal> might be implemented by various persistent classes:"
+#. Tag: para
+#: query_hql.xml:384
+#, no-c-format
+msgid ""
+"The interface <literal>Named</literal> might be implemented by various "
+"persistent classes:"
+msgstr ""
+"<literal>Named</literal> インターフェイスは様々な永続クラスによって実装されま"
+"す。:"
+
+#. Tag: programlisting
+#: query_hql.xml:389
+#, no-c-format
+msgid "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:391
+#, no-c-format
+msgid ""
+"Note that these last two queries will require more than one SQL "
+"<literal>SELECT</literal>. This means that the <literal>order by</literal> "
+"clause does not correctly order the whole result set. (It also means you "
+"can't call these queries using <literal>Query.scroll()</literal>.)"
+msgstr ""
+"最後の二つのクエリは、二つ以上のSQL <literal>SELECT</literal> を要求している"
+"ことに注意してください。 このことは <literal>order by</literal> 節がリザルト"
+"セット全体を正確には整列しないことを意味します (さらにそれは、<literal>Query."
+"scroll()</literal> を使用してこれらのクエリを呼ぶことができないことを意味しま"
+"す。)。"
+
+#. Tag: title
+#: query_hql.xml:400
+#, no-c-format
+msgid "The where clause"
+msgstr "where節"
+
+#. Tag: para
+#: query_hql.xml:402
+#, no-c-format
+msgid ""
+"The <literal>where</literal> clause allows you to narrow the list of "
+"instances returned. If no alias exists, you may refer to properties by name:"
+msgstr ""
+"<literal>where</literal> 節は返されるインスタンスのリストを絞ることができま"
+"す。 もし別名がない場合、名前でプロパティを参照します。"
+
+#. Tag: programlisting
+#: query_hql.xml:407
+#, no-c-format
+msgid "<![CDATA[from Cat where name='Fritz']]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:409
+#, no-c-format
+msgid "If there is an alias, use a qualified property name:"
 msgstr "もし別名がある場合、修飾名を使ってください。"
 
-#: index.docbook:389
-msgid "<![CDATA[from Named n, Named m where n.name = m.name]]>"
-msgstr "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
-
-#: index.docbook:391
-msgid "Note that these last two queries will require more than one SQL <literal>SELECT</literal>. This means that the <literal>order by</literal> clause does not correctly order the whole result set. (It also means you can't call these queries using <literal>Query.scroll()</literal>.)"
-msgstr "名前が'Fritz'という <literal>Cat</literal> のインスタンスを返します。"
-
-#: index.docbook:400
-msgid "The where clause"
-msgstr ""
-      "<![CDATA[select foo \n"
-      "from Foo foo, Bar bar\n"
-      "where foo.startDate = bar.date]]>"
-
-#: index.docbook:402
-msgid "The <literal>where</literal> clause allows you to narrow the list of instances returned. If no alias exists, you may refer to properties by name:"
-msgstr "上のHQLは、<literal>Foo</literal> の <literal>startDate</literal> プロパティと等しい <literal>date</literal> プロパティを持った <literal>bar</literal> インスタンスが存在する、 すべての <literal>Foo</literal> インスタンスを返します。 コンパウンドパス式（例えば「cat.mate.name」）は <literal>where</literal> 節を非常に強力にします。注目："
-
-#: index.docbook:407
-msgid "<![CDATA[from Cat where name='Fritz']]>"
-msgstr "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
-
-#: index.docbook:409
-msgid "If there is an alias, use a qualified property name:"
-msgstr "このクエリはテーブル結合（内部結合）を持つSQLクエリに変換されます。 その代わりに以下のように書くと、"
-
-#: index.docbook:413
+#. Tag: programlisting
+#: query_hql.xml:413
+#, no-c-format
 msgid "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
 msgstr ""
-      "<![CDATA[from Foo foo  \n"
-      "where foo.bar.baz.customer.address.city is not null]]>"
 
-#: index.docbook:415
+#. Tag: para
+#: query_hql.xml:415
+#, no-c-format
 msgid "returns instances of <literal>Cat</literal> named 'Fritz'."
-msgstr "もし上のクエリを記述したらクエリ内に4つのテーブル結合を必要とするSQLクエリに変換されます。"
+msgstr "名前が'Fritz'という <literal>Cat</literal> のインスタンスを返します。"
 
-#: index.docbook:419
+#. Tag: programlisting
+#: query_hql.xml:419
+#, no-c-format
 msgid ""
-      "<![CDATA[select foo\n"
-      "from Foo foo, Bar bar\n"
-      "where foo.startDate = bar.date]]>"
-msgstr "<literal>=</literal> 演算子は以下のように、プロパティだけでなくインスタンスを比較するためにも使われます。："
+"<![CDATA[select foo\n"
+"from Foo foo, Bar bar\n"
+"where foo.startDate = bar.date]]>"
+msgstr ""
 
-#: index.docbook:421
-msgid "will return all instances of <literal>Foo</literal> for which there exists an instance of <literal>bar</literal> with a <literal>date</literal> property equal to the <literal>startDate</literal> property of the <literal>Foo</literal>. Compound path expressions make the <literal>where</literal> clause extremely powerful. Consider:"
-msgstr "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
+#. Tag: para
+#: query_hql.xml:421
+#, no-c-format
+msgid ""
+"will return all instances of <literal>Foo</literal> for which there exists "
+"an instance of <literal>bar</literal> with a <literal>date</literal> "
+"property equal to the <literal>startDate</literal> property of the "
+"<literal>Foo</literal>. Compound path expressions make the <literal>where</"
+"literal> clause extremely powerful. Consider:"
+msgstr ""
+"上のHQLは、<literal>Foo</literal> の <literal>startDate</literal> プロパティ"
+"と等しい <literal>date</literal> プロパティを持った <literal>bar</literal> イ"
+"ンスタンスが存在する、 すべての <literal>Foo</literal> インスタンスを返しま"
+"す。 コンパウンドパス式（例えば「cat.mate.name」）は <literal>where</"
+"literal> 節を非常に強力にします。注目："
 
-#: index.docbook:430
+#. Tag: programlisting
+#: query_hql.xml:430
+#, no-c-format
 msgid "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
 msgstr ""
-      "<![CDATA[select cat, mate \n"
-      "from Cat cat, Cat mate\n"
-      "where cat.mate = mate]]>"
 
-#: index.docbook:432
-msgid "This query translates to an SQL query with a table (inner) join. If you were to write something like"
-msgstr "<literal>id</literal> (小文字)は特別なプロパティであり、 オブジェクトのユニークな識別子を参照するために使用できます。(さらに、そのプロパティ名を使用できます。)"
-
-#: index.docbook:437
+#. Tag: para
+#: query_hql.xml:432
+#, no-c-format
 msgid ""
-      "<![CDATA[from Foo foo\n"
-      "where foo.bar.baz.customer.address.city is not null]]>"
+"This query translates to an SQL query with a table (inner) join. If you were "
+"to write something like"
 msgstr ""
-      "<![CDATA[from Cat as cat where cat.id = 123\n"
-      "\n"
-      "from Cat as cat where cat.mate.id = 69]]>"
+"このクエリはテーブル結合（内部結合）を持つSQLクエリに変換されます。 その代わ"
+"りに以下のように書くと、"
 
-#: index.docbook:439
-msgid "you would end up with a query that would require four table joins in SQL."
-msgstr "2番目のクエリは効率的です。テーブル結合が必要ありません！"
+#. Tag: programlisting
+#: query_hql.xml:437
+#, no-c-format
+msgid ""
+"<![CDATA[from Foo foo\n"
+"where foo.bar.baz.customer.address.city is not null]]>"
+msgstr ""
 
-#: index.docbook:443
-msgid "The <literal>=</literal> operator may be used to compare not only properties, but also instances:"
-msgstr "また複合識別子のプロパティも使用できます。ここで <literal>Person</literal> が <literal>country</literal> と <literal>medicareNumber</literal> からなる複合識別子を持つと仮定します。"
+#. Tag: para
+#: query_hql.xml:439
+#, no-c-format
+msgid ""
+"you would end up with a query that would require four table joins in SQL."
+msgstr ""
+"もし上のクエリを記述したらクエリ内に4つのテーブル結合を必要とするSQLクエリに"
+"変換されます。"
 
-#: index.docbook:448
+#. Tag: para
+#: query_hql.xml:443
+#, no-c-format
+msgid ""
+"The <literal>=</literal> operator may be used to compare not only "
+"properties, but also instances:"
+msgstr ""
+"<literal>=</literal> 演算子は以下のように、プロパティだけでなくインスタンスを"
+"比較するためにも使われます。："
+
+#. Tag: programlisting
+#: query_hql.xml:448
+#, no-c-format
 msgid "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
 msgstr ""
-      "<![CDATA[from bank.Person person\n"
-      "where person.id.country = 'AU' \n"
-      "    and person.id.medicareNumber = 123456]]>"
 
-#: index.docbook:450
+#. Tag: programlisting
+#: query_hql.xml:450
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat, mate\n"
-      "from Cat cat, Cat mate\n"
-      "where cat.mate = mate]]>"
+"<![CDATA[select cat, mate\n"
+"from Cat cat, Cat mate\n"
+"where cat.mate = mate]]>"
 msgstr ""
-      "<![CDATA[from bank.Account account\n"
-      "where account.owner.id.country = 'AU' \n"
-      "    and account.owner.id.medicareNumber = 123456]]>"
 
-#: index.docbook:452
-msgid "The special property (lowercase) <literal>id</literal> may be used to reference the unique identifier of an object. See <xref linkend=\"queryhql-identifier-property\"/> for more information."
+#. Tag: para
+#: query_hql.xml:452
+#, no-c-format
+msgid ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the unique identifier of an object. See <xref linkend=\"queryhql-"
+"identifier-property\"/> for more information."
+msgstr ""
+"<literal>id</literal> (小文字)は特別なプロパティであり、 オブジェクトのユニー"
+"クな識別子を参照するために使用できます。(さらに、そのプロパティ名を使用できま"
+"す。)"
+
+#. Tag: programlisting
+#: query_hql.xml:458
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat where cat.id = 123\n"
+"\n"
+"from Cat as cat where cat.mate.id = 69]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:460
+#, no-c-format
+msgid "The second query is efficient. No table join is required!"
+msgstr "2番目のクエリは効率的です。テーブル結合が必要ありません！"
+
+#. Tag: para
+#: query_hql.xml:464
+#, no-c-format
+msgid ""
+"Properties of composite identifiers may also be used. Suppose "
+"<literal>Person</literal> has a composite identifier consisting of "
+"<literal>country</literal> and <literal>medicareNumber</literal>. Again, see "
+"<xref linkend=\"queryhql-identifier-property\"/> for more information "
+"regarding referencing identifier properties."
+msgstr ""
+"また複合識別子のプロパティも使用できます。ここで <literal>Person</literal> "
+"が <literal>country</literal> と <literal>medicareNumber</literal> からなる複"
+"合識別子を持つと仮定します。"
+
+#. Tag: programlisting
+#: query_hql.xml:471
+#, no-c-format
+msgid ""
+"<![CDATA[from bank.Person person\n"
+"where person.id.country = 'AU'\n"
+"    and person.id.medicareNumber = 123456]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:473
+#, no-c-format
+msgid ""
+"<![CDATA[from bank.Account account\n"
+"where account.owner.id.country = 'AU'\n"
+"    and account.owner.id.medicareNumber = 123456]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:475
+#, no-c-format
+msgid "Once again, the second query requires no table join."
 msgstr "もう一度言いますが、2番目のクエリにはテーブル結合が必要ありません。"
 
-#: index.docbook:458
+#. Tag: para
+#: query_hql.xml:479
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat where cat.id = 123\n"
-      "\n"
-      "from Cat as cat where cat.mate.id = 69]]>"
-msgstr "同様に <literal>class</literal> は特別なプロパティであり、 ポリモーフィックな永続化におけるインスタンスのdiscriminator値にアクセスします。 where節に埋め込まれたJavaのクラス名はそのdiscriminator値に変換されます。"
-
-#: index.docbook:460
-msgid "The second query is efficient. No table join is required!"
-msgstr "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
-
-#: index.docbook:464
-msgid "Properties of composite identifiers may also be used. Suppose <literal>Person</literal> has a composite identifier consisting of <literal>country</literal> and <literal>medicareNumber</literal>. Again, see <xref linkend=\"queryhql-identifier-property\"/> for more information regarding referencing identifier properties."
-msgstr "またコンポーネントや複合ユーザ型(またそのコンポーネントのコンポーネントなど)のプロパティも指定できます。 しかし決して（コンポーネントのプロパティではなく）コンポーネント型のプロパティで終了するパス式を使わないでください。 例えばもし <literal>store.owner</literal> が <literal>address</literal> コンポーネントを持つエンティティならば以下のような結果となります。"
-
-#: index.docbook:471
-msgid ""
-      "<![CDATA[from bank.Person person\n"
-      "where person.id.country = 'AU'\n"
-      "    and person.id.medicareNumber = 123456]]>"
+"Likewise, the special property <literal>class</literal> accesses the "
+"discriminator value of an instance in the case of polymorphic persistence. A "
+"Java class name embedded in the where clause will be translated to its "
+"discriminator value."
 msgstr ""
-      "<![CDATA[store.owner.address.city    // okay\n"
-      "store.owner.address         // error!]]>"
+"同様に <literal>class</literal> は特別なプロパティであり、 ポリモーフィックな"
+"永続化におけるインスタンスのdiscriminator値にアクセスします。 where節に埋め込"
+"まれたJavaのクラス名はそのdiscriminator値に変換されます。"
 
-#: index.docbook:473
-msgid ""
-      "<![CDATA[from bank.Account account\n"
-      "where account.owner.id.country = 'AU'\n"
-      "    and account.owner.id.medicareNumber = 123456]]>"
-msgstr "\"any\"型は特別なプロパティである <literal>id</literal> と <literal>class</literal> を持ち、 以下の方法で結合を表現することを可能にします(<literal>AuditLog.item</literal> は <literal>&lt;any&gt;</literal> でマッピングされたプロパティです)。"
-
-#: index.docbook:475
-msgid "Once again, the second query requires no table join."
-msgstr ""
-      "<![CDATA[from AuditLog log, Payment payment \n"
-      "where log.item.class = 'Payment' and log.item.id = payment.id]]>"
-
-#: index.docbook:479
-msgid "Likewise, the special property <literal>class</literal> accesses the discriminator value of an instance in the case of polymorphic persistence. A Java class name embedded in the where clause will be translated to its discriminator value."
-msgstr "<literal>log.item.class</literal> と <literal>payment.class</literal> が 上記のクエリ中で全く異なるデータベースカラムの値を参照するということに注意してください。"
-
-#: index.docbook:485
+#. Tag: programlisting
+#: query_hql.xml:485
+#, no-c-format
 msgid "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:487
+#, no-c-format
+msgid ""
+"You may also use components or composite user types, or properties of said "
+"component types. See <xref linkend=\"queryhql-components\"/> for more "
+"details."
+msgstr ""
+"またコンポーネントや複合ユーザ型(またそのコンポーネントのコンポーネントなど)"
+"のプロパティも指定できます。 しかし決して（コンポーネントのプロパティではな"
+"く）コンポーネント型のプロパティで終了するパス式を使わないでください。 例えば"
+"もし <literal>store.owner</literal> が <literal>address</literal> コンポーネ"
+"ントを持つエンティティならば以下のような結果となります。"
+
+#. Tag: para
+#: query_hql.xml:492
+#, no-c-format
+msgid ""
+"An \"any\" type has the special properties <literal>id</literal> and "
+"<literal>class</literal>, allowing us to express a join in the following way "
+"(where <literal>AuditLog.item</literal> is a property mapped with "
+"<literal>&lt;any&gt;</literal>)."
+msgstr ""
+"\"any\"型は特別なプロパティである <literal>id</literal> と <literal>class</"
+"literal> を持ち、 以下の方法で結合を表現することを可能にします"
+"(<literal>AuditLog.item</literal> は <literal>&lt;any&gt;</literal> でマッピ"
+"ングされたプロパティです)。"
+
+#. Tag: programlisting
+#: query_hql.xml:498
+#, no-c-format
+msgid ""
+"<![CDATA[from AuditLog log, Payment payment\n"
+"where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:500
+#, no-c-format
+msgid ""
+"Notice that <literal>log.item.class</literal> and <literal>payment.class</"
+"literal> would refer to the values of completely different database columns "
+"in the above query."
+msgstr ""
+"<literal>log.item.class</literal> と <literal>payment.class</literal> が 上記"
+"のクエリ中で全く異なるデータベースカラムの値を参照するということに注意してく"
+"ださい。"
+
+#. Tag: title
+#: query_hql.xml:508
+#, no-c-format
+msgid "Expressions"
 msgstr "Expressions 式"
 
-#: index.docbook:487
-msgid "You may also use components or composite user types, or properties of said component types. See <xref linkend=\"queryhql-coomponents\"/> for more details."
-msgstr "SQLの <literal>where</literal> 節で記述することが出来る式のほとんどをHQLでも記述できます。:"
+#. Tag: para
+#: query_hql.xml:510
+#, no-c-format
+msgid ""
+"Expressions allowed in the <literal>where</literal> clause include most of "
+"the kind of things you could write in SQL:"
+msgstr ""
+"SQLの <literal>where</literal> 節で記述することが出来る式のほとんどをHQLでも"
+"記述できます。:"
 
-#: index.docbook:492
-msgid "An \"any\" type has the special properties <literal>id</literal> and <literal>class</literal>, allowing us to express a join in the following way (where <literal>AuditLog.item</literal> is a property mapped with <literal>&lt;any&gt;</literal>)."
+#. Tag: para
+#: query_hql.xml:517
+#, no-c-format
+msgid "mathematical operators <literal>+, -, *, /</literal>"
 msgstr "算術演算子：<literal>+, -, *, /</literal>"
 
-#: index.docbook:498
+#. Tag: para
+#: query_hql.xml:522
+#, no-c-format
 msgid ""
-      "<![CDATA[from AuditLog log, Payment payment\n"
-      "where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+"binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</"
+"literal>"
 msgstr "2項比較演算子：<literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
 
-#: index.docbook:500
-msgid "Notice that <literal>log.item.class</literal> and <literal>payment.class</literal> would refer to the values of completely different database columns in the above query."
+#. Tag: para
+#: query_hql.xml:527
+#, no-c-format
+msgid "logical operations <literal>and, or, not</literal>"
 msgstr "論理演算子：<literal>and, or, not</literal>"
 
-#: index.docbook:508
-msgid "Expressions"
+#. Tag: para
+#: query_hql.xml:532
+#, no-c-format
+msgid "Parentheses <literal>( )</literal>, indicating grouping"
 msgstr "グループ分けを表す括弧：<literal>( )</literal>"
 
-#: index.docbook:510
-msgid "Expressions allowed in the <literal>where</literal> clause include most of the kind of things you could write in SQL:"
-msgstr "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
+#. Tag: para
+#: query_hql.xml:537
+#, no-c-format
+msgid ""
+"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
+"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
+"<literal>is empty</literal>, <literal>is not empty</literal>, "
+"<literal>member of</literal> and <literal>not member of</literal>"
+msgstr ""
+"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
+"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
+"<literal>is empty</literal>, <literal>is not empty</literal>, "
+"<literal>member of</literal> and <literal>not member of</literal>"
 
-#: index.docbook:517
-msgid "mathematical operators <literal>+, -, *, /</literal>"
-msgstr "\"シンプル\"なcase <literal>case ... when ... then ... else ... end</literal>、 \"探索的\"なcase <literal>case when ... then ... else ... end</literal>"
+#. Tag: para
+#: query_hql.xml:550
+#, no-c-format
+msgid ""
+"\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
+"and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgstr ""
+"\"シンプル\"なcase <literal>case ... when ... then ... else ... end</"
+"literal>、 \"探索的\"なcase <literal>case when ... then ... else ... end</"
+"literal>"
 
-#: index.docbook:522
-msgid "binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
-msgstr "ストリングの連結 <literal>...||...</literal> または <literal>concat(...,...)</literal>"
+#. Tag: para
+#: query_hql.xml:556
+#, no-c-format
+msgid ""
+"string concatenation <literal>...||...</literal> or <literal>concat(...,...)"
+"</literal>"
+msgstr ""
+"ストリングの連結 <literal>...||...</literal> または <literal>concat(...,...)"
+"</literal>"
 
-#: index.docbook:527
-msgid "logical operations <literal>and, or, not</literal>"
-msgstr "<literal>current_date()</literal>, <literal>current_time()</literal>, <literal>current_timestamp()</literal>"
+#. Tag: para
+#: query_hql.xml:561
+#, no-c-format
+msgid ""
+"<literal>current_date()</literal>, <literal>current_time()</literal>, "
+"<literal>current_timestamp()</literal>"
+msgstr ""
+"<literal>current_date()</literal>, <literal>current_time()</literal>, "
+"<literal>current_timestamp()</literal>"
 
-#: index.docbook:532
-msgid "Parentheses <literal>( )</literal>, indicating grouping"
-msgstr "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, <literal>year(...)</literal>,"
+#. Tag: para
+#: query_hql.xml:567
+#, no-c-format
+msgid ""
+"<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
+"(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
+"<literal>year(...)</literal>,"
+msgstr ""
+"<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
+"(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
+"<literal>year(...)</literal>,"
 
-#: index.docbook:537
-msgid "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
-msgstr "EJB-QL 3.0で定義されている関数や演算子: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>"
+#. Tag: para
+#: query_hql.xml:574
+#, no-c-format
+msgid ""
+"Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim"
+"(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()"
+"</literal>"
+msgstr ""
+"EJB-QL 3.0で定義されている関数や演算子: <literal>substring(), trim(), lower"
+"(), upper(), length(), locate(), abs(), sqrt(), bit_length()</literal>"
 
-#: index.docbook:550
-msgid "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+#. Tag: para
+#: query_hql.xml:580
+#, no-c-format
+msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
 msgstr "<literal>coalesce()</literal> と <literal>nullif()</literal>"
 
-#: index.docbook:556
-msgid "string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>"
+#. Tag: para
+#: query_hql.xml:585
+#, no-c-format
+msgid ""
+"<literal>str()</literal> for converting numeric or temporal values to a "
+"readable string"
 msgstr "数字や時間の値をStringにコンバートする <literal>str()</literal>）"
 
-#: index.docbook:561
-msgid "<literal>current_date()</literal>, <literal>current_time()</literal>, <literal>current_timestamp()</literal>"
-msgstr "2番目の引数がHibernate型の名前である <literal>cast(... as ...)</literal> と <literal>extract(... from ...)</literal>。 ただし使用するデータベースがANSI <literal>cast()</literal> と <literal>extract()</literal> をサポートする場合に限ります。"
+#. Tag: para
+#: query_hql.xml:591
+#, no-c-format
+msgid ""
+"<literal>cast(... as ...)</literal>, where the second argument is the name "
+"of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI "
+"<literal>cast()</literal> and <literal>extract()</literal> is supported by "
+"the underlying database"
+msgstr ""
+"2番目の引数がHibernate型の名前である <literal>cast(... as ...)</literal> と "
+"<literal>extract(... from ...)</literal>。 ただし使用するデータベースがANSI "
+"<literal>cast()</literal> と <literal>extract()</literal> をサポートする場合"
+"に限ります。"
 
-#: index.docbook:567
-msgid "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, <literal>year(...)</literal>,"
-msgstr "結合したインデックス付きのコレクションの別名に適用されるHQLの <literal>index()</literal> 関数。"
+#. Tag: para
+#: query_hql.xml:599
+#, no-c-format
+msgid ""
+"the HQL <literal>index()</literal> function, that applies to aliases of a "
+"joined indexed collection"
+msgstr ""
+"結合したインデックス付きのコレクションの別名に適用されるHQLの <literal>index"
+"()</literal> 関数。"
 
-#: index.docbook:574
-msgid "Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
-msgstr "コレクション値のパス式を取るHQL関数： <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal> 。 <literal>some, all, exists, any, in</literal> を使って修飾することができる特別な <literal>elements()</literal> と <literal>indices</literal> 関数と一緒に使います。"
+#. Tag: para
+#: query_hql.xml:605
+#, no-c-format
+msgid ""
+"HQL functions that take collection-valued path expressions: <literal>size(), "
+"minelement(), maxelement(), minindex(), maxindex()</literal>, along with the "
+"special <literal>elements()</literal> and <literal>indices</literal> "
+"functions which may be quantified using <literal>some, all, exists, any, in</"
+"literal>."
+msgstr ""
+"コレクション値のパス式を取るHQL関数： <literal>size(), minelement(), "
+"maxelement(), minindex(), maxindex()</literal> 。 <literal>some, all, "
+"exists, any, in</literal> を使って修飾することができる特別な "
+"<literal>elements()</literal> と <literal>indices</literal> 関数と一緒に使い"
+"ます。"
 
-#: index.docbook:580
-msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
-msgstr "<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal> のようなデータベースがサポートするSQLスカラ関数。"
+#. Tag: para
+#: query_hql.xml:613
+#, no-c-format
+msgid ""
+"Any database-supported SQL scalar function like <literal>sign()</literal>, "
+"<literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</"
+"literal>"
+msgstr ""
+"<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</"
+"literal>, <literal>sin()</literal> のようなデータベースがサポートするSQLスカ"
+"ラ関数。"
 
-#: index.docbook:585
-msgid "<literal>str()</literal> for converting numeric or temporal values to a readable string"
+#. Tag: para
+#: query_hql.xml:619
+#, no-c-format
+msgid "JDBC-style positional parameters <literal>?</literal>"
 msgstr "JDBCスタイルの位置パラメータ <literal>?</literal>"
 
-#: index.docbook:591
-msgid "<literal>cast(... as ...)</literal>, where the second argument is the name of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI <literal>cast()</literal> and <literal>extract()</literal> is supported by the underlying database"
-msgstr "名前付きパラメータ: <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>"
+#. Tag: para
+#: query_hql.xml:624
+#, no-c-format
+msgid ""
+"named parameters <literal>:name</literal>, <literal>:start_date</literal>, "
+"<literal>:x1</literal>"
+msgstr ""
+"名前付きパラメータ: <literal>:name</literal>, <literal>:start_date</"
+"literal>, <literal>:x1</literal>"
 
-#: index.docbook:599
-msgid "the HQL <literal>index()</literal> function, that applies to aliases of a joined indexed collection"
-msgstr "SQLリテラル：<literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+#. Tag: para
+#: query_hql.xml:629
+#, no-c-format
+msgid ""
+"SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
+"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgstr ""
+"SQLリテラル：<literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
+"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
 
-#: index.docbook:605
-msgid "HQL functions that take collection-valued path expressions: <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>, along with the special <literal>elements()</literal> and <literal>indices</literal> functions which may be quantified using <literal>some, all, exists, any, in</literal>."
-msgstr "Javaの <literal>public static final</literal> 定数：<literal>eg.Color.TABBY</literal>"
+#. Tag: para
+#: query_hql.xml:635
+#, no-c-format
+msgid ""
+"Java <literal>public static final</literal> constants <literal>eg.Color."
+"TABBY</literal>"
+msgstr ""
+"Javaの <literal>public static final</literal> 定数：<literal>eg.Color.TABBY</"
+"literal>"
 
-#: index.docbook:613
-msgid "Any database-supported SQL scalar function like <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>"
-msgstr "<literal>in</literal> と <literal>between</literal> は以下のように使用できます。:"
+#. Tag: para
+#: query_hql.xml:641
+#, no-c-format
+msgid ""
+"<literal>in</literal> and <literal>between</literal> may be used as follows:"
+msgstr ""
+"<literal>in</literal> と <literal>between</literal> は以下のように使用できま"
+"す。:"
 
-#: index.docbook:619
-msgid "JDBC-style positional parameters <literal>?</literal>"
-msgstr "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+#. Tag: programlisting
+#: query_hql.xml:645
+#, no-c-format
+msgid "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+msgstr ""
 
-#: index.docbook:624
-msgid "named parameters <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>"
-msgstr "<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+#. Tag: programlisting
+#: query_hql.xml:647
+#, no-c-format
+msgid ""
+"<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+msgstr ""
 
-#: index.docbook:629
-msgid "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+#. Tag: para
+#: query_hql.xml:649
+#, no-c-format
+msgid "and the negated forms may be written"
 msgstr "また、否定形で記述することもできます。"
 
-#: index.docbook:635
-msgid "Java <literal>public static final</literal> constants <literal>eg.Color.TABBY</literal>"
-msgstr "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
-
-#: index.docbook:641
-msgid "<literal>in</literal> and <literal>between</literal> may be used as follows:"
-msgstr "<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]>"
-
-#: index.docbook:645
-msgid "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
-msgstr "同様に <literal>is null</literal> や <literal>is not null</literal> はnull値をテストするために使用できます。"
-
-#: index.docbook:647
-msgid "<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
-msgstr "Hibernate設定ファイルでHQL query substitutionsを定義すれば、boolean値を式の中で簡単に使用できま。："
-
-#: index.docbook:649
-msgid "and the negated forms may be written"
-msgstr "<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</property>]]>"
-
-#: index.docbook:653
+#. Tag: programlisting
+#: query_hql.xml:653
+#, no-c-format
 msgid "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
-msgstr "こうすることで下記のHQLをSQLに変換するときに <literal>true</literal> , <literal>false</literal> キーワードは <literal>1</literal> , <literal>0</literal> に置き換えられます。:"
+msgstr ""
 
-#: index.docbook:655
-msgid "<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]>"
-msgstr "<![CDATA[from Cat cat where cat.alive = true]]>"
+#. Tag: programlisting
+#: query_hql.xml:655
+#, no-c-format
+msgid ""
+"<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]"
+">"
+msgstr ""
 
-#: index.docbook:657
-msgid "Likewise, <literal>is null</literal> and <literal>is not null</literal> may be used to test for null values."
-msgstr "特別なプロパティ <literal>size</literal>、または特別な関数 <literal>size()</literal> を使ってコレクションのサイズをテストできます。:"
+#. Tag: para
+#: query_hql.xml:657
+#, no-c-format
+msgid ""
+"Likewise, <literal>is null</literal> and <literal>is not null</literal> may "
+"be used to test for null values."
+msgstr ""
+"同様に <literal>is null</literal> や <literal>is not null</literal> はnull値"
+"をテストするために使用できます。"
 
-#: index.docbook:662
-msgid "Booleans may be easily used in expressions by declaring HQL query substitutions in Hibernate configuration:"
-msgstr "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
+#. Tag: para
+#: query_hql.xml:662
+#, no-c-format
+msgid ""
+"Booleans may be easily used in expressions by declaring HQL query "
+"substitutions in Hibernate configuration:"
+msgstr ""
+"Hibernate設定ファイルでHQL query substitutionsを定義すれば、boolean値を式の中"
+"で簡単に使用できま。："
 
-#: index.docbook:667
-msgid "<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</property>]]>"
-msgstr "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+#. Tag: programlisting
+#: query_hql.xml:667
+#, no-c-format
+msgid ""
+"<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</"
+"property>]]>"
+msgstr ""
 
-#: index.docbook:669
-msgid "This will replace the keywords <literal>true</literal> and <literal>false</literal> with the literals <literal>1</literal> and <literal>0</literal> in the translated SQL from this HQL:"
-msgstr "インデックス付きのコレクションでは、<literal>minindex</literal> と <literal>maxindex</literal> 関数を使って、インデックスの最小値と最大値を参照できます。 同様に、<literal>minelement</literal> と <literal>maxelement</literal> を使って、 基本型のコレクション要素の最小値と最大値を参照できます。"
+#. Tag: para
+#: query_hql.xml:669
+#, no-c-format
+msgid ""
+"This will replace the keywords <literal>true</literal> and <literal>false</"
+"literal> with the literals <literal>1</literal> and <literal>0</literal> in "
+"the translated SQL from this HQL:"
+msgstr ""
+"こうすることで下記のHQLをSQLに変換するときに <literal>true</literal> , "
+"<literal>false</literal> キーワードは <literal>1</literal> , <literal>0</"
+"literal> に置き換えられます。:"
 
-#: index.docbook:674
+#. Tag: programlisting
+#: query_hql.xml:674
+#, no-c-format
 msgid "<![CDATA[from Cat cat where cat.alive = true]]>"
-msgstr "<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+msgstr ""
 
-#: index.docbook:676
-msgid "You may test the size of a collection with the special property <literal>size</literal>, or the special <literal>size()</literal> function."
-msgstr "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
+#. Tag: para
+#: query_hql.xml:676
+#, no-c-format
+msgid ""
+"You may test the size of a collection with the special property "
+"<literal>size</literal>, or the special <literal>size()</literal> function."
+msgstr ""
+"特別なプロパティ <literal>size</literal>、または特別な関数 <literal>size()</"
+"literal> を使ってコレクションのサイズをテストできます。:"
 
-#: index.docbook:681
+#. Tag: programlisting
+#: query_hql.xml:681
+#, no-c-format
 msgid "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
-msgstr "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+msgstr ""
 
-#: index.docbook:683
+#. Tag: programlisting
+#: query_hql.xml:683
+#, no-c-format
 msgid "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
-msgstr "コレクションの要素やインデックスのセット（<literal>elements</literal> と <literal>indices</literal> 関数）、または副問い合わせ（後述）の結果が受け取れるときは、 SQL関数 <literal>any, some, all, exists, in</literal> がサポートされます。"
-
-#: index.docbook:685
-msgid "For indexed collections, you may refer to the minimum and maximum indices using <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly, you may refer to the minimum and maximum elements of a collection of basic type using the <literal>minelement</literal> and <literal>maxelement</literal> functions."
 msgstr ""
-      "<![CDATA[select mother from Cat as mother, Cat as kit\n"
-      "where kit in elements(foo.kittens)]]>"
 
-#: index.docbook:693
-msgid "<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+#. Tag: para
+#: query_hql.xml:685
+#, no-c-format
+msgid ""
+"For indexed collections, you may refer to the minimum and maximum indices "
+"using <literal>minindex</literal> and <literal>maxindex</literal> functions. "
+"Similarly, you may refer to the minimum and maximum elements of a collection "
+"of basic type using the <literal>minelement</literal> and "
+"<literal>maxelement</literal> functions."
 msgstr ""
-      "<![CDATA[select p from NameList list, Person p\n"
-      "where p.name = some elements(list.names)]]>"
+"インデックス付きのコレクションでは、<literal>minindex</literal> と "
+"<literal>maxindex</literal> 関数を使って、インデックスの最小値と最大値を参照"
+"できます。 同様に、<literal>minelement</literal> と <literal>maxelement</"
+"literal> を使って、 基本型のコレクション要素の最小値と最大値を参照できます。"
 
-#: index.docbook:695
+#. Tag: programlisting
+#: query_hql.xml:693
+#, no-c-format
+msgid ""
+"<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:695
+#, no-c-format
 msgid "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
-msgstr "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
+msgstr ""
 
-#: index.docbook:697
+#. Tag: programlisting
+#: query_hql.xml:697
+#, no-c-format
 msgid "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
-msgstr "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
+msgstr ""
 
-#: index.docbook:699
-msgid "The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element or index set of a collection (<literal>elements</literal> and <literal>indices</literal> functions) or the result of a subquery (see below)."
-msgstr "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
-
-#: index.docbook:705
+#. Tag: para
+#: query_hql.xml:699
+#, no-c-format
 msgid ""
-      "<![CDATA[select mother from Cat as mother, Cat as kit\n"
-      "where kit in elements(foo.kittens)]]>"
-msgstr "<literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal> はHibernate3のwhere節だけで利用可能であることに注意してください。"
+"The SQL functions <literal>any, some, all, exists, in</literal> are "
+"supported when passed the element or index set of a collection "
+"(<literal>elements</literal> and <literal>indices</literal> functions) or "
+"the result of a subquery (see below)."
+msgstr ""
+"コレクションの要素やインデックスのセット（<literal>elements</literal> と "
+"<literal>indices</literal> 関数）、または副問い合わせ（後述）の結果が受け取れ"
+"るときは、 SQL関数 <literal>any, some, all, exists, in</literal> がサポートさ"
+"れます。"
 
-#: index.docbook:707
+#. Tag: programlisting
+#: query_hql.xml:705
+#, no-c-format
 msgid ""
-      "<![CDATA[select p from NameList list, Person p\n"
-      "where p.name = some elements(list.names)]]>"
-msgstr "インデックス付きのコレクション（arrays, lists, maps）の要素は、 インデックスで参照できます（where節内でのみ）。"
+"<![CDATA[select mother from Cat as mother, Cat as kit\n"
+"where kit in elements(foo.kittens)]]>"
+msgstr ""
 
-#: index.docbook:709
+#. Tag: programlisting
+#: query_hql.xml:707
+#, no-c-format
+msgid ""
+"<![CDATA[select p from NameList list, Person p\n"
+"where p.name = some elements(list.names)]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:709
+#, no-c-format
 msgid "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
-msgstr "<![CDATA[from Order order where order.items[0].id = 1234]]>"
+msgstr ""
 
-#: index.docbook:711
+#. Tag: programlisting
+#: query_hql.xml:711
+#, no-c-format
 msgid "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
 msgstr ""
-      "<![CDATA[select person from Person person, Calendar calendar\n"
-      "where calendar.holidays['national day'] = person.birthDay\n"
-      "    and person.nationality.calendar = calendar]]>"
 
-#: index.docbook:713
+#. Tag: programlisting
+#: query_hql.xml:713
+#, no-c-format
 msgid "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
 msgstr ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]>"
 
-#: index.docbook:715
-msgid "Note that these constructs - <literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal> - may only be used in the where clause in Hibernate3."
+#. Tag: para
+#: query_hql.xml:715
+#, no-c-format
+msgid ""
+"Note that these constructs - <literal>size</literal>, <literal>elements</"
+"literal>, <literal>indices</literal>, <literal>minindex</literal>, "
+"<literal>maxindex</literal>, <literal>minelement</literal>, "
+"<literal>maxelement</literal> - may only be used in the where clause in "
+"Hibernate3."
 msgstr ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+"<literal>size</literal>, <literal>elements</literal>, <literal>indices</"
+"literal>, <literal>minindex</literal>, <literal>maxindex</literal>, "
+"<literal>minelement</literal>, <literal>maxelement</literal> はHibernate3の"
+"where節だけで利用可能であることに注意してください。"
 
-#: index.docbook:722
-msgid "Elements of indexed collections (arrays, lists, maps) may be referred to by index (in a where clause only):"
-msgstr "<literal>[]</literal> 内部の式は、算術式でも構いません。"
+#. Tag: para
+#: query_hql.xml:722
+#, no-c-format
+msgid ""
+"Elements of indexed collections (arrays, lists, maps) may be referred to by "
+"index (in a where clause only):"
+msgstr ""
+"インデックス付きのコレクション（arrays, lists, maps）の要素は、 インデックス"
+"で参照できます（where節内でのみ）。"
 
-#: index.docbook:727
+#. Tag: programlisting
+#: query_hql.xml:727
+#, no-c-format
 msgid "<![CDATA[from Order order where order.items[0].id = 1234]]>"
 msgstr ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ size(order.items) - 1 ] = item]]>"
 
-#: index.docbook:729
+#. Tag: programlisting
+#: query_hql.xml:729
+#, no-c-format
 msgid ""
-      "<![CDATA[select person from Person person, Calendar calendar\n"
-      "where calendar.holidays['national day'] = person.birthDay\n"
-      "    and person.nationality.calendar = calendar]]>"
-msgstr "一対多関連や値のコレクションの要素に対しては、HQLは組み込みの <literal>index()</literal> 関数も用意しています。"
-
-#: index.docbook:731
-msgid ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]>"
+"<![CDATA[select person from Person person, Calendar calendar\n"
+"where calendar.holidays['national day'] = person.birthDay\n"
+"    and person.nationality.calendar = calendar]]>"
 msgstr ""
-      "<![CDATA[select item, index(item) from Order order \n"
-      "    join order.items item\n"
-      "where index(item) < 5]]>"
 
-#: index.docbook:733
+#. Tag: programlisting
+#: query_hql.xml:731
+#, no-c-format
 msgid ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
-msgstr "ベースとなるデータベースがサポートしているスカラーSQL関数が使用できます"
-
-#: index.docbook:735
-msgid "The expression inside <literal>[]</literal> may even be an arithmetic expression."
-msgstr "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
-
-#: index.docbook:739
-msgid ""
-      "<![CDATA[select item from Item item, Order order\n"
-      "where order.items[ size(order.items) - 1 ] = item]]>"
-msgstr "もしまだ全てを理解していないなら、下のクエリをSQLでどれだけ長く、読みづらく出来るか考えてください。:"
-
-#: index.docbook:741
-msgid "HQL also provides the built-in <literal>index()</literal> function, for elements of a one-to-many association or collection of values."
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]"
+">"
 msgstr ""
-      "<![CDATA[select cust\n"
-      "from Product prod,\n"
-      "    Store store\n"
-      "    inner join store.customers cust\n"
-      "where prod.name = 'widget'\n"
-      "    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
-      "    and prod = all elements(cust.currentOrder.lineItems)]]>"
 
-#: index.docbook:746
+#. Tag: programlisting
+#: query_hql.xml:733
+#, no-c-format
 msgid ""
-      "<![CDATA[select item, index(item) from Order order\n"
-      "    join order.items item\n"
-      "where index(item) < 5]]>"
-msgstr "<emphasis>ヒント:</emphasis> 例えばこのように出来ます。"
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+msgstr ""
 
-#: index.docbook:748
+#. Tag: para
+#: query_hql.xml:735
+#, no-c-format
+msgid ""
+"The expression inside <literal>[]</literal> may even be an arithmetic "
+"expression."
+msgstr "<literal>[]</literal> 内部の式は、算術式でも構いません。"
+
+#. Tag: programlisting
+#: query_hql.xml:739
+#, no-c-format
+msgid ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ size(order.items) - 1 ] = item]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:741
+#, no-c-format
+msgid ""
+"HQL also provides the built-in <literal>index()</literal> function, for "
+"elements of a one-to-many association or collection of values."
+msgstr ""
+"一対多関連や値のコレクションの要素に対しては、HQLは組み込みの <literal>index"
+"()</literal> 関数も用意しています。"
+
+#. Tag: programlisting
+#: query_hql.xml:746
+#, no-c-format
+msgid ""
+"<![CDATA[select item, index(item) from Order order\n"
+"    join order.items item\n"
+"where index(item) < 5]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:748
+#, no-c-format
 msgid "Scalar SQL functions supported by the underlying database may be used"
 msgstr ""
-      "<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order\n"
-      "FROM customers cust,\n"
-      "    stores store,\n"
-      "    locations loc,\n"
-      "    store_customers sc,\n"
-      "    product prod\n"
-      "WHERE prod.name = 'widget'\n"
-      "    AND store.loc_id = loc.id\n"
-      "    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
-      "    AND sc.store_id = store.id\n"
-      "    AND sc.cust_id = cust.id\n"
-      "    AND prod.id = ALL(\n"
-      "        SELECT item.prod_id\n"
-      "        FROM line_items item, orders o\n"
-      "        WHERE item.order_id = o.id\n"
-      "            AND cust.current_order = o.id\n"
-      "    )]]>"
+"ベースとなるデータベースがサポートしているスカラーSQL関数が使用できます"
 
-#: index.docbook:752
+#. Tag: programlisting
+#: query_hql.xml:752
+#, no-c-format
 msgid "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:754
+#, no-c-format
+msgid ""
+"If you are not yet convinced by all this, think how much longer and less "
+"readable the following query would be in SQL:"
+msgstr ""
+"もしまだ全てを理解していないなら、下のクエリをSQLでどれだけ長く、読みづらく出"
+"来るか考えてください。:"
+
+#. Tag: programlisting
+#: query_hql.xml:759
+#, no-c-format
+msgid ""
+"<![CDATA[select cust\n"
+"from Product prod,\n"
+"    Store store\n"
+"    inner join store.customers cust\n"
+"where prod.name = 'widget'\n"
+"    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
+"    and prod = all elements(cust.currentOrder.lineItems)]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:761
+#, no-c-format
+msgid "<emphasis>Hint:</emphasis> something like"
+msgstr "<emphasis>ヒント:</emphasis> 例えばこのように出来ます。"
+
+#. Tag: programlisting
+#: query_hql.xml:765
+#, no-c-format
+msgid ""
+"<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust."
+"current_order\n"
+"FROM customers cust,\n"
+"    stores store,\n"
+"    locations loc,\n"
+"    store_customers sc,\n"
+"    product prod\n"
+"WHERE prod.name = 'widget'\n"
+"    AND store.loc_id = loc.id\n"
+"    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
+"    AND sc.store_id = store.id\n"
+"    AND sc.cust_id = cust.id\n"
+"    AND prod.id = ALL(\n"
+"        SELECT item.prod_id\n"
+"        FROM line_items item, orders o\n"
+"        WHERE item.order_id = o.id\n"
+"            AND cust.current_order = o.id\n"
+"    )]]>"
+msgstr ""
+
+#. Tag: title
+#: query_hql.xml:770
+#, no-c-format
+msgid "The order by clause"
 msgstr "order by節"
 
-#: index.docbook:754
-msgid "If you are not yet convinced by all this, think how much longer and less readable the following query would be in SQL:"
-msgstr "クエリが返すlistは、返されるクラスやコンポーネントの任意の属性によって並べ替えられます。："
-
-#: index.docbook:759
+#. Tag: para
+#: query_hql.xml:772
+#, no-c-format
 msgid ""
-      "<![CDATA[select cust\n"
-      "from Product prod,\n"
-      "    Store store\n"
-      "    inner join store.customers cust\n"
-      "where prod.name = 'widget'\n"
-      "    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
-      "    and prod = all elements(cust.currentOrder.lineItems)]]>"
+"The list returned by a query may be ordered by any property of a returned "
+"class or components:"
 msgstr ""
-      "<![CDATA[from DomesticCat cat\n"
-      "order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+"クエリが返すlistは、返されるクラスやコンポーネントの任意の属性によって並べ替"
+"えられます。："
 
-#: index.docbook:761
-msgid "<emphasis>Hint:</emphasis> something like"
-msgstr "オプションの <literal>asc</literal> と <literal>desc</literal> はそれぞれ昇順か降順の整列を示します。"
-
-#: index.docbook:765
+#. Tag: programlisting
+#: query_hql.xml:776
+#, no-c-format
 msgid ""
-      "<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order\n"
-      "FROM customers cust,\n"
-      "    stores store,\n"
-      "    locations loc,\n"
-      "    store_customers sc,\n"
-      "    product prod\n"
-      "WHERE prod.name = 'widget'\n"
-      "    AND store.loc_id = loc.id\n"
-      "    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
-      "    AND sc.store_id = store.id\n"
-      "    AND sc.cust_id = cust.id\n"
-      "    AND prod.id = ALL(\n"
-      "        SELECT item.prod_id\n"
-      "        FROM line_items item, orders o\n"
-      "        WHERE item.order_id = o.id\n"
-      "            AND cust.current_order = o.id\n"
-      "    )]]>"
+"<![CDATA[from DomesticCat cat\n"
+"order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:778
+#, no-c-format
+msgid ""
+"The optional <literal>asc</literal> or <literal>desc</literal> indicate "
+"ascending or descending order respectively."
+msgstr ""
+"オプションの <literal>asc</literal> と <literal>desc</literal> はそれぞれ昇順"
+"か降順の整列を示します。"
+
+#. Tag: title
+#: query_hql.xml:785
+#, no-c-format
+msgid "The group by clause"
 msgstr "group by節"
 
-#: index.docbook:770
-msgid "The order by clause"
-msgstr "集約値を返すクエリは、返されるクラスやコンポーネントの任意のプロパティによってグループ化できます。:"
-
-#: index.docbook:772
-msgid "The list returned by a query may be ordered by any property of a returned class or components:"
-msgstr ""
-      "<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
-      "from Cat cat\n"
-      "group by cat.color]]>"
-
-#: index.docbook:776
+#. Tag: para
+#: query_hql.xml:787
+#, no-c-format
 msgid ""
-      "<![CDATA[from DomesticCat cat\n"
-      "order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+"A query that returns aggregate values may be grouped by any property of a "
+"returned class or components:"
 msgstr ""
-      "<![CDATA[select foo.id, avg(name), max(name) \n"
-      "from Foo foo join foo.names name\n"
-      "group by foo.id]]>"
+"集約値を返すクエリは、返されるクラスやコンポーネントの任意のプロパティによっ"
+"てグループ化できます。:"
 
-#: index.docbook:778
-msgid "The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order respectively."
+#. Tag: programlisting
+#: query_hql.xml:791
+#, no-c-format
+msgid ""
+"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+"from Cat cat\n"
+"group by cat.color]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:793
+#, no-c-format
+msgid ""
+"<![CDATA[select foo.id, avg(name), max(name)\n"
+"from Foo foo join foo.names name\n"
+"group by foo.id]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:795
+#, no-c-format
+msgid "A <literal>having</literal> clause is also allowed."
 msgstr "<literal>having</literal> 節も使えます。"
 
-#: index.docbook:785
-msgid "The group by clause"
-msgstr ""
-      "<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
-      "from Cat cat\n"
-      "group by cat.color \n"
-      "having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
-
-#: index.docbook:787
-msgid "A query that returns aggregate values may be grouped by any property of a returned class or components:"
-msgstr "もし使用するデータベースがサポートしているなら、 <literal>having</literal> と <literal>order by</literal> 節でSQL関数と集約関数が使えます （例えばMySQLにはありません）。"
-
-#: index.docbook:791
+#. Tag: programlisting
+#: query_hql.xml:799
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
-      "from Cat cat\n"
-      "group by cat.color]]>"
+"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+"from Cat cat\n"
+"group by cat.color\n"
+"having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
 msgstr ""
-      "<![CDATA[select cat\n"
-      "from Cat cat\n"
-      "    join cat.kittens kitten\n"
-      "group by cat\n"
-      "having avg(kitten.weight) > 100\n"
-      "order by count(kitten) asc, sum(kitten.weight) desc]]>"
 
-#: index.docbook:793
+#. Tag: para
+#: query_hql.xml:801
+#, no-c-format
 msgid ""
-      "<![CDATA[select foo.id, avg(name), max(name)\n"
-      "from Foo foo join foo.names name\n"
-      "group by foo.id]]>"
-msgstr "<literal>group by</literal> 節や <literal>order by</literal> 節に 算術式を含むことができないことに注意してください。"
+"SQL functions and aggregate functions are allowed in the <literal>having</"
+"literal> and <literal>order by</literal> clauses, if supported by the "
+"underlying database (eg. not in MySQL)."
+msgstr ""
+"もし使用するデータベースがサポートしているなら、 <literal>having</literal> "
+"と <literal>order by</literal> 節でSQL関数と集約関数が使えます （例えばMySQL"
+"にはありません）。"
 
-#: index.docbook:795
-msgid "A <literal>having</literal> clause is also allowed."
+#. Tag: programlisting
+#: query_hql.xml:807
+#, no-c-format
+msgid ""
+"<![CDATA[select cat\n"
+"from Cat cat\n"
+"    join cat.kittens kitten\n"
+"group by cat.id, cat.name, cat.other, cat.properties\n"
+"having avg(kitten.weight) > 100\n"
+"order by count(kitten) asc, sum(kitten.weight) desc]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:809
+#, no-c-format
+msgid ""
+"Note that neither the <literal>group by</literal> clause nor the "
+"<literal>order by</literal> clause may contain arithmetic expressions. Also "
+"note that Hibernate currently does not expand a grouped entity, so you can't "
+"write <literal>group by cat</literal> if all properties of <literal>cat</"
+"literal> are non-aggregated. You have to list all non-aggregated properties "
+"explicitly."
+msgstr ""
+"Note that neither the <literal>group by</literal> clause nor the "
+"<literal>order by</literal> clause may contain arithmetic expressions. Also "
+"note that Hibernate currently does not expand a grouped entity, so you can't "
+"write <literal>group by cat</literal> if all properties of <literal>cat</"
+"literal> are non-aggregated. You have to list all non-aggregated properties "
+"explicitly."
+
+#. Tag: title
+#: query_hql.xml:821
+#, no-c-format
+msgid "Subqueries"
 msgstr "副問い合わせ"
 
-#: index.docbook:799
+#. Tag: para
+#: query_hql.xml:823
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
-      "from Cat cat\n"
-      "group by cat.color\n"
-      "having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
-msgstr "サブセレクトをサポートするデータベースのため、Hibernateは副問い合わせをサポートしています。 副問い合わせは括弧で囲まなければなりません（SQLの集約関数呼び出しによる事が多いです）。 関連副問い合わせ(外部クエリ中の別名を参照する副問い合わせのこと)さえ許可されます。"
-
-#: index.docbook:801
-msgid "SQL functions and aggregate functions are allowed in the <literal>having</literal> and <literal>order by</literal> clauses, if supported by the underlying database (eg. not in MySQL)."
+"For databases that support subselects, Hibernate supports subqueries within "
+"queries. A subquery must be surrounded by parentheses (often by an SQL "
+"aggregate function call). Even correlated subqueries (subqueries that refer "
+"to an alias in the outer query) are allowed."
 msgstr ""
-      "<![CDATA[from Cat as fatcat \n"
-      "where fatcat.weight > ( \n"
-      "    select avg(cat.weight) from DomesticCat cat \n"
-      ")]]>"
+"サブセレクトをサポートするデータベースのため、Hibernateは副問い合わせをサポー"
+"トしています。 副問い合わせは括弧で囲まなければなりません（SQLの集約関数呼び"
+"出しによる事が多いです）。 関連副問い合わせ(外部クエリ中の別名を参照する副問"
+"い合わせのこと)さえ許可されます。"
 
-#: index.docbook:807
+#. Tag: programlisting
+#: query_hql.xml:829
+#, no-c-format
 msgid ""
-      "<![CDATA[select cat\n"
-      "from Cat cat\n"
-      "    join cat.kittens kitten\n"
-      "group by cat.id, cat.name, cat.other, cat.properties\n"
-      "having avg(kitten.weight) > 100\n"
-      "order by count(kitten) asc, sum(kitten.weight) desc]]>"
+"<![CDATA[from Cat as fatcat\n"
+"where fatcat.weight > (\n"
+"    select avg(cat.weight) from DomesticCat cat\n"
+")]]>"
 msgstr ""
-      "<![CDATA[from DomesticCat as cat \n"
-      "where cat.name = some ( \n"
-      "    select name.nickName from Name as name \n"
-      ")]]>"
 
-#: index.docbook:809
-msgid "Note that neither the <literal>group by</literal> clause nor the <literal>order by</literal> clause may contain arithmetic expressions. Also note that Hibernate currently does not expand a grouped entity, so you can't write <literal>group by cat</literal> if all properties of <literal>cat</literal> are non-aggregated. You have to list all non-aggregated properties explicitly."
+#. Tag: programlisting
+#: query_hql.xml:831
+#, no-c-format
+msgid ""
+"<![CDATA[from DomesticCat as cat\n"
+"where cat.name = some (\n"
+"    select name.nickName from Name as name\n"
+")]]>"
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "where not exists ( \n"
-      "    from Cat as mate where mate.mate = cat \n"
-      ")]]>"
 
-#: index.docbook:821
-msgid "Subqueries"
+#. Tag: programlisting
+#: query_hql.xml:833
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"where not exists (\n"
+"    from Cat as mate where mate.mate = cat\n"
+")]]>"
 msgstr ""
-      "<![CDATA[from DomesticCat as cat \n"
-      "where cat.name not in ( \n"
-      "    select name.nickName from Name as name \n"
-      ")]]>"
 
-#: index.docbook:823
-msgid "For databases that support subselects, Hibernate supports subqueries within queries. A subquery must be surrounded by parentheses (often by an SQL aggregate function call). Even correlated subqueries (subqueries that refer to an alias in the outer query) are allowed."
+#. Tag: programlisting
+#: query_hql.xml:835
+#, no-c-format
+msgid ""
+"<![CDATA[from DomesticCat as cat\n"
+"where cat.name not in (\n"
+"    select name.nickName from Name as name\n"
+")]]>"
 msgstr ""
-      "<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit) \n"
-      "from Cat as cat]]>"
 
-#: index.docbook:829
+#. Tag: programlisting
+#: query_hql.xml:837
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as fatcat\n"
-      "where fatcat.weight > (\n"
-      "    select avg(cat.weight) from DomesticCat cat\n"
-      ")]]>"
-msgstr "HQL副問い合わせは、selectまたはwhere節だけで使われることに注意してください。"
-
-#: index.docbook:831
-msgid ""
-      "<![CDATA[from DomesticCat as cat\n"
-      "where cat.name = some (\n"
-      "    select name.nickName from Name as name\n"
-      ")]]>"
-msgstr "selectリストに複数の式を持つ副問い合わせには、タプルを使うことができます。"
-
-#: index.docbook:833
-msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "where not exists (\n"
-      "    from Cat as mate where mate.mate = cat\n"
-      ")]]>"
+"<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
+"from Cat as cat]]>"
 msgstr ""
-      "<![CDATA[from Cat as cat \n"
-      "where not ( cat.name, cat.color ) in ( \n"
-      "    select cat.name, cat.color from DomesticCat cat \n"
-      ")]]>"
 
-#: index.docbook:835
-msgid ""
-      "<![CDATA[from DomesticCat as cat\n"
-      "where cat.name not in (\n"
-      "    select name.nickName from Name as name\n"
-      ")]]>"
-msgstr "いくつかのデータベース（OracleやHSQLにはありません）では、 他のコンテキストでもタプルが使えます。 例えば、クエリコンポーネントや複合ユーザ型においてです。"
-
-#: index.docbook:837
-msgid ""
-      "<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
-      "from Cat as cat]]>"
-msgstr "<![CDATA[from Person where name = ('Gavin', 'A', 'King')]]>"
-
-#: index.docbook:839
+#. Tag: para
+#: query_hql.xml:839
+#, no-c-format
 msgid "Note that HQL subqueries may occur only in the select or where clauses."
-msgstr "同等ですが、より冗長なクエリです："
+msgstr ""
+"HQL副問い合わせは、selectまたはwhere節だけで使われることに注意してください。"
 
-#: index.docbook:843
-msgid "Note that subqueries can also utilize <literal>row value constructor</literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
-msgstr "<![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]>"
+#. Tag: para
+#: query_hql.xml:843
+#, no-c-format
+msgid ""
+"Note that subqueries can also utilize <literal>row value constructor</"
+"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+msgstr ""
+"Note that subqueries can also utilize <literal>row value constructor</"
+"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
 
-#: index.docbook:851
+#. Tag: title
+#: query_hql.xml:851
+#, no-c-format
 msgid "HQL examples"
-msgstr "このようなことをしたくないのには2つの理由があります： 1つ目は、データベースプラットフォーム間で完全な互換性はないからです。 2つ目は、クエリがマッピングドキュメントのプロパティの順序に依存するからです。"
-
-#: index.docbook:853
-msgid "Hibernate queries can be quite powerful and complex. In fact, the power of the query language is one of Hibernate's main selling points. Here are some example queries very similar to queries that I used on a recent project. Note that most queries you will write are much simpler than these!"
 msgstr "HQLの例"
 
-#: index.docbook:859
-msgid "The following query returns the order id, number of items and total value of the order for all unpaid orders for a particular customer and given minimum total value, ordering the results by total value. In determining the prices, it uses the current catalog. The resulting SQL query, against the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four inner joins and an (uncorrelated) subselect."
-msgstr "Hibernateクエリは非常に強力で複雑にできます。実際、クエリ言語の威力はHibernateの主要なセールスポイントの一つです。 ここに最近のプロジェクトで使用したクエリと非常によく似た例があります。 ほとんどのクエリはこれらの例より簡単に記述できることに注意してください!"
-
-#: index.docbook:868
+#. Tag: para
+#: query_hql.xml:853
+#, no-c-format
 msgid ""
-      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
-      "from Order as order\n"
-      "    join order.lineItems as item\n"
-      "    join item.product as product,\n"
-      "    Catalog as catalog\n"
-      "    join catalog.prices as price\n"
-      "where order.paid = false\n"
-      "    and order.customer = :customer\n"
-      "    and price.product = product\n"
-      "    and catalog.effectiveDate < sysdate\n"
-      "    and catalog.effectiveDate >= all (\n"
-      "        select cat.effectiveDate\n"
-      "        from Catalog as cat\n"
-      "        where cat.effectiveDate < sysdate\n"
-      "    )\n"
-      "group by order\n"
-      "having sum(price.amount) > :minAmount\n"
-      "order by sum(price.amount) desc]]>"
-msgstr "以下のクエリは特定の顧客と与えられた最小の合計値に対する未払い注文の注文ID、 商品の数、注文の合計を合計値で整列して返します。 価格を決定する際、現在のカタログを使います。結果として返されるSQLクエリは <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> および <literal>PRICE</literal> テーブルに対し4つの内部結合と (関連しない)副問い合わせを持ちます。"
-
-#: index.docbook:870
-msgid "What a monster! Actually, in real life, I'm not very keen on subqueries, so my query was really more like this:"
+"Hibernate queries can be quite powerful and complex. In fact, the power of "
+"the query language is one of Hibernate's main selling points. Here are some "
+"example queries very similar to queries that I used on a recent project. "
+"Note that most queries you will write are much simpler than these!"
 msgstr ""
-      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
-      "from Order as order\n"
-      "    join order.lineItems as item\n"
-      "    join item.product as product,\n"
-      "    Catalog as catalog\n"
-      "    join catalog.prices as price\n"
-      "where order.paid = false\n"
-      "    and order.customer = :customer\n"
-      "    and price.product = product\n"
-      "    and catalog.effectiveDate < sysdate\n"
-      "    and catalog.effectiveDate >= all (\n"
-      "        select cat.effectiveDate \n"
-      "        from Catalog as cat\n"
-      "        where cat.effectiveDate < sysdate\n"
-      "    )\n"
-      "group by order\n"
-      "having sum(price.amount) > :minAmount\n"
-      "order by sum(price.amount) desc]]>"
+"Hibernateクエリは非常に強力で複雑にできます。実際、クエリ言語の威力は"
+"Hibernateの主要なセールスポイントの一つです。 ここに最近のプロジェクトで使用"
+"したクエリと非常によく似た例があります。 ほとんどのクエリはこれらの例より簡単"
+"に記述できることに注意してください!"
 
-#: index.docbook:875
+#. Tag: para
+#: query_hql.xml:859
+#, no-c-format
 msgid ""
-      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
-      "from Order as order\n"
-      "    join order.lineItems as item\n"
-      "    join item.product as product,\n"
-      "    Catalog as catalog\n"
-      "    join catalog.prices as price\n"
-      "where order.paid = false\n"
-      "    and order.customer = :customer\n"
-      "    and price.product = product\n"
-      "    and catalog = :currentCatalog\n"
-      "group by order\n"
-      "having sum(price.amount) > :minAmount\n"
-      "order by sum(price.amount) desc]]>"
-msgstr "何て巨大なクエリなのでしょう! 普段私は副問い合わせをあまり使いません。したがって私のクエリは実際には以下のようになります。:"
-
-#: index.docbook:877
-msgid "The next query counts the number of payments in each status, excluding all payments in the <literal>AWAITING_APPROVAL</literal> status where the most recent status change was made by the current user. It translates to an SQL query with two inner joins and a correlated subselect against the <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and <literal>PAYMENT_STATUS_CHANGE</literal> tables."
+"The following query returns the order id, number of items and total value of "
+"the order for all unpaid orders for a particular customer and given minimum "
+"total value, ordering the results by total value. In determining the prices, "
+"it uses the current catalog. The resulting SQL query, against the "
+"<literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</"
+"literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has "
+"four inner joins and an (uncorrelated) subselect."
 msgstr ""
-      "<![CDATA[select order.id, sum(price.amount), count(item)\n"
-      "from Order as order\n"
-      "    join order.lineItems as item\n"
-      "    join item.product as product,\n"
-      "    Catalog as catalog\n"
-      "    join catalog.prices as price\n"
-      "where order.paid = false\n"
-      "    and order.customer = :customer\n"
-      "    and price.product = product\n"
-      "    and catalog = :currentCatalog\n"
-      "group by order\n"
-      "having sum(price.amount) > :minAmount\n"
-      "order by sum(price.amount) desc]]>"
+"以下のクエリは特定の顧客と与えられた最小の合計値に対する未払い注文の注文ID、 "
+"商品の数、注文の合計を合計値で整列して返します。 価格を決定する際、現在のカタ"
+"ログを使います。結果として返されるSQLクエリは <literal>ORDER</literal>, "
+"<literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</"
+"literal> および <literal>PRICE</literal> テーブルに対し4つの内部結合と (関連"
+"しない)副問い合わせを持ちます。"
 
-#: index.docbook:885
+#. Tag: programlisting
+#: query_hql.xml:868
+#, no-c-format
 msgid ""
-      "<![CDATA[select count(payment), status.name\n"
-      "from Payment as payment\n"
-      "    join payment.currentStatus as status\n"
-      "    join payment.statusChanges as statusChange\n"
-      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-      "    or (\n"
-      "        statusChange.timeStamp = (\n"
-      "            select max(change.timeStamp)\n"
-      "            from PaymentStatusChange change\n"
-      "            where change.payment = payment\n"
-      "        )\n"
-      "        and statusChange.user <> :currentUser\n"
-      "    )\n"
-      "group by status.name, status.sortOrder\n"
-      "order by status.sortOrder]]>"
-msgstr "次のクエリは各ステータスの支払い数を数えます。ただしすべての支払いが現在の利用者による 最新のステータス変更である <literal>AWAITING_APPROVAL</literal> である場合を除きます。 このクエリは2つの内部結合と <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> および <literal>PAYMENT_STATUS_CHANGE</literal> テーブルに対する関連副問い合わせを備えたSQLクエリに変換されます。"
-
-#: index.docbook:887
-msgid "If I would have mapped the <literal>statusChanges</literal> collection as a list, instead of a set, the query would have been much simpler to write."
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog.effectiveDate < sysdate\n"
+"    and catalog.effectiveDate >= all (\n"
+"        select cat.effectiveDate\n"
+"        from Catalog as cat\n"
+"        where cat.effectiveDate < sysdate\n"
+"    )\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
 msgstr ""
-      "<![CDATA[select count(payment), status.name \n"
-      "from Payment as payment \n"
-      "    join payment.currentStatus as status\n"
-      "    join payment.statusChanges as statusChange\n"
-      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-      "    or (\n"
-      "        statusChange.timeStamp = ( \n"
-      "            select max(change.timeStamp) \n"
-      "            from PaymentStatusChange change \n"
-      "            where change.payment = payment\n"
-      "        )\n"
-      "        and statusChange.user <> :currentUser\n"
-      "    )\n"
-      "group by status.name, status.sortOrder\n"
-      "order by status.sortOrder]]>"
 
-#: index.docbook:892
+#. Tag: para
+#: query_hql.xml:870
+#, no-c-format
 msgid ""
-      "<![CDATA[select count(payment), status.name\n"
-      "from Payment as payment\n"
-      "    join payment.currentStatus as status\n"
-      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-      "    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :currentUser\n"
-      "group by status.name, status.sortOrder\n"
-      "order by status.sortOrder]]>"
-msgstr "もし私がsetの代わりにlistとして <literal>statusChanges</literal> コレクションを マッピングしたならば、はるかに簡単にクエリを記述できるでしょう。"
-
-#: index.docbook:894
-msgid "The next query uses the MS SQL Server <literal>isNull()</literal> function to return all the accounts and unpaid payments for the organization to which the current user belongs. It translates to an SQL query with three inner joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and <literal>ORG_USER</literal> tables."
+"What a monster! Actually, in real life, I'm not very keen on subqueries, so "
+"my query was really more like this:"
 msgstr ""
-      "<![CDATA[select count(payment), status.name \n"
-      "from Payment as payment\n"
-      "    join payment.currentStatus as status\n"
-      "where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-      "    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :currentUser\n"
-      "group by status.name, status.sortOrder\n"
-      "order by status.sortOrder]]>"
+"何て巨大なクエリなのでしょう! 普段私は副問い合わせをあまり使いません。した"
+"がって私のクエリは実際には以下のようになります。:"
 
-#: index.docbook:903
+#. Tag: programlisting
+#: query_hql.xml:875
+#, no-c-format
 msgid ""
-      "<![CDATA[select account, payment\n"
-      "from Account as account\n"
-      "    left outer join account.payments as payment\n"
-      "where :currentUser in elements(account.holder.users)\n"
-      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
-      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-msgstr "次のクエリは現在のユーザが所属する組織に対するアカウントおよび未払いの支払いを すべて返すMS SQL Server の <literal>isNull()</literal> 関数を使用しています。 このクエリは3つの内部結合と1つの外部結合 、 そして <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> および <literal>ORG_USER</literal> テーブルに対する副問い合わせ持ったSQLに変換されます。"
-
-#: index.docbook:905
-msgid "For some databases, we would need to do away with the (correlated) subselect."
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog = :currentCatalog\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
 msgstr ""
-      "<![CDATA[select account, payment\n"
-      "from Account as account\n"
-      "    left outer join account.payments as payment\n"
-      "where :currentUser in elements(account.holder.users)\n"
-      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
-      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
 
-#: index.docbook:909
+#. Tag: para
+#: query_hql.xml:877
+#, no-c-format
 msgid ""
-      "<![CDATA[select account, payment\n"
-      "from Account as account\n"
-      "    join account.holder.users as user\n"
-      "    left outer join account.payments as payment\n"
-      "where :currentUser = user\n"
-      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
-      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-msgstr "いくつかのデータベースについては、(関連させられた)副問い合わせの使用を避ける必要があるでしょう。"
+"The next query counts the number of payments in each status, excluding all "
+"payments in the <literal>AWAITING_APPROVAL</literal> status where the most "
+"recent status change was made by the current user. It translates to an SQL "
+"query with two inner joins and a correlated subselect against the "
+"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and "
+"<literal>PAYMENT_STATUS_CHANGE</literal> tables."
+msgstr ""
+"次のクエリは各ステータスの支払い数を数えます。ただしすべての支払いが現在の利"
+"用者による 最新のステータス変更である <literal>AWAITING_APPROVAL</literal> で"
+"ある場合を除きます。 このクエリは2つの内部結合と <literal>PAYMENT</literal>, "
+"<literal>PAYMENT_STATUS</literal> および <literal>PAYMENT_STATUS_CHANGE</"
+"literal> テーブルに対する関連副問い合わせを備えたSQLクエリに変換されます。"
 
-#: index.docbook:914
+#. Tag: programlisting
+#: query_hql.xml:885
+#, no-c-format
+msgid ""
+"<![CDATA[select count(payment), status.name\n"
+"from Payment as payment\n"
+"    join payment.currentStatus as status\n"
+"    join payment.statusChanges as statusChange\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or (\n"
+"        statusChange.timeStamp = (\n"
+"            select max(change.timeStamp)\n"
+"            from PaymentStatusChange change\n"
+"            where change.payment = payment\n"
+"        )\n"
+"        and statusChange.user <> :currentUser\n"
+"    )\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:887
+#, no-c-format
+msgid ""
+"If I would have mapped the <literal>statusChanges</literal> collection as a "
+"list, instead of a set, the query would have been much simpler to write."
+msgstr ""
+"もし私がsetの代わりにlistとして <literal>statusChanges</literal> コレクション"
+"を マッピングしたならば、はるかに簡単にクエリを記述できるでしょう。"
+
+#. Tag: programlisting
+#: query_hql.xml:892
+#, no-c-format
+msgid ""
+"<![CDATA[select count(payment), status.name\n"
+"from Payment as payment\n"
+"    join payment.currentStatus as status\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :"
+"currentUser\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:894
+#, no-c-format
+msgid ""
+"The next query uses the MS SQL Server <literal>isNull()</literal> function "
+"to return all the accounts and unpaid payments for the organization to which "
+"the current user belongs. It translates to an SQL query with three inner "
+"joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, "
+"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, "
+"<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and "
+"<literal>ORG_USER</literal> tables."
+msgstr ""
+"次のクエリは現在のユーザが所属する組織に対するアカウントおよび未払いの支払い"
+"を すべて返すMS SQL Server の <literal>isNull()</literal> 関数を使用していま"
+"す。 このクエリは3つの内部結合と1つの外部結合 、 そして <literal>ACCOUNT</"
+"literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, "
+"<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> および "
+"<literal>ORG_USER</literal> テーブルに対する副問い合わせ持ったSQLに変換されま"
+"す。"
+
+#. Tag: programlisting
+#: query_hql.xml:903
+#, no-c-format
+msgid ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser in elements(account.holder.users)\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:905
+#, no-c-format
+msgid ""
+"For some databases, we would need to do away with the (correlated) subselect."
+msgstr ""
+"いくつかのデータベースについては、(関連させられた)副問い合わせの使用を避ける"
+"必要があるでしょう。"
+
+#. Tag: programlisting
+#: query_hql.xml:909
+#, no-c-format
+msgid ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    join account.holder.users as user\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser = user\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+
+#. Tag: title
+#: query_hql.xml:914
+#, no-c-format
 msgid "Bulk update and delete"
-msgstr ""
-      "<![CDATA[select account, payment\n"
-      "from Account as account\n"
-      "    join account.holder.users as user\n"
-      "    left outer join account.payments as payment\n"
-      "where :currentUser = user\n"
-      "    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)\n"
-      "order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-
-#: index.docbook:916
-msgid "HQL now supports <literal>update</literal>, <literal>delete</literal> and <literal>insert ... select ...</literal> statements. See <xref linkend=\"batch-direct\"/> for details."
 msgstr "大量のUPDATEとDELETE"
 
-#: index.docbook:924
-msgid "Tips &amp; Tricks"
-msgstr "HQLは今は <literal>update</literal> と <literal>delete</literal>、<literal>insert ... select ...</literal> ステートメントをHQLに入れることをサポートしています。 <xref linkend=\"batch-direct\"/> に詳細があります。"
+#. Tag: para
+#: query_hql.xml:916
+#, no-c-format
+msgid ""
+"HQL now supports <literal>update</literal>, <literal>delete</literal> and "
+"<literal>insert ... select ...</literal> statements. See <xref linkend="
+"\"batch-direct\"/> for details."
+msgstr ""
+"HQLは今は <literal>update</literal> と <literal>delete</literal>、"
+"<literal>insert ... select ...</literal> ステートメントをHQLに入れることをサ"
+"ポートしています。 <xref linkend=\"batch-direct\"/> に詳細があります。"
 
-#: index.docbook:926
-msgid "You can count the number of query results without actually returning them:"
+#. Tag: title
+#: query_hql.xml:924
+#, no-c-format
+msgid "Tips &amp; Tricks"
 msgstr "Tips &amp; Tricks"
 
-#: index.docbook:930
-msgid "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue()]]>"
+#. Tag: para
+#: query_hql.xml:926
+#, no-c-format
+msgid ""
+"You can count the number of query results without actually returning them:"
 msgstr "実際に結果を返さなくてもクエリの結果数を数えることができます。:"
 
-#: index.docbook:932
+#. Tag: programlisting
+#: query_hql.xml:930
+#, no-c-format
+msgid ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue()]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:932
+#, no-c-format
 msgid "To order a result by the size of a collection, use the following query:"
-msgstr "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue()]]>"
-
-#: index.docbook:936
-msgid ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User as usr\n"
-      "    left join usr.messages as msg\n"
-      "group by usr.id, usr.name\n"
-      "order by count(msg)]]>"
-msgstr "コレクションのサイズにより結果を並べ替えるためには以下のクエリを使用します。:"
-
-#: index.docbook:938
-msgid "If your database supports subselects, you can place a condition upon selection size in the where clause of your query:"
 msgstr ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User as usr \n"
-      "    left join usr.messages as msg\n"
-      "group by usr.id, usr.name\n"
-      "order by count(msg)]]>"
+"コレクションのサイズにより結果を並べ替えるためには以下のクエリを使用します。:"
 
-#: index.docbook:943
+#. Tag: programlisting
+#: query_hql.xml:936
+#, no-c-format
+msgid ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr\n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"order by count(msg)]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:938
+#, no-c-format
+msgid ""
+"If your database supports subselects, you can place a condition upon "
+"selection size in the where clause of your query:"
+msgstr ""
+"使用しているデータベースがサブセレクトをサポートする場合、クエリのwhere節でサ"
+"イズによる選択条件を設定できます:"
+
+#. Tag: programlisting
+#: query_hql.xml:943
+#, no-c-format
 msgid "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
-msgstr "使用しているデータベースがサブセレクトをサポートする場合、クエリのwhere節でサイズによる選択条件を設定できます:"
-
-#: index.docbook:945
-msgid "If your database doesn't support subselects, use the following query:"
-msgstr "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
-
-#: index.docbook:949
-msgid ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User usr.name\n"
-      "    join usr.messages msg\n"
-      "group by usr.id, usr.name\n"
-      "having count(msg) >= 1]]>"
-msgstr "使用しているデータベースがサブセレクトをサポートしない場合は、次のクエリを使用してください:"
-
-#: index.docbook:951
-msgid "As this solution can't return a <literal>User</literal> with zero messages because of the inner join, the following form is also useful:"
 msgstr ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User usr.name\n"
-      "    join usr.messages msg\n"
-      "group by usr.id, usr.name\n"
-      "having count(msg) >= 1]]>"
 
-#: index.docbook:956
+#. Tag: para
+#: query_hql.xml:945
+#, no-c-format
+msgid "If your database doesn't support subselects, use the following query:"
+msgstr ""
+"使用しているデータベースがサブセレクトをサポートしない場合は、次のクエリを使"
+"用してください:"
+
+#. Tag: programlisting
+#: query_hql.xml:949
+#, no-c-format
 msgid ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User as usr\n"
-      "    left join usr.messages as msg\n"
-      "group by usr.id, usr.name\n"
-      "having count(msg) = 0]]>"
-msgstr "内部結合をしているせいで上の解決法がmessageの件数が ゼロの <literal>User</literal> を返すことができないならば、以下の形式が使えます。"
+"<![CDATA[select usr.id, usr.name\n"
+"from User usr.name\n"
+"    join usr.messages msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) >= 1]]>"
+msgstr ""
 
-#: index.docbook:958
+#. Tag: para
+#: query_hql.xml:951
+#, no-c-format
+msgid ""
+"As this solution can't return a <literal>User</literal> with zero messages "
+"because of the inner join, the following form is also useful:"
+msgstr ""
+"内部結合をしているせいで上の解決法がmessageの件数が ゼロの <literal>User</"
+"literal> を返すことができないならば、以下の形式が使えます。"
+
+#. Tag: programlisting
+#: query_hql.xml:956
+#, no-c-format
+msgid ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr\n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) = 0]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:958
+#, no-c-format
 msgid "Properties of a JavaBean can be bound to named query parameters:"
 msgstr ""
-      "<![CDATA[select usr.id, usr.name\n"
-      "from User as usr\n"
-      "    left join usr.messages as msg\n"
-      "group by usr.id, usr.name\n"
-      "having count(msg) = 0]]>"
+"JavaBeanのプロパティは、名前付きのクエリパラメータに結びつけることが出来ま"
+"す。："
 
-#: index.docbook:962
+#. Tag: programlisting
+#: query_hql.xml:962
+#, no-c-format
 msgid ""
-      "<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name and foo.size=:size\");\n"
-      "q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
-      "List foos = q.list();]]>"
-msgstr "JavaBeanのプロパティは、名前付きのクエリパラメータに結びつけることが出来ます。："
-
-#: index.docbook:964
-msgid "Collections are pageable by using the <literal>Query</literal> interface with a filter:"
+"<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name "
+"and foo.size=:size\");\n"
+"q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
+"List foos = q.list();]]>"
 msgstr ""
-      "<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name and foo.size=:size\");\n"
-      "q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
-      "List foos = q.list();]]>"
 
-#: index.docbook:968
+#. Tag: para
+#: query_hql.xml:964
+#, no-c-format
 msgid ""
-      "<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial filter\n"
-      "q.setMaxResults(PAGE_SIZE);\n"
-      "q.setFirstResult(PAGE_SIZE * pageNumber);\n"
-      "List page = q.list();]]>"
-msgstr "コレクションはフィルタ付き <literal>Query</literal> インターフェイスを使用することでページをつけることができます。:"
+"Collections are pageable by using the <literal>Query</literal> interface "
+"with a filter:"
+msgstr ""
+"コレクションはフィルタ付き <literal>Query</literal> インターフェイスを使用す"
+"ることでページをつけることができます。:"
 
-#: index.docbook:970
+#. Tag: programlisting
+#: query_hql.xml:968
+#, no-c-format
+msgid ""
+"<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial "
+"filter\n"
+"q.setMaxResults(PAGE_SIZE);\n"
+"q.setFirstResult(PAGE_SIZE * pageNumber);\n"
+"List page = q.list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_hql.xml:970
+#, no-c-format
 msgid "Collection elements may be ordered or grouped using a query filter:"
 msgstr ""
-      "<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial filter\n"
-      "q.setMaxResults(PAGE_SIZE);\n"
-      "q.setFirstResult(PAGE_SIZE * pageNumber);\n"
-      "List page = q.list();]]>"
+"コレクションの要素はクエリフィルタを使って、並べ替えやグループ分けが出来ま"
+"す。:"
 
-#: index.docbook:974
+#. Tag: programlisting
+#: query_hql.xml:974
+#, no-c-format
 msgid ""
-      "<![CDATA[Collection orderedCollection = s.filter( collection, \"order by this.amount\" );\n"
-      "Collection counts = s.filter( collection, \"select this.type, count(this) group by this.type\" );]]>"
-msgstr "コレクションの要素はクエリフィルタを使って、並べ替えやグループ分けが出来ます。:"
-
-#: index.docbook:976
-msgid "You can find the size of a collection without initializing it:"
+"<![CDATA[Collection orderedCollection = s.filter( collection, \"order by "
+"this.amount\" );\n"
+"Collection counts = s.filter( collection, \"select this.type, count(this) "
+"group by this.type\" );]]>"
 msgstr ""
-      "<![CDATA[Collection orderedCollection = s.filter( collection, \"order by this.amount\" );\n"
-      "Collection counts = s.filter( collection, \"select this.type, count(this) group by this.type\" );]]>"
 
-#: index.docbook:980
-msgid "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue();]]>"
+#. Tag: para
+#: query_hql.xml:976
+#, no-c-format
+msgid "You can find the size of a collection without initializing it:"
 msgstr "コレクションを初期化せずにコレクションのサイズを得ることができます。:"
 
-#: index.docbook:985
-msgid "Components"
-msgstr "<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\").iterate().next() ).intValue();]]>"
-
-#: index.docbook:987
-msgid "Components might be used in just about every way that simple value types can be used in HQL queries. They can appear in the <literal>select</literal> clause:"
+#. Tag: programlisting
+#: query_hql.xml:980
+#, no-c-format
+msgid ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue();]]>"
 msgstr ""
 
-#: index.docbook:992, index.docbook:1038
+#. Tag: title
+#: query_hql.xml:985
+#, no-c-format
+msgid "Components"
+msgstr "translator-credits"
+
+#. Tag: para
+#: query_hql.xml:987
+#, no-c-format
+msgid ""
+"Components might be used in just about every way that simple value types can "
+"be used in HQL queries. They can appear in the <literal>select</literal> "
+"clause:"
+msgstr ""
+
+#. Tag: programlisting
+#: query_hql.xml:992 query_hql.xml:1038
+#, no-c-format
 msgid "<![CDATA[select p.name from from Person p]]>"
 msgstr ""
 
-#: index.docbook:993
+#. Tag: programlisting
+#: query_hql.xml:993
+#, no-c-format
 msgid "<![CDATA[select p.name.first from from Person p]]>"
 msgstr ""
 
-#: index.docbook:995
-msgid "where the Person's name property is a component. Components can also be used in the <literal>where</literal> clause:"
+#. Tag: para
+#: query_hql.xml:995
+#, no-c-format
+msgid ""
+"where the Person's name property is a component. Components can also be used "
+"in the <literal>where</literal> clause:"
 msgstr ""
 
-#: index.docbook:1000
+#. Tag: programlisting
+#: query_hql.xml:1000
+#, no-c-format
 msgid "<![CDATA[from from Person p where p.name = :name]]>"
 msgstr ""
 
-#: index.docbook:1001
+#. Tag: programlisting
+#: query_hql.xml:1001
+#, no-c-format
 msgid "<![CDATA[from from Person p where p.name.first = :firstName]]>"
 msgstr ""
 
-#: index.docbook:1003
+#. Tag: para
+#: query_hql.xml:1003
+#, no-c-format
 msgid "Components can also be used in the <literal>order by</literal> clause:"
 msgstr ""
 
-#: index.docbook:1007
+#. Tag: programlisting
+#: query_hql.xml:1007
+#, no-c-format
 msgid "<![CDATA[from from Person p order by p.name]]>"
 msgstr ""
 
-#: index.docbook:1008
+#. Tag: programlisting
+#: query_hql.xml:1008
+#, no-c-format
 msgid "<![CDATA[from from Person p order by p.name.first]]>"
 msgstr ""
 
-#: index.docbook:1010
-msgid "Another common use of components is in <xref linkend=\"queryhql-tuple\"/>row value constructors."
+#. Tag: para
+#: query_hql.xml:1010
+#, no-c-format
+msgid ""
+"Another common use of components is in <link linkend=\"queryhql-tuple\">row "
+"value constructors</link>."
 msgstr ""
 
-#: index.docbook:1016
+#. Tag: title
+#: query_hql.xml:1016
+#, no-c-format
 msgid "Row value constructor syntax"
 msgstr ""
 
-#: index.docbook:1018
-msgid "HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax (sometimes called <literal>tuple</literal> syntax), even though the underlying database may not support that notion. Here we are generally referring to multi-valued comparisons, typically associated with components. Consider an entity Person which defines a name component:"
+#. Tag: para
+#: query_hql.xml:1018
+#, no-c-format
+msgid ""
+"HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
+"syntax (sometimes called <literal>tuple</literal> syntax), even though the "
+"underlying database may not support that notion. Here we are generally "
+"referring to multi-valued comparisons, typically associated with components. "
+"Consider an entity Person which defines a name component:"
 msgstr ""
 
-#: index.docbook:1025
-msgid "<![CDATA[from Person p where p.name.first='John' and p.name.last='Jingleheimer-Schmidt']]>"
+#. Tag: programlisting
+#: query_hql.xml:1025
+#, no-c-format
+msgid ""
+"<![CDATA[from Person p where p.name.first='John' and p.name."
+"last='Jingleheimer-Schmidt']]>"
 msgstr ""
 
-#: index.docbook:1027
-msgid "That's valid syntax, although a little verbose. It be nice to make this a bit more concise and use <literal>row value constructor</literal> syntax:"
+#. Tag: para
+#: query_hql.xml:1027
+#, no-c-format
+msgid ""
+"That's valid syntax, although a little verbose. It be nice to make this a "
+"bit more concise and use <literal>row value constructor</literal> syntax:"
 msgstr ""
 
-#: index.docbook:1032
+#. Tag: programlisting
+#: query_hql.xml:1032
+#, no-c-format
 msgid "<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
 msgstr ""
 
-#: index.docbook:1034
-msgid "It can also be useful to specify this in the <literal>select</literal> clause:"
-msgstr ""
-
-#: index.docbook:1040
-msgid "Another time using <literal>row value constructor</literal> syntax can be beneficial is when using subqueries needing to compare against multiple values:"
-msgstr ""
-
-#: index.docbook:1045
+#. Tag: para
+#: query_hql.xml:1034
+#, no-c-format
 msgid ""
-      "<![CDATA[from Cat as cat\n"
-      "where not ( cat.name, cat.color ) in (\n"
-      "    select cat.name, cat.color from DomesticCat cat\n"
-      ")]]>"
+"It can also be useful to specify this in the <literal>select</literal> "
+"clause:"
 msgstr ""
 
-#: index.docbook:1047
-msgid "One thing to consider when deciding if you want to use this syntax is that the query will be dependent upon the ordering of the component sub-properties in the metadata."
+#. Tag: para
+#: query_hql.xml:1040
+#, no-c-format
+msgid ""
+"Another time using <literal>row value constructor</literal> syntax can be "
+"beneficial is when using subqueries needing to compare against multiple "
+"values:"
 msgstr ""
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#. Tag: programlisting
+#: query_hql.xml:1045
+#, no-c-format
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"where not ( cat.name, cat.color ) in (\n"
+"    select cat.name, cat.color from DomesticCat cat\n"
+")]]>"
+msgstr ""
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
-
+#. Tag: para
+#: query_hql.xml:1047
+#, no-c-format
+msgid ""
+"One thing to consider when deciding if you want to use this syntax is that "
+"the query will be dependent upon the ordering of the component sub-"
+"properties in the metadata."
+msgstr ""

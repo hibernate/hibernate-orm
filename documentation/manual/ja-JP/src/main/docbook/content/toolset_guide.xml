@@ -220,9 +220,12 @@
                             <entry><literal>foreign-key</literal></entry>
                             <entry><literal>外部キー名</literal></entry>
                             <entry>
-                                &lt;one-to-one&gt;、&lt;many-to-one&gt;、&lt;many-to-many&gt;マッピング要素を使って、
-                                関連に対し生成された外部キー制約の名前を指定します。
-                                <literal>SchemaExport</literal>  は <literal>inverse="true"</literal>  側を考慮しないことに注意してください。
+				    specifies the name of the foreign key constraint generated
+				    for an association, for a <literal>&lt;one-to-one&gt;</literal>, 
+				    <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
+				    or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that
+				    <literal>inverse="true"</literal> sides will not be considered
+                                by <literal>SchemaExport</literal>.
                             </entry>
                         </row>
                         <row>

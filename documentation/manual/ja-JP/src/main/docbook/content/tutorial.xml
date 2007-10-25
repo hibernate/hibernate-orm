@@ -692,6 +692,8 @@ public class EventManager {
                 <literal>hibernate.cfg.xml</literal> のこの機能の設定で、"thread"を指定したことを思い出してください。
                 このため現在の作業単位のスコープは、このアプリケーションを実行する現在のJavaスレッドです。
                 しかしこれで全てではありません。
+	</para>
+	<para>	
                 <literal>Session</literal> は最初に必要となったとき、つまり最初に <literal>getCurrentSession()</literal> が
                 呼ばれたときに開始します。
                 そのときHibernateにより現在のスレッドに結び付けられます。
@@ -701,7 +703,16 @@ public class EventManager {
                 新しい <literal>Session</literal> を取得して新しい作業単位をスタートできます。
                 この <emphasis>thread-bound</emphasis> プログラミング・モデルはHibernateを利用する上で最も人気があります。
             </para>
-
+	    <para>
+		    Related to the unit of work scope, should the Hibernate <literal>Session</literal> be used to
+		    execute one or several database operations? The above example uses one <literal>Session</literal>
+		    for one operation. This is pure coincidence, the example is just not complex enough to show any
+		    other approach. The scope of a Hibernate <literal>Session</literal> is flexible but you should
+		    never design your application to use a new Hibernate <literal>Session</literal> for
+		    <emphasis>every</emphasis> database operation. So even if you see it a few more times in
+		    the following (very trivial) examples, consider <emphasis>session-per-operation</emphasis>
+		    an anti-pattern. A real (web) application is shown later in this tutorial.
+            </para>
             <para>
                 トランザクションの扱いと境界の詳しい情報については、
                 <xref linkend="transactions"/> を見てください。
@@ -1379,7 +1390,12 @@ public class EventManagerServlet extends HttpServlet {
                 データの読み書きに関わらず、すべてのデータアクセスはトランザクション内で行います。
                 （アプリケーション内ではオートコミットモードを使用しません）。
             </para>
-
+	    <para>
+		    Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> for
+		    every database operation. Use one Hibernate <literal>Session</literal> that is
+		    scoped to the whole request. Use <literal>getCurrentSession()</literal>, so that
+		    it is automatically bound to the current Java thread.
+            </para>
             <para>
                 次に、リクエストのアクションは処理され、レスポンスであるHTMLが描画されます。
                 これについてはすぐに説明します。

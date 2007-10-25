@@ -113,25 +113,7 @@
                 このモデルは多くのアプリケーションに完全に適合します。
             </para>
 
-            <para>
-                以降の実装にチャレンジしてください。
-                <literal>Session</literal> を持ち、トランザクションを正確に開始し、終わらせるだけでなく、
-                データアクセス操作も得やすくする必要があります。
-                リクエストがサーバーにヒットした際と、レスポンスを送信する前に、実行されるinterceptor
-                （例えば、<literal>ServletFilter</literal>）を使って、作業単位の境界を実装するのが理想的です。
-                <literal>ThreadLocal</literal> 変数を使って、
-                リクエストを処理するスレッドに <literal>Session</literal> を結びつけることを推奨します。
-                これにより、スレッド内で実行されるすべてのコードで、
-                （static変数にアクセスするように）簡単に <literal>Session</literal> にアクセスできるようになります。
-                選択したデータベーストランザクション境界の機構次第で、<literal>ThreadLocal</literal>
-                変数の中にトランザクションコンテキストを保持するかもしれません。
-                この実装パターンは、<emphasis>ThreadLocal Session</emphasis> および
-                <emphasis>Open Session in View</emphasis> という名前で知られています。
-                本ドキュメントで先に見せた <literal>HibernateUtil</literal> ヘルパークラスを拡張することで、
-                このパターンを容易に実装できます。
-                もちろん、interceptor を実装する方法を見つけ、環境をセットアップする必要があります。
-                HibernateのWebサイトにあるtipsと例を参照してください。
-             </para>
+
 
             <para>
                 以降の実装にチャレンジしてください。

@@ -211,6 +211,41 @@
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
     </sect1>
+    <sect1 id="queryhql-identifier-property">
+	    <title>Refering to identifier property</title>
+	    
+	    <para>
+		    There are, generally speaking, 2 ways to refer to an entity's identifier property:
+	    </para>
+	    <itemizedlist spacing="compact">
+		    <listitem>
+			    <para>
+				    The special property (lowercase) <literal>id</literal> may be used to reference the identifier
+				    property of an entity <emphasis>provided that entity does not define a non-identifier property
+					    named id</emphasis>.
+			    </para>
+		    </listitem>
+		    <listitem>
+			    <para>
+				    If the entity defines a named identifier property, you may use that property name.
+			    </para>
+		    </listitem>
+	    </itemizedlist>
+	    
+	    <para>
+		    References to composite identifier properties follow the same naming rules.  If the
+		    entity has a non-identifier property named id, the composite identifier property can only
+		    be referenced by its defined named; otherwise, the special <literal>id</literal> property
+		    can be used to rerference the identifier property.
+	    </para>
+	    
+	    <para>
+		    Note: this has changed significantly starting in version 3.2.2.  In previous versions,
+		    <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
+		    matter what its actual name.  A ramification of that decision was that non-identifier
+		    properties named <literal>id</literal> could never be referenced in Hibernate queries.
+	    </para>
+    </sect1>
 
     <sect1 id="queryhql-select">
         <title>Select節</title>
@@ -846,9 +881,12 @@ having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
-            <literal>group by</literal> 節や <literal>order by</literal> 節に
-            算術式を含むことができないことに注意してください。
-        </para>
+		Note that neither the <literal>group by</literal> clause nor the
+		<literal>order by</literal> clause may contain arithmetic expressions.
+		Also note that Hibernate currently does not expand a grouped entity,
+		so you can't write <literal>group by cat</literal> if all properties
+		of <literal>cat</literal> are non-aggregated. You have to list all
+            non-aggregated properties explicitly.        </para>
 
     </sect1>
     
@@ -888,33 +926,9 @@ from Cat as cat]]></programlisting>
             HQL副問い合わせは、selectまたはwhere節だけで使われることに注意してください。
         </para>
 
-        <para>
-            selectリストに複数の式を持つ副問い合わせには、タプルを使うことができます。
-        </para>
-        
-        <programlisting><![CDATA[from Cat as cat 
-where not ( cat.name, cat.color ) in ( 
-    select cat.name, cat.color from DomesticCat cat 
-)]]></programlisting>
-
-        <para>
-            いくつかのデータベース（OracleやHSQLにはありません）では、
-            他のコンテキストでもタプルが使えます。
-            例えば、クエリコンポーネントや複合ユーザ型においてです。
-        </para>
-
-        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
-        
-        <para>
-            同等ですが、より冗長なクエリです：
-        </para>
-        
-        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
-
-        <para>
-            このようなことをしたくないのには2つの理由があります：
-            1つ目は、データベースプラットフォーム間で完全な互換性はないからです。
-            2つ目は、クエリがマッピングドキュメントのプロパティの順序に依存するからです。
+	<para>
+		Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
+		<xref linkend="queryhql-tuple"/> for more details.
         </para>
         
     </sect1>

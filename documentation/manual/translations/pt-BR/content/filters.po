@@ -14,7 +14,7 @@ msgstr ""
 #: filters.xml:5
 #, no-c-format
 msgid "Filtering data"
-msgstr "Filtrando dados"
+msgstr "Filtrer les données"
 
 #. Tag: para
 #: filters.xml:7
@@ -25,16 +25,16 @@ msgid ""
 "named, parameterized filter that may be enabled or disabled for a particular "
 "Hibernate session."
 msgstr ""
-"O Hibernate3 provê um novo método inovador para manusear dados com regras de "
-"\"visibilidade\". Um <emphasis>Filtro do Hibernate</emphasis> é um filtro "
-"global, nomeado e parametrizado que pode se habilitado ou não dentro de um "
-"Session do Hibernate."
+"Hibernate3 fournit une nouvelle approche innovatrice pour gérer des données "
+"avec des règles de \"visibilité\". Un <emphasis>filtre Hibernate</emphasis> "
+"est un filtre global, nommé, paramétré qui peut être activé ou désactivé "
+"pour une session Hibernate particulière."
 
 #. Tag: title
 #: filters.xml:14
 #, no-c-format
 msgid "Hibernate filters"
-msgstr "Filtros do Hibernate"
+msgstr "Filtres Hibernate"
 
 #. Tag: para
 #: filters.xml:16
@@ -49,15 +49,15 @@ msgid ""
 "their parameter values should be. Filters can be used like database views, "
 "but parameterized inside the application."
 msgstr ""
-"O Hibernate tem a habilidade de pré definir os critérios do filtro e anexar "
-"esses filtros no nível da classe e no nível da coleção. Um critério do "
-"filtro é a habilidade de definir uma cláusula restritiva muito semelhante ao "
-"atributo \"where\" disponível para a classe e várias coleções. A não ser que "
-"essas condições de filtros podem ser parametrizadas. A aplicação pode, "
-"então, fazer uma decisão em tempo de execução se os filtros definidos devem "
-"estar habilitados e quais valores seus parâmetros devem ter. Os filtros "
-"podem ser usados como Views de bancos de dados, mas com parametros internos "
-"à aplicação."
+"Hibernate3 ajoute la capacité de prédéfinir des critères de filtre et "
+"d'attacher ces filtres à une classe ou à une collection. Un critère de "
+"filtre est la faculté de définir une clause de restriction très similaire à "
+"l'attribut \"where\" existant disponible sur une classe et divers éléments "
+"d'une collection. Mis à part que ces conditions de filtre peuvent être "
+"paramétrées. L'application peut alors prendre la décision à l'exécution si "
+"des filtres donnés devraient être activés et quels devraient être leurs "
+"paramètres. Des filtres peuvent être utilisés comme des vues de base de "
+"données, mais paramétrées dans l'application."
 
 #. Tag: para
 #: filters.xml:26
@@ -68,10 +68,10 @@ msgid ""
 "filter-def/&gt;</literal> element within a <literal>&lt;hibernate-mapping/"
 "&gt;</literal> element:"
 msgstr ""
-"Para usar esses filtros, eles primeiramente devem ser definidos e anexados "
-"aos elementos do mapeamento apropriados. Para definir um filtro, use o "
-"elemento <literal>&lt;filter-def/&gt;</literal> dentro do elemento "
-"<literal>&lt;hibernate-mapping/&gt;</literal>:"
+"Afin d'utiliser des filtres, ils doivent d'abord être définis, puis attachés "
+"aux éléments de mapping appropriés. Pour définir un filtre, utilisez "
+"l'élément <literal>&lt;filter-def/&gt;</literal> dans un élément "
+"<literal>&lt;hibernate-mapping/&gt;</literal> :"
 
 #. Tag: programlisting
 #: filters.xml:32
@@ -86,7 +86,7 @@ msgstr ""
 #: filters.xml:34
 #, no-c-format
 msgid "Then, this filter can be attached to a class:"
-msgstr "Então esse filtro pode ser anexo à uma classe:"
+msgstr "Puis, ce filtre peut être attaché à une classe :"
 
 #. Tag: programlisting
 #: filters.xml:38
@@ -103,7 +103,7 @@ msgstr ""
 #: filters.xml:40
 #, no-c-format
 msgid "or, to a collection:"
-msgstr "ou em uma coleção:"
+msgstr "ou à une collection :"
 
 #. Tag: programlisting
 #: filters.xml:44
@@ -119,7 +119,7 @@ msgstr ""
 #: filters.xml:46
 #, no-c-format
 msgid "or, even to both (or multiples of each) at the same time."
-msgstr "ou mesmo para ambos (ou muitos de cada) ao mesmo tempo."
+msgstr "ou même aux deux (ou à plusieurs de chaque) en même temps."
 
 #. Tag: para
 #: filters.xml:50
@@ -134,13 +134,14 @@ msgid ""
 "<literal>Filter</literal> interface. Using the simple filter defined above, "
 "this would look like:"
 msgstr ""
-"Os métodos na <literal>Session</literal> são: <literal>enableFilter(String "
-"filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
-"literal>, e <literal>disableFilter(String filterName)</literal>. Por padrão, "
-"os filtros não são habilitados dentro de qualquer session; Eles devem ser "
-"explicitamente habilitados usando o método <literal>Session.enabledFilter()</"
-"literal>, que retorna uma instância da interface <literal>Filter</literal>. "
-"Usando o filtro simples definido acima, o código se pareceria com o seguinte:"
+"Les méthodes sur <literal>Session</literal> sont : <literal>enableFilter"
+"(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
+"literal>, et <literal>disableFilter(String filterName)</literal>. Par "
+"défaut, les filtres <emphasis>ne sont pas</emphasis> activés pour une "
+"session donnée ; ils doivent être explicitement activés en appelant la "
+"méthode <literal>Session.enabledFilter()</literal>, laquelle retourne une "
+"instance de l'interface <literal>Filter</literal>. Utiliser le simple filtre "
+"défini au-dessus ressemblerait à :"
 
 #. Tag: programlisting
 #: filters.xml:59
@@ -157,8 +158,8 @@ msgid ""
 "Note that methods on the org.hibernate.Filter interface do allow the method-"
 "chaining common to much of Hibernate."
 msgstr ""
-"Veja que os métodos da interface org.hibernate.Filter permite o encadeamento "
-"de funções, comum à maioria das funções do Hibernate."
+"Notez que des méthodes sur l'interface org.hibernate.Filter autorisent le "
+"chaînage de beaucoup de méthodes communes d'Hibernate."
 
 #. Tag: para
 #: filters.xml:65
@@ -166,8 +167,8 @@ msgstr ""
 msgid ""
 "A full example, using temporal data with an effective record date pattern:"
 msgstr ""
-"Um exemplo completo, usando dados temporais com um padrão efetivo de "
-"registro de datas:"
+"Un exemple complet, utilisant des données temporelles avec une structure de "
+"date d'enregistrement effectif :"
 
 #. Tag: programlisting
 #: filters.xml:69
@@ -215,8 +216,9 @@ msgid ""
 "records, simply enable the filter on the session prior to retrieving "
 "employee data:"
 msgstr ""
-"Para garantir que você sempre tenha registro efetivos, simplesmente habilite "
-"o filtro na session antes de recuperar os dados dos empregados:"
+"Puis, afin de s'assurer que vous pouvez toujours récupérer les "
+"enregistrements actuellement effectifs, activez simplement le filtre sur la "
+"session avant de récupérer des données des employés :"
 
 #. Tag: programlisting
 #: filters.xml:76
@@ -241,9 +243,10 @@ msgid ""
 "return only currently active employees who have a salary greater than a "
 "million dollars."
 msgstr ""
-"No HQL acima, mesmo que mencionamos apenas uma restrição de salário nos "
-"resultados, por causa do filtro habilitado, a consulta retornará apenas os "
-"funcionários ativos cujo salário é maior que um milhão de dólares."
+"Dans le HQL ci-dessus, bien que nous ayons seulement mentionné une "
+"contrainte de salaire sur les resultats, à cause du filtre activé, la "
+"requête retournera seulement les employés actuellement actifs qui ont un "
+"salaire supérieur à un million de dollars."
 
 #. Tag: para
 #: filters.xml:84
@@ -254,10 +257,11 @@ msgid ""
 "safest to set this up for left outer joining; in general, place the "
 "parameter first followed by the column name(s) after the operator."
 msgstr ""
-"Nota: se você planeja usar filtros com outer join (por HQL ou por load "
-"fetching) seja cuidadoso na direção da expressão de condição. É mais seguro "
-"configura-lo com para um left outer join; geralmente, coloque o parâmetro "
-"primeiro seguido pelo nome da coluna após o operador."
+"A noter : si vous prévoyez d'utiliser des filtres avec des jointures "
+"externes (soit à travers HQL, soit par le chargement) faites attention à la "
+"direction de l'expression de condition. Il est plus sûr de la positionner "
+"pour les jointures externes à gauche ; en général, placez le paramètre "
+"d'abord, suivi du(des) nom(s) de colonne après l'opérateur."
 
 #. Tag: para
 #: filters.xml:91

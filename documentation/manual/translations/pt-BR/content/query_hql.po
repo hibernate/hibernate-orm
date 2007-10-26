@@ -14,7 +14,7 @@ msgstr ""
 #: query_hql.xml:5
 #, no-c-format
 msgid "HQL: The Hibernate Query Language"
-msgstr "HQL: A linguagem de Queries do Hibernate"
+msgstr "HQL: Langage de requêtage d'Hibernate"
 
 #. Tag: para
 #: query_hql.xml:7
@@ -25,16 +25,16 @@ msgid ""
 "HQL is fully object-oriented, understanding notions like inheritence, "
 "polymorphism and association."
 msgstr ""
-"O Hibernate vem com uma poderosa linguagem que é (intencionalmente) muito "
-"parecida com o SQL. Mas não seja enganado pela sintaxe; a HQL é totalmente "
-"orientada à objetos, requer conhecimentos de herança, polimorfismo e "
-"associações."
+"Hibernate fourni un langage d'interrogation extrêmement puissant qui "
+"ressemble (et c'est voulu) au SQL. Mais ne soyez pas distraits par la "
+"syntaxe ; HQL est totalement orienté objet, comprenant des notions "
+"d'héritage, de polymorphisme et d'association."
 
 #. Tag: title
 #: query_hql.xml:14
 #, no-c-format
 msgid "Case Sensitivity"
-msgstr "Case Sensitíve"
+msgstr "Sensibilité à la casse"
 
 #. Tag: para
 #: query_hql.xml:16
@@ -46,10 +46,11 @@ msgid ""
 "eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and "
 "<literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
 msgstr ""
-"As Queries não são case-sensitive, exceto pelo nomes das classes e "
-"propriedades Java. <literal>sELEct</literal> e o mesmo que <literal>SELECT</"
-"literal> mas <literal>org.hibernate.eg.FOO</literal> não é <literal>org."
-"hibernate.eg.Foo</literal> e <literal>foo.barSet</literal> não é "
+"Les requêtes sont insensibles à la casse, à l'exception des noms des classes "
+"Java et des propriétés. Ainsi, <literal>SeLeCT</literal> est identique à "
+"<literal>sELEct</literal> et à <literal>SELECT</literal> mais <literal>net."
+"sf.hibernate.eg.FOO</literal> n'est pas identique <literal>net.sf.hibernate."
+"eg.Foo</literal> et <literal>foo.barSet</literal> n'est pas identique à "
 "<literal>foo.BARSET</literal>."
 
 #. Tag: para
@@ -60,21 +61,22 @@ msgid ""
 "uppercase keywords more readable, but we find this convention ugly when "
 "embedded in Java code."
 msgstr ""
-"Esse manual usa as palavras chave HQL em letras minúsculas. Alguns usuários "
-"acham que com letras maiúsculas as queries ficam mais legíveis, mas nós "
-"achamos essa convenção feia dentro do código Java."
+"Ce guide utilise les mots clés HQL en minuscule. Certains utilisateurs "
+"trouvent les requêtes écrites avec les mots clés en majuscule plus lisibles, "
+"mais nous trouvons cette convention pénible lorsqu'elle est lue dans du code "
+"Java."
 
 #. Tag: title
 #: query_hql.xml:35
 #, no-c-format
 msgid "The from clause"
-msgstr "A clausula from"
+msgstr "La clause from"
 
 #. Tag: para
 #: query_hql.xml:37
 #, no-c-format
 msgid "The simplest possible Hibernate query is of the form:"
-msgstr "A mais simples query possível do Hibernate é a assim:"
+msgstr "La requête Hibernate la plus simple est de la forme :"
 
 #. Tag: programlisting
 #: query_hql.xml:41
@@ -90,10 +92,10 @@ msgid ""
 "We don't usually need to qualify the class name, since <literal>auto-import</"
 "literal> is the default. So we almost always just write:"
 msgstr ""
-"Ela irá retornar todas as instancias da classe <literal>eg.Cat</literal>. "
-"Necessariamente não precisamos qualificar o nome da classe, pois é realizado "
-"<literal>auto-import</literal> por padrão. Por isso na maior parte do tempos "
-"nós simplesmente escrevemos:"
+"qui retourne simplement toutes les instances de la classe <literal>eg.Cat</"
+"literal>. Nous n'avons pas besoin d'habitude de qualifier le nom de la "
+"classe, puisque <literal>auto-import</literal> est la valeur par défaut. "
+"Donc nous écrivons presque toujours :"
 
 #. Tag: programlisting
 #: query_hql.xml:49
@@ -109,9 +111,9 @@ msgid ""
 "since you will want to refer to the <literal>Cat</literal> in other parts of "
 "the query."
 msgstr ""
-"Na maior parte do tempo, você precisará atribuir um <emphasis>alias</"
-"emphasis>, desde que você queira se referia ao <literal>Cat</literal> em "
-"outras partes da query."
+"La plupart du temps, vous devrez assigner un <emphasis>alias</emphasis> "
+"puisque vous voudrez faire référence à <literal>Cat</literal> dans d'autres "
+"parties de la requête."
 
 #. Tag: programlisting
 #: query_hql.xml:57 query_hql.xml:372
@@ -127,9 +129,10 @@ msgid ""
 "literal> instances, so we could use that alias later in the query. The "
 "<literal>as</literal> keyword is optional; we could also write:"
 msgstr ""
-"Essa query atribui um alias a <literal>cat</literal> para as instancias de "
-"<literal>Cat</literal>, então nós podemos usar esse alias depois na query. A "
-"palavra chave as é opcional; poderíamos escrever assim:"
+"Cette requête assigne l'alias <literal>cat</literal> à l'instance "
+"<literal>Cat</literal>, nous pouvons donc utiliser cet alias ailleurs dans "
+"la requête. Le mot clé <literal>as</literal> est optionnel ; nous aurions pu "
+"écrire :"
 
 #. Tag: programlisting
 #: query_hql.xml:65
@@ -144,8 +147,8 @@ msgid ""
 "Multiple classes may appear, resulting in a cartesian product or \"cross\" "
 "join."
 msgstr ""
-"Múltiplas classes pode ser envolvidas, resultando em um produto cartesiano "
-"ou \"cross\" join."
+"Plusieurs classes peuvent apparaître, ce qui conduira à un produit cartésien "
+"(encore appelé jointures croisées)."
 
 #. Tag: programlisting
 #: query_hql.xml:71
@@ -167,15 +170,16 @@ msgid ""
 "lowercase, consistent with Java naming standards for local variables (eg. "
 "<literal>domesticCat</literal>)."
 msgstr ""
-"É considerada uma boa prática os nomes dos aliases começarem com letra "
-"minúscula, aderente com os padrões Java para variáveis locais (ex: "
-"<literal>domesticCat</literal>)."
+"C'est une bonne pratique que de nommer les alias dans les requêtes en "
+"utilisant l'initiale en miniscule, ce qui a le mérite d'être en phase avec "
+"les standards de nommage Java pour les variables locales "
+"(<literal>domesticCat</literal>)."
 
 #. Tag: title
 #: query_hql.xml:83
 #, no-c-format
 msgid "Associations and joins"
-msgstr "Associações e joins"
+msgstr "Associations et jointures"
 
 #. Tag: para
 #: query_hql.xml:85
@@ -184,9 +188,9 @@ msgid ""
 "We may also assign aliases to associated entities, or even to elements of a "
 "collection of values, using a <literal>join</literal>."
 msgstr ""
-"Nós também podemos querer atribuir aliases em uma entidade associada, ou "
-"mesmo em elementos de uma coleção de valores, usando um <literal>join</"
-"literal>."
+"On peut aussi assigner des alias à des entités associées, ou même aux "
+"éléments d'une collection de valeurs, en utilisant un <literal>join</"
+"literal> (jointure)."
 
 #. Tag: programlisting
 #: query_hql.xml:90
@@ -213,31 +217,33 @@ msgstr ""
 #: query_hql.xml:96
 #, no-c-format
 msgid "The supported join types are borrowed from ANSI SQL"
-msgstr "Os tipos de joins suportados foram inspirados no SQL ANSI:"
+msgstr "Les types de jointures supportées sont celles de ANSI SQL"
 
 #. Tag: literal
 #: query_hql.xml:103
 #, no-c-format
 msgid "inner join"
-msgstr "inner join"
+msgstr "<literal>inner join</literal> (jointure fermée)"
 
 #. Tag: literal
 #: query_hql.xml:108
 #, no-c-format
 msgid "left outer join"
-msgstr "left outer join"
+msgstr "<literal>left outer join</literal> (jointure ouverte par la gauche)"
 
 #. Tag: literal
 #: query_hql.xml:113
 #, no-c-format
 msgid "right outer join"
-msgstr "right outer join"
+msgstr "<literal>right outer join</literal> (jointure ouverte par la droite)"
 
 #. Tag: para
 #: query_hql.xml:117
 #, no-c-format
 msgid "<literal>full join</literal> (not usually useful)"
-msgstr "<literal>full join</literal> (geralmente não é útil)"
+msgstr ""
+"<literal>full join</literal> (jointure ouverte totalement - généralement "
+"inutile)"
 
 #. Tag: para
 #: query_hql.xml:123
@@ -246,10 +252,9 @@ msgid ""
 "The <literal>inner join</literal>, <literal>left outer join</literal> and "
 "<literal>right outer join</literal> constructs may be abbreviated."
 msgstr ""
-"The <literal>inner join</literal>, <literal>left outer join</literal> and "
-"<literal>right outer join</literal> constructs may be abbreviated. As "
-"construções <literal>inner join</literal>, <literal>left outer join</"
-"literal> e <literal>right outer join</literal> podem ser abreviadas."
+"Les constructions des jointures <literal>inner join</literal>, <literal>left "
+"outer join</literal> et <literal>right outer join</literal> peuvent être "
+"abbrégées."
 
 #. Tag: programlisting
 #: query_hql.xml:128
@@ -267,8 +272,8 @@ msgid ""
 "You may supply extra join conditions using the HQL <literal>with</literal> "
 "keyword."
 msgstr ""
-"Você pode fornecer condições extras de join usando a palavra chave do HQL "
-"<literal>with</literal>."
+"Nous pouvons soumettre des conditions de jointure supplémentaires en "
+"utilisant le mot-clef HQL <literal>with</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:135
@@ -290,12 +295,13 @@ msgid ""
 "associations and collections. See <xref linkend=\"performance-fetching\"/> "
 "for more information."
 msgstr ""
-"Adicionalmente, um \"fetch\" join permite que associações ou coleções de "
-"valores sejam inicializadas junto com o objeto pai, usando apenas um select. "
-"Isso é muito útil no caso das coleções. Isso efetivamente sobre escreve as "
-"declarações outer join e lazy do arquivo mapeamento para associações e "
-"coleções. Veja a seção <xref linkend=\"performance-fetching\"/> para mais "
-"informações."
+"Par ailleurs, une jointure \"fetchée\" (rapportée) permet d'initialiser les "
+"associations ou collections de valeurs en même temps que leur objet parent, "
+"le tout n'utilisant qu'un seul Select. Ceci est particulièrement utile dans "
+"le cas des collections. Ce système permet de surcharger les déclarations "
+"\"lazy\" et \"outer-join\" des fichiers de mapping pour les associations et "
+"collections. Voir <xref linkend=\"performance-fetching\"/> pour plus "
+"d'informations."
 
 #. Tag: programlisting
 #: query_hql.xml:145
@@ -317,13 +323,13 @@ msgid ""
 "object. The only reason we might need an alias is if we are recursively join "
 "fetching a further collection:"
 msgstr ""
-"Usualmente, um <literal>fetch</literal>join não precisa atribuir um alias, "
-"pois o objeto associado não deve ser usado na clausula <literal>where</"
-"literal> (ou em qualquer outra clausula). Também, os objetos associados não "
-"são retornados diretamente nos resultados da query. Ao invés disso, eles "
-"devem ser acessados usando o objeto pai. A única razão que nós podemos "
-"necessitar de um alias é quando fazemos um fech join recursivamente em uma "
-"coleção adicional:"
+"Une jointure \"fetchée\" (rapportée) n'a généralement pas besoin de se voir "
+"assigner un alias puisque les objets associés n'ont pas à être utilisés dans "
+"les autres clauses. Notez aussi que les objets associés ne sont pas "
+"retournés directement dans le résultat de la requête mais l'on peut y "
+"accéder via l'objet parent. La seule raison pour laquelle nous pourrions "
+"avoir besoin d'un alias est si nous récupérions récursivement une collection "
+"supplémentaire :"
 
 #. Tag: programlisting
 #: query_hql.xml:155
@@ -354,21 +360,19 @@ msgid ""
 "join fetch</literal> and <literal>right join fetch</literal> are not "
 "meaningful."
 msgstr ""
-"Observe que a construção <literal>fetch</literal> não deve ser usada em "
-"queries invocadas usando <literal>iterate()</literal> (embora possa ser "
-"usado com <literal>scroll()</literal>). O <literal>fetch</literal> também "
-"não deve ser usado junto com o <literal>setMaxResults()</literal> ou "
-"<literal>setFirstResult()</literal> pois essas operações são baseadas nas "
-"linhas retornadas, que normalmente contem duplicidade devido ao fetching das "
-"coleções, então o número de linhas pode não ser o que você espera. O "
-"<literal>fetch</literal> não deve ser usado junto com uma condição "
-"<literal>with</literal> em uma condição <literal>with</literal> ad hoc. É "
-"possível que seja criado um produto cartesiano pelo join fetching em mais do "
-"que uma coleção em uma query, então tome cuidado nesses casos. Um join "
-"fetching em varias coleções pode trazer resultados inesperados para "
-"mapeamentos do tipo bag, tome cuidado na hora de formular queries como "
-"essas. Finalmente, observe o seguinte, o <literal>full join fetch</literal> "
-"e <literal>right join fetch</literal> não são significativos."
+"Notez que la construction de <literal>fetch</literal> ne peut pas être "
+"utilisée dans les requêtes appelées par <literal>scroll()</literal> ou "
+"<literal>iterate()</literal>. <literal>fetch</literal> ne devrait pas non "
+"plus être utilisé avec <literal>setMaxResults()</literal> ou "
+"<literal>setFirstResult()</literal>. <literal>fetch</literal> ne peut pas "
+"non plus être utilisé avec une condition <literal>with</literal> ad hoc. Il "
+"est possible de créer un produit cartésien par jointure en récupérant plus "
+"d'une collection dans une requête, donc faites attention dans ce cas. "
+"Récupérer par jointure de multiples collections donne aussi parfois des "
+"résultats inattendus pour des mappings de bag, donc soyez prudent lorsque "
+"vous formulez vos requêtes dans de tels cas. Finalement, notez que "
+"<literal>full join fetch</literal> et <literal>right join fetch</literal> ne "
+"sont pas utiles en général."
 
 #. Tag: para
 #: query_hql.xml:172
@@ -379,10 +383,10 @@ msgid ""
 "properties immediately (in the first query) using <literal>fetch all "
 "properties</literal>."
 msgstr ""
-"Se está usando o nível de propriedade lazy (<literal>com</literal> "
-"instrumentação de bytecode), é possível forçar o Hibernate a "
-"<literal>buscar</literal> as propriedades lazy imediatamente (na primeira "
-"query), usando <literal>fetch all properties </literal>."
+"Si vous utilisez un chargement retardé pour les propriétés (avec une "
+"instrumentation par bytecode), il est possible de forcer Hibernate à "
+"récupérer les propriétés non encore chargées immédiatement (dans la première "
+"requête) en utilisant <literal>fetch all properties</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:178
@@ -402,7 +406,7 @@ msgstr ""
 #: query_hql.xml:184
 #, no-c-format
 msgid "Forms of join syntax"
-msgstr "Formas e sintaxe de joins"
+msgstr "Formes de syntaxes pour les jointures"
 
 #. Tag: para
 #: query_hql.xml:186
@@ -411,8 +415,8 @@ msgid ""
 "HQL supports two forms of association joining: <literal>implicit</literal> "
 "and <literal>explicit</literal>."
 msgstr ""
-"O HQL suporta duas formas de associação para união: <literal>implícita</"
-"literal> e <literal>explicita</literal>."
+"HQL supporte deux formes pour joindre les associations: <literal>implicite</"
+"literal> et <literal>explicite</literal>."
 
 #. Tag: para
 #: query_hql.xml:190
@@ -422,9 +426,9 @@ msgid ""
 "literal> form where the join keyword is explicitly used in the from clause. "
 "This is the recommended form."
 msgstr ""
-"As queries apresentadas na seção anterior usam a forma <literal>explicita</"
-"literal>, onde a palavra chave \"join\" é explicitamente usada na clausula "
-"\"from\". Essa é a forma recomendada."
+"Les requêtes présentes dans la section précédente utilisent la forme "
+"<literal>explicite</literal> où le mode clé join est explicitement utilisé "
+"dans la clause from. C'est la forme recommandée."
 
 #. Tag: para
 #: query_hql.xml:195
@@ -435,11 +439,10 @@ msgid ""
 "literal> joins can appear in any of the HQL clauses. <literal>implicit</"
 "literal> join result in inner joins in the resulting SQL statement."
 msgstr ""
-"A forma <literal>implícita</literal> não usa a palavra chave \"join\". "
-"Entretanto, as associações são diferenciadas usando pontuação (\".\" - "
-"dotnation). Uniões implícitas podem aparecer em qualquer das clausulas HQL. "
-"A união <literal>implícita</literal> resulta em declarações SQL que contem "
-"inner joins."
+"La forme <literal>implicite</literal> n'utilise pas le mot clé join. A la "
+"place, les associations sont \"déréférencées\" en utilisant le notation '.'. "
+"Ces jointures peuvent apparaitre dans toutes les clauses. Les jointures "
+"<literal>implicites</literal> résultent en des inner join dans le SQL généré."
 
 #. Tag: programlisting
 #: query_hql.xml:202
@@ -521,7 +524,7 @@ msgstr ""
 #: query_hql.xml:242
 #, no-c-format
 msgid "The select clause"
-msgstr "Clausula select"
+msgstr "La clause select"
 
 #. Tag: para
 #: query_hql.xml:244
@@ -530,8 +533,8 @@ msgid ""
 "The <literal>select</literal> clause picks which objects and properties to "
 "return in the query result set. Consider:"
 msgstr ""
-"A clausula <literal>select</literal> seleciona quais obetos e propriedades "
-"retornam no resultado da query. Considere:"
+"La clause <literal>select</literal> sélectionne les objets et propriétés qui "
+"doivent être retournés dans le résultat de la requête. Soit :"
 
 #. Tag: programlisting
 #: query_hql.xml:249
@@ -549,9 +552,8 @@ msgid ""
 "The query will select <literal>mate</literal>s of other <literal>Cat</"
 "literal>s. Actually, you may express this query more compactly as:"
 msgstr ""
-"A query selecionará <literal>mate</literal>s (companheiros), de outros "
-"<literal>Cat</literal>s. Atualmente, podemos expressar a query de forma mais "
-"compacta como:"
+"La requête recherchera les <literal>mate</literal>s liés aux <literal>Cat</"
+"literal>s. Vous pouvez explimer la requête d'une manière plus compacte :"
 
 #. Tag: programlisting
 #: query_hql.xml:256
@@ -566,8 +568,8 @@ msgid ""
 "Queries may return properties of any value type including properties of "
 "component type:"
 msgstr ""
-"Queries podem retornar propriedades de qualquer tipo de valor, incluindo "
-"propriedades de tipo de componente:"
+"Les requêtes peuvent retourner des propriétés de n'importe quel type, même "
+"celles de type composant (component) :"
 
 #. Tag: programlisting
 #: query_hql.xml:262
@@ -590,8 +592,8 @@ msgid ""
 "Queries may return multiple objects and/or properties as an array of type "
 "<literal>Object[]</literal>,"
 msgstr ""
-"Queries podem retornar múltiplos objetos e/ou propriedades como um array do "
-"tipo Object[],"
+"Les requêtes peuvent retourner plusieurs objets et/ou propriétés sous la "
+"forme d'un tableau du type <literal>Object[]</literal>,"
 
 #. Tag: programlisting
 #: query_hql.xml:271
@@ -607,7 +609,7 @@ msgstr ""
 #: query_hql.xml:273
 #, no-c-format
 msgid "or as a <literal>List</literal>,"
-msgstr "ou como um <literal>List</literal>,"
+msgstr "ou sous la forme d'une <literal>List</literal>,"
 
 #. Tag: programlisting
 #: query_hql.xml:277
@@ -623,7 +625,7 @@ msgstr ""
 #: query_hql.xml:279
 #, no-c-format
 msgid "or as an actual typesafe Java object,"
-msgstr "ou como um objeto Java typesafe,"
+msgstr "ou sous la forme d'un objet Java typé,"
 
 #. Tag: programlisting
 #: query_hql.xml:283
@@ -642,8 +644,8 @@ msgid ""
 "assuming that the class <literal>Family</literal> has an appropriate "
 "constructor."
 msgstr ""
-"assumindo que a classe <literal>Family</literal> tenha um construtor "
-"apropriado."
+"à condition que la classe <literal>Family</literal> possède le constructeur "
+"approprié."
 
 #. Tag: para
 #: query_hql.xml:289
@@ -651,8 +653,8 @@ msgstr ""
 msgid ""
 "You may assign aliases to selected expressions using <literal>as</literal>:"
 msgstr ""
-"Pode-se designar referencias a expressões selecionadas, <literal>as</"
-"literal>:"
+"Vous pouvez assigner des alias aux expressions sélectionnées en utilisant "
+"<literal>as</literal> :"
 
 #. Tag: programlisting
 #: query_hql.xml:293
@@ -670,8 +672,8 @@ msgid ""
 "This is most useful when used together with <literal>select new map</"
 "literal>:"
 msgstr ""
-"Isto é bem mais útil quando usado junto <literal>com</"
-"literal><literal>select new map</literal>:"
+"C'est surtout utile lorsque c'est utilisé avec <literal>select new map</"
+"literal> :"
 
 #. Tag: programlisting
 #: query_hql.xml:299
@@ -688,14 +690,14 @@ msgstr ""
 msgid ""
 "This query returns a <literal>Map</literal> from aliases to selected values."
 msgstr ""
-"Esta query retorna um <literal>Map</literal> de referencias para valores "
-"selecionados."
+"Cette requête retourne une <literal>Map</literal> à partir des alias vers "
+"les valeurs sélectionnées."
 
 #. Tag: title
 #: query_hql.xml:308
 #, no-c-format
 msgid "Aggregate functions"
-msgstr "Funções de agregação"
+msgstr "Fonctions d'aggrégation"
 
 #. Tag: para
 #: query_hql.xml:310
@@ -703,8 +705,8 @@ msgstr "Funções de agregação"
 msgid ""
 "HQL queries may even return the results of aggregate functions on properties:"
 msgstr ""
-"As queries HQL podem retornar o resultado de funções agregadas nas "
-"propriedades."
+"Les requêtes HQL peuvent aussi retourner le résultat de fonctions "
+"d'aggrégation sur les propriétés :"
 
 #. Tag: programlisting
 #: query_hql.xml:314
@@ -719,7 +721,7 @@ msgstr ""
 #: query_hql.xml:325
 #, no-c-format
 msgid "The supported aggregate functions are"
-msgstr "As funções agregadas suportadas são:"
+msgstr "Les fonctions supportées sont"
 
 #. Tag: literal
 #: query_hql.xml:332
@@ -746,8 +748,8 @@ msgid ""
 "You may use arithmetic operators, concatenation, and recognized SQL "
 "functions in the select clause:"
 msgstr ""
-"Pode-se usar operadores aritiméticos, concatenação e funções SQL "
-"reconhecidas na clausula select:"
+"Vous pouvez utiliser des opérateurs arithmétiques, la concaténation, et des "
+"fonctions SQL reconnues dans la clause select :"
 
 #. Tag: programlisting
 #: query_hql.xml:352
@@ -773,8 +775,8 @@ msgid ""
 "The <literal>distinct</literal> and <literal>all</literal> keywords may be "
 "used and have the same semantics as in SQL."
 msgstr ""
-"As palavras <literal>distinct</literal> e <literal>all</literal> podem ser "
-"usadas e têm a mesma semântica como no SQL."
+"Les mots clé <literal>distinct</literal> et <literal>all</literal> peuvent "
+"être utilisés et ont la même signification qu'en SQL."
 
 #. Tag: programlisting
 #: query_hql.xml:361
@@ -789,13 +791,13 @@ msgstr ""
 #: query_hql.xml:366
 #, no-c-format
 msgid "Polymorphic queries"
-msgstr "Queries polimórficas"
+msgstr "Requêtes polymorphiques"
 
 #. Tag: para
 #: query_hql.xml:368
 #, no-c-format
 msgid "A query like:"
-msgstr "A query:"
+msgstr "Une requête comme:"
 
 #. Tag: para
 #: query_hql.xml:374
@@ -808,12 +810,12 @@ msgid ""
 "that extend that class or implement the interface. The following query would "
 "return all persistent objects:"
 msgstr ""
-"retorna instancias não só de <literal>Cat</literal>, mas também de "
-"subclasses como <literal>DomesticCat</literal>. As queries do Hibernate "
-"podem nomear qualquer classe Java ou interface na clausula <literal>from</"
-"literal>. A query retornará instancias de toda classe persistente que "
-"extenda a determinada classe ou implemente a determinada interface. A "
-"query , a seguir, pode retornar todo objeto persistente:"
+"retourne non seuleument les instances de <literal>Cat</literal>, mais aussi "
+"celles des sous classes comme <literal>DomesticCat</literal>. Les requêtes "
+"Hibernate peuvent nommer n'importe quelle classe ou interface Java dans la "
+"clause <literal>from</literal>. La requête retournera les instances de "
+"toutes les classes persistantes qui étendent cette classe ou implémente "
+"cette interface. La requête suivante retournera tous les objets persistants :"
 
 #. Tag: programlisting
 #: query_hql.xml:382
@@ -828,8 +830,8 @@ msgid ""
 "The interface <literal>Named</literal> might be implemented by various "
 "persistent classes:"
 msgstr ""
-"A interface <literal>Named</literal> pode ser implementada por várias "
-"classes persistentes:"
+"L'interface <literal>Named</literal> peut être implémentée par plusieurs "
+"classes persistantes :"
 
 #. Tag: programlisting
 #: query_hql.xml:389
@@ -846,16 +848,17 @@ msgid ""
 "clause does not correctly order the whole result set. (It also means you "
 "can't call these queries using <literal>Query.scroll()</literal>.)"
 msgstr ""
-"Note que as duas últimas queries requerem mais de um SQL SELECT . Isto "
-"significa que a clausula <literal>order by</literal> não ordena corretamente "
-"todo o resultado. (Isso também significa que você não pode chamar essas "
-"queries usando <literal>Query.scroll()</literal>.)"
+"Notez que ces deux dernières requêtes nécessitent plus d'un <literal>SELECT</"
+"literal> SQL. Ce qui signifie que la clause <literal>order by</literal> ne "
+"trie pas correctement la totalité des résultats (cela signifie aussi que "
+"vous ne pouvez exécuter ces requêtes en appelant <literal>Query.scroll()</"
+"literal>)."
 
 #. Tag: title
 #: query_hql.xml:400
 #, no-c-format
 msgid "The where clause"
-msgstr "A clausula where"
+msgstr "La clause where"
 
 #. Tag: para
 #: query_hql.xml:402
@@ -864,9 +867,9 @@ msgid ""
 "The <literal>where</literal> clause allows you to narrow the list of "
 "instances returned. If no alias exists, you may refer to properties by name:"
 msgstr ""
-"A clausula <literal>where</literal> permite estreitar a lista de instancias "
-"retornada. Se não houver referencia alguma, pode-se referir a propriedades "
-"pelo nome:"
+"La clause <literal>where</literal> vous permet de réduire la liste des "
+"instances retournées. Si aucun alias n'existe, vous pouvez vous référer aux "
+"propriétés par leur nom :"
 
 #. Tag: programlisting
 #: query_hql.xml:407
@@ -878,7 +881,7 @@ msgstr ""
 #: query_hql.xml:409
 #, no-c-format
 msgid "If there is an alias, use a qualified property name:"
-msgstr "Se houver uma referência, use o nome da propriedade qualificada:"
+msgstr "S'il y a un alias, utilisez un nom de propriété qualifié :"
 
 #. Tag: programlisting
 #: query_hql.xml:413
@@ -890,7 +893,9 @@ msgstr ""
 #: query_hql.xml:415
 #, no-c-format
 msgid "returns instances of <literal>Cat</literal> named 'Fritz'."
-msgstr "retorna instancias de <literal>Cat</literal> com nome ‘Fritz’."
+msgstr ""
+"retourne les instances de <literal>Cat</literal> dont name est égale à "
+"'Fritz'."
 
 #. Tag: programlisting
 #: query_hql.xml:419
@@ -911,11 +916,11 @@ msgid ""
 "<literal>Foo</literal>. Compound path expressions make the <literal>where</"
 "literal> clause extremely powerful. Consider:"
 msgstr ""
-"retornará todas as instancias de <literal>Foo</literal>, para cada um que "
-"tiver uma instancia de <literal>bar</literal> com a propriedade "
-"<literal>date</literal> igual a propriedade <literal>startDate</literal> de "
-"<literal>Foo</literal>. Expressões de filtro compostas fazem da clausula "
-"<literal>where</literal>, extremamente poderosa. Consideremos:"
+"retournera les instances de <literal>Foo</literal> pour lesquelles il existe "
+"une instance de <literal>bar</literal> avec la propriété <literal>date</"
+"literal> est égale à la propriété <literal>startDate</literal> de "
+"<literal>Foo</literal>. Les expressions utilisant la navigation rendent la "
+"clause <literal>where</literal> extrêmement puissante. Soit :"
 
 #. Tag: programlisting
 #: query_hql.xml:430
@@ -930,8 +935,8 @@ msgid ""
 "This query translates to an SQL query with a table (inner) join. If you were "
 "to write something like"
 msgstr ""
-"Esta query traduzida para uma query SQL <literal>com</literal> uma tabela "
-"(inner) join. Se fosse escrever algo como:"
+"Cette requête se traduit en SQL par une jointure interne à une table. Si "
+"vous souhaitez écrire quelque chose comme :"
 
 #. Tag: programlisting
 #: query_hql.xml:437
@@ -947,8 +952,7 @@ msgstr ""
 msgid ""
 "you would end up with a query that would require four table joins in SQL."
 msgstr ""
-"Poderia-se terminar <literal>com</literal> uma query que necessitasse de "
-"join de quatro tabelas, no SQL."
+"vous finiriez avec une requête qui nécessiterait quatre jointures en SQL."
 
 #. Tag: para
 #: query_hql.xml:443
@@ -957,8 +961,8 @@ msgid ""
 "The <literal>=</literal> operator may be used to compare not only "
 "properties, but also instances:"
 msgstr ""
-"O operador <literal>=</literal> pode ser uasdo para comparar não apenas "
-"propriedades, mas também instancias:"
+"L'opérateur <literal>=</literal> peut être utilisé pour comparer aussi bien "
+"des propriétés que des instances :"
 
 #. Tag: programlisting
 #: query_hql.xml:448
@@ -983,9 +987,9 @@ msgid ""
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
 "identifier-property\"/> for more information."
 msgstr ""
-"A propriedade especial (lowercase) <literal>id</literal> pode ser usada para "
-"referenciar o identificador único de um objeto. (Pode-se usar também o nome "
-"de sua propriedade)"
+"La propriété spéciale (en minuscule) <literal>id</literal> peut être "
+"utilisée pour faire référence à l'identifiant d'un objet (vous pouvez aussi "
+"utiliser le nom de cette propriété)."
 
 #. Tag: programlisting
 #: query_hql.xml:458
@@ -1000,7 +1004,9 @@ msgstr ""
 #: query_hql.xml:460
 #, no-c-format
 msgid "The second query is efficient. No table join is required!"
-msgstr "A Segunda query é eficiente. Nenhuma união de tabelas é necessária!"
+msgstr ""
+"La seconde requête est particulièrement efficace. Aucune jointure n'est "
+"nécessaire !"
 
 #. Tag: para
 #: query_hql.xml:464
@@ -1012,9 +1018,9 @@ msgid ""
 "<xref linkend=\"queryhql-identifier-property\"/> for more information "
 "regarding referencing identifier properties."
 msgstr ""
-"As propriedades de identificadores compostas também podem ser usadas. "
-"Suponha que <literal>Person</literal> tenha um identificador composto que "
-"consiste de <literal>country</literal> e <literal>medicareNumber</literal>."
+"Les propriétés d'un identifiant composé peuvent aussi être utilisées. "
+"Supposez que <literal>Person</literal> ait un identifiant composé de "
+"<literal>country</literal> et <literal>medicareNumber</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:471
@@ -1038,7 +1044,7 @@ msgstr ""
 #: query_hql.xml:475
 #, no-c-format
 msgid "Once again, the second query requires no table join."
-msgstr "Mais uma vez, a Segunda query não precisa de nenhum join de tabela."
+msgstr "Une fois de plus, la seconde requête ne nécessite pas de jointure."
 
 #. Tag: para
 #: query_hql.xml:479
@@ -1049,10 +1055,10 @@ msgid ""
 "Java class name embedded in the where clause will be translated to its "
 "discriminator value."
 msgstr ""
-"Assim mesmo, a propriedade especial <literal>class</literal> acessa o valor "
-"discriminador da instancia, no caso de persistência polimórfica. O nome de "
-"uma classe Java inclusa em uma clausula \"where\", será traduzida para seu "
-"valor descriminante."
+"De même, la propriété spéciale <literal>class</literal> interroge la valeur "
+"discriminante d'une instance dans le cas d'une persistance polymorphique. Le "
+"nom d'une classe Java incorporée dans la clause where sera traduite par sa "
+"valeur discriminante."
 
 #. Tag: programlisting
 #: query_hql.xml:485
@@ -1068,12 +1074,12 @@ msgid ""
 "component types. See <xref linkend=\"queryhql-components\"/> for more "
 "details."
 msgstr ""
-"Pode-se também especificar as propriedades dos components ou tipos de "
-"usuário composto (e de componentes de componentes). Nunca tente usar uma "
-"expressão de filtro que termine na propriedade de um tipo de componente (ao "
-"contrário de uma propriedade de um componente). Por exemplo, se store.owner "
-"é uma entidade <literal>com</literal> um componente <literal>address</"
-"literal>."
+"Vous pouvez aussi spécifier les propriétés des composants ou types "
+"utilisateurs composés (components, composite user types etc). N'essayez "
+"jamais d'utiliser un expression de navigation qui se terminerait par une "
+"propriété de type composant (qui est différent d'une propriété d'un "
+"composant). Par exemple, si <literal>store.owner</literal> est une entité "
+"avec un composant <literal>address</literal>"
 
 #. Tag: para
 #: query_hql.xml:492
@@ -1084,10 +1090,10 @@ msgid ""
 "(where <literal>AuditLog.item</literal> is a property mapped with "
 "<literal>&lt;any&gt;</literal>)."
 msgstr ""
-"Um tipo \"any\" tem as propriedades <literal>id</literal> e <literal>class</"
-"literal> especiais, nôs permitindo expressar um join da seguinte forma (onde "
-"<literal>AuditLog.item</literal> é uma propriedade mapeada <literal>com</"
-"literal><literal>&lt;any&gt;</literal>)"
+"Un type \"any\" possède les propriétés spéciales <literal>id</literal> et "
+"<literal>class</literal>, qui nous permettent d'exprimer une jointure de la "
+"manière suivante (où <literal>AuditLog.item</literal> est une propriété "
+"mappée avec <literal>&lt;any&gt;</literal>)."
 
 #. Tag: programlisting
 #: query_hql.xml:498
@@ -1105,15 +1111,15 @@ msgid ""
 "literal> would refer to the values of completely different database columns "
 "in the above query."
 msgstr ""
-"Veja que <literal>log.item.class</literal> e <literal>payment.class</"
-"literal> podem referir-se a valores de colunas de banco de dados "
-"completamente diferentes, na query acima."
+"Dans la requête précédente, notez que <literal>log.item.class</literal> et "
+"<literal>payment.class</literal> feraient référence à des valeurs de "
+"colonnes de la base de données complètement différentes."
 
 #. Tag: title
 #: query_hql.xml:508
 #, no-c-format
 msgid "Expressions"
-msgstr "Expressões"
+msgstr "Expressions"
 
 #. Tag: para
 #: query_hql.xml:510
@@ -1122,14 +1128,14 @@ msgid ""
 "Expressions allowed in the <literal>where</literal> clause include most of "
 "the kind of things you could write in SQL:"
 msgstr ""
-"As expressões permitidas na cláusula <literal>where</literal> inclui a "
-"maioria das coisas que você poderia escrever no SQL:"
+"Les expressions permises dans la clause <literal>where</literal> incluent la "
+"plupart des choses que vous pouvez utiliser en SQL :"
 
 #. Tag: para
 #: query_hql.xml:517
 #, no-c-format
 msgid "mathematical operators <literal>+, -, *, /</literal>"
-msgstr "operadores matemáticos <literal>+, -, *, /</literal>"
+msgstr "opérateurs mathématiques <literal>+, -, *, /</literal>"
 
 #. Tag: para
 #: query_hql.xml:522
@@ -1138,20 +1144,20 @@ msgid ""
 "binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</"
 "literal>"
 msgstr ""
-"operadores de comparação binários <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, "
+"opérateur de comparaison binaire <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, "
 "like</literal>"
 
 #. Tag: para
 #: query_hql.xml:527
 #, no-c-format
 msgid "logical operations <literal>and, or, not</literal>"
-msgstr "operadores lógicos <literal>and, or, not</literal>"
+msgstr "opérateurs logiques <literal>and, or, not</literal>"
 
 #. Tag: para
 #: query_hql.xml:532
 #, no-c-format
 msgid "Parentheses <literal>( )</literal>, indicating grouping"
-msgstr "parenteses <literal>( )</literal>, indicating grouping"
+msgstr "Parenthèses <literal>( )</literal>, indiquant un regroupement"
 
 #. Tag: para
 #: query_hql.xml:537
@@ -1174,9 +1180,8 @@ msgid ""
 "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
 "and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
 msgstr ""
-"case \"simples\" , <literal>case ... when ... then ... else ... end</"
-"literal>, and \"searched\" case, <literal>case when ... then ... else ... "
-"end</literal>"
+"\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
+"and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
 
 #. Tag: para
 #: query_hql.xml:556
@@ -1185,8 +1190,8 @@ msgid ""
 "string concatenation <literal>...||...</literal> or <literal>concat(...,...)"
 "</literal>"
 msgstr ""
-"concatenação de string <literal>...||...</literal> ou <literal>concat"
-"(...,...)</literal>"
+"concatenation de chaîne de caractères <literal>...||...</literal> ou "
+"<literal>concat(...,...)</literal>"
 
 #. Tag: para
 #: query_hql.xml:561
@@ -1218,15 +1223,15 @@ msgid ""
 "(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()"
 "</literal>"
 msgstr ""
-"qualquer funcao ou operador definida pela EJB-QL 3.0: <literal>substring(), "
-"trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), "
-"mod()</literal>"
+"N'importe quel fonction ou opérateur défini par EJB-QL 3.0 : "
+"<literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), "
+"sqrt(), bit_length(), mod()</literal>"
 
 #. Tag: para
 #: query_hql.xml:580
 #, no-c-format
 msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
-msgstr "<literal>coalesce()</literal> and <literal>nullif()</literal>"
+msgstr "<literal>coalesce()</literal> et <literal>nullif()</literal>"
 
 #. Tag: para
 #: query_hql.xml:585
@@ -1235,8 +1240,8 @@ msgid ""
 "<literal>str()</literal> for converting numeric or temporal values to a "
 "readable string"
 msgstr ""
-"<literal>str()</literal> para converter valores numericos ou temporais para "
-"string"
+"<literal>str()</literal> pour convertir des valeurs numériques ou "
+"temporelles vers une chaîne de caractères lisible"
 
 #. Tag: para
 #: query_hql.xml:591
@@ -1247,10 +1252,10 @@ msgid ""
 "<literal>cast()</literal> and <literal>extract()</literal> is supported by "
 "the underlying database"
 msgstr ""
-"<literal>cast(... as ...)</literal>, onde o segundo argumento é o nome do "
-"tipo hibernate, e<literal>extract(... from ...)</literal> se ANSI "
-"<literal>cast()</literal> e <literal>extract()</literal> é suportado pele "
-"banco de dados usado"
+"<literal>cast(... as ...)</literal>, où le second argument est le nom d'un "
+"type Hibernate, et <literal>extract(... from ...)</literal> si le "
+"<literal>cast()</literal> ANSI et <literal>extract()</literal> sont "
+"supportés par la base de données sous-jacente"
 
 #. Tag: para
 #: query_hql.xml:599
@@ -1259,8 +1264,8 @@ msgid ""
 "the HQL <literal>index()</literal> function, that applies to aliases of a "
 "joined indexed collection"
 msgstr ""
-"A função HQL <literal>index()</literal> , que se aplicam a referencias de "
-"coleçôes associadas e indexadas"
+"La fonction HQL <literal>index()</literal>, qui s'applique aux alias d'une "
+"collection indexée jointe"
 
 #. Tag: para
 #: query_hql.xml:605
@@ -1272,11 +1277,11 @@ msgid ""
 "functions which may be quantified using <literal>some, all, exists, any, in</"
 "literal>."
 msgstr ""
-"As funções hql que retornam expressões de coleções de valores: <literal>size"
-"(), minelement(), maxelement(), minindex(), maxindex()</literal>, "
-"<literal>junto</literal> com o elemento especial, <literal>elements()</"
-"literal>, e funções de <literal>índice</literal> que podem ser quantificadas "
-"usando <literal>some, all, exists, any, in</literal>."
+"Les fonctions HQL qui s'appliquent expressions représentant des "
+"collections : <literal>size(), minelement(), maxelement(), minindex(), "
+"maxindex()</literal>, ainsi que les fonctions spéciales <literal>elements()</"
+"literal> et <literal>indices</literal> qui peuvent être quantifiées en "
+"utilisant <literal>some, all, exists, any, in</literal>."
 
 #. Tag: para
 #: query_hql.xml:613
@@ -1286,15 +1291,15 @@ msgid ""
 "<literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</"
 "literal>"
 msgstr ""
-"Qualquer funçâo escalar pelo bando de dados como <literal>sign()</literal>, "
-"<literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</"
-"literal>"
+"N'importe quelle fonction scalaire supportée par la base de données comme "
+"<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</"
+"literal>, <literal>sin()</literal>"
 
 #. Tag: para
 #: query_hql.xml:619
 #, no-c-format
 msgid "JDBC-style positional parameters <literal>?</literal>"
-msgstr "Parametros posicionais ao estilo JDBC <literal>?</literal>"
+msgstr "Les paramètres positionnels de JDBC <literal>?</literal>"
 
 #. Tag: para
 #: query_hql.xml:624
@@ -1303,8 +1308,8 @@ msgid ""
 "named parameters <literal>:name</literal>, <literal>:start_date</literal>, "
 "<literal>:x1</literal>"
 msgstr ""
-"Parametros nomeados <literal>:name</literal>, <literal>:start_date</"
-"literal>, <literal>:x1</literal>"
+"paramètres nommés <literal>:name</literal>, <literal>:start_date</literal>, "
+"<literal>:x1</literal>"
 
 #. Tag: para
 #: query_hql.xml:629
@@ -1313,8 +1318,8 @@ msgid ""
 "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
 "+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
 msgstr ""
-"Literais SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
-"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+"littéral SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>'1970-"
+"01-01 10:00:01.0'</literal>"
 
 #. Tag: para
 #: query_hql.xml:635
@@ -1323,7 +1328,7 @@ msgid ""
 "Java <literal>public static final</literal> constants <literal>eg.Color."
 "TABBY</literal>"
 msgstr ""
-"Constantes Java <literal>public static final</literal><literal>ex: Color."
+"Constantes Java <literal>public static final</literal><literal>eg.Color."
 "TABBY</literal>"
 
 #. Tag: para
@@ -1332,8 +1337,8 @@ msgstr ""
 msgid ""
 "<literal>in</literal> and <literal>between</literal> may be used as follows:"
 msgstr ""
-"<literal>in</literal> e <literal>between</literal> podem ser usadas da "
-"seguinte maneira:"
+"<literal>in</literal> et <literal>between</literal> peuvent être utilisés "
+"comme suit :"
 
 #. Tag: programlisting
 #: query_hql.xml:645
@@ -1352,7 +1357,7 @@ msgstr ""
 #: query_hql.xml:649
 #, no-c-format
 msgid "and the negated forms may be written"
-msgstr "e as formas negativas podem ser escritas"
+msgstr "et la forme négative peut être écrite"
 
 #. Tag: programlisting
 #: query_hql.xml:653
@@ -1375,9 +1380,8 @@ msgid ""
 "Likewise, <literal>is null</literal> and <literal>is not null</literal> may "
 "be used to test for null values."
 msgstr ""
-"Likewise, <literal>is null</literal> and <literal>is not null</literal> may "
-"be used to test for null values. Assim mesmo, , <literal>is null</literal> e "
-"<literal>is not null</literal> podem ser usados para testar valores nulos."
+"De même, <literal>is null</literal> et <literal>is not null</literal> "
+"peuvent être utilisés pour tester les valeurs nulle."
 
 #. Tag: para
 #: query_hql.xml:662
@@ -1386,8 +1390,8 @@ msgid ""
 "Booleans may be easily used in expressions by declaring HQL query "
 "substitutions in Hibernate configuration:"
 msgstr ""
-"Booleanos podem ser facilmente usados em expressões, declarando as "
-"substituições da HQL query, na configuração do Hibernate"
+"Les booléens peuvent être facilement utilisés en déclarant les substitutions "
+"de requêtes dans la configuration Hibernate :"
 
 #. Tag: programlisting
 #: query_hql.xml:667
@@ -1405,9 +1409,9 @@ msgid ""
 "literal> with the literals <literal>1</literal> and <literal>0</literal> in "
 "the translated SQL from this HQL:"
 msgstr ""
-"Isso irá substituir as palavras chave <literal>true</literal> e "
-"<literal>false</literal><literal>pelos</literal> literais <literal>1</"
-"literal> e <literal>0</literal> na tradução do HQL para SQL."
+"Ce qui remplacera les mots clés <literal>true</literal> et <literal>false</"
+"literal> par <literal>1</literal> et <literal>0</literal> dans la traduction "
+"SQL du HQL suivant :"
 
 #. Tag: programlisting
 #: query_hql.xml:674
@@ -1422,9 +1426,8 @@ msgid ""
 "You may test the size of a collection with the special property "
 "<literal>size</literal>, or the special <literal>size()</literal> function."
 msgstr ""
-"Pode-se testar o tamanho de uma coleção <literal>com</literal> a propriedade "
-"especial <literal>size</literal>, ou a função especial <literal>size()</"
-"literal>."
+"Vous pouvez tester la taille d'une collection par la propriété spéciale "
+"<literal>size</literal>, ou la fonction spéciale <literal>size()</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:681
@@ -1448,10 +1451,11 @@ msgid ""
 "of basic type using the <literal>minelement</literal> and "
 "<literal>maxelement</literal> functions."
 msgstr ""
-"Para coleções indexadas, você pode se referir aos índices máximo e mínimo, "
-"usando as funções <literal>minindex</literal> e <literal>maxindex</literal>. "
-"Similarmente, pode-se referir aos elementos máximo e mínimo de uma coleção "
-"de tipos básicos usando as funções <literal>minelement</literal> e "
+"Pour les collections indexées, vous pouvez faire référence aux indices "
+"minimum et maximum en utilisant les fonctions <literal>minindex</literal> "
+"and <literal>maxindex</literal>. De manière similaire, vous pouvez faire "
+"référence aux éléments minimum et maximum d'une collection de type basiques "
+"en utilisant les fonctions <literal>minelement</literal> et "
 "<literal>maxelement</literal>."
 
 #. Tag: programlisting
@@ -1482,10 +1486,10 @@ msgid ""
 "(<literal>elements</literal> and <literal>indices</literal> functions) or "
 "the result of a subquery (see below)."
 msgstr ""
-"As funções SQL <literal>any, some, all, exists, in</literal> são suportadas "
-"quando passado o elemento ou o conjunto de índices de uma coleção "
-"(<literal>elements</literal> e <literal>indices</literal> de funções), ou o "
-"resultado de uma subquery (veja abaixo)."
+"Les fonctions SQL <literal>any, some, all, exists, in</literal> supportent "
+"que leur soient passées l'élément, l'index d'une collection (fonctions "
+"<literal>elements</literal> et <literal>indices</literal>) ou le résultat "
+"d'une sous requête (voir ci dessous)."
 
 #. Tag: programlisting
 #: query_hql.xml:705
@@ -1531,11 +1535,11 @@ msgid ""
 "<literal>maxelement</literal> - may only be used in the where clause in "
 "Hibernate3."
 msgstr ""
-"Note que essas construções - <literal>size</literal>, <literal>elements</"
+"Notez que l'écriture de - <literal>size</literal>, <literal>elements</"
 "literal>, <literal>indices</literal>, <literal>minindex</literal>, "
 "<literal>maxindex</literal>, <literal>minelement</literal>, "
-"<literal>maxelement</literal>– só podem ser usados na clausula where do "
-"Hibernate3."
+"<literal>maxelement</literal> - peuvent seulement être utilisée dans la "
+"clause where dans Hibernate3."
 
 #. Tag: para
 #: query_hql.xml:722
@@ -1544,8 +1548,8 @@ msgid ""
 "Elements of indexed collections (arrays, lists, maps) may be referred to by "
 "index (in a where clause only):"
 msgstr ""
-"Elementos de coleções com índice (arrays, lists, maps), podem ser "
-"referenciadas pelo índice (apenas na clausula where):"
+"Les éléments de collections indexées (arrays, lists, maps) peuvent être "
+"référencés via index (dans une clause where seulement) :"
 
 #. Tag: programlisting
 #: query_hql.xml:727
@@ -1586,8 +1590,8 @@ msgid ""
 "The expression inside <literal>[]</literal> may even be an arithmetic "
 "expression."
 msgstr ""
-"A expressão entre colchetes <literal>[]</literal>, pode ser até uma "
-"expressão aritimética."
+"L'expression entre <literal>[]</literal> peut même être une expression "
+"arithmétique."
 
 #. Tag: programlisting
 #: query_hql.xml:739
@@ -1604,8 +1608,8 @@ msgid ""
 "HQL also provides the built-in <literal>index()</literal> function, for "
 "elements of a one-to-many association or collection of values."
 msgstr ""
-"O HQL também provê a função interna <literal>index()</literal>, para "
-"elementos de associação um-pra-muitos ou coleção de valores."
+"HQL propose aussi une fonction <literal>index()</literal> interne, pour les "
+"éléments d'une association one-to-many ou d'une collections de valeurs."
 
 #. Tag: programlisting
 #: query_hql.xml:746
@@ -1620,7 +1624,9 @@ msgstr ""
 #: query_hql.xml:748
 #, no-c-format
 msgid "Scalar SQL functions supported by the underlying database may be used"
-msgstr "Funções escalares SQL, suportadas pelo banco de dados subjacente."
+msgstr ""
+"Les fonctions SQL scalaires supportées par la base de données utilisée "
+"peuvent être utilisées"
 
 #. Tag: programlisting
 #: query_hql.xml:752
@@ -1635,8 +1641,9 @@ msgid ""
 "If you are not yet convinced by all this, think how much longer and less "
 "readable the following query would be in SQL:"
 msgstr ""
-"Se ainda ainda não está totalmente convencido, pense o quão maior e menos "
-"legível poderia ser a query a seguir, em SQL:"
+"Si vous n'êtes pas encore convaincu par tout cela, imaginez la taille et "
+"l'illisibilité qui caractériseraient la transformation SQL de la requête HQL "
+"suivante :"
 
 #. Tag: programlisting
 #: query_hql.xml:759
@@ -1655,7 +1662,7 @@ msgstr ""
 #: query_hql.xml:761
 #, no-c-format
 msgid "<emphasis>Hint:</emphasis> something like"
-msgstr "<emphasis>Hint:</emphasis> something like"
+msgstr "<emphasis>Un indice :</emphasis> cela donnerait quelque chose comme"
 
 #. Tag: programlisting
 #: query_hql.xml:765
@@ -1685,7 +1692,7 @@ msgstr ""
 #: query_hql.xml:770
 #, no-c-format
 msgid "The order by clause"
-msgstr "A clausula order by"
+msgstr "La clause order by"
 
 #. Tag: para
 #: query_hql.xml:772
@@ -1694,8 +1701,8 @@ msgid ""
 "The list returned by a query may be ordered by any property of a returned "
 "class or components:"
 msgstr ""
-"A lista retornada pela query pode ser ordenada por qualquer propriedade da "
-"classe ou componente retornado:"
+"La liste retounée par la requête peut être triée par n'importe quelle "
+"propriété de la classe ou du composant retourné :"
 
 #. Tag: programlisting
 #: query_hql.xml:776
@@ -1712,14 +1719,14 @@ msgid ""
 "The optional <literal>asc</literal> or <literal>desc</literal> indicate "
 "ascending or descending order respectively."
 msgstr ""
-"As opções <literal>asc</literal> ou <literal>desc</literal> indicam ordem "
-"crescente ou decrescente, respectivamente."
+"Le mot optionnel <literal>asc</literal> ou <literal>desc</literal> indique "
+"respectivement si le tri doit être croissant ou décroissant."
 
 #. Tag: title
 #: query_hql.xml:785
 #, no-c-format
 msgid "The group by clause"
-msgstr "A clausula group by"
+msgstr "La clause group by"
 
 #. Tag: para
 #: query_hql.xml:787
@@ -1728,8 +1735,8 @@ msgid ""
 "A query that returns aggregate values may be grouped by any property of a "
 "returned class or components:"
 msgstr ""
-"Uma query que retorne valores agregados, podem ser agrupados por qualquer "
-"propriedade de uma classe ou componente retornado:"
+"Si la requête retourne des valeurs aggrégées, celles ci peuvent être "
+"groupées par propriété ou composant :"
 
 #. Tag: programlisting
 #: query_hql.xml:791
@@ -1753,7 +1760,7 @@ msgstr ""
 #: query_hql.xml:795
 #, no-c-format
 msgid "A <literal>having</literal> clause is also allowed."
-msgstr "Uma clausula <literal>having</literal> também é permitida."
+msgstr "Une clause <literal>having</literal> est aussi permise."
 
 #. Tag: programlisting
 #: query_hql.xml:799
@@ -1773,9 +1780,10 @@ msgid ""
 "literal> and <literal>order by</literal> clauses, if supported by the "
 "underlying database (eg. not in MySQL)."
 msgstr ""
-"Funções SQL e funções agregadas são permitidas nas clausulas "
-"<literal>having</literal> e <literal>order by</literal>, se suportadas pelo "
-"banco de dados subjacente (ex: não no MySQL)."
+"Les fonctions SQL et les fonctions d'aggrégations sont permises dans les "
+"clauses <literal>having</literal> et <literal>order by</literal>, si elles "
+"sont supportées par la base de données (ce que ne fait pas MySQL par "
+"exemple)."
 
 #. Tag: programlisting
 #: query_hql.xml:807
@@ -1800,14 +1808,14 @@ msgid ""
 "literal> are non-aggregated. You have to list all non-aggregated properties "
 "explicitly."
 msgstr ""
-"Note que, nem a clausula <literal>group by</literal> ou <literal>order by</"
-"literal>, podem conter expressões aritiméticas."
+"Notez que ni la clause <literal>group by</literal> ni la clause "
+"<literal>order by</literal> ne peuvent contenir d'expressions arithmétiques."
 
 #. Tag: title
 #: query_hql.xml:821
 #, no-c-format
 msgid "Subqueries"
-msgstr "Subqueries"
+msgstr "Sous-requêtes"
 
 #. Tag: para
 #: query_hql.xml:823
@@ -1818,10 +1826,11 @@ msgid ""
 "aggregate function call). Even correlated subqueries (subqueries that refer "
 "to an alias in the outer query) are allowed."
 msgstr ""
-"Para bancos de dados que suportem subselects, o Hibernate suporta subqueries "
-"dentro de queries. Uma subquery precisa estar entre parênteses (normalmente "
-"uma chamada de função agregada SQL). Mesmo subqueries co-relacionadas "
-"(subqueries que fazem referência à alias de outras queries), são aceitas."
+"Pour les bases de données le supportant, Hibernate supporte les sous "
+"requêtes dans les requêtes. Une sous requête doit être entre parenthèses "
+"(souvent pour un appel à une fonction d'agrégation SQL) Même les sous "
+"requêtes corrélées (celles qui font référence à un alias de la requête "
+"principale) sont supportées."
 
 #. Tag: programlisting
 #: query_hql.xml:829
@@ -1876,8 +1885,8 @@ msgstr ""
 #, no-c-format
 msgid "Note that HQL subqueries may occur only in the select or where clauses."
 msgstr ""
-"Note que HQL subqueries podem aparecer apenas dentro de clausulas select ou "
-"where."
+"Notez que les sous-requêtes HQL peuvent arriver seulememnt dans les clauses "
+"select ou where."
 
 #. Tag: para
 #: query_hql.xml:843
@@ -1893,7 +1902,7 @@ msgstr ""
 #: query_hql.xml:851
 #, no-c-format
 msgid "HQL examples"
-msgstr "Exemplos de HQL"
+msgstr "Exemples HQL"
 
 #. Tag: para
 #: query_hql.xml:853
@@ -1904,11 +1913,11 @@ msgid ""
 "example queries very similar to queries that I used on a recent project. "
 "Note that most queries you will write are much simpler than these!"
 msgstr ""
-"As queries do Hibernate, podem ser muito poderosas e complexas. De fato, o "
-"poder da linguagem de querie é um dos pontos principais na distribuição do "
-"Hibernate. Aqui temos algumas queries de exemplo, muito similares a queries "
-"que usei em um projeto recente. Note que a maioria das queries que você irá "
-"escrever, são mais simples que estas."
+"Les requêtes Hibernate peuvent être relativement puissantes et complexes. En "
+"fait, la puissance du langage de requêtage est l'un des avantages principaux "
+"d'Hibernate. Voici quelques exemples très similaires aux requêtes que nous "
+"avons utilisées lors d'un récent projet. Notez que la plupart des requêtes "
+"que vous écrirez seront plus simples que les exemples suivantes !"
 
 #. Tag: para
 #: query_hql.xml:859
@@ -1922,13 +1931,14 @@ msgid ""
 "literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has "
 "four inner joins and an (uncorrelated) subselect."
 msgstr ""
-"A query a seguir retorna o id de order, numero de itens e o valor total do "
-"order para todos os orders não pagos para um freguês particular e valor "
-"total mínimo dado, ordenando os resultados por valor total. Ao determinar os "
-"preços, é usado o catalogo corrente. A query SQL resultante, usando tabelas "
+"La requête suivante retourne l'id de commande (order), le nombre d'articles "
+"(items) et la valeur totale de la commande (order) pour toutes les commandes "
+"non payées d'un client (customer) particulier pour un total minimum donné, "
+"le tout trié par la valeur totale. La requête SQL générée sur les tables "
 "<literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</"
-"literal>, <literal>CATALOG</literal> e <literal>PRICE</literal>, tem quatro "
-"inner joins e um (não correlacionado) subselect."
+"literal>, <literal>CATALOG</literal> et <literal>PRICE</literal> est "
+"composée de quatre jointures interne ainsi que d'une sous-requête (non "
+"corrélée)."
 
 #. Tag: programlisting
 #: query_hql.xml:868
@@ -1961,8 +1971,8 @@ msgid ""
 "What a monster! Actually, in real life, I'm not very keen on subqueries, so "
 "my query was really more like this:"
 msgstr ""
-"Que monstro! Atualmente, na vida real, eu não sou muito afeiçoado a "
-"subqueries, então minha query seria mais parecida com isto:"
+"Quel monstre ! En principe, nous ne sommes pas très fan des sous-requêtes, "
+"la requête ressemblait donc plutôt à cela :"
 
 #. Tag: programlisting
 #: query_hql.xml:875
@@ -1994,13 +2004,13 @@ msgid ""
 "<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and "
 "<literal>PAYMENT_STATUS_CHANGE</literal> tables."
 msgstr ""
-"A próxima query conta o número de pagamentos em cada status, tirando todos "
-"os pagamentos com status <literal>AWAITING_APPROVAL</literal>, onde a mais "
-"recente mudança de status foi feita pelo usuário corrente. Traduz-se para "
-"uma query SQL <literal>com</literal> dois inner joins e um subselect "
-"correlacionado, nas tabelas <literal>PAYMENT</literal>, "
-"<literal>PAYMENT_STATUS</literal> e <literal>PAYMENT_STATUS_CHANGE</"
-"literal> ."
+"La requête suivante compte le nombre de paiements (payments) pour chaque "
+"status, en excluant les paiements dans le status <literal>AWAITING_APPROVAL</"
+"literal> où le changement de status le plus récent à été fait par "
+"l'utilisateur courant. En SQL, cette requête effectue deux jointures "
+"internes et des sous requêtes corrélées sur les tables <literal>PAYMENT</"
+"literal>, <literal>PAYMENT_STATUS</literal> et "
+"<literal>PAYMENT_STATUS_CHANGE</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:885
@@ -2030,8 +2040,8 @@ msgid ""
 "If I would have mapped the <literal>statusChanges</literal> collection as a "
 "list, instead of a set, the query would have been much simpler to write."
 msgstr ""
-"Se eu tivesse mapeado a Collection <literal>statusChanges</literal> como um "
-"List, ao invés de um Set, a query teria sido muito mais simples de escrever."
+"Si nous avions mappé la collection <literal>statusChanges</literal> comme "
+"une liste, au lieu d'un ensemble, la requête aurait été plus facile à écrire."
 
 #. Tag: programlisting
 #: query_hql.xml:892
@@ -2059,13 +2069,14 @@ msgid ""
 "<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and "
 "<literal>ORG_USER</literal> tables."
 msgstr ""
-"A próxima query usa a função <literal>isNull()</literal> do MS SQL Server, "
-"para retornar todas as contas e pagamentos não pagos para a organização, "
-"para cada usuário corrente pertencente. Traduz-se para uma query SQL "
-"<literal>com</literal> três inner joins, um outer join e um subselect nas "
-"tabelas <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, "
-"<literal>PAYMENT_STATUS</literal>,<literal>ACCOUNT_TYPE</literal>, "
-"<literal>ORGANIZATION</literal> e <literal>ORG_USER</literal> ."
+"La requête qui suit utilise la fonction de MS SQL <literal>isNull()</"
+"literal> pour retourner tous les comptes (accounts) et paiements (payments) "
+"impayés pour l'organisation à laquelle l'uilisateur (user) courant "
+"appartient. Elle est traduite en SQL par trois jointures internes, une "
+"jointure externe ainsi qu'une sous requête sur les tables <literal>ACCOUNT</"
+"literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, "
+"<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> et "
+"<literal>ORG_USER</literal>."
 
 #. Tag: programlisting
 #: query_hql.xml:903
@@ -2086,8 +2097,8 @@ msgstr ""
 msgid ""
 "For some databases, we would need to do away with the (correlated) subselect."
 msgstr ""
-"Para alguns bancos de dados, precisaremos eleminar o subselect "
-"(correlacionado)."
+"Pour d'autres base de données, nous aurions dû faire sans la sous-requête "
+"(corrélée)."
 
 #. Tag: programlisting
 #: query_hql.xml:909
@@ -2107,7 +2118,7 @@ msgstr ""
 #: query_hql.xml:914
 #, no-c-format
 msgid "Bulk update and delete"
-msgstr "update e delete em lote"
+msgstr "Mise à jour et suppression"
 
 #. Tag: para
 #: query_hql.xml:916
@@ -2117,15 +2128,15 @@ msgid ""
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
 "\"batch-direct\"/> for details."
 msgstr ""
-"Agora o HQL suporta declarações, <literal>update</literal>, <literal>delete</"
-"literal> e <literal>insert ... select ...</literal> Veja <xref linkend="
-"\"batch-direct\"/>, para mais detalhes."
+"HQL supporte maintenant les expressions <literal>update</literal>, "
+"<literal>delete</literal> et <literal>insert ... select ...</literal>. Voir "
+"<xref linkend=\"batch-direct\"/> pour les détails."
 
 #. Tag: title
 #: query_hql.xml:924
 #, no-c-format
 msgid "Tips &amp; Tricks"
-msgstr "Dicas e Truques"
+msgstr "Trucs &amp; Astuces"
 
 #. Tag: para
 #: query_hql.xml:926
@@ -2133,7 +2144,7 @@ msgstr "Dicas e Truques"
 msgid ""
 "You can count the number of query results without actually returning them:"
 msgstr ""
-"Pode-se contar o número de resultados da query, sem realmente retorna-los."
+"Vous pouvez compter le nombre de résultats d'une requête sans les retourner :"
 
 #. Tag: programlisting
 #: query_hql.xml:930
@@ -2148,8 +2159,8 @@ msgstr ""
 #, no-c-format
 msgid "To order a result by the size of a collection, use the following query:"
 msgstr ""
-"Para ordenar um resultado pelo tamanho de uma Collection, use a query a "
-"seguir."
+"Pour trier les résultats par la taille d'une collection, utilisez la requête "
+"suivante :"
 
 #. Tag: programlisting
 #: query_hql.xml:936
@@ -2169,8 +2180,9 @@ msgid ""
 "If your database supports subselects, you can place a condition upon "
 "selection size in the where clause of your query:"
 msgstr ""
-"Se seu banco de dados suporta subselects, pode-se colocar uma condição sobre "
-"tamanho de seleção na cláusula where da sua query:"
+"Si votre base de données supporte les sous-requêtes, vous pouvez placer des "
+"conditions sur la taille de la sélection dans la clause where de votre "
+"requête:"
 
 #. Tag: programlisting
 #: query_hql.xml:943
@@ -2182,7 +2194,9 @@ msgstr ""
 #: query_hql.xml:945
 #, no-c-format
 msgid "If your database doesn't support subselects, use the following query:"
-msgstr "Se seu banco de dados não suporta subselects, use a query a seguir:"
+msgstr ""
+"Si votre base de données ne supporte pas les sous-requêtes, utilisez la "
+"requête suivante :"
 
 #. Tag: programlisting
 #: query_hql.xml:949
@@ -2202,9 +2216,9 @@ msgid ""
 "As this solution can't return a <literal>User</literal> with zero messages "
 "because of the inner join, the following form is also useful:"
 msgstr ""
-"Com essa solução não se pode retornar um <literal>User</"
-"literal><literal>com</literal> sem nenhuma menssagem, por causa do \"inner "
-"join\", a forma a seguir também é útil."
+"Cette solution ne peut pas retourner un <literal>User</literal> avec zéro "
+"message à cause de la jointure interne, la forme suivante peut donc être "
+"utile :"
 
 #. Tag: programlisting
 #: query_hql.xml:956
@@ -2222,8 +2236,8 @@ msgstr ""
 #, no-c-format
 msgid "Properties of a JavaBean can be bound to named query parameters:"
 msgstr ""
-"As propriedades de um JavaBean podem ser limitadas à parâmetros nomeados da "
-"query:"
+"Les propriétés d'un JavaBean peuvent être injectées dans les paramètres "
+"nommés d'un requête :"
 
 #. Tag: programlisting
 #: query_hql.xml:962
@@ -2242,8 +2256,8 @@ msgid ""
 "Collections are pageable by using the <literal>Query</literal> interface "
 "with a filter:"
 msgstr ""
-"As Collections são paginaveis, usando a interface <literal>Query</"
-"literal><literal>com</literal> um filtro:"
+"Les collections sont paginables via l'utilisation de l'interface "
+"<literal>Query</literal> avec un filtre :"
 
 #. Tag: programlisting
 #: query_hql.xml:968
@@ -2261,8 +2275,8 @@ msgstr ""
 #, no-c-format
 msgid "Collection elements may be ordered or grouped using a query filter:"
 msgstr ""
-"Os elementos da Collection podem ser ordenados ou agrupados usando um filtro "
-"de query:"
+"Les éléments d'une collection peuvent être triés ou groupés en utilisant un "
+"filtre de requête :"
 
 #. Tag: programlisting
 #: query_hql.xml:974
@@ -2278,7 +2292,7 @@ msgstr ""
 #: query_hql.xml:976
 #, no-c-format
 msgid "You can find the size of a collection without initializing it:"
-msgstr "Pode-se achar o tamanho de uma Collection sem inicializa-la:"
+msgstr "Vous pouvez récupérer la taille d'une collection sans l'initialiser :"
 
 #. Tag: programlisting
 #: query_hql.xml:980

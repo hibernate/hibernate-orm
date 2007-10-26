@@ -14,7 +14,7 @@ msgstr ""
 #: query_sql.xml:5
 #, no-c-format
 msgid "Native SQL"
-msgstr "Native SQL"
+msgstr "SQL natif"
 
 #. Tag: para
 #: query_sql.xml:7
@@ -26,11 +26,12 @@ msgid ""
 "provides a clean migration path from a direct SQL/JDBC based application to "
 "Hibernate."
 msgstr ""
-"You may also express queries in the native SQL dialect of your database. "
-"This is useful if you want to utilize database specific features such as "
-"query hints or the <literal>CONNECT</literal> keyword in Oracle. It also "
-"provides a clean migration path from a direct SQL/JDBC based application to "
-"Hibernate."
+"Vous pouvez aussi écrire vos requêtes dans le dialecte SQL natif de votre "
+"base de données. Ceci est utile si vous souhaitez utiliser les "
+"fonctionnalités spécifiques de votre base de données comme le mot clé "
+"<literal>CONNECT</literal> d'Oracle. Cette fonctionnalité offre par ailleurs "
+"un moyen de migration plus propre et doux d'une application basée sur SQL/"
+"JDBC vers une application Hibernate."
 
 #. Tag: para
 #: query_sql.xml:13
@@ -39,14 +40,15 @@ msgid ""
 "Hibernate3 allows you to specify handwritten SQL (including stored "
 "procedures) for all create, update, delete, and load operations."
 msgstr ""
-"Hibernate3 allows you to specify handwritten SQL (including stored "
-"procedures) for all create, update, delete, and load operations."
+"Hibernate3 vous permet de spécifier du SQL écrit à la main (incluant les "
+"procédures stockées) pour toutes les opérations de création, mise à jour, "
+"suppression et chargement."
 
 #. Tag: title
 #: query_sql.xml:17
 #, no-c-format
 msgid "Using a <literal>SQLQuery</literal>"
-msgstr "Using a <literal>SQLQuery</literal>"
+msgstr "Utiliser une <literal>SQLQuery</literal>"
 
 #. Tag: para
 #: query_sql.xml:19
@@ -57,10 +59,10 @@ msgid ""
 "createSQLQuery()</literal>. The following describes how to use this API for "
 "querying."
 msgstr ""
-"Execution of native SQL queries is controlled via the <literal>SQLQuery</"
-"literal> interface, which is obtained by calling <literal>Session."
-"createSQLQuery()</literal>. The following describes how to use this API for "
-"querying."
+"L'exécution des requêtes en SQL natif est contrôlée par l'interface "
+"<literal>SQLQuery</literal>, laquelle est obtenue en appelant "
+"<literal>Session.createSQLQuery()</literal>. Dans des cas extrêmement "
+"simples, nous pouvons utiliser la forme suivante :"
 
 #. Tag: title
 #: query_sql.xml:25
@@ -804,7 +806,7 @@ msgstr ""
 #: query_sql.xml:361
 #, no-c-format
 msgid "Named SQL queries"
-msgstr "Named SQL queries"
+msgstr "Requêtes SQL nommées"
 
 #. Tag: para
 #: query_sql.xml:363
@@ -814,9 +816,10 @@ msgid ""
 "exactly the same way as a named HQL query. In this case, we do "
 "<emphasis>not</emphasis> need to call <literal>addEntity()</literal>."
 msgstr ""
-"Named SQL queries may be defined in the mapping document and called in "
-"exactly the same way as a named HQL query. In this case, we do "
-"<emphasis>not</emphasis> need to call <literal>addEntity()</literal>."
+"Les requêtes SQL nommées peuvent être définies dans le document de mapping "
+"et appelées exactement de la même manière qu'un requête HQL nommée. Dans ce "
+"cas, nous <emphasis>n'avons pas besoin</emphasis> d'appeler "
+"<literal>addEntity()</literal>."
 
 #. Tag: programlisting
 #: query_sql.xml:368
@@ -850,9 +853,9 @@ msgid ""
 "collection&gt;</literal> elements are used to join associations and define "
 "queries which initialize collections, respectively."
 msgstr ""
-"The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-"
-"collection&gt;</literal> elements are used to join associations and define "
-"queries which initialize collections, respectively."
+"Les éléments <literal>&lt;return-join&gt;</literal> et <literal>&lt;load-"
+"collection&gt;</literal> sont respectivement utilisés pour lier des "
+"associations et définir des requêtes qui initialisent des collections."
 
 #. Tag: programlisting
 #: query_sql.xml:377
@@ -883,9 +886,9 @@ msgid ""
 "alias and Hibernate type using the <literal>&lt;return-scalar&gt;</literal> "
 "element:"
 msgstr ""
-"A named SQL query may return a scalar value. You must declare the column "
-"alias and Hibernate type using the <literal>&lt;return-scalar&gt;</literal> "
-"element:"
+"Une requête SQL nommée peut retourner une valeur scalaire. Vous devez "
+"spécifier l'alias de colonne et le type Hibernate utilisant l'élément "
+"<literal>&lt;return-scalar&gt;</literal> :"
 
 #. Tag: programlisting
 #: query_sql.xml:383
@@ -908,9 +911,10 @@ msgid ""
 "resultset&gt;</literal> element to either reuse them accross several named "
 "queries or through the <literal>setResultSetMapping()</literal> API."
 msgstr ""
-"You can externalize the resultset mapping informations in a <literal>&lt;"
-"resultset&gt;</literal> element to either reuse them accross several named "
-"queries or through the <literal>setResultSetMapping()</literal> API."
+"Vous pouvez externaliser les informations de mapping des résultats dans un "
+"élément <literal>&lt;resultset&gt;</literal> pour soit les réutiliser dans "
+"différentes requêtes nommées, soit à travers l'API "
+"<literal>setResultSetMapping()</literal>."
 
 #. Tag: programlisting
 #: query_sql.xml:390
@@ -962,7 +966,9 @@ msgstr ""
 #: query_sql.xml:398
 #, no-c-format
 msgid "Using return-property to explicitly specify column/alias names"
-msgstr "Using return-property to explicitly specify column/alias names"
+msgstr ""
+"Utilisation de return-property pour spécifier explicitement les noms des "
+"colonnes/alias"
 
 #. Tag: para
 #: query_sql.xml:401
@@ -972,9 +978,10 @@ msgid ""
 "Hibernate what column aliases to use, instead of using the <literal>{}</"
 "literal>-syntax to let Hibernate inject its own aliases."
 msgstr ""
-"With <literal>&lt;return-property&gt;</literal> you can explicitly tell "
-"Hibernate what column aliases to use, instead of using the <literal>{}</"
-"literal>-syntax to let Hibernate inject its own aliases."
+"Avec <literal>&lt;return-property&gt;</literal> vous pouvez explicitement "
+"dire à Hibernate quels alias de colonne utiliser, plutot que d'employer la "
+"syntaxe <literal>{}</literal> pour laisser Hibernate injecter ses propres "
+"alias."
 
 #. Tag: programlisting
 #: query_sql.xml:406
@@ -1002,9 +1009,9 @@ msgid ""
 "This solves a limitation with the <literal>{}</literal>-syntax which can not "
 "allow fine grained control of multi-column properties."
 msgstr ""
-"<literal>&lt;return-property&gt;</literal> also works with multiple columns. "
-"This solves a limitation with the <literal>{}</literal>-syntax which can not "
-"allow fine grained control of multi-column properties."
+"<literal>&lt;return-property&gt;</literal> fonctionne aussi avec de multiple "
+"colonnes. Cela résout une limitation de la syntaxe <literal>{}</literal> qui "
+"ne peut pas permettre une bonne granularité des propriétés multi-colonnes."
 
 #. Tag: programlisting
 #: query_sql.xml:413
@@ -1035,9 +1042,10 @@ msgid ""
 "literal> in combination with the <literal>{}</literal>-syntax for injection. "
 "Allowing users to choose how they want to refer column and properties."
 msgstr ""
-"Notice that in this example we used <literal>&lt;return-property&gt;</"
-"literal> in combination with the <literal>{}</literal>-syntax for injection. "
-"Allowing users to choose how they want to refer column and properties."
+"Notez que dans cet exemple nous avons utilisé <literal>&lt;return-"
+"property&gt;</literal> en combinaison avec la syntaxe <literal>{}</literal> "
+"pour l'injection. Cela autorise les utilisateurs à choisir comment ils "
+"veulent référencer les colonnes et les propriétés."
 
 #. Tag: para
 #: query_sql.xml:420
@@ -1046,14 +1054,14 @@ msgid ""
 "If your mapping has a discriminator you must use <literal>&lt;return-"
 "discriminator&gt;</literal> to specify the discriminator column."
 msgstr ""
-"If your mapping has a discriminator you must use <literal>&lt;return-"
-"discriminator&gt;</literal> to specify the discriminator column."
+"Si votre mapping a un discriminant vous devez utiliser <literal>&lt;return-"
+"discriminator&gt;</literal> pour spécifier la colonne discriminante."
 
 #. Tag: title
 #: query_sql.xml:426
 #, no-c-format
 msgid "Using stored procedures for querying"
-msgstr "Using stored procedures for querying"
+msgstr "Utilisation de procédures stockées pour les requêtes"
 
 #. Tag: para
 #: query_sql.xml:428
@@ -1065,11 +1073,12 @@ msgid ""
 "to be able to work with Hibernate. An example of such a stored function in "
 "Oracle 9 and higher is as follows:"
 msgstr ""
-"Hibernate 3 introduces support for queries via stored procedures and "
-"functions. Most of the following documentation is equivalent for both. The "
-"stored procedure/function must return a resultset as the first out-parameter "
-"to be able to work with Hibernate. An example of such a stored function in "
-"Oracle 9 and higher is as follows:"
+"Hibernate 3 introduit le support des requêtes via procédures stockées et les "
+"fonctions. La documentation suivante est valable pour les deux. Les "
+"procédures stockées/fonctions doivent retourner l'ensemble de résultats en "
+"tant que premier paramètre sortant (NdT: \"out-parameter\") pour être "
+"capable de fonctionner avec Hibernate. Un exemple d'une telle procédure "
+"stockée en Oracle 9 et version supérieure :"
 
 #. Tag: programlisting
 #: query_sql.xml:434
@@ -1093,7 +1102,9 @@ msgstr ""
 #: query_sql.xml:436
 #, no-c-format
 msgid "To use this query in Hibernate you need to map it via a named query."
-msgstr "To use this query in Hibernate you need to map it via a named query."
+msgstr ""
+"Pour utiliser cette requête dans Hibernate vous avez besoin de la mapper via "
+"une requête nommée."
 
 #. Tag: programlisting
 #: query_sql.xml:439
@@ -1124,15 +1135,15 @@ msgid ""
 "<literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</"
 "literal> are not supported."
 msgstr ""
-"Notice stored procedures currently only return scalars and entities. "
-"<literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</"
-"literal> are not supported."
+"Notez que les procédures stockées retournent, pour le moment, seulement des "
+"scalaires et des entités. <literal>&lt;return-join&gt;</literal> et "
+"<literal>&lt;load-collection&gt;</literal> ne sont pas supportés."
 
 #. Tag: title
 #: query_sql.xml:446
 #, no-c-format
 msgid "Rules/limitations for using stored procedures"
-msgstr "Rules/limitations for using stored procedures"
+msgstr "Règles/limitations lors de l'utilisation des procédures stockées"
 
 #. Tag: para
 #: query_sql.xml:448
@@ -1145,12 +1156,13 @@ msgid ""
 "different for each database, since database vendors have different stored "
 "procedure semantics/syntax."
 msgstr ""
-"To use stored procedures with Hibernate the procedures/functions have to "
-"follow some rules. If they do not follow those rules they are not usable "
-"with Hibernate. If you still want to use these procedures you have to "
-"execute them via <literal>session.connection()</literal>. The rules are "
-"different for each database, since database vendors have different stored "
-"procedure semantics/syntax."
+"Pur utiliser des procédures stockées avec Hibernate, les procédures doivent "
+"suivre certaines règles. Si elles ne suivent pas ces règles, elles ne sont "
+"pas utilisables avec Hibernate. Si vous voulez encore utiliser ces "
+"procédures vous devez les exécuter via <literal>session.connection()</"
+"literal>. Les règles sont différentes pour chaque base de données, puisque "
+"les vendeurs de base de données ont des sémantiques/syntaxes différentes "
+"pour les procédures stockées."
 
 #. Tag: para
 #: query_sql.xml:455
@@ -1159,8 +1171,8 @@ msgid ""
 "Stored procedure queries can't be paged with <literal>setFirstResult()/"
 "setMaxResults()</literal>."
 msgstr ""
-"Stored procedure queries can't be paged with <literal>setFirstResult()/"
-"setMaxResults()</literal>."
+"Les requêtes de procédures stockées ne peuvent pas être paginées avec "
+"<literal>setFirstResult()/setMaxResults()</literal>."
 
 #. Tag: para
 #: query_sql.xml:458
@@ -1178,7 +1190,7 @@ msgstr ""
 #: query_sql.xml:463
 #, no-c-format
 msgid "For Oracle the following rules apply:"
-msgstr "For Oracle the following rules apply:"
+msgstr "Pour Oracle les règles suivantes s'appliquent :"
 
 #. Tag: para
 #: query_sql.xml:467
@@ -1190,17 +1202,17 @@ msgid ""
 "you need to define a <literal>REF CURSOR</literal> type, see Oracle "
 "literature."
 msgstr ""
-"A funçãp deve retornar um result set. O primeiro parâmetro da procedure "
-"dever ser uma <literal>SAÍDA</literal> que retorne um result set. Isto é "
-"feito usando o tipo a <literal>SYS_REFCURSOR</literal> no Oracle 9 ou 10. No "
-"Oracle é necessário definir o tipo <literal>REF CURSOR</literal>, veja a "
-"documentação do Oracle."
+"La procédure doit retourner un ensemble de résultats. Le prmeier paramètre "
+"d'une procédure doit être un <literal>OUT</literal> qui retourne un ensemble "
+"de résultats. Ceci est fait en retournant un <literal>SYS_REFCURSOR</"
+"literal> dans Oracle 9 ou 10. Dans Oracle vous avez besoin de définir un "
+"type <literal>REF CURSOR</literal>."
 
 #. Tag: para
 #: query_sql.xml:476
 #, no-c-format
 msgid "For Sybase or MS SQL server the following rules apply:"
-msgstr "For Sybase or MS SQL server the following rules apply:"
+msgstr "Pour Sybase ou MS SQL server les règles suivantes s'appliquent :"
 
 #. Tag: para
 #: query_sql.xml:480
@@ -1211,10 +1223,11 @@ msgid ""
 "the results and take the first result that is a result set as its return "
 "value. Everything else will be discarded."
 msgstr ""
-"A procedure deve retornar um result set. Veja que este servidor pode "
-"retornar múltiplos result sets e update counts. O Hibernate ira iterar os "
-"resultados e pegar o primeiro resultado que é o valor de retorno do result "
-"set. O resto será descartado."
+"La procédure doit retourner un ensemble de résultats. Notez que comme ces "
+"serveurs peuvent retourner de multiples ensembles de résultats et mettre à "
+"jour des compteurs, Hibernate itérera les résultats et prendra le premier "
+"résultat qui est un ensemble de résultat comme valeur de retour. Tout le "
+"reste sera ignoré."
 
 #. Tag: para
 #: query_sql.xml:488
@@ -1223,14 +1236,15 @@ msgid ""
 "If you can enable <literal>SET NOCOUNT ON</literal> in your procedure it "
 "will probably be more efficient, but this is not a requirement."
 msgstr ""
-"Se você habilitar <literal>SET NOCOUNT ON</literal> na sua procedure, ela "
-"provavelmente será mais eficiente. Mas, isto não é obrigatório"
+"Si vous pouvez activer <literal>SET NOCOUNT ON</literal> dans votre "
+"procédure, elle sera probablement plus efficace, mais ce n'est pas une "
+"obligation."
 
 #. Tag: title
 #: query_sql.xml:498
 #, no-c-format
 msgid "Custom SQL for create, update and delete"
-msgstr "SQL customizado para create, update e delete"
+msgstr "SQL personnalisé pour créer, mettre à jour et effacer"
 
 #. Tag: para
 #: query_sql.xml:500
@@ -1243,17 +1257,13 @@ msgid ""
 "<literal>&lt;sql-delete&gt;</literal>, and <literal>&lt;sql-update&gt;</"
 "literal> override these strings:"
 msgstr ""
-"Hibernate3 can use custom SQL statements for create, update, and delete "
-"operations. The class and collection persisters in Hibernate already contain "
-"a set of configuration time generated strings (insertsql, deletesql, "
-"updatesql etc.). The mapping tags <literal>&lt;sql-insert&gt;</literal>, "
-"<literal>&lt;sql-delete&gt;</literal>, and <literal>&lt;sql-update&gt;</"
-"literal> override these strings: Hibernate3 pode usar SQL customizado para "
-"operações de create, update e delete. A persistência de classe e collection "
-"no hibernate já contem alguma strings de configurações (insertsql, "
-"deletesql, updatesql etc.). O mapaemento das tags <literal>&lt;sql-insert&gt;"
-"</literal>, <literal>&lt;sql-delete&gt;</literal>, e <literal>&lt;sql-"
-"update&gt;</literal> sobreecreve essas strings:"
+"Hibernate3 peut utiliser des expression SQL personnalisées pour des "
+"opérations de création, de mise à jour, et de suppression. Les objets "
+"persistants les classes et les collections dans Hibernate contiennent déjà "
+"un ensemble de chaînes de caractères générées lors de la configuration "
+"(insertsql, deletesql, updatesql, etc). Les tages de mapping <literal>&lt;"
+"sql-insert&gt;</literal>, <literal>&lt;sql-delete&gt;</literal>, et "
+"<literal>&lt;sql-update&gt;</literal> surchargent ces chaînes de caractères :"
 
 #. Tag: programlisting
 #: query_sql.xml:508
@@ -1279,9 +1289,10 @@ msgid ""
 "dialect you like. This will of course reduce the portability of your mapping "
 "if you use database specific SQL."
 msgstr ""
-"O SQL é executado diretamente no seu banco de dados, então você pode usar "
-"qualquer linguagem que quiser. Isto com certeza reduzira a portabilidade do "
-"seu mapeamento se você utilizar um SQL para um banco de dados especifico."
+"Le SQL est directement exécuté dans votre base de données, donc vous êtes "
+"libre d'utiliser le dialecte que vous souhaitez. Cela réduira bien sûr la "
+"portabilité de votre mapping si vous utilisez du SQL spécifique à votre base "
+"de données."
 
 #. Tag: para
 #: query_sql.xml:514
@@ -1290,8 +1301,8 @@ msgid ""
 "Stored procedures are supported if the <literal>callable</literal> attribute "
 "is set:"
 msgstr ""
-"Stored Procedures são suportadas se o atributo the <literal>callable</"
-"literal> estiver ativado:"
+"Les procédures stockées sont supportées si l'attribut <literal>callable</"
+"literal> est paramétré :"
 
 #. Tag: programlisting
 #: query_sql.xml:517
@@ -1316,8 +1327,8 @@ msgid ""
 "The order of the positional parameters are currently vital, as they must be "
 "in the same sequence as Hibernate expects them."
 msgstr ""
-"A ordem de posições dos parâmetros são vitais, pois eles devem estar na "
-"mesma seqüência esperada pelo Hibernate."
+"L'ordre des paramètres positionnels est actuellement vital, car ils doivent "
+"être dans la même séquence qu'Hibernate les attend."
 
 #. Tag: para
 #: query_sql.xml:522
@@ -1330,12 +1341,13 @@ msgid ""
 "include your custom SQL in the mapping files as that will override the "
 "Hibernate generated static sql.)"
 msgstr ""
-"Você pode ver a ordem esperada ativando o debug logging no nível "
-"<literal>org.hibernate.persister.entity</literal>. Com este nível ativado, o "
-"Hibernate irá imprimir o SQL estático que foi usado para create, update, "
-"delete, etc. Entidades. (Para ver a seqüência esperada, lembre-se de não "
-"incluir seu SQL customizado no arquivo de mapeamento, pois ele irá "
-"sobreecreve o SQL estático gerado pelo Hibernate)."
+"Vous pouvez voir l'ordre attendu en activant les journaux de debug pour le "
+"niveau <literal>org.hibernate.persister.entity</literal> level. Avec ce "
+"niveau activé, Hibernate imprimera le SQL statique qui est utilisé pour "
+"créer, mettre à jour, supprimer, etc. des entités. (Pour voir la séquence "
+"attendue, rappelez-vous de ne pas inclure votre SQL personnalisé dans les "
+"fichiers de mapping de manière à surcharger le SQL statique généré par "
+"Hibernate.)"
 
 #. Tag: para
 #: query_sql.xml:529
@@ -1347,11 +1359,11 @@ msgid ""
 "registers the first statement parameter as a numeric output parameter for "
 "the CUD operations:"
 msgstr ""
-"As stored procedures são na maioria dos casos (leia: melhor não fazer) "
-"requeridas para retornar o numero de linhas inseridas/atualizadas/deletadas. "
-"O hibernate tem algumas verificações em tempo de execução para o sucesso da "
-"declaração. Hibernate sempre registra o primeiro parâmetro da declaração "
-"como uma saída numérica para operações CRUD."
+"Les procédures stockées sont dans la plupart des cas (lire : il vaut mieux "
+"le faire) requises pour retourner le nombre de lignes insérées/mises à jour/"
+"supprimées, puisque Hibernate fait quelques vérifications de succès lors de "
+"l'exécution de l'expression. Hibernate inscrit toujours la première "
+"expression comme un paramètre de sortie numérique pour les opérations CUD :"
 
 #. Tag: programlisting
 #: query_sql.xml:535
@@ -1377,14 +1389,15 @@ msgstr ""
 #: query_sql.xml:539
 #, no-c-format
 msgid "Custom SQL for loading"
-msgstr "SQL customizado para carga"
+msgstr "SQL personnalisé pour le chargement"
 
 #. Tag: para
 #: query_sql.xml:541
 #, no-c-format
 msgid "You may also declare your own SQL (or HQL) queries for entity loading:"
 msgstr ""
-"Você pode declarar sua própria query SQL (ou HQL) para iniciar entidades:"
+"Vous pouvez aussi déclarer vos propres requêtes SQL (ou HQL) pour le "
+"chargement d'entité :"
 
 #. Tag: programlisting
 #: query_sql.xml:544
@@ -1406,9 +1419,8 @@ msgid ""
 "This is just a named query declaration, as discussed earlier. You may "
 "reference this named query in a class mapping:"
 msgstr ""
-"Este é apenas uma declaração de query com nome, como discutido "
-"anteriormente. Você pode referenciar esta query com nome em um mapeamento de "
-"classe:"
+"Ceci est juste une déclaration de requête nommée, comme vu plus tôt. Vous "
+"pouvez référencer cette requête nommée dans un mapping de classe :"
 
 #. Tag: programlisting
 #: query_sql.xml:549
@@ -1427,13 +1439,14 @@ msgstr ""
 #: query_sql.xml:551
 #, no-c-format
 msgid "This even works with stored procedures."
-msgstr "Isto também funciona com stored procedures."
+msgstr "Ceci fonctionne même avec des procédures stockées."
 
 #. Tag: para
 #: query_sql.xml:553
 #, no-c-format
 msgid "You may even define a query for collection loading:"
-msgstr "Você pode tembém definir uma query para iniciar collection:"
+msgstr ""
+"Vous pouvez même définir une requête pour le chargement d'une collection :"
 
 #. Tag: programlisting
 #: query_sql.xml:555
@@ -1466,8 +1479,8 @@ msgid ""
 "You could even define an entity loader that loads a collection by join "
 "fetching:"
 msgstr ""
-"You could even define an entity loader that loads a collection by join "
-"fetching:"
+"Vous pourriez même définir un chargeur d'entité qui charge une collection "
+"par jointure :"
 
 #. Tag: programlisting
 #: query_sql.xml:562

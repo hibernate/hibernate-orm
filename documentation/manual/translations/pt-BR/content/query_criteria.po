@@ -14,19 +14,20 @@ msgstr ""
 #: query_criteria.xml:5
 #, no-c-format
 msgid "Criteria Queries"
-msgstr "Consultas por critérios"
+msgstr "Requêtes par critères"
 
 #. Tag: para
 #: query_criteria.xml:7
 #, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
-msgstr "O Hibernate provê uma intuitiva e extensível API de critério de query."
+msgstr ""
+"Hibernate offre une API d'interrogation par critères intuitive et extensible."
 
 #. Tag: title
 #: query_criteria.xml:12
 #, no-c-format
 msgid "Creating a <literal>Criteria</literal> instance"
-msgstr "Criando uma instancia <literal>Criteria</literal>"
+msgstr "Créer une instance de <literal>Criteria</literal>"
 
 #. Tag: para
 #: query_criteria.xml:14
@@ -36,9 +37,9 @@ msgid ""
 "against a particular persistent class. The <literal>Session</literal> is a "
 "factory for <literal>Criteria</literal> instances."
 msgstr ""
-"A interface <literal>org.hibernate.Criteria</literal> representa a query ao "
-"invés de uma classe persistente particular. A sessão é uma fábrica para "
-"intancias de <literal>Criteria</literal> ."
+"L'interface <literal>net.sf.hibernate.Criteria</literal> représente une "
+"requête sur une classe persistente donnée. La <literal>Session</literal> "
+"fournit les instances de <literal>Criteria</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:20
@@ -53,7 +54,7 @@ msgstr ""
 #: query_criteria.xml:25
 #, no-c-format
 msgid "Narrowing the result set"
-msgstr "Limitando o result set"
+msgstr "Restriction du résultat"
 
 #. Tag: para
 #: query_criteria.xml:27
@@ -64,10 +65,10 @@ msgid ""
 "criterion.Restrictions</literal> defines factory methods for obtaining "
 "certain built-in <literal>Criterion</literal> types."
 msgstr ""
-"Um critério individual de query é uma instancia da interface <literal>org."
-"hibernate.criterion.Criterion</literal>. A classe <literal>org.hibernate."
-"criterion.Restrictions</literal> define os métodos da fábrica para obter "
-"certos tipos pré fabricados de <literal>Criterion</literal>."
+"Un criterion (critère de recherche) est une instance de l'interface "
+"<literal>org.hibernate.criterion.Criterion</literal>. La classe <literal>org."
+"hibernate.criterion.Restrictions</literal> définit des méthodes pour obtenir "
+"des types de <literal>Criterion</literal> pré-définis."
 
 #. Tag: programlisting
 #: query_criteria.xml:35
@@ -83,7 +84,7 @@ msgstr ""
 #: query_criteria.xml:37
 #, no-c-format
 msgid "Restrictions may be grouped logically."
-msgstr "Restrições podem ser logicamente agrupadas."
+msgstr "Les restrictions peuvent être goupées de manière logique."
 
 #. Tag: programlisting
 #: query_criteria.xml:41
@@ -122,9 +123,9 @@ msgid ""
 "literal> subclasses), but one that is especially useful lets you specify SQL "
 "directly."
 msgstr ""
-"Existe um grande número de critérios pré fabricados (subclasses de "
-"<literal>Restrictions</literal>), mas um é especialmente útil pois permite "
-"especificar o SQL diretamente."
+"Il y a plusieurs types de criterion pré-définis (sous classes de "
+"<literal>Restriction</literal>), mais l'une d'entre elle particulièrement "
+"utile vous permet de spécifier directement du SQL."
 
 #. Tag: programlisting
 #: query_criteria.xml:50
@@ -143,8 +144,8 @@ msgid ""
 "The <literal>{alias}</literal> placeholder with be replaced by the row alias "
 "of the queried entity."
 msgstr ""
-"O parametro <literal>{alias}</literal> será substituido pelo alias da "
-"entidade procurada."
+"La zone <literal>{alias}</literal> sera remplacée par l'alias de colonne de "
+"l'entité que l'on souhaite intérroger."
 
 #. Tag: para
 #: query_criteria.xml:57
@@ -154,9 +155,10 @@ msgid ""
 "<literal>Property</literal> instance. You can create a <literal>Property</"
 "literal> by calling <literal>Property.forName()</literal>."
 msgstr ""
-"Uma maneira alternativa de obter um critério é pegá-lo de uma instancia de "
-"<literal>Property</literal>. Você pode criar uma <literal>Property</literal> "
-"chamando <literal>Property.forName()</literal>."
+"Une autre approche pour obtenir un criterion est de le récupérer d'une "
+"instance de <literal>Property</literal>. Vous pouvez créer une "
+"<literal>Property</literal> en appelant <literal>Property.forName()</"
+"literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:63
@@ -180,7 +182,7 @@ msgstr ""
 #: query_criteria.xml:68
 #, no-c-format
 msgid "Ordering the results"
-msgstr "Ordering the results"
+msgstr "Trier les résultats"
 
 #. Tag: para
 #: query_criteria.xml:70
@@ -189,8 +191,8 @@ msgid ""
 "You may order the results using <literal>org.hibernate.criterion.Order</"
 "literal>."
 msgstr ""
-"You may order the results using <literal>org.hibernate.criterion.Order</"
-"literal>."
+"Vous pouvez trier les résultats en utilisant <literal>org.hibernate."
+"criterion.Order</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:74
@@ -229,8 +231,8 @@ msgid ""
 "You may easily specify constraints upon related entities by navigating "
 "associations using <literal>createCriteria()</literal>."
 msgstr ""
-"You may easily specify constraints upon related entities by navigating "
-"associations using <literal>createCriteria()</literal>."
+"Vous pouvez facilement spécifier des contraintes sur des entités liées, par "
+"des associations en utilisant <literal>createCriteria()</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:88
@@ -251,15 +253,15 @@ msgid ""
 "instance of <literal>Criteria</literal>, which refers to the elements of the "
 "<literal>kittens</literal> collection."
 msgstr ""
-"note that the second <literal>createCriteria()</literal> returns a new "
-"instance of <literal>Criteria</literal>, which refers to the elements of the "
-"<literal>kittens</literal> collection."
+"Notez que la seconde <literal>createCriteria()</literal> retourne une "
+"nouvelle instance de <literal>Criteria</literal>, qui se rapporte aux "
+"éléments de la collection <literal>kittens</literal>."
 
 #. Tag: para
 #: query_criteria.xml:96
 #, no-c-format
 msgid "The following, alternate form is useful in certain circumstances."
-msgstr "The following, alternate form is useful in certain circumstances."
+msgstr "La forme alternative suivante est utile dans certains cas."
 
 #. Tag: programlisting
 #: query_criteria.xml:100
@@ -279,7 +281,7 @@ msgid ""
 "(<literal>createAlias()</literal> does not create a new instance of "
 "<literal>Criteria</literal>.)"
 msgstr ""
-"(<literal>createAlias()</literal> does not create a new instance of "
+"(<literal>createAlias()</literal> ne crée pas de nouvelle instance de "
 "<literal>Criteria</literal>.)"
 
 #. Tag: para
@@ -291,10 +293,11 @@ msgid ""
 "pre-filtered by the criteria! If you wish to retrieve just the kittens that "
 "match the criteria, you must use a <literal>ResultTransformer</literal>."
 msgstr ""
-"Note that the kittens collections held by the <literal>Cat</literal> "
-"instances returned by the previous two queries are <emphasis>not</emphasis> "
-"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
-"match the criteria, you must use a <literal>ResultTransformer</literal>."
+"Notez que les collections kittens contenues dans les instances de "
+"<literal>Cat</literal> retournées par les deux précédentes requêtes ne sont "
+"<emphasis>pas</emphasis> pré-filtrées par les critères ! Si vous souhaitez "
+"récupérer uniquement les kittens qui correspondent à la criteria, vous devez "
+"utiliser <literal>ResultTransformer</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:114
@@ -317,7 +320,7 @@ msgstr ""
 #: query_criteria.xml:119
 #, no-c-format
 msgid "Dynamic association fetching"
-msgstr "Dynamic association fetching"
+msgstr "Peuplement d'associations de manière dynamique"
 
 #. Tag: para
 #: query_criteria.xml:121
@@ -326,8 +329,10 @@ msgid ""
 "You may specify association fetching semantics at runtime using "
 "<literal>setFetchMode()</literal>."
 msgstr ""
-"You may specify association fetching semantics at runtime using "
-"<literal>setFetchMode()</literal>."
+"Vous pouvez spéficier au moment de l'exécution le peuplement d'une "
+"association en utilisant <literal>setFetchMode()</literal> (c'est-à-dire le "
+"chargement de celle-ci). Cela permet de surcharger les valeurs \"lazy\" et "
+"\"outer-join\" du mapping."
 
 #. Tag: programlisting
 #: query_criteria.xml:126
@@ -348,15 +353,15 @@ msgid ""
 "literal> by outer join. See <xref linkend=\"performance-fetching\"/> for "
 "more information."
 msgstr ""
-"This query will fetch both <literal>mate</literal> and <literal>kittens</"
-"literal> by outer join. See <xref linkend=\"performance-fetching\"/> for "
-"more information."
+"Cette requête recherchera <literal>mate</literal> et <literal>kittens</"
+"literal> via les jointures externes. Voir <xref linkend=\"performance-"
+"fetching\"/> pour plus d'informations."
 
 #. Tag: title
 #: query_criteria.xml:136
 #, no-c-format
 msgid "Example queries"
-msgstr "Example queries"
+msgstr "Requêtes par l'exemple"
 
 #. Tag: para
 #: query_criteria.xml:138
@@ -365,8 +370,8 @@ msgid ""
 "The class <literal>org.hibernate.criterion.Example</literal> allows you to "
 "construct a query criterion from a given instance."
 msgstr ""
-"The class <literal>org.hibernate.criterion.Example</literal> allows you to "
-"construct a query criterion from a given instance."
+"La classe <literal>org.hibernate.criterion.Example</literal> vous permet de "
+"construire un critère suivant une instance d'objet donnée."
 
 #. Tag: programlisting
 #: query_criteria.xml:143
@@ -387,14 +392,16 @@ msgid ""
 "Version properties, identifiers and associations are ignored. By default, "
 "null valued properties are excluded."
 msgstr ""
-"Version properties, identifiers and associations are ignored. By default, "
-"null valued properties are excluded."
+"Les propriétés de type version, identifiant et association sont ignorées. "
+"Par défaut, les valeurs null sont exclues."
 
 #. Tag: para
 #: query_criteria.xml:150
 #, no-c-format
 msgid "You can adjust how the <literal>Example</literal> is applied."
-msgstr "You can adjust how the <literal>Example</literal> is applied."
+msgstr ""
+"Vous pouvez ajuster la stratégie d'utilisation de valeurs de "
+"l'<literal>Exemple</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:154
@@ -415,7 +422,9 @@ msgstr ""
 #: query_criteria.xml:156
 #, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
-msgstr "You can even use examples to place criteria upon associated objects."
+msgstr ""
+"Vous pouvez utiliser les \"exemples\" pour des critères sur les objets "
+"associés."
 
 #. Tag: programlisting
 #: query_criteria.xml:160
@@ -432,7 +441,7 @@ msgstr ""
 #: query_criteria.xml:165
 #, no-c-format
 msgid "Projections, aggregation and grouping"
-msgstr "Projections, aggregation and grouping"
+msgstr "Projections, agrégation et regroupement"
 
 #. Tag: para
 #: query_criteria.xml:166
@@ -442,9 +451,9 @@ msgid ""
 "factory for <literal>Projection</literal> instances. We apply a projection "
 "to a query by calling <literal>setProjection()</literal>."
 msgstr ""
-"The class <literal>org.hibernate.criterion.Projections</literal> is a "
-"factory for <literal>Projection</literal> instances. We apply a projection "
-"to a query by calling <literal>setProjection()</literal>."
+"La classe <literal>org.hibernate.criterion.Projections</literal> est une "
+"fabrique d'instances de <literal>Projection</literal>. Nous appliquons une "
+"projection sur une requête en appelant <literal>setProjection()</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:172
@@ -478,9 +487,10 @@ msgid ""
 "projection types are defined to be <emphasis>grouping projections</"
 "emphasis>, which also appear in the SQL <literal>group by</literal> clause."
 msgstr ""
-"There is no explicit \"group by\" necessary in a criteria query. Certain "
-"projection types are defined to be <emphasis>grouping projections</"
-"emphasis>, which also appear in the SQL <literal>group by</literal> clause."
+"Il n'y a pas besoin de \"group by\" explicite dans une requête par critère. "
+"Certains types de projection sont définis pour être des "
+"<emphasis>projections de regroupement</emphasis>, lesquels apparaissent "
+"aussi dans la clause <literal>group by</literal> SQL."
 
 #. Tag: para
 #: query_criteria.xml:182
@@ -490,9 +500,9 @@ msgid ""
 "value may be referred to in restrictions or orderings. Here are two "
 "different ways to do this:"
 msgstr ""
-"An alias may optionally be assigned to a projection, so that the projected "
-"value may be referred to in restrictions or orderings. Here are two "
-"different ways to do this:"
+"Un alias peut optionnellement être assigné à une projection, ainsi la valeur "
+"projetée peut être référencée dans des restrictions ou des tris. Voici deux "
+"façons différentes de faire ça :"
 
 #. Tag: programlisting
 #: query_criteria.xml:188
@@ -524,10 +534,10 @@ msgid ""
 "<literal>Projection</literal>. As a shortcut, you can assign an alias when "
 "you add the projection to a projection list:"
 msgstr ""
-"The <literal>alias()</literal> and <literal>as()</literal> methods simply "
-"wrap a projection instance in another, aliased, instance of "
-"<literal>Projection</literal>. As a shortcut, you can assign an alias when "
-"you add the projection to a projection list:"
+"Les méthodes <literal>alias()</literal> et <literal>as()</literal> enveloppe "
+"simplement une instance de projection dans une autre instance (aliasée) de "
+"<literal>Projection</literal>. Comme un raccourci, vous pouvez assignez un "
+"alias lorsque vous ajoutez la projection à la liste de projections :"
 
 #. Tag: programlisting
 #: query_criteria.xml:199
@@ -567,8 +577,8 @@ msgid ""
 "You can also use <literal>Property.forName()</literal> to express "
 "projections:"
 msgstr ""
-"You can also use <literal>Property.forName()</literal> to express "
-"projections:"
+"Vous pouvez aussi utiliser <literal>Property.forName()</literal> pour "
+"formuler des projections :"
 
 #. Tag: programlisting
 #: query_criteria.xml:207
@@ -600,7 +610,7 @@ msgstr ""
 #: query_criteria.xml:214
 #, no-c-format
 msgid "Detached queries and subqueries"
-msgstr "Detached queries and subqueries"
+msgstr "Requêtes et sous-requêtes détachées"
 
 #. Tag: para
 #: query_criteria.xml:215
@@ -610,9 +620,9 @@ msgid ""
 "outside the scope of a session, and then later execute it using some "
 "arbitrary <literal>Session</literal>."
 msgstr ""
-"The <literal>DetachedCriteria</literal> class lets you create a query "
-"outside the scope of a session, and then later execute it using some "
-"arbitrary <literal>Session</literal>."
+"La classe <literal>DetachedCriteria</literal> vous laisse créer une requête "
+"en dehors de la portée de la session, et puis l'exécuter plus tard en "
+"utilisant n'importe quelle <literal>Session</literal> arbitraire."
 
 #. Tag: programlisting
 #: query_criteria.xml:220
@@ -637,9 +647,10 @@ msgid ""
 "subquery. Criterion instances involving subqueries may be obtained via "
 "<literal>Subqueries</literal> or <literal>Property</literal>."
 msgstr ""
-"A <literal>DetachedCriteria</literal> may also be used to express a "
-"subquery. Criterion instances involving subqueries may be obtained via "
-"<literal>Subqueries</literal> or <literal>Property</literal>."
+"Une <literal>DetachedCriteria</literal> peut aussi être utilisée pour "
+"exprimer une sous-requête. Des instances de criterion impliquant des sous-"
+"requêtes peuvent être obtenues via <literal>Subqueries</literal> ou "
+"<literal>Property</literal>."
 
 #. Tag: programlisting
 #: query_criteria.xml:228
@@ -667,7 +678,7 @@ msgstr ""
 #: query_criteria.xml:232
 #, no-c-format
 msgid "Even correlated subqueries are possible:"
-msgstr "Even correlated subqueries are possible:"
+msgstr "Même des requêtes corrélées sont possibles :"
 
 #. Tag: programlisting
 #: query_criteria.xml:236
@@ -686,7 +697,7 @@ msgstr ""
 #: query_criteria.xml:245
 #, no-c-format
 msgid "Queries by natural identifier"
-msgstr "Queries by natural identifier"
+msgstr "Requêtes par identifiant naturel"
 
 #. Tag: para
 #: query_criteria.xml:247
@@ -699,12 +710,13 @@ msgid ""
 "applications, this kind of query occurs frequently. The criteria API "
 "provides special provision for this use case."
 msgstr ""
-"For most queries, including criteria queries, the query cache is not very "
-"efficient, because query cache invalidation occurs too frequently. However, "
-"there is one special kind of query where we can optimize the cache "
-"invalidation algorithm: lookups by a constant natural key. In some "
-"applications, this kind of query occurs frequently. The criteria API "
-"provides special provision for this use case."
+"Pour la plupart des requêtes, incluant les requêtes par critère, le cache de "
+"requêtes n'est pas très efficace, parce que l'invalidation du cache de "
+"requêtes arrive trop souvent. Cependant, il y a une sorte spéciale de "
+"requête où nous pouvons optimiser l'algorithme d'invalidation du cache : les "
+"recherches sur une clef naturelle constante. Dans certaines applications, "
+"cette sorte de requête se produit fréquemment. L'API de critère fournit une "
+"provision spéciale pour ce cas d'utilisation."
 
 #. Tag: para
 #: query_criteria.xml:255
@@ -713,8 +725,9 @@ msgid ""
 "First, you should map the natural key of your entity using <literal>&lt;"
 "natural-id&gt;</literal>, and enable use of the second-level cache."
 msgstr ""
-"First, you should map the natural key of your entity using <literal>&lt;"
-"natural-id&gt;</literal>, and enable use of the second-level cache."
+"D'abord vous devriez mapper la clef naturelle de votre entité en utilisant "
+"<literal>&lt;natural-id&gt;</literal>, et activer l'utilisation du cache de "
+"second niveau."
 
 #. Tag: programlisting
 #: query_criteria.xml:260
@@ -740,14 +753,14 @@ msgid ""
 "Note that this functionality is not intended for use with entities with "
 "<emphasis>mutable</emphasis> natural keys."
 msgstr ""
-"Note that this functionality is not intended for use with entities with "
-"<emphasis>mutable</emphasis> natural keys."
+"Notez que cette fonctionnalité n'est pas prévue pour l'utilisation avec des "
+"entités avec des clefs naturelles <emphasis>mutables</emphasis>."
 
 #. Tag: para
 #: query_criteria.xml:267
 #, no-c-format
 msgid "Next, enable the Hibernate query cache."
-msgstr "Next, enable the Hibernate query cache."
+msgstr "Ensuite, activez le cache de requête d'Hibernate."
 
 #. Tag: para
 #: query_criteria.xml:271
@@ -756,8 +769,8 @@ msgid ""
 "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
 "the more efficient cache algorithm."
 msgstr ""
-"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
-"the more efficient cache algorithm."
+"Maintenant <literal>Restrictions.naturalId()</literal> nous permet de rendre "
+"l'utilisation de l'algorithme de cache plus efficace."
 
 #. Tag: programlisting
 #: query_criteria.xml:276

@@ -713,21 +713,28 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                                 <emphasis role="strong">ex.</emphasis> 
                                 <literal>on_close</literal> (default) | <literal>after_transaction</literal> |
                                 <literal>after_statement</literal> | <literal>auto</literal>
+			</para>                            <para>
+				Note that this setting only affects <literal>Session</literal>s returned from
+				<literal>SessionFactory.openSession</literal>.  For <literal>Session</literal>s
+				obtained through <literal>SessionFactory.getCurrentSession</literal>, the
+				<literal>CurrentSessionContext</literal> implementation configured for use
+				controls the connection release mode for those <literal>Session</literal>s.
+				See <xref linkend="architecture-current-session"/>
                             </para>
                         </entry>
                     </row>
                     <row>
                     <entry>
-                        <literal>hibernate.connection.<emphasis>&lt;propertyName&gt;</emphasis></literal>
+			    <literal>hibernate.connection.</literal><emphasis>&lt;propertyName&gt;</emphasis>
                     </entry>
                     <entry>
-                        Passe la propriété JDBC<literal>propertyName</literal>
+			    Passe la propriété JDBC <emphasis>&lt;propertyName&gt;</emphasis>
                         à <literal>DriverManager.getConnection()</literal>.
                     </entry>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jndi.<emphasis>&lt;propertyName&gt;</emphasis></literal>
+				<literal>hibernate.jndi.</literal><emphasis>&lt;propertyName&gt;</emphasis>
                         </entry>
                         <entry>
                            Passe la propriété <literal>propertyName</literal> à l'<literal>InitialContextFactory</literal>
@@ -1415,7 +1422,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
        <programlisting><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>
 
-
+       <para>
+	       You can pick a different XML configuration file using
+       </para>
+       
+       <programlisting><![CDATA[SessionFactory sf = new Configuration()
+					       .configure("catdb.cfg.xml")
+    .buildSessionFactory();]]></programlisting>
 
     </sect1>
 

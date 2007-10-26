@@ -219,7 +219,9 @@
                             <entry>
                                 spécifie le nom d'une contrainte de clé étrangère générée pour
                                 une association, utilisez-la avec les éléments de mapping
-                                &lt;one-to-one&gt;, &lt;many-to-one&gt;, &lt;key&gt;, et &lt;many-to-many&gt;
+				<literal>&lt;one-to-one&gt;</literal>, 
+				<literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
+                                or <literal>&lt;many-to-many&gt;</literal> 
                                 Notez que les extrêmités <literal>inverse="true"</literal>
                                 se seront pas prises en compte par <literal>SchemaExport</literal>.
                             </entry>
@@ -451,8 +453,8 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
             </para>
 
             <para>
-                <literal>java -cp </literal><emphasis>classpath_hibernate</emphasis>
-                <literal>net.sf.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options fichiers_de_mapping</emphasis>
+		    <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
+                <literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options mapping_files</emphasis>
             </para>
 
             <table frame="topbot">
@@ -482,6 +484,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                         <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>lire les propriétés de la base de données à partir d'un fichier</entry>
+		    </row>                        <row>
+			    <entry><literal>--config=hibernate.cfg.xml</literal></entry>
+			    <entry>specify a <literal>.cfg.xml</literal> file</entry>
                         </row>
                      </tbody>
                 </tgroup>

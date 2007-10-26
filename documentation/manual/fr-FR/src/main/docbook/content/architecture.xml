@@ -323,6 +323,14 @@
                     courantes sont associées au thread d'exécution. Voir les javadocs pour les détails.
                 </para>
             </listitem>
+	    <listitem>
+		    <para>
+			    <literal>org.hibernate.context.ManagedSessionContext</literal> - current
+			    sessions are tracked by thread of execution. However, you are responsible to
+			    bind and unbind a <literal>Session</literal> instance with static methods
+			    on this class, it does never open, flush, or close a <literal>Session</literal>.
+		    </para>
+            </listitem>
         </itemizedlist>
 
         <para>

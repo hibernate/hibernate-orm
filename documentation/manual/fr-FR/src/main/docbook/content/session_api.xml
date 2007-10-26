@@ -94,6 +94,30 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
             Vous pouvez aussi utiliser <literal>persist()</literal> à la place de<literal>save()</literal>,
             avec la sémantique définie plus tôt dans le brouillon d'EJB3.
         </para>
+	
+	<itemizedlist spacing="compact">
+		<listitem>
+			<para>
+				<literal>persist()</literal> makes a transient instance persistent. 
+				However, it doesn't guarantee that the identifier value will be assigned to 
+				the persistent instance immediately, the assignment might happen at flush time. 
+				<literal>persist()</literal> also guarantees that it will not execute an 
+				<literal>INSERT</literal> statement if it is called outside of transaction 
+				boundaries. This is useful in long-running conversations with an extended 
+				Session/persistence context.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<literal>save()</literal> does guarantee to return an identifier. If an INSERT 
+				has to be executed to get the identifier ( e.g. "identity" generator, not 
+				"sequence"), this INSERT happens immediately, no matter if you are inside or 
+				outside of a transaction. This is problematic in a long-running conversation  
+				with an extended Session/persistence context.
+			</para>
+		</listitem>
+	</itemizedlist>        
+	
 
         <para>
             Alternativement, vous pouvez assigner l'identifiant en utilisant une version
@@ -478,6 +502,13 @@ List cats = q.list();]]></programlisting>
                     utilisé, vous pouvez aussi définir des requêtes SQL nativez dans les méta-données, ou
                     migrer des requêtes existantes vers Hibernate en les plaçant dans les fichiers de mapping.
                 </para>
+		<para> UNTRANSLATED!
+			Also note that a query declaration inside a <literal>&lt;hibernate-mapping&gt;</literal>
+			element requires a global unique name for the query, while a query declaration inside a
+			<literal>&lt;class&gt;</literal> element is made unique automatically by prepending the
+			fully qualified name of the class, for example
+			<literal>eg.Cat.ByNameAndMaximumWeight</literal>.
+		</para>
 
             </sect3>
 

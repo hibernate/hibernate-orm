@@ -800,7 +800,12 @@ catch (RuntimeException e) {
             pour conserver la <literal>Session</literal> et évitez de la sérialiser et de la transférer à la couche de présentation (i.e. Il est préférable de ne pas
             la conserver dans la session <literal>HttpSession</literal> .)
         </para>
-
+	<para>
+		The extended session pattern, or <emphasis>session-per-conversation</emphasis>, is
+		more difficult to implement with automatic current session context management.
+		You need to supply your own implementation of the <literal>CurrentSessionContext</literal>
+		for this, see the Hibernate Wiki for examples.
+            </para>
     </sect2>
 
     <sect2 id="transactions-optimistic-detached">

@@ -214,6 +214,43 @@
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
     </sect1>
 
+    <sect1 id="queryhql-identifier-property">
+	    <title>Refering to identifier property</title>
+	    
+	    <para>
+		    There are, generally speaking, 2 ways to refer to an entity's identifier property:
+	    </para>
+	    <itemizedlist spacing="compact">
+		    <listitem>
+			    <para>
+				    The special property (lowercase) <literal>id</literal> may be used to reference the identifier
+				    property of an entity <emphasis>provided that entity does not define a non-identifier property
+					    named id</emphasis>.
+			    </para>
+		    </listitem>
+		    <listitem>
+			    <para>
+				    If the entity defines a named identifier property, you may use that property name.
+			    </para>
+		    </listitem>
+	    </itemizedlist>
+	    
+	    <para>
+		    References to composite identifier properties follow the same naming rules.  If the
+		    entity has a non-identifier property named id, the composite identifier property can only
+		    be referenced by its defined named; otherwise, the special <literal>id</literal> property
+		    can be used to rerference the identifier property.
+	    </para>
+	    
+	    <para>
+		    Note: this has changed significantly starting in version 3.2.2.  In previous versions,
+		    <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
+		    matter what its actual name.  A ramification of that decision was that non-identifier
+		    properties named <literal>id</literal> could never be referenced in Hibernate queries.
+	    </para>
+    </sect1>
+    
+
     <sect1 id="queryhql-select">
         <title>La clause select</title>
 
@@ -904,34 +941,10 @@ from Cat as cat]]></programlisting>
             Notez que les sous-requêtes HQL peuvent arriver seulememnt dans les clauses select ou where.
         </para>
 
-        <para>
-            Pour des sous-requêtes avec plus d'une expression dans le select, vous pouvez utiliser un constructeur de tuples :
+	<para>
+		Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
+		<xref linkend="queryhql-tuple"/> for more details.
         </para>
-
-        <programlisting><![CDATA[from Cat as cat
-where not ( cat.name, cat.color ) in (
-    select cat.name, cat.color from DomesticCat cat
-)]]></programlisting>
-
-        <para>
-            Notez que sur certaines bases de données (mais par Oracle ou HSQL), vous pouvez utiliser des constructeurs de tuples 
-            dans d'autres contextes, par exemple lors du requêtage de composants ou de types utilisateur composites :
-        </para>
-
-        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
-
-        <para>
-            Ce qui est équivalent à la forme plus verbeuse suivante :
-        </para>
-
-        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
-
-        <para>
-            Il y a deux bonnes raisons que vous ne puissiez ne pas vouloir faire cette sorte de choses : d'abord, ce n'est
-            pas complètement portable entre les plateformes de base de données ; deuxièmement, la requête est maintenant
-            dépendante de l'ordre des propriétés dans le document de mapping.
-        </para>
-
     </sect1>
 
     <sect1 id="queryhql-examples">

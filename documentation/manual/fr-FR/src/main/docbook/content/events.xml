@@ -116,15 +116,26 @@ public class AuditInterceptor extends EmptyInterceptor {
 
 }]]></programlisting>
 
-        <para>
-            L'intercepteur doit être spécifié quand une session est créée.
+	    <para>
+		    Interceptors come in two flavors: <literal>Session</literal>-scoped and
+		    <literal>SessionFactory</literal>-scoped.
+	    </para>
+	    
+	    <para>
+		    A <literal>Session</literal>-scoped interceptor is specified
+		    when a session is opened using one of the overloaded SessionFactory.openSession()
+		    methods accepting an <literal>Interceptor</literal>.
         </para>
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
-        <para>
-            Vous pouvez aussi mettre un intercepteur au niveau global, en utilisant l'objet <literal>Configuration</literal>.
-            Dans ce cas, l'intercepteur doit être "threadsafe".
+	<para>
+		A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>
+		object prior to building the <literal>SessionFactory</literal>.  In this case, the supplied interceptor
+		will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless
+		a session is opened explicitly specifying the interceptor to use.  <literal>SessionFactory</literal>-scoped
+		interceptors must be thread safe, taking care to not store session-specific state since multiple
+		sessions will use this interceptor (potentially) concurrently.
         </para>
 
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>

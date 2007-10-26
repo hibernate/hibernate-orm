@@ -681,7 +681,9 @@ public class EventManager {
                 La méthode <literal>getCurrentSession()</literal> renvoie toujours l'unité de travail courante.
                 Souvenez vous que nous avons basculé notre option de configuration au mécanisme basé sur le "thread"
                 dans <literal>hibernate.cfg.xml</literal>. Par conséquent, le scope de l'unité de travail
-                courante est le thread java courant d'exécution. Ceci n'est pas totalement vrai. Une
+		courante est le thread java courant d'exécution. Ceci n'est pas totalement vrai.             </para>
+	
+            <para>Une
                 <literal>Session</literal> commence lorsqu'elle est vraiment utilisée la première fois,
                 Lorsque nous appelons pour la première fois <literal>getCurrentSession()</literal>.
                 Ensuite, elle est liée, par Hibernate, au thread courant. Lorsque la transaction s'achève
@@ -691,7 +693,17 @@ public class EventManager {
                 Ce modèle de programmation "<emphasis>thread-bound</emphasis>" est le moyen le plus 
                 populaire d'utiliser Hibernate.
             </para>
-            
+	    <para> UNTRANSLATED
+		   !
+		    Related to the unit of work scope, should the Hibernate <literal>Session</literal> be used to
+		    execute one or several database operations? The above example uses one <literal>Session</literal>
+		    for one operation. This is pure coincidence, the example is just not complex enough to show any
+		    other approach. The scope of a Hibernate <literal>Session</literal> is flexible but you should
+		    never design your application to use a new Hibernate <literal>Session</literal> for
+		    <emphasis>every</emphasis> database operation. So even if you see it a few more times in
+		    the following (very trivial) examples, consider <emphasis>session-per-operation</emphasis>
+		    an anti-pattern. A real (web) application is shown later in this tutorial.
+            </para>           
             <para>
                 Lisez <xref linkend="transactions"/> pour plus d'informations sur la gestion des transactions et leur démarcations.
                 Nous n'avons pas géré les erreurs et rollback sur l'exemple précédent.
@@ -801,7 +813,13 @@ else if (args[0].equals("list")) {
                 les événements que vous avez stockés jusque là. Vous pouvez bien sûr aussi appeler l'action
                 <literal>store</literal> plusieurs fois.
             </para>
-
+	    <para> UNTRANSLATED!
+		    Note: Most new Hibernate users fail at this point and we see questions about
+		    <emphasis>Table not found</emphasis> error messages regularly. However, if you follow the
+		    steps outlined above you will not have this problem, as hbm2ddl creates the database
+		    schema on the first run, and subsequent application restarts will use this schema. If
+		    you change the mapping and/or database schema, you have to re-enable hbm2ddl once again.
+            </para>
         </sect2>
 
     </sect1>
@@ -1285,7 +1303,12 @@ public void removeFromEvent(Event event) {
                 doesn't scale anymore with our growing application.
             </para>
 -->
+	    
         </sect2>
+	<para>
+		Let's turn this into a small web application.
+        </para>	
+	
     </sect1>
     
     <sect1 id="tutorial-webapp">
@@ -1305,27 +1328,18 @@ public void removeFromEvent(Event event) {
                 Créons une nouvelle classe dans notre répertoire source, dans le package <literal>events</literal>:
             </para>
 
-            <programlisting><![CDATA[package events;
-
-// Imports
-
-public class EventManagerServlet extends HttpServlet {
-
-    private final SimpleDateFormat dateFormatter =
-                            new SimpleDateFormat("dd.MM.yyyy");
-
-    // Servlet code
-}]]></programlisting>
-
-            <para>
-                Le <literal>dateFormatter</literal> est un outil que nous utiliserons plus tard pour convertir les objets
-                <literal>Date</literal> depuis et vers des chaines de caractères. Il est propice de n'avoir qu'un
-                formatter comme membre de la servlet.
-            </para>
-
-            <para>
-                La servlet n'accepte que les requêtes HTTP <literal>GET</literal>, la méthode à implémenter est donc
-				<literal>doGet()</literal>:
+	    <programlisting><![CDATA[package events;
+					     
+					     // Imports
+					     
+					     public class EventManagerServlet extends HttpServlet {
+					     
+					     // Servlet code
+					     }]]></programlisting>
+	    
+	    <para>
+		    The servlet handles HTTP <literal>GET</literal> requests only, hence, the method
+		    we implement is <literal>doGet()</literal>:
             </para>
 
             <programlisting><![CDATA[protected void doGet(HttpServletRequest request,
@@ -1359,7 +1373,12 @@ public class EventManagerServlet extends HttpServlet {
                 tous les accès à la base de données interviennent au sein de la transactiton, peu importe que les données
                 soient lues ou écrites (nous n'utilisons pas le mode auto-commit dans les applications).
             </para>
-
+	    <para> UNTRANSLATED
+		    Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> for
+		    every database operation. Use one Hibernate <literal>Session</literal> that is
+		    scoped to the whole request. Use <literal>getCurrentSession()</literal>, so that
+		    it is automatically bound to the current Java thread.
+            </para>
             <para>
                 Ensuite, les actions possibles de la requêtes sont exécutées et la réponse HTML
                 est rendue. Nous en parlerons plus tard.

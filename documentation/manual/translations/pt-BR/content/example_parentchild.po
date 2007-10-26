@@ -1,287 +1,605 @@
-#, fuzzy
 msgid ""
 msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
-#: index.docbook:5
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: example_parentchild.xml:5
+#, no-c-format
 msgid "Example: Parent/Child"
-msgstr ""
+msgstr "Example: Parent/Child"
 
-#: index.docbook:7
-msgid "One of the very first things that new users try to do with Hibernate is to model a parent / child type relationship. There are two different approaches to this. For various reasons the most convenient approach, especially for new users, is to model both <literal>Parent</literal> and <literal>Child</literal> as entity classes with a <literal>&lt;one-to-many&gt;</literal> association from <literal>Parent</literal> to <literal>Child</literal>. (The alternative approach is to declare the <literal>Child</literal> as a <literal>&lt;composite-element&gt;</literal>.) Now, it turns out that default semantics of a one to many association (in Hibernate) are much less close to the usual semantics of a parent / child relationship than those of a composite element mapping. We will explain how to use a <emphasis>bidirectional one to many association with cascades</emphasis> to model a parent / child relationship efficiently and elegantly. It's not at all difficult!"
+#. Tag: para
+#: example_parentchild.xml:7
+#, no-c-format
+msgid ""
+"One of the very first things that new users try to do with Hibernate is to "
+"model a parent / child type relationship. There are two different approaches "
+"to this. For various reasons the most convenient approach, especially for "
+"new users, is to model both <literal>Parent</literal> and <literal>Child</"
+"literal> as entity classes with a <literal>&lt;one-to-many&gt;</literal> "
+"association from <literal>Parent</literal> to <literal>Child</literal>. (The "
+"alternative approach is to declare the <literal>Child</literal> as a "
+"<literal>&lt;composite-element&gt;</literal>.) Now, it turns out that "
+"default semantics of a one to many association (in Hibernate) are much less "
+"close to the usual semantics of a parent / child relationship than those of "
+"a composite element mapping. We will explain how to use a "
+"<emphasis>bidirectional one to many association with cascades</emphasis> to "
+"model a parent / child relationship efficiently and elegantly. It's not at "
+"all difficult!"
 msgstr ""
+"One of the very first things that new users try to do with Hibernate is to "
+"model a parent / child type relationship. There are two different approaches "
+"to this. For various reasons the most convenient approach, especially for "
+"new users, is to model both <literal>Parent</literal> and <literal>Child</"
+"literal> as entity classes with a <literal>&lt;one-to-many&gt;</literal> "
+"association from <literal>Parent</literal> to <literal>Child</literal>. (The "
+"alternative approach is to declare the <literal>Child</literal> as a "
+"<literal>&lt;composite-element&gt;</literal>.) Now, it turns out that "
+"default semantics of a one to many association (in Hibernate) are much less "
+"close to the usual semantics of a parent / child relationship than those of "
+"a composite element mapping. We will explain how to use a "
+"<emphasis>bidirectional one to many association with cascades</emphasis> to "
+"model a parent / child relationship efficiently and elegantly. It's not at "
+"all difficult!"
 
-#: index.docbook:21
+#. Tag: title
+#: example_parentchild.xml:21
+#, no-c-format
 msgid "A note about collections"
-msgstr ""
+msgstr "A note about collections"
 
-#: index.docbook:23
-msgid "Hibernate collections are considered to be a logical part of their owning entity; never of the contained entities. This is a crucial distinction! It has the following consequences:"
+#. Tag: para
+#: example_parentchild.xml:23
+#, no-c-format
+msgid ""
+"Hibernate collections are considered to be a logical part of their owning "
+"entity; never of the contained entities. This is a crucial distinction! It "
+"has the following consequences:"
 msgstr ""
+"Hibernate collections are considered to be a logical part of their owning "
+"entity; never of the contained entities. This is a crucial distinction! It "
+"has the following consequences:"
 
-#: index.docbook:30
-msgid "When we remove / add an object from / to a collection, the version number of the collection owner is incremented."
+#. Tag: para
+#: example_parentchild.xml:30
+#, no-c-format
+msgid ""
+"When we remove / add an object from / to a collection, the version number of "
+"the collection owner is incremented."
 msgstr ""
+"When we remove / add an object from / to a collection, the version number of "
+"the collection owner is incremented."
 
-#: index.docbook:36
-msgid "If an object that was removed from a collection is an instance of a value type (eg, a composite element), that object will cease to be persistent and its state will be completely removed from the database. Likewise, adding a value type instance to the collection will cause its state to be immediately persistent."
+#. Tag: para
+#: example_parentchild.xml:36
+#, no-c-format
+msgid ""
+"If an object that was removed from a collection is an instance of a value "
+"type (eg, a composite element), that object will cease to be persistent and "
+"its state will be completely removed from the database. Likewise, adding a "
+"value type instance to the collection will cause its state to be immediately "
+"persistent."
 msgstr ""
+"If an object that was removed from a collection is an instance of a value "
+"type (eg, a composite element), that object will cease to be persistent and "
+"its state will be completely removed from the database. Likewise, adding a "
+"value type instance to the collection will cause its state to be immediately "
+"persistent."
 
-#: index.docbook:44
-msgid "On the other hand, if an entity is removed from a collection (a one-to-many or many-to-many association), it will not be deleted, by default. This behaviour is completely consistent - a change to the internal state of another entity should not cause the associated entity to vanish! Likewise, adding an entity to a collection does not cause that entity to become persistent, by default."
+#. Tag: para
+#: example_parentchild.xml:44
+#, no-c-format
+msgid ""
+"On the other hand, if an entity is removed from a collection (a one-to-many "
+"or many-to-many association), it will not be deleted, by default. This "
+"behaviour is completely consistent - a change to the internal state of "
+"another entity should not cause the associated entity to vanish! Likewise, "
+"adding an entity to a collection does not cause that entity to become "
+"persistent, by default."
 msgstr ""
+"On the other hand, if an entity is removed from a collection (a one-to-many "
+"or many-to-many association), it will not be deleted, by default. This "
+"behaviour is completely consistent - a change to the internal state of "
+"another entity should not cause the associated entity to vanish! Likewise, "
+"adding an entity to a collection does not cause that entity to become "
+"persistent, by default."
 
-#: index.docbook:54
-msgid "Instead, the default behaviour is that adding an entity to a collection merely creates a link between the two entities, while removing it removes the link. This is very appropriate for all sorts of cases. Where it is not appropriate at all is the case of a parent / child relationship, where the life of the child is bound to the life cycle of the parent."
+#. Tag: para
+#: example_parentchild.xml:54
+#, no-c-format
+msgid ""
+"Instead, the default behaviour is that adding an entity to a collection "
+"merely creates a link between the two entities, while removing it removes "
+"the link. This is very appropriate for all sorts of cases. Where it is not "
+"appropriate at all is the case of a parent / child relationship, where the "
+"life of the child is bound to the life cycle of the parent."
 msgstr ""
+"Instead, the default behaviour is that adding an entity to a collection "
+"merely creates a link between the two entities, while removing it removes "
+"the link. This is very appropriate for all sorts of cases. Where it is not "
+"appropriate at all is the case of a parent / child relationship, where the "
+"life of the child is bound to the life cycle of the parent."
 
-#: index.docbook:64
+#. Tag: title
+#: example_parentchild.xml:64
+#, no-c-format
 msgid "Bidirectional one-to-many"
-msgstr ""
+msgstr "Bidirectional one-to-many"
 
-#: index.docbook:66
-msgid "Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> association from <literal>Parent</literal> to <literal>Child</literal>."
-msgstr ""
-
-#: index.docbook:71
+#. Tag: para
+#: example_parentchild.xml:66
+#, no-c-format
 msgid ""
-      "<![CDATA[<set name=\"children\">\n"
-      "    <key column=\"parent_id\"/>\n"
-      "    <one-to-many class=\"Child\"/>\n"
-      "</set>]]>"
+"Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> "
+"association from <literal>Parent</literal> to <literal>Child</literal>."
+msgstr ""
+"Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> "
+"association from <literal>Parent</literal> to <literal>Child</literal>."
+
+#. Tag: programlisting
+#: example_parentchild.xml:71
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"children\">\n"
+"    <key column=\"parent_id\"/>\n"
+"    <one-to-many class=\"Child\"/>\n"
+"</set>]]>"
 msgstr ""
 
-#: index.docbook:73
+#. Tag: para
+#: example_parentchild.xml:73
+#, no-c-format
 msgid "If we were to execute the following code"
-msgstr ""
+msgstr "If we were to execute the following code"
 
-#: index.docbook:77
+#. Tag: programlisting
+#: example_parentchild.xml:77
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = .....;\n"
-      "Child c = new Child();\n"
-      "p.getChildren().add(c);\n"
-      "session.save(c);\n"
-      "session.flush();]]>"
+"<![CDATA[Parent p = .....;\n"
+"Child c = new Child();\n"
+"p.getChildren().add(c);\n"
+"session.save(c);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:79
+#. Tag: para
+#: example_parentchild.xml:79
+#, no-c-format
 msgid "Hibernate would issue two SQL statements:"
-msgstr ""
+msgstr "Hibernate would issue two SQL statements:"
 
-#: index.docbook:85
-msgid "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
-msgstr ""
-
-#: index.docbook:88
-msgid "an <literal>UPDATE</literal> to create the link from <literal>p</literal> to <literal>c</literal>"
-msgstr ""
-
-#: index.docbook:95
-msgid "This is not only inefficient, but also violates any <literal>NOT NULL</literal> constraint on the <literal>parent_id</literal> column. We can fix the nullability constraint violation by specifying <literal>not-null=\"true\"</literal> in the collection mapping:"
-msgstr ""
-
-#: index.docbook:101
+#. Tag: para
+#: example_parentchild.xml:85
+#, no-c-format
 msgid ""
-      "<![CDATA[<set name=\"children\">\n"
-      "    <key column=\"parent_id\" not-null=\"true\"/>\n"
-      "    <one-to-many class=\"Child\"/>\n"
-      "</set>]]>"
+"an <literal>INSERT</literal> to create the record for <literal>c</literal>"
+msgstr ""
+"an <literal>INSERT</literal> to create the record for <literal>c</literal>"
+
+#. Tag: para
+#: example_parentchild.xml:88
+#, no-c-format
+msgid ""
+"an <literal>UPDATE</literal> to create the link from <literal>p</literal> to "
+"<literal>c</literal>"
+msgstr ""
+"an <literal>UPDATE</literal> to create the link from <literal>p</literal> to "
+"<literal>c</literal>"
+
+#. Tag: para
+#: example_parentchild.xml:95
+#, no-c-format
+msgid ""
+"This is not only inefficient, but also violates any <literal>NOT NULL</"
+"literal> constraint on the <literal>parent_id</literal> column. We can fix "
+"the nullability constraint violation by specifying <literal>not-null=\"true"
+"\"</literal> in the collection mapping:"
+msgstr ""
+"This is not only inefficient, but also violates any <literal>NOT NULL</"
+"literal> constraint on the <literal>parent_id</literal> column. We can fix "
+"the nullability constraint violation by specifying <literal>not-null=\"true"
+"\"</literal> in the collection mapping:"
+
+#. Tag: programlisting
+#: example_parentchild.xml:101
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"children\">\n"
+"    <key column=\"parent_id\" not-null=\"true\"/>\n"
+"    <one-to-many class=\"Child\"/>\n"
+"</set>]]>"
 msgstr ""
 
-#: index.docbook:103
+#. Tag: para
+#: example_parentchild.xml:103
+#, no-c-format
 msgid "However, this is not the recommended solution."
-msgstr ""
+msgstr "However, this is not the recommended solution."
 
-#: index.docbook:106
-msgid "The underlying cause of this behaviour is that the link (the foreign key <literal>parent_id</literal>) from <literal>p</literal> to <literal>c</literal> is not considered part of the state of the <literal>Child</literal> object and is therefore not created in the <literal>INSERT</literal>. So the solution is to make the link part of the <literal>Child</literal> mapping."
-msgstr ""
-
-#: index.docbook:113
-msgid "<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/>]]>"
-msgstr ""
-
-#: index.docbook:115
-msgid "(We also need to add the <literal>parent</literal> property to the <literal>Child</literal> class.)"
-msgstr ""
-
-#: index.docbook:119
-msgid "Now that the <literal>Child</literal> entity is managing the state of the link, we tell the collection not to update the link. We use the <literal>inverse</literal> attribute."
-msgstr ""
-
-#: index.docbook:124
+#. Tag: para
+#: example_parentchild.xml:106
+#, no-c-format
 msgid ""
-      "<![CDATA[<set name=\"children\" inverse=\"true\">\n"
-      "    <key column=\"parent_id\"/>\n"
-      "    <one-to-many class=\"Child\"/>\n"
-      "</set>]]>"
+"The underlying cause of this behaviour is that the link (the foreign key "
+"<literal>parent_id</literal>) from <literal>p</literal> to <literal>c</"
+"literal> is not considered part of the state of the <literal>Child</literal> "
+"object and is therefore not created in the <literal>INSERT</literal>. So the "
+"solution is to make the link part of the <literal>Child</literal> mapping."
+msgstr ""
+"The underlying cause of this behaviour is that the link (the foreign key "
+"<literal>parent_id</literal>) from <literal>p</literal> to <literal>c</"
+"literal> is not considered part of the state of the <literal>Child</literal> "
+"object and is therefore not created in the <literal>INSERT</literal>. So the "
+"solution is to make the link part of the <literal>Child</literal> mapping."
+
+#. Tag: programlisting
+#: example_parentchild.xml:113
+#, no-c-format
+msgid ""
+"<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/"
+">]]>"
 msgstr ""
 
-#: index.docbook:126
+#. Tag: para
+#: example_parentchild.xml:115
+#, no-c-format
+msgid ""
+"(We also need to add the <literal>parent</literal> property to the "
+"<literal>Child</literal> class.)"
+msgstr ""
+"(We also need to add the <literal>parent</literal> property to the "
+"<literal>Child</literal> class.)"
+
+#. Tag: para
+#: example_parentchild.xml:119
+#, no-c-format
+msgid ""
+"Now that the <literal>Child</literal> entity is managing the state of the "
+"link, we tell the collection not to update the link. We use the "
+"<literal>inverse</literal> attribute."
+msgstr ""
+"Now that the <literal>Child</literal> entity is managing the state of the "
+"link, we tell the collection not to update the link. We use the "
+"<literal>inverse</literal> attribute."
+
+#. Tag: programlisting
+#: example_parentchild.xml:124
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"children\" inverse=\"true\">\n"
+"    <key column=\"parent_id\"/>\n"
+"    <one-to-many class=\"Child\"/>\n"
+"</set>]]>"
+msgstr ""
+
+#. Tag: para
+#: example_parentchild.xml:126
+#, no-c-format
 msgid "The following code would be used to add a new <literal>Child</literal>"
-msgstr ""
+msgstr "The following code would be used to add a new <literal>Child</literal>"
 
-#: index.docbook:130
+#. Tag: programlisting
+#: example_parentchild.xml:130
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "Child c = new Child();\n"
-      "c.setParent(p);\n"
-      "p.getChildren().add(c);\n"
-      "session.save(c);\n"
-      "session.flush();]]>"
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"Child c = new Child();\n"
+"c.setParent(p);\n"
+"p.getChildren().add(c);\n"
+"session.save(c);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:132
+#. Tag: para
+#: example_parentchild.xml:132
+#, no-c-format
 msgid "And now, only one SQL <literal>INSERT</literal> would be issued!"
-msgstr ""
+msgstr "And now, only one SQL <literal>INSERT</literal> would be issued!"
 
-#: index.docbook:136
-msgid "To tighten things up a bit, we could create an <literal>addChild()</literal> method of <literal>Parent</literal>."
-msgstr ""
-
-#: index.docbook:141
+#. Tag: para
+#: example_parentchild.xml:136
+#, no-c-format
 msgid ""
-      "<![CDATA[public void addChild(Child c) {\n"
-      "    c.setParent(this);\n"
-      "    children.add(c);\n"
-      "}]]>"
+"To tighten things up a bit, we could create an <literal>addChild()</literal> "
+"method of <literal>Parent</literal>."
+msgstr ""
+"To tighten things up a bit, we could create an <literal>addChild()</literal> "
+"method of <literal>Parent</literal>."
+
+#. Tag: programlisting
+#: example_parentchild.xml:141
+#, no-c-format
+msgid ""
+"<![CDATA[public void addChild(Child c) {\n"
+"    c.setParent(this);\n"
+"    children.add(c);\n"
+"}]]>"
 msgstr ""
 
-#: index.docbook:143
+#. Tag: para
+#: example_parentchild.xml:143
+#, no-c-format
 msgid "Now, the code to add a <literal>Child</literal> looks like"
-msgstr ""
+msgstr "Now, the code to add a <literal>Child</literal> looks like"
 
-#: index.docbook:147
+#. Tag: programlisting
+#: example_parentchild.xml:147
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "Child c = new Child();\n"
-      "p.addChild(c);\n"
-      "session.save(c);\n"
-      "session.flush();]]>"
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"Child c = new Child();\n"
+"p.addChild(c);\n"
+"session.save(c);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:152
+#. Tag: title
+#: example_parentchild.xml:152
+#, no-c-format
 msgid "Cascading life cycle"
-msgstr ""
+msgstr "Cascading life cycle"
 
-#: index.docbook:154
-msgid "The explicit call to <literal>save()</literal> is still annoying. We will address this by using cascades."
-msgstr ""
-
-#: index.docbook:159
+#. Tag: para
+#: example_parentchild.xml:154
+#, no-c-format
 msgid ""
-      "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all\">\n"
-      "    <key column=\"parent_id\"/>\n"
-      "    <one-to-many class=\"Child\"/>\n"
-      "</set>]]>"
+"The explicit call to <literal>save()</literal> is still annoying. We will "
+"address this by using cascades."
+msgstr ""
+"The explicit call to <literal>save()</literal> is still annoying. We will "
+"address this by using cascades."
+
+#. Tag: programlisting
+#: example_parentchild.xml:159
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all\">\n"
+"    <key column=\"parent_id\"/>\n"
+"    <one-to-many class=\"Child\"/>\n"
+"</set>]]>"
 msgstr ""
 
-#: index.docbook:161
+#. Tag: para
+#: example_parentchild.xml:161
+#, no-c-format
 msgid "This simplifies the code above to"
-msgstr ""
+msgstr "This simplifies the code above to"
 
-#: index.docbook:165
+#. Tag: programlisting
+#: example_parentchild.xml:165
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "Child c = new Child();\n"
-      "p.addChild(c);\n"
-      "session.flush();]]>"
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"Child c = new Child();\n"
+"p.addChild(c);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:167
-msgid "Similarly, we don't need to iterate over the children when saving or deleting a <literal>Parent</literal>. The following removes <literal>p</literal> and all its children from the database."
-msgstr ""
-
-#: index.docbook:172
+#. Tag: para
+#: example_parentchild.xml:167
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "session.delete(p);\n"
-      "session.flush();]]>"
+"Similarly, we don't need to iterate over the children when saving or "
+"deleting a <literal>Parent</literal>. The following removes <literal>p</"
+"literal> and all its children from the database."
+msgstr ""
+"Similarly, we don't need to iterate over the children when saving or "
+"deleting a <literal>Parent</literal>. The following removes <literal>p</"
+"literal> and all its children from the database."
+
+#. Tag: programlisting
+#: example_parentchild.xml:172
+#, no-c-format
+msgid ""
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"session.delete(p);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:174
+#. Tag: para
+#: example_parentchild.xml:174
+#, no-c-format
 msgid "However, this code"
-msgstr ""
+msgstr "However, this code"
 
-#: index.docbook:178
+#. Tag: programlisting
+#: example_parentchild.xml:178
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "Child c = (Child) p.getChildren().iterator().next();\n"
-      "p.getChildren().remove(c);\n"
-      "c.setParent(null);\n"
-      "session.flush();]]>"
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"Child c = (Child) p.getChildren().iterator().next();\n"
+"p.getChildren().remove(c);\n"
+"c.setParent(null);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:180
-msgid "will not remove <literal>c</literal> from the database; it will ony remove the link to <literal>p</literal> (and cause a <literal>NOT NULL</literal> constraint violation, in this case). You need to explicitly <literal>delete()</literal> the <literal>Child</literal>."
-msgstr ""
-
-#: index.docbook:186
+#. Tag: para
+#: example_parentchild.xml:180
+#, no-c-format
 msgid ""
-      "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-      "Child c = (Child) p.getChildren().iterator().next();\n"
-      "p.getChildren().remove(c);\n"
-      "session.delete(c);\n"
-      "session.flush();]]>"
+"will not remove <literal>c</literal> from the database; it will ony remove "
+"the link to <literal>p</literal> (and cause a <literal>NOT NULL</literal> "
+"constraint violation, in this case). You need to explicitly <literal>delete()"
+"</literal> the <literal>Child</literal>."
 msgstr ""
+"will not remove <literal>c</literal> from the database; it will ony remove "
+"the link to <literal>p</literal> (and cause a <literal>NOT NULL</literal> "
+"constraint violation, in this case). You need to explicitly <literal>delete()"
+"</literal> the <literal>Child</literal>."
 
-#: index.docbook:188
-msgid "Now, in our case, a <literal>Child</literal> can't really exist without its parent. So if we remove a <literal>Child</literal> from the collection, we really do want it to be deleted. For this, we must use <literal>cascade=\"all-delete-orphan\"</literal>."
-msgstr ""
-
-#: index.docbook:194
+#. Tag: programlisting
+#: example_parentchild.xml:186
+#, no-c-format
 msgid ""
-      "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all-delete-orphan\">\n"
-      "    <key column=\"parent_id\"/>\n"
-      "    <one-to-many class=\"Child\"/>\n"
-      "</set>]]>"
+"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
+"Child c = (Child) p.getChildren().iterator().next();\n"
+"p.getChildren().remove(c);\n"
+"session.delete(c);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:196
-msgid "Note: even though the collection mapping specifies <literal>inverse=\"true\"</literal>, cascades are still processed by iterating the collection elements. So if you require that an object be saved, deleted or updated by cascade, you must add it to the collection. It is not enough to simply call <literal>setParent()</literal>."
+#. Tag: para
+#: example_parentchild.xml:188
+#, no-c-format
+msgid ""
+"Now, in our case, a <literal>Child</literal> can't really exist without its "
+"parent. So if we remove a <literal>Child</literal> from the collection, we "
+"really do want it to be deleted. For this, we must use <literal>cascade="
+"\"all-delete-orphan\"</literal>."
+msgstr ""
+"Now, in our case, a <literal>Child</literal> can't really exist without its "
+"parent. So if we remove a <literal>Child</literal> from the collection, we "
+"really do want it to be deleted. For this, we must use <literal>cascade="
+"\"all-delete-orphan\"</literal>."
+
+#. Tag: programlisting
+#: example_parentchild.xml:194
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all-delete-orphan"
+"\">\n"
+"    <key column=\"parent_id\"/>\n"
+"    <one-to-many class=\"Child\"/>\n"
+"</set>]]>"
 msgstr ""
 
-#: index.docbook:206
+#. Tag: para
+#: example_parentchild.xml:196
+#, no-c-format
+msgid ""
+"Note: even though the collection mapping specifies <literal>inverse=\"true"
+"\"</literal>, cascades are still processed by iterating the collection "
+"elements. So if you require that an object be saved, deleted or updated by "
+"cascade, you must add it to the collection. It is not enough to simply call "
+"<literal>setParent()</literal>."
+msgstr ""
+"Note: even though the collection mapping specifies <literal>inverse=\"true"
+"\"</literal>, cascades are still processed by iterating the collection "
+"elements. So if you require that an object be saved, deleted or updated by "
+"cascade, you must add it to the collection. It is not enough to simply call "
+"<literal>setParent()</literal>."
+
+#. Tag: title
+#: example_parentchild.xml:206
+#, no-c-format
 msgid "Cascades and <literal>unsaved-value</literal>"
-msgstr ""
+msgstr "Cascades and <literal>unsaved-value</literal>"
 
-#: index.docbook:208
-msgid "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</literal>, made some changes in a UI action and wish to persist these changes in a new session by calling <literal>update()</literal>. The <literal>Parent</literal> will contain a collection of childen and, since cascading update is enabled, Hibernate needs to know which children are newly instantiated and which represent existing rows in the database. Lets assume that both <literal>Parent</literal> and <literal>Child</literal> have genenerated identifier properties of type <literal>Long</literal>. Hibernate will use the identifier and version/timestamp property value to determine which of the children are new. (See <xref linkend=\"objectstate-saveorupdate\"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify an <literal>unsaved-value</literal> explicitly.</emphasis>"
-msgstr ""
-
-#: index.docbook:220
-msgid "The following code will update <literal>parent</literal> and <literal>child</literal> and insert <literal>newChild</literal>."
-msgstr ""
-
-#: index.docbook:225
+#. Tag: para
+#: example_parentchild.xml:208
+#, no-c-format
 msgid ""
-      "<![CDATA[//parent and child were both loaded in a previous session\n"
-      "parent.addChild(child);\n"
-      "Child newChild = new Child();\n"
-      "parent.addChild(newChild);\n"
-      "session.update(parent);\n"
-      "session.flush();]]>"
+"Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
+"literal>, made some changes in a UI action and wish to persist these changes "
+"in a new session by calling <literal>update()</literal>. The "
+"<literal>Parent</literal> will contain a collection of childen and, since "
+"cascading update is enabled, Hibernate needs to know which children are "
+"newly instantiated and which represent existing rows in the database. Lets "
+"assume that both <literal>Parent</literal> and <literal>Child</literal> have "
+"genenerated identifier properties of type <literal>Long</literal>. Hibernate "
+"will use the identifier and version/timestamp property value to determine "
+"which of the children are new. (See <xref linkend=\"objectstate-saveorupdate"
+"\"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify an "
+"<literal>unsaved-value</literal> explicitly.</emphasis>"
+msgstr ""
+"Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
+"literal>, made some changes in a UI action and wish to persist these changes "
+"in a new session by calling <literal>update()</literal>. The "
+"<literal>Parent</literal> will contain a collection of childen and, since "
+"cascading update is enabled, Hibernate needs to know which children are "
+"newly instantiated and which represent existing rows in the database. Lets "
+"assume that both <literal>Parent</literal> and <literal>Child</literal> have "
+"genenerated identifier properties of type <literal>Long</literal>. Hibernate "
+"will use the identifier and version/timestamp property value to determine "
+"which of the children are new. (See <xref linkend=\"objectstate-saveorupdate"
+"\"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify an "
+"<literal>unsaved-value</literal> explicitly.</emphasis>"
+
+#. Tag: para
+#: example_parentchild.xml:220
+#, no-c-format
+msgid ""
+"The following code will update <literal>parent</literal> and <literal>child</"
+"literal> and insert <literal>newChild</literal>."
+msgstr ""
+"The following code will update <literal>parent</literal> and <literal>child</"
+"literal> and insert <literal>newChild</literal>."
+
+#. Tag: programlisting
+#: example_parentchild.xml:225
+#, no-c-format
+msgid ""
+"<![CDATA[//parent and child were both loaded in a previous session\n"
+"parent.addChild(child);\n"
+"Child newChild = new Child();\n"
+"parent.addChild(newChild);\n"
+"session.update(parent);\n"
+"session.flush();]]>"
 msgstr ""
 
-#: index.docbook:227
-msgid "Well, that's all very well for the case of a generated identifier, but what about assigned identifiers and composite identifiers? This is more difficult, since Hibernate can't use the identifier property to distinguish between a newly instantiated object (with an identifier assigned by the user) and an object loaded in a previous session. In this case, Hibernate will either use the timestamp or version property, or will actually query the second-level cache or, worst case, the database, to see if the row exists."
+#. Tag: para
+#: example_parentchild.xml:227
+#, no-c-format
+msgid ""
+"Well, that's all very well for the case of a generated identifier, but what "
+"about assigned identifiers and composite identifiers? This is more "
+"difficult, since Hibernate can't use the identifier property to distinguish "
+"between a newly instantiated object (with an identifier assigned by the "
+"user) and an object loaded in a previous session. In this case, Hibernate "
+"will either use the timestamp or version property, or will actually query "
+"the second-level cache or, worst case, the database, to see if the row "
+"exists."
 msgstr ""
+"Well, that's all very well for the case of a generated identifier, but what "
+"about assigned identifiers and composite identifiers? This is more "
+"difficult, since Hibernate can't use the identifier property to distinguish "
+"between a newly instantiated object (with an identifier assigned by the "
+"user) and an object loaded in a previous session. In this case, Hibernate "
+"will either use the timestamp or version property, or will actually query "
+"the second-level cache or, worst case, the database, to see if the row "
+"exists."
 
-#: index.docbook:260
+#. Tag: title
+#: example_parentchild.xml:260
+#, no-c-format
 msgid "Conclusion"
+msgstr "Conclusion"
+
+#. Tag: para
+#: example_parentchild.xml:262
+#, no-c-format
+msgid ""
+"There is quite a bit to digest here and it might look confusing first time "
+"around. However, in practice, it all works out very nicely. Most Hibernate "
+"applications use the parent / child pattern in many places."
 msgstr ""
+"There is quite a bit to digest here and it might look confusing first time "
+"around. However, in practice, it all works out very nicely. Most Hibernate "
+"applications use the parent / child pattern in many places."
 
-#: index.docbook:262
-msgid "There is quite a bit to digest here and it might look confusing first time around. However, in practice, it all works out very nicely. Most Hibernate applications use the parent / child pattern in many places."
+#. Tag: para
+#: example_parentchild.xml:267
+#, no-c-format
+msgid ""
+"We mentioned an alternative in the first paragraph. None of the above issues "
+"exist in the case of <literal>&lt;composite-element&gt;</literal> mappings, "
+"which have exactly the semantics of a parent / child relationship. "
+"Unfortunately, there are two big limitations to composite element classes: "
+"composite elements may not own collections, and they should not be the child "
+"of any entity other than the unique parent."
 msgstr ""
-
-#: index.docbook:267
-msgid "We mentioned an alternative in the first paragraph. None of the above issues exist in the case of <literal>&lt;composite-element&gt;</literal> mappings, which have exactly the semantics of a parent / child relationship. Unfortunately, there are two big limitations to composite element classes: composite elements may not own collections, and they should not be the child of any entity other than the unique parent."
-msgstr ""
-
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
-
+"We mentioned an alternative in the first paragraph. None of the above issues "
+"exist in the case of <literal>&lt;composite-element&gt;</literal> mappings, "
+"which have exactly the semantics of a parent / child relationship. "
+"Unfortunately, there are two big limitations to composite element classes: "
+"composite elements may not own collections, and they should not be the child "
+"of any entity other than the unique parent."

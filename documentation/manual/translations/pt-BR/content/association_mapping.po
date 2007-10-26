@@ -14,13 +14,13 @@ msgstr ""
 #: association_mapping.xml:6
 #, no-c-format
 msgid "Association Mappings"
-msgstr "Mapper les associations"
+msgstr "Mapeamento de Associações"
 
 #. Tag: title
 #: association_mapping.xml:9
 #, no-c-format
 msgid "Introduction"
-msgstr "Introduction"
+msgstr "Introdução"
 
 #. Tag: para
 #: association_mapping.xml:11
@@ -32,12 +32,11 @@ msgid ""
 "use <literal>Person</literal> and <literal>Address</literal> in all the "
 "examples."
 msgstr ""
-"Correctement mapper les associations est souvent la tâche la plus difficile. "
-"Dans cette section nous traiterons les cas classiques les uns après les "
-"autres. Nous commencerons d'abbord par les mappings unidirectionnels, puis "
-"nous aborderons la question des mappings bidirectionnels. Nous illustrerons "
-"tous nos exemples avec les classes <literal>Person</literal> et "
-"<literal>Address</literal>."
+"Mapeamentos de associações são freqüentemente a coisa mais difícil de se "
+"acertar. Nesta seção nós passaremos pêlos casos canônicos um pôr um, "
+"começando com mapeamentos unidirecionais e considerando os casos "
+"bidirecionais. Nos vamos usar <literal>Person</literal> e <literal>Address</"
+"literal> em todos os exemplos."
 
 #. Tag: para
 #: association_mapping.xml:19
@@ -46,10 +45,8 @@ msgid ""
 "We'll classify associations by whether or not they map to an intervening "
 "join table, and by multiplicity."
 msgstr ""
-"Nous utiliserons deux critères pour classer les associations : le premier "
-"sera de savoir si l'association est bâti sur une table supplémentaire "
-"d'association et le deuxieme sera basé sur la multiplicité de cette "
-"association."
+"Nós classificaremos as associações pelo seu mapeamento ou a falta do mesmo, "
+"sua intervenção na tabela associativa, e pela sua multiplicidade."
 
 #. Tag: para
 #: association_mapping.xml:24
@@ -60,25 +57,23 @@ msgid ""
 "requirement of Hibernate, and the mappings will all work if you drop the "
 "nullability constraints."
 msgstr ""
-"Autoriser une clé étrangère nulle est considéré comme un mauvais choix dans "
-"la construction d'un modèle de données. Nous supposerons donc que dans tous "
-"les exemples qui vont suivre on aura interdit la valeur nulle pour les clés "
-"étrangères. Attention, ceci ne veut pas dire que Hibernate ne supporte pas "
-"les clés étrangères pouvant prendre des valeurs nulles, les exemples qui "
-"suivent continueront de fonctionner si vous décidiez ne plus imposer la "
-"contrainte de non-nullité sur les clés étrangères."
+"O uso de chaves estrangeiras não obrigatórias não é considerada uma boa "
+"prática na modelagem de dados tradicional, assim todos nossos exemplos usam "
+"chaves estrangeiras obrigatórias. Esta não é uma exigência do Hibernate, e "
+"todas as mapeamentos funcionarão se você remover as constraints de "
+"obrigatoriedade."
 
 #. Tag: title
 #: association_mapping.xml:34
 #, no-c-format
 msgid "Unidirectional associations"
-msgstr "Association unidirectionnelle"
+msgstr "Associações Unidirecionais"
 
 #. Tag: title
 #: association_mapping.xml:37 association_mapping.xml:108
 #, no-c-format
 msgid "many to one"
-msgstr "plusieurs à un"
+msgstr "muitos para um"
 
 #. Tag: para
 #: association_mapping.xml:39
@@ -87,9 +82,8 @@ msgid ""
 "A <emphasis>unidirectional many-to-one association</emphasis> is the most "
 "common kind of unidirectional association."
 msgstr ""
-"Une <emphasis>association plusieurs-à-un (many-to-one) unidirectionnelle </"
-"emphasis> est le type que l'on rencontre le plus souvent dans les "
-"associations unidirectionnelles."
+"Uma <emphasis>associação unidirecional muitos-para-um</emphasis> é o tipo "
+"mais comum de associação unidirecional."
 
 #. Tag: programlisting
 #: association_mapping.xml:44
@@ -129,13 +123,13 @@ msgstr ""
 msgid "one to one"
 msgstr ""
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"un à un\n"
+"um para um\n"
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"un à un\n"
+"um para um\n"
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"Un à un\n"
+"um para um\n"
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"Un à un"
+"one to one"
 
 #. Tag: para
 #: association_mapping.xml:52
@@ -145,9 +139,9 @@ msgid ""
 "emphasis> is almost identical. The only difference is the column unique "
 "constraint."
 msgstr ""
-"une <emphasis>association un-à-un (one-to-one) sur une clé étrangère</"
-"emphasis> est presque identique. La seule différence est sur la contrainte "
-"d'unicité que l'on impose à cette colonne."
+"Uma <emphasis>associação unidirecional um-para-um em uma chave estrangeira </"
+"emphasis> é quase idêntica. A única diferença é a constraint unique na "
+"coluna."
 
 #. Tag: programlisting
 #: association_mapping.xml:57
@@ -189,10 +183,9 @@ msgid ""
 "emphasis> usually uses a special id generator. (Notice that we've reversed "
 "the direction of the association in this example.)"
 msgstr ""
-"Une <emphasis>association un-à-un (one-to-one) unidirectionnelle sur une clé "
-"primaire</emphasis> utilise un générateur d'identifiant particulier. "
-"(Remarquez que nous avons inversé le sens de cette association dans cet "
-"exemple.)"
+"Uma <emphasis>associação unidirecional um-para-um na chave primaria</"
+"emphasis> geralmente usa um gerador de id special. ( Note que nós invertemos "
+"a direção da associação nesse exemplo)."
 
 #. Tag: programlisting
 #: association_mapping.xml:66
@@ -228,7 +221,7 @@ msgstr ""
 #: association_mapping.xml:72 association_mapping.xml:94
 #, no-c-format
 msgid "one to many"
-msgstr "un à plusieurs"
+msgstr "um para muitos"
 
 #. Tag: para
 #: association_mapping.xml:74
@@ -237,9 +230,9 @@ msgid ""
 "A <emphasis>unidirectional one-to-many association on a foreign key</"
 "emphasis> is a very unusual case, and is not really recommended."
 msgstr ""
-"Une <emphasis>association un-à-plusieurs (one-to-many) unidirectionnelle sur "
-"une clé étrangère</emphasis> est vraiment inhabituelle, et n'est pas "
-"vraiment recommandée."
+"Uma <emphasis>associação unidirecional um-para-muitos em uma chave "
+"estrangeira</emphasis> é um caso muito incomum, e realmente não é "
+"recomendada."
 
 #. Tag: programlisting
 #: association_mapping.xml:79
@@ -279,14 +272,14 @@ msgstr ""
 #, no-c-format
 msgid "We think it's better to use a join table for this kind of association."
 msgstr ""
-"Nous pensons qu'il est préférable d'utiliser une table de jointure pour ce "
-"type d'association."
+"Nós achamos que é melhor usar uma tabela associativa para este tipo de "
+"associação."
 
 #. Tag: title
 #: association_mapping.xml:91
 #, no-c-format
 msgid "Unidirectional associations with join tables"
-msgstr "Associations unidirectionnelles avec tables de jointure"
+msgstr "Associações Unidirecionais com tabelas associativas"
 
 #. Tag: para
 #: association_mapping.xml:96
@@ -297,11 +290,10 @@ msgid ""
 "\"</literal>, we have changed the multiplicity from many-to-many to one-to-"
 "many."
 msgstr ""
-"Une <emphasis>association unidirectionnelle un-à-plusieurs (one-to-many) "
-"avec une table de jointure</emphasis> est un bien meilleur choix. Remarquez "
-"qu'en spécifiant <literal>unique=\"true\"</literal>, on a changé la "
-"multiplicité plusieurs-à-plusieurs (many-to-many) pour un-à-plusieurs (one-"
-"to-many)."
+"Uma <emphasis>associação um-para-muitos unidirecional usando uma tabela "
+"associativa</emphasis> e o mais comum. Note que se especificarmos "
+"<literal>unique=\"true\"</literal>, estaremos modificando a cardinalidade de "
+"muitos-para-muitos para um-para-muitos."
 
 #. Tag: programlisting
 #: association_mapping.xml:102
@@ -345,9 +337,8 @@ msgid ""
 "A <emphasis>unidirectional many-to-one association on a join table</"
 "emphasis> is quite common when the association is optional."
 msgstr ""
-"Une <emphasis>assiociation plusieurs-à-un (many-to-one) unidirectionnelle "
-"sur une table de jointure</emphasis> est très fréquente quand l'association "
-"est optionnelle."
+"Uma <emphasis>associação unidirecional muitos-para-um em uma tabela "
+"associativa</emphasis> é bastante comum quando a associação for opcional."
 
 #. Tag: programlisting
 #: association_mapping.xml:115
@@ -392,8 +383,8 @@ msgid ""
 "A <emphasis>unidirectional one-to-one association on a join table</emphasis> "
 "is extremely unusual, but possible."
 msgstr ""
-"Une <emphasis>association unidirectionnelle un-à-un (one-to-one) sur une "
-"table de jointure</emphasis> est extrèmement rare mais envisageable."
+"Uma <emphasis>associação unidirecional um-para-um em uma tabela associativa</"
+"emphasis> é extremamente incomum, mas possível."
 
 #. Tag: programlisting
 #: association_mapping.xml:128
@@ -437,7 +428,7 @@ msgstr ""
 #: association_mapping.xml:134 association_mapping.xml:238
 #, no-c-format
 msgid "many to many"
-msgstr "plusieurs à plusieurs"
+msgstr "muitos para muitos"
 
 #. Tag: para
 #: association_mapping.xml:136
@@ -446,8 +437,8 @@ msgid ""
 "Finally, we have a <emphasis>unidirectional many-to-many association</"
 "emphasis>."
 msgstr ""
-"Finallement, nous avons <emphasis>l'association unidirectionnelle plusieurs-"
-"à-plusieurs (many-to-many)</emphasis>."
+"Finalmente, nós temos a <emphasis>associação unidirecional muitos-para- "
+"muitos</emphasis>."
 
 #. Tag: programlisting
 #: association_mapping.xml:140
@@ -487,13 +478,13 @@ msgstr ""
 #: association_mapping.xml:148
 #, no-c-format
 msgid "Bidirectional associations"
-msgstr "Associations bidirectionnelles"
+msgstr "Associações Bidirecionais"
 
 #. Tag: title
 #: association_mapping.xml:151 association_mapping.xml:211
 #, no-c-format
 msgid "one to many / many to one"
-msgstr "un à plusieurs / plusieurs à un"
+msgstr "um para muitos / muitos para um"
 
 #. Tag: para
 #: association_mapping.xml:153
@@ -502,9 +493,8 @@ msgid ""
 "A <emphasis>bidirectional many-to-one association</emphasis> is the most "
 "common kind of association. (This is the standard parent/child relationship.)"
 msgstr ""
-"Une <emphasis>association bidirectionnelle plusieurs à un (many-to-one)</"
-"emphasis> est le type d'association que l'on rencontre le plus souvent. "
-"(c'est la façon standard de créer des relations parents/enfants.)"
+"Uma <emphasis>associação bidirecional muitos-para-um</emphasis> é o tipo "
+"mais comum de associação. (Esse é o relacionamento padrão pai / filho. )"
 
 #. Tag: programlisting
 #: association_mapping.xml:159
@@ -541,12 +531,12 @@ msgid ""
 "side virtually inverse by setting <literal>update=\"false\"</literal> and "
 "<literal>insert=\"false\"</literal>):"
 msgstr ""
-"Si vous utilisez une <literal>List</literal> (ou toute autre collection "
-"indexée) vous devez paramétrer la colonne <literal>key</literal> de la clé "
-"étrangère à <literal>not null</literal>, et laisser Hibernate gérer "
-"l'association depuis l'extrémité collection pour maintenir l'index de chaque "
-"élément (rendant l'autre extrémité virtuellement inverse en paramétrant "
-"<literal>update=\"false\"</literal> et <literal>insert=\"false\"</literal>):"
+"Se você usar uma <literal>List</literal> ( ou outra coleção indexada ), você "
+"precisa especificar a coluna <literal>chave</literal> estrangeira como not "
+"null, e deixar o Hibernate administrar a associação do lado da coleção para "
+"que seja mantido o índice de cada elemento da coleção (fazendo com que o "
+"outro lado seja virtualmente inverso setando <literal>update=\"false\"</"
+"literal> e <literal>insert=\"false\"</literal>):"
 
 #. Tag: programlisting
 #: association_mapping.xml:171
@@ -584,12 +574,12 @@ msgid ""
 "<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</"
 "literal> element."
 msgstr ""
-"It is important that you define <literal>not-null=\"true\"</literal> on the "
-"<literal>&lt;key&gt;</literal> element of the collection mapping if the "
-"underlying foreign key column is <literal>NOT NULL</literal>. Don't only "
-"declare <literal>not-null=\"true\"</literal> on a possible nested "
-"<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</"
-"literal> element."
+"É importante que você defina <literal>not-null=\"true\"</literal> no "
+"elemento <literal>&lt;key&gt;</literal> no mapeamento na coleção se a coluna "
+"de chave estrangeira for <literal>NOT NULL</literal>. Não declare como "
+"<literal>not-null=\"true\"</literal> apenas um elemento aninhado "
+"<literal>&lt;column&gt;</literal>, mas sim o elemento <literal>&lt;key&gt;</"
+"literal>."
 
 #. Tag: para
 #: association_mapping.xml:187
@@ -598,8 +588,8 @@ msgid ""
 "A <emphasis>bidirectional one-to-one association on a foreign key</emphasis> "
 "is quite common."
 msgstr ""
-"Une <emphasis>association bidirectionnelle un à un (one-to-one) sur une clé "
-"étrangère</emphasis> est aussi très fréquente."
+"Uma <emphasis>associação bidirecional um para um em uma chave estrangeira</"
+"emphasis> é bastante comum."
 
 #. Tag: programlisting
 #: association_mapping.xml:192
@@ -631,8 +621,8 @@ msgid ""
 "A <emphasis>bidirectional one-to-one association on a primary key</emphasis> "
 "uses the special id generator."
 msgstr ""
-"Une <emphasis>association bidirectionnelle un-à-un (one-to-one) sur une clé "
-"primaire</emphasis> utilise un générateur particulier d'id."
+"Uma <emphasis>associação bidirecional um para um em uma chave primária</"
+"emphasis> usa um gerador de id especial."
 
 #. Tag: programlisting
 #: association_mapping.xml:200
@@ -660,7 +650,7 @@ msgstr ""
 #: association_mapping.xml:208
 #, no-c-format
 msgid "Bidirectional associations with join tables"
-msgstr "Associations bidirectionnelles avec table de jointure"
+msgstr "Associações Bidirecionais com tabelas associativas"
 
 #. Tag: para
 #: association_mapping.xml:213
@@ -670,10 +660,9 @@ msgid ""
 "emphasis>. Note that the <literal>inverse=\"true\"</literal> can go on "
 "either end of the association, on the collection, or on the join."
 msgstr ""
-"Une <emphasis>association bidirectionnelle un-à-plusieurs (one-to-many) sur "
-"une table de jointure </emphasis>. Remarquez que <literal>inverse=\"true\"</"
-"literal> peut s'appliquer sur les deux extrémités de l' association, sur la "
-"collection, ou sur la jointure."
+"Uma <emphasis>associação bidirecional um para muitos em uma tabela "
+"associativa</emphasis>. Veja que <literal>inverse=\"true\"</literal> pode "
+"ser colocado em qualquer ponta associação, na coleção, ou no join."
 
 #. Tag: programlisting
 #: association_mapping.xml:219
@@ -726,8 +715,8 @@ msgid ""
 "A <emphasis>bidirectional one-to-one association on a join table</emphasis> "
 "is extremely unusual, but possible."
 msgstr ""
-"Une <emphasis>association bidirectionnelle un-à-un (one-to-one) sur une "
-"table de jointure</emphasis> est extrèmement rare mais envisageable."
+"Uma <emphasis>associação bidirecional um-para-um em uma tabela de "
+"associação</emphasis> é algo bastante incomum, mas possivel."
 
 #. Tag: programlisting
 #: association_mapping.xml:232
@@ -772,8 +761,9 @@ msgid ""
 "Finally, we have a <emphasis>bidirectional many-to-many association</"
 "emphasis>."
 msgstr ""
-"Finallement nous avons <emphasis>l'association bidirectionnelle plusieurs à "
-"plusieurs</emphasis>."
+"Finally, we have a <emphasis>bidirectional many-to-many association</"
+"emphasis>. Finalmente, nós temos uma associação bidirecional de muitos para "
+"muitos."
 
 #. Tag: programlisting
 #: association_mapping.xml:244
@@ -806,7 +796,7 @@ msgstr ""
 #: association_mapping.xml:253
 #, no-c-format
 msgid "More complex association mappings"
-msgstr "Des mappings plus complexes"
+msgstr "Mapeamento de associações mais complexas"
 
 #. Tag: para
 #: association_mapping.xml:255
@@ -819,12 +809,17 @@ msgid ""
 "literal>, <literal>effectiveEndDate</literal> and "
 "<literal>effectiveStartDate</literal>columns, mapped as follows:"
 msgstr ""
-"Des associations encore plus complexes sont <emphasis>extrêmement</emphasis> "
-"rares. Hibernate permet de gérer des situations plus complexes en utilisant "
-"des parties SQL dans les fichiers de mapping. Par exemple, si une table avec "
-"l'historiques des informations d'un compte définit les colonnes "
-"<literal>accountNumber</literal>, <literal>effectiveEndDate</literal> et "
-"<literal>effectiveStartDate</literal>, mappées de telle sorte:"
+"More complex association joins are <emphasis>extremely</emphasis> rare. "
+"Hibernate makes it possible to handle more complex situations using SQL "
+"fragments embedded in the mapping document. For example, if a table with "
+"historical account information data defines <literal>accountNumber</"
+"literal>, <literal>effectiveEndDate</literal> and "
+"<literal>effectiveStartDate</literal>columns, mapped as follows: Joins de "
+"associações mais complexas são extremamente raros. O Hibernate torna "
+"possível tratar mapeamentos mais complexos usando fragmentos de SQL "
+"embutidos no documento de mapeamento. Por exemplo, se uma tabela com "
+"informações de dados históricos de uma conta define a coluna accountNumber, "
+"effectiveEndDate e effectiveStartDate, mapeadas assim como segue:"
 
 #. Tag: programlisting
 #: association_mapping.xml:264
@@ -848,9 +843,10 @@ msgid ""
 "Then we can map an association to the <emphasis>current</emphasis> instance "
 "(the one with null <literal>effectiveEndDate</literal>) using:"
 msgstr ""
-"alors nous pouvons mapper une association à l'instance <emphasis>courante</"
-"emphasis> (celle avec une <literal>effectiveEndDate</literal>) nulle en "
-"utilisant:"
+"Then we can map an association to the <emphasis>current</emphasis> instance "
+"(the one with null <literal>effectiveEndDate</literal>) using: Então nós "
+"podemos mapear uma associação para a instância corrente (aquela com a "
+"effectiveEndDate igual a null) usando:"
 
 #. Tag: programlisting
 #: association_mapping.xml:271
@@ -875,12 +871,16 @@ msgid ""
 "recent</emphasis> employer (the one with the most recent <literal>startDate</"
 "literal>) might be mapped this way:"
 msgstr ""
-"Dans un exemple plus complexe, imaginez qu'une association entre "
-"<literal>Employee</literal> et <literal>Organization</literal> est gérée "
-"dans une table <literal>Employment</literal> pleines de données historiques. "
-"Dans ce cas, une association vers l'employeur <emphasis>le plus récent</"
-"emphasis> (celui avec la <literal>startDate</literal> la plus récente) "
-"pourrait être mappée comme cela:"
+"In a more complex example, imagine that the association between "
+"<literal>Employee</literal> and <literal>Organization</literal> is "
+"maintained in an <literal>Employment</literal> table full of historical "
+"employment data. Then an association to the employee's <emphasis>most "
+"recent</emphasis> employer (the one with the most recent <literal>startDate</"
+"literal>) might be mapped this way: Em um exemplo mais complexo, imagine que "
+"a associação entre Employee e Organization é mantida em uma tabela "
+"Employment cheia de dados históricos do trabalho. Então a associação do "
+"funcionário mais recentemente empregado (aquele com a mais recente "
+"startDate) deve ser mapeado desta maneira:"
 
 #. Tag: programlisting
 #: association_mapping.xml:281
@@ -907,6 +907,8 @@ msgid ""
 "You can get quite creative with this functionality, but it is usually more "
 "practical to handle these kinds of cases using HQL or a criteria query."
 msgstr ""
-"Vous pouvez être créatif grace à ces possibilités, mais il est généralement "
-"plus pratique d'utiliser des requêtes HQL ou criteria dans ce genre de "
-"situation."
+"You can get quite creative with this functionality, but it is usually more "
+"practical to handle these kinds of cases using HQL or a criteria query. Você "
+"pode ser criativo com esta funcionalidade, mas geralmente é mais prático "
+"tratar estes tipos de casos, usando uma pesquisa HQL ou uma pesquisa por "
+"criteria."

@@ -14,7 +14,7 @@ msgstr ""
 #: component_mapping.xml:5
 #, no-c-format
 msgid "Component Mapping"
-msgstr "Mapping de composants"
+msgstr "Mapeamento de Componentes"
 
 #. Tag: para
 #: component_mapping.xml:7
@@ -23,14 +23,14 @@ msgid ""
 "The notion of a <emphasis>component</emphasis> is re-used in several "
 "different contexts, for different purposes, throughout Hibernate."
 msgstr ""
-"La notion de <emphasis>composants</emphasis> est réutilisé dans différents "
-"contextes, avec différents objectifs, à travers Hibernate."
+"A noção de <emphasis>componente</emphasis> é reusada em vários contextos "
+"diferentes, para propósitos diferentes, pelo Hibernate."
 
 #. Tag: title
 #: component_mapping.xml:13
 #, no-c-format
 msgid "Dependent objects"
-msgstr "Objects dépendants"
+msgstr "Objetos dependentes"
 
 #. Tag: para
 #: component_mapping.xml:15
@@ -41,11 +41,10 @@ msgid ""
 "notion of composition (not to architecture-level components). For example, "
 "you might model a person like this:"
 msgstr ""
-"Le composant est un objet inclu dans un autre qui est sauvegardé comme une "
-"valeur, et non pas comme une entité. Le composant fait référence à la notion "
-"(au sens objet) de composition (et non pas de composant au sens "
-"d'architecture de composants). Par exemple on pourrait modélisé l'objet "
-"personne de cette façon:"
+"Um componente é um objeto contido que é persistido como um tipo de valor, "
+"não uma referência de entidade. O termo \"componente\" refere-se à noção de "
+"composição da orientação a objetos (não a componentes no nível de "
+"arquitetura). Por exemplo, você pode modelar uma pessoa desta maneira:"
 
 #. Tag: programlisting
 #: component_mapping.xml:21
@@ -116,17 +115,16 @@ msgid ""
 "getter and setter methods for its persistent properties, but doesn't need to "
 "declare any interfaces or identifier properties."
 msgstr ""
-"Maintenant <literal>Name</literal> peut-être sauvegardé comme un composant "
-"de <literal>Person</literal>. Remarquer que <literal>Name</literal> définit "
-"des methodes d'accès et de modification pour ses propriétés persistantes, "
-"mais il n'a pas besoin des interfaces ou des propriétés d'identification "
-"( par exemple getId() ) qui sont propres aux entités."
+"Agora <literal>Name</literal> pode ser persistido como um componente de "
+"<literal>Person</literal>. Note que <literal>Name</literal> define métodos "
+"getter e setter para suas propriedades persistentes, mas não necessita "
+"declarar nenhuma interface ou propriedades identificadoras."
 
 #. Tag: para
 #: component_mapping.xml:32
 #, no-c-format
 msgid "Our Hibernate mapping would look like:"
-msgstr "Nous serions alors amené à mapper ce composant de cette façon:"
+msgstr "Nosso mapeamento do Hibernate seria semelhante a isso"
 
 #. Tag: programlisting
 #: component_mapping.xml:36
@@ -154,7 +152,7 @@ msgid ""
 "<literal>birthday</literal>, <literal>initial</literal>, <literal>first</"
 "literal> and <literal>last</literal>."
 msgstr ""
-"La table person aurai les colonnes <literal>pid</literal>, "
+"A tabela pessoa teria as seguintes colunas <literal>pid</literal>, "
 "<literal>birthday</literal>, <literal>initial</literal>, <literal>first</"
 "literal> and <literal>last</literal>."
 
@@ -170,15 +168,14 @@ msgid ""
 "columns are null, then the entire component is null. This should be okay for "
 "most purposes."
 msgstr ""
-"Comme tous les types valeurs, les composants ne supportent pas les "
-"références partagés. En d'autres mots, deux instances de person peuvent "
-"avoir un même nom, mais ces noms sont indépendants, ils peuvent être "
-"identiques si on les compare par valeur mais ils représentent deux objets "
-"distincts en mémoire. La notion de nullité pour un composant est "
-"<emphasis>ad hoc</emphasis>. Quand il recharge l'objet qui contient le "
-"composant, Hibernate supposera que si tous les champs du composants sont "
-"nuls alors le composant sera positionné à la valeur null. Ce choix "
-"programmatif devrait être satisfaisant dans la plupart des cas."
+"Assim como todos tipos por valor, componentes não suportam referencias "
+"cruzadas. Em outras palavras, duas pessoas poderiam possuir o mesmo nome, "
+"mas os dois objetos pessoa poderiam conter dois objetos nome independentes, "
+"apenas com \"o mesmo\" por valor. A semântica dos valores null de um "
+"componente são <emphasis>ad hoc</emphasis>. No recarregameno do conteúdo do "
+"objeto, O Hibernate assumira que se todas as colunas do componente são null, "
+"então todo o componente é null. Isto seria o certo para a maioria dos "
+"propósitos."
 
 #. Tag: para
 #: component_mapping.xml:55
@@ -189,11 +186,11 @@ msgid ""
 "<emphasis>not</emphasis> be considered an exotic usage. Hibernate is "
 "intended to support a very fine-grained object model."
 msgstr ""
-"Les propriétés d'un composant peuvent être de tous les types qu'Hibernate "
-"supporte habituellement (collections, many-to-one associations, autres "
-"composants, etc). Les composants inclus ne doivent <emphasis>pas</emphasis> "
-"être vus comme quelque chose d'exotique. Hibernate a été conçu pour "
-"supporter un modèle objet très granulaire."
+"As propriedades de um componente podem ser de qualquer tipo do Hibernate"
+"(collections, associações muitos-para-um, outros componentes, etc). "
+"Componentes agrupados <emphasis>não </emphasis> devem ser consideros um uso "
+"exótico. O Hibernate tem a intenção de suportar um modelo de objetos muito "
+"bem granulado."
 
 #. Tag: para
 #: component_mapping.xml:62
@@ -203,8 +200,9 @@ msgid ""
 "parent&gt;</literal> subelement that maps a property of the component class "
 "as a reference back to the containing entity."
 msgstr ""
-"Le <literal>&lt;component&gt;</literal> peut inclure dans la liste de ses "
-"propriétés une référence au <literal>&lt;parent&gt;</literal> conteneur."
+"O elemento <literal>&lt;component&gt;</literal> permite um subelemento "
+"<literal>&lt;parent&gt;</literal> que mapeia uma propriedade da classe "
+"componente como uma referência de volta para a entidade que a contém."
 
 #. Tag: programlisting
 #: component_mapping.xml:68
@@ -229,7 +227,7 @@ msgstr ""
 #: component_mapping.xml:73
 #, no-c-format
 msgid "Collections of dependent objects"
-msgstr "Collection d'objets dépendants"
+msgstr "Collections de objetos dependentes"
 
 #. Tag: para
 #: component_mapping.xml:75
@@ -240,9 +238,9 @@ msgid ""
 "element&gt;</literal> tag with a <literal>&lt;composite-element&gt;</"
 "literal> tag."
 msgstr ""
-"Les collections d'objets dépendants sont supportés (exemple: un tableau de "
-"type <literal>Name</literal>). Déclarer la collection de composants en "
-"remplaçant le tag <literal>&lt;element&gt;</literal> par le tag <literal>&lt;"
+"Collections de componentes são suportadadas(ex. uma array de tipo "
+"<literal>Name</literal>). Declare a sua collection de componentes "
+"substituindo a tag<literal>&lt;element&gt;</literal> pela tag <literal>&lt;"
 "composite-element&gt;</literal>."
 
 #. Tag: programlisting
@@ -267,9 +265,9 @@ msgid ""
 "very important to implement <literal>equals()</literal> and <literal>hashCode"
 "()</literal> correctly."
 msgstr ""
-"Remarque: Si vous définissez un <literal>Set</literal> d'élément composite, "
-"il est très important d'implémenter la méthode <literal>equals()</literal> "
-"et <literal>hashCode()</literal> correctement."
+"Nota: se você definir um <literal>Set</literal> de elementos compostos, é "
+"muito importante implementar <literal>equals()</literal> e <literal>hashCode"
+"()</literal> corretamente."
 
 #. Tag: para
 #: component_mapping.xml:90
@@ -284,15 +282,14 @@ msgid ""
 "though the Java model is the same, the relational model and persistence "
 "semantics are still slightly different."
 msgstr ""
-"Les élements composite peuvent aussi contenir des composants mais pas des "
-"collections. Si votre élément composite contient aussi des composants, "
-"utilisez l'élément <literal>&lt;nested-composite-element&gt;</literal> . Une "
-"collections de composants qui ccontiennent eux-mêmes des composants est un "
-"cas très exotique. A ce stade demandez-vous si une association un-à-"
-"plusieurs ne serait pas plus approprié. Essayez de re remodeler votre "
-"élément composite comme une entité ( Dans ce cas même si le modèle Java est "
-"le même la logique de persitence et de relation sont tout de même "
-"différentes)"
+"Elementos compostos podem conter componentes mas não collections. Se o seu "
+"elemento composto contiver componentes , use a tag <literal>&lt;nested-"
+"composite-element&gt;</literal> . Este é um caso bastante exótico – uma "
+"collections de componentes que por si própria possui componentes. Neste "
+"momento você deve estar se perguntando se uma associação de um-para-muitos "
+"seria mais apropriada. Tente remodelar o elemento composto como uma entidade "
+"– mas note que mesmo pensando que o modelo Java é o mesmo, o modelo "
+"relacional e a semântica de persistência ainda são diferentes."
 
 #. Tag: para
 #: component_mapping.xml:102
@@ -307,15 +304,15 @@ msgid ""
 "literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal> or "
 "<literal>&lt;idbag&gt;</literal>."
 msgstr ""
-"Remarque, le mapping d'éléments composites ne supporte pas la nullité des "
-"propriétés lorsqu'on utilise un <literal>&lt;set&gt;</literal>. Hibernate "
-"lorsqu'il supprime un objet utilise chaque colonne pour identifier un objet "
-"(on ne peut pas utiliser des clés primaires distinctes dans une table "
-"d'éléments composites), ce qui n'est pas possible avec des valeurs nulles. "
-"Vous devez donc choisir d'interdire la nullité des propriétés d'un élément "
-"composite ou choisir un autre type de collection comme : <literal>&lt;"
-"list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</"
-"literal> ou <literal>&lt;idbag&gt;</literal>."
+"Por favor, note que um mapeamento de elemento composto não suporta "
+"propriedades capazes de serem null se você estiver usando um <literal>&lt;"
+"set&gt;</literal>. O Hibernate tem que usar cada valor das colunas para "
+"identificar um registro quando estiver deletando objetos (não existe coluna "
+"chave primária separada na tabela de elemento composto), que não é possível "
+"com valores null. Você tem que usar um dos dois, ou apenas propriedades não "
+"null em um elemento composto ou escolher uma <literal>&lt;list&gt;</"
+"literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal> ou "
+"<literal>&lt;idbag&gt;</literal>."
 
 #. Tag: para
 #: component_mapping.xml:113
@@ -329,14 +326,13 @@ msgid ""
 "<literal>purchaseDate</literal>, <literal>price</literal> and "
 "<literal>quantity</literal> are properties of the association:"
 msgstr ""
-"Un cas particulier d'élément composite est un élément composite qui inclut "
-"un élément <literal>&lt;many-to-one&gt;</literal>. Un mapping comme celui-ci "
-"vous permet d'associer les colonnes d'une table d'association plusieurs à "
-"plusieurs (many-to-many) à la classse de l'élément composite. L'exemple "
-"suivant est une association plusieurs à plusieurs de <literal>Order</"
-"literal> à <literal>Item</literal> à <literal>purchaseDate</literal>, "
-"<literal>price</literal> et <literal>quantity</literal> sont des propriétés "
-"de l'association."
+"Um caso especial de elemento composto é um elemento composto com um elemento "
+"<literal>&lt;many-to-one&gt;</literal> aninhado. Um mapeamento como este "
+"permite você a mapear colunas extras de uma tabela de associação de muitos-"
+"para-muitos para a classe de elemento composto. A seguinte associação de "
+"muitos-para-muitos de <literal>Order</literal> para um <literal>Item</"
+"literal> onde <literal>purchaseDate</literal>, <literal>price</literal> e "
+"<literal>quantity</literal> são propriedades da associação:"
 
 #. Tag: programlisting
 #: component_mapping.xml:123
@@ -367,16 +363,18 @@ msgid ""
 "literal> can be in the set of an <literal>Order</literal>, but it can't be "
 "referenced by the <literal>Item</literal> at the same time."
 msgstr ""
-"Bien sûr, il ne peut pas y avoir de référence à l'achat (purchase) depuis "
-"l'article (item), pour pouvoir naviguer de façon bidirectionnelle dans "
-"l'association. N'oubliez pas que les composants sont de type valeurs et "
-"n'autorise pas les références partagées."
+"Claro, que não pode ter uma referência para purchase no outro lado, para a "
+"navegação da associação bidirecional. Lembre-se que componentes são tipos "
+"por valor e não permitem referências compartilhadas. Uma classe "
+"<literal>Purchase</literal> simples pode estar no set de uma classe "
+"<literal>Order</literal>, mas ela não pode ser referenciada por "
+"<literal>Item</literal> no mesmo momento."
 
 #. Tag: para
 #: component_mapping.xml:133
 #, no-c-format
 msgid "Even ternary (or quaternary, etc) associations are possible:"
-msgstr "Même les associations ternaires ou quaternaires sont possibles:"
+msgstr "Até mesmo associações ternárias (ou quaternária, etc) são possíveis:"
 
 #. Tag: programlisting
 #: component_mapping.xml:135
@@ -401,14 +399,14 @@ msgid ""
 "Composite elements may appear in queries using the same syntax as "
 "associations to other entities."
 msgstr ""
-"Les éléments composites peuvent apparaître dans les requêtes en utilisant la "
-"même syntaxe que associations"
+"Elementos compostos podem aparecer em pesquisas usando a mesma sintaxe assim "
+"como associações para outras entidades."
 
 #. Tag: title
 #: component_mapping.xml:145
 #, no-c-format
 msgid "Components as Map indices"
-msgstr "Utiliser les composants comme index de map"
+msgstr "Componentes como índices de Map"
 
 #. Tag: para
 #: component_mapping.xml:147
@@ -419,16 +417,16 @@ msgid ""
 "override <literal>hashCode()</literal> and <literal>equals()</literal> "
 "correctly on the component class."
 msgstr ""
-"l'élément <literal>&lt;composite-map-key&gt;</literal> vous permet "
-"d'utiliser une classe de composant comme indice de <literal>Map</literal>. "
-"Assurez-vous d'avoir surdéfini <literal>hashCode()</literal> et "
-"<literal>equals()</literal> dans la classe du composant."
+"O elemento <literal>&lt;composite-map-key&gt;</literal> permite você mapear "
+"uma classe componente como uma chave de um <literal>Map</literal>. Tenha "
+"certeza que você sobrescreveu <literal>hashCode()</literal> e <literal>equals"
+"()</literal> corretamente na classe componente."
 
 #. Tag: title
 #: component_mapping.xml:156
 #, no-c-format
 msgid "Components as composite identifiers"
-msgstr "Utiliser un composant comme identifiant"
+msgstr ". Componentes como identificadores compostos"
 
 #. Tag: para
 #: component_mapping.xml:158
@@ -437,14 +435,14 @@ msgid ""
 "You may use a component as an identifier of an entity class. Your component "
 "class must satisfy certain requirements:"
 msgstr ""
-"Vous pouvez utiliser un composant comme identifiant d'une entité. Mais pour "
-"cela la classe du composant doit respecter certaines règles."
+"Você pode usar um componente como um identificador de uma classe entidade. "
+"Sua classe componente deve satisfazer certos requisitos:"
 
 #. Tag: para
 #: component_mapping.xml:165
 #, no-c-format
 msgid "It must implement <literal>java.io.Serializable</literal>."
-msgstr "Elle doit implémenter <literal>java.io.Serializable</literal>."
+msgstr "Ele deve implementar <literal>java.io.Serializable</literal>."
 
 #. Tag: para
 #: component_mapping.xml:170
@@ -453,9 +451,9 @@ msgid ""
 "It must re-implement <literal>equals()</literal> and <literal>hashCode()</"
 "literal>, consistently with the database's notion of composite key equality."
 msgstr ""
-"Elle doit redéfinir <literal>equals()</literal> et <literal>hashCode()</"
-"literal>, de façon cohérente avec le fait qu'elle définit une clé composite "
-"dans la base de données."
+"Ele deve re-implementar <literal>equals()</literal> e <literal>hashCode()</"
+"literal>, consistentemente com a noção de igualdade de chave composta do "
+"banco de dados."
 
 #. Tag: emphasis
 #: component_mapping.xml:179
@@ -464,8 +462,8 @@ msgid ""
 "Note: in Hibernate3, the second requirement is not an absolutely hard "
 "requirement of Hibernate. But do it anyway."
 msgstr ""
-"Remarque: avec hibernate3, la seconde règle n'est plus absolument necessaire "
-"mais faîtes le quand même."
+"Nota: no Hibernate 3, o segundo requisito não é um requisito absolutamente "
+"necessário. Mas atenda ele de qualquer forma."
 
 #. Tag: para
 #: component_mapping.xml:183
@@ -474,9 +472,9 @@ msgid ""
 "You can't use an <literal>IdentifierGenerator</literal> to generate "
 "composite keys. Instead the application must assign its own identifiers."
 msgstr ""
-"Vous ne pouvez pas utiliser de <literal>IdentifierGenerator</literal> pour "
-"générer une clé composite, l'application devra définir elle même ses propres "
-"identifiants."
+"Você não pode usar um <literal>IdentifierGenerator</literal> para gerar "
+"chaves compostas. Ao invés disso o aplicativo deve gerenciar seus próprios "
+"identificadores."
 
 #. Tag: para
 #: component_mapping.xml:188
@@ -488,11 +486,11 @@ msgid ""
 "<literal>OrderLine</literal> class has a primary key that depends upon the "
 "(composite) primary key of <literal>Order</literal>."
 msgstr ""
-"Utiliser l'élément <literal>&lt;composite-id&gt;</literal> (en incluant "
-"l'élément <literal>&lt;key-property&gt;</literal>) à la place de l'habituel "
-"déclaration <literal>&lt;id&gt;</literal>. Par exemple la classe "
-"<literal>OrderLine</literal> qui dépend de la clé primaire (composite) de "
-"<literal>Order</literal>."
+"Use a tag <literal>&lt;composite-id&gt;</literal> (com elementos "
+"<literal>&lt;key-property&gt;</literal> aninhados) no lugar da declaração "
+"<literal>&lt;id&gt;</literal> de costume. Por exemplo, a classe "
+"<literal>OrderLine</literal> possui uma chave primária que depende da chave "
+"primária (composta) de <literal>Order</literal>."
 
 #. Tag: programlisting
 #: component_mapping.xml:196
@@ -526,10 +524,10 @@ msgid ""
 "also composite. You must declare this in your mappings for other classes. An "
 "association to <literal>OrderLine</literal> would be mapped like this:"
 msgstr ""
-"Maintenant toutes clés étrangères référençant la table <literal>OrderLine</"
-"literal> devra aussi être composite. Vous devez en tenir compte lorsque vous "
-"écrivez vos mapping d'association pour les autres classes. Une association à "
-"<literal>OrderLine</literal> devrait être mappé de la façon suivante :"
+"Agora, qualquer chave estrangeira referenciando a tabela <literal>OrderLine</"
+"literal> também serão compostas. Você deve declarar isto em seus mapeamentos "
+"para outras classes. Uma associação para <literal>OrderLine</literal> seria "
+"mapeada dessa forma:"
 
 #. Tag: programlisting
 #: component_mapping.xml:204
@@ -550,8 +548,8 @@ msgid ""
 "(Note that the <literal>&lt;column&gt;</literal> tag is an alternative to "
 "the <literal>column</literal> attribute everywhere.)"
 msgstr ""
-"(Remarque: l'élément <literal>&lt;column&gt;</literal> est une alternative à "
-"l'attribut <literal>column</literal> que l'on utilise partout.)"
+"(Note que a tag <literal>&lt;column&gt;</literal> é uma alternativa para o "
+"atributo <literal>column</literal> por toda a parte.)"
 
 #. Tag: para
 #: component_mapping.xml:211
@@ -560,8 +558,8 @@ msgid ""
 "A <literal>many-to-many</literal> association to <literal>OrderLine</"
 "literal> also uses the composite foreign key:"
 msgstr ""
-"Une association <literal>plusieurs-à-plusieurs</literal> (many-to-many) à "
-"<literal>OrderLine</literal> utilisera aussi une clé étrangère composite:"
+"Uma associação <literal>many-to-many</literal> para <literal>many-to-many</"
+"literal> também usa a chave estrangeira composta:"
 
 #. Tag: programlisting
 #: component_mapping.xml:216
@@ -584,8 +582,8 @@ msgid ""
 "The collection of <literal>OrderLine</literal>s in <literal>Order</literal> "
 "would use:"
 msgstr ""
-"La collection des <literal>OrderLine</literal>s dans <literal>Order</"
-"literal> utilisera:"
+"A collection de <literal>OrderLine</literal>s em <literal>Order</literal> "
+"usaria:"
 
 #. Tag: programlisting
 #: component_mapping.xml:223
@@ -607,8 +605,8 @@ msgid ""
 "(The <literal>&lt;one-to-many&gt;</literal> element, as usual, declares no "
 "columns.)"
 msgstr ""
-"(L'élément <literal>&lt;one-to-many&gt;</literal>, comme d'habitude, ne "
-"déclare pas de colonne.)"
+"(O elemento <literal>&lt;one-to-many&gt;</literal>, como de costume, não "
+"declara colunas.)"
 
 #. Tag: para
 #: component_mapping.xml:229
@@ -617,8 +615,8 @@ msgid ""
 "If <literal>OrderLine</literal> itself owns a collection, it also has a "
 "composite foreign key."
 msgstr ""
-"Si <literal>OrderLine</literal> lui-même possède une collection, celle-ci "
-"aura aussi une clé composite étrangère."
+"Se <literal>OrderLine</literal> possui uma collection, ela também tem uma "
+"chave estrangeira composta."
 
 #. Tag: programlisting
 #: component_mapping.xml:234
@@ -645,13 +643,14 @@ msgstr ""
 #: component_mapping.xml:239
 #, no-c-format
 msgid "Dynamic components"
-msgstr "Composant Dynamique"
+msgstr "Componentes Dinâmicos"
 
 #. Tag: para
 #: component_mapping.xml:241
 #, no-c-format
 msgid "You may even map a property of type <literal>Map</literal>:"
-msgstr "Vous pouvez même mapper une propriété de type <literal>Map</literal>:"
+msgstr ""
+"Você pode até mesmo mapear uma propriedade do tipo <literal>Map</literal>:"
 
 #. Tag: programlisting
 #: component_mapping.xml:245
@@ -676,12 +675,11 @@ msgid ""
 "Even better, you can access (and change) Hibernate's configuration-time "
 "metamodel via the <literal>Configuration</literal> object."
 msgstr ""
-"La sémantique de l'association à un <literal>&lt;dynamic-component&gt;</"
-"literal> est identique à celle que l'on utilise pour les composants. "
-"L'avantage de ce type de mapping est qu'il pemet de déterminer les "
-"véritables propriétés du bean au moment su déploiement en éditant simplement "
-"le document de mapping. La manipulation du document de mapping pendant "
-"l'execution de l'application est aussi possible en utilisant un parser DOM. "
-"Il ya même mieux, vous pouvez accéder (et changer) le metamodel de "
-"configuration d'hibernate en utilisant l'objet <literal>Configuration</"
-"literal>"
+"A semântica de um mapeamento <literal>&lt;dynamic-component&gt;</literal> é "
+"idêntica à <literal>&lt;component&gt;</literal>. A vantagem deste tipo de "
+"mapeamento é a habilidade de determinar as propriedades atuais do bean no "
+"momento de deploy, apenas editando o documento de mapeamento. A Manipulação "
+"em tempo de execução do documento de mapeamento também é possível, usando o "
+"parser DOM. Até melhor, você pode acessar (e mudar) o metamodelo "
+"configuration-time do Hibernate através do objeto <literal>Configuration</"
+"literal>."

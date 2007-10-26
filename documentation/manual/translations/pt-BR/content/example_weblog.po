@@ -14,13 +14,13 @@ msgstr ""
 #: example_weblog.xml:5
 #, no-c-format
 msgid "Example: Weblog Application"
-msgstr "Exemple : application Weblog"
+msgstr "Example: Weblog Application"
 
 #. Tag: title
 #: example_weblog.xml:8
 #, no-c-format
 msgid "Persistent Classes"
-msgstr "Classes persistantes"
+msgstr "Persistent Classes"
 
 #. Tag: para
 #: example_weblog.xml:10
@@ -30,9 +30,9 @@ msgid ""
 "They are to be modelled as a standard parent/child relationship, but we will "
 "use an ordered bag, instead of a set."
 msgstr ""
-"Les classes persistantes representent un weblog, et un article posté dans un "
-"weblog. Il seront modélisés comme une relation père/fils standard, mais nous "
-"allons utiliser un \"bag\" trié au lieu d'un set."
+"The persistent classes represent a weblog, and an item posted in a weblog. "
+"They are to be modelled as a standard parent/child relationship, but we will "
+"use an ordered bag, instead of a set."
 
 #. Tag: programlisting
 #: example_weblog.xml:16
@@ -121,13 +121,13 @@ msgstr ""
 #: example_weblog.xml:23
 #, no-c-format
 msgid "Hibernate Mappings"
-msgstr "Mappings Hibernate"
+msgstr "Hibernate Mappings"
 
 #. Tag: para
 #: example_weblog.xml:25
 #, no-c-format
 msgid "The XML mappings should now be quite straightforward."
-msgstr "Le mapping XML doit maintenant être relativement simple à vos yeux."
+msgstr "The XML mappings should now be quite straightforward."
 
 #. Tag: programlisting
 #: example_weblog.xml:29
@@ -227,7 +227,7 @@ msgstr ""
 #: example_weblog.xml:36
 #, no-c-format
 msgid "Hibernate Code"
-msgstr "Code Hibernate"
+msgstr "Hibernate Code"
 
 #. Tag: para
 #: example_weblog.xml:38
@@ -236,8 +236,8 @@ msgid ""
 "The following class demonstrates some of the kinds of things we can do with "
 "these classes, using Hibernate."
 msgstr ""
-"La classe suivante montre quelques utilisations que nous pouvons faire de "
-"ces classes."
+"The following class demonstrates some of the kinds of things we can do with "
+"these classes, using Hibernate."
 
 #. Tag: programlisting
 #: example_weblog.xml:43

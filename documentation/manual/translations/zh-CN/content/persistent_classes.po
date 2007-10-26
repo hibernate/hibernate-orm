@@ -1,446 +1,809 @@
-#, fuzzy
 msgid ""
 msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 01:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
-#: index.docbook:5
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: persistent_classes.xml:5
+#, no-c-format
 msgid "Persistent Classes"
-msgstr ""
+msgstr "持久化类(Persistent Classes)"
 
-#: index.docbook:7
-msgid "Persistent classes are classes in an application that implement the entities of the business problem (e.g. Customer and Order in an E-commerce application). Not all instances of a persistent class are considered to be in the persistent state - an instance may instead be transient or detached."
+#. Tag: para
+#: persistent_classes.xml:7
+#, no-c-format
+msgid ""
+"Persistent classes are classes in an application that implement the entities "
+"of the business problem (e.g. Customer and Order in an E-commerce "
+"application). Not all instances of a persistent class are considered to be "
+"in the persistent state - an instance may instead be transient or detached."
 msgstr ""
+"在应用程序中，用来实现业务问题实体的（如，在电子商务应用程序中的Customer和"
+"Order） 类就是持久化类。不能认为所有的持久化类的实例都是持久的状态——一个实例"
+"的状态也可能 是瞬时的或脱管的。"
 
-#: index.docbook:14
-msgid "Hibernate works best if these classes follow some simple rules, also known as the Plain Old Java Object (POJO) programming model. However, none of these rules are hard requirements. Indeed, Hibernate3 assumes very little about the nature of your persistent objects. You may express a domain model in other ways: using trees of <literal>Map</literal> instances, for example."
+#. Tag: para
+#: persistent_classes.xml:14
+#, no-c-format
+msgid ""
+"Hibernate works best if these classes follow some simple rules, also known "
+"as the Plain Old Java Object (POJO) programming model. However, none of "
+"these rules are hard requirements. Indeed, Hibernate3 assumes very little "
+"about the nature of your persistent objects. You may express a domain model "
+"in other ways: using trees of <literal>Map</literal> instances, for example."
 msgstr ""
+"如果这些持久化类遵循一些简单的规则，Hibernate能够工作得更好，这些规则也被称"
+"作 简单传统Java对象(POJO:Plain Old Java Object)编程模型。但是这些规则并不是必"
+"需的。 实际上，Hibernate3对于你的持久化类几乎不做任何设想。你可以用其他的方法"
+"来表达领域模型： 比如，使用<literal>Map</literal>实例的树型结构。"
 
-#: index.docbook:23
+#. Tag: title
+#: persistent_classes.xml:23
+#, no-c-format
 msgid "A simple POJO example"
-msgstr ""
+msgstr "一个简单的POJO例子"
 
-#: index.docbook:25
+#. Tag: para
+#: persistent_classes.xml:25
+#, no-c-format
 msgid "Most Java applications require a persistent class representing felines."
-msgstr ""
+msgstr "大多数Java程序需要用一个持久化类来表示猫科动物。"
 
-#: index.docbook:29
+#. Tag: programlisting
+#: persistent_classes.xml:29
+#, no-c-format
 msgid ""
-      "<![CDATA[package eg;\n"
-      "import java.util.Set;\n"
-      "import java.util.Date;\n"
-      "\n"
-      "public class Cat {\n"
-      "    private Long id; // identifier\n"
-      "\n"
-      "    private Date birthdate;\n"
-      "    private Color color;\n"
-      "    private char sex;\n"
-      "    private float weight;\n"
-      "    private int litterId;\n"
-      "\n"
-      "    private Cat mother;\n"
-      "    private Set kittens = new HashSet();\n"
-      "\n"
-      "    private void setId(Long id) {\n"
-      "        this.id=id;\n"
-      "    }\n"
-      "    public Long getId() {\n"
-      "        return id;\n"
-      "    }\n"
-      "\n"
-      "    void setBirthdate(Date date) {\n"
-      "        birthdate = date;\n"
-      "    }\n"
-      "    public Date getBirthdate() {\n"
-      "        return birthdate;\n"
-      "    }\n"
-      "\n"
-      "    void setWeight(float weight) {\n"
-      "        this.weight = weight;\n"
-      "    }\n"
-      "    public float getWeight() {\n"
-      "        return weight;\n"
-      "    }\n"
-      "\n"
-      "    public Color getColor() {\n"
-      "        return color;\n"
-      "    }\n"
-      "    void setColor(Color color) {\n"
-      "        this.color = color;\n"
-      "    }\n"
-      "\n"
-      "    void setSex(char sex) {\n"
-      "        this.sex=sex;\n"
-      "    }\n"
-      "    public char getSex() {\n"
-      "        return sex;\n"
-      "    }\n"
-      "\n"
-      "    void setLitterId(int id) {\n"
-      "        this.litterId = id;\n"
-      "    }\n"
-      "    public int getLitterId() {\n"
-      "        return litterId;\n"
-      "    }\n"
-      "\n"
-      "    void setMother(Cat mother) {\n"
-      "        this.mother = mother;\n"
-      "    }\n"
-      "    public Cat getMother() {\n"
-      "        return mother;\n"
-      "    }\n"
-      "    void setKittens(Set kittens) {\n"
-      "        this.kittens = kittens;\n"
-      "    }\n"
-      "    public Set getKittens() {\n"
-      "        return kittens;\n"
-      "    }\n"
-      "    \n"
-      "    // addKitten not needed by Hibernate\n"
-      "    public void addKitten(Cat kitten) {\n"
-      "            kitten.setMother(this);\n"
-      "        kitten.setLitterId( kittens.size() ); \n"
-      "        kittens.add(kitten);\n"
-      "    }\n"
-      "}]]>"
+"<![CDATA[package eg;\n"
+"import java.util.Set;\n"
+"import java.util.Date;\n"
+"\n"
+"public class Cat {\n"
+"    private Long id; // identifier\n"
+"\n"
+"    private Date birthdate;\n"
+"    private Color color;\n"
+"    private char sex;\n"
+"    private float weight;\n"
+"    private int litterId;\n"
+"\n"
+"    private Cat mother;\n"
+"    private Set kittens = new HashSet();\n"
+"\n"
+"    private void setId(Long id) {\n"
+"        this.id=id;\n"
+"    }\n"
+"    public Long getId() {\n"
+"        return id;\n"
+"    }\n"
+"\n"
+"    void setBirthdate(Date date) {\n"
+"        birthdate = date;\n"
+"    }\n"
+"    public Date getBirthdate() {\n"
+"        return birthdate;\n"
+"    }\n"
+"\n"
+"    void setWeight(float weight) {\n"
+"        this.weight = weight;\n"
+"    }\n"
+"    public float getWeight() {\n"
+"        return weight;\n"
+"    }\n"
+"\n"
+"    public Color getColor() {\n"
+"        return color;\n"
+"    }\n"
+"    void setColor(Color color) {\n"
+"        this.color = color;\n"
+"    }\n"
+"\n"
+"    void setSex(char sex) {\n"
+"        this.sex=sex;\n"
+"    }\n"
+"    public char getSex() {\n"
+"        return sex;\n"
+"    }\n"
+"\n"
+"    void setLitterId(int id) {\n"
+"        this.litterId = id;\n"
+"    }\n"
+"    public int getLitterId() {\n"
+"        return litterId;\n"
+"    }\n"
+"\n"
+"    void setMother(Cat mother) {\n"
+"        this.mother = mother;\n"
+"    }\n"
+"    public Cat getMother() {\n"
+"        return mother;\n"
+"    }\n"
+"    void setKittens(Set kittens) {\n"
+"        this.kittens = kittens;\n"
+"    }\n"
+"    public Set getKittens() {\n"
+"        return kittens;\n"
+"    }\n"
+"    \n"
+"    // addKitten not needed by Hibernate\n"
+"    public void addKitten(Cat kitten) {\n"
+"            kitten.setMother(this);\n"
+"        kitten.setLitterId( kittens.size() ); \n"
+"        kittens.add(kitten);\n"
+"    }\n"
+"}]]>"
 msgstr ""
 
-#: index.docbook:31
+#. Tag: para
+#: persistent_classes.xml:31
+#, no-c-format
 msgid "There are four main rules to follow here:"
-msgstr ""
+msgstr "这里要遵循四条主要的规则："
 
-#: index.docbook:37
+#. Tag: title
+#: persistent_classes.xml:37
+#, no-c-format
 msgid "Implement a no-argument constructor"
-msgstr ""
+msgstr "实现一个默认的（即无参数的）构造方法（constructor）"
 
-#: index.docbook:39
-msgid "<literal>Cat</literal> has a no-argument constructor. All persistent classes must have a default constructor (which may be non-public) so that Hibernate can instantiate them using <literal>Constructor.newInstance()</literal>. We strongly recommend having a default constructor with at least <emphasis>package</emphasis> visibility for runtime proxy generation in Hibernate."
+#. Tag: para
+#: persistent_classes.xml:39
+#, no-c-format
+msgid ""
+"<literal>Cat</literal> has a no-argument constructor. All persistent classes "
+"must have a default constructor (which may be non-public) so that Hibernate "
+"can instantiate them using <literal>Constructor.newInstance()</literal>. We "
+"strongly recommend having a default constructor with at least "
+"<emphasis>package</emphasis> visibility for runtime proxy generation in "
+"Hibernate."
 msgstr ""
+"<literal>Cat</literal>有一个无参数的构造方法。所有的持久化类都必须有一个 默认"
+"的构造方法（可以不是public的），这样的话Hibernate就可以使用 "
+"<literal>Constructor.newInstance()</literal>来实例化它们。 我们强烈建议，在"
+"Hibernate中，为了运行期代理的生成，构造方法至少是 <emphasis>包(package)</"
+"emphasis>内可见的。"
 
-#: index.docbook:49
+#. Tag: title
+#: persistent_classes.xml:49
+#, no-c-format
 msgid "Provide an identifier property (optional)"
-msgstr ""
+msgstr "提供一个标识属性（identifier property）（可选）"
 
-#: index.docbook:51
-msgid "<literal>Cat</literal> has a property called <literal>id</literal>. This property maps to the primary key column of a database table. The property might have been called anything, and its type might have been any primitive type, any primitive \"wrapper\" type, <literal>java.lang.String</literal> or <literal>java.util.Date</literal>. (If your legacy database table has composite keys, you can even use a user-defined class with properties of these types - see the section on composite identifiers later.)"
+#. Tag: para
+#: persistent_classes.xml:51
+#, no-c-format
+msgid ""
+"<literal>Cat</literal> has a property called <literal>id</literal>. This "
+"property maps to the primary key column of a database table. The property "
+"might have been called anything, and its type might have been any primitive "
+"type, any primitive \"wrapper\" type, <literal>java.lang.String</literal> or "
+"<literal>java.util.Date</literal>. (If your legacy database table has "
+"composite keys, you can even use a user-defined class with properties of "
+"these types - see the section on composite identifiers later.)"
 msgstr ""
+"<literal>Cat</literal>有一个属性叫做<literal>id</literal>。这个属性映射数据库"
+"表的主 键字段。这个属性可以叫任何名字，其类型可以是任何的原始类型、原始类型的"
+"包装类型、 <literal>java.lang.String</literal> 或者是 <literal>java.util."
+"Date</literal>。 （如果你的遗留数据库表有联合主键，你甚至可以用一个用户自定义"
+"的类，该类拥有这些类型 的属性。参见后面的关于联合标识符的章节。）"
 
-#: index.docbook:60
-msgid "The identifier property is strictly optional. You can leave them off and let Hibernate keep track of object identifiers internally. We do not recommend this, however."
+#. Tag: para
+#: persistent_classes.xml:60
+#, no-c-format
+msgid ""
+"The identifier property is strictly optional. You can leave them off and let "
+"Hibernate keep track of object identifiers internally. We do not recommend "
+"this, however."
 msgstr ""
+"标识符属性是可选的。可以不用管它，让Hibernate内部来追踪对象的识别。 但是我们"
+"并不推荐这样做。"
 
-#: index.docbook:65
-msgid "In fact, some functionality is available only to classes which declare an identifier property:"
+#. Tag: para
+#: persistent_classes.xml:65
+#, no-c-format
+msgid ""
+"In fact, some functionality is available only to classes which declare an "
+"identifier property:"
+msgstr "实际上，一些功能只对那些声明了标识符属性的类起作用："
+
+#. Tag: para
+#: persistent_classes.xml:72
+#, fuzzy, no-c-format
+msgid ""
+"Transitive reattachment for detached objects (cascade update or cascade "
+"merge) - see"
 msgstr ""
+"托管对象的传播性再连接（级联更新或级联合并） ——参阅 <xref linkend="
+"\"objectstate-transitive\"/>"
 
-#: index.docbook:72
-msgid "Transitive reattachment for detached objects (cascade update or cascade merge) - see"
-msgstr ""
-
-#: index.docbook:79
+#. Tag: literal
+#: persistent_classes.xml:79
+#, no-c-format
 msgid "Session.saveOrUpdate()"
-msgstr ""
+msgstr "Session.saveOrUpdate()"
 
-#: index.docbook:84
+#. Tag: literal
+#: persistent_classes.xml:84
+#, no-c-format
 msgid "Session.merge()"
-msgstr ""
+msgstr "Session.merge()"
 
-#: index.docbook:89
-msgid "We recommend you declare consistently-named identifier properties on persistent classes. We further recommend that you use a nullable (ie. non-primitive) type."
+#. Tag: para
+#: persistent_classes.xml:89
+#, no-c-format
+msgid ""
+"We recommend you declare consistently-named identifier properties on "
+"persistent classes. We further recommend that you use a nullable (ie. non-"
+"primitive) type."
 msgstr ""
+"我们建议你对持久化类声明命名一致的标识属性。我们还建议你使用一 个可以为空（也"
+"就是说，不是原始类型）的类型。"
 
-#: index.docbook:96
+#. Tag: title
+#: persistent_classes.xml:96
+#, no-c-format
 msgid "Prefer non-final classes (optional)"
-msgstr ""
+msgstr "使用非final的类 (可选)"
 
-#: index.docbook:97
-msgid "A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon the persistent class being either non-final, or the implementation of an interface that declares all public methods."
+#. Tag: para
+#: persistent_classes.xml:97
+#, no-c-format
+msgid ""
+"A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon "
+"the persistent class being either non-final, or the implementation of an "
+"interface that declares all public methods."
 msgstr ""
+"<emphasis>代理（proxies）</emphasis>是Hibernate的一个重要的功能，它依赖的条件"
+"是，持久 化类或者是非final的，或者是实现了一个所有方法都声明为public的接口。"
 
-#: index.docbook:102
-msgid "You can persist <literal>final</literal> classes that do not implement an interface with Hibernate, but you won't be able to use proxies for lazy association fetching - which will limit your options for performance tuning."
+#. Tag: para
+#: persistent_classes.xml:102
+#, no-c-format
+msgid ""
+"You can persist <literal>final</literal> classes that do not implement an "
+"interface with Hibernate, but you won't be able to use proxies for lazy "
+"association fetching - which will limit your options for performance tuning."
 msgstr ""
+"你可以用Hibernate持久化一个没有实现任何接口的<literal>final</literal>类，但是"
+"你 不能使用代理来延迟关联加载，这会限制你进行性能优化的选择。"
 
-#: index.docbook:107
-msgid "You should also avoid declaring <literal>public final</literal> methods on the non-final classes. If you want to use a class with a <literal>public final</literal> method, you must explicitly disable proxying by setting <literal>lazy=\"false\"</literal>."
+#. Tag: para
+#: persistent_classes.xml:107
+#, no-c-format
+msgid ""
+"You should also avoid declaring <literal>public final</literal> methods on "
+"the non-final classes. If you want to use a class with a <literal>public "
+"final</literal> method, you must explicitly disable proxying by setting "
+"<literal>lazy=\"false\"</literal>."
 msgstr ""
+"你也应该避免在非final类中声明 <literal>public final</literal>的方法。如果你想"
+"使用一 个有<literal>public final</literal>方法的类，你必须通过设置"
+"<literal>lazy=\"false\"</literal> 来明确地禁用代理。"
 
-#: index.docbook:115
+#. Tag: title
+#: persistent_classes.xml:115
+#, no-c-format
 msgid "Declare accessors and mutators for persistent fields (optional)"
-msgstr ""
+msgstr "为持久化字段声明访问器(accessors)和是否可变的标志(mutators)(可选)"
 
-#: index.docbook:117
-msgid "<literal>Cat</literal> declares accessor methods for all its persistent fields. Many other ORM tools directly persist instance variables. We believe it is better to provide an indirection between the relational schema and internal data structures of the class. By default, Hibernate persists JavaBeans style properties, and recognizes method names of the form <literal>getFoo</literal>, <literal>isFoo</literal> and <literal>setFoo</literal>. You may switch to direct field access for particular properties, if needed."
+#. Tag: para
+#: persistent_classes.xml:117
+#, no-c-format
+msgid ""
+"<literal>Cat</literal> declares accessor methods for all its persistent "
+"fields. Many other ORM tools directly persist instance variables. We believe "
+"it is better to provide an indirection between the relational schema and "
+"internal data structures of the class. By default, Hibernate persists "
+"JavaBeans style properties, and recognizes method names of the form "
+"<literal>getFoo</literal>, <literal>isFoo</literal> and <literal>setFoo</"
+"literal>. You may switch to direct field access for particular properties, "
+"if needed."
 msgstr ""
+"<literal>Cat</literal>为它的所有持久化字段声明了访问方法。很多其他ORM工具直接"
+"对 实例变量进行持久化。我们相信，在关系数据库schema和类的内部数据结构之间引入"
+"间接层(原文为\"非直接\"，indirection)会好一些。默认情况下Hibernate持久化"
+"JavaBeans风格的属性，认可 <literal>getFoo</literal>，<literal>isFoo</"
+"literal> 和 <literal>setFoo</literal>这种形式的方法名。 如果需要，你可以对某"
+"些特定属性实行直接字段访问。"
 
-#: index.docbook:127
-msgid "Properties need <emphasis>not</emphasis> be declared public - Hibernate can persist a property with a default, <literal>protected</literal> or <literal>private</literal> get / set pair."
+#. Tag: para
+#: persistent_classes.xml:127
+#, no-c-format
+msgid ""
+"Properties need <emphasis>not</emphasis> be declared public - Hibernate can "
+"persist a property with a default, <literal>protected</literal> or "
+"<literal>private</literal> get / set pair."
 msgstr ""
+"属性<emphasis>不需要</emphasis>要声明为public的。Hibernate可以持久化一个有 "
+"<literal>default</literal>、<literal>protected</literal>或<literal>private</"
+"literal>的get/set方法对 的属性进行持久化。"
 
-#: index.docbook:138
+#. Tag: title
+#: persistent_classes.xml:138
+#, no-c-format
 msgid "Implementing inheritance"
-msgstr ""
+msgstr "实现继承（Inheritance）"
 
-#: index.docbook:140
-msgid "A subclass must also observe the first and second rules. It inherits its identifier property from the superclass, <literal>Cat</literal>."
-msgstr ""
-
-#: index.docbook:145
+#. Tag: para
+#: persistent_classes.xml:140
+#, no-c-format
 msgid ""
-      "<![CDATA[package eg;\n"
-      "\n"
-      "public class DomesticCat extends Cat {\n"
-      "        private String name;\n"
-      "\n"
-      "        public String getName() {\n"
-      "                return name;\n"
-      "        }\n"
-      "        protected void setName(String name) {\n"
-      "                this.name=name;\n"
-      "        }\n"
-      "}]]>"
+"A subclass must also observe the first and second rules. It inherits its "
+"identifier property from the superclass, <literal>Cat</literal>."
+msgstr ""
+"子类也必须遵守第一条和第二条规则。它从超类<literal>Cat</literal>继承了标识属"
+"性。"
+
+#. Tag: programlisting
+#: persistent_classes.xml:145
+#, no-c-format
+msgid ""
+"<![CDATA[package eg;\n"
+"\n"
+"public class DomesticCat extends Cat {\n"
+"        private String name;\n"
+"\n"
+"        public String getName() {\n"
+"                return name;\n"
+"        }\n"
+"        protected void setName(String name) {\n"
+"                this.name=name;\n"
+"        }\n"
+"}]]>"
 msgstr ""
 
-#: index.docbook:149
-msgid "Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
-msgstr ""
+#. Tag: title
+#: persistent_classes.xml:149
+#, no-c-format
+msgid ""
+"Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
+msgstr "实现<literal>equals()</literal>和<literal>hashCode()</literal>"
 
-#: index.docbook:151
-msgid "You have to override the <literal>equals()</literal> and <literal>hashCode()</literal> methods if you"
+#. Tag: para
+#: persistent_classes.xml:151
+#, no-c-format
+msgid ""
+"You have to override the <literal>equals()</literal> and <literal>hashCode()"
+"</literal> methods if you"
 msgstr ""
+"如果你有如下需求，你必须重载 <literal>equals()</literal> 和 <literal>hashCode"
+"()</literal>方法："
 
-#: index.docbook:157
-msgid "intend to put instances of persistent classes in a <literal>Set</literal> (the recommended way to represent many-valued associations) <emphasis>and</emphasis>"
+#. Tag: para
+#: persistent_classes.xml:157
+#, no-c-format
+msgid ""
+"intend to put instances of persistent classes in a <literal>Set</literal> "
+"(the recommended way to represent many-valued associations) <emphasis>and</"
+"emphasis>"
 msgstr ""
+"想把持久类的实例放入<literal>Set</literal>中（当表示多值关联时，推荐这么做）"
 
-#: index.docbook:164
+#. Tag: para
+#: persistent_classes.xml:164
+#, no-c-format
 msgid "intend to use reattachment of detached instances"
-msgstr ""
+msgstr "想重用脱管实例"
 
-#: index.docbook:170
-msgid "Hibernate guarantees equivalence of persistent identity (database row) and Java identity only inside a particular session scope. So as soon as we mix instances retrieved in different sessions, we must implement <literal>equals()</literal> and <literal>hashCode()</literal> if we wish to have meaningful semantics for <literal>Set</literal>s."
-msgstr ""
-
-#: index.docbook:178
-msgid "The most obvious way is to implement <literal>equals()</literal>/<literal>hashCode()</literal> by comparing the identifier value of both objects. If the value is the same, both must be the same database row, they are therefore equal (if both are added to a <literal>Set</literal>, we will only have one element in the <literal>Set</literal>). Unfortunately, we can't use that approach with generated identifiers! Hibernate will only assign identifier values to objects that are persistent, a newly created instance will not have any identifier value! Furthermore, if an instance is unsaved and currently in a <literal>Set</literal>, saving it will assign an identifier value to the object. If <literal>equals()</literal> and <literal>hashCode()</literal> are based on the identifier value, the hash code would change, breaking the contract of the <literal>Set</literal>. See the Hibernate website for a full discussion of this problem. Note that this is not a Hibernate issue, but normal Java semantics of object identity and equality."
-msgstr ""
-
-#: index.docbook:192
-msgid "We recommend implementing <literal>equals()</literal> and <literal>hashCode()</literal> using <emphasis>Business key equality</emphasis>. Business key equality means that the <literal>equals()</literal> method compares only the properties that form the business key, a key that would identify our instance in the real world (a <emphasis>natural</emphasis> candidate key):"
-msgstr ""
-
-#: index.docbook:200
+#. Tag: para
+#: persistent_classes.xml:170
+#, no-c-format
 msgid ""
-      "<![CDATA[public class Cat {\n"
-      "\n"
-      "    ...\n"
-      "    public boolean equals(Object other) {\n"
-      "        if (this == other) return true;\n"
-      "        if ( !(other instanceof Cat) ) return false;\n"
-      "\n"
-      "        final Cat cat = (Cat) other;\n"
-      "\n"
-      "        if ( !cat.getLitterId().equals( getLitterId() ) ) return false;\n"
-      "        if ( !cat.getMother().equals( getMother() ) ) return false;\n"
-      "\n"
-      "        return true;\n"
-      "    }\n"
-      "\n"
-      "    public int hashCode() {\n"
-      "        int result;\n"
-      "        result = getMother().hashCode();\n"
-      "        result = 29 * result + getLitterId();\n"
-      "        return result;\n"
-      "    }\n"
-      "\n"
-      "}]]>"
+"Hibernate guarantees equivalence of persistent identity (database row) and "
+"Java identity only inside a particular session scope. So as soon as we mix "
+"instances retrieved in different sessions, we must implement <literal>equals"
+"()</literal> and <literal>hashCode()</literal> if we wish to have meaningful "
+"semantics for <literal>Set</literal>s."
+msgstr ""
+"Hibernate保证，仅在特定会话范围内，持久化标识（数据库的行）和Java标识是等价"
+"的。因此，一旦 我们混合了从不同会话中获取的实例，如果希望<literal>Set</"
+"literal>有明确的语义，就必 须实现<literal>equals()</literal> 和"
+"<literal>hashCode()</literal>。"
+
+#. Tag: para
+#: persistent_classes.xml:178
+#, no-c-format
+msgid ""
+"The most obvious way is to implement <literal>equals()</literal>/"
+"<literal>hashCode()</literal> by comparing the identifier value of both "
+"objects. If the value is the same, both must be the same database row, they "
+"are therefore equal (if both are added to a <literal>Set</literal>, we will "
+"only have one element in the <literal>Set</literal>). Unfortunately, we "
+"can't use that approach with generated identifiers! Hibernate will only "
+"assign identifier values to objects that are persistent, a newly created "
+"instance will not have any identifier value! Furthermore, if an instance is "
+"unsaved and currently in a <literal>Set</literal>, saving it will assign an "
+"identifier value to the object. If <literal>equals()</literal> and "
+"<literal>hashCode()</literal> are based on the identifier value, the hash "
+"code would change, breaking the contract of the <literal>Set</literal>. See "
+"the Hibernate website for a full discussion of this problem. Note that this "
+"is not a Hibernate issue, but normal Java semantics of object identity and "
+"equality."
+msgstr ""
+"实现<literal>equals()</literal>/<literal>hashCode()</literal>最显而易见的方法"
+"是比较两个对象 标识符的值。如果值相同，则两个对象对应于数据库的同一行，因此它"
+"们是相等的（如果都被添加到 <literal>Set</literal>，则在<literal>Set</literal>"
+"中只有一个元素）。不幸的是，对生成的标识不能 使用这种方法。Hibernate仅对那些"
+"持久化对象赋标识值，一个新创建的实例将不会有任何标识值。此外， 如果一个实例没"
+"有被保存(unsaved)，并且它当前正在一个<literal>Set</literal>中，保存它将会给这"
+"个对象 赋一个标识值。如果<literal>equals()</literal> 和 <literal>hashCode()</"
+"literal>是基于标识值 实现的，则其哈希码将会改变，这违反了<literal>Set</"
+"literal>的契约。建议去Hibernate的站点阅读关于这个 问题的全部讨论。注意，这不"
+"是Hibernate的问题，而是一般的Java对象标识和Java对象等价的语义问题。"
+
+#. Tag: para
+#: persistent_classes.xml:192
+#, no-c-format
+msgid ""
+"We recommend implementing <literal>equals()</literal> and <literal>hashCode()"
+"</literal> using <emphasis>Business key equality</emphasis>. Business key "
+"equality means that the <literal>equals()</literal> method compares only the "
+"properties that form the business key, a key that would identify our "
+"instance in the real world (a <emphasis>natural</emphasis> candidate key):"
+msgstr ""
+"我们建议使用<emphasis>业务键值相等(Business key equality)</emphasis>来实现"
+"<literal>equals()</literal> 和 <literal>hashCode()</literal>。业务键值相等的"
+"意思是，<literal>equals()</literal>方法 仅仅比较形成业务键的属性，它能在现实"
+"世界里标识我们的实例（是一个<emphasis>自然的</emphasis>候选码）。"
+
+#. Tag: programlisting
+#: persistent_classes.xml:200
+#, no-c-format
+msgid ""
+"<![CDATA[public class Cat {\n"
+"\n"
+"    ...\n"
+"    public boolean equals(Object other) {\n"
+"        if (this == other) return true;\n"
+"        if ( !(other instanceof Cat) ) return false;\n"
+"\n"
+"        final Cat cat = (Cat) other;\n"
+"\n"
+"        if ( !cat.getLitterId().equals( getLitterId() ) ) return false;\n"
+"        if ( !cat.getMother().equals( getMother() ) ) return false;\n"
+"\n"
+"        return true;\n"
+"    }\n"
+"\n"
+"    public int hashCode() {\n"
+"        int result;\n"
+"        result = getMother().hashCode();\n"
+"        result = 29 * result + getLitterId();\n"
+"        return result;\n"
+"    }\n"
+"\n"
+"}]]>"
 msgstr ""
 
-#: index.docbook:202
-msgid "Note that a business key does not have to be as solid as a database primary key candidate (see <xref linkend=\"transactions-basics-identity\"/>). Immutable or unique properties are usually good candidates for a business key."
+#. Tag: para
+#: persistent_classes.xml:202
+#, no-c-format
+msgid ""
+"Note that a business key does not have to be as solid as a database primary "
+"key candidate (see <xref linkend=\"transactions-basics-identity\"/>). "
+"Immutable or unique properties are usually good candidates for a business "
+"key."
 msgstr ""
+"注意，业务键不必像数据库的主键那样固定不变（参见<xref linkend=\"transactions-"
+"basics-identity\"/>）。 对业务键而言，不可变或唯一的属性是不错的选择。"
 
-#: index.docbook:212
+#. Tag: title
+#: persistent_classes.xml:212
+#, no-c-format
 msgid "Dynamic models"
-msgstr ""
+msgstr "动态模型(Dynamic models)"
 
-#: index.docbook:215
-msgid "Note that the following features are currently considered experimental and may change in the near future."
-msgstr ""
-
-#: index.docbook:219
-msgid "Persistent entities don't necessarily have to be represented as POJO classes or as JavaBean objects at runtime. Hibernate also supports dynamic models (using <literal>Map</literal>s of <literal>Map</literal>s at runtime) and the representation of entities as DOM4J trees. With this approach, you don't write persistent classes, only mapping files."
-msgstr ""
-
-#: index.docbook:227
-msgid "By default, Hibernate works in normal POJO mode. You may set a default entity representation mode for a particular <literal>SessionFactory</literal> using the <literal>default_entity_mode</literal> configuration option (see <xref linkend=\"configuration-optional-properties\"/>."
-msgstr ""
-
-#: index.docbook:234
-msgid "The following examples demonstrates the representation using <literal>Map</literal>s. First, in the mapping file, an <literal>entity-name</literal> has to be declared instead of (or in addition to) a class name:"
-msgstr ""
-
-#: index.docbook:240
+#. Tag: emphasis
+#: persistent_classes.xml:215
+#, no-c-format
 msgid ""
-      "<![CDATA[<hibernate-mapping>\n"
-      "\n"
-      "    <class entity-name=\"Customer\">\n"
-      "\n"
-      "        <id name=\"id\"\n"
-      "            type=\"long\"\n"
-      "            column=\"ID\">\n"
-      "            <generator class=\"sequence\"/>\n"
-      "        </id>\n"
-      "\n"
-      "        <property name=\"name\"\n"
-      "            column=\"NAME\"\n"
-      "            type=\"string\"/>\n"
-      "\n"
-      "        <property name=\"address\"\n"
-      "            column=\"ADDRESS\"\n"
-      "            type=\"string\"/>\n"
-      "\n"
-      "        <many-to-one name=\"organization\"\n"
-      "            column=\"ORGANIZATION_ID\"\n"
-      "            class=\"Organization\"/>\n"
-      "\n"
-      "        <bag name=\"orders\"\n"
-      "            inverse=\"true\"\n"
-      "            lazy=\"false\"\n"
-      "            cascade=\"all\">\n"
-      "            <key column=\"CUSTOMER_ID\"/>\n"
-      "            <one-to-many class=\"Order\"/>\n"
-      "        </bag>\n"
-      "\n"
-      "    </class>\n"
-      "    \n"
-      "</hibernate-mapping>]]>"
-msgstr ""
+"Note that the following features are currently considered experimental and "
+"may change in the near future."
+msgstr "注意，以下特性在当前处于试验阶段，将来可能会有变化。"
 
-#: index.docbook:242
-msgid "Note that even though associations are declared using target class names, the target type of an associations may also be a dynamic entity instead of a POJO."
-msgstr ""
-
-#: index.docbook:249
-msgid "After setting the default entity mode to <literal>dynamic-map</literal> for the <literal>SessionFactory</literal>, we can at runtime work with <literal>Map</literal>s of <literal>Map</literal>s:"
-msgstr ""
-
-#: index.docbook:255
+#. Tag: para
+#: persistent_classes.xml:219
+#, no-c-format
 msgid ""
-      "<![CDATA[Session s = openSession();\n"
-      "Transaction tx = s.beginTransaction();\n"
-      "Session s = openSession();\n"
-      "\n"
-      "// Create a customer\n"
-      "Map david = new HashMap();\n"
-      "david.put(\"name\", \"David\");\n"
-      "\n"
-      "// Create an organization\n"
-      "Map foobar = new HashMap();\n"
-      "foobar.put(\"name\", \"Foobar Inc.\");\n"
-      "\n"
-      "// Link both\n"
-      "david.put(\"organization\", foobar);\n"
-      "\n"
-      "// Save both\n"
-      "s.save(\"Customer\", david);\n"
-      "s.save(\"Organization\", foobar);\n"
-      "\n"
-      "tx.commit();\n"
-      "s.close();]]>"
+"Persistent entities don't necessarily have to be represented as POJO classes "
+"or as JavaBean objects at runtime. Hibernate also supports dynamic models "
+"(using <literal>Map</literal>s of <literal>Map</literal>s at runtime) and "
+"the representation of entities as DOM4J trees. With this approach, you don't "
+"write persistent classes, only mapping files."
 msgstr ""
+"运行期的持久化实体没有必要一定表示为像POJO类或JavaBean对象那样的形式。"
+"Hibernate也支持动态模型 （在运行期使用<literal>Map</literal>的<literal>Map</"
+"literal>）和象DOM4J的树模型那 样的实体表示。使用这种方法，你不用写持久化类，"
+"只写映射文件就行了。"
 
-#: index.docbook:257
-msgid "The advantages of a dynamic mapping are quick turnaround time for prototyping without the need for entity class implementation. However, you lose compile-time type checking and will very likely deal with many exceptions at runtime. Thanks to the Hibernate mapping, the database schema can easily be normalized and sound, allowing to add a proper domain model implementation on top later on."
-msgstr ""
-
-#: index.docbook:265
-msgid "Entity representation modes can also be set on a per <literal>Session</literal> basis:"
-msgstr ""
-
-#: index.docbook:270
+#. Tag: para
+#: persistent_classes.xml:227
+#, no-c-format
 msgid ""
-      "<![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);\n"
-      "\n"
-      "// Create a customer\n"
-      "Map david = new HashMap();\n"
-      "david.put(\"name\", \"David\");\n"
-      "dynamicSession.save(\"Customer\", david);\n"
-      "...\n"
-      "dynamicSession.flush();\n"
-      "dynamicSession.close()\n"
-      "...\n"
-      "// Continue on pojoSession\n"
-      "]]>"
+"By default, Hibernate works in normal POJO mode. You may set a default "
+"entity representation mode for a particular <literal>SessionFactory</"
+"literal> using the <literal>default_entity_mode</literal> configuration "
+"option (see <xref linkend=\"configuration-optional-properties\"/>."
+msgstr ""
+"Hibernate默认工作在普通POJO模式。你可以使用配置选项"
+"<literal>default_entity_mode</literal>， 对特定的<literal>SessionFactory</"
+"literal>，设置一个默认的实体表示模式。 （参见<xref linkend=\"configuration-"
+"optional-properties\"/>。）"
+
+#. Tag: para
+#: persistent_classes.xml:234
+#, no-c-format
+msgid ""
+"The following examples demonstrates the representation using <literal>Map</"
+"literal>s. First, in the mapping file, an <literal>entity-name</literal> has "
+"to be declared instead of (or in addition to) a class name:"
+msgstr ""
+"下面是用<literal>Map</literal>来表示的例子。首先，在映射文件中，要声明 "
+"<literal>entity-name</literal>来代替一个类名（或作为一种附属）。"
+
+#. Tag: programlisting
+#: persistent_classes.xml:240
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class entity-name=\"Customer\">\n"
+"\n"
+"        <id name=\"id\"\n"
+"            type=\"long\"\n"
+"            column=\"ID\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"\n"
+"        <property name=\"name\"\n"
+"            column=\"NAME\"\n"
+"            type=\"string\"/>\n"
+"\n"
+"        <property name=\"address\"\n"
+"            column=\"ADDRESS\"\n"
+"            type=\"string\"/>\n"
+"\n"
+"        <many-to-one name=\"organization\"\n"
+"            column=\"ORGANIZATION_ID\"\n"
+"            class=\"Organization\"/>\n"
+"\n"
+"        <bag name=\"orders\"\n"
+"            inverse=\"true\"\n"
+"            lazy=\"false\"\n"
+"            cascade=\"all\">\n"
+"            <key column=\"CUSTOMER_ID\"/>\n"
+"            <one-to-many class=\"Order\"/>\n"
+"        </bag>\n"
+"\n"
+"    </class>\n"
+"    \n"
+"</hibernate-mapping>]]>"
 msgstr ""
 
-#: index.docbook:273
-msgid "Please note that the call to <literal>getSession()</literal> using an <literal>EntityMode</literal> is on the <literal>Session</literal> API, not the <literal>SessionFactory</literal>. That way, the new <literal>Session</literal> shares the underlying JDBC connection, transaction, and other context information. This means you don't have tocall <literal>flush()</literal> and <literal>close()</literal> on the secondary <literal>Session</literal>, and also leave the transaction and connection handling to the primary unit of work."
+#. Tag: para
+#: persistent_classes.xml:242
+#, no-c-format
+msgid ""
+"Note that even though associations are declared using target class names, "
+"the target type of an associations may also be a dynamic entity instead of a "
+"POJO."
+msgstr ""
+"注意，虽然是用目标类名来声明关联的，但是关联的目标类型除了是POJO之外，也可以 "
+"是一个动态的实体。"
+
+#. Tag: para
+#: persistent_classes.xml:249
+#, no-c-format
+msgid ""
+"After setting the default entity mode to <literal>dynamic-map</literal> for "
+"the <literal>SessionFactory</literal>, we can at runtime work with "
+"<literal>Map</literal>s of <literal>Map</literal>s:"
+msgstr ""
+"在使用<literal>dynamic-map</literal>为<literal>SessionFactory</literal> 设置"
+"了默认的实体模式之后，可以在运行期使用<literal>Map</literal>的 <literal>Map</"
+"literal>。"
+
+#. Tag: programlisting
+#: persistent_classes.xml:255
+#, no-c-format
+msgid ""
+"<![CDATA[Session s = openSession();\n"
+"Transaction tx = s.beginTransaction();\n"
+"Session s = openSession();\n"
+"\n"
+"// Create a customer\n"
+"Map david = new HashMap();\n"
+"david.put(\"name\", \"David\");\n"
+"\n"
+"// Create an organization\n"
+"Map foobar = new HashMap();\n"
+"foobar.put(\"name\", \"Foobar Inc.\");\n"
+"\n"
+"// Link both\n"
+"david.put(\"organization\", foobar);\n"
+"\n"
+"// Save both\n"
+"s.save(\"Customer\", david);\n"
+"s.save(\"Organization\", foobar);\n"
+"\n"
+"tx.commit();\n"
+"s.close();]]>"
 msgstr ""
 
-#: index.docbook:283
-msgid "More information about the XML representation capabilities can be found in <xref linkend=\"xml\"/>."
+#. Tag: para
+#: persistent_classes.xml:257
+#, no-c-format
+msgid ""
+"The advantages of a dynamic mapping are quick turnaround time for "
+"prototyping without the need for entity class implementation. However, you "
+"lose compile-time type checking and will very likely deal with many "
+"exceptions at runtime. Thanks to the Hibernate mapping, the database schema "
+"can easily be normalized and sound, allowing to add a proper domain model "
+"implementation on top later on."
+msgstr ""
+"动态映射的好处是，变化所需要的时间少了，因为原型不需要实现实体类。然而，你无"
+"法进行 编译期的类型检查，并可能由此会处理很多的运行期异常。幸亏有了Hibernate"
+"映射，它使得数 据库的schema能容易的规格化和合理化，并允许稍后在此之上添加合适"
+"的领域模型实现。"
+
+#. Tag: para
+#: persistent_classes.xml:265
+#, no-c-format
+msgid ""
+"Entity representation modes can also be set on a per <literal>Session</"
+"literal> basis:"
+msgstr "实体表示模式也能在每个<literal>Session</literal>的基础上设置："
+
+#. Tag: programlisting
+#: persistent_classes.xml:270
+#, no-c-format
+msgid ""
+"<![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);\n"
+"\n"
+"// Create a customer\n"
+"Map david = new HashMap();\n"
+"david.put(\"name\", \"David\");\n"
+"dynamicSession.save(\"Customer\", david);\n"
+"...\n"
+"dynamicSession.flush();\n"
+"dynamicSession.close()\n"
+"...\n"
+"// Continue on pojoSession\n"
+"]]>"
 msgstr ""
 
-#: index.docbook:291
+#. Tag: para
+#: persistent_classes.xml:273
+#, no-c-format
+msgid ""
+"Please note that the call to <literal>getSession()</literal> using an "
+"<literal>EntityMode</literal> is on the <literal>Session</literal> API, not "
+"the <literal>SessionFactory</literal>. That way, the new <literal>Session</"
+"literal> shares the underlying JDBC connection, transaction, and other "
+"context information. This means you don't have tocall <literal>flush()</"
+"literal> and <literal>close()</literal> on the secondary <literal>Session</"
+"literal>, and also leave the transaction and connection handling to the "
+"primary unit of work."
+msgstr ""
+"请注意，用<literal>EntityMode</literal>调用<literal>getSession()</literal>是"
+"在 <literal>Session</literal>的API中，而不是<literal>SessionFactory</"
+"literal>。 这样，新的<literal>Session</literal>共享底层的JDBC连接，事务，和其"
+"他的上下文信 息。这意味着，你不需要在第二个<literal>Session</literal>中调用 "
+"<literal>flush()</literal>和<literal>close()</literal>，同样的，把事务和连接"
+"的处理 交给原来的工作单元。"
+
+#. Tag: para
+#: persistent_classes.xml:283
+#, no-c-format
+msgid ""
+"More information about the XML representation capabilities can be found in "
+"<xref linkend=\"xml\"/>."
+msgstr "关于XML表示能力的更多信息可以在<xref linkend=\"xml\"/>中找到。"
+
+#. Tag: title
+#: persistent_classes.xml:291
+#, no-c-format
 msgid "Tuplizers"
-msgstr ""
+msgstr "元组片断映射(Tuplizers)"
 
-#: index.docbook:293
-msgid "<literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are responsible for managing a particular representation of a piece of data, given that representation's <literal>org.hibernate.EntityMode</literal>. If a given piece of data is thought of as a data structure, then a tuplizer is the thing which knows how to create such a data structure and how to extract values from and inject values into such a data structure. For example, for the POJO entity mode, the correpsonding tuplizer knows how create the POJO through its constructor and how to access the POJO properties using the defined property accessors. There are two high-level types of Tuplizers, represented by the <literal>org.hibernate.tuple.entity.EntityTuplizer</literal> and <literal>org.hibernate.tuple.component.ComponentTuplizer</literal> interfaces. <literal>EntityTuplizer</literal>s are responsible for managing the above mentioned contracts in regards to entities, while <literal>ComponentTuplizer</literal>s do the same for components."
-msgstr ""
-
-#: index.docbook:308
-msgid "Users may also plug in their own tuplizers. Perhaps you require that a <literal>java.util.Map</literal> implementation other than <literal>java.util.HashMap</literal> be used while in the dynamic-map entity-mode; or perhaps you need to define a different proxy generation strategy than the one used by default. Both would be achieved by defining a custom tuplizer implementation. Tuplizers definitions are attached to the entity or component mapping they are meant to manage. Going back to the example of our customer entity:"
-msgstr ""
-
-#: index.docbook:317
+#. Tag: para
+#: persistent_classes.xml:293
+#, no-c-format
 msgid ""
-      "<![CDATA[<hibernate-mapping>\n"
-      "    <class entity-name=\"Customer\">\n"
-      "        <!--\n"
-      "            Override the dynamic-map entity-mode\n"
-      "            tuplizer for the customer entity\n"
-      "        -->\n"
-      "        <tuplizer entity-mode=\"dynamic-map\"\n"
-      "                class=\"CustomMapTuplizerImpl\"/>\n"
-      "\n"
-      "        <id name=\"id\" type=\"long\" column=\"ID\">\n"
-      "            <generator class=\"sequence\"/>\n"
-      "        </id>\n"
-      "\n"
-      "        <!-- other properties -->\n"
-      "        ...\n"
-      "    </class>\n"
-      "</hibernate-mapping>\n"
-      "\n"
-      "\n"
-      "public class CustomMapTuplizerImpl\n"
-      "        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {\n"
-      "    // override the buildInstantiator() method to plug in our custom map...\n"
-      "    protected final Instantiator buildInstantiator(\n"
-      "            org.hibernate.mapping.PersistentClass mappingInfo) {\n"
-      "        return new CustomMapInstantiator( mappingInfo );\n"
-      "    }\n"
-      "\n"
-      "    private static final class CustomMapInstantiator\n"
-      "            extends org.hibernate.tuple.DynamicMapInstantitor {\n"
-      "        // override the generateMap() method to return our custom map...\n"
-      "            protected final Map generateMap() {\n"
-      "                    return new CustomMap();\n"
-      "            }\n"
-      "    }\n"
-      "}]]>"
+"<literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are "
+"responsible for managing a particular representation of a piece of data, "
+"given that representation's <literal>org.hibernate.EntityMode</literal>. If "
+"a given piece of data is thought of as a data structure, then a tuplizer is "
+"the thing which knows how to create such a data structure and how to extract "
+"values from and inject values into such a data structure. For example, for "
+"the POJO entity mode, the correpsonding tuplizer knows how create the POJO "
+"through its constructor and how to access the POJO properties using the "
+"defined property accessors. There are two high-level types of Tuplizers, "
+"represented by the <literal>org.hibernate.tuple.entity.EntityTuplizer</"
+"literal> and <literal>org.hibernate.tuple.component.ComponentTuplizer</"
+"literal> interfaces. <literal>EntityTuplizer</literal>s are responsible for "
+"managing the above mentioned contracts in regards to entities, while "
+"<literal>ComponentTuplizer</literal>s do the same for components."
+msgstr ""
+"<literal>org.hibernate.tuple.Tuplizer</literal>，以及其子接口，负责根据给定的"
+"<literal>org.hibernate.EntityMode</literal>，来复现片断数据。如果给定的片断数"
+"据被认为其是一种数据结构，\"tuplizer\"就是一个知道如何创建这样的数据结构，以"
+"及如何给这个数据结构赋值的东西。比如说，对于POJO这种Entity Mode，对应的"
+"tuplizer知道通过其构造方法来创建一个POJO，再通过其属性访问器来访问POJO属性。"
+"有两大类高层Tuplizer，分别是<literal>org.hibernate.tuple.entity."
+"EntityTuplizer</literal> 和<literal>org.hibernate.tuple.entity."
+"ComponentTuplizer</literal>接口。<literal>EntityTuplizer</literal>负责管理上"
+"面提到的实体的契约，而<literal>ComponentTuplizer</literal>则是针对组件的。"
+
+#. Tag: para
+#: persistent_classes.xml:308
+#, no-c-format
+msgid ""
+"Users may also plug in their own tuplizers. Perhaps you require that a "
+"<literal>java.util.Map</literal> implementation other than <literal>java."
+"util.HashMap</literal> be used while in the dynamic-map entity-mode; or "
+"perhaps you need to define a different proxy generation strategy than the "
+"one used by default. Both would be achieved by defining a custom tuplizer "
+"implementation. Tuplizers definitions are attached to the entity or "
+"component mapping they are meant to manage. Going back to the example of our "
+"customer entity:"
+msgstr ""
+"用户也可以插入其自定义的tuplizer。或许您需要一种不同于dynamic-map entity-mode"
+"中使用的<literal>java.util.HashMap</literal>的<literal>java.util.Map</"
+"literal>实现；或许您需要与默认策略不同的代理生成策略(proxy generation "
+"strategy)。通过自定义tuplizer实现，这两个目标您都可以达到。Tuplizer定义被附加"
+"到它们期望管理的entity或者component映射中。回到我们的customer entity例子："
+
+#. Tag: programlisting
+#: persistent_classes.xml:317
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"    <class entity-name=\"Customer\">\n"
+"        <!--\n"
+"            Override the dynamic-map entity-mode\n"
+"            tuplizer for the customer entity\n"
+"        -->\n"
+"        <tuplizer entity-mode=\"dynamic-map\"\n"
+"                class=\"CustomMapTuplizerImpl\"/>\n"
+"\n"
+"        <id name=\"id\" type=\"long\" column=\"ID\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"\n"
+"        <!-- other properties -->\n"
+"        ...\n"
+"    </class>\n"
+"</hibernate-mapping>\n"
+"\n"
+"\n"
+"public class CustomMapTuplizerImpl\n"
+"        extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {\n"
+"    // override the buildInstantiator() method to plug in our custom map...\n"
+"    protected final Instantiator buildInstantiator(\n"
+"            org.hibernate.mapping.PersistentClass mappingInfo) {\n"
+"        return new CustomMapInstantiator( mappingInfo );\n"
+"    }\n"
+"\n"
+"    private static final class CustomMapInstantiator\n"
+"            extends org.hibernate.tuple.DynamicMapInstantitor {\n"
+"        // override the generateMap() method to return our custom map...\n"
+"            protected final Map generateMap() {\n"
+"                    return new CustomMap();\n"
+"            }\n"
+"    }\n"
+"}]]>"
 msgstr ""
 
-#: index.docbook:322
-msgid "TODO: Document user-extension framework in the property and proxy packages"
-msgstr ""
-
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
-
+#. Tag: para
+#: persistent_classes.xml:322
+#, no-c-format
+msgid ""
+"TODO: Document user-extension framework in the property and proxy packages"
+msgstr "TODO：property和proxy包里的用户扩展框架文档。"

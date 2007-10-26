@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿<chapter id="queryhql">
+<chapter id="queryhql">
     <title>HQL: A linguagem de Queries do Hibernate</title>
     
     <para>
@@ -217,6 +217,42 @@
 	    </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
+	</sect1>
+
+	<sect1 id="queryhql-identifier-property">
+		<title>Refering to identifier property</title>
+		
+		<para>
+			There are, generally speaking, 2 ways to refer to an entity's identifier property:
+		</para>
+		<itemizedlist spacing="compact">
+			<listitem>
+				<para>
+					The special property (lowercase) <literal>id</literal> may be used to reference the identifier
+					property of an entity <emphasis>provided that entity does not define a non-identifier property
+						named id</emphasis>.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					If the entity defines a named identifier property, you may use that property name.
+				</para>
+			</listitem>
+		</itemizedlist>
+		
+		<para>
+			References to composite identifier properties follow the same naming rules.  If the
+			entity has a non-identifier property named id, the composite identifier property can only
+			be referenced by its defined named; otherwise, the special <literal>id</literal> property
+			can be used to rerference the identifier property.
+		</para>
+		
+		<para>
+			Note: this has changed significantly starting in version 3.2.2.  In previous versions,
+			<literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
+			matter what its actual name.  A ramification of that decision was that non-identifier
+			properties named <literal>id</literal> could never be referenced in Hibernate queries.
+		</para>
 	</sect1>
 
     <sect1 id="queryhql-select">
@@ -914,35 +950,10 @@ from Cat as cat]]></programlisting>
             Note que HQL subqueries podem aparecer apenas dentro de clausulas select ou where.
         </para>
 
-        <para>
-            Para subqueries <literal>com</literal> mais de uma expressão na lista do select, pode-se usar um construtor 
-            de tuplas:
-        </para>
-        
-        <programlisting><![CDATA[from Cat as cat 
-where not ( cat.name, cat.color ) in ( 
-    select cat.name, cat.color from DomesticCat cat 
-)]]></programlisting>
-
-        <para>
-            Veja que em alguns bancos de dados (mas não o Oracle ou HSQL), pode-se  usar construtores 
-            de tuplas em outros contextos. Por exemplo quando buscando componentes ou tipos de usuário composto.
-        </para>
-
-        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
-        
-        <para>
-            Qual é equivalente ao mais verbalizado:
-        </para>
-        
-        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
-
-        <para>
-            Há duas razões boas que você pode não querer fazer este tipo de coisa: primeira, não 
-            é completamente portável entre plataformas de banco de dados; segunda, a query agora é 
-            dependente da ordem de propriedades no documento de mapeamento.
-        </para>
-        
+	<para>
+		Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
+		<xref linkend="queryhql-tuple"/> for more details.
+        </para>        
     </sect1>
 
     <sect1 id="queryhql-examples">

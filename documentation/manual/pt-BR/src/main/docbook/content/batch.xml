@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="batch">
+<chapter id="batch">
     <title>Processamento de lotes</title>
     
     <para>
@@ -40,6 +40,10 @@ session.close();]]></programlisting>
     </para>
 
 <programlisting><![CDATA[hibernate.cache.use_second_level_cache false]]></programlisting>
+<para id="disablebatching" revision="1">
+	Note that Hibernate disables insert batching at the JDBC level transparently if you
+	use an <literal>identiy</literal> identifier generator.
+</para>
 
     <para>
         Mas isto não é absolutamente necessário, desde que nós possamos ajustar o 

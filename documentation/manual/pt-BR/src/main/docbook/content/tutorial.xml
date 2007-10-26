@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="tutorial">
+<chapter id="tutorial">
     <title>Introdu&#x00E7;&#x00E3;o ao Hibernate</title>
     
     <sect1 id="tutorial-intro" revision="1">
@@ -652,7 +652,10 @@ public class EventManager {
                 de configuração desse mecanismo para thread no <literal>hibernate.cfg.xml</literal>? Daqui em
                 diante, o escopo da unidade de trabalho corrente é a thread Java 
                 corrente que executa nossa aplicação. Entretanto, esta não é toda a verdade. Uma 
-                <literal>Session</literal> começa quando é primeiramente necessária, quando é feita a 
+	</para>
+	
+            <para>
+		<literal>Session</literal> começa quando é primeiramente necessária, quando é feita a 
                 primeira chamada à <literal>getCurrentSession()</literal>. É então limitado pelo Hibernate 
                 para thread corrente. Quando a transação termina, tanto com commit quanto rollback, 
                 o Hibernate também desune a <literal>Session</literal> da thread e fecha isso pra você. 
@@ -661,7 +664,16 @@ public class EventManager {
                 programação de limite de thread  <emphasis>thread-bound</emphasis>, é o modo mais popular 
                 de se usar o Hibernate.
            </para>
-
+	   <para>
+		   Related to the unit of work scope, should the Hibernate <literal>Session</literal> be used to
+		   execute one or several database operations? The above example uses one <literal>Session</literal>
+		   for one operation. This is pure coincidence, the example is just not complex enough to show any
+		   other approach. The scope of a Hibernate <literal>Session</literal> is flexible but you should
+		   never design your application to use a new Hibernate <literal>Session</literal> for
+		   <emphasis>every</emphasis> database operation. So even if you see it a few more times in
+		   the following (very trivial) examples, consider <emphasis>session-per-operation</emphasis>
+		   an anti-pattern. A real (web) application is shown later in this tutorial.
+            </para>
             <para>
                Dê uma olhada no <xref linkend="transactions"/>  para mais informações a 
                respeito de manipulação de transação e demarcação. Nós também pulamos qualquer 
@@ -1315,7 +1327,12 @@ public class EventManagerServlet extends HttpServlet {
                 (nós não devemos usar o modo auto-commit em aplicações).
 
             </para>
-
+	    <para>
+		    Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> for
+		    every database operation. Use one Hibernate <literal>Session</literal> that is
+		    scoped to the whole request. Use <literal>getCurrentSession()</literal>, so that
+		    it is automatically bound to the current Java thread.
+            </para>
             <para>
                 Agora, as possibilidades de ações de uma requisição serão processadas e uma resposta HTML será renderizada. 
                 Nós já iremos chegar nesta parte.

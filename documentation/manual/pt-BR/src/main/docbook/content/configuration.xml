@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="session-configuration" revision="1">
+<chapter id="session-configuration" revision="1">
 
     <title>Configuração</title>
     
@@ -799,9 +799,6 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.cache.use_second_level_cache</literal>
                         </entry>
                         <entry>
-                            May be used to completely disable the second level cache, which is enabled
-                            by default for classes which specify a <literal>&lt;cache&gt;</literal>
-                            mapping.
                             Pode ser usada para desabilitar completamente ocache de segundo nível, 
                             o qual está habilitado por default para classes que especificam 
                             um mapeamento <literal>&lt;cache&gt;</literal>.
@@ -878,7 +875,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <entry>
                             O nome da clase de um a <literal>TransactionFactory</literal>
                             para usar com API <literal>Transaction</literal>
-                            ( por default JDBCTransactionFactory).
+			    ( por default <literal>JDBCTransactionFactory</literal>).
                             <para>
                                 <emphasis role="strong">Ex.</emphasis> 
                                 <literal>classname.of.TransactionFactory</literal>
@@ -1028,7 +1025,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             ( propriedade a nível de sistema). Reflexão pode algumas vezes ser ú
                             til quando controlar erros, note que o Hibernate sempre irá requerer a CGLIB 
                             mesmo se você desligar o otimizador. Você não pode determinar esta 
-                            propriedade no hibernate.cfg.xml.
+			    propriedade no <literal>hibernate.cfg.xml</literal>.
                             <para>
                                 <emphasis role="strong">Ex.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>

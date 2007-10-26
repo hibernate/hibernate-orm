@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿<chapter id="batch">
+<chapter id="batch">
     <title>批量处理（Batch processing）</title>
     <para>
         使用Hibernate将 100 000 条记录插入到数据库的一个很自然的做法可能是这样的

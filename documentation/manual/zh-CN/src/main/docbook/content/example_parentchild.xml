@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="example-parentchild">
+<chapter id="example-parentchild">
     <title>示例：父子关系(Parent Child Relationships)</title>
     <para>
     刚刚接触Hibernate的人大多是从父子关系（parent / child type relationship）的建模入手的。父子关系的建模有两种方法。由于种种原因，最方便的方法是把<literal>Parent</literal>和<literal>Child</literal>都建模成实体类，并创建一个从<literal>Parent</literal>指向<literal>Child</literal>的&lt;one-to-many&gt;关联，对新手来说尤其如此。还有一种方法，就是将<literal>Child</literal>声明为一个<literal>&lt;composite-element&gt;</literal>（组合元素）。 事实上在Hibernate中one to many关联的默认语义远没有composite element贴近parent / child关系的通常语义。下面我们会阐述如何使用<emphasis>带有级联的双向一对多关联(bidirectional one to many association with cascades)</emphasis>去建立有效、优美的parent / child关系。这一点也不难！
@@ -223,14 +223,7 @@ parent.addChild(newChild);
 session.update(parent);
 session.flush();]]></programlisting>
      
-         <para>
-             Well, that's all very well for the case of a generated identifier, but what about assigned identifiers
-             and composite identifiers? This is more difficult, since Hibernate can't use the identifier property to
-             distinguish between a newly instantiated object (with an identifier assigned by the user) and an 
-             object loaded in a previous session. In this case, Hibernate will either use the timestamp or version 
-             property, or will actually query the second-level cache or, worst case, the database, to see if the 
-             row exists.
-         </para>
+
      <para>
          这对于自动生成标识的情况是非常好的，但是自分配的标识和复合标识怎么办呢？这是有点麻烦，因为Hibernate没有办法区分新实例化的对象（标识被用户指定了）和前一个Session装入的对象。在这种情况下，Hibernate会使用timestamp或version属性，或者查询第二级缓存，或者最坏的情况，查询数据库，来确认是否此行存在。</para>
      

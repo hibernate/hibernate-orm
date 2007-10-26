@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿    <chapter id="inheritance">
+<chapter id="inheritance">
         <title>继承映射(Inheritance Mappings)</title>
 
 	    <sect1 id="inheritance-strategies" revision="3">
@@ -266,7 +266,7 @@
             </sect2>
 
             <sect2 id="inheritance-tableperconcreate-polymorphism">
-     			  <title>Table per concrete class, using implicit polymorphism</title>
+     			  
             <title>每个具体类一张表，使用隐式多态</title>
 
             <para>

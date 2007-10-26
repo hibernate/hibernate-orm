@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="performance">
+<chapter id="performance">
     <title>提升性能
 	</title>
     <sect1 id="performance-fetching" revision="2">
@@ -609,7 +609,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
-                <entry>yes (clustered invalidation)</entry>
+                <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>

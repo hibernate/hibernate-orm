@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿<chapter id="queryhql">
+<chapter id="queryhql">
     <title>HQL: Hibernate查询语言</title>
     <para>
         Hibernate配备了一种非常强大的查询语言，这种语言看上去很像SQL。但是不要被语法结构
@@ -191,6 +191,42 @@ all properties</literal>
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
 	</sect1>
+	<sect1 id="queryhql-identifier-property">
+		<title>Refering to identifier property</title>
+		
+		<para>
+			There are, generally speaking, 2 ways to refer to an entity's identifier property:
+		</para>
+		<itemizedlist spacing="compact">
+			<listitem>
+				<para>
+					The special property (lowercase) <literal>id</literal> may be used to reference the identifier
+					property of an entity <emphasis>provided that entity does not define a non-identifier property
+						named id</emphasis>.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					If the entity defines a named identifier property, you may use that property name.
+				</para>
+			</listitem>
+		</itemizedlist>
+		
+		<para>
+			References to composite identifier properties follow the same naming rules.  If the
+			entity has a non-identifier property named id, the composite identifier property can only
+			be referenced by its defined named; otherwise, the special <literal>id</literal> property
+			can be used to rerference the identifier property.
+		</para>
+		
+		<para>
+			Note: this has changed significantly starting in version 3.2.2.  In previous versions,
+			<literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
+			matter what its actual name.  A ramification of that decision was that non-identifier
+			properties named <literal>id</literal> could never be referenced in Hibernate queries.
+		</para>
+	</sect1>
+	
 
     <sect1 id="queryhql-select">
         <title>select子句</title>
@@ -504,6 +540,11 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                 <para>
                     逻辑运算符<literal>and, or, not</literal>
                 </para>
+            </listitem>
+	    <listitem>
+		    <para>
+			    Parentheses <literal>( )</literal>, indicating grouping
+		    </para>
             </listitem>
             <listitem>
                 <para>
@@ -856,30 +897,9 @@ from Cat as cat]]></programlisting>
             注意，HQL自查询只可以在select或者where子句中出现。
         </para>
 
-        <para>
-            在select列表中包含一个表达式以上的子查询，你可以使用一个元组构造符（tuple constructors）： 
-        </para>
-        
-        <programlisting><![CDATA[from Cat as cat 
-where not ( cat.name, cat.color ) in ( 
-    select cat.name, cat.color from DomesticCat cat 
-)]]></programlisting>
-
-        <para>
-            注意在某些数据库中（不包括Oracle与HSQL），你也可以在其他语境中使用元组构造符，
-            比如查询用户类型的组件与组合：
-        </para>
-
-        <programlisting><![CDATA[from Person where name = ('Gavin', 'A', 'King')]]></programlisting>
-        
-        <para>
-            该查询等价于更复杂的：
-        </para>
-        
-        <programlisting><![CDATA[from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')]]></programlisting>
-
-        <para>
-            有两个很好的理由使你不应当作这样的事情：首先，它不完全适用于各个数据库平台；其次，查询现在依赖于映射文件中属性的顺序。
+	<para>
+		Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
+		<xref linkend="queryhql-tuple"/> for more details.
         </para>
         
     </sect1>

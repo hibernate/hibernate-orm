@@ -185,12 +185,6 @@
                             <entry><literal>foreign-key</literal></entry>
                             <entry><literal>foreign_key_name</literal></entry>
                             <entry>
-                                                                specifies the name of the foreign key constraint generated
-                                for an association, for a <literal>&lt;one-to-one&gt;</literal>, 
-                                <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
-                                or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that
-                                <literal>inverse="true"</literal> sides will not be considered
-                                by <literal>SchemaExport</literal>.
                                 指明一个外键的名字，它是为关联生成的，或者<literal>&lt;one-to-one&gt;</literal>，<literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 或者<literal>&lt;many-to-many&gt;</literal>映射元素。注意<literal>inverse="true"</literal>在<literal>SchemaExport</literal>时会被忽略。
 
                             </entry>

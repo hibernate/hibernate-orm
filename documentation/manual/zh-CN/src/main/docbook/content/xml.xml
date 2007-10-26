@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿<chapter id="xml">
+<chapter id="xml">
     <title>XML映射</title>
     <para><emphasis>
         注意这是Hibernate 3.0的一个实验性的特性。这一特性仍在积极开发中。

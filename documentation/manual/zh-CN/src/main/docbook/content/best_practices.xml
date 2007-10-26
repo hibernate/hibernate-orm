@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿﻿<chapter id="best-practices" revision="2">
+<chapter id="best-practices" revision="2">
     <title>最佳实践(Best Practices)</title>
     
     <variablelist spacing="compact">
@@ -30,7 +30,6 @@
                     对所有的实体都标识出自然键，用<literal>&lt;natural-id&gt;</literal>进行映射。实现<literal>equals()</literal>和<literal>hashCode()</literal>，在其中用组成自然键的属性进行比较。
                 </para>
             </listitem>
-            Y00008051221000980   2.7，89，100万
         </varlistentry>
         
         <varlistentry> 

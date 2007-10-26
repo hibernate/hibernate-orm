@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-﻿<chapter id="example-mappings">
+<chapter id="example-mappings">
     <title>示例：复杂映射实例</title>
     <para>
         本章展示了一些较为复杂的关系映射。

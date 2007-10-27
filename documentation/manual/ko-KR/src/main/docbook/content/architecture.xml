@@ -284,7 +284,14 @@
 					<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - 현재의 세션들은 
 					실행 쓰레드에 의해 추적된다. 상세한 것은 다시 javadocs를 보라.
 				</para>
-			</listitem>
+			</listitem>            <listitem>
+				<para> NOT TRANSLATED!
+					<literal>org.hibernate.context.ManagedSessionContext</literal> - current
+					sessions are tracked by thread of execution. However, you are responsible to
+					bind and unbind a <literal>Session</literal> instance with static methods
+					on this class, it does never open, flush, or close a <literal>Session</literal>.
+				</para>
+            </listitem>
 		</itemizedlist>
 	    <para>
                         처음의 두 구현들은 <emphasis>session-per-request</emphasis>로 알려지고 사용되고 있는 

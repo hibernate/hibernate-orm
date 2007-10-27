@@ -581,8 +581,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>hibernate.jdbc.use_streams_for_binary</literal>
                         </entry>
                         <entry>
-                            <literal>binary</literal> 또는 <literal>serializable</literal> 타입들을 JDBC로 기록하고
-                            /JDBC로부터 <literal>binary</literal> 또는 <literal>serializable</literal> 타입들을 읽어들일 때 
+                            FUZZY! <literal>binary</literal> 또는 <literal>serializable</literal> 타입들을 읽어들일 때 
                                                         스트림들을 사용한다(시스템-레벨 프로퍼티).
                             <para>
                                 <emphasis role="strong">예.</emphasis>

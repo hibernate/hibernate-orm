@@ -862,7 +862,175 @@
             </sect3>
 
         </sect2>
+	
+	<sect2 id="mapping-declaration-id-enhanced">
+		<title>NOT TRANSLATED!Enhanced identifier generators</title>
+		
+		<para>
+			Starting with release 3.2.3, there are 2 new generators which represent a re-thinking of 2 different
+			aspects of identifier generation.  The first aspect is database portability; the second is optimization
+			(not having to query the database for every request for a new identifier value).  These two new
+			generators are intended to take the place of some of the named generators described above (starting
+			in 3.3.x); however, they are included in the current releases and can be referenced by FQN.
+		</para>
+		
+		<para>
+			The first of these new generators is <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal>
+			which is intended firstly as a replacement for the <literal>sequence</literal> generator and secondly as
+			a better portability generator than <literal>native</literal> (because <literal>native</literal>
+			(generally) chooses between <literal>identity</literal> and <literal>sequence</literal> which have
+			largely different semantics which can cause subtle isssues in applications eyeing portability).
+			<literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal> however achieves portability in
+			a different manner.  It chooses between using a table or a sequence in the database to store its
+			incrementing values depending on the capabilities of the dialect being used.  The difference between this
+			and <literal>native</literal> is that table-based and sequence-based storage have the same exact
+			semantic (in fact sequences are exactly what Hibernate tries to emmulate with its table-based
+			generators).  This generator has a number of configuration parameters:
+			<itemizedlist spacing="compact">
+				<listitem>
+					<para>
+						<literal>sequence_name</literal> (optional, defaults to <literal>hibernate_sequence</literal>):
+						The name of the sequence (or table) to be used.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>initial_value</literal> (optional, defaults to <literal>1</literal>): The initial
+						value to be retrieved from the sequence/table.  In sequence creation terms, this is analogous
+						to the clause typical named "STARTS WITH".
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>increment_size</literal> (optional, defaults to <literal>1</literal>): The value by
+						which subsequent calls to the sequence/table should differ.  In sequence creation terms, this
+						is analogous to the clause typical named "INCREMENT BY".
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>force_table_use</literal> (optional, defaults to <literal>false</literal>): Should
+						we force the use of a table as the backing structure even though the dialect might support
+						sequence?
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>value_column</literal> (optional, defaults to <literal>next_val</literal>): Only
+						relevant for table structures!  The name of the column on the table which is used to
+						hold the value.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>optimizer</literal> (optional, defaults to <literal>none</literal>):
+						See <xref linkend="mapping-declaration-id-enhanced-optimizers"/>
+					</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+		<para>
+			The second of these new generators is <literal>org.hibernate.id.enhanced.TableGenerator</literal> which
+			is intended firstly as a replacement for the <literal>table</literal> generator (although it actually
+			functions much more like <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal>) and secondly
+			as a re-implementation of <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> utilizing the
+			notion of pluggable optimiziers.  Essentially this generator defines a table capable of holding
+			a number of different increment values simultaneously by using multiple distinctly keyed rows.  This
+			generator has a number of configuration parameters:
+			<itemizedlist spacing="compact">
+				<listitem>
+					<para>
+						<literal>table_name</literal> (optional, defaults to <literal>hibernate_sequences</literal>):
+						The name of the table to be used.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>value_column_name</literal> (optional, defaults to <literal>next_val</literal>):
+						The name of the column on the table which is used to hold the value.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>segment_column_name</literal> (optional, defaults to <literal>sequence_name</literal>):
+						The name of the column on the table which is used to hold the "segement key".  This is the
+						value which distinctly identifies which increment value to use.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>segment_value</literal> (optional, defaults to <literal>default</literal>):
+						The "segment key" value for the segment from which we want to pull increment values for
+						this generator.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>segment_value_length</literal> (optional, defaults to <literal>255</literal>):
+						Used for schema generation; the column size to create this segment key column.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>initial_value</literal> (optional, defaults to <literal>1</literal>):
+						The initial value to be retrieved from the table.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>increment_size</literal> (optional, defaults to <literal>1</literal>):
+						The value by which subsequent calls to the table should differ.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>optimizer</literal> (optional, defaults to <literal></literal>):
+						See <xref linkend="mapping-declaration-id-enhanced-optimizers"/>
+					</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+	</sect2>
+	
+	<sect2 id="mapping-declaration-id-enhanced-optimizers">
+		<title>NOT TRANSLATED! Identifier generator optimization</title>
+		<para>
+			For identifier generators which store values in the database, it is inefficient for them to hit the
+			database on each and every call to generate a new identifier value.  Instead, you'd ideally want to
+			group a bunch of them in memory and only hit the database when you have exhausted your in-memory
+			value group.  This is the role of the pluggable optimizers.  Currently only the two enhanced generators
+			(<xref linkend="mapping-declaration-id-enhanced"/> support this notion.
+			<itemizedlist spacing="compact">
+				<listitem>
+					<para>
+						<literal>none</literal> (generally this is the default if no optimizer was specified):  This
+						says to not perform any optimizations, and hit the database each and every request.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>hilo</literal>: applies a hi/lo algorithm around the database retrieved values.  The
+						values from the database for this optimizer are expected to be sequential.  The values
+						retrieved from the database structure for this optimizer indicates the "group number"; the
+						<literal>increment_size</literal> is multiplied by that value in memory to define a group
+						"hi value".
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<literal>pooled</literal>: like was discussed for <literal>hilo</literal>, this optimizers
+						attempts to minimize the number of hits to the database.  Here, however, we simply store
+						the starting value for the "next group" into the database structure rather than a sequential
+						value in combination with an in-memory grouping algorithm.  <literal>increment_size</literal>
+						here refers to the values coming from the database.
+					</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+	</sect2>
+	
 
+	
         <sect2 id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 

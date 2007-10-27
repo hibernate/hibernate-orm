@@ -121,12 +121,7 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
-        <para>
-                        당신은 또한 <literal>Configuration</literal>을 사용하여 인터셉터를 전역 레벨 상에 설정할 수도 있다. 
-                        이 경우에, 인터셉터는 threadsafe이어야 한다.
-        </para>
-    
-        <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
+
         
         <para>
             <literal>SessionFactory</literal>-영역의 인터셉터는 <literal>SessionFactory</literal>을 빌드하기에 앞서 

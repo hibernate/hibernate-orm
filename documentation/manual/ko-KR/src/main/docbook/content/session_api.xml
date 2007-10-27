@@ -84,6 +84,28 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
                         호출하기 전에 그 식별자가<literal>cat</literal> 인스턴스에 할당될 것이다. 당신은 또한  EJB3 초기 드래프트에서 
                         정의된 의미로 <literal>save()</literal> 대신 <literal>persist()</literal>를 사용할 수도 있다.
         </para>
+	<itemizedlist spacing="compact">
+		<listitem>
+			<para> UNTRANSLATED!
+				<literal>persist()</literal> makes a transient instance persistent. 
+				However, it doesn't guarantee that the identifier value will be assigned to 
+				the persistent instance immediately, the assignment might happen at flush time. 
+				<literal>persist()</literal> also guarantees that it will not execute an 
+				<literal>INSERT</literal> statement if it is called outside of transaction 
+				boundaries. This is useful in long-running conversations with an extended 
+				Session/persistence context.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<literal>save()</literal> does guarantee to return an identifier. If an INSERT 
+				has to be executed to get the identifier ( e.g. "identity" generator, not 
+				"sequence"), this INSERT happens immediately, no matter if you are inside or 
+				outside of a transaction. This is problematic in a long-running conversation  
+				with an extended Session/persistence context.
+			</para>
+		</listitem>
+	</itemizedlist>        
         
         <para>
                         다른 방법으로, 당신은 <literal>save()</literal>의 오버로드된 버전을 사용하여 식별자를 할당할 수 있다.

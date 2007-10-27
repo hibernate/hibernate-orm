@@ -155,9 +155,7 @@ public class Cat {
                     <para>
                         <literal>Session.merge()</literal>
                     </para>
-                    <para>
-                                                를 보라 
-                    </para>
+
                 </listitem>
             </itemizedlist>
 

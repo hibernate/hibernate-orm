@@ -635,7 +635,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
-                <entry>yes (clustered invalidation)</entry>
+                <entry></entry>
                 <entry>yes</entry>
             </row>
             <row>

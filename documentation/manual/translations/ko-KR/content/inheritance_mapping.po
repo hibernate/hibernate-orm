@@ -1,642 +1,829 @@
-#, fuzzy
 msgid ""
 msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
-#: index.docbook:5
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: inheritance_mapping.xml:5
+#, no-c-format
 msgid "Inheritance Mapping"
 msgstr "상속 매핑"
 
-#: index.docbook:8
+#. Tag: title
+#: inheritance_mapping.xml:8
+#, no-c-format
 msgid "The Three Strategies"
 msgstr "세 가지 방도들"
 
-#: index.docbook:10
+#. Tag: para
+#: inheritance_mapping.xml:10
+#, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
 msgstr "Hibernate는 세 가지 기본적인 상속 매핑 방도들을 지원한다:"
 
-#: index.docbook:16
+#. Tag: para
+#: inheritance_mapping.xml:16
+#, no-c-format
 msgid "table per class hierarchy"
 msgstr "table per class hierarchy"
 
-#: index.docbook:21
+#. Tag: para
+#: inheritance_mapping.xml:21
+#, fuzzy, no-c-format
 msgid "<para>table per subclass</para>"
-msgstr "<para>table per subclass</para>"
+msgstr "table per subclass"
 
-#: index.docbook:26
+#. Tag: para
+#: inheritance_mapping.xml:26
+#, no-c-format
 msgid "table per concrete class"
 msgstr "table per concrete class"
 
-#: index.docbook:32
-msgid "In addition, Hibernate supports a fourth, slightly different kind of polymorphism:"
+#. Tag: para
+#: inheritance_mapping.xml:32
+#, no-c-format
+msgid ""
+"In addition, Hibernate supports a fourth, slightly different kind of "
+"polymorphism:"
 msgstr "게다가 Hibernate는 네 번째의 약간 다른 종류의 다형성을 지원한다:"
 
-#: index.docbook:39
+#. Tag: para
+#: inheritance_mapping.xml:39
+#, no-c-format
 msgid "implicit polymorphism"
 msgstr "implicit polymorphism(함축적인 다형성)"
 
-#: index.docbook:45
-msgid "It is possible to use different mapping strategies for different branches of the same inheritance hierarchy, and then make use of implicit polymorphism to achieve polymorphism across the whole hierarchy. However, Hibernate does not support mixing <literal>&lt;subclass&gt;</literal>, and <literal>&lt;joined-subclass&gt;</literal> and <literal>&lt;union-subclass&gt;</literal> mappings under the same root <literal>&lt;class&gt;</literal> element. It is possible to mix together the table per hierarchy and table per subclass strategies, under the the same <literal>&lt;class&gt;</literal> element, by combining the <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal> elements (see below)."
-msgstr "동일한 상속 계층구조의 다른 가지들에 대해 다른 매핑 방도들을 사용하는 것이 가능하고, 그런 다음 전체 계층 구조를 가로질러 다형성을 성취하는데 함축적인 다형성을 사용하라. 하지만 Hibernate는 동일한 루트 <literal>&lt;class&gt;</literal> 요소 하에서 <literal>&lt;subclass&gt;</literal> 그리고 <literal>&lt;joined-subclass&gt;</literal> 그리고 <literal>&lt;union-subclass&gt;</literal> 매핑들을 혼합하는 것을 지원하지 않는다. 동일한 <literal>&lt;class&gt;</literal> 요소 하에서 <literal>&lt;subclass&gt;</literal> 요소와 <literal>&lt;join&gt;</literal> 요소를 결합시킴으로써 table per hierarchy 방도와 table per subclass 방도를 함께 혼합시키는 것이 가능하다(아래를 보라)."
-
-#: index.docbook:59
-msgid "It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>, and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping documents important. Since Hibernate3, the ordering of mapping files does not matter when using the extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses before subclasses."
-msgstr "별도의 매핑 문서 내에, <literal>hibernate-mapping</literal> 바로 밑에 <literal>subclass</literal>, <literal>union-subclass</literal>, 그리고 <literal>joined-subclass</literal> 매핑들을 정의하는 것이 가능하다. 이것은 단지 하나의 새로운 매핑 파일을 추가시켜서 하나의 class 계층구조를 확장하는 것을 당신에게 허용해준다. 당신은 subclass 매핑 내에 앞서 매핑된 슈퍼클래스를 명명하여 <literal>extends</literal> 속성을 지정해야 한다. 노트 : 명백하게 이 특징은 매핑 문서들의 순서를 중요하게끔 만들었다. Hibernate3 이후로, 매핑 파일들의 순서는 extends 키워드를 사용할 때 상관없다. 하나의 매핑 파일 내의 순서는 여전히 서브클래스들에 앞서 슈퍼클래스들을 정의하는데 여전히 필요하다."
-
-#: index.docbook:70
+#. Tag: para
+#: inheritance_mapping.xml:45
+#, no-c-format
 msgid ""
-      "<![CDATA[\n"
-      " <hibernate-mapping>\n"
-      "     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D\">\n"
-      "          <property name=\"name\" type=\"string\"/>\n"
-      "     </subclass>\n"
-      " </hibernate-mapping>]]>"
+"It is possible to use different mapping strategies for different branches of "
+"the same inheritance hierarchy, and then make use of implicit polymorphism "
+"to achieve polymorphism across the whole hierarchy. However, Hibernate does "
+"not support mixing <literal>&lt;subclass&gt;</literal>, and <literal>&lt;"
+"joined-subclass&gt;</literal> and <literal>&lt;union-subclass&gt;</literal> "
+"mappings under the same root <literal>&lt;class&gt;</literal> element. It is "
+"possible to mix together the table per hierarchy and table per subclass "
+"strategies, under the the same <literal>&lt;class&gt;</literal> element, by "
+"combining the <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</"
+"literal> elements (see below)."
 msgstr ""
-      "<![CDATA[\n"
-      " <hibernate-mapping>\n"
-      "     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D\">\n"
-      "          <property name=\"name\" type=\"string\"/>\n"
-      "     </subclass>\n"
-      " </hibernate-mapping>]]>"
+"동일한 상속 계층구조의 다른 가지들에 대해 다른 매핑 방도들을 사용하는 것이 가"
+"능하고, 그런 다음 전체 계층 구조를 가로질러 다형성을 성취하는데 함축적인 다형"
+"성을 사용하라. 하지만 Hibernate는 동일한 루트 <literal>&lt;class&gt;</"
+"literal> 요소 하에서 <literal>&lt;subclass&gt;</literal> 그리고 <literal>&lt;"
+"joined-subclass&gt;</literal> 그리고 <literal>&lt;union-subclass&gt;</"
+"literal> 매핑들을 혼합하는 것을 지원하지 않는다. 동일한 <literal>&lt;"
+"class&gt;</literal> 요소 하에서 <literal>&lt;subclass&gt;</literal> 요소와 "
+"<literal>&lt;join&gt;</literal> 요소를 결합시킴으로써 table per hierarchy 방"
+"도와 table per subclass 방도를 함께 혼합시키는 것이 가능하다(아래를 보라)."
 
-#: index.docbook:74
+#. Tag: para
+#: inheritance_mapping.xml:59
+#, no-c-format
+msgid ""
+"It is possible to define <literal>subclass</literal>, <literal>union-"
+"subclass</literal>, and <literal>joined-subclass</literal> mappings in "
+"separate mapping documents, directly beneath <literal>hibernate-mapping</"
+"literal>. This allows you to extend a class hierachy just by adding a new "
+"mapping file. You must specify an <literal>extends</literal> attribute in "
+"the subclass mapping, naming a previously mapped superclass. Note: "
+"Previously this feature made the ordering of the mapping documents "
+"important. Since Hibernate3, the ordering of mapping files does not matter "
+"when using the extends keyword. The ordering inside a single mapping file "
+"still needs to be defined as superclasses before subclasses."
+msgstr ""
+"별도의 매핑 문서 내에, <literal>hibernate-mapping</literal> 바로 밑에 "
+"<literal>subclass</literal>, <literal>union-subclass</literal>, 그리고 "
+"<literal>joined-subclass</literal> 매핑들을 정의하는 것이 가능하다. 이것은 단"
+"지 하나의 새로운 매핑 파일을 추가시켜서 하나의 class 계층구조를 확장하는 것"
+"을 당신에게 허용해준다. 당신은 subclass 매핑 내에 앞서 매핑된 슈퍼클래스를 명"
+"명하여 <literal>extends</literal> 속성을 지정해야 한다. 노트 : 명백하게 이 특"
+"징은 매핑 문서들의 순서를 중요하게끔 만들었다. Hibernate3 이후로, 매핑 파일들"
+"의 순서는 extends 키워드를 사용할 때 상관없다. 하나의 매핑 파일 내의 순서는 "
+"여전히 서브클래스들에 앞서 슈퍼클래스들을 정의하는데 여전히 필요하다."
+
+#. Tag: programlisting
+#: inheritance_mapping.xml:70
+#, no-c-format
+msgid ""
+"<![CDATA[\n"
+" <hibernate-mapping>\n"
+"     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D"
+"\">\n"
+"          <property name=\"name\" type=\"string\"/>\n"
+"     </subclass>\n"
+" </hibernate-mapping>]]>"
+msgstr ""
+
+#. Tag: title
+#: inheritance_mapping.xml:74
+#, no-c-format
 msgid "Table per class hierarchy"
 msgstr "Table per class hierarchy"
 
-#: index.docbook:76
-msgid "Suppose we have an interface <literal>Payment</literal>, with implementors <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, <literal>ChequePayment</literal>. The table per hierarchy mapping would look like:"
-msgstr "우리가 <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, <literal>ChequePayment</literal> 구현자들을 가진 하나의 인터페이스 <literal>Payment</literal>를 갖고 있다고 가정하자. table per hierarchy 매핑은 다음과 같을 것이다:"
-
-#: index.docbook:83
+#. Tag: para
+#: inheritance_mapping.xml:76
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"Suppose we have an interface <literal>Payment</literal>, with implementors "
+"<literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, "
+"<literal>ChequePayment</literal>. The table per hierarchy mapping would look "
+"like:"
 msgstr ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"우리가 <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, "
+"<literal>ChequePayment</literal> 구현자들을 가진 하나의 인터페이스 "
+"<literal>Payment</literal>를 갖고 있다고 가정하자. table per hierarchy 매핑"
+"은 다음과 같을 것이다:"
 
-#: index.docbook:85
-msgid "Exactly one table is required. There is one big limitation of this mapping strategy: columns declared by the subclasses, such as <literal>CCTYPE</literal>, may not have <literal>NOT NULL</literal> constraints."
-msgstr "정확히 하나의 테이블이 필요하다. 이 매핑 방도에는 다음의 하나의 큰 제약이 존재한다: <literal>CCTYPE</literal>과 같이, 서브 클래스들에 의해 선언된 컬럼들은 <literal>NOT NULL</literal> 컨스트레인트들을 가질 수 없다."
+#. Tag: programlisting
+#: inheritance_mapping.xml:83
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+"    ...\n"
+"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+"        ...\n"
+"    </subclass>\n"
+"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+"        ...\n"
+"    </subclass>\n"
+"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+"        ...\n"
+"    </subclass>\n"
+"</class>]]>"
+msgstr ""
 
-#: index.docbook:94
+#. Tag: para
+#: inheritance_mapping.xml:85
+#, no-c-format
+msgid ""
+"Exactly one table is required. There is one big limitation of this mapping "
+"strategy: columns declared by the subclasses, such as <literal>CCTYPE</"
+"literal>, may not have <literal>NOT NULL</literal> constraints."
+msgstr ""
+"정확히 하나의 테이블이 필요하다. 이 매핑 방도에는 다음의 하나의 큰 제약이 존"
+"재한다: <literal>CCTYPE</literal>과 같이, 서브 클래스들에 의해 선언된 컬럼들"
+"은 <literal>NOT NULL</literal> 컨스트레인트들을 가질 수 없다."
+
+#. Tag: title
+#: inheritance_mapping.xml:94
+#, no-c-format
 msgid "Table per subclass"
 msgstr "Table per subclass"
 
-#: index.docbook:96
+#. Tag: para
+#: inheritance_mapping.xml:96
+#, no-c-format
 msgid "A table per subclass mapping would look like:"
 msgstr "table per subclass 매핑은 다음과 같을 것이다:"
 
-#: index.docbook:100
+#. Tag: programlisting
+#: inheritance_mapping.xml:100
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "</class>]]>"
+"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+"    ...\n"
+"    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+"        <key column=\"PAYMENT_ID\"/>\n"
+"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+"        ...\n"
+"    </joined-subclass>\n"
+"    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+"        <key column=\"PAYMENT_ID\"/>\n"
+"        ...\n"
+"    </joined-subclass>\n"
+"    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+"        <key column=\"PAYMENT_ID\"/>\n"
+"        ...\n"
+"    </joined-subclass>\n"
+"</class>]]>"
 msgstr ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "</class>]]>"
 
-#: index.docbook:102
-msgid "Four tables are required. The three subclass tables have primary key associations to the superclass table (so the relational model is actually a one-to-one association)."
-msgstr "네 개의 테이블들이 필요하다. 세 개의 서브클래스 테이블들은 슈퍼클래스 테이블에 대한 프라이머리 키 연관들을 갖는다 (따라서 그 관계형 모형은 실제로 one-to-one 연관이다)."
+#. Tag: para
+#: inheritance_mapping.xml:102
+#, no-c-format
+msgid ""
+"Four tables are required. The three subclass tables have primary key "
+"associations to the superclass table (so the relational model is actually a "
+"one-to-one association)."
+msgstr ""
+"네 개의 테이블들이 필요하다. 세 개의 서브클래스 테이블들은 슈퍼클래스 테이블"
+"에 대한 프라이머리 키 연관들을 갖는다 (따라서 그 관계형 모형은 실제로 one-to-"
+"one 연관이다)."
 
-#: index.docbook:111
+#. Tag: title
+#: inheritance_mapping.xml:111
+#, no-c-format
 msgid "Table per subclass, using a discriminator"
 msgstr "discriminator를 사용하는, table per subclass"
 
-#: index.docbook:113
-msgid "Note that Hibernate's implementation of table per subclass requires no discriminator column. Other object/relational mappers use a different implementation of table per subclass which requires a type discriminator column in the superclass table. The approach taken by Hibernate is much more difficult to implement but arguably more correct from a relational point of view. If you would like to use a discriminator column with the table per subclass strategy, you may combine the use of <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal>, as follow:"
-msgstr "table-per-subclass에 대한 Hibernate의 구현은 discriminator(판별자) 컬럼을 필요로 하지 않음을 노트하라. 다른 객체/관계형 매핑기들은 슈퍼클래스 테이블 속에 하나의 타입 판별자 컬럼을 필요로 하는 table-per-subclass에 대한 다른 구현을 사용한다. Hibernate에 의해 채택된 접근법은 구현하기가 훨씬 더 어렵지만 관계형 관점에서는 아마 틀림없이 보다 더 정확하다. 만일 당신이 table per subclass 방도에 대해 하나의 판별자 컬럼을 사용하고 싶다면, 당신은 다음과 같이 <literal>&lt;subclass&gt;</literal>와 <literal>&lt;join&gt;</literal>의 사용을 결합시킬 수도 있다:"
-
-#: index.docbook:125
+#. Tag: para
+#: inheritance_mapping.xml:113
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <join table=\"CREDIT_PAYMENT\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        <join table=\"CASH_PAYMENT\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"Note that Hibernate's implementation of table per subclass requires no "
+"discriminator column. Other object/relational mappers use a different "
+"implementation of table per subclass which requires a type discriminator "
+"column in the superclass table. The approach taken by Hibernate is much more "
+"difficult to implement but arguably more correct from a relational point of "
+"view. If you would like to use a discriminator column with the table per "
+"subclass strategy, you may combine the use of <literal>&lt;subclass&gt;</"
+"literal> and <literal>&lt;join&gt;</literal>, as follow:"
 msgstr ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <join table=\"CREDIT_PAYMENT\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        <join table=\"CASH_PAYMENT\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
-      "            <key column=\"PAYMENT_ID\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"table-per-subclass에 대한 Hibernate의 구현은 discriminator(판별자) 컬럼을 필"
+"요로 하지 않음을 노트하라. 다른 객체/관계형 매핑기들은 슈퍼클래스 테이블 속"
+"에 하나의 타입 판별자 컬럼을 필요로 하는 table-per-subclass에 대한 다른 구현"
+"을 사용한다. Hibernate에 의해 채택된 접근법은 구현하기가 훨씬 더 어렵지만 관"
+"계형 관점에서는 아마 틀림없이 보다 더 정확하다. 만일 당신이 table per "
+"subclass 방도에 대해 하나의 판별자 컬럼을 사용하고 싶다면, 당신은 다음과 같"
+"이 <literal>&lt;subclass&gt;</literal>와 <literal>&lt;join&gt;</literal>의 사"
+"용을 결합시킬 수도 있다:"
 
-#: index.docbook:127
-msgid "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate not to fetch the <literal>ChequePayment</literal> subclass data using an outer join when querying the superclass."
-msgstr "선택적인 <literal>fetch=\"select\"</literal> 선언은 슈퍼클래스를 질의할 때 outer join을 사용하여 <literal>ChequePayment</literal> 서브클래스 데이터를 페치시키지 않도록 Hibernate에게 알려준다."
+#. Tag: programlisting
+#: inheritance_mapping.xml:125
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+"    ...\n"
+"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+"        <join table=\"CREDIT_PAYMENT\">\n"
+"            <key column=\"PAYMENT_ID\"/>\n"
+"            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+"            ...\n"
+"        </join>\n"
+"    </subclass>\n"
+"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+"        <join table=\"CASH_PAYMENT\">\n"
+"            <key column=\"PAYMENT_ID\"/>\n"
+"            ...\n"
+"        </join>\n"
+"    </subclass>\n"
+"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+"        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
+"            <key column=\"PAYMENT_ID\"/>\n"
+"            ...\n"
+"        </join>\n"
+"    </subclass>\n"
+"</class>]]>"
+msgstr ""
 
-#: index.docbook:136
+#. Tag: para
+#: inheritance_mapping.xml:127
+#, no-c-format
+msgid ""
+"The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate "
+"not to fetch the <literal>ChequePayment</literal> subclass data using an "
+"outer join when querying the superclass."
+msgstr ""
+"선택적인 <literal>fetch=\"select\"</literal> 선언은 슈퍼클래스를 질의할 때 "
+"outer join을 사용하여 <literal>ChequePayment</literal> 서브클래스 데이터를 페"
+"치시키지 않도록 Hibernate에게 알려준다."
+
+#. Tag: title
+#: inheritance_mapping.xml:136
+#, no-c-format
 msgid "Mixing table per class hierarchy with table per subclass"
 msgstr "table per class hierarchy와 table per subclass를 혼합하기"
 
-#: index.docbook:138
-msgid "You may even mix the table per hierarchy and table per subclass strategies using this approach:"
-msgstr "당신은 이 접근법을 사용하여 table per hierarchy 방도와 table per subclass 방도를 혼합시킬 수 있다:"
-
-#: index.docbook:143
+#. Tag: para
+#: inheritance_mapping.xml:138
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <join table=\"CREDIT_PAYMENT\">\n"
-      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"You may even mix the table per hierarchy and table per subclass strategies "
+"using this approach:"
 msgstr ""
-      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-      "        <join table=\"CREDIT_PAYMENT\">\n"
-      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "            ...\n"
-      "        </join>\n"
-      "    </subclass>\n"
-      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-      "        ...\n"
-      "    </subclass>\n"
-      "</class>]]>"
+"당신은 이 접근법을 사용하여 table per hierarchy 방도와 table per subclass 방"
+"도를 혼합시킬 수 있다:"
 
-#: index.docbook:145
-msgid "For any of these mapping strategies, a polymorphic association to the root <literal>Payment</literal> class is mapped using <literal>&lt;many-to-one&gt;</literal>."
-msgstr "이들 매핑 방도들 중 어떤 것에 대해, 루트 <literal>Payment</literal> 클래스에 대한 하나의 다형성 연관은 <literal>&lt;many-to-one&gt;</literal>을 사용하여 매핑된다."
+#. Tag: programlisting
+#: inheritance_mapping.xml:143
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+"    ...\n"
+"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+"        <join table=\"CREDIT_PAYMENT\">\n"
+"            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+"            ...\n"
+"        </join>\n"
+"    </subclass>\n"
+"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+"        ...\n"
+"    </subclass>\n"
+"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+"        ...\n"
+"    </subclass>\n"
+"</class>]]>"
+msgstr ""
 
-#: index.docbook:151
-msgid "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment\"/>]]>"
-msgstr "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment\"/>]]>"
+#. Tag: para
+#: inheritance_mapping.xml:145
+#, no-c-format
+msgid ""
+"For any of these mapping strategies, a polymorphic association to the root "
+"<literal>Payment</literal> class is mapped using <literal>&lt;many-to-one&gt;"
+"</literal>."
+msgstr ""
+"이들 매핑 방도들 중 어떤 것에 대해, 루트 <literal>Payment</literal> 클래스에 "
+"대한 하나의 다형성 연관은 <literal>&lt;many-to-one&gt;</literal>을 사용하여 "
+"매핑된다."
 
-#: index.docbook:156
+#. Tag: programlisting
+#: inheritance_mapping.xml:151
+#, no-c-format
+msgid ""
+"<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment"
+"\"/>]]>"
+msgstr ""
+
+#. Tag: title
+#: inheritance_mapping.xml:156
+#, no-c-format
 msgid "Table per concrete class"
 msgstr "Table per concrete class"
 
-#: index.docbook:158
-msgid "There are two ways we could go about mapping the table per concrete class strategy. The first is to use <literal>&lt;union-subclass&gt;</literal>."
-msgstr "우리가 table per concrete class 방도 매핑에 대해 취할 수 있는 두 가지 방법들이 존재한다. 첫 번째는 <literal>&lt;union-subclass&gt;</literal>를 사용하는 것이다."
-
-#: index.docbook:163
+#. Tag: para
+#: inheritance_mapping.xml:158
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"Payment\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"sequence\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "</class>]]>"
+"There are two ways we could go about mapping the table per concrete class "
+"strategy. The first is to use <literal>&lt;union-subclass&gt;</literal>."
 msgstr ""
-      "<![CDATA[<class name=\"Payment\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-      "        <generator class=\"sequence\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-      "    ...\n"
-      "    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        ...\n"
-      "    </union-subclass>\n"
-      "</class>]]>"
+"우리가 table per concrete class 방도 매핑에 대해 취할 수 있는 두 가지 방법들"
+"이 존재한다. 첫 번째는 <literal>&lt;union-subclass&gt;</literal>를 사용하는 "
+"것이다."
 
-#: index.docbook:165
-msgid "Three tables are involved for the subclasses. Each table defines columns for all properties of the class, including inherited properties."
-msgstr "세 개의 테이블들이 슈퍼클래스들에 대해 수반된다. 각각의 테이블은 상속된 프로퍼티들을 포함하여, 그 클래스의 모든 프로퍼티들에 대한 컬럼들을 정의한다."
+#. Tag: programlisting
+#: inheritance_mapping.xml:163
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Payment\">\n"
+"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+"        <generator class=\"sequence\"/>\n"
+"    </id>\n"
+"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+"    ...\n"
+"    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+"        ...\n"
+"    </union-subclass>\n"
+"    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+"        ...\n"
+"    </union-subclass>\n"
+"    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+"        ...\n"
+"    </union-subclass>\n"
+"</class>]]>"
+msgstr ""
 
-#: index.docbook:170
-msgid "The limitation of this approach is that if a property is mapped on the superclass, the column name must be the same on all subclass tables. (We might relax this in a future release of Hibernate.) The identity generator strategy is not allowed in union subclass inheritance, indeed the primary key seed has to be shared accross all unioned subclasses of a hierarchy."
-msgstr "이 접근법의 제약은 만일 하나의 프로퍼티가 슈퍼클래스 상으로 매핑될 경우, 그 컬럼 이름이 모든 서브클래스 테이블들 상에서 같아야 한다는 점이다.(장래의 Hibernate 배포본에서 우리는 이 제약을 풀 수도 있다.) identity 생성기 방도는 union 서브클래스 상속에서 허용되지 않으며, 진정 프라이머리 키 시드는 하나의 계층구조의 모든 unioned 서브클래스들을 가로질러 공유되어야 한다."
+#. Tag: para
+#: inheritance_mapping.xml:165
+#, no-c-format
+msgid ""
+"Three tables are involved for the subclasses. Each table defines columns for "
+"all properties of the class, including inherited properties."
+msgstr ""
+"세 개의 테이블들이 슈퍼클래스들에 대해 수반된다. 각각의 테이블은 상속된 프로"
+"퍼티들을 포함하여, 그 클래스의 모든 프로퍼티들에 대한 컬럼들을 정의한다."
 
-#: index.docbook:179
-msgid "If your superclass is abstract, map it with <literal>abstract=\"true\"</literal>. Of course, if it is not abstract, an additional table (defaults to <literal>PAYMENT</literal> in the example above) is needed to hold instances of the superclass."
-msgstr "만일 당신의 슈퍼클래스가 abstract일 경우에, 그것을 <literal>abstract=\"true\"</literal>로 매핑하라. 물론 만일 그것이 abstract가 아닐 경우, 추가적인 테이블(위의 예제에서는 디폴트로 <literal>PAYMENT</literal>)이 슈퍼클래스의 인스턴스들을 소유하는데 필요하다."
+#. Tag: para
+#: inheritance_mapping.xml:170
+#, no-c-format
+msgid ""
+"The limitation of this approach is that if a property is mapped on the "
+"superclass, the column name must be the same on all subclass tables. (We "
+"might relax this in a future release of Hibernate.) The identity generator "
+"strategy is not allowed in union subclass inheritance, indeed the primary "
+"key seed has to be shared accross all unioned subclasses of a hierarchy."
+msgstr ""
+"이 접근법의 제약은 만일 하나의 프로퍼티가 슈퍼클래스 상으로 매핑될 경우, 그 "
+"컬럼 이름이 모든 서브클래스 테이블들 상에서 같아야 한다는 점이다.(장래의 "
+"Hibernate 배포본에서 우리는 이 제약을 풀 수도 있다.) identity 생성기 방도는 "
+"union 서브클래스 상속에서 허용되지 않으며, 진정 프라이머리 키 시드는 하나의 "
+"계층구조의 모든 unioned 서브클래스들을 가로질러 공유되어야 한다."
 
-#: index.docbook:189
+#. Tag: para
+#: inheritance_mapping.xml:179
+#, no-c-format
+msgid ""
+"If your superclass is abstract, map it with <literal>abstract=\"true\"</"
+"literal>. Of course, if it is not abstract, an additional table (defaults to "
+"<literal>PAYMENT</literal> in the example above) is needed to hold instances "
+"of the superclass."
+msgstr ""
+"만일 당신의 슈퍼클래스가 abstract일 경우에, 그것을 <literal>abstract=\"true"
+"\"</literal>로 매핑하라. 물론 만일 그것이 abstract가 아닐 경우, 추가적인 테이"
+"블(위의 예제에서는 디폴트로 <literal>PAYMENT</literal>)이 슈퍼클래스의 인스턴"
+"스들을 소유하는데 필요하다."
+
+#. Tag: title
+#: inheritance_mapping.xml:189
+#, no-c-format
 msgid "Table per concrete class, using implicit polymorphism"
 msgstr "함축적인 다형성을 사용하는, table per concrete class"
 
-#: index.docbook:191
+#. Tag: para
+#: inheritance_mapping.xml:191
+#, no-c-format
 msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr "대안적인 접근법은 함축적인 다형성을 사용하는 것이다:"
 
-#: index.docbook:195
+#. Tag: programlisting
+#: inheritance_mapping.xml:195
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>]]>"
+"<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+"    ...\n"
+"</class>\n"
+"\n"
+"<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+"    ...\n"
+"</class>\n"
+"\n"
+"<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+"    ...\n"
+"</class>]]>"
 msgstr ""
-      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-      "    ...\n"
-      "</class>]]>"
 
-#: index.docbook:197
-msgid "Notice that nowhere do we mention the <literal>Payment</literal> interface explicitly. Also notice that properties of <literal>Payment</literal> are mapped in each of the subclasses. If you want to avoid duplication, consider using XML entities (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> declartion and <literal>&amp;allproperties;</literal> in the mapping)."
-msgstr "어느 곳에서도 우리가 명시적으로 <literal>Payment</literal> 인터페이스를 언급하지 않음을 주목하라. 또한 <literal>Payment</literal>의 프로퍼티들이 서브클래스들 각각에서 매핑된다는 점을 주목하라. 만일 당신이 중복을 피하고자 원한다면, XML 엔티티들을 사용하는 것을 고려하라(예를 들어 매핑에서 <literal>DOCTYPE</literal> 선언과 <literal>&amp;allproperties;</literal>에서 <literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</literal>)."
-
-#: index.docbook:207
-msgid "The disadvantage of this approach is that Hibernate does not generate SQL <literal>UNION</literal>s when performing polymorphic queries."
-msgstr "이 접근법의 단점은 다형성 질의들을 수행할 때 Hibernate가 생성된 SQl <literal>UNION</literal>들을 생성시키는 않는다는 점이다."
-
-#: index.docbook:212
-msgid "For this mapping strategy, a polymorphic association to <literal>Payment</literal> is usually mapped using <literal>&lt;any&gt;</literal>."
-msgstr "이 매핑 방도의 경우, <literal>Payment</literal>에 대한 하나의 다형성 연관은 대개 <literal>&lt;any&gt;</literal>를 사용하여 매핑된다."
-
-#: index.docbook:217
+#. Tag: para
+#: inheritance_mapping.xml:197
+#, no-c-format
 msgid ""
-      "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
-      "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
-      "    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
-      "    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
-      "    <column name=\"PAYMENT_CLASS\"/>\n"
-      "    <column name=\"PAYMENT_ID\"/>\n"
-      "</any>]]>"
+"Notice that nowhere do we mention the <literal>Payment</literal> interface "
+"explicitly. Also notice that properties of <literal>Payment</literal> are "
+"mapped in each of the subclasses. If you want to avoid duplication, consider "
+"using XML entities (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM "
+"\"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> "
+"declartion and <literal>&amp;allproperties;</literal> in the mapping)."
 msgstr ""
-      "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
-      "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
-      "    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
-      "    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
-      "    <column name=\"PAYMENT_CLASS\"/>\n"
-      "    <column name=\"PAYMENT_ID\"/>\n"
-      "</any>]]>"
+"어느 곳에서도 우리가 명시적으로 <literal>Payment</literal> 인터페이스를 언급"
+"하지 않음을 주목하라. 또한 <literal>Payment</literal>의 프로퍼티들이 서브클래"
+"스들 각각에서 매핑된다는 점을 주목하라. 만일 당신이 중복을 피하고자 원한다"
+"면, XML 엔티티들을 사용하는 것을 고려하라(예를 들어 매핑에서 "
+"<literal>DOCTYPE</literal> 선언과 <literal>&amp;allproperties;</literal>에서 "
+"<literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</"
+"literal>)."
 
-#: index.docbook:222
+#. Tag: para
+#: inheritance_mapping.xml:207
+#, no-c-format
+msgid ""
+"The disadvantage of this approach is that Hibernate does not generate SQL "
+"<literal>UNION</literal>s when performing polymorphic queries."
+msgstr ""
+"이 접근법의 단점은 다형성 질의들을 수행할 때 Hibernate가 생성된 SQl "
+"<literal>UNION</literal>들을 생성시키는 않는다는 점이다."
+
+#. Tag: para
+#: inheritance_mapping.xml:212
+#, no-c-format
+msgid ""
+"For this mapping strategy, a polymorphic association to <literal>Payment</"
+"literal> is usually mapped using <literal>&lt;any&gt;</literal>."
+msgstr ""
+"이 매핑 방도의 경우, <literal>Payment</literal>에 대한 하나의 다형성 연관은 "
+"대개 <literal>&lt;any&gt;</literal>를 사용하여 매핑된다."
+
+#. Tag: programlisting
+#: inheritance_mapping.xml:217
+#, no-c-format
+msgid ""
+"<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
+"    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
+"    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
+"    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
+"    <column name=\"PAYMENT_CLASS\"/>\n"
+"    <column name=\"PAYMENT_ID\"/>\n"
+"</any>]]>"
+msgstr ""
+
+#. Tag: title
+#: inheritance_mapping.xml:222
+#, no-c-format
 msgid "Mixing implicit polymorphism with other inheritance mappings"
 msgstr "함축적인 다형성을 다른 상속 매핑들과 혼합하기"
 
-#: index.docbook:224
-msgid "There is one further thing to notice about this mapping. Since the subclasses are each mapped in their own <literal>&lt;class&gt;</literal> element (and since <literal>Payment</literal> is just an interface), each of the subclasses could easily be part of another inheritance hierarchy! (And you can still use polymorphic queries against the <literal>Payment</literal> interface.)"
-msgstr "이 매핑에 대해 주목할 하나 이상의 것이 존재한다. 서브클래스들이 그것들 자신의<literal>&lt;class&gt;</literal> 요소 내에 각각 매핑되므로(그리고 <literal>Payment</literal>가 단지 인터페이스이므로), 서브클래스들 각각은 쉽게 또 다른 상속 계층구조의 부분일 수 있다! (그리고 당신은 <literal>Payment</literal> 인터페이스에 대해 여전히 다형성 질의들을 사용할 수 있다.)"
-
-#: index.docbook:232
+#. Tag: para
+#: inheritance_mapping.xml:224
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
-      "    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    ...\n"
-      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "</class>]]>"
+"There is one further thing to notice about this mapping. Since the "
+"subclasses are each mapped in their own <literal>&lt;class&gt;</literal> "
+"element (and since <literal>Payment</literal> is just an interface), each of "
+"the subclasses could easily be part of another inheritance hierarchy! (And "
+"you can still use polymorphic queries against the <literal>Payment</literal> "
+"interface.)"
 msgstr ""
-      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
-      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-      "    ...\n"
-      "    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
-      "    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
-      "    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
-      "        <generator class=\"native\"/>\n"
-      "    </id>\n"
-      "    ...\n"
-      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-      "        <key column=\"PAYMENT_ID\"/>\n"
-      "        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-      "        ...\n"
-      "    </joined-subclass>\n"
-      "</class>]]>"
+"이 매핑에 대해 주목할 하나 이상의 것이 존재한다. 서브클래스들이 그것들 자신의"
+"<literal>&lt;class&gt;</literal> 요소 내에 각각 매핑되므로(그리고 "
+"<literal>Payment</literal>가 단지 인터페이스이므로), 서브클래스들 각각은 쉽"
+"게 또 다른 상속 계층구조의 부분일 수 있다! (그리고 당신은 <literal>Payment</"
+"literal> 인터페이스에 대해 여전히 다형성 질의들을 사용할 수 있다.)"
 
-#: index.docbook:234
-msgid "Once again, we don't mention <literal>Payment</literal> explicitly. If we execute a query against the <literal>Payment</literal> interface - for example, <literal>from Payment</literal> - Hibernate automatically returns instances of <literal>CreditCardPayment</literal> (and its subclasses, since they also implement <literal>Payment</literal>), <literal>CashPayment</literal> and <literal>ChequePayment</literal> but not instances of <literal>NonelectronicTransaction</literal>."
-msgstr "다시 한번, 우리는 <literal>Payment</literal>를 명시적으로 언급하지 않는다. 만일 우리가 <literal>Payment</literal> 인터페이스에 대해 하나의 질의를 실행할 경우-예를 들어, from Payment-, Hibernate는 <literal>CreditCardPayment</literal> (와 그것의 서브클래스들, 왜냐하면 그것들 또한 <literal>Payment</literal>를 구현하므로), <literal>CashPayment</literal> 그리고 <literal>ChequePayment</literal> 인스턴스들을 자동적으로 반환할 것이지만 <literal>NonelectronicTransaction</literal>의 인스턴스들을 반환하지 않는다."
+#. Tag: programlisting
+#: inheritance_mapping.xml:232
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+"    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
+"    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+"    ...\n"
+"    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
+"    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
+"</class>\n"
+"\n"
+"<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
+"    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
+"        <generator class=\"native\"/>\n"
+"    </id>\n"
+"    ...\n"
+"    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+"        <key column=\"PAYMENT_ID\"/>\n"
+"        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+"        ...\n"
+"    </joined-subclass>\n"
+"    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+"        <key column=\"PAYMENT_ID\"/>\n"
+"        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+"        ...\n"
+"    </joined-subclass>\n"
+"</class>]]>"
+msgstr ""
 
-#: index.docbook:249
+#. Tag: para
+#: inheritance_mapping.xml:234
+#, no-c-format
+msgid ""
+"Once again, we don't mention <literal>Payment</literal> explicitly. If we "
+"execute a query against the <literal>Payment</literal> interface - for "
+"example, <literal>from Payment</literal> - Hibernate automatically returns "
+"instances of <literal>CreditCardPayment</literal> (and its subclasses, since "
+"they also implement <literal>Payment</literal>), <literal>CashPayment</"
+"literal> and <literal>ChequePayment</literal> but not instances of "
+"<literal>NonelectronicTransaction</literal>."
+msgstr ""
+"다시 한번, 우리는 <literal>Payment</literal>를 명시적으로 언급하지 않는다. 만"
+"일 우리가 <literal>Payment</literal> 인터페이스에 대해 하나의 질의를 실행할 "
+"경우-예를 들어, from Payment-, Hibernate는 <literal>CreditCardPayment</"
+"literal> (와 그것의 서브클래스들, 왜냐하면 그것들 또한 <literal>Payment</"
+"literal>를 구현하므로), <literal>CashPayment</literal> 그리고 "
+"<literal>ChequePayment</literal> 인스턴스들을 자동적으로 반환할 것이지만 "
+"<literal>NonelectronicTransaction</literal>의 인스턴스들을 반환하지 않는다."
+
+#. Tag: title
+#: inheritance_mapping.xml:249
+#, no-c-format
 msgid "Limitations"
-msgstr "<title>제약들</title>"
+msgstr "제약들"
 
-#: index.docbook:251
-msgid "There are certain limitations to the \"implicit polymorphism\" approach to the table per concrete-class mapping strategy. There are somewhat less restrictive limitations to <literal>&lt;union-subclass&gt;</literal> mappings."
-msgstr "table per concrete-class 매핑 방도에 대한 \"함축적인 다형성\" 접근법에는 어떤 제약들이 존재한다. <literal>&lt;union-subclass&gt;</literal> 매핑들에 대해서는 다소 덜 제한적인 제약들이 존재한다:"
+#. Tag: para
+#: inheritance_mapping.xml:251
+#, no-c-format
+msgid ""
+"There are certain limitations to the \"implicit polymorphism\" approach to "
+"the table per concrete-class mapping strategy. There are somewhat less "
+"restrictive limitations to <literal>&lt;union-subclass&gt;</literal> "
+"mappings."
+msgstr ""
+"table per concrete-class 매핑 방도에 대한 \"함축적인 다형성\" 접근법에는 어"
+"떤 제약들이 존재한다. <literal>&lt;union-subclass&gt;</literal> 매핑들에 대해"
+"서는 다소 덜 제한적인 제약들이 존재한다:"
 
-#: index.docbook:258
-msgid "The following table shows the limitations of table per concrete-class mappings, and of implicit polymorphism, in Hibernate."
-msgstr "다음 표는 Hibernate에서 table per concrete-class 매핑들에 대한 제약들, 그리고 함축적인 다형성에 대한 제약들을 보여준다."
+#. Tag: para
+#: inheritance_mapping.xml:258
+#, no-c-format
+msgid ""
+"The following table shows the limitations of table per concrete-class "
+"mappings, and of implicit polymorphism, in Hibernate."
+msgstr ""
+"다음 표는 Hibernate에서 table per concrete-class 매핑들에 대한 제약들, 그리"
+"고 함축적인 다형성에 대한 제약들을 보여준다."
 
-#: index.docbook:264
+#. Tag: title
+#: inheritance_mapping.xml:264
+#, no-c-format
 msgid "Features of inheritance mappings"
 msgstr "상속 매핑들의 특징들"
 
-#: index.docbook:276
+#. Tag: entry
+#: inheritance_mapping.xml:276
+#, no-c-format
 msgid "Inheritance strategy"
 msgstr "상속 방도"
 
-#: index.docbook:277
+#. Tag: entry
+#: inheritance_mapping.xml:277
+#, no-c-format
 msgid "Polymorphic many-to-one"
 msgstr "다형성 다대일"
 
-#: index.docbook:278
+#. Tag: entry
+#: inheritance_mapping.xml:278
+#, no-c-format
 msgid "Polymorphic one-to-one"
 msgstr "다형성 일대일"
 
-#: index.docbook:279
+#. Tag: entry
+#: inheritance_mapping.xml:279
+#, no-c-format
 msgid "Polymorphic one-to-many"
 msgstr "다형성 일대다"
 
-#: index.docbook:280
+#. Tag: entry
+#: inheritance_mapping.xml:280
+#, no-c-format
 msgid "Polymorphic many-to-many"
 msgstr "다형성 다대다"
 
-#: index.docbook:281
+#. Tag: entry
+#: inheritance_mapping.xml:281
+#, no-c-format
 msgid "Polymorphic <literal>load()/get()</literal>"
-msgstr "다형성 <literal>load()/get()</literal>"
+msgstr ""
 
-#: index.docbook:282
+#. Tag: entry
+#: inheritance_mapping.xml:282
+#, no-c-format
 msgid "Polymorphic queries"
 msgstr "다형성 질의들"
 
-#: index.docbook:283
+#. Tag: entry
+#: inheritance_mapping.xml:283
+#, no-c-format
 msgid "Polymorphic joins"
 msgstr "다형성 조인들"
 
-#: index.docbook:284
+#. Tag: entry
+#: inheritance_mapping.xml:284
+#, no-c-format
 msgid "Outer join fetching"
 msgstr "Outer 조인 페칭"
 
-#: index.docbook:289
+#. Tag: entry
+#: inheritance_mapping.xml:289
+#, no-c-format
 msgid "table per class-hierarchy"
 msgstr "table per class-hierarchy"
 
-#: index.docbook:290, index.docbook:301, index.docbook:312
+#. Tag: literal
+#: inheritance_mapping.xml:290 inheritance_mapping.xml:301
+#: inheritance_mapping.xml:312
+#, no-c-format
 msgid "&lt;many-to-one&gt;"
 msgstr "&lt;many-to-one&gt;"
 
-#: index.docbook:291, index.docbook:302, index.docbook:313
+#. Tag: literal
+#: inheritance_mapping.xml:291 inheritance_mapping.xml:302
+#: inheritance_mapping.xml:313
+#, no-c-format
 msgid "&lt;one-to-one&gt;"
 msgstr "&lt;one-to-one&gt;"
 
-#: index.docbook:292, index.docbook:303
+#. Tag: literal
+#: inheritance_mapping.xml:292 inheritance_mapping.xml:303
+#, no-c-format
 msgid "&lt;one-to-many&gt;"
 msgstr "&lt;one-to-many&gt;"
 
-#: index.docbook:293, index.docbook:304, index.docbook:315
+#. Tag: literal
+#: inheritance_mapping.xml:293 inheritance_mapping.xml:304
+#: inheritance_mapping.xml:315
+#, no-c-format
 msgid "&lt;many-to-many&gt;"
 msgstr "&lt;many-to-many&gt;"
 
-#: index.docbook:294, index.docbook:305, index.docbook:316
+#. Tag: literal
+#: inheritance_mapping.xml:294 inheritance_mapping.xml:305
+#: inheritance_mapping.xml:316
+#, no-c-format
 msgid "s.get(Payment.class, id)"
 msgstr "s.get(Payment.class, id)"
 
-#: index.docbook:295, index.docbook:306, index.docbook:317, index.docbook:328
+#. Tag: literal
+#: inheritance_mapping.xml:295 inheritance_mapping.xml:306
+#: inheritance_mapping.xml:317 inheritance_mapping.xml:328
+#, no-c-format
 msgid "from Payment p"
 msgstr "from Payment p"
 
-#: index.docbook:296, index.docbook:307, index.docbook:318
+#. Tag: literal
+#: inheritance_mapping.xml:296 inheritance_mapping.xml:307
+#: inheritance_mapping.xml:318
+#, no-c-format
 msgid "from Order o join o.payment p"
 msgstr "from Order o join o.payment p"
 
-#: index.docbook:297, index.docbook:308, index.docbook:319
+#. Tag: emphasis
+#: inheritance_mapping.xml:297 inheritance_mapping.xml:308
+#: inheritance_mapping.xml:319
+#, no-c-format
 msgid "supported"
-msgstr "<emphasis>지원됨</emphasis>"
+msgstr "지원됨"
 
-#: index.docbook:300
+#. Tag: entry
+#: inheritance_mapping.xml:300
+#, fuzzy, no-c-format
 msgid "<entry>table per subclass</entry>"
-msgstr "<entry>table per subclass</entry>"
+msgstr "table per subclass"
 
-#: index.docbook:311
+#. Tag: entry
+#: inheritance_mapping.xml:311
+#, no-c-format
 msgid "table per concrete-class (union-subclass)"
 msgstr "table per concrete-class (union-subclass)"
 
-#: index.docbook:314
-msgid "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</literal> only)"
-msgstr "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</literal> only)"
+#. Tag: entry
+#: inheritance_mapping.xml:314
+#, no-c-format
+msgid ""
+"<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
+"literal> only)"
+msgstr ""
 
-#: index.docbook:322
+#. Tag: entry
+#: inheritance_mapping.xml:322
+#, no-c-format
 msgid "table per concrete class (implicit polymorphism)"
 msgstr "table per concrete class (implicit polymorphism)"
 
-#: index.docbook:323
+#. Tag: literal
+#: inheritance_mapping.xml:323
+#, no-c-format
 msgid "&lt;any&gt;"
 msgstr "&lt;any&gt;"
 
-#: index.docbook:324, index.docbook:325, index.docbook:329, index.docbook:330
+#. Tag: emphasis
+#: inheritance_mapping.xml:324 inheritance_mapping.xml:325
+#: inheritance_mapping.xml:329 inheritance_mapping.xml:330
+#, no-c-format
 msgid "not supported"
 msgstr "지원되지 않음"
 
-#: index.docbook:326
+#. Tag: literal
+#: inheritance_mapping.xml:326
+#, no-c-format
 msgid "&lt;many-to-any&gt;"
 msgstr "&lt;many-to-any&gt;"
 
-#: index.docbook:327
-msgid "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
-msgstr "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+#. Tag: literal
+#: inheritance_mapping.xml:327
+#, no-c-format
+msgid ""
+"s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+msgstr ""
+"s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid "load()/get()"
+#~ msgstr "load()/get()"
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid "Polymorphic <placeholder-1/>"
+#~ msgstr "다형성 <placeholder-1/>"
 
+#~ msgid "inverse=\"true\""
+#~ msgstr "inverse=\"true\""
+
+#~ msgid "<placeholder-1/> (for <placeholder-2/> only)"
+#~ msgstr "<placeholder-1/> (for <placeholder-2/> only)"

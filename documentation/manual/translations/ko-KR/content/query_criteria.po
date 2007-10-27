@@ -1,672 +1,776 @@
-#, fuzzy
 msgid ""
 msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
-#: index.docbook:5
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: query_criteria.xml:5
+#, no-c-format
 msgid "Criteria Queries"
 msgstr "Criteria 질의들"
 
-#: index.docbook:7
+#. Tag: para
+#: query_criteria.xml:7
+#, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
 msgstr "Hibernate는 직관적인, 확장 가능한 criteria query API를 특징 짓는다."
 
-#: index.docbook:12
+#. Tag: title
+#: query_criteria.xml:12
+#, no-c-format
 msgid "Creating a <literal>Criteria</literal> instance"
 msgstr "<literal>Criteria</literal> 인스턴스 생성하기"
 
-#: index.docbook:14
-msgid "The interface <literal>org.hibernate.Criteria</literal> represents a query against a particular persistent class. The <literal>Session</literal> is a factory for <literal>Criteria</literal> instances."
-msgstr "<literal>org.hibernate.Criteria</literal>인터페이스는 특정 영속 클래스에 대한 질의를 표현한다. <literal>Session</literal>은 <literal>Criteria</literal> 인스턴스들에 대한 팩토리이다."
-
-#: index.docbook:20
+#. Tag: para
+#: query_criteria.xml:14
+#, no-c-format
 msgid ""
-      "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
-      "crit.setMaxResults(50);\n"
-      "List cats = crit.list();]]>"
+"The interface <literal>org.hibernate.Criteria</literal> represents a query "
+"against a particular persistent class. The <literal>Session</literal> is a "
+"factory for <literal>Criteria</literal> instances."
 msgstr ""
-      "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
-      "crit.setMaxResults(50);\n"
-      "List cats = crit.list();]]>"
+"<literal>org.hibernate.Criteria</literal>인터페이스는 특정 영속 클래스에 대"
+"한 질의를 표현한다. <literal>Session</literal>은 <literal>Criteria</literal> "
+"인스턴스들에 대한 팩토리이다."
 
-#: index.docbook:25
+#. Tag: programlisting
+#: query_criteria.xml:20
+#, no-c-format
+msgid ""
+"<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
+"crit.setMaxResults(50);\n"
+"List cats = crit.list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:25
+#, no-c-format
 msgid "Narrowing the result set"
 msgstr "결과 셋 제한하기"
 
-#: index.docbook:27
-msgid "An individual query criterion is an instance of the interface <literal>org.hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate.criterion.Restrictions</literal> defines factory methods for obtaining certain built-in <literal>Criterion</literal> types."
-msgstr "개별적인 질의 기준은 <literal>org.hibernate.criterion.Criterion</literal> 인터페이스의 인스턴스이다. <literal>org.hibernate.criterion.Restrictions</literal> 클래스는 어떤 미리 만들어진 <literal>Criterion</literal> 타입들을 얻는 팩토리 메소드들을 정의한다."
-
-#: index.docbook:35
+#. Tag: para
+#: query_criteria.xml:27
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
-      "    .list();]]>"
+"An individual query criterion is an instance of the interface <literal>org."
+"hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate."
+"criterion.Restrictions</literal> defines factory methods for obtaining "
+"certain built-in <literal>Criterion</literal> types."
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
-      "    .list();]]>"
+"개별적인 질의 기준은 <literal>org.hibernate.criterion.Criterion</literal> 인"
+"터페이스의 인스턴스이다. <literal>org.hibernate.criterion.Restrictions</"
+"literal> 클래스는 어떤 미리 만들어진 <literal>Criterion</literal> 타입들을 얻"
+"는 팩토리 메소드들을 정의한다."
 
-#: index.docbook:37
+#. Tag: programlisting
+#: query_criteria.xml:35
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:37
+#, no-c-format
 msgid "Restrictions may be grouped logically."
 msgstr "제한들은 논리적으로 그룹지워질 수도 있다."
 
-#: index.docbook:41
+#. Tag: programlisting
+#: query_criteria.xml:41
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .add( Restrictions.or(\n"
-      "        Restrictions.eq( \"age\", new Integer(0) ),\n"
-      "        Restrictions.isNull(\"age\")\n"
-      "    ) )\n"
-      "    .list();]]>"
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .add( Restrictions.or(\n"
+"        Restrictions.eq( \"age\", new Integer(0) ),\n"
+"        Restrictions.isNull(\"age\")\n"
+"    ) )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .add( Restrictions.or(\n"
-      "        Restrictions.eq( \"age\", new Integer(0) ),\n"
-      "        Restrictions.isNull(\"age\")\n"
-      "    ) )\n"
-      "    .list();]]>"
 
-#: index.docbook:43
+#. Tag: programlisting
+#: query_criteria.xml:43
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
-      "    .add( Restrictions.disjunction()\n"
-      "        .add( Restrictions.isNull(\"age\") )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
-      "    ) )\n"
-      "    .list();]]>"
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk"
+"\" } ) )\n"
+"    .add( Restrictions.disjunction()\n"
+"        .add( Restrictions.isNull(\"age\") )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
+"    ) )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
-      "    .add( Restrictions.disjunction()\n"
-      "        .add( Restrictions.isNull(\"age\") )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
-      "        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
-      "    ) )\n"
-      "    .list();]]>"
 
-#: index.docbook:45
-msgid "There are quite a range of built-in criterion types (<literal>Restrictions</literal> subclasses), but one that is especially useful lets you specify SQL directly."
-msgstr "미리 만들어진 criterion 타입들(<literal>Restrictions</literal> 서브클래스들)의 영역이 꽤 존재하지만, 특히 유용한 것은 당신으로 하여금 SQL을 직접 지정하도록 해준다."
-
-#: index.docbook:50
+#. Tag: para
+#: query_criteria.xml:45
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", \"Fritz%\", Hibernate.STRING) )\n"
-      "    .list();]]>"
+"There are quite a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses), but one that is especially useful lets you specify SQL "
+"directly."
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", \"Fritz%\", Hibernate.STRING) )\n"
-      "    .list();]]>"
+"미리 만들어진 criterion 타입들(<literal>Restrictions</literal> 서브클래스들)"
+"의 영역이 꽤 존재하지만, 특히 유용한 것은 당신으로 하여금 SQL을 직접 지정하도"
+"록 해준다."
 
-#: index.docbook:52
-msgid "The <literal>{alias}</literal> placeholder with be replaced by the row alias of the queried entity."
-msgstr "질의된 엔티티의 행 alias에 의해 대체된 <literal>{alias}</literal> placeholder."
-
-#: index.docbook:57
-msgid "An alternative approach to obtaining a criterion is to get it from a <literal>Property</literal> instance. You can create a <literal>Property</literal> by calling <literal>Property.forName()</literal>."
-msgstr "criterion을 얻는 대안적인 접근법은 <literal>Property</literal> 인스턴스로부터 그것을 얻는 것이다. 당신은 <literal>Property.forName()</literal>을 호출하여 <literal>Property</literal>를 생성시킬 수 있다."
-
-#: index.docbook:63
+#. Tag: programlisting
+#: query_criteria.xml:50
+#, no-c-format
 msgid ""
-      "<![CDATA[\n"
-      "Property age = Property.forName(\"age\");\n"
-      "List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.disjunction()\n"
-      "        .add( age.isNull() )\n"
-      "        .add( age.eq( new Integer(0) ) )\n"
-      "        .add( age.eq( new Integer(1) ) )\n"
-      "        .add( age.eq( new Integer(2) ) )\n"
-      "    ) )\n"
-      "    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
-      "    .list();]]>"
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", "
+"\"Fritz%\", Hibernate.STRING) )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[\n"
-      "Property age = Property.forName(\"age\");\n"
-      "List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.disjunction()\n"
-      "        .add( age.isNull() )\n"
-      "        .add( age.eq( new Integer(0) ) )\n"
-      "        .add( age.eq( new Integer(1) ) )\n"
-      "        .add( age.eq( new Integer(2) ) )\n"
-      "    ) )\n"
-      "    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi\", \"Pk\" } ) )\n"
-      "    .list();]]>"
 
-#: index.docbook:68
+#. Tag: para
+#: query_criteria.xml:52
+#, no-c-format
+msgid ""
+"The <literal>{alias}</literal> placeholder with be replaced by the row alias "
+"of the queried entity."
+msgstr ""
+"질의된 엔티티의 행 alias에 의해 대체된 <literal>{alias}</literal> "
+"placeholder."
+
+#. Tag: para
+#: query_criteria.xml:57
+#, no-c-format
+msgid ""
+"An alternative approach to obtaining a criterion is to get it from a "
+"<literal>Property</literal> instance. You can create a <literal>Property</"
+"literal> by calling <literal>Property.forName()</literal>."
+msgstr ""
+"criterion을 얻는 대안적인 접근법은 <literal>Property</literal> 인스턴스로부"
+"터 그것을 얻는 것이다. 당신은 <literal>Property.forName()</literal>을 호출하"
+"여 <literal>Property</literal>를 생성시킬 수 있다."
+
+#. Tag: programlisting
+#: query_criteria.xml:63
+#, no-c-format
+msgid ""
+"<![CDATA[\n"
+"Property age = Property.forName(\"age\");\n"
+"List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.disjunction()\n"
+"        .add( age.isNull() )\n"
+"        .add( age.eq( new Integer(0) ) )\n"
+"        .add( age.eq( new Integer(1) ) )\n"
+"        .add( age.eq( new Integer(2) ) )\n"
+"    ) )\n"
+"    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi\", "
+"\"Pk\" } ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:68
+#, no-c-format
 msgid "Ordering the results"
 msgstr "결과들을 순서지우기(ordering)"
 
-#: index.docbook:70
-msgid "You may order the results using <literal>org.hibernate.criterion.Order</literal>."
-msgstr "당신은 <literal>org.hibernate.criterion.Order</literal>를 사용하여 결과들을 순서(ordering)지울 수 있다."
-
-#: index.docbook:74
+#. Tag: para
+#: query_criteria.xml:70
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"F%\")\n"
-      "    .addOrder( Order.asc(\"name\") )\n"
-      "    .addOrder( Order.desc(\"age\") )\n"
-      "    .setMaxResults(50)\n"
-      "    .list();]]>"
+"You may order the results using <literal>org.hibernate.criterion.Order</"
+"literal>."
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"F%\")\n"
-      "    .addOrder( Order.asc(\"name\") )\n"
-      "    .addOrder( Order.desc(\"age\") )\n"
-      "    .setMaxResults(50)\n"
-      "    .list();]]>"
+"당신은 <literal>org.hibernate.criterion.Order</literal>를 사용하여 결과들을 "
+"순서(ordering)지울 수 있다."
 
-#: index.docbook:76
+#. Tag: programlisting
+#: query_criteria.xml:74
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Property.forName(\"name\").like(\"F%\") )\n"
-      "    .addOrder( Property.forName(\"name\").asc() )\n"
-      "    .addOrder( Property.forName(\"age\").desc() )\n"
-      "    .setMaxResults(50)\n"
-      "    .list();]]>"
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"F%\")\n"
+"    .addOrder( Order.asc(\"name\") )\n"
+"    .addOrder( Order.desc(\"age\") )\n"
+"    .setMaxResults(50)\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Property.forName(\"name\").like(\"F%\") )\n"
-      "    .addOrder( Property.forName(\"name\").asc() )\n"
-      "    .addOrder( Property.forName(\"age\").desc() )\n"
-      "    .setMaxResults(50)\n"
-      "    .list();]]>"
 
-#: index.docbook:81
+#. Tag: programlisting
+#: query_criteria.xml:76
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Property.forName(\"name\").like(\"F%\") )\n"
+"    .addOrder( Property.forName(\"name\").asc() )\n"
+"    .addOrder( Property.forName(\"age\").desc() )\n"
+"    .setMaxResults(50)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:81
+#, no-c-format
 msgid "Associations"
-msgstr "<title>연관들</title>"
+msgstr "연관들"
 
-#: index.docbook:83
-msgid "You may easily specify constraints upon related entities by navigating associations using <literal>createCriteria()</literal>."
-msgstr "당신은 <literal>createCriteria()</literal>를 사용하여 연관들을 네비게이트함으로써 관계된 엔티티들에 대한 컨스트레인트들을 쉽게 지정할 수 있다."
-
-#: index.docbook:88
+#. Tag: para
+#: query_criteria.xml:83
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"F%\") )\n"
-      "    .createCriteria(\"kittens\")\n"
-      "        .add( Restrictions.like(\"name\", \"F%\") )\n"
-      "    .list();]]>"
+"You may easily specify constraints upon related entities by navigating "
+"associations using <literal>createCriteria()</literal>."
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"F%\") )\n"
-      "    .createCriteria(\"kittens\")\n"
-      "        .add( Restrictions.like(\"name\", \"F%\") )\n"
-      "    .list();]]>"
+"당신은 <literal>createCriteria()</literal>를 사용하여 연관들을 네비게이트함으"
+"로써 관계된 엔티티들에 대한 컨스트레인트들을 쉽게 지정할 수 있다."
 
-#: index.docbook:90
-msgid "note that the second <literal>createCriteria()</literal> returns a new instance of <literal>Criteria</literal>, which refers to the elements of the <literal>kittens</literal> collection."
-msgstr "두 번째 <literal>createCriteria()</literal>는 <literal>Criteria</literal>의 새로운 인스턴스를 반환하며, 그것은 <literal>kittens</literal> 콜렉션의 요소들을 참조한다는 점을 노트하라."
+#. Tag: programlisting
+#: query_criteria.xml:88
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"F%\") )\n"
+"    .createCriteria(\"kittens\")\n"
+"        .add( Restrictions.like(\"name\", \"F%\") )\n"
+"    .list();]]>"
+msgstr ""
 
-#: index.docbook:96
+#. Tag: para
+#: query_criteria.xml:90
+#, no-c-format
+msgid ""
+"note that the second <literal>createCriteria()</literal> returns a new "
+"instance of <literal>Criteria</literal>, which refers to the elements of the "
+"<literal>kittens</literal> collection."
+msgstr ""
+"두 번째 <literal>createCriteria()</literal>는 <literal>Criteria</literal>의 "
+"새로운 인스턴스를 반환하며, 그것은 <literal>kittens</literal> 콜렉션의 요소들"
+"을 참조한다는 점을 노트하라."
+
+#. Tag: para
+#: query_criteria.xml:96
+#, no-c-format
 msgid "The following, alternate form is useful in certain circumstances."
 msgstr "다음 대체 형식은 어떤 환경들에서 유용하다."
 
-#: index.docbook:100
+#. Tag: programlisting
+#: query_criteria.xml:100
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .createAlias(\"kittens\", \"kt\")\n"
-      "    .createAlias(\"mate\", \"mt\")\n"
-      "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
-      "    .list();]]>"
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .createAlias(\"kittens\", \"kt\")\n"
+"    .createAlias(\"mate\", \"mt\")\n"
+"    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .createAlias(\"kittens\", \"kt\")\n"
-      "    .createAlias(\"mate\", \"mt\")\n"
-      "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
-      "    .list();]]>"
 
-#: index.docbook:102
-msgid "(<literal>createAlias()</literal> does not create a new instance of <literal>Criteria</literal>.)"
-msgstr "(<literal>createAlias()</literal>는 <literal>Criteria</literal>의 새로운 인스턴스를 생성시키지 않는다.)"
-
-#: index.docbook:107
-msgid "Note that the kittens collections held by the <literal>Cat</literal> instances returned by the previous two queries are <emphasis>not</emphasis> pre-filtered by the criteria! If you wish to retrieve just the kittens that match the criteria, you must use a <literal>ResultTransformer</literal>."
-msgstr "앞의 두 개의 질의들에 의해 반환된 <literal>Cat</literal> 인스턴스들에 의해 보관된 kittens 콜렉션들은 criteria에 의해 사전-필터링되지 <emphasis>않는다</emphasis>는 점을 노트하라! 만일 당신이 criteria(기준)과 일치하는 고양이 새끼들을 단지 검색하고자 원할 경우, 당신은 하나의 <literal>ResultTransformer</literal>를 사용해야 한다."
-
-#: index.docbook:114
+#. Tag: para
+#: query_criteria.xml:102
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .createCriteria(\"kittens\", \"kt\")\n"
-      "        .add( Restrictions.eq(\"name\", \"F%\") )\n"
-      "    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
-      "    .list();\n"
-      "Iterator iter = cats.iterator();\n"
-      "while ( iter.hasNext() ) {\n"
-      "    Map map = (Map) iter.next();\n"
-      "    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
-      "    Cat kitten = (Cat) map.get(\"kt\");\n"
-      "}]]>"
+"(<literal>createAlias()</literal> does not create a new instance of "
+"<literal>Criteria</literal>.)"
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .createCriteria(\"kittens\", \"kt\")\n"
-      "        .add( Restrictions.eq(\"name\", \"F%\") )\n"
-      "    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
-      "    .list();\n"
-      "Iterator iter = cats.iterator();\n"
-      "while ( iter.hasNext() ) {\n"
-      "    Map map = (Map) iter.next();\n"
-      "    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
-      "    Cat kitten = (Cat) map.get(\"kt\");\n"
-      "}]]>"
+"(<literal>createAlias()</literal>는 <literal>Criteria</literal>의 새로운 인스"
+"턴스를 생성시키지 않는다.)"
 
-#: index.docbook:119
+#. Tag: para
+#: query_criteria.xml:107
+#, no-c-format
+msgid ""
+"Note that the kittens collections held by the <literal>Cat</literal> "
+"instances returned by the previous two queries are <emphasis>not</emphasis> "
+"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
+"match the criteria, you must use a <literal>ResultTransformer</literal>."
+msgstr ""
+"앞의 두 개의 질의들에 의해 반환된 <literal>Cat</literal> 인스턴스들에 의해 보"
+"관된 kittens 콜렉션들은 criteria에 의해 사전-필터링되지 <emphasis>않는다</"
+"emphasis>는 점을 노트하라! 만일 당신이 criteria(기준)과 일치하는 고양이 새끼"
+"들을 단지 검색하고자 원할 경우, 당신은 하나의 <literal>ResultTransformer</"
+"literal>를 사용해야 한다."
+
+#. Tag: programlisting
+#: query_criteria.xml:114
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .createCriteria(\"kittens\", \"kt\")\n"
+"        .add( Restrictions.eq(\"name\", \"F%\") )\n"
+"    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
+"    .list();\n"
+"Iterator iter = cats.iterator();\n"
+"while ( iter.hasNext() ) {\n"
+"    Map map = (Map) iter.next();\n"
+"    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
+"    Cat kitten = (Cat) map.get(\"kt\");\n"
+"}]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:119
+#, no-c-format
 msgid "Dynamic association fetching"
 msgstr "동적인 연관 페칭"
 
-#: index.docbook:121
-msgid "You may specify association fetching semantics at runtime using <literal>setFetchMode()</literal>."
-msgstr "당신은 <literal>setFetchMode()</literal>를 사용하여 실행 시에 연관 페칭 의미를 지정할 수 있다."
-
-#: index.docbook:126
+#. Tag: para
+#: query_criteria.xml:121
+#, no-c-format
 msgid ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
-      "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
-      "    .list();]]>"
+"You may specify association fetching semantics at runtime using "
+"<literal>setFetchMode()</literal>."
 msgstr ""
-      "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
-      "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
-      "    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
-      "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
-      "    .list();]]>"
+"당신은 <literal>setFetchMode()</literal>를 사용하여 실행 시에 연관 페칭 의미"
+"를 지정할 수 있다."
 
-#: index.docbook:128
-msgid "This query will fetch both <literal>mate</literal> and <literal>kittens</literal> by outer join. See <xref linkend=\"performance-fetching\"/> for more information."
-msgstr "이 질의는 outer 조인으로 <literal>mate</literal>와 <literal>kittens</literal> 모두를 페치할 것이다. 추가 정보는 <xref linkend=\"performance-fetching\"/>을 보라."
+#. Tag: programlisting
+#: query_criteria.xml:126
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
+"    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
+"    .list();]]>"
+msgstr ""
 
-#: index.docbook:136
+#. Tag: para
+#: query_criteria.xml:128
+#, no-c-format
+msgid ""
+"This query will fetch both <literal>mate</literal> and <literal>kittens</"
+"literal> by outer join. See <xref linkend=\"performance-fetching\"/> for "
+"more information."
+msgstr ""
+"이 질의는 outer 조인으로 <literal>mate</literal>와 <literal>kittens</"
+"literal> 모두를 페치할 것이다. 추가 정보는 <xref linkend=\"performance-"
+"fetching\"/>을 보라."
+
+#. Tag: title
+#: query_criteria.xml:136
+#, no-c-format
 msgid "Example queries"
 msgstr "예제 질의들"
 
-#: index.docbook:138
-msgid "The class <literal>org.hibernate.criterion.Example</literal> allows you to construct a query criterion from a given instance."
-msgstr "<literal>org.hibernate.criterion.Example</literal> 클래스는 주어진 인스턴스로부터 질의 기준(criterion)을 구조화 시키는 것을 당신에게 허용해준다."
-
-#: index.docbook:143
+#. Tag: para
+#: query_criteria.xml:138
+#, no-c-format
 msgid ""
-      "<![CDATA[Cat cat = new Cat();\n"
-      "cat.setSex('F');\n"
-      "cat.setColor(Color.BLACK);\n"
-      "List results = session.createCriteria(Cat.class)\n"
-      "    .add( Example.create(cat) )\n"
-      "    .list();]]>"
+"The class <literal>org.hibernate.criterion.Example</literal> allows you to "
+"construct a query criterion from a given instance."
 msgstr ""
-      "<![CDATA[Cat cat = new Cat();\n"
-      "cat.setSex('F');\n"
-      "cat.setColor(Color.BLACK);\n"
-      "List results = session.createCriteria(Cat.class)\n"
-      "    .add( Example.create(cat) )\n"
-      "    .list();]]>"
+"<literal>org.hibernate.criterion.Example</literal> 클래스는 주어진 인스턴스로"
+"부터 질의 기준(criterion)을 구조화 시키는 것을 당신에게 허용해준다."
 
-#: index.docbook:145
-msgid "Version properties, identifiers and associations are ignored. By default, null valued properties are excluded."
-msgstr "버전 프로퍼티들, 식별자들, 연관관계들이 무시된다. 디폴트로 null 값 프로퍼티들이 제외된다."
+#. Tag: programlisting
+#: query_criteria.xml:143
+#, no-c-format
+msgid ""
+"<![CDATA[Cat cat = new Cat();\n"
+"cat.setSex('F');\n"
+"cat.setColor(Color.BLACK);\n"
+"List results = session.createCriteria(Cat.class)\n"
+"    .add( Example.create(cat) )\n"
+"    .list();]]>"
+msgstr ""
 
-#: index.docbook:150
+#. Tag: para
+#: query_criteria.xml:145
+#, no-c-format
+msgid ""
+"Version properties, identifiers and associations are ignored. By default, "
+"null valued properties are excluded."
+msgstr ""
+"버전 프로퍼티들, 식별자들, 연관관계들이 무시된다. 디폴트로 null 값 프로퍼티들"
+"이 제외된다."
+
+#. Tag: para
+#: query_criteria.xml:150
+#, no-c-format
 msgid "You can adjust how the <literal>Example</literal> is applied."
 msgstr "당신은 <literal>Example</literal>이 적용되는 방법을 조정할 수 있다."
 
-#: index.docbook:154
+#. Tag: programlisting
+#: query_criteria.xml:154
+#, no-c-format
 msgid ""
-      "<![CDATA[Example example = Example.create(cat)\n"
-      "    .excludeZeroes()           //exclude zero valued properties\n"
-      "    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
-      "    .ignoreCase()              //perform case insensitive string comparisons\n"
-      "    .enableLike();             //use like for string comparisons\n"
-      "List results = session.createCriteria(Cat.class)\n"
-      "    .add(example)\n"
-      "    .list();]]>"
+"<![CDATA[Example example = Example.create(cat)\n"
+"    .excludeZeroes()           //exclude zero valued properties\n"
+"    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
+"    .ignoreCase()              //perform case insensitive string "
+"comparisons\n"
+"    .enableLike();             //use like for string comparisons\n"
+"List results = session.createCriteria(Cat.class)\n"
+"    .add(example)\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[Example example = Example.create(cat)\n"
-      "    .excludeZeroes()           //exclude zero valued properties\n"
-      "    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
-      "    .ignoreCase()              //perform case insensitive string comparisons\n"
-      "    .enableLike();             //use like for string comparisons\n"
-      "List results = session.createCriteria(Cat.class)\n"
-      "    .add(example)\n"
-      "    .list();]]>"
 
-#: index.docbook:156
+#. Tag: para
+#: query_criteria.xml:156
+#, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
-msgstr "당신은 연관된 객체들에 대한 criteria(기준)을 위치지우는데 examples를 사용할 수 있다."
-
-#: index.docbook:160
-msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .add( Example.create(cat) )\n"
-      "    .createCriteria(\"mate\")\n"
-      "        .add( Example.create( cat.getMate() ) )\n"
-      "    .list();]]>"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .add( Example.create(cat) )\n"
-      "    .createCriteria(\"mate\")\n"
-      "        .add( Example.create( cat.getMate() ) )\n"
-      "    .list();]]>"
+"당신은 연관된 객체들에 대한 criteria(기준)을 위치지우는데 examples를 사용할 "
+"수 있다."
 
-#: index.docbook:165
+#. Tag: programlisting
+#: query_criteria.xml:160
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .add( Example.create(cat) )\n"
+"    .createCriteria(\"mate\")\n"
+"        .add( Example.create( cat.getMate() ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:165
+#, no-c-format
 msgid "Projections, aggregation and grouping"
 msgstr "Projections, aggregation 그리고 grouping"
 
-#: index.docbook:166
-msgid "The class <literal>org.hibernate.criterion.Projections</literal> is a factory for <literal>Projection</literal> instances. We apply a projection to a query by calling <literal>setProjection()</literal>."
-msgstr "<literal>org.hibernate.criterion.Projections</literal> 클래스는 <literal>Projection</literal> 인스턴스들에 대한 팩토리이다. 우리는 <literal>setProjection()</literal>을 호출하여 하나의 질의에 projection(투사,투영)을 적용시킨다."
-
-#: index.docbook:172
+#. Tag: para
+#: query_criteria.xml:166
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.rowCount() )\n"
-      "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
-      "    .list();]]>"
+"The class <literal>org.hibernate.criterion.Projections</literal> is a "
+"factory for <literal>Projection</literal> instances. We apply a projection "
+"to a query by calling <literal>setProjection()</literal>."
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.rowCount() )\n"
-      "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
-      "    .list();]]>"
+"<literal>org.hibernate.criterion.Projections</literal> 클래스는 "
+"<literal>Projection</literal> 인스턴스들에 대한 팩토리이다. 우리는 "
+"<literal>setProjection()</literal>을 호출하여 하나의 질의에 projection(투사,"
+"투영)을 적용시킨다."
 
-#: index.docbook:174
+#. Tag: programlisting
+#: query_criteria.xml:172
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount() )\n"
-      "        .add( Projections.avg(\"weight\") )\n"
-      "        .add( Projections.max(\"weight\") )\n"
-      "        .add( Projections.groupProperty(\"color\") )\n"
-      "    )\n"
-      "    .list();]]>"
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.rowCount() )\n"
+"    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount() )\n"
-      "        .add( Projections.avg(\"weight\") )\n"
-      "        .add( Projections.max(\"weight\") )\n"
-      "        .add( Projections.groupProperty(\"color\") )\n"
-      "    )\n"
-      "    .list();]]>"
 
-#: index.docbook:176
-msgid "There is no explicit \"group by\" necessary in a criteria query. Certain projection types are defined to be <emphasis>grouping projections</emphasis>, which also appear in the SQL <literal>group by</literal> clause."
-msgstr "criteria 질의 내에서는 명시적인 \"group by\"가 필수적이지 않다. 어떤 projection 타입들은 <emphasis>grouping projections</emphasis>들이게끔 정의되고, 그것은 또한 SQL <literal>group by</literal> 절 속에 나타난다."
-
-#: index.docbook:182
-msgid "An alias may optionally be assigned to a projection, so that the projected value may be referred to in restrictions or orderings. Here are two different ways to do this:"
-msgstr "alias는 선택적으로 projection에 할당될 수 있어서, 투사된(projected) 값은 제한(restriction)들 또는 ordering들 내에서 참조될 수 있다. 다음은 이것을 행하는 두 개의 다른 방법들이다:"
-
-#: index.docbook:188
+#. Tag: programlisting
+#: query_criteria.xml:174
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), \"colr\" ) )\n"
-      "    .addOrder( Order.asc(\"colr\") )\n"
-      "    .list();]]>"
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount() )\n"
+"        .add( Projections.avg(\"weight\") )\n"
+"        .add( Projections.max(\"weight\") )\n"
+"        .add( Projections.groupProperty(\"color\") )\n"
+"    )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), \"colr\" ) )\n"
-      "    .addOrder( Order.asc(\"colr\") )\n"
-      "    .list();]]>"
 
-#: index.docbook:190
+#. Tag: para
+#: query_criteria.xml:176
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
-      "    .addOrder( Order.asc(\"colr\") )\n"
-      "    .list();]]>"
+"There is no explicit \"group by\" necessary in a criteria query. Certain "
+"projection types are defined to be <emphasis>grouping projections</"
+"emphasis>, which also appear in the SQL <literal>group by</literal> clause."
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
-      "    .addOrder( Order.asc(\"colr\") )\n"
-      "    .list();]]>"
+"criteria 질의 내에서는 명시적인 \"group by\"가 필수적이지 않다. 어떤 "
+"projection 타입들은 <emphasis>grouping projections</emphasis>들이게끔 정의되"
+"고, 그것은 또한 SQL <literal>group by</literal> 절 속에 나타난다."
 
-#: index.docbook:192
-msgid "The <literal>alias()</literal> and <literal>as()</literal> methods simply wrap a projection instance in another, aliased, instance of <literal>Projection</literal>. As a shortcut, you can assign an alias when you add the projection to a projection list:"
-msgstr "<literal>alias()</literal> 메소드와 <literal>as()</literal> 메소드는 또 다른 alias 된 <literal>Projection</literal>의 인스턴스 내에 하나의 projection 인스턴스를 간단하게 포장한다. 지름길로서, 당신이 projection을 projection 리스트에 추가할 때 당신은 alias를 할당할 수 있다:"
-
-#: index.docbook:199
+#. Tag: para
+#: query_criteria.xml:182
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount(), \"catCountByColor\" )\n"
-      "        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
-      "        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
-      "        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
-      "    )\n"
-      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
-      "    .addOrder( Order.desc(\"avgWeight\") )\n"
-      "    .list();]]>"
+"An alias may optionally be assigned to a projection, so that the projected "
+"value may be referred to in restrictions or orderings. Here are two "
+"different ways to do this:"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount(), \"catCountByColor\" )\n"
-      "        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
-      "        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
-      "        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
-      "    )\n"
-      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
-      "    .addOrder( Order.desc(\"avgWeight\") )\n"
-      "    .list();]]>"
+"alias는 선택적으로 projection에 할당될 수 있어서, 투사된(projected) 값은 제한"
+"(restriction)들 또는 ordering들 내에서 참조될 수 있다. 다음은 이것을 행하는 "
+"두 개의 다른 방법들이다:"
 
-#: index.docbook:201
+#. Tag: programlisting
+#: query_criteria.xml:188
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
-      "    .createAlias(\"kittens\", \"kit\")\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
-      "        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
-      "    )\n"
-      "    .addOrder( Order.asc(\"catName\") )\n"
-      "    .addOrder( Order.asc(\"kitName\") )\n"
-      "    .list();]]>"
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), "
+"\"colr\" ) )\n"
+"    .addOrder( Order.asc(\"colr\") )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
-      "    .createAlias(\"kittens\", \"kit\")\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
-      "        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
-      "    )\n"
-      "    .addOrder( Order.asc(\"catName\") )\n"
-      "    .addOrder( Order.asc(\"kitName\") )\n"
-      "    .list();]]>"
 
-#: index.docbook:203
-msgid "You can also use <literal>Property.forName()</literal> to express projections:"
-msgstr "당신은 또한 projection들을 표현하는데 <literal>Property.forName()</literal>을 사용할 수 있다:"
-
-#: index.docbook:207
+#. Tag: programlisting
+#: query_criteria.xml:190
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Property.forName(\"name\") )\n"
-      "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
-      "    .list();]]>"
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
+"    .addOrder( Order.asc(\"colr\") )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Property.forName(\"name\") )\n"
-      "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
-      "    .list();]]>"
 
-#: index.docbook:209
+#. Tag: para
+#: query_criteria.xml:192
+#, no-c-format
 msgid ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
-      "        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
-      "        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
-      "        .add( Property.forName(\"color\").group().as(\"color\" )\n"
-      "    )\n"
-      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
-      "    .addOrder( Order.desc(\"avgWeight\") )\n"
-      "    .list();]]>"
+"The <literal>alias()</literal> and <literal>as()</literal> methods simply "
+"wrap a projection instance in another, aliased, instance of "
+"<literal>Projection</literal>. As a shortcut, you can assign an alias when "
+"you add the projection to a projection list:"
 msgstr ""
-      "<![CDATA[List results = session.createCriteria(Cat.class)\n"
-      "    .setProjection( Projections.projectionList()\n"
-      "        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
-      "        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
-      "        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
-      "        .add( Property.forName(\"color\").group().as(\"color\" )\n"
-      "    )\n"
-      "    .addOrder( Order.desc(\"catCountByColor\") )\n"
-      "    .addOrder( Order.desc(\"avgWeight\") )\n"
-      "    .list();]]>"
+"<literal>alias()</literal> 메소드와 <literal>as()</literal> 메소드는 또 다른 "
+"alias 된 <literal>Projection</literal>의 인스턴스 내에 하나의 projection 인스"
+"턴스를 간단하게 포장한다. 지름길로서, 당신이 projection을 projection 리스트"
+"에 추가할 때 당신은 alias를 할당할 수 있다:"
 
-#: index.docbook:214
+#. Tag: programlisting
+#: query_criteria.xml:199
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount(), \"catCountByColor\" )\n"
+"        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
+"        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
+"        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
+"    )\n"
+"    .addOrder( Order.desc(\"catCountByColor\") )\n"
+"    .addOrder( Order.desc(\"avgWeight\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:201
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
+"    .createAlias(\"kittens\", \"kit\")\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
+"        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
+"    )\n"
+"    .addOrder( Order.asc(\"catName\") )\n"
+"    .addOrder( Order.asc(\"kitName\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:203
+#, no-c-format
+msgid ""
+"You can also use <literal>Property.forName()</literal> to express "
+"projections:"
+msgstr ""
+"당신은 또한 projection들을 표현하는데 <literal>Property.forName()</literal>"
+"을 사용할 수 있다:"
+
+#. Tag: programlisting
+#: query_criteria.xml:207
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Property.forName(\"name\") )\n"
+"    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:209
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
+"        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
+"        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
+"        .add( Property.forName(\"color\").group().as(\"color\" )\n"
+"    )\n"
+"    .addOrder( Order.desc(\"catCountByColor\") )\n"
+"    .addOrder( Order.desc(\"avgWeight\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:214
+#, no-c-format
 msgid "Detached queries and subqueries"
 msgstr "Detached 질의들과 서브질의들"
 
-#: index.docbook:215
-msgid "The <literal>DetachedCriteria</literal> class lets you create a query outside the scope of a session, and then later execute it using some arbitrary <literal>Session</literal>."
-msgstr "<literal>DetachedCriteria</literal> 클래스는 당신에게 세션 영역의 외부에서 질의를 생성시키도록 하고, 그런 다음 나중에 어떤 임의의 <literal>Session</literal>을 사용하여 그것을 실행하도록 한다."
-
-#: index.docbook:220
+#. Tag: para
+#: query_criteria.xml:215
+#, no-c-format
 msgid ""
-      "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
-      "    .add( Property.forName(\"sex\").eq('F') );\n"
-      "    \n"
-      "Session session = ....;\n"
-      "Transaction txn = session.beginTransaction();\n"
-      "List results = query.getExecutableCriteria(session).setMaxResults(100).list();\n"
-      "txn.commit();\n"
-      "session.close();]]>"
+"The <literal>DetachedCriteria</literal> class lets you create a query "
+"outside the scope of a session, and then later execute it using some "
+"arbitrary <literal>Session</literal>."
 msgstr ""
-      "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
-      "    .add( Property.forName(\"sex\").eq('F') );\n"
-      "    \n"
-      "Session session = ....;\n"
-      "Transaction txn = session.beginTransaction();\n"
-      "List results = query.getExecutableCriteria(session).setMaxResults(100).list();\n"
-      "txn.commit();\n"
-      "session.close();]]>"
+"<literal>DetachedCriteria</literal> 클래스는 당신에게 세션 영역의 외부에서 질"
+"의를 생성시키도록 하고, 그런 다음 나중에 어떤 임의의 <literal>Session</"
+"literal>을 사용하여 그것을 실행하도록 한다."
 
-#: index.docbook:222
-msgid "A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion instances involving subqueries may be obtained via <literal>Subqueries</literal> or <literal>Property</literal>."
-msgstr "<literal>DetachedCriteria</literal>는 또한 서브질의를 표현하는데 사용된다. 서브질의들을 포함하는 Criterion 인스턴스들은 <literal>Subqueries</literal> 또는 <literal>Property</literal>를 통해 얻어질 수 있다."
-
-#: index.docbook:228
+#. Tag: programlisting
+#: query_criteria.xml:220
+#, no-c-format
 msgid ""
-      "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
-      "    .setProjection( Property.forName(\"weight\").avg() );\n"
-      "session.createCriteria(Cat.class)\n"
-      "    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
-      "    .list();]]>"
+"<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
+"    .add( Property.forName(\"sex\").eq('F') );\n"
+"    \n"
+"Session session = ....;\n"
+"Transaction txn = session.beginTransaction();\n"
+"List results = query.getExecutableCriteria(session).setMaxResults(100).list"
+"();\n"
+"txn.commit();\n"
+"session.close();]]>"
 msgstr ""
-      "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
-      "    .setProjection( Property.forName(\"weight\").avg() );\n"
-      "session.createCriteria(Cat.class)\n"
-      "    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
-      "    .list();]]>"
 
-#: index.docbook:230
+#. Tag: para
+#: query_criteria.xml:222
+#, no-c-format
 msgid ""
-      "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
-      "    .setProjection( Property.forName(\"weight\") );\n"
-      "session.createCriteria(Cat.class)\n"
-      "    .add( Subqueries.geAll(\"weight\", weights) )\n"
-      "    .list();]]>"
+"A <literal>DetachedCriteria</literal> may also be used to express a "
+"subquery. Criterion instances involving subqueries may be obtained via "
+"<literal>Subqueries</literal> or <literal>Property</literal>."
 msgstr ""
-      "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
-      "    .setProjection( Property.forName(\"weight\") );\n"
-      "session.createCriteria(Cat.class)\n"
-      "    .add( Subqueries.geAll(\"weight\", weights) )\n"
-      "    .list();]]>"
+"<literal>DetachedCriteria</literal>는 또한 서브질의를 표현하는데 사용된다. 서"
+"브질의들을 포함하는 Criterion 인스턴스들은 <literal>Subqueries</literal> 또"
+"는 <literal>Property</literal>를 통해 얻어질 수 있다."
 
-#: index.docbook:232
+#. Tag: programlisting
+#: query_criteria.xml:228
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
+"    .setProjection( Property.forName(\"weight\").avg() );\n"
+"session.createCriteria(Cat.class)\n"
+"    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:230
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
+"    .setProjection( Property.forName(\"weight\") );\n"
+"session.createCriteria(Cat.class)\n"
+"    .add( Subqueries.geAll(\"weight\", weights) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:232
+#, no-c-format
 msgid "Even correlated subqueries are possible:"
 msgstr "심지어 상관관계 지워진 서브질의들이 가능하다:"
 
-#: index.docbook:236
+#. Tag: programlisting
+#: query_criteria.xml:236
+#, no-c-format
 msgid ""
-      "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, \"cat2\")\n"
-      "    .setProjection( Property.forName(\"weight\").avg() )\n"
-      "    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
-      "session.createCriteria(Cat.class, \"cat\")\n"
-      "    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
-      "    .list();]]>"
+"<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
+"class, \"cat2\")\n"
+"    .setProjection( Property.forName(\"weight\").avg() )\n"
+"    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
+"session.createCriteria(Cat.class, \"cat\")\n"
+"    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
+"    .list();]]>"
 msgstr ""
-      "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, \"cat2\")\n"
-      "    .setProjection( Property.forName(\"weight\").avg() )\n"
-      "    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
-      "session.createCriteria(Cat.class, \"cat\")\n"
-      "    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
-      "    .list();]]>"
 
-#: index.docbook:245
+#. Tag: title
+#: query_criteria.xml:245
+#, no-c-format
 msgid "Queries by natural identifier"
 msgstr "natural 식별자에 의한 질의들"
 
-#: index.docbook:247
-msgid "For most queries, including criteria queries, the query cache is not very efficient, because query cache invalidation occurs too frequently. However, there is one special kind of query where we can optimize the cache invalidation algorithm: lookups by a constant natural key. In some applications, this kind of query occurs frequently. The criteria API provides special provision for this use case."
-msgstr "대부분의 질의들에서, criteria 질의들을 포함하여, 질의 캐시는 매우 효율적이지 않다. 왜냐하면 질의 캐시 비유효성이 너무 자주 발생하기 때문이다. 하지만, 우리가 캐시 비유효성 알고리즘을 최적화 시킬 수 있는 한 가지 특별한 종류의 질의가 존재한다: 상수 natural 키에 의한 룩업. 몇몇 어플리케이션들에서, 이런 종류의 질의가 자주 발생한다. criteria API는 이 쓰임새를 위한 특별한 설비를 제공한다."
-
-#: index.docbook:255
-msgid "First, you should map the natural key of your entity using <literal>&lt;natural-id&gt;</literal>, and enable use of the second-level cache."
-msgstr "첫번째로 당신은 <literal>&lt;natural-id&gt;</literal>를 사용하여 당신의 엔티티에 대한 natural 키를 매핑 시켜야 하고, second-level 캐시 사용을 가능하게 해야 한다."
-
-#: index.docbook:260
+#. Tag: para
+#: query_criteria.xml:247
+#, no-c-format
 msgid ""
-      "<![CDATA[<class name=\"User\">\n"
-      "    <cache usage=\"read-write\"/>\n"
-      "    <id name=\"id\">\n"
-      "        <generator class=\"increment\"/>\n"
-      "    </id>\n"
-      "    <natural-id>\n"
-      "        <property name=\"name\"/>\n"
-      "        <property name=\"org\"/>\n"
-      "    </natural-id>\n"
-      "    <property name=\"password\"/>\n"
-      "</class>]]>"
+"For most queries, including criteria queries, the query cache is not very "
+"efficient, because query cache invalidation occurs too frequently. However, "
+"there is one special kind of query where we can optimize the cache "
+"invalidation algorithm: lookups by a constant natural key. In some "
+"applications, this kind of query occurs frequently. The criteria API "
+"provides special provision for this use case."
 msgstr ""
-      "<![CDATA[<class name=\"User\">\n"
-      "    <cache usage=\"read-write\"/>\n"
-      "    <id name=\"id\">\n"
-      "        <generator class=\"increment\"/>\n"
-      "    </id>\n"
-      "    <natural-id>\n"
-      "        <property name=\"name\"/>\n"
-      "        <property name=\"org\"/>\n"
-      "    </natural-id>\n"
-      "    <property name=\"password\"/>\n"
-      "</class>]]>"
+"대부분의 질의들에서, criteria 질의들을 포함하여, 질의 캐시는 매우 효율적이지 "
+"않다. 왜냐하면 질의 캐시 비유효성이 너무 자주 발생하기 때문이다. 하지만, 우리"
+"가 캐시 비유효성 알고리즘을 최적화 시킬 수 있는 한 가지 특별한 종류의 질의가 "
+"존재한다: 상수 natural 키에 의한 룩업. 몇몇 어플리케이션들에서, 이런 종류의 "
+"질의가 자주 발생한다. criteria API는 이 쓰임새를 위한 특별한 설비를 제공한다."
 
-#: index.docbook:262
-msgid "Note that this functionality is not intended for use with entities with <emphasis>mutable</emphasis> natural keys."
-msgstr "이 기능은 <emphasis>가변성 있는</emphasis> natural 키들을 가진 엔티티들의 용도로 고안되어 있지 않음을 노트하라."
+#. Tag: para
+#: query_criteria.xml:255
+#, no-c-format
+msgid ""
+"First, you should map the natural key of your entity using <literal>&lt;"
+"natural-id&gt;</literal>, and enable use of the second-level cache."
+msgstr ""
+"첫번째로 당신은 <literal>&lt;natural-id&gt;</literal>를 사용하여 당신의 엔티"
+"티에 대한 natural 키를 매핑 시켜야 하고, second-level 캐시 사용을 가능하게 해"
+"야 한다."
 
-#: index.docbook:267
+#. Tag: programlisting
+#: query_criteria.xml:260
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"User\">\n"
+"    <cache usage=\"read-write\"/>\n"
+"    <id name=\"id\">\n"
+"        <generator class=\"increment\"/>\n"
+"    </id>\n"
+"    <natural-id>\n"
+"        <property name=\"name\"/>\n"
+"        <property name=\"org\"/>\n"
+"    </natural-id>\n"
+"    <property name=\"password\"/>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:262
+#, no-c-format
+msgid ""
+"Note that this functionality is not intended for use with entities with "
+"<emphasis>mutable</emphasis> natural keys."
+msgstr ""
+"이 기능은 <emphasis>가변성 있는</emphasis> natural 키들을 가진 엔티티들의 용"
+"도로 고안되어 있지 않음을 노트하라."
+
+#. Tag: para
+#: query_criteria.xml:267
+#, no-c-format
 msgid "Next, enable the Hibernate query cache."
 msgstr "다음으로 , Hibernate 질의 캐시를 사용 가능하도록 하라."
 
-#: index.docbook:271
-msgid "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of the more efficient cache algorithm."
-msgstr "이제 <literal>Restrictions.naturalId()</literal>는 캐시 알고리즘을 보다 효율적으로 사용할 수 있도록 우리에게 허용해준다."
-
-#: index.docbook:276
+#. Tag: para
+#: query_criteria.xml:271
+#, no-c-format
 msgid ""
-      "<![CDATA[session.createCriteria(User.class)\n"
-      "    .add( Restrictions.naturalId()\n"
-      "        .set(\"name\", \"gavin\")\n"
-      "        .set(\"org\", \"hb\") \n"
-      "    ).setCacheable(true)\n"
-      "    .uniqueResult();]]>"
+"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
+"the more efficient cache algorithm."
 msgstr ""
-      "<![CDATA[session.createCriteria(User.class)\n"
-      "    .add( Restrictions.naturalId()\n"
-      "        .set(\"name\", \"gavin\")\n"
-      "        .set(\"org\", \"hb\") \n"
-      "    ).setCacheable(true)\n"
-      "    .uniqueResult();]]>"
+"이제 <literal>Restrictions.naturalId()</literal>는 캐시 알고리즘을 보다 효율"
+"적으로 사용할 수 있도록 우리에게 허용해준다."
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
-
+#. Tag: programlisting
+#: query_criteria.xml:276
+#, no-c-format
+msgid ""
+"<![CDATA[session.createCriteria(User.class)\n"
+"    .add( Restrictions.naturalId()\n"
+"        .set(\"name\", \"gavin\")\n"
+"        .set(\"org\", \"hb\") \n"
+"    ).setCacheable(true)\n"
+"    .uniqueResult();]]>"
+msgstr ""

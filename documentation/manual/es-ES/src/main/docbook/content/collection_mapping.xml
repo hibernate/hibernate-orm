@@ -230,13 +230,20 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         propiedad.
                     </para>
                 </callout>
-                <callout arearefs="mappingcollection12">
+                <callout arearefs="mappingcollection13">
                     <para>
                         <literal>optimistic-lock</literal> (opcional - por defecto a <literal>true</literal>):
                         Especifica que los cambios de estado de la colecci&#x00f3;n resultan en
                         incrementos de versi&#x00f3;n de la entidad due&#x00f1;a. (Para asociaciones
                         uno a muchos, frecuentemente es razonable deshabilitar esta opci&#x00f3;n.)
                     </para>
+	    </callout>               
+	    <callout arearefs="mappingcollection14">
+		    <para>
+			    <literal>mutable</literal> (optional - defaults to <literal>true</literal>): 
+			    A value of <literal>false</literal> specifies that the elements of the 
+			    collection never change (a minor performance optimization in some cases).
+		    </para>
                 </callout>
             </calloutlist>
         </programlistingco>
@@ -555,7 +562,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                         <literal>entity-name</literal> (opcional): El nombre de entidad de la clase
                         asociada, como una alternativa a <literal>class</literal>.
                     </para>
-                </callout>
+	    </callout>                <callout arearefs="manytomany8">
+		    <para> UNTRANSLATED!
+			    <literal>property-ref</literal>: (optional) The name of a property of the associated 
+			    class that is joined to this foreign key. If not specified, the primary key of
+			    the associated class is used.
+		    </para>                
+                </callout> 
             </calloutlist>
         </programlistingco>
 

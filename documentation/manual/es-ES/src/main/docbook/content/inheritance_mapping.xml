@@ -42,6 +42,24 @@
         </listitem>
         </itemizedlist>
         
+	
+	<para> UNTRANSLATED!
+		It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>,
+		and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath
+		<literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
+		a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
+		naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
+		documents important. Since Hibernate3, the ordering of mapping files does not matter when using the
+		extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
+		before subclasses.
+	</para>
+	
+	<programlisting><![CDATA[
+				 <hibernate-mapping>
+					 <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
+						 <property name="name" type="string"/>
+					 </subclass>
+ </hibernate-mapping>]]></programlisting>
         <para>
             Es posible usar estrategias de mapeo diferentes para diferentes
             ramificaciones de la misma jerarqu&#x00ed;a de herencia, y entonces usar
@@ -258,7 +276,12 @@
             de uni&#x00f3;n de subclase, de hecho la semilla de clave primaria tiene que ser
             compartida a trav&#x00e9;s de todas las subclases unidas de una jerarqu&#x00ed;a.
         </para>
-        
+	<para> UNTRANSLATED!
+		If your superclass is abstract, map it with <literal>abstract="true"</literal>.
+		Of course, if it is not abstract, an additional table (defaults to
+		<literal>PAYMENT</literal> in the example above) is needed to hold instances
+		of the superclass.
+        </para>        
         </sect2>
 
         <sect2 id="inheritance-tableperconcreate-polymorphism">

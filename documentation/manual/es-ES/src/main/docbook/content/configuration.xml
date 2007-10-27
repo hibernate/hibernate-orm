@@ -392,11 +392,25 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                         <entry>
                             Escribe todas las sentencias SQL a la consola.
-                            <para>
-                                <emphasis role="strong">ej.</emphasis> 
-                                <literal>true</literal> | <literal>false</literal>
+			    This is an alternative
+			    to setting the log category <literal>org.hibernate.SQL</literal>
+			    to <literal>debug</literal>.
+			    <para>
+				    <emphasis role="strong">eg.</emphasis> 
+				    <literal>true</literal> | <literal>false</literal>
                             </para>
                         </entry>
+		</row>                    <row>
+			<entry>
+				<literal>hibernate.format_sql</literal>
+			</entry>
+			<entry>
+				Pretty print the SQL in the log and console.
+				<para>
+					<emphasis role="strong">eg.</emphasis> 
+					<literal>true</literal> | <literal>false</literal>
+				</para>
+			</entry>
                     </row>
                     <row>
                         <entry>
@@ -715,6 +729,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                                 <emphasis role="strong">ej.</emphasis> 
                                 <literal>on_close</literal> (por defecto)| <literal>after_transaction</literal> |
                                 <literal>after_statement</literal> | <literal>auto</literal>
+			</para>                            <para>
+				Note that this setting only affects <literal>Session</literal>s returned from
+				<literal>SessionFactory.openSession</literal>.  For <literal>Session</literal>s
+				obtained through <literal>SessionFactory.getCurrentSession</literal>, the
+				<literal>CurrentSessionContext</literal> implementation configured for use
+				controls the connection release mode for those <literal>Session</literal>s.
+				See <xref linkend="architecture-current-session"/>
                             </para>
                         </entry>
                     </row>
@@ -928,7 +949,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <entry>
                             De habilitarse, la sesi&#x00f3;n ser&#x00e1; cerrada autom&#x00e1;ticamente
                             durante la fase posterior a la compleci&#x00f3;n de la transacci&#x00f3;n.
-                            (Muy &#x00fa;til cuando se usa Hibernate con CMT).
+			    (Muy &#x00fa;til cuando se usa Hibernate con CMT).<xref linkend="architecture-current-session"/>
                             <para>
                                 <emphasis role="strong">ej.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -950,7 +971,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         <entry>Prop&#x00f3;sito</entry>
                     </row>
                 </thead>
-                <tbody>
+		<tbody>                    <row>
+				<entry>
+					<literal>hibernate.current_session_context_class</literal>
+				</entry>
+				<entry>
+					Supply a (custom) strategy for the scoping of the "current"
+					<literal>Session</literal>. See
+					<xref linkend="architecture-current-session"/> for more
+					information about the built-in strategies.
+					<para>
+						<emphasis role="strong">eg.</emphasis>
+						<literal>jta</literal> | <literal>thread</literal> |
+						<literal>managed</literal> | <literal>custom.Class</literal>
+					</para>
+				</entry>
+                    </row>
                     <row>
                         <entry>
                             <literal>hibernate.query.factory_class</literal>
@@ -1636,7 +1672,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 de arranque (o clase de utilidad) en tu aplicaci&#x00f3;n, a menos qie uses el despliegue
                 JMX con el <literal>HibernateService</literal> (discutido luego).
             </para>
-
+	    <para> UNTRANSLATED!
+		    If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other class may
+		    obtain the  <literal>SessionFactory</literal> using a JNDI lookup.
+            </para>
             <para>
                 Si usas una <literal>SessionFactory</literal> de JNDI, un EJB o cualquier otra
                 clase puede obtener la <literal>SessionFactory</literal> usando una b&#x00fa;squeda
@@ -1651,36 +1690,27 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <sect2 id="configuration-j2ee-currentsession" revision="1">
             <title>Ligado autom&#x00e1;tico de JTA y Session</title>
 
-            <para>
-                Para entornos no manejados hemos sugerido <literal>HibernateUtil</literal> con una
-                <literal>SessionFactory</literal> est&#x00e1;tica, y administraci&#x00f3;n de la
-                <literal>Session</literal> de Hibernate. Este enfoque no es f&#x00e1;cil de usar
-                en un entorno EJB, al poder ejecutarse muchos EJBs dentro de la misma transacci&#x00f3;n
-                pero no en la misma hebra. Recomendados que ligues la <literal>SessionFactory</literal>
-                a JNDI en un entorno manejado.
+	    <para> UNTRANSLATED!
+		    The easiest way to handle <literal>Session</literal>s and transactions is
+		    Hibernates automatic "current" <literal>Session</literal> management.
+		    See the discussion of <link linkend="architecture-current-session">current sessions</link>.
+		    Using the <literal>"jta"</literal> session context, if there is no Hibernate
+		    <literal>Session</literal> associated with the current JTA transaction, one will
+		    be started and associated with that JTA transaction the first time you call
+		    <literal>sessionFactory.getCurrentSession()</literal>. The <literal>Session</literal>s
+		    retrieved via <literal>getCurrentSession()</literal> in <literal>"jta"</literal> context
+		    will be set to automatically flush before the transaction completes, close
+		    after the transaction completes, and aggressively release JDBC connections
+		    after each statement.  This allows the <literal>Session</literal>s to
+		    be managed by the life cycle of the JTA transaction to which it is associated,
+		    keeping user code clean of such management concerns. Your code can either use
+		    JTA programmatically through <literal>UserTransaction</literal>, or (recommended
+		    for portable code) use the Hibernate <literal>Transaction</literal> API to set
+		    transaction boundaries. If you run in an EJB container, declarative transaction
+		    demarcation with CMT is preferred.
             </para>
 
-            <para>
-                En vez de rodar tu propia utilidad de <literal>ThreadLocal</literal>,
-                usa el m&#x00e9;todo <literal>getCurrentSession()</literal> en la
-                <literal>SessionFactory</literal> para obtener una <literal>Session</literal>
-                de Hibernate. Si no hubiese una <literal>Session</literal> de Hibernate en la
-                transacci&#x00f3;n JTA actual, se arrancar&#x00e1; y asignar&#x00e1; una.
-                Ambas opciones de configuraci&#x00f3;n <literal>hibernate.transaction.flush_before_completion</literal>
-                y <literal>hibernate.transaction.auto_close_session</literal>, ser&#x00e1;n establecidas
-                autom&#x00e1;ticamente para cada <literal>Session</literal> que obtengas con
-                <literal>getCurrentSession()</literal>, de modo que &#x00e9;stas ser&#x00e1;n
-                limpiadas (flushed) y cerradas autom&#x00e1;ticamente cuando el contenedor complete
-                las transacciones JTA.
-            </para>
 
-            <para>
-                Si tu, por ejemplo, usas el patr&#x00f3;n de dise&#x00f1;o DAO para escribir tu
-                capa de persistencia, todos los DAO's buscan la <literal>SessionFactory</literal>
-                cuando se necesite y abren la sesi&#x00f3;n "actual". No hay necesidad de pasar
-                las instancias de <literal>SessionFactory</literal> o <literal>Session</literal>
-                alrededor entre el c&#x00f3;digo de control y el c&#x00f3;digo DAO.
-            </para>
 
         </sect2>
 

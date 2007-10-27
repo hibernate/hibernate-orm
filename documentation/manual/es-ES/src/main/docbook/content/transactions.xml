@@ -14,7 +14,13 @@
         B&#x00e1;sicamente, usa Hibernate como usar&#x00ed;as JDBC directo (o JTA/CMT) con tus recursos de base de
         datos.
     </para>
-
+    <para>
+	    Hibernate does not lock objects in memory. Your application can expect the behavior as
+	    defined by the isolation level of your database transactions. Note that thanks to the
+	    <literal>Session</literal>, which is also a transaction-scoped cache, Hibernate
+	    provides repeatable reads for lookup by identifier and entity queries (not
+	    reporting queries that return scalar values).
+    </para>
     <para>
         Sin embargo, adem&#x00e1;s del versionado autom&#x00e1;tico, Hibernate ofrece una API (menor) para
         bloqueo pesimista de filas, usando la sint&#x00e1;xis <literal>SELECT FOR UPDATE</literal>.
@@ -90,22 +96,37 @@
                 aplicaciones.
             </para>
 
-            <para>
-                El desaf&#x00ed;o yace en la implementaci&#x00f3;n: no s&#x00f3;lo tienen que comenzarse y terminarse correctamente
-                la <literal>Session</literal> y la transacci&#x00f3;n, sino que adem&#x00e1;s tienen que estar accesibles
-                para las operaciones de acceso a datos. La demarcaci&#x00f3;n de una unidad de trabajo se implementa
-                idealmente usando un interceptor que se ejecuta cuando una petici&#x00f3;n llama al servidor y anter que
-                la respuesta sea enviada (es decir, un <literal>ServletFilter</literal>). Recomendamos ligar la
-                <literal>Session</literal> a la hebra que atiende la petici&#x00f3;n, usando una variable
-                <literal>ThreadLocal</literal>. Esto permite un f&#x00e1;cil acceso (como acceder a una variable static)
-                en t&#x00f3;do el c&#x00f3;digo que se ejecuta en esta hebra. Dependiendo del mecanismo de demarcaci&#x00f3;n de
-                transacciones de base de datos que elijas, podr&#x00ed;as mantener tambi&#x00e9;n el contexto de la transacci&#x00f3;n
-                en una variable <literal>ThreadLocal</literal>. Los patrones de implementaci&#x00f3;n para esto son
-                conocidos como <emphasis>Sesi&#x00f3;n Local de Hebra (ThreadLocal Session)</emphasis> y
-                <emphasis>Sesi&#x00f3;n Abierta en Vista (Open Session in View)</emphasis>. Puedes extender f&#x00e1;cilmente
-                la clase de ayuda <literal>HibernateUtil</literal> mostrada anteriormente para encontrar
-                una forma de implementar un interceptor e instalarlo en tu entorno. Ver el sitio web de Hibernate
-                para consejos y ejemplos.
+	    <para>
+		    The challenge lies in the implementation. Hibernate provides built-in management of
+		    the "current session" to simplify this pattern. All you have to do is start a
+		    transaction when a server request has to be processed, and end the transaction
+		    before the response is send to the client. You can do this in any way you
+		    like, common solutions are <literal>ServletFilter</literal>, AOP interceptor with a
+		    pointcut on the service methods, or a proxy/interception container. An EJB container
+		    is a standardized way to implement cross-cutting aspects such as transaction
+		    demarcation on EJB session beans, declaratively with CMT. If you decide to
+		    use programmatic transaction demarcation, prefer the Hibernate <literal>Transaction</literal>
+		    API shown later in this chapter, for ease of use and code portability.
+	    </para>
+	    
+	    <para>
+		    Your application code can access a "current session" to process the request
+		    by simply calling <literal>sessionFactory.getCurrentSession()</literal> anywhere
+		    and as often as needed. You will always get a <literal>Session</literal> scoped
+		    to the current database transaction. This has to be configured for either
+		    resource-local or JTA environments, see <xref linkend="architecture-current-session"/>.
+	    </para>
+	    
+	    <para>
+		    Sometimes it is convenient to extend the scope of a <literal>Session</literal> and
+		    database transaction until the "view has been rendered". This is especially useful
+		    in servlet applications that utilize a separate rendering phase after the request
+		    has been processed. Extending the database transaction until view rendering is
+		    complete is easy to do if you implement your own interceptor. However, it is not
+		    easily doable if you rely on EJBs with container-managed transactions, as a
+		    transaction will be completed when an EJB method returns, before rendering of any
+		    view can start. See the Hibernate website and forum for tips and examples around
+		    this <emphasis>Open Session in View</emphasis> pattern.
              </para>
 
         </sect2>
@@ -421,9 +442,7 @@ finally {
             <para>
                 No tienes que limpiar con <literal>flush()</literal> la <literal>Session</literal> expl&#x00ed;citamente -
                 la llamada a <literal>commit()</literal> autom&#x00e1;ticamente dispara la sincronizaci&#x00f3;n.
-            </para>
-
-            <para>
+           
                 Una llamada a <literal>close()</literal> marca el fin de una sesi&#x00f3;n. La principal implicaci&#x00f3;n
                 de <literal>close()</literal> es que la conexi&#x00f3;n JDBC ser&#x00e1; abandonada por la sesi&#x00f3;n.
             </para>
@@ -624,6 +643,50 @@ Session sess = factory.getCurrentSession();
 
 
         </sect2>
+	
+	<sect2 id="transactions-demarcation-timeout">
+		<title>Transaction timeout</title>
+		
+		<para>
+			One extremely important feature provided by a managed environment like EJB
+			that is never provided for non-managed code is transaction timeout. Transaction
+			timeouts ensure that no misbehaving transaction can indefinitely tie up 
+			resources while returning no response to the user. Outside a managed (JTA)
+			environment, Hibernate cannot fully provide this functionality. However,
+			Hibernate can at least control data access operations, ensuring that database
+			level deadlocks and queries with huge result sets are limited by a defined
+			timeout. In a managed environment, Hibernate can delegate transaction timeout
+			to JTA. This functioanlity is abstracted by the Hibernate 
+			<literal>Transaction</literal> object.
+		</para>
+		
+		<programlisting><![CDATA[
+					 Session sess = factory.openSession();
+					 try {
+					 //set transaction timeout to 3 seconds
+					 sess.getTransaction().setTimeout(3);
+					 sess.getTransaction().begin();
+					 
+					 // do some work
+					 ...
+					 
+					 sess.getTransaction().commit()
+					 }
+					 catch (RuntimeException e) {
+					 sess.getTransaction().rollback();
+					 throw e; // or display error message
+					 }
+					 finally {
+					 sess.close();
+					 }]]></programlisting>
+		
+		<para>
+			Note that <literal>setTimeout()</literal> may not be called in a CMT bean,
+			where transaction timeouts must be defined declaratively.
+		</para>
+		
+	</sect2>
+	
 
     </sect1>
 
@@ -700,7 +763,7 @@ session.close();]]></programlisting>
                 La <literal>Session</literal> se desconecta de cualquier conexi&#x00f3;n JDBC subyacente
                 al esperar por una interacci&#x00f3;n del usuario. Este enfoque es el m&#x00e1;s eficiente en t&#x00e9;rminos
                 de acceso a base de datos. La aplicaci&#x00f3;n no necesita tratar por s&#x00ed; misma con el chequeo de
-                versiones, ni re-uniendo instancias separadas, ni tiene que recargar instancias en cada
+                versiones, ni re-uniendo instancias separadas, ni tiene que recargar instancias en cadatransactions-demarcation-timeout
                 transacci&#x00f3;n de base de datos.
             </para>
 
@@ -742,7 +805,12 @@ session.disconnect(); // Return JDBC connection ]]></programlisting>
                 <literal>Session</literal> y no transferirla a la capa web para almacenarla en la
                 <literal>HttpSession</literal> (ni incluso serializarla a una capa separada).
             </para>
-
+	    <para> UNTRANSLATED!!!
+		    The extended session pattern, or <emphasis>session-per-conversation</emphasis>, is
+		    more difficult to implement with automatic current session context management.
+		    You need to supply your own implementation of the <literal>CurrentSessionContext</literal>
+		    for this, see the Hibernate Wiki for examples.
+            </para>
         </sect2>
 
         <sect2 id="transactions-optimistic-detached">

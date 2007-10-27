@@ -471,6 +471,71 @@ dynamicSession.close()
         </para>
 
     </sect1>
+    <sect1 id="persistent-classes-tuplizers" revision="1">
+	    <title>UNTRANSLATED!!! Tuplizers</title>
+	    
+	    <para>
+		    <literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are responsible
+		    for managing a particular representation of a piece of data, given that representation's
+		    <literal>org.hibernate.EntityMode</literal>.  If a given piece of data is thought of as
+		    a data structure, then a tuplizer is the thing which knows how to create such a data structure
+		    and how to extract values from and inject values into such a data structure.  For example,
+		    for the POJO entity mode, the correpsonding tuplizer knows how create the POJO through its
+		    constructor and how to access the POJO properties using the defined property accessors.
+		    There are two high-level types of Tuplizers, represented by the
+		    <literal>org.hibernate.tuple.entity.EntityTuplizer</literal> and <literal>org.hibernate.tuple.component.ComponentTuplizer</literal>
+		    interfaces.  <literal>EntityTuplizer</literal>s are responsible for managing the above mentioned
+		    contracts in regards to entities, while <literal>ComponentTuplizer</literal>s do the same for
+		    components.
+	    </para>
+	    
+	    <para>
+		    Users may also plug in their own tuplizers.  Perhaps you require that a <literal>java.util.Map</literal>
+		    implementation other than <literal>java.util.HashMap</literal> be used while in the
+		    dynamic-map entity-mode; or perhaps you need to define a different proxy generation strategy
+		    than the one used by default.  Both would be achieved by defining a custom tuplizer
+		    implementation.  Tuplizers definitions are attached to the entity or component mapping they
+		    are meant to manage.  Going back to the example of our customer entity:
+	    </para>
+	    
+	    <programlisting><![CDATA[<hibernate-mapping>
+			    <class entity-name="Customer">
+				    <!--
+					Override the dynamic-map entity-mode
+					tuplizer for the customer entity
+					-->
+				    <tuplizer entity-mode="dynamic-map"
+					      class="CustomMapTuplizerImpl"/>
+				    
+				    <id name="id" type="long" column="ID">
+					    <generator class="sequence"/>
+				    </id>
+				    
+				    <!-- other properties -->
+				    ...
+			    </class>
+		    </hibernate-mapping>
+		    
+		    
+		    public class CustomMapTuplizerImpl
+		    extends org.hibernate.tuple.entity.DynamicMapEntityTuplizer {
+		    // override the buildInstantiator() method to plug in our custom map...
+		    protected final Instantiator buildInstantiator(
+		    org.hibernate.mapping.PersistentClass mappingInfo) {
+		    return new CustomMapInstantiator( mappingInfo );
+		    }
+		    
+		    private static final class CustomMapInstantiator
+		    extends org.hibernate.tuple.DynamicMapInstantitor {
+		    // override the generateMap() method to return our custom map...
+		    protected final Map generateMap() {
+		    return new CustomMap();
+		    }
+		    }
+		    }]]></programlisting>
+	    
+	    
+    </sect1>
 
     <para>
         PORHACER: Documentar el framework de extensiones del usuario en los paquetes

@@ -332,6 +332,45 @@ create table Person ( personId bigint not null primary key, addressId bigint not
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
+	
+	<para> UNTRANSLATED!
+		If you use a <literal>List</literal> (or other indexed collection) you need
+		to set the <literal>key</literal> column of the foreign key to <literal>not null</literal>,
+		and let Hibernate manage the association from the collections side to maintain the index
+		of each element (making the other side virtually inverse by setting
+		<literal>update="false"</literal> and <literal>insert="false"</literal>):
+	</para>
+	
+	<programlisting><![CDATA[<class name="Person">
+			<id name="id"/>
+			...
+			<many-to-one name="address"
+				     column="addressId"
+				     not-null="true"
+				     insert="false"
+				     update="false"/>
+		</class>
+		
+		<class name="Address">
+			<id name="id"/>
+			...
+			<list name="people">
+				<key column="addressId" not-null="true"/>
+				<list-index column="peopleIdx"/>
+				<one-to-many class="Person"/>
+			</list>
+		</class>]]></programlisting>
+	
+	<para>UNTRANSLATED!
+		It is important that you define <literal>not-null="true"</literal> on the
+		<literal>&lt;key&gt;</literal> element of the collection mapping if the
+		underlying foreign key column is <literal>NOT NULL</literal>. Don't only
+		declare <literal>not-null="true"</literal> on a possible nested
+		<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</literal>
+		element.
+	</para>
+	
+	
         </sect2>
         
         <sect2 id="assoc-bidirectional-121">

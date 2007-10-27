@@ -22,7 +22,10 @@
             creado y actualiza la propiedad <literal>lastUpdateTimestamp</literal> cuando un
             <literal>Auditable</literal> es acutalizado.
         </para>
-
+	<para> UNTRANSLATED!
+		You may either implement <literal>Interceptor</literal> directly or (better) extend
+		<literal>EmptyInterceptor</literal>.
+        </para>
         <programlisting><![CDATA[package org.hibernate.test;
 
 import java.io.Serializable;
@@ -103,14 +106,24 @@ public class AuditInterceptor implements Interceptor, Serializable {
 
 }]]></programlisting>
 
-        <para>
-            El interceptor podr&#x00ed;a ser especificado cuando se crea la sesi&#x00f3;n:
+	    <para> UNTRANSLATED!
+		    Interceptors come in two flavors: <literal>Session</literal>-scoped and
+		    <literal>SessionFactory</literal>-scoped.
+	    </para>
+	    
+	    <para> UNTRANSLATED!
+		    A <literal>Session</literal>-scoped interceptor is specified
+		    when a session is opened using one of the overloaded SessionFactory.openSession()
+		    methods accepting an <literal>Interceptor</literal>.
         </para>
-
         <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
-
-        <para>
-            Puedes adem&#x00e1;s establecer un interceptor a un nivel global, usando la <literal>Configuration</literal>:
+	<para> UNTRANSLATED!
+		A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>
+		object prior to building the <literal>SessionFactory</literal>.  In this case, the supplied interceptor
+		will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless
+		a session is opened explicitly specifying the interceptor to use.  <literal>SessionFactory</literal>-scoped
+		interceptors must be thread safe, taking care to not store session-specific state since multiple
+		sessions will use this interceptor (potentially) concurrently.
         </para>
     
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
@@ -218,7 +231,11 @@ cfg.getSessionEventListenerConfig().setLoadEventListener( new MyLoadListener() )
 <listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
 <listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
-
+<para> UNTRANSLATED!
+	Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is just a shorthand
+	for <literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>
+	when there is exactly one listener for a particular event type.
+        </para>
         <para>
             Seguido, a&#x00fa;n en <literal>hibernate.cfg.xml</literal>, liga los permisos a roles:
         </para>

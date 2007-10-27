@@ -68,6 +68,20 @@
                     <emphasis>Recuperaci&#x00f3;n perezosa de colecciones</emphasis> - se recupera una colecci&#x00f3;n cuando la
                     aplicaci&#x00f3;n invoca una operaci&#x00f3;n sobre la colecci&#x00f3;n. (Esto es por defecto para las colecciones.)
                 </para>
+	</listitem>            <listitem>
+		<para>
+			<emphasis>"Extra-lazy" collection fetching</emphasis> - individual
+			elements of the collection are accessed from the database as needed.
+			Hibernate tries not to fetch the whole collection into memory unless
+			absolutely needed (suitable for very large collections)
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<emphasis>Proxy fetching</emphasis> - a single-valued association is 
+			fetched when a method other than the identifier getter is invoked
+			upon the associated object.
+		</para>
             </listitem>
             <listitem>
                 <para>
@@ -186,9 +200,17 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 <para>
                     las consultas de <literal>Criteria</literal>
                 </para>
+	</listitem>            <listitem>
+		<para>
+			HQL queries if <literal>subselect</literal> fetching is used
+		</para>
             </listitem>
         </itemizedlist>
-
+	<para>
+		No matter what fetching strategy you use, the defined non-lazy graph is guaranteed
+		to be loaded into memory. Note that this might result in several immediate selects
+		being used to execute a particular HQL query.
+            </para>
             <para>
                 Usualmente, no usamos el documento de mapeo para personalizar la recuperaci&#x00f3;n. En cambio, mantenemos el
                 comportamiento por defecto, y lo sobrescribimos para una transacci&#x00f3;n en particular, usando
@@ -353,7 +375,12 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 Hibernate detectar&#x00e1; las clase persistentes que sobrescriban <literal>equals()</literal> o
                 <literal>hashCode()</literal>.
             </para>
-
+	    <para> UNTRANSLATED!!!
+		    By choosing <literal>lazy="no-proxy"</literal> instead of the default 
+		    <literal>lazy="proxy"</literal>, we can avoid the problems associated with typecasting.
+		    However, we will require buildtime bytecode instrumentation, and all operations
+		    will result in immediate proxy initialization.
+            </para>
         </sect2>
 
         <sect2 id="performance-fetching-initialization">
@@ -673,7 +700,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <programlistingco>
                 <areaspec>
-                    <area id="cache1" coords="2 70"/>
+			<area id="cache1" coords="2 70"/><area id="cache2" coords="3 70"/>
+                    <area id="cache3" coords="4 70"/>
                 </areaspec>
                 <programlisting><![CDATA[<cache 
     usage="transactional|read-write|nonstrict-read-write|read-only"
@@ -687,7 +715,21 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                             <literal>nonstrict-read-write</literal> o
                             <literal>read-only</literal>
                         </para>
-                    </callout>                   
+		</callout>                      <callout arearefs="cache2">
+			<para>
+				<literal>region</literal> (optional, defaults to the class or
+				collection role name) specifies the name of the second level cache 
+				region
+			</para>
+		</callout>                   
+		<callout arearefs="cache3">
+			<para>
+				<literal>include</literal> (optional, defaults to <literal>all</literal>) 
+				<literal>non-lazy</literal> specifies that properties of the entity mapped
+				with <literal>lazy="true"</literal> may not be cached when attribute-level
+				lazy fetching is enabled
+			</para>
+                    </callout>                  
                 </calloutlist>
             </programlistingco>
             

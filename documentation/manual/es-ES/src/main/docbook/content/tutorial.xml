@@ -19,6 +19,10 @@
             Michael Gloegl. Las bibliotecas de terceros que mencionamos son para JDK 1.4
             y 5.0. Podr&#x00ed;as necesitar otras para JDK 1.3.
         </para>
+	<para> UNTRANSLATED!!!
+		The source code for the tutorial is included in the distribution in the
+		<literal>doc/reference/tutorial/</literal> directory.
+	</para>
 
     </sect1>
     
@@ -785,18 +789,40 @@ else if (args[0].equals("list")) {
                 a la base de datosy poblar&#x00e1; los objetos <literal>Event</literal> con datos.
                 Puedes, por supuesto, crear consultas m&#x00e1;s complejas con HQL.
             </para>
-
-            <para>
-                Si ahora llamas a Ant con <literal>-Daction=list</literal>, debes ver los eventos
-                que has almacenado hasta ahora. Puede sorprenderte que esto no funcione, al menos
-                si has seguido este tutorial paso por paso; el resultado siempre estar&#x00e1;
-                vac&#x00ed;o. La razon de esto es la opci&#x00f3;n <literal>hbm2ddl.auto</literal>
-                en la configuraci&#x00f3;n de Hibernate: Hibernate recrear&#x00e1; la base de datos
-                en cada ejecuci&#x00f3;n. Deshabil&#x00ed;tala quitando la opci&#x00f3;n, y ver&#x00e1;s
-                resultados en tu listado despu&#x00e9;s que llames a la acci&#x00f3;n <literal>store</literal>
-                unas cuantas veces. La generaci&#x00f3;n y exportaci&#x00f3;n de esquema es &#x00fa;til
-                mayormente en testeo unitario.
+	    
+	    <para>
+		    Now, to execute and test all of this, follow these steps:
             </para>
+	    <itemizedlist>
+		    <listitem>
+			    <para>
+				    Run <literal>ant run -Daction=store</literal> to store something into the database
+				    and, of course, to generate the database schema before through hbm2ddl.
+			    </para>
+		    </listitem>
+		    <listitem>
+			    <para>
+				    Now disable hbm2ddl by commenting out the property in your <literal>hibernate.cfg.xml</literal>
+				    file. Usually you only leave it turned on in continous unit testing, but another
+				    run of hbm2ddl would <emphasis>drop</emphasis> everything you have stored - the
+				    <literal>create</literal> configuration setting actually translates into "drop all
+				    tables from the schema, then re-create all tables, when the SessionFactory is build".
+			    </para>
+		    </listitem>
+            </itemizedlist>
+	    <para>
+		    If you now call Ant with <literal>-Daction=list</literal>, you should see the events
+		    you have stored so far. You can of course also call the <literal>store</literal> action a few
+		    times more.
+	    </para>
+	    
+	    <para>
+		    Note: Most new Hibernate users fail at this point and we see questions about
+		    <emphasis>Table not found</emphasis> error messages regularly. However, if you follow the
+		    steps outlined above you will not have this problem, as hbm2ddl creates the database
+		    schema on the first run, and subsequent application restarts will use this schema. If
+		    you change the mapping and/or database schema, you have to re-enable hbm2ddl once again.
+	    </para>
 
         </sect2>
 
@@ -1119,11 +1145,25 @@ public void setEmailAddresses(Set emailAddresses) {
                 direcciones de email duplicadas por persona, que es exactamente la sem&#x00e1;ntica
                 que necesitamos para un conjunto en Java.
             </para>
-
+	    <programlisting><![CDATA[private void addEmailToPerson(Long personId, String emailAddress) {
+					     
+					     Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+					     session.beginTransaction();
+					     
+					     Person aPerson = (Person) session.load(Person.class, personId);
+					     
+					     // The getEmailAddresses() might trigger a lazy load of the collection
+					     aPerson.getEmailAddresses().add(emailAddress);
+					     
+					     session.getTransaction().commit();
+}]]></programlisting>
             <para>
                 Puedes ahora intentar y agregar elementos a esta colecci&#x00f3;n, al igual que
-                hicimos antes enlazando personas y eventos. Es el mismo c&#x00f3;digo en Java.
-            </para>
+		hicimos antes enlazando personas y eventos. Es el mismo c&#x00f3;digo en Java.</para><para>
+		This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the collection.
+		Hence, the call to its getter method will trigger an additional select to initialize
+		it, so we can add an element to it. Monitor the SQL log and try to optimize this with
+                an eager fetch.</para>
 
         </sect2>
 
@@ -1246,7 +1286,279 @@ public void removeFromEvent(Event event) {
             </para>
 -->
         </sect2>
-    </sect1>
+	<para>
+		Let's turn this into a small web application.
+        </para>    
+</sect1>
+
+<sect1 id="tutorial-webapp">
+	<title>Part 3 - The EventManager web application</title>
+	
+	<para>
+		A Hibernate web application uses <literal>Session</literal> and <literal>Transaction</literal>
+		almost like a standalone application. However, some common patterns are useful. We now write
+		an <literal>EventManagerServlet</literal>. This servlet can list all events stored in the
+		database, and it provides an HTML form to enter new events.
+	</para>
+	
+	<sect2 id="tutorial-webapp-servlet" revision="2">
+		<title>Writing the basic servlet</title>
+		
+		<para>
+			Create a new class in your source directory, in the <literal>events</literal>
+			package:
+		</para>
+		
+		<programlisting><![CDATA[package events;
+						 
+						 // Imports
+						 
+						 public class EventManagerServlet extends HttpServlet {
+						 
+						 // Servlet code
+						 }]]></programlisting>
+		
+		<para>
+			The servlet handles HTTP <literal>GET</literal> requests only, hence, the method
+			we implement is <literal>doGet()</literal>:
+		</para>
+		
+		<programlisting><![CDATA[protected void doGet(HttpServletRequest request,
+						   HttpServletResponse response)
+						   throws ServletException, IOException {
+						   
+						   SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy");
+						   
+						   try {
+						   // Begin unit of work
+						   HibernateUtil.getSessionFactory()
+						   .getCurrentSession().beginTransaction();
+						   
+						   // Process request and render page...
+						   
+						   // End unit of work
+						   HibernateUtil.getSessionFactory()
+						   .getCurrentSession().getTransaction().commit();
+						   
+						   } catch (Exception ex) {
+						   HibernateUtil.getSessionFactory()
+						   .getCurrentSession().getTransaction().rollback();
+						   throw new ServletException(ex);
+						   }
+						   
+						   }]]></programlisting>
+		
+		<para>
+			The pattern we are applying here is called <emphasis>session-per-request</emphasis>.
+			When a request hits the servlet, a new Hibernate <literal>Session</literal> is
+			opened through the first call to <literal>getCurrentSession()</literal> on the
+			<literal>SessionFactory</literal>. Then a database transaction is started&mdash;all
+			data access as to occur inside a transaction, no matter if data is read or written
+			(we don't use the auto-commit mode in applications).
+		</para>
+		
+		<para>
+			Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> for
+			every database operation. Use one Hibernate <literal>Session</literal> that is
+			scoped to the whole request. Use <literal>getCurrentSession()</literal>, so that
+			it is automatically bound to the current Java thread.
+		</para>
+		
+		<para>
+			Next, the possible actions of the request are processed and the response HTML
+			is rendered. We'll get to that part soon.
+		</para>
+		
+		<para>
+			Finally, the unit of work ends when processing and rendering is complete. If any
+			problem occured during processing or rendering, an exception will be thrown
+			and the database transaction rolled back. This completes the
+			<literal>session-per-request</literal> pattern. Instead of the transaction
+			demarcation code in every servlet you could also write a servlet filter.
+			See the Hibernate website and Wiki for more information about this pattern,
+			called <emphasis>Open Session in View</emphasis>&mdash;you'll need it as soon
+			as you consider rendering your view in JSP, not in a servlet.
+		</para>
+		
+	</sect2>
+	
+	<sect2 id="tutorial-webapp-processing" revision="1">
+		<title>Processing and rendering</title>
+		
+		<para>
+			Let's implement the processing of the request and rendering of the page.
+		</para>
+		
+		<programlisting><![CDATA[// Write HTML header
+					    PrintWriter out = response.getWriter();
+					    out.println("<html><head><title>Event Manager</title></head><body>");
+							    
+							    // Handle actions
+							    if ( "store".equals(request.getParameter("action")) ) {
+							    
+							    String eventTitle = request.getParameter("eventTitle");
+							    String eventDate = request.getParameter("eventDate");
+							    
+							    if ( "".equals(eventTitle) || "".equals(eventDate) ) {
+							    out.println("<b><i>Please enter event title and date.</i></b>");
+							    } else {
+							    createAndStoreEvent(eventTitle, dateFormatter.parse(eventDate));
+							    out.println("<b><i>Added event.</i></b>");
+							    }
+							    }
+							    
+							    // Print page
+							    printEventForm(out);
+							    listEvents(out, dateFormatter);
+							    
+							    // Write HTML footer
+							    out.println("</body></html>");
+					    out.flush();
+					    out.close();]]></programlisting>
+				    
+				    <para>
+					    Granted, this coding style with a mix of Java and HTML would not scale
+					    in a more complex application&mdash;keep in mind that we are only illustrating
+					    basic Hibernate concepts in this tutorial. The code prints an HTML
+					    header and a footer. Inside this page, an HTML form for event entry and
+					    a list of all events in the database are printed. The first method is
+					    trivial and only outputs HTML:
+				    </para>
+				    
+				    <programlisting><![CDATA[private void printEventForm(PrintWriter out) {
+								     out.println("<h2>Add new event:</h2>");
+								     out.println("<form>");
+									     out.println("Title: <input name='eventTitle' length='50'/><br/>");
+									     out.println("Date (e.g. 24.12.2009): <input name='eventDate' length='10'/><br/>");
+									     out.println("<input type='submit' name='action' value='store'/>");
+									     out.println("</form>");
+								     }]]></programlisting>
+							     
+							     <para>
+								     The <literal>listEvents()</literal> method uses the Hibernate
+								     <literal>Session</literal> bound to the current thread to execute
+								     a query:
+							     </para>
+							     
+							     <programlisting><![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+										
+										List result = HibernateUtil.getSessionFactory()
+										.getCurrentSession().createCriteria(Event.class).list();
+										if (result.size() > 0) {
+								     out.println("<h2>Events in database:</h2>");
+								     out.println("<table border='1'>");
+									     out.println("<tr>");
+										out.println("<th>Event title</th>");
+										out.println("<th>Event date</th>");
+										out.println("</tr>");
+									for (Iterator it = result.iterator(); it.hasNext();) {
+									Event event = (Event) it.next();
+									out.println("<tr>");
+										out.println("<td>" + event.getTitle() + "</td>");
+										out.println("<td>" + dateFormatter.format(event.getDate()) + "</td>");
+										out.println("</tr>");
+									}
+									out.println("</table>");
+								}
+								}]]></programlisting>
+							
+							<para>
+								Finally, the <literal>store</literal> action is dispatched to the
+								<literal>createAndStoreEvent()</literal> method, which also uses
+								the <literal>Session</literal> of the current thread:
+							</para>
+							
+							<programlisting><![CDATA[protected void createAndStoreEvent(String title, Date theDate) {
+										Event theEvent = new Event();
+										theEvent.setTitle(title);
+										theEvent.setDate(theDate);
+										
+										HibernateUtil.getSessionFactory()
+										.getCurrentSession().save(theEvent);
+										}]]></programlisting>
+							
+							<para>
+								That's it, the servlet is complete. A request to the servlet will be processed
+								in a single <literal>Session</literal> and <literal>Transaction</literal>. As
+								earlier in the standalone application, Hibernate can automatically bind these
+								ojects to the current thread of execution. This gives you the freedom to layer
+								your code and access the <literal>SessionFactory</literal> in any way you like.
+								Usually you'd use a more sophisticated design and move the data access code
+								into data access objects (the DAO pattern). See the Hibernate Wiki for more
+								examples.
+							</para>
+							
+						</sect2>
+						
+						<sect2 id="tutorial-webapp-deploy">
+							<title>Deploying and testing</title>
+							
+							<para>
+								To deploy this application you have to create a web archive, a WAR. Add the
+								following Ant target to your <literal>build.xml</literal>:
+							</para>
+							
+							<programlisting><![CDATA[<target name="war" depends="compile">
+									<war destfile="hibernate-tutorial.war" webxml="web.xml">
+										<lib dir="${librarydir}">
+										<exclude name="jsdk*.jar"/>
+									</lib>
+									
+									<classes dir="${targetdir}"/>
+								</war>
+							</target>]]></programlisting>
+						
+						<para>
+							This target creates a file called <literal>hibernate-tutorial.war</literal>
+							in your project directory. It packages all libraries and the <literal>web.xml</literal>
+							descriptor, which is expected in the base directory of your project:
+						</para>
+						
+						<programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+							<web-app version="2.4"
+								 xmlns="http://java.sun.com/xml/ns/j2ee"
+								 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+								 xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+								
+								<servlet>
+									<servlet-name>Event Manager</servlet-name>
+									<servlet-class>events.EventManagerServlet</servlet-class>
+								</servlet>
+								
+								<servlet-mapping>
+									<servlet-name>Event Manager</servlet-name>
+									<url-pattern>/eventmanager</url-pattern>
+								</servlet-mapping>
+							</web-app>]]></programlisting>
+						
+						<para>
+							Before you compile and deploy the web application, note that an additional library
+							is required: <literal>jsdk.jar</literal>. This is the Java servlet development kit,
+							if you don't have this library already, get it from the Sun website and copy it to
+							your library directory. However, it will be only used for compliation and excluded
+							from the WAR package.
+						</para>
+						
+						<para>
+							To build and deploy call <literal>ant war</literal> in your project directory
+							and copy the <literal>hibernate-tutorial.war</literal> file into your Tomcat
+							<literal>webapp</literal> directory. If you don't have Tomcat installed, download
+							it and follow the installation instructions. You don't have to change any Tomcat
+							configuration to deploy this application though.
+						</para>
+						
+						<para>
+							Once deployed and Tomcat is running, access the application at
+							<literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>. Make
+							sure you watch the Tomcat log to see Hibernate initialize when the first
+							request hits your servlet (the static initializer in <literal>HibernateUtil</literal>
+							is called) and to get the detailed output if any exceptions occurs.
+						</para>
+						
+					</sect2>
+					
+				</sect1>
+				
 
     <sect1 id="tutorial-summary">
         <title>Summary</title>

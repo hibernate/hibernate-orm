@@ -1996,7 +1996,7 @@ public final class HbmBinder {
 			Iterator iter = subnode.elementIterator( "param" );
 			while ( iter.hasNext() ) {
 				Element childNode = (Element) iter.next();
-				params.setProperty( childNode.attributeValue( "name" ), childNode.getText() );
+				params.setProperty( childNode.attributeValue( "name" ), childNode.getTextTrim() );
 			}
 
 			model.setIdentifierGeneratorProperties( params );

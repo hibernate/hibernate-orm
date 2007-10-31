@@ -1,4 +1,4 @@
-//$Id: DiscriminatorTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: DiscriminatorTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.discriminator;
 
 import java.math.BigDecimal;
@@ -10,7 +10,9 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -171,6 +173,82 @@ public class DiscriminatorTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	public void testLoadSuperclassProxyPolymorphicAccess() {
+		Session s = openSession();
+		s.beginTransaction();
+		Employee e = new Employee();
+		e.setName( "Steve" );
+		e.setSex( 'M' );
+		e.setTitle( "grand poobah" );
+		s.save( e );
+		s.getTransaction().commit();
+		s.close();
 
+		s = openSession();
+		s.beginTransaction();
+		// load the superclass proxy.
+		Person pLoad = ( Person ) s.load( Person.class, new Long( e.getId() ) );
+		assertTrue( pLoad instanceof HibernateProxy);
+		Person pGet = ( Person ) s.get( Person.class, new Long( e.getId() ));
+		Person pQuery = ( Person ) s.createQuery( "from Person where id = :id" )
+				.setLong( "id", e.getId() )
+				.uniqueResult();
+		Person pCriteria = ( Person ) s.createCriteria( Person.class )
+				.add( Restrictions.idEq( new Long( e.getId() ) ) )
+				.uniqueResult();
+		// assert that executing the queries polymorphically returns the same proxy
+		assertSame( pLoad, pGet );
+		assertSame( pLoad, pQuery );
+		assertSame( pLoad, pCriteria );
+
+		// assert that the proxy is not an instance of Employee
+		assertFalse( pLoad instanceof Employee );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( e );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testLoadSuperclassProxyEvictPolymorphicAccess() {
+		Session s = openSession();
+		s.beginTransaction();
+		Employee e = new Employee();
+		e.setName( "Steve" );
+		e.setSex( 'M' );
+		e.setTitle( "grand poobah" );
+		s.save( e );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		// load the superclass proxy.
+		Person pLoad = ( Person ) s.load( Person.class, new Long( e.getId() ) );
+		assertTrue( pLoad instanceof HibernateProxy);
+		// evict the proxy
+		s.evict( pLoad );
+		Employee pGet = ( Employee ) s.get( Person.class, new Long( e.getId() ));
+		Employee pQuery = ( Employee ) s.createQuery( "from Person where id = :id" )
+				.setLong( "id", e.getId() )
+				.uniqueResult();
+		Employee pCriteria = ( Employee ) s.createCriteria( Person.class )
+				.add( Restrictions.idEq( new Long( e.getId() ) ) )
+				.uniqueResult();
+		// assert that executing the queries polymorphically returns the same Employee instance
+		assertSame( pGet, pQuery );
+		assertSame( pGet, pCriteria );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( e );
+		s.getTransaction().commit();
+		s.close();
+	}
 }
-

@@ -16,17 +16,16 @@
         <title>Programmatic configuration</title>
 
         <para>
-            An instance of <literal>org.hibernate.cfg.Configuration</literal>
-            represents an entire set of mappings of an application's Java types to an
-            SQL database. The <literal>Configuration</literal> is used to build an
-            (immutable) <literal>SessionFactory</literal>. The mappings are compiled
-            from various XML mapping files.
+            An instance of <classname>org.hibernate.cfg.Configuration</classname> represents an entire set of mappings
+            of an application's Java types to an SQL database. The <classname>org.hibernate.cfg.Configuration</classname>
+            is used to build an (immutable) <interfacename>org.hibernate.SessionFactory</interfacename>. The mappings
+            are compiled from various XML mapping files.
         </para>
 
         <para>
-            You may obtain a <literal>Configuration</literal> instance by instantiating 
-            it directly and specifying XML mapping documents. If the mapping files are
-            in the classpath, use <literal>addResource()</literal>:
+            You may obtain a <classname>org.hibernate.cfg.Configuration</classname> instance by instantiating
+            it directly and specifying XML mapping documents. If the mapping files are in the classpath,
+            use <literal>addResource()</literal>:
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration()
@@ -43,14 +42,13 @@
     .addClass(org.hibernate.auction.Bid.class);]]></programlisting>
 
         <para>
-            Then Hibernate will look for mapping files named
-            <literal>/org/hibernate/auction/Item.hbm.xml</literal> and
-            <literal>/org/hibernate/auction/Bid.hbm.xml</literal> in the classpath.
-            This approach eliminates any hardcoded filenames.
+            Then Hibernate will look for mapping files named <filename>/org/hibernate/auction/Item.hbm.xml</filename>
+            and <filename>/org/hibernate/auction/Bid.hbm.xml</filename> in the classpath.  This approach eliminates any
+            hardcoded filenames.
         </para>
         
         <para>
-            A <literal>Configuration</literal> also allows you to specify configuration
+            A <classname>org.hibernate.cfg.Configuration</classname> also allows you to specify configuration
             properties:
         </para>
 
@@ -69,20 +67,18 @@
         <orderedlist spacing="compact">
             <listitem>
                 <para>
-                    Pass an instance of <literal>java.util.Properties</literal> to
+                    Pass an instance of <classname>java.util.Properties</classname> to
                     <literal>Configuration.setProperties()</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Place <literal>hibernate.properties</literal> in a root directory 
-                    of the classpath.
+                    Place a file named <filename>hibernate.properties</filename> in a root directory of the classpath.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    Set <literal>System</literal> properties using
-                    <literal>java -Dproperty=value</literal>.
+                    Set <literal>System</literal> properties using <literal>java -Dproperty=value</literal>.
                 </para>
             </listitem>
             <listitem>
@@ -94,12 +90,11 @@
         </orderedlist>
 
         <para>
-            <literal>hibernate.properties</literal> is the easiest approach if you
-            want to get started quickly.
+            <filename>hibernate.properties</filename> is the easiest approach if you want to get started quickly.
         </para>
 
         <para>
-            The <literal>Configuration</literal> is intended as a startup-time object, 
+            The <classname>org.hibernate.cfg.Configuration</classname> is intended as a startup-time object,
             to be discarded once a <literal>SessionFactory</literal> is created.
         </para>
 
@@ -109,8 +104,8 @@
         <title>Obtaining a SessionFactory</title>
 
         <para>
-            When all mappings have been parsed by the <literal>Configuration</literal>, 
-            the application must obtain a factory for <literal>Session</literal> instances. 
+            When all mappings have been parsed by the <classname>org.hibernate.cfg.Configuration</classname>,
+            the application must obtain a factory for <interfacename>org.hibernate.Session</interfacename> instances.
             This factory is intended to be shared by all application threads:
         </para>
 
@@ -118,7 +113,7 @@
 
         <para>
             Hibernate does allow your application to instantiate more than one
-            <literal>SessionFactory</literal>. This is useful if you are using more than 
+            <interfacename>org.hibernate.SessionFactory</interfacename>. This is useful if you are using more than
             one database.
         </para>
 
@@ -128,27 +123,26 @@
         <title>JDBC connections</title>
 
         <para>
-            Usually, you want to have the <literal>SessionFactory</literal> create and pool JDBC 
-            connections for you. If you take this approach, opening a <literal>Session</literal> 
+            Usually, you want to have the <interfacename>org.hibernate.SessionFactory</interfacename> create and pool
+            JDBC connections for you. If you take this approach, opening a <interfacename>org.hibernate.Session</interfacename>
             is as simple as:
         </para>
 
         <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
         
         <para>
-            As soon as you do something that requires access to the database, a JDBC connection
-            will be obtained from the pool.
+            As soon as you do something that requires access to the database, a JDBC connection will be obtained from
+            the pool.
         </para>
 
         <para>
-            For this to work, we need to pass some JDBC connection properties to Hibernate.
-            All Hibernate property names and semantics are defined on the class 
-            <literal>org.hibernate.cfg.Environment</literal>. We will now describe the most
-            important settings for JDBC connection configuration.
+            For this to work, we need to pass some JDBC connection properties to Hibernate. All Hibernate property
+            names and semantics are defined on the class <classname>org.hibernate.cfg.Environment</classname>. We will
+            now describe the most important settings for JDBC connection configuration.
         </para>
 
         <para>
-            Hibernate will obtain (and pool) connections using <literal>java.sql.DriverManager</literal> 
+            Hibernate will obtain (and pool) connections using <classname>java.sql.DriverManager</classname>
             if you set the following properties:
         </para>
 
@@ -166,7 +160,7 @@
             <tbody>
             <row>
                 <entry>
-                    <literal>hibernate.connection.driver_class</literal>
+                    <property>hibernate.connection.driver_class</property>
                 </entry>
                 <entry>
                     <emphasis>JDBC driver class</emphasis>
@@ -174,7 +168,7 @@
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.url</literal>
+                    <property>hibernate.connection.url</property>
                 </entry>
                 <entry>
                     <emphasis>JDBC URL</emphasis>
@@ -182,7 +176,7 @@
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.username</literal>
+                    <property>hibernate.connection.username</property>
                 </entry>
                 <entry>
                     <emphasis>database user</emphasis>
@@ -190,7 +184,7 @@
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.password</literal>
+                    <property>hibernate.connection.password</property>
                 </entry>
                 <entry>
                     <emphasis>database user password</emphasis>
@@ -198,7 +192,7 @@
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.pool_size</literal>
+                    <property>hibernate.connection.pool_size</property>
                 </entry>
                 <entry>
                     <emphasis>maximum number of pooled connections</emphasis>
@@ -213,22 +207,21 @@
             It is intended to help you get started and is <emphasis>not intended for use 
             in a production system</emphasis> or even for performance testing. You should
             use a third party pool for best performance and stability. Just replace the 
-            <literal>hibernate.connection.pool_size</literal> property with connection 
+            <property>hibernate.connection.pool_size</property> property with connection
             pool specific settings. This will turn off Hibernate's internal pool. For
             example, you might like to use C3P0.
         </para>
 
         <para>
-            C3P0 is an open source JDBC connection pool distributed along with 
-            Hibernate in the <literal>lib</literal> directory. Hibernate will use its
-            <literal>C3P0ConnectionProvider</literal> for connection pooling if you set 
-            <literal>hibernate.c3p0.*</literal> properties. If you'd like to use Proxool
-            refer to the packaged <literal>hibernate.properties</literal> and the Hibernate
-            web site for more information.
+            C3P0 is an open source JDBC connection pool distributed along with Hibernate in the <filename>lib</filename>
+            directory. Hibernate will use its <classname>org.hibernate.connection.C3P0ConnectionProvider</classname>
+            for connection pooling if you set <property>hibernate.c3p0.*</property> properties. If you'd like to use Proxool
+            refer to the packaged <filename>hibernate.properties</filename> and the Hibernate web site for more
+            information.
         </para>
 
         <para>
-            Here is an example <literal>hibernate.properties</literal> file for C3P0:
+            Here is an example <filename>hibernate.properties</filename> file for C3P0:
         </para>
 
         <programlisting id="c3p0-configuration" revision="1"><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
@@ -242,10 +235,9 @@ hibernate.c3p0.max_statements=50
 hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 
         <para>
-            For use inside an application server, you should almost always configure 
-            Hibernate to obtain connections from an application server  
-            <literal>Datasource</literal> registered in JNDI. You'll need to set at
-            least one of the following properties:
+            For use inside an application server, you should almost always configure Hibernate to obtain connections
+            from an application server <interfacename>javax.sql.Datasource</interfacename> registered in JNDI. You'll
+            need to set at least one of the following properties:
         </para>
 
         <table frame="topbot">
@@ -262,7 +254,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <tbody>
             <row>
                 <entry>
-                    <literal>hibernate.connection.datasource</literal>
+                    <property>hibernate.connection.datasource</property>
                 </entry>
                 <entry>
                     <emphasis>datasource JNDI name</emphasis>
@@ -270,7 +262,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.jndi.url</literal>
+                    <property>hibernate.jndi.url</property>
                 </entry>
                 <entry>
                     <emphasis>URL of the JNDI provider</emphasis> (optional)
@@ -278,7 +270,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.jndi.class</literal>
+                    <property>hibernate.jndi.class</property>
                 </entry>
                 <entry>
                     <emphasis>class of the JNDI <literal>InitialContextFactory</literal></emphasis> (optional)
@@ -286,7 +278,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.username</literal>
+                    <property>hibernate.connection.username</property>
                 </entry>
                 <entry>
                     <emphasis>database user</emphasis> (optional)
@@ -294,7 +286,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </row>
             <row>
                 <entry>
-                    <literal>hibernate.connection.password</literal>
+                    <property>hibernate.connection.password</property>
                 </entry>
                 <entry>
                     <emphasis>database user password</emphasis> (optional)
@@ -305,8 +297,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </table>
 
         <para>
-            Here's an example <literal>hibernate.properties</literal> file for an
-            application server provided JNDI datasource:
+            Here's an example <filename>hibernate.properties</filename> file for an application server provided JNDI
+            datasource:
         </para>
 
         <programlisting><![CDATA[hibernate.connection.datasource = java:/comp/env/jdbc/test
@@ -322,15 +314,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </para>
 
         <para>
-            Arbitrary connection properties may be given by prepending
-            "<literal>hibernate.connection</literal>" to the property name. For example, you
-            may specify a <literal>charSet</literal> using <literal>hibernate.connection.charSet</literal>.
+            Arbitrary connection properties may be given by prepending "<literal>hibernate.connection</literal>" to the
+            connection property name. For example, you may specify a <property>charSet</property>
+            connection property using <property>hibernate.connection.charSet</property>.
         </para>
 
         <para>
             You may define your own plugin strategy for obtaining JDBC connections by implementing the
-            interface <literal>org.hibernate.connection.ConnectionProvider</literal>. You may select
-            a custom implementation by setting <literal>hibernate.connection.provider_class</literal>.
+            interface <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>, and specifying your
+            custom implementation via the <property>hibernate.connection.provider_class</property> property.
         </para>
 
     </sect1>
@@ -339,15 +331,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <title>Optional configuration properties</title>
         
         <para>
-            There are a number of other properties that control the behaviour of Hibernate
-            at runtime. All are optional and have reasonable default values.
+            There are a number of other properties that control the behaviour of Hibernate at runtime. All are optional
+            and have reasonable default values.
         </para>
 
         <para>
-        	<emphasis>Warning: some of these properties are "system-level" only.</emphasis>
-            System-level properties can be set only via <literal>java -Dproperty=value</literal> or
-            <literal>hibernate.properties</literal>. They may <emphasis>not</emphasis> be set by
-            the other techniques described above.
+        	<emphasis>Warning: some of these properties are "system-level" only.</emphasis>  System-level properties can
+            be set only via <literal>java -Dproperty=value</literal> or <filename>hibernate.properties</filename>. They
+            may <emphasis>not</emphasis> be set by the other techniques described above.
         </para>
 
         <table frame="topbot" id="configuration-optional-properties" revision="8">
@@ -364,21 +355,25 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <tbody>
                     <row>
                         <entry>
-                            <literal>hibernate.dialect</literal>
+                            <property>hibernate.dialect</property>
                         </entry>
                         <entry>
-                            The classname of a Hibernate <literal>Dialect</literal> which 
-                            allows Hibernate to generate SQL optimized for a particular
-                            relational database.
+                            The classname of a Hibernate <classname>org.hibernate.dialect.Dialect</classname> which
+                            allows Hibernate to generate SQL optimized for a particular relational database.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>full.classname.of.Dialect</literal>
+                            </para>
+                            <para>
+                                In most cases Hibernate will actually be able to chose the correct
+                                <classname>org.hibernate.dialect.Dialect</classname> implementation to use based on the
+                                <literal>JDBC metadata</literal> returned by the JDBC driver.
                             </para>
                         </entry>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.show_sql</literal>
+                            <property>hibernate.show_sql</property>
                         </entry>
                         <entry>
                             Write all SQL statements to console. This is an alternative
@@ -392,7 +387,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.format_sql</literal>
+                            <property>hibernate.format_sql</property>
                         </entry>
                         <entry>
                             Pretty print the SQL in the log and console.
@@ -404,7 +399,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.default_schema</literal>
+                            <property>hibernate.default_schema</property>
                         </entry>
                         <entry>
                             Qualify unqualified table names with the given schema/tablespace
@@ -417,7 +412,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.default_catalog</literal>
+                            <property>hibernate.default_catalog</property>
                         </entry>
                         <entry>
                             Qualify unqualified table names with the given catalog
@@ -430,10 +425,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.session_factory_name</literal>
+                            <property>hibernate.session_factory_name</property>
                         </entry>
                         <entry>
-                            The <literal>SessionFactory</literal> will be automatically
+                            The <interfacename>org.hibernate.SessionFactory</interfacename> will be automatically
                             bound to this name in JNDI after it has been created.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
@@ -443,7 +438,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.max_fetch_depth</literal>
+                            <property>hibernate.max_fetch_depth</property>
                         </entry>
                         <entry>
                             Set a maximum "depth" for the outer join fetch tree
@@ -458,7 +453,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.default_batch_fetch_size</literal>
+                            <property>hibernate.default_batch_fetch_size</property>
                         </entry>
                         <entry>
                             Set a default size for Hibernate batch fetching of associations.
@@ -471,7 +466,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.default_entity_mode</literal>
+                            <property>hibernate.default_entity_mode</property>
                         </entry>
                         <entry>
                             Set a default mode for entity representation for all sessions
@@ -484,7 +479,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.order_updates</literal>
+                            <property>hibernate.order_updates</property>
                         </entry>
                         <entry>
                             Force Hibernate to order SQL updates by the primary key value
@@ -498,7 +493,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.generate_statistics</literal>
+                            <property>hibernate.generate_statistics</property>
                         </entry>
                         <entry>
                             If enabled, Hibernate will collect statistics useful for
@@ -511,7 +506,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.use_identifier_rollback</literal>
+                            <property>hibernate.use_identifier_rollback</property>
                         </entry>
                         <entry>
                             If enabled, generated identifier properties will be
@@ -524,7 +519,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.use_sql_comments</literal>
+                            <property>hibernate.use_sql_comments</property>
                         </entry>
                         <entry>
                             If turned on, Hibernate will generate comments inside the SQL, for
@@ -555,7 +550,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <tbody>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.fetch_size</literal>
+                            <property>hibernate.jdbc.fetch_size</property>
                         </entry>
                         <entry>
                             A non-zero value determines the JDBC fetch size (calls
@@ -564,7 +559,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.batch_size</literal>
+                            <property>hibernate.jdbc.batch_size</property>
                         </entry>
                         <entry>
                             A non-zero value enables use of JDBC2 batch updates by Hibernate.
@@ -576,7 +571,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.batch_versioned_data</literal>
+                            <property>hibernate.jdbc.batch_versioned_data</property>
                         </entry>
                         <entry>
                             Set this property to <literal>true</literal> if your JDBC driver returns
@@ -591,10 +586,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.factory_class</literal>
+                            <property>hibernate.jdbc.factory_class</property>
                         </entry>
                         <entry>
-                            Select a custom <literal>Batcher</literal>. Most applications
+                            Select a custom <interfacename>org.hibernate.jdbc.Batcher</interfacename>. Most applications
                             will not need this configuration property.
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
@@ -604,7 +599,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.use_scrollable_resultset</literal>
+                            <property>hibernate.jdbc.use_scrollable_resultset</property>
                         </entry>
                         <entry>
                             Enables use of JDBC2 scrollable resultsets by Hibernate.
@@ -618,12 +613,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.use_streams_for_binary</literal>
+                            <property>hibernate.jdbc.use_streams_for_binary</property>
                         </entry>
                         <entry>
-                            Use streams when writing/reading <literal>binary</literal>
-                            or <literal>serializable</literal> types to/from JDBC
-                            (system-level property).
+                            Use streams when writing/reading <literal>binary</literal> or <literal>serializable</literal>
+                            types to/from JDBC. <emphasis>*system-level property*</emphasis>
                             <para>
                                 <emphasis role="strong">eg.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -632,7 +626,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jdbc.use_get_generated_keys</literal>
+                            <property>hibernate.jdbc.use_get_generated_keys</property>
                         </entry>
                         <entry>
                             Enable use of JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal>
@@ -648,11 +642,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.connection.provider_class</literal>
+                            <property>hibernate.connection.provider_class</property>
                         </entry>
                         <entry>
-                            The classname of a custom <literal>ConnectionProvider</literal> which provides
-                            JDBC connections to Hibernate.
+                            The classname of a custom <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>
+                            which provides JDBC connections to Hibernate.
                             <para>
                                 <emphasis role="strong">eg.</emphasis> 
                                 <literal>classname.of.ConnectionProvider</literal>
@@ -661,12 +655,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                     <entry>
-                        <literal>hibernate.connection.isolation</literal>
+                        <property>hibernate.connection.isolation</property>
                     </entry>
                     <entry>
-                        Set the JDBC transaction isolation level. Check
-                        <literal>java.sql.Connection</literal> for meaningful values but
-                        note that most databases do not support all isolation levels.
+                        Set the JDBC transaction isolation level. Check <interfacename>java.sql.Connection</interfacename>
+                        for meaningful values but note that most databases do not support all isolation levels and some
+                        define additional, non-standard isolations.
                         <para>
                             <emphasis role="strong">eg.</emphasis> 
                             <literal>1, 2, 4, 8</literal>
@@ -675,7 +669,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.connection.autocommit</literal>
+                            <property>hibernate.connection.autocommit</property>
                         </entry>
                         <entry>
                             Enables autocommit for JDBC pooled connections (not recommended).
@@ -687,7 +681,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.connection.release_mode</literal>
+                            <property>hibernate.connection.release_mode</property>
                         </entry>
                         <entry>
                             Specify when Hibernate should release JDBC connections. By default, 
@@ -716,17 +710,17 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                    <entry>
-                        <literal>hibernate.connection.</literal><emphasis>&lt;propertyName&gt;</emphasis>
-                    </entry>
-                    <entry>
-                        Pass the JDBC property <emphasis>&lt;propertyName&gt;</emphasis>
-                        to <literal>DriverManager.getConnection()</literal>.
-                    </entry>
+                        <entry>
+                            <property>hibernate.connection.</property><emphasis>&lt;propertyName&gt;</emphasis>
+                        </entry>
+                        <entry>
+                            Pass the JDBC property <emphasis>&lt;propertyName&gt;</emphasis>
+                            to <literal>DriverManager.getConnection()</literal>.
+                        </entry>
                     </row>
                     <row>
                         <entry>
-                            <literal>hibernate.jndi.</literal><emphasis>&lt;propertyName&gt;</emphasis>
+                            <property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>
                         </entry>
                         <entry>
                             Pass the property <emphasis>&lt;propertyName&gt;</emphasis> to

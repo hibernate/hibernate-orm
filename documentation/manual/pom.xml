@@ -13,14 +13,74 @@
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-manual</artifactId>
     <version>3.3.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jdocbook</packaging>
 
-    <name>Hibernate Manual (aggregator)</name>
-    <description>The Hibernate reference manual (aggregator)</description>
+    <name>Hibernate Manual</name>
+    <description>The Hibernate reference manual</description>
 
-    <modules>
-        <module>en-US</module>
-        <module>fr-FR</module>
-    </modules>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-jdocbook-plugin</artifactId>
+                <version>2.1.0-SNAPSHOT</version>
+		<extensions>true</extensions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-jdocbook-style</artifactId>
+                        <version>1.0.1-SNAPSHOT</version>
+                        <type>jdocbook-style</type>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <sourceDocumentName>Hibernate_Reference.xml</sourceDocumentName>
+                    <masterTranslation>en-US</masterTranslation>
+                    <translations>
+                        <translation>es-ES</translation>
+                        <translation>fr-FR</translation>
+                        <translation>ja-JP</translation>
+                        <translation>ko-KR</translation>
+                        <translation>pt-BR</translation>
+                        <translation>zh-CN</translation>
+                    </translations>
+                    <imageResource>
+                        <directory>src/main/docbook/en-US</directory>
+                        <excludes>
+                            <exclude>*.xml</exclude>
+                            <exclude>**/*.xml</exclude>
+                            <exclude>*.zargo</exclude>
+                            <exclude>**/*.zargo</exclude>
+                        </excludes>
+                    </imageResource>
+                    <formats>
+                        <format>
+                            <formatName>pdf</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
+                            <finalName>hibernate_reference.pdf</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                        <format>
+                            <formatName>html_single</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl</stylesheetResource>
+                            <finalName>index.html</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                        <format>
+                            <formatName>html</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl</stylesheetResource>
+                            <finalName>index.html</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                    </formats>
+                    <options>
+                        <xincludeSupported>true</xincludeSupported>
+                        <localeSeparator>-</localeSeparator>
+                        <useRelativeImageUris>true</useRelativeImageUris>
+                    </options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -120,7 +120,7 @@ public class OptimizerFactory {
 			}
 		}
 
-		public Serializable generate(AccessCallback callback) {
+		public synchronized Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue < 0 ) {
 				lastSourceValue = callback.getNextValue();
 				while ( lastSourceValue <= 0 ) {
@@ -168,7 +168,7 @@ public class OptimizerFactory {
 			}
 		}
 
-		public Serializable generate(AccessCallback callback) {
+		public synchronized Serializable generate(AccessCallback callback) {
 			if ( hiValue < 0 ) {
 				value = callback.getNextValue();
 				if ( value < 1 ) {

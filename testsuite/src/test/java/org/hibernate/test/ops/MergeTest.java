@@ -11,6 +11,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.NonUniqueObjectException;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.criterion.Projections;
 
@@ -25,6 +26,39 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( MergeTest.class );
+	}
+
+	public void testMergeStaleVersionFails() throws Exception {
+		Session s = openSession();
+        s.beginTransaction();
+		VersionedEntity entity = new VersionedEntity( "entity", "entity" );
+		s.persist( entity );
+		s.getTransaction().commit();
+		s.close();
+
+		// make the detached 'entity' reference stale...
+		s = openSession();
+        s.beginTransaction();
+		VersionedEntity entity2 = ( VersionedEntity ) s.get( VersionedEntity.class, entity.getId() );
+		entity2.setName( "entity-name" );
+		s.getTransaction().commit();
+		s.close();
+
+		// now try to reattch it
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.merge( entity );
+			s.getTransaction().commit();
+			fail( "was expecting staleness error" );
+		}
+		catch ( StaleObjectStateException expected ) {
+			// expected outcome...
+		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
 	}
 
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {

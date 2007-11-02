@@ -526,9 +526,12 @@ public class CustomMapTuplizerImpl
 
     </sect1>
 
-    <para>
-        TODO: Document user-extension framework in the property and proxy packages
-    </para>
+    <sect1 id="persistent-classes-extensions">
+        <title>Extentsions</title>
+        <para>
+            TODO: Document user-extension framework in the property and proxy packages
+        </para>
+    </sect1>
 
 </chapter>
 

@@ -1821,13 +1821,13 @@
                             <literal>entity-name</literal> (optional): The entity name of the associated class.
                         </para>
                     </callout>
-                </calloutlist>
                     <callout arearefs="manytoone16">
                         <para>
                             <literal>formula</literal> (optional): an SQL expression that defines the value for a
                             <emphasis>computed</emphasis> foreign key.
                         </para>
                     </callout>
+                </calloutlist>
             </programlistingco>
 
             <para>

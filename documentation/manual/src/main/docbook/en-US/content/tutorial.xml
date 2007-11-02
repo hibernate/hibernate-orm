@@ -1260,14 +1260,14 @@ public void removeFromEvent(Event event) {
 
         </sect2>
 
-        <para>
-            Let's turn this into a small web application.
-        </para>
-
     </sect1>
 
     <sect1 id="tutorial-webapp">
         <title>Part 3 - The EventManager web application</title>
+
+        <para>
+            Let's turn the following discussion into a small web application...
+        </para>
 
         <para>
             A Hibernate web application uses <literal>Session</literal> and <literal>Transaction</literal>

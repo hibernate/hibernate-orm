@@ -80,6 +80,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     <sect1 id="collections-mapping" revision="4">
         <title>Collection mappings</title>
 
+        <tip>
+            <para>
+                There are quite a range of mappings that can be generated for collections, covering
+                many common relational models. We suggest you experiment with the schema generation tool
+                to get a feeling for how various mapping declarations translate to database tables.
+            </para>
+        </tip>
+
         <para>
             The Hibernate mapping element used for mapping a collection depends upon
             the type of the interface. For example, a <literal>&lt;set&gt;</literal> 
@@ -408,12 +416,6 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </para>
             
         </sect2>
-
-        <para>
-            There are quite a range of mappings that can be generated for collections, covering 
-            many common relational models. We suggest you experiment with the schema generation tool 
-            to get a feeling for how various mapping declarations translate to database tables.
-        </para>
 
     <sect2 id="collections-ofvalues" revision="2">
         <title>Collections of values and many-to-many associations</title>

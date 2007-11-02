@@ -829,68 +829,78 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </para>
 
         </sect2>
-        
-        <para>
-            None of the cache providers support all of the cache concurrency strategies. The following table shows
-            which providers are compatible with which concurrency strategies.
-        </para>
 
-        <table frame="topbot">
-            <title>Cache Concurrency Strategy Support</title>
-            <tgroup cols='5' align='left' colsep='1' rowsep='1'>
-            <colspec colname='c1' colwidth="1*"/>
-            <colspec colname='c2' colwidth="1*"/>
-            <colspec colname='c3' colwidth="1*"/>
-            <colspec colname='c4' colwidth="1*"/>
-            <colspec colname='c5' colwidth="1*"/>
-            <thead>
-            <row>
-              <entry>Cache</entry>
-              <entry>read-only</entry>
-              <entry>nonstrict-read-write</entry>
-              <entry>read-write</entry>
-              <entry>transactional</entry>
-            </row>
-            </thead>
-            <tbody>
-            <row>
-                <entry>Hashtable (not intended for production use)</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry></entry>
-            </row>
-            <row>
-                <entry>EHCache</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry></entry>
-            </row>
-            <row>
-                <entry>OSCache</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry></entry>
-            </row>
-            <row>
-                <entry>SwarmCache</entry>
-                <entry>yes</entry>
-                <entry>yes</entry>
-                <entry></entry>
-                <entry></entry>
-            </row>
-            <row>
-                <entry>JBoss TreeCache</entry>
-                <entry>yes</entry>
-                <entry></entry>
-                <entry></entry>
-                <entry>yes</entry>
-            </row>
-            </tbody>
-            </tgroup>
-        </table>
+        <sect2 id="performance-cache-compat-matrix">
+            <title>Cache-provider/concurrency-strategy compatibility</title>
+
+            <important>
+                <para>
+                    None of the cache providers support all of the cache concurrency strategies.
+                </para>
+            </important>
+
+            <para>
+                The following table shows which providers are compatible with which concurrency strategies.
+            </para>
+
+            <table frame="topbot">
+                <title>Cache Concurrency Strategy Support</title>
+                <tgroup cols='5' align='left' colsep='1' rowsep='1'>
+                <colspec colname='c1' colwidth="1*"/>
+                <colspec colname='c2' colwidth="1*"/>
+                <colspec colname='c3' colwidth="1*"/>
+                <colspec colname='c4' colwidth="1*"/>
+                <colspec colname='c5' colwidth="1*"/>
+                <thead>
+                <row>
+                  <entry>Cache</entry>
+                  <entry>read-only</entry>
+                  <entry>nonstrict-read-write</entry>
+                  <entry>read-write</entry>
+                  <entry>transactional</entry>
+                </row>
+                </thead>
+                <tbody>
+                <row>
+                    <entry>Hashtable (not intended for production use)</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                </row>
+                <row>
+                    <entry>EHCache</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                </row>
+                <row>
+                    <entry>OSCache</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                </row>
+                <row>
+                    <entry>SwarmCache</entry>
+                    <entry>yes</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                    <entry></entry>
+                </row>
+                <row>
+                    <entry>JBoss TreeCache</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                    <entry></entry>
+                    <entry>yes</entry>
+                </row>
+                </tbody>
+                </tgroup>
+            </table>
+
+        </sect2>
 
     </sect1>
 

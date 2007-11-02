@@ -1,47 +1,34 @@
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=utf-8\n"
 
-#. Tag: title
-#: toolset_guide.xml:5
-#, no-c-format
+#: index.docbook:5
 msgid "Toolset Guide"
-msgstr "Guía del Conjunto de Herramientas"
+msgstr "Gu&#x00ed;a del Conjunto de Herramientas"
 
-#. Tag: para
-#: toolset_guide.xml:7
-#, no-c-format
+#: index.docbook:7
 msgid ""
 "Roundtrip engineering with Hibernate is possible using a set of Eclipse "
 "plugins, commandline tools, as well as Ant tasks."
 msgstr ""
-"La ingeniería de ida y vuelta con Hibernate es posible usando un conjunto de "
-"plugins de Eclipse, herramientas de línea de comandos, así como tareas de "
-"Ant."
+"La ingenier&#x00ed;a de ida y vuelta con Hibernate es posible usando un "
+"conjunto de plugins de Eclipse, herramientas de l&#x00ed;nea de comandos, "
+"as&#x00ed; como tareas de Ant."
 
-#. Tag: para
-#: toolset_guide.xml:12
-#, no-c-format
+#: index.docbook:12
 msgid ""
 "The <emphasis>Hibernate Tools</emphasis> currently include plugins for the "
 "Eclipse IDE as well as Ant tasks for reverse engineering of existing "
 "databases:"
 msgstr ""
 "Las <emphasis>Herramientas de Hibernate</emphasis> actualmente incluyen "
-"plugins para la IDE de Eclipse así como tareas de Ant para la ingeniería "
-"inversa de bases de datos existentes:"
+"plugins para la IDE de Eclipse as&#x00ed; como tareas de Ant para la "
+"ingenier&#x00ed;a inversa de bases de datos existentes:"
 
-#. Tag: para
-#: toolset_guide.xml:18
-#, no-c-format
+#: index.docbook:18
 msgid ""
 "<emphasis>Mapping Editor:</emphasis> An editor for Hibernate XML mapping "
 "files, supporting auto-completion and syntax highlighting. It also supports "
@@ -49,13 +36,12 @@ msgid ""
 "much more versatile than a normal XML editor."
 msgstr ""
 "<emphasis>Editor de Mapeo:</emphasis> Un editor de ficheros de mapeo XML, "
-"que soporta autocompleción y resaltado de sintáxis. Soporta también "
-"autocompleción semántica de nombres de clases y nombres de campos/"
-"propiedades, haciéndolo mucho más versátil que un editor de XML normal."
+"que soporta autocompleci&#x00f3;n y resaltado de sint&#x00e1;xis. Soporta "
+"tambi&#x00e9;n autocompleci&#x00f3;n sem&#x00e1;ntica de nombres de clases y "
+"nombres de campos/propiedades, haci&#x00e9;ndolo mucho m&#x00e1;s "
+"vers&#x00e1;til que un editor de XML normal."
 
-#. Tag: para
-#: toolset_guide.xml:23
-#, no-c-format
+#: index.docbook:23
 msgid ""
 "<emphasis>Console:</emphasis> The console is a new view in Eclipse. In "
 "addition to a tree overview of your console configurations, you also get an "
@@ -64,14 +50,12 @@ msgid ""
 "the result directly in Eclipse."
 msgstr ""
 "<emphasis>Consola:</emphasis> La consola es una nueva vista en Eclipse. "
-"Además de la vista de árbol de tus configuraciones de consola, tienes "
-"también una vista interactiva de tus clases persistentes y sus relaciones. "
-"La console te permite ejecutar consultas HQL contra tu base de datos y "
-"navegar el resultado directamente en Eclipse."
+"Adem&#x00e1;s de la vista de &#x00e1;rbol de tus configuraciones de consola, "
+"tienes tambi&#x00e9;n una vista interactiva de tus clases persistentes y sus "
+"relaciones. La console te permite ejecutar consultas HQL contra tu base de "
+"datos y navegar el resultado directamente en Eclipse."
 
-#. Tag: para
-#: toolset_guide.xml:30
-#, no-c-format
+#: index.docbook:30
 msgid ""
 "<emphasis>Development Wizards:</emphasis> Several wizards are provided with "
 "the Hibernate Eclipse tools; you can use a wizard to quickly generate "
@@ -82,30 +66,25 @@ msgid ""
 msgstr ""
 "<emphasis>Asistentes de Desarrollo:</emphasis> Se proveen muchos asistentes "
 "con las herramientas de Eclipse. Puedes usar un asistente para generar "
-"rápidamente ficheros de configuración de Hibernate (cfg.xml), o incluso "
-"puedes haceruna ingeniería inversa completa de un esquema de base de datos "
-"existente en ficheros de código de POJO y ficheros de mapeo de Hibernate. El "
-"asistente de ingeniería inversa soporta plantillas personalizables."
+"r&#x00e1;pidamente ficheros de configuraci&#x00f3;n de Hibernate (cfg.xml), "
+"o incluso puedes haceruna ingenier&#x00ed;a inversa completa de un esquema "
+"de base de datos existente en ficheros de c&#x00f3;digo de POJO y ficheros "
+"de mapeo de Hibernate. El asistente de ingenier&#x00ed;a inversa soporta "
+"plantillas personalizables."
 
-#. Tag: emphasis
-#: toolset_guide.xml:38
-#, no-c-format
+#: index.docbook:38
 msgid "Ant Tasks:"
 msgstr "Tareas de Ant:"
 
-#. Tag: para
-#: toolset_guide.xml:43
-#, no-c-format
+#: index.docbook:43
 msgid ""
 "Please refer to the <emphasis>Hibernate Tools</emphasis> package and it's "
 "documentation for more information."
 msgstr ""
-"Por favor refiérete al paquete <emphasis>Herramientas de Hibernate</"
-"emphasis> y su documentación para más información."
+"Por favor refi&#x00e9;rete al paquete <emphasis>Herramientas de Hibernate</"
+"emphasis> y su documentaci&#x00f3;n para m&#x00e1;s informaci&#x00f3;n."
 
-#. Tag: para
-#: toolset_guide.xml:48
-#, no-c-format
+#: index.docbook:48
 msgid ""
 "However, the Hibernate main package comes bundled with an integrated tool "
 "(it can even be used from \"inside\" Hibernate on-the-fly): "
@@ -113,18 +92,14 @@ msgid ""
 msgstr ""
 "Sin embargo, el paquete principal de Hibernate viene incluyendo una "
 "herramienta integrada (puede ser usada incluso \"dentro\" de Hibernate on-"
-"the-fly): <emphasis>SchemaExport</emphasis> también conocido como "
+"the-fly): <emphasis>SchemaExport</emphasis> tambi&#x00e9;n conocido como "
 "<literal>hbm2ddl</literal>."
 
-#. Tag: title
-#: toolset_guide.xml:55
-#, no-c-format
+#: index.docbook:55
 msgid "Automatic schema generation"
-msgstr "Generación automática de esquemas"
+msgstr "Generaci&#x00f3;n autom&#x00e1;tica de esquemas"
 
-#. Tag: para
-#: toolset_guide.xml:57
-#, no-c-format
+#: index.docbook:57
 msgid ""
 "DDL may be generated from your mapping files by a Hibernate utility. The "
 "generated schema includes referential integrity constraints (primary and "
@@ -133,37 +108,29 @@ msgid ""
 msgstr ""
 "Una utilidad de Hibernate puede generar DDL desde tus ficheros de mapeo. El "
 "esquema generado incluye restricciones de integridad referencial (claves "
-"primarias y foráneas) para las tablas de entidades y colecciones. Las tablas "
-"y secuencias también son creadas para los generadores de identificadores "
-"mapeados."
+"primarias y for&#x00e1;neas) para las tablas de entidades y colecciones. Las "
+"tablas y secuencias tambi&#x00e9;n son creadas para los generadores de "
+"identificadores mapeados."
 
-#. Tag: para
-#: toolset_guide.xml:64
-#, no-c-format
+#: index.docbook:64
 msgid ""
 "You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via "
 "the <literal>hibernate.dialect</literal> property when using this tool, as "
 "DDL is highly vendor specific."
 msgstr ""
 "<emphasis>Debes</emphasis> especificar un <literal>Dialecto</literal> SQL "
-"vía la propiedad <literal>hibernate.dialect</literal> al usar esta "
-"herramienta, ya que el DDL es altamente específico del vendedor."
+"v&#x00ed;a la propiedad <literal>hibernate.dialect</literal> al usar esta "
+"herramienta, ya que el DDL es altamente espec&#x00ed;fico del vendedor."
 
-#. Tag: para
-#: toolset_guide.xml:70
-#, no-c-format
+#: index.docbook:70
 msgid "First, customize your mapping files to improve the generated schema."
 msgstr "First, customize your mapping files to improve the generated schema."
 
-#. Tag: title
-#: toolset_guide.xml:75
-#, no-c-format
+#: index.docbook:75
 msgid "Customizing the schema"
 msgstr "Personalizando el esquema"
 
-#. Tag: para
-#: toolset_guide.xml:77
-#, no-c-format
+#: index.docbook:77
 msgid ""
 "Many Hibernate mapping elements define optional attributes named "
 "<literal>length</literal>, <literal>precision</literal> and <literal>scale</"
@@ -171,53 +138,45 @@ msgid ""
 "attribute."
 msgstr ""
 "Muchos elementos de mapeo de Hibernate definen un atributo opcional llamado "
-"<literal>length</literal>. Con este atributo puedes establecer el tamaño de "
-"una columna. (O, para tipos de datos numéricos/decimales, la precisión.)"
+"<literal>length</literal>. Con este atributo puedes establecer el "
+"tama&#x00f1;o de una columna. (O, para tipos de datos num&#x00e9;ricos/"
+"decimales, la precisi&#x00f3;n.)"
 
-#. Tag: programlisting
-#: toolset_guide.xml:84
-#, no-c-format
+#: index.docbook:84
 msgid "<![CDATA[<property name=\"zip\" length=\"5\"/>]]>"
-msgstr ""
+msgstr "<![CDATA[<property name=\"zip\" length=\"5\"/>]]>"
 
-#. Tag: programlisting
-#: toolset_guide.xml:85
-#, no-c-format
+#: index.docbook:85
 msgid "<![CDATA[<property name=\"balance\" precision=\"12\" scale=\"2\"/>]]>"
-msgstr ""
+msgstr "<![CDATA[<property name=\"balance\" precision=\"12\" scale=\"2\"/>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:87
-#, no-c-format
+#: index.docbook:87
 msgid ""
 "Some tags also accept a <literal>not-null</literal> attribute (for "
 "generating a <literal>NOT NULL</literal> constraint on table columns) and a "
 "<literal>unique</literal> attribute (for generating <literal>UNIQUE</"
 "literal> constraint on table columns)."
 msgstr ""
-"Algunas etiquetas también aceptan un atributo <literal>not-null</literal> "
-"(para generar una restricción <literal>NOT NULL</literal> en columnas de "
-"tablas) y y un atributo <literal>unique</literal> (para generar "
+"Algunas etiquetas tambi&#x00e9;n aceptan un atributo <literal>not-null</"
+"literal> (para generar una restricci&#x00f3;n <literal>NOT NULL</literal> en "
+"columnas de tablas) y y un atributo <literal>unique</literal> (para generar "
 "restricciones <literal>UNIQUE</literal> en columnas de tablas)."
 
-#. Tag: programlisting
-#: toolset_guide.xml:93
-#, no-c-format
+#: index.docbook:93
 msgid ""
 "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/>]]>"
 msgstr ""
+"<![CDATA[<many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/>]]>"
 
-#. Tag: programlisting
-#: toolset_guide.xml:95
-#, no-c-format
+#: index.docbook:95
 msgid ""
 "<![CDATA[<element column=\"serialNumber\" type=\"long\" not-null=\"true\" "
 "unique=\"true\"/>]]>"
 msgstr ""
+"<![CDATA[<element column=\"serialNumber\" type=\"long\" not-null=\"true\" "
+"unique=\"true\"/>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:97
-#, no-c-format
+#: index.docbook:97
 msgid ""
 "A <literal>unique-key</literal> attribute may be used to group columns in a "
 "single unique key constraint. Currently, the specified value of the "
@@ -231,18 +190,17 @@ msgstr ""
 "name the constraint in the generated DDL, only to group the columns in the "
 "mapping file."
 
-#. Tag: programlisting
-#: toolset_guide.xml:105
-#, no-c-format
+#: index.docbook:105
 msgid ""
 "<![CDATA[<many-to-one name=\"org\" column=\"orgId\" unique-key="
 "\"OrgEmployeeId\"/>\n"
 "<property name=\"employeeId\" unique-key=\"OrgEmployee\"/>]]>"
 msgstr ""
+"<![CDATA[<many-to-one name=\"org\" column=\"orgId\" unique-key="
+"\"OrgEmployeeId\"/>\n"
+"<property name=\"employeeId\" unique-key=\"OrgEmployee\"/>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:107
-#, no-c-format
+#: index.docbook:107
 msgid ""
 "An <literal>index</literal> attribute specifies the name of an index that "
 "will be created using the mapped column or columns. Multiple columns may be "
@@ -252,17 +210,15 @@ msgstr ""
 "will be created using the mapped column or columns. Multiple columns may be "
 "grouped into the same index, simply by specifying the same index name."
 
-#. Tag: programlisting
-#: toolset_guide.xml:113
-#, no-c-format
+#: index.docbook:113
 msgid ""
 "<![CDATA[<property name=\"lastName\" index=\"CustName\"/>\n"
 "<property name=\"firstName\" index=\"CustName\"/>]]>"
 msgstr ""
+"<![CDATA[<property name=\"lastName\" index=\"CustName\"/>\n"
+"        <property name=\"firstName\" index=\"CustName\"/>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:115
-#, no-c-format
+#: index.docbook:115
 msgid ""
 "A <literal>foreign-key</literal> attribute may be used to override the name "
 "of any generated foreign key constraint."
@@ -270,17 +226,15 @@ msgstr ""
 "A <literal>foreign-key</literal> attribute may be used to override the name "
 "of any generated foreign key constraint."
 
-#. Tag: programlisting
-#: toolset_guide.xml:120
-#, no-c-format
+#: index.docbook:120
 msgid ""
 "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar\"/"
 ">]]>"
 msgstr ""
+"<![CDATA[<many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar\"/"
+">]]>"
 
-#. Tag: para
-#: toolset_guide.xml:122
-#, no-c-format
+#: index.docbook:122
 msgid ""
 "Many mapping elements also accept a child <literal>&lt;column&gt;</literal> "
 "element. This is particularly useful for mapping multi-column types:"
@@ -288,9 +242,7 @@ msgstr ""
 "Many mapping elements also accept a child <literal>&lt;column&gt;</literal> "
 "element. This is particularly useful for mapping multi-column types:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:127
-#, no-c-format
+#: index.docbook:127
 msgid ""
 "<![CDATA[<property name=\"name\" type=\"my.customtypes.Name\"/>\n"
 "    <column name=\"last\" not-null=\"true\" index=\"bar_idx\" length=\"30\"/"
@@ -300,10 +252,15 @@ msgid ""
 "    <column name=\"initial\"/>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<property name=\"name\" type=\"my.customtypes.Name\"/>\n"
+"        <column name=\"last\" not-null=\"true\" index=\"bar_idx\" length=\"30"
+"\"/>\n"
+"        <column name=\"first\" not-null=\"true\" index=\"bar_idx\" length="
+"\"20\"/>\n"
+"        <column name=\"initial\"/>\n"
+"</property>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:129
-#, no-c-format
+#: index.docbook:129
 msgid ""
 "The <literal>default</literal> attribute lets you specify a default value "
 "for a column (you should assign the same value to the mapped property before "
@@ -313,27 +270,27 @@ msgstr ""
 "for a column (you should assign the same value to the mapped property before "
 "saving a new instance of the mapped class)."
 
-#. Tag: programlisting
-#: toolset_guide.xml:135
-#, no-c-format
+#: index.docbook:135
 msgid ""
 "<![CDATA[<property name=\"credits\" type=\"integer\" insert=\"false\">\n"
 "    <column name=\"credits\" default=\"10\"/>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<property name=\"credits\" type=\"integer\" insert=\"false\">\n"
+"                <column name=\"credits\" default=\"10\"/>\n"
+"        </property>]]>"
 
-#. Tag: programlisting
-#: toolset_guide.xml:137
-#, no-c-format
+#: index.docbook:137
 msgid ""
 "<![CDATA[<version name=\"version\" type=\"integer\" insert=\"false\">\n"
 "    <column name=\"version\" default=\"0\"/>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<version name=\"version\" type=\"integer\" insert=\"false\">\n"
+"                <column name=\"version\" default=\"0\"/>\n"
+"        </property>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:139
-#, no-c-format
+#: index.docbook:139
 msgid ""
 "The <literal>sql-type</literal> attribute allows the user to override the "
 "default mapping of a Hibernate type to SQL datatype."
@@ -341,191 +298,146 @@ msgstr ""
 "El atributo <literal>sql-type</literal> permite al usuario sobrescribir el "
 "mapeo por defecto de tipo Hibernate a tipo de datos SQL."
 
-#. Tag: programlisting
-#: toolset_guide.xml:144
-#, no-c-format
+#: index.docbook:144
 msgid ""
 "<![CDATA[<property name=\"balance\" type=\"float\">\n"
 "    <column name=\"balance\" sql-type=\"decimal(13,3)\"/>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<property name=\"balance\" type=\"float\">\n"
+"                            <column name=\"balance\" sql-type=\"decimal(13,3)"
+"\"/>\n"
+"</property>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:146
-#, no-c-format
+#: index.docbook:146
 msgid ""
 "The <literal>check</literal> attribute allows you to specify a check "
 "constraint."
 msgstr ""
-"El atributo <literal>check</literal> te permite especificar una comprobación "
-"de restricción."
+"El atributo <literal>check</literal> te permite especificar una "
+"comprobaci&#x00f3;n de restricci&#x00f3;n."
 
-#. Tag: programlisting
-#: toolset_guide.xml:150
-#, no-c-format
+#: index.docbook:150
 msgid ""
 "<![CDATA[<property name=\"foo\" type=\"integer\">\n"
 "    <column name=\"foo\" check=\"foo > 10\"/>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<property name=\"foo\" type=\"integer\">\n"
+"    <column name=\"foo\" check=\"foo > 10\"/>\n"
+"</property>]]>"
 
-#. Tag: programlisting
-#: toolset_guide.xml:152
-#, no-c-format
+#: index.docbook:152
 msgid ""
 "<![CDATA[<class name=\"Foo\" table=\"foos\" check=\"bar < 100.0\">\n"
 "    ...\n"
 "    <property name=\"bar\" type=\"float\"/>\n"
 "</class>]]>"
 msgstr ""
+"<![CDATA[<class name=\"Foo\" table=\"foos\" check=\"bar < 100.0\">\n"
+"    ...\n"
+"    <property name=\"bar\" type=\"float\"/>\n"
+"</class>]]>"
 
-#. Tag: title
-#: toolset_guide.xml:156
-#, no-c-format
+#: index.docbook:156
 msgid "Summary"
 msgstr "Resumen"
 
-#. Tag: entry
-#: toolset_guide.xml:163
-#, no-c-format
+#: index.docbook:163
 msgid "Attribute"
 msgstr "Atributo"
 
-#. Tag: entry
-#: toolset_guide.xml:164
-#, no-c-format
+#: index.docbook:164
 msgid "Values"
 msgstr "Valores"
 
-#. Tag: entry
-#: toolset_guide.xml:165
-#, no-c-format
+#: index.docbook:165
 msgid "Interpretation"
-msgstr "Interpretación"
+msgstr "Interpretaci&#x00f3;n"
 
-#. Tag: literal
-#: toolset_guide.xml:170
-#, no-c-format
+#: index.docbook:170
 msgid "length"
 msgstr "length"
 
-#. Tag: entry
-#: toolset_guide.xml:171 toolset_guide.xml:176 toolset_guide.xml:181
-#, no-c-format
+#: index.docbook:171, index.docbook:176, index.docbook:181
 msgid "number"
 msgstr "number"
 
-#. Tag: entry
-#: toolset_guide.xml:172
-#, no-c-format
+#: index.docbook:172
 msgid "column length"
-msgstr "largo de columna/precisión decimal"
+msgstr "largo de columna/precisi&#x00f3;n decimal"
 
-#. Tag: literal
-#: toolset_guide.xml:175
-#, no-c-format
+#: index.docbook:175
 msgid "precision"
 msgstr "precision"
 
-#. Tag: entry
-#: toolset_guide.xml:177
-#, no-c-format
+#: index.docbook:177
 msgid "column decimal precision"
 msgstr "column decimal precision"
 
-#. Tag: literal
-#: toolset_guide.xml:180
-#, no-c-format
+#: index.docbook:180
 msgid "scale"
 msgstr "scale"
 
-#. Tag: entry
-#: toolset_guide.xml:182
-#, no-c-format
+#: index.docbook:182
 msgid "column decimal scale"
 msgstr "column decimal scale"
 
-#. Tag: literal
-#: toolset_guide.xml:185
-#, no-c-format
+#: index.docbook:185
 msgid "not-null"
 msgstr "not-null"
 
-#. Tag: literal
-#: toolset_guide.xml:186 toolset_guide.xml:191
-#, no-c-format
+#: index.docbook:186, index.docbook:191
 msgid "true|false"
 msgstr "true|false"
 
-#. Tag: entry
-#: toolset_guide.xml:187
-#, no-c-format
+#: index.docbook:187
 msgid "specfies that the column should be non-nullable"
 msgstr "especifica que la columna debe ser no nulable"
 
-#. Tag: literal
-#: toolset_guide.xml:190
-#, no-c-format
+#: index.docbook:190
 msgid "unique"
 msgstr "unique"
 
-#. Tag: entry
-#: toolset_guide.xml:192
-#, no-c-format
+#: index.docbook:192
 msgid "specifies that the column should have a unique constraint"
-msgstr "especifica que la columna debe tener una restricción de unicidad"
+msgstr ""
+"especifica que la columna debe tener una restricci&#x00f3;n de unicidad"
 
-#. Tag: literal
-#: toolset_guide.xml:195
-#, no-c-format
+#: index.docbook:195
 msgid "index"
 msgstr "index"
 
-#. Tag: literal
-#: toolset_guide.xml:196
-#, no-c-format
+#: index.docbook:196
 msgid "index_name"
 msgstr "index_name"
 
-#. Tag: entry
-#: toolset_guide.xml:197
-#, no-c-format
+#: index.docbook:197
 msgid "specifies the name of a (multi-column) index"
-msgstr "especifica el nombre de un índice (multicolumna)"
+msgstr "especifica el nombre de un &#x00ed;ndice (multicolumna)"
 
-#. Tag: literal
-#: toolset_guide.xml:200
-#, no-c-format
+#: index.docbook:200
 msgid "unique-key"
 msgstr "unique-key"
 
-#. Tag: literal
-#: toolset_guide.xml:201
-#, no-c-format
+#: index.docbook:201
 msgid "unique_key_name"
 msgstr "unique_key_name"
 
-#. Tag: entry
-#: toolset_guide.xml:202
-#, no-c-format
+#: index.docbook:202
 msgid "specifies the name of a multi-column unique constraint"
-msgstr "especifica el nombre de una restricción de unicidad multicolumna"
+msgstr ""
+"especifica el nombre de una restricci&#x00f3;n de unicidad multicolumna"
 
-#. Tag: literal
-#: toolset_guide.xml:205
-#, no-c-format
+#: index.docbook:205
 msgid "foreign-key"
 msgstr "foreign-key"
 
-#. Tag: literal
-#: toolset_guide.xml:206
-#, no-c-format
+#: index.docbook:206
 msgid "foreign_key_name"
 msgstr "foreign_key_name"
 
-#. Tag: entry
-#: toolset_guide.xml:207
-#, fuzzy, no-c-format
+#: index.docbook:207
 msgid ""
 "specifies the name of the foreign key constraint generated for an "
 "association, for a <literal>&lt;one-to-one&gt;</literal>, <literal>&lt;many-"
@@ -533,70 +445,51 @@ msgid ""
 "to-many&gt;</literal> mapping element. Note that <literal>inverse=\"true\"</"
 "literal> sides will not be considered by <literal>SchemaExport</literal>."
 msgstr ""
-"especifica el nombre de la restricción de clave foránea generada por una "
-"asociación, úsalo e <placeholder-1/>, <placeholder-2/>, <placeholder-3/>, or "
-"<placeholder-4/> . Nota que los lados <placeholder-5/> no serán considerados "
-"por <placeholder-6/>."
+"especifica el nombre de la restricci&#x00f3;n de clave for&#x00e1;nea "
+"generada por una asociaci&#x00f3;n, &#x00fa;salo e <literal>&lt;one-to-"
+"one&gt;</literal>, <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;"
+"key&gt;</literal>, or <literal>&lt;many-to-many&gt;</literal> . Nota que los "
+"lados <literal>inverse=\"true\"</literal> no ser&#x00e1;n considerados por "
+"<literal>SchemaExport</literal>."
 
-#. Tag: literal
-#: toolset_guide.xml:217
-#, no-c-format
+#: index.docbook:217
 msgid "sql-type"
 msgstr "sql-type"
 
-#. Tag: literal
-#: toolset_guide.xml:218
-#, no-c-format
+#: index.docbook:218
 msgid "SQL column type"
 msgstr "column_type"
 
-#. Tag: entry
-#: toolset_guide.xml:219
-#, fuzzy, no-c-format
+#: index.docbook:219
 msgid ""
 "overrides the default column type (attribute of <literal>&lt;column&gt;</"
 "literal> element only)"
 msgstr ""
-"sobrescribe el tipo de columna por defecto (sólo atributo del elemento "
-"<placeholder-1/>)"
+"sobrescribe el tipo de columna por defecto (s&#x00f3;lo atributo del "
+"elemento <literal>&lt;column&gt;</literal>)"
 
-#. Tag: literal
-#: toolset_guide.xml:225
-#, no-c-format
+#: index.docbook:225
 msgid "default"
 msgstr "default"
 
-#. Tag: entry
-#: toolset_guide.xml:226 toolset_guide.xml:233
-#, fuzzy, no-c-format
+#: index.docbook:226, index.docbook:233
 msgid "SQL expression"
-msgstr ""
-"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"SQL expression\n"
-"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-"expresión SQL"
+msgstr "SQL expression"
 
-#. Tag: entry
-#: toolset_guide.xml:227
-#, no-c-format
+#: index.docbook:227
 msgid "specify a default value for the column"
 msgstr "specify a default value for the column"
 
-#. Tag: literal
-#: toolset_guide.xml:232
-#, no-c-format
+#: index.docbook:232
 msgid "check"
 msgstr "check"
 
-#. Tag: entry
-#: toolset_guide.xml:234
-#, no-c-format
+#: index.docbook:234
 msgid "create an SQL check constraint on either column or table"
-msgstr "crea una restricción de comprobación SQL en columna o tabla"
+msgstr ""
+"crea una restricci&#x00f3;n de comprobaci&#x00f3;n SQL en columna o tabla"
 
-#. Tag: para
-#: toolset_guide.xml:242
-#, no-c-format
+#: index.docbook:242
 msgid ""
 "The <literal>&lt;comment&gt;</literal> element allows you to specify "
 "comments for the generated schema."
@@ -604,19 +497,19 @@ msgstr ""
 "El elemento <literal>&lt;comment&gt;</literal> te permite especificar un "
 "comentario para el esquema generado."
 
-#. Tag: programlisting
-#: toolset_guide.xml:247
-#, no-c-format
+#: index.docbook:247
 msgid ""
 "<![CDATA[<class name=\"Customer\" table=\"CurCust\">\n"
 "    <comment>Current customers only</comment>\n"
 "    ...\n"
 "</class>]]>"
 msgstr ""
+"<![CDATA[<class name=\"Customer\" table=\"CurCust\">\n"
+"    <comment>Current customers only</comment>\n"
+"    ...\n"
+"</class>]]>"
 
-#. Tag: programlisting
-#: toolset_guide.xml:249
-#, no-c-format
+#: index.docbook:249
 msgid ""
 "<![CDATA[<property name=\"balance\">\n"
 "    <column name=\"bal\">\n"
@@ -624,212 +517,159 @@ msgid ""
 "    </column>\n"
 "</property>]]>"
 msgstr ""
+"<![CDATA[<property name=\"balance\">\n"
+"    <column name=\"bal\">\n"
+"        <comment>Balance in USD</comment>\n"
+"    </column>\n"
+"</property>]]>"
 
-#. Tag: para
-#: toolset_guide.xml:251
-#, no-c-format
+#: index.docbook:251
 msgid ""
 "This results in a <literal>comment on table</literal> or <literal>comment on "
 "column</literal> statement in the generated DDL (where supported)."
 msgstr ""
 "Esto resulta en una sentencia <literal>comment on table</literal> o "
-"<literal>comment on column</literal> en el DDL generado (donde esté "
+"<literal>comment on column</literal> en el DDL generado (donde est&#x00e9; "
 "soportado)."
 
-#. Tag: title
-#: toolset_guide.xml:260
-#, no-c-format
+#: index.docbook:260
 msgid "Running the tool"
 msgstr "Ejecutando la herramienta"
 
-#. Tag: para
-#: toolset_guide.xml:262
-#, no-c-format
+#: index.docbook:262
 msgid ""
 "The <literal>SchemaExport</literal> tool writes a DDL script to standard out "
 "and/or executes the DDL statements."
 msgstr ""
-"La herramienta <literal>SchemaExport</literal> escribe un guión DDL a la "
-"salida estándar y/o ejecuta las sentencias DDL."
+"La herramienta <literal>SchemaExport</literal> escribe un gui&#x00f3;n DDL a "
+"la salida est&#x00e1;ndar y/o ejecuta las sentencias DDL."
 
-#. Tag: para
-#: toolset_guide.xml:267
-#, no-c-format
+#: index.docbook:267
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
 "<literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options "
 "mapping_files</emphasis>"
 msgstr ""
+"<literal>java -cp </literal><emphasis>classpaths_de_hibernate</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> "
+"<emphasis>opciones ficheros_de_mapeo</emphasis>"
 
-#. Tag: title
-#: toolset_guide.xml:273
-#, no-c-format
+#: index.docbook:273
 msgid "<literal>SchemaExport</literal> Command Line Options"
-msgstr "Opciones de Línea de Comandos de <literal>SchemaExport</literal>"
+msgstr ""
+"Opciones de L&#x00ed;nea de Comandos de <literal>SchemaExport</literal>"
 
-#. Tag: entry
-#: toolset_guide.xml:279 toolset_guide.xml:429 toolset_guide.xml:498
-#, no-c-format
+#: index.docbook:279, index.docbook:429, index.docbook:498
 msgid "Option"
-msgstr "Opción"
+msgstr "Opci&#x00f3;n"
 
-#. Tag: entry
-#: toolset_guide.xml:280 toolset_guide.xml:367 toolset_guide.xml:430
-#: toolset_guide.xml:499
-#, no-c-format
+#: index.docbook:280, index.docbook:367, index.docbook:430, index.docbook:499
 msgid "Description"
-msgstr "Descripción"
+msgstr "Descripci&#x00f3;n"
 
-#. Tag: literal
-#: toolset_guide.xml:285 toolset_guide.xml:435
-#, no-c-format
+#: index.docbook:285, index.docbook:435
 msgid "--quiet"
 msgstr "--quiet"
 
-#. Tag: entry
-#: toolset_guide.xml:286 toolset_guide.xml:436
-#, no-c-format
+#: index.docbook:286, index.docbook:436
 msgid "don't output the script to stdout"
-msgstr "no enviar a salida estándar el guión"
+msgstr "no enviar a salida est&#x00e1;ndar el gui&#x00f3;n"
 
-#. Tag: literal
-#: toolset_guide.xml:289
-#, no-c-format
+#: index.docbook:289
 msgid "--drop"
 msgstr "--drop"
 
-#. Tag: entry
-#: toolset_guide.xml:290
-#, no-c-format
+#: index.docbook:290
 msgid "only drop the tables"
-msgstr "sólo desechar las tablas"
+msgstr "s&#x00f3;lo desechar las tablas"
 
-#. Tag: literal
-#: toolset_guide.xml:293
-#, no-c-format
+#: index.docbook:293
 msgid "--create"
 msgstr "--create"
 
-#. Tag: entry
-#: toolset_guide.xml:294
-#, no-c-format
+#: index.docbook:294
 msgid "only create the tables"
 msgstr "only create the tables"
 
-#. Tag: literal
-#: toolset_guide.xml:297 toolset_guide.xml:439
-#, no-c-format
+#: index.docbook:297, index.docbook:439
 msgid "--text"
 msgstr "--text"
 
-#. Tag: entry
-#: toolset_guide.xml:298
-#, no-c-format
+#: index.docbook:298
 msgid "don't export to the database"
 msgstr "no exportar a la base de datos"
 
-#. Tag: literal
-#: toolset_guide.xml:301
-#, no-c-format
+#: index.docbook:301
 msgid "--output=my_schema.ddl"
 msgstr "--output=my_schema.ddl"
 
-#. Tag: entry
-#: toolset_guide.xml:302
-#, no-c-format
+#: index.docbook:302
 msgid "output the ddl script to a file"
-msgstr "enviar la salida del guión ddl a un fichero"
+msgstr "enviar la salida del gui&#x00f3;n ddl a un fichero"
 
-#. Tag: literal
-#: toolset_guide.xml:305 toolset_guide.xml:443 toolset_guide.xml:504
-#, no-c-format
+#: index.docbook:305, index.docbook:443, index.docbook:504
 msgid "--naming=eg.MyNamingStrategy"
 msgstr "--naming=eg.MyNamingStrategy"
 
-#. Tag: entry
-#: toolset_guide.xml:306 toolset_guide.xml:444 toolset_guide.xml:505
-#, fuzzy, no-c-format
+#: index.docbook:306, index.docbook:444, index.docbook:505
 msgid "select a <literal>NamingStrategy</literal>"
-msgstr "en <literal>hibernate.properties</literal>"
+msgstr "select a <literal>NamingStrategy</literal>"
 
-#. Tag: literal
-#: toolset_guide.xml:309 toolset_guide.xml:451 toolset_guide.xml:512
-#, no-c-format
+#: index.docbook:309, index.docbook:451, index.docbook:512
 msgid "--config=hibernate.cfg.xml"
 msgstr "--config=hibernate.cfg.xml"
 
-#. Tag: entry
-#: toolset_guide.xml:310
-#, no-c-format
+#: index.docbook:310
 msgid "read Hibernate configuration from an XML file"
-msgstr "lee la configuración de Hibernate de un fichero XML"
+msgstr "lee la configuraci&#x00f3;n de Hibernate de un fichero XML"
 
-#. Tag: literal
-#: toolset_guide.xml:313 toolset_guide.xml:447 toolset_guide.xml:508
-#, no-c-format
+#: index.docbook:313, index.docbook:447, index.docbook:508
 msgid "--properties=hibernate.properties"
 msgstr "--properties=hibernate.properties"
 
-#. Tag: entry
-#: toolset_guide.xml:314 toolset_guide.xml:448 toolset_guide.xml:509
-#, no-c-format
+#: index.docbook:314, index.docbook:448, index.docbook:509
 msgid "read database properties from a file"
 msgstr "lee las propiedades de base de datos de un fichero"
 
-#. Tag: literal
-#: toolset_guide.xml:317
-#, no-c-format
+#: index.docbook:317
 msgid "--format"
 msgstr "--format"
 
-#. Tag: entry
-#: toolset_guide.xml:318
-#, no-c-format
+#: index.docbook:318
 msgid "format the generated SQL nicely in the script"
-msgstr "formatea agradablemente el SQL generado en el guión"
+msgstr "formatea agradablemente el SQL generado en el gui&#x00f3;n"
 
-#. Tag: literal
-#: toolset_guide.xml:321
-#, no-c-format
+#: index.docbook:321
 msgid "--delimiter=;"
 msgstr "--delimiter=x"
 
-#. Tag: entry
-#: toolset_guide.xml:322
-#, no-c-format
+#: index.docbook:322
 msgid "set an end of line delimiter for the script"
-msgstr "establece un delimitador de fin de línea para el guión"
+msgstr "establece un delimitador de fin de l&#x00ed;nea para el gui&#x00f3;n"
 
-#. Tag: para
-#: toolset_guide.xml:328
-#, no-c-format
+#: index.docbook:328
 msgid "You may even embed <literal>SchemaExport</literal> in your application:"
 msgstr ""
-"Puedes incluso encajar <literal>SchemaExport</literal> en tu aplicación:"
+"Puedes incluso encajar <literal>SchemaExport</literal> en tu aplicaci&#x00f3;"
+"n:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:332
-#, no-c-format
+#: index.docbook:332
 msgid ""
 "<![CDATA[Configuration cfg = ....;\n"
 "new SchemaExport(cfg).create(false, true);]]>"
 msgstr ""
+"<![CDATA[Configuration cfg = ....;\n"
+"new SchemaExport(cfg).create(false, true);]]>"
 
-#. Tag: title
-#: toolset_guide.xml:337
-#, no-c-format
+#: index.docbook:337
 msgid "Properties"
 msgstr "Propiedades"
 
-#. Tag: para
-#: toolset_guide.xml:339
-#, no-c-format
+#: index.docbook:339
 msgid "Database properties may be specified"
 msgstr "Las propiedades de base de datos pueden especificarse"
 
-#. Tag: para
-#: toolset_guide.xml:345
-#, no-c-format
+#: index.docbook:345
 msgid ""
 "as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</"
 "emphasis>"
@@ -837,115 +677,79 @@ msgstr ""
 "como propiedades de sistema con <literal>-D</literal><emphasis>&lt;"
 "property&gt;</emphasis>"
 
-#. Tag: para
-#: toolset_guide.xml:348
-#, no-c-format
+#: index.docbook:348
 msgid "in <literal>hibernate.properties</literal>"
 msgstr "en <literal>hibernate.properties</literal>"
 
-#. Tag: para
-#: toolset_guide.xml:351
-#, no-c-format
+#: index.docbook:351
 msgid "in a named properties file with <literal>--properties</literal>"
 msgstr ""
 "en un fichero de propiedades mencionado con <literal>--properties</literal>"
 
-#. Tag: para
-#: toolset_guide.xml:355
-#, no-c-format
+#: index.docbook:355
 msgid "The needed properties are:"
 msgstr "Las propiedades necesarias son:"
 
-#. Tag: title
-#: toolset_guide.xml:360
-#, no-c-format
+#: index.docbook:360
 msgid "SchemaExport Connection Properties"
-msgstr "Propiedades de Conexión de SchemaExport"
+msgstr "Propiedades de Conexi&#x00f3;n de SchemaExport"
 
-#. Tag: entry
-#: toolset_guide.xml:366
-#, no-c-format
+#: index.docbook:366
 msgid "Property Name"
 msgstr "Nombre de Propiedad"
 
-#. Tag: literal
-#: toolset_guide.xml:372
-#, no-c-format
+#: index.docbook:372
 msgid "hibernate.connection.driver_class"
 msgstr "hibernate.connection.driver_class"
 
-#. Tag: entry
-#: toolset_guide.xml:373
-#, no-c-format
+#: index.docbook:373
 msgid "jdbc driver class"
 msgstr "clase del driver jdbc"
 
-#. Tag: literal
-#: toolset_guide.xml:376
-#, no-c-format
+#: index.docbook:376
 msgid "hibernate.connection.url"
 msgstr "hibernate.connection.url"
 
-#. Tag: entry
-#: toolset_guide.xml:377
-#, no-c-format
+#: index.docbook:377
 msgid "jdbc url"
 msgstr "url de jdbc"
 
-#. Tag: literal
-#: toolset_guide.xml:380
-#, no-c-format
+#: index.docbook:380
 msgid "hibernate.connection.username"
 msgstr "hibernate.connection.username"
 
-#. Tag: entry
-#: toolset_guide.xml:381
-#, no-c-format
+#: index.docbook:381
 msgid "database user"
 msgstr "usuario de base de datos"
 
-#. Tag: literal
-#: toolset_guide.xml:384
-#, no-c-format
+#: index.docbook:384
 msgid "hibernate.connection.password"
 msgstr "hibernate.connection.password"
 
-#. Tag: entry
-#: toolset_guide.xml:385
-#, no-c-format
+#: index.docbook:385
 msgid "user password"
-msgstr "contraseña de usuario"
+msgstr "contrase&#x00f1;a de usuario"
 
-#. Tag: literal
-#: toolset_guide.xml:388
-#, no-c-format
+#: index.docbook:388
 msgid "hibernate.dialect"
 msgstr "hibernate.dialect"
 
-#. Tag: entry
-#: toolset_guide.xml:389
-#, no-c-format
+#: index.docbook:389
 msgid "dialect"
 msgstr "dialecto"
 
-#. Tag: title
-#: toolset_guide.xml:398
-#, no-c-format
+#: index.docbook:398
 msgid "Using Ant"
 msgstr "Usando Ant"
 
-#. Tag: para
-#: toolset_guide.xml:400
-#, no-c-format
+#: index.docbook:400
 msgid ""
 "You can call <literal>SchemaExport</literal> from your Ant build script:"
 msgstr ""
-"Puedes llamar a <literal>SchemaExport</literal> desde tu guión de "
-"construcción de Ant:"
+"Puedes llamar a <literal>SchemaExport</literal> desde tu gui&#x00f3;n de "
+"construcci&#x00f3;n de Ant:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:404
-#, no-c-format
+#: index.docbook:404
 msgid ""
 "<![CDATA[<target name=\"schemaexport\">\n"
 "    <taskdef name=\"schemaexport\"\n"
@@ -965,83 +769,86 @@ msgid ""
 "    </schemaexport>\n"
 "</target>]]>"
 msgstr ""
+"<![CDATA[<target name=\"schemaexport\">\n"
+"    <taskdef name=\"schemaexport\"\n"
+"        classname=\"org.hibernate.tool.hbm2ddl.SchemaExportTask\"\n"
+"        classpathref=\"class.path\"/>\n"
+"    \n"
+"    <schemaexport\n"
+"        properties=\"hibernate.properties\"\n"
+"        quiet=\"no\"\n"
+"        text=\"no\"\n"
+"        drop=\"no\"\n"
+"        delimiter=\";\"\n"
+"        output=\"schema-export.sql\">\n"
+"        <fileset dir=\"src\">\n"
+"            <include name=\"**/*.hbm.xml\"/>\n"
+"        </fileset>\n"
+"    </schemaexport>\n"
+"</target>]]>"
 
-#. Tag: title
-#: toolset_guide.xml:409
-#, no-c-format
+#: index.docbook:409
 msgid "Incremental schema updates"
 msgstr "Actualizaciones incrementales de esquema"
 
-#. Tag: para
-#: toolset_guide.xml:411
-#, no-c-format
+#: index.docbook:411
 msgid ""
 "The <literal>SchemaUpdate</literal> tool will update an existing schema with "
 "\"incremental\" changes. Note that <literal>SchemaUpdate</literal> depends "
 "heavily upon the JDBC metadata API, so it will not work with all JDBC "
 "drivers."
 msgstr ""
-"La herramienta <literal>SchemaUpdate</literal> actualizará un esquema "
+"La herramienta <literal>SchemaUpdate</literal> actualizar&#x00e1; un esquema "
 "existente con cambios \"incrementales\". Nota que <literal>SchemaUpdate</"
 "literal> depende fuertemente de la API de metadatos de JDBC, de modo que no "
-"funcionará con todos los drivers JDBC."
+"funcionar&#x00e1; con todos los drivers JDBC."
 
-#. Tag: para
-#: toolset_guide.xml:417
-#, no-c-format
+#: index.docbook:417
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
 "<literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options "
 "mapping_files</emphasis>"
 msgstr ""
+"<literal>java -cp </literal><emphasis>classpaths_de_hibernate</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> "
+"<emphasis>opciones ficheros_de_mapeo</emphasis>"
 
-#. Tag: title
-#: toolset_guide.xml:423
-#, no-c-format
+#: index.docbook:423
 msgid "<literal>SchemaUpdate</literal> Command Line Options"
-msgstr "Opciones de Línea de Comandos de <literal>SchemaUpdate</literal>"
+msgstr ""
+"Opciones de L&#x00ed;nea de Comandos de <literal>SchemaUpdate</literal>"
 
-#. Tag: entry
-#: toolset_guide.xml:440
-#, no-c-format
+#: index.docbook:440
 msgid "don't export the script to the database"
 msgstr "don't export the script to the database"
 
-#. Tag: entry
-#: toolset_guide.xml:452 toolset_guide.xml:513
-#, fuzzy, no-c-format
+#: index.docbook:452, index.docbook:513
 msgid "specify a <literal>.cfg.xml</literal> file"
-msgstr "specify a <placeholder-1/> file"
+msgstr "specify a <literal>.cfg.xml</literal> file"
 
-#. Tag: para
-#: toolset_guide.xml:458
-#, no-c-format
+#: index.docbook:458
 msgid "You may embed <literal>SchemaUpdate</literal> in your application:"
-msgstr "Puedes encajar <literal>SchemaUpdate</literal> en tu aplicación:"
+msgstr ""
+"Puedes encajar <literal>SchemaUpdate</literal> en tu aplicaci&#x00f3;n:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:462
-#, no-c-format
+#: index.docbook:462
 msgid ""
 "<![CDATA[Configuration cfg = ....;\n"
 "new SchemaUpdate(cfg).execute(false);]]>"
 msgstr ""
+"<![CDATA[Configuration cfg = ....;\n"
+"new SchemaUpdate(cfg).execute(false);]]>"
 
-#. Tag: title
-#: toolset_guide.xml:467
-#, no-c-format
+#: index.docbook:467
 msgid "Using Ant for incremental schema updates"
 msgstr "Usando Ant para actualizaciones incrementales de esquema"
 
-#. Tag: para
-#: toolset_guide.xml:469
-#, no-c-format
+#: index.docbook:469
 msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
-msgstr "Puedes llamar a <literal>SchemaUpdate</literal> desde el guión de Ant:"
+msgstr ""
+"Puedes llamar a <literal>SchemaUpdate</literal> desde el gui&#x00f3;n de Ant:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:473
-#, no-c-format
+#: index.docbook:473
 msgid ""
 "<![CDATA[<target name=\"schemaupdate\">\n"
 "    <taskdef name=\"schemaupdate\"\n"
@@ -1057,16 +864,25 @@ msgid ""
 "    </schemaupdate>\n"
 "</target>]]>"
 msgstr ""
+"<![CDATA[<target name=\"schemaupdate\">\n"
+"    <taskdef name=\"schemaupdate\"\n"
+"        classname=\"org.hibernate.tool.hbm2ddl.SchemaUpdateTask\"\n"
+"        classpathref=\"class.path\"/>\n"
+"    \n"
+"    <schemaupdate\n"
+"        properties=\"hibernate.properties\"\n"
+"        quiet=\"no\">\n"
+"        <fileset dir=\"src\">\n"
+"            <include name=\"**/*.hbm.xml\"/>\n"
+"        </fileset>\n"
+"    </schemaupdate>\n"
+"</target>]]>"
 
-#. Tag: title
-#: toolset_guide.xml:478
-#, no-c-format
+#: index.docbook:478
 msgid "Schema validation"
-msgstr "translator-credits"
+msgstr "Schema validation"
 
-#. Tag: para
-#: toolset_guide.xml:480
-#, no-c-format
+#: index.docbook:480
 msgid ""
 "The <literal>SchemaValidator</literal> tool will validate that the existing "
 "database schema \"matches\" your mapping documents. Note that "
@@ -1074,51 +890,48 @@ msgid ""
 "API, so it will not work with all JDBC drivers. This tool is extremely "
 "useful for testing."
 msgstr ""
+"The <literal>SchemaValidator</literal> tool will validate that the existing "
+"database schema \"matches\" your mapping documents. Note that "
+"<literal>SchemaValidator</literal> depends heavily upon the JDBC metadata "
+"API, so it will not work with all JDBC drivers. This tool is extremely "
+"useful for testing."
 
-#. Tag: para
-#: toolset_guide.xml:486
-#, no-c-format
+#: index.docbook:486
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
 "<literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> "
 "<emphasis>options mapping_files</emphasis>"
 msgstr ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> "
+"<emphasis>options mapping_files</emphasis>"
 
-#. Tag: title
-#: toolset_guide.xml:492
-#, no-c-format
+#: index.docbook:492
 msgid "<literal>SchemaValidator</literal> Command Line Options"
-msgstr ""
+msgstr "<literal>SchemaValidator</literal> Command Line Options"
 
-#. Tag: para
-#: toolset_guide.xml:519
-#, no-c-format
+#: index.docbook:519
 msgid "You may embed <literal>SchemaValidator</literal> in your application:"
-msgstr ""
+msgstr "You may embed <literal>SchemaValidator</literal> in your application:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:523
-#, no-c-format
+#: index.docbook:523
 msgid ""
 "<![CDATA[Configuration cfg = ....;\n"
 "new SchemaValidator(cfg).validate();]]>"
 msgstr ""
+"<![CDATA[Configuration cfg = ....;\n"
+"                                                       new SchemaValidator"
+"(cfg).validate();]]>"
 
-#. Tag: title
-#: toolset_guide.xml:528
-#, no-c-format
+#: index.docbook:528
 msgid "Using Ant for schema validation"
-msgstr ""
+msgstr "Using Ant for schema validation"
 
-#. Tag: para
-#: toolset_guide.xml:530
-#, no-c-format
+#: index.docbook:530
 msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
-msgstr ""
+msgstr "You can call <literal>SchemaValidator</literal> from the Ant script:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:534
-#, no-c-format
+#: index.docbook:534
 msgid ""
 "<![CDATA[<target name=\"schemavalidate\">\n"
 "    <taskdef name=\"schemavalidator\"\n"
@@ -1133,48 +946,24 @@ msgid ""
 "    </schemavalidator>\n"
 "</target>]]>"
 msgstr ""
+"<![CDATA[<target name=\"schemavalidate\">\n"
+"                                <taskdef name=\"schemavalidator\"\n"
+"                                         classname=\"org.hibernate.tool."
+"hbm2ddl.SchemaValidatorTask\"\n"
+"                                         classpathref=\"class.path\"/>\n"
+"                                \n"
+"                                <schemavalidator\n"
+"                                                properties=\"hibernate."
+"properties\">\n"
+"                                        <fileset dir=\"src\">\n"
+"                                                <include name=\"**/*.hbm.xml"
+"\"/>\n"
+"                                        </fileset>\n"
+"                                </schemavalidator>\n"
+"                        </target>]]>"
 
-#~ msgid "&lt;one-to-one&gt;"
-#~ msgstr "&lt;one-to-one&gt;"
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
 
-#~ msgid "&lt;many-to-one&gt;"
-#~ msgstr "&lt;many-to-one&gt;"
-
-#~ msgid "&lt;key&gt;"
-#~ msgstr "&lt;key&gt;"
-
-#~ msgid "&lt;many-to-many&gt;"
-#~ msgstr "&lt;many-to-many&gt;"
-
-#~ msgid "inverse=\"true\""
-#~ msgstr "inverse=\"true\""
-
-#~ msgid "SchemaExport"
-#~ msgstr "SchemaExport"
-
-#~ msgid "&lt;column&gt;"
-#~ msgstr "&lt;column&gt;"
-
-#~ msgid "java -cp"
-#~ msgstr "java -cp"
-
-#~ msgid "hibernate_classpaths"
-#~ msgstr "classpaths_de_hibernate"
-
-#~ msgid "org.hibernate.tool.hbm2ddl.SchemaExport"
-#~ msgstr "org.hibernate.tool.hbm2ddl.SchemaExport"
-
-#~ msgid "options mapping_files"
-#~ msgstr "opciones ficheros_de_mapeo"
-
-#~ msgid "NamingStrategy"
-#~ msgstr "NamingStrategy"
-
-#~ msgid "select a <placeholder-1/>"
-#~ msgstr "select a <placeholder-1/>"
-
-#~ msgid "org.hibernate.tool.hbm2ddl.SchemaUpdate"
-#~ msgstr "org.hibernate.tool.hbm2ddl.SchemaUpdate"
-
-#~ msgid ".cfg.xml"
-#~ msgstr ".cfg.xml"
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

@@ -1,39 +1,28 @@
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=utf-8\n"
 
-#. Tag: title
-#: persistent_classes.xml:5
-#, no-c-format
+#: index.docbook:5
 msgid "Persistent Classes"
 msgstr "Clases Persistentes"
 
-#. Tag: para
-#: persistent_classes.xml:7
-#, no-c-format
+#: index.docbook:7
 msgid ""
 "Persistent classes are classes in an application that implement the entities "
 "of the business problem (e.g. Customer and Order in an E-commerce "
 "application). Not all instances of a persistent class are considered to be "
 "in the persistent state - an instance may instead be transient or detached."
 msgstr ""
-"Clases presistentes son clases en una aplicación que implementan las "
+"Clases presistentes son clases en una aplicaci&#x00f3;n que implementan las "
 "entidades del problema de negocio (por ejemplo, Customer y Order en una "
-"aplicación de comercio electrónico). No todas las instancias de una clase "
-"persistente se considera que estén en el estado persistente, una instancia "
-"puede en cambio ser transitoria o estar separada."
+"aplicaci&#x00f3;n de comercio electr&#x00f3;nico). No todas las instancias "
+"de una clase persistente se considera que est&#x00e9;n en el estado "
+"persistente, una instancia puede en cambio ser transitoria o estar separada."
 
-#. Tag: para
-#: persistent_classes.xml:14
-#, no-c-format
+#: index.docbook:14
 msgid ""
 "Hibernate works best if these classes follow some simple rules, also known "
 "as the Plain Old Java Object (POJO) programming model. However, none of "
@@ -42,29 +31,24 @@ msgid ""
 "in other ways: using trees of <literal>Map</literal> instances, for example."
 msgstr ""
 "Hibernate funciona mejor si las clases siguen algunas simples reglas, "
-"también conocidas como el modelo de programación de Viejas Clases Java "
-"Planas (Plain Old Java Object o POJO). Sin embargo, ninguna de estas reglas "
-"son requerimientos rígidos. En cambio, Hibernate3 asume muy poco acerca de "
-"la naturaleza de tus objetos persistentes. Puedes expresar un modelo de "
-"dominio en otras formas: usando árboles de instancias de <literal>Map</"
-"literal>, por ejemplo."
+"tambi&#x00e9;n conocidas como el modelo de programaci&#x00f3;n de Viejas "
+"Clases Java Planas (Plain Old Java Object o POJO). Sin embargo, ninguna de "
+"estas reglas son requerimientos r&#x00ed;gidos. En cambio, Hibernate3 asume "
+"muy poco acerca de la naturaleza de tus objetos persistentes. Puedes "
+"expresar un modelo de dominio en otras formas: usando &#x00e1;rboles de "
+"instancias de <literal>Map</literal>, por ejemplo."
 
-#. Tag: title
-#: persistent_classes.xml:23
-#, no-c-format
+#: index.docbook:23
 msgid "A simple POJO example"
 msgstr "Un ejemplo simple de POJO"
 
-#. Tag: para
-#: persistent_classes.xml:25
-#, no-c-format
+#: index.docbook:25
 msgid "Most Java applications require a persistent class representing felines."
 msgstr ""
-"La mayoría de aplicaciones Java requieren una clase representando felinos."
+"La mayor&#x00ed;a de aplicaciones Java requieren una clase representando "
+"felinos."
 
-#. Tag: programlisting
-#: persistent_classes.xml:29
-#, no-c-format
+#: index.docbook:29
 msgid ""
 "<![CDATA[package eg;\n"
 "import java.util.Set;\n"
@@ -145,22 +129,94 @@ msgid ""
 "    }\n"
 "}]]>"
 msgstr ""
+"<![CDATA[package eg;\n"
+"import java.util.Set;\n"
+"import java.util.Date;\n"
+"\n"
+"public class Cat {\n"
+"    private Long id; // identifier\n"
+"\n"
+"    private Date birthdate;\n"
+"    private Color color;\n"
+"    private char sex;\n"
+"    private float weight;\n"
+"    private int litterId;\n"
+"\n"
+"    private Cat mother;\n"
+"    private Set kittens = new HashSet();\n"
+"\n"
+"    private void setId(Long id) {\n"
+"        this.id=id;\n"
+"    }\n"
+"    public Long getId() {\n"
+"        return id;\n"
+"    }\n"
+"\n"
+"    void setBirthdate(Date date) {\n"
+"        birthdate = date;\n"
+"    }\n"
+"    public Date getBirthdate() {\n"
+"        return birthdate;\n"
+"    }\n"
+"\n"
+"    void setWeight(float weight) {\n"
+"        this.weight = weight;\n"
+"    }\n"
+"    public float getWeight() {\n"
+"        return weight;\n"
+"    }\n"
+"\n"
+"    public Color getColor() {\n"
+"        return color;\n"
+"    }\n"
+"    void setColor(Color color) {\n"
+"        this.color = color;\n"
+"    }\n"
+"\n"
+"    void setSex(char sex) {\n"
+"        this.sex=sex;\n"
+"    }\n"
+"    public char getSex() {\n"
+"        return sex;\n"
+"    }\n"
+"\n"
+"    void setLitterId(int id) {\n"
+"        this.litterId = id;\n"
+"    }\n"
+"    public int getLitterId() {\n"
+"        return litterId;\n"
+"    }\n"
+"\n"
+"    void setMother(Cat mother) {\n"
+"        this.mother = mother;\n"
+"    }\n"
+"    public Cat getMother() {\n"
+"        return mother;\n"
+"    }\n"
+"    void setKittens(Set kittens) {\n"
+"        this.kittens = kittens;\n"
+"    }\n"
+"    public Set getKittens() {\n"
+"        return kittens;\n"
+"    }\n"
+"    \n"
+"    // addKitten not needed by Hibernate\n"
+"    public void addKitten(Cat kitten) {\n"
+"            kitten.setMother(this);\n"
+"        kitten.setLitterId( kittens.size() ); \n"
+"        kittens.add(kitten);\n"
+"    }\n"
+"}]]>"
 
-#. Tag: para
-#: persistent_classes.xml:31
-#, no-c-format
+#: index.docbook:31
 msgid "There are four main rules to follow here:"
-msgstr "Aquí hay cuatro reglas principales a seguir:"
+msgstr "Aqu&#x00ed; hay cuatro reglas principales a seguir:"
 
-#. Tag: title
-#: persistent_classes.xml:37
-#, no-c-format
+#: index.docbook:37
 msgid "Implement a no-argument constructor"
 msgstr "Implementa un constructor sin argumentos"
 
-#. Tag: para
-#: persistent_classes.xml:39
-#, no-c-format
+#: index.docbook:39
 msgid ""
 "<literal>Cat</literal> has a no-argument constructor. All persistent classes "
 "must have a default constructor (which may be non-public) so that Hibernate "
@@ -171,20 +227,17 @@ msgid ""
 msgstr ""
 "<literal>Cat</literal> tiene un contructor sin argumentos. Todas las clases "
 "persistentes deben tener un constructor por defecto (que puede no ser "
-"público) de modo que Hibernate pueda instanciarlas usando "
+"p&#x00fa;blico) de modo que Hibernate pueda instanciarlas usando "
 "<literal>Constructor.newInstance()</literal>. Recomendamos fuertemente tener "
 "un constructor por defecto con al menos visibilidad de <emphasis>package</"
-"emphasis> para la generación de proxies en tiempo de ejecución en Hibernate."
+"emphasis> para la generaci&#x00f3;n de proxies en tiempo de ejecuci&#x00f3;n "
+"en Hibernate."
 
-#. Tag: title
-#: persistent_classes.xml:49
-#, no-c-format
+#: index.docbook:49
 msgid "Provide an identifier property (optional)"
 msgstr "Provee una propiedad identificadora (opcional)"
 
-#. Tag: para
-#: persistent_classes.xml:51
-#, no-c-format
+#: index.docbook:51
 msgid ""
 "<literal>Cat</literal> has a property called <literal>id</literal>. This "
 "property maps to the primary key column of a database table. The property "
@@ -196,16 +249,15 @@ msgid ""
 msgstr ""
 "<literal>Cat</literal> tiene una propiedad llamada <literal>id</literal>. "
 "Esta propiedad mapea a la columna clave primaria de la tabla de base de "
-"datos. La propiedad podría llamarse cualquierCosa, y su tipo podría haber "
-"sido cualquier tipo primitivo, cualquier tipo de \"envoltura\" primitivo, "
-"<literal>java.lang.String</literal> o <literal>java.util.Date</literal>. (Si "
-"tu tabla de base de datos heredada tiene claves compuestas, puedes incluso "
-"usar una clase definida por el usuario con propiedades de estos tipos, ver "
-"la sección sobre identificadores compuestos luego.)"
+"datos. La propiedad podr&#x00ed;a llamarse cualquierCosa, y su tipo "
+"podr&#x00ed;a haber sido cualquier tipo primitivo, cualquier tipo de "
+"\"envoltura\" primitivo, <literal>java.lang.String</literal> o <literal>java."
+"util.Date</literal>. (Si tu tabla de base de datos heredada tiene claves "
+"compuestas, puedes incluso usar una clase definida por el usuario con "
+"propiedades de estos tipos, ver la secci&#x00f3;n sobre identificadores "
+"compuestos luego.)"
 
-#. Tag: para
-#: persistent_classes.xml:60
-#, no-c-format
+#: index.docbook:60
 msgid ""
 "The identifier property is strictly optional. You can leave them off and let "
 "Hibernate keep track of object identifiers internally. We do not recommend "
@@ -215,106 +267,85 @@ msgstr ""
 "dejar que Hibernate siga internamente la pista de los identificadores del "
 "objeto. Sin embargo, no recomendamos esto."
 
-#. Tag: para
-#: persistent_classes.xml:65
-#, no-c-format
+#: index.docbook:65
 msgid ""
 "In fact, some functionality is available only to classes which declare an "
 "identifier property:"
 msgstr ""
-"De hecho, alguna funcionalidad está disponible sólo para clases que declaran "
-"una propiedad identificadora:"
+"De hecho, alguna funcionalidad est&#x00e1; disponible s&#x00f3;lo para "
+"clases que declaran una propiedad identificadora:"
 
-#. Tag: para
-#: persistent_classes.xml:72
-#, fuzzy, no-c-format
+#: index.docbook:72
 msgid ""
 "Transitive reattachment for detached objects (cascade update or cascade "
 "merge) - see"
 msgstr ""
-"Reasociación transitiva de objetos separados (actualizaciones o fusiones en "
-"cascada) - ver <xref linkend=\"objectstate-transitive\"/>"
+"Reasociaci&#x00f3;n transitiva de objetos separados (actualizaciones o "
+"fusiones en cascada) - ver"
 
-#. Tag: literal
-#: persistent_classes.xml:79
-#, no-c-format
+#: index.docbook:79
 msgid "Session.saveOrUpdate()"
 msgstr "Session.saveOrUpdate()"
 
-#. Tag: literal
-#: persistent_classes.xml:84
-#, no-c-format
+#: index.docbook:84
 msgid "Session.merge()"
 msgstr "Session.merge()"
 
-#. Tag: para
-#: persistent_classes.xml:89
-#, no-c-format
+#: index.docbook:89
 msgid ""
 "We recommend you declare consistently-named identifier properties on "
 "persistent classes. We further recommend that you use a nullable (ie. non-"
 "primitive) type."
 msgstr ""
 "Recomendamos que declares propiedades identificadoras nombradas-"
-"consistentemente en clases persistentes. Mas aún, recomendamos que uses un "
-"tipo nulable (es decir, no primitivo)."
+"consistentemente en clases persistentes. Mas a&#x00fa;n, recomendamos que "
+"uses un tipo nulable (es decir, no primitivo)."
 
-#. Tag: title
-#: persistent_classes.xml:96
-#, no-c-format
+#: index.docbook:96
 msgid "Prefer non-final classes (optional)"
 msgstr "Prefiere las clases no finales (opcional)"
 
-#. Tag: para
-#: persistent_classes.xml:97
-#, no-c-format
+#: index.docbook:97
 msgid ""
 "A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon "
 "the persistent class being either non-final, or the implementation of an "
 "interface that declares all public methods."
 msgstr ""
 "Un aspecto central de Hibernate, <emphasis>proxies</emphasis>, depende de "
-"que las clases persistentes sean ya no finales, o sean ya la implementación "
-"de una interface que declare todos los métodos públicos."
+"que las clases persistentes sean ya no finales, o sean ya la "
+"implementaci&#x00f3;n de una interface que declare todos los m&#x00e9;todos "
+"p&#x00fa;blicos."
 
-#. Tag: para
-#: persistent_classes.xml:102
-#, no-c-format
+#: index.docbook:102
 msgid ""
 "You can persist <literal>final</literal> classes that do not implement an "
 "interface with Hibernate, but you won't be able to use proxies for lazy "
 "association fetching - which will limit your options for performance tuning."
 msgstr ""
 "Puedes persistir con Hibernate clases <literal>final</literal> que no "
-"implementen una interface, pero no serás capaz de usar proxies para "
-"recuperación perezosa de asociaciones, lo que limitará tus opciones para "
-"afinar el rendimiento."
+"implementen una interface, pero no ser&#x00e1;s capaz de usar proxies para "
+"recuperaci&#x00f3;n perezosa de asociaciones, lo que limitar&#x00e1; tus "
+"opciones para afinar el rendimiento."
 
-#. Tag: para
-#: persistent_classes.xml:107
-#, no-c-format
+#: index.docbook:107
 msgid ""
 "You should also avoid declaring <literal>public final</literal> methods on "
 "the non-final classes. If you want to use a class with a <literal>public "
 "final</literal> method, you must explicitly disable proxying by setting "
 "<literal>lazy=\"false\"</literal>."
 msgstr ""
-"Debes también evitar declarar métodos <literal>public final</literal> en "
-"clases non-final. Si quieres usar una clase con un método <literal>public "
-"final</literal>, debes deshabilitar explícitamente el uso de proxies "
-"estableciendo <literal>lazy=\"false\"</literal>."
+"Debes tambi&#x00e9;n evitar declarar m&#x00e9;todos <literal>public final</"
+"literal> en clases non-final. Si quieres usar una clase con un m&#x00e9;todo "
+"<literal>public final</literal>, debes deshabilitar expl&#x00ed;citamente el "
+"uso de proxies estableciendo <literal>lazy=\"false\"</literal>."
 
-#. Tag: title
-#: persistent_classes.xml:115
-#, no-c-format
+#: index.docbook:115
 msgid "Declare accessors and mutators for persistent fields (optional)"
 msgstr ""
-"Declara métodos de acceso y modificación para los campos persistentes "
-"(opcional)"
+"Declara m&#x00e9;todos de acceso y modificaci&#x00f3;n para los campos "
+"persistentes (opcional)"
 
-#. Tag: para
-#: persistent_classes.xml:117
-#, no-c-format
+#: index.docbook:117
 msgid ""
 "<literal>Cat</literal> declares accessor methods for all its persistent "
 "fields. Many other ORM tools directly persist instance variables. We believe "
@@ -325,36 +356,30 @@ msgid ""
 "literal>. You may switch to direct field access for particular properties, "
 "if needed."
 msgstr ""
-"<literal>Cat</literal> declara métodos de acceso para todos sus campos "
-"persistente. Muchas otras herramientas ORM persisten directamente variables "
-"de instancia. Creemos que es mejor proveer una indirección entre el esquema "
-"relacional y las estructuras internas de la clase. Por defecto, Hibernate "
-"persiste propiedades del estilo JavaBeans, y reconoce nombres de método de "
-"la forma <literal>getFoo</literal>, <literal>isFoo</literal> y "
-"<literal>setFoo</literal>. Puedes cambiar a acceso directo a campos para "
-"propiedades en particular, de ser necesario."
+"<literal>Cat</literal> declara m&#x00e9;todos de acceso para todos sus "
+"campos persistente. Muchas otras herramientas ORM persisten directamente "
+"variables de instancia. Creemos que es mejor proveer una indirecci&#x00f3;n "
+"entre el esquema relacional y las estructuras internas de la clase. Por "
+"defecto, Hibernate persiste propiedades del estilo JavaBeans, y reconoce "
+"nombres de m&#x00e9;todo de la forma <literal>getFoo</literal>, "
+"<literal>isFoo</literal> y <literal>setFoo</literal>. Puedes cambiar a "
+"acceso directo a campos para propiedades en particular, de ser necesario."
 
-#. Tag: para
-#: persistent_classes.xml:127
-#, no-c-format
+#: index.docbook:127
 msgid ""
 "Properties need <emphasis>not</emphasis> be declared public - Hibernate can "
 "persist a property with a default, <literal>protected</literal> or "
 "<literal>private</literal> get / set pair."
 msgstr ""
-"Las propiedades <emphasis>no</emphasis> necesitan ser declaradas públicas. "
-"Hibernate puede persistir una propiedad con un par get / set "
+"Las propiedades <emphasis>no</emphasis> necesitan ser declaradas p&#x00fa;"
+"blicas. Hibernate puede persistir una propiedad con un par get / set "
 "<literal>protected</literal> o <literal>private</literal>."
 
-#. Tag: title
-#: persistent_classes.xml:138
-#, no-c-format
+#: index.docbook:138
 msgid "Implementing inheritance"
 msgstr "Implementando herencia"
 
-#. Tag: para
-#: persistent_classes.xml:140
-#, no-c-format
+#: index.docbook:140
 msgid ""
 "A subclass must also observe the first and second rules. It inherits its "
 "identifier property from the superclass, <literal>Cat</literal>."
@@ -362,9 +387,7 @@ msgstr ""
 "Una subclase puede a su vez observar la primera y segunda regla. Hereda su "
 "propiedad identificadora de la superclase, <literal>Cat</literal>."
 
-#. Tag: programlisting
-#: persistent_classes.xml:145
-#, no-c-format
+#: index.docbook:145
 msgid ""
 "<![CDATA[package eg;\n"
 "\n"
@@ -379,28 +402,34 @@ msgid ""
 "        }\n"
 "}]]>"
 msgstr ""
+"<![CDATA[package eg;\n"
+"\n"
+"public class DomesticCat extends Cat {\n"
+"        private String name;\n"
+"\n"
+"        public String getName() {\n"
+"                return name;\n"
+"        }\n"
+"        protected void setName(String name) {\n"
+"                this.name=name;\n"
+"        }\n"
+"}]]>"
 
-#. Tag: title
-#: persistent_classes.xml:149
-#, no-c-format
+#: index.docbook:149
 msgid ""
 "Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
 msgstr ""
 "Implementando <literal>equals()</literal> y <literal>hashCode()</literal>"
 
-#. Tag: para
-#: persistent_classes.xml:151
-#, no-c-format
+#: index.docbook:151
 msgid ""
 "You have to override the <literal>equals()</literal> and <literal>hashCode()"
 "</literal> methods if you"
 msgstr ""
-"Tienes que sobrescribir los métodos <literal>equals()</literal> y "
+"Tienes que sobrescribir los m&#x00e9;todos <literal>equals()</literal> y "
 "<literal>hashCode()</literal> si :"
 
-#. Tag: para
-#: persistent_classes.xml:157
-#, no-c-format
+#: index.docbook:157
 msgid ""
 "intend to put instances of persistent classes in a <literal>Set</literal> "
 "(the recommended way to represent many-valued associations) <emphasis>and</"
@@ -410,15 +439,11 @@ msgstr ""
 "(la forma recomendada de representar asociaciones multivaluadas) "
 "<emphasis>y</emphasis>"
 
-#. Tag: para
-#: persistent_classes.xml:164
-#, no-c-format
+#: index.docbook:164
 msgid "intend to use reattachment of detached instances"
-msgstr "piensas usar reasociación de instancias separadas."
+msgstr "piensas usar reasociaci&#x00f3;n de instancias separadas."
 
-#. Tag: para
-#: persistent_classes.xml:170
-#, no-c-format
+#: index.docbook:170
 msgid ""
 "Hibernate guarantees equivalence of persistent identity (database row) and "
 "Java identity only inside a particular session scope. So as soon as we mix "
@@ -427,15 +452,13 @@ msgid ""
 "semantics for <literal>Set</literal>s."
 msgstr ""
 "Hibernate garantiza la equivalencia de identidad persistente (fila de base "
-"de datos) y identidad Java sólo dentro del ámbito de una sesión en "
-"particular. De modo que en el momento que mezclamos instancias recuperadas "
-"en sesiones diferentes, debemos implementar <literal>equals()</literal> y "
-"<literal>hashCode()</literal> si deseamos tener una semántica significativa "
-"de <literal>Set</literal>s."
+"de datos) y identidad Java s&#x00f3;lo dentro del &#x00e1;mbito de una "
+"sesi&#x00f3;n en particular. De modo que en el momento que mezclamos "
+"instancias recuperadas en sesiones diferentes, debemos implementar "
+"<literal>equals()</literal> y <literal>hashCode()</literal> si deseamos "
+"tener una sem&#x00e1;ntica significativa de <literal>Set</literal>s."
 
-#. Tag: para
-#: persistent_classes.xml:178
-#, no-c-format
+#: index.docbook:178
 msgid ""
 "The most obvious way is to implement <literal>equals()</literal>/"
 "<literal>hashCode()</literal> by comparing the identifier value of both "
@@ -453,26 +476,25 @@ msgid ""
 "is not a Hibernate issue, but normal Java semantics of object identity and "
 "equality."
 msgstr ""
-"La forma más obvia es implementar <literal>equals()</literal>/"
+"La forma m&#x00e1;s obvia es implementar <literal>equals()</literal>/"
 "<literal>hashCode()</literal> comparando el valor identificador de ambos "
 "objetos. Si el valor es el mismo, ambos deben ser la misma fila de base de "
 "datos, por lo tanto son iguales (si ambos son agregados a un <literal>Set</"
-"literal>, sólo tendremos un elemento en el <literal>Set</literal>). "
+"literal>, s&#x00f3;lo tendremos un elemento en el <literal>Set</literal>). "
 "Desafortunadamente, no podemos usar este enfoque con identificadores "
-"generados! Hibernate sólo asignará valores identificadores a objetos que son "
-"persistentes, una instancia recién creada no tendrá ningún valor "
-"identificador! Además, si una instancia no está salvada y está actualmente "
-"en un <literal>Set</literal>, salvarla asignará un valor identificador al "
+"generados! Hibernate s&#x00f3;lo asignar&#x00e1; valores identificadores a "
+"objetos que son persistentes, una instancia reci&#x00e9;n creada no "
+"tendr&#x00e1; ning&#x00fa;n valor identificador! Adem&#x00e1;s, si una "
+"instancia no est&#x00e1; salvada y est&#x00e1; actualmente en un "
+"<literal>Set</literal>, salvarla asignar&#x00e1; un valor identificador al "
 "objeto. Si <literal>equals()</literal> and <literal>hashCode()</literal> "
-"están basados en el valor identificador, el código hash podría cambiar, "
-"rompiendo el contrato de <literal>Set</literal>. Ver el sitio web de "
-"Hibernate para una discusión completa de este problema. Observa que esto no "
-"es una incidencia de Hibernate, sino la semántica normal de Java de "
-"identidad de objeto e igualdad."
+"est&#x00e1;n basados en el valor identificador, el c&#x00f3;digo hash "
+"podr&#x00ed;a cambiar, rompiendo el contrato de <literal>Set</literal>. Ver "
+"el sitio web de Hibernate para una discusi&#x00f3;n completa de este "
+"problema. Observa que esto no es una incidencia de Hibernate, sino la "
+"sem&#x00e1;ntica normal de Java de identidad de objeto e igualdad."
 
-#. Tag: para
-#: persistent_classes.xml:192
-#, no-c-format
+#: index.docbook:192
 msgid ""
 "We recommend implementing <literal>equals()</literal> and <literal>hashCode()"
 "</literal> using <emphasis>Business key equality</emphasis>. Business key "
@@ -482,14 +504,13 @@ msgid ""
 msgstr ""
 "Recomendamos implementar <literal>equals()</literal> y <literal>hashCode()</"
 "literal> usando <emphasis>igualdad de clave de negocio (Business key "
-"equality)</emphasis>. Igualdad de clave de negocio significa que el método "
-"<literal>equals()</literal> compara sólo las propiedades que forman la clave "
-"de negocio, una clave que podría identificar nuestra instancia en el mundo "
-"real (una clave candidata <emphasis>natural</emphasis>):"
+"equality)</emphasis>. Igualdad de clave de negocio significa que el m&#x00e9;"
+"todo <literal>equals()</literal> compara s&#x00f3;lo las propiedades que "
+"forman la clave de negocio, una clave que podr&#x00ed;a identificar nuestra "
+"instancia en el mundo real (una clave candidata <emphasis>natural</"
+"emphasis>):"
 
-#. Tag: programlisting
-#: persistent_classes.xml:200
-#, no-c-format
+#: index.docbook:200
 msgid ""
 "<![CDATA[public class Cat {\n"
 "\n"
@@ -515,40 +536,55 @@ msgid ""
 "\n"
 "}]]>"
 msgstr ""
+"<![CDATA[public class Cat {\n"
+"\n"
+"    ...\n"
+"    public boolean equals(Object other) {\n"
+"        if (this == other) return true;\n"
+"        if ( !(other instanceof Cat) ) return false;\n"
+"\n"
+"        final Cat cat = (Cat) other;\n"
+"\n"
+"        if ( !cat.getLitterId().equals( getLitterId() ) ) return false;\n"
+"        if ( !cat.getMother().equals( getMother() ) ) return false;\n"
+"\n"
+"        return true;\n"
+"    }\n"
+"\n"
+"    public int hashCode() {\n"
+"        int result;\n"
+"        result = getMother().hashCode();\n"
+"        result = 29 * result + getLitterId();\n"
+"        return result;\n"
+"    }\n"
+"\n"
+"}]]>"
 
-#. Tag: para
-#: persistent_classes.xml:202
-#, no-c-format
+#: index.docbook:202
 msgid ""
 "Note that a business key does not have to be as solid as a database primary "
 "key candidate (see <xref linkend=\"transactions-basics-identity\"/>). "
 "Immutable or unique properties are usually good candidates for a business "
 "key."
 msgstr ""
-"Nota que una clave de negocio no tiene que ser tan sólida como una clave "
-"primaria candidata de base de datos (ver <xref linkend=\"transactions-basics-"
-"identity\"/>). Las propiedades inmutables o únicas son usualmente buenas "
-"candidatas para una clave de negocio."
+"Nota que una clave de negocio no tiene que ser tan s&#x00f3;lida como una "
+"clave primaria candidata de base de datos (ver <xref linkend=\"transactions-"
+"basics-identity\"/>). Las propiedades inmutables o &#x00fa;nicas son "
+"usualmente buenas candidatas para una clave de negocio."
 
-#. Tag: title
-#: persistent_classes.xml:212
-#, no-c-format
+#: index.docbook:212
 msgid "Dynamic models"
-msgstr "Modelos dinámicos"
+msgstr "Modelos din&#x00e1;micos"
 
-#. Tag: emphasis
-#: persistent_classes.xml:215
-#, no-c-format
+#: index.docbook:215
 msgid ""
 "Note that the following features are currently considered experimental and "
 "may change in the near future."
 msgstr ""
-"Ten en cuenta que las siguientes funcionalidades están consideradas "
+"Ten en cuenta que las siguientes funcionalidades est&#x00e1;n consideradas "
 "actualmente experimentales y pueden cambiar en el futuro cercano."
 
-#. Tag: para
-#: persistent_classes.xml:219
-#, no-c-format
+#: index.docbook:219
 msgid ""
 "Persistent entities don't necessarily have to be represented as POJO classes "
 "or as JavaBean objects at runtime. Hibernate also supports dynamic models "
@@ -557,15 +593,14 @@ msgid ""
 "write persistent classes, only mapping files."
 msgstr ""
 "Las entidades persistentes no necesariamente tienen que estar representadas "
-"como clases POJO o como objetos JavaBean en tiempo de ejecución. Hibernate "
-"soporta además modelos dinámicos (usando <literal>Map</literal>s de "
-"<literal>Map</literal>s en tiempo de ejecución) y la representación de "
-"entidades como árboles de DOM4J. Con este enfoque no escribes clases "
-"persistentes, sólo ficheros de mapeo."
+"como clases POJO o como objetos JavaBean en tiempo de ejecuci&#x00f3;n. "
+"Hibernate soporta adem&#x00e1;s modelos din&#x00e1;micos (usando "
+"<literal>Map</literal>s de <literal>Map</literal>s en tiempo de "
+"ejecuci&#x00f3;n) y la representaci&#x00f3;n de entidades como &#x00e1;"
+"rboles de DOM4J. Con este enfoque no escribes clases persistentes, s&#x00f3;"
+"lo ficheros de mapeo."
 
-#. Tag: para
-#: persistent_classes.xml:227
-#, no-c-format
+#: index.docbook:227
 msgid ""
 "By default, Hibernate works in normal POJO mode. You may set a default "
 "entity representation mode for a particular <literal>SessionFactory</"
@@ -573,27 +608,23 @@ msgid ""
 "option (see <xref linkend=\"configuration-optional-properties\"/>."
 msgstr ""
 "Por defecto, Hibernate funciona en modo POJO normal. Puedes establecer una "
-"representación de entidad por defecto para una <literal>SessionFactory</"
-"literal> en particular usando la opción de configuración "
-"<literal>default_entity_mode</literal> (ver <xref linkend=\"configuration-"
-"optional-properties\"/>)."
+"representaci&#x00f3;n de entidad por defecto para una "
+"<literal>SessionFactory</literal> en particular usando la opci&#x00f3;n de "
+"configuraci&#x00f3;n <literal>default_entity_mode</literal> (ver <xref "
+"linkend=\"configuration-optional-properties\"/>)."
 
-#. Tag: para
-#: persistent_classes.xml:234
-#, no-c-format
+#: index.docbook:234
 msgid ""
 "The following examples demonstrates the representation using <literal>Map</"
 "literal>s. First, in the mapping file, an <literal>entity-name</literal> has "
 "to be declared instead of (or in addition to) a class name:"
 msgstr ""
-"Los siguientes ejemplos demuestran la representación usando <literal>Map</"
-"literal>s. Primero, en el fichero de mapeo, tiene que declararse un "
-"<literal>entity-name</literal> en vez de (o como agregado a) un nombre de "
-"clase:"
+"Los siguientes ejemplos demuestran la representaci&#x00f3;n usando "
+"<literal>Map</literal>s. Primero, en el fichero de mapeo, tiene que "
+"declararse un <literal>entity-name</literal> en vez de (o como agregado a) "
+"un nombre de clase:"
 
-#. Tag: programlisting
-#: persistent_classes.xml:240
-#, no-c-format
+#: index.docbook:240
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
 "\n"
@@ -629,34 +660,62 @@ msgid ""
 "    \n"
 "</hibernate-mapping>]]>"
 msgstr ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class entity-name=\"Customer\">\n"
+"\n"
+"        <id name=\"id\"\n"
+"            type=\"long\"\n"
+"            column=\"ID\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"\n"
+"        <property name=\"name\"\n"
+"            column=\"NAME\"\n"
+"            type=\"string\"/>\n"
+"\n"
+"        <property name=\"address\"\n"
+"            column=\"ADDRESS\"\n"
+"            type=\"string\"/>\n"
+"\n"
+"        <many-to-one name=\"organization\"\n"
+"            column=\"ORGANIZATION_ID\"\n"
+"            class=\"Organization\"/>\n"
+"\n"
+"        <bag name=\"orders\"\n"
+"            inverse=\"true\"\n"
+"            lazy=\"false\"\n"
+"            cascade=\"all\">\n"
+"            <key column=\"CUSTOMER_ID\"/>\n"
+"            <one-to-many class=\"Order\"/>\n"
+"        </bag>\n"
+"\n"
+"    </class>\n"
+"    \n"
+"</hibernate-mapping>]]>"
 
-#. Tag: para
-#: persistent_classes.xml:242
-#, no-c-format
+#: index.docbook:242
 msgid ""
 "Note that even though associations are declared using target class names, "
 "the target type of an associations may also be a dynamic entity instead of a "
 "POJO."
 msgstr ""
 "Ten en cuenta que aunque las asociaciones se declaran usando nombres de "
-"clase objetivo, el tipo objetivo de una asociación puede ser además una "
-"entidad dinámica en vez de un POJO."
+"clase objetivo, el tipo objetivo de una asociaci&#x00f3;n puede ser "
+"adem&#x00e1;s una entidad din&#x00e1;mica en vez de un POJO."
 
-#. Tag: para
-#: persistent_classes.xml:249
-#, no-c-format
+#: index.docbook:249
 msgid ""
 "After setting the default entity mode to <literal>dynamic-map</literal> for "
 "the <literal>SessionFactory</literal>, we can at runtime work with "
 "<literal>Map</literal>s of <literal>Map</literal>s:"
 msgstr ""
-"Después de establecer el modo de entidad por defecto a <literal>dynamic-map</"
-"literal> para la <literal>SessionFactory</literal>, podemos trabajar en "
-"tiempo de ejecución con <literal>Map</literal>s de <literal>Map</literal>s:"
+"Despu&#x00e9;s de establecer el modo de entidad por defecto a "
+"<literal>dynamic-map</literal> para la <literal>SessionFactory</literal>, "
+"podemos trabajar en tiempo de ejecuci&#x00f3;n con <literal>Map</literal>s "
+"de <literal>Map</literal>s:"
 
-#. Tag: programlisting
-#: persistent_classes.xml:255
-#, no-c-format
+#: index.docbook:255
 msgid ""
 "<![CDATA[Session s = openSession();\n"
 "Transaction tx = s.beginTransaction();\n"
@@ -680,10 +739,29 @@ msgid ""
 "tx.commit();\n"
 "s.close();]]>"
 msgstr ""
+"<![CDATA[Session s = openSession();\n"
+"Transaction tx = s.beginTransaction();\n"
+"Session s = openSession();\n"
+"\n"
+"// Create a customer\n"
+"Map david = new HashMap();\n"
+"david.put(\"name\", \"David\");\n"
+"\n"
+"// Create an organization\n"
+"Map foobar = new HashMap();\n"
+"foobar.put(\"name\", \"Foobar Inc.\");\n"
+"\n"
+"// Link both\n"
+"david.put(\"organization\", foobar);\n"
+"\n"
+"// Save both\n"
+"s.save(\"Customer\", david);\n"
+"s.save(\"Organization\", foobar);\n"
+"\n"
+"tx.commit();\n"
+"s.close();]]>"
 
-#. Tag: para
-#: persistent_classes.xml:257
-#, no-c-format
+#: index.docbook:257
 msgid ""
 "The advantages of a dynamic mapping are quick turnaround time for "
 "prototyping without the need for entity class implementation. However, you "
@@ -692,27 +770,23 @@ msgid ""
 "can easily be normalized and sound, allowing to add a proper domain model "
 "implementation on top later on."
 msgstr ""
-"Las ventajas de un mapeo dinámico es rápido tiempo de ciclo de prototipado "
-"sin la necesidad de implementación de clases de entidad. Sin embargo, "
-"pierdes chequeo de tipos en tiempo de compilación y muy probablemente "
-"tratarás con muchas excepciones en tiempo de ejecución. Gracias al mapeo de "
-"Hibernate, el esquema de base de datos puede estar facilmente sano y "
-"normalizado, permitiendo agregar una implementación apropiada del modelo de "
-"dominio más tarde."
+"Las ventajas de un mapeo din&#x00e1;mico es r&#x00e1;pido tiempo de ciclo de "
+"prototipado sin la necesidad de implementaci&#x00f3;n de clases de entidad. "
+"Sin embargo, pierdes chequeo de tipos en tiempo de compilaci&#x00f3;n y muy "
+"probablemente tratar&#x00e1;s con muchas excepciones en tiempo de "
+"ejecuci&#x00f3;n. Gracias al mapeo de Hibernate, el esquema de base de datos "
+"puede estar facilmente sano y normalizado, permitiendo agregar una "
+"implementaci&#x00f3;n apropiada del modelo de dominio m&#x00e1;s tarde."
 
-#. Tag: para
-#: persistent_classes.xml:265
-#, no-c-format
+#: index.docbook:265
 msgid ""
 "Entity representation modes can also be set on a per <literal>Session</"
 "literal> basis:"
 msgstr ""
-"Los modos de representación de entidad pueden ser establecidos por "
+"Los modos de representaci&#x00f3;n de entidad pueden ser establecidos por "
 "<literal>Session</literal>:"
 
-#. Tag: programlisting
-#: persistent_classes.xml:270
-#, no-c-format
+#: index.docbook:270
 msgid ""
 "<![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);\n"
 "\n"
@@ -727,10 +801,20 @@ msgid ""
 "// Continue on pojoSession\n"
 "]]>"
 msgstr ""
+"<![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);\n"
+"\n"
+"// Create a customer\n"
+"Map david = new HashMap();\n"
+"david.put(\"name\", \"David\");\n"
+"dynamicSession.save(\"Customer\", david);\n"
+"...\n"
+"dynamicSession.flush();\n"
+"dynamicSession.close()\n"
+"...\n"
+"// Continue on pojoSession\n"
+"]]>"
 
-#. Tag: para
-#: persistent_classes.xml:273
-#, no-c-format
+#: index.docbook:273
 msgid ""
 "Please note that the call to <literal>getSession()</literal> using an "
 "<literal>EntityMode</literal> is on the <literal>Session</literal> API, not "
@@ -742,33 +826,28 @@ msgid ""
 "primary unit of work."
 msgstr ""
 "Por favor, ten en cuenta que la llamada a <literal>getSession()</literal> "
-"usando un <literal>EntityMode</literal> está en la API de <literal>Session</"
-"literal>, no en la de <literal>SessionFactory</literal>. De esta forma, la "
-"nueva <literal>Session</literal> comparte la conexión JDBC, transacción y "
-"otra información de contexto. Esto significa que no tienes que llamar a "
-"<literal>flush()</literal> ni a <literal>close()</literal> en la "
-"<literal>Session</literal> secundaria, y tembién dejar el manejo de la "
-"transacción y de la conexión a la unidad de trabajo primaria."
+"usando un <literal>EntityMode</literal> est&#x00e1; en la API de "
+"<literal>Session</literal>, no en la de <literal>SessionFactory</literal>. "
+"De esta forma, la nueva <literal>Session</literal> comparte la conexi&#x00f3;"
+"n JDBC, transacci&#x00f3;n y otra informaci&#x00f3;n de contexto. Esto "
+"significa que no tienes que llamar a <literal>flush()</literal> ni a "
+"<literal>close()</literal> en la <literal>Session</literal> secundaria, y "
+"tembi&#x00e9;n dejar el manejo de la transacci&#x00f3;n y de la "
+"conexi&#x00f3;n a la unidad de trabajo primaria."
 
-#. Tag: para
-#: persistent_classes.xml:283
-#, no-c-format
+#: index.docbook:283
 msgid ""
 "More information about the XML representation capabilities can be found in "
 "<xref linkend=\"xml\"/>."
 msgstr ""
-"Puede encontrarse más información sobre las capacidades de representación "
-"XML en <xref linkend=\"xml\"/>."
+"Puede encontrarse m&#x00e1;s informaci&#x00f3;n sobre las capacidades de "
+"representaci&#x00f3;n XML en <xref linkend=\"xml\"/>."
 
-#. Tag: title
-#: persistent_classes.xml:291
-#, no-c-format
+#: index.docbook:291
 msgid "Tuplizers"
 msgstr "UNTRANSLATED!!! Tuplizers"
 
-#. Tag: para
-#: persistent_classes.xml:293
-#, no-c-format
+#: index.docbook:293
 msgid ""
 "<literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are "
 "responsible for managing a particular representation of a piece of data, "
@@ -800,9 +879,7 @@ msgstr ""
 "managing the above mentioned contracts in regards to entities, while "
 "<literal>ComponentTuplizer</literal>s do the same for components."
 
-#. Tag: para
-#: persistent_classes.xml:308
-#, no-c-format
+#: index.docbook:308
 msgid ""
 "Users may also plug in their own tuplizers. Perhaps you require that a "
 "<literal>java.util.Map</literal> implementation other than <literal>java."
@@ -822,9 +899,7 @@ msgstr ""
 "component mapping they are meant to manage. Going back to the example of our "
 "customer entity:"
 
-#. Tag: programlisting
-#: persistent_classes.xml:317
-#, no-c-format
+#: index.docbook:317
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
 "    <class entity-name=\"Customer\">\n"
@@ -862,12 +937,57 @@ msgid ""
 "    }\n"
 "}]]>"
 msgstr ""
+"<![CDATA[<hibernate-mapping>\n"
+"                            <class entity-name=\"Customer\">\n"
+"                                    <!--\n"
+"                                        Override the dynamic-map entity-"
+"mode\n"
+"                                        tuplizer for the customer entity\n"
+"                                        -->\n"
+"                                    <tuplizer entity-mode=\"dynamic-map\"\n"
+"                                              class=\"CustomMapTuplizerImpl"
+"\"/>\n"
+"                                    \n"
+"                                    <id name=\"id\" type=\"long\" column=\"ID"
+"\">\n"
+"                                            <generator class=\"sequence\"/>\n"
+"                                    </id>\n"
+"                                    \n"
+"                                    <!-- other properties -->\n"
+"                                    ...\n"
+"                            </class>\n"
+"                    </hibernate-mapping>\n"
+"                    \n"
+"                    \n"
+"                    public class CustomMapTuplizerImpl\n"
+"                    extends org.hibernate.tuple.entity."
+"DynamicMapEntityTuplizer {\n"
+"                    // override the buildInstantiator() method to plug in "
+"our custom map...\n"
+"                    protected final Instantiator buildInstantiator(\n"
+"                    org.hibernate.mapping.PersistentClass mappingInfo) {\n"
+"                    return new CustomMapInstantiator( mappingInfo );\n"
+"                    }\n"
+"                    \n"
+"                    private static final class CustomMapInstantiator\n"
+"                    extends org.hibernate.tuple.DynamicMapInstantitor {\n"
+"                    // override the generateMap() method to return our "
+"custom map...\n"
+"                    protected final Map generateMap() {\n"
+"                    return new CustomMap();\n"
+"                    }\n"
+"                    }\n"
+"                    }]]>"
 
-#. Tag: para
-#: persistent_classes.xml:322
-#, no-c-format
+#: index.docbook:322
 msgid ""
 "TODO: Document user-extension framework in the property and proxy packages"
 msgstr ""
 "PORHACER: Documentar el framework de extensiones del usuario en los paquetes "
 "de propiedad y proxies."
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

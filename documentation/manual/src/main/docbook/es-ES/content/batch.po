@@ -1,24 +1,15 @@
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=utf-8\n"
 
-#. Tag: title
-#: batch.xml:5
-#, no-c-format
+#: index.docbook:5
 msgid "Batch processing"
 msgstr "Procesamiento por lotes"
 
-#. Tag: para
-#: batch.xml:7
-#, no-c-format
+#: index.docbook:7
 msgid ""
 "A naive approach to inserting 100 000 rows in the database using Hibernate "
 "might look like this:"
@@ -26,9 +17,7 @@ msgstr ""
 "Un enfoque ingenuo para insertar 100.000 filas en la base de datos usando "
 "Hibernate podría verse así:"
 
-#. Tag: programlisting
-#: batch.xml:12
-#, no-c-format
+#: index.docbook:12
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -39,10 +28,16 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"for ( int i=0; i<100000; i++ ) {\n"
+"    Customer customer = new Customer(.....);\n"
+"    session.save(customer);\n"
+"}\n"
+"tx.commit();\n"
+"session.close();]]>"
 
-#. Tag: para
-#: batch.xml:14
-#, no-c-format
+#: index.docbook:14
 msgid ""
 "This would fall over with an <literal>OutOfMemoryException</literal> "
 "somewhere around the 50 000th row. That's because Hibernate caches all the "
@@ -54,9 +49,7 @@ msgstr ""
 "las instancias de <literal>Customer</literal> recién instanciadas en el "
 "caché de nivel de sesión."
 
-#. Tag: para
-#: batch.xml:20
-#, no-c-format
+#: index.docbook:20
 msgid ""
 "In this chapter we'll show you how to avoid this problem. First, however, if "
 "you are doing batch processing, it is absolutely critical that you enable "
@@ -69,15 +62,11 @@ msgstr ""
 "lograr un rendimiento razonable. Establece el tamaño de lote JDBC a un "
 "número razonable (digamos 10-50):"
 
-#. Tag: programlisting
-#: batch.xml:27
-#, no-c-format
+#: index.docbook:27
 msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
-msgstr ""
+msgstr "<![CDATA[hibernate.jdbc.batch_size 20]]>"
 
-#. Tag: para
-#: batch.xml:29
-#, no-c-format
+#: index.docbook:29
 msgid ""
 "Note that Hibernate disables insert batching at the JDBC level transparently "
 "if you use an <literal>identiy</literal> identifier generator."
@@ -85,9 +74,7 @@ msgstr ""
 "UNTRANSLATED! Note that Hibernate disables insert batching at the JDBC level "
 "transparently if you use an <literal>identiy</literal> identifier generator."
 
-#. Tag: para
-#: batch.xml:34
-#, no-c-format
+#: index.docbook:34
 msgid ""
 "You also might like to do this kind of work in a process where interaction "
 "with the second-level cache is completely disabled:"
@@ -95,15 +82,11 @@ msgstr ""
 "Podrías además querer hacer este tipo de trabajo en un proceso donde la "
 "interacción con el caché de segundo nivel esté completamente deshabilitado:"
 
-#. Tag: programlisting
-#: batch.xml:39
-#, no-c-format
+#: index.docbook:39
 msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
-msgstr ""
+msgstr "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
 
-#. Tag: para
-#: batch.xml:41
-#, no-c-format
+#: index.docbook:41
 msgid ""
 "However, this is not absolutely necessary, since we can explicitly set the "
 "<literal>CacheMode</literal> to disable interaction with the second-level "
@@ -113,15 +96,11 @@ msgstr ""
 "explicitly set the <literal>CacheMode</literal> to disable interaction with "
 "the second-level cache."
 
-#. Tag: title
-#: batch.xml:47
-#, no-c-format
+#: index.docbook:47
 msgid "Batch inserts"
 msgstr "Inserciones en lote"
 
-#. Tag: para
-#: batch.xml:49
-#, no-c-format
+#: index.docbook:49
 msgid ""
 "When making new objects persistent, you must <literal>flush()</literal> and "
 "then <literal>clear()</literal> the session regularly, to control the size "
@@ -131,9 +110,7 @@ msgstr ""
 "literal> y llamar a <literal>clear()</literal> en la sesión regularmente, "
 "para controlar el tamaño del caché de primer nivel."
 
-#. Tag: programlisting
-#: batch.xml:55
-#, no-c-format
+#: index.docbook:55
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -151,16 +128,27 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"   \n"
+"for ( int i=0; i<100000; i++ ) {\n"
+"    Customer customer = new Customer(.....);\n"
+"    session.save(customer);\n"
+"    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
+"        //flush a batch of inserts and release memory:\n"
+"        session.flush();\n"
+"        session.clear();\n"
+"    }\n"
+"}\n"
+"   \n"
+"tx.commit();\n"
+"session.close();]]>"
 
-#. Tag: title
-#: batch.xml:60
-#, no-c-format
+#: index.docbook:60
 msgid "Batch updates"
 msgstr "Actualizaciones en lote"
 
-#. Tag: para
-#: batch.xml:62
-#, no-c-format
+#: index.docbook:62
 msgid ""
 "For retrieving and updating data the same ideas apply. In addition, you need "
 "to use <literal>scroll()</literal> to take advantage of server-side cursors "
@@ -171,9 +159,7 @@ msgstr ""
 "ventaja de los cursores del lado del servidor en consultas que devuelvan "
 "muchas filas de datos."
 
-#. Tag: programlisting
-#: batch.xml:68
-#, no-c-format
+#: index.docbook:68
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -195,16 +181,31 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"   \n"
+"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+"    .setCacheMode(CacheMode.IGNORE)\n"
+"    .scroll(ScrollMode.FORWARD_ONLY);\n"
+"int count=0;\n"
+"while ( customers.next() ) {\n"
+"    Customer customer = (Customer) customers.get(0);\n"
+"    customer.updateStuff(...);\n"
+"    if ( ++count % 20 == 0 ) {\n"
+"        //flush a batch of updates and release memory:\n"
+"        session.flush();\n"
+"        session.clear();\n"
+"    }\n"
+"}\n"
+"   \n"
+"tx.commit();\n"
+"session.close();]]>"
 
-#. Tag: title
-#: batch.xml:73
-#, no-c-format
+#: index.docbook:73
 msgid "The StatelessSession interface"
 msgstr "UNTRANSLATED! The StatelessSession interface"
 
-#. Tag: para
-#: batch.xml:74
-#, no-c-format
+#: index.docbook:74
 msgid ""
 "Alternatively, Hibernate provides a command-oriented API that may be used "
 "for streaming data to and from the database in the form of detached objects. "
@@ -234,9 +235,7 @@ msgstr ""
 "level cache. A stateless session is a lower-level abstraction, much closer "
 "to the underlying JDBC."
 
-#. Tag: programlisting
-#: batch.xml:89
-#, no-c-format
+#: index.docbook:89
 msgid ""
 "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -252,10 +251,28 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
+"                                                      Transaction tx = "
+"session.beginTransaction();\n"
+"                                                      \n"
+"                                                      ScrollableResults "
+"customers = session.getNamedQuery(\"GetCustomers\")\n"
+"                                                      .scroll(ScrollMode."
+"FORWARD_ONLY);\n"
+"                                                      while ( customers.next"
+"() ) {\n"
+"                                                      Customer customer = "
+"(Customer) customers.get(0);\n"
+"                                                      customer.updateStuff"
+"(...);\n"
+"                                                      session.update"
+"(customer);\n"
+"                                                      }\n"
+"                                                      \n"
+"                                                      tx.commit();\n"
+"                                                      session.close();]]>"
 
-#. Tag: para
-#: batch.xml:91
-#, no-c-format
+#: index.docbook:91
 msgid ""
 "Note that in this code example, the <literal>Customer</literal> instances "
 "returned by the query are immediately detached. They are never associated "
@@ -265,9 +282,7 @@ msgstr ""
 "returned by the query are immediately detached. They are never associated "
 "with any persistence context."
 
-#. Tag: para
-#: batch.xml:97
-#, no-c-format
+#: index.docbook:97
 msgid ""
 "The <literal>insert(), update()</literal> and <literal>delete()</literal> "
 "operations defined by the <literal>StatelessSession</literal> interface are "
@@ -287,15 +302,11 @@ msgstr ""
 "<literal>delete()</literal> operations defined by the <literal>Session</"
 "literal> interface."
 
-#. Tag: title
-#: batch.xml:110
-#, no-c-format
+#: index.docbook:110
 msgid "DML-style operations"
 msgstr "update/delete en masa"
 
-#. Tag: para
-#: batch.xml:112
-#, no-c-format
+#: index.docbook:112
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
 "concerned with the management of object state. This implies that the object "
@@ -315,11 +326,9 @@ msgstr ""
 "embargo, Hibernate provee métodos para la ejecución de sentencias del estilo "
 "de <literal>UPDATE</literal> y <literal>DELETE</literal> de SQL que se "
 "realizan a través del Lenguaje de Consulta de Hibernate (Hibernate Query "
-"Language o <xref linkend=\"queryhql\">HQL</xref>)."
+"Language o <xref linkend=\"queryhql\"/>HQL)."
 
-#. Tag: para
-#: batch.xml:122
-#, no-c-format
+#: index.docbook:122
 msgid ""
 "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
 "literal> statements is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE "
@@ -329,15 +338,11 @@ msgstr ""
 "<literal>DELETE</literal> es: <literal>( UPDATE | DELETE ) FROM? ClassName "
 "(WHERE WHERE_CONDITIONS)?</literal>. Algunos puntos a tener en cuenta:"
 
-#. Tag: para
-#: batch.xml:130
-#, no-c-format
+#: index.docbook:130
 msgid "In the from-clause, the FROM keyword is optional"
 msgstr "En la cláusula-from, la palabra clave FROM es opcional"
 
-#. Tag: para
-#: batch.xml:135
-#, no-c-format
+#: index.docbook:135
 msgid ""
 "There can only be a single entity named in the from-clause; it can "
 "optionally be aliased. If the entity name is aliased, then any property "
@@ -349,9 +354,7 @@ msgstr ""
 "references must be qualified using that alias; if the entity name is not "
 "aliased, then it is illegal for any property references to be qualified."
 
-#. Tag: para
-#: batch.xml:143
-#, no-c-format
+#: index.docbook:143
 msgid ""
 "No <link linkend=\"queryhql-joins-forms\">joins</link> (either implicit or "
 "explicit) can be specified in a bulk HQL query. Sub-queries may be used in "
@@ -361,15 +364,11 @@ msgstr ""
 "explicit) can be specified in a bulk HQL query. Sub-queries may be used in "
 "the where-clause; the subqueries, themselves, may contain joins."
 
-#. Tag: para
-#: batch.xml:150
-#, no-c-format
+#: index.docbook:150
 msgid "The where-clause is also optional."
 msgstr "La cláusula-where es también opcional."
 
-#. Tag: para
-#: batch.xml:156
-#, no-c-format
+#: index.docbook:156
 msgid ""
 "As an example, to execute an HQL <literal>UPDATE</literal>, use the "
 "<literal>Query.executeUpdate()</literal> method (the method is named for "
@@ -381,9 +380,7 @@ msgstr ""
 "those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</"
 "literal>):"
 
-#. Tag: programlisting
-#: batch.xml:162
-#, no-c-format
+#: index.docbook:162
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -399,10 +396,23 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"                                         Transaction tx = session."
+"beginTransaction();\n"
+"                                         \n"
+"                                         String hqlUpdate = \"update "
+"Customer c set c.name = :newName where c.name = :oldName\";\n"
+"                                         // or String hqlUpdate = \"update "
+"Customer set name = :newName where name = :oldName\";\n"
+"                                         int updatedEntities = s.createQuery"
+"( hqlUpdate )\n"
+"                                         .setString( \"newName\", newName )\n"
+"                                         .setString( \"oldName\", oldName )\n"
+"                                         .executeUpdate();\n"
+"                                         tx.commit();\n"
+"                                         session.close();]]>"
 
-#. Tag: para
-#: batch.xml:164
-#, no-c-format
+#: index.docbook:164
 msgid ""
 "HQL <literal>UPDATE</literal> statements, by default do not effect the <link "
 "linkend=\"mapping-declaration-version\">version</link> or the <link linkend="
@@ -424,9 +434,7 @@ msgstr ""
 "<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
 "keyword."
 
-#. Tag: programlisting
-#: batch.xml:174
-#, no-c-format
+#: index.docbook:174
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -439,10 +447,20 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"                                         Transaction tx = session."
+"beginTransaction();\n"
+"                                         String hqlVersionedUpdate = "
+"\"update versioned Customer set name = :newName where name = :oldName\";\n"
+"                                         int updatedEntities = s.createQuery"
+"( hqlUpdate )\n"
+"                                         .setString( \"newName\", newName )\n"
+"                                         .setString( \"oldName\", oldName )\n"
+"                                         .executeUpdate();\n"
+"                                         tx.commit();\n"
+"                                         session.close();]]>"
 
-#. Tag: para
-#: batch.xml:176
-#, no-c-format
+#: index.docbook:176
 msgid ""
 "Note that custom version types (<literal>org.hibernate.usertype."
 "UserVersionType</literal>) are not allowed in conjunction with a "
@@ -452,9 +470,7 @@ msgstr ""
 "UserVersionType</literal>) are not allowed in conjunction with a "
 "<literal>update versioned</literal> statement."
 
-#. Tag: para
-#: batch.xml:181
-#, no-c-format
+#: index.docbook:181
 msgid ""
 "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
 "executeUpdate()</literal> method:"
@@ -462,9 +478,7 @@ msgstr ""
 "Para ejecutar un <literal>DELETE</literal> HQL, usa el mismo método "
 "<literal>Query.executeUpdate()</literal>:"
 
-#. Tag: programlisting
-#: batch.xml:186
-#, no-c-format
+#: index.docbook:186
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -477,10 +491,17 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"        Transaction tx = session.beginTransaction();\n"
+"\n"
+"        String hqlDelete = \"delete Customer where name = :oldName\";\n"
+"        int deletedEntities = s.createQuery( hqlDelete )\n"
+"                            .setString( \"oldName\", oldName )\n"
+"                            .executeUpdate();\n"
+"        tx.commit();\n"
+"        session.close();]]>"
 
-#. Tag: para
-#: batch.xml:188
-#, no-c-format
+#: index.docbook:188
 msgid ""
 "The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
 "()</literal> method indicate the number of entities effected by the "
@@ -505,9 +526,7 @@ msgstr ""
 "tabla \"raíz\" y potencialmente tablas de joined-subclass más debajo en la "
 "jerarquía de herencia."
 
-#. Tag: para
-#: batch.xml:199
-#, no-c-format
+#: index.docbook:199
 msgid ""
 "The pseudo-syntax for <literal>INSERT</literal> statements is: "
 "<literal>INSERT INTO EntityName properties_list select_statement</literal>. "
@@ -517,17 +536,13 @@ msgstr ""
 "operaciones HQL masivas, que serán atendidas en lanzamientos futuros; "
 "consulta la hoja de ruta de JIRA para más detalles."
 
-#. Tag: para
-#: batch.xml:207
-#, no-c-format
+#: index.docbook:207
 msgid ""
 "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
 "INTO ... VALUES ... form."
-msgstr "translator-credits"
+msgstr ""
 
-#. Tag: para
-#: batch.xml:210
-#, no-c-format
+#: index.docbook:210
 msgid ""
 "The properties_list is analogous to the <literal>column speficiation</"
 "literal> in the SQL <literal>INSERT</literal> statement. For entities "
@@ -537,9 +552,7 @@ msgid ""
 "<literal>INSERT</literal> statements are inherently non-polymorphic."
 msgstr ""
 
-#. Tag: para
-#: batch.xml:220
-#, no-c-format
+#: index.docbook:220
 msgid ""
 "select_statement can be any valid HQL select query, with the caveat that the "
 "return types must match the types expected by the insert. Currently, this is "
@@ -553,9 +566,7 @@ msgid ""
 "distinction or might be able to handle the conversion."
 msgstr ""
 
-#. Tag: para
-#: batch.xml:232
-#, no-c-format
+#: index.docbook:232
 msgid ""
 "For the id property, the insert statement gives you two options. You can "
 "either explicitly specify the id property in the properties_list (in which "
@@ -572,9 +583,7 @@ msgid ""
 "because it does not expose a selectable way to get its values."
 msgstr ""
 
-#. Tag: para
-#: batch.xml:247
-#, no-c-format
+#: index.docbook:247
 msgid ""
 "For properties mapped as either <literal>version</literal> or "
 "<literal>timestamp</literal>, the insert statement gives you two options. "
@@ -584,15 +593,11 @@ msgid ""
 "defined by the <literal>org.hibernate.type.VersionType</literal> is used)."
 msgstr ""
 
-#. Tag: para
-#: batch.xml:257
-#, no-c-format
+#: index.docbook:257
 msgid "An example HQL <literal>INSERT</literal> statement execution:"
 msgstr ""
 
-#. Tag: programlisting
-#: batch.xml:261
-#, no-c-format
+#: index.docbook:261
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
 "Transaction tx = session.beginTransaction();\n"
@@ -604,3 +609,9 @@ msgid ""
 "tx.commit();\n"
 "session.close();]]>"
 msgstr ""
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

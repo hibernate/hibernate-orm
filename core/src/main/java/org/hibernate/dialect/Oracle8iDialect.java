@@ -121,7 +121,7 @@ public class Oracle8iDialect extends Dialect {
 		registerFunction( "current_time", new NoArgSQLFunction("current_timestamp", Hibernate.TIME, false) );
 		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP, false) );
 
-		registerFunction( "lastday", new StandardSQLFunction("lastday", Hibernate.DATE) );
+		registerFunction( "last_day", new StandardSQLFunction("last_day", Hibernate.DATE) );
 		registerFunction( "sysdate", new NoArgSQLFunction("sysdate", Hibernate.DATE, false) );
 		registerFunction( "systimestamp", new NoArgSQLFunction("systimestamp", Hibernate.TIMESTAMP, false) );
 		registerFunction( "uid", new NoArgSQLFunction("uid", Hibernate.INTEGER, false) );

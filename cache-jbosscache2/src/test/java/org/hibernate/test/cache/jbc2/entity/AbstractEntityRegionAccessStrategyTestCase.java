@@ -696,7 +696,10 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     
     private static class AccessStrategyTestSetup extends TestSetup {
         
+        private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
+        
         private String configName;
+        private String preferIPv4Stack;
         
         public AccessStrategyTestSetup(Test test, String configName) {
             super(test);
@@ -705,7 +708,20 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
         @Override
         protected void setUp() throws Exception {
-            super.setUp();
+            try {
+                super.tearDown();
+            }
+            finally {
+                if (preferIPv4Stack == null)
+                    System.clearProperty(PREFER_IPV4STACK);
+                else 
+                    System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);                
+            }
+            
+            // Try to ensure we use IPv4; otherwise cluster formation is very slow 
+            preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
+            System.setProperty(PREFER_IPV4STACK, "true");
+            
             localCfg = createConfiguration(configName);
             localRegionFactory = CacheTestUtil.startRegionFactory(localCfg);
             localCache = localRegionFactory.getCacheInstanceManager().getEntityCacheInstance();

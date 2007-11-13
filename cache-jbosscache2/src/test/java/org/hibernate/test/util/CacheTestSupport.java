@@ -31,9 +31,12 @@ import org.jboss.cache.Cache;
  */
 public class CacheTestSupport {
     
+    private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
+    
     private Set<Cache> caches = new HashSet();
     private Set<RegionFactory> factories = new HashSet();
     private Exception exception;
+    private String preferIPv4Stack;
  
     public void registerCache(Cache cache) {
         caches.add(cache);
@@ -51,12 +54,23 @@ public class CacheTestSupport {
         factories.remove(factory);
     }
     
-    public void setUp() throws Exception {        
+    public void setUp() throws Exception {   
+        
+        // Try to ensure we use IPv4; otherwise cluster formation is very slow 
+        preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
+        System.setProperty(PREFER_IPV4STACK, "true");
+        
         cleanUp();
         throwStoredException();
     }
 
     public void tearDown() throws Exception {       
+        
+        if (preferIPv4Stack == null)
+            System.clearProperty(PREFER_IPV4STACK);
+        else 
+            System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);
+        
         cleanUp();
         throwStoredException();
     }

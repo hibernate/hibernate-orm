@@ -3,6 +3,8 @@ package org.hibernate.test.cache.jbc2.functional;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.Mappings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.test.tm.DummyConnectionProvider;
 import org.hibernate.test.tm.DummyTransactionManagerLookup;
@@ -14,6 +16,10 @@ import org.hibernate.test.tm.DummyTransactionManagerLookup;
  */
 public abstract class CacheTestCaseBase extends FunctionalTestCase {
 
+    private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
+
+    private String preferIPv4Stack;
+    
     // note that a lot of the functionality here is intended to be used
     // in creating specific tests for each CacheProvider that would extend
     // from a base test case (this) for common requirement testing...
@@ -44,7 +50,7 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
 
     public String getCacheConcurrencyStrategy() {
         return "transactional";
-    }
+    }    
 
     /**
      * The cache provider to be tested.
@@ -78,4 +84,30 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
      * @return The config resource location.
      */
     protected abstract String getConfigResourceLocation();
+
+    @Override
+    public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
+        
+        super.afterConfigurationBuilt(mappings, dialect);
+        
+        // Try to ensure we use IPv4; otherwise cluster formation is very slow 
+        preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
+        System.setProperty(PREFER_IPV4STACK, "true");  
+    }
+
+    @Override
+    protected void cleanupTest() throws Exception {
+        try {
+            super.cleanupTest();
+        }
+        finally {
+            if (preferIPv4Stack == null)
+                System.clearProperty(PREFER_IPV4STACK);
+            else 
+                System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);
+        }
+        
+    }
+    
+    
 }

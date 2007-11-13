@@ -27,7 +27,6 @@ public abstract class AbstractJBossCacheTestCase extends UnitTestCase {
     
     private CacheTestSupport testSupport = new CacheTestSupport();
     protected final Logger log = LoggerFactory.getLogger(getClass());
-
     
     public AbstractJBossCacheTestCase(String name) {
         super(name);

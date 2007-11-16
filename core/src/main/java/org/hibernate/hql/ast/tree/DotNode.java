@@ -336,7 +336,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			joinIsNeeded = generateJoin && !isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType );
 		}
 		else if ( ! getWalker().isSelectStatement() ) {
-			joinIsNeeded = false;
+			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
+			joinIsNeeded = getWalker().getCurrentStatementType() == SqlTokenTypes.SELECT && getWalker().isInFrom();
 		}
 		else if ( REGRESSION_STYLE_JOIN_SUPPRESSION ) {
 			// this is the regression style determination which matches the logic of the classic translator

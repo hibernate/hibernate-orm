@@ -22,7 +22,7 @@
         <dependency>
             <groupId>antlr</groupId>
             <artifactId>antlr</artifactId>
-            <version>${antlr.version}</version>
+            <version>${antlrVersion}</version>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
@@ -85,12 +85,12 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>antlr-maven-plugin</artifactId>
-                <version>2.0-SNAPSHOT</version>
+                <version>${antlrPluginVersion}</version>
                 <dependencies>
                     <dependency>
                         <groupId>antlr</groupId>
                         <artifactId>antlr</artifactId>
-                        <version>${antlr.version}</version>
+                        <version>${antlrVersion}</version>
                     </dependency>
                 </dependencies>
                 <configuration>
@@ -112,7 +112,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>antlr-maven-plugin</artifactId>
-                <version>2.0-SNAPSHOT</version>
+                <version>${antlrPluginVersion}</version>
                 <configuration>
                     <!-- eventually should be based on the second phase grammar -->
                     <grammars>hql.g</grammars>
@@ -150,7 +150,8 @@
     </reporting>
 
     <properties>
-        <antlr.version>2.7.6</antlr.version>
+        <antlrVersion>2.7.6</antlrVersion>
+        <antlrPluginVersion>2.0.0-SNAPSHOT</antlrPluginVersion>
     </properties>
 
 </project>

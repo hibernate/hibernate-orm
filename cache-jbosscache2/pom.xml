@@ -85,7 +85,32 @@
                             <name>hibernate.test.validatefailureexpected</name>
                             <value>true</value>
                         </property>
+                        <!-- If you find the testsuite runs very slowly, there
+                             may be problems with multicast on the interface
+                             JGroups uses by default. You can try to resolve
+                             this by uncommenting this property and setting the
+                             value to an interface where you know multicast works
+                        <property>
+                            <name>jgroups.bind_addr</name>
+                            <value>192.168.0.1</value>
+                        </property>
+                        -->
+                        <!-- There are problems with multicast and IPv6 on some
+                             OS/JDK combos, so we tell Java to use IPv4. If you
+                             have problems with multicast when running the tests
+                             you can try setting this to 'false', although typically
+                             that won't be helpful.
+                        -->
+                        <property>
+                            <name>java.net.preferIPv4Stack</name>
+                            <value>true</value>
+                        </property>
                     </systemProperties>
+                    <!-- If all else fails and you cannot get multicast working
+                         properly for the testsuite, uncomment this to disable the
+                         tests.
+                    <skipExec>true</skipExec>
+                    -->
                 </configuration>
             </plugin>
         </plugins>

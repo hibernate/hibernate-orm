@@ -25,7 +25,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	public void execute() throws HibernateException {
-		if ( !emptySnapshot ) getPersister().remove( getKey(), getSession() );
+        final boolean stats = getSession().getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
+        if ( !emptySnapshot ) getPersister().remove( getKey(), getSession() );
 		
 		final PersistentCollection collection = getCollection();
 		if (collection!=null) {
@@ -36,9 +40,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 		
 		evict();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+		if ( stats ) {
 			getSession().getFactory().getStatisticsImplementor()
-					.removeCollection( getPersister().getRole() );
+					.removeCollection( getPersister().getRole(), System.currentTimeMillis() - startTime);
 		}
 	}
 

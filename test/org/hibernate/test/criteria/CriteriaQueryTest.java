@@ -16,7 +16,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
@@ -154,8 +153,8 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.list();
 	
 		session.createCriteria(Student.class)
-		.add( Property.forName("name").eqAll(dc) )
-		.list();
+			.add( Property.forName("name").eqAll(dc) )
+			.list();
 	
 		session.createCriteria(Student.class)
 			.add( Subqueries.in("Gavin King", dc) )
@@ -169,8 +168,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.add( Subqueries.eq("Gavin King", dc2) )
 			.list();
 
-		//TODO: join in subselect: HHH-952
-		/*DetachedCriteria dc3 = DetachedCriteria.forClass(Student.class, "st")
+		DetachedCriteria dc3 = DetachedCriteria.forClass(Student.class, "st")
 			.createCriteria("enrolments")
 				.createCriteria("course")
 					.add( Property.forName("description").eq("Hibernate Training") )
@@ -178,7 +176,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 	
 		session.createCriteria(Enrolment.class, "e")
 			.add( Subqueries.eq("Gavin King", dc3) )
-			.list();*/
+			.list();
 
 		session.delete(enrolment2);
 		session.delete(gavin);
@@ -398,8 +396,8 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 					.add( Projections.property("studentNumber"), "stNumber" )
 					.add( Projections.property("courseCode"), "cCode" ) )
 			)
-		    .add( Expression.gt( "studentNumber", new Long(665) ) )
-		    .add( Expression.lt( "studentNumber", new Long(668) ) )
+		    .add( Restrictions.gt( "studentNumber", new Long(665) ) )
+		    .add( Restrictions.lt( "studentNumber", new Long(668) ) )
 		    .addOrder( Order.asc("stNumber") )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
 			.list();

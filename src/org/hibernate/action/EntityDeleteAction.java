@@ -44,6 +44,9 @@ public final class EntityDeleteAction extends EntityAction {
 		EntityPersister persister = getPersister();
 		SessionImplementor session = getSession();
 		Object instance = getInstance();
+        final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
 
 		boolean veto = preDelete();
 
@@ -93,9 +96,9 @@ public final class EntityDeleteAction extends EntityAction {
 
 		postDelete();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
+		if ( stats && !veto ) {
 			getSession().getFactory().getStatisticsImplementor()
-					.deleteEntity( getPersister().getEntityName() );
+					.deleteEntity( getPersister().getEntityName(), System.currentTimeMillis() - startTime);
 		}
 	}
 

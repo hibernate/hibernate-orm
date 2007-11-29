@@ -32,6 +32,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final CollectionPersister persister = getPersister();
 		final PersistentCollection collection = getCollection();
 		boolean affectedByFilters = persister.isAffectedByEnabledFilters(session);
+        final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
 
 		if ( !collection.wasInitialized() ) {
 			if ( !collection.hasQueuedOperations() ) throw new AssertionFailure( "no queued adds" );
@@ -62,9 +65,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 		evict();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+		if ( stats ) {
 			getSession().getFactory().getStatisticsImplementor().
-					updateCollection( getPersister().getRole() );
+					updateCollection( getPersister().getRole(), System.currentTimeMillis() - startTime);
 		}
 	}
 

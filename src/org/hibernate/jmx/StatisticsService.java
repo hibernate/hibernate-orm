@@ -314,4 +314,14 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public String getQueryExecutionMaxTimeQueryString() {
 		return stats.getQueryExecutionMaxTimeQueryString();
 	}
+
+    public void setOperationThreshold(long threshold) {
+        stats.setOperationThreshold(threshold);
+    }
+
+    public long getOperationThreshold() {
+        return stats.getOperationThreshold();
+    }
+
+
 }

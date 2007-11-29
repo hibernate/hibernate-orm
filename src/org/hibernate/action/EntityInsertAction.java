@@ -46,6 +46,10 @@ public final class EntityInsertAction extends EntityAction {
 		Object instance = getInstance();
 		Serializable id = getId();
 
+        final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
 		boolean veto = preInsert();
 
 		// Don't need to lock the cache here, since if someone
@@ -96,7 +100,7 @@ public final class EntityInsertAction extends EntityAction {
 //			boolean put = persister.getCache().insert(ck, cacheEntry);
 			boolean put = persister.getCache().insert( ck, cacheEntry, version );
 			
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+			if ( put && stats ) {
 				factory.getStatisticsImplementor()
 						.secondLevelCachePut( getPersister().getCache().getRegionName() );
 			}
@@ -105,9 +109,9 @@ public final class EntityInsertAction extends EntityAction {
 
 		postInsert();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
+		if ( stats && !veto ) {
 			factory.getStatisticsImplementor()
-					.insertEntity( getPersister().getEntityName() );
+					.insertEntity( getPersister().getEntityName(), System.currentTimeMillis() - startTime);
 		}
 
 	}

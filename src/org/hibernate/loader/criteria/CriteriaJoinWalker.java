@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
@@ -18,7 +17,6 @@ import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -57,9 +55,19 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			final SessionFactoryImplementor factory, 
 			final CriteriaImpl criteria, 
 			final String rootEntityName,
-			final Map enabledFilters)
-	throws HibernateException {
-		super(persister, factory, enabledFilters);
+			final Map enabledFilters) {
+		this(persister, translator, factory, criteria, rootEntityName, enabledFilters, null);
+	}
+
+	public CriteriaJoinWalker(
+			final OuterJoinLoadable persister,
+			final CriteriaQueryTranslator translator,
+			final SessionFactoryImplementor factory,
+			final CriteriaImpl criteria,
+			final String rootEntityName,
+			final Map enabledFilters,
+			final String alias) {
+		super(persister, factory, enabledFilters, alias);
 
 		this.translator = translator;
 

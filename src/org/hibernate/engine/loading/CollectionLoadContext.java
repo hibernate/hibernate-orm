@@ -233,6 +233,9 @@ public class CollectionLoadContext {
 		}
 		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
 		final EntityMode em = session.getEntityMode();
+        final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
 
 		boolean hasNoQueuedAdds = lce.getCollection().endRead(); // warning: can cause a recursive calls! (proxy initialization)
 
@@ -260,8 +263,8 @@ public class CollectionLoadContext {
 			log.debug( "collection fully initialized: " + MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory() ) );
 		}
 
-		if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-			session.getFactory().getStatisticsImplementor().loadCollection( persister.getRole() );
+		if ( stats ) {
+			session.getFactory().getStatisticsImplementor().loadCollection( persister.getRole(), System.currentTimeMillis() - startTime);
 		}
 	}
 

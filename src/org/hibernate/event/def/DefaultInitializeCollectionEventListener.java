@@ -33,6 +33,9 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 		PersistentCollection collection = event.getCollection();
 		SessionImplementor source = event.getSession();
+        final boolean stats = source.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
 
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry(collection);
 		if (ce==null) throw new HibernateException("collection was evicted");
@@ -60,10 +63,10 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
 				log.trace("collection initialized");
 
-				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
+				if ( stats ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection( 
-							ce.getLoadedPersister().getRole() 
-						);
+							ce.getLoadedPersister().getRole(),
+                            System.currentTimeMillis() - startTime);
 				}
 			}
 		}

@@ -21,7 +21,11 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	public void execute() throws HibernateException {
-		final PersistentCollection collection = getCollection();
+        final boolean stats = getSession().getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
+        final PersistentCollection collection = getCollection();
 		
 		getPersister().recreate( collection, getKey(), getSession() );
 		
@@ -31,9 +35,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 		
 		evict();
 
-		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+		if ( stats ) {
 			getSession().getFactory().getStatisticsImplementor()
-					.recreateCollection( getPersister().getRole() );
+					.recreateCollection( getPersister().getRole(), System.currentTimeMillis() - startTime);
 		}
 	}
 

@@ -208,4 +208,17 @@ public interface Statistics {
 	 * that occurred
 	 */
 	public long getOptimisticFailureCount();
+
+    /**
+     * Set the operationThreshold to a value greater than zero to enable logging of long running operations.
+     * @param threshold (milliseconds)
+     */
+    public void setOperationThreshold(long threshold);
+
+    /**
+     *
+     * @return Operationthreshold, if greater than zero, operations that exceed the level will be logged. 
+     */
+    public long getOperationThreshold();
+
 }

@@ -65,7 +65,11 @@ public final class EntityUpdateAction extends EntityAction {
 		boolean veto = preUpdate();
 
 		final SessionFactoryImplementor factory = getSession().getFactory();
-		Object previousVersion = this.previousVersion;
+        final boolean stats = factory.getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
+        Object previousVersion = this.previousVersion;
 		if ( persister.isVersionPropertyGenerated() ) {
 			// we need to grab the version value from the entity, otherwise
 			// we have issues with generated-version entities that may have
@@ -158,9 +162,9 @@ public final class EntityUpdateAction extends EntityAction {
 
 		postUpdate();
 
-		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
+		if ( stats && !veto ) {
 			factory.getStatisticsImplementor()
-					.updateEntity( getPersister().getEntityName() );
+					.updateEntity( getPersister().getEntityName(), System.currentTimeMillis() - startTime);
 		}
 	}
 

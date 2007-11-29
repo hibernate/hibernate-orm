@@ -93,7 +93,11 @@ public final class TwoPhaseLoad {
 			final PostLoadEvent postLoadEvent) throws HibernateException {
 		
 		//TODO: Should this be an InitializeEntityEventListener??? (watch out for performance!)
-	
+        final SessionFactoryImplementor factory = session.getFactory();
+        final boolean stats = factory.getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		EntityEntry entityEntry = persistenceContext.getEntry(entity);
 		if ( entityEntry == null ) {
@@ -128,7 +132,6 @@ public final class TwoPhaseLoad {
 	
 		persister.setPropertyValues( entity, hydratedState, session.getEntityMode() );
 	
-		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
 			
 			if ( log.isDebugEnabled() )
@@ -208,8 +211,8 @@ public final class TwoPhaseLoad {
 					MessageHelper.infoString( persister, id, session.getFactory() )
 				);
 		
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );
+		if ( stats) {
+			factory.getStatisticsImplementor().loadEntity( persister.getEntityName(), System.currentTimeMillis() - startTime);
 		}
 	
 	}

@@ -26,12 +26,16 @@ import org.hibernate.util.CollectionHelper;
 public abstract class AbstractEntityJoinWalker extends JoinWalker {
 
 	private final OuterJoinLoadable persister;
-	private String alias;
+	private final String alias;
 
 	public AbstractEntityJoinWalker(OuterJoinLoadable persister, SessionFactoryImplementor factory, Map enabledFilters) {
+		this( persister, factory, enabledFilters, null );
+	}
+
+	public AbstractEntityJoinWalker(OuterJoinLoadable persister, SessionFactoryImplementor factory, Map enabledFilters, String alias) {
 		super( factory, enabledFilters );
 		this.persister = persister;
-		alias = generateRootAlias( persister.getEntityName() );
+		this.alias = ( alias == null ) ? generateRootAlias( persister.getEntityName() ) : alias;
 	}
 
 	protected final void initAll(
@@ -39,9 +43,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		final String orderByString,
 		final LockMode lockMode)
 	throws MappingException {
-
 		walkEntityTree( persister, getAlias() );
-
 		List allAssociations = new ArrayList();
 		allAssociations.addAll(associations);
 		allAssociations.add( new OuterJoinableAssociation(

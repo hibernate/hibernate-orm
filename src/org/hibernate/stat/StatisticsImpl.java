@@ -46,8 +46,11 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	private long secondLevelCacheHitCount;
 	private long secondLevelCacheMissCount;
 	private long secondLevelCachePutCount;
-	
-	private long queryExecutionCount;
+
+    private long operationThreshold = 0;    // log operations that take longer than this value (in milliseconds)
+                                            // We don't log anything if operationThreshold == 0 
+
+    private long queryExecutionCount;
 	private long queryExecutionMaxTime;
 	private String queryExecutionMaxTimeQueryString;
 	private long queryCacheHitCount;
@@ -68,7 +71,20 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	/** entity statistics per query string (HQL or SQL) */
 	private final Map queryStatistics = new HashMap();
 
-	public StatisticsImpl() {
+    static final String OPERATION_LOAD = "load ";
+    static final String OPERATION_FETCH = "fetch ";
+    static final String OPERATION_UPDATE = "update ";
+    static final String OPERATION_INSERT = "insert ";
+    static final String OPERATION_DELETE = "delete ";
+    static final String OPERATION_LOADCOLLECTION = "loadCollection ";
+    static final String OPERATION_FETCHCOLLECTION = "fetchCollection ";
+    static final String OPERATION_UPDATECOLLECTION = "updateCollection ";
+    static final String OPERATION_RECREATECOLLECTION = "recreateCollection ";
+    static final String OPERATION_REMOVECOLLECTION = "removeCollection ";
+    static final String OPERATION_EXECUTEQUERY = "executeQuery ";
+    static final String OPERATION_ENDTRANSACTION = "endTransaction ";
+
+    public StatisticsImpl() {
 		clear();
 	}
 
@@ -140,16 +156,43 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public synchronized void connect() {
 		connectCount++;
 	}
-	
-	public synchronized void loadEntity(String entityName) {
-		entityLoadCount++;
-		getEntityStatistics(entityName).loadCount++;
-	}
 
-	public synchronized void fetchEntity(String entityName) {
-		entityFetchCount++;
-		getEntityStatistics(entityName).fetchCount++;
-	}
+    public synchronized void setOperationThreshold(long threshold) {
+        operationThreshold = threshold;
+    }
+
+    public synchronized long getOperationThreshold() {
+        return operationThreshold;
+    }
+
+    private void logOperation(String operation, String entityName, long time) {
+        if(entityName != null)
+            log.info(operation+entityName + " " + time + "ms");
+        else
+            log.info(operation);  // just log that the event occurred
+
+    }
+
+
+    public void loadEntity(String entityName, long time) {
+        synchronized(this) {
+            entityLoadCount++;
+		    getEntityStatistics(entityName).loadCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_LOAD,entityName, time);
+        }
+    }
+
+    public void fetchEntity(String entityName, long time) {
+        synchronized(this) {
+            entityFetchCount++;
+    		getEntityStatistics(entityName).fetchCount++;
+        }    
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_FETCH,entityName, time);
+        }
+    }
 
 	/**
 	 * find entity statistics per name
@@ -165,26 +208,41 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		}
 		return es;
 	}
-	
-	public synchronized void updateEntity(String entityName) {
-		entityUpdateCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
-		es.updateCount++;
-	}
 
-	public synchronized void insertEntity(String entityName) {
-		entityInsertCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
-		es.insertCount++;
-	}
+    public void updateEntity(String entityName, long time) {
+        synchronized(this) {
+            entityUpdateCount++;
+    		EntityStatistics es = getEntityStatistics(entityName);
+    		es.updateCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_UPDATE,entityName, time);
+        }
+    }
 
-	public synchronized void deleteEntity(String entityName) {
-		entityDeleteCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
-		es.deleteCount++;
-	}
+	public void insertEntity(String entityName, long time) {
+        synchronized(this) {
+            entityInsertCount++;
+            EntityStatistics es = getEntityStatistics(entityName);
+            es.insertCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_INSERT,entityName, time);
+        }
+    }
 
-	/**
+	public void deleteEntity(String entityName, long time) {
+        synchronized(this) {
+            entityDeleteCount++;
+    		EntityStatistics es = getEntityStatistics(entityName);
+    		es.deleteCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_DELETE,entityName, time);
+        }
+    }
+
+    /**
 	 * Get collection statistics per role
 	 * 
 	 * @param role collection role
@@ -199,30 +257,55 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		return cs;
 	}
 	
-	public synchronized void loadCollection(String role) {
-		collectionLoadCount++;
-		getCollectionStatistics(role).loadCount++;
-	}
+	public void loadCollection(String role, long time) {
+        synchronized(this) {
+            collectionLoadCount++;
+		    getCollectionStatistics(role).loadCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_LOADCOLLECTION,role, time);
+        }
+    }
 
-	public synchronized void fetchCollection(String role) {
-		collectionFetchCount++;
-		getCollectionStatistics(role).fetchCount++;
-	}
+    public void fetchCollection(String role, long time) {
+        synchronized(this) {
+            collectionFetchCount++;
+    		getCollectionStatistics(role).fetchCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_FETCHCOLLECTION,role, time);
+        }
+    }
 
-	public synchronized void updateCollection(String role) {
-		collectionUpdateCount++;
-		getCollectionStatistics(role).updateCount++;
-	}
+	public void updateCollection(String role, long time) {
+        synchronized(this) {
+            collectionUpdateCount++;
+    		getCollectionStatistics(role).updateCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_UPDATECOLLECTION,role, time);
+        }
+    }
 
-	public synchronized void recreateCollection(String role) {
-		collectionRecreateCount++;
-		getCollectionStatistics(role).recreateCount++;
-	}
+	public void recreateCollection(String role, long time) {
+        synchronized(this) {
+            collectionRecreateCount++;
+	    	getCollectionStatistics(role).recreateCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_RECREATECOLLECTION,role, time);
+        }
+    }
 
-	public synchronized void removeCollection(String role) {
-		collectionRemoveCount++;
-		getCollectionStatistics(role).removeCount++;
-	}
+	public void removeCollection(String role, long time) {
+        synchronized(this) {
+            collectionRemoveCount++;
+    		getCollectionStatistics(role).removeCount++;
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_REMOVECOLLECTION,role, time);
+        }
+    }
 	
 	/**
 	 * Second level cache statistics per region
@@ -257,17 +340,23 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		getSecondLevelCacheStatistics(regionName).missCount++;
 	}
 
-	public synchronized void queryExecuted(String hql, int rows, long time) {
-		queryExecutionCount++;
-		if (queryExecutionMaxTime<time) {
-			queryExecutionMaxTime=time;
-			queryExecutionMaxTimeQueryString = hql;
-		}
-		if (hql!=null) {
-			QueryStatistics qs = getQueryStatistics(hql);
-			qs.executed(rows, time);
-		}
-	}
+
+    public void queryExecuted(String hql, int rows, long time) {
+        synchronized(this) {
+            queryExecutionCount++;
+            if (queryExecutionMaxTime<time) {
+                queryExecutionMaxTime=time;
+                queryExecutionMaxTimeQueryString = hql;
+            }
+            if (hql!=null) {
+                QueryStatistics qs = getQueryStatistics(hql);
+                qs.executed(rows, time);
+            }
+        }
+        if(operationThreshold > 0 && operationThreshold < time) {
+            logOperation(OPERATION_EXECUTEQUERY,hql, time);
+        }
+    }
 	
 	public synchronized void queryCacheHit(String hql, String regionName) {
 		queryCacheHitCount++;
@@ -556,10 +645,17 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		}
 	}
 
-	public void endTransaction(boolean success) {
-		transactionCount++;
-		if (success) commitedTransactionCount++;
-	}
+    public void endTransaction(boolean success) {
+        synchronized(this) {
+            transactionCount++;
+		    if (success) commitedTransactionCount++;
+        }
+        // The end transaction message can get too verbose (output log fills up with just end tx messages)
+        //if(operationThreshold > 0) {    // show endTransaction operations if we are logging operations that exceed a threshold.
+        //    logOperation(OPERATION_ENDTRANSACTION,null, 0);
+        //}
+
+    }
 	
 	public long getSuccessfulTransactionCount() {
 		return commitedTransactionCount;

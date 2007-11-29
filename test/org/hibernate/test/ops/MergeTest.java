@@ -8,11 +8,12 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.NonUniqueObjectException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.Session;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King
@@ -25,6 +26,39 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( MergeTest.class );
+	}
+
+	public void testMergeStaleVersionFails() throws Exception {
+		Session s = openSession();
+        s.beginTransaction();
+		VersionedEntity entity = new VersionedEntity( "entity", "entity" );
+		s.persist( entity );
+		s.getTransaction().commit();
+		s.close();
+
+		// make the detached 'entity' reference stale...
+		s = openSession();
+        s.beginTransaction();
+		VersionedEntity entity2 = ( VersionedEntity ) s.get( VersionedEntity.class, entity.getId() );
+		entity2.setName( "entity-name" );
+		s.getTransaction().commit();
+		s.close();
+
+		// now try to reattch it
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.merge( entity );
+			s.getTransaction().commit();
+			fail( "was expecting staleness error" );
+		}
+		catch ( StaleObjectStateException expected ) {
+			// expected outcome...
+		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
 	}
 
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
@@ -121,7 +155,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+//		cleanup();
     }
 
 	public void testNoExtraUpdatesOnMergeWithCollection() throws Exception {
@@ -162,7 +196,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+//		cleanup();
 	}
 
     public void testNoExtraUpdatesOnMergeVersioned() throws Exception {
@@ -201,7 +235,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+//		cleanup();
     }
 
     public void testNoExtraUpdatesOnMergeVersionedWithCollection() throws Exception {
@@ -245,7 +279,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
 
-		cleanup();
+//		cleanup();
     }
 
 	public void testPersistThenMergeInSameTxnWithVersion() {
@@ -267,7 +301,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx.commit();
 		s.close();
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testPersistThenMergeInSameTxnWithTimestamp() {
@@ -289,7 +323,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx.commit();
 		s.close();
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testMergeDeepTree() {
@@ -447,7 +481,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount(1);
 		assertUpdateCount(2);
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testMergeTreeWithGeneratedId() {
@@ -482,7 +516,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertInsertCount(1);
 		assertUpdateCount(2);
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testMergeManaged() {
@@ -524,7 +558,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		s.close();
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testRecursiveMergeTransient() {
@@ -544,7 +578,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx.commit();
 		s.close();
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testDeleteAndMerge() throws Exception {
@@ -567,7 +601,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		cleanup();
+//		cleanup();
 	}
 
 	public void testMergeManyToManyWithCollectionDeference() throws Exception {
@@ -610,11 +644,16 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx.commit();
 		s.close();
 
+//		cleanup();
+	}
+
+	protected void cleanupTest() throws Exception {
 		cleanup();
+		super.cleanupTest();
 	}
 
 	private void cleanup() {
-		Session s = openSession();
+		Session s = sfi().openSession();
 		s.beginTransaction();
 		s.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode" ).executeUpdate();

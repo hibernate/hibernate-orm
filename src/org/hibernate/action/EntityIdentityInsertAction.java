@@ -38,7 +38,10 @@ public final class EntityIdentityInsertAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		final SessionImplementor session = getSession();
 		final Object instance = getInstance();
-		
+        final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
 		boolean veto = preInsert();
 
 		// Don't need to lock the cache here, since if someone
@@ -65,9 +68,9 @@ public final class EntityIdentityInsertAction extends EntityAction {
 		
 		postInsert();
 
-		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
+		if ( stats && !veto ) {
 			session.getFactory().getStatisticsImplementor()
-					.insertEntity( getPersister().getEntityName() );
+					.insertEntity( getPersister().getEntityName(), System.currentTimeMillis() - startTime);
 		}
 
 	}

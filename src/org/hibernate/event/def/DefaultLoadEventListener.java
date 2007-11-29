@@ -392,15 +392,19 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) throws HibernateException {
 		final SessionImplementor source = event.getSession();
-		Object entity = persister.load(
+        final boolean stats = source.getFactory().getStatistics().isStatisticsEnabled();
+        long startTime = 0;
+        if ( stats ) startTime = System.currentTimeMillis();
+
+        Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
 				event.getLockMode(),
 				source
 		);
 
-		if ( event.isAssociationFetch() && source.getFactory().getStatistics().isStatisticsEnabled() ) {
-			source.getFactory().getStatisticsImplementor().fetchEntity( event.getEntityClassName() );
+		if ( event.isAssociationFetch() && stats) {
+			source.getFactory().getStatisticsImplementor().fetchEntity( event.getEntityClassName(), System.currentTimeMillis() - startTime);
 		}
 
 		return entity;

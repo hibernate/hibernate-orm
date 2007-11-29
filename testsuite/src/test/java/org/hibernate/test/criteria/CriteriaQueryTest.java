@@ -1,4 +1,4 @@
-//$Id: CriteriaQueryTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.criteria;
 
 import java.util.List;
@@ -153,8 +153,8 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.list();
 	
 		session.createCriteria(Student.class)
-		.add( Property.forName("name").eqAll(dc) )
-		.list();
+			.add( Property.forName("name").eqAll(dc) )
+			.list();
 	
 		session.createCriteria(Student.class)
 			.add( Subqueries.in("Gavin King", dc) )

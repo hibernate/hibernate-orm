@@ -58,12 +58,12 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			final Map enabledFilters) {
 		this(persister, translator, factory, criteria, rootEntityName, enabledFilters, null);
 	}
-	
+
 	public CriteriaJoinWalker(
-			final OuterJoinLoadable persister, 
+			final OuterJoinLoadable persister,
 			final CriteriaQueryTranslator translator,
-			final SessionFactoryImplementor factory, 
-			final CriteriaImpl criteria, 
+			final SessionFactoryImplementor factory,
+			final CriteriaImpl criteria,
 			final String rootEntityName,
 			final Map enabledFilters,
 			final String alias) {

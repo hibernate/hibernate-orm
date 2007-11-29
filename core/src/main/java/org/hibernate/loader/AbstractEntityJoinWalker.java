@@ -1,4 +1,4 @@
-//$Id: AbstractEntityJoinWalker.java 11080 2007-01-23 16:29:18Z steve.ebersole@jboss.com $
+//$Id: AbstractEntityJoinWalker.java 11081 2007-01-23 16:31:13Z steve.ebersole@jboss.com $
 package org.hibernate.loader;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ import org.hibernate.util.CollectionHelper;
 /**
  * Abstract walker for walkers which begin at an entity (criteria
  * queries and entity loaders).
- * 
+ *
  * @author Gavin King
  */
 public abstract class AbstractEntityJoinWalker extends JoinWalker {
@@ -55,10 +55,11 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 				getFactory(),
 				CollectionHelper.EMPTY_MAP
 			) );
-		
+
 		initPersisters(allAssociations, lockMode);
 		initStatementString( whereString, orderByString, lockMode);
 	}
+
 	protected final void initProjection(
 		final String projectionString,
 		final String whereString,

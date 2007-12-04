@@ -16,9 +16,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.tm.DummyConnectionProvider;
-import org.hibernate.test.tm.DummyTransactionManager;
-import org.hibernate.test.tm.DummyTransactionManagerLookup;
+import org.hibernate.test.tm.ConnectionProviderImpl;
+import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.test.tm.TransactionManagerLookupImpl;
 import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.util.SerializationHelper;
 
@@ -39,10 +39,10 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, DummyConnectionProvider.class.getName() );
+		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
+		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
-		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, DummyTransactionManagerLookup.class.getName() );
+		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
@@ -56,11 +56,11 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	protected void prepare() throws Throwable {
-		DummyTransactionManager.INSTANCE.begin();
+		SimpleJtaTransactionManagerImpl.getInstance().begin();
 	}
 
 	protected void done() throws Throwable {
-		DummyTransactionManager.INSTANCE.commit();
+		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
 	// Some additional tests specifically for the aggressive-release functionality...
@@ -184,7 +184,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	public void testSuppliedConnection() throws Throwable {
 		prepare();
 
-		Connection originalConnection = DummyTransactionManager.INSTANCE.getCurrent().getConnection();
+		Connection originalConnection = ConnectionProviderImpl.getActualConnectionProvider().getConnection();
 		Session session = getSessions().openSession( originalConnection );
 
 		Silly silly = new Silly( "silly" );
@@ -201,6 +201,8 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 		release( session );
 		done();
+
+		ConnectionProviderImpl.getActualConnectionProvider().closeConnection( originalConnection );
 	}
 
 	public void testBorrowedConnections() throws Throwable {

@@ -1,6 +1,5 @@
 package org.hibernate.test.cache;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.Session;
@@ -11,8 +10,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.test.tm.DummyConnectionProvider;
-import org.hibernate.test.tm.DummyTransactionManagerLookup;
+import org.hibernate.test.tm.ConnectionProviderImpl;
+import org.hibernate.test.tm.TransactionManagerLookupImpl;
 import org.hibernate.transaction.JDBCTransactionFactory;
 
 /**
@@ -47,8 +46,8 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		}
 
 		if ( useTransactionManager() ) {
-			cfg.setProperty( Environment.CONNECTION_PROVIDER, DummyConnectionProvider.class.getName() );
-			cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, DummyTransactionManagerLookup.class.getName() );
+			cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
+			cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
 		}
 		else {
 			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );

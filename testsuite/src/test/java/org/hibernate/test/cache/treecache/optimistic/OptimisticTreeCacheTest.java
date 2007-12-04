@@ -11,7 +11,7 @@ import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.cfg.Environment;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.cache.BaseCacheProviderTestCase;
-import org.hibernate.test.tm.DummyTransactionManager;
+import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
 
 /**
  * @author Steve Ebersole
@@ -59,25 +59,25 @@ public class OptimisticTreeCacheTest extends BaseCacheProviderTestCase {
 
 		try {
 			System.out.println( "****************************************************************" );
-			DummyTransactionManager.INSTANCE.begin();
+			SimpleJtaTransactionManagerImpl.getInstance().begin();
 			treeCache.put( fqn, "ITEM", long1, ManualDataVersion.gen( 1 ) );
-			DummyTransactionManager.INSTANCE.commit();
+			SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 			System.out.println( "****************************************************************" );
-			DummyTransactionManager.INSTANCE.begin();
+			SimpleJtaTransactionManagerImpl.getInstance().begin();
 			treeCache.put( fqn, "ITEM", long2, ManualDataVersion.gen( 2 ) );
-			DummyTransactionManager.INSTANCE.commit();
+			SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 			try {
 				System.out.println( "****************************************************************" );
-				DummyTransactionManager.INSTANCE.begin();
+				SimpleJtaTransactionManagerImpl.getInstance().begin();
 				treeCache.put( fqn, "ITEM", long1, ManualDataVersion.gen( 1 ) );
-				DummyTransactionManager.INSTANCE.commit();
+				SimpleJtaTransactionManagerImpl.getInstance().commit();
 				fail( "stale write allowed" );
 			}
 			catch( Throwable ignore ) {
 				// expected behavior
-				DummyTransactionManager.INSTANCE.rollback();
+				SimpleJtaTransactionManagerImpl.getInstance().rollback();
 			}
 
 			Long current = ( Long ) treeCache.get( fqn, "ITEM" );

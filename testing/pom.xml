@@ -27,10 +27,9 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <!-- here we need to pull JUnit deps into compile scope... -->
+            <!-- here we need to pull JUnit deps into compile scope, as opposed to the normal test scope -->
             <version>3.8.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
-
 </project>

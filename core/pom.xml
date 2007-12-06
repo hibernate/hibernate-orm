@@ -22,18 +22,16 @@
         <dependency>
             <groupId>antlr</groupId>
             <artifactId>antlr</artifactId>
-            <version>${antlrVersion}</version>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <version>3.1</version>
         </dependency>
         <dependency>
             <groupId>dom4j</groupId>
             <artifactId>dom4j</artifactId>
-            <version>1.6.1</version>
         </dependency>
+
         <dependency>
             <!-- YUCK, YUCK, YUCK!!!! -->
             <groupId>javax.transaction</groupId>
@@ -86,13 +84,6 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>antlr-maven-plugin</artifactId>
                 <version>${antlrPluginVersion}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>antlr</groupId>
-                        <artifactId>antlr</artifactId>
-                        <version>${antlrVersion}</version>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <grammars>hql.g,hql-sql.g,sql-gen.g</grammars>
                 </configuration>
@@ -150,8 +141,7 @@
     </reporting>
 
     <properties>
-        <antlrVersion>2.7.6</antlrVersion>
-        <antlrPluginVersion>2.0.0-SNAPSHOT</antlrPluginVersion>
+        <antlrPluginVersion>2.0-SNAPSHOT</antlrPluginVersion>
     </properties>
 
 </project>

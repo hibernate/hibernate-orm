@@ -29,26 +29,6 @@
             <artifactId>hibernate-testing</artifactId>
             <version>${version}</version>
         </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-ehcache</artifactId>
-            <version>${version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-jbosscache</artifactId>
-            <version>${version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-oscache</artifactId>
-            <version>${version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>hibernate-swarmcache</artifactId>
-            <version>${version}</version>
-        </dependency>
         <!-- these are optional on core... :( -->
         <dependency>
             <groupId>javassist</groupId>

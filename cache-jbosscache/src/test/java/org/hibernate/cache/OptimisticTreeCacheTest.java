@@ -1,12 +1,35 @@
-package org.hibernate.test.cache.treecache.optimistic;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.cache;
 
 import junit.framework.Test;
+import junit.framework.Assert;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.TreeCache;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.optimistic.DataVersion;
 
-import org.hibernate.cache.OptimisticTreeCacheProvider;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.cfg.Environment;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -17,11 +40,6 @@ import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
  * @author Steve Ebersole
  */
 public class OptimisticTreeCacheTest extends BaseCacheProviderTestCase {
-
-	// note that a lot of the fucntionality here is intended to be used
-	// in creating specific tests for each CacheProvider that would extend
-	// from a base test case (this) for common requirement testing...
-
 	public OptimisticTreeCacheTest(String x) {
 		super( x );
 	}
@@ -43,7 +61,7 @@ public class OptimisticTreeCacheTest extends BaseCacheProviderTestCase {
 	}
 
 	protected String getConfigResourceLocation() {
-		return "org/hibernate/test/cache/treecache/optimistic/treecache.xml";
+		return "treecache-optimistic.xml";
 	}
 
 	protected boolean useTransactionManager() {
@@ -73,7 +91,7 @@ public class OptimisticTreeCacheTest extends BaseCacheProviderTestCase {
 				SimpleJtaTransactionManagerImpl.getInstance().begin();
 				treeCache.put( fqn, "ITEM", long1, ManualDataVersion.gen( 1 ) );
 				SimpleJtaTransactionManagerImpl.getInstance().commit();
-				fail( "stale write allowed" );
+				Assert.fail( "stale write allowed" );
 			}
 			catch( Throwable ignore ) {
 				// expected behavior
@@ -81,7 +99,7 @@ public class OptimisticTreeCacheTest extends BaseCacheProviderTestCase {
 			}
 
 			Long current = ( Long ) treeCache.get( fqn, "ITEM" );
-			assertEquals( "unexpected current value", 2, current.longValue() );
+			Assert.assertEquals( "unexpected current value", 2, current.longValue() );
 		}
 		finally {
 			try {

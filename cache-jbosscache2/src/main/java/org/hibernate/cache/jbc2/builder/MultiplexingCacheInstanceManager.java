@@ -1,17 +1,25 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.jbc2.builder;
 
@@ -150,53 +158,66 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
     }
     
     /**
-     * Create a new MultiplexingCacheInstanceManager using the provided
-     * {@link Cache}s.
-     * <p>
+     * Create a new MultiplexingCacheInstanceManager using the provided {@link Cache}s.
+     * <p/>
      * If this constructor is used, the {@link #start(Settings, Properties)}
      * method will make no attempt to create a cache factory or obtain caches
      * from it.  Only the <code>Cache</code>s passed as arguments to this
      * constructor will be available.
-     * </p>
-     * 
+     *
+	 * @param jbcEntityCache The entity cache
+	 * @param jbcCollectionCache the collection cache
+	 * @param jbcTsCache The timestamps cache
+	 * @param jbcQueryCache The query cache
      */
-    public MultiplexingCacheInstanceManager(Cache jbcEntityCache, Cache jbcCollectionCache, 
-                                            Cache jbcTsCache, Cache jbcQueryCache) {
-        
+    public MultiplexingCacheInstanceManager(
+			Cache jbcEntityCache,
+			Cache jbcCollectionCache,
+			Cache jbcTsCache,
+			Cache jbcQueryCache) {
         this.jbcEntityCache = jbcEntityCache;
         this.jbcCollectionCache = jbcCollectionCache;
         this.jbcTsCache = jbcTsCache;
         this.jbcQueryCache = jbcQueryCache;
     }
-    
+
     /**
-     * Gets the cache factory.
-     */
-    public JBossCacheFactory getCacheFactory() {
+	 * Getter for property 'cacheFactory'.
+	 * @see #setCacheFactory
+	 *
+	 * @return Value for property 'cacheFactory'.
+	 */
+	public JBossCacheFactory getCacheFactory() {
         return jbcFactory;
     }
 
     /**
-     * Sets the cache factory.
-     * @param cacheFactory the cache factory
-     */
-    public void setCacheFactory(JBossCacheFactory factory) {
+	 * Setter for property 'cacheFactory'.
+	 * @see #getCacheFactory
+	 *
+	 * @param factory Value to set for property 'cacheFactory'.
+	 */
+	public void setCacheFactory(JBossCacheFactory factory) {
         this.jbcFactory = factory;
     }
-    
+
     /**
-     * Gets the channel factory.
-     */
-    public ChannelFactory getChannelFactory() {
+	 * Getter for property 'channelFactory'.
+	 * @see #setChannelFactory
+	 *
+	 * @return Value for property 'channelFactory'.
+	 */
+	public ChannelFactory getChannelFactory() {
         return channelFactory;
     }
-    
+
     /**
-     * Set the channel factory.
-     * 
-     * @param factory the channel factory
-     */
-    public void setChannelFactory(ChannelFactory factory) {
+	 * Setter for property 'channelFactory'.
+	 * @see #getChannelFactory
+	 *
+	 * @param factory Value to set for property 'channelFactory'.
+	 */
+	public void setChannelFactory(ChannelFactory factory) {
         this.channelFactory = factory;
     }
 

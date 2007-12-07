@@ -1,17 +1,25 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.jbc2;
 
@@ -43,7 +51,6 @@ import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
 /**
  * General support for writing {@link Region} implementations for JBoss Cache
  * 2.x.
- * 
  * 
  * @author Steve Ebersole
  */
@@ -81,7 +88,7 @@ public abstract class BasicRegionAdapter implements Region {
                     classLoader = getClass().getClassLoader();
                 }
                 jbcRegion.registerContextClassLoader(classLoader);
-                if (jbcRegion.isActive() == false) {
+                if ( !jbcRegion.isActive() ) {
                     jbcRegion.activate();
                 }
             }
@@ -105,7 +112,7 @@ public abstract class BasicRegionAdapter implements Region {
             }
             else if (optimistic && regionRoot instanceof NodeSPI) {
                 // FIXME Hacky workaround to JBCACHE-1202
-                if ((((NodeSPI) regionRoot).getVersion() instanceof NonLockingDataVersion) == false) {
+                if ( !( ( ( NodeSPI ) regionRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
                     ((NodeSPI) regionRoot).setVersion(NonLockingDataVersion.INSTANCE);
                 }
             }
@@ -211,10 +218,11 @@ public abstract class BasicRegionAdapter implements Region {
      * {@link #suspend suspending any ongoing transaction}. Wraps any exception
      * in a {@link CacheException}. Ensures any ongoing transaction is resumed.
      * 
-     * @param key
+     * @param key The key of the item to get
      * @param opt any option to add to the get invocation. May be <code>null</code>
      * @param suppressTimeout should any TimeoutException be suppressed?
-     * @return
+     * @return The retrieved object
+	 * @throws CacheException issue managing transaction or talking to cache
      */
     protected Object suspendAndGet(Object key, Option opt, boolean suppressTimeout) throws CacheException {
         Transaction tx = suspend();

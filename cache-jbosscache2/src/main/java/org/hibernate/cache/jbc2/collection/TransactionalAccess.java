@@ -1,17 +1,25 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.jbc2.collection;
 
@@ -41,7 +49,7 @@ public class TransactionalAccess implements CollectionRegionAccessStrategy {
     /**
      * Create a new TransactionalAccess.
      * 
-     * @param region
+     * @param region the region to which this provides access
      */
     public TransactionalAccess(CollectionRegionImpl region) {
         this(region, new TransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn()));
@@ -49,66 +57,99 @@ public class TransactionalAccess implements CollectionRegionAccessStrategy {
 
     /**
      * Allow subclasses to define the delegate.
-     * 
-     * @param region
-     * @param delegate
+     *
+     * @param region the region to which this provides access
+     * @param delegate type of transactional access
      */
     protected TransactionalAccess(CollectionRegionImpl region, TransactionalAccessDelegate delegate) {
         this.region = region;
         this.delegate = delegate;
     }
 
-    public CollectionRegion getRegion() {
+    /**
+	 * {@inheritDoc}
+	 */
+	public CollectionRegion getRegion() {
         return region;
     }
 
-    public Object get(Object key, long txTimestamp) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public Object get(Object key, long txTimestamp) throws CacheException {
 
         return delegate.get(key, txTimestamp);
     }
 
-    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 
         return delegate.putFromLoad(key, value, txTimestamp, version);
     }
 
-    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+    /**
+	 * {@inheritDoc}
+	 */
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
 
         return delegate.putFromLoad(key, value, txTimestamp, version, minimalPutOverride);
     }
 
-    public void remove(Object key) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void remove(Object key) throws CacheException {
 
         delegate.remove(key);
     }
 
-    public void removeAll() throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void removeAll() throws CacheException {
         delegate.removeAll();
     }
 
-    public void evict(Object key) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void evict(Object key) throws CacheException {
         delegate.evict(key);
     }
 
-    public void evictAll() throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void evictAll() throws CacheException {
         delegate.evictAll();
     }
 
-    // Following methods we don't delegate since they have so little logic
-    // it's clearer to just implement them here
-
-    public SoftLock lockItem(Object key, Object version) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
         return null;
     }
 
-    public SoftLock lockRegion() throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public SoftLock lockRegion() throws CacheException {
         return null;
     }
 
-    public void unlockItem(Object key, SoftLock lock) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
     }
 
-    public void unlockRegion(SoftLock lock) throws CacheException {
+    /**
+	 * {@inheritDoc}
+	 */
+	public void unlockRegion(SoftLock lock) throws CacheException {
     }
 }

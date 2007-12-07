@@ -1,17 +1,25 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.jbc2.builder;
 
@@ -174,10 +182,10 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
 
     /**
      * Create a cache using the given settings and properties.
-     * 
-     * @param settings
-     * @param properties
-     * @return
+     *
+     * @param settings The Hibernate settings
+     * @param properties The configuration properties
+     * @return The created cache
      */
     protected Cache createSharedCache(Settings settings, Properties properties)
     {
@@ -189,9 +197,9 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      * Injects the TransactionManager found via {@link Settings#getTransactionManagerLookup()}
      * into the cache.
      * 
-     * @param cache
-     * @param settings
-     * @param properties
+     * @param cache The cache instance
+     * @param settings The Hibernate settings
+     * @param properties The configuration properties
      * 
      * @throws CacheException if <code>cache</code> is already started and is 
      *                        configured with a different TransactionManager

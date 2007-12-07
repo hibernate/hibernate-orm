@@ -1,17 +1,25 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.jbc2.collection;
 
@@ -32,26 +40,43 @@ import org.hibernate.cache.CacheException;
 public class ReadOnlyAccess extends TransactionalAccess {
     private static final Logger log = LoggerFactory.getLogger(ReadOnlyAccess.class);
 
-    public ReadOnlyAccess(CollectionRegionImpl region) {
+	/**
+	 * Create a provider of read-only access to the specific region.
+	 *
+	 * @param region The region to which this provides access.
+	 */
+	public ReadOnlyAccess(CollectionRegionImpl region) {
         super(region);
     }
 
-    @Override
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
     public SoftLock lockItem(Object key, Object version) throws CacheException {
         throw new UnsupportedOperationException("Illegal attempt to edit read only item");
     }
 
-    @Override
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
     public SoftLock lockRegion() throws CacheException {
         throw new UnsupportedOperationException("Illegal attempt to edit read only region");
     }
 
-    @Override
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
     public void unlockItem(Object key, SoftLock lock) throws CacheException {
         log.error("Illegal attempt to edit read only item");
     }
 
-    @Override
+    /**
+	 * {@inheritDoc}
+	 */
+	@Override
     public void unlockRegion(SoftLock lock) throws CacheException {
         log.error("Illegal attempt to edit read only region");
     }

@@ -1,3 +1,26 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.cache.jbc2.functional;
 
 import org.hibernate.cache.RegionFactory;
@@ -6,8 +29,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.test.tm.DummyConnectionProvider;
-import org.hibernate.test.tm.DummyTransactionManagerLookup;
 
 /**
  * Provides common configuration setups for cache testing.
@@ -42,8 +63,8 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
         cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
 
         cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
-        cfg.setProperty(Environment.CONNECTION_PROVIDER, DummyConnectionProvider.class.getName());
-        cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, DummyTransactionManagerLookup.class.getName());
+        cfg.setProperty(Environment.CONNECTION_PROVIDER, org.hibernate.test.tm.ConnectionProviderImpl.class.getName());
+        cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, org.hibernate.test.tm.TransactionManagerLookupImpl.class.getName());
 
         configureCacheFactory(cfg);
     }

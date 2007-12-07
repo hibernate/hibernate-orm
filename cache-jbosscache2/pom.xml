@@ -120,28 +120,12 @@
                     <source>1.5</source>
                     <target>1.5</target>
                 </configuration>
-              </plugin>
-            <plugin>
-                <groupId>org.jboss.maven.plugins</groupId>
-                <artifactId>maven-test-ext-plugin</artifactId>
-                <version>1.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extend</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
-                        <property>
-                            <name>hibernate.test.validatefailureexpected</name>
-                            <value>true</value>
-                        </property>
                         <!-- If you find the testsuite runs very slowly, there
                              may be problems with multicast on the interface
                              JGroups uses by default. You can try to resolve
@@ -163,52 +147,24 @@
                             <value>true</value>
                         </property>
                     </systemProperties>
-                    <!-- If all else fails and you cannot get multicast working
-                         properly for the testsuite, uncomment this to disable the
-                         tests.
-                    <skipExec>true</skipExec>
-                    -->
+                    <skipExec>${skipUnitTests}</skipExec>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
+    <properties>
+        <skipUnitTests>true</skipUnitTests>
+    </properties>
+
     <profiles>
-        <!-- HSQLDB is the default (eventually move to H2) -->
         <profile>
-            <id>hsqldb</id>
+            <id>test</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>hsqldb</groupId>
-                    <artifactId>hsqldb</artifactId>
-                    <version>1.8.0.2</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.4.2</version>
-                </dependency>
-                <dependency>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                    <version>1.2.14</version>
-                </dependency>
-                <dependency>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
-                    <version>2.1_3</version>
-                </dependency>
-            </dependencies>
             <properties>
-                <db.dialect>org.hibernate.dialect.HSQLDialect</db.dialect>
-                <jdbc.driver>org.hsqldb.jdbcDriver</jdbc.driver>
-                <jdbc.url>jdbc:hsqldb:target/test/db/hsqldb/hibernate</jdbc.url>
-                <jdbc.user>sa</jdbc.user>
-                <jdbc.pass/>
-                <jdbc.isolation/>
+                <skipUnitTests>false</skipUnitTests>
             </properties>
         </profile>
      </profiles>

@@ -102,7 +102,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * Thus, leaving this value at default means using the default protocol
      * stack configs provided by JGroups.
      */
-    public static final String DEF_MULTIPLEXER_RESOURCE = "stacks.xml";
+    public static final String DEF_MULTIPLEXER_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
     /**
      * Default value for {@link #ENTITY_CACHE_RESOURCE_PROP}.
      */

@@ -141,7 +141,7 @@
     </reporting>
 
     <properties>
-        <antlrPluginVersion>2.0-SNAPSHOT</antlrPluginVersion>
+        <antlrPluginVersion>2.1-SNAPSHOT</antlrPluginVersion>
     </properties>
 
 </project>

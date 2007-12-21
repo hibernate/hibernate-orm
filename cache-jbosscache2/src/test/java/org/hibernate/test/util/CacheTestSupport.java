@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.jboss.cache.Cache;
+import org.slf4j.Logger;
 
 import org.hibernate.cache.RegionFactory;
 
@@ -41,11 +42,17 @@ public class CacheTestSupport {
     
     private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
     
+    private Logger log;
+    
     private Set<Cache> caches = new HashSet();
     private Set<RegionFactory> factories = new HashSet();
     private Exception exception;
     private String preferIPv4Stack;
  
+    public CacheTestSupport(Logger log) {
+       this.log = log;
+    }
+    
     public void registerCache(Cache cache) {
         caches.add(cache);
     }
@@ -82,6 +89,21 @@ public class CacheTestSupport {
         cleanUp();
         throwStoredException();
     }
+    
+    public void avoidConcurrentFlush() {
+       // JG 2.6.1 has a problem where calling flush more than once too quickly
+       // can result in several second delays
+       sleep(100);
+    }
+    
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        }
+        catch (InterruptedException e) {
+            log.warn("Interrupted during sleep", e);
+        }
+    }
 
     private void cleanUp() {
         for (Iterator it = factories.iterator(); it.hasNext(); ) {
@@ -109,6 +131,7 @@ public class CacheTestSupport {
             finally {
                 it.remove();
             }
+            avoidConcurrentFlush();
         }        
         caches.clear();
     }

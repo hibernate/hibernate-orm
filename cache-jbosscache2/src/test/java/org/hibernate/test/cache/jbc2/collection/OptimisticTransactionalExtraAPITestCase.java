@@ -75,6 +75,10 @@ public class OptimisticTransactionalExtraAPITestCase extends AbstractJBossCacheT
             JBossCacheRegionFactory rf  = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
             Cache localCache = rf.getCacheInstanceManager().getEntityCacheInstance();
             optimistic = localCache.getConfiguration().getNodeLockingScheme() == org.jboss.cache.config.Configuration.NodeLockingScheme.OPTIMISTIC;
+            
+            // Sleep a bit to avoid concurrent FLUSH problem
+            avoidConcurrentFlush();
+            
             CollectionRegion localCollectionRegion = rf.buildCollectionRegion(REGION_NAME, cfg.getProperties(), null);
             setCollectionAccessStrategy(localCollectionRegion.buildAccessStrategy(getAccessType()));
         }

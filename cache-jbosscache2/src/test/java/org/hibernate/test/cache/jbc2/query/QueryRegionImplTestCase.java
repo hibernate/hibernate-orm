@@ -99,6 +99,9 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
         Configuration cfg = createConfiguration(configName);
         JBossCacheRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
         
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
+
         final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX), cfg.getProperties());
         
         region.put(KEY, VALUE1);
@@ -186,6 +189,9 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
         
         Configuration cfg = createConfiguration(configName);
         JBossCacheRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+        
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
         
         final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX), cfg.getProperties());
         

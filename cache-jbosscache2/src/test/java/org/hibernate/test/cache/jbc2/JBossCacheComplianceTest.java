@@ -39,6 +39,8 @@ import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.optimistic.DataVersion;
 import org.jboss.cache.transaction.BatchModeTransactionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests that JBC itself functions as expected in certain areas where there
@@ -51,11 +53,13 @@ import org.jboss.cache.transaction.BatchModeTransactionManager;
  */
 public class JBossCacheComplianceTest extends TestCase {
 
-    private CacheTestSupport testSupport = new CacheTestSupport();
+    private CacheTestSupport testSupport;
     
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     
     public JBossCacheComplianceTest(String x) {
         super(x);
+        testSupport = new CacheTestSupport(log);
     }
 
     protected String getConfigResourceKey() {

@@ -95,6 +95,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         Cache localCache = getJBossCache(regionFactory);
         boolean invalidation = CacheHelper.isClusteredInvalidation(localCache);
         
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
+        
         GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(regionFactory, getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
         
         cfg = createConfiguration(configName);
@@ -149,12 +152,18 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         Cache localCache = getJBossCache(regionFactory);
         boolean optimistic = "OPTIMISTIC".equals(localCache.getConfiguration().getNodeLockingSchemeString());
         boolean invalidation = CacheHelper.isClusteredInvalidation(localCache);
+        
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
     
         GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(regionFactory, getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
         
         cfg = createConfiguration(configName);
         regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
         Cache remoteCache = getJBossCache(regionFactory);
+        
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
     
         GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory, getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
         Fqn regionFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);

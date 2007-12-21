@@ -48,11 +48,12 @@ public abstract class AbstractJBossCacheTestCase extends UnitTestCase {
 
     public static final String REGION_PREFIX = "test";
     
-    private CacheTestSupport testSupport = new CacheTestSupport();
+    private CacheTestSupport testSupport;
     protected final Logger log = LoggerFactory.getLogger(getClass());
     
     public AbstractJBossCacheTestCase(String name) {
         super(name);
+        testSupport = new CacheTestSupport(log);
     }
 
     @Override
@@ -96,6 +97,10 @@ public abstract class AbstractJBossCacheTestCase extends UnitTestCase {
         catch (InterruptedException e) {
             log.warn("Interrupted during sleep", e);
         }
+    }
+    
+    protected void avoidConcurrentFlush() {
+        testSupport.avoidConcurrentFlush();
     }
 
     

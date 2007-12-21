@@ -64,9 +64,11 @@ import org.jboss.cache.transaction.BatchModeTransactionManager;
 public abstract class AbstractEntityRegionAccessStrategyTestCase extends AbstractJBossCacheTestCase {
 
     public static final String REGION_NAME = "test/com.foo.test";
-    public static final String KEY = "KEY";
+    public static final String KEY_BASE = "KEY";
     public static final String VALUE1 = "VALUE1";
     public static final String VALUE2 = "VALUE2";
+    
+    protected static int testCount;
     
     protected static Configuration localCfg;
     protected static JBossCacheRegionFactory localRegionFactory;
@@ -116,8 +118,14 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     protected void setUp() throws Exception {
         super.setUp();
         
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
+        
         localEntityRegion = localRegionFactory.buildEntityRegion(REGION_NAME, localCfg.getProperties(), getCacheDataDescription());
         localAccessStrategy = localEntityRegion.buildAccessStrategy(getAccessType());
+        
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
         
         remoteEntityRegion = remoteRegionFactory.buildEntityRegion(REGION_NAME, remoteCfg.getProperties(), getCacheDataDescription());
         remoteAccessStrategy = remoteEntityRegion.buildAccessStrategy(getAccessType());
@@ -186,6 +194,24 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     protected Fqn getRegionFqn(String regionName, String regionPrefix) {
         return BasicRegionAdapter.getTypeLastRegionFqn(regionName, regionPrefix, EntityRegionImpl.TYPE);
     }
+
+    protected void assertThreadsRanCleanly()
+    {
+        if (node1Failure != null)
+            throw node1Failure;
+        if (node2Failure != null)
+            throw node2Failure;
+      
+        if (node1Exception != null) {
+            log.error("node1 saw an exception", node1Exception);
+            assertEquals("node1 saw no exceptions", null, node1Exception);
+        }
+        
+        if (node2Exception != null) {
+            log.error("node2 saw an exception", node2Exception);
+            assertEquals("node2 saw no exceptions", null, node2Exception);
+        }
+    }
     
     /**
      * This is just a setup test where we assert that the cache config is
@@ -220,13 +246,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
      * Second tries to do a putFromLoad with stale data (i.e. it took
      * longer to read from the db).  Both commit their tx. Then
      * both start a new tx and get. First should see the updated data;
-     * second should either see the updated data (isInvalidation()( == false)
+     * second should either see the updated data (isInvalidation() == false)
      * or null (isInvalidation() == true).
      * 
      * @param useMinimalAPI
      * @throws Exception
      */
     private void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
+        
+        final String KEY = KEY_BASE + testCount++;
         
         final CountDownLatch writeLatch1 = new CountDownLatch(1);
         final CountDownLatch writeLatch2 = new CountDownLatch(1);
@@ -319,13 +347,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         
         assertTrue("Threads completed", completionLatch.await(2, TimeUnit.SECONDS));
         
-        if (node1Failure != null)
-            throw node1Failure;
-        if (node2Failure != null)
-            throw node2Failure;
-        
-        assertEquals("node1 saw no exceptions", null, node1Exception);
-        assertEquals("node2 saw no exceptions", null, node2Exception);
+        assertThreadsRanCleanly();
         
         long txTimestamp = System.currentTimeMillis();
         assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
@@ -349,6 +371,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
      * Test method for {@link TransactionalAccess#insert(java.lang.Object, java.lang.Object, java.lang.Object)}.
      */
     public void testInsert() throws Exception {
+       
+        final String KEY = KEY_BASE + testCount++;
         
         final CountDownLatch readLatch = new CountDownLatch(1);
         final CountDownLatch commitLatch = new CountDownLatch(1);
@@ -431,13 +455,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
             assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
         }
         
-        if (node1Failure != null)
-            throw node1Failure;
-        if (node2Failure != null)
-            throw node2Failure;
-        
-        assertEquals("node1 saw no exceptions", null, node1Exception);
-        assertEquals("node2 saw no exceptions", null, node2Exception);
+        assertThreadsRanCleanly();
         
         long txTimestamp = System.currentTimeMillis();
         assertEquals("Correct node1 value", VALUE1, localAccessStrategy.get(KEY, txTimestamp));
@@ -449,6 +467,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
      * Test method for {@link TransactionalAccess#update(java.lang.Object, java.lang.Object, java.lang.Object, java.lang.Object)}.
      */
     public void testUpdate() throws Exception {
+       
+        final String KEY = KEY_BASE + testCount++;
         
         // Set up initial state
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
@@ -542,13 +562,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
             assertTrue(completionLatch.await(1, TimeUnit.SECONDS));
         }
         
-        if (node1Failure != null)
-            throw node1Failure;
-        if (node2Failure != null)
-            throw node2Failure;
-        
-        assertEquals("node1 saw no exceptions", null, node1Exception);
-        assertEquals("node2 saw no exceptions", null, node2Exception);
+        assertThreadsRanCleanly();
         
         long txTimestamp = System.currentTimeMillis();
         assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
@@ -591,6 +605,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     }
 
     private void evictOrRemoveTest(boolean evict) {
+       
+        final String KEY = KEY_BASE + testCount++;
+        
         assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
         assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
         
@@ -615,6 +632,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     }
 
     private void evictOrRemoveAllTest(boolean evict) {
+       
+        final String KEY = KEY_BASE + testCount++;
         
         Fqn regionFqn = getRegionFqn(REGION_NAME, REGION_PREFIX);
         
@@ -641,13 +660,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
+        
+        // Wait for async propagation
+        sleep(250);
+        
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
         
         // Wait for async propagation
         sleep(250);
-        
-
         
         if (isUsingOptimisticLocking()) {
             regionRoot = localCache.getRoot().getChild(regionFqn);

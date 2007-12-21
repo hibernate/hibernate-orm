@@ -58,6 +58,9 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
     }
     
     private void putFromLoadTest(boolean minimal) throws Exception {
+       
+        final String KEY = KEY_BASE + testCount++;
+        
         long txTimestamp = System.currentTimeMillis();
         BatchModeTransactionManager.getInstance().begin();
         assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
@@ -77,6 +80,9 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
 
     @Override
     public void testUpdate() throws Exception {
+       
+        final String KEY = KEY_BASE + testCount++;
+        
         try {
             localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
             fail("Call to update did not throw exception");

@@ -64,9 +64,11 @@ import org.jboss.cache.transaction.BatchModeTransactionManager;
 public abstract class AbstractCollectionRegionAccessStrategyTestCase extends AbstractJBossCacheTestCase {
 
     public static final String REGION_NAME = "test/com.foo.test";
-    public static final String KEY = "KEY";
+    public static final String KEY_BASE = "KEY";
     public static final String VALUE1 = "VALUE1";
     public static final String VALUE2 = "VALUE2";
+    
+    protected static int testCount;
     
     protected static Configuration localCfg;
     protected static JBossCacheRegionFactory localRegionFactory;
@@ -114,11 +116,17 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
     protected void setUp() throws Exception {
         super.setUp();
         
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
+        
         invalidation = CacheHelper.isClusteredInvalidation(localCache);
         synchronous = CacheHelper.isSynchronous(localCache);
         optimistic = localCache.getConfiguration().getNodeLockingScheme() == org.jboss.cache.config.Configuration.NodeLockingScheme.OPTIMISTIC;
         localCollectionRegion = localRegionFactory.buildCollectionRegion(REGION_NAME, localCfg.getProperties(), getCacheDataDescription());
         localAccessStrategy = localCollectionRegion.buildAccessStrategy(getAccessType());
+        
+        // Sleep a bit to avoid concurrent FLUSH problem
+        avoidConcurrentFlush();
         
         remoteCollectionRegion = remoteRegionFactory.buildCollectionRegion(REGION_NAME, remoteCfg.getProperties(), getCacheDataDescription());
         remoteAccessStrategy = remoteCollectionRegion.buildAccessStrategy(getAccessType());
@@ -228,6 +236,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
      * @throws Exception
      */
     private void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
+        
+        final String KEY = KEY_BASE + testCount++;
         
         final CountDownLatch writeLatch1 = new CountDownLatch(1);
         final CountDownLatch writeLatch2 = new CountDownLatch(1);
@@ -400,6 +410,9 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
     }
 
     private void evictOrRemoveTest(boolean evict) {
+       
+        final String KEY = KEY_BASE + testCount++;
+        
         assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
         assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
         
@@ -422,6 +435,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
     }
 
     private void evictOrRemoveAllTest(boolean evict) {
+       
+        final String KEY = KEY_BASE + testCount++;
         
         Fqn regionFqn = getRegionFqn(REGION_NAME, REGION_PREFIX);
         

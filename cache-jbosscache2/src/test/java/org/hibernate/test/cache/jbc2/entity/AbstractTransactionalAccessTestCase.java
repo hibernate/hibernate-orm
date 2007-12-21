@@ -53,6 +53,8 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
     }
     
     public void testContestedPutFromLoad() throws Exception {
+       
+        final String KEY = KEY_BASE + testCount++;
         
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
                
@@ -129,13 +131,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
         
         assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
         
-        if (node1Failure != null)
-            throw node1Failure;
-        if (node2Failure != null)
-            throw node2Failure;
-        
-        assertEquals("node1 saw no exceptions", null, node1Exception);
-        assertEquals("node2 saw no exceptions", null, node2Exception);
+        assertThreadsRanCleanly();
         
         long txTimestamp = System.currentTimeMillis();
         assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));

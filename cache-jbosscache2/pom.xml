@@ -27,12 +27,15 @@
         <dependency>
             <groupId>org.jboss.cache</groupId>
             <artifactId>jbosscache-core</artifactId>
-            <!-- I'd prefer this, at least until we get a GA...
-            <version>[2.0.0.BETA2,)</version>
-            -->
-            <version>2.1.0.BETA1</version>
+            <version>2.1.0.CR2</version>
         </dependency>
-
+        <!-- TODO Remove once JBC 2.1.0.GA uses JG 2.6.1 -->
+        <dependency>
+            <groupId>jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+        
         <!-- test dependencies -->
         <dependency>
             <groupId>${groupId}</groupId>
@@ -125,6 +128,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <excludes>
+                        <!-- Skip a long-running test of a prototype class -->
+                        <exclude>**/ClusteredConcurrentTimestampRegionTestCase.java</exclude>
+                    </excludes>
                     <systemProperties>
                         <property>
                             <name>hibernate.test.validatefailureexpected</name>
@@ -143,6 +150,30 @@
                         <property>
                             <name>java.net.preferIPv4Stack</name>
                             <value>true</value>
+                        </property>
+                        <!-- Tell JGroups to only wait a short time for PING 
+                             responses before determining coordinator. Speeds cluster
+                             formation during integration tests. (This is too
+                             low a value for a real system; only use for tests.)
+                        -->
+                        <property>
+                            <name>jgroups.ping.timeout</name>
+                            <value>500</value>
+                        </property>
+                        <!-- Tell JGroups to only require one PING response
+                             before determining coordinator. Speeds cluster
+                             formation during integration tests. (This is too
+                             low a value for a real system; only use for tests.)
+                        -->
+                        <property>
+                            <name>jgroups.ping.num_initial_members</name>
+                            <value>1</value>
+                        </property>
+                        <!-- Disable the JGroups message bundling feature
+                             to speed tests and avoid FLUSH issue -->
+                        <property>
+                            <name>jgroups.udp.enable_bundling</name>
+                            <value>false</value>
                         </property>
                     </systemProperties>
                     <skipExec>${skipUnitTests}</skipExec>

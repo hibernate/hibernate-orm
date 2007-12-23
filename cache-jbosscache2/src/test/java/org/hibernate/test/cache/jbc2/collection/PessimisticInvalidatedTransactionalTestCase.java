@@ -63,14 +63,6 @@ public class PessimisticInvalidatedTransactionalTestCase extends AbstractTransac
 
     public void testRemoveAllFailureExpected() {
         super.testRemoveAll();
-    }
-
-    public void testPutFromLoadFailureExpected() throws Exception {
-        super.testPutFromLoad();
-    }
-
-    public void testPutFromLoadMinimalFailureExpected() throws Exception {
-        super.testPutFromLoadMinimal();
-    }    
+    }  
 
 }

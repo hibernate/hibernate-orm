@@ -65,12 +65,4 @@ public class OptimisticReadOnlyTestCase extends AbstractReadOnlyAccessTestCase {
         super.testRemoveAll();
     }
 
-    public void testPutFromLoadFailureExpected() throws Exception {
-        super.testPutFromLoad();
-    }
-
-    public void testPutFromLoadMinimalFailureExpected() throws Exception {
-        super.testPutFromLoadMinimal();
-    }   
-
 }

@@ -80,8 +80,9 @@
             <UNICAST timeout="300,600,1200,2400,3600"/>
             <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
                            max_bytes="400000"/>
-            <pbcast.GMS print_local_addr="true" join_timeout="3000"  
-                        join_retry_timeout="2000" shun="false"
+            <pbcast.GMS print_local_addr="true" 
+                        join_timeout="3000"  
+                        shun="false"
                         view_bundling="true"
                         view_ack_collection_timeout="5000"/>
             <FC max_credits="2000000"
@@ -148,8 +149,9 @@
             <UNICAST timeout="300,600,1200,2400,3600"/>
             <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
                            max_bytes="400000"/>
-            <pbcast.GMS print_local_addr="true" join_timeout="3000" 
-                        join_retry_timeout="2000" shun="false"
+            <pbcast.GMS print_local_addr="true" 
+                        join_timeout="3000" 
+                        shun="false"
                         view_bundling="true"/>
             <FRAG2 frag_size="60000"  />
             <pbcast.STREAMING_STATE_TRANSFER/>
@@ -211,8 +213,9 @@
                            discard_delivered_msgs="false"/>
             <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
                            max_bytes="400000"/>
-            <pbcast.GMS print_local_addr="true" join_timeout="3000" 
-                        join_retry_timeout="2000" shun="false"
+            <pbcast.GMS print_local_addr="true" 
+                        join_timeout="3000" 
+                        shun="false"
                         view_bundling="true"/>
             <FC max_credits="2000000"
                 min_threshold="0.10"/>
@@ -274,8 +277,9 @@
                            discard_delivered_msgs="false"/>
             <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
                            max_bytes="400000"/>
-            <pbcast.GMS print_local_addr="true" join_timeout="3000" 
-                        join_retry_timeout="2000" shun="false"
+            <pbcast.GMS print_local_addr="true" 
+                        join_timeout="3000" 
+                        shun="false"
                         view_bundling="true"/>
             <pbcast.STREAMING_STATE_TRANSFER/>
 	        <!-- <pbcast.STATE_TRANSFER/> -->
@@ -303,8 +307,9 @@
             <UNICAST timeout="300,600,1200,2400,3600"/>
             <pbcast.STABLE stability_delay="1000" desired_avg_gossip="5000"
                            max_bytes="400000"/>
-            <pbcast.GMS print_local_addr="true" join_timeout="3000"
-                        join_retry_timeout="2000" shun="false"
+            <pbcast.GMS print_local_addr="true" 
+                        join_timeout="3000"
+                        shun="false"
                         view_bundling="true"
                         view_ack_collection_timeout="5000"/>
             <FC max_credits="2000000"

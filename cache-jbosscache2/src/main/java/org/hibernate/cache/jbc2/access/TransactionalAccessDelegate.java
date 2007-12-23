@@ -27,6 +27,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
@@ -46,10 +47,12 @@ public class TransactionalAccessDelegate {
 
     protected final Cache cache;
     protected final Fqn regionFqn;
+    protected final BasicRegionAdapter region;
 
-    public TransactionalAccessDelegate(Cache cache, Fqn regionFqn) {
-        this.cache = cache;
-        this.regionFqn = regionFqn;
+    public TransactionalAccessDelegate(BasicRegionAdapter adapter) {
+        this.region = adapter;
+        this.cache = adapter.getCacheInstance();
+        this.regionFqn = adapter.getRegionFqn();
     }
 
     public Object get(Object key, long txTimestamp) throws CacheException {

@@ -42,8 +42,7 @@ public class OptimisticTransactionalAccess extends TransactionalAccess {
     public OptimisticTransactionalAccess(CollectionRegionImpl region) {
         
         // We use a different delegate than the non-optimistic superclass default
-        super(region, new OptimisticTransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn(),
-                region.getCacheDataDescription()));
+        super(region, new OptimisticTransactionalAccessDelegate(region));
     }
 
 }

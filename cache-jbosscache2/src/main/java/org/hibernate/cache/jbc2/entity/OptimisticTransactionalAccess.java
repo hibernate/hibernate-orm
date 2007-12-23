@@ -41,7 +41,6 @@ public class OptimisticTransactionalAccess extends TransactionalAccess {
      * @param region The region\ to which this is providing access
      */
     public OptimisticTransactionalAccess(EntityRegionImpl region) {
-        super(region, new OptimisticTransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn(),
-                region.getCacheDataDescription()));
+        super(region, new OptimisticTransactionalAccessDelegate(region));
     }
 }

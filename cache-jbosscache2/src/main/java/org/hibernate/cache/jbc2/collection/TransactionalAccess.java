@@ -52,7 +52,7 @@ public class TransactionalAccess implements CollectionRegionAccessStrategy {
      * @param region the region to which this provides access
      */
     public TransactionalAccess(CollectionRegionImpl region) {
-        this(region, new TransactionalAccessDelegate(region.getCacheInstance(), region.getRegionFqn()));
+        this(region, new TransactionalAccessDelegate(region));
     }
 
     /**

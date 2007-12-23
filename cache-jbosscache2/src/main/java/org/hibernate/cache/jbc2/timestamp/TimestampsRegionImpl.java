@@ -85,6 +85,9 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
     }
 
     public void evict(Object key) throws CacheException {
+       
+        ensureRegionRootExists();
+        
         // TODO Is this a valid operation on a timestamps cache?
         Option opt = getNonLockingDataVersionOption(true);
         CacheHelper.removeNode(getCacheInstance(), getRegionFqn(), key, opt);
@@ -102,6 +105,9 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
 
         Object value = localCache.get(key);
         if (value == null) {
+           
+            ensureRegionRootExists();
+            
             value = suspendAndGet(key, null, false);
             if (value != null)
                 localCache.put(key, value);
@@ -110,6 +116,8 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
     }
 
     public void put(Object key, Object value) throws CacheException {
+       
+        ensureRegionRootExists();
 
         // Don't hold the JBC node lock throughout the tx, as that
         // prevents reads and other updates

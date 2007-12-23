@@ -27,11 +27,11 @@ import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.jbc2.BasicRegionAdapter;
+import org.hibernate.cache.jbc2.TransactionalDataRegionAdapter;
 import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.hibernate.cache.jbc2.util.DataVersionAdapter;
 import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
-import org.jboss.cache.Cache;
-import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.optimistic.DataVersion;
 
@@ -51,9 +51,9 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     protected final CacheDataDescription dataDescription;
 
-    public OptimisticTransactionalAccessDelegate(Cache cache, Fqn regionFqn, CacheDataDescription dataDescription) {
-        super(cache, regionFqn);
-        this.dataDescription = dataDescription;
+    public OptimisticTransactionalAccessDelegate(TransactionalDataRegionAdapter region) {
+        super(region);
+        this.dataDescription = region.getCacheDataDescription();
     }
 
     /**
@@ -63,6 +63,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
      */
     @Override
     public void evict(Object key) throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         Option opt = NonLockingDataVersion.getInvocationOption();
         CacheHelper.remove(cache, regionFqn, key, opt);
@@ -76,6 +78,18 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     public void evictAll() throws CacheException {
 
         evictOrRemoveAll();
+    }    
+    
+    /**
+     * Overrides the {@link TransactionalAccessDelegate#get(Object, long) superclass}
+     * by {@link BasicRegionAdapter#ensureRegionRootExists() ensuring the root
+     * node for the region exists} before making the call.
+     */
+    @Override
+    public Object get(Object key, long txTimestamp) throws CacheException
+    {
+        region.ensureRegionRootExists();
+        return super.get(key, txTimestamp);
     }
 
     /**
@@ -85,6 +99,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
      */
     @Override
     public boolean insert(Object key, Object value, Object version) throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         Option opt = getDataVersionOption(version, null);
         CacheHelper.put(cache, regionFqn, key, value, opt);
@@ -94,6 +110,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         // We ignore minimalPutOverride. JBossCache putForExternalRead is
         // already about as minimal as we can get; it will promptly return
@@ -104,6 +122,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         Option opt = getDataVersionOption(version, version);
         return CacheHelper.putForExternalRead(cache, regionFqn, key, value, opt);
@@ -111,6 +131,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public void remove(Object key) throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         Option opt = NonLockingDataVersion.getInvocationOption();
         CacheHelper.remove(cache, regionFqn, key, opt);
@@ -125,6 +147,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
+        
+        region.ensureRegionRootExists();
 
         Option opt = getDataVersionOption(currentVersion, previousVersion);
         CacheHelper.put(cache, regionFqn, key, value, opt);
@@ -132,6 +156,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     }
 
     private Option getDataVersionOption(Object currentVersion, Object previousVersion) {
+        
         DataVersion dv = (dataDescription != null && dataDescription.isVersioned()) ? new DataVersionAdapter(
                 currentVersion, previousVersion, dataDescription.getVersionComparator(), dataDescription.toString())
                 : NonLockingDataVersion.INSTANCE;
@@ -141,6 +166,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     }
 
     private void evictOrRemoveAll() {
+       
         Option opt = NonLockingDataVersion.getInvocationOption();
         CacheHelper.removeAll(cache, regionFqn, opt);
         

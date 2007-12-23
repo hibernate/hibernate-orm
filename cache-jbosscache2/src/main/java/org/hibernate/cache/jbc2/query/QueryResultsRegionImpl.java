@@ -75,6 +75,9 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
     }
 
     public void evict(Object key) throws CacheException {
+       
+        ensureRegionRootExists();
+        
         Option opt = getNonLockingDataVersionOption(false);
         if (localOnly)
             opt.setCacheModeLocal(true);
@@ -91,6 +94,8 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
     }
 
     public Object get(Object key) throws CacheException {
+       
+        ensureRegionRootExists();
 
         // Don't hold the JBC node lock throughout the tx, as that
         // prevents updates
@@ -102,6 +107,8 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
     }
 
     public void put(Object key, Object value) throws CacheException {
+       
+        ensureRegionRootExists();
 
         // Here we don't want to suspend the tx. If we do:
         // 1) We might be caching query results that reflect uncommitted
@@ -110,9 +117,9 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
         // 2) No tx == immediate replication. More overhead, plus we
         // spread issue #1 above around the cluster
 
-        // Add a zero (or quite low) timeout option so we don't block
+        // Add a zero (or quite low) timeout option so we don't block.
         // Ignore any TimeoutException. Basically we forego caching the
-        // query result in order to avoid blocking for concurrent reads.
+        // query result in order to avoid blocking.
         // Reads are done with suspended tx, so they should not hold the
         // lock for long.  Not caching the query result is OK, since
         // any subsequent read will just see the old result with its

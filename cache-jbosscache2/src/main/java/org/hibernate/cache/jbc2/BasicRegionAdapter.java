@@ -40,11 +40,16 @@ import org.jboss.cache.config.Option;
 import org.jboss.cache.config.Configuration.NodeLockingScheme;
 import org.jboss.cache.notifications.annotation.CacheListener;
 import org.jboss.cache.notifications.annotation.NodeCreated;
+import org.jboss.cache.notifications.annotation.NodeRemoved;
 import org.jboss.cache.notifications.event.NodeCreatedEvent;
+import org.jboss.cache.notifications.event.NodeRemovedEvent;
 import org.jboss.cache.optimistic.DataVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.jbc2.builder.JndiMultiplexingCacheInstanceManager;
 import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
 
@@ -56,16 +61,20 @@ import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
  */
 @CacheListener
 public abstract class BasicRegionAdapter implements Region {
+   
+    
     public static final String ITEM = CacheHelper.ITEM;
 
     protected final Cache jbcCache;
     protected final String regionName;
     protected final Fqn regionFqn;
+    protected Node regionRoot;
     protected final boolean optimistic;
-    
     protected final TransactionManager transactionManager;
+    protected final Logger log;
+    protected final Object regionRootMutex = new Object();
 
-    protected SetResidentListener listener;
+    protected RegionRootListener listener;
     
     public BasicRegionAdapter(Cache jbcCache, String regionName, String regionPrefix) {
         this.jbcCache = jbcCache;
@@ -73,6 +82,7 @@ public abstract class BasicRegionAdapter implements Region {
         this.regionName = regionName;
         this.regionFqn = createRegionFqn(regionName, regionPrefix);
         optimistic = jbcCache.getConfiguration().getNodeLockingScheme() == NodeLockingScheme.OPTIMISTIC;
+        log = LoggerFactory.getLogger(getClass());
         activateLocalClusterNode();
     }
 
@@ -97,30 +107,47 @@ public abstract class BasicRegionAdapter implements Region {
             // and then need to re-add it. In that case, the fact
             // that it is resident will not replicate, so use a listener
             // to set it as resident
-            if (CacheHelper.isClusteredReplication(cfg.getCacheMode())) {
-                listener = new SetResidentListener();
+            if (CacheHelper.isClusteredReplication(cfg.getCacheMode()) 
+                  || CacheHelper.isClusteredInvalidation(cfg.getCacheMode())) {
+                listener = new RegionRootListener();
                 jbcCache.addCacheListener(listener);
             }
             
-            // Make sure the root node for the region exists and 
-            // has a DataVersion that never complains
-            Node regionRoot = jbcCache.getRoot().getChild( regionFqn );
-            if (regionRoot == null) {                
-                // Establish the region root node with a non-locking data version
-                DataVersion version = optimistic ? NonLockingDataVersion.INSTANCE : null;
-                regionRoot = CacheHelper.addNode(jbcCache, regionFqn, true, true, version);    
-            }
-            else if (optimistic && regionRoot instanceof NodeSPI) {
-                // FIXME Hacky workaround to JBCACHE-1202
-                if ( !( ( ( NodeSPI ) regionRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
-                    ((NodeSPI) regionRoot).setVersion(NonLockingDataVersion.INSTANCE);
-                }
-            }
-            // Never evict this node
-            regionRoot.setResident(true);
+            establishRegionRootNode();
         }
         catch (Exception e) {
             throw new CacheException(e.getMessage(), e);
+        }
+    }
+
+    private void establishRegionRootNode()
+    {
+        synchronized (regionRootMutex) {
+            if (regionRoot != null && regionRoot.isValid())
+                return;
+            // Don't hold a transactional lock for this 
+            Transaction tx = suspend();
+            try {
+                 // Make sure the root node for the region exists and 
+                 // has a DataVersion that never complains
+                 regionRoot = jbcCache.getRoot().getChild( regionFqn );
+                 if (regionRoot == null) {                
+                     // Establish the region root node with a non-locking data version
+                     DataVersion version = optimistic ? NonLockingDataVersion.INSTANCE : null;
+                     regionRoot = CacheHelper.addNode(jbcCache, regionFqn, true, true, version);    
+                 }
+                 else if (optimistic && regionRoot instanceof NodeSPI) {
+                     // FIXME Hacky workaround to JBCACHE-1202
+                     if ( !( ( ( NodeSPI ) regionRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
+                          ((NodeSPI) regionRoot).setVersion(NonLockingDataVersion.INSTANCE);
+                     }
+                 }
+                // Never evict this node
+                regionRoot.setResident(true);
+            }
+            finally {
+                resume(tx);
+            }
         }
     }
 
@@ -135,12 +162,29 @@ public abstract class BasicRegionAdapter implements Region {
     public Fqn getRegionFqn() {
         return regionFqn;
     }
+    
+    /**
+     * If the cache is configured for optimistic locking, checks for the 
+     * validity of the root cache node for this region,
+     * creating a new one if it does not exist or is invalid.  Suspends any 
+     * transaction while doing this to ensure no transactional locks are held 
+     * on the region root.
+     * 
+     * This is only needed for optimistic locking, as with optimistic the
+     * region root node has a special version that must be established.
+     * 
+     * TODO remove this once JBCACHE-1250 is resolved.
+     */
+    public void ensureRegionRootExists() {
+       if (optimistic && (regionRoot == null || !regionRoot.isValid()))
+          establishRegionRootNode();
+    }
 
     public void destroy() throws CacheException {
         try {
             // NOTE : this is being used from the process of shutting down a
             // SessionFactory. Specific things to consider:
-            // (1) this clearing of the region should not propogate to
+            // (1) this clearing of the region should not propagate to
             // other nodes on the cluster (if any); this is the
             // cache-mode-local option bit...
             // (2) really just trying a best effort to cleanup after
@@ -321,11 +365,12 @@ public abstract class BasicRegionAdapter implements Region {
     }
     
     @CacheListener
-    public class SetResidentListener {
+    public class RegionRootListener {
         
         @NodeCreated
         public void nodeCreated(NodeCreatedEvent event) {
             if (!event.isPre() && event.getFqn().equals(getRegionFqn())) {
+                log.debug("Node created for " + getRegionFqn());
                 Node regionRoot = jbcCache.getRoot().getChild(getRegionFqn());
                 regionRoot.setResident(true);
             }

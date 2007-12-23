@@ -33,6 +33,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
@@ -289,7 +290,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                     long txTimestamp = System.currentTimeMillis();
                     BatchModeTransactionManager.getInstance().begin();
                     
-                    assertNull("node1 starts clean", remoteAccessStrategy.get(KEY, txTimestamp));
+                    assertNull("node2 starts clean", remoteAccessStrategy.get(KEY, txTimestamp));
                     
                     // Let node1 write
                     writeLatch1.countDown();
@@ -348,22 +349,12 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         Object expected1 = null;
         Object expected2 = null;
         if (isUsingInvalidation()) {
-            if (isUsingOptimisticLocking()) {
-                expected1 = null; // the initial VALUE2 DataVersion should prevent the node2 put
-                expected2 = VALUE2;
-                
-                // We know this case fails
-                msg1 = msg2 = "Known issue JBCACHE-1203";
-            }
-            else {
-                // node2 can write since there is no data version
-                // We count on db locking to prevent this case
-                expected1 = VALUE1; 
-                expected2 = null; // invalidated by node2
-                
-                // We know this case fails
-                msg1 = msg2 = "Known issue JBCACHE-1203";
-            }
+            // PFER does not generate any invalidation, so each node should
+            // succeed. We count on database locking and Hibernate removing
+            // the collection on any update to prevent the situation we have
+            // here where the caches have inconsistent data
+            expected1 = VALUE2;
+            expected2 = VALUE1;
         }
         else {
             // the initial VALUE2 should prevent the node2 put
@@ -488,6 +479,24 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         assertEquals(0, regionRoot.getChildrenNames().size());
         assertTrue(regionRoot.isResident());
 
+        if (isUsingInvalidation()) {
+           // With invalidation, a node that removes the region root cannot reestablish
+           // it on remote nodes, since the only message the propagates is "invalidate".
+           // So, we have to reestablish it ourselves
+           
+           // First, do a get to help test whether a get messes up the optimistic version
+           String msg = "Known issue JBCACHE-1251 -- problem reestablishing invalidated region root";
+           try {
+              assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+           }
+           catch (CacheException ce) {
+              log.error(msg, ce);
+              fail(msg + " -- cause: " + ce);
+           }
+           remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+           assertEquals(msg, VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+        }
+
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
         if (isUsingInvalidation()) {
@@ -507,7 +516,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
     }
     
     private void checkNodeIsEmpty(Node node) {
-        assertEquals("Known issue JBCACHE-1200. node " + node.getFqn() + " should not have keys", 0, node.getKeys().size());
+        assertEquals(node.getFqn() + " should not have keys", 0, node.getKeys().size());
         for (Iterator it = node.getChildren().iterator(); it.hasNext(); ) {
             checkNodeIsEmpty((Node) it.next());
         }

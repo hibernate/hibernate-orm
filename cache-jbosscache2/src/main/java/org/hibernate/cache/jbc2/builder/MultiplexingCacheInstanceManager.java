@@ -27,6 +27,8 @@ import java.util.Properties;
 import javax.transaction.TransactionManager;
 
 import org.jboss.cache.Cache;
+import org.jboss.cache.CacheManager;
+import org.jboss.cache.CacheManagerImpl;
 import org.jboss.cache.CacheStatus;
 import org.jboss.cache.config.Configuration;
 import org.jgroups.ChannelFactory;
@@ -106,9 +108,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
     public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc2/builder/jbc2-configs.xml";    
     /**
      * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}. Specifies
-     * "stacks.xml", which can be found in the root of the JGroups jar file.
-     * Thus, leaving this value at default means using the default protocol
-     * stack configs provided by JGroups.
+     * the "jgroups-stacks.xml" file in this package.
      */
     public static final String DEF_MULTIPLEXER_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
     /**
@@ -142,7 +142,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
     private String tsConfig = null;
     
     /** Our cache factory */
-    private JBossCacheFactory jbcFactory;
+    private CacheManager jbcFactory;
     /** Our channel factory */
     private ChannelFactory channelFactory;
     /** 
@@ -187,7 +187,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
 	 *
 	 * @return Value for property 'cacheFactory'.
 	 */
-	public JBossCacheFactory getCacheFactory() {
+	public CacheManager getCacheFactory() {
         return jbcFactory;
     }
 
@@ -197,7 +197,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
 	 *
 	 * @param factory Value to set for property 'cacheFactory'.
 	 */
-	public void setCacheFactory(JBossCacheFactory factory) {
+	public void setCacheFactory(CacheManager factory) {
         this.jbcFactory = factory;
     }
 
@@ -288,9 +288,8 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                 }
                 
                 String factoryRes = PropertiesHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, DEF_CACHE_FACTORY_RESOURCE);
-                // FIXME use an impl from JBossCache
-                jbcFactory = new JBossCacheFactoryImpl(factoryRes, channelFactory);
-                ((JBossCacheFactoryImpl) jbcFactory).start();
+                jbcFactory = new CacheManagerImpl(factoryRes, channelFactory);
+                ((CacheManagerImpl) jbcFactory).start();
                 selfCreatedFactory = true;
             }
             
@@ -390,7 +389,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
     public void stop() {
         releaseCaches();
         if (selfCreatedFactory) {
-            ((JBossCacheFactoryImpl) jbcFactory).stop();
+            ((CacheManagerImpl) jbcFactory).stop();
         }
     }
 

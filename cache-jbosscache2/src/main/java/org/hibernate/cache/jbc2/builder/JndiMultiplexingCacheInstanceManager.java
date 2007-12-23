@@ -33,6 +33,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.util.NamingHelper;
 import org.hibernate.util.PropertiesHelper;
+import org.jboss.cache.CacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class JndiMultiplexingCacheInstanceManager extends MultiplexingCacheInsta
     private static final Logger log = LoggerFactory.getLogger(JndiMultiplexingCacheInstanceManager.class);
     
     /**
-     * Specifies the JNDI name under which the {@link JBossCacheFactory} to use is bound.
+     * Specifies the JNDI name under which the {@link CacheManager} to use is bound.
      * There is no default value -- the user must specify the property.
      */
     public static final String CACHE_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cachefactory";
@@ -68,18 +69,18 @@ public class JndiMultiplexingCacheInstanceManager extends MultiplexingCacheInsta
         if (name == null)
             throw new CacheException("Configuration property " + CACHE_FACTORY_RESOURCE_PROP + " not set");
         
-        JBossCacheFactory cf = locateCacheFactory( name, NamingHelper.getJndiProperties( properties ) );
+        CacheManager cf = locateCacheFactory( name, NamingHelper.getJndiProperties( properties ) );
         setCacheFactory( cf );        
         
         super.start(settings, properties);
     }
 
-    private JBossCacheFactory locateCacheFactory(String jndiNamespace, Properties jndiProperties) {
+    private CacheManager locateCacheFactory(String jndiNamespace, Properties jndiProperties) {
 
         Context ctx = null;
         try {
             ctx = new InitialContext( jndiProperties );
-            return (JBossCacheFactory) ctx.lookup( jndiNamespace );
+            return (CacheManager) ctx.lookup( jndiNamespace );
         }
         catch (NamingException ne) {
             String msg = "Unable to retreive Cache from JNDI [" + jndiNamespace + "]";

@@ -26,6 +26,7 @@ package org.hibernate.test.cache.jbc2;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
@@ -215,6 +216,24 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         assertFalse(regionRoot == null);
         assertEquals(0, regionRoot.getChildrenNames().size());
         assertTrue(regionRoot.isResident());
+
+        if (CacheHelper.isClusteredInvalidation(remoteCache)) {
+           // With invalidation, a node that removes the region root cannot reestablish
+           // it on remote nodes, since the only message the propagates is "invalidate".
+           // So, we have to reestablish it ourselves
+           
+           // First, do a get to help test whether a get messes up the optimistic version
+           String msg = "Known issue JBCACHE-1251 -- problem reestablishing invalidated region root";
+           try {
+              assertEquals(null, remoteRegion.get(KEY));
+           }
+           catch (CacheException ce) {
+              log.error(msg, ce);
+              fail(msg + " -- cause: " + ce);
+           }
+           remoteRegion.put(KEY, VALUE1);
+           assertEquals(msg, VALUE1, remoteRegion.get(KEY));
+        }
     
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);

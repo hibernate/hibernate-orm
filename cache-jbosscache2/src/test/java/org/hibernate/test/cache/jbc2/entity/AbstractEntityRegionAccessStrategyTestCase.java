@@ -33,6 +33,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
@@ -687,6 +688,24 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         assertEquals(0, regionRoot.getChildrenNames().size());
         assertTrue(regionRoot.isResident());
 
+        if (isUsingInvalidation()) {
+           // With invalidation, a node that removes the region root cannot reestablish
+           // it on remote nodes, since the only message the propagates is "invalidate".
+           // So, we have to reestablish it ourselves
+           
+           // First, do a get to help test whether a get messes up the optimistic version
+           String msg = "Known issue JBCACHE-1251 -- problem reestablishing invalidated region root";
+           try {
+              assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+           }
+           catch (CacheException ce) {
+              log.error(msg, ce);
+              fail(msg + " -- cause: " + ce);
+           }
+           remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+           assertEquals(msg, VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+        }
+        
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
         if (isUsingInvalidation()) {
@@ -706,7 +725,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     }
     
     private void checkNodeIsEmpty(Node node) {
-        assertEquals("Known issue JBCACHE-1200. node " + node.getFqn() + " should not have keys", 0, node.getKeys().size());
+        assertEquals(node.getFqn() + " should not have keys", 0, node.getKeys().size());
         for (Iterator it = node.getChildren().iterator(); it.hasNext(); ) {
             checkNodeIsEmpty((Node) it.next());
         }

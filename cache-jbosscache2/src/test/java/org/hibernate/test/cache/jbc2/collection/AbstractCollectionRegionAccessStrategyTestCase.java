@@ -433,7 +433,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         
         Node regionRoot = localCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
-        assertEquals(0, regionRoot.getChildrenNames().size());
+        assertEquals(0, getValidChildrenCount(regionRoot));
         assertTrue(regionRoot.isResident());
         
         if (isUsingOptimisticLocking()) {
@@ -442,7 +442,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
-        assertEquals(0, regionRoot.getChildrenNames().size());
+        assertEquals(0, getValidChildrenCount(regionRoot));
         assertTrue(regionRoot.isResident());
         
         if (isUsingOptimisticLocking()) {
@@ -476,7 +476,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         
         regionRoot = localCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
-        assertEquals(0, regionRoot.getChildrenNames().size());
+        assertEquals(0, getValidChildrenCount(regionRoot));
         assertTrue(regionRoot.isResident());
 
         if (isUsingInvalidation()) {
@@ -500,26 +500,27 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
         if (isUsingInvalidation()) {
-            // JBC seems broken: see http://www.jboss.com/index.html?module=bb&op=viewtopic&t=121408
-            // FIXME   replace with the following when JBCACHE-1199 and JBCACHE-1200 are done:
-            //assertFalse(regionRoot.isValid());
-            checkNodeIsEmpty(regionRoot);
+            // Region root should have 1 child -- the one we added above
+            assertEquals(1, getValidChildrenCount(regionRoot));
         }
         else {
             // Same assertion, just different assertion msg
-            assertEquals(0, regionRoot.getChildrenNames().size());
+            assertEquals(0, getValidChildrenCount(regionRoot));
         }        
         assertTrue(regionRoot.isResident());
         
         assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
-        assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+        assertEquals("remote is correct", (isUsingInvalidation() ? VALUE1 : null), remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
     }
     
-    private void checkNodeIsEmpty(Node node) {
-        assertEquals(node.getFqn() + " should not have keys", 0, node.getKeys().size());
+    private int getValidChildrenCount(Node node) {
+        int result = 0;
         for (Iterator it = node.getChildren().iterator(); it.hasNext(); ) {
-            checkNodeIsEmpty((Node) it.next());
+           if (((Node) it.next()).isValid()) {
+              result++;
+           }
         }
+        return result;        
     }
     
     private void rollback() {

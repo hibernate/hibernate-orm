@@ -55,13 +55,4 @@ public class OptimisticInvalidatedTransactionalTestCase extends AbstractTransact
         assertTrue("Synchronous mode", isSynchronous());
     }
     
-    // Known failures   
-
-    public void testEvictAllFailureExpected() {
-        super.testEvictAll();
-    }
-
-    public void testRemoveAllFailureExpected() {
-        super.testRemoveAll();
-    }
 }

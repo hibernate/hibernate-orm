@@ -54,15 +54,5 @@ public class OptimisticReadOnlyTestCase extends AbstractReadOnlyAccessTestCase {
         assertTrue("Using Optimistic locking", isUsingOptimisticLocking());
         assertTrue("Synchronous mode", isSynchronous());
     }
-    
-    // Known failures   
-
-    public void testEvictAllFailureExpected() {
-        super.testEvictAll();
-    }
-
-    public void testRemoveAllFailureExpected() {
-        super.testRemoveAll();
-    }
 
 }

@@ -1,13 +1,12 @@
 package org.hibernate.tuple;
 
+import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-
-import java.util.Map;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.io.Serializable;
+import org.hibernate.util.FastHashMap;
 
 /**
  * Centralizes handling of {@link EntityMode} to {@link Tuplizer} mappings.
@@ -17,7 +16,15 @@ import java.io.Serializable;
 public abstract class EntityModeToTuplizerMapping implements Serializable {
 
 	// map of EntityMode -> Tuplizer
-	private final Map tuplizers = Collections.synchronizedMap( new LinkedHashMap() );
+	private final Map tuplizers;
+
+	public EntityModeToTuplizerMapping() {
+		tuplizers = new FastHashMap();
+	}
+
+	public EntityModeToTuplizerMapping(Map tuplizers) {
+		this.tuplizers = tuplizers;
+	}
 
 	protected void addTuplizer(EntityMode entityMode, Tuplizer tuplizer) {
 		tuplizers.put( entityMode, tuplizer );

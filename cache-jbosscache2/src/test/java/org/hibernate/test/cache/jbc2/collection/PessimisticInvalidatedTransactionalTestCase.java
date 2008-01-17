@@ -55,14 +55,6 @@ public class PessimisticInvalidatedTransactionalTestCase extends AbstractTransac
         assertTrue("Synchronous mode", isSynchronous());
     }
     
-    // Known failures   
-
-    public void testEvictAllFailureExpected() {
-        super.testEvictAll();
-    }
-
-    public void testRemoveAllFailureExpected() {
-        super.testRemoveAll();
-    }  
+    // Known failures 
 
 }

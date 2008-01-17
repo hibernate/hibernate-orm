@@ -48,15 +48,7 @@ public class PessimisticReadOnlyTestCase extends AbstractReadOnlyAccessTestCase 
         return getTestSetup(suite, "pessimistic-entity");
     }
     
-    // Known failures   
-
-    public void testEvictAllFailureExpected() {
-        super.testEvictAll();
-    }
-
-    public void testRemoveAllFailureExpected() {
-        super.testRemoveAll();
-    }
+    // Known failures
     
     // Overrides   
 

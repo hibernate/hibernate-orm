@@ -18,7 +18,7 @@ public class QueryStatistics extends CategorizedStatistics {
 	private long executionRowCount;
 	private long executionAvgTime;
 	private long executionMaxTime;
-	private long executionMinTime;
+	private long executionMinTime = Long.MAX_VALUE;
 
 	QueryStatistics(String query) {
 		super(query);

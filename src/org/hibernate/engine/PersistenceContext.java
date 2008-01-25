@@ -251,6 +251,11 @@ public interface PersistenceContext {
 			throws MappingException;
 
 	/**
+	 * Get the entity that owned this persistent collection when it was loaded
+	 */
+	Object getLoadedCollectionOwner(PersistentCollection collection);
+
+	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
 	public void addUninitializedCollection(CollectionPersister persister,

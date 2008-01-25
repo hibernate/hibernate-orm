@@ -679,6 +679,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
+	 * Get the entity that owned this persistent collection when it was loaded
+	 */
+	public Object getLoadedCollectionOwner(PersistentCollection collection) {
+		CollectionEntry ce = getCollectionEntry(collection);
+		if ( ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
+			return null;
+		}
+		return getCollectionOwner(ce.getLoadedKey(), ce.getLoadedPersister());
+	}
+
+	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Serializable id) {

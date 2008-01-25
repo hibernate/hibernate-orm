@@ -38,6 +38,7 @@ import org.hibernate.test.dynamicentity.interceptor.InterceptorDynamicEntityTest
 import org.hibernate.test.dynamicentity.tuplizer.TuplizerDynamicEntityTest;
 import org.hibernate.test.ecid.EmbeddedCompositeIdTest;
 import org.hibernate.test.entitymode.EntityModeSuite;
+import org.hibernate.test.event.collection.CollectionEventSuite;
 import org.hibernate.test.exception.SQLExceptionConversionTest;
 import org.hibernate.test.extralazy.ExtraLazyTest;
 import org.hibernate.test.filter.DynamicFilterTest;
@@ -261,6 +262,7 @@ public class AllTests {
 			suite.addTest( IterateTest.suite() );
 			suite.addTest( CascadeSuite.suite() );
 			suite.addTest( ListenerTest.suite() );
+			suite.addTest( CollectionEventSuite.suite() );
 			suite.addTest( ExtraLazyTest.suite() );
 			suite.addTest( StatsTest.suite() );
 			suite.addTest( SessionStatsTest.suite() );

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.event.collection.association.bidirectional.manytomany">
+
+    <class name="ParentWithBidirectionalManyToMany" table="PARENT">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <set name="children" table="PARENT_CHILD"
+             inverse="false" cascade="all">
+            <key column="parent_id"/>
+            <many-to-many column="child_id" class="ChildWithBidirectionalManyToMany"/>
+        </set>
+    </class>
+
+    <class name="ChildWithBidirectionalManyToMany" table="CHILD">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <set name="parents" table="PARENT_CHILD"
+             inverse="true">
+            <key column="child_id"/>
+            <many-to-many column="parent_id" class="ParentWithBidirectionalManyToMany"/>
+        </set>
+    </class>
+
+</hibernate-mapping>

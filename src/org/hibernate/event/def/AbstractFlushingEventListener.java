@@ -246,7 +246,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				session.getInterceptor().onCollectionRemove( coll, ce.getLoadedKey() );
 				actionQueue.addAction(
 						new CollectionRemoveAction( 
-								coll, 
+								coll,
 								ce.getLoadedPersister(), 
 								ce.getLoadedKey(), 
 								ce.isSnapshotEmpty(coll), 

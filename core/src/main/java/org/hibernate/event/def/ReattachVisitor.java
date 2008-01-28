@@ -79,7 +79,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
 			);
 		}
-		source.getActionQueue().addAction( new CollectionRemoveAction( null, role, collectionKey, false, source ) );
+		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
 
 	/**

@@ -67,6 +67,12 @@ import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.event.RefreshEventListener;
 import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEventListener;
+import org.hibernate.event.PreCollectionRecreateEventListener;
+import org.hibernate.event.PreCollectionRemoveEventListener;
+import org.hibernate.event.PreCollectionUpdateEventListener;
+import org.hibernate.event.PostCollectionUpdateEventListener;
+import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.impl.SessionFactoryImpl;
@@ -1863,6 +1869,30 @@ public class Configuration implements Serializable {
 				eventListeners.setPreInsertEventListeners( (PreInsertEventListener[]) listeners );
 			}
 		}
+		else if ( "pre-collection-recreate".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPreCollectionRecreateEventListeners( new PreCollectionRecreateEventListener[]{} );
+			}
+			else {
+				eventListeners.setPreCollectionRecreateEventListeners( (PreCollectionRecreateEventListener[]) listeners );
+			}
+		}
+		else if ( "pre-collection-remove".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPreCollectionRemoveEventListeners( new PreCollectionRemoveEventListener[]{} );
+			}
+			else {
+				eventListeners.setPreCollectionRemoveEventListeners( ( PreCollectionRemoveEventListener[]) listeners );
+			}
+		}
+		else if ( "pre-collection-update".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPreCollectionUpdateEventListeners( new PreCollectionUpdateEventListener[]{} );
+			}
+			else {
+				eventListeners.setPreCollectionUpdateEventListeners( ( PreCollectionUpdateEventListener[]) listeners );
+			}
+		}
 		else if ( "post-load".equals( type ) ) {
 			if ( listeners == null ) {
 				eventListeners.setPostLoadEventListeners( new PostLoadEventListener[]{} );
@@ -1923,6 +1953,30 @@ public class Configuration implements Serializable {
 			}
 			else {
 				eventListeners.setPostCommitInsertEventListeners( (PostInsertEventListener[]) listeners );
+			}
+		}
+		else if ( "post-collection-recreate".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPostCollectionRecreateEventListeners( new PostCollectionRecreateEventListener[]{} );
+			}
+			else {
+				eventListeners.setPostCollectionRecreateEventListeners( (PostCollectionRecreateEventListener[]) listeners );
+			}
+		}
+		else if ( "post-collection-remove".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPostCollectionRemoveEventListeners( new PostCollectionRemoveEventListener[]{} );
+			}
+			else {
+				eventListeners.setPostCollectionRemoveEventListeners( ( PostCollectionRemoveEventListener[]) listeners );
+			}
+		}
+		else if ( "post-collection-update".equals( type ) ) {
+			if ( listeners == null ) {
+				eventListeners.setPostCollectionUpdateEventListeners( new PostCollectionUpdateEventListener[]{} );
+			}
+			else {
+				eventListeners.setPostCollectionUpdateEventListeners( ( PostCollectionUpdateEventListener[]) listeners );
 			}
 		}
 		else {

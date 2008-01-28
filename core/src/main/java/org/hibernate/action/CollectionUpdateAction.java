@@ -3,6 +3,11 @@ package org.hibernate.action;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.event.PostCollectionUpdateEvent;
+import org.hibernate.event.PreCollectionUpdateEvent;
+import org.hibernate.event.PreCollectionUpdateEventListener;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
@@ -33,6 +38,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		boolean affectedByFilters = persister.isAffectedByEnabledFilters(session);
 
+		preUpdate();
+
 		if ( !collection.wasInitialized() ) {
 			if ( !collection.hasQueuedOperations() ) throw new AssertionFailure( "no queued adds" );
 			//do nothing - we only need to notify the cache...
@@ -62,12 +69,37 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 		evict();
 
+		postUpdate();
+
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
 			getSession().getFactory().getStatisticsImplementor().
 					updateCollection( getPersister().getRole() );
 		}
 	}
+	
+	private void preUpdate() {
+		PreCollectionUpdateEventListener[] preListeners = getSession().getListeners()
+				.getPreCollectionUpdateEventListeners();
+		if (preListeners.length > 0) {
+			PreCollectionUpdateEvent preEvent = new PreCollectionUpdateEvent(
+					getCollection(), ( EventSource ) getSession() );
+			for ( int i = 0; i < preListeners.length; i++ ) {
+				preListeners[i].onPreUpdateCollection( preEvent );
+			}
+		}
+	}
 
+	private void postUpdate() {
+		PostCollectionUpdateEventListener[] postListeners = getSession().getListeners()
+				.getPostCollectionUpdateEventListeners();
+		if (postListeners.length > 0) {
+			PostCollectionUpdateEvent postEvent = new PostCollectionUpdateEvent(
+					getCollection(), ( EventSource ) getSession() );
+			for ( int i = 0; i < postListeners.length; i++ ) {
+				postListeners[i].onPostUpdateCollection( postEvent );
+			}
+		}
+	}
 }
 
 

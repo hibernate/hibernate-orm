@@ -9,16 +9,9 @@ import org.hibernate.collection.PersistentCollection;
  * 
  * @author Gavin King
  */
-public class InitializeCollectionEvent extends AbstractEvent {
-	
-	private final PersistentCollection collection;
+public class InitializeCollectionEvent extends AbstractCollectionEvent {
 
 	public InitializeCollectionEvent(PersistentCollection collection, EventSource source) {
-		super(source);
-		this.collection = collection;
-	}
-	
-	public PersistentCollection getCollection() {
-		return collection;
-	}
+		super(collection, source, getLoadedOwner( collection, source ) );
+	}	
 }

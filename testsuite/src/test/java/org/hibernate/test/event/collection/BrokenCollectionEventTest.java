@@ -1,0 +1,322 @@
+//$Id: $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution statements
+ * applied by the authors.
+ * 
+ * All third-party contributions are distributed under license by Red Hat
+ * Middleware LLC.  This copyrighted material is made available to anyone
+ * wishing to use, modify, copy, or redistribute it subject to the terms
+ * and conditions of the GNU Lesser General Public License, as published by
+ * the Free Software Foundation.  This program is distributed in the hope
+ * that it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * See the GNU Lesser General Public License for more details.  You should
+ * have received a copy of the GNU Lesser General Public License along with
+ * this distribution; if not, write to: Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
+ */
+package org.hibernate.test.event.collection;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+
+import junit.framework.Test;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
+import org.hibernate.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities;
+
+/**
+ *
+ * @author Gail Badner
+ *
+ * These tests are known to fail. When the functionality is corrected, the
+ * corresponding method will be moved into AbstractCollectionEventTest.
+ */
+public class BrokenCollectionEventTest extends FunctionalTestCase {
+
+	public BrokenCollectionEventTest(String string) {
+		super( string );
+	}
+
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( BrokenCollectionEventTest.class );
+	}
+
+	public String[] getMappings() {
+		return new String[] { "event/collection/association/unidirectional/onetomany/UnidirectionalOneToManySetMapping.hbm.xml" };
+	}
+
+	public ParentWithCollection createParent(String name) {
+		return new ParentWithCollectionOfEntities( name );
+	}
+
+	public Collection createCollection() {
+		return new HashSet();
+	}
+
+	protected void cleanupTest() {
+		ParentWithCollection dummyParent = createParent( "dummyParent" );
+		dummyParent.setChildren( createCollection() );
+		Child dummyChild = dummyParent.addChild( "dummyChild" );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		List children = s.createCriteria( dummyChild.getClass() ).list();
+		List parents = s.createCriteria( dummyParent.getClass() ).list();
+		for ( Iterator it = parents.iterator(); it.hasNext(); ) {
+			ParentWithCollection parent = ( ParentWithCollection ) it.next();
+			parent.clearChildren();
+			s.delete( parent );
+		}
+		for ( Iterator it = children.iterator(); it.hasNext(); ) {
+			s.delete( it.next() );
+		}
+		tx.commit();
+		s.close();
+	}
+
+	public void testUpdateDetachedParentNoChildrenToNullFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		ParentWithCollection parent = createParentWithNoChildren( "parent" );
+		listeners.clear();
+		assertEquals( 0, parent.getChildren().size() );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( null );
+		s.update( parent );
+		tx.commit();
+		s.close();
+		int index = 0;
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}
+
+	// The following fails for the same reason as testUpdateDetachedParentNoChildrenToNullFailureExpected
+	// When that issue is fixed, this one should also be fixed and moved into AbstractCollectionEventTest.
+	/*
+	public void testUpdateDetachedParentOneChildToNullFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		Child oldChild = ( Child ) parent.getChildren().iterator().next();
+		assertEquals( 1, parent.getChildren().size() );
+		listeners.clear();
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( null );
+		s.update( parent );
+		tx.commit();
+		s.close();
+		int index = 0;
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		if ( oldChild.hasBidirectionalManyToMany() ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		}
+		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}
+	*/
+
+	public void testSaveParentNullChildrenFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		ParentWithCollection parent = createParentWithNullChildren( "parent" );
+		assertNull( parent.getChildren() );
+		int index = 0;
+		// pre- and post- collection recreate events should be created when creating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+		listeners.clear();
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
+		tx.commit();
+		s.close();
+		assertNotNull( parent.getChildren() );
+		checkNumberOfResults( listeners, 0 );
+	}
+
+	public void testUpdateParentNoChildrenToNullFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		ParentWithCollection parent = createParentWithNoChildren( "parent" );
+		listeners.clear();
+		assertEquals( 0, parent.getChildren().size() );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( null );
+		tx.commit();
+		s.close();
+		int index = 0;
+		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
+		}
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}
+
+
+	// The following two tests fail for the same reason as testUpdateParentNoChildrenToNullFailureExpected
+	// When that issue is fixed, this one should also be fixed and moved into AbstractCollectionEventTest.
+	/*
+	public void testUpdateParentOneChildToNullFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		Child oldChild = ( Child ) parent.getChildren().iterator().next();
+		assertEquals( 1, parent.getChildren().size() );
+		listeners.clear();
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		parent = ( AbstractParentWithCollection ) s.get( parent.getClass(), parent.getId() );
+		if ( oldChild instanceof ChildEntity ) {
+			oldChild = ( Child ) s.get( oldChild.getClass(), ( ( ChildEntity ) oldChild ).getId() );
+		}
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( null );
+		tx.commit();
+		s.close();
+		int index = 0;
+		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
+		}
+		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		}
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		if ( oldChild.hasBidirectionalManyToMany() ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		}
+		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}
+
+	public void testUpdateMergedParentOneChildToNullFailureExpected() {
+		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		assertEquals( 1, parent.getChildren().size() );
+		listeners.clear();
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		parent = ( AbstractParentWithCollection ) s.merge( parent );
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( null );
+		tx.commit();
+		s.close();
+		int index = 0;
+		Child oldChild = ( Child ) oldCollection.iterator().next();
+		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		}
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		if ( oldChild.hasBidirectionalManyToMany() ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		}
+		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}	
+	*/
+
+	private ParentWithCollection createParentWithNullChildren(String parentName) {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		ParentWithCollection parent = createParent( parentName );
+		s.save( parent );
+		tx.commit();
+		s.close();
+		return parent;
+	}
+
+	private ParentWithCollection createParentWithNoChildren(String parentName) {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		ParentWithCollection parent = createParent( parentName );
+		parent.setChildren( createCollection() );
+		s.save( parent );
+		tx.commit();
+		s.close();
+		return parent;
+	}
+
+	private ParentWithCollection createParentWithOneChild(String parentName, String ChildName) {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		ParentWithCollection parent = createParent( parentName );
+		parent.setChildren( createCollection() );
+		parent.addChild( ChildName );
+		s.save( parent );
+		tx.commit();
+		s.close();
+		return parent;
+	}
+
+	private Collection getParents( Child child ) {
+		return ( ( child instanceof ChildWithBidirectionalManyToMany )
+						? ( ( ChildWithBidirectionalManyToMany ) child ).getParents()
+						: null );
+	}
+	private void checkResult(CollectionListeners listeners,
+							 CollectionListeners.Listener listenerExpected,
+							 ParentWithCollection parent,
+							 int index) {
+		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
+	}
+	private void checkResult(CollectionListeners listeners,
+							 CollectionListeners.Listener listenerExpected,
+							 Child child,
+							 int index) {
+		checkResult( listeners, listenerExpected, child, getParents( child ), index );
+	}
+
+	private void checkResult(CollectionListeners listeners,
+							 CollectionListeners.Listener listenerExpected,
+							 Object ownerExpected,
+							 Collection collExpected,
+							 int index) {
+		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
+		assertSame(
+				ownerExpected,
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwner()
+		);
+		assertSame(
+				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()
+		);
+	}
+
+	private void checkNumberOfResults(CollectionListeners listeners, int nEventsExpected) {
+		assertEquals( nEventsExpected, listeners.getListenersCalled().size() );
+		assertEquals( nEventsExpected, listeners.getEvents().size() );
+	}
+}

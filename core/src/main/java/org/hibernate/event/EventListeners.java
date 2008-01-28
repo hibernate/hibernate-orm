@@ -69,6 +69,13 @@ public class EventListeners extends Cloneable implements Serializable {
 	private PostUpdateEventListener[] postCommitUpdateEventListeners = {};
 	private PostInsertEventListener[] postCommitInsertEventListeners = {};
 
+	private PreCollectionRecreateEventListener[] preCollectionRecreateEventListeners = {};
+	private PostCollectionRecreateEventListener[] postCollectionRecreateEventListeners = {};
+	private PreCollectionRemoveEventListener[] preCollectionRemoveEventListeners = {};
+	private PostCollectionRemoveEventListener[] postCollectionRemoveEventListeners = {};
+	private PreCollectionUpdateEventListener[] preCollectionUpdateEventListeners = {};
+	private PostCollectionUpdateEventListener[] postCollectionUpdateEventListeners = {};	
+
 	private SaveOrUpdateEventListener[] saveEventListeners = { new DefaultSaveEventListener() };
 	private SaveOrUpdateEventListener[] updateEventListeners = { new DefaultUpdateEventListener() };
 	private MergeEventListener[] saveOrUpdateCopyEventListeners = { new DefaultSaveOrUpdateCopyEventListener() };//saveOrUpdateCopy() is deprecated!
@@ -99,6 +106,9 @@ public class EventListeners extends Cloneable implements Serializable {
 		eventInterfaceFromType.put("pre-update", PreUpdateEventListener.class);
 		eventInterfaceFromType.put("pre-delete", PreDeleteEventListener.class);
 		eventInterfaceFromType.put("pre-insert", PreInsertEventListener.class);
+		eventInterfaceFromType.put("pre-collection-recreate", PreCollectionRecreateEventListener.class);
+		eventInterfaceFromType.put("pre-collection-remove", PreCollectionRemoveEventListener.class);
+		eventInterfaceFromType.put("pre-collection-update", PreCollectionUpdateEventListener.class);
 		eventInterfaceFromType.put("post-load", PostLoadEventListener.class);
 		eventInterfaceFromType.put("post-update", PostUpdateEventListener.class);
 		eventInterfaceFromType.put("post-delete", PostDeleteEventListener.class);
@@ -106,6 +116,9 @@ public class EventListeners extends Cloneable implements Serializable {
 		eventInterfaceFromType.put("post-commit-update", PostUpdateEventListener.class);
 		eventInterfaceFromType.put("post-commit-delete", PostDeleteEventListener.class);
 		eventInterfaceFromType.put("post-commit-insert", PostInsertEventListener.class);
+		eventInterfaceFromType.put("post-collection-recreate", PostCollectionRecreateEventListener.class);
+		eventInterfaceFromType.put("post-collection-remove", PostCollectionRemoveEventListener.class);
+		eventInterfaceFromType.put("post-collection-update", PostCollectionUpdateEventListener.class);
 		eventInterfaceFromType = Collections.unmodifiableMap( eventInterfaceFromType );
 	}
 
@@ -279,6 +292,30 @@ public class EventListeners extends Cloneable implements Serializable {
 		this.preLoadEventListeners = preLoadEventListener;
 	}
 
+	public PreCollectionRecreateEventListener[] getPreCollectionRecreateEventListeners() {
+		return preCollectionRecreateEventListeners;
+	}
+
+	public void setPreCollectionRecreateEventListeners(PreCollectionRecreateEventListener[] preCollectionRecreateEventListener) {
+		this.preCollectionRecreateEventListeners = preCollectionRecreateEventListener;
+	}
+
+	public PreCollectionRemoveEventListener[] getPreCollectionRemoveEventListeners() {
+		return preCollectionRemoveEventListeners;
+	}
+
+	public void setPreCollectionRemoveEventListeners(PreCollectionRemoveEventListener[] preCollectionRemoveEventListener) {
+		this.preCollectionRemoveEventListeners = preCollectionRemoveEventListener;
+	}
+
+	public PreCollectionUpdateEventListener[] getPreCollectionUpdateEventListeners() {
+		return preCollectionUpdateEventListeners;
+	}
+
+	public void setPreCollectionUpdateEventListeners(PreCollectionUpdateEventListener[] preCollectionUpdateEventListeners) {
+		this.preCollectionUpdateEventListeners = preCollectionUpdateEventListeners;
+	}
+
 	public PostDeleteEventListener[] getPostDeleteEventListeners() {
 		return postDeleteEventListeners;
 	}
@@ -303,6 +340,30 @@ public class EventListeners extends Cloneable implements Serializable {
 		this.postUpdateEventListeners = postUpdateEventListener;
 	}
 	
+	public PostCollectionRecreateEventListener[] getPostCollectionRecreateEventListeners() {
+		return postCollectionRecreateEventListeners;
+	}
+
+	public void setPostCollectionRecreateEventListeners(PostCollectionRecreateEventListener[] postCollectionRecreateEventListener) {
+		this.postCollectionRecreateEventListeners = postCollectionRecreateEventListener;
+	}
+
+	public PostCollectionRemoveEventListener[] getPostCollectionRemoveEventListeners() {
+		return postCollectionRemoveEventListeners;
+	}
+
+	public void setPostCollectionRemoveEventListeners(PostCollectionRemoveEventListener[] postCollectionRemoveEventListener) {
+		this.postCollectionRemoveEventListeners = postCollectionRemoveEventListener;
+	}	        
+
+	public PostCollectionUpdateEventListener[] getPostCollectionUpdateEventListeners() {
+		return postCollectionUpdateEventListeners;
+	}
+
+	public void setPostCollectionUpdateEventListeners(PostCollectionUpdateEventListener[] postCollectionUpdateEventListeners) {
+		this.postCollectionUpdateEventListeners = postCollectionUpdateEventListeners;
+	}
+
 	public PreDeleteEventListener[] getPreDeleteEventListeners() {
 		return preDeleteEventListeners;
 	}

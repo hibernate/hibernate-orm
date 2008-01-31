@@ -21,12 +21,13 @@
  */
 package org.hibernate.test.event.collection.association;
 
-import org.hibernate.test.event.collection.AbstractCollectionEventTest;
-import org.hibernate.test.event.collection.CollectionListeners;
-import org.hibernate.test.event.collection.ChildEntity;
-import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.test.event.collection.AbstractCollectionEventTest;
+import org.hibernate.test.event.collection.ChildEntity;
+import org.hibernate.test.event.collection.CollectionListeners;
+import org.hibernate.test.event.collection.ParentWithCollection;
+import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 
 /**
  *
@@ -52,14 +53,14 @@ public abstract class AbstractAssociationCollectionEventTest extends AbstractCol
 		s.close();
 		int index = 0;
 		checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}

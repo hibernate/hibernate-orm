@@ -25,9 +25,8 @@ package org.hibernate.test.event.collection;
  *
  * @author Gail Badner
  */
-public class ChildEntity extends ChildValue {
+public class ChildEntity extends ChildValue implements Entity {
 	private Long id;
-
 
 	public ChildEntity() {
 		super();

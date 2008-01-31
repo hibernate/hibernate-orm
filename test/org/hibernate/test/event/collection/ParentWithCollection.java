@@ -27,7 +27,7 @@ import java.util.Collection;
  *
  * @author Gail Badner
  */
-public interface ParentWithCollection {
+public interface ParentWithCollection extends Entity {
 	void newChildren(Collection collection);
 
 	Child createChild(String name);

@@ -1,19 +1,19 @@
 //$Id$
 package org.hibernate.action;
 
-import org.hibernate.HibernateException;
+import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
-import org.hibernate.event.PostCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.EventSource;
-import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PostCollectionRemoveEvent;
+import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.event.PreCollectionRemoveEvent;
+import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.io.Serializable;
 
 public final class CollectionRemoveAction extends CollectionAction {
 
@@ -45,7 +45,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		// the loaded owner will be set to null after the collection is removed,
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
-		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwner( collection );
+		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwnerOrNull( collection );
 	}
 
 	/**
@@ -68,7 +68,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final SessionImplementor session)
 			throws CacheException {
 		super( persister, null, id, session );
-		if (affectedOwner == null) { throw new AssertionFailure("affectedOwner == null"); };
+		if (affectedOwner == null) { throw new AssertionFailure("affectedOwner == null"); }
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 	}

@@ -252,8 +252,20 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner if its entity ID is available from the collection's loaded key
+	 * and the owner entity is in the persistence context; otherwise, returns null
 	 */
-	Object getLoadedCollectionOwner(PersistentCollection collection);
+	Object getLoadedCollectionOwnerOrNull(PersistentCollection collection);
+
+	/**
+	 * Get the ID for the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
+	 */
+	public Serializable getLoadedCollectionOwnerIdOrNull(PersistentCollection collection);
 
 	/**
 	 * add a collection we just loaded up (still needs initializing)

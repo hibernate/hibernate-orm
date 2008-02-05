@@ -311,12 +311,12 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,
-				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwner()
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerOrNull()
 		);
-		//assertSame(
-		//		ownerExpected.getId(),
-		//		( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerId()
-		//);
+		assertEquals(
+				ownerExpected.getId(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerIdOrNull()
+		);
 		assertSame(
 				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()
 		);

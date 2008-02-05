@@ -11,6 +11,8 @@ import org.hibernate.collection.PersistentCollection;
 public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	public PostCollectionUpdateEvent(PersistentCollection collection, EventSource source) {
-		super(collection, source, getLoadedOwner( collection, source ));
+		super( collection, source,
+				getLoadedOwnerOrNull( collection, source ),
+				getLoadedOwnerIdOrNull( collection, source ) );
 	}
 }

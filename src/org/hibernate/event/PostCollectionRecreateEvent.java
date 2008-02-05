@@ -11,6 +11,8 @@ import org.hibernate.collection.PersistentCollection;
 public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 
 	public PostCollectionRecreateEvent(PersistentCollection collection, EventSource source) {
-		super(collection, source, collection.getOwner());
+		super( collection, source,
+				collection.getOwner(),
+				getOwnerIdOrNull( collection.getOwner(), source ) );
 	}
 }

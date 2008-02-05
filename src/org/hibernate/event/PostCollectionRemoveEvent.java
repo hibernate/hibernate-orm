@@ -11,6 +11,8 @@ import org.hibernate.collection.PersistentCollection;
 public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 
 	public PostCollectionRemoveEvent(PersistentCollection collection, Object loadedOwner, EventSource source) {
-		super(collection, source, loadedOwner);
+		super( collection, source,
+				loadedOwner,
+				getOwnerIdOrNull( loadedOwner, source ) );
 	}
 }

@@ -110,9 +110,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				.getPreCollectionRemoveEventListeners();
 		if (preListeners.length>0) {
 			PreCollectionRemoveEvent preEvent = new PreCollectionRemoveEvent(
-					getCollection(),
-					affectedOwner,
-					( EventSource )getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				preListeners[i].onPreRemoveCollection(preEvent);
 			}
@@ -124,9 +122,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				.getPostCollectionRemoveEventListeners();
 		if (postListeners.length>0) {
 			PostCollectionRemoveEvent postEvent = new PostCollectionRemoveEvent(
-					getCollection(),
-					affectedOwner,
-					( EventSource )getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
 			for ( int i = 0; i < postListeners.length; i++ ) {
 				postListeners[i].onPostRemoveCollection(postEvent);
 			}

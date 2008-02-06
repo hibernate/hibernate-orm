@@ -11,8 +11,10 @@ import org.hibernate.collection.PersistentCollection;
  */
 public class InitializeCollectionEvent extends AbstractCollectionEvent {
 
-	public InitializeCollectionEvent(PersistentCollection collection, EventSource source) {
-		super( collection, source,
+	public InitializeCollectionEvent(PersistentCollection collection, EventSource source ) {
+		super( getLoadedCollectionPersister( collection, source ),
+				collection,
+				source,
 				getLoadedOwnerOrNull( collection, source ),
 				getLoadedOwnerIdOrNull( collection, source ) );
 	}

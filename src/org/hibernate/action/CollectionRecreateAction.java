@@ -57,7 +57,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 				.getPreCollectionRecreateEventListeners();
 		if (preListeners.length > 0) {
 			PreCollectionRecreateEvent preEvent = new PreCollectionRecreateEvent(
-					getCollection(), ( EventSource ) getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession() );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				preListeners[i].onPreRecreateCollection( preEvent );
 			}
@@ -69,7 +69,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 				.getPostCollectionRecreateEventListeners();
 		if (postListeners.length > 0) {
 			PostCollectionRecreateEvent postEvent = new PostCollectionRecreateEvent(
-					getCollection(), ( EventSource ) getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession() );
 			for ( int i = 0; i < postListeners.length; i++ ) {
 				postListeners[i].onPostRecreateCollection( postEvent );
 			}

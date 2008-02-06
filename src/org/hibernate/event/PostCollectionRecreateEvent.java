@@ -2,6 +2,7 @@
 package org.hibernate.event;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * An event that occurs after a collection is recreated
@@ -10,8 +11,10 @@ import org.hibernate.collection.PersistentCollection;
  */
 public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 
-	public PostCollectionRecreateEvent(PersistentCollection collection, EventSource source) {
-		super( collection, source,
+	public PostCollectionRecreateEvent( CollectionPersister collectionPersister,
+										PersistentCollection collection,
+										EventSource source ) {
+		super( collectionPersister, collection, source,
 				collection.getOwner(),
 				getOwnerIdOrNull( collection.getOwner(), source ) );
 	}

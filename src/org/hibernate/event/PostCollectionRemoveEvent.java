@@ -2,6 +2,7 @@
 package org.hibernate.event;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * An event that occurs after a collection is removed
@@ -10,8 +11,11 @@ import org.hibernate.collection.PersistentCollection;
  */
 public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 
-	public PostCollectionRemoveEvent(PersistentCollection collection, Object loadedOwner, EventSource source) {
-		super( collection, source,
+	public PostCollectionRemoveEvent(CollectionPersister collectionPersister,
+									 PersistentCollection collection,
+									 EventSource source,
+									 Object loadedOwner ) {
+		super( collectionPersister, collection, source,
 				loadedOwner,
 				getOwnerIdOrNull( loadedOwner, source ) );
 	}

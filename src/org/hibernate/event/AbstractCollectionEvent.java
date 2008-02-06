@@ -4,7 +4,9 @@ package org.hibernate.event;
 import java.io.Serializable;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Defines a base class for events involving collections.
@@ -16,6 +18,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	private final PersistentCollection collection;
 	private final Object affectedOwner;
 	private final Serializable affectedOwnerId;
+	private final String affectedOwnerEntityName;
 
 	/**
 	 * Constructs an AbstractCollectionEvent object.
@@ -28,14 +31,22 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	 * by this event; can be null if unavailable
 	 * that is affected by this event; can be null if unavailable
 	 */
-	public AbstractCollectionEvent(PersistentCollection collection,
-								   EventSource source,
-								   Object affectedOwner,
-								   Serializable affectedOwnerId ) {
+	public AbstractCollectionEvent( CollectionPersister collectionPersister,
+					PersistentCollection collection,
+					EventSource source,
+					Object affectedOwner,
+					Serializable affectedOwnerId) {
 		super(source);
 		this.collection = collection;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
+		this.affectedOwnerEntityName =
+				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
+	}
+
+	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection collection, EventSource source ) {
+		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry( collection );
+		return ( ce == null ? null : ce.getLoadedPersister() );		
 	}
 
 	protected static Object getLoadedOwnerOrNull( PersistentCollection collection, EventSource source ) {
@@ -49,6 +60,21 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	protected static Serializable getOwnerIdOrNull( Object owner, EventSource source ) {
 		EntityEntry ownerEntry = source.getPersistenceContext().getEntry( owner );
 		return ( ownerEntry == null ? null : ownerEntry.getId() );
+	}
+
+	protected static String getAffectedOwnerEntityName(CollectionPersister collectionPersister, Object affectedOwner, EventSource source ) {
+
+		// collectionPersister should not be null, but we don't want to throw
+		// an exception if it is null
+		String entityName =
+				( collectionPersister == null ? null : collectionPersister.getOwnerEntityPersister().getEntityName() );
+		if ( affectedOwner != null ) {
+			EntityEntry ee = source.getPersistenceContext().getEntry( affectedOwner );
+			if ( ee != null && ee.getEntityName() != null) {
+				entityName = ee.getEntityName();
+			}
+		}	
+		return entityName;
 	}
 
 	public PersistentCollection getCollection() {
@@ -75,4 +101,15 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	public Serializable getAffectedOwnerIdOrNull() {
 		return affectedOwnerId;
 	}
+
+	/**
+	 * Get the entity name for the collection owner entity that is affected by this event.
+	 *
+	 * @return the entity name; if the owner is not in the PersistenceContext, the
+	 * returned value may be a superclass name, instead of the actual class name
+	 */
+	public String getAffectedOwnerEntityName() {
+		return affectedOwnerEntityName;
+	}
+
 }

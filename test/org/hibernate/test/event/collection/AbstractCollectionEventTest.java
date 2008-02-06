@@ -767,6 +767,10 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 				ownerExpected.getId(),
 				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerIdOrNull()
 		);
+		assertEquals(
+				ownerExpected.getClass().getName(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
+		);
 		assertSame(
 				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()
 		);

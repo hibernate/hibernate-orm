@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.event.collection.association.bidirectional.onetomany">
+
+    <class name="ParentWithBidirectionalOneToMany" table="PARENT" discriminator-value="P">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+
+        <discriminator column="TYPE" type="string" length="1"/>
+
+        <bag name="children"
+             inverse="true"
+             cascade="all">
+            <key column="parent_id"/>
+            <one-to-many class="ChildWithManyToOne"/>
+        </bag>
+
+        <subclass name="ParentWithBidirectionalOneToManySubclass"
+            discriminator-value="S">
+        </subclass>
+    </class>
+
+    <class name="ChildWithManyToOne" table="CHILD">
+        <id name="id" column="ID" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <many-to-one name="parent" column="parent_id" class="ParentWithBidirectionalOneToMany" cascade="none"/>
+    </class>
+
+</hibernate-mapping>

@@ -163,11 +163,15 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 				else {
 					javax.transaction.Transaction tx = tm.getTransaction();
 					if ( JTAHelper.isMarkedForRollback( tx ) ) {
+						// transactions marked for rollback-only cause some TM impls to throw exceptions
 						log.debug( "Transaction is marked for rollback; skipping Synchronization registration" );
 						return false;
 					}
 					else {
-						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, null) );
+						if ( hibernateTransaction == null ) {
+							hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction( this, owner );
+						}
+						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
 						isTransactionCallbackRegistered = true;
 						log.debug("successfully registered Synchronization");
 						return true;

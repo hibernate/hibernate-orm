@@ -153,7 +153,7 @@ import org.hibernate.util.PropertiesHelper;
  */
 public final class Environment {
 
-	public static final String VERSION = "3.2.5";
+	public static final String VERSION = "3.2.6";
 
 	/**
 	 * <tt>ConnectionProvider</tt> implementor to use when obtaining connections

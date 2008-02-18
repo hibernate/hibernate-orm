@@ -37,7 +37,7 @@
         <resources>
             <resource>
                 <filtering>false</filtering>
-                <directory>${baseir}/src/main/java</directory>
+                <directory>src/main/java</directory>
                 <includes>
                     <include>**/*.hbm.xml</include>
                 </includes>

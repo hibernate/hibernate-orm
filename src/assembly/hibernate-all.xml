@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.1.0-SNAPSHOT.xsd">
+
+    <!--
+        Produces a dist-style bundle similar to what previous (non-mavenized) versions of
+        Hibernate did.
+    -->
+    <id>all</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>hibernate-all</baseDirectory>
+    <moduleSets>
+        <!-- Handle the "code" related modules -->
+        <moduleSet>
+            <!-- this setting makes sure that sub modules of documentation are not picked up here -->
+            <includeSubModules>false</includeSubModules>
+            <includes>
+                <include>org.hibernate:*</include>
+            </includes>
+            <excludes>
+                <!-- documentation handled in separate moduleSet -->
+                <exclude>org.hibernate:hibernate-documentation</exclude>
+                <!-- not included in the dist bundle -->
+                <exclude>org.hibernate:hibernate-testsuite</exclude>
+                <!-- not included in the dist bundle (for now; eventually will become part of documentation/tutorial) -->
+                <exclude>org.hibernate:hibernate-eg</exclude>
+            </excludes>
+            <sources>
+                <includeModuleDirectory>false</includeModuleDirectory>
+                <fileSets>
+                    <fileSet>
+                        <directory>target/classes</directory>
+                        <outputDirectory>/</outputDirectory>
+                    </fileSet>
+                </fileSets>
+            </sources>
+        </moduleSet>
+    </moduleSets>
+</assembly>

@@ -71,6 +71,7 @@
                 <configuration>
                     <descriptors>
                         <descriptor>src/assembly/dist.xml</descriptor>
+                        <descriptor>src/assembly/hibernate-all.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>

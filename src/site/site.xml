@@ -14,6 +14,7 @@
     </poweredBy>
 
     <body>
+
         <head>
             <link rel="shortcut icon" href="images/favicon.ico"/>
         </head>
@@ -26,10 +27,37 @@
 
         <menu name="Overview">
             <item name="Introduction" href="index.html"/>
+            <item name="Getting Started" href="quickstart.html"/>
+            <item name="Documentation" href="documentation.html"/>
+            <item name="FAQs" href="faq.html"/>
         </menu>
 
-        <menu ref="reports"/>
+        <menu name="Information">
+            <item name="Project Summary" href="project-summary.html"/>
+            <item name="Project License" href="license.html"/>
+            <item name="Issue Tracking" href="issue-tracking.html"/>
+            <item name="Mailing Lists" href="mail-lists.html"/>
+            <item name="Source Repository" href="source-repository.html"/>
+            <item name="Continuous Integration" href="integration.html"/>
+            <item name="Dependencies" href="dependencies.html"/>
+            <item name="Dependency Convergence" href="dependency-convergence.html"/>
+        </menu>
+
+        <menu name="Modules">
+            <item name="Core" href="modules/core/index.html"/>
+            <item name="JMX Capabilities" href="modules/jmx/index.html"/>
+            <item name="Ehcache Integration" href="ehcache/index.html"/>
+            <item name="JBossCache(1.x) Integration" href="jbc/index.html"/>
+            <item name="JBossCache(2.x) Integration" href="jbc2/index.html"/>
+            <item name="SwarmCache Integration" href="swarmcache/index.html"/>
+            <item name="OSCache Integration" href="oscache/index.html"/>
+            <item name="C3P0 Integration" href="c3p0/index.html"/>
+            <item name="Proxool Integration" href="proxool/index.html"/>
+            <item name="Testing Support" href="testing/index.html"/>
+        </menu>
+
     </body>
-</project> 
+
+</project>
 
         

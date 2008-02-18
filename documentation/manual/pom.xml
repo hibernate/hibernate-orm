@@ -24,7 +24,20 @@
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
                 <version>2.1.0-SNAPSHOT</version>
-		<extensions>true</extensions>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <!--
+                            here we are attaching the translate goal so that the translations are processed
+                            before compilation so that the transated XML is also transformed during
+                            generation
+                        -->
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>translate</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <dependencies>
                     <dependency>
                         <groupId>org.hibernate</groupId>
@@ -45,7 +58,7 @@
                         <translation>zh-CN</translation>
                     </translations>
                     <imageResource>
-                        <directory>src/main/docbook/en-US</directory>
+                        <directory>${basedir}/src/main/docbook/en-US</directory>
                         <excludes>
                             <exclude>*.xml</exclude>
                             <exclude>**/*.xml</exclude>

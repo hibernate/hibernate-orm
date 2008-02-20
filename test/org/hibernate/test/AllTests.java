@@ -87,6 +87,7 @@ import org.hibernate.test.legacy.SQLLoaderTest;
 import org.hibernate.test.legacy.StatisticsTest;
 import org.hibernate.test.lob.LobSuite;
 import org.hibernate.test.manytomany.ManyToManyTest;
+import org.hibernate.test.manytomanyassociationclass.ManyToManyAssociationClassSuite;
 import org.hibernate.test.map.MapIndexFormulaTest;
 import org.hibernate.test.mapcompelem.MapCompositeElementTest;
 import org.hibernate.test.mapelemformula.MapElementFormulaTest;
@@ -230,6 +231,7 @@ public class AllTests {
 			suite.addTest( MixedTest.suite() );
 			suite.addTest( OneToManyTest.suite() );
 			suite.addTest( ManyToManyTest.suite() );
+			suite.addTest( ManyToManyAssociationClassSuite.suite() );
 			suite.addTest( OneToOneSuite.suite() );
 			suite.addTest( OptimisticLockTest.suite() );
 			suite.addTest( PropertyRefSuite.suite() );

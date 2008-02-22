@@ -695,10 +695,17 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry></entry>
             </row>
             <row>
-                <entry>JBoss TreeCache</entry>
+                <entry>JBoss Cache 1.x</entry>
                 <entry><literal>org.hibernate.cache.TreeCacheProvider</literal></entry>
                 <entry>clustered (ip multicast), transactional</entry>
                 <entry>yes (replication)</entry>
+                <entry>yes (clock sync req.)</entry>
+            </row>
+            <row>
+                <entry>JBoss Cache 2</entry>
+                <entry><literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal></entry>
+                <entry>clustered (ip multicast), transactional</entry>
+                <entry>yes (replication or invalidation)</entry>
                 <entry>yes (clock sync req.)</entry>
             </row>
             </tbody>
@@ -890,7 +897,14 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <entry></entry>
                 </row>
                 <row>
-                    <entry>JBoss TreeCache</entry>
+                    <entry>JBoss Cache 1.x</entry>
+                    <entry>yes</entry>
+                    <entry></entry>
+                    <entry></entry>
+                    <entry>yes</entry>
+                </row>
+                <row>
+                    <entry>JBoss Cache 2</entry>
                     <entry>yes</entry>
                     <entry></entry>
                     <entry></entry>

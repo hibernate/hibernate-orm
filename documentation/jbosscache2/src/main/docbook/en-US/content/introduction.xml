@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+<chapter id="introduction">
+
+    <title>Introduction</title>
+
+    <sect1 id="introduction-overview" revision="1">
+        <title>Overview</title>
+        
+        <para>
+         JBoss Cache is a tree-structured, clustered, transactional cache. It 
+         includes support for maintaining cache consistency across multiple 
+         cache instances running in a cluster. It integrates with JTA transaction 
+         managers, supporting transaction-scoped locking of cache elements and
+         automatic rollback of cache changes upon transaction rollback. It 
+         supports both pessimistic and optimistic locking, with the tree-structure
+         of the cache allowing maximum concurrency.
+        </para>
+        
+        <para>
+         All of these features make JBoss Cache an excellent choice for use as a
+         Hibernate <emphasis>Second Level Cache</emphasis>, particularly in
+         a clustered environment. A Hibernate <literal>Session</literal> is a 
+         transaction-scoped cache of persistent data -- data accessed via the 
+         <literal>Session</literal> is cached in the <literal>Session</literal> 
+         for the duration of the current transaction, and then is cleared. A 
+         <emphasis>Second Level Cache</emphasis> is an optional cluster or 
+         JVM-level cache whose contents are maintained beyond the life of a 
+         transaction and whose contents can be shared across transactions. 
+         Use of a Second Level Cache is configured as part of the configuration 
+         of the Hibernate <literal>SessionFactory</literal>. If a Second Level 
+         Cache is enabled, caching of an instance of a particular
+         entity class or of results of a particular query can be configured on 
+         a class-by-class, collection-by-collection and query-by-query basis. 
+         See the <emphasis>Hibernate Reference Documentation</emphasis> for more
+         on Second Level Cache basics and how to configure entity classes,
+         collections and queries for caching.
+        </para>
+        
+        <para>
+         The JBoss Cache Second Level Cache integration supports the 
+         <literal>transactional</literal> and <literal>read only</literal>
+         <emphasis>cache concurrency strategies</emphasis> discussed in the 
+         <emphasis>Hibernate Reference Documentation</emphasis>. It supports 
+         query caching and is, of course, cluster safe.
+        </para>
+    </sect1>
+
+    <sect1 id="introduction-requirements" revision="1">
+       <title>Requirements</title>
+       
+       <para>
+        Second level caching with JBoss Cache 2 requires the use of JBoss
+        Cache 2.1.0 or later. The core JBoss Cache project is used; the
+        related PojoCache project/library is not needed.  The following jars, 
+        included with the JBoss Cache distribution, need to be on the classpath:
+       </para>
+       
+       <itemizedlist>
+            <listitem><para>jbosscache-core.jar</para></listitem>
+            <listitem><para>commons-logging.jar</para></listitem>
+            <listitem><para>jboss-common-core.jar</para></listitem>
+            <listitem><para>jgroups.jar</para></listitem>
+       </itemizedlist>
+       
+       <para>
+        JBoss Cache also needs to have the classes in the 
+        <literal>javax.transaction</literal> package on the classpath,
+        but those are already included in the Hibernate distribution.
+       </para>
+       
+       <para>
+         The <literal>hibernate-jbosscache2.jar</literal> that is included with
+         the Hibernate distribution also needs to be on the classpath.
+       </para>
+       
+       <para>
+         A JBoss Cache configuration file, and usually a JGroups configuration
+         file<footnote><para><ulink url="http://labs.jboss.org/jgroups">JGroups</ulink>
+         is the group communication library used by JBoss Cache for intra-cluster 
+         communication.</para></footnote>, need to be on the classpath.  The
+         <literal>hibernate-jbosscache2.jar</literal> includes standard 
+         configuration files in the <literal>org.hibernate.cache.jbc2.builder</literal>
+         package.  The <literal>jbc2-configs.xml</literal> file is for JBoss 
+         Cache and the <literal>jgroups-stacks.xml</literal> file is for JGroups.
+         See <xref linkend="jbc-config"/> and <xref linkend="jgroups-config"/>
+         for more details on these files. Users can create their own versions 
+         and tell the <literal>SessionFactory</literal> to use them; see 
+         <xref linkend="sessionfactory"/> for details.
+       </para>
+       
+    </sect1>
+
+    <sect1 id="introduction-configuration" revision="1">
+       <title>Configuration Basics</title>
+       
+       <para>
+        The key steps in using JBoss Cache as a second level cache are to:
+       </para>
+       
+       <itemizedlist>
+           <listitem>
+              <para>
+                Tell Hibernate in your <literal>SessionFactory</literal>
+                configuration that you want to use JBoss Cache 2 as your
+                Second Level Cache implementation:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+              
+              <para>
+                There are a number of values that can be provided for the 
+                <literal>hibernate.cache.region.factory_class</literal>
+                property, depending on how you want the JBoss Cache integration
+                to work. Based on what factory class you specify, there are 
+                additional detail configuration properties you can add to further
+                control that factory.  However, simply specifying the 
+                <literal>MultiplexedJBossCacheRegionFactory</literal> shown
+                above provides a reasonable set of default values useful for
+                many applications. See <xref linkend="sessionfactory-factories"/> 
+                for more details.
+              </para>
+              
+              <para>
+                Do not set the legacy <literal>hibernate.cache.provider_class</literal> 
+                property when using JBoss Cache 2. That is a legacy property
+                from before Hibernate 3.3's redesign of second level caching
+                internals. It will not work with JBoss Cache 2.
+              </para>
+              
+           </listitem>
+           <listitem>
+              <para>
+                Tell Hibernate you want to enable caching of entities and 
+                collections. No need to set this property if you don't:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.use_second_level_cache=true]]></programlisting>
+           </listitem>
+           <listitem>
+              <para>
+                Tell Hibernate you want to enable caching of 
+                query results. No need to set this property if you don't:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.use_query_cache=true]]></programlisting>
+           </listitem>
+           <listitem>
+              <para>
+                If you have enabled caching of query results, tell Hibernate if
+                you want to suppress costly replication of those results around
+                the cluster. No need to set this property if you want query
+                results replicated:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+           </listitem>
+       </itemizedlist>
+       
+       <para>
+        See <xref linkend="configuration"/> for full details on configuration.
+       </para>
+    </sect1>
+    
+</chapter>

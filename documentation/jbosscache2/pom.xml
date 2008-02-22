@@ -1,0 +1,86 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core-parent</artifactId>
+        <version>1</version>
+    </parent>
+    
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-jbc2-manual</artifactId>
+    <version>3.3.0-SNAPSHOT</version>
+    <packaging>jdocbook</packaging>
+
+    <name>Hibernate/JBoss Cache 2 Reference Manual</name>
+    <description>The Hibernate / JBoss Cache 2 integration reference manual</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-jdocbook-plugin</artifactId>
+                <version>2.1.0-SNAPSHOT</version>
+		          <extensions>true</extensions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-jdocbook-style</artifactId>
+                        <version>1.0.1-SNAPSHOT</version>
+                        <type>jdocbook-style</type>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <sourceDocumentName>Hibernate_JBC2_Reference.xml</sourceDocumentName>
+                    <masterTranslation>en-US</masterTranslation>
+                    <translations>
+                        <translation>es-ES</translation>
+                        <translation>fr-FR</translation>
+                        <translation>ja-JP</translation>
+                        <translation>ko-KR</translation>
+                        <translation>pt-BR</translation>
+                        <translation>zh-CN</translation>
+                    </translations>
+                    <imageResource>
+                        <directory>src/main/docbook/en-US</directory>
+                        <excludes>
+                            <exclude>*.xml</exclude>
+                            <exclude>**/*.xml</exclude>
+                            <exclude>*.zargo</exclude>
+                            <exclude>**/*.zargo</exclude>
+                        </excludes>
+                    </imageResource>
+                    <formats>
+                        <format>
+                            <formatName>pdf</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
+                            <finalName>hibernate_reference.pdf</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                        <format>
+                            <formatName>html_single</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl</stylesheetResource>
+                            <finalName>index.html</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                        <format>
+                            <formatName>html</formatName>
+                            <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl</stylesheetResource>
+                            <finalName>index.html</finalName>
+                            <profilingTypeName>two_pass</profilingTypeName>
+                        </format>
+                    </formats>
+                    <options>
+                        <xincludeSupported>true</xincludeSupported>
+                        <localeSeparator>-</localeSeparator>
+                        <useRelativeImageUris>true</useRelativeImageUris>
+                    </options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

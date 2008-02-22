@@ -1,0 +1,944 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+<chapter id="concepts">
+
+    <title>Core Concepts</title>
+    
+    <para>
+      This chapter focuses on some of the core concepts underlying how the
+      JBoss Cache-based implementation of the Hibernate Second Level Cache works.
+      There's a fair amount of detail, which certainly doesn't all need to be
+      mastered to use JBoss Cache with Hibernate. But, an understanding of some
+      of the basic concepts here will help a user understand what some of the
+      typical configurations discussed in the next chapter are all about.
+    </para>
+    
+    <para>
+      If you want to skip the details for now, feel free to jump ahead to 
+      <xref linkend="concepts-cache-matching-process"/>
+    </para>
+
+    <sect1 id="concepts-data-types" revision="1">
+       <title>Types of Cached Data</title>
+       
+       <para>
+         The Second Level Cache can cache four different types of data: entities,
+         collections, query results and timestamps. Proper handling of each
+         of the types requires slightly different caching semantics.  A major
+         improvement in Hibernate 3.3 is the addition of the 
+         <literal>org.hibernate.cache.RegionFactory</literal> API, which
+         allows Hibernate to tell the caching integration layer what type
+         of data is being cached. Based on that knowledge, the cache integration
+         layer can apply the semantics appropriate to that type. 
+       </para>
+       
+       <sect2 id="concepts-data-types-entity" revision="1">
+          <title>Entities</title>     
+          <para>
+            Entities are the most common type of data cached in the second level 
+            cache.  Entity caching requires the following semantics in a
+            clustered cache:
+          </para>
+          
+          <itemizedlist>
+             <listitem>
+                <para>
+                   Newly created entities should only be stored on the node on 
+                   which they are created until the transaction in which they
+                   were created commits. Until that transaction commits, the
+                   cached entity should only be visible to that transaction.
+                   After the transaction commits, cluster-wide the cache should
+                   be in a "consistent" state.  The cache is consistent if on
+                   any node in the cluster, the new entity is either:
+                   
+                   <itemizedlist>
+                      <listitem>
+                        <para>
+                           stored in the cache, with all non-collection fields
+                           matching what is in the database.
+                        </para>
+                      </listitem>
+                      <listitem>
+                        <para>
+                           not stored in the cache at all.
+                        </para>
+                      </listitem>
+                   </itemizedlist> 
+                </para>
+                
+                <para>
+                  Maintaining cache consistency basically requires that the 
+                  cluster-wide update messages that inform other nodes of
+                  the changes made during a transaction be made 
+                  <emphasis>synchronously</emphasis> as part of the transaction
+                  commit process.  This means that the transaction thread will
+                  block until the changes have been transmitted to all nodes
+                  in the cluster, those nodes have updated their internal 
+                  state to reflect the changes, and have responded to the
+                  originating node telling them of their success (or failure)
+                  in doing so.  JBoss Cache uses a 2 phase commit protocol, so
+                  there will actually be 2 synchronous cluster-wide messages per
+                  transaction commit.  If any node in the cluster fails in the
+                  initial prepare phase of the 2PC, the underlying transaction
+                  will be rolled back and in the second phase JBoss
+                  Cache will tell the other nodes in the cluster to revert
+                  the change.
+                </para>
+             </listitem>
+             
+             <listitem>
+                <para>
+                   For existing entities that are modified in the course of a
+                   transaction, the updated entity state should only be stored 
+                   on the node on which the modification occurred until the 
+                   transaction commits. Until that transaction commits, the
+                   changed entity state should only be visible to that transaction.
+                   After the transaction commits, cluster-wide the cache should
+                   be in a "consistent" state, as described above.
+                </para>
+                <para>
+                   Concurrent cache updates of the same entity anywhere in the
+                   cluster should not be possible, as Hibernate will acquire
+                   an exclusive lock on the database representation of the entity
+                   before attempting to update the cache.
+                </para>
+             </listitem>
+             
+             <listitem>
+                <para>
+                   A read of a cached entity holds a transaction scope read lock on 
+                   the relevant portion of cache. The presence of a read lock
+                   held by one transaction should not prevent a concurrent read
+                   by another transaction. Whether the presence of that read
+                   lock prevents a concurrent write depends on whether the cache
+                   is configured for READ_COMMITTED or REPEATABLE_READ semantics
+                   and whether the cache is using optimistic locking. READ_COMMITTED 
+                   will allow a concurrent write to proceed; pessimistic locking 
+                   with REPEATABLE_READ will cause the write to block until the 
+                   transaction with the read lock commits. Optimistic locking
+                   allows a REPEATABLE_READ semantic without forcing the writing
+                   transaction to block.
+                </para>
+                
+                <para>
+                   A read of a cached entity does not result in any messages to
+                   other nodes in the cluster or any cluster-wide read locks.
+                </para>
+                
+             </listitem>
+             
+             <listitem>
+                <para>
+                   The basic operation of storing an entity that has been directly
+                   read from the database should have a <emphasis>fail-fast</emphasis>
+                   semantic. This type of operation is referred to as a <emphasis>put</emphasis>
+                   and is the most common type of operation. Basically, the 
+                   rules for handling new entities or entity updates discussed 
+                   above mean the cache's representation of an entity should 
+                   always match the database's.  So, if a <literal>put</literal>
+                   attempt encounters any existing copy of the entity in the cache,
+                   it should assume that existing copy is either newer or the same
+                   as what it is trying to store, and the <literal>put</literal> 
+                   attempt should promptly and silently abort, with no impact on 
+                   any ongoing transactions.
+                </para>
+                
+                <para>
+                  A <literal>put</literal> operation should not acquire any
+                  long-lasting locks on the cache.
+                </para>
+                
+                <para>
+                   If the cache is configured to use replication, the replication 
+                   of the <literal>put</literal> should occur immediately, not 
+                   waiting for transaction commit and without the calling thread 
+                   needing to block waiting for responses from the other nodes 
+                   in the cluster. This is a "fire-and-forget" semantic that 
+                   JBoss Cache refers to as <emphasis>asynchronous replication</emphasis>.
+                   When other nodes receive a replicated <literal>put</literal>,
+                   they use the same fail-fast semantics as a local <literal>put</literal> 
+                   -- i.e. promptly and silently abort if the entity is already cached.
+                </para>
+                
+                <para>
+                  If the cache is configured to use invalidation, a 
+                  <literal>put</literal> should not result in any cluster-wide
+                  message at all.  The fact that one node in the cluster has
+                  cached an entity should not invalidate another node's cache
+                  of that same entity -- both caches are storing the same
+                  information.
+                </para>
+                
+             </listitem>
+             
+             <listitem>
+                <para>
+                   A removal of an entity from the cache (i.e. to reflect a 
+                   DELETE from the underlying database) is basically a special 
+                   case of a modification; the removal should not be visible on
+                   other nodes or to other transactions until the transaction that
+                   did the remove commits. Cache consistency after commit means the
+                   removed entity is no longer in the cache on any node in the 
+                   cluster.
+                </para>
+             </listitem>
+          </itemizedlist>
+       </sect2>
+       
+       <sect2 id="concepts-data-types-collection" revision="1">
+          <title>Collections</title>     
+          <para>
+            Collection caching refers to the case where a cached entity has as
+            one of its fields a collection of other entities.  Hibernate handles
+            this field specially in the second level cache; a special area in
+            the cache is created where the primary keys of the entities in the
+            collection are stored.
+          </para>
+          
+          <para>
+            The management of collection caching is very similar to entity 
+            caching, with a few differences:
+            
+            <itemizedlist>
+               <listitem>
+                  <para>
+                    When a new entity is created that includes a collection,
+                    no attempt is made to insert the collection into the cache.
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                    When a transaction updates the contents of a collection,
+                    no attempt is made to reflect the new contents of the collection
+                    in the cache.  Instead, the existing collection is simply
+                    removed from the cache across the cluster, using the same
+                    semantics as an entity removal.
+                  </para>
+               </listitem>
+            </itemizedlist>
+          </para>
+          
+          <para>
+            In essence, for collections Hibernate only supports cache reads and
+            the <literal>put</literal> operation, with any modification of the 
+            collection resulting in cluster-wide invalidation of that collection 
+            from the cache. If the collection field is accessed again, a new read from 
+            the database will be done, followed by another cache <literal>put</literal>.
+          </para>
+       </sect2>
+       
+       <sect2 id="concepts-data-types-queries" revision="1">
+          <title>Queries</title>
+             
+          <para>
+            Hibernate supports caching of query results in the second level
+            cache.  The HQL statement that comprised the query is cached (including
+            any parameter values) along with the primary keys of all entities
+            that comprise the result set.
+          </para>
+          
+          <para>  
+            The semantics of query caching are significantly different
+            from those of entity caching. A database row that reflects an
+            entity's state can be locked, with cache updates applied with that 
+            lock in place. The semantics of entity caching take advantage of
+            this fact to help ensure cache consistency across the cluster.
+            There is no clear database analogue to a query result set that can 
+            be efficiently locked to ensure consistency in the cache. As a result, 
+            the fail-fast semantics used with the entity caching <literal>put</literal>
+            operation are not available; instead query caching has semantics
+            akin to an entity insert, including costly synchronous cluster 
+            updates and the JBoss Cache two phase commit protocol. Furthermore, 
+            Hibernate must agressively invalidate query results from the cache 
+            any time any instance of one of the entity classes involved in the 
+            query's WHERE clause changes. All such query results are invalidated,
+            even if the change made to the entity instance would not have affected
+            the query result.  It is not performant for Hibernate to try to 
+            determine if the entity change would have affected the query result,
+            so the safe choice is to invaldiate the query. See 
+            <xref linkend="concepts-data-types-timestamps"/> for more on query 
+            invalidation.
+          </para>
+          
+          <para>
+            The effect of all this is that query caching is less likely to
+            provide a performance boost than entity/collection caching. Use it
+            with care and benchmark your application with it enabled and disabled.  
+            Be careful about replicating query results; caching them locally 
+            only on the node that executed the query will be more
+            performant unless the query is quite expensive, is very likely to
+            be repeated on other nodes, and is unlikely to be invalidated out
+            of the cache.<footnote><para>See the discussion of the 
+            <literal>hibernate.cache.region.jbc2.query.localonly</literal> 
+            property in <xref linkend="sessionfactory"/></para> for more on how
+            to only cache query results locally.</footnote>.  
+          </para>
+          
+          <para>
+            The JBoss Cache-based implementation of query caching adds a couple
+            of interesting semantics, both designed to ensure that query
+            cache operations don't block transactions from proceeding:
+            
+            <itemizedlist>
+               <listitem>
+                  <para>
+                     The insertion of a query result into the cache is very much
+                     like the insertion of a new entity.  The difference is it
+                     is possible for two transactions, possibly on different
+                     nodes, to try to insert the same query at the same time. 
+                     (If this happened with entities, the database would throw
+                     an exception with a primary key violation before any 
+                     caching work could start).  This could lead to long delays
+                     as the transactions compete for cache locks. To prevent 
+                     such delays, the cache integration layer will set a very
+                     short (a few ms) lock timeout before attempting to cache a 
+                     query result.  If there is any sort of locking conflict, 
+                     it will be detected quickly, and the attempt to cache the
+                     result will be quietly abandonded. 
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     A read of a query result does not result in any long-lasting
+                     read lock in the cache.  Thus, the fact that an uncommitted 
+                     transaction had read a query result does not prevent concurrent 
+                     transactions from subsequently invalidating that result and 
+                     caching a new result set.  However, an insertion of a query result
+                     into the cache will result in an exclusive write lock that
+                     lasts until the transaction that did the insert commits; this
+                     lock will prevent other transactions from reading the result.
+                     Since the point of query caching is to improve performance,
+                     blocking on a cache read for an extended period seems
+                     suboptimal.  So, the cache integration code will set a very
+                     low lock acquisition timeout before attempting the read; if 
+                     there is a lock conflict, the read will silently fail,
+                     resulting in a cache miss and a re-execution of the query
+                     against the database.
+                  </para>
+               </listitem>               
+            </itemizedlist>
+          </para>
+          
+       </sect2>
+       
+       <sect2 id="concepts-data-types-timestamps" revision="1">
+          <title>Timestamps</title>     
+          
+          <para>
+             Timestamp caching is an internal detail of query caching. As part of
+             each query result, Hibernate stores the timestamp of when the query
+             was executed.  There is also a special area in the cache (the 
+             <emphasis>timestamps cache</emphasis>) where, for each entity class, 
+             the timestamp of the last update to any instance of that class is 
+             stored.  When a query result is read from the cache, its timestamp 
+             is compared to the timestamps of all entities involved in the query. 
+             If any entity has a later timestamp, the cached result is discarded 
+             and a new query against the database is executed.
+          </para>
+          
+          <para>
+             The semantics of of the timestamp cache are quite different from
+             those of the entity, collection and query caches.
+             
+             <itemizedlist>
+                <listitem>
+                  <para>
+                    For all nodes in the cluster, the contents of the timestamp 
+                    cache should be identical, with all timestamps represented.
+                    For the other cache types, it is acceptable for some nodes
+                    in the cluster to not store some data, as long as everyone
+                    who does store an item stores the same thing.  Not so with
+                    timestamps -- everyone must store all timestamps. Using a
+                    JBoss Cache configured for invalidation is not allowed for
+                    the timestamps cache. Further, configuring JBoss Cache 
+                    eviction to remove old or infrequently used data from the 
+                    timestamps cache should not be done. Also, when a new node 
+                    joins a running cluster, it must acquire the current state of all 
+                    timestamps from another member, performing what is known as an 
+                    <emphasis>initial state transfer</emphasis>.  
+                    For other cache types, an initial state transfer is not
+                    required.                   
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    A timestamp represents an entire entity class, not a single
+                    instance.  Thus it is quite likely that two concurrent 
+                    transactions will both attempt to update the same timestamp.
+                    These updates need to be serialized, but no long lasting 
+                    exclusive lock on the timestamp is held. 
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    As soon as a timestamp is updated, the new value needs to be
+                    propagated around the cluster.  Waiting until the transaction
+                    that changed the timestamp commits is inadequate. So, changes
+                    to timestamps can be quite "chatty" in terms of how many 
+                    messages are sent around the cluster. Sending the timestamp
+                    update messages synchronously would have a serious impact
+                    on performance, and would quite likely result in 
+                    cluster-wide lock conflicts that would prevent transactions
+                    from progressing for tens of seconds at a time.  To mitigate
+                    these issues, timestamp updates are sent asynchronously.
+                  </para>
+                </listitem>
+             </itemizedlist>
+          </para>
+          
+       </sect2>
+    </sect1>
+
+    <sect1 id="concepts-cache-attributes" revision="1">
+       <title>Key JBoss Cache Behaviors</title>
+       
+       <para>
+         JBoss Cache is a very flexible tool and includes a great number of 
+         configuration options.  See the <emphasis>JBoss Cache User Guide</emphasis>
+         for an in depth discussion of these options.  Here we focus on the
+         main concepts that are most important to the Second Level Cache use case.
+         This discussion will focus on concepts; see <xref linkend="jbc-config"/> for
+         details on the actual configurations involved.
+       </para>
+                     
+       <sect2 id="concepts-cache-attr-repl" revision="1">
+         <title>Replication vs. Invalidation vs. Local Mode</title>
+         
+         <para>
+           JBoss Cache provides three different choices for how a node in the
+           cluster should interact with the rest of the cluster when its local
+           state is updated:
+           
+           <itemizedlist>
+              <listitem>
+                 <para>
+                   <emphasis>Replication:</emphasis> The updated cache will 
+                   send its new state (e.g. the new values for an entity's fields)
+                   to the other members of the cluster.  This is heavy in terms 
+                   of the size of network traffic, since the new state needs to 
+                   be transmitted. It also has the effect forcing the data that 
+                   is cached in each node in the cluster to be the same, even if 
+                   the users accessing the various nodes are interested in 
+                   different data.  So, if a user on node A reads an 
+                   <literal>Order</literal> entity with primary 
+                   key <literal>12343439485030</literal> from the database,
+                   with replication that entity will be cached on every node
+                   in the cluster, even though no other users are interested
+                   in that particular <literal>Order</literal>.
+                 </para>
+                 
+                 <para>
+                   Because of these downsides, replication is generally not the
+                   best choice for entity, collection and query caching.
+                   However, in a cluster <emphasis>replication is the only
+                   valid choice for the timestamps cache</emphasis>.
+                 </para>
+                 
+              </listitem>
+              
+              <listitem>
+                 <para>
+                   <emphasis>Invalidation:</emphasis> The updated cache will 
+                   send a message to the other members of the cluster telling 
+                   them that a particular piece of data (e.g. a particular entity)
+                   has been modified.  Upon receipt of this message, the other
+                   nodes will remove this data from their local cache, if it
+                   is stored there.  Invalidation is lighter than replication
+                   in terms of network traffic, since only the "id" of the
+                   data needs to be transmitted, not the entire new state.
+                   The downside to invalidation is that if the invalidated
+                   data is needed again, it has to be re-read from the database.
+                   However, in most cases data that many nodes in the cluster
+                   all want to have in memory is not data that is frequently 
+                   changed.
+                 </para>
+                 
+                 <para>
+                   Invalidation makes no sense for query caching; if it is
+                   used for a query cache region the Hibernate/JBoss Cache 
+                   integration will detect this and switch any query cache
+                   related calls to Local mode. Invalidation must not be used 
+                   for timestamp caching; Hibernate will throw an exception
+                   during session factory startup if it finds that it is.
+                 </para>
+                 
+              </listitem>
+              
+              <listitem>
+                 <para>
+                    <emphasis>Local:</emphasis> The updated cache does not even
+                    know if there are any other nodes, and will not attempt
+                    to update them.  If JBoss Cache is used as a Second
+                    Level Cache in a non-clustered environment, Local mode
+                    should be used.  <emphasis>If there is a cluster, Local
+                    mode should never be used for entity, collection or 
+                    timestamp caching.</emphasis>  Local mode can be used
+                    for query caching in a cluster, since the replicated
+                    timestamps cache will ensure that outdated cached queries
+                    are not used.  Often Local mode is the best choice for
+                    query caching, as query results can be large and the cost
+                    of replicating them high.
+                 </para>
+                 
+                 <para>
+                    If the same underlying JBoss Cache instance is used for
+                    the query cache and any of the other caches, the 
+                    <literal>SessionFactory</literal> can be configured to suppress
+                    replication of the queries, essentially making the queries
+                    operate in Local mode.  This is done by adding the following 
+                    configuration:
+                 </para>
+                 
+                 <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+                 
+                 <para>
+                   If the JBoss Cache instance that the query cache is using
+                   is configured for invalidation, setting this property isn't
+                   even necessary; the Hibernate/JBoss Cache integration will 
+                   detect this condition and switch any query cache-related 
+                   calls to Local mode.
+                 </para>
+                 
+              </listitem>
+           </itemizedlist>
+         </para>
+       </sect2>
+                     
+       <sect2 id="concepts-cache-attr-sync" revision="1">
+          <title>Synchronous vs. Asynchronous</title>
+          
+          <para>
+            In JBoss Cache terms, <emphasis>synchronous</emphasis> vs.
+            <emphasis>asynchronous</emphasis> refers to whether a thread that
+            initiates a cluster-wide message blocks until that message has been
+            received, processed and acknowledged by the other members of the
+            cluster.  Synchronous means the thread blocks; asynchronous means
+            the message is sent and the thread immediately returns; more of a 
+            "fire and forget". An example of a message would be a set of cache 
+            inserts, updates and removes sent out to the cluster as part of a 
+            transaction commit.
+          </para>
+          
+          <para>
+            In almost all cases, the cache should be configured to use synchronous 
+            messages, as these are the only way to ensure data consistency 
+            across the cluster.  JBoss Cache supports programatically overriding 
+            the default configured behavior on a per-call basis, so for the
+            special cases where sending a message asynchronously is appropriate,
+            the Hibernate/JBoss Cache integration code will force the call
+            to go asynchronously.  So, configure your caches to use
+            synchronous messages.
+          </para>
+          
+       </sect2>
+                     
+       <sect2 id="concepts-cache-attr-lock" revision="1">
+         <title>Locking Scheme</title>
+         
+         <para>
+           JBoss Cache supports both optimistic and pessimistic locking schemes.
+           See the <emphasis>JBoss Cache User Guide</emphasis> for an in depth 
+           discussion of these options.  In the Second Level Cache use case, the
+           main benefit of optimistic locking is that updates of cached entities 
+           by one transaction do not block reads of the cached entity by other
+           transactions, yet REPEATABLE_READ semantics are preserved. Optimistic
+           locking has a higher level of runtime overhead, however.
+         </para>
+         
+         <para>
+           If you are using optimistic locking and data versioning in Hibernate
+           for your entities, you should use it in the entity cache as well.
+         </para>
+         
+       </sect2>
+                     
+       <sect2 id="concepts-cache-attr-state" revision="1">
+         <title>Initial State Transfer</title>
+         
+         <para>
+           When a new node joins a running cluster, it can request from an
+           existing member a copy of that member's current cache contents.
+           This process is known as an <emphasis>initial state transfer</emphasis>.
+           Doing an initial state transfer allows the new member to have a 
+           "hot cache"; i.e. as user requests come in, data will already be 
+           cached, helping avoid an initial set of reads from the database.
+         </para>
+         
+         <para>
+           However, doing an initial state transfer comes at a cost.  The node
+           providing the state needs to lock its entire tree, serialize it and 
+           send it over the network.  This could be a large amount of data and
+           the transfer could take a considerable period of time to process.
+           While the transfer is ongoing, the state provider is holding locks
+           on its cache, preventing any local or replicated updates from 
+           proceeeding. All work around the cache can come to a halt for a period.
+         </para>
+         
+         <para>
+           Because of this cost, we generally recommend avoiding initial state
+           transfers in the second level cache use case.  The exception to this
+           is the timestamps cache.  <emphasis>For the timestamps cache, an
+           initial state transfer is required.</emphasis>
+         </para>
+         
+       </sect2>
+                     
+       <sect2 id="concepts-cache-attr-eviction" revision="1">
+         <title>Cache Eviction</title>
+         
+         <para>
+           <emphasis>Eviction</emphasis> refers to the process by which old,
+           relatively unused, or excessively voluminous data can be dropped
+           from the cache, allowing the cache to remain within a memory budget.
+           Generally, applications that use the Second Level Cache should
+           configure eviction.  See <xref linkend="eviction"/> for details.
+         </para>
+       </sect2>
+                     
+       <sect2 id="concepts-cache-attr-misc" revision="1">
+          <title>Buddy Replication and Cache Loading</title>
+          
+          <para>
+             <emphasis>Buddy replication</emphasis> refers to a JBoss Cache feature
+             whereby each node in the cluster replicates its cached data to a
+             limited number (often one) of "buddies" rather than to all nodes
+             in the cluster.  <emphasis>Buddy replication should not be used in a 
+             Second Level Cache</emphasis>. It is intended for use cases where 
+             one node in the cluster "owns" some data , and just wants to make a 
+             backup copy of the data to provide high availability. The data 
+             (e.g. a web session) is never meant to be accessed simultaneously on 
+             two different nodes in the cluster.  Second Level Cache data does 
+             not meet this "ownership" criteria; entities are meant to be 
+             simultaneously usable by all nodes in the cluster.              
+          </para>
+          
+          <para>
+             <emphasis>Cache Loading</emphasis> refers to a JBoss Cache feature
+             whereby cached data can be persisted to disk. The persisted data
+             either serves as a highly available copy of the data in case of 
+             a cluster restart, or as an overflow area for when the amount of
+             cached data exceeds an application's memory budget. <emphasis>Cache 
+             loading should not be used in a Second Level Cache</emphasis>.
+             The underlying database from which the cached data comes already
+             serves the same functions; adding a cache loader to the mix is 
+             just wasteful.
+          </para>
+       </sect2>
+       
+    </sect1>
+
+    <sect1 id="concepts-cache-matching" revision="1">
+       <title>Matching JBC Behavior to Types of Data</title>
+       
+       <para>
+         The preceding discussion has gone into a lot of detail about what
+         Hibernate wants to accomplish as it caches data, and what JBoss Cache
+         configuration options are available.  What should be clear is that the 
+         configurations that are best for caching one type of data are not 
+         the best (and are sometimes completely incorrect) for other types.
+         Entities likely work best with synchronous invalidation; timestamps
+         <emphasis>require</emphasis> replication; query caching might do
+         best in local mode.
+       </para>
+       
+       <para>
+         Prior to Hibernate 3.3 and JBoss Cache 2.1, the conflicting requirements
+         between the different cache types led to a real dilemna, particularly
+         if query caching was enabled.  This conflict arose because all four
+         cache types needed to share a single underlying cache, with a single
+         configuration. If query caching was enabled, the requirements of the
+         timestamps cache basically forced use of synchronous replication, 
+         which is the worst performing choice for the more critical
+         entity cache and is often inappropriate for the query cache.
+       </para>
+       
+       <para>
+         With Hibernate 3.3 and JBoss Cache 2.1 it has become
+         possible, even easy, to use separate underlying JBoss Cache instances
+         for the different cache types.  As a result, the entity cache can be
+         optimally configured for entities while the necessary configuration
+         for the timestamps cache is maintained.
+       </para>
+       
+       <para>
+         There were three key changes that make this improvement possible:
+       </para>
+       
+       <sect2 id="concepts-cache-matching-region-factory" revision="1">
+         <title>The <literal>RegionFactory</literal> Interface</title>
+         
+         <para>
+          As mentioned previously, Hibernate 3.3 introduced the 
+          <literal>RegionFactory</literal> API as its mechanism for managing
+          the Second Level Cache. This API makes it possible for implementations
+          to know at all times whether they are working with entities, 
+          collections, queries or timestamps. That knowledge allows the 
+          Hibernate/JBoss Cache integration layer to make the best use of the
+          various options JBoss Cache provides.          
+         </para>
+         
+         <para>
+          A Hibernate user doesn't need to understand the <literal>RegionFactory</literal>
+          API in any detail at all; the main point is internally it makes 
+          possible independent management of the different cache types.  
+         </para>
+       </sect2>
+       
+       <sect2 id="concepts-cache-matching-cache-manager" revision="1">
+          <title>The <literal>CacheManager</literal> API</title>
+          
+          <para>
+            The <literal>CacheManager</literal> API is a new feature of JBoss
+            Cache 2.1. It provides an API for managing multiple distinct 
+            JBoss Cache instances in the same VM.  Basically a 
+            <literal>CacheManager</literal> is instantiated and provided a set
+            of <emphasis>named</emphasis> cache configurations.  An application 
+            like the Hibernate/JBoss Cache integration layer accesses the 
+            <literal>CacheManager</literal> and asks for a cache configured with
+            a particular named configuration.
+          </para>          
+         
+          <para>
+           Again,a Hibernate user doesn't need to understand the 
+           <literal>CacheManager</literal>; it's an internal detail. The thing
+           to understand is that the task of a Hibernate Second Level Cache user 
+           is to: 
+            
+            <itemizedlist>
+               <listitem>
+                  <para>
+                   Provide a set of named JBoss Cache configurations in an XML
+                   file (or just use the default set included in the 
+                   <literal>jbc2-configs.xml</literal> file found in the
+                   <literal>org.hibernate.cache.jbc2.builder</literal> package
+                   in <literal>hibernate-jbosscache2.jar</literal>).
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                   Tell Hibernate which cache configurations to use for entity,
+                   collection, query and timestamp caching.  In practice, this
+                   can be quite simple, as there is a reasonable set of defaults.
+                  </para>
+               </listitem>
+            </itemizedlist> 
+            
+          </para>
+            
+          <para>
+           See <xref linkend="configuration"/> for more on how to do this.
+          </para>
+          
+       </sect2>
+       
+       <sect2 id="concepts-cache-matching-jgroups" revision="1">
+           <title>Sharable JGroups Resources</title>
+           
+           <para>
+             JGroups is the group communication library JBoss Cache uses to send
+             messages around a cluster. Each cache has a JGroups 
+             <literal>Channel</literal>; different channels
+             around the cluster that have the same name and compatible 
+             configurations detect each other and form a group for message
+             transmission.             
+           </para> 
+           
+           <para>
+            A <literal>Channel</literal> is a fairly heavy object, typically
+            using a good number of threads, several sockets and some good sized
+            network I/O buffers.  Creating multiple different channels in the
+            same VM was therefore costly, and was an administrative burden as
+            well, since each channel would need separate configuration to use
+            different network addresses or ports.  Architecturally, this
+            mitigated against having multiple JBoss Cache instances in an
+            application, since each would need its own <literal>Channel</literal>.
+           </para>
+           
+           <para>
+             Added in JGroups 2.5 and much improved in the JGroups 2.6 
+             series is the concept of sharable JGroups resources. Basically,
+             the heavyweight JGroups elements can be shared. An application
+             (e.g. the Hibernate/JBoss Cache integration layer) uses a JGroups
+             <literal>ChannelFactory</literal>. The <literal>ChannelFactory</literal>
+             is provided with a set of <emphasis>named</emphasis> channel 
+             configurations. When a <literal>Channel</literal> is needed (e.g. 
+             by a JBoss Cache instance), the application asks the 
+             <literal>ChannelFactory</literal> for the channel by name. If 
+             different callers ask for a channel with the same name, the 
+             <literal>ChannelFactory</literal> ensures that they get
+             channels that share resources.             
+           </para>
+           
+           <para>
+             The effect of all this is that if a user wants to use four separate 
+             JBoss Cache instances, one for entity caching, one for collection 
+             caching, one for query caching and one for timestamp caching, those 
+             four caches can all share the same underlying JGroups resources.             
+           </para>         
+         
+          <para>
+           The task of a Hibernate Second Level Cache user is to:                         
+          </para>
+            
+            <itemizedlist>
+               <listitem>
+                  <para>
+                   Provide a set of named JGroups configurations in an XML file
+                   (or just use the default set included in the 
+                   <literal>jgroups-stacks.xml</literal> file found in the
+                   <literal>org.hibernate.cache.jbc2.builder</literal> package
+                   in the <literal>hibernate-jbosscache2.jar</literal>).
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                   Tell Hibernate where to find that set of configurations
+                   on the classpath. See <xref linkend="sessionfactory"/> for
+                   details on how to do this. This is not necessary if the 
+                   default set included in <literal>hibernate-jbosscache2.jar</literal>
+                   is used.
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                    In the JBoss Cache configurations you are using specify
+                    the name of the channel you want to use. This should be
+                    one of the named configurations in the JGroups XML file.
+                    The default set of JBoss Cache configurations found in the
+                    <literal>hibernate-jbosscache2.jar</literal> already have
+                    appropriate default choices. See <xref linkend="jbc-config-jgroups"/> 
+                    for details on how to set this if you don't wish to use the
+                    defaults.
+                  </para>
+               </listitem>
+            </itemizedlist> 
+          
+          <para>
+            See <xref linkend="jgroups-config"/> for more on JGroups.
+          </para>
+      
+       </sect2>
+       
+       <sect2 id="concepts-cache-matching-process" revision="1">
+          <title>Bringing It All Together</title>
+          
+          <para>
+           So, we've seen that Hibernate caches up to four different types of 
+           data (entities, collections, queries and timestamps) and that
+           Hibernate 3.3 + JBoss Cache 2 gives you the flexibility to use a
+           separate underlying JBoss Cache, with different behavior, for each
+           type.  You can actually deploy four separate caches, one for each type.
+          </para>
+          
+          <para>
+           In practice, four separate caches are unnecessary. For example,
+           entities and collection caching have similar enough semantics that
+           there is no reason not to share a JBoss Cache instance between them.
+           The queries can usually use the same cache as well. Similarly, 
+           queries and timestamps can share a JBoss Cache instance configured 
+           for replication, with the
+           <literal>hibernate.cache.region.jbc2.query.localonly=true</literal>
+           configuration letting you turn off replication for the queries if
+           you want to.
+          </para>
+          
+          <para>
+           Here's a decision tree you can follow:
+           
+           <orderedlist>
+              <listitem>
+                 <para>
+                   Decide if you want to enable query caching.
+                 </para>
+              </listitem>
+              
+              <listitem>
+                <para>
+                   Decide if you want to use invalidation or replication for
+                   your entities and collections. Invalidation is generally
+                   recommended for entities and collections. 
+                </para>
+                <itemizedlist>
+                <listitem>
+                <para>
+                   If you want invalidation, and you want query
+                   caching, you will need two JBoss Cache instances, one
+                   with synchronous invalidation for the entities and collections,
+                   and one with synchronous replication for the timestamps.
+                   The queries will go in the timestamp cache if you want them
+                   to replicate; they can go with the entities and collections
+                   otherwise.
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                  If you want invalidation but don't want query caching, you can
+                  use a single JBoss Cache instance, configured for synchronous
+                  invalidation.
+                </para>
+                </listitem>
+                <listitem>
+                <para>
+                  If you want replication, whether or not you want query caching, 
+                  you can use a single JBoss Cache instance, configured for 
+                  synchronous replication.
+                </para>
+                </listitem>
+                </itemizedlist>
+              </listitem>
+              
+              <listitem>
+                 <para>
+                  If you are using query caching, from the above decision tree
+                  you've either got your timestamps sharing a cache with other
+                  data types, or they are by themselves.  Either way,
+                  the cache being used for timestamps <emphasis>must have
+                  initial state transfer enabled</emphasis>. Now, if the timestamps
+                  are sharing a cache with entities, collections or queries, 
+                  decide whether you want initial state transfer for that other 
+                  data. See <xref linkend="concepts-cache-attr-state"/>
+                  for the implications of this. If you don't want initial state
+                  transfer for the other data, you'll need to have a separate
+                  cache for the timestamps.
+                 </para>
+              </listitem>
+              
+              <listitem>
+                 <para>
+                  Finally, if your queries are sharing a cache configured
+                  for replication, decide if you want the cached query results 
+                  to replicate. (The timestamps cache <emphasis>must</emphasis> 
+                  replicate.) If not, you'll want to set the
+                  <literal>hibernate.cache.region.jbc2.query.localonly=true</literal>
+                  option when you configure your <literal>SessionFactory</literal>
+                 </para>
+              </listitem>
+           </orderedlist>
+           
+          </para>
+          
+          <para>
+            Once you've made these decisions, you know whether you need just one
+            underlying JBoss Cache instance, or more than one.
+            Next we'll see how to actually configure the setup you've selected.
+          </para>
+       </sect2>
+    </sect1>
+    
+</chapter>

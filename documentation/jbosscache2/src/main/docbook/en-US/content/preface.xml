@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+
+<preface id="preface" revision="1">
+    <title>Preface</title>
+
+    <para>
+        This document is focused on the use of the 
+        <ulink url="http://labs.jboss.org/jbosscache">JBoss Cache</ulink>
+        clustered transactional caching library as a tool for caching data in
+        a Hibernate-based application.
+    </para>
+    
+    <para>
+        Working with object-oriented software and a relational database can be cumbersome
+        and time consuming in today's enterprise environments. Hibernate is an object/relational
+        mapping tool for Java environments. The term object/relational mapping (ORM) refers to
+        the technique of mapping a data representation from an object model to a relational
+        data model with a SQL-based schema.
+    </para>
+
+    <para>
+        Hibernate not only takes care of the mapping from Java classes to
+        database tables (and from Java data types to SQL data types), but also provides data
+        query and retrieval facilities and can significantly reduce development time otherwise
+        spent with manual data handling in SQL and JDBC.
+    </para>
+
+    <para>
+        In any application that works with a relational database, caching data
+        retrieved from the database can potentially improve application performance.
+        Hibernate provides a number of facilities for caching data on the 
+        database client side, i.e. in the Java process in which Hibernate is 
+        running.  The primary facility is the Hibernate <literal>Session</literal>
+        itself,  which maintains a transaction-scoped cache of persistent data.
+        If you wish to cache data beyond the scope of a transaction, it is
+        possible to configure a cluster or JVM-level (technically a
+        <literal>SessionFactory</literal>-level) cache on a class-by-class, 
+        collection-by-collection and query-by-query basis. This type of cache 
+        is referred to as a <emphasis>Second Level Cache</emphasis>.
+    </para>
+    
+    <para>
+        Hibernate provides a pluggable architecture for implementing its
+        Second Level Cache, allowing it to integrate with a number of third-party
+        caching libraries.  This document is focused on the use of the
+        <ulink url="http://labs.jboss.org/jbosscache">JBoss Cache</ulink>
+        clustered transactional caching library as an implementation of
+        the Second Level Cache.  It specifically focuses on JBoss Cache 2.
+    </para>
+
+    <para>
+        If you are new to Hibernate and Object/Relational Mapping or even Java,
+        please follow these steps:
+    </para>
+
+    <orderedlist>
+        <listitem>
+            <para>
+                Read the <emphasis>Hibernate Reference Documentation</emphasis>,
+                particularly the <emphasis>Introduction</emphasis> and
+                <emphasis>Architecture</emphasis> sections.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Have a look at the <literal>eg/</literal> directory in the Hibernate
+                distribution, it contains a simple standalone application. Copy your
+                JDBC driver to the <literal>lib/</literal> directory and edit
+                <literal>etc/hibernate.properties</literal>, specifying correct values for
+                your database. From a command prompt in the distribution directory,
+                type <literal>ant eg</literal> (using Ant), or under Windows, type
+                <literal>build eg</literal>.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Use the <emphasis>Hibernate Reference Documentation</emphasis> 
+                as your primary source of information.
+                Consider reading <emphasis>Java Persistence with Hibernate</emphasis>
+                (http://www.manning.com/bauer2) if you need more help with application
+                design or if you prefer a step-by-step tutorial. Also visit
+                http://caveatemptor.hibernate.org and download the example application
+                for Java Persistence with Hibernate.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                FAQs are answered on the Hibernate website.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Third party demos, examples, and tutorials are linked on the Hibernate
+                website.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                The Community Area on the Hibernate website is a good resource for
+                design patterns and various integration solutions (Tomcat, JBoss AS,
+                Struts, EJB, etc.).
+            </para>
+        </listitem>
+     </orderedlist>
+
+    <para>
+        If you are new to the Hibernate Second Level Cache or to JBoss Cache,
+        please follow these steps:
+    </para>
+
+    <orderedlist>
+        <listitem>
+            <para>
+                Read the <emphasis>Hibernate Reference Documentation</emphasis>,
+                particularly the <emphasis>Second Level Cache</emphasis> and
+                <emphasis>Configuration</emphasis> sections.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Read the 
+                <ulink url="http://labs.jboss.org/jbosscache/docs/index.html">JBoss Cache User Guide, Core Edition</ulink>.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Use this guide as your primary source of information on the
+                usage of JBoss Cache 2 as a Hibernate Second Level Cache.
+            </para>
+        </listitem>
+     </orderedlist>
+
+     <para>
+         If you have questions, use the user forum linked on the Hibernate website.
+         The user forum on the JBoss Cache website is also useful. 
+         We also provide a JIRA issue tracking system for bug reports and feature requests. If you
+         are interested in the development of Hibernate, join the developer mailing list. If
+         you are interested in translating this documentation into your language, contact us
+         on the developer mailing list.
+     </para>
+
+     <para>
+         Commercial development support, production support, and training for Hibernate is
+         available through Red Hat Inc. (see http://www.hibernate.org/SupportTraining/).
+         Hibernate is a Professional Open Source project and a critical component of the
+         JBoss Enterprise Middleware System (JEMS) suite of products.
+     </para>
+
+</preface>

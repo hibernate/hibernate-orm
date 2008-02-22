@@ -1,0 +1,293 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+<chapter id="architecture">
+
+    <title>Architecture</title>
+
+    <para>
+     We've now gone through all the main concepts and the configuration 
+     details; now we'll look a bit under the covers to understand a bit
+     more about the architectural design of the Hibernate/JBoss Cache 
+     integration.  Readers can skip this chapter if they aren't interested
+     in a look under the covers.
+    </para>
+    
+    <sect1 id="architecture-interface" revision="1">
+       <title>Hibernate Interface to the Caching Subsystem</title>
+       
+       <para>
+        The rest of Hibernate interacts with the Second Level Cache subsystem
+        via the <literal>org.hibernate.cache.RegionFactory</literal> interface.
+        What implementation of the interface is used is determined by the
+        value of the <literal>hibernate.cache.region.factory_class</literal>
+        configuration property.  The interface itself is straightforward:
+       </para>
+       
+       <programlisting><![CDATA[void start(Settings settings, Properties properties) 
+       throws CacheException;
+
+void stop();
+
+boolean isMinimalPutsEnabledByDefault();
+
+long nextTimestamp();
+
+EntityRegion buildEntityRegion(String regionName, 
+                               Properties properties, 
+                               CacheDataDescription metadata) 
+            throws CacheException;
+
+CollectionRegion buildCollectionRegion(String regionName, 
+                                       Properties properties, 
+                                       CacheDataDescription cdd) 
+            throws CacheException;
+
+QueryResultsRegion buildQueryResultsRegion(String regionName, 
+                                           Properties properties) 
+            throws CacheException;
+
+TimestampsRegion buildTimestampsRegion(String regionName, 
+                                       Properties properties) 
+            throws CacheException;]]></programlisting>
+      
+      <itemizedlist>
+        <listitem>
+           <para>
+             The <literal>start</literal> method is invoked during 
+             <literal>SessionFactory</literal> startup and allows the region
+             factory implementation to access all the configuration settings
+             and initialize itself. The <literal>stop</literal> method is 
+             invoked during <literal>SessionFactory</literal> shutdown.
+           </para>
+        </listitem>
+        <listitem>
+           <para>
+            The various <literal>build***Region</literal> methods are invoked as
+            Hibernate detects it needs to cache different data. Hibernate can
+            invoke these methods multiple times, with different 
+            <literal>regionName</literal> values; each call results in the
+            establishment of a separate area in the underlying JBoss Cache
+            instance(s).  For example, if an application includes an
+            entity class <literal>org.example.Order</literal> and another entity
+            class  <literal>org.example.LineItem</literal>, you would see two
+            calls to <literal>buildEntityRegion</literal>, one for the 
+            <literal>Order</literal> class and one for the 
+            <literal>LineItem</literal> class. (Note that it is possible, and
+            recommended, to configure one or more shared regions for entities, 
+            collections and queries. See <xref linkend="eviction-organization"/> 
+            for some examples.)
+           </para>
+        </listitem>
+        <listitem>
+           <para>
+             For each call to a <literal>build***Region</literal> method, the
+             region factory returns a region object implementing the 
+             <literal>EntityRegion</literal>, <literal>CollectionRegion</literal>, 
+             <literal>QueryResultsRegion</literal> or <literal>TimestampsRegion</literal>
+             interface.  Each interface specifies the needed semantics for
+             caching the relevant type of data. Thereafter, the Hibernate core 
+             invokes on that region object to manage reading and writing data
+             in the cache.
+           </para>
+        </listitem>
+      </itemizedlist>
+      
+      <para>
+       Next, we'll look at the architecture of how the JBoss Cache integration
+       implements these interfaces, first in the case where a single JBoss
+       Cache instance is used, next in the case where multiple instances are
+       desired.
+      </para>
+      
+    </sect1>
+
+    <sect1 id="architecture-single-cache" revision="1">
+        <title>Single JBoss Cache Instance Architecture</title>
+        
+        <para>
+          The following diagram illustrates the key elements involved when
+          a single JBoss Cache instance is used:
+        </para>
+        
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/single-cache.png" format="PNG" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/single-cache.png" format="PNG" align="center" />
+            </imageobject>
+        </mediaobject>
+        
+        <itemizedlist>
+           <listitem>
+             <para>
+               For the single cache case, the user should specify
+               <literal>SharedJBossCacheRegionFactory</literal> as their
+               <literal>hibernate.cache.region.factory_class</literal>. 
+              </para>
+           </listitem>
+           <listitem>
+             <para>As part of its startup process, te region factory delegates
+               responsibility for providing JBoss Cache instances to an
+               implementation of the 
+               <literal>org.hibernate.cache.jbc2.CacheInstanceManager</literal>
+               interface.  The region factory separately requests a JBoss Cache 
+               instance for entities, one for collections, one for queries and one
+               for timestamps.  Whether the <literal>CacheInstanceManager</literal>
+               provides the same underlying JBoss Cache instance for each
+               request or provides multiple caches is an implementation detail
+               of the  <literal>CacheInstanceManager</literal>.
+             </para>
+           </listitem>
+           <listitem>
+             <para>
+               <literal>SharedJBossCacheRegionFactory</literal> creates an 
+               instance of <literal>SharedCacheInstanceManager</literal> as
+               its <literal>CacheInstanceManager</literal>. 
+               <literal>SharedCacheInstanceManager</literal> uses the JBoss Cache
+               configuration file specified by the user to create a single
+               <literal>org.jboss.cache.Cache</literal> instance, and provides
+               that same instance to the region factory when it requests the
+               cache for entities, collections, queries and timestamps.
+               <literal>SharedCacheInstanceManager</literal> also creates an
+               <literal>org.jgroups.ChannelFactory</literal> and passes it to
+               the <literal>Cache</literal>.  The <literal>ChannelFactory</literal>
+               provides the cache with the <literal>org.jgroups.Channel</literal>
+               it uses for intra-cluster communication.
+              </para>
+           </listitem>
+           <listitem>
+             <para>
+               At this point, the region factory has a reference to a cache
+               for entities, a reference to a cache for collections, one for
+               queries and one for timestamps.  In this particular case, each
+               reference points to the same underlying <literal>Cache</literal>
+               instance.  When core Hibernate invokes the 
+               <literal>buildEntityRegion</literal> operation on the region 
+               factory, it instantiates an implementation of the 
+               <literal>EntityRegion</literal> interface that knows how to
+               interface with JBoss Cache, passing it a reference to its 
+               entity cache. Same thing happens for collections, etc.
+              </para>
+           </listitem>
+           <listitem>
+             <para>
+               Core Hibernate invokes on the <literal>EntityRegion</literal>,
+               which in turn invokes read and write operations on the underlying
+               JBoss Cache. The cache uses its <literal>Channel</literal> to
+               propagate changes to its peers in the cluster.   
+              </para>
+           </listitem>
+           <listitem>
+             <para>
+               When the <literal>SessionFactory</literal> shuts down, it
+               invokes <literal>stop()</literal> on the region factory, which
+               in turn ensures that the JBoss Cache instance is stopped and
+               destroyed (which in turn closes the JGroups channel).   
+              </para>
+           </listitem>
+        </itemizedlist>
+    </sect1>
+
+    <sect1 id="architecture-cache-per-type" revision="1">
+        <title>Multiple JBoss Cache Instance Architecture</title>
+        
+        <para>
+          The situation when multiple JBoss Cache instances are used is very
+          similar to the single cache case:
+        </para>
+        
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/multi-cache.png" format="PNG" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/multi-cache.png" format="PNG" align="center" />
+            </imageobject>
+        </mediaobject>
+        
+        <itemizedlist>
+           <listitem>
+             <para>
+               Here the user should specify
+               <literal>MultiplexedJBossCacheRegionFactory</literal> as their
+               <literal>hibernate.cache.region.factory_class</literal>. The 
+               <literal>MultiplexedJBossCacheRegionFactory</literal> shares
+               almost all its code with <literal>SharedJBossCacheRegionFactory</literal>;
+               the main difference is it constructs a different <literal>CacheInstanceManager</literal>
+               implementation -- the <literal>MultiplexedCacheInstanceManager</literal>.
+              </para>
+           </listitem>
+           <listitem>
+             <para>
+               <literal>MultiplexedCacheInstanceManager</literal> differs from
+               <literal>SharedCacheInstanceManager</literal> in that it does
+               not directly instantiate a cache. Rather, it creates an
+               instance of <literal>org.jboss.cache.CacheManager</literal>,
+               providing it with a <literal>ChannelFactory</literal> and the
+               location of the user-specified cache configuration file. The 
+               <literal>CacheManager</literal> parses the configuration file.
+             </para>
+           </listitem>
+           <listitem>
+             <para>
+               <literal>MultiplexedCacheInstanceManager</literal> analyzes 
+               Hibernate's configuration to determine the name of the desired
+               cache configuration for entities, collections, queries and 
+               timestamps. See <xref linkend="sessionfactory-multiplexed"/> for
+               details. It then asks its <literal>CacheManager</literal> to 
+               provide each needed cache. In the diagram, two different caches are needed:
+             </para>
+               <itemizedlist>
+                 <listitem>
+                    <para>One, using the "optimistic-entity" configuration,
+                    that is used for entities, collections and queries
+                    </para>
+                 </listitem>
+               </itemizedlist>
+               <itemizedlist>
+                 <listitem>
+                    <para>Another, with the "timestamps-cache" configuration,
+                    that is used for timestamps.
+                    </para>
+                 </listitem>
+               </itemizedlist>
+               
+              <para>
+                Both the "optimistic-entity" configuration and the "timestamps-cache" 
+                configuration specify the use of the "udp" JGroups channel
+                configuration, so the <literal>CacheManager</literal>'s
+                <literal>ChannelFactory</literal> will ensure that they share
+                the underlying JGroups resources.
+              </para>
+           </listitem>
+           <listitem>
+             <para>
+               The way the region factory creates regions is exactly the same
+               as in the single JBoss Cache case; the only difference is the
+               region factory's internal reference to its timestamps cache
+               now points to a different cache object from the entity, collection
+               and query cache references.
+              </para>
+           </listitem>
+        </itemizedlist>
+       
+    </sect1>
+
+</chapter>

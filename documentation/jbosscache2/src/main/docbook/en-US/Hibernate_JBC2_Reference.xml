@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+        <!ENTITY versionNumber "3.3.0.alpha1">
+        <!ENTITY copyrightYear "2008">
+        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
+]>
+
+<book>
+
+    <bookinfo>
+        <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
+        <subtitle>Using JBoss Cache 2 as a Hibernate Second Level Cache</subtitle>
+        <releaseinfo>&versionNumber;</releaseinfo>
+        <productnumber>&versionNumber;</productnumber>
+        <issuenum>1</issuenum>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+        <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<!-- include translators... -->
+    </bookinfo>
+
+    <toc/> 
+
+    <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    
+    <xi:include href="content/introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    
+    <xi:include href="content/concepts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    
+    <xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    
+    <xi:include href="content/eviction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    
+    <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</book>
+

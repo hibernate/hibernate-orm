@@ -1,0 +1,1052 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!--
+  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, v. 2.1. This program is distributed in the
+  ~ hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details. You should have received a
+  ~ copy of the GNU Lesser General Public License, v.2.1 along with this
+  ~ distribution; if not, write to the Free Software Foundation, Inc.,
+  ~ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  ~
+  ~ Red Hat Author(s): Brian Stansberry
+  -->
+<chapter id="configuration">
+     
+    <title>Configuration</title>
+
+    <para>
+      There are three main areas of configuration involved in using JBoss Cache 
+      2 for your Hibernate Second Level Cache: configuring the Hibernate 
+      <literal>SessionFactory</literal>, configuring the underlying JBoss Cache
+      instance(s), and configuring the JGroups <literal>ChannelFactory</literal>.
+      If you use the standard JBoss Cache and JGroups configurations that ship
+      with the <literal>hibernate-jbosscache2.jar</literal>, then all you
+      need to worry about is the <literal>SessionFactory</literal> configuration.
+    </para>
+    
+    <sect1 id="sessionfactory" revision="1">
+        <title>Configuring the Hibernate Session Factory</title>        
+    
+        <sect2 id="sessionfactory-overview" revision="1">
+            <title>Basics</title>
+            
+            <para>
+              There are four basic steps to configuring the 
+              <literal>SessionFactory</literal>:
+              
+            <itemizedlist>
+                <listitem>
+                <para>
+                   Tell Hibernate you whether to enable caching of entities and 
+                   collections. No need to set this property if you don't:
+                </para>
+              
+                <programlisting><![CDATA[hibernate.cache.use_second_level_cache=true]]></programlisting>
+                
+                </listitem>
+
+                <listitem>
+              <para>
+                Tell Hibernate you want to enable caching of 
+                query results. No need to set this property if you don't:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.use_query_cache=true]]></programlisting>
+                </listitem>
+
+                <listitem>
+              <para>
+                If you have enabled caching of query results, tell Hibernate if
+                you want to suppress costly replication of those results around
+                the cluster. No need to set this property if you want query
+                results replicated:
+              </para>
+              
+              <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+                </listitem>
+
+                <listitem>
+                    <para>
+                     Finally, you need to tell Hibernate what <literal>RegionFactory</literal>
+                     implementation to use to manage your caches. You do this by 
+                     setting the <literal>hibernate.cache.region.factory_class</literal>
+                     configuration option.
+                    </para>
+                    
+              <programlisting><![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+                    
+                    <para>
+                     To determine the correct factory class, you must decide
+                     whether you need just one underlying JBoss
+                     Cache instance to support the different types of caching
+                     you will be doing, or whether you need more than one. See
+                     <xref linkend="concepts"/> and particularly 
+                     <xref linkend="concepts-cache-matching-process"/> for more
+                     on how to make that decision. Once you know the answer,
+                     see <xref linkend="sessionfactory-factories"/> to find the 
+                     factory class that best meets your needs.
+                    </para>
+                    
+                    <para>
+                      Once you've specified your factory class, there may be
+                      other factory-class-specific configurations you may
+                      want to set.  The available options are explained below.
+                    </para>
+                </listitem>
+                
+            </itemizedlist>
+            
+            </para>
+           
+        
+        </sect2>
+
+        <sect2 id="sessionfactory-factories" revision="1">
+            <title>Specifying the <literal>RegionFactory</literal> Implementation</title>
+            
+            <para>
+              Hibernate 3.3 ships with the following <literal>RegionFactory</literal>
+              implementations that work with JBoss Cache 2. Select the
+              one that is appropriate to your needs and use it with
+              the <literal>hibernate.cache.region.factory_class</literal>
+              configuration option.
+            </para>
+            
+            <variablelist>
+               <varlistentry>
+                 <term><literal>org.hibernate.cache.jbc2.SharedJBossCacheRegionFactory</literal></term>
+                 <listitem>
+                 <para>
+                    Instantiates a single JBoss Cache instance for use with all
+                    cache data types (entities, collections, queries, timestamps).
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>org.hibernate.cache.jbc2.JndiSharedJBossCacheRegionFactory</literal></term>
+                 <listitem>
+                 <para>
+                    Uses a single JBoss Cache instance for all cache data types.
+                    However, does not instantiate the JBoss Cache instance itself; 
+                    instead looks for an existing cache in JNDI. This allows
+                    sharing of a single JBoss Cache instance across multiple
+                    Hibernate session factories running in the same environment.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory</literal></term>
+                 <listitem>
+                 <para>
+                    Supports using multiple JBoss Cache instances with different
+                    cache data types (entities, collections, queries, timestamps)
+                    assigned to different JBoss Cache instances. Instantiates a 
+                    JBoss Cache <literal>CacheManager</literal> to manage the 
+                    JBoss Cache instances.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>org.hibernate.cache.jbc2.JndiMultiplexedJBossCacheRegionFactory</literal></term>
+                 <listitem>
+                 <para>
+                    Functions like <literal>JndiMultiplexedJBossCacheRegionFactory</literal>,
+                    but instead of instantiating its own <literal>CacheManager</literal>
+                    it looks for an existing one in JNDI.  This allows
+                    sharing of the various JBoss Cache instances across multiple
+                    Hibernate session factories running in the same environment.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>         
+            
+        </sect2>
+
+        <sect2 id="sessionfactory-shared" revision="1">
+           <title>The <literal>SharedJBossCacheRegionFactory</literal></title>
+           
+           <para>
+            The <literal>SharedJBossCacheRegionFactory</literal> supports a
+            number of additional configuration options:
+           </para>
+           
+           <variablelist>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.shared</literal></term>
+                 <listitem>
+                 <para>
+                    Classpath or filesystem resource containing JBoss Cache 
+                    configuration settings the underlying cache should use.
+                    Default value is <literal>treecache.xml</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.multiplexer.stacks</literal></term>
+                 <listitem>
+                 <para>
+                    Classpath or filesystem resource containing JGroups protocol
+                    stack configurations the <literal>ChannelFactory</literal>
+                    should use. Default is 
+                    <literal>org/hibernate/cache/jbc2/builder/jgroups-stacks.xml</literal>, 
+                    a file found in the <literal>hibernate-jbosscache2.jar</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>
+           
+           <para>
+             Note that the default <literal>treecache.xml</literal> file does
+             not exist; it is up to the user to provide it.
+           </para>
+        </sect2>
+
+        <sect2 id="sessionfactory-shared-jndi" revision="1">
+           <title>The <literal>JndiSharedJBossCacheRegionFactory</literal></title>
+           
+           <para>
+            The <literal>JndiSharedJBossCacheRegionFactory</literal> supports an
+            additional configuration option:
+           </para>
+           
+           <variablelist>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.shared</literal></term>
+                 <listitem>
+                 <para>
+                    Specifies the JNDI name under which the JBoss Cache instance 
+                    to use is bound. Note that although this configuration property 
+                    has the same name as the one used by <literal>SharedCacheInstanceManager</literal>, 
+                    the meaning here is different. Note also that in this class' 
+                    usage of the property, there is no default value -- the user
+                    must specify the property.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>
+           
+           <para>
+            The <literal>JndiSharedJBossCacheRegionFactory</literal> requires
+            that the JBoss Cache instance is already bound in JNDI; it will
+            not create and bind one if it isn't.  It is up to the the user
+            to ensure the cache is created and bound in JNDI before the
+            Hibernate <literal>SessionFactory</literal> is created.
+           </para>
+           
+        </sect2>
+
+        <sect2 id="sessionfactory-multiplexed" revision="1">
+           <title>The <literal>MultiplexedJBossCacheRegionFactory</literal></title>
+           
+           <para>
+            The <literal>MultiplexedJBossCacheRegionFactory</literal> supports a
+            number of additional configuration options:
+           </para>
+           
+           <variablelist>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.configs</literal></term>
+                 <listitem>
+                 <para>
+                    Classpath or filesystem resource containing JBoss Cache 
+                    configurations the <literal>CacheManager</literal> should 
+                    use. Default is
+                    <literal>org/hibernate/cache/jbc2/builder/jbc2-configs.xml</literal>, 
+                    a file found in the <literal>hibernate-jbosscache2.jar</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.multiplexer.stacks</literal></term>
+                 <listitem>
+                 <para>
+                    Classpath or filesystem resource containing JGroups protocol
+                    stack configurations the <literal>ChannelFactory</literal>
+                    should use. Default is 
+                    <literal>org/hibernate/cache/jbc2/builder/jgroups-stacks.xml</literal>, 
+                    a file found in the <literal>hibernate-jbosscache2.jar</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.entity</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for entity caches.
+                    Default value is <literal>optimistic-entity</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.collection</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for collection caches.
+                    No default value, as by default we try to use the same JBoss Cache
+                    instance that is used for entity caching.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.ts</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for timestamp caches.
+                    Default value is <literal>timestamps-cache</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.query</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for query caches.
+                    By default, tries to use the same cache as is used for
+                    entity caching.  If there is no entity cache or it uses 
+                    invalidation, the default value is <literal>local-query</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>
+           
+           <para>
+             Many of the default values name JBoss Cache configurations in the 
+             standard <literal>jbc2-configs.xml</literal> file found in the 
+             <literal>hibernate-jbosscache2.jar</literal>. See 
+             <xref linkend="jbc-config-multiple-std"/> for details on those
+             configurations. If you want to set 
+             <literal>hibernate.cache.region.jbc2.configs</literal> and use your 
+             own JBoss Cache configuration file, you can still take advantage of 
+             these defaults names; just name the configurations in your file
+             to match.
+           </para>
+           
+           <para>
+             This is all looks a bit complex, so let's show what happens if you
+             just configure the defaults, with query caching enabled:
+           </para>
+           
+         <programlisting><![CDATA[hibernate.cache.use_second_level_cache=true
+hibernate.cache.use_query_cache=true
+hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+      
+      <para>
+       You would end up using two JBoss Cache instances:
+       </para>
+       
+       <itemizedlist>
+         <listitem>
+           <para>One, for the entities, collection and queries, would use the
+           <literal>optimistic-entity</literal> configuration. This cache
+           would use optimistic locking, synchronous invalidation and would
+           disable initial state transfer.
+           </para>
+         </listitem>
+         <listitem>
+           <para>The second, for timestamps, would use the
+           <literal>timestamps-cache</literal> configuration. This cache
+           would use pessimistic locking, asynchronous replication and would
+           enable initial state transfer.
+           </para>
+         </listitem>
+       </itemizedlist>
+       
+      <para>
+       See <xref linkend="jbc-config-multiple-std"/> for more on these 
+       standard cache configurations.
+      </para>
+      
+      <para>
+        If you hadn't set <literal>hibernate.cache.use_query_cache=true</literal>
+        you'd just have the single <literal>optimistic-entity</literal> cache,
+        shared by the entities and collections.
+      </para>
+        </sect2>
+
+        <sect2 id="sessionfactory-multiplexed-jndi" revision="1">
+           <title>The <literal>JndiMultiplexedJBossCacheRegionFactory</literal></title>
+           
+           <para>
+            The <literal>JndiMultiplexedJBossCacheRegionFactory</literal> 
+            supports an additional configuration option:
+           </para>
+           
+           <variablelist>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cachefactory</literal></term>
+                 <listitem>
+                 <para>
+                    Specifies the JNDI name under which the 
+                    <literal>CacheManager</literal> to use is bound.
+                    There is no default value -- the user must specify the property.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>
+           
+           <para>
+            The <literal>JndiMultiplexedJBossCacheRegionFactory</literal> requires
+            that the JBoss Cache <literal>CacheManager</literal> is already 
+            bound in JNDI; it will not create and bind one if it isn't.  It is 
+            up to the the user to ensure the cache is <literal>CacheManager</literal>
+            and bound in JNDI before the Hibernate <literal>SessionFactory</literal> 
+            is created.
+           </para>
+        </sect2>
+    
+    </sect1>
+    
+    <sect1 id="jbc-config" revision="1">
+
+        <title>Configuring JBoss Cache</title>
+
+        <para>
+          JBoss Cache provides a great many different configuration options;
+          here we are just going to look at a few that are most relevant
+          to the Second Level Cache use case. Please see the 
+          <emphasis>JBoss Cache User Guide</emphasis> for full details.
+        </para>
+
+        <sect2 id="jbc-config-single" revision="1">
+           <title>Configuring a Single Standalone Cache</title>
+       
+           <para>
+             To configure a single standalone cache (i.e. for use by a
+             <literal>SharedJBossCacheRegionFactory</literal>), you need to
+             create a standard JBoss Cache XML configuration file and place
+             it on the classpath. See the <emphasis>JBoss Cache User Guide</emphasis>
+             and the JBoss Cache distribution for examples of JBoss Cache
+             configuration files.
+           </para>
+           <para>
+             If the resource path to your file is <literal>treecache.xml</literal>,
+             the <literal>SharedJBossCacheRegionFactory</literal> will find it
+             by default; otherwise you will need to use a configuration option
+             to tell it where it is. See <xref linkend="sessionfactory-shared"/>
+             for instruction on how to do that.
+           </para>
+        </sect2>
+
+        <sect2 id="jbc-config-multiple" revision="1">
+            <title>Managing Multiple Caches via a CacheManager</title>
+            
+            <para>
+              If you are using <literal>MultiplexedJBossCacheRegionFactory</literal>
+              you will need to provide a set of JBoss Cache configurations for
+              its <literal>CacheManager</literal> to use. (Or, use the set in the
+              <literal>jbc2-configs.xml</literal> file that ships with 
+              <literal>hibernate-jbosscache2.jar</literal>.)  The XML file used
+              by a <literal>CacheManager</literal> is very similar to the
+              usual config file used by a standalone cache; the biggest 
+              difference is it can include multiple, named, configurations.
+              The format looks like this:
+            </para>
+            
+            <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+
+<cache-configs>
+
+    <!-- A config appropriate for entity/collection caching. -->
+    <cache-config name="optimistic-entity">
+
+        <!-- Node locking scheme -->
+        <attribute name="NodeLockingScheme">OPTIMISTIC</attribute> 
+        
+        ..... other configuration attributes
+        
+    </cache-config>
+
+
+    <!-- A config appropriate for entity/collection caching that
+         uses pessimistic locking -->
+    <cache-config name="pessimistic-entity">
+
+        <!-- Node locking scheme -->
+        <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>   
+        
+        ..... other configuration attributes
+        
+    </cache-config>
+    
+</cache-configs>]]></programlisting>
+      
+      <para>
+        Each <literal>&lt;cache-config&gt;</literal> element contains a complete
+        cache configuration, with the same contents as what you would place in 
+        the <literal>&lt;mbean&gt;</literal> element in a standalone cache
+        configuration file. The <literal>name</literal> attribute on the
+        <literal>&lt;cache-config&gt;</literal> element provides the identifier
+        for the configuration; users of the <literal>CacheManager</literal>
+        will provide this name when requesting a JBoss Cache instance that uses
+        this configuration.
+      </para>
+      
+        </sect2>
+        
+        <sect2 id="jbc-config-detail" revision="1">
+           <title>JBoss Cache Configuration Details</title>
+           
+           <para>
+             Let's look at how to specify a few of the JBoss Cache configuration 
+             options that are most relevant to the Hibernate use case.              
+           </para>
+           
+           <sect3 id="jbc-config-mode" revision="1">
+              <title>CacheMode</title>
+           
+              <para>
+                The JBoss Cache <emphasis>CacheMode</emphasis> attribute 
+                encapsulates whether the cache uses replication, invalidation or
+                local mode, as well as whether messages should be synchronous
+                or asynchronous.  See <xref linkend="concepts-cache-attr-repl"/> 
+                and <xref linkend="concepts-cache-attr-sync"/> for a discussion of
+                these concepts. 
+              </para>
+              
+              <para>
+                The CacheMode is configured as follows:
+              </para>
+              
+              <programlisting><![CDATA[<!-- Legal modes are LOCAL
+                     REPL_ASYNC
+                     REPL_SYNC
+                     INVALIDATION_ASYNC
+                     INVALIDATION_SYNC
+-->
+<attribute name="CacheMode">INVALIDATION_SYNC</attribute>]]></programlisting>  
+              
+           </sect3>
+
+           <sect3 id="jbc-config-locking" revision="1">
+              <title>NodeLockingScheme</title>
+           
+               <para>
+                 The JBoss Cache <emphasis>NodeLockingScheme</emphasis> attribute 
+                 configures whether optimistic locking or pessimistic locking
+                 should be used.  See <xref linkend="concepts-cache-attr-lock"/>
+                 for a discussion of locking. 
+               </para>
+              
+              <para>
+                The NodeLockingScheme is configured as follows:
+              </para>
+              
+              <programlisting><![CDATA[<!-- Node locking scheme:
+        OPTIMISTIC
+        PESSIMISTIC (default)
+-->
+<attribute name="NodeLockingScheme">OPTIMISTIC</attribute>]]></programlisting>  
+       
+           </sect3>
+
+           <sect3 id="jbc-config-jgroups" revision="1">
+              <title>JGroups <literal>Channel</literal> Configuration</title>
+           
+              <para>
+                Each JBoss Cache instance (except those with CacheMode
+                LOCAL) will need a JGroups <literal>Channel</literal>. The cache 
+                configuration needs to tell JGroups how to set up the channel's
+                protocol stack. This is configured as follows:
+              </para>
+
+              <programlisting><![CDATA[<attribute name="MultiplexerStack">udp</attribute>]]></programlisting>  
+      
+      <para>
+        An alternate approach is to include the full protocol stack 
+        configuration in the JBoss Cache configuration:
+      </para>
+      
+      <programlisting><![CDATA[<!-- JGroups protocol stack properties. -->
+<attribute name="ClusterConfig">
+   <config>
+      <UDP mcast_addr="228.10.10.10"
+           mcast_port="45588"
+           tos="8"  
+           
+           ... many more details
+           
+      <pbcast.STATE_TRANSFER/>
+      <pbcast.FLUSH timeout="0"/>
+   </config>
+</attribute>]]></programlisting>            
+      
+      <para>
+       See <xref linkend="jgroups-config"/> for more on JGroups configuration.
+      </para> 
+           </sect3>
+
+
+           <sect3 id="jbc-config-statetransfer" revision="1">
+              <title>Initial State Transfer</title>
+           
+              <para>
+                See <xref linkend="concepts-cache-attr-state"/> for a discussion 
+                of the concept of initial state transfer.
+              </para>
+              <para>
+                Initial State Transfer is configured as follows:
+              </para>
+              
+              <programlisting><![CDATA[<!-- Whether or not to fetch state on joining a cluster. -->
+<attribute name="FetchInMemoryState">false</attribute>]]></programlisting>
+  
+           </sect3>
+
+           <sect3 id="jbc-config-marshalling" revision="1">
+              <title>Region-Based Marshalling</title>
+           
+              <para>
+                JBoss Cache includes a feature called <emphasis>Region Based
+                Marshalling</emphasis> that helps ensure the correct 
+                classloader is in place when objects are serialized and
+                deserialized as part of replication and invalidation
+                messages. This feature adds some overhead, but it allows
+                your cache to work in complex classloading environments
+                such as those found in many application servers. It can be
+                disabled if your application meets the following criteria:
+              </para>
+              
+              <itemizedlist>
+                <listitem>
+                  <para>
+                    No cached entities use custom types (i.e. types persisted as 
+                    BLOBs or CLOBs or as a Hibernate UserType) in their
+                    fields, and no entities use complex primary keys.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    <emphasis>OR</emphasis> all custom types and complex
+                    primary key types are visible to the classloader that
+                    loads JGroups.
+                  </para>
+                </listitem>
+              </itemizedlist>
+              
+              <para>
+                Region based marshalling is configured as follows:
+              </para>
+              
+              <programlisting><![CDATA[<!--
+ Whether to use marshalling or not. Default is "false".
+-->
+<attribute name="UseRegionBasedMarshalling">true</attribute>
+<!-- Must match the value of "UseRegionBasedMarshalling" -->
+<attribute name="InactiveOnStartup">true</attribute>]]></programlisting>  
+                  
+              <para>
+                Region based marshalling is enabled in the standard cache
+                configurations that ship with 
+                <literal>hibernate-jbosscache2.jar</literal>
+              </para>
+           </sect3>
+
+           <sect3 id="jbc-config-eviction" revision="1">
+              <title>Eviction</title>
+       
+              <para>
+                This topic deserves a chapter of it's own. See 
+                <xref linkend="eviction"/>.
+              </para>
+           </sect3>
+           
+        </sect2>
+        
+        <sect2 id="jbc-config-multiple-std" revision="1">
+            <title>Standard JBoss Cache Configurations</title>
+            
+            <para>
+              Hibernate ships with a number of standard JBoss Cache configurations
+              in the <literal>hibernate-jbosscache2.jar</literal>'s
+              <literal>jbc2-configs.xml</literal> file. The following table
+              highlights the key features of each configuration.
+            </para>
+            
+            <table frame="topbot">
+            <title>Standard JBoss Cache Configurations</title>
+            <tgroup cols="6">
+                <colspec colname="c1" colwidth="1*"/>
+                <colspec colname="c2" colwidth="1*"/>
+                <colspec colname="c3" colwidth="1*"/>
+                <colspec colname="c4" colwidth="2*"/>
+                <colspec colname="c5" colwidth="1*"/>
+                <colspec colname="c6" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Valid For</entry>
+                        <entry>Optimal For</entry>
+                        <entry>CacheMode</entry>
+                        <entry>Locking</entry>
+                        <entry>State Transfer</entry>
+                    </row>
+                </thead>
+            <tbody>
+            <row>
+                <entry>
+                    <property>optimistic-entity</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>INVALIDATION_SYNC</property>
+                </entry>
+                <entry>
+                    <property>OPTIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>no</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>pessimistic-entity</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>INVALIDATION_SYNC</property>
+                </entry>
+                <entry>
+                    <property>PESSIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>no</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>local-query</property>
+                </entry>
+                <entry>
+                    <property>Q</property>
+                </entry>
+                <entry>
+                    <property>Q</property>
+                </entry>
+                <entry>
+                    <property>LOCAL</property>
+                </entry>
+                <entry>
+                    <property>PESSIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>no</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>replicated-query</property>
+                </entry>
+                <entry>
+                    <property>Q</property>
+                </entry>
+                <entry>
+                    <property>--</property>
+                </entry>
+                <entry>
+                    <property>LOCAL</property>
+                </entry>
+                <entry>
+                    <property>OPTIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>no</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>timestamps-cache</property>
+                </entry>
+                <entry>
+                    <property>T</property>
+                </entry>
+                <entry>
+                    <property>T</property>
+                </entry>
+                <entry>
+                    <property>REPL_ASYNC</property>
+                </entry>
+                <entry>
+                    <property>PESSIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>yes</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>optimistic-shared</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q/T</property>
+                </entry>
+                <entry>
+                    <property>--</property>
+                </entry>
+                <entry>
+                    <property>REPL_SYNC</property>
+                </entry>
+                <entry>
+                    <property>OPTIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>yes</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>pessimistic-shared</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q/T</property>
+                </entry>
+                <entry>
+                    <property>--</property>
+                </entry>
+                <entry>
+                    <property>REPL_SYNC</property>
+                </entry>
+                <entry>
+                    <property>PESSIMISTIC</property>
+                </entry>
+                <entry>
+                    <para>yes</para>
+                </entry>
+            </row>
+            </tbody>
+            </tgroup>
+          </table>
+          
+          <para>
+           A few notes on the above table:
+          </para>
+          
+          <itemizedlist>
+            <listitem>
+              <para>
+               <emphasis>Valid For</emphasis> and <emphasis>Optimal For</emphasis>
+               describe the suitability of the configuration for the four types
+               of data -- Entities, Collections, Queries and Timestamps.
+              </para>
+            </listitem>
+            <listitem>
+              <para><emphasis>State Transfer</emphasis> indicates whether an
+              initial state transfer will be performed when a cache region is
+              activated.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+              Each of the configurations uses the <literal>udp</literal> JGroups
+              protocol stack configuration (except <literal>local-query</literal>,
+              which doesn't use JGroups at all). Since they all use the same
+              stack, if more than one of these caches is created they will share
+              their JGroups resources. See <xref linkend="jgroups-config-std"/> 
+              for a description of the standard stacks.
+              </para>
+            </listitem>
+            
+          </itemizedlist>
+          
+          <para>
+            These standard configurations are a good choice for many applications.
+            The primary reason users may want to use their own configurations is
+            to support more complex eviction setups. See <xref linkend="eviction"/>
+            for more on the kinds of things you can do with eviction.
+          </para>
+        </sect2>
+        
+    </sect1>
+    
+    <sect1 id="jgroups-config" revision="1">
+       <title>JGroups Configuration</title>
+       
+       <para>
+         JGroups configuration is a complex area that goes well beyond the scope 
+         of this document.  Users interested in exploring the details are 
+         encouraged to visit the JGroups website at http://www.jgroups.org as 
+         well as the JGroups wiki page at jboss.com.
+       </para>
+       
+       <para>
+         The <literal>jgroups-stacks.xml</literal> file found in the
+         <literal>org.hibernate.cache.jbc2.builder</literal> package
+         in the <literal>hibernate-jbosscache2.jar</literal> provides a good
+         set of standard JGroups configurations; these should be suitable for
+         most needs.  If you need to create your own configuration set, we
+         recommend that you start with this file as a base.
+       </para>
+       
+       <sect2 id="jgroups-config-transport" revision="1">
+          <title>Transport -- UDP vs. TCP</title>
+          
+          <para>
+            The JGroups <emphasis>transport</emphasis> refers to the mechanism
+            JGroups uses for sending messages to the group members.  Choosing
+            which transport to use is the main JGroups-related decision users
+            will need to make. There are three transport types:
+          </para>
+          
+          <itemizedlist>
+             <listitem>
+                <para>
+                 <emphasis>UDP</emphasis> -- uses UDP multicast for transmitting
+                 messages to all members of the group.  Multicast is efficient for the
+                 Second Level Cache use case, particularly with larger clusters,
+                 since maintaining cache consistency means many messages need to
+                 be sent to all members.  UDP-based channel configurations are
+                 used in the JBoss Cache configurations in the standard
+                 <literal>jbc2-configs.xml</literal> file that ships with
+                 Hibernate.
+                </para>
+             </listitem>
+             <listitem>
+                <para>
+                 <emphasis>TCP</emphasis> -- uses multiple TCP unicasts
+                 for transmitting messages to all members of the group.  Less
+                 efficient for the Second Level Cache use case, particularly as
+                 clusters get larger, i.e. over 4 to 6 nodes.  However, in some
+                 network environments UDP multicast is not an option, in which
+                 case TCP is available.
+                </para>
+                
+                <para>
+                  If a TCP-based channel is used, there are a couple of options
+                  available for how a channel "discovers" the other members in
+                  the group when it first starts.
+                </para>
+          
+                <itemizedlist>
+                   <listitem>
+                      <para>
+                        <emphasis>TCP + TCPPING</emphasis> -- here a static 
+                        list of all the possible nodes in the cluster
+                        must be provided.  The TCPPING "discovery" protocol uses 
+                        that static list to probe for available peers, using
+                        TCP messages. The downside here is the need to provide
+                        and maintain the static list.  The upside, for multicast-averse
+                        environments, is all communication uses TCP. 
+                      </para>
+                   </listitem>
+                   <listitem>
+                      <para>
+                        <emphasis>TCP + MPING</emphasis> -- here the MPING
+                        "discovery" protocol uses UDP multicast to probe for
+                        available peers; once they are detected all regular 
+                        message traffic uses TCP.  The downside here, for the
+                        multicast-averse, is that multicast is used. The upside
+                        is there is no need for a static configuration of all
+                        possible peers.
+                      </para>
+                   </listitem>
+                </itemizedlist>
+                      
+                <para>
+                  The TCP-based configurations in the 
+                  <literal>jgroups-stacks.xml</literal> file found in 
+                  <literal>hibernate-jbosscache2.jar</literal> all use
+                  TCP + MPING.  This is because there is no way for the
+                  Hibernate authors to provide a meaningful static
+                  configuration for TCPPING.  If you want to use TCP + TCPPING
+                  you will need to provide your own JGroups configuration file. 
+                </para>
+             </listitem>
+             <listitem>
+                <para>
+                  <emphasis>TUNNEL</emphasis> -- a specialized protocol designed
+                  for cases where cluster members need to communicate across
+                  firewalls.  See the JGroups documentation for details.
+                </para>
+             </listitem>
+          </itemizedlist>
+       </sect2>
+       
+       <sect2 id="jgroups-config-std" revision="1">
+          <title>Standard JGroups Configurations</title>
+          
+          <para>
+            By default the Second Level Cache will use JGroups configurations
+            found in the <literal>jgroups-stacks.xml</literal> file included in 
+            <literal>hibernate-jbosscache2.jar</literal>.  Following are their
+            names and a brief description of each:
+          </para>
+           
+           <variablelist>
+               <varlistentry>
+                 <term><literal>udp</literal></term>
+                 <listitem>
+                 <para>
+                  UDP multicast-based config; appropriate for all cache types. 
+                  Includes JGroups flow control (FC) which is needed for caches 
+                  that send significant numbers of asynchronous messages (i.e. 
+                  timestamp caches and entity/collection caches configured for 
+                  replication instead of invalidation).  If you're not sure and 
+                  want to use UDP multicast, this is the best choice.
+                </para>
+                </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>udp-sync</literal></term>
+                 <listitem>
+                 <para>
+                  UDP multicast-based config that omits JGroups flow control 
+                  (FC). Optimal for caches that send little or no asynchronous 
+                  messages, i.e. entity/collection caches configured for invalidation.
+                  Unsuitable for timestamp caches or entity/collection caches 
+                  configured for replication.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>tcp</literal></term>
+                 <listitem>
+                 <para>
+                  TCP-based config with UDP multicast discovery (MPING). 
+                  Includes JGroups flow control (FC); see <literal>udp</literal> 
+                  above for the significance of that.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>tcp-sync</literal></term>
+                 <listitem>
+                 <para>
+                  TCP-based config with UDP multicast discovery (MPING). 
+                  Omits JGroups flow control (FC); see
+                  <literal>udp-sync</literal> above for the significance of that.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>tunnel</literal></term>
+                 <listitem>
+                 <para>
+                  Uses a specialized protocol designed for cases where cluster 
+                  members need to communicate across firewalls.  See the JGroups 
+                  documentation for details.
+                 </para>
+                 </listitem>
+               </varlistentry>
+            </variablelist>
+       </sect2>
+       
+    </sect1>
+    
+</chapter>

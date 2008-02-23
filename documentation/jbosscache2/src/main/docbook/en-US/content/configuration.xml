@@ -223,7 +223,7 @@
                  <para>
                     Specifies the JNDI name under which the JBoss Cache instance 
                     to use is bound. Note that although this configuration property 
-                    has the same name as the one used by <literal>SharedCacheInstanceManager</literal>, 
+                    has the same name as the one used by <literal>SharedJBossCacheRegionFactory</literal>, 
                     the meaning here is different. Note also that in this class' 
                     usage of the property, there is no default value -- the user
                     must specify the property.
@@ -309,8 +309,8 @@
                  <para>
                     Name of the configuration that should be used for query caches.
                     By default, tries to use the same cache as is used for
-                    entity caching.  If there is no entity cache or it uses 
-                    invalidation, the default value is <literal>local-query</literal>.
+                    entity caching.  If there is no entity cache, the default 
+                    value is <literal>local-query</literal>.
                  </para>
                  </listitem>
                </varlistentry>
@@ -324,7 +324,7 @@
              configurations. If you want to set 
              <literal>hibernate.cache.region.jbc2.configs</literal> and use your 
              own JBoss Cache configuration file, you can still take advantage of 
-             these defaults names; just name the configurations in your file
+             these default names; just name the configurations in your file
              to match.
            </para>
            

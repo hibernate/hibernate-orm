@@ -46,9 +46,7 @@ import org.hibernate.util.PropertiesHelper;
 /**
  * Allows building separate {@link Cache} instances for each type of region, but
  * supports using the JGroups multiplexer under the covers to re-use the same group
- * communication stack. <p/> todo : replace the prototype cache factory with
- * the equivalent JBoss Cache solution from
- * http://jira.jboss.com/jira/browse/JBCACHE-1156
+ * communication stack. <p/>
  * 
  * @author Steve Ebersole
  * @author Brian Stansberry
@@ -58,20 +56,20 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
     private static final Logger log = LoggerFactory.getLogger(MultiplexingCacheInstanceManager.class);
     
     /** 
-     * Classpath or filesystem resource identifying containing JBoss Cache 
+     * Classpath or filesystem resource containing JBoss Cache 
      * configurations the factory should use.
      * 
      * @see #DEF_CACHE_FACTORY_RESOURCE
      */
     public static final String CACHE_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.configs";
     /**
-     * Classpath or filesystem resource identifying containing JGroups protocol
+     * Classpath or filesystem resource containing JGroups protocol
      * stack configurations the <code>org.jgroups.ChannelFactory</code>
      * should use.
      * 
-     * @see #DEF_MULTIPLEXER_RESOURCE
+     * @see #DEF_JGROUPS_RESOURCE
      */
-    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.multiplexer.stacks";
+    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.jgroups.stacks";
     
     /**
      * Name of the configuration that should be used for entity caches.
@@ -110,7 +108,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}. Specifies
      * the "jgroups-stacks.xml" file in this package.
      */
-    public static final String DEF_MULTIPLEXER_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
+    public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
     /**
      * Default value for {@link #ENTITY_CACHE_RESOURCE_PROP}.
      */
@@ -280,7 +278,7 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
             if (buildCaches && jbcFactory == null) {
                 // See if the user configured a multiplexer stack
                 if (channelFactory == null) {
-                    String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_MULTIPLEXER_RESOURCE);
+                    String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
                     if (muxStacks != null) {
                         channelFactory = new JChannelFactory();
                         channelFactory.setMultiplexerConfig(muxStacks);

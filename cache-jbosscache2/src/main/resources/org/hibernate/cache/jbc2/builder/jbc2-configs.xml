@@ -55,9 +55,11 @@
              to find each other -->
         <attribute name="ClusterName">optimistic-entity</attribute>
         
-        <!-- Use a UDP (multicast) based stack. No JGroups flow control (FC)
-             because all communication will require a synchronous response. -->
-        <attribute name="MultiplexerStack">udp-sync</attribute>
+        <!-- Use a UDP (multicast) based stack. A udp-sync stack might be
+             slightly better (no JGroups FC) but we stick with udp to
+             help ensure this cache and others like timestamps-cache
+             that require FC can use the same underlying JGroups resources. -->
+        <attribute name="MultiplexerStack">udp</attribute>
 
         <!-- Whether or not to fetch state on joining a cluster. -->
         <attribute name="FetchInMemoryState">false</attribute>
@@ -95,18 +97,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 
@@ -145,9 +144,11 @@
              to find each other -->
         <attribute name="ClusterName">pessimistic-entity</attribute>
         
-        <!-- Use a UDP (multicast) based stack. No JGroups flow control (FC)
-             because all communication will require a synchronous response. -->
-        <attribute name="MultiplexerStack">udp-sync</attribute>
+        <!-- Use a UDP (multicast) based stack. A udp-sync stack might be
+             slightly better (no JGroups FC) but we stick with udp to
+             help ensure this cache and others like timestamps-cache
+             that require FC can use the same underlying JGroups resources. -->
+        <attribute name="MultiplexerStack">udp</attribute>
 
         <!-- Whether or not to fetch state on joining a cluster. -->
         <attribute name="FetchInMemoryState">false</attribute>
@@ -186,18 +187,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 
@@ -227,18 +225,15 @@
             <!--  Cache wide default -->
             <region name="/_default_">
                <!-- Evict LRU node once we have more than this number of nodes -->
-               <attribute name="maxNodes">5000</attribute>
+               <attribute name="maxNodes">10000</attribute>
                <!-- And, evict any node that hasn't been accessed in this many seconds -->
                <attribute name="timeToLiveSeconds">1000</attribute>
                <!-- Don't evict a node that's been accessed within this many seconds. 
                     Set this to a value greater than your max expected transaction length. -->
-               <attribute name="minTimeToLiveSeconds">300</attribute>
+               <attribute name="minTimeToLiveSeconds">120</attribute>
             </region>
             <!--  Don't ever evict modification timestamps -->
-            <region name="/TS">
-              <attribute name="maxNodes">0</attribute>
-              <attribute name="timeToLiveSeconds">0</attribute>
-            </region>
+            <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
           </config>
        </attribute>
 
@@ -318,18 +313,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 
@@ -402,18 +394,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 
@@ -486,18 +475,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 
@@ -589,18 +575,15 @@
           <!--  Cache wide default -->
           <region name="/_default_">
             <!-- Evict LRU node once we have more than this number of nodes -->
-            <attribute name="maxNodes">5000</attribute>
+            <attribute name="maxNodes">10000</attribute>
             <!-- And, evict any node that hasn't been accessed in this many seconds -->
             <attribute name="timeToLiveSeconds">1000</attribute>
             <!-- Don't evict a node that's been accessed within this many seconds. 
                  Set this to a value greater than your max expected transaction length. -->
-            <attribute name="minTimeToLiveSeconds">300</attribute>
+            <attribute name="minTimeToLiveSeconds">120</attribute>
           </region>
           <!--  Don't ever evict modification timestamps -->
-          <region name="/TS">
-            <attribute name="maxNodes">0</attribute>
-            <attribute name="timeToLiveSeconds">0</attribute>
-          </region>
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
         </config>
      </attribute>
 

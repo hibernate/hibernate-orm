@@ -54,7 +54,7 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
     private static final Logger log = LoggerFactory.getLogger(SharedCacheInstanceManager.class);
 
     /**
-     * Classpath or filesystem resource identifying containing JBoss Cache 
+     * Classpath or filesystem resource containing JBoss Cache 
      * configuration settings the {@link Cache} should use.
      * 
      * @see #DEFAULT_CACHE_RESOURCE
@@ -66,20 +66,18 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      */
     public static final String DEFAULT_CACHE_RESOURCE = "treecache.xml";
     /**
-     * Classpath or filesystem resource identifying containing JGroups protocol
+     * Classpath or filesystem resource containing JGroups protocol
      * stack configurations the <code>org.jgroups.ChannelFactory</code>
      * should use.
      * 
-     * @see #DEF_MULTIPLEXER_RESOURCE
+     * @see #DEF_JGROUPS_RESOURCE
      */
-    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.multiplexer.stacks";
+    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.jgroups.stacks";
     /**
-     * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}. Specifies
-     * "stacks.xml", which can be found in the root of the JGroups jar file.
-     * Thus, leaving this value at default means using the default protocol
-     * stack configs provided by JGroups.
+     * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}.  Specifies
+     * the "jgroups-stacks.xml" file in this package.
      */
-    public static final String DEF_MULTIPLEXER_RESOURCE = "stacks.xml";
+    public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
 
     private Cache cache;
     private ChannelFactory channelFactory;
@@ -136,7 +134,7 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
         if (cache == null) {
             
             if (channelFactory == null) {
-                String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_MULTIPLEXER_RESOURCE);
+                String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
                 if (muxStacks != null) {
                     channelFactory = new JChannelFactory();
                     try {

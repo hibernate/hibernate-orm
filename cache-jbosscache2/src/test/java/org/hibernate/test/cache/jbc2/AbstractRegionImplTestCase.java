@@ -73,7 +73,7 @@ public abstract class AbstractRegionImplTestCase extends AbstractJBossCacheTestC
         assertEquals("Cache is REPL_SYNC", "REPL_SYNC", remoteCache.getConfiguration().getCacheModeString());
         
         JChannelFactory channelFactory = new JChannelFactory();
-        channelFactory.setMultiplexerConfig(SharedCacheInstanceManager.DEF_MULTIPLEXER_RESOURCE);
+        channelFactory.setMultiplexerConfig(SharedCacheInstanceManager.DEF_JGROUPS_RESOURCE);
         remoteCache.getConfiguration().getRuntimeConfig().setMuxChannelFactory(channelFactory);
         remoteCache.start();
         

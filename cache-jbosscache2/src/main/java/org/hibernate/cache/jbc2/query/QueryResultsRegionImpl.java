@@ -43,7 +43,7 @@ import org.jboss.cache.config.Option;
 public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter implements QueryResultsRegion {
 
     public static final String QUERY_CACHE_LOCAL_ONLY_PROP = "hibernate.cache.region.jbc2.query.localonly";
-    
+    public static final String TYPE = "QUERY";
     
     /**
      * Whether we should set an option to disable propagation of changes around
@@ -134,7 +134,7 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
 
     @Override
     protected Fqn<String> createRegionFqn(String regionName, String regionPrefix) {
-        return Fqn.fromString(escapeRegionName(regionName, regionPrefix));
+        return getTypeLastRegionFqn(regionName, regionPrefix, TYPE);
     }
 
 }

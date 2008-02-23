@@ -36,6 +36,7 @@ import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
+import org.hibernate.cache.jbc2.query.QueryResultsRegionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.jbc2.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.util.CacheTestUtil;
@@ -83,7 +84,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 
     @Override
     protected Fqn getRegionFqn(String regionName, String regionPrefix) {
-        return Fqn.fromString(BasicRegionAdapter.escapeRegionName(regionName, regionPrefix));
+        return BasicRegionAdapter.getTypeLastRegionFqn(regionName, regionPrefix, QueryResultsRegionImpl.TYPE);
     }
 
     public void testPutDoesNotBlockGetOptimistic() throws Exception {

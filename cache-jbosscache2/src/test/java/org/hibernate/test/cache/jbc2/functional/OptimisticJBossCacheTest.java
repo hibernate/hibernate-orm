@@ -35,18 +35,18 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
  * 
  * @author Brian Stansberry
  */
-public class PessimisticJBossCacheTestDisabled extends AbstractQueryCacheFunctionalTestCase {
+public class OptimisticJBossCacheTest extends AbstractQueryCacheFunctionalTestCase {
 
     // note that a lot of the fucntionality here is intended to be used
     // in creating specific tests for each CacheProvider that would extend
     // from a base test case (this) for common requirement testing...
 
-    public PessimisticJBossCacheTestDisabled(String x) {
+    public OptimisticJBossCacheTest(String x) {
         super(x);
     }
 
     public static Test suite() {
-        return new FunctionalTestClassTestSuite(PessimisticJBossCacheTestDisabled.class);
+        return new FunctionalTestClassTestSuite(OptimisticJBossCacheTest.class);
     }
 
     protected Class<? extends RegionFactory> getCacheRegionFactory() {
@@ -58,7 +58,7 @@ public class PessimisticJBossCacheTestDisabled extends AbstractQueryCacheFunctio
     }
 
     protected String getConfigResourceLocation() {
-        return "org/hibernate/test/cache/jbc2/functional/pessimistic-treecache.xml";
+        return "org/hibernate/test/cache/jbc2/functional/optimistic-treecache.xml";
     }
 
 }

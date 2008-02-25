@@ -143,7 +143,7 @@ TimestampsRegion buildTimestampsRegion(String regionName,
               </para>
            </listitem>
            <listitem>
-             <para>As part of its startup process, te region factory delegates
+             <para>As part of its startup process, the region factory delegates
                responsibility for providing JBoss Cache instances to an
                implementation of the 
                <literal>org.hibernate.cache.jbc2.CacheInstanceManager</literal>

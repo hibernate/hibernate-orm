@@ -43,8 +43,6 @@ public class TestCacheInstanceManager extends MultiplexingCacheInstanceManager {
     
     private static final Hashtable cacheManagers = new Hashtable();
     
-    public static final String CACHE_MANAGER_NAME_PROP = "hibernate.test.cache.jbc2.cache.manager.name";
-
     public static CacheManager getTestCacheManager(String name) {
        return (CacheManager) cacheManagers.get(name);
     }
@@ -63,7 +61,7 @@ public class TestCacheInstanceManager extends MultiplexingCacheInstanceManager {
         
         super.start(settings, properties);
         
-        cacheManagerName = properties.getProperty(CACHE_MANAGER_NAME_PROP);
+        cacheManagerName = properties.getProperty(DualNodeTestUtil.NODE_ID_PROP);
         cacheManagers.put(cacheManagerName, getCacheFactory());
     }
 

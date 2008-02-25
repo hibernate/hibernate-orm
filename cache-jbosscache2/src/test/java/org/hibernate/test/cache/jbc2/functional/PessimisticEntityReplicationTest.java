@@ -34,8 +34,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
 import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
 import org.hibernate.test.cache.jbc2.functional.util.TestJBossCacheRegionFactory;
+import org.hibernate.transaction.CMTTransactionFactory;
 import org.jboss.cache.Cache;
 import org.jboss.cache.CacheManager;
 import org.jboss.cache.Fqn;
@@ -55,10 +58,7 @@ extends DualNodeTestCaseBase
 {
    protected final Logger log = LoggerFactory.getLogger(getClass());
 
-   private static final long SLEEP_TIME = 100l;
-   
-   private static final String LOCAL = "local";
-   private static final String REMOTE = "remote";
+   private static final long SLEEP_TIME = 50l;
    
    private static final Integer CUSTOMER_ID = new Integer(1);
    
@@ -74,6 +74,7 @@ extends DualNodeTestCaseBase
    @Override
    public void configure(Configuration cfg)
    {
+      cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
       super.configure(cfg);
    }
 
@@ -97,20 +98,6 @@ extends DualNodeTestCaseBase
       cfg.setProperty(MultiplexingCacheInstanceManager.ENTITY_CACHE_RESOURCE_PROP, 
                       getEntityCacheConfigName());      
    }
-   
-   @Override
-   protected void configureFirstNode(Configuration cfg)
-   {
-      cfg.setProperty(TestCacheInstanceManager.CACHE_MANAGER_NAME_PROP, 
-                      LOCAL);      
-   }
-
-   @Override
-   protected void configureSecondNode(Configuration cfg)
-   {
-      cfg.setProperty(TestCacheInstanceManager.CACHE_MANAGER_NAME_PROP, 
-                      REMOTE);
-   }
 
    protected String getEntityCacheConfigName() {
        return "pessimistic-shared";
@@ -123,7 +110,7 @@ extends DualNodeTestCaseBase
       
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = TestCacheInstanceManager.getTestCacheManager(LOCAL);
+      CacheManager localManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.LOCAL);
       Cache localCache = localManager.getCache(getEntityCacheConfigName(), true);
       MyListener localListener = new MyListener();
       localCache.addCacheListener(localListener);
@@ -131,7 +118,7 @@ extends DualNodeTestCaseBase
       TransactionManager localTM = localCache.getConfiguration().getRuntimeConfig().getTransactionManager();
       
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = TestCacheInstanceManager.getTestCacheManager(REMOTE);
+      CacheManager remoteManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.REMOTE);
       Cache remoteCache = remoteManager.getCache(getEntityCacheConfigName(), true);
       MyListener remoteListener = new MyListener();
       remoteCache.addCacheListener(remoteListener);      
@@ -154,7 +141,9 @@ extends DualNodeTestCaseBase
          // This actually brings the collection into the cache
          getCustomer(ids.customerId, localFactory, localTM);
          
-         // Now the collection is in the cache so, we the 2nd "get"
+         sleep(SLEEP_TIME);
+         
+         // Now the collection is in the cache so, the 2nd "get"
          // should read everything from the cache
          System.out.println("Find(2) node 0");         
          localListener.clear();
@@ -163,10 +152,6 @@ extends DualNodeTestCaseBase
          //Check the read came from the cache
          System.out.println("Check cache 0");
          assertLoadedFromCache(localListener, ids.customerId, ids.contactIds);
-   
-         // The above placement of the collection in the cache is replicated async
-         // so pause a bit before checking node 1
-         sleep(SLEEP_TIME);
          
          System.out.println("Find node 1");
          getCustomer(ids.customerId, remoteFactory, remoteTM);

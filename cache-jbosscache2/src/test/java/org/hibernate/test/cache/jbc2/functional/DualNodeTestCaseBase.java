@@ -22,6 +22,10 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.ExecutionEnvironment;
+import org.hibernate.test.cache.jbc2.functional.util.DualNodeConnectionProviderImpl;
+import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
+import org.hibernate.test.cache.jbc2.functional.util.DualNodeTransactionManagerLookup;
+import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +38,8 @@ import org.slf4j.LoggerFactory;
 public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
 {
    private static final Logger log = LoggerFactory.getLogger( CacheTestCaseBase.class );
+   
+   public static final String CACHE_MANAGER_NAME_PROP = "hibernate.test.cluster.node.id";
    
    private ExecutionEnvironment secondNodeEnvironment;
    private org.hibernate.classic.Session secondNodeSession;
@@ -64,14 +70,31 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
     * 
     * @param the Configuration to update.
     */
-   protected abstract void configureFirstNode(Configuration cfg);    
-
+   protected void configureFirstNode(Configuration cfg)
+   {
+      cfg.setProperty(DualNodeTestUtil.NODE_ID_PROP, 
+                      DualNodeTestUtil.LOCAL);      
+   }
    /**
     * Apply any node-specific configurations to our second node.
     * 
     * @param the Configuration to update.
     */
-   protected abstract void configureSecondNode(Configuration cfg);
+   protected void configureSecondNode(Configuration cfg)
+   {
+      cfg.setProperty(DualNodeTestUtil.NODE_ID_PROP, 
+                      DualNodeTestUtil.REMOTE);
+   }
+   
+   @Override
+   protected Class getConnectionProviderClass() {
+       return DualNodeConnectionProviderImpl.class;
+   }
+   
+   @Override
+   protected Class getTransactionManagerLookupClass() {
+       return DualNodeTransactionManagerLookup.class;
+   }
 
    @Override
    protected void prepareTest() throws Exception

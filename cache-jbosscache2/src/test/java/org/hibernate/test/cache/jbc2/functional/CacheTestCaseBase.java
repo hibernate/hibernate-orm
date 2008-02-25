@@ -29,7 +29,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.transaction.CMTTransactionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +67,9 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
         cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
 
         cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
-        cfg.setProperty(Environment.CONNECTION_PROVIDER, org.hibernate.test.tm.ConnectionProviderImpl.class.getName());
-        cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, org.hibernate.test.tm.TransactionManagerLookupImpl.class.getName());
-        cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+        cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
+        cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
+//        cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
         
         configureCacheFactory(cfg);
     }
@@ -89,6 +88,14 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     protected abstract Class<? extends RegionFactory> getCacheRegionFactory();
 
     protected abstract boolean getUseQueryCache();
+    
+    protected Class getConnectionProviderClass() {
+        return org.hibernate.test.tm.ConnectionProviderImpl.class;
+    }
+    
+    protected Class getTransactionManagerLookupClass() {
+        return org.hibernate.test.tm.TransactionManagerLookupImpl.class;
+    }
 
     @Override
     public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {

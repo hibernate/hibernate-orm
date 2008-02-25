@@ -375,6 +375,10 @@ public class ActionQueue {
 		}
 	}
 
+	public boolean hasAfterTransactionActions() {
+		return executions.size() > 0;
+	}
+
 	public boolean hasAnyQueuedActions() {
 		return updates.size() > 0 ||
 				insertions.size() > 0 ||

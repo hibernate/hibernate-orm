@@ -28,19 +28,18 @@ import junit.framework.Test;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.builder.SharedCacheInstanceManager;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * FIXME Move to hibernate-testsuite project and rename class x- "Disabled"
+ * Basic functional test of a optimistic locking entity + query cache.
  * 
  * @author Brian Stansberry
  */
 public class OptimisticJBossCacheTest extends AbstractQueryCacheFunctionalTestCase {
 
-    // note that a lot of the fucntionality here is intended to be used
-    // in creating specific tests for each CacheProvider that would extend
-    // from a base test case (this) for common requirement testing...
-
+    private static final String JBC_CONFIG = "org/hibernate/test/cache/jbc2/functional/optimistic-treecache.xml";
+   
     public OptimisticJBossCacheTest(String x) {
         super(x);
     }
@@ -51,14 +50,15 @@ public class OptimisticJBossCacheTest extends AbstractQueryCacheFunctionalTestCa
 
     protected Class<? extends RegionFactory> getCacheRegionFactory() {
         return JBossCacheRegionFactory.class;
-    }
+    }    
 
-    protected String getConfigResourceKey() {
-        return SharedCacheInstanceManager.CACHE_RESOURCE_PROP;
-    }
-
-    protected String getConfigResourceLocation() {
-        return "org/hibernate/test/cache/jbc2/functional/optimistic-treecache.xml";
+    /**
+     * Apply any region-factory specific configurations.
+     * 
+     * @param the Configuration to update.
+     */
+    protected void configureCacheFactory(Configuration cfg) {
+        cfg.setProperty(SharedCacheInstanceManager.CACHE_RESOURCE_PROP, JBC_CONFIG);        
     }
 
 }

@@ -474,8 +474,8 @@
     <attribute name="policyClass">org.jboss.cache.eviction.LRUPolicy</attribute>
           
     <!--  
-      Default region to pick up anything we miss in the more specific
-      regions below.
+      Default region to pick up anything we miss in the more
+      specific regions below.
     -->
     <region name="/_default_">
        <attribute name="maxNodes">500</attribute>

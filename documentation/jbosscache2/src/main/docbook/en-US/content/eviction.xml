@@ -334,9 +334,11 @@
             <programlisting><![CDATA[<class name="org.example.Foo">
     <cache usage="transactional"/>
     ....
-    <one-to-many name="bars" class="org.example.Bar">
+    <set name="bars">
         <cache usage="transactional" region="foo_region"/>
-    </one-to-many>
+        <key column="FOO_ID"/>
+        <one-to-many class="org.example.Bar"/>
+    </set>
 </class>]]></programlisting>
 
             <para>

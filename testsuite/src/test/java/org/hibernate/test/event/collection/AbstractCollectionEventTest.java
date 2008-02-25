@@ -94,9 +94,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		Child child = ( Child ) parent.getChildren().iterator().next();
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -119,9 +119,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( newChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -143,9 +143,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( newChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -167,9 +167,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( newChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -183,8 +183,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( Child ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		parent.addChild( child );
 		tx.commit();
@@ -193,16 +193,20 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) parent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( child ) ).wasInitialized() ) {
-				checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		ChildWithBidirectionalManyToMany childWithManyToMany = null;
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			childWithManyToMany = ( ChildWithBidirectionalManyToMany ) child;
+			if ( ( ( PersistentCollection ) childWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), childWithManyToMany, index++ );
+			}
 		}
 		if ( !( parent.getChildren() instanceof PersistentSet ) ) {
 			checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 			checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() && !( getParents( child ) instanceof PersistentSet ) ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( childWithManyToMany != null && !( childWithManyToMany.getParents() instanceof PersistentSet ) ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), childWithManyToMany, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), childWithManyToMany, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -226,9 +230,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, collectionOrig, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, collectionOrig, index++ );
-		if ( newChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
@@ -254,9 +258,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( newChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
@@ -272,8 +276,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( ChildEntity ) s.get( child.getClass(), ( ( ChildEntity ) child).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child).getId() );
 		}
 		Collection oldCollection = parent.getChildren();
 		parent.newChildren( createCollection() );
@@ -284,16 +288,19 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany()  && ( ( PersistentCollection ) getParents( child ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany childWithManyToMany = ( ChildWithBidirectionalManyToMany ) child;
+			if ( ( ( PersistentCollection ) childWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), childWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
 			// hmmm, the same parent was removed and re-added to the child's collection;
 			// should this be considered an update?
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
@@ -309,8 +316,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( oldChild instanceof ChildEntity ) {
-			oldChild = ( ChildEntity ) s.get( oldChild.getClass(), ( ( ChildEntity ) oldChild).getId() );
+		if ( oldChild instanceof Entity ) {
+			oldChild = ( Child ) s.get( oldChild.getClass(), ( ( Entity ) oldChild).getId() );
 		}
 		Collection oldCollection = parent.getChildren();
 		parent.newChildren( createCollection() );
@@ -321,16 +328,19 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
-		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany oldChildWithManyToMany = ( ChildWithBidirectionalManyToMany ) oldChild;
+			if ( ( ( PersistentCollection ) oldChildWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( oldChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), newChild, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
@@ -346,8 +356,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( Child ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		parent.removeChild( child );
 		tx.commit();
@@ -356,14 +366,17 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) parent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( child ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany childWithManyToMany = ( ChildWithBidirectionalManyToMany ) child;
+			if ( ( ( PersistentCollection ) childWithManyToMany.getParents( ) ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), childWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -377,8 +390,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( Child ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		parent.clearChildren();
 		tx.commit();
@@ -387,14 +400,17 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) parent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( child ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany childWithManyToMany = ( ChildWithBidirectionalManyToMany ) child;
+			if ( ( ( PersistentCollection ) childWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), childWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -415,8 +431,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( oldChild instanceof ChildEntity ) {
-			oldChild = ( Child ) s.get( oldChild.getClass(), ( ( ChildEntity ) oldChild ).getId() );
+		if ( oldChild instanceof Entity ) {
+			oldChild = ( Child ) s.get( oldChild.getClass(), ( ( Entity ) oldChild ).getId() );
 		}
 		parent.removeChild( oldChild );
 		tx.commit();
@@ -425,14 +441,17 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) parent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
 		}
-		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany oldChildWithManyToMany = ( ChildWithBidirectionalManyToMany ) oldChild;
+			if ( ( ( PersistentCollection ) oldChildWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		if ( oldChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -479,11 +498,11 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( Child ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		parent.removeChild( child );
-		if ( child instanceof ChildEntity ) {
+		if ( child instanceof Entity ) {
 			s.delete( child );
 		}
 		s.delete( parent );
@@ -491,14 +510,14 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		s.close();
 		int index = 0;
 		checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionRemoveListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionRemoveListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -513,8 +532,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
 		otherParent = ( ParentWithCollection ) s.get( otherParent.getClass(), otherParent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( Child ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		parent.removeChild( child );
 		otherParent.addChild( child );
@@ -524,8 +543,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) parent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		if ( ( ( PersistentCollection ) otherParent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), otherParent, index++ );
@@ -534,9 +553,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -551,8 +570,8 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
 		otherParent = ( ParentWithCollection ) s.get( otherParent.getClass(), otherParent.getId() );
-		if ( child instanceof ChildEntity ) {
-			child = ( ChildEntity ) s.get( child.getClass(), ( ( ChildEntity ) child ).getId() );
+		if ( child instanceof Entity ) {
+			child = ( Child ) s.get( child.getClass(), ( ( Entity ) child ).getId() );
 		}
 		otherParent.addAllChildren( parent.getChildren() );
 		parent.clearChildren();
@@ -565,16 +584,16 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) otherParent.getChildren() ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), otherParent, index++ );
 		}
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
 		checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
-		if ( child.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), child, index++ );
+		if ( child instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) child, index++ );
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -598,24 +617,24 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) otherCollectionOrig ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), otherParent, otherCollectionOrig, index++ );
 			otherChildOrig = ( Child ) otherCollectionOrig.iterator().next();
-			if ( otherChildOrig.hasBidirectionalManyToMany() ) {
-				checkResult( listeners, listeners.getInitializeCollectionListener(), otherChildOrig, index++ );
+			if ( otherChildOrig instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
 			}
 		}
 		checkResult( listeners, listeners.getInitializeCollectionListener(), parent, otherParent.getChildren(), index++ );
 		Child otherChild = ( Child ) otherParent.getChildren().iterator().next();
-		if ( otherChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), otherChild, index++ );
+		if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) otherChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
-		if ( otherChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherChild, index++ );
+		if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent, index++ );
@@ -649,24 +668,24 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) otherCollectionOrig ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), otherParent, otherCollectionOrig, index++ );
 			otherChildOrig = ( Child ) otherCollectionOrig.iterator().next();
-			if ( otherChildOrig.hasBidirectionalManyToMany() ) {
-				checkResult( listeners, listeners.getInitializeCollectionListener(), otherChildOrig, index++ );
+			if ( otherChildOrig instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
 			}
 		}
 		checkResult( listeners, listeners.getInitializeCollectionListener(), parent, otherOtherParent.getChildren(), index++ );
 		Child otherOtherChild = ( Child ) otherOtherParent.getChildren().iterator().next();
-		if ( otherOtherChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), otherOtherChild, index++ );
+		if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), ( ChildWithBidirectionalManyToMany ) otherOtherChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherOtherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherOtherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
-		if ( otherOtherChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherOtherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherOtherChild, index++ );
+		if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherChildOrig, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherOtherChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherOtherChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent, otherOtherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent, otherOtherParent.getChildren(), index++ );
@@ -677,9 +696,9 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherOtherParent.getChildren(), index++ );
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig, index++ );
-		if ( otherOtherChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherOtherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherOtherChild, index++ );
+		if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherOtherChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) otherOtherChild, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherOtherParent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherOtherParent, index++ );
@@ -721,11 +740,6 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 		return parent;
 	}
 
-	protected Collection getParents( Child child ) {
-		return ( ( child instanceof ChildWithBidirectionalManyToMany )
-						? ( ( ChildWithBidirectionalManyToMany ) child ).getParents()
-						: null );
-	}
 	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
 							 ParentWithCollection parent,
@@ -734,20 +748,28 @@ public abstract class AbstractCollectionEventTest extends FunctionalTestCase {
 	}
 	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
-							 Child child,
+							 ChildWithBidirectionalManyToMany child,
 							 int index) {
-		checkResult( listeners, listenerExpected, child, getParents( child ), index );
+		checkResult( listeners, listenerExpected, child, child.getParents(), index );
 	}
 
 	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
-							 Object ownerExpected,
+							 Entity ownerExpected,
 							 Collection collExpected,
 							 int index) {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,
-				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwner()
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerOrNull()
+		);
+		assertEquals(
+				ownerExpected.getId(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerIdOrNull()
+		);
+		assertEquals(
+				ownerExpected.getClass().getName(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
 		);
 		assertSame(
 				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()

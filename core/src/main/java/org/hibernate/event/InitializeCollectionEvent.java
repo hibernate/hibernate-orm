@@ -1,4 +1,4 @@
-//$Id: InitializeCollectionEvent.java 6929 2005-05-27 03:54:08Z oneovthafew $
+//$Id: InitializeCollectionEvent.java 14313 2008-02-06 07:46:52Z gbadner $
 package org.hibernate.event;
 
 import org.hibernate.collection.PersistentCollection;
@@ -11,7 +11,11 @@ import org.hibernate.collection.PersistentCollection;
  */
 public class InitializeCollectionEvent extends AbstractCollectionEvent {
 
-	public InitializeCollectionEvent(PersistentCollection collection, EventSource source) {
-		super(collection, source, getLoadedOwner( collection, source ) );
-	}	
+	public InitializeCollectionEvent(PersistentCollection collection, EventSource source ) {
+		super( getLoadedCollectionPersister( collection, source ),
+				collection,
+				source,
+				getLoadedOwnerOrNull( collection, source ),
+				getLoadedOwnerIdOrNull( collection, source ) );
+	}
 }

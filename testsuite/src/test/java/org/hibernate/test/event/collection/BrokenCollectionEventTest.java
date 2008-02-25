@@ -112,7 +112,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	/*
 	public void testUpdateDetachedParentOneChildToNullFailureExpected() {
 		CollectionListeners listeners = new CollectionListeners( getSessions() );
-		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		Child oldChild = ( Child ) parent.getChildren().iterator().next();
 		assertEquals( 1, parent.getChildren().size() );
 		listeners.clear();
@@ -126,9 +126,9 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		int index = 0;
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( oldChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
 		}
 		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
@@ -186,7 +186,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	/*
 	public void testUpdateParentOneChildToNullFailureExpected() {
 		CollectionListeners listeners = new CollectionListeners( getSessions() );
-		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		Child oldChild = ( Child ) parent.getChildren().iterator().next();
 		assertEquals( 1, parent.getChildren().size() );
 		listeners.clear();
@@ -204,14 +204,18 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
-		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		ChildWithBidirectionalManyToMany oldChildWithManyToMany = null;
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			oldChildWithManyToMany = ( ChildWithBidirectionalManyToMany ) oldChild;
+			if ( ( ( PersistentCollection ) oldChildWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
+			}
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( oldChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		if ( oldChildWithManyToMany != null ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChildWithManyToMany, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChildWithManyToMany, index++ );
 		}
 		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
@@ -221,7 +225,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 
 	public void testUpdateMergedParentOneChildToNullFailureExpected() {
 		CollectionListeners listeners = new CollectionListeners( getSessions() );
-		AbstractParentWithCollection parent = createParentWithOneChild( "parent", "child" );
+		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		assertEquals( 1, parent.getChildren().size() );
 		listeners.clear();
 		Session s = openSession();
@@ -233,14 +237,18 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		s.close();
 		int index = 0;
 		Child oldChild = ( Child ) oldCollection.iterator().next();
-		if ( oldChild.hasBidirectionalManyToMany() && ( ( PersistentCollection ) getParents( oldChild ) ).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChild, index++ );
+		ChildWithBidirectionalManyToMany oldChildWithManyToMany = null;
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			oldChildWithManyToMany = ( ChildWithBidirectionalManyToMany ) oldChild;
+			if ( ( ( PersistentCollection ) oldChildWithManyToMany.getParents() ).wasInitialized() ) {
+		}
+			checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
 		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( oldChild.hasBidirectionalManyToMany() ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChild, index++ );
+		if ( oldChildWithManyToMany != null ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), oldChildWithManyToMany, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), oldChildWithManyToMany, index++ );
 		}
 		// pre- and post- collection recreate events should be created when updating an entity with a "null" collection
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
@@ -282,33 +290,36 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		return parent;
 	}
 
-	private Collection getParents( Child child ) {
-		return ( ( child instanceof ChildWithBidirectionalManyToMany )
-						? ( ( ChildWithBidirectionalManyToMany ) child ).getParents()
-						: null );
-	}
-	private void checkResult(CollectionListeners listeners,
+	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
 							 ParentWithCollection parent,
 							 int index) {
 		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
 	}
-	private void checkResult(CollectionListeners listeners,
+	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
-							 Child child,
+							 ChildWithBidirectionalManyToMany child,
 							 int index) {
-		checkResult( listeners, listenerExpected, child, getParents( child ), index );
+		checkResult( listeners, listenerExpected, child, child.getParents(), index );
 	}
 
-	private void checkResult(CollectionListeners listeners,
+	protected void checkResult(CollectionListeners listeners,
 							 CollectionListeners.Listener listenerExpected,
-							 Object ownerExpected,
+							 Entity ownerExpected,
 							 Collection collExpected,
 							 int index) {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,
-				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwner()
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerOrNull()
+		);
+		assertEquals(
+				ownerExpected.getId(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerIdOrNull()
+		);
+		assertEquals(
+				ownerExpected.getClass().getName(),
+				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
 		);
 		assertSame(
 				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()

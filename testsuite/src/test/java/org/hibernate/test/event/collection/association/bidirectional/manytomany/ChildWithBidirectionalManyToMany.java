@@ -40,10 +40,6 @@ public class ChildWithBidirectionalManyToMany extends ChildEntity {
 		this.parents = parents;
 	}
 
-	public boolean hasBidirectionalManyToMany() {
-		return true;
-	}
-
 	public Collection getParents() {
 		return parents;
 	}

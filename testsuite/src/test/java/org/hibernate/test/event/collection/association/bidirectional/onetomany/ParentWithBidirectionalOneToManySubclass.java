@@ -19,29 +19,24 @@
  * this distribution; if not, write to: Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.event.collection;
+package org.hibernate.test.event.collection.association.bidirectional.onetomany;
+
+import java.util.Collection;
+import java.util.Iterator;
+
+import org.hibernate.test.event.collection.Child;
+import org.hibernate.test.event.collection.AbstractParentWithCollection;
 
 /**
  *
  * @author Gail Badner
  */
-public class ChildEntity extends ChildValue implements Entity {
-	private Long id;
-
-	public ChildEntity() {
-		super();
+public class ParentWithBidirectionalOneToManySubclass extends ParentWithBidirectionalOneToMany {
+	public ParentWithBidirectionalOneToManySubclass() {
 	}
 
-	public ChildEntity(String name) {
+	public ParentWithBidirectionalOneToManySubclass(String name) {
 		super( name );
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 }

@@ -45,7 +45,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		// the loaded owner will be set to null after the collection is removed,
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
-		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwner( collection );
+		this.affectedOwner = session.getPersistenceContext().getLoadedCollectionOwnerOrNull( collection );
 	}
 
 	/**
@@ -68,7 +68,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final SessionImplementor session)
 			throws CacheException {
 		super( persister, null, id, session );
-		if (affectedOwner == null) { throw new AssertionFailure("affectedOwner == null"); };
+		if (affectedOwner == null) { throw new AssertionFailure("affectedOwner == null"); }
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 	}
@@ -106,9 +106,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				.getPreCollectionRemoveEventListeners();
 		if (preListeners.length>0) {
 			PreCollectionRemoveEvent preEvent = new PreCollectionRemoveEvent(
-					getCollection(),
-					affectedOwner,
-					( EventSource )getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				preListeners[i].onPreRemoveCollection(preEvent);
 			}
@@ -120,9 +118,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				.getPostCollectionRemoveEventListeners();
 		if (postListeners.length>0) {
 			PostCollectionRemoveEvent postEvent = new PostCollectionRemoveEvent(
-					getCollection(),
-					affectedOwner,
-					( EventSource )getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
 			for ( int i = 0; i < postListeners.length; i++ ) {
 				postListeners[i].onPostRemoveCollection(postEvent);
 			}

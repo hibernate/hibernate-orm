@@ -82,7 +82,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				.getPreCollectionUpdateEventListeners();
 		if (preListeners.length > 0) {
 			PreCollectionUpdateEvent preEvent = new PreCollectionUpdateEvent(
-					getCollection(), ( EventSource ) getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession() );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				preListeners[i].onPreUpdateCollection( preEvent );
 			}
@@ -94,7 +94,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				.getPostCollectionUpdateEventListeners();
 		if (postListeners.length > 0) {
 			PostCollectionUpdateEvent postEvent = new PostCollectionUpdateEvent(
-					getCollection(), ( EventSource ) getSession() );
+					getPersister(), getCollection(), ( EventSource ) getSession() );
 			for ( int i = 0; i < postListeners.length; i++ ) {
 				postListeners[i].onPostUpdateCollection( postEvent );
 			}

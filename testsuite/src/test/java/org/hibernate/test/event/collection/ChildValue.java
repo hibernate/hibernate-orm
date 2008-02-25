@@ -35,10 +35,6 @@ public class ChildValue implements Child {
 		this.name = name;
 	}
 
-	public boolean hasBidirectionalManyToMany() {
-		return false;
-	}
-
 	public String getName() {
 		return name;
 	}

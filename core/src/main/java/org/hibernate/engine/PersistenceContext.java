@@ -1,4 +1,4 @@
-//$Id: PersistenceContext.java 11319 2007-03-20 03:12:56Z steve.ebersole@jboss.com $
+//$Id: PersistenceContext.java 14312 2008-02-05 23:55:35Z gbadner $
 package org.hibernate.engine;
 
 import java.io.Serializable;
@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public interface PersistenceContext {
 	
 	public boolean isStateless();
-	
+
 	/**
 	 * Get the session to which this persistence context is bound.
 	 *
@@ -89,7 +89,7 @@ public interface PersistenceContext {
 	 * corresponding row.
 	 */
 	public Object[] getNaturalIdSnapshot(Serializable id, EntityPersister persister)
-			throws HibernateException;
+	throws HibernateException;
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
@@ -252,8 +252,20 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner if its entity ID is available from the collection's loaded key
+	 * and the owner entity is in the persistence context; otherwise, returns null
 	 */
-	Object getLoadedCollectionOwner(PersistentCollection collection);
+	Object getLoadedCollectionOwnerOrNull(PersistentCollection collection);
+
+	/**
+	 * Get the ID for the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
+	 */
+	public Serializable getLoadedCollectionOwnerIdOrNull(PersistentCollection collection);
 
 	/**
 	 * add a collection we just loaded up (still needs initializing)

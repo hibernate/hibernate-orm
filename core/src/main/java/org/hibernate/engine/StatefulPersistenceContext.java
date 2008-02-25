@@ -680,13 +680,49 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	/**
 	 * Get the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner, if its entity ID is available from the collection's loaded key
+	 * and the owner entity is in the persistence context; otherwise, returns null
 	 */
-	public Object getLoadedCollectionOwner(PersistentCollection collection) {
-		CollectionEntry ce = getCollectionEntry(collection);
-		if ( ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
+	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
+		CollectionEntry ce = getCollectionEntry( collection );
+		if ( ce.getLoadedPersister() == null ) {
+			return null; // early exit...
+		}
+		Object loadedOwner = null;
+		// TODO: an alternative is to check if the owner has changed; if it hasn't then
+		// return collection.getOwner()
+		Serializable entityId = getLoadedCollectionOwnerIdOrNull( ce );
+		if ( entityId != null ) {
+			loadedOwner = getCollectionOwner( entityId, ce.getLoadedPersister() );
+		}
+		return loadedOwner;
+	}
+
+	/**
+	 * Get the ID for the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param collection The persistent collection
+	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
+	 */
+	public Serializable getLoadedCollectionOwnerIdOrNull(PersistentCollection collection) {
+		return getLoadedCollectionOwnerIdOrNull( getCollectionEntry( collection ) );
+	}
+
+	/**
+	 * Get the ID for the entity that owned this persistent collection when it was loaded
+	 *
+	 * @param ce The collection entry
+	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
+	 */
+	private Serializable getLoadedCollectionOwnerIdOrNull(CollectionEntry ce) {
+		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
-		return getCollectionOwner(ce.getLoadedKey(), ce.getLoadedPersister());
+		// TODO: an alternative is to check if the owner has changed; if it hasn't then
+		// get the ID from collection.getOwner()
+		return ce.getLoadedPersister().getCollectionType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
 	}
 
 	/**

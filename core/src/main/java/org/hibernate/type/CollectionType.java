@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -26,6 +27,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -260,6 +262,13 @@ public abstract class CollectionType extends AbstractType implements Association
 		return getPersister( session ).getOwnerEntityPersister().isVersioned();
 	}
 
+	/**
+	 * Get our underlying collection persister (using the session to access the
+	 * factory).
+	 *
+	 * @param session The session from which the request is originating.
+	 * @return The underlying collection persister
+	 */
 	private CollectionPersister getPersister(SessionImplementor session) {
 		return session.getFactory().getCollectionPersister( role );
 	}
@@ -335,6 +344,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			}
 
 			// NOTE VERY HACKISH WORKAROUND!!
+			// TODO: Fix this so it will work for non-POJO entity mode
 			Type keyType = getPersister( session ).getKeyType();
 			if ( !keyType.getReturnedClass().isInstance( id ) ) {
 				id = (Serializable) keyType.semiResolve(
@@ -346,6 +356,37 @@ public abstract class CollectionType extends AbstractType implements Association
 
 			return (Serializable) id;
 		}
+	}
+
+	/**
+	 * Get the id value from the owning entity key, usually the same as the key, but might be some
+	 * other property, in the case of property-ref
+	 *
+	 * @param key The collection owner key
+	 * @param session The session from which the request is originating.
+	 * @return The collection owner's id, if it can be obtained from the key;
+	 * otherwise, null is returned
+	 */
+	public Serializable getIdOfOwnerOrNull(Serializable key, SessionImplementor session) {
+		Serializable ownerId = null;
+		if ( foreignKeyPropertyName == null ) {
+			ownerId = key;
+		}
+		else {
+			Type keyType = getPersister( session ).getKeyType();
+			EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
+			// TODO: Fix this so it will work for non-POJO entity mode
+			Class ownerMappedClass = ownerPersister.getMappedClass( session.getEntityMode() );
+			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&
+					keyType.getReturnedClass().isInstance( key ) ) {
+				// the key is the owning entity itself, so get the ID from the key
+				ownerId = ownerPersister.getIdentifier( key, session.getEntityMode() );
+			}
+			else {
+				// TODO: check if key contains the owner ID
+			}
+		}
+		return ownerId;
 	}
 
 	public Object hydrate(ResultSet rs, String[] name, SessionImplementor session, Object owner) {

@@ -34,10 +34,10 @@ in JNDI.
 <!ATTLIST collection-cache usage (read-only|read-write|nonstrict-read-write|transactional) #REQUIRED>
 
 <!ELEMENT event (listener*)>
-<!ATTLIST event type (auto-flush|merge|create|create-onflush|delete|dirty-check|evict|flush|flush-entity|load|load-collection|lock|refresh|replicate|save-update|save|update|pre-load|pre-update|pre-insert|pre-delete|post-load|post-update|post-insert|post-delete|post-commit-update|post-commit-insert|post-commit-delete) #REQUIRED>
+<!ATTLIST event type (auto-flush|merge|create|create-onflush|delete|dirty-check|evict|flush|flush-entity|load|load-collection|lock|refresh|replicate|save-update|save|update|pre-load|pre-update|pre-insert|pre-delete|pre-collection-recreate|pre-collection-remove|pre-collection-update|post-load|post-update|post-insert|post-delete|post-collection-recreate|post-collection-remove|post-collection-update|post-commit-update|post-commit-insert|post-commit-delete) #REQUIRED>
 
 <!ELEMENT listener EMPTY>
-<!ATTLIST listener type (auto-flush|merge|create|create-onflush|delete|dirty-check|evict|flush|flush-entity|load|load-collection|lock|refresh|replicate|save-update|save|update|pre-load|pre-update|pre-insert|pre-delete|post-load|post-update|post-insert|post-delete|post-commit-update|post-commit-insert|post-commit-delete) #IMPLIED>
+<!ATTLIST listener type (auto-flush|merge|create|create-onflush|delete|dirty-check|evict|flush|flush-entity|load|load-collection|lock|refresh|replicate|save-update|save|update|pre-load|pre-update|pre-insert|pre-delete|pre-collection-recreate|pre-collection-remove|pre-collection-update|post-load|post-update|post-insert|post-delete|post-collection-recreate|post-collection-remove|post-collection-update|post-commit-update|post-commit-insert|post-commit-delete) #IMPLIED>
 <!ATTLIST listener class CDATA #REQUIRED>
 
 <!ELEMENT session-factory (property*, mapping*, (class-cache|collection-cache)*, event*, listener*)>

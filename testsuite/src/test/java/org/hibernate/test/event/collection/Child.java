@@ -27,8 +27,6 @@ package org.hibernate.test.event.collection;
  */
 public interface Child {
 
-	boolean hasBidirectionalManyToMany();
-
 	String getName();
 
 	void setName(String name);

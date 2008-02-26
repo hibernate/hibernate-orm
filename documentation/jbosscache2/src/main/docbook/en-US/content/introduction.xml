@@ -65,6 +65,8 @@
     <sect1 id="introduction-requirements" revision="1">
        <title>Requirements</title>
        
+       <sect2 id="introduction-requirements-dependencies" revision="1">
+       <title>Dependencies</title>
        <para>
         Second level caching with JBoss Cache 2 requires the use of JBoss
         Cache 2.1.0 or later. The core JBoss Cache project is used; the
@@ -104,7 +106,44 @@
          and tell the <literal>SessionFactory</literal> to use them; see 
          <xref linkend="sessionfactory"/> for details.
        </para>
+       </sect2>
        
+       <sect2 id="introduction-requirements-transactions" revision="1">
+       <title>JTA Transactional Support</title>
+       <para>
+        JBoss Cache requires integration with a JTA 
+        <literal>TransactionManager</literal> in order to meet the requirements
+        of the second level caching use case.  This means your Hibernate
+        application must be configured to use JTA:
+       </para> 
+        <itemizedlist>
+          <listitem>
+            <para>
+            You must configure a <literal>hibernate.transaction.manager_lookup_class</literal>.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+            You must configure a <literal>hibernate.transaction.factory_class</literal>, 
+            specifying a transaction factory that supports JTA. In practice, this means
+            <literal>org.hibernate.transaction.JTATransactionFactory</literal> if
+            you are using JTA directly, or <literal>org.hibernate.transaction.CMTTransactionFactory</literal>
+            if you are accessing Hibernate via a CMT session bean.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+            Finally, make sure <literal>hibernate.current_session_context_class</literal>
+            is either unset (backwards compatiblity), or set to <literal>"jta"</literal>.
+            </para>
+          </listitem>
+        </itemizedlist>
+        
+       <para>
+        See the <emphasis>Hibernate Reference Documentation</emphasis> for
+        an in-depth discussion of using Hibernate with JTA
+       </para>
+       </sect2>
     </sect1>
 
     <sect1 id="introduction-configuration" revision="1">

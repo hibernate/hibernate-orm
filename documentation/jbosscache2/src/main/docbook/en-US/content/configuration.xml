@@ -37,10 +37,19 @@
             <title>Basics</title>
             
             <para>
-              There are four basic steps to configuring the 
+              There are five basic steps to configuring the 
               <literal>SessionFactory</literal>:
               
             <itemizedlist>
+            
+                <listitem>
+                  <para>
+                    Make sure your Hibernate is configured to use JTA transactions.
+                    See <xref linkend="introduction-requirements-transactions"/>
+                    for details.
+                  </para>
+                </listitem>
+                
                 <listitem>
                 <para>
                    Tell Hibernate you whether to enable caching of entities and 

@@ -89,15 +89,16 @@ public class DataVersionAdapter implements DataVersion {
             log.trace("skipping lock checks...");
             return false;
         } else if (dataVersion instanceof DefaultDataVersion) {
-            if (((DefaultDataVersion) dataVersion).getRawVersion() == 0) {
-                // JBC put a version in the node when it created it as
-                // part of building a larger tree
-                return true;
-            } else {
-                log.error("Cannot compare to " + dataVersion);
-                return false;
+            // JBC put a version in the node when it created as part of
+            // some internal operation. We are always newer, but if
+            // the JBC version is > 1 something odd has happened
+            if (((DefaultDataVersion) dataVersion).getRawVersion() > 1) {
+                log.warn("Unexpected comparison to " + dataVersion +
+                         " -- we are " + toString());
             }
+            return true;
         }
+        
         DataVersionAdapter other = (DataVersionAdapter) dataVersion;
         if (other.previousVersion == null) {
             log.warn("Unexpected optimistic lock check on inserting data");

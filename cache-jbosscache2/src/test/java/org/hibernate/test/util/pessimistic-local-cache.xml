@@ -89,10 +89,9 @@
                 <VERIFY_SUSPECT timeout="1500"/>
                 <pbcast.NAKACK gc_lag="50" retransmit_timeout="600,1200,2400,4800"/>
                 <pbcast.STABLE desired_avg_gossip="20000"/>
-                <UNICAST timeout="600,1200,2400" window_size="100" min_threshold="10"/>
+                <UNICAST timeout="600,1200,2400" min_threshold="10"/>
                 <FRAG frag_size="8192"/>
-                <pbcast.GMS join_timeout="5000" join_retry_timeout="2000"
-                    shun="true" print_local_addr="true"/>
+                <pbcast.GMS join_timeout="5000" shun="true" print_local_addr="true"/>
                 <pbcast.STATE_TRANSFER/>
             </config>
         </attribute>

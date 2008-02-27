@@ -56,6 +56,12 @@ public class OptimisticBulkOperationsTest
       return "optimistic-entity";
    }
 
+   /**
+    * FIXME remove when JBC release with JBCACHE-1298 fix included is
+    * integrated.
+    * 
+    * @throws Exception
+    */
    public void testBulkOperationsFailureExpected() throws Exception
    {
       super.testBulkOperations();

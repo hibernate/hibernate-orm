@@ -68,17 +68,6 @@ extends DualNodeTestCaseBase
    {
       super(name);
    }
-   
-   
-   
-   @Override
-   public void configure(Configuration cfg)
-   {
-      cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
-      super.configure(cfg);
-   }
-
-
 
    @Override
    protected Class<? extends RegionFactory> getCacheRegionFactory()

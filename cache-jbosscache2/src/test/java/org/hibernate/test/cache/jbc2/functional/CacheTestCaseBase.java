@@ -69,7 +69,10 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
         cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
         cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
         cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
-//        cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+        
+        Class transactionFactory = getTransactionFactoryClass();
+        if (transactionFactory != null)
+            cfg.setProperty( Environment.TRANSACTION_STRATEGY, transactionFactory.getName() );
         
         configureCacheFactory(cfg);
     }
@@ -95,6 +98,10 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     
     protected Class getTransactionManagerLookupClass() {
         return org.hibernate.test.tm.TransactionManagerLookupImpl.class;
+    }
+    
+    protected Class getTransactionFactoryClass() {
+        return null;
     }
 
     @Override

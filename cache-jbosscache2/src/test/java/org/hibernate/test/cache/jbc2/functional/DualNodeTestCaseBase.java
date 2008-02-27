@@ -26,6 +26,7 @@ import org.hibernate.test.cache.jbc2.functional.util.DualNodeConnectionProviderI
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTransactionManagerLookup;
 import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
+import org.hibernate.transaction.CMTTransactionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +95,11 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    @Override
    protected Class getTransactionManagerLookupClass() {
        return DualNodeTransactionManagerLookup.class;
+   }   
+   
+   @Override
+   protected Class getTransactionFactoryClass() {
+       return CMTTransactionFactory.class;
    }
 
    @Override

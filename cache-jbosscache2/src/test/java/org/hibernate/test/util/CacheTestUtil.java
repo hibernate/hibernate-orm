@@ -113,12 +113,6 @@ public class CacheTestUtil {
         factory.stop();
         testSupport.unregisterFactory(factory);
     }
-    
-    /**
-     * Prevent instantiation. 
-     */
-    private CacheTestUtil() {        
-    }
 
    /**
      * Supports easy creation of a TestSuite where a subclass' "FailureExpected"
@@ -157,6 +151,12 @@ public class CacheTestUtil {
        }
        
        return result;
+    }
+    
+    /**
+     * Prevent instantiation. 
+     */
+    private CacheTestUtil() {        
     }
 
 }

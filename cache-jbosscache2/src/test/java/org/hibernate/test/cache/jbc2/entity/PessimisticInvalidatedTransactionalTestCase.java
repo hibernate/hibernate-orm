@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.cache.jbc2.entity;
 
+import org.hibernate.test.util.CacheTestUtil;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -44,7 +46,7 @@ public class PessimisticInvalidatedTransactionalTestCase extends AbstractTransac
     }
     
     public static Test suite() throws Exception {
-        TestSuite suite = createFailureExpectedSuite(PessimisticInvalidatedTransactionalTestCase.class);
+        TestSuite suite = CacheTestUtil.createFailureExpectedSuite(PessimisticInvalidatedTransactionalTestCase.class);
         return getTestSetup(suite, "pessimistic-entity");
     }
     

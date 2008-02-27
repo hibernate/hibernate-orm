@@ -23,13 +23,7 @@
  */
 package org.hibernate.test.cache.jbc2;
 
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.junit.UnitTestCase;
@@ -101,45 +95,5 @@ public abstract class AbstractJBossCacheTestCase extends UnitTestCase {
     
     protected void avoidConcurrentFlush() {
         testSupport.avoidConcurrentFlush();
-    }
-
-    
-    /**
-     * Supports easy creation of a TestSuite where a subclass' "FailureExpected"
-     * version of a base test is included in the suite, while the base test
-     * is excluded.  E.g. test class FooTestCase includes method testBar(), while test
-     * class SubFooTestCase extends FooTestCase includes method testBarFailureExcluded().
-     * Passing SubFooTestCase.class to this method will return a suite that
-     * does not include testBar().
-     * 
-     * FIXME Move this to UnitTestCase
-     */
-    public static TestSuite createFailureExpectedSuite(Class testClass) {
-       
-       TestSuite allTests = new TestSuite(testClass);
-       Set failureExpected = new HashSet();
-       Enumeration tests = allTests.tests();
-       while (tests.hasMoreElements()) {
-          Test t = (Test) tests.nextElement();
-          if (t instanceof TestCase) {
-             String name = ((TestCase) t).getName();
-             if (name.endsWith("FailureExpected"))
-                failureExpected.add(name);
-          }       
-       }
-       
-       TestSuite result = new TestSuite();
-       tests = allTests.tests();
-       while (tests.hasMoreElements()) {
-          Test t = (Test) tests.nextElement();
-          if (t instanceof TestCase) {
-             String name = ((TestCase) t).getName();
-             if (!failureExpected.contains(name + "FailureExpected")) {
-                result.addTest(t);
-             }
-          }       
-       }
-       
-       return result;
     }
 }

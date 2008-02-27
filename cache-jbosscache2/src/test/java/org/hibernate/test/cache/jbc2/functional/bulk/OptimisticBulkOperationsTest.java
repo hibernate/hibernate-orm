@@ -22,6 +22,11 @@
 
 package org.hibernate.test.cache.jbc2.functional.bulk;
 
+import junit.framework.Test;
+
+import org.hibernate.test.cache.jbc2.collection.OptimisticInvalidatedTransactionalTestCase;
+import org.hibernate.test.util.CacheTestUtil;
+
 
 /**
  * Optimistic version of BulkOperationsUnitTestCase.
@@ -32,6 +37,10 @@ package org.hibernate.test.cache.jbc2.functional.bulk;
 public class OptimisticBulkOperationsTest 
    extends PessimisticBulkOperationsTest
 {
+   
+   public static Test suite() throws Exception {
+       return CacheTestUtil.createFailureExpectedSuite(OptimisticBulkOperationsTest.class); 
+   }
 
    /**
     * @param name

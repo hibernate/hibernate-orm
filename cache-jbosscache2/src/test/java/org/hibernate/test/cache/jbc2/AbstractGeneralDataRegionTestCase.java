@@ -212,42 +212,35 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         
         localRegion.evictAll();
         
+        // This should re-establish the region root node in the optimistic case
+        assertNull(localRegion.get(KEY));
+        
         regionRoot = localCache.getRoot().getChild(regionFqn);
-        assertFalse(regionRoot == null);
-        assertEquals(0, regionRoot.getChildrenNames().size());
-        assertTrue(regionRoot.isResident());
-
-        if (CacheHelper.isClusteredInvalidation(remoteCache)) {
-           // With invalidation, a node that removes the region root cannot reestablish
-           // it on remote nodes, since the only message the propagates is "invalidate".
-           // So, we have to reestablish it ourselves
-           
-           // First, do a get to help test whether a get messes up the optimistic version
-           String msg = "Known issue JBCACHE-1251 -- problem reestablishing invalidated region root";
-           try {
-              assertEquals(null, remoteRegion.get(KEY));
-           }
-           catch (CacheException ce) {
-              log.error(msg, ce);
-              fail(msg + " -- cause: " + ce);
-           }
-           remoteRegion.put(KEY, VALUE1);
-           assertEquals(msg, VALUE1, remoteRegion.get(KEY));
-        }
-    
-        regionRoot = remoteCache.getRoot().getChild(regionFqn);
-        assertFalse(regionRoot == null);
-        if (invalidation) {
-            // JBC seems broken: see http://www.jboss.com/index.html?module=bb&op=viewtopic&t=121408
-            // FIXME   replace with the following when JBCACHE-1199 and JBCACHE-1200 are done:
-            //assertFalse(regionRoot.isValid());
-            checkNodeIsEmpty(regionRoot);
+        if (optimistic) {
+           assertFalse(regionRoot == null);
+           assertEquals(0, regionRoot.getChildrenNames().size());
+           assertTrue(regionRoot.isValid());
+           assertTrue(regionRoot.isResident());
         }
         else {
-            // Same assertion, just different assertion msg
+            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
+        }
+
+        // Re-establishing the region root on the local node doesn't 
+        // propagate it to other nodes. Do a get on the remote node to re-establish
+        // This only adds a node in the case of optimistic locking
+        assertEquals(null, remoteRegion.get(KEY));
+        
+        regionRoot = remoteCache.getRoot().getChild(regionFqn);
+        if (optimistic) {
+            assertFalse(regionRoot == null);
             assertEquals(0, regionRoot.getChildrenNames().size());
-        }        
-        assertTrue(regionRoot.isResident());
+            assertTrue(regionRoot.isValid());
+            assertTrue(regionRoot.isResident());
+        }
+        else {
+            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
+        }
         
         assertEquals("local is clean", null, localRegion.get(KEY));
         assertEquals("remote is clean", null, remoteRegion.get(KEY));

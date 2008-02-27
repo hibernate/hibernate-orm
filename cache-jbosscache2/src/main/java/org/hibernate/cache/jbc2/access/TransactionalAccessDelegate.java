@@ -56,16 +56,23 @@ public class TransactionalAccessDelegate {
     }
 
     public Object get(Object key, long txTimestamp) throws CacheException {
+       
+        region.ensureRegionRootExists();
+        
         return CacheHelper.get(cache, regionFqn, key);
     }
 
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+       
+        region.ensureRegionRootExists();
 
         return CacheHelper.putForExternalRead(cache, regionFqn, key, value);
     }
 
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
+       
+        region.ensureRegionRootExists();
 
         // We ignore minimalPutOverride. JBossCache putForExternalRead is
         // already about as minimal as we can get; it will promptly return
@@ -88,6 +95,8 @@ public class TransactionalAccessDelegate {
     }
 
     public boolean insert(Object key, Object value, Object version) throws CacheException {
+       
+        region.ensureRegionRootExists();
 
         CacheHelper.put(cache, regionFqn, key, value);
         return true;
@@ -99,6 +108,8 @@ public class TransactionalAccessDelegate {
 
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
+       
+        region.ensureRegionRootExists();
 
         CacheHelper.put(cache, regionFqn, key, value);
         return true;
@@ -110,6 +121,8 @@ public class TransactionalAccessDelegate {
     }
 
     public void remove(Object key) throws CacheException {
+       
+        region.ensureRegionRootExists();
 
         CacheHelper.remove(cache, regionFqn, key);
     }
@@ -119,6 +132,9 @@ public class TransactionalAccessDelegate {
     }
 
     public void evict(Object key) throws CacheException {
+       
+        region.ensureRegionRootExists();
+        
         CacheHelper.remove(cache, regionFqn, key);
     }
 
@@ -127,8 +143,6 @@ public class TransactionalAccessDelegate {
     }
     
     private void evictOrRemoveAll() throws CacheException {
-        CacheHelper.removeAll(cache, regionFqn);
-        // Restore the region root node
-        CacheHelper.addNode(cache, regionFqn, false, true, null);        
+        CacheHelper.removeAll(cache, regionFqn);        
     }
 }

@@ -169,9 +169,6 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
        
         Option opt = NonLockingDataVersion.getInvocationOption();
         CacheHelper.removeAll(cache, regionFqn, opt);
-        
-        // Restablish the region root node with a non-locking data version
-        CacheHelper.addNode(cache, regionFqn, false, true, NonLockingDataVersion.INSTANCE);
     }
 
 }

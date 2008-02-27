@@ -93,8 +93,6 @@ public class ClusteredConcurrentTimestampsRegionImpl extends TransactionalDataRe
     public void evictAll() throws CacheException {
         Option opt = getNonLockingDataVersionOption(true);
         CacheHelper.removeAll(getCacheInstance(), getRegionFqn(), opt);
-        // Restore the region root node
-        CacheHelper.addNode(getCacheInstance(), getRegionFqn(), false, true, null);   
     }
 
     public Object get(Object key) throws CacheException {

@@ -460,8 +460,6 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         // Wait for async propagation
         sleep(250);
         
-
-        
         if (isUsingOptimisticLocking()) {
             regionRoot = localCache.getRoot().getChild(regionFqn);
             assertEquals(NonLockingDataVersion.class, ((NodeSPI) regionRoot).getVersion().getClass());
@@ -474,43 +472,54 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         else
             localAccessStrategy.removeAll();
         
+        // This should re-establish the region root node in the optimistic case
+        assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
+        
         regionRoot = localCache.getRoot().getChild(regionFqn);
-        assertFalse(regionRoot == null);
-        assertEquals(0, getValidChildrenCount(regionRoot));
-        assertTrue(regionRoot.isResident());
-
-        if (isUsingInvalidation()) {
-           // With invalidation, a node that removes the region root cannot reestablish
-           // it on remote nodes, since the only message the propagates is "invalidate".
-           // So, we have to reestablish it ourselves
-           
-           // First, do a get to help test whether a get messes up the optimistic version
-           String msg = "Known issue JBCACHE-1251 -- problem reestablishing invalidated region root";
-           try {
-              assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-           }
-           catch (CacheException ce) {
-              log.error(msg, ce);
-              fail(msg + " -- cause: " + ce);
-           }
-           remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-           assertEquals(msg, VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-        }
-
-        regionRoot = remoteCache.getRoot().getChild(regionFqn);
-        assertFalse(regionRoot == null);
-        if (isUsingInvalidation()) {
-            // Region root should have 1 child -- the one we added above
-            assertEquals(1, getValidChildrenCount(regionRoot));
+        if (isUsingOptimisticLocking()) {
+            assertFalse(regionRoot == null);
+            assertEquals(0, getValidChildrenCount(regionRoot));
+            assertTrue(regionRoot.isValid());
+            assertTrue(regionRoot.isResident());
         }
         else {
-            // Same assertion, just different assertion msg
-            assertEquals(0, getValidChildrenCount(regionRoot));
+            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
+        }
+
+        // Re-establishing the region root on the local node doesn't 
+        // propagate it to other nodes. Do a get on the remote node to re-establish
+        // This only adds a node in the case of optimistic locking
+        assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+
+        regionRoot = remoteCache.getRoot().getChild(regionFqn);
+        if (isUsingOptimisticLocking()) {
+           assertFalse(regionRoot == null);
+           assertTrue(regionRoot.isValid());
+           assertTrue(regionRoot.isResident());
+           // Not invalidation, so we didn't insert a child above
+           assertEquals(0, getValidChildrenCount(regionRoot));
         }        
-        assertTrue(regionRoot.isResident());
+        else {
+            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
+        }
         
-        assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
-        assertEquals("remote is correct", (isUsingInvalidation() ? VALUE1 : null), remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+        // Test whether the get above messes up the optimistic version
+        remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+        assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+        
+        // Revalidate the region root
+        regionRoot = remoteCache.getRoot().getChild(regionFqn);
+        assertFalse(regionRoot == null);
+        assertTrue(regionRoot.isValid());
+        assertTrue(regionRoot.isResident());
+        // Region root should have 1 child -- the one we added above
+        assertEquals(1, getValidChildrenCount(regionRoot));
+        
+        // Wait for async propagation of the putFromLoad
+        sleep(250);
+        
+        assertEquals("local is correct", (isUsingInvalidation() ? null : VALUE1), localAccessStrategy.get(KEY, System.currentTimeMillis()));
+        assertEquals("remote is correct", VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
     }
     
     private int getValidChildrenCount(Node node) {

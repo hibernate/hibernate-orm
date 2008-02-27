@@ -31,6 +31,10 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.Region;
+import org.hibernate.cache.jbc2.util.CacheHelper;
+import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
@@ -39,19 +43,9 @@ import org.jboss.cache.config.Configuration;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.config.Configuration.NodeLockingScheme;
 import org.jboss.cache.notifications.annotation.CacheListener;
-import org.jboss.cache.notifications.annotation.NodeCreated;
-import org.jboss.cache.notifications.annotation.NodeRemoved;
-import org.jboss.cache.notifications.event.NodeCreatedEvent;
-import org.jboss.cache.notifications.event.NodeRemovedEvent;
 import org.jboss.cache.optimistic.DataVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.jbc2.builder.JndiMultiplexingCacheInstanceManager;
-import org.hibernate.cache.jbc2.util.CacheHelper;
-import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
 
 /**
  * General support for writing {@link Region} implementations for JBoss Cache
@@ -74,7 +68,7 @@ public abstract class BasicRegionAdapter implements Region {
     protected final Logger log;
     protected final Object regionRootMutex = new Object();
 
-    protected RegionRootListener listener;
+//    protected RegionRootListener listener;
     
     public BasicRegionAdapter(Cache jbcCache, String regionName, String regionPrefix) {
         this.jbcCache = jbcCache;
@@ -103,17 +97,31 @@ public abstract class BasicRegionAdapter implements Region {
                 }
             }
             
-            // If we are using replication, we may remove the root node
-            // and then need to re-add it. In that case, the fact
-            // that it is resident will not replicate, so use a listener
-            // to set it as resident
-            if (CacheHelper.isClusteredReplication(cfg.getCacheMode()) 
-                  || CacheHelper.isClusteredInvalidation(cfg.getCacheMode())) {
-                listener = new RegionRootListener();
-                jbcCache.addCacheListener(listener);
-            }
+//            // If we are using replication, we may remove the root node
+//            // and then need to re-add it. In that case, the fact
+//            // that it is resident will not replicate, so use a listener
+//            // to set it as resident
+//            if (CacheHelper.isClusteredReplication(cfg.getCacheMode()) 
+//                  || CacheHelper.isClusteredInvalidation(cfg.getCacheMode())) {
+//                listener = new RegionRootListener();
+//                jbcCache.addCacheListener(listener);
+//            }
             
-            establishRegionRootNode();
+            regionRoot = jbcCache.getRoot().getChild( regionFqn );
+            if (regionRoot == null || !regionRoot.isValid()) {
+               // Establish the region root node with a non-locking data version
+               DataVersion version = optimistic ? NonLockingDataVersion.INSTANCE : null;
+               regionRoot = CacheHelper.addNode(jbcCache, regionFqn, true, true, version);
+            }
+            else if (optimistic && regionRoot instanceof NodeSPI) {
+                // FIXME Hacky workaround to JBCACHE-1202
+                if ( !( ( ( NodeSPI ) regionRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
+                    ((NodeSPI) regionRoot).setVersion(NonLockingDataVersion.INSTANCE);
+                }
+            }
+            if (!regionRoot.isResident()) {
+               regionRoot.setResident(true);
+            }
         }
         catch (Exception e) {
             throw new CacheException(e.getMessage(), e);
@@ -123,30 +131,48 @@ public abstract class BasicRegionAdapter implements Region {
     private void establishRegionRootNode()
     {
         synchronized (regionRootMutex) {
-            if (regionRoot != null && regionRoot.isValid())
+            // If we've been blocking for the mutex, perhaps another
+            // thread has already reestablished the root.
+            // In case the node was reestablised via replication, confirm it's 
+            // marked "resident" (a status which doesn't replicate)
+            if (regionRoot != null && regionRoot.isValid()) {
                 return;
+            }
+            
+            // For pessimistic locking, we just want to toss out our ref
+            // to any old invalid root node and get the latest (may be null)            
+            if (!optimistic) {
+               regionRoot = jbcCache.getRoot().getChild( regionFqn );
+               return;
+            }
+            
+            // The rest only matters for optimistic locking, where we
+            // need to establish the proper data version on the region root
+            
             // Don't hold a transactional lock for this 
             Transaction tx = suspend();
+            Node newRoot = null;
             try {
                  // Make sure the root node for the region exists and 
                  // has a DataVersion that never complains
-                 regionRoot = jbcCache.getRoot().getChild( regionFqn );
-                 if (regionRoot == null) {                
+                 newRoot = jbcCache.getRoot().getChild( regionFqn );
+                 if (newRoot == null || !newRoot.isValid()) {                
                      // Establish the region root node with a non-locking data version
                      DataVersion version = optimistic ? NonLockingDataVersion.INSTANCE : null;
-                     regionRoot = CacheHelper.addNode(jbcCache, regionFqn, true, true, version);    
+                     newRoot = CacheHelper.addNode(jbcCache, regionFqn, true, true, version);    
                  }
-                 else if (optimistic && regionRoot instanceof NodeSPI) {
+                 else if (newRoot instanceof NodeSPI) {
                      // FIXME Hacky workaround to JBCACHE-1202
-                     if ( !( ( ( NodeSPI ) regionRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
-                          ((NodeSPI) regionRoot).setVersion(NonLockingDataVersion.INSTANCE);
+                     if ( !( ( ( NodeSPI ) newRoot ).getVersion() instanceof NonLockingDataVersion ) ) {
+                          ((NodeSPI) newRoot).setVersion(NonLockingDataVersion.INSTANCE);
                      }
                  }
-                // Never evict this node
-                regionRoot.setResident(true);
+                 // Never evict this node
+                 newRoot.setResident(true);
             }
             finally {
                 resume(tx);
+                regionRoot = newRoot;
             }
         }
     }
@@ -164,20 +190,22 @@ public abstract class BasicRegionAdapter implements Region {
     }
     
     /**
-     * If the cache is configured for optimistic locking, checks for the 
-     * validity of the root cache node for this region,
-     * creating a new one if it does not exist or is invalid.  Suspends any 
+     * Checks for the validity of the root cache node for this region,
+     * creating a new one if it does not exist or is invalid, and also
+     * ensuring that the root node is marked as resident.  Suspends any 
      * transaction while doing this to ensure no transactional locks are held 
      * on the region root.
-     * 
-     * This is only needed for optimistic locking, as with optimistic the
-     * region root node has a special version that must be established.
      * 
      * TODO remove this once JBCACHE-1250 is resolved.
      */
     public void ensureRegionRootExists() {
-       if (optimistic && (regionRoot == null || !regionRoot.isValid()))
+       
+       if (regionRoot == null || !regionRoot.isValid())
           establishRegionRootNode();
+       
+       // Fix up the resident flag
+       if (regionRoot != null && regionRoot.isValid() && !regionRoot.isResident())
+          regionRoot.setResident(true);
     }
 
     public void destroy() throws CacheException {
@@ -202,10 +230,10 @@ public abstract class BasicRegionAdapter implements Region {
         } catch (Exception e) {
             throw new CacheException(e);
         }
-        finally {
-            if (listener != null)
-                jbcCache.removeCacheListener(listener);
-        }
+//        finally {
+//            if (listener != null)
+//                jbcCache.removeCacheListener(listener);
+//        }
     }
 
     protected void deactivateLocalNode() {
@@ -364,17 +392,17 @@ public abstract class BasicRegionAdapter implements Region {
         return escaped;
     }
     
-    @CacheListener
-    public class RegionRootListener {
-        
-        @NodeCreated
-        public void nodeCreated(NodeCreatedEvent event) {
-            if (!event.isPre() && event.getFqn().equals(getRegionFqn())) {
-                log.debug("Node created for " + getRegionFqn());
-                Node regionRoot = jbcCache.getRoot().getChild(getRegionFqn());
-                regionRoot.setResident(true);
-            }
-        }
-        
-    }
+//    @CacheListener
+//    public class RegionRootListener {
+//        
+//        @NodeCreated
+//        public void nodeCreated(NodeCreatedEvent event) {
+//            if (!event.isPre() && event.getFqn().equals(getRegionFqn())) {
+//                log.debug("Node created for " + getRegionFqn());
+//                Node regionRoot = jbcCache.getRoot().getChild(getRegionFqn());
+//                regionRoot.setResident(true);
+//            }
+//        }
+//        
+//    }
 }

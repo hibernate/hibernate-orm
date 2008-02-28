@@ -42,7 +42,6 @@
         <module>bytecode-cglib</module>
         <module>bytecode-javassist</module>
 -->
-        <module>documentation</module>
     </modules>
     
     <build>
@@ -55,34 +54,19 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-1</version>
-                <executions>
-                    <execution>
-                        <id>assemble</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/dist.xml</descriptor>
-                        <descriptor>src/assembly/hibernate-all.xml</descriptor>
-                    </descriptors>
-                </configuration>
-            </plugin>
--->
         </plugins>
     </build>
 
     <profiles>
         <profile>
+            <!--
+                A profile used implicitly by the release plugin.  Here we use it to enable documentation building
+                as well as execution of the assembly plugin (to build the SourceForge dist).
+            -->
             <id>release</id>
+            <modules>
+                <module>documentation</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -107,6 +91,14 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <!-- seperate profile for documentation activation -->
+        <profile>
+            <id>docs</id>
+            <modules>
+                <module>documentation</module>
+            </modules>
         </profile>
     </profiles>
 </project>

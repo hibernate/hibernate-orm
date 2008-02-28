@@ -52,7 +52,7 @@ extends CacheTestCaseBase
    } 
 
    @Override
-   protected Class<? extends RegionFactory> getCacheRegionFactory()
+   protected Class getCacheRegionFactory()
    {
       return MultiplexedJBossCacheRegionFactory.class;
    }

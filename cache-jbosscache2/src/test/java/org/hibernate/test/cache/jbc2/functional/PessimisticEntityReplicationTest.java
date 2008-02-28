@@ -70,7 +70,7 @@ extends DualNodeTestCaseBase
    }
 
    @Override
-   protected Class<? extends RegionFactory> getCacheRegionFactory()
+   protected Class getCacheRegionFactory()
    {
       return TestJBossCacheRegionFactory.class;
    }

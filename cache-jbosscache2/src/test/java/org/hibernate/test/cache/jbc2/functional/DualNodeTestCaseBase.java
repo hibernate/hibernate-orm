@@ -16,6 +16,8 @@
 
 package org.hibernate.test.cache.jbc2.functional;
 
+import javax.transaction.TransactionManager;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
@@ -23,6 +25,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.ExecutionEnvironment;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeConnectionProviderImpl;
+import org.hibernate.test.cache.jbc2.functional.util.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTransactionManagerLookup;
 import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
@@ -138,11 +141,21 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    @Override
    protected void cleanupTest() throws Exception
    {
-      super.cleanupTest();
+      try {
+          super.cleanupTest();
       
-      log.info( "Destroying second node locally managed execution env" );
-      secondNodeEnvironment.complete();
-      secondNodeEnvironment = null;
+          log.info( "Destroying second node locally managed execution env" );
+          secondNodeEnvironment.complete();
+          secondNodeEnvironment = null;
+      }
+      finally {
+         cleanupTransactionManagement();
+      }
+   }
+   
+   protected void cleanupTransactionManagement() {
+      DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+      DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
    }
 
    public ExecutionEnvironment getSecondNodeEnvironment() {

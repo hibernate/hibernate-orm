@@ -35,6 +35,11 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.test.cache.jbc2.functional.classloader.ClassLoaderTestDAO;
+import org.hsqldb.lib.Iterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Variant of SimpleJtaTransactionManagerImpl that doesn't use a VM-singleton,
  * but rather a set of impls keyed by a node id.
@@ -42,17 +47,43 @@ import javax.transaction.TransactionManager;
  * @author Brian Stansberry
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
-	private static final Hashtable INSTANCES = new Hashtable();
+    
+    private static final Logger log = LoggerFactory.getLogger(DualNodeJtaTransactionManagerImpl.class);
+   
+    private static final Hashtable INSTANCES = new Hashtable();
 
 	private DualNodeJtaTransactionImpl currentTransaction;
-
+    private String nodeId;
+	
 	public synchronized static DualNodeJtaTransactionManagerImpl getInstance(String nodeId) {
 	    DualNodeJtaTransactionManagerImpl tm = (DualNodeJtaTransactionManagerImpl) INSTANCES.get(nodeId);
 	    if (tm == null) {
-	        tm = new DualNodeJtaTransactionManagerImpl();
+	        tm = new DualNodeJtaTransactionManagerImpl(nodeId);
 	        INSTANCES.put(nodeId, tm);
 	    }
 		return tm;
+	}
+	
+	public synchronized static void cleanupTransactions() {
+	   for (java.util.Iterator it = INSTANCES.values().iterator(); it.hasNext();) {
+	       TransactionManager tm = (TransactionManager) it.next();
+	       try
+           {
+              tm.suspend();
+           }
+           catch (Exception e)
+           {
+              log.error("Exception cleaning up TransactionManager " + tm);
+           }
+	   }
+	}
+    
+    public synchronized static void cleanupTransactionManagers() {       
+        INSTANCES.clear();
+    }
+	
+	private DualNodeJtaTransactionManagerImpl(String nodeId) {
+	    this.nodeId = nodeId;
 	}
 
 	public int getStatus() throws SystemException {
@@ -72,7 +103,8 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 	}
 
 	public Transaction suspend() throws SystemException {
-	   DualNodeJtaTransactionImpl suspended = currentTransaction;
+	    log.trace(nodeId + ": Suspending " + currentTransaction + " for thread " + Thread.currentThread().getName());
+	    DualNodeJtaTransactionImpl suspended = currentTransaction;
 		currentTransaction = null;
 		return suspended;
 	}
@@ -80,6 +112,7 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 	public void resume(Transaction transaction)
 			throws InvalidTransactionException, IllegalStateException, SystemException {
 		currentTransaction = ( DualNodeJtaTransactionImpl ) transaction;
+		log.trace(nodeId + ": Resumed " + currentTransaction + " for thread " + Thread.currentThread().getName());
 	}
 
 	public void commit()
@@ -111,5 +144,13 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 		if ( transaction == currentTransaction ) {
 			currentTransaction = null;
 		}
+	}
+	
+	public String toString() {
+	    StringBuffer sb = new StringBuffer(getClass().getName());
+	    sb.append("[nodeId=");
+	    sb.append(nodeId);
+	    sb.append("]");
+	    return sb.toString();
 	}
 }

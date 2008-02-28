@@ -115,9 +115,11 @@ public class DualNodeJtaTransactionImpl implements Transaction {
 			}
 		}
 
-		for ( int i = 0; i < synchronizations.size(); i++ ) {
-			Synchronization s = ( Synchronization ) synchronizations.get( i );
-			s.afterCompletion( status );
+		if (synchronizations != null) {
+   		    for ( int i = 0; i < synchronizations.size(); i++ ) {
+   			    Synchronization s = ( Synchronization ) synchronizations.get( i );
+   			    s.afterCompletion( status );
+   		    }
 		}
 
 		//status = Status.STATUS_NO_TRANSACTION;

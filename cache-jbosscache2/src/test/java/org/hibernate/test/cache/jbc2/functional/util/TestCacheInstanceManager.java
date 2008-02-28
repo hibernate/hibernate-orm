@@ -30,6 +30,9 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.cfg.Settings;
 import org.jboss.cache.CacheManager;
+import org.jboss.cache.CacheManagerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,6 +43,8 @@ import org.jboss.cache.CacheManager;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public class TestCacheInstanceManager extends MultiplexingCacheInstanceManager {
+   
+    private static final Logger log = LoggerFactory.getLogger(TestCacheInstanceManager.class);
     
     private static final Hashtable cacheManagers = new Hashtable();
     
@@ -47,7 +52,28 @@ public class TestCacheInstanceManager extends MultiplexingCacheInstanceManager {
        return (CacheManager) cacheManagers.get(name);
     }
     
+    public static void addTestCacheManager(String name,CacheManager manager) {
+       cacheManagers.put(name, manager);
+    }
+    
+    public static void clearCacheManagers() {
+       for (java.util.Iterator it = cacheManagers.values().iterator(); it.hasNext();) {
+          CacheManager cm = (CacheManager) it.next();
+          try
+          {
+             if (cm instanceof CacheManagerImpl)
+                 ((CacheManagerImpl) cm).stop();
+          }
+          catch (Exception e)
+          {
+             log.error("Exception cleaning up CacheManager " + cm);
+          }
+       }
+       cacheManagers.clear();
+    }
+    
     private String cacheManagerName;
+    private boolean locallyAdded;
     
     /**
      * Create a new TestCacheInstanceManager.
@@ -58,17 +84,26 @@ public class TestCacheInstanceManager extends MultiplexingCacheInstanceManager {
 
     @Override
     public void start(Settings settings, Properties properties) throws CacheException {
+       
+        cacheManagerName = properties.getProperty(DualNodeTestUtil.NODE_ID_PROP);
+        
+        CacheManager existing = getTestCacheManager(cacheManagerName);
+        locallyAdded = (existing == null);
+        if (!locallyAdded) {
+           setCacheFactory(existing);
+        }
         
         super.start(settings, properties);
         
-        cacheManagerName = properties.getProperty(DualNodeTestUtil.NODE_ID_PROP);
-        cacheManagers.put(cacheManagerName, getCacheFactory());
+        if (locallyAdded)
+            cacheManagers.put(cacheManagerName, getCacheFactory());
     }
 
    @Override
    public void stop()
    {
-      cacheManagers.remove(cacheManagerName);
+      if (locallyAdded)
+          cacheManagers.remove(cacheManagerName);
       
       super.stop();
    }

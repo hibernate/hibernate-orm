@@ -78,6 +78,8 @@ public abstract class BasicRegionAdapter implements Region {
         optimistic = jbcCache.getConfiguration().getNodeLockingScheme() == NodeLockingScheme.OPTIMISTIC;
         log = LoggerFactory.getLogger(getClass());
         activateLocalClusterNode();
+        
+        log.debug("Created Region for " + regionName + " -- regionPrefix is " + regionPrefix);
     }
 
     protected abstract Fqn<String> createRegionFqn(String regionName, String regionPrefix);

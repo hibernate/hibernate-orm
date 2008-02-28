@@ -60,7 +60,10 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     public void configure(Configuration cfg) {
         super.configure(cfg);
 
-        cfg.setProperty(Environment.CACHE_REGION_PREFIX, "test");
+        if (getRegionPrefix() != null) {
+            cfg.setProperty(Environment.CACHE_REGION_PREFIX, getRegionPrefix());
+        }
+        
         cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
         cfg.setProperty(Environment.USE_STRUCTURED_CACHE, "true");
@@ -75,6 +78,10 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
             cfg.setProperty( Environment.TRANSACTION_STRATEGY, transactionFactory.getName() );
         
         configureCacheFactory(cfg);
+    }  
+    
+    protected String getRegionPrefix() {
+        return "test";
     }
 
     public String getCacheConcurrencyStrategy() {
@@ -88,7 +95,7 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
      */
     protected abstract void configureCacheFactory(Configuration cfg);
 
-    protected abstract Class<? extends RegionFactory> getCacheRegionFactory();
+    protected abstract Class getCacheRegionFactory();
 
     protected abstract boolean getUseQueryCache();
     

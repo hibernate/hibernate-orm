@@ -83,8 +83,8 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 			throw new UnsupportedOperationException();
 		}
 
-		public int getStatus() throws UnsupportedOperationException {
-			throw new UnsupportedOperationException();
+		public int getStatus() throws SystemException {
+			return getTransaction() == null ? Status.STATUS_NO_TRANSACTION : getTransaction().getStatus();
 		}
 
 		public Transaction getTransaction() throws SystemException {

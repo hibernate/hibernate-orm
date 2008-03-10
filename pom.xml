@@ -64,9 +64,12 @@
                 as well as execution of the assembly plugin (to build the SourceForge dist).
             -->
             <id>release</id>
+<!--
+    temporarily disable documentation module
             <modules>
                 <module>documentation</module>
             </modules>
+-->
             <build>
                 <plugins>
                     <plugin>

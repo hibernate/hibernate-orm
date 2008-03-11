@@ -10,7 +10,7 @@
     
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-swarmcache</artifactId>
-    <version>3.3.0.Alpha1</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hibernate SwarmCache Integration</name>
@@ -28,11 +28,4 @@
             <version>1.0RC2</version>
         </dependency>
     </dependencies>
-
-
-  <scm>
-    <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.Alpha1</connection>
-    <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.Alpha1/hibernate-swarmcache</developerConnection>
-    <url>http://viewvc.jboss.org/cgi-bin/viewvc.cgi/hibernate/core/tags/hibernate-3.3.0.Alpha1/hibernate-swarmcache</url>
-  </scm>
 </project>

@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     
@@ -147,8 +149,8 @@
                 <jdbc.driver>org.hsqldb.jdbcDriver</jdbc.driver>
                 <jdbc.url>jdbc:hsqldb:target/test/db/hsqldb/hibernate</jdbc.url>
                 <jdbc.user>sa</jdbc.user>
-                <jdbc.pass />
-                <jdbc.isolation />
+                <jdbc.pass/>
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -167,8 +169,8 @@
                 <jdbc.driver>org.h2.Driver</jdbc.driver>
                 <jdbc.url>jdbc:h2:mem:target/test/db/h2/hibernate</jdbc.url>
                 <jdbc.user>sa</jdbc.user>
-                <jdbc.pass />
-                <jdbc.isolation />
+                <jdbc.pass/>
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -196,7 +198,7 @@
                 <jdbc.url>jdbc:mysql://dev02.qa.atl.jboss.com/cruisecontrol</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -217,7 +219,7 @@
                 <jdbc.url>jdbc:postgresql://dev01.qa.atl.jboss.com:5432:cruisecontrol</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -244,7 +246,7 @@
                 <jdbc.url>jdbc:oracle:thin:@dev20.qa.atl.jboss.com:1521:qa</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -265,7 +267,7 @@
                 <jdbc.url>jdbc:oracle:thin:@dev01.qa.atl.jboss.com:1521:qadb01</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -290,7 +292,7 @@
                 <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
                 <jdbc.user>hiber</jdbc.user>
                 <jdbc.pass>hiber</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -310,7 +312,7 @@
                 <jdbc.url>jdbc:sybase:Tds:dev01.qa.atl.jboss.com:4100/cruisecontrol</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -330,7 +332,7 @@
                 <jdbc.url>jdbc:jtds:sqlserver://dev30.qa.atl.jboss.com:3918/cruisecontrol</jdbc.url>
                 <jdbc.user>cruisecontrol</jdbc.user>
                 <jdbc.pass>cruisecontrol</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
 
@@ -355,4 +357,5 @@
         </profile>
 
     </profiles>
+
 </project>

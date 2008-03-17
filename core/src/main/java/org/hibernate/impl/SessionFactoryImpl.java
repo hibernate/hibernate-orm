@@ -207,6 +207,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		// Prepare persisters and link them up with their cache
 		// region/access-strategy
 
+		final String cacheRegionPrefix = settings.getCacheRegionPrefix() == null ? "" : settings.getCacheRegionPrefix() + ".";
+
 		entityPersisters = new HashMap();
 		Map entityAccessStrategies = new HashMap();
 		Map classMeta = new HashMap();
@@ -214,8 +216,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		while ( classes.hasNext() ) {
 			final PersistentClass model = (PersistentClass) classes.next();
 			model.prepareTemporaryTables( mapping, settings.getDialect() );
+			final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
 			// cache region is defined by the root-class in the hierarchy...
-			final String cacheRegionName = model.getRootClass().getCacheRegionName();
 			EntityRegionAccessStrategy accessStrategy = ( EntityRegionAccessStrategy ) entityAccessStrategies.get( cacheRegionName );
 			if ( accessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
 				final AccessType accessType = AccessType.parse( model.getCacheConcurrencyStrategy() );
@@ -238,7 +240,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		Iterator collections = cfg.getCollectionMappings();
 		while ( collections.hasNext() ) {
 			Collection model = (Collection) collections.next();
-			final String cacheRegionName = model.getCacheRegionName();
+			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
 			final AccessType accessType = AccessType.parse( model.getCacheConcurrencyStrategy() );
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {

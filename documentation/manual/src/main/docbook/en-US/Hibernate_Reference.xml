@@ -15,7 +15,7 @@
   ~ Red Hat Author(s): Steve Ebersole
   -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY versionNumber "3.3.0.alpha1">
+        <!ENTITY versionNumber "3.3.0.CR1">
         <!ENTITY copyrightYear "2004">
         <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
 ]>

@@ -10,7 +10,7 @@
     
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-testing</artifactId>
-    <version>3.3.0.CR1</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hibernate Testing</name>
@@ -42,11 +42,4 @@
             </resource>
         </resources>
     </build>
-
-
-  <scm>
-    <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</connection>
-    <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-testing</developerConnection>
-    <url>http://viewvc.jboss.org/cgi-bin/viewvc.cgi/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-testing</url>
-  </scm>
 </project>

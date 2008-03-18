@@ -12,7 +12,7 @@
     
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-eg</artifactId>
-    <version>3.3.0.CR1</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hibernate Example</name>
@@ -25,11 +25,4 @@
             <version>${version}</version>
         </dependency>
     </dependencies>
-
-
-  <scm>
-    <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</connection>
-    <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-eg</developerConnection>
-    <url>http://viewvc.jboss.org/cgi-bin/viewvc.cgi/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-eg</url>
-  </scm>
 </project>

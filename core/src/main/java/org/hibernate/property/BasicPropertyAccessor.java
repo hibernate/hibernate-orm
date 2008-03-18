@@ -316,8 +316,8 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 
 		Method[] methods = theClass.getDeclaredMethods();
 		for (int i=0; i<methods.length; i++) {
-			// only carry on if the method has no parameters and is not a bridge
-			if ( methods[i].getParameterTypes().length == 0 && !methods[i].isBridge() ) {
+			// only carry on if the method has no parameters
+			if ( methods[i].getParameterTypes().length == 0 ) {
 				String methodName = methods[i].getName();
 
 				// try "get"

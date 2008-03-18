@@ -26,11 +26,15 @@ import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.dom4j.Attribute;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -38,7 +42,7 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
-import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -56,10 +60,16 @@ import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.LockEventListener;
 import org.hibernate.event.MergeEventListener;
 import org.hibernate.event.PersistEventListener;
+import org.hibernate.event.PostCollectionRecreateEventListener;
+import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostLoadEventListener;
 import org.hibernate.event.PostUpdateEventListener;
+import org.hibernate.event.PreCollectionRecreateEventListener;
+import org.hibernate.event.PreCollectionRemoveEventListener;
+import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.event.PreDeleteEventListener;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreLoadEventListener;
@@ -67,12 +77,6 @@ import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.event.RefreshEventListener;
 import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEventListener;
-import org.hibernate.event.PreCollectionRecreateEventListener;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.event.PostCollectionUpdateEventListener;
-import org.hibernate.event.PostCollectionRemoveEventListener;
-import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.impl.SessionFactoryImpl;
@@ -87,6 +91,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -95,14 +100,11 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ConfigHelper;
+import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.SerializationHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.XMLHelper;
-import org.hibernate.util.PropertiesHelper;
-import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -157,6 +159,8 @@ public class Configuration implements Serializable {
 	private EventListeners eventListeners;
 
 	protected final SettingsFactory settingsFactory;
+
+	private SessionFactoryObserver sessionFactoryObserver;
 
 	protected void reset() {
 		classes = new HashMap();
@@ -1301,7 +1305,8 @@ public class Configuration implements Serializable {
 				this,
 				mapping,
 				settings,
-				getInitializedEventListeners()
+				getInitializedEventListeners(),
+				sessionFactoryObserver
 			);
 	}
 
@@ -2163,5 +2168,13 @@ public class Configuration implements Serializable {
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
 		sqlFunctions.put( functionName, function );
+	}
+
+	public SessionFactoryObserver getSessionFactoryObserver() {
+		return sessionFactoryObserver;
+	}
+
+	public void setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
+		this.sessionFactoryObserver = sessionFactoryObserver;
 	}
 }

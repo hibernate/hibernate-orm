@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -24,6 +23,7 @@ import javax.transaction.TransactionManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
@@ -34,17 +34,17 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.CacheKey;
-import org.hibernate.cache.QueryCache;
-import org.hibernate.cache.UpdateTimestampsCache;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.impl.CacheDataDescriptionImpl;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.EntityRegion;
+import org.hibernate.cache.QueryCache;
+import org.hibernate.cache.Region;
+import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -62,6 +62,7 @@ import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.QueryPlanCache;
+import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -116,6 +117,9 @@ import org.hibernate.util.ReflectHelper;
  */
 public final class SessionFactoryImpl implements SessionFactory, SessionFactoryImplementor {
 
+	private static final Logger log = LoggerFactory.getLogger(SessionFactoryImpl.class);
+	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
+
 	private final String name;
 	private final String uuid;
 
@@ -144,22 +148,18 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
-	
+	private final transient SessionFactoryObserver observer;
+
 	private final QueryPlanCache queryPlanCache = new QueryPlanCache( this );
 
 	private transient boolean isClosed = false;
-	
-
-	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
-
-	private static final Logger log = LoggerFactory.getLogger(SessionFactoryImpl.class);
 
 	public SessionFactoryImpl(
 			Configuration cfg,
 	        Mapping mapping,
 	        Settings settings,
-	        EventListeners listeners)
-	throws HibernateException {
+	        EventListeners listeners,
+			SessionFactoryObserver observer) throws HibernateException {
 
 		log.info("building session factory");
 
@@ -169,7 +169,13 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		this.settings = settings;
 		this.sqlFunctionRegistry = new SQLFunctionRegistry(settings.getDialect(), cfg.getSqlFunctions());
         this.eventListeners = listeners;
-        this.filters = new HashMap();
+		this.observer = observer != null ? observer : new SessionFactoryObserver() {
+			public void sessionFactoryCreated(SessionFactory factory) {
+			}
+			public void sessionFactoryClosed(SessionFactory factory) {
+			}
+		};
+		this.filters = new HashMap();
 		this.filters.putAll( cfg.getFilterDefinitions() );
 
 		if ( log.isDebugEnabled() ) {
@@ -382,6 +388,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			};
 		}
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
+
+		this.observer.sessionFactoryCreated( this );
 	}
 
 	public QueryPlanCache getQueryPlanCache() {
@@ -766,6 +774,11 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	 */
 	public void close() throws HibernateException {
 
+		if ( isClosed ) {
+			log.trace( "already closed" );
+			return;
+		}
+
 		log.info("closing");
 
 		isClosed = true;
@@ -810,6 +823,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			schemaExport.drop( false, true );
 		}
 
+		observer.sessionFactoryClosed( this );
+		eventListeners.destroyListeners();
 	}
 
 	public void evictEntity(String entityName, Serializable id) throws HibernateException {

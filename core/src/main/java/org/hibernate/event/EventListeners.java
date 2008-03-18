@@ -1,4 +1,26 @@
-//$Id: EventListeners.java 8416 2005-10-16 13:27:54Z epbernard $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.event;
 
 import java.io.Serializable;
@@ -132,7 +154,70 @@ public class EventListeners extends Cloneable implements Serializable {
 		return clazz;
 	}
 
-    public LoadEventListener[] getLoadEventListeners() {
+	private static interface ListenerProcesser {
+		public void processListener(Object listener);
+	}
+
+	private void processListeners(ListenerProcesser processer) {
+		Field[] fields = getClass().getDeclaredFields();
+		for ( int i = 0; i < fields.length; i++ ) {
+			try {
+				final Object field = fields[i].get( this );
+				if ( field instanceof Object[] ) {
+					final Object[] listeners = ( Object[] ) field;
+					int length = listeners.length;
+					for ( int index = 0 ; index < length ; index++ ) {
+						processer.processListener( listeners[index ] );
+					}
+				}
+			}
+			catch ( Exception e ) {
+				throw new AssertionFailure( "could not process listeners" );
+			}
+		}
+	}
+
+	/**
+	 * Call {@link Initializable#initialize} on any listeners that implement the
+	 * {@link Initializable} interface.
+	 *
+	 * @param cfg The configuration.
+	 */
+	public void initializeListeners(final Configuration cfg) {
+		try {
+			processListeners(
+					new ListenerProcesser() {
+						public void processListener(Object listener) {
+							if ( listener instanceof Initializable ) {
+								( ( Initializable ) listener ).initialize( cfg );
+							}
+						}
+					}
+			);
+		}
+		catch ( Exception e ) {
+			throw new AssertionFailure("could not init listeners");
+		}
+	}
+
+	public void destroyListeners() {
+		try {
+			processListeners(
+					new ListenerProcesser() {
+						public void processListener(Object listener) {
+							if ( listener instanceof Destructible ) {
+								( ( Destructible ) listener ).cleanup();
+							}
+						}
+					}
+			);
+		}
+		catch ( Exception e ) {
+			throw new AssertionFailure("could not init listeners");
+		}
+	}
+
+	public LoadEventListener[] getLoadEventListeners() {
         return loadEventListeners;
     }
 
@@ -386,39 +471,6 @@ public class EventListeners extends Cloneable implements Serializable {
 	
 	public void setPreUpdateEventListeners(PreUpdateEventListener[] preUpdateEventListener) {
 		this.preUpdateEventListeners = preUpdateEventListener;
-	}
-	
-	/**
-	 * Call <tt>initialize()</tt> on any listeners that implement 
-	 * <tt>Initializable</tt>.
-	 * @see Initializable
-	 */
-	public void initializeListeners(Configuration cfg) {
-		Field[] fields = getClass().getDeclaredFields();
-		for ( int i = 0; i < fields.length; i++ ) {
-			Object[] listeners;
-			try {
-				Object listener = fields[i].get(this);
-				if (listener instanceof Object[]) {
-					listeners = (Object[]) listener;
-				}
-				else {
-					continue;
-				}
-
-			}
-			catch (Exception e) {
-				throw new AssertionFailure("could not init listeners");
-			}
-			int length = listeners.length;
-			for (int index = 0 ; index < length ; index++) {
-				Object listener = listeners[index];
-				if (listener instanceof Initializable ) {
-					( (Initializable) listener ).initialize(cfg);
-				}
-			}
-
-		}
 	}
 
 	public PostDeleteEventListener[] getPostCommitDeleteEventListeners() {

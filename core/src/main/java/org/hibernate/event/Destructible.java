@@ -23,14 +23,15 @@
  */
 package org.hibernate.event;
 
-import org.hibernate.cfg.Configuration;
-
 /**
- * An event listener that requires access to mappings to initialize state at 
- * initialization time.
+ * Contract for listeners which require notification of SessionFactory closing,
+ * presumably to destroy internal state.
  *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface Initializable {
-	public void initialize(Configuration cfg);
+public interface Destructible {
+	/**
+	 * Notification of {@link org.hibernate.SessionFactory} shutdown.
+	 */
+	public void cleanup();
 }

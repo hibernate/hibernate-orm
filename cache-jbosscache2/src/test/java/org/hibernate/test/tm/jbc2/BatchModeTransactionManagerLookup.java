@@ -26,6 +26,7 @@ package org.hibernate.test.tm.jbc2;
 import java.util.Properties;
 
 import javax.transaction.TransactionManager;
+import javax.transaction.Transaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.transaction.TransactionManagerLookup;
@@ -52,5 +53,9 @@ public class BatchModeTransactionManagerLookup
     public String getUserTransactionName() {
         throw new UnsupportedOperationException();
     }
+
+	public Object getTransactionIdentifier(Transaction transaction) {
+		return transaction;
+	}
 
 }

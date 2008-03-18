@@ -25,6 +25,7 @@ package org.hibernate.test.cache.jbc2.functional.util;
 
 import java.util.Properties;
 import javax.transaction.TransactionManager;
+import javax.transaction.Transaction;
 
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.HibernateException;
@@ -47,5 +48,9 @@ public class DualNodeTransactionManagerLookup implements TransactionManagerLooku
 
 	public String getUserTransactionName() {
 		throw new UnsupportedOperationException( "jndi currently not implemented for these tests" );
+	}
+
+	public Object getTransactionIdentifier(Transaction transaction) {
+		return transaction;
 	}
 }

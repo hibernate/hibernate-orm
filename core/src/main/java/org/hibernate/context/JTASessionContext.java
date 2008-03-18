@@ -35,7 +35,7 @@ import java.util.Hashtable;
  * the {@link #buildOrObtainSession()} method) for easier subclassing for custom
  * JTA-based session tracking logic (like maybe long-session semantics).
  *
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * @author Steve Ebersole
  */
 public class JTASessionContext implements CurrentSessionContext {
 

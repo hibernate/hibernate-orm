@@ -1,10 +1,31 @@
-//$Id: JDBCTransaction.java 9595 2006-03-10 18:14:21Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.transaction;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 
@@ -17,10 +38,13 @@ import org.hibernate.TransactionException;
 import org.hibernate.jdbc.JDBCContext;
 
 /**
- * Implements a basic transaction strategy for JDBC connections.This is the
- * default <tt>Transaction</tt> implementation used if none is explicitly
- * specified.
- * @author Anton van Straaten, Gavin King
+ * {@link Transaction} implementation based on transaction management through
+ * a JDBC {@link java.sql.Connection}.
+ * <p/>
+ * This the Hibernate's default transaction strategy.
+ *
+ * @author Anton van Straaten
+ * @author Gavin King
  */
 public class JDBCTransaction implements Transaction {
 
@@ -43,6 +67,9 @@ public class JDBCTransaction implements Transaction {
 		this.transactionContext = transactionContext;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void begin() throws HibernateException {
 		if (begun) {
 			return;
@@ -95,6 +122,9 @@ public class JDBCTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void commit() throws HibernateException {
 		if (!begun) {
 			throw new TransactionException("Transaction not successfully started");
@@ -143,6 +173,9 @@ public class JDBCTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void rollback() throws HibernateException {
 
 		if (!begun && !commitFailed) {
@@ -200,18 +233,30 @@ public class JDBCTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasRolledBack() {
 		return rolledBack;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasCommitted() {
 		return committed;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isActive() {
 		return begun && ! ( rolledBack || committed | commitFailed );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerSynchronization(Synchronization sync) throws HibernateException {
 		if (sync==null) throw new NullPointerException("null Synchronization");
 		if (synchronizations==null) {
@@ -249,6 +294,9 @@ public class JDBCTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setTimeout(int seconds) {
 		timeout = seconds;
 	}

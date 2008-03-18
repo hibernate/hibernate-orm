@@ -1,4 +1,26 @@
-//$Id: CMTTransaction.java 9680 2006-03-22 23:47:31Z epbernard $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.transaction;
 
 import javax.transaction.Status;
@@ -14,8 +36,13 @@ import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.util.JTAHelper;
 
 /**
- * Implements a basic transaction strategy for CMT transactions. All work is done 
- * in the context of the container managed transaction.
+ * Implements a basic transaction strategy for CMT transactions. All work is
+ * done in the context of the container managed transaction.
+ * <p/>
+ * The term 'CMT' is potentially misleading here; the pertinent point simply
+ * being that the transactions are being managed by something other than the
+ * Hibernate transaction mechanism.
+ *
  * @author Gavin King
  */
 public class CMTTransaction implements Transaction {
@@ -32,6 +59,9 @@ public class CMTTransaction implements Transaction {
 		this.transactionContext = transactionContext;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void begin() throws HibernateException {
 		if (begun) {
 			return;
@@ -50,6 +80,9 @@ public class CMTTransaction implements Transaction {
 		jdbcContext.afterTransactionBegin(this);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void commit() throws HibernateException {
 		if (!begun) {
 			throw new TransactionException("Transaction not successfully started");
@@ -68,6 +101,9 @@ public class CMTTransaction implements Transaction {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void rollback() throws HibernateException {
 		if (!begun) {
 			throw new TransactionException("Transaction not successfully started");
@@ -87,10 +123,18 @@ public class CMTTransaction implements Transaction {
 
 	}
 
+	/**
+	 * Getter for property 'transaction'.
+	 *
+	 * @return Value for property 'transaction'.
+	 */
 	public javax.transaction.Transaction getTransaction() throws SystemException {
 		return transactionContext.getFactory().getTransactionManager().getTransaction();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isActive() throws TransactionException {
 
 		if (!begun) return false;
@@ -111,6 +155,9 @@ public class CMTTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasRolledBack() throws TransactionException {
 
 		if (!begun) return false;
@@ -131,6 +178,9 @@ public class CMTTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasCommitted() throws TransactionException {
 
 		if ( !begun ) return false;
@@ -151,6 +201,9 @@ public class CMTTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerSynchronization(Synchronization sync) throws HibernateException {
 		try {
 			getTransaction().registerSynchronization(sync);
@@ -160,6 +213,9 @@ public class CMTTransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setTimeout(int seconds) {
 		throw new UnsupportedOperationException("cannot set transaction timeout in CMT");
 	}

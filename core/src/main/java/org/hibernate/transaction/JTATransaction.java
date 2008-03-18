@@ -1,4 +1,26 @@
-//$Id: JTATransaction.java 9601 2006-03-11 18:17:43Z epbernard $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.transaction;
 
 import javax.naming.InitialContext;
@@ -19,16 +41,20 @@ import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.util.JTAHelper;
 
 /**
- * Implements a basic transaction strategy for JTA transactions. Instances check to
- * see if there is an existing JTA transaction. If none exists, a new transaction
- * is started. If one exists, all work is done in the existing context. The
- * following properties are used to locate the underlying <tt>UserTransaction</tt>:
- * <br><br>
- * <table>
- * <tr><td><tt>hibernate.jndi.url</tt></td><td>JNDI initial context URL</td></tr>
- * <tr><td><tt>hibernate.jndi.class</tt></td><td>JNDI provider class</td></tr>
- * <tr><td><tt>jta.UserTransaction</tt></td><td>JNDI name</td></tr>
- * </table>
+ * {@link Transaction} implementation based on transaction management through
+ * a JTA {@link UserTransaction}.  Similar to {@link CMTTransaction}, except
+ * here we are actually managing the transactions through the Hibernate
+ * transaction mechanism.
+ * <p/>
+ * Instances check to see if there is an existing JTA transaction.  If none
+ * exists, a new transaction is started; if one exists, all work is done in the
+ * existing context. The following properties are used to locate the underlying
+ * {@link UserTransaction}:<ul>
+ * <li><tt>hibernate.jndi.url</tt> : JNDI initial context URL</li>
+ * <li><tt>hibernate.jndi.class</tt> : JNDI provider class</li>
+ * <li><tt>jta.UserTransaction</tt> : JNDI namespace</li>
+ * </ul>
+ *
  * @author Gavin King
  */
 public class JTATransaction implements Transaction {
@@ -70,6 +96,9 @@ public class JTATransaction implements Transaction {
 		log.debug("Obtained UserTransaction");
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void begin() throws HibernateException {
 		if (begun) {
 			return;
@@ -121,6 +150,9 @@ public class JTATransaction implements Transaction {
 		jdbcContext.afterTransactionBegin(this);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void commit() throws HibernateException {
 		if (!begun) {
 			throw new TransactionException("Transaction not successfully started");
@@ -166,6 +198,9 @@ public class JTATransaction implements Transaction {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void rollback() throws HibernateException {
 		if (!begun && !commitFailed) {
 			throw new TransactionException("Transaction not successfully started");
@@ -236,6 +271,9 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasRolledBack() throws TransactionException {
 
 		//if (!begun) return false;
@@ -257,6 +295,9 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean wasCommitted() throws TransactionException {
 
 		//if (!begun || commitFailed) return false;
@@ -277,6 +318,9 @@ public class JTATransaction implements Transaction {
 		}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isActive() throws TransactionException {
 
 		if (!begun || commitFailed || commitSucceeded) return false;
@@ -297,6 +341,9 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerSynchronization(Synchronization sync) throws HibernateException {
 		if (getTransactionManager()==null) {
 			throw new IllegalStateException("JTA TransactionManager not available");
@@ -311,6 +358,11 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * Getter for property 'transactionManager'.
+	 *
+	 * @return Value for property 'transactionManager'.
+	 */
 	private TransactionManager getTransactionManager() {
 		return transactionContext.getFactory().getTransactionManager();
 	}
@@ -324,6 +376,9 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setTimeout(int seconds) {
 		try {
 			ut.setTransactionTimeout(seconds);
@@ -333,6 +388,11 @@ public class JTATransaction implements Transaction {
 		}
 	}
 
+	/**
+	 * Getter for property 'userTransaction'.
+	 *
+	 * @return Value for property 'userTransaction'.
+	 */
 	protected UserTransaction getUserTransaction() {
 		return ut;
 	}

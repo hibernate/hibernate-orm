@@ -1,4 +1,26 @@
-//$Id: CacheSynchronization.java 9239 2006-02-08 22:34:34Z steveebersole $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.transaction;
 
 import javax.transaction.Status;
@@ -8,11 +30,15 @@ import javax.transaction.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.TransactionException;
 import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.util.JTAHelper;
 
 /**
+ * A JTA transaction synch used to allow the {@link org.hibernate.Session} to know about transaction
+ * events.
+ *
  * @author Gavin King
  */
 public final class CacheSynchronization implements Synchronization {
@@ -28,14 +54,16 @@ public final class CacheSynchronization implements Synchronization {
 			TransactionFactory.Context ctx, 
 			JDBCContext jdbcContext, 
 			Transaction transaction, 
-			org.hibernate.Transaction tx
-	) {
+			org.hibernate.Transaction tx) {
 		this.ctx = ctx;
 		this.jdbcContext = jdbcContext;
 		this.transaction = transaction;
 		this.hibernateTransaction = tx;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void beforeCompletion() {
 		log.trace("transaction before completion callback");
 
@@ -77,6 +105,9 @@ public final class CacheSynchronization implements Synchronization {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void afterCompletion(int status) {
 		if ( log.isTraceEnabled() ) {
 			log.trace("transaction after completion callback, status: " + status);
@@ -92,6 +123,9 @@ public final class CacheSynchronization implements Synchronization {
 		}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public String toString() {
 		return CacheSynchronization.class.getName();
 	}

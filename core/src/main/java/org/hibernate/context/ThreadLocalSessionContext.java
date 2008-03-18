@@ -42,9 +42,9 @@ import org.hibernate.engine.SessionFactoryImplementor;
  * The {@link #buildOrObtainSession}, {@link #isAutoCloseEnabled},
  * {@link #isAutoFlushEnabled}, {@link #getConnectionReleaseMode}, and
  * {@link #buildCleanupSynch} methods are all provided to allow easy
- * subclassing (for long- running session scenarios, for example).
+ * subclassing (for long-running session scenarios, for example).
  *
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * @author Steve Ebersole
  */
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
@@ -70,6 +70,9 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		this.factory = factory;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public final Session currentSession() throws HibernateException {
 		Session current = existingSession( factory );
 		if (current == null) {
@@ -94,6 +97,11 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		       && ! ( Proxy.getInvocationHandler( session ) instanceof TransactionProtectionWrapper ) );
 	}
 
+	/**
+	 * Getter for property 'factory'.
+	 *
+	 * @return Value for property 'factory'.
+	 */
 	protected SessionFactoryImplementor getFactory() {
 		return factory;
 	}
@@ -244,9 +252,15 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			this.factory = factory;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public void beforeCompletion() {
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public void afterCompletion(int i) {
 			unbind( factory );
 		}
@@ -260,6 +274,9 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			this.realSession = realSession;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			try {
 				// If close() is called, guarantee unbind()
@@ -310,6 +327,11 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			}
 		}
 
+		/**
+		 * Setter for property 'wrapped'.
+		 *
+		 * @param wrapped Value to set for property 'wrapped'.
+		 */
 		public void setWrapped(Session wrapped) {
 			this.wrappedSession = wrapped;
 		}

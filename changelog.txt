@@ -6,6 +6,203 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.3.0.CR1 (2008.03.18)
+-------------------------------------------
+
+** Bug
+    * [HHH-1312] - Unclosed ResultSet when using Identity
+    * [HHH-1396] - Table.validateColumns fails on valid column
+    * [HHH-1569] - Immutable Natural Id check fails with ArrayIndexOutOfBounds in some cases
+    * [HHH-1593] - Infinite loop/StackOverflow when calling configuration.setListener(null)
+    * [HHH-1753] - DB2Dialect.getCurrentTimestampSQLFunctionName() uses Oracle syntax
+    * [HHH-1916] - param values in generator element should be trimmed during HbmBinding
+    * [HHH-1920] - Incorrect documentation regarding XML manipulation in Hibernate reference manual (chapter 18.3).
+    * [HHH-1956] - Interceptor.afterTransactionCompletion not called with JTATransaction (CacheSynchronization.hibernateTransaction not set)
+    * [HHH-2159] - NullPointerException in FromElement#findIntendedAliasedFromElementBasedOnCrazyJPARequirements with 'hibernate.query.jpaql_strict_compliance' enabled
+    * [HHH-2164] - Minor bug in section "20.1.1. Customizing the schema"
+    * [HHH-2200] - Memory leak in AbstractBatcher with Generated Properties
+    * [HHH-2320] - Regression: optional properties under a <join> tag no longer update properly
+    * [HHH-2503] - AbstractEntityPersister swallows JDBCExceptions in processGeneratedProperties
+    * [HHH-2513] - Abusive WARN logged during deserialization of replicated SessionFactory
+    * [HHH-2542] - NullPointerException in TypeFactory.replaceAssociations for ComponentType
+    * [HHH-2553] - New LoadContexts Implementation causing possible performance degradation
+    * [HHH-2593] - Keyword UNION is prefixed with "this_." in filter conditions
+    * [HHH-2616] - No event is fired on Collection recreate/remove/update action
+    * [HHH-2627] - Generated properties leak prepared statements in Hibernate 3.2.3 and higher.
+    * [HHH-2631] - Leaking PreparedStatement and ResultSet via CollectionLoadContext instances maintained in Map collectionLoadContexts in LoadContexts
+    * [HHH-2711] - PropertyAccessException with backref and <composite-map-key/>
+    * [HHH-2726] - spelling o your CLASSPATH
+    * [HHH-2728] - Calling session.clear() while retrieving objects via an iterator will cause a "LazyInitializationException - No Session" by the CGLIBLazyInitializer
+    * [HHH-2788] - Oracl8iDialect No Dialect mapping for JDBC type 91
+    * [HHH-2795] - CollectionLoadContexts for empy collections are not removed until PersistenceContext.clear()
+    * [HHH-2816] - DefaultFlushEntityEventListener.checkNaturalId() causes extra SELECTs on read-only entities
+    * [HHH-2833] - insert-select query fails with NPE when select includes join
+    * [HHH-2857] - schemaSupport for HSQLDialect remote connections doesn't work
+    * [HHH-2861] - cascade="delete-orphan,all" is ignored
+    * [HHH-2863] - testsuite fix-ups for maven and/or directory changes
+    * [HHH-2864] - Merging a detached instance with a new child in a unidirectional one-to-many association fails if the parent was previously loaded as a proxy
+    * [HHH-2892] - skip up-to-date checks of query cache for natural-id only if immutable
+    * [HHH-2928] - optimizers for enhanced id generators should be synchronized against multi-threaded access
+    * [HHH-2948] - QueryStatistics.executionMinTime always = 0
+    * [HHH-3111] - WebSphereExtendedJTATransactionLookup$TransactionManagerAdapter.getStatus() implemented incorrect
+    * [HHH-3140] - Region prefix ignored for entities and collections
+
+** Deprecation
+    * [HHH-2755] - Wrong "jsdk.jar" referenced in the tutorial
+
+** Improvement
+    * [HHH-1786] - JTASessionContext.CleanupSynch does not remove sessions from currentSessionMap
+    * [HHH-2048] - Incomplete MappingException at org.hibernate.mapping.SimpleValue
+    * [HHH-2156] - Section 19.3, "Managing the caches" doesn't document CacheMode.IGNORE
+    * [HHH-2533] - redesign Cache/CacheProviders
+    * [HHH-2662] - Workaround PostgreSQL issues in testsuite
+    * [HHH-2663] - Map java.sql.Types.REAL to Hibernate FloatType for auto-discovery stuff
+    * [HHH-2665] - Split Oracle9Dialect into Oracle9iDialect and Oracle10gDialect
+    * [HHH-2669] - Unequivocally map MySQL LOB types to the LONG variant
+    * [HHH-2682] - support for auto-discovery of H2 dialect
+    * [HHH-2696] - Consider migrating to slf4j
+    * [HHH-2761] - Handle null and empty string consistently in PropertiesHelper
+    * [HHH-2778] - TransactionManagerLookup implementation for Bitronix Transaction Manager
+    * [HHH-2789] - Section 19.2 of the documentation does not show OSCache as supporting clusters. It does.
+    * [HHH-2822] - timestamp extraction functions for SAPDBDialect
+    * [HHH-2826] - IS [NOT] NULL checks with component values
+    * [HHH-2859] - Introduce a 'Work' API for user to perform JDBC work
+    * [HHH-3131] - Add a method to ActionQueue to tell whether there are currently entries in the executions collection
+
+** New Feature
+    * [HHH-1] - Optimize Hibernate for the bulk insertion of related entities
+    * [HHH-2555] - Create new RegionFactory for JBossCache
+    * [HHH-2884] - Provide a sessionFactory close event or hook for the event listeners
+
+** Patch
+    * [HHH-952] - Patch to allow subqueries with joins using Criteria API and Subqueries with DetachedCriteria
+    * [HHH-2070] - Expand DB2Dialect auto-discovery support (Martin Renner)
+    * [HHH-2519] - Schema dropping not documented with hibernate.hbm2ddl.auto=create
+    * [HHH-2630] - Hibernate Dialect is not auto-detected for Sybase ASE and DB2 (Shelley McGowan)
+    * [HHH-2758] - Patch IngresDialect based on certification
+    * [HHH-2839] - Don't use dummy dual table for hsqldb (David Bala?ic)
+    * [HHH-2849] - Better error logging in IdentifierGeneratorFactory (Antony Stubbs)
+    * [HHH-2957] - ActionQueue Insertion sort performance degrades exponentially (Jay Erb)
+    * [HHH-3084] - DialectFactory detection of Ingres metadata (Michael Leo)
+
+** Task
+    * [HHH-2702] - Officially move to JDK 1.4
+    * [HHH-2704] - Migrate to Maven2 for build
+
+
+Changes in version 3.2.6 (2008.02.07)
+-------------------------------------------
+
+** Bug
+    * [HHH-925] - DetachedCriteria.createCriteria not working with alias
+    * [HHH-1312] - Unclosed ResultSet when using Identity
+    * [HHH-1329] - SchemaValidator fail when views are involved
+    * [HHH-1593] - Infinite loop/StackOverflow when calling configuration.setListener(null)
+    * [HHH-1685] - DetachedCriteria doesn't create alias on subcriteria
+    * [HHH-1753] - DB2Dialect.getCurrentTimestampSQLFunctionName() uses Oracle syntax
+    * [HHH-1916] - param values in generator element should be trimmed during HbmBinding
+    * [HHH-1956] - Interceptor.afterTransactionCompletion not called with JTATransaction (CacheSynchronization.hibernateTransaction not set)
+    * [HHH-2016] - Oracle9Dialect registers last_day() function as "lastday"
+    * [HHH-2159] - NullPointerException in FromElement#findIntendedAliasedFromElementBasedOnCrazyJPARequirements with 'hibernate.query.jpaql_strict_compliance' enabled
+    * [HHH-2200] - Memory leak in AbstractBatcher with Generated Properties
+    * [HHH-2261] - Setting hibernate.hbm2ddl.auto=validate causes problems on mySQL with numeric fields
+    * [HHH-2320] - Regression: optional properties under a <join> tag no longer update properly
+    * [HHH-2503] - AbstractEntityPersister swallows JDBCExceptions in processGeneratedProperties
+    * [HHH-2542] - NullPointerException in TypeFactory.replaceAssociations for ComponentType
+    * [HHH-2593] - Keyword UNION is prefixed with "this_." in filter conditions
+    * [HHH-2598] - Mapping a collection of entities from two different classes with the same collection name results in duplicate backref property exception if collection keys are not null
+    * [HHH-2616] - No event is fired on Collection recreate/remove/update action
+    * [HHH-2627] - Generated properties leak prepared statements in Hibernate 3.2.3 and higher.
+    * [HHH-2728] - Calling session.clear() while retrieving objects via an iterator will cause a "LazyInitializationException - No Session" by the CGLIBLazyInitializer
+    * [HHH-2788] - Oracl8iDialect No Dialect mapping for JDBC type 91
+    * [HHH-2795] - CollectionLoadContexts for empy collections are not removed until PersistenceContext.clear()
+    * [HHH-2816] - DefaultFlushEntityEventListener.checkNaturalId() causes extra SELECTs on read-only entities
+    * [HHH-2833] - insert-select query fails with NPE when select includes join
+    * [HHH-2857] - schemaSupport for HSQLDialect remote connections doesn't work
+    * [HHH-2861] - cascade="delete-orphan,all" is ignored
+    * [HHH-2864] - Merging a detached instance with a new child in a unidirectional one-to-many association fails if the parent was previously loaded as a proxy
+    * [HHH-2892] - skip up-to-date checks of query cache for natural-id only if immutable
+    * [HHH-2928] - optimizers for enhanced id generators should be synchronized against multi-threaded access
+    * [HHH-2948] - QueryStatistics.executionMinTime always = 0
+
+** Improvement
+    * [HHH-1630] - duplicate property mapping - more details
+    * [HHH-1696] - Add outer join support for aliases on DetachedCriteria
+    * [HHH-2048] - Incomplete MappingException at org.hibernate.mapping.SimpleValue
+    * [HHH-2682] - support for auto-discovery of H2 dialect
+    * [HHH-2761] - Handle null and empty string consistently in PropertiesHelper
+    * [HHH-2822] - timestamp extraction functions for SAPDBDialect
+    * [HHH-2826] - IS [NOT] NULL checks with component values
+    * [HHH-2852] - Better error messages when schema validation fails
+
+** Patch
+    * [HHH-952] - Patch to allow subqueries with joins using Criteria API and Subqueries with DetachedCriteria
+    * [HHH-2070] - Expand DB2Dialect auto-discovery support (Martin Renner)
+    * [HHH-2839] - Don't use dummy dual table for hsqldb (David Bala?ic)
+    * [HHH-2849] - Better error logging in IdentifierGeneratorFactory (Antony Stubbs)
+    * [HHH-2957] - ActionQueue Insertion sort performance degrades exponentially (Jay Erb)
+    * [HHH-3084] - DialectFactory detection of Ingres metadata (Michael Leo)
+
+** Task
+    * [HHH-2559] - http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd needs to be updated
+    * [HHH-3085] - Remove connector.jar (unnecessary library)
+    * [HHH-3086] - Remove jdbc2_0-stdext.jar (unnecessary library)
+
+
+Changes in version 3.2.5 (2007.07.31)
+-------------------------------------------
+
+** Bug
+    * [HHH-1116] - batch-size typo
+    * [HHH-1561] - Missing " in Documentation for H3, Chapter 15.8
+    * [HHH-1569] - Immutable Natural Id check fails with ArrayIndexOutOfBounds in some cases
+    * [HHH-1694] - Documentation Outdated: "10.4.4. Queries in native SQL"
+    * [HHH-2180] - minordocumentation error in hbm xml
+    * [HHH-2201] - session.iterate() does not exist
+    * [HHH-2267] - A copy/paste mistake in the documentation for <schemavalidator> ant task
+    * [HHH-2334] - Documentation error in section 5.1.3
+    * [HHH-2420] - Error in 2.5. Contextual Sessions
+    * [HHH-2502] - The second level caching documentation states that ehcache is not distributed.
+    * [HHH-2631] - Leaking PreparedStatement and ResultSet via CollectionLoadContext instances maintained in Map collectionLoadContexts in LoadContexts
+    * [HHH-2649] - Batcher configuration parameter incorrectly documented
+    * [HHH-2711] - PropertyAccessException with backref and <composite-map-key/>
+    * [HHH-2713] - duplicated phrase in docs "of the of the"
+    * [HHH-2714] - Three typos in code examples
+    * [HHH-2719] - adddress --> address
+    * [HHH-2720] - Monetory --> Monetary
+
+** Improvement
+    * [HHH-1022] - incomplete documentation in _README.txt in the lib directory
+    * [HHH-1682] - Improve the description of differences between save() and persist()
+    * [HHH-2048] - Incomplete MappingException at org.hibernate.mapping.SimpleValue
+    * [HHH-2417] - Update book on Hibernate reference
+    * [HHH-2418] - Refer HSQL DB website in chapter 1.2.3
+    * [HHH-2487] - Typo in "5.1.7. version (optional)"
+    * [HHH-2550] - Update API Class in 10.4.3. Criteria queries
+    * [HHH-2662] - Workaround PostgreSQL issues in testsuite
+    * [HHH-2663] - Map java.sql.Types.REAL to Hibernate FloatType for auto-discovery stuff
+    * [HHH-2665] - Split Oracle9Dialect into Oracle9iDialect and Oracle10gDialect
+
+** Patch
+    * [HHH-2520] - Miscellaneous config doc spelling fixes
+    * [HHH-2630] - Hibernate Dialect is not auto-detected for Sybase ASE and DB2 (Shelley McGowan)
+    * [HHH-2758] - Patch IngresDialect based on certification
+
+** Task
+    * [HHH-2551] - Deprecate org.hibernate.criterion.Expression
+    * [HHH-2566] - Replace usages of FlushMode.NEVER with FlushMode.MANUAL
+    * [HHH-2567] - Update reference to use FlushMode.MANUAL
+    * [HHH-2568] - Hibernate javadoc overview refering wrong classes and packages
+
+
+Changes in version 3.2.4.sp1 (2007.05.18)
+-------------------------------------------
+
+** Bug
+    * [HHH-2605] - Since 3.2.4 no value specified for row id
+    * [HHH-2613] - LockMode.FORCE on non versioned entity leads to NPE
+
+
 Changes in version 3.2.4 (2007.05.09)
 -------------------------------------------
 

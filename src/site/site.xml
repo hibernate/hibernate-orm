@@ -8,11 +8,11 @@
     
     <version position="left"/>
     <publishDate position="navigation-bottom" format="yyyy-MM-dd"/>
-
+<!--
     <poweredBy>
         <logo name="Maven" href="http://maven.apache.org/" img="images/maven-button-4.png"/>
-    </poweredBy>
-
+    </poweredBy
+-->
     <body>
 
         <head>
@@ -27,9 +27,7 @@
 
         <menu name="Overview">
             <item name="Introduction" href="index.html"/>
-            <item name="Getting Started" href="quickstart.html"/>
             <item name="Documentation" href="documentation.html"/>
-            <item name="FAQs" href="faq.html"/>
         </menu>
 
         <menu name="Information">

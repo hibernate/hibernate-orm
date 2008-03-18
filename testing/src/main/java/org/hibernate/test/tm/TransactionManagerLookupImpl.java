@@ -25,6 +25,7 @@ package org.hibernate.test.tm;
 
 import java.util.Properties;
 import javax.transaction.TransactionManager;
+import javax.transaction.Transaction;
 
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.HibernateException;
@@ -41,5 +42,9 @@ public class TransactionManagerLookupImpl implements TransactionManagerLookup {
 
 	public String getUserTransactionName() {
 		throw new UnsupportedOperationException( "jndi currently not implemented for these tests" );
+	}
+
+	public Object getTransactionIdentifier(Transaction transaction) {
+		return transaction;
 	}
 }

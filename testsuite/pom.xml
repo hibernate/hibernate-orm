@@ -10,7 +10,7 @@
     
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-testsuite</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.0.CR1</version>
     <packaging>jar</packaging>
 
     <name>Hibernate Testsuite</name>
@@ -355,4 +355,10 @@
         </profile>
 
     </profiles>
+
+  <scm>
+    <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</connection>
+    <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-testsuite</developerConnection>
+    <url>http://viewvc.jboss.org/cgi-bin/viewvc.cgi/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-testsuite</url>
+  </scm>
 </project>

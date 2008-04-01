@@ -11,16 +11,16 @@
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate</artifactId>
     <packaging>pom</packaging>
-    <version>3.3.0.CR1</version>
+    <version>3.3.0-SNAPSHOT</version>
 
     <name>Hibernate Core Aggregator</name>
     <description>Aggregator of the Hibernate Core modules.</description>
     <url>http://hibernate.org</url>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
     </scm>
 
     <modules>

@@ -10,7 +10,7 @@
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jmx</artifactId>
-    <version>3.3.0.CR1</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Hibernate JMX Module</name>
@@ -34,10 +34,4 @@
             <version>1.2.14</version>
         </dependency>
     </dependencies>
-
-  <scm>
-    <connection>scm:svn:http://anonsvn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1</connection>
-    <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-jmx</developerConnection>
-    <url>http://viewvc.jboss.org/cgi-bin/viewvc.cgi/hibernate/core/tags/hibernate-3.3.0.CR1/hibernate-jmx</url>
-  </scm>
 </project>

@@ -69,6 +69,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
+			s.getTransaction().commit();
 			fail( "should have failed because inserts are before deletes");
 		}
 		catch( ConstraintViolationException ex ) {
@@ -95,6 +96,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
+			s.getTransaction().commit();
 			fail( "should have failed because inserts are before deletes");
 		}
 		catch( ConstraintViolationException ex ) {
@@ -121,6 +123,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
+			s.getTransaction().commit();
 			fail( "should have failed because inserts are before deletes");
 		}
 		catch( ConstraintViolationException ex ) {

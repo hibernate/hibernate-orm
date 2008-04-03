@@ -58,11 +58,9 @@
         </composite-id>
         <property name="name" column="NAME" type="string" length="40" not-null="true"/>
         <many-to-one column="USER_ID" name="user" class="org.hibernate.test.manytomanyassociationclass.User"
-                not-null="true" unique-key="UK_MEMBERSHIP"
-                insert="false" update="false"/>
+                not-null="true" insert="false" update="false"/>
         <many-to-one column="GROUP_ID" name="group" class="org.hibernate.test.manytomanyassociationclass.Group"
-                not-null="true" unique-key="UK_MEMBERSHIP"
-                insert="false" update="false"/>
+                not-null="true" insert="false" update="false"/>
     </class>
 
 </hibernate-mapping>

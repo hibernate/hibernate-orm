@@ -16,9 +16,6 @@
 
 package org.hibernate.test.cache.jbc2.functional;
 
-import javax.transaction.TransactionManager;
-
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
@@ -28,7 +25,6 @@ import org.hibernate.test.cache.jbc2.functional.util.DualNodeConnectionProviderI
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTransactionManagerLookup;
-import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
 import org.hibernate.transaction.CMTTransactionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

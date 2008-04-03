@@ -73,6 +73,12 @@ extends DualNodeTestCaseBase
 
    static int test = 0;
    
+   private Cache localCache;
+   private CacheAccessListener localListener;
+   
+   private Cache remoteCache;
+   private CacheAccessListener remoteListener;
+   
    public PessimisticIsolatedClassLoaderTest(String name)
    {
       super(name);
@@ -120,6 +126,22 @@ extends DualNodeTestCaseBase
       // Don't clean up the managers, just the transactions
       // Managers are still needed by the long-lived caches
       DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+   }  
+
+   @Override
+   protected void cleanupTest() throws Exception
+   {
+      try
+      {
+      if (localCache != null && localListener != null)
+         localCache.removeCacheListener(localListener);
+      if (remoteCache != null && remoteListener != null)
+         remoteCache.removeCacheListener(remoteListener);
+      }
+      finally
+      {
+         super.cleanupTest();
+      }
    }
 
    /**
@@ -145,9 +167,11 @@ extends DualNodeTestCaseBase
       
       org.jboss.cache.Fqn fqn = org.jboss.cache.Fqn.fromString("/isolated1");
       org.jboss.cache.Region r = localCache.getRegion(fqn, true);
+      r.registerContextClassLoader(cl.getParent());
       r.activate();
       
       r = remoteCache.getRegion(fqn, true);
+      r.registerContextClassLoader(cl.getParent());
       r.activate();
       Thread.currentThread().setContextClassLoader(cl);
       Account acct = new Account();
@@ -182,16 +206,16 @@ extends DualNodeTestCaseBase
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
       CacheManager localManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.LOCAL);
-      Cache localCache = localManager.getCache(getEntityCacheConfigName(), true);
-      CacheAccessListener localListener = new CacheAccessListener();
+      this.localCache = localManager.getCache(getEntityCacheConfigName(), true);
+      this.localListener = new CacheAccessListener();
       localCache.addCacheListener(localListener);
       
       TransactionManager localTM = localCache.getConfiguration().getRuntimeConfig().getTransactionManager();
       
       // Bind a listener to the "remote" cache
       CacheManager remoteManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.REMOTE);
-      Cache remoteCache = remoteManager.getCache(getEntityCacheConfigName(), true);
-      CacheAccessListener remoteListener = new CacheAccessListener();
+      this.remoteCache = remoteManager.getCache(getEntityCacheConfigName(), true);
+      this.remoteListener = new CacheAccessListener();
       remoteCache.addCacheListener(remoteListener);      
       
       TransactionManager remoteTM = remoteCache.getConfiguration().getRuntimeConfig().getTransactionManager();

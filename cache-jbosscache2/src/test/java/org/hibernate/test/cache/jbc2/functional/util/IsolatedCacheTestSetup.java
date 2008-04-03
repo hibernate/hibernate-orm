@@ -20,8 +20,6 @@ import junit.framework.Test;
 
 import org.hibernate.test.util.SelectedClassnameClassLoader;
 import org.hibernate.test.util.SelectedClassnameClassLoaderTestSetup;
-import org.jboss.cache.Cache;
-import org.jboss.cache.config.Configuration;
 
 /**
  * A TestSetup that uses SelectedClassnameClassLoader to ensure that
@@ -55,36 +53,34 @@ public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetu
    protected void setUp() throws Exception
    {
       super.setUp();
-      
+
       // At this point the TCCL cannot see the isolatedClasses
+      // We want the caches to use this CL as their default classloader
+      
       ClassLoader tccl = Thread.currentThread().getContextClassLoader();
       
       org.jgroups.ChannelFactory cf = new org.jgroups.JChannelFactory();
       cf.setMultiplexerConfig(DEF_JGROUPS_RESOURCE);
       
-      org.jboss.cache.CacheManagerImpl cm = new org.jboss.cache.CacheManagerImpl(DEF_CACHE_FACTORY_RESOURCE, cf);
+      // Use a CacheManager that will inject the desired defaultClassLoader into our caches
+      CustomClassLoaderCacheManager cm = new CustomClassLoaderCacheManager(DEF_CACHE_FACTORY_RESOURCE, cf, tccl);
       cm.start();
       TestCacheInstanceManager.addTestCacheManager(DualNodeTestUtil.LOCAL, cm);
       
-      // Inject the desired defaultClassLoader into our caches
-      Configuration cfg = cm.getConfigurationRegistry().getConfiguration(cacheConfig);
-      Cache cache = new CustomClassLoaderCacheFactory(tccl).createCache(cfg, false);
-      cache.getConfiguration().getRuntimeConfig().setMuxChannelFactory(cm.getChannelFactory());      
-      cm.registerCache(cache, cacheConfig);
+      cm.getCache(cacheConfig, true);
+      
+      // Repeat for the "remote" cache
       
       cf = new org.jgroups.JChannelFactory();
       cf.setMultiplexerConfig(DEF_JGROUPS_RESOURCE);
       
-      cm = new org.jboss.cache.CacheManagerImpl(DEF_CACHE_FACTORY_RESOURCE, cf);
+      cm = new CustomClassLoaderCacheManager(DEF_CACHE_FACTORY_RESOURCE, cf, tccl);
       cm.start();
       TestCacheInstanceManager.addTestCacheManager(DualNodeTestUtil.REMOTE, cm);
       
-      cfg = cm.getConfigurationRegistry().getConfiguration(cacheConfig);
-      cache = new CustomClassLoaderCacheFactory(tccl).createCache(cfg, false);
-      cache.getConfiguration().getRuntimeConfig().setMuxChannelFactory(cm.getChannelFactory()); 
-      cm.registerCache(cache, cacheConfig);
+      cm.getCache(cacheConfig, true);
       
-      // Now make the isolatedClasses visible
+      // Now make the isolatedClasses visible to the test driver itself
       SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(isolatedClasses, null, null, tccl);
       Thread.currentThread().setContextClassLoader(visible);
    }

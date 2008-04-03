@@ -35,8 +35,6 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.hibernate.test.cache.jbc2.functional.classloader.ClassLoaderTestDAO;
-import org.hsqldb.lib.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +50,7 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
    
     private static final Hashtable INSTANCES = new Hashtable();
 
-	private DualNodeJtaTransactionImpl currentTransaction;
+    private ThreadLocal currentTransaction = new ThreadLocal();
     private String nodeId;
 	
 	public synchronized static DualNodeJtaTransactionManagerImpl getInstance(String nodeId) {
@@ -87,62 +85,66 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 	}
 
 	public int getStatus() throws SystemException {
-		return currentTransaction == null ? Status.STATUS_NO_TRANSACTION : currentTransaction.getStatus();
+	    Transaction tx = getCurrentTransaction();
+		return tx == null ? Status.STATUS_NO_TRANSACTION : tx.getStatus();
 	}
 
 	public Transaction getTransaction() throws SystemException {
-		return currentTransaction;
+		return (Transaction) currentTransaction.get();
 	}
 
 	public DualNodeJtaTransactionImpl getCurrentTransaction() {
-		return currentTransaction;
+		return (DualNodeJtaTransactionImpl) currentTransaction.get();
 	}
 
 	public void begin() throws NotSupportedException, SystemException {
-		currentTransaction = new DualNodeJtaTransactionImpl( this );
+		currentTransaction.set(new DualNodeJtaTransactionImpl( this ));
 	}
 
 	public Transaction suspend() throws SystemException {
-	    log.trace(nodeId + ": Suspending " + currentTransaction + " for thread " + Thread.currentThread().getName());
-	    DualNodeJtaTransactionImpl suspended = currentTransaction;
-		currentTransaction = null;
+       DualNodeJtaTransactionImpl suspended = getCurrentTransaction();
+	    log.trace(nodeId + ": Suspending " + suspended + " for thread " + Thread.currentThread().getName());
+		currentTransaction.set(null);
 		return suspended;
 	}
 
 	public void resume(Transaction transaction)
 			throws InvalidTransactionException, IllegalStateException, SystemException {
-		currentTransaction = ( DualNodeJtaTransactionImpl ) transaction;
-		log.trace(nodeId + ": Resumed " + currentTransaction + " for thread " + Thread.currentThread().getName());
+		currentTransaction.set(( DualNodeJtaTransactionImpl ) transaction);
+		log.trace(nodeId + ": Resumed " + transaction + " for thread " + Thread.currentThread().getName());
 	}
 
 	public void commit()
 			throws RollbackException, HeuristicMixedException, HeuristicRollbackException, SecurityException, IllegalStateException, SystemException {
-		if ( currentTransaction == null ) {
+		Transaction tx = getCurrentTransaction();
+	    if ( tx == null ) {
 			throw new IllegalStateException( "no current transaction to commit" );
 		}
-		currentTransaction.commit();
+	    tx.commit();
 	}
 
 	public void rollback() throws IllegalStateException, SecurityException, SystemException {
-		if ( currentTransaction == null ) {
+	    Transaction tx = getCurrentTransaction();
+        if ( tx == null ) {
 			throw new IllegalStateException( "no current transaction" );
 		}
-		currentTransaction.rollback();
+        tx.rollback();
 	}
 
 	public void setRollbackOnly() throws IllegalStateException, SystemException {
-		if ( currentTransaction == null ) {
+	    Transaction tx = getCurrentTransaction();
+        if ( tx == null ) {
 			throw new IllegalStateException( "no current transaction" );
 		}
-		currentTransaction.setRollbackOnly();
+        tx.setRollbackOnly();
 	}
 
 	public void setTransactionTimeout(int i) throws SystemException {
 	}
 
 	void endCurrent(DualNodeJtaTransactionImpl transaction) {
-		if ( transaction == currentTransaction ) {
-			currentTransaction = null;
+		if ( transaction == currentTransaction.get() ) {
+			currentTransaction.set(null);
 		}
 	}
 	

@@ -85,6 +85,11 @@ public abstract class BasicRegionAdapter implements Region {
     protected abstract Fqn<String> createRegionFqn(String regionName, String regionPrefix);
 
     protected void activateLocalClusterNode() {
+       
+        // Regions can get instantiated in the course of normal work (e.g.
+        // a named query region will be created the first time the query is
+        // executed), so suspend any ongoing tx
+        Transaction tx = suspend();
         try {
             Configuration cfg = jbcCache.getConfiguration();
             if (cfg.isUseRegionBasedMarshalling()) {
@@ -128,6 +133,11 @@ public abstract class BasicRegionAdapter implements Region {
         catch (Exception e) {
             throw new CacheException(e.getMessage(), e);
         }
+        finally {
+            if (tx != null)
+               resume(tx);
+        }
+        
     }
 
     private void establishRegionRootNode()

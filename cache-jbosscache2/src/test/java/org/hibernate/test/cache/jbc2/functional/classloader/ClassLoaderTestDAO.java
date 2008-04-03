@@ -212,6 +212,10 @@ public class ClassLoaderTestDAO
       try {
           Query query = sessionFactory.getCurrentSession().createQuery("select account.balance from Account as account where account.accountHolder = ?");
           query.setParameter(0, holder);
+          if (useRegion)
+          {
+             query.setCacheRegion("AccountRegion");
+          }
           query.setCacheable(true);
           results = query.list();
           tm.commit();

@@ -63,7 +63,7 @@ public abstract class AbstractQueryCacheFunctionalTestCase extends AbstractEntit
         s.close();
 
         SecondLevelCacheStatistics slcs = s.getSessionFactory().getStatistics().getSecondLevelCacheStatistics(
-                Item.class.getName());
+              getPrefixedRegionName(Item.class.getName()));
 
         assertEquals(slcs.getPutCount(), 1);
         assertEquals(slcs.getElementCountInMemory(), 1);

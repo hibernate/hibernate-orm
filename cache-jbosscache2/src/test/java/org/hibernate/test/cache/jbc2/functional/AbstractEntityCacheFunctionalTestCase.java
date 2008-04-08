@@ -56,7 +56,7 @@ public abstract class AbstractEntityCacheFunctionalTestCase extends CacheTestCas
         getSessions().evictEntity(Item.class.getName());
         Statistics stats = getSessions().getStatistics();
         stats.clear();
-        SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics(Item.class.getName());
+        SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics(getPrefixedRegionName(Item.class.getName()));
         Map cacheEntries = statistics.getEntries();
         assertEquals(0, cacheEntries.size());
     }
@@ -102,7 +102,7 @@ public abstract class AbstractEntityCacheFunctionalTestCase extends CacheTestCas
 
         // check the version value in the cache...
         SecondLevelCacheStatistics slcs = sfi().getStatistics().getSecondLevelCacheStatistics(
-                VersionedItem.class.getName());
+              getPrefixedRegionName(VersionedItem.class.getName()));
 
         Object entry = slcs.getEntries().get(item.getId());
         Long cachedVersionValue;

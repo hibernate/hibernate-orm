@@ -83,6 +83,12 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     protected String getRegionPrefix() {
         return "test";
     }
+    
+    protected String getPrefixedRegionName(String regionName)
+    {
+       String prefix = getRegionPrefix() == null ? "" : getRegionPrefix() + ".";
+       return prefix + regionName;
+    }
 
     public String getCacheConcurrencyStrategy() {
         return "transactional";

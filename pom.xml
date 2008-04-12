@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-core-parent</artifactId>
-        <version>2</version>
+        <version>3</version>
     </parent>
     
     <groupId>org.hibernate</groupId>
@@ -50,6 +50,18 @@
                 <version>2.0-beta-7</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <goals>install,site,assembly:single</goals>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-2</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/assembly/hibernate-all.xml</descriptor>
+                        <descriptor>src/assembly/dist.xml</descriptor>
+                    </descriptors>
                 </configuration>
             </plugin>
         </plugins>
@@ -61,39 +73,10 @@
                 A profile used implicitly by the release plugin.  Here we use it to enable documentation building
                 as well as execution of the assembly plugin (to build the SourceForge dist).
             -->
-            <id>release</id>
-<!--
-    temporarily disable documentation module
+            <id>release-profile</id>
             <modules>
                 <module>documentation</module>
             </modules>
--->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-2</version>
-<!--
-                        <executions>
-                            <execution>
-                                <id>assemble</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                            </execution>
-                        </executions>
--->
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/dist.xml</descriptor>
-                                <descriptor>src/assembly/hibernate-all.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
 
         <!-- seperate profile for documentation activation -->

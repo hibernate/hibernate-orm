@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  ~
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>3.3.0-SNAPSHOT</version>
+
+    <name>Hibernate Core Parent POM</name>
+    <description>The base POM for all Hibernate Core modules.</description>
+    <url>http://hibernate.org</url>
+
+    <organization>
+        <name>Hibernate.org</name>
+        <url>http://hibernate.org</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <url>http://www.gnu.org/copyleft/lesser.html</url>
+            <comments>See discussion at http://hibernate.org/356.html for more details.</comments>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <!-- this is the cloned repo!!! -->
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
+    </scm>
+
+    <ciManagement>
+        <system>hudson</system>
+        <url>http://hudson.jboss.org/hudson/job/hibernate-testsuite/</url>
+        <notifiers>
+            <notifier>
+                <type>mail</type>
+                <address>hibernate-dev@lists.jboss.org</address>
+            </notifier>
+        </notifiers>
+    </ciManagement>
+
+    <issueManagement>
+        <system>jira</system>
+        <url>http://opensource.atlassian.com/projects/hibernate/browse/HHH</url>
+    </issueManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>Hibernate Announcements</name>
+            <post>hibernate-announce@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Commit Notificatons</name>
+            <post>hibernate-commits@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-commits/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Developers</name>
+            <post>hibernate-dev@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+            <otherArchives>
+                <otherArchive>http://www.mail-archive.com/hibernate-dev%40lists.jboss.org/index.html</otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Issue Notifications</name>
+            <post>hibernate-issues@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-issues/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!-- require at least JDK 1.5 to run the build -->
+                <!-- ... -->
+                <!-- we need at least Maven 2.0.8 because of a bug fix affecting our antlr usage -->
+                <!-- 2.0.8 not released at this time, so I instead say anything greater that 2.0.7 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0-alpha-3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[1.5,)</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>(2.0.7,)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- by default, compile to JDK 1.4 compatibility (individual modules and/or user can override) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.4</source>
+                    <target>1.4</target>
+                </configuration>
+            </plugin>
+            <!-- add specification/implementation details to the manifests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Implementation-URL>${pom.url}</Implementation-URL>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-webdav</artifactId>
+                <version>1.0-beta-2</version>
+            </extension>
+        </extensions>
+    </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.2</version>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <links>
+                        <link>http://java.sun.com/j2se/1.4.2/docs/api/</link>
+                        <link>http://java.sun.com/j2ee/1.4/docs/api/</link>
+                    </links>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <linkXref>true</linkXref>
+                    <minimumTokens>100</minimumTokens>
+                    <targetJdk>1.4</targetJdk>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>taglist-maven-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <tags>
+                        <tag>@FIXME</tag>
+                        <tag>@fixme</tag>
+                        <tag>FIXME</tag>
+                        <tag>fixme</tag>
+                        <tag>@TODO</tag>
+                        <tag>@todo</tag>
+                        <tag>TODO</tag>
+                        <tag>todo</tag>
+                    </tags>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- Note: aggregate-able, may cause problems if we aggregate jxr and not this because of the xref links -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>javancss-maven-plugin</artifactId>
+                <version>2.0-beta-2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <configuration>
+                    <onlyAnalyze>org.hibernate.*</onlyAnalyze>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <profiles>
+        <profile>
+            <!--
+                A profile used implicitly by the release plugin.  Here we use it to enable documentation building
+                as well as execution of the assembly plugin (to build the SourceForge dist).
+            -->
+            <id>release-profile</id>
+            <modules>
+                <module>documentation</module>
+            </modules>
+        </profile>
+
+        <!-- seperate profile for documentation activation -->
+        <profile>
+            <id>docs</id>
+            <modules>
+                <module>documentation</module>
+            </modules>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.4.2</version>
+            </dependency>
+            <dependency>
+                <groupId>antlr</groupId>
+                <artifactId>antlr</artifactId>
+                <version>2.7.6</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>3.1</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>3.8.1</version>
+            </dependency>
+            <dependency>
+                <groupId>dom4j</groupId>
+                <artifactId>dom4j</artifactId>
+                <version>1.6.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <!-- Copy the dist to the local checkout of the JBoss maven2 repo ${maven.repository.root} -->
+            <!-- It is anticipated that ${maven.repository.root} be set in user's settings.xml -->
+            <!-- todo : replace this with direct svn access once the svnkit providers are available -->
+            <id>repository.jboss.org</id>
+            <url>file://${maven.repository.root}</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots.jboss.org</id>
+            <name>JBoss Snapshot Repository</name>
+            <url>dav:https://snapshots.jboss.org/maven2</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

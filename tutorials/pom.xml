@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
@@ -22,12 +22,9 @@
   ~ Free Software Foundation, Inc.
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
-  ~
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -37,13 +34,18 @@
         <version>3.3.0-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
-    
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-testsuite</artifactId>
-    <packaging>jar</packaging>
 
-    <name>Hibernate Testsuite</name>
-    <description>The testsuite of Hibernate functionality</description>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-tutorials</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Hibernate Tutorials</name>
+    <description>Series of tutorials demonstrating Hibernate functionality</description>
+
+    <modules>
+        <module>eg</module>
+        <module>web</module>
+    </modules>
 
     <dependencies>
         <dependency>
@@ -78,7 +80,13 @@
             <artifactId>jaxen</artifactId>
             <version>1.1</version>
         </dependency>
-        <!-- logging setup for the test suite -->
+        <!-- the tutorials use HSQLDB -->
+         <dependency>
+             <groupId>hsqldb</groupId>
+             <artifactId>hsqldb</artifactId>
+             <version>1.8.0.2</version>
+        </dependency>
+        <!-- logging setup -->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
@@ -130,30 +138,6 @@
                     <target>1.5</target>
                 </configuration>
               </plugin>
-            <plugin>
-                <groupId>org.jboss.maven.plugins</groupId>
-                <artifactId>maven-test-ext-plugin</artifactId>
-                <version>1.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extend</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <property>
-                            <name>hibernate.test.validatefailureexpected</name>
-                            <value>true</value>
-                        </property>
-                    </systemProperties>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

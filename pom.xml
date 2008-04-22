@@ -1,29 +1,50 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  ~
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-core-parent</artifactId>
-        <version>3</version>
+        <artifactId>hibernate-parent</artifactId>
+        <version>3.3.0-SNAPSHOT</version>
+        <relativePath>parent/pom.xml</relativePath>
     </parent>
-    
+
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate</artifactId>
     <packaging>pom</packaging>
-    <version>3.3.0-SNAPSHOT</version>
 
     <name>Hibernate Core Aggregator</name>
     <description>Aggregator of the Hibernate Core modules.</description>
-    <url>http://hibernate.org</url>
-
-    <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
-    </scm>
 
     <modules>
+        <module>parent</module>
         <module>core</module>
         <module>cache-ehcache</module>
         <module>cache-jbosscache</module>
@@ -35,40 +56,23 @@
         <module>jmx</module>
         <module>testing</module>
         <module>testsuite</module>
-        <module>eg</module>
-<!-- Need to scope bytecode providers first
+        <module>tutorials</module>
+<!--
+    Need to scope bytecode providers first...
         <module>bytecode-cglib</module>
         <module>bytecode-javassist</module>
 -->
+        <module>distribution</module>
     </modules>
-    
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.0-beta-7</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>perform</goal>
-                        </goals>
-                        <configuration>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <goals>install,site,assembly:single</goals>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-2</version>
                 <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/hibernate-all.xml</descriptor>
-                        <descriptor>src/assembly/dist.xml</descriptor>
-                    </descriptors>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
         </plugins>
@@ -77,10 +81,16 @@
     <profiles>
         <profile>
             <!--
-                A profile used implicitly by the release plugin.  Here we use it to enable documentation building
-                as well as execution of the assembly plugin (to build the SourceForge dist).
+                A profile used implicitly by the release plugin.  Here we use
+                it to enable documentation building.
             -->
             <id>release-profile</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <modules>
                 <module>documentation</module>
             </modules>
@@ -94,4 +104,5 @@
             </modules>
         </profile>
     </profiles>
+
 </project>

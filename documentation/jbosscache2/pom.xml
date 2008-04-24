@@ -73,7 +73,7 @@
                         <translation>zh-CN</translation>
                     </translations>
                     <imageResource>
-                        <directory>src/main/docbook/en-US</directory>
+                        <directory>${basedir}/src/main/docbook/en-US</directory>
                         <excludes>
                             <exclude>*.xml</exclude>
                             <exclude>**/*.xml</exclude>

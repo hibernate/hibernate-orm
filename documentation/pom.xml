@@ -47,7 +47,9 @@
 
     <modules>
         <module>manual</module>
+<!--
         <module>jbosscache2</module>
+-->
     </modules>
 
 </project>

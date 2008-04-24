@@ -26,8 +26,8 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -37,7 +37,7 @@
         <version>3.3.0-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
-    
+
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jbc2-manual</artifactId>
     <version>3.3.0-SNAPSHOT</version>
@@ -51,8 +51,8 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
-                <version>2.1.0-SNAPSHOT</version>
-		          <extensions>true</extensions>
+                <version>2.1.0</version>
+                <extensions>true</extensions>
                 <dependencies>
                     <dependency>
                         <groupId>org.hibernate</groupId>
@@ -77,20 +77,26 @@
                         <format>
                             <formatName>pdf</formatName>
                             <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
-                            <finalName>hibernate_reference.pdf</finalName>
+                            <finalName>hibernate-jbosscache-guide.pdf</finalName>
+                            <!--
                             <profilingTypeName>two_pass</profilingTypeName>
+                            -->
                         </format>
                         <format>
                             <formatName>html_single</formatName>
                             <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl</stylesheetResource>
                             <finalName>index.html</finalName>
+                            <!--
                             <profilingTypeName>two_pass</profilingTypeName>
+                            -->
                         </format>
                         <format>
                             <formatName>html</formatName>
                             <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl</stylesheetResource>
                             <finalName>index.html</finalName>
+                            <!--
                             <profilingTypeName>two_pass</profilingTypeName>
+                            -->
                         </format>
                     </formats>
                     <options>

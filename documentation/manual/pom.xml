@@ -78,9 +78,13 @@
                     <sourceDocumentName>Hibernate_Reference.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <translations>
+<!--
                         <translation>es-ES</translation>
+-->
                         <translation>fr-FR</translation>
+<!--
                         <translation>ja-JP</translation>
+-->
                         <translation>ko-KR</translation>
                         <translation>pt-BR</translation>
                         <translation>zh-CN</translation>

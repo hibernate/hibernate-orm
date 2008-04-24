@@ -33,8 +33,6 @@
         Hibernate did.
     -->
 
-    <!-- todo : still need to account for documentation -->
-    <!-- todo : still need to account for tutorials -->
     <!-- todo : still need to account for overall site stuff -->
 
     <id>dist</id>
@@ -142,13 +140,41 @@
     </dependencySets>
 
     <fileSets>
+        <!--
+            Build the 'project' directory which includes the project sources
+        -->
         <fileSet>
             <directory>..</directory>
             <useDefaultExcludes>true</useDefaultExcludes>
             <outputDirectory>project</outputDirectory>
             <excludes>
                 <exclude>**/target/**</exclude>
+                <exclude>**/*.ipr</exclude>
+                <exclude>**/*.iml</exclude>
+                <exclude>**/*.iws</exclude>
             </excludes>
+        </fileSet>
+        <!--
+            Build the 'documentation/manual' directory containing the built
+            reference manual documentation
+        -->
+        <fileSet>
+            <directory>../documentation/manual/target/docbook/publish/</directory>
+            <outputDirectory>documentation/manual</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+        <!--
+            Build the 'documentation/jbosscache-guide' directory containing the built
+            reference manual documentation
+        -->
+        <fileSet>
+            <directory>../documentation/jbosscache2/target/docbook/publish/</directory>
+            <outputDirectory>documentation/jbosscache-guide</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
         </fileSet>
     </fileSets>
 

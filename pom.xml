@@ -85,12 +85,6 @@
                 it to enable documentation building.
             -->
             <id>release-profile</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
             <modules>
                 <module>documentation</module>
             </modules>

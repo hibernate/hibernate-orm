@@ -64,14 +64,6 @@
                 <configuration>
                     <sourceDocumentName>Hibernate_JBC2_Reference.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
-                    <translations>
-                        <translation>es-ES</translation>
-                        <translation>fr-FR</translation>
-                        <translation>ja-JP</translation>
-                        <translation>ko-KR</translation>
-                        <translation>pt-BR</translation>
-                        <translation>zh-CN</translation>
-                    </translations>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>
                         <excludes>

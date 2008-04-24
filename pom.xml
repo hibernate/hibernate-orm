@@ -79,20 +79,16 @@
     </build>
 
     <profiles>
-        <profile>
-            <!--
-                A profile used implicitly by the release plugin.  Here we use
-                it to enable documentation building.
-            -->
-            <id>release-profile</id>
-            <modules>
-                <module>documentation</module>
-            </modules>
-        </profile>
-
-        <!-- seperate profile for documentation activation -->
+        <!-- profile for documentation activation -->
         <profile>
             <id>docs</id>
+            <!-- automatically activate this profile when performing a release -->
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <modules>
                 <module>documentation</module>
             </modules>

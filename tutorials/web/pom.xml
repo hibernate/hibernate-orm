@@ -42,8 +42,8 @@
     <artifactId>hibernate-tutorial-web</artifactId>
     <packaging>war</packaging>
 
-    <name>Hibernate Tutorial</name>
-    <description>A tutorial project showcasing Hibernate usage</description>
+    <name>Hibernate Web Tutorial</name>
+    <description>A webapp-based tutorial project showcasing Hibernate usage</description>
 
     <dependencies>
         <dependency>

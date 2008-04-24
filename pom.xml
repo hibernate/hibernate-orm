@@ -73,7 +73,7 @@
                 <version>2.0-beta-7</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <arguments>-Pdocs</arguments>
+                    <arguments>-DbuildDocs=true</arguments>
                 </configuration>
             </plugin>
         </plugins>
@@ -83,6 +83,12 @@
         <!-- profile for documentation module activation -->
         <profile>
             <id>docs</id>
+            <activation>
+                <property>
+                    <name>buildDocs</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <modules>
                 <module>documentation</module>
             </modules>

@@ -57,7 +57,7 @@
                     <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-jdocbook-style</artifactId>
-                        <version>1.0.1-SNAPSHOT</version>
+                        <version>1.0.2</version>
                         <type>jdocbook-style</type>
                     </dependency>
                 </dependencies>

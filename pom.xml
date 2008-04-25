@@ -56,6 +56,7 @@
         <module>jmx</module>
         <module>testing</module>
         <module>testsuite</module>
+        <module>documentation</module>
         <module>tutorials</module>
 <!--
     Need to scope bytecode providers first...
@@ -73,26 +74,19 @@
                 <version>2.0-beta-7</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <arguments>-DbuildDocs=true</arguments>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
+<!--
     <profiles>
-        <!-- profile for documentation module activation -->
         <profile>
             <id>docs</id>
-            <activation>
-                <property>
-                    <name>buildDocs</name>
-                    <value>true</value>
-                </property>
-            </activation>
             <modules>
                 <module>documentation</module>
             </modules>
         </profile>
     </profiles>
-
+-->
 </project>

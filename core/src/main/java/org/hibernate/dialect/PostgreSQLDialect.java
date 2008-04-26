@@ -1,19 +1,21 @@
 //$Id: PostgreSQLDialect.java 11367 2007-03-29 13:26:40Z steve.ebersole@jboss.com $
 package org.hibernate.dialect;
 
-import java.sql.Types;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.Hibernate;
-import org.hibernate.exception.ViolatedConstraintNameExtracter;
-import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.PositionSubstringFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
 
 /**
@@ -292,6 +294,19 @@ public class PostgreSQLDialect extends Dialect {
 			}
 		}
 	};
+	
+	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+		// Register the type of the out param - PostgreSQL uses Types.OTHER
+		statement.registerOutParameter(col, Types.OTHER);
+		col++;
+		return col;
+	}
+
+	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
+		ps.execute();
+		ResultSet rs = (ResultSet) ps.getObject(1);
+		return rs;
+	}
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

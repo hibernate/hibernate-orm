@@ -234,7 +234,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public String getCreateTemporaryTableString() {
-		return "create local temporary table";
+		return "create temporary table";
 	}
 
 	public String getCreateTemporaryTablePostfix() {
@@ -308,7 +308,16 @@ public class PostgreSQLDialect extends Dialect {
 		return rs;
 	}
 
+	public boolean supportsPooledSequences() {
+		return true;
+	}
 
+	//only necessary for postgre < 7.4
+	//http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+		return getCreateSequenceString( sequenceName ) + " start " + initialValue + " increment " + incrementSize;
+	}
+	
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // seems to not really...

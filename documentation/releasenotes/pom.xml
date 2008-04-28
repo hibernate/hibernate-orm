@@ -80,7 +80,7 @@
                         <format>
                             <formatName>pdf</formatName>
                             <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
-                            <finalName>hibernate_reference.pdf</finalName>
+                            <finalName>Release_Notes.pdf</finalName>
                             <profilingTypeName>two_pass</profilingTypeName>
                         </format>
                         <format>

@@ -59,7 +59,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
       </itemizedlist>
 
       <para>This will still return Object arrays, but now it will not use
-      <literal>ResultSetMetdata</literal> but will instead explicitly get the
+      <literal>ResultSetMetadata</literal> but will instead explicitly get the
       ID, NAME and BIRTHDATE column as respectively a Long, String and a Short
       from the underlying resultset. This also means that only these three
       columns will be returned, even though the query is using
@@ -181,7 +181,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       row, a cat and its mother. This will fail since there is a conflict of
       names since they are mapped to the same column names and on some
       databases the returned column aliases will most likely be on the form
-      "c.ID", "c.NAME", etc. which are not equal to the columns specificed in
+      "c.ID", "c.NAME", etc. which are not equal to the columns specified in
       the mappings ("ID" and "NAME").</para>
 
       <para>The following form is not vulnerable to column name
@@ -206,7 +206,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       </itemizedlist>
 
       <para>The {cat.*} and {mother.*} notation used above is a shorthand for
-      "all properties". Alternatively, you may list the columns explicity, but
+      "all properties". Alternatively, you may list the columns explicitly, but
       even in this case we let Hibernate inject the SQL column aliases for
       each property. The placeholder for a column alias is just the property
       name qualified by the table alias. In the following example, we retrieve
@@ -450,7 +450,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
 </sql-query>]]></programlisting>
 
     <para>You can externalize the resultset mapping informations in a
-    <literal>&lt;resultset&gt;</literal> element to either reuse them accross
+    <literal>&lt;resultset&gt;</literal> element to either reuse them across
     several named queries or through the
     <literal>setResultSetMapping()</literal> API.</para>
 

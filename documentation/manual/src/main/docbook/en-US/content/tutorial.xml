@@ -237,7 +237,7 @@ public class Event {
 </hibernate-mapping>]]></programlisting>
 
             <para>
-                The <literal>id</literal> element is the declaration of the identifer property,
+                The <literal>id</literal> element is the declaration of the identifier property,
                 <literal>name="id"</literal> declares the name of the Java property -
                 Hibernate will use the getter and setter methods to access the property.
                 The column attribute tells Hibernate which column of the
@@ -776,7 +776,7 @@ else if (args[0].equals("list")) {
                 <listitem>
                     <para>
                         Now disable hbm2ddl by commenting out the property in your <literal>hibernate.cfg.xml</literal>
-                        file. Usually you only leave it turned on in continous unit testing, but another
+                        file. Usually you only leave it turned on in continuous unit testing, but another
                         run of hbm2ddl would <emphasis>drop</emphasis> everything you have stored - the
                         <literal>create</literal> configuration setting actually translates into "drop all
                         tables from the schema, then re-create all tables, when the SessionFactory is build".
@@ -1144,7 +1144,7 @@ public void setEmailAddresses(Set emailAddresses) {
 }]]></programlisting>
 
             <para>
-                This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the collection.
+                This time we didn't use a <emphasis>fetch</emphasis> query to initialize the collection.
                 Hence, the call to its getter method will trigger an additional select to initialize
                 it, so we can add an element to it. Monitor the SQL log and try to optimize this with
                 an eager fetch.
@@ -1216,7 +1216,7 @@ public void setParticipants(Set participants) {
             </para>
 
             <para>
-                Many developers program defensive and create link management methods to
+                Many developers program defensively and create link management methods to
                 correctly set both sides, e.g. in <literal>Person</literal>:
             </para>
 
@@ -1346,7 +1346,7 @@ public class EventManagerServlet extends HttpServlet {
 
             <para>
                 Finally, the unit of work ends when processing and rendering is complete. If any
-                problem occured during processing or rendering, an exception will be thrown
+                problem occurred during processing or rendering, an exception will be thrown
                 and the database transaction rolled back. This completes the
                 <literal>session-per-request</literal> pattern. Instead of the transaction
                 demarcation code in every servlet you could also write a servlet filter.
@@ -1456,7 +1456,7 @@ out.close();]]></programlisting>
                 That's it, the servlet is complete. A request to the servlet will be processed
                 in a single <literal>Session</literal> and <literal>Transaction</literal>. As
                 earlier in the standalone application, Hibernate can automatically bind these
-                ojects to the current thread of execution. This gives you the freedom to layer
+                objects to the current thread of execution. This gives you the freedom to layer
                 your code and access the <literal>SessionFactory</literal> in any way you like.
                 Usually you'd use a more sophisticated design and move the data access code
                 into data access objects (the DAO pattern). See the Hibernate Wiki for more
@@ -1510,7 +1510,7 @@ out.close();]]></programlisting>
                 Before you compile and deploy the web application, note that an additional library
                 is required: <literal>jsdk.jar</literal>. This is the Java servlet development kit,
                 if you don't have this library already, get it from the Sun website and copy it to
-                your library directory. However, it will be only used for compliation and excluded
+                your library directory. However, it will be only used for compilation and excluded
                 from the WAR package.
             </para>
 

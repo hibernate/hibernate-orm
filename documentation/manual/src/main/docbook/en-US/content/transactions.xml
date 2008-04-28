@@ -87,7 +87,7 @@
             <para>
                 The most common pattern in a multi-user client/server application is
                 <emphasis>session-per-request</emphasis>. In this model, a request from the client
-                is send to the server (where the Hibernate persistence layer runs), a new Hibernate
+                is sent to the server (where the Hibernate persistence layer runs), a new Hibernate
                 <literal>Session</literal> is opened, and all database operations are executed in this unit
                 of work. Once the work has been completed (and the response for the client has been prepared),
                 the session is flushed and closed. You would also use a single database transaction to
@@ -100,7 +100,7 @@
                 The challenge lies in the implementation. Hibernate provides built-in management of
                 the "current session" to simplify this pattern. All you have to do is start a
                 transaction when a server request has to be processed, and end the transaction
-                before the response is send to the client. You can do this in any way you
+                before the response is sent to the client. You can do this in any way you
                 like, common solutions are <literal>ServletFilter</literal>, AOP interceptor with a
                 pointcut on the service methods, or a proxy/interception container. An EJB container
                 is a standardized way to implement cross-cutting aspects such as transaction
@@ -174,7 +174,7 @@
             </para>
 
             <para>
-                Clearly, we have to use several database transactions to implement the converastion.
+                Clearly, we have to use several database transactions to implement the conversation.
                 In this case, maintaining isolation of business processes becomes the
                 partial responsibility of the application tier. A single conversation
                 usually spans several database transactions. It will be atomic if only one of
@@ -189,7 +189,7 @@
                     <para>
                         <emphasis>Automatic Versioning</emphasis> - Hibernate can do automatic
                         optimistic concurrency control for you, it can automatically detect
-                        if a concurrent modification occured during user think time. Usually
+                        if a concurrent modification occurred during user think time. Usually
                         we only check at the end of the conversation.
                     </para>
                 </listitem>
@@ -212,7 +212,7 @@
                         <emphasis>session-per-conversation</emphasis> and makes
                         even reattachment unnecessary. Automatic versioning is used to isolate
                         concurrent modifications and the <literal>Session</literal> is usually
-                        not allowed to be flushed automatically, but explicitely.
+                        not allowed to be flushed automatically, but explicitly.
                     </para>
                 </listitem>
             </itemizedlist>
@@ -348,7 +348,7 @@
         <title>Database transaction demarcation</title>
 
         <para>
-            Datatabase (or system) transaction boundaries are always necessary. No communication with
+            Database (or system) transaction boundaries are always necessary. No communication with
             the database can occur outside of a database transaction (this seems to confuse many developers
             who are used to the auto-commit mode). Always use clear transaction boundaries, even for
             read-only operations. Depending on your isolation level and database capabilities this might not
@@ -370,7 +370,7 @@
         <para>
             However, it is often desirable to keep your persistence layer portable between non-managed
             resource-local environments, and systems that can rely on JTA but use BMT instead of CMT.
-            In both cases you'd use programmatic transaction demaracation. Hibernate offers a wrapper
+            In both cases you'd use programmatic transaction demarcation. Hibernate offers a wrapper
             API called <literal>Transaction</literal> that translates into the native transaction system of
             your deployment environment. This API is actually optional, but we strongly encourage its use
             unless you are in a CMT session bean.
@@ -544,7 +544,7 @@ catch (RuntimeException e) {
 }]]></programlisting>
 
             <para>
-                With CMT, transaction demarcation is done in session bean deployment descriptors, not programatically,
+                With CMT, transaction demarcation is done in session bean deployment descriptors, not programmatically,
                 hence, the code is reduced to:
             </para>
 
@@ -569,7 +569,7 @@ catch (RuntimeException e) {
                 in a CMT session bean, when you configure Hibernate's transaction factory. Remember to also set
                 <literal>hibernate.transaction.manager_lookup_class</literal>. Furthermore, make sure
                 that your <literal>hibernate.current_session_context_class</literal> is either unset (backwards
-                compatiblity), or set to <literal>"jta"</literal>.
+                compatibility), or set to <literal>"jta"</literal>.
             </para>
 
             <para>
@@ -580,7 +580,7 @@ catch (RuntimeException e) {
                 <literal>Iterator</literal> instances returned by <literal>scroll()</literal> or 
                 <literal>iterate()</literal>. You <emphasis>must</emphasis> release the underlying database 
                 cursor by calling <literal>ScrollableResults.close()</literal> or 
-                <literal>Hibernate.close(Iterator)</literal> explicity from a <literal>finally</literal> 
+                <literal>Hibernate.close(Iterator)</literal> explicitly from a <literal>finally</literal> 
                 block. (Of course, most applications can easily avoid using <literal>scroll()</literal> or 
                 <literal>iterate()</literal> at all from the JTA or CMT code.)
             </para>
@@ -615,8 +615,8 @@ catch (RuntimeException e) {
 
             <para>
                 Hibernate wraps <literal>SQLException</literal>s thrown while interacting with the database
-                in a <literal>JDBCException</literal>. In fact, Hibernate will attempt to convert the eexception
-                into a more meningful subclass of <literal>JDBCException</literal>.  The underlying
+                in a <literal>JDBCException</literal>. In fact, Hibernate will attempt to convert the exception
+                into a more meaningful subclass of <literal>JDBCException</literal>.  The underlying
                 <literal>SQLException</literal> is always available via <literal>JDBCException.getCause()</literal>.
                 Hibernate converts the <literal>SQLException</literal> into an appropriate 
                 <literal>JDBCException</literal> subclass using the <literal>SQLExceptionConverter</literal> 
@@ -674,7 +674,7 @@ catch (RuntimeException e) {
                 Hibernate can at least control data access operations, ensuring that database
                 level deadlocks and queries with huge result sets are limited by a defined
                 timeout. In a managed environment, Hibernate can delegate transaction timeout
-                to JTA. This functioanlity is abstracted by the Hibernate 
+                to JTA. This functionality is abstracted by the Hibernate 
                 <literal>Transaction</literal> object.
             </para>
             
@@ -762,7 +762,7 @@ session.close();]]></programlisting>
             <para>
                 Clearly, manual version checking is only feasible in very trivial circumstances
                 and not practical for most applications. Often not only single instances, but
-                complete graphs of modified ojects have to be checked. Hibernate offers automatic
+                complete graphs of modified objects have to be checked. Hibernate offers automatic
                 version checking with either an extended <literal>Session</literal> or detached instances
                 as the design paradigm.
             </para>
@@ -866,7 +866,7 @@ session.close();]]></programlisting>
 
             <para>
                 Again, Hibernate will check instance versions during flush, throwing an
-                exception if conflicting updates occured.
+                exception if conflicting updates occurred.
             </para>
 
             <para>
@@ -893,7 +893,7 @@ session.close();]]></programlisting>
                 even timestamps. In both cases, versioning can't rely on a particular column in a table.
                 To force a version check without a version or timestamp property mapping, with a
                 comparison of the state of all fields in a row, turn on <literal>optimistic-lock="all"</literal>
-                in the <literal>&lt;class&gt;</literal> mapping. Note that this concepetually only works
+                in the <literal>&lt;class&gt;</literal> mapping. Note that this conceptually only works
                 if Hibernate can compare the old and new state, i.e. if you use a single long
                 <literal>Session</literal> and not session-per-request-with-detached-objects.
             </para>
@@ -909,7 +909,7 @@ session.close();]]></programlisting>
                 comparison, Hibernate uses a single <literal>UPDATE</literal> statement (with an
                 appropriate <literal>WHERE</literal> clause) per entity to execute the version check
                 and update the information. If you use transitive persistence to cascade reattachment
-                to associated entities, Hibernate might execute uneccessary updates. This is usually
+                to associated entities, Hibernate might execute unnecessary updates. This is usually
                 not a problem, but <emphasis>on update</emphasis> triggers in the database might be
                 executed even when no changes have been made to detached instances. You can customize
                 this behavior by setting  <literal>select-before-update="true"</literal> in the
@@ -925,7 +925,7 @@ session.close();]]></programlisting>
         <title>Pessimistic Locking</title>
 
         <para>
-            It is not intended that users spend much time worring about locking strategies. Its usually
+            It is not intended that users spend much time worrying about locking strategies. It's usually
             enough to specify an isolation level for the JDBC connections and then simply let the
             database do all the work. However, advanced users may sometimes wish to obtain
             exclusive pessimistic locks, or re-obtain locks at the start of a new transaction.
@@ -1042,7 +1042,7 @@ session.close();]]></programlisting>
             <listitem>
                 <para>
                     <literal>ON_CLOSE</literal> - is essentially the legacy behavior described above. The
-                    Hibernate session obatins a connection when it first needs to perform some JDBC access
+                    Hibernate session obtains a connection when it first needs to perform some JDBC access
                     and holds unto that connection until the session is closed.
                 </para>
             </listitem>

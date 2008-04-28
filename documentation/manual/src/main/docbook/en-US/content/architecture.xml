@@ -215,7 +215,7 @@
                         The instance was once associated with a persistence
                         context, but that context was closed, or the instance
                         was serialized to another process. It has a persistent 
-                        identity and, perhaps, a corrsponding row in the database.
+                        identity and, perhaps, a corresponding row in the database.
                         For detached instances, Hibernate makes no guarantees 
                         about the relationship between persistent identity and
                         Java identity.
@@ -348,7 +348,7 @@
             The first two implementations provide a "one session - one database transaction" programming
             model, also known and used as <emphasis>session-per-request</emphasis>. The beginning
             and end of a Hibernate session is defined by the duration of a database transaction.
-            If you use programatic transaction demarcation in plain JSE without JTA, you are adviced to
+            If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to
             use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system
             from your code. If you use JTA, use the JTA interfaces to demarcate transactions. If you
             execute in an EJB container that supports CMT, transaction boundaries are defined declaratively

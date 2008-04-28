@@ -522,7 +522,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has
                 a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the
-                <literal>Sesssion</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
+                <literal>Session</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
                 one for every call to <literal>getCats()</literal>. If you enable batch fetching for the
                 <literal>cats</literal> collection in the mapping of <literal>Person</literal>, Hibernate can pre-fetch
                 collections:
@@ -615,7 +615,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 A different (better?) way to avoid unnecessary column reads, at least for
                 read-only transactions is to use the projection features of HQL or Criteria
                 queries. This avoids the need for buildtime bytecode processing and is
-                certainly a prefered solution.
+                certainly a preferred solution.
             </para>
             
             <para>
@@ -760,7 +760,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </programlistingco>
             
             <para>
-                Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</literal> and 
+                Alternatively (preferably?), you may specify <literal>&lt;class-cache&gt;</literal> and 
                 <literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate.cfg.xml</literal>.
             </para>
             
@@ -1124,7 +1124,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element
                 columns. This may be less efficient for some types of collection element, particularly
                 composite elements or large text or binary fields; the database may not be able to index
-                a complex primary key as efficently.  On the other hand, for one to many or many to many
+                a complex primary key as efficiently.  On the other hand, for one to many or many to many
                 associations, particularly in the case of synthetic identifiers, it is likely to be just
                 as efficient. (Side-note: if you want <literal>SchemaExport</literal> to actually create
                 the primary key of a <literal>&lt;set&gt;</literal> for you, you must declare all columns
@@ -1330,7 +1330,7 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
             </itemizedlist>
 
             <para>
-                Statistics can be reset programatically using the <literal>clear()</literal> method.
+                Statistics can be reset programmatically using the <literal>clear()</literal> method.
                 A summary can be sent to a logger (info level) using the <literal>logSummary()</literal>
                 method.
             </para>
@@ -1367,7 +1367,7 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
             </itemizedlist>
 
             <para>
-                For exampl,e you can check the cache hit, miss, and put ratio of entities, collections
+                For example, you can check the cache hit, miss, and put ratio of entities, collections
                 and queries, and the average time a query needs. Beware that the number of milliseconds
                 is subject to approximation in Java. Hibernate is tied to the JVM precision, on some
                 platforms this might even only be accurate to 10 seconds.

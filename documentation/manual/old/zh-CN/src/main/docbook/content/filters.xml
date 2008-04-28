@@ -56,7 +56,7 @@
 
 			<literal>Session</literal>对象中会用到的方法有：<literal>enableFilter(String filterName)</literal>,
             <literal>getEnabledFilter(String filterName)</literal>, 和 <literal>disableFilter(String filterName)</literal>.
-			Session中默认是<emphasis>不</emphasis>启用过滤器的，必须通过<literal>Session.enabledFilter()</literal>方法显式的启用。
+			Session中默认是<emphasis>不</emphasis>启用过滤器的，必须通过<literal>Session.enableFilter()</literal>方法显式的启用。
 			该方法返回被启用的<literal>Filter</literal>的实例。以上文定义的过滤器为例：
         </para>
 
@@ -106,7 +106,7 @@
         </para>
 
 <programlisting><![CDATA[Session session = ...;
-session.enabledFilter("effectiveDate").setParameter("asOfDate", new Date());
+session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
          .list();

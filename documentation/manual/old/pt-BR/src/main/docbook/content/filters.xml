@@ -58,7 +58,7 @@
             Os métodos na <literal>Session</literal> são: <literal>enableFilter(String filterName)</literal>,
             <literal>getEnabledFilter(String filterName)</literal>, e <literal>disableFilter(String filterName)</literal>.
             Por padrão, os filtros não são habilitados dentro de qualquer session; Eles devem ser explicitamente 
-            habilitados usando o método  <literal>Session.enabledFilter()</literal>, que retorna uma instância da 
+            habilitados usando o método  <literal>Session.enableFilter()</literal>, que retorna uma instância da 
             interface <literal>Filter</literal>. Usando o filtro simples definido acima, o código se pareceria 
             com o seguinte:
         </para>
@@ -107,7 +107,7 @@
         </para>
 
 <programlisting><![CDATA[Session session = ...;
-session.enabledFilter("effectiveDate").setParameter("asOfDate", new Date());
+session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
          .list();

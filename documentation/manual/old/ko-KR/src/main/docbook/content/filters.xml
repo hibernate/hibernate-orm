@@ -54,8 +54,8 @@
         <para>
             <literal>Session</literal> 상의 메소드들은 다음과 같다: <literal>enableFilter(String filterName)</literal>, 
             <literal>getEnabledFilter(String filterName)</literal>, <literal>disableFilter(String filterName)</literal>. 
-                        디폴트로, 필터들은 주어진 세션에 대해 이용 가능하지 <emphasis>않다</emphasis>; 그것들은 <literal>Session.enabledFilter()</literal> 
-                        메소드의 사용을 통해 명시적으로 이용 가능하게 되어야 한다. <literal>Session.enabledFilter()</literal>는 
+                        디폴트로, 필터들은 주어진 세션에 대해 이용 가능하지 <emphasis>않다</emphasis>; 그것들은 <literal>Session.enableFilter()</literal> 
+                        메소드의 사용을 통해 명시적으로 이용 가능하게 되어야 한다. <literal>Session.enableFilter()</literal>는 
             <literal>Filter</literal> 인터페이스의 인스턴스를 반환한다. 위에 정의된 간단한 필터를 사용하면, 이것은 다음과 같을 것이다:
         </para>
 
@@ -103,7 +103,7 @@
         </para>
 
 <programlisting><![CDATA[Session session = ...;
-session.enabledFilter("effectiveDate").setParameter("asOfDate", new Date());
+session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
          .list();

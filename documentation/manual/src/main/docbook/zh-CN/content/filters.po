@@ -216,7 +216,7 @@ msgstr ""
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = ...;\n"
-"session.enabledFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date"
+"session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date"
 "());\n"
 "List results = session.createQuery(\"from Employee as e where e.salary > :"
 "targetSalary\")\n"

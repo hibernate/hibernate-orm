@@ -42,7 +42,7 @@ msgid "or, even to both (or multiples of each) at the same time."
 msgstr ""
 
 #: filters.xml:57(para) 
-msgid "The methods on <literal>Session</literal> are: <literal>enableFilter(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</literal>, and <literal>disableFilter(String filterName)</literal>. By default, filters are <emphasis>not</emphasis> enabled for a given session; they must be explcitly enabled through use of the <literal>Session.enabledFilter()</literal> method, which returns an instance of the <literal>Filter</literal> interface. Using the simple filter defined above, this would look like:"
+msgid "The methods on <literal>Session</literal> are: <literal>enableFilter(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</literal>, and <literal>disableFilter(String filterName)</literal>. By default, filters are <emphasis>not</emphasis> enabled for a given session; they must be explcitly enabled through use of the <literal>Session.enableFilter()</literal> method, which returns an instance of the <literal>Filter</literal> interface. Using the simple filter defined above, this would look like:"
 msgstr ""
 
 #: filters.xml:68(para) 

@@ -60,7 +60,7 @@
             <literal>Session</literal> 上のメソッドは <literal>enableFilter(String filterName)</literal>,
             <literal>getEnabledFilter(String filterName)</literal>, <literal>disableFilter(String filterName)</literal> です。
             デフォルトでは、フィルタは与えられたセッションに対して使用 <emphasis>できません</emphasis> 。
-            <literal>Filter</literal> インスタンスを返り値とする <literal>Session.enabledFilter()</literal> メソッドを使うことで、
+            <literal>Filter</literal> インスタンスを返り値とする <literal>Session.enableFilter()</literal> メソッドを使うことで、
             フィルタは明示的に使用可能となります。
             上で定義した単純なフィルタの使用は、このようになります。：
         </para>
@@ -114,7 +114,7 @@
         </para>
 
 <programlisting><![CDATA[Session session = ...;
-session.enabledFilter("effectiveDate").setParameter("asOfDate", new Date());
+session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
          .list();

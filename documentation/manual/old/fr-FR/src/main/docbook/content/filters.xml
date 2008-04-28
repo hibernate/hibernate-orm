@@ -61,7 +61,7 @@
             <literal>getEnabledFilter(String filterName)</literal>, et <literal>disableFilter(String filterName)</literal>.
             Par défaut, les filtres <emphasis>ne sont pas</emphasis> activés pour une session donnée ;
             ils doivent être explicitement activés en appelant la méthode
-            <literal>Session.enabledFilter()</literal>, laquelle retourne une instance de l'interface
+            <literal>Session.enableFilter()</literal>, laquelle retourne une instance de l'interface
             <literal>Filter</literal>. Utiliser le simple filtre défini au-dessus ressemblerait à :
         </para>
 
@@ -112,7 +112,7 @@
         </para>
 
 <programlisting><![CDATA[Session session = ...;
-session.enabledFilter("effectiveDate").setParameter("asOfDate", new Date());
+session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
          .list();

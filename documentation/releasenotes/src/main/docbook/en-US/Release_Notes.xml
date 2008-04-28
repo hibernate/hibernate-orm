@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<article id="HIB_Release_Notes">
+	<xi:include href="Article_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	
+	<section id="Overview">		
+		<title>
+			Overview
+		</title>
+		<para>
+			These release notes contain important information regarding Hibernate &VERSION;. This document covers installation and migration notes, new features and bug fixes. 
+		</para>
+	
+		<section id="Background">
+			<title>Background</title>
+			<para>
+				Hibernate is a powerful object/relational mapping tool for building Java applications. It significantly reduces repetitive persistence related programming tasks by mapping the object model's data representation to a relational data model. The mapping feature eliminates paradigm mismatch issues caused by data handling between objects and relational databases. 			
+			</para>
+		</section>
+	</section>
+	<section id="Important_Notes">
+		<title>Installation And Migration Guide</title>
+		<para>
+			This section contains all information related to installing hibernate, testing the installation and running some examples.
+		</para>
+		<section id="Installation_Notes">
+			<title>Installation Notes</title>
+			<para>
+				Any information that the user must keep in mind before or during installation has to be specified here.
+			</para>
+		</section>
+		<section id="Migration_Guide">
+			<title>Migration Guide</title>
+			<para>
+				Information regarding upgrades  
+			</para>
+		</section>
+	</section>
+	<section id="Features_And_Bug_Fixes">
+		<title>New features and bug fixes</title>
+		<para>
+			All new features and bug fixes mentioned in these release notes are applicable to VERSION;. 
+		</para>
+		<section id="New_Features">
+			<title>New Features</title>
+			<para>
+				Provide a summary of new features applicable to this release. 
+			</para>
+		</section>
+		<section id="Bug_Fixes">
+			<title>Bug Fixes</title>
+			<para>
+				The following bugs have been addressed and resolved in this release.  
+			</para>
+		</section>
+	</section>
+	<section id="Documentation">
+		<title>Documentation</title>
+		<para>
+			 List all the documentation links here and where to find them. 
+		</para>		
+	</section>
+	<section id="Product_Support">
+		<title>Product Support</title>
+		<para>
+			List all the links here. 
+		</para>		
+	</section>
+</article>

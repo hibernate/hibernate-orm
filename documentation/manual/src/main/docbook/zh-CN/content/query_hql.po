@@ -2216,13 +2216,13 @@ msgstr ""
 #. Tag: programlisting
 #: query_hql.xml:992 query_hql.xml:1038
 #, no-c-format
-msgid "<![CDATA[select p.name from from Person p]]>"
+msgid "<![CDATA[select p.name from Person p]]>"
 msgstr ""
 
 #. Tag: programlisting
 #: query_hql.xml:993
 #, no-c-format
-msgid "<![CDATA[select p.name.first from from Person p]]>"
+msgid "<![CDATA[select p.name.first from Person p]]>"
 msgstr ""
 
 #. Tag: para
@@ -2236,13 +2236,13 @@ msgstr ""
 #. Tag: programlisting
 #: query_hql.xml:1000
 #, no-c-format
-msgid "<![CDATA[from from Person p where p.name = :name]]>"
+msgid "<![CDATA[from Person p where p.name = :name]]>"
 msgstr ""
 
 #. Tag: programlisting
 #: query_hql.xml:1001
 #, no-c-format
-msgid "<![CDATA[from from Person p where p.name.first = :firstName]]>"
+msgid "<![CDATA[from Person p where p.name.first = :firstName]]>"
 msgstr ""
 
 #. Tag: para
@@ -2254,13 +2254,13 @@ msgstr ""
 #. Tag: programlisting
 #: query_hql.xml:1007
 #, no-c-format
-msgid "<![CDATA[from from Person p order by p.name]]>"
+msgid "<![CDATA[from Person p order by p.name]]>"
 msgstr ""
 
 #. Tag: programlisting
 #: query_hql.xml:1008
 #, no-c-format
-msgid "<![CDATA[from from Person p order by p.name.first]]>"
+msgid "<![CDATA[from Person p order by p.name.first]]>"
 msgstr ""
 
 #. Tag: para

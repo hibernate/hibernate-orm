@@ -1168,23 +1168,23 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             queries.  They can appear in the <literal>select</literal> clause:
         </para>
 
-        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
-        <programlisting><![CDATA[select p.name.first from from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name.first from Person p]]></programlisting>
 
         <para>
             where the Person's name property is a component.  Components can also be used
             in the <literal>where</literal> clause:
         </para>
 
-        <programlisting><![CDATA[from from Person p where p.name = :name]]></programlisting>
-        <programlisting><![CDATA[from from Person p where p.name.first = :firstName]]></programlisting>
+        <programlisting><![CDATA[from Person p where p.name = :name]]></programlisting>
+        <programlisting><![CDATA[from Person p where p.name.first = :firstName]]></programlisting>
 
         <para>
             Components can also be used in the <literal>order by</literal> clause:
         </para>
 
-        <programlisting><![CDATA[from from Person p order by p.name]]></programlisting>
-        <programlisting><![CDATA[from from Person p order by p.name.first]]></programlisting>
+        <programlisting><![CDATA[from Person p order by p.name]]></programlisting>
+        <programlisting><![CDATA[from Person p order by p.name.first]]></programlisting>
 
         <para>
             Another common use of components is in <link linkend="queryhql-tuple">row value constructors</link>.
@@ -1214,7 +1214,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             It can also be useful to specify this in the <literal>select</literal> clause:
         </para>
 
-        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name from Person p]]></programlisting>
 
         <para>
             Another time using <literal>row value constructor</literal> syntax can be beneficial

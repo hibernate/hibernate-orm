@@ -1114,22 +1114,22 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             <literal>select</literal> 절 내에 나타날 수 있다. 
         </para>
 
-        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
-        <programlisting><![CDATA[select p.name.first from from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name.first from Person p]]></programlisting>
 
         <para>
             여기서 Person의 name 속성은 컴포넌트이다. 컴포넌트들은 또한 <literal>where</literal> 절 내에 사용될 수 있다: 
         </para>
 
-        <programlisting><![CDATA[from from Person p where p.name = :name]]></programlisting>
-        <programlisting><![CDATA[from from Person p where p.name.first = :firstName]]></programlisting>
+        <programlisting><![CDATA[from Person p where p.name = :name]]></programlisting>
+        <programlisting><![CDATA[from Person p where p.name.first = :firstName]]></programlisting>
 
         <para>
             컴포넌트들은 또한 <literal>order by</literal> 절 내에 사용될 수 있다:
         </para>
 
-        <programlisting><![CDATA[from from Person p order by p.name]]></programlisting>
-        <programlisting><![CDATA[from from Person p order by p.name.first]]></programlisting>
+        <programlisting><![CDATA[from Person p order by p.name]]></programlisting>
+        <programlisting><![CDATA[from Person p order by p.name.first]]></programlisting>
 
         <para>
             컴포넌트들에 대한 또 다른 공통적인 사용은 <xref linkend="queryhql-tuple">row value constructors</xref>에 있다.
@@ -1158,7 +1158,7 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
             <literal>select</literal>절 내에 이것을 지정하는 것이 또한 유용할 수 있다:
         </para>
 
-        <programlisting><![CDATA[select p.name from from Person p]]></programlisting>
+        <programlisting><![CDATA[select p.name from Person p]]></programlisting>
 
         <para>
             <literal>row value constructor</literal> 구문을 사용하는 또 다른 경우는 다중 값들에 대해 비교할 필요가 있는 

@@ -2099,12 +2099,12 @@ msgstr ""
 "clause:"
 
 #: index.docbook:992, index.docbook:1038
-msgid "<![CDATA[select p.name from from Person p]]>"
-msgstr "<![CDATA[select p.name from from Person p]]>"
+msgid "<![CDATA[select p.name from Person p]]>"
+msgstr "<![CDATA[select p.name from Person p]]>"
 
 #: index.docbook:993
-msgid "<![CDATA[select p.name.first from from Person p]]>"
-msgstr "<![CDATA[select p.name.first from from Person p]]>"
+msgid "<![CDATA[select p.name.first from Person p]]>"
+msgstr "<![CDATA[select p.name.first from Person p]]>"
 
 #: index.docbook:995
 msgid ""
@@ -2115,24 +2115,24 @@ msgstr ""
 "in the <literal>where</literal> clause:"
 
 #: index.docbook:1000
-msgid "<![CDATA[from from Person p where p.name = :name]]>"
-msgstr "<![CDATA[from from Person p where p.name = :name]]>"
+msgid "<![CDATA[from Person p where p.name = :name]]>"
+msgstr "<![CDATA[from Person p where p.name = :name]]>"
 
 #: index.docbook:1001
-msgid "<![CDATA[from from Person p where p.name.first = :firstName]]>"
-msgstr "<![CDATA[from from Person p where p.name.first = :firstName]]>"
+msgid "<![CDATA[from Person p where p.name.first = :firstName]]>"
+msgstr "<![CDATA[from Person p where p.name.first = :firstName]]>"
 
 #: index.docbook:1003
 msgid "Components can also be used in the <literal>order by</literal> clause:"
 msgstr "Components can also be used in the <literal>order by</literal> clause:"
 
 #: index.docbook:1007
-msgid "<![CDATA[from from Person p order by p.name]]>"
-msgstr "<![CDATA[from from Person p order by p.name]]>"
+msgid "<![CDATA[from Person p order by p.name]]>"
+msgstr "<![CDATA[from Person p order by p.name]]>"
 
 #: index.docbook:1008
-msgid "<![CDATA[from from Person p order by p.name.first]]>"
-msgstr "<![CDATA[from from Person p order by p.name.first]]>"
+msgid "<![CDATA[from Person p order by p.name.first]]>"
+msgstr "<![CDATA[from Person p order by p.name.first]]>"
 
 #: index.docbook:1010
 msgid ""

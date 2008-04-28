@@ -86,14 +86,15 @@ public class PostgreSQLDialect extends Dialect {
 		registerFunction( "bit_length", new StandardSQLFunction("bit_length", Hibernate.LONG) );
 		registerFunction( "octet_length", new StandardSQLFunction("octet_length", Hibernate.LONG) );
 
+		registerFunction( "age", new StandardSQLFunction("age") );
 		registerFunction( "current_date", new NoArgSQLFunction("current_date", Hibernate.DATE, false) );
 		registerFunction( "current_time", new NoArgSQLFunction("current_time", Hibernate.TIME, false) );
 		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP, false) );
+		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", Hibernate.TIMESTAMP ) );
 		registerFunction( "localtime", new NoArgSQLFunction("localtime", Hibernate.TIME, false) );
 		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", Hibernate.TIMESTAMP, false) );
 		registerFunction( "now", new NoArgSQLFunction("now", Hibernate.TIMESTAMP) );
 		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", Hibernate.STRING) );
-		registerFunction( "age", new StandardSQLFunction("age") );
 
 		registerFunction( "current_user", new NoArgSQLFunction("current_user", Hibernate.STRING, false) );
 		registerFunction( "session_user", new NoArgSQLFunction("session_user", Hibernate.STRING, false) );

@@ -1211,7 +1211,7 @@ msgstr "memoria"
 #: index.docbook:793, index.docbook:798, index.docbook:799, index.docbook:800,
 #: index.docbook:805, index.docbook:806, index.docbook:812, index.docbook:815
 msgid "<entry>yes</entry>"
-msgstr "s&#x00ed;"
+msgstr "<entry>si</entry>"
 
 #: index.docbook:617, index.docbook:790
 msgid "EHCache"

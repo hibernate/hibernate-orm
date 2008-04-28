@@ -56,14 +56,12 @@
         <module>jmx</module>
         <module>testing</module>
         <module>testsuite</module>
-        <module>documentation</module>
         <module>tutorials</module>
 <!--
     Need to scope bytecode providers first...
         <module>bytecode-cglib</module>
         <module>bytecode-javassist</module>
 -->
-        <module>distribution</module>
     </modules>
 
     <build>
@@ -79,14 +77,20 @@
         </plugins>
     </build>
 
-<!--
     <profiles>
         <profile>
             <id>docs</id>
+            <activation>
+                <property>
+                    <name>disableDistribution</name>
+                    <value>!true</value>
+                </property>
+            </activation>
             <modules>
                 <module>documentation</module>
+                <module>distribution</module>
             </modules>
         </profile>
     </profiles>
--->
+
 </project>

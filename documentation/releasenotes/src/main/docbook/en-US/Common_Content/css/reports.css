@@ -1,0 +1,55 @@
+
+/* Reports */
+.reports ul.locale{list-style:none;}
+.reports ul{padding:0em;margin:0em;}
+.reports ul.locale li{font-size:small;color:#000;display:block;border:1px solid #eee;float:left;padding-right:2em;margin-right:1em;margin-bottom:1em;}
+.reports ul.locale li a{font-size:1.2em;display:block;padding-top:.1em;padding-bottom:.5em;}
+.reports ul.locale strong{display:block;margin:0em;padding:0em;margin-bottom:-2.2em;}
+.reports ul.locale span.value{display:block;position:relative;text-align:right;margin-right:-1.5em;font-size:1.0em;color:#444;}
+.reports ul.locale li{width:12em;display:block;float:left;margin:0em;clear:none;}
+.reports ul.locale li div.progress{font-size:1em;width:13.2em;position:relative; left: 0em; top:0em; margin-bottom:0em;}
+.reports h2{font-size:1em;margin:0em;}
+.reports li{}
+.reports li:hover{background-color:#666;border-color:#444 !important;color:white !important;}
+.reports li:hover strong, .reports li:hover h2, .reports li:hover a, .reports li:hover span.value{color:white;}
+
+/*uniform*/
+body.results, body.reports{max-width:57em  !important;padding:0em !important}
+/*Progress Bar*/
+div.progress{display:block;float:left;width:16em;background:#c00 url(../images/shine.png) top left repeat-x;height:1em;}
+div.progress span{height:1em; float:left;}
+div.progress span.translated{background:#6c3 url(../images/shine.png) top left repeat-x;}
+div.progress span.fuzzy{background:#ff9f00 url(../images/shine.png) top left repeat-x;}
+
+
+
+
+/*Results*/
+
+.results ul.locale{list-style:none;padding:0em;margin:0em;}
+.results .pofile{padding:0em !important;margin:0em;}
+.results ul.locale li{border-top:1px solid #eee;padding:0em; margin:0em;padding-left:32px;}
+.results ul.locale .pofile{font-size:1.2em;display:block;width:100%;color:#444;padding:0em;margin:0em;}
+.results span.value{color:#888;}
+.results strong{font-weight: normal;}
+.results .home a{display:block;margin:0 auto;width:5em;background: url(../images/stock-home.png) top left no-repeat;padding:5px;padding-left:28px;font-size:1.2em;}
+.results ul.locale li:hover, .results ul.locale li:hover span.pofile ,.results ul.locale li:hover strong,  .results ul.locale li:hover span.value{background-color:#666 !important;color:white;}
+
+ul.locale{list-style:none;}
+ul.locale li.total{font-size:small;color:#777;width:31em;display:block;float:left;margin-right:2em;clear:none !important;}
+ul.locale li{clear:both;font-size:small;color:#777;display:block;}
+ul.locale strong, span.value {font-weight:normal;color:#888;font-size:.7em;}
+ul.locale li a{font-size:1.2em;display:block;padding-top:.2em;}
+ul.locale li.total div.progress{position:relative;left:0em;top:0em;margin-bottom:0em; }
+ul.locale li{width:100%;}
+ul.locale li div.progress{float:left;position:relative; left:30.5em; top:-2em; margin:0em;margin-bottom:-3em;}
+
+li.total{padding:0em !important;}
+li.total{float:right;max-width:16em;padding:.5em;margin:0 auto;padding-top: .5em;background-color:#f7f2d0;font-size: 1.3em !important;color:#ccc !important;margin-bottom:1em;min-height:9.5em;}
+li.total .value{color:#444;font-size:.8em;}
+li.total strong{display:block;color:black;font-weight:bold;}
+li.total span.value {position:relative;display:block;top:-1.25em;text-align:right;}
+
+
+.pofile{position:relative;}
+

@@ -1,0 +1,102 @@
+@import "locale.css";
+
+
+#logo{display:block;height:32px; background: transparent url(../images/logo.png) top left no-repeat;margin-left:18px;}
+#logo span{display:none;}
+#wrap{padding:10px; padding-top:8px;background-color:white;}
+.hide {display:none;}
+
+body {max-width: 760px;min-width: 72em;margin: 0 auto 10px auto;padding: 0;background: #fff url(../images/bkgrnd_greydots.png) repeat;font-family: "liberation Sans", "Bitstream Vera Sans", "Lucida Grande", "Trebuchet MS", helvetica, verdana, arial, sans-serif;font-size: small;color: #333;}
+
+
+p {line-height: 1.25em;
+
+
+/*	margin-top: 0;*/}
+h1+p,h2+p,h3+p,h4+p {margin-top: .25em;}
+p.footnote {margin-top: 4em;font-size: xx-small;color: black;}
+
+a img, img {border-width: 0px;border-style:none; border-color:transparent;}
+
+/*lists*/
+dt {font-weight:bold;padding-bottom:.5em;}
+dd {margin-bottom:1.5em;}
+dd div {margin: 1em 0 2em 0;}
+ul li,
+ol li {margin: 5px 0;}
+ul.linkage {list-style: none;padding-left: 8px;margin-left: 9px;}
+ul.linkage li{background-image: url(../images/bullet_arrowblue.png);background-repeat: no-repeat;background-position: 0 .4em;padding-left: 10px;margin: .4em 0;}
+	
+/*Headings*/
+h1, h2, h3, h4 {margin-top: 0;margin-bottom: .5em;padding-bottom: 0;}
+h1 {padding-top: 0;font-size: x-large;}
+h2 {font-size: medium;margin: 0;}
+h3, h4, h5 {font-size: small;margin-bottom: 0em; padding-bottom:0em;}
+h4 {font-size: x-small;}
+
+
+/*links */	
+a:link {color: #0066cc;	text-decoration: none;}
+a:visited {color: #6699cc;	text-decoration: none;}
+
+h2 a,
+h3 a,
+h4 a {text-decoration: none;}
+
+h1, h2, h3, h4 {	margin-top: 0;	margin-bottom: .5em;	padding-bottom: 0;	}	
+h1 {	padding-top: 0;	font-size: x-large; 	}
+
+input {border: 1px solid #999;background: #f7f2d0;}
+input.submitSpace {margin-top: 20px}
+
+/*tables*/
+#legacy{max-height:40em; overflow:auto;}
+table.docstable{width:100%;}
+table.docstable td.title a{display:block;width:100%;}
+table.docstable th{text-align:left;padding-left:.5em;padding-top:1em;}
+table.docstable tr:hover td a{color:black}
+table.docstable td{ border-bottom:1px solid #efefef; }
+table, td,th{ table-collapse:collapse; border-style:none;  border-collapse:collapse;}
+table.docstable .download a:link,.docstable .download a:visited{color:#ccc;}
+table.docstable td{line-height:16px;}
+
+.pdf, .tarball{display:block; float:left; padding: 0px 4px 0px 18px;height:16px;font-size:x-small;}
+.pdf {background: transparent url(../images/doc.png)top left no-repeat;}
+.tarball {background: transparent url(../images/pkg.png)top left no-repeat;}
+
+#content{padding:0em 1.5em;}
+table.docstable tr:hover .tarball, table.docstable tr:hover .pdf {background-position:bottom left; color:black;}
+
+td{ padding:.2em .5em; font-size:.85em;}
+
+table.docstable .date, table.docstable .download{width:100px;}
+table.docstable .date{color:#999;}
+b{ color:#900; }
+
+acronym{border-bottom:none;}
+#content{clear:both;}
+/*navigation*/
+#navigation{margin-top:1em;display:block; clear:both;margin-bottom:1em;font-weight:bold;font-size:x-small;	font-family: "Luxi Sans", verdana, "bistream vera sans",helvetica, arial, sans-serif;}
+#navigation ul{clear:both;}
+#navigation ul, #navigation li {list-style:none;margin:0em;padding:0em;display:block;}
+#navigation li {display:inline;}
+#navigation li a{float:left;min-height:24px; line-height:24px;padding:0em 1em;}
+
+#main-navigation #mainLast a{background:#b70000 url(../images/mainlink.png)top right no-repeat;padding-right:2em;}
+#main-navigation #mainFirst a{background:#b70000 url(../images/mainfirst.png)top left no-repeat;padding-left:2em;}
+
+#secondary-navigation, #main-navigation{display:block; clear:both; height:24px;}
+#main-navigation{background:#c00 url(../images/mainback.png)top right no-repeat;color:white;}
+#main-navigation a:link, #main-navigation a:visited{background-color:#b70000;color:white;}
+#secondary-navigation #secFirst a{background:#999 url(../images/secondaryfirst.png)top left no-repeat;padding-left:2em;}
+#secondary-navigation #secLast a{background:#999 url(../images/secondarylink.png)top right no-repeat;padding-right:2em;}
+
+#secondary-navigation{background:#e6e6e6 url(../images/secondaryback.png)top right no-repeat;font-weight:normal;}
+#secondary-navigation a:link, #secondary-navigation a:visited{background-color:#999;color:white;}
+
+#main-navigation a:focus,
+#main-navigation a:hover, 
+#secondary-navigation a:focus,
+#secondary-navigation a:hover{color:black;}
+
+#footer{color:#999;margin-top:2em;}

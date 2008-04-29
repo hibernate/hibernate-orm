@@ -1,0 +1,22 @@
+/*document navigation*/
+.docnav a, .docnav strong{text-decoration:none;font-weight:normal;}
+.docnav{list-style:none;margin:0em;padding:0em;position:relative;width:100%;padding-bottom:2em;padding-top:1em;border-top:1px dotted #ccc;}
+.docnav li{list-style:none;margin:0em;padding:0em;display:inline;font-size:.8em;}
+.docnav li:before{content:" ";}
+.docnav li.previous, .docnav li.next{position:absolute;top:1em;}
+.docnav li.up, .docnav li.home{margin:0em 1.5em;}
+.docnav li.previous{left:0px;text-align:left;}
+.docnav li.next{right:0px;text-align:right;}
+.docnav li.previous strong, .docnav li.next strong{display:block;height:22px;}
+.docnav{margin:0 auto;text-align:center;}
+.docnav li.next a strong{background:  url(../images/stock-go-forward.png) top right no-repeat;padding-top:3px;padding-right:28px;font-size:1.2em;}
+.docnav li.previous a strong{background: url(../images/stock-go-back.png) top left no-repeat;padding-top:3px;padding-left:28px;font-size:1.2em;}
+.docnav li.home a strong{background: url(../images/stock-home.png) top left no-repeat;padding:5px;padding-left:28px;font-size:1.2em;}
+.docnav li.up a strong{background: url(../images/stock-go-up.png) top left no-repeat;padding:5px;padding-left:28px;font-size:1.2em;}
+
+.docnav a:link, .docnav a:visited {color:#666 !important;}
+.docnav a:hover,.docnav a:focus, .docnav a:active{color:black !important;}
+.docnav a{max-width: 10em;overflow:hidden;}
+.docnav a:link strong{text-decoration:none;}
+
+.docnav{margin:0 auto;text-align:center;}

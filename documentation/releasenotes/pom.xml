@@ -76,6 +76,13 @@
                 <configuration>
                     <sourceDocumentName>en-US/Release_Notes.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
+                    <imageResource>
+                        <directory>${basedir}/src/main/docbook/en-US</directory>
+                        <includes>
+                            <include>**/*.svg</include>
+                            <include>**/*.png</include>
+                        </includes>
+                    </imageResource>
                     <formats>
                         <format>
                             <formatName>pdf</formatName>

@@ -4,16 +4,17 @@ package org.hibernate.test.ops;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.NonUniqueObjectException;
+import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King
@@ -555,6 +556,95 @@ public class MergeTest extends AbstractOperationTestCase {
 				.uniqueResult(),
 			new Integer(2)
 		);
+
+		s.close();
+
+		cleanup();
+	}
+
+	public void testMergeManagedUninitializedCollection() {
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		NumberedNode root = new NumberedNode( "root" );
+		root.addChild( new NumberedNode( "child" ) );
+		s.persist(root);
+		tx.commit();
+		s.close();
+
+		clearCounts();
+
+		NumberedNode newRoot = new NumberedNode( "root" );
+		newRoot.setId( root.getId() );
+
+		s = openSession();
+		tx = s.beginTransaction();
+		root = ( NumberedNode ) s.get( NumberedNode.class, root.getId() );
+		Set managedChildren = root.getChildren();
+		assertFalse( Hibernate.isInitialized( managedChildren ) );
+		newRoot.setChildren( managedChildren );
+		assertSame( root, s.merge( newRoot ) );
+		assertSame( managedChildren, root.getChildren() );
+		assertFalse( Hibernate.isInitialized( managedChildren ) );
+		tx.commit();
+
+		assertInsertCount(0);
+		assertUpdateCount(0);
+		assertDeleteCount(0);
+
+		tx = s.beginTransaction();
+		assertEquals(
+			s.createCriteria(NumberedNode.class)
+				.setProjection( Projections.rowCount() )
+				.uniqueResult(),
+			new Integer(2)
+		);
+		tx.commit();
+
+		s.close();
+
+		cleanup();
+	}
+
+	public void testMergeManagedInitializedCollection() {
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		NumberedNode root = new NumberedNode( "root" );
+		root.addChild( new NumberedNode( "child" ) );
+		s.persist(root);
+		tx.commit();
+		s.close();
+
+		clearCounts();
+
+		NumberedNode newRoot = new NumberedNode( "root" );
+		newRoot.setId( root.getId() );
+
+		s = openSession();
+		tx = s.beginTransaction();
+		root = ( NumberedNode ) s.get( NumberedNode.class, root.getId() );
+		Set managedChildren = root.getChildren();
+		Hibernate.initialize( managedChildren );
+		assertTrue( Hibernate.isInitialized( managedChildren ) );
+		newRoot.setChildren( managedChildren );
+		assertSame( root, s.merge( newRoot ) );
+		assertSame( managedChildren, root.getChildren() );
+		assertTrue( Hibernate.isInitialized( managedChildren ) );
+		tx.commit();
+
+		assertInsertCount(0);
+		assertUpdateCount(0);
+		assertDeleteCount(0);
+
+		tx = s.beginTransaction();
+		assertEquals(
+			s.createCriteria(NumberedNode.class)
+				.setProjection( Projections.rowCount() )
+				.uniqueResult(),
+			new Integer(2)
+		);
+		tx.commit();
 
 		s.close();
 

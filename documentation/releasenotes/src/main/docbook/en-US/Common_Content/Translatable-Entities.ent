@@ -1,0 +1,130 @@
+
+<!ENTITY ADS "Administration Server">
+<!ENTITY AG "Administration Guide">
+<!ENTITY AGG "Agent Guide">
+<!ENTITY AKA "Activation Key Administrator">
+<!ENTITY APACHE "Apache Web server">
+<!ENTITY BC "Update">
+<!ENTITY BIGB "<guilabel>Big Board</guilabel>">
+<!ENTITY BROKER "RHN Proxy Broker Server">
+<!ENTITY CA "certificate authority">
+<!ENTITY CACHE "HTTP Proxy Caching Server">
+<!ENTITY CAG "Check Reference Guide">
+<!ENTITY CC "Command Center">
+<!ENTITY CCFR "Configuration, Command, and File Reference">
+<!ENTITY CCMENU "<guilabel>Command Center</guilabel>">
+<!ENTITY CFA "Configuration Administrator">
+<!ENTITY CIG "Setup and Installation Guide">
+<!ENTITY CLTG "Command-Line Tools Guide">
+<!ENTITY CON "Console">
+<!ENTITY CSMENU "<guilabel>Current State</guilabel> area">
+<!ENTITY DCAG "Deployment Guide">
+<!ENTITY DG "Developer's Guide">
+<!ENTITY DGG "DSML Gateway Guide">
+<!ENTITY EM64TLONG "Intel Extended Memory 64 Technology">
+<!ENTITY EMB "Embedded Database">
+<!ENTITY ENT "Management">
+<!ENTITY FAQ "Frequently Asked Questions (FAQ)">
+<!ENTITY FP "&FED; Project">
+<!ENTITY GCG "Gateway Customization Guide">
+<!ENTITY GFSU2 "&RHGFS; &PRODVER; for &RHEL; 4 Update 2">
+<!ENTITY HTTPD "Apache HTTP Server">
+<!ENTITY IG "Installation Guide">
+<!ENTITY IGS390 "&IG; for the &S390; Architectures">
+<!ENTITY IGX8664 "&IG; for &X8664;">
+<!ENTITY ISA "Introduction to System Administration">
+<!ENTITY JBEAP "JBoss Enterprise Application Platform">
+<!ENTITY LANG "EN">
+<!ENTITY LSCAP "Scout">
+<!ENTITY LS "scout">
+<!ENTITY LSSENT "&LSCAP;">
+<!ENTITY MA "&MON; Administrator">
+<!ENTITY MG "Migration Guide">
+<!ENTITY MMENU "<guilabel>Main Menu</guilabel>">
+<!ENTITY MON "Monitoring">
+<!ENTITY NESFULL "Netscape Enterprise Server">
+<!ENTITY NG "Networking Guide">
+<!ENTITY NSSFULL "Network Security Services">
+<!ENTITY NWMAP "<guilabel>Network Map</guilabel>">
+<!ENTITY NWMENU "<guilabel>Network Status</guilabel> bar">
+<!ENTITY OA "Organization Administrator">
+<!ENTITY OC "Org Chart">
+<!ENTITY PIRANHA "Piranha Configuration Tool">
+<!ENTITY PPC "IBM POWER Architecture">
+<!ENTITY PPR "Plug-in Programmer's Guide">
+<!ENTITY PRO "Provisioning">
+<!ENTITY PROXY "RHN Proxy Server">
+<!ENTITY PROXYX "Proxy">
+<!ENTITY QIGS390 "&QIG; for the &S390; Architectures">
+<!ENTITY QIGX8664 "&QIG; for &X8664;">
+<!ENTITY REDIRECT "RHN SSL Redirect Server">
+<!ENTITY RG "Reference Guide">
+<!ENTITY RHAS "&RH; Application Stack">
+<!ENTITY RHAUTHTOOL "Authentication Configuration Tool">
+<!ENTITY RHCLUSTERSTATTOOL "Cluster Status Tool">
+<!ENTITY RHCLUSTERTOOL "Cluster Configuration Tool">
+<!ENTITY RHCM "&RH; Cluster Manager">
+<!ENTITY RHCS "&RH; Cluster Suite">
+<!ENTITY RHDATETOOL "Time and Date Properties Tool">
+<!ENTITY RHD "&RH; Desktop">
+<!ENTITY RHDSIG "&RH; &DS; Installation Guide">
+<!ENTITY RHDSRK "&RH; &DS; Resource Kit">
+<!ENTITY RHDSSR "&RH; &DS; Schema Reference">
+<!ENTITY RHELAS21 "&RHEL; AS 2.1 Update 5">
+<!ENTITY RHELAS3 "&RHEL; AS 3 Update 5">
+<!ENTITY RHELAS4 "&RHEL; AS 4">
+<!ENTITY RHELAS "&RHEL; AS">
+<!ENTITY RHEL "&RH; Enterprise Linux">
+<!ENTITY RHGFSTOOL "GFS Setup Druid">
+<!ENTITY RHKBDTOOL "Keyboard Configuration Tool">
+<!ENTITY RHLIGS390 "&RHL; for S/390 &IG;">
+<!ENTITY RHLOGTOOL "Log Viewer">
+<!ENTITY RHMAINMENU "Applications (the main menu on the panel)">
+<!ENTITY RHNAC "&RHN; Actions Control">
+<!ENTITY RHNAPPLET "&RHN; Alert Notification Tool">
+<!ENTITY RHNAUTHD "RHN Authentication Daemon">
+<!ENTITY RHNBT "RHN Bootstrap">
+<!ENTITY RHNCC "&RHN; Configuration Client">
+<!ENTITY RHNCLIENTCONF "&RHN; Client Configuration Guide">
+<!ENTITY RHNCM "&RHN; Configuration Manager">
+<!ENTITY RHNDB "RHN DB Control">
+<!ENTITY RHND "&RHN; Daemon">
+<!ENTITY RHNETWORKTOOL "Network Administration Tool">
+<!ENTITY RHNMD "&RHN; Monitoring Daemon">
+<!ENTITY RHNPM "RHN Package Manager">
+<!ENTITY RHNPUSH "RHN Push">
+<!ENTITY RHNRC "&RHN; Registration Client">
+<!ENTITY RHN "Red Hat Network">
+<!ENTITY RHNSA "RHN Satellite Activate">
+<!ENTITY RHNSE "RHN Satellite Exporter">
+<!ENTITY RHNSMT "RHN SSL Maintenance Tool">
+<!ENTITY RHNSST "RHN Satellite Synchronization Tool">
+<!ENTITY RHNTE "RHN Task Engine">
+<!ENTITY RHPRINTERTOOL "Printer Configuration Tool">
+<!ENTITY RHRPMTOOL "Package Management Tool">
+<!ENTITY RHSAMBATOOL "Samba Server Configuration Tool">
+<!ENTITY RHSECLEVELTOOL "Security Level Configuration Tool">
+<!ENTITY RHSECONDMENU "Actions (on the panel)">
+<!ENTITY RHSERVICESTOOL "Services Configuration Tool">
+<!ENTITY RHSETUPAGENT "Setup Agent">
+<!ENTITY RHTHIRDMENU "System (on the panel)">
+<!ENTITY RHUA "Red Hat Update Agent">
+<!ENTITY RHUSERTOOL "User Manager">
+<!ENTITY RHVIRTUALIZATION "Red Hat Virtualization">
+<!ENTITY RHXFREE86TOOL "X Configuration Tool">
+<!ENTITY RK "Resource Kit">
+<!ENTITY RN "Release Notes">
+<!ENTITY S390 "IBM S/390 and IBM eServer zSeries">
+<!ENTITY SAG "System Administration Guide">
+<!ENTITY SAT "RHN Satellite Server">
+<!ENTITY SATX "Satellite">
+<!ENTITY SBS "Step By Step Guide">
+<!ENTITY SELG "&SEL; Guide">
+<!ENTITY SGA "System Group Administrator">
+<!ENTITY SG "Security Guide">
+<!ENTITY SIG "&SAT; &SATVER; Installation Guide">
+<!ENTITY SR "Schema Reference">
+<!ENTITY SSM "System Set Manager">
+<!ENTITY STAN "Stand-Alone Database">
+<!ENTITY UG "User's Guide">
+<!ENTITY UNIX "UNIX Support">

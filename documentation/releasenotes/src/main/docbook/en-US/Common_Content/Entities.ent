@@ -1,0 +1,115 @@
+<!ENTITY RH "Red Hat">
+<!ENTITY RHI "&RH; Inc.">
+<!ENTITY HOLDER "&RHI;">
+<!ENTITY YEAR "You need to override the YEAR enity in your local ent file">
+<!ENTITY BOOKID "You need to override the BOOKID enity in your local ent file">
+<!ENTITY PRODUCT "You need to override the PRODUCT enity in your local ent file">
+
+<!-- everything below here may need to be removed? -->
+<!ENTITY CCAG "&RHI; &CC; &CAG;">
+<!ENTITY CCIG "&RHI; &CC; &CIG;">
+<!ENTITY CCRN "&RHI; &CC; &RN;">
+<!ENTITY CCUG "&RHI; &CC; &UG;">
+<!ENTITY CCVER "4.0">
+<!ENTITY CLUMANAGER-386-RPM "clumanager-1.0.4-1.i386.rpm">
+<!ENTITY CRTSAG "&CRTS; &AG;">
+<!ENTITY CRTSAGG "&CRTS; &AGG;">
+<!ENTITY CRTS "Certificate System">
+<!ENTITY CRTSCLTG "&CRTS; &CLTG;">
+<!ENTITY CRTSMG "&CRTS; &MG;">
+<!ENTITY CS "Engineering Content Services">
+<!ENTITY DG "&DCAG;">
+<!ENTITY DPG "&DCAG;">
+<!ENTITY DSAG "&DS; &AG;">
+<!ENTITY DSCCFR "&DS; &CCFR;">
+<!ENTITY DSDGG "&DS; &DGG;">
+<!ENTITY DS "Directory Server">
+<!ENTITY DSC "&DS; Console">
+<!ENTITY DSDPG "&DS; &DPG;">
+<!ENTITY DSGCG "&DS; &GCG;">
+<!ENTITY DSIG "&DS; &IG;">
+<!ENTITY DSOC "&DS; &OC;">
+<!ENTITY DSPPR "&DS; &PPR;">
+<!ENTITY DSRK "&DS; &RK;">
+<!ENTITY EM64T "Intel EM64T">
+<!ENTITY FC "&FED; Core;">
+<!ENTITY FED "Fedora">
+<!ENTITY FIGUREDASH "&#x2012;">
+<!ENTITY FORMAL-RHI "&RH;, Inc.">
+<!ENTITY FORT "Fortitude">
+<!ENTITY HYPHEN "&#x2010;">
+<!ENTITY IPVS-386-RPM "ipvsadm-1.18-8.i386.rpm">
+<!ENTITY JBEAPVER "4.2">
+<!ENTITY KERNVER "2.6.x">
+<!ENTITY LEGALNOTICE-IDM SYSTEM "./boilerplate-idm.xml">
+<!ENTITY LOCALVER "7.3">
+<!ENTITY MINUS "&#x2212;">
+<!ENTITY NBHYPHEN "&#x2011;">
+<!ENTITY NES "NES">
+<!ENTITY NSS "NSS">
+<!ENTITY ORG "&RHIS;">
+<!ENTITY PG "&SELG;">
+<!ENTITY PIRANHA-386-RPM "piranha-0.7.0-1.i386.rpm">
+<!ENTITY PROD "&RHEL;">
+<!ENTITY PRODVER "&RHELVER;">
+<!ENTITY PROXYIG "&RHN; &PROXYVER; &PROXYX; &IG;">
+<!ENTITY PROXYVER "4.2.0">
+<!ENTITY QUOTEDASH "&#8213;">
+<!ENTITY RA "Registration Authority">
+<!ENTITY RHASVER "V.1.1">
+<!ENTITY RHCC "&RHI; &CC;">
+<!ENTITY RHCRTSAGG "&RHI; &CRTSAGG;">
+<!ENTITY RHCRTSAG "&RHI; &CRTSAG;">
+<!ENTITY RHCRTSCLTG "&RHI; &CRTSCLTG;">
+<!ENTITY RHCRTSMG "&RHI; &CRTSMG;">
+<!ENTITY RHCRTS "&RHI; &CRTS;">
+<!ENTITY RHCRTSVER "8.0">
+<!ENTITY RHCSG "&RHCS; &CMIAG;"> 
+<!ENTITY RHCSGS "rh-cs">
+<!ENTITY RHDSAG "&RHI; &DSAG;">
+<!ENTITY RHDSCCFR "&RHI; &DSCCFR;">
+<!ENTITY RHDSDGG "&RHI; &DSDGG;">
+<!ENTITY RHDSDPG "&RHI; &DSDPG;">
+<!ENTITY RHDSGCG "&RHI; &DSGCG;">
+<!ENTITY RHDSIG "&RHI; &DSIG;">
+<!ENTITY RHDSOC "&RHI; &DSOC;">
+<!ENTITY RHDSPPR "&RHI; &DSPPR;">
+<!ENTITY RHDS "&RHI; &DS;">
+<!ENTITY RHDSVER "8.0.0">
+<!ENTITY RHELIG "&RHEL; &IG;">
+<!ENTITY RHELIGS390S "rhel-ig-s390">
+<!ENTITY RHELIGX8664S "rhel-ig-x8664">
+<!ENTITY RHELISA "&RHEL; &ISA;">
+<!ENTITY RHELQIGS390S "rhel-qig-s390">
+<!ENTITY RHELQIGX8664S "rhel-qig-x8664">
+<!ENTITY RHELRG "&RHEL; &RG;">
+<!ENTITY RHELSAG "&RHEL; &SAG;">
+<!ENTITY RHELSBS "&RHEL; &SBS;">
+<!ENTITY RHELSG "&RHEL; &SG;">
+<!ENTITY RHELVER "5.0.0">
+<!ENTITY RHFORT "&RHI; &FORT;">
+<!ENTITY RHGFSG "&RHGFS; &GFSIAG;">
+<!ENTITY RHGFSGS "rh-gfsg">
+<!ENTITY RHGFS "&RH; GFS">
+<!ENTITY RHLAS "&RHELAS;">
+<!ENTITY RHLASVER "2.1">
+<!ENTITY RHLIA64ASS "rhl-ig-as-itanium">
+<!ENTITY RHLIA64ASVER "2.1">
+<!ENTITY RHLIA64AWS "rhl-ig-aw-itanium">
+<!ENTITY RHLIA64AWVER "2.1">
+<!ENTITY RHLIA64S "rhl-ig-itanium">
+<!ENTITY RHLIGIA64 "&RHL; Itanium &IG;">
+<!ENTITY RHL "&RH; Linux">
+<!ENTITY RHLS390S "rhl-ig-s390">
+<!ENTITY RHNRG "&RHN; &RG;">
+<!ENTITY RHNVER "5.0.0">
+<!ENTITY RHNX "RHN">
+<!ENTITY RHSELG "&RHI; &SELG;">
+<!ENTITY RHSELGS "rhel-selg">
+<!ENTITY ROOT "<systemitem class='username'>root</systemitem>">
+<!ENTITY SATIG "&RHN; &SATVER; &SATX; &IG;">
+<!ENTITY SATVER "4.2.0">
+<!ENTITY SEL "SELinux">
+<!ENTITY SHARED-SCSI-386-RPM "scsi_reserve-0.7-6.i386.rpm">
+<!ENTITY SMPM "solaris2mpm">
+<!ENTITY X8664 "x86, Itanium, AMD64, and &EM64TLONG; (&EM64T;)">

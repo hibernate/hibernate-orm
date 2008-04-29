@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE legalnotice PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Release_Notes.ent">
+%BOOK_ENTITIES;
+<!ENTITY % RH_ENTITIES SYSTEM "Entities.ent">
+%RH_ENTITIES;
+
+]>
+<legalnotice>
+	<para>
+		Copyright <trademark class="copyright"></trademark> &YEAR; &HOLDER;. This material may only be distributed subject to the terms and conditions set forth in the Creative Commons Attribution-Noncommercial-Share Alike 3.0 Unported License (which is presently available at <ulink url="http://creativecommons.org/licenses/by-nc-sa/3.0/">http://creativecommons.org/licenses/by-nc-sa/3.0/</ulink>).
+	</para>
+	<para>
+		Red Hat and the Red Hat "Shadow Man" logo are registered trademarks of Red Hat, Inc. in the United States and other countries.
+	</para>
+	<para>
+		All other trademarks referenced herein are the property of their respective owners.
+	</para>
+	<para>
+		The GPG fingerprint of the security@redhat.com key is:
+	</para>
+	<para>
+		CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E
+	</para>
+	<para>
+<address><street>1801 Varsity Drive</street>
+<city>Raleigh</city>, <state>NC</state> <postcode>27606-2072</postcode>
+<country>USA</country>
+<phone>Phone: +1 919 754 3700</phone>
+<phone>Phone: 888 733 4281</phone>
+<fax>Fax: +1 919 754 3701</fax>
+<pob>PO Box 13588</pob>
+<city>Research Triangle Park</city>, <state>NC</state> <postcode>27709</postcode>
+<country>USA</country></address>
+	</para>
+</legalnotice>

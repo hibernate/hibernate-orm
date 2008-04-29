@@ -74,7 +74,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <sourceDocumentName>Release_Notes.xml</sourceDocumentName>
+                    <sourceDocumentName>en-US/Release_Notes.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <formats>
                         <format>

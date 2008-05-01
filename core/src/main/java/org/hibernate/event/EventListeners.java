@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.event.def.DefaultAutoFlushEventListener;
 import org.hibernate.event.def.DefaultDeleteEventListener;
@@ -172,7 +173,7 @@ public class EventListeners extends Cloneable implements Serializable {
 				}
 			}
 			catch ( Exception e ) {
-				throw new AssertionFailure( "could not process listeners", e );
+				throw new HibernateException( "could not process listeners", e );
 			}
 		}
 	}
@@ -196,7 +197,7 @@ public class EventListeners extends Cloneable implements Serializable {
 			);
 		}
 		catch ( Exception e ) {
-			throw new AssertionFailure("could not init listeners");
+			throw new HibernateException("could not init listeners", e);
 		}
 	}
 
@@ -213,7 +214,7 @@ public class EventListeners extends Cloneable implements Serializable {
 			);
 		}
 		catch ( Exception e ) {
-			throw new AssertionFailure("could not init listeners");
+			throw new HibernateException("could not destruct listeners", e);
 		}
 	}
 

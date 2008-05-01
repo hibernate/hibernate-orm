@@ -172,7 +172,7 @@ public class EventListeners extends Cloneable implements Serializable {
 				}
 			}
 			catch ( Exception e ) {
-				throw new AssertionFailure( "could not process listeners" );
+				throw new AssertionFailure( "could not process listeners", e );
 			}
 		}
 	}

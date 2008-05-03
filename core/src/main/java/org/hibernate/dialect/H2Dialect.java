@@ -132,7 +132,7 @@ public class H2Dialect extends Dialect {
         registerFunction("current_date", new NoArgSQLFunction("current_date", Hibernate.DATE));
         registerFunction("current_time", new NoArgSQLFunction("current_time", Hibernate.TIME));
         registerFunction("current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP));
-        registerFunction("datediff", new NoArgSQLFunction("datediff", Hibernate.INTEGER));
+        registerFunction("datediff", new StandardSQLFunction("datediff", Hibernate.INTEGER));
         registerFunction("dayname", new StandardSQLFunction("dayname", Hibernate.STRING));
         registerFunction("dayofmonth", new StandardSQLFunction("dayofmonth", Hibernate.INTEGER));
         registerFunction("dayofweek", new StandardSQLFunction("dayofweek", Hibernate.INTEGER));

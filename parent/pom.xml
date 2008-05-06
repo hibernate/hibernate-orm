@@ -46,14 +46,13 @@
     <licenses>
         <license>
             <name>GNU Lesser General Public License</name>
-            <url>http://www.gnu.org/copyleft/lesser.html</url>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
             <comments>See discussion at http://hibernate.org/356.html for more details.</comments>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <!-- this is the cloned repo!!! -->
         <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
         <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
         <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>

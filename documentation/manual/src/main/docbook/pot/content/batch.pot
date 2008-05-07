@@ -1,152 +1,373 @@
+# SOME DESCRIPTIVE TITLE.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2007-10-19 10:29-0500\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2008-05-07 21:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: application/x-xml2pot; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: batch.xml:5(title) 
+#. Tag: title
+#: batch.xml:29
+#, no-c-format
 msgid "Batch processing"
 msgstr ""
 
-#: batch.xml:7(para) 
+#. Tag: para
+#: batch.xml:31
+#, no-c-format
 msgid "A naive approach to inserting 100 000 rows in the database using Hibernate might look like this:"
 msgstr ""
 
-#: batch.xml:21(para) 
+#. Tag: programlisting
+#: batch.xml:36
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "for ( int i=0; i<100000; i++ ) {\n"
+      "    Customer customer = new Customer(.....);\n"
+      "    session.save(customer);\n"
+      "}\n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:38
+#, no-c-format
 msgid "This would fall over with an <literal>OutOfMemoryException</literal> somewhere around the 50 000th row. That's because Hibernate caches all the newly inserted <literal>Customer</literal> instances in the session-level cache."
 msgstr ""
 
-#: batch.xml:27(para) 
+#. Tag: para
+#: batch.xml:44
+#, no-c-format
 msgid "In this chapter we'll show you how to avoid this problem. First, however, if you are doing batch processing, it is absolutely critical that you enable the use of JDBC batching, if you intend to achieve reasonable performance. Set the JDBC batch size to a reasonable number (say, 10-50):"
 msgstr ""
 
-#: batch.xml:36(para) 
+#. Tag: programlisting
+#: batch.xml:51
+#, no-c-format
+msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:53
+#, no-c-format
 msgid "Note that Hibernate disables insert batching at the JDBC level transparently if you use an <literal>identiy</literal> identifier generator."
 msgstr ""
 
-#: batch.xml:41(para) 
+#. Tag: para
+#: batch.xml:58
+#, no-c-format
 msgid "You also might like to do this kind of work in a process where interaction with the second-level cache is completely disabled:"
 msgstr ""
 
-#: batch.xml:48(para) 
+#. Tag: programlisting
+#: batch.xml:63
+#, no-c-format
+msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:65
+#, no-c-format
 msgid "However, this is not absolutely necessary, since we can explicitly set the <literal>CacheMode</literal> to disable interaction with the second-level cache."
 msgstr ""
 
-#: batch.xml:54(title) 
+#. Tag: title
+#: batch.xml:71
+#, no-c-format
 msgid "Batch inserts"
 msgstr ""
 
-#: batch.xml:56(para) 
+#. Tag: para
+#: batch.xml:73
+#, no-c-format
 msgid "When making new objects persistent, you must <literal>flush()</literal> and then <literal>clear()</literal> the session regularly, to control the size of the first-level cache."
 msgstr ""
 
-#: batch.xml:81(title) 
+#. Tag: programlisting
+#: batch.xml:79
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "   \n"
+      "for ( int i=0; i<100000; i++ ) {\n"
+      "    Customer customer = new Customer(.....);\n"
+      "    session.save(customer);\n"
+      "    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
+      "        //flush a batch of inserts and release memory:\n"
+      "        session.flush();\n"
+      "        session.clear();\n"
+      "    }\n"
+      "}\n"
+      "   \n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: title
+#: batch.xml:84
+#, no-c-format
 msgid "Batch updates"
 msgstr ""
 
-#: batch.xml:83(para) 
+#. Tag: para
+#: batch.xml:86
+#, no-c-format
 msgid "For retrieving and updating data the same ideas apply. In addition, you need to use <literal>scroll()</literal> to take advantage of server-side cursors for queries that return many rows of data."
 msgstr ""
 
-#: batch.xml:112(title) 
+#. Tag: programlisting
+#: batch.xml:92
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "   \n"
+      "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+      "    .setCacheMode(CacheMode.IGNORE)\n"
+      "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+      "int count=0;\n"
+      "while ( customers.next() ) {\n"
+      "    Customer customer = (Customer) customers.get(0);\n"
+      "    customer.updateStuff(...);\n"
+      "    if ( ++count % 20 == 0 ) {\n"
+      "        //flush a batch of updates and release memory:\n"
+      "        session.flush();\n"
+      "        session.clear();\n"
+      "    }\n"
+      "}\n"
+      "   \n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: title
+#: batch.xml:97
+#, no-c-format
 msgid "The StatelessSession interface"
 msgstr ""
 
-#: batch.xml:113(para) 
+#. Tag: para
+#: batch.xml:98
+#, no-c-format
 msgid "Alternatively, Hibernate provides a command-oriented API that may be used for streaming data to and from the database in the form of detached objects. A <literal>StatelessSession</literal> has no persistence context associated with it and does not provide many of the higher-level life cycle semantics. In particular, a stateless session does not implement a first-level cache nor interact with any second-level or query cache. It does not implement transactional write-behind or automatic dirty checking. Operations performed using a stateless session do not ever cascade to associated instances. Collections are ignored by a stateless session. Operations performed via a stateless session bypass Hibernate's event model and interceptors. Stateless sessions are vulnerable to data aliasing effects, due to the lack of a first-level cache. A stateless session is a lower-level abstraction, much closer to the underlying JDBC."
 msgstr ""
 
-#: batch.xml:142(para) 
+#. Tag: programlisting
+#: batch.xml:113
+#, no-c-format
+msgid ""
+      "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "   \n"
+      "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+      "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+      "while ( customers.next() ) {\n"
+      "    Customer customer = (Customer) customers.get(0);\n"
+      "    customer.updateStuff(...);\n"
+      "    session.update(customer);\n"
+      "}\n"
+      "   \n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:115
+#, no-c-format
 msgid "Note that in this code example, the <literal>Customer</literal> instances returned by the query are immediately detached. They are never associated with any persistence context."
 msgstr ""
 
-#: batch.xml:148(para) 
+#. Tag: para
+#: batch.xml:121
+#, no-c-format
 msgid "The <literal>insert(), update()</literal> and <literal>delete()</literal> operations defined by the <literal>StatelessSession</literal> interface are considered to be direct database row-level operations, which result in immediate execution of a SQL <literal>INSERT, UPDATE</literal> or <literal>DELETE</literal> respectively. Thus, they have very different semantics to the <literal>save(), saveOrUpdate()</literal> and <literal>delete()</literal> operations defined by the <literal>Session</literal> interface."
 msgstr ""
 
-#: batch.xml:161(title) 
+#. Tag: title
+#: batch.xml:134
+#, no-c-format
 msgid "DML-style operations"
 msgstr ""
 
-#: batch.xml:163(para) 
-msgid "As already discussed, automatic and transparent object/relational mapping is concerned with the management of object state. This implies that the object state is available in memory, hence manipulating (using the SQL <literal>Data Manipulation Language</literal> (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>) data directly in the database will not affect in-memory state. However, Hibernate provides methods for bulk SQL-style DML statement execution which are performed through the Hibernate Query Language (<xref linkend=\"queryhql\">HQL</xref>)."
+#. Tag: para
+#: batch.xml:136
+#, no-c-format
+msgid "As already discussed, automatic and transparent object/relational mapping is concerned with the management of object state. This implies that the object state is available in memory, hence manipulating (using the SQL <literal>Data Manipulation Language</literal> (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</literal>) data directly in the database will not affect in-memory state. However, Hibernate provides methods for bulk SQL-style DML statement execution which are performed through the Hibernate Query Language (<link linkend=\"queryhql\">HQL</link>)."
 msgstr ""
 
-#: batch.xml:173(para) 
+#. Tag: para
+#: batch.xml:146
+#, no-c-format
 msgid "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</literal> statements is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</literal>. Some points to note:"
 msgstr ""
 
-#: batch.xml:181(para) 
+#. Tag: para
+#: batch.xml:154
+#, no-c-format
 msgid "In the from-clause, the FROM keyword is optional"
 msgstr ""
 
-#: batch.xml:186(para) 
+#. Tag: para
+#: batch.xml:159
+#, no-c-format
 msgid "There can only be a single entity named in the from-clause; it can optionally be aliased. If the entity name is aliased, then any property references must be qualified using that alias; if the entity name is not aliased, then it is illegal for any property references to be qualified."
 msgstr ""
 
-#: batch.xml:194(para) 
-msgid "No <xref linkend=\"queryhql-joins-forms\">joins</xref> (either implicit or explicit) can be specified in a bulk HQL query. Sub-queries may be used in the where-clause; the subqueries, themselves, may contain joins."
+#. Tag: para
+#: batch.xml:167
+#, no-c-format
+msgid "No <link linkend=\"queryhql-joins-forms\">joins</link> (either implicit or explicit) can be specified in a bulk HQL query. Sub-queries may be used in the where-clause; the subqueries, themselves, may contain joins."
 msgstr ""
 
-#: batch.xml:201(para) 
+#. Tag: para
+#: batch.xml:174
+#, no-c-format
 msgid "The where-clause is also optional."
 msgstr ""
 
-#: batch.xml:207(para) 
+#. Tag: para
+#: batch.xml:180
+#, no-c-format
 msgid "As an example, to execute an HQL <literal>UPDATE</literal>, use the <literal>Query.executeUpdate()</literal> method (the method is named for those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</literal>):"
 msgstr ""
 
-#: batch.xml:225(para) 
-msgid "HQL <literal>UPDATE</literal> statements, by default do not effect the <xref linkend=\"mapping-declaration-version\">version</xref> or the <xref linkend=\"mapping-declaration-timestamp\">timestamp</xref> property values for the affected entities; this is in keeping with the EJB3 specification. However, you can force Hibernate to properly reset the <literal>version</literal> or <literal>timestamp</literal> property values through the use of a <literal>versioned update</literal>. This is achieved by adding the <literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> keyword."
+#. Tag: programlisting
+#: batch.xml:186
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "\n"
+      "String hqlUpdate = \"update Customer c set c.name = :newName where c.name = :oldName\";\n"
+      "// or String hqlUpdate = \"update Customer set name = :newName where name = :oldName\";\n"
+      "int updatedEntities = s.createQuery( hqlUpdate )\n"
+      "        .setString( \"newName\", newName )\n"
+      "        .setString( \"oldName\", oldName )\n"
+      "        .executeUpdate();\n"
+      "tx.commit();\n"
+      "session.close();]]>"
 msgstr ""
 
-#: batch.xml:245(para) 
+#. Tag: para
+#: batch.xml:188
+#, no-c-format
+msgid "HQL <literal>UPDATE</literal> statements, by default do not effect the <link linkend=\"mapping-declaration-version\">version</link> or the <link linkend=\"mapping-declaration-timestamp\">timestamp</link> property values for the affected entities; this is in keeping with the EJB3 specification. However, you can force Hibernate to properly reset the <literal>version</literal> or <literal>timestamp</literal> property values through the use of a <literal>versioned update</literal>. This is achieved by adding the <literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> keyword."
+msgstr ""
+
+#. Tag: programlisting
+#: batch.xml:198
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "String hqlVersionedUpdate = \"update versioned Customer set name = :newName where name = :oldName\";\n"
+      "int updatedEntities = s.createQuery( hqlUpdate )\n"
+      "        .setString( \"newName\", newName )\n"
+      "        .setString( \"oldName\", oldName )\n"
+      "        .executeUpdate();\n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:200
+#, no-c-format
 msgid "Note that custom version types (<literal>org.hibernate.usertype.UserVersionType</literal>) are not allowed in conjunction with a <literal>update versioned</literal> statement."
 msgstr ""
 
-#: batch.xml:250(para) 
+#. Tag: para
+#: batch.xml:205
+#, no-c-format
 msgid "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query.executeUpdate()</literal> method:"
 msgstr ""
 
-#: batch.xml:266(para) 
+#. Tag: programlisting
+#: batch.xml:210
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "\n"
+      "String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+      "// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+      "int deletedEntities = s.createQuery( hqlDelete )\n"
+      "        .setString( \"oldName\", oldName )\n"
+      "        .executeUpdate();\n"
+      "tx.commit();\n"
+      "session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:212
+#, no-c-format
 msgid "The <literal>int</literal> value returned by the <literal>Query.executeUpdate()</literal> method indicate the number of entities effected by the operation. Consider this may or may not correlate to the number of rows effected in the database. An HQL bulk operation might result in multiple actual SQL statements being executed, for joined-subclass, for example. The returned number indicates the number of actual entities affected by the statement. Going back to the example of joined-subclass, a delete against one of the subclasses may actually result in deletes against not just the table to which that subclass is mapped, but also the \"root\" table and potentially joined-subclass tables further down the inheritence hierarchy."
 msgstr ""
 
-#: batch.xml:277(para) 
+#. Tag: para
+#: batch.xml:223
+#, no-c-format
 msgid "The pseudo-syntax for <literal>INSERT</literal> statements is: <literal>INSERT INTO EntityName properties_list select_statement</literal>. Some points to note:"
 msgstr ""
 
-#: batch.xml:285(para) 
+#. Tag: para
+#: batch.xml:231
+#, no-c-format
 msgid "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT INTO ... VALUES ... form."
 msgstr ""
 
-#: batch.xml:288(para) 
+#. Tag: para
+#: batch.xml:234
+#, no-c-format
 msgid "The properties_list is analogous to the <literal>column speficiation</literal> in the SQL <literal>INSERT</literal> statement. For entities involved in mapped inheritence, only properties directly defined on that given class-level can be used in the properties_list. Superclass properties are not allowed; and subclass properties do not make sense. In other words, <literal>INSERT</literal> statements are inherently non-polymorphic."
 msgstr ""
 
-#: batch.xml:298(para) 
+#. Tag: para
+#: batch.xml:244
+#, no-c-format
 msgid "select_statement can be any valid HQL select query, with the caveat that the return types must match the types expected by the insert. Currently, this is checked during query compilation rather than allowing the check to relegate to the database. Note however that this might cause problems between Hibernate <literal>Type</literal>s which are <emphasis>equivalent</emphasis> as opposed to <emphasis>equal</emphasis>. This might cause issues with mismatches between a property defined as a <literal>org.hibernate.type.DateType</literal> and a property defined as a <literal>org.hibernate.type.TimestampType</literal>, even though the database might not make a distinction or might be able to handle the conversion."
 msgstr ""
 
-#: batch.xml:310(para) 
+#. Tag: para
+#: batch.xml:256
+#, no-c-format
 msgid "For the id property, the insert statement gives you two options. You can either explicitly specify the id property in the properties_list (in which case its value is taken from the corresponding select expression) or omit it from the properties_list (in which case a generated value is used). This later option is only available when using id generators that operate in the database; attempting to use this option with any \"in memory\" type generators will cause an exception during parsing. Note that for the purposes of this discussion, in-database generators are considered to be <literal>org.hibernate.id.SequenceGenerator</literal> (and its subclasses) and any implementors of <literal>org.hibernate.id.PostInsertIdentifierGenerator</literal>. The most notable exception here is <literal>org.hibernate.id.TableHiLoGenerator</literal>, which cannot be used because it does not expose a selectable way to get its values."
 msgstr ""
 
-#: batch.xml:325(para) 
+#. Tag: para
+#: batch.xml:271
+#, no-c-format
 msgid "For properties mapped as either <literal>version</literal> or <literal>timestamp</literal>, the insert statement gives you two options. You can either specify the property in the properties_list (in which case its value is taken from the corresponding select expressions) or omit it from the properties_list (in which case the <literal>seed value</literal> defined by the <literal>org.hibernate.type.VersionType</literal> is used)."
 msgstr ""
 
-#: batch.xml:335(para) 
+#. Tag: para
+#: batch.xml:281
+#, no-c-format
 msgid "An example HQL <literal>INSERT</literal> statement execution:"
 msgstr ""
 
-#. Put one translator per line, in the form of NAME <EMAIL>, YEAR1, YEAR2.
-#: batch.xml:0(None) 
-msgid "translator-credits"
+#. Tag: programlisting
+#: batch.xml:285
+#, no-c-format
+msgid ""
+      "<![CDATA[Session session = sessionFactory.openSession();\n"
+      "Transaction tx = session.beginTransaction();\n"
+      "\n"
+      "String hqlInsert = \"insert into DelinquentAccount (id, name) select c.id, c.name from Customer c where ...\";\n"
+      "int createdEntities = s.createQuery( hqlInsert )\n"
+      "        .executeUpdate();\n"
+      "tx.commit();\n"
+      "session.close();]]>"
 msgstr ""
 

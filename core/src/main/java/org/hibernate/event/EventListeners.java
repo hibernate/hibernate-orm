@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
@@ -162,18 +161,23 @@ public class EventListeners extends Cloneable implements Serializable {
 	private void processListeners(ListenerProcesser processer) {
 		Field[] fields = getClass().getDeclaredFields();
 		for ( int i = 0; i < fields.length; i++ ) {
+			final Object[] listeners;
 			try {
-				final Object field = fields[i].get( this );
-				if ( field instanceof Object[] ) {
-					final Object[] listeners = ( Object[] ) field;
-					int length = listeners.length;
-					for ( int index = 0 ; index < length ; index++ ) {
-						processer.processListener( listeners[index ] );
-					}
+				Object fieldValue = fields[i].get(this);
+				if ( fieldValue instanceof Object[] ) {
+					listeners = ( Object[] ) fieldValue;
+				}
+				else {
+					continue;
 				}
 			}
-			catch ( Exception e ) {
-				throw new HibernateException( "could not process listeners", e );
+			catch ( Throwable t ) {
+				throw new HibernateException( "could not init listeners", t );
+			}
+
+			int length = listeners.length;
+			for ( int index = 0 ; index < length ; index++ ) {
+				processer.processListener( listeners[index ] );
 			}
 		}
 	}
@@ -201,6 +205,10 @@ public class EventListeners extends Cloneable implements Serializable {
 		}
 	}
 
+	/**
+	 * Call {@link Destructible#cleanup} on any listeners that implement the
+	 * {@link Destructible} interface.
+	 */
 	public void destroyListeners() {
 		try {
 			processListeners(

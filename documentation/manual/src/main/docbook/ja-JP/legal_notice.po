@@ -13,16 +13,8 @@ msgid "<street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</stat
 msgstr "<street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</state><postcode>27606-2072</postcode><country>USA</country> <phone>Phone: +1 919 754 3700</phone> <phone>Phone: 888 733 4281</phone> <fax>Fax: +1 919 754 3701</fax> <pob>PO Box 13588</pob><city>Research Triangle Park</city>, <state>NC</state><postcode>27709</postcode><country>USA</country>"
 
 #: index.docbook:31
-msgid "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. This material may be distributed only subject to the terms and conditions set forth in the Open Publication License, V1.0 or later (the latest version is presently available at <ulink url=\"http://www.opencontent.org/openpub/\">http://www.opencontent.org/openpub/</ulink>)."
-msgstr "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. This material may be distributed only subject to the terms and conditions set forth in the Open Publication License, V1.0 or later (the latest version is presently available at <ulink url=\"http://www.opencontent.org/openpub/\">http://www.opencontent.org/openpub/</ulink>)."
-
-#: index.docbook:34
-msgid "Distribution of substantively modified versions of this document is prohibited without the explicit permission of the copyright holder."
-msgstr "Distribution of substantively modified versions of this document is prohibited without the explicit permission of the copyright holder."
-
-#: index.docbook:37
-msgid "Distribution of the work or derivative of the work in any standard (paper) book form for commercial purposes is prohibited unless prior permission is obtained from the copyright holder."
-msgstr "Distribution of the work or derivative of the work in any standard (paper) book form for commercial purposes is prohibited unless prior permission is obtained from the copyright holder."
+msgid "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc.  This copyrighted material is made available to anyone wishing to use, modify, copy, or redistribute it subject to the terms and conditions of the GNU <ulink url=\"http://www.gnu.org/licenses/lgpl-2.1.html\">Lesser General Public License</ulink>, as published by the Free Software Foundation."
+msgstr "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc.  This copyrighted material is made available to anyone wishing to use, modify, copy, or redistribute it subject to the terms and conditions of the GNU <ulink url=\"http://www.gnu.org/licenses/lgpl-2.1.html\">Lesser General Public License</ulink>, as published by the Free Software Foundation."
 
 #: index.docbook:40
 msgid "Red Hat and the Red Hat \"Shadow Man\" logo are registered trademarks of Red Hat, Inc. in the United States and other countries."

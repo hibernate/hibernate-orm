@@ -70,10 +70,6 @@
             <includes>
                 <include>antlr:antlr</include>
 
-                <include>cglib:cglib</include>
-                <include>asm:asm</include>
-                <include>asm:asm-attrs</include>
-
                 <include>commons-collections:commons-collections</include>
 
                 <include>dom4j:dom4j</include>
@@ -81,6 +77,8 @@
                 <include>javassist:javassist</include>
 
                 <include>org.slf4j:slf4j-api</include>
+
+                <include>javax.transaction:jta</include>
             </includes>
         </dependencySet>
 
@@ -135,6 +133,22 @@
             <outputDirectory>lib/optional/swarmcache</outputDirectory>
             <includes>
                 <include>swarmcache:swarmcache</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>lib/bytecode/cglib</outputDirectory>
+            <includes>
+                <include>cglib:cglib</include>
+                <include>asm:asm</include>
+                <include>asm:asm-attrs</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>lib/bytecode/javassist</outputDirectory>
+            <includes>
+                <include>javassist:javassist</include>
             </includes>
         </dependencySet>
     </dependencySets>

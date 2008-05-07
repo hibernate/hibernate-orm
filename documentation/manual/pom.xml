@@ -92,7 +92,7 @@
                     <options>
                         <xincludeSupported>true</xincludeSupported>
                         <localeSeparator>-</localeSeparator>
-                        <useRelativeImageUris>true</useRelativeImageUris>
+                        <useRelativeImageUris>false</useRelativeImageUris>
                     </options>
                 </configuration>
             </plugin>

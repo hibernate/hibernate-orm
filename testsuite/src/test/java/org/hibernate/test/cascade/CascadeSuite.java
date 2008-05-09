@@ -12,6 +12,7 @@ public class CascadeSuite {
 		TestSuite suite = new TestSuite( "Cascade tests" );
 		suite.addTest( BidirectionalOneToManyCascadeTest.suite() );
 		suite.addTest( RefreshTest.suite() );
+		suite.addTest( MultiPathCascadeTest.suite() );
 		return suite;
 	}
 }

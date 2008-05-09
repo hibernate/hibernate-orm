@@ -1,4 +1,4 @@
-//$Id: EntityType.java 10777 2006-11-08 22:02:28Z steve.ebersole@jboss.com $
+//$Id: EntityType.java 14513 2008-04-17 23:05:11Z gbadner $
 package org.hibernate.type;
 
 import java.io.Serializable;
@@ -250,13 +250,23 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( original == target ) {
 				return target;
 			}
-			Object id = getIdentifier( original, session );
-			if ( id == null ) {
-				throw new AssertionFailure("cannot copy a reference to an object with a null id");
+			if ( session.getContextEntityIdentifier( original ) == null  &&
+					ForeignKeys.isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
+				final Object copy = session.getFactory().getEntityPersister( associatedEntityName )
+						.instantiate( null, session.getEntityMode() );
+				//TODO: should this be Session.instantiate(Persister, ...)?
+				copyCache.put( original, copy );
+				return copy;
 			}
-			id = getIdentifierOrUniqueKeyType( session.getFactory() )
-					.replace(id, null, session, owner, copyCache);
-			return resolve( id, session, owner );
+			else {
+				Object id = getIdentifier( original, session );
+				if ( id == null ) {
+					throw new AssertionFailure("non-transient entity has a null id");
+				}
+				id = getIdentifierOrUniqueKeyType( session.getFactory() )
+						.replace(id, null, session, owner, copyCache);
+				return resolve( id, session, owner );
+			}
 		}
 	}
 
@@ -451,7 +461,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		if ( value == null ) {
 			return "null";
 		}
-
+		
 		EntityPersister persister = factory.getEntityPersister( associatedEntityName );
 		StringBuffer result = new StringBuffer().append( associatedEntityName );
 
@@ -467,11 +477,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			else {
 				id = getIdentifier( value, persister, entityMode );
 			}
-
+			
 			result.append( '#' )
 				.append( persister.getIdentifierType().toLoggableString( id, factory ) );
 		}
-
+		
 		return result.toString();
 	}
 
@@ -537,7 +547,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return uniqueKeyPropertyName;
 		}
 	}
-
+	
 	protected abstract boolean isNullable();
 
 	/**
@@ -584,9 +594,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @throws HibernateException generally indicates problems performing the load.
 	 */
 	public Object loadByUniqueKey(
-			String entityName,
-			String uniqueKeyPropertyName,
-			Object key,
+			String entityName, 
+			String uniqueKeyPropertyName, 
+			Object key, 
 			SessionImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
 		UniqueKeyLoadable persister = ( UniqueKeyLoadable ) factory.getEntityPersister( entityName );
@@ -594,11 +604,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		//TODO: implement caching?! proxies?!
 
 		EntityUniqueKey euk = new EntityUniqueKey(
-				entityName,
-				uniqueKeyPropertyName,
-				key,
+				entityName, 
+				uniqueKeyPropertyName, 
+				key, 
 				getIdentifierOrUniqueKeyType( factory ),
-				session.getEntityMode(),
+				session.getEntityMode(), 
 				session.getFactory()
 		);
 

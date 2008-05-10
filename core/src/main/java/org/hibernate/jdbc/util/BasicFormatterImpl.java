@@ -268,7 +268,7 @@ public class BasicFormatterImpl implements Formatter {
 			out();
 			indent++;
 			newline();
-			parenCounts.addLast( Integer.valueOf( parensSinceSelect ) );
+			parenCounts.addLast( new Integer( parensSinceSelect ) );
 			afterByOrFromOrSelects.addLast( Boolean.valueOf( afterByOrSetOrFromOrSelect ) );
 			parensSinceSelect = 0;
 			afterByOrSetOrFromOrSelect = true;

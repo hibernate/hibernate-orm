@@ -318,11 +318,16 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
+		EntityPersister persister = sfi().getEntityPersister( entityClass.getName() );
+		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		return HqlSqlWalker.supportsIdGenWithBulkInsertion( generator );
+	}
+
 	public void testInsertWithGeneratedId() {
 		// Make sure the env supports bulk inserts with generated ids...
-		EntityPersister persister = sfi().getEntityPersister( PettingZoo.class.getName() );
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		if ( !HqlSqlWalker.supportsIdGenWithBulkInsertion( generator ) ) {
+		if ( !supportsBulkInsertIdGeneration( PettingZoo.class ) ) {
+			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
 			return;
 		}
 
@@ -351,7 +356,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 
 		assertEquals( zoo.getName(), pz.getName() );
-		assertTrue( zoo.getId() != pz.getId() );
+		assertTrue( !zoo.getId().equals( pz.getId() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -362,9 +367,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 	public void testInsertWithGeneratedVersionAndId() {
 		// Make sure the env supports bulk inserts with generated ids...
-		EntityPersister persister = sfi().getEntityPersister( IntegerVersioned.class.getName() );
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		if ( !HqlSqlWalker.supportsIdGenWithBulkInsertion( generator ) ) {
+		if ( !supportsBulkInsertIdGeneration( IntegerVersioned.class ) ) {
+			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
 			return;
 		}
 
@@ -407,9 +411,15 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 	public void testInsertWithGeneratedTimestampVersion() {
 		// Make sure the env supports bulk inserts with generated ids...
-		EntityPersister persister = sfi().getEntityPersister( TimestampVersioned.class.getName() );
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		if ( !HqlSqlWalker.supportsIdGenWithBulkInsertion( generator ) ) {
+		if ( !supportsBulkInsertIdGeneration( TimestampVersioned.class ) ) {
+			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
+			return;
+		}
+		// dialects which do not allow a parameter in the select portion of an INSERT ... SELECT statement
+		// will also be problematic for this test because the timestamp here is vm-based as opposed to
+		// db-based.
+		if ( !getDialect().supportsParametersInInsertSelect() ) {
+			reportSkip( "dialect does not support parameter in INSERT ... SELECT", "test bulk inserts with generated id and generated timestamp");
 			return;
 		}
 

@@ -2,14 +2,13 @@
 
 package org.hibernate.test.cascade;
 
-import java.util.Collections;
-
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.TransientObjectException;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author <a href="mailto:ovidiu@feodorov.com">Ovidiu Feodorov</a>
@@ -33,15 +32,23 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( MultiPathCascadeTest.class );
 	}
 
-	public void testMultiPathMergeDetachedFailureExpected() throws Exception
+	protected void cleanupTest() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete from A" );
+		s.createQuery( "delete from G" );
+		s.createQuery( "delete from H" );
+	}
+
+	public void testMultiPathMergeModifiedDetached() throws Exception
 	{
 		// persist a simple A in the database
 
 		Session s = openSession();
 		s.beginTransaction();
 		A a = new A();
-		a.setData("Anna");
-		s.save(a);
+		a.setData( "Anna" );
+		s.save( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -50,22 +57,22 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.merge(a);
+		a = ( A ) s.merge( a );
 		s.getTransaction().commit();
 		s.close();
 
 		verifyModifications( a.getId() );
 	}
 
-	public void testMultiPathUpdateDetached() throws Exception
+	public void testMultiPathMergeModifiedDetachedIntoProxy() throws Exception
 	{
 		// persist a simple A in the database
 
 		Session s = openSession();
 		s.beginTransaction();
 		A a = new A();
-		a.setData("Anna");
-		s.save(a);
+		a.setData( "Anna" );
+		s.save( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -74,7 +81,33 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.update(a);
+		A aLoaded = ( A ) s.load( A.class, new Long( a.getId() ) );
+		assertTrue( aLoaded instanceof HibernateProxy );
+		assertSame( aLoaded, s.merge( a ) );
+		s.getTransaction().commit();
+		s.close();
+
+		verifyModifications( a.getId() );
+	}
+
+	public void testMultiPathUpdateModifiedDetached() throws Exception
+	{
+		// persist a simple A in the database
+
+		Session s = openSession();
+		s.beginTransaction();
+		A a = new A();
+		a.setData( "Anna" );
+		s.save( a );
+		s.getTransaction().commit();
+		s.close();
+
+		// modify detached entity
+		modifyEntity( a );
+
+		s = openSession();
+		s.beginTransaction();
+		s.update( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -88,8 +121,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		A a = new A();
-		a.setData("Anna");
-		s.save(a);
+		a.setData( "Anna" );
+		s.save( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -104,24 +137,168 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		verifyModifications( a.getId() );
 	}
 
+	public void testMultiPathMergeNonCascadedTransientEntityInCollection() throws Exception
+	{
+		// persist a simple A in the database
+
+		Session s = openSession();
+		s.beginTransaction();
+		A a = new A();
+		a.setData( "Anna" );
+		s.save( a );
+		s.getTransaction().commit();
+		s.close();
+
+		// modify detached entity
+		modifyEntity( a );
+
+		s = openSession();
+		s.beginTransaction();
+		a = ( A ) s.merge( a );
+		s.getTransaction().commit();
+		s.close();
+
+		verifyModifications( a.getId() );
+
+		// add a new (transient) G to collection in h
+		// there is no cascade from H to the collection, so this should fail when merged
+		assertEquals( 1, a.getHs().size() );
+		H h = ( H ) a.getHs().iterator().next();
+		G gNew = new G();
+		gNew.setData( "Gail" );
+		gNew.getHs().add( h );
+		h.getGs().add( gNew );
+
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.merge( a );
+			s.merge( h );
+			fail( "should have thrown TransientObjectException" );
+		}
+		catch ( TransientObjectException ex ) {
+			// expected
+		}
+		finally {
+			s.getTransaction().rollback();
+		}
+		s.close();
+	}
+
+	public void testMultiPathMergeNonCascadedTransientEntityInOneToOne() throws Exception
+	{
+		// persist a simple A in the database
+
+		Session s = openSession();
+		s.beginTransaction();
+		A a = new A();
+		a.setData( "Anna" );
+		s.save( a );
+		s.getTransaction().commit();
+		s.close();
+
+		// modify detached entity
+		modifyEntity( a );
+
+		s = openSession();
+		s.beginTransaction();
+		a = ( A ) s.merge( a );
+		s.getTransaction().commit();
+		s.close();
+
+		verifyModifications( a.getId() );
+
+		// change the one-to-one association from g to be a new (transient) A
+		// there is no cascade from G to A, so this should fail when merged
+		G g = a.getG();
+		a.setG( null );
+		A aNew = new A();
+		aNew.setData( "Alice" );
+		g.setA( aNew );
+		aNew.setG( g );
+
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.merge( a );
+			s.merge( g );
+			fail( "should have thrown TransientObjectException" );
+		}
+		catch ( TransientObjectException ex ) {
+			// expected
+		}
+		finally {
+			s.getTransaction().rollback();
+		}
+		s.close();
+	}
+
+	public void testMultiPathMergeNonCascadedTransientEntityInManyToOne() throws Exception
+	{
+		// persist a simple A in the database
+
+		Session s = openSession();
+		s.beginTransaction();
+		A a = new A();
+		a.setData( "Anna" );
+		s.save( a );
+		s.getTransaction().commit();
+		s.close();
+
+		// modify detached entity
+		modifyEntity( a );
+
+		s = openSession();
+		s.beginTransaction();
+		a = ( A ) s.merge( a );
+		s.getTransaction().commit();
+		s.close();
+
+		verifyModifications( a.getId() );
+
+		// change the many-to-one association from h to be a new (transient) A
+		// there is no cascade from H to A, so this should fail when merged
+		assertEquals( 1, a.getHs().size() );
+		H h = ( H ) a.getHs().iterator().next();
+		a.getHs().remove( h );
+		A aNew = new A();
+		aNew.setData( "Alice" );
+		aNew.addH( h );
+
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.merge( a );
+			s.merge( h );
+			fail( "should have thrown TransientObjectException" );
+		}
+		catch ( TransientObjectException ex ) {
+			// expected
+		}
+		finally {
+			s.getTransaction().rollback();
+		}
+		s.close();
+	}
+
 	private void modifyEntity(A a) {
 		// create a *circular* graph in detached entity
 		a.setData("Anthony");
 
 		G g = new G();
-		g.setData("Giovanni");
+		g.setData( "Giovanni" );
 
 		H h = new H();
-		h.setData("Hellen");
+		h.setData( "Hellen" );
 
-		a.setG(g);
-		g.setA(a);
+		a.setG( g );
+		g.setA( a );
 
-		a.getHs().add(h);
-		h.setA(a);
+		a.getHs().add( h );
+		h.setA( a );
 
-		g.getHs().add(h);
-		h.getGs().add(g);
+		g.getHs().add( h );
+		h.getGs().add( g );
 	}
 
 	private void verifyModifications(long aId) {

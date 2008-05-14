@@ -2,23 +2,27 @@
 package org.hibernate.event.def;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.WrongClassException;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.MergeEvent;
 import org.hibernate.event.MergeEventListener;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -43,14 +47,33 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		return IdentityMap.invert( (Map) anything );
 	}
 
-	/** 
+	/**
 	 * Handle the given merge event.
 	 *
 	 * @param event The merge event to be handled.
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		onMerge( event, IdentityMap.instantiate(10) );
+		Map copyCache = IdentityMap.instantiate(10);
+		onMerge( event, copyCache );
+		for ( Iterator it=copyCache.values().iterator(); it.hasNext(); ) {
+			Object entity = it.next();
+			if ( entity instanceof HibernateProxy ) {
+				entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
+			}
+			EntityEntry entry = event.getSession().getPersistenceContext().getEntry( entity );
+			if ( entry == null ) {
+				throw new TransientObjectException(
+						"object references an unsaved transient instance - save the transient instance before merging: " +
+						event.getSession().guessEntityName( entity )
+				);
+				// TODO: cache the entity name somewhere so that it is available to this exception
+				// entity name will not be available for non-POJO entities
+			}
+			if ( entry.getStatus() != Status.MANAGED ) {
+				throw new AssertionFailure( "Merged entity does not have status set to MANAGED; "+entry+" status="+entry.getStatus() );
+			}
+		}
 	}
 
 	/** 
@@ -82,7 +105,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				entity = original;
 			}
 			
-			if ( copyCache.containsKey(entity) ) {
+			if ( copyCache.containsKey(entity) &&
+					source.getContextEntityIdentifier( copyCache.get( entity ) ) != null ) {
 				log.trace("already merged");
 				event.setResult(entity);
 			}
@@ -126,7 +150,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 						entityIsPersistent(event, copyCache);
 						break;
 					default: //DELETED
-						throw new ObjectDeletedException( 
+						throw new ObjectDeletedException(
 								"deleted instance passed to merge", 
 								null, 
 								getLoggableName( event.getEntityName(), entity )
@@ -137,7 +161,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 		
 	}
-	
+
 	protected void entityIsPersistent(MergeEvent event, Map copyCache) {
 		log.trace("ignoring persistent instance");
 		
@@ -168,10 +192,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		final Serializable id = persister.hasIdentifierProperty() ?
 				persister.getIdentifier( entity, source.getEntityMode() ) :
 		        null;
-		
-		final Object copy = persister.instantiate( id, source.getEntityMode() );  //TODO: should this be Session.instantiate(Persister, ...)?
-		copyCache.put(entity, copy); //before cascade!
-		
+		if ( copyCache.containsKey( entity ) ) {
+			persister.setIdentifier( copyCache.get( entity ), id, source.getEntityMode() );
+		}
+		else {
+			copyCache.put(entity, persister.instantiate( id, source.getEntityMode() ) ); //before cascade!
+			//TODO: should this be Session.instantiate(Persister, ...)?
+		}
+		final Object copy = copyCache.get( entity );
+
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);

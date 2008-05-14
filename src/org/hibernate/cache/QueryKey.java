@@ -51,6 +51,7 @@ public class QueryKey implements Serializable {
 	}
 	
 	public boolean equals(Object other) {
+		if ( !( other instanceof QueryKey ) ) return false;
 		QueryKey that = (QueryKey) other;
 		if ( !sqlQueryString.equals(that.sqlQueryString) ) return false;
 		if ( !EqualsHelper.equals(firstRow, that.firstRow) || !EqualsHelper.equals(maxRows, that.maxRows) ) return false;

@@ -250,13 +250,23 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( original == target ) {
 				return target;
 			}
-			Object id = getIdentifier( original, session );
-			if ( id == null ) {
-				throw new AssertionFailure("cannot copy a reference to an object with a null id");
+			if ( session.getContextEntityIdentifier( original ) == null  &&
+					ForeignKeys.isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
+				final Object copy = session.getFactory().getEntityPersister( associatedEntityName )
+						.instantiate( null, session.getEntityMode() );
+				//TODO: should this be Session.instantiate(Persister, ...)?
+				copyCache.put( original, copy );
+				return copy;
 			}
-			id = getIdentifierOrUniqueKeyType( session.getFactory() )
-					.replace(id, null, session, owner, copyCache);
-			return resolve( id, session, owner );
+			else {
+				Object id = getIdentifier( original, session );
+				if ( id == null ) {
+					throw new AssertionFailure("non-transient entity has a null id");
+				}
+				id = getIdentifierOrUniqueKeyType( session.getFactory() )
+						.replace(id, null, session, owner, copyCache);
+				return resolve( id, session, owner );
+			}
 		}
 	}
 

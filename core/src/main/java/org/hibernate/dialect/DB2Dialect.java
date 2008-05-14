@@ -362,4 +362,8 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsEmptyInList() {
 		return false;
 	}
+
+	public boolean supportsLobValueChangePropogation() {
+		return false;
+	}
 }

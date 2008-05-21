@@ -89,7 +89,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     public Object get(Object key, long txTimestamp) throws CacheException
     {
         region.ensureRegionRootExists();
-        return super.get(key, txTimestamp);
+        
+        return CacheHelper.get(cache, regionFqn, key);
     }
 
     /**

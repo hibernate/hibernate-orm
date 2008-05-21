@@ -681,9 +681,8 @@ public final class Environment {
 		return (String) ISOLATION_LEVELS.get( new Integer(isolation) );
 	}
 
-
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = PropertiesHelper.getString( Environment.BYTECODE_PROVIDER, properties, "cglib" );
+		String provider = PropertiesHelper.getString( BYTECODE_PROVIDER, properties, "javassist" );
 		log.info( "Bytecode provider name : " + provider );
 		return buildBytecodeProvider( provider );
 	}
@@ -695,10 +694,9 @@ public final class Environment {
 		else if ( "cglib".equals( providerName ) ) {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
-		else {
-			log.warn( "unrecognized bytecode provider [" + providerName + "], using cglib by default" );
-			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
-		}
+
+		log.warn( "unrecognized bytecode provider [" + providerName + "], using javassist by default" );
+		return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 	}
 
 }

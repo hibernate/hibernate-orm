@@ -6,12 +6,12 @@ import org.hibernate.bytecode.util.ClassDescriptor;
 import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
 import org.hibernate.bytecode.ClassTransformer;
 import org.hibernate.tool.instrument.BasicInstrumentationTask;
-import org.objectweb.asm.ClassReader;
+import org.hibernate.repackage.cglib.asm.ClassReader;
 
 import java.io.ByteArrayInputStream;
 
-import net.sf.cglib.core.ClassNameReader;
-import net.sf.cglib.transform.impl.InterceptFieldEnabled;
+import org.hibernate.repackage.cglib.core.ClassNameReader;
+import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
 
 /**
  * An Ant task for instrumenting persistent classes in order to enable

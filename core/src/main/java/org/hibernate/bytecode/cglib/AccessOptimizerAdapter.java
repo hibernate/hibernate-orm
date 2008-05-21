@@ -2,9 +2,8 @@ package org.hibernate.bytecode.cglib;
 
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.PropertyAccessException;
-import net.sf.cglib.beans.BulkBean;
-import net.sf.cglib.beans.BulkBeanException;
-import net.sf.cglib.reflect.FastClass;
+import org.hibernate.repackage.cglib.beans.BulkBean;
+import org.hibernate.repackage.cglib.beans.BulkBeanException;
 
 import java.io.Serializable;
 import java.io.ObjectOutputStream;

@@ -7,10 +7,8 @@ import org.hibernate.proxy.*;
 import org.hibernate.test.bytecode.*;
 import junit.framework.*;
 
-import java.text.*;
 import java.lang.reflect.*;
 
-import net.sf.cglib.proxy.*;
 
 /**
  * Test that the static thread local callback object is cleared out of the proxy class after instantiated.

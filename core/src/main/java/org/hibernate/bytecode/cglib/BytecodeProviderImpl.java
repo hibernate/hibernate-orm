@@ -2,15 +2,9 @@ package org.hibernate.bytecode.cglib;
 
 import java.lang.reflect.Modifier;
 
-import net.sf.cglib.beans.BulkBean;
-import net.sf.cglib.beans.BulkBeanException;
-import net.sf.cglib.reflect.FastClass;
-import net.sf.cglib.transform.ClassFilter;
-import net.sf.cglib.transform.ClassTransformer;
-import net.sf.cglib.transform.ClassTransformerFactory;
-import net.sf.cglib.transform.TransformingClassLoader;
-import net.sf.cglib.transform.impl.InterceptFieldFilter;
-import net.sf.cglib.transform.impl.InterceptFieldTransformer;
+import org.hibernate.repackage.cglib.beans.BulkBean;
+import org.hibernate.repackage.cglib.beans.BulkBeanException;
+import org.hibernate.repackage.cglib.reflect.FastClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.BytecodeProvider;
@@ -18,7 +12,6 @@ import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.util.StringHelper;
-import org.objectweb.asm.Type;
 
 /**
  * Bytecode provider implementation for CGLIB.
@@ -28,6 +21,10 @@ import org.objectweb.asm.Type;
 public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
+
+	public BytecodeProviderImpl() {
+		log.warn( "The CGLIB BytecodeProvider impl is considered deprecated and not recommended for use" );
+	}
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();

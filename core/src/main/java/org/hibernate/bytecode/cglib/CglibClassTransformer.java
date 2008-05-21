@@ -6,25 +6,25 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-import net.sf.cglib.transform.ClassTransformer;
-import net.sf.cglib.transform.TransformingClassGenerator;
-import net.sf.cglib.transform.ClassReaderGenerator;
-import net.sf.cglib.transform.impl.InterceptFieldEnabled;
-import net.sf.cglib.transform.impl.InterceptFieldFilter;
-import net.sf.cglib.transform.impl.InterceptFieldTransformer;
-import net.sf.cglib.core.ClassNameReader;
-import net.sf.cglib.core.DebuggingClassWriter;
+import org.hibernate.repackage.cglib.transform.ClassTransformer;
+import org.hibernate.repackage.cglib.transform.TransformingClassGenerator;
+import org.hibernate.repackage.cglib.transform.ClassReaderGenerator;
+import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
+import org.hibernate.repackage.cglib.transform.impl.InterceptFieldFilter;
+import org.hibernate.repackage.cglib.transform.impl.InterceptFieldTransformer;
+import org.hibernate.repackage.cglib.core.ClassNameReader;
+import org.hibernate.repackage.cglib.core.DebuggingClassWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.HibernateException;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.attrs.Attributes;
+import org.hibernate.repackage.cglib.asm.Attribute;
+import org.hibernate.repackage.cglib.asm.Type;
+import org.hibernate.repackage.cglib.asm.ClassReader;
+import org.hibernate.repackage.cglib.asm.ClassWriter;
+import org.hibernate.repackage.cglib.asm.attrs.Attributes;
 
 /**
  * Enhance the classes allowing them to implements InterceptFieldEnabled

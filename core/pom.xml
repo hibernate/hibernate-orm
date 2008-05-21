@@ -63,15 +63,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-cglib-repack</artifactId>
             <version>2.1_3</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-attrs</artifactId>
-            <version>1.5.3</version>
             <optional>true</optional>
         </dependency>
     </dependencies>

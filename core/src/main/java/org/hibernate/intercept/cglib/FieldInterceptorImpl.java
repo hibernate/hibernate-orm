@@ -4,7 +4,7 @@ package org.hibernate.intercept.cglib;
 import java.io.Serializable;
 import java.util.Set;
 
-import net.sf.cglib.transform.impl.InterceptFieldCallback;
+import org.hibernate.repackage.cglib.transform.impl.InterceptFieldCallback;
 
 import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.engine.SessionImplementor;
@@ -25,9 +25,9 @@ public final class FieldInterceptorImpl extends AbstractFieldInterceptor impleme
 	/**
 	 * Package-protected constructor
 	 *
-	 * @param session
-	 * @param uninitializedFields
-	 * @param entityName
+	 * @param session The Hibernate session
+	 * @param uninitializedFields Names of the fields we need to initialize on load
+	 * @param entityName The entity name to which we are being bound
 	 */
 	FieldInterceptorImpl(SessionImplementor session, Set uninitializedFields, String entityName) {
 		super( session, uninitializedFields, entityName );

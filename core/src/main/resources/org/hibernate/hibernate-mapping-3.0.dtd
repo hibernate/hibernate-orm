@@ -174,7 +174,7 @@ via Session.getIdentifier() -->
 key column. The class must implement java.io.Serializable and reimplement equals() 
 and hashCode(). -->
 
-<!ELEMENT composite-id ( meta*, (key-property|key-many-to-one)+ )>
+<!ELEMENT composite-id ( meta*, (key-property|key-many-to-one)+, generator? )>
 	<!ATTLIST composite-id class CDATA #IMPLIED>
 	<!ATTLIST composite-id mapped (true|false) "false">
 	<!ATTLIST composite-id name CDATA #IMPLIED>

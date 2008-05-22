@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates composite-id using a generator.
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.cid">
+
+    <class name="PurchaseRecord">
+    	
+    	<composite-id name="id" 
+    		class="PurchaseRecord$Id">
+    		<key-property name="purchaseNumber"/>
+    		<key-property name="purchaseSequence"/>
+    		<generator class="org.hibernate.test.cid.PurchaseRecordIdGenerator"/>
+    	</composite-id>
+    	
+		<set name="details" 
+			lazy="false" 
+			inverse="true" 
+			cascade="all">
+		    <key>
+			    <column name="purchaseNumber"/>
+			    <column name="purchaseSequence"/>
+		    </key>
+		    <one-to-many class="PurchaseDetail"/>
+		</set>		
+		
+		<property name="timestamp" column="timestamp"/>
+    	
+    </class>
+
+    <class name="PurchaseDetail">
+    	
+    	<id name="productId" 
+    		type="string" 
+    		column="productId">
+    		<generator class="assigned"/>
+    	</id>
+    	
+    	<property name="quantity"/>
+    	
+ 		<many-to-one name="purchaseRecord" 
+	        class="PurchaseRecord"
+	        not-null="true">
+	     	<column name="purchaseNumber"/>
+	     	<column name="purchaseSequence"/>
+	     </many-to-one>
+    	
+    </class>
+
+</hibernate-mapping>

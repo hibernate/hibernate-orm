@@ -118,7 +118,10 @@ public class JTASessionContext implements CurrentSessionContext {
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
 
-			currentSessionMap.put( txn, currentSession );
+			Object txnIdentifier = factory.getSettings().getTransactionManagerLookup() == null
+					? txn
+					: factory.getSettings().getTransactionManagerLookup().getTransactionIdentifier( txn );
+			currentSessionMap.put( txnIdentifier, currentSession );
 		}
 
 		return currentSession;

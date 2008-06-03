@@ -8,62 +8,299 @@
 			Overview
 		</title>
 		<para>
-			These release notes contain important information regarding Hibernate &VERSION;. This document covers installation and migration notes, new features and bug fixes. 
+			These release notes contain important information regarding Hibernate &VERSION; release. This document lists the necessary software that must be installed before using Hibernate. Users of previous versions of Hibernate may refer to <xref linkend="Issues"/> to find the latest JIRA issue fixes. In addition, the latest <xref linkend="Documentation"/>, product support and license links are also provided.  
 		</para>
-	
+		
 		<section id="Background">
 			<title>Background</title>
 			<para>
-				Hibernate is a powerful object/relational mapping tool for building Java applications. It significantly reduces repetitive persistence related programming tasks by mapping the object model's data representation to a relational data model. The mapping feature eliminates paradigm mismatch issues caused by data handling between objects and relational databases. 			
+				Hibernate is a powerful object/relational mapping tool and a query service for building Java applications. Hibernate offers a sophisticated object-oriented HQL (Hibernate query language) allowing the programmer to make use of polymorphic queries. Queries can be expressed in native SQL or using Java-based Criteria and Example queries. However, please read these release notes for more information on software that are compatible with this version of Hibernate release. 
 			</para>
 		</section>
 	</section>
 	<section id="Important_Notes">
 		<title>Installation And Migration Guide</title>
 		<para>
-			This section contains all information related to installing hibernate, testing the installation and running some examples.
+			This section lists the software that must be installed on your local machine before beginning to use Hibernate. Migration notes are also listed in this section for users who will be using existing databases along with Hibernate.
 		</para>
+		
+		<section id="Prerequisites">
+			<title>Prerequisites</title>
+			<para>
+				The software listed in this section needs to be installed before using Hibernate, running unit tests or running the demo. 
+			</para>		
+			<section id="Using_Hibernate">
+				<title>Using Hibernate</title>
+				<para><application>JDK 1.5</application></para>
+				<para>
+					To build Java applications with Hibernate you must have <application>JDK</application> 1.5 version installed. While this version is compatible with Hibernate, version 1.4 is no longer supported. Once installation of JDK 1.5 version is completed, you must set the environment variables.  
+				</para>
+				
+			</section>
+			
+			<section id="Testing_Hibernate_And_Running_Demo">
+				<title>Testing Hibernate and Running the demo</title>
+				<para>
+					To test Hibernate and run the demo, you will need <application>Apache Ant 1.7.0</application> and <application>JUnit 3.8.1</application>. 	
+				</para>
+				
+				<itemizedlist>	
+					<listitem>
+						<para><application>Apache Ant 1.7.0</application></para>
+						<para>Apache Ant can be downloaded from this <ulink url="http://ant.apache.org">link</ulink>. You must set the <property>ANT_HOME</property> environment variable to point to the Apache Ant install location. You may refer to the manual available on their website for installing and setting up Apache Ant for use. </para>
+					</listitem>
+					<listitem>
+						<para><application>JUnit 3.8.1</application></para>
+						<para>
+							To run JUnit tests, you may use JUnit 3.8.1 version which can be downloaded from <ulink url="http://www.junit.org/">here</ulink>. After installation, copy <filename>junit.jar</filename> to <literal>$ANT_HOME/lib</literal> directory. <xref linkend="Running_JUnit_Tests"/> provides further notes on running JUnit tests.  
+						</para>
+						
+					</listitem>					
+				</itemizedlist>				
+			</section>		
+		</section>
+		
 		<section id="Installation_Notes">
 			<title>Installation Notes</title>
 			<para>
-				Any information that the user must keep in mind before or during installation has to be specified here.
+				Extract files from the Hibernate <literal>ZIP</literal> file to the desired location. Open the directory where you have extracted these files. To use Hibernate, you must configure the project's classpath settings to point to these <filename>jar</filename> files. Settings for individual IDEs differ, but normally you would add the <filename>jar</filename> files as external library files.  
 			</para>
+			
 		</section>
-		<section id="Migration_Guide">
-			<title>Migration Guide</title>
-			<para>
-				Information regarding upgrades  
-			</para>
+		<section id="Migration_Notes">
+			<title>Migration Notes</title>
+			<section id="Configuring_Database">
+				<title>Configuring your database</title>
+				<para>
+					To use your database with Hibernate, copy your <literal>JDBC</literal> driver into the <literal>lib</literal> directory. Then edit the <filename>hibernate.properties</filename> file in the <literal>etc</literal> directory. Additional configuration notes are available in <citetitle pubwork="book">Hibernate Reference Guide</citetitle>, chapter 3: Configuration. The Hibernate supported databases are: Oracle9i, Oracle10g, MS SQL 2005, PostgreSQL and MySQL.
+				</para>
+				<section id="Oracle_Users">
+					<title>Oracle users</title>
+					<para>
+						OracleDialect and Oracle9Dialect have been deprecated. Oracle8iDialect, Oracle9iDialect, or Oracle10gDialect should be used instead.  
+					</para>
+				</section>
+			</section>
 		</section>
 	</section>
-	<section id="Features_And_Bug_Fixes">
-		<title>New features and bug fixes</title>
+	
+	<section id="Running_JUnit_Tests">
+		<title>Running JUnit Tests</title>
+		
 		<para>
-			All new features and bug fixes mentioned in these release notes are applicable to VERSION;. 
+			It is recommended that the Hibernate unit tests be executed using the same dialect and version of JDBC that will be used in production, to ensure that the configuration setting, <property>hibernate.jdbc.batch_versioned_data</property>, is set properly. The value for  <property>hibernate.jdbc.batch_versioned_data</property> determines if Hibernate will use batches for updating versioned data (an optimization). 
 		</para>
-		<section id="New_Features">
-			<title>New Features</title>
+		<para>
+			Optimistic locking relies on the ability to obtain the number of rows updated. If the JDBC driver does not return update counts for each command in a batch, then <property>hibernate.jdbc.batch_versioned_data</property> should be set to "false". 
+		</para>
+		<para>
+			The unit tests use the settings in <filename>etc/hibernate.properties</filename>. The value for <property>hibernate.jdbc.batch_versioned_data</property> is set to <parameter>true</parameter> in that file. If the unit tests involving optimistic locking fail, then the appropriate value for this flag is  <parameter>false</parameter>. Some versions of Oracle JDBC do not support returning update counts for each command in a batch, so it is particularly important to test using the same version of JDBC as will be used in production.
+		</para>
+		
+		<section id="Expected_JUnit_Failures_And_Tests">
+			<title>Expected failures and tests</title>
 			<para>
-				Provide a summary of new features applicable to this release. 
+				The following unit tests are expected to fail:
 			</para>
-		</section>
-		<section id="Bug_Fixes">
-			<title>Bug Fixes</title>
-			<para>
-				The following bugs have been addressed and resolved in this release.  
-			</para>
+			
+			<formalpara>					
+				<title>
+					Ehcache tests (Ehcache is not provided in this distribution):
+				</title>
+				<para>
+					org.hibernate.test.cache.ehcache.EhCacheTest.testQueryCacheInvalidation
+					org.hibernate.test.cache.ehcache.EhCacheTest.testEmptySecondLevelCacheEntry
+					org.hibernate.test.cache.ehcache.EhCacheTest.testStaleWritesLeaveCacheConsistent
+				</para>
+			</formalpara>
+			<formalpara>
+				<title>Expected unit test failure against MS SQL 2005</title>
+				<para>
+					org.hibernate.test.legacy.MasterDetailTest.testCachedCollectionRefresh
+				</para>
+			</formalpara>
+			<formalpara>
+				<title>
+					"FailureExpected" tests (known issues to be addressed in the future): 
+				</title>
+				<para>
+					org.hibernate.test.hql.ASTParserLoadingTest.testParameterTypeMismatchFailureExpected
+					org.hibernate.test.hql.CriteriaHQLAlignmentTest.testCriteriaAggregationReturnTypeFailureExpected
+					org.hibernate.test.hql.HQLTest.testEmptyInListFailureExpected   
+					org.hibernate.test.hql.HQLTest.testMaxindexHqlFuncttestMultipleElementAccessorOperatorsFailureExpectedionInElementAccessorFailureExpected
+					org.hibernate.test.hql.HQLTest.testMultipleElementAccessorOperatorsFailureExpected
+					org.hibernate.test.hql.HQLTest.testKeyManyToOneJoinFailureExpected
+					org.hibernate.test.hql.HQLTest.testDuplicateExplicitJoinFailureExpected
+					org.hibernate.test.keymanytoone.bidir.component.EagerKeyManyToOneTest.testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelfFailureExpected
+					org.hibernate.test.legacy.SQLLoaderTest.testReturnPropertyComponentRenameFailureExpected
+					org.hibernate.test.readonly.ReadOnlyTest.testReadOnlyOnProxiesFailureExpected
+					org.hibernate.test.sql.hand.query.NativeSQLQueriesTest.testCompositeIdJoinsFailureExpected 
+				</para>
+			</formalpara>		
 		</section>
 	</section>
-	<section id="Documentation">
+	
+	<section id="Issues" xreflabel="Issues">
+		<title>Issues</title>
+		
+		<section id="Issue_Type_Bugs">
+			<title>Issue type: Bugs</title>
+			<formalpara>
+				<title>[HHH-2683] - <property>"datediff"</property> is declared as <methodname>NoArgSQLFunction</methodname> in H2Dialect, but actually accepts 3 arguments.</title>
+				<para>
+					This issue is now resolved. It has been changed from <methodname>NoArgSQLFunction</methodname> to <methodname>StandardSQLFunction</methodname>.
+				</para>
+			</formalpara>
+			
+			<formalpara>
+				<title><ulink>[HHH-3257]</ulink> - Content images not displayed</title>
+				<para></para>
+			</formalpara>
+			<formalpara>
+				<title><ulink>[HHH-3260]</ulink> - Hibernate wraps a listener init or destroy exception into an AssertionFailure</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title><ulink>[HHH-3261]</ulink> - Do not wrap exceptions raised by event listeners (at init or destroy time)</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3265] - change license url in pom to http://www.gnu.org/licenses/lgpl-2.1.html</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3266] - distribution bundle missing jta dependency</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3272] - using of Integer.valueOf(int), which is not available in JDK 1.4</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3282] - DB2Dialect should report supportsLobValueChangePropogation() == false</title><para></para>
+			</formalpara>
+		</section>
+		
+		<section id="Issue_Type_Improvement">
+			<title>Improvement</title>
+			<formalpara>
+				<title>[HHH-2060] - To be able to use &lt;generator&gt; with &lt;composite-id&gt;</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-2506] - Make javassist the default ByteCodeProvider</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-2875] - repackage cglib/asm under org.hibernate namespace</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3229] - Make cascade rules more transparent/explicit/deterministic</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3269] - upgrade to jDocBook plugin version 2.1.1</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3276] - review proposed new doc styling</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3283] - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false</title><para></para>
+			</formalpara>
+			<formalpara>
+				<title>[HHH-3286] - Move ACTION_PERSIST_SKIPLAZY from HEM to Core in CascadingAction</title><para></para>
+			</formalpara>
+		</section>
+		
+		<section id="Issue_Type_New_Feature"><title>New Feature</title>
+			<formalpara>
+				<title>[HHH-3279] - create series of maven plugins offering functionality of the ant tools</title><para></para>
+			</formalpara>
+		</section>
+		
+		
+		<section id="Issue_Type_Task"><title>Task</title>
+			<formalpara>
+				<title>[HHH-3270] - follow up on documentation license questions</title><para></para>
+			</formalpara>
+		</section>
+		
+		
+		
+	</section>
+	<section id="Documentation" xreflabel="documentation">
 		<title>Documentation</title>
-		<para>
-			 List all the documentation links here and where to find them. 
-		</para>		
+		<itemizedlist>
+			<listitem>
+				<para>
+					The <citetitle pubwork="book">Hibernate reference guide</citetitle> is a comprehensive source of material for learning about Hibernate. It kicks off with an example to get you started with Hibernate, lists the major functionality of Hibernate, offers design solutions and suggests best practises.   
+				</para>		
+			</listitem>
+			<listitem>
+				<para>
+					The <citetitle pubwork="book">Hibernate Core API Reference</citetitle> guide will be helpful during application development.
+				</para>
+			</listitem>
+		</itemizedlist>
 	</section>
 	<section id="Product_Support">
-		<title>Product Support</title>
-		<para>
-			List all the links here. 
-		</para>		
+		<title>Product Support and License Website Links</title>
+		<formalpara>
+			<title>Support Processes</title>
+			<para>
+				<ulink url="http://www.redhat.com/support/process/">http://www.redhat.com/support/process/</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				Production Support Scope of Coverage
+			</title>
+			<para>
+				<ulink url="http://www.redhat.com/support/policy/soc/production">http://www.redhat.com/support/policy/soc/production</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				Production Support Service Level Agreement
+			</title>
+			
+			<para>
+				<ulink url="http://www.redhat.com/support/policy/sla/production/">http://www.redhat.com/support/policy/sla/production/</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				Developer Support Scope of Coverage
+			</title>
+			
+			<para>
+				<ulink url="http://www.redhat.com/support/policy/soc/developer/">http://www.redhat.com/support/policy/soc/developer/</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				Developer Support Service Level Agreement
+			</title>
+			
+			<para>
+				<ulink url="http://www.redhat.com/support/policy/sla/developer/">http://www.redhat.com/support/policy/sla/developer/</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				Product Update and Support Policy by Product
+			</title>
+			
+			<para>
+				<ulink url="http://www.redhat.com/security/updates/jboss_notes/">http://www.redhat.com/security/updates/jboss_notes/</ulink>
+			</para>
+		</formalpara>
+		
+		<formalpara>
+			<title>
+				JBoss End User License Agreement
+			</title>
+			
+			<para>
+				<ulink url="http://www.redhat.com/licenses/jboss_eula.html">http://www.redhat.com/licenses/jboss_eula.html</ulink>
+			</para>
+		</formalpara>
 	</section>
 </article>

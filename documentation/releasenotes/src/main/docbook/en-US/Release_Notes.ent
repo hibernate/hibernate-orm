@@ -1,3 +1,4 @@
 <!ENTITY PRODUCT "Hibernate Standalone">
 <!ENTITY BOOKID "Release_Notes">
-<!ENTITY VERSION "3.2.4.x">
+<!ENTITY VERSION "3.3.0.CR2">
+<!ENTITY YEAR "2008">

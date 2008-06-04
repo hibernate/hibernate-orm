@@ -3,15 +3,15 @@
 ]>
 
 <articleinfo id="Release_Notes-Hibernate-Standalone">
-	<title>Enterprise Hibernate x.y.z Release Notes</title>
+	<title>Hibernate</title>
 	<subtitle>Release Notes</subtitle>
-	<issuenum>0.1</issuenum>
-	<productnumber>0</productnumber>
-	<abstract><para>This document outlines information necessary for installation, migration and bug fixes.</para>
+	<issuenum>3.3.0</issuenum>
+	<productnumber>1</productnumber>
+	<abstract><para>This document provides the release notes for Hibernate &VERSION;.</para>
 	</abstract>
 	<corpauthor><inlinemediaobject>
 			<imageobject>
-				<imagedata fileref="Common_Content/images/redhat-logo.svg" />
+				<imagedata fileref="Common_Content/images/hibernate_logo_a.png" />
 			</imageobject>
 		</inlinemediaobject>
 	</corpauthor><copyright>
@@ -20,6 +20,3 @@
 	</copyright>
 	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />	
 </articleinfo>
-
-
-

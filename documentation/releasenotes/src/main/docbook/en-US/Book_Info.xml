@@ -3,7 +3,7 @@
 ]>
 
 <articleinfo id="Release_Notes-Product_Name_and_Version">
-	<title>Product Name and Version</title>
+	<title>Hibernate</title>
 	<subtitle>Release Notes</subtitle>
 	<issuenum>0.1</issuenum>
 	<productnumber>0</productnumber>
@@ -12,7 +12,7 @@
 	</abstract>
 	<corpauthor><inlinemediaobject>
 			<imageobject>
-				<imagedata fileref="Common_Content/images/redhat-logo.svg" />
+				<imagedata fileref="/images/hibernate_logo_a.png" />
 			</imageobject>
 		</inlinemediaobject>
 	</corpauthor><copyright>

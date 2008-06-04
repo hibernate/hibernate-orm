@@ -1,4 +1,28 @@
 <?xml version="1.0"?>
+<!--
+    ~ Hibernate, Relational Persistence for Idiomatic Java
+    ~
+    ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+    ~ indicated by the @author tags or express copyright attribution
+    ~ statements applied by the authors.  All third-party contributions are
+    ~ distributed under license by Red Hat Middleware LLC.
+    ~
+    ~ This copyrighted material is made available to anyone wishing to use, modify,
+    ~ copy, or redistribute it subject to the terms and conditions of the GNU
+    ~ Lesser General Public License, as published by the Free Software Foundation.
+    ~
+    ~ This program is distributed in the hope that it will be useful,
+    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+    ~ for more details.
+    ~
+    ~ You should have received a copy of the GNU Lesser General Public License
+    ~ along with this distribution; if not, write to:
+    ~ Free Software Foundation, Inc.
+    ~ 51 Franklin Street, Fifth Floor
+    ~ Boston, MA  02110-1301  USA
+  -->
+
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
 <article id="HIB_Release_Notes">
 	<xi:include href="Article_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -103,40 +127,7 @@
 				The following unit tests are expected to fail:
 			</para>
 			
-			<formalpara>					
-				<title>
-					Ehcache tests (Ehcache is not provided in this distribution):
-				</title>
-				<para>
-					org.hibernate.test.cache.ehcache.EhCacheTest.testQueryCacheInvalidation
-					org.hibernate.test.cache.ehcache.EhCacheTest.testEmptySecondLevelCacheEntry
-					org.hibernate.test.cache.ehcache.EhCacheTest.testStaleWritesLeaveCacheConsistent
-				</para>
-			</formalpara>
-			<formalpara>
-				<title>Expected unit test failure against MS SQL 2005</title>
-				<para>
-					org.hibernate.test.legacy.MasterDetailTest.testCachedCollectionRefresh
-				</para>
-			</formalpara>
-			<formalpara>
-				<title>
-					"FailureExpected" tests (known issues to be addressed in the future): 
-				</title>
-				<para>
-					org.hibernate.test.hql.ASTParserLoadingTest.testParameterTypeMismatchFailureExpected
-					org.hibernate.test.hql.CriteriaHQLAlignmentTest.testCriteriaAggregationReturnTypeFailureExpected
-					org.hibernate.test.hql.HQLTest.testEmptyInListFailureExpected   
-					org.hibernate.test.hql.HQLTest.testMaxindexHqlFuncttestMultipleElementAccessorOperatorsFailureExpectedionInElementAccessorFailureExpected
-					org.hibernate.test.hql.HQLTest.testMultipleElementAccessorOperatorsFailureExpected
-					org.hibernate.test.hql.HQLTest.testKeyManyToOneJoinFailureExpected
-					org.hibernate.test.hql.HQLTest.testDuplicateExplicitJoinFailureExpected
-					org.hibernate.test.keymanytoone.bidir.component.EagerKeyManyToOneTest.testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelfFailureExpected
-					org.hibernate.test.legacy.SQLLoaderTest.testReturnPropertyComponentRenameFailureExpected
-					org.hibernate.test.readonly.ReadOnlyTest.testReadOnlyOnProxiesFailureExpected
-					org.hibernate.test.sql.hand.query.NativeSQLQueriesTest.testCompositeIdJoinsFailureExpected 
-				</para>
-			</formalpara>		
+				
 		</section>
 	</section>
 	
@@ -146,74 +137,78 @@
 		<section id="Issue_Type_Bugs">
 			<title>Issue type: Bugs</title>
 			<formalpara>
-				<title>[HHH-2683] - <property>"datediff"</property> is declared as <methodname>NoArgSQLFunction</methodname> in H2Dialect, but actually accepts 3 arguments.</title>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2683">[HHH-2683]</ulink> - <property>"datediff"</property> is declared as <literal>NoArgSQLFunction</literal> in H2Dialect, but actually accepts 3 arguments.</title>
 				<para>
-					This issue is now resolved. It has been changed from <methodname>NoArgSQLFunction</methodname> to <methodname>StandardSQLFunction</methodname>.
+					This issue is now resolved. It has been changed from <literal>NoArgSQLFunction</literal> to <literal>StandardSQLFunction</literal>.
 				</para>
 			</formalpara>
 			
 			<formalpara>
-				<title><ulink>[HHH-3257]</ulink> - Content images not displayed</title>
-				<para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3257">[HHH-3257]</ulink> - Content images not displayed</title>
+				<para>This issue affects the use of jdocbook plugin. useRelativeImageUris is now set to false to fix this error.</para>
 			</formalpara>
 			<formalpara>
-				<title><ulink>[HHH-3260]</ulink> - Hibernate wraps a listener init or destroy exception into an AssertionFailure</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3260">[HHH-3260]</ulink> - Hibernate wraps a listener init or destroy exception into an AssertionFailure</title>
+				<para><literal>AssertionFailure</literal> is now replaced with <literal>HibernateException</literal> to catch <literal>listener</literal> exception errors.</para>
 			</formalpara>
 			<formalpara>
-				<title><ulink>[HHH-3261]</ulink> - Do not wrap exceptions raised by event listeners (at init or destroy time)</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3261">[HHH-3261]</ulink> - Do not wrap exceptions raised by event listeners (at init or destroy time)</title>
+				<para>Use of <literal>AssertionFailureExceptions</literal> has been removed. </para>
 			</formalpara>
 			<formalpara>
-				<title>[HHH-3265] - change license url in pom to http://www.gnu.org/licenses/lgpl-2.1.html</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3265">[HHH-3265]</ulink> - change license url in pom to http://www.gnu.org/licenses/lgpl-2.1.html</title>
+				<para>The license information has been updated to version 2.1 of LGPL.</para>
 			</formalpara>
 			<formalpara>
-				<title>[HHH-3266] - distribution bundle missing jta dependency</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3266">[HHH-3266]</ulink> - distribution bundle missing jta dependency</title>
+				<para>The missing dependency set has been updated in the <filename>dist.xml</filename> file.</para>
 			</formalpara>
 			<formalpara>
-				<title>[HHH-3272] - using of Integer.valueOf(int), which is not available in JDK 1.4</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3272">[HHH-3272]</ulink> - use of Integer.valueOf(int) which is not available in JDK 1.4</title>
+				<para>This has been updated for the compatible JDK version. Instead of <literal>Integer.valueOf(int)</literal>, <literal>new Integer(int)</literal> is used.</para>
 			</formalpara>
 			<formalpara>
-				<title>[HHH-3282] - DB2Dialect should report supportsLobValueChangePropogation() == false</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3282">[HHH-3282]</ulink> - <literal>DB2Dialect</literal> should report <literal>supportsLobValueChangePropogation()</literal> as false</title>
+				<para>The above change has been incorporated.</para>
 			</formalpara>
 		</section>
 		
 		<section id="Issue_Type_Improvement">
 			<title>Improvement</title>
-			<formalpara>
-				<title>[HHH-2060] - To be able to use &lt;generator&gt; with &lt;composite-id&gt;</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-2506] - Make javassist the default ByteCodeProvider</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-2875] - repackage cglib/asm under org.hibernate namespace</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-3229] - Make cascade rules more transparent/explicit/deterministic</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-3269] - upgrade to jDocBook plugin version 2.1.1</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-3276] - review proposed new doc styling</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-3283] - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false</title><para></para>
-			</formalpara>
-			<formalpara>
-				<title>[HHH-3286] - Move ACTION_PERSIST_SKIPLAZY from HEM to Core in CascadingAction</title><para></para>
-			</formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-1786">[HHH-1786]</ulink> JTASessionContext.CleanupSynch does not remove sessions from currentSessionMap</title><para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2060">[HHH-2060]</ulink> - To be able to use <literal>&lt;generator&gt;</literal> with &lt;composite-id&gt;</title>
+				<para>Functionality to use <literal>&lt;generator&gt;</literal> has been incorporated.</para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2506">[HHH-2506]</ulink> - Make javassist the default ByteCodeProvider</title>
+				<para>This is now incorporated into this release.</para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2875">[HHH-2875]</ulink> - repackage cglib/asm under org.hibernate namespace</title>
+				<para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3229">[HHH-3229]</ulink> - Make cascade rules more transparent/explicit/deterministic</title><para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3269">[HHH-3269]</ulink> - upgrade to jDocBook plugin version 2.1.1</title><para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3276">[HHH-3276]</ulink> - review proposed new doc styling</title><para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3283">[HHH-3283]</ulink> - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false</title><para></para></formalpara>
+			
+			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3286">[HHH-3286]</ulink> - Move ACTION_PERSIST_SKIPLAZY from HEM to Core in CascadingAction</title><para></para></formalpara>
+			
 		</section>
 		
 		<section id="Issue_Type_New_Feature"><title>New Feature</title>
 			<formalpara>
-				<title>[HHH-3279] - create series of maven plugins offering functionality of the ant tools</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3279">[HHH-3279]</ulink> - create series of maven plugins offering functionality of the ant tools</title><para></para>
 			</formalpara>
 		</section>
 		
 		
 		<section id="Issue_Type_Task"><title>Task</title>
 			<formalpara>
-				<title>[HHH-3270] - follow up on documentation license questions</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3270">[HHH-3270]</ulink> - follow up on documentation license questions</title><para></para>
 			</formalpara>
 		</section>
 		

@@ -411,10 +411,12 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
             if (cache.getCacheStatus() != CacheStatus.INSTANTIATED) {
                 // We can't change the TM on a running cache; just check
                 // if the cache has no TM and we're OK with that
-                if (!allowNull || cacheTm != null) {
-                    throw new CacheException("JBoss Cache is already started " + "with a transaction manager ("
-                            + cacheTm + ") that doesn't match our own (" + tm + ")");
-                }
+                if (!allowNull && cacheTm == null) {
+                    throw new CacheException("JBoss Cache is already started with no transaction manager configured");
+                } else {
+                   log.debug("JBoss Cache is already started with a transaction manager ("
+                         + cacheTm + ") that is not equal to our own (" + tm + ")");                   
+                }                
             } else {
                 // Configure the cache to use our TM
                 cacheConfig.getRuntimeConfig().setTransactionManager(tm);

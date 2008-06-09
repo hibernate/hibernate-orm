@@ -216,8 +216,8 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
         if (!safeEquals(tm, cacheTm)) {            
             if (cache.getCacheStatus() != CacheStatus.INSTANTIATED
                     && cache.getCacheStatus() != CacheStatus.DESTROYED) {
-                throw new CacheException("JBoss Cache is already started " + "with a transaction manager ("
-                            + cacheTm + ") that doesn't match our own (" + tm + ")");
+               log.debug("JBoss Cache is already started with a transaction manager ("
+                     + cacheTm + ") that is not equal to our own (" + tm + ")");    
             } else {
                 // Configure the cache to use our TM
                 cacheConfig.getRuntimeConfig().setTransactionManager(tm);

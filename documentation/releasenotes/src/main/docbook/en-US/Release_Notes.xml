@@ -121,17 +121,17 @@
 			The unit tests use the settings in <filename>etc/hibernate.properties</filename>. The value for <property>hibernate.jdbc.batch_versioned_data</property> is set to <parameter>true</parameter> in that file. If the unit tests involving optimistic locking fail, then the appropriate value for this flag is  <parameter>false</parameter>. Some versions of Oracle JDBC do not support returning update counts for each command in a batch, so it is particularly important to test using the same version of JDBC as will be used in production.
 		</para>
 		
-		<section id="Expected_JUnit_Failures_And_Tests">
+		<!--<section id="Expected_JUnit_Failures_And_Tests">
 			<title>Expected failures and tests</title>
 			<para>
 				The following unit tests are expected to fail:
 			</para>
 			
 				
-		</section>
+		</section>-->
 	</section>
 	
-	<section id="Issues" xreflabel="Issues">
+	<section id="Issues">
 		<title>Issues</title>
 		
 		<section id="Issue_Type_Bugs">
@@ -169,53 +169,69 @@
 			</formalpara>
 			<formalpara>
 				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3282">[HHH-3282]</ulink> - <literal>DB2Dialect</literal> should report <literal>supportsLobValueChangePropogation()</literal> as false</title>
-				<para>The above change has been incorporated.</para>
+				<para>This change has been incorporated.</para>
 			</formalpara>
 		</section>
 		
 		<section id="Issue_Type_Improvement">
 			<title>Improvement</title>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-1786">[HHH-1786]</ulink> JTASessionContext.CleanupSynch does not remove sessions from currentSessionMap</title><para></para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-1786">[HHH-1786] - </ulink> JTASessionContext.CleanupSynch does not remove sessions from currentSessionMap</title><para></para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2060">[HHH-2060]</ulink> - To be able to use <literal>&lt;generator&gt;</literal> with &lt;composite-id&gt;</title>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2060">[HHH-2060]</ulink> - To be able to use <literal>&lt;generator&gt;</literal> with &lt;composite-id&gt;</title>
 				<para>Functionality to use <literal>&lt;generator&gt;</literal> has been incorporated.</para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2506">[HHH-2506]</ulink> - Make javassist the default ByteCodeProvider</title>
-				<para>This is now incorporated into this release.</para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2506">[HHH-2506]</ulink> - Make <literal>javassist</literal> the default <literal>ByteCodeProvider</literal></title>
+				<para>This has been incorporated into this release.</para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2875">[HHH-2875]</ulink> - repackage cglib/asm under org.hibernate namespace</title>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2875">[HHH-2875]</ulink> - repackage cglib/asm under org.hibernate namespace</title>
+				<para>This issue is also associated with the above issue.</para></formalpara>
+			
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3229">[HHH-3229]</ulink> - Make cascade rules more transparent/explicit/deterministic</title>
 				<para></para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3229">[HHH-3229]</ulink> - Make cascade rules more transparent/explicit/deterministic</title><para></para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3269">[HHH-3269]</ulink> - upgrade to jDocBook plugin version 2.1.1</title>
+				<para>Upgrade for jDocBook plugin version from 2.1.0 to 2.1.1 has been enabled for this release</para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3269">[HHH-3269]</ulink> - upgrade to jDocBook plugin version 2.1.1</title><para></para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3276">[HHH-3276]</ulink> - review proposed new doc styling</title>
+				<para>Hibernate going to have a new look soon!</para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3276">[HHH-3276]</ulink> - review proposed new doc styling</title><para></para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3283">[HHH-3283]</ulink> - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false</title>
+				<para></para></formalpara>
 			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3283">[HHH-3283]</ulink> - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false</title><para></para></formalpara>
-			
-			<formalpara><title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3286">[HHH-3286]</ulink> - Move ACTION_PERSIST_SKIPLAZY from HEM to Core in CascadingAction</title><para></para></formalpara>
+			<formalpara>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3286">[HHH-3286]</ulink> - Move ACTION_PERSIST_SKIPLAZY from HEM to Core in CascadingAction</title>
+				<para></para></formalpara>
 			
 		</section>
 		
 		<section id="Issue_Type_New_Feature"><title>New Feature</title>
 			<formalpara>
-				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3279">[HHH-3279]</ulink> - create series of maven plugins offering functionality of the ant tools</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3279">[HHH-3279]</ulink> - create series of maven plugins offering functionality of the ant tools</title>
+				<para></para>
 			</formalpara>
 		</section>
 		
 		
 		<section id="Issue_Type_Task"><title>Task</title>
 			<formalpara>
-				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3270">[HHH-3270]</ulink> - follow up on documentation license questions</title><para></para>
+				<title><ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3270">[HHH-3270]</ulink> - follow up on documentation license questions</title>
+				<para>License information has been modified to reflect LGPL licensing. </para>
 			</formalpara>
 		</section>
 		
 		
 		
 	</section>
-	<section id="Documentation" xreflabel="documentation">
+	<section id="Documentation">
 		<title>Documentation</title>
 		<itemizedlist>
 			<listitem>

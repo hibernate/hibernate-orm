@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.ConcurrentModificationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -296,28 +297,45 @@ public abstract class AbstractBatcher implements Batcher {
 			releasing = true;
 
 			try {
-				if (batchUpdate!=null) batchUpdate.close();
+				if ( batchUpdate != null ) {
+					batchUpdate.close();
+				}
 			}
-			catch (SQLException sqle) {
+			catch ( SQLException sqle ) {
 				//no big deal
-				log.warn("Could not close a JDBC prepared statement", sqle);
+				log.warn( "Could not close a JDBC prepared statement", sqle );
 			}
-			batchUpdate=null;
-			batchUpdateSQL=null;
+			batchUpdate = null;
+			batchUpdateSQL = null;
 
 			Iterator iter = resultSetsToClose.iterator();
 			while ( iter.hasNext() ) {
 				try {
 					logCloseResults();
-					( (ResultSet) iter.next() ).close();
+					( ( ResultSet ) iter.next() ).close();
 				}
-				catch (SQLException e) {
+				catch ( SQLException e ) {
 					// no big deal
-					log.warn("Could not close a JDBC result set", e);
+					log.warn( "Could not close a JDBC result set", e );
 				}
-				catch (Throwable e) {
-					// sybase driver (jConnect) throwing NPE here in certain cases
-					log.warn("Could not close a JDBC result set", e);
+				catch ( ConcurrentModificationException e ) {
+					// this has been shown to happen occasionally in rare cases
+					// when using a transaction manager + transaction-timeout
+					// where the timeout calls back through Hibernate's
+					// registered transaction synchronization on a separate
+					// "reaping" thread.  In cases where that reaping thread
+					// executes through this block at the same time the main
+					// application thread does we can get into situations where
+					// these CMEs occur.  And though it is not "allowed" per-se,
+					// the end result without handling it specifically is infinite
+					// looping.  So here, we simply break the loop
+					log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
+					break;
+				}
+				catch ( Throwable e ) {
+					// sybase driver (jConnect) throwing NPE here in certain
+					// cases, but we'll just handle the general "unexpected" case
+					log.warn( "Could not close a JDBC result set", e );
 				}
 			}
 			resultSetsToClose.clear();
@@ -325,11 +343,16 @@ public abstract class AbstractBatcher implements Batcher {
 			iter = statementsToClose.iterator();
 			while ( iter.hasNext() ) {
 				try {
-					closeQueryStatement( (PreparedStatement) iter.next() );
+					closeQueryStatement( ( PreparedStatement ) iter.next() );
 				}
-				catch (SQLException e) {
+				catch ( ConcurrentModificationException e ) {
+					// see explanation above...
+					log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
+					break;
+				}
+				catch ( SQLException e ) {
 					// no big deal
-					log.warn("Could not close a JDBC statement", e);
+					log.warn( "Could not close a JDBC statement", e );
 				}
 			}
 			statementsToClose.clear();

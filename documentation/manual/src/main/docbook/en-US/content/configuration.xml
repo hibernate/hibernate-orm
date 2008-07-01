@@ -1228,17 +1228,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <title>Logging</title>
 
         <para>
-            Hibernate logs various events using Apache commons-logging.
-        </para>
-
-        <para>
-            The commons-logging service will direct output to either Apache Log4j
-            (if you include <literal>log4j.jar</literal> in your classpath) or
-            JDK1.4 logging (if running under JDK1.4 or above). You may download
-            Log4j from <literal>http://jakarta.apache.org</literal>.
-            To use Log4j you will need to place a <literal>log4j.properties</literal>
-            file in your classpath, an example properties file is distributed with
-            Hibernate in the <literal>src/</literal> directory.
+            Hibernate Annotations utilizes <ulink url="http://www.slf4j.org/">Simple Logging Facade for Java</ulink> 
+            (SLF4J) in order to log various system events. SLF4J can direct your logging output to 
+            several logging frameworks (NOP, Simple, log4j version 1.2, JDK 1.4 logging, JCL or logback) depending on your 
+            chosen binding. In order to setup logging properly you will need <filename>slf4j-api.jar</filename> in
+            your classpath together with the jar file for your preferred binding - <filename>slf4j-log4j12.jar</filename> 
+            in the case of Log4J. See the SLF4J <ulink url="http://www.slf4j.org/manual.html">documentation</ulink> for more detail.
+            To use Log4j you will also need to place a <filename>log4j.properties</filename> file in your classpath, 
+            an example properties file is distributed with Hibernate in the <literal>src/</literal> directory.
         </para>
         
         <para>

@@ -550,11 +550,15 @@ public abstract class CollectionType extends AbstractType implements Association
 		//the array length might not match
 		result = replaceElements( original, result, owner, copyCache, session );
 
-		if (original==target) {
-			//get the elements back into the target
+		if ( original == target ) {
+			// get the elements back into the target making sure to handle dirty flag
+			boolean wasClean = PersistentCollection.class.isInstance( target ) && !( ( PersistentCollection ) target ).isDirty();
 			//TODO: this is a little inefficient, don't need to do a whole
 			//      deep replaceElements() call
 			replaceElements( result, target, owner, copyCache, session );
+			if ( wasClean ) {
+				( ( PersistentCollection ) target ).clearDirty();
+			}
 			result = target;
 		}
 

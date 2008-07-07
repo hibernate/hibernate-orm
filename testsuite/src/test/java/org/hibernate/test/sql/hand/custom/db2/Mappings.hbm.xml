@@ -191,7 +191,7 @@
 	
 	<database-object>
 		<create>
-		CREATE PROCEDURE HIBDB2TST.selectAllEmployments ()
+		CREATE PROCEDURE HIBDB2TST.selectAllEmployments () RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
 			SELECT EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE, 
@@ -208,7 +208,7 @@
 	
 	<database-object>
 		<create>
-		CREATE PROCEDURE HIBDB2TST.paramHandling (IN j SMALLINT, IN i SMALLINT)
+		CREATE PROCEDURE HIBDB2TST.paramHandling (IN j SMALLINT, IN i SMALLINT) RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
     		SELECT j as value, i as value2 from sysibm.sysdummy1;
@@ -222,7 +222,7 @@
 	
     <database-object>
 	 <create>
-		CREATE PROCEDURE HIBDB2TST.simpleScalar (IN j SMALLINT)
+		CREATE PROCEDURE HIBDB2TST.simpleScalar (IN j SMALLINT) RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
     		SELECT j as value, 'getAll' as name from sysibm.sysdummy1;

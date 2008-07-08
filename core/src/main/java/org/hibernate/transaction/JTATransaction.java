@@ -31,6 +31,7 @@ import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -49,7 +50,7 @@ import org.hibernate.util.JTAHelper;
  */
 public class JTATransaction implements Transaction {
 
-	private static final Logger log = LoggerFactory.getLogger(JTATransaction.class);
+	private static final Logger log = LoggerFactory.getLogger( JTATransaction.class );
 
 	private final JDBCContext jdbcContext;
 	private final TransactionFactory.Context transactionContext;
@@ -61,38 +62,38 @@ public class JTATransaction implements Transaction {
 	private boolean commitSucceeded;
 	private boolean callback;
 
-    public JTATransaction(
+	public JTATransaction(
 			UserTransaction userTransaction,
 			JDBCContext jdbcContext,
 			TransactionFactory.Context transactionContext) {
 		this.jdbcContext = jdbcContext;
 		this.transactionContext = transactionContext;
-        this.userTransaction = userTransaction;
+		this.userTransaction = userTransaction;
 	}
 
-    /**
+	/**
 	 * {@inheritDoc}
 	 */
 	public void begin() throws HibernateException {
-		if (begun) {
+		if ( begun ) {
 			return;
 		}
-		if (commitFailed) {
-			throw new TransactionException("cannot re-start transaction after failed commit");
+		if ( commitFailed ) {
+			throw new TransactionException( "cannot re-start transaction after failed commit" );
 		}
 
-		log.debug("begin");
+		log.debug( "begin" );
 
 		try {
 			newTransaction = userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION;
-			if (newTransaction) {
+			if ( newTransaction ) {
 				userTransaction.begin();
-				log.debug("Began a new JTA transaction");
+				log.debug( "Began a new JTA transaction" );
 			}
 		}
-		catch (Exception e) {
-			log.error("JTA transaction begin failed", e);
-			throw new TransactionException("JTA transaction begin failed", e);
+		catch ( Exception e ) {
+			log.error( "JTA transaction begin failed", e );
+			throw new TransactionException( "JTA transaction begin failed", e );
 		}
 
 		/*if (newTransaction) {
@@ -105,10 +106,10 @@ public class JTATransaction implements Transaction {
 		boolean synchronization = jdbcContext.registerSynchronizationIfPossible();
 
 		if ( !newTransaction && !synchronization ) {
-			log.warn("You should set hibernate.transaction.manager_lookup_class if cache is enabled");
+			log.warn( "You should set hibernate.transaction.manager_lookup_class if cache is enabled" );
 		}
 
-		if (!synchronization) {
+		if ( !synchronization ) {
 			//if we could not register a synchronization,
 			//do the before/after completion callbacks
 			//ourself (but we need to let jdbcContext
@@ -121,42 +122,42 @@ public class JTATransaction implements Transaction {
 		begun = true;
 		commitSucceeded = false;
 
-		jdbcContext.afterTransactionBegin(this);
+		jdbcContext.afterTransactionBegin( this );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public void commit() throws HibernateException {
-		if (!begun) {
-			throw new TransactionException("Transaction not successfully started");
+		if ( !begun ) {
+			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-		log.debug("commit");
+		log.debug( "commit" );
 
 		boolean flush = !transactionContext.isFlushModeNever()
-		        && ( callback || !transactionContext.isFlushBeforeCompletionEnabled() );
+				&& ( callback || !transactionContext.isFlushBeforeCompletionEnabled() );
 
-		if (flush) {
+		if ( flush ) {
 			transactionContext.managedFlush(); //if an exception occurs during flush, user must call rollback()
 		}
 
-		if (callback && newTransaction) {
-			jdbcContext.beforeTransactionCompletion(this);
+		if ( callback && newTransaction ) {
+			jdbcContext.beforeTransactionCompletion( this );
 		}
 
 		closeIfRequired();
 
-		if (newTransaction) {
+		if ( newTransaction ) {
 			try {
 				userTransaction.commit();
 				commitSucceeded = true;
-				log.debug("Committed JTA UserTransaction");
+				log.debug( "Committed JTA UserTransaction" );
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				commitFailed = true; // so the transaction is already rolled back, by JTA spec
-				log.error("JTA commit failed", e);
-				throw new TransactionException("JTA commit failed: ", e);
+				log.error( "JTA commit failed", e );
+				throw new TransactionException( "JTA commit failed: ", e );
 			}
 			finally {
 				afterCommitRollback();
@@ -176,39 +177,35 @@ public class JTATransaction implements Transaction {
 	 * {@inheritDoc}
 	 */
 	public void rollback() throws HibernateException {
-		if (!begun && !commitFailed) {
-			throw new TransactionException("Transaction not successfully started");
+		if ( !begun && !commitFailed ) {
+			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-		log.debug("rollback");
-
-		/*if (!synchronization && newTransaction && !commitFailed) {
-			jdbcContext.beforeTransactionCompletion(this);
-		}*/
+		log.debug( "rollback" );
 
 		try {
 			closeIfRequired();
 		}
-		catch (Exception e) {
-			log.error("could not close session during rollback", e);
-			//swallow it, and continue to roll back JTA transaction
+		catch ( Exception e ) {
+			// swallow it, and continue to roll back JTA transaction
+			log.error( "could not close session during rollback", e );
 		}
 
 		try {
-			if (newTransaction) {
-				if (!commitFailed) {
+			if ( newTransaction ) {
+				if ( !commitFailed ) {
 					userTransaction.rollback();
-					log.debug("Rolled back JTA UserTransaction");
+					log.debug( "Rolled back JTA UserTransaction" );
 				}
 			}
 			else {
 				userTransaction.setRollbackOnly();
-				log.debug("set JTA UserTransaction to rollback only");
+				log.debug( "set JTA UserTransaction to rollback only" );
 			}
 		}
-		catch (Exception e) {
-			log.error("JTA rollback failed", e);
-			throw new TransactionException("JTA rollback failed", e);
+		catch ( Exception e ) {
+			log.error( "JTA rollback failed", e );
+			throw new TransactionException( "JTA rollback failed", e );
 		}
 		finally {
 			afterCommitRollback();
@@ -220,28 +217,22 @@ public class JTATransaction implements Transaction {
 	private void afterCommitRollback() throws TransactionException {
 
 		begun = false;
-
-		if (callback) { // this method is a noop if there is a Synchronization!
-
-			if (!newTransaction) {
-				log.warn("You should set hibernate.transaction.manager_lookup_class if cache is enabled");
+		// this method is a noop if there is a Synchronization!
+		if ( callback ) {
+			if ( !newTransaction ) {
+				log.warn( "You should set hibernate.transaction.manager_lookup_class if cache is enabled" );
 			}
-			int status=NULL;
+			int status = NULL;
 			try {
 				status = userTransaction.getStatus();
 			}
-			catch (Exception e) {
-				log.error("Could not determine transaction status after commit", e);
-				throw new TransactionException("Could not determine transaction status after commit", e);
+			catch ( Exception e ) {
+				log.error( "Could not determine transaction status after commit", e );
+				throw new TransactionException( "Could not determine transaction status after commit", e );
 			}
 			finally {
-				/*if (status!=Status.STATUS_COMMITTED && status!=Status.STATUS_ROLLEDBACK) {
-					log.warn("Transaction not complete - you should set hibernate.transaction.manager_lookup_class if cache is enabled");
-					//throw exception??
-				}*/
-				jdbcContext.afterTransactionCompletion(status==Status.STATUS_COMMITTED, this);
+				jdbcContext.afterTransactionCompletion( status == Status.STATUS_COMMITTED, this );
 			}
-
 		}
 	}
 
@@ -253,15 +244,15 @@ public class JTATransaction implements Transaction {
 		try {
 			status = userTransaction.getStatus();
 		}
-		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status", se);
+		catch ( SystemException se ) {
+			log.error( "Could not determine transaction status", se );
+			throw new TransactionException( "Could not determine transaction status", se );
 		}
-		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+		if ( status == Status.STATUS_UNKNOWN ) {
+			throw new TransactionException( "Could not determine transaction status" );
 		}
 		else {
-			return JTAHelper.isRollback(status);
+			return JTAHelper.isRollback( status );
 		}
 	}
 
@@ -273,15 +264,15 @@ public class JTATransaction implements Transaction {
 		try {
 			status = userTransaction.getStatus();
 		}
-		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status: ", se);
+		catch ( SystemException se ) {
+			log.error( "Could not determine transaction status", se );
+			throw new TransactionException( "Could not determine transaction status: ", se );
 		}
-		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+		if ( status == Status.STATUS_UNKNOWN ) {
+			throw new TransactionException( "Could not determine transaction status" );
 		}
 		else {
-			return status==Status.STATUS_COMMITTED;
+			return status == Status.STATUS_COMMITTED;
 		}
 	}
 
@@ -289,22 +280,23 @@ public class JTATransaction implements Transaction {
 	 * {@inheritDoc}
 	 */
 	public boolean isActive() throws TransactionException {
-
-		if (!begun || commitFailed || commitSucceeded) return false;
+		if ( !begun || commitFailed || commitSucceeded ) {
+			return false;
+		}
 
 		final int status;
 		try {
 			status = userTransaction.getStatus();
 		}
-		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status: ", se);
+		catch ( SystemException se ) {
+			log.error( "Could not determine transaction status", se );
+			throw new TransactionException( "Could not determine transaction status: ", se );
 		}
-		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+		if ( status == Status.STATUS_UNKNOWN ) {
+			throw new TransactionException( "Could not determine transaction status" );
 		}
 		else {
-			return status==Status.STATUS_ACTIVE;
+			return status == Status.STATUS_ACTIVE;
 		}
 	}
 
@@ -312,15 +304,15 @@ public class JTATransaction implements Transaction {
 	 * {@inheritDoc}
 	 */
 	public void registerSynchronization(Synchronization sync) throws HibernateException {
-		if (getTransactionManager()==null) {
-			throw new IllegalStateException("JTA TransactionManager not available");
+		if ( getTransactionManager() == null ) {
+			throw new IllegalStateException( "JTA TransactionManager not available" );
 		}
 		else {
 			try {
-				getTransactionManager().getTransaction().registerSynchronization(sync);
+				getTransactionManager().getTransaction().registerSynchronization( sync );
 			}
-			catch (Exception e) {
-				throw new TransactionException("could not register synchronization", e);
+			catch ( Exception e ) {
+				throw new TransactionException( "could not register synchronization", e );
 			}
 		}
 	}
@@ -348,10 +340,10 @@ public class JTATransaction implements Transaction {
 	 */
 	public void setTimeout(int seconds) {
 		try {
-			userTransaction.setTransactionTimeout(seconds);
+			userTransaction.setTransactionTimeout( seconds );
 		}
-		catch (SystemException se) {
-			throw new TransactionException("could not set transaction timeout", se);
+		catch ( SystemException se ) {
+			throw new TransactionException( "could not set transaction timeout", se );
 		}
 	}
 

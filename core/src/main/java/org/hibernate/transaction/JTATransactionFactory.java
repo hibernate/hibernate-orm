@@ -44,57 +44,177 @@ import org.hibernate.util.JTAHelper;
 
 /**
  * Factory for {@link JTATransaction} instances.
+ * <p/>
+ * To be completely accurate to the JTA spec, JTA implementations should
+ * publish their contextual {@link UserTransaction} reference into JNDI.
+ * However, in practice there are quite a few <tt>stand-alone</tt>
+ * implementations intended for use outside of J2EE/JEE containers and
+ * which therefore do not publish their {@link UserTransaction} references
+ * into JNDI but which otherwise follow the aspects of the JTA specification.
+ * This {@link TransactionFactory} implementation can support both models.
+ * <p/>
+ * For complete JTA implementations (including dependence on JNDI), the
+ * {@link UserTransaction} reference is obtained by a call to
+ * {@link #resolveInitialContext}.  Hibernate will then attempt to locate the
+ * {@link UserTransaction} within this resolved
+ * {@link InitialContext} based on the namespace returned by
+ * {@link #resolveUserTransactionName}.
+ * <p/>
+ * For the so-called <tt>stand-alone</tt> implementations, we do not care at
+ * all about the JNDI aspects just described.  Here, the implementation would
+ * have a specific manner to obtain a reference to its contextual
+ * {@link UserTransaction}; usually this would be a static code reference, but
+ * again it varies.  Anyway, for each implementation the integration would need
+ * to override the {@link #getUserTransaction} method and return the appropriate
+ * thing.
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ * @author Les Hazlewood
  */
 public class JTATransactionFactory implements TransactionFactory {
-
+	public static final String DEFAULT_USER_TRANSACTION_NAME = "java:comp/UserTransaction";
 	private static final Logger log = LoggerFactory.getLogger( JTATransactionFactory.class );
-	private static final String DEFAULT_USER_TRANSACTION_NAME = "java:comp/UserTransaction";
 
-	protected InitialContext context;
-	protected String utName;
+	protected InitialContext initialContext;
+	protected String userTransactionName;
 
+	/**
+	 * Configure this transaction factory.  Specifically here we are attempting to
+	 * resolve both an {@link #getInitialContext InitialContext} as well as the
+	 * {@link #getUserTransactionName() JNDI namespace} for the {@link UserTransaction}.
+	 *
+	 * @param props The configuration properties
+	 *
+	 * @exception HibernateException
+	 */
 	public void configure(Properties props) throws HibernateException {
+		this.initialContext = resolveInitialContext( props );
+		this.userTransactionName = resolveUserTransactionName( props );
+		log.trace( "Configured JTATransactionFactory to use [{}] for UserTransaction JDNI namespace", userTransactionName );
+	}
+
+	/**
+	 * Given the lot of Hibernate configuration properties, resolve appropriate
+	 * reference to JNDI {@link InitialContext}.
+	 * <p/>
+	 * In general, the properties in which we are interested here all begin with
+	 * <tt>hibernate.jndi</tt>.  Especially important depending on your
+	 * environment are {@link Environment#JNDI_URL hibernate.jndi.url} and
+	 *  {@link Environment#JNDI_CLASS hibernate.jndi.class}
+	 *
+	 * @param properties The Hibernate config properties.
+	 * @return The resolved InitialContext.
+	 */
+	protected final InitialContext resolveInitialContext(Properties properties) {
 		try {
-			context = NamingHelper.getInitialContext( props );
+			return NamingHelper.getInitialContext( properties );
 		}
 		catch ( NamingException ne ) {
-			log.error( "Could not obtain initial context", ne );
 			throw new HibernateException( "Could not obtain initial context", ne );
 		}
+	}
 
-		utName = props.getProperty( Environment.USER_TRANSACTION );
-
+	/**
+	 * Given the lot of Hibernate configuration properties, resolve appropriate
+	 * JNDI namespace to use for {@link UserTransaction} resolution.
+	 * <p/>
+	 * We determine the namespace to use by<ol>
+	 * <li>Any specified {@link Environment#USER_TRANSACTION jta.UserTransaction} config property</li>
+	 * <li>If a {@link TransactionManagerLookup} was indicated, use its
+	 * {@link TransactionManagerLookup#getUserTransactionName}</li>
+	 * <li>finally, as a last resort, we use {@link #DEFAULT_USER_TRANSACTION_NAME}</li>
+	 * </ol>
+	 *
+	 * @param properties The Hibernate config properties.
+	 * @return The resolved {@link UserTransaction} namespace
+	 */
+	protected final String resolveUserTransactionName(Properties properties) {
+		String utName = properties.getProperty( Environment.USER_TRANSACTION );
 		if ( utName == null ) {
-			TransactionManagerLookup lookup = TransactionManagerLookupFactory.getTransactionManagerLookup( props );
+			TransactionManagerLookup lookup = TransactionManagerLookupFactory.getTransactionManagerLookup( properties );
 			if ( lookup != null ) {
 				utName = lookup.getUserTransactionName();
 			}
 		}
+		return utName == null ? DEFAULT_USER_TRANSACTION_NAME : utName;
+	}
 
-		if ( utName == null ) {
-			utName = DEFAULT_USER_TRANSACTION_NAME;
+	/**
+	 * {@inheritDoc}
+	 */
+	public Transaction createTransaction(JDBCContext jdbcContext, Context transactionContext)
+			throws HibernateException {
+		UserTransaction ut = getUserTransaction();
+		return new JTATransaction( ut, jdbcContext, transactionContext );
+	}
+
+	/**
+	 * Get the {@link UserTransaction} reference.
+	 *
+	 * @return The appropriate {@link UserTransaction} reference.
+	 */
+	protected UserTransaction getUserTransaction() {
+		log.trace( "Attempting to locate UserTransaction via JNDI [{}]", getUserTransactionName() );
+
+		try {
+			UserTransaction ut = ( UserTransaction ) getInitialContext().lookup( getUserTransactionName() );
+			if ( ut == null ) {
+				throw new TransactionException( "Naming service lookup for UserTransaction returned null [" + getUserTransactionName() +"]" );
+			}
+
+			log.trace( "Obtained UserTransaction" );
+
+			return ut;
+		}
+		catch ( NamingException ne ) {
+			throw new TransactionException( "Could not find UserTransaction in JNDI [" + getUserTransaction() + "]", ne );
 		}
 	}
 
-	public Transaction createTransaction(JDBCContext jdbcContext, Context transactionContext)
-			throws HibernateException {
-		return new JTATransaction( context, utName, jdbcContext, transactionContext );
+	/**
+	 * Getter for property 'initialContext'.
+	 *
+	 * @return Value for property 'initialContext'.
+	 */
+	protected InitialContext getInitialContext() {
+		return initialContext;
 	}
 
+	/**
+	 * Getter for property 'userTransactionName'.
+	 * The algorithm here is
+	 *
+	 * @return Value for property 'userTransactionName'.
+	 */
+	protected String getUserTransactionName() {
+		return userTransactionName;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public ConnectionReleaseMode getDefaultReleaseMode() {
 		return ConnectionReleaseMode.AFTER_STATEMENT;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isTransactionManagerRequired() {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean areCallbacksLocalToHibernateTransactions() {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isTransactionInProgress(
 			JDBCContext jdbcContext,
 			Context transactionContext,
@@ -120,13 +240,8 @@ public class JTATransactionFactory implements TransactionFactory {
 				return JTAHelper.isInProgress( jdbcContext.getFactory().getTransactionManager().getStatus() );
 			}
 			else {
-				try {
-					UserTransaction ut = ( UserTransaction ) context.lookup( utName );
-					return ut != null && JTAHelper.isInProgress( ut.getStatus() );
-				}
-				catch ( NamingException ne ) {
-					throw new TransactionException( "Unable to locate UserTransaction to check status", ne );
-				}
+				UserTransaction ut = getUserTransaction();
+				return ut != null && JTAHelper.isInProgress( ut.getStatus() );
 			}
 		}
 		catch ( SystemException se ) {

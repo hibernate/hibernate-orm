@@ -23,8 +23,6 @@
  */
 package org.hibernate.transaction;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
@@ -33,7 +31,6 @@ import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -45,17 +42,10 @@ import org.hibernate.util.JTAHelper;
  * a JTA {@link UserTransaction}.  Similar to {@link CMTTransaction}, except
  * here we are actually managing the transactions through the Hibernate
  * transaction mechanism.
- * <p/>
- * Instances check to see if there is an existing JTA transaction.  If none
- * exists, a new transaction is started; if one exists, all work is done in the
- * existing context. The following properties are used to locate the underlying
- * {@link UserTransaction}:<ul>
- * <li><tt>hibernate.jndi.url</tt> : JNDI initial context URL</li>
- * <li><tt>hibernate.jndi.class</tt> : JNDI provider class</li>
- * <li><tt>jta.UserTransaction</tt> : JNDI namespace</li>
- * </ul>
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ * @author Les Hazlewood
  */
 public class JTATransaction implements Transaction {
 
@@ -64,39 +54,23 @@ public class JTATransaction implements Transaction {
 	private final JDBCContext jdbcContext;
 	private final TransactionFactory.Context transactionContext;
 
-	private UserTransaction ut;
+	private UserTransaction userTransaction;
 	private boolean newTransaction;
 	private boolean begun;
 	private boolean commitFailed;
 	private boolean commitSucceeded;
 	private boolean callback;
-	
-	public JTATransaction(
-			InitialContext context, 
-			String utName, 
-			JDBCContext jdbcContext, 
-			TransactionFactory.Context transactionContext
-	) {
+
+    public JTATransaction(
+			UserTransaction userTransaction,
+			JDBCContext jdbcContext,
+			TransactionFactory.Context transactionContext) {
 		this.jdbcContext = jdbcContext;
 		this.transactionContext = transactionContext;
-
-		log.debug("Looking for UserTransaction under: " + utName);
-		
-		try {
-			ut = (UserTransaction) context.lookup(utName);
-		}
-		catch (NamingException ne) {
-			log.error("Could not find UserTransaction in JNDI", ne);
-			throw new TransactionException("Could not find UserTransaction in JNDI: ", ne);
-		}
-		if (ut==null) {
-			throw new AssertionFailure("A naming service lookup returned null");
-		}
-
-		log.debug("Obtained UserTransaction");
+        this.userTransaction = userTransaction;
 	}
 
-	/**
+    /**
 	 * {@inheritDoc}
 	 */
 	public void begin() throws HibernateException {
@@ -106,13 +80,13 @@ public class JTATransaction implements Transaction {
 		if (commitFailed) {
 			throw new TransactionException("cannot re-start transaction after failed commit");
 		}
-		
+
 		log.debug("begin");
 
 		try {
-			newTransaction = ut.getStatus() == Status.STATUS_NO_TRANSACTION;
+			newTransaction = userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION;
 			if (newTransaction) {
-				ut.begin();
+				userTransaction.begin();
 				log.debug("Began a new JTA transaction");
 			}
 		}
@@ -146,7 +120,7 @@ public class JTATransaction implements Transaction {
 
 		begun = true;
 		commitSucceeded = false;
-		
+
 		jdbcContext.afterTransactionBegin(this);
 	}
 
@@ -175,7 +149,7 @@ public class JTATransaction implements Transaction {
 
 		if (newTransaction) {
 			try {
-				ut.commit();
+				userTransaction.commit();
 				commitSucceeded = true;
 				log.debug("Committed JTA UserTransaction");
 			}
@@ -223,12 +197,12 @@ public class JTATransaction implements Transaction {
 		try {
 			if (newTransaction) {
 				if (!commitFailed) {
-					ut.rollback();
+					userTransaction.rollback();
 					log.debug("Rolled back JTA UserTransaction");
 				}
 			}
 			else {
-				ut.setRollbackOnly();
+				userTransaction.setRollbackOnly();
 				log.debug("set JTA UserTransaction to rollback only");
 			}
 		}
@@ -244,7 +218,7 @@ public class JTATransaction implements Transaction {
 	private static final int NULL = Integer.MIN_VALUE;
 
 	private void afterCommitRollback() throws TransactionException {
-		
+
 		begun = false;
 
 		if (callback) { // this method is a noop if there is a Synchronization!
@@ -254,7 +228,7 @@ public class JTATransaction implements Transaction {
 			}
 			int status=NULL;
 			try {
-				status = ut.getStatus();
+				status = userTransaction.getStatus();
 			}
 			catch (Exception e) {
 				log.error("Could not determine transaction status after commit", e);
@@ -275,13 +249,9 @@ public class JTATransaction implements Transaction {
 	 * {@inheritDoc}
 	 */
 	public boolean wasRolledBack() throws TransactionException {
-
-		//if (!begun) return false;
-		//if (commitFailed) return true;
-
 		final int status;
 		try {
-			status = ut.getStatus();
+			status = userTransaction.getStatus();
 		}
 		catch (SystemException se) {
 			log.error("Could not determine transaction status", se);
@@ -299,12 +269,9 @@ public class JTATransaction implements Transaction {
 	 * {@inheritDoc}
 	 */
 	public boolean wasCommitted() throws TransactionException {
-
-		//if (!begun || commitFailed) return false;
-
 		final int status;
 		try {
-			status = ut.getStatus();
+			status = userTransaction.getStatus();
 		}
 		catch (SystemException se) {
 			log.error("Could not determine transaction status", se);
@@ -317,7 +284,7 @@ public class JTATransaction implements Transaction {
 			return status==Status.STATUS_COMMITTED;
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -327,7 +294,7 @@ public class JTATransaction implements Transaction {
 
 		final int status;
 		try {
-			status = ut.getStatus();
+			status = userTransaction.getStatus();
 		}
 		catch (SystemException se) {
 			log.error("Could not determine transaction status", se);
@@ -368,8 +335,8 @@ public class JTATransaction implements Transaction {
 	}
 
 	private void closeIfRequired() throws HibernateException {
-		boolean close = callback && 
-				transactionContext.shouldAutoClose() && 
+		boolean close = callback &&
+				transactionContext.shouldAutoClose() &&
 				!transactionContext.isClosed();
 		if ( close ) {
 			transactionContext.managedClose();
@@ -381,7 +348,7 @@ public class JTATransaction implements Transaction {
 	 */
 	public void setTimeout(int seconds) {
 		try {
-			ut.setTransactionTimeout(seconds);
+			userTransaction.setTransactionTimeout(seconds);
 		}
 		catch (SystemException se) {
 			throw new TransactionException("could not set transaction timeout", se);
@@ -394,6 +361,6 @@ public class JTATransaction implements Transaction {
 	 * @return Value for property 'userTransaction'.
 	 */
 	protected UserTransaction getUserTransaction() {
-		return ut;
+		return userTransaction;
 	}
 }

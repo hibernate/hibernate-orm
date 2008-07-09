@@ -24,6 +24,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private Serializable id;
 	private transient SessionImplementor session;
 	private boolean unwrap;
+
+	/**
+	 * For serialization from the non-pojo initializers (HHH-3309)
+	 */
+	protected AbstractLazyInitializer() {
+	}
 	
 	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
 		this.id = id;

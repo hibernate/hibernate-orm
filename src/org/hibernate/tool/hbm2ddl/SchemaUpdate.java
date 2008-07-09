@@ -2,6 +2,8 @@
 package org.hibernate.tool.hbm2ddl;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -12,10 +14,12 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.pretty.DDLFormatter;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -31,6 +35,10 @@ public class SchemaUpdate {
 	private Configuration configuration;
 	private Dialect dialect;
 	private List exceptions;
+	private boolean haltOnError = false;
+	private boolean format = true;
+	private String outputFile = null;
+	private String delimiter;
 
 	public SchemaUpdate(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );
@@ -116,6 +124,7 @@ public class SchemaUpdate {
 
 		Connection connection = null;
 		Statement stmt = null;
+		Writer outputFileWriter = null;
 
 		exceptions.clear();
 
@@ -137,20 +146,36 @@ public class SchemaUpdate {
 
 			log.info( "updating schema" );
 
+			
+			if ( outputFile != null ) {
+				log.info( "writing generated schema to file: " + outputFile );
+				outputFileWriter = new FileWriter( outputFile );
+			}
+			 
 			String[] createSQL = configuration.generateSchemaUpdateScript( dialect, meta );
 			for ( int j = 0; j < createSQL.length; j++ ) {
 
 				final String sql = createSQL[j];
+				String formatted = format( sql );
 				try {
+					if ( delimiter != null ) {
+						formatted += delimiter;
+					}
 					if ( script ) {
-						System.out.println( sql );
+						System.out.println( formatted );
+					}
+					if ( outputFile != null ) {
+						outputFileWriter.write( formatted + "\n" );
 					}
 					if ( doUpdate ) {
 						log.debug( sql );
-						stmt.executeUpdate( sql );
+						stmt.executeUpdate( formatted );
 					}
 				}
 				catch ( SQLException e ) {
+					if ( haltOnError ) {
+						throw new JDBCException( "Error during DDL export", e );
+					}
 					exceptions.add( e );
 					log.error( "Unsuccessful: " + sql );
 					log.error( e.getMessage() );
@@ -176,7 +201,15 @@ public class SchemaUpdate {
 				exceptions.add( e );
 				log.error( "Error closing connection", e );
 			}
-
+			try {
+				if( outputFileWriter != null ) {
+					outputFileWriter.close();
+				}
+			}
+			catch(Exception e) {
+				exceptions.add(e);
+				log.error( "Error closing connection", e );
+			}
 		}
 	}
 
@@ -187,5 +220,27 @@ public class SchemaUpdate {
 	 */
 	public List getExceptions() {
 		return exceptions;
+	}
+
+	public void setHaltOnError(boolean haltOnError) {
+		this.haltOnError = haltOnError;
+	}
+
+	public void setFormat(boolean format) {
+		this.format = format;
+	}
+
+	public void setOutputFile(String outputFile) {
+		this.outputFile = outputFile;
+	}
+
+	public void setDelimiter(String delimiter) {
+		this.delimiter = delimiter;
+	}
+	
+	private String format(String sql) {
+		return format ?
+		       new DDLFormatter( sql ).format() :
+		       sql;
 	}
 }

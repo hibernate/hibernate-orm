@@ -47,9 +47,13 @@ public class SchemaUpdateTask extends MatchingTask {
 	private List fileSets = new LinkedList();
 	private File propertiesFile = null;
 	private File configurationFile = null;
+	private File outputFile = null;
 	private boolean quiet = false;
 	private boolean text = true;
+	private boolean haltOnError = false;
+	private String delimiter = null;
 	private String namingStrategy = null;
+	
 
 	public void addFileset(FileSet set) {
 		fileSets.add(set);
@@ -174,11 +178,39 @@ public class SchemaUpdateTask extends MatchingTask {
 			properties.load( new FileInputStream(propertiesFile) );
 		}
 		cfg.setProperties(properties);
-		return new SchemaUpdate(cfg);
+		SchemaUpdate su = new SchemaUpdate(cfg);
+		su.setOutputFile( outputFile.getPath() );
+		su.setDelimiter(delimiter);
+		su.setHaltOnError(haltOnError);
+		return su;
 	}
 
 	public void setNamingStrategy(String namingStrategy) {
 		this.namingStrategy = namingStrategy;
+	}
+
+	public File getOutputFile() {
+		return outputFile;
+	}
+
+	public void setOutputFile(File outputFile) {
+		this.outputFile = outputFile;
+	}
+
+	public boolean isHaltOnError() {
+		return haltOnError;
+	}
+
+	public void setHaltOnError(boolean haltOnError) {
+		this.haltOnError = haltOnError;
+	}
+
+	public String getDelimiter() {
+		return delimiter;
+	}
+
+	public void setDelimiter(String delimiter) {
+		this.delimiter = delimiter;
 	}
 
 }

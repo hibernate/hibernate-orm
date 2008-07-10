@@ -42,12 +42,14 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.util.PropertiesHelper;
 
 /**
- * A {@link CacheInstanceManager} implementation where we use a single cache
- * instance we assume to be configured for invalidation if operating on a
- * cluster. Under that assumption, we can store all data into the same
- * {@link Cache} instance.
+ * A {@link CacheInstanceManager} implementation where we use a single JBoss Cache
+ * instance for each type of region. If operating on a cluster, the cache must
+ * be configured for REPL_SYNC if query caching is enabled. If query caching
+ * is not used, REPL_SYNC or INVALIDATION_SYNC are valid, with 
+ * INVALIDATION_SYNC preferred.
  * 
  * @author Steve Ebersole
+ * @author Brian Stansberry
  */
 public class SharedCacheInstanceManager implements CacheInstanceManager {
     

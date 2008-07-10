@@ -44,9 +44,10 @@ import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.util.PropertiesHelper;
 
 /**
- * Allows building separate {@link Cache} instances for each type of region, but
- * supports using the JGroups multiplexer under the covers to re-use the same group
- * communication stack. <p/>
+ * Allows building separate {@link Cache} instances for each type of region,
+ * with the expectation that a single multiplexed JGroups resource (i.e. a 
+ * multiplexed channel or a shared transport channel) will be shared between 
+ * the caches.<p/>
  * 
  * @author Steve Ebersole
  * @author Brian Stansberry

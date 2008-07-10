@@ -33,9 +33,9 @@ import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
  * {@link #getCacheInstanceManager() CacheInstanceManager}.
  * <p>
  * Supports separate JBoss Cache instances for entity, collection, query
- * and timestamp caching, with the expectation that a single multiplexed
- * JGroups channel will be shared between the caches. JBoss Cache instances
- * are created from a factory.
+ * and timestamp caching, with the expectation that a single JGroups resource 
+ * (i.e. a multiplexed channel or a shared transport channel) will be shared 
+ * between the caches. JBoss Cache instances are created from a factory.
  * </p>
  * <p>
  * This version instantiates the factory itself. See 

@@ -325,7 +325,12 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	public String getQuerySequencesString() {
-		return "select sequence_name from user_sequences";
+		return    "select sequence_name from all_sequences "
+				+ "union "
+				+ "select synonym_name "
+				+ "  from all_synonyms us, all_sequences asq "
+				+ " where asq.sequence_name = us.table_name"
+				+ "   and asq.sequence_owner = us.table_owner";
 	}
 
 	public String getSelectGUIDString() {

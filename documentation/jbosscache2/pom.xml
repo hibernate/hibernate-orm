@@ -63,6 +63,7 @@
                 </dependencies>
                 <configuration>
                     <sourceDocumentName>Hibernate_JBC2_Reference.xml</sourceDocumentName>
+                    <sourceDirectory>${basedir}/src/main/docbook/en-US</sourceDirectory>
                     <masterTranslation>en-US</masterTranslation>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>

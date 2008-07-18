@@ -16,7 +16,7 @@
   ~
   ~ Red Hat Author(s): Brian Stansberry
   -->
-<chapter id="concepts">
+<chapter id="concepts" revision="2">
 
     <title>Core Concepts</title>
     
@@ -271,7 +271,7 @@
             even if the change made to the entity instance would not have affected
             the query result.  It is not performant for Hibernate to try to 
             determine if the entity change would have affected the query result,
-            so the safe choice is to invaldiate the query. See 
+            so the safe choice is to invalidate the query. See 
             <xref linkend="concepts-data-types-timestamps"/> for more on query 
             invalidation.
           </para>
@@ -405,7 +405,7 @@
        </sect2>
     </sect1>
 
-    <sect1 id="concepts-cache-attributes" revision="1">
+    <sect1 id="concepts-cache-attributes" revision="2">
        <title>Key JBoss Cache Behaviors</title>
        
        <para>
@@ -548,7 +548,7 @@
           
        </sect2>
                      
-       <sect2 id="concepts-cache-attr-lock" revision="1">
+       <sect2 id="concepts-cache-attr-lock" revision="2">
          <title>Locking Scheme</title>
          
          <para>
@@ -557,13 +557,82 @@
            discussion of these options.  In the Second Level Cache use case, the
            main benefit of optimistic locking is that updates of cached entities 
            by one transaction do not block reads of the cached entity by other
-           transactions, yet REPEATABLE_READ semantics are preserved. Optimistic
-           locking has a higher level of runtime overhead, however.
+           transactions, yet REPEATABLE_READ semantics are preserved.
          </para>
          
          <para>
            If you are using optimistic locking and data versioning in Hibernate
            for your entities, you should use it in the entity cache as well.
+           If you are not using data versioning, pessimistic locking should be
+           a better choice. Optimistic locking has a higher level of runtime overhead
+           than pessimistic locking, and in most Second Level Cache use cases a 
+           REPEATABLE_READ semantic from the cache is not required (see 
+           <xref linkend="concepts-cache-attr-isolation"/> for details on why not).
+         </para>
+         
+       </sect2><sect2 id="concepts-cache-attr-isolation" revision="1">
+         <title>Isolation Level</title>
+         
+         <para>
+           If the PESSIMISTIC node locking scheme is used, JBoss Cache supports a number of
+           different isolation level configurations that specify how different
+           transactions coordinate the locking of nodes in the cache. These
+           are somewhat analogous to database isolation levels; see the 
+           <emphasis>JBoss Cache User Guide</emphasis> for an in depth 
+           discussion of these options.  For the Second Level Cache use case, 
+           only two are valid: READ_COMMITTED and REPEATABLE_READ. In both cases,
+           cache reads do not block for other reads. In both cases a transaction 
+           that writes to a node in the cache tree will hold an exclusive lock on 
+           that node until the transaction commits, causing other transactions
+           that wish to read the node to block. In the REPEATABLE_READ case, 
+           the read lock held by an uncommitted transaction that has read a node 
+           will cause another transaction wishing to write to that node to block 
+           until the read transaction commits.  This ensures the reader transaction 
+           can read the node again and get the same results, i.e. have a repeatable read.
+         </para>
+         
+         <para>
+           READ_COMMITTED allows the greatest concurrency, since reads don't 
+           block each other and also don't block a write.
+         </para>
+         
+         <para>
+           If the OPTIMISTIC node locking scheme is used, any isolation level 
+           configuration is ignored by the cache. Optimistic locking provides a 
+           repeatable read semantic but does not cause writes to block for reads. 
+         </para>
+                  
+         <para>
+           In most cases, a REPEATABLE_READ setting on the cache is not needed,
+           even if the application wants repeatable read semantics.  This is
+           because the Second Level Cache is just that -- a secondary cache.
+           The primary cache for an entity or collection is the Hibernate
+           <literal>Session</literal> object itself. Once an entity or collection
+           is read from the second level cache, it is cached in the 
+           <literal>Session</literal> for the life of the transaction. Subsequent
+           reads of that entity/collection will be resolved from the 
+           <literal>Session</literal> cache itself -- there will be no repeated 
+           read of  the Second Level Cache by that transaction. So, there is no 
+           benefit to a REPEATABLE_READ configuration in the Second Level Cache.
+         </para>
+         
+         <para>
+           The only exception to this is if the application uses 
+           <literal>Session</literal>'s <literal>evict()</literal> or 
+           <literal>clear()</literal> methods to remove data from the
+           <literal>Session</literal> cache <emphasis>and</emphasis>  
+           during the course of the same transaction wants 
+           to read that same data again <emphasis>with a repeatable read 
+           semantic</emphasis>. 
+         </para>
+         
+         <para>
+           Note that for query and timestamp caches, the behavior of the
+           Hibernate/JBC integration will not allow repeatable read semantics
+           even if JBC is configured for REPEATABLE_READ. A cache read will
+           not result in a read lock in the cache being held for the life
+           of the transaction.  So, for these caches there is no benefit to a
+           REPEATABLE_READ configuration.
          </para>
          
        </sect2>

@@ -16,7 +16,7 @@
   ~
   ~ Red Hat Author(s): Brian Stansberry
   -->
-<chapter id="configuration">
+<chapter id="configuration" revision="2">
      
     <title>Configuration</title>
 
@@ -30,7 +30,7 @@
       need to worry about is the <literal>SessionFactory</literal> configuration.
     </para>
     
-    <sect1 id="sessionfactory" revision="1">
+    <sect1 id="sessionfactory" revision="2">
         <title>Configuring the Hibernate Session Factory</title>        
     
         <sect2 id="sessionfactory-overview" revision="1">
@@ -380,12 +380,12 @@ hibernate.cache.region.factory_class=
       </para>
         </sect2>
 
-        <sect2 id="sessionfactory-multiplexed-jndi" revision="1">
+        <sect2 id="sessionfactory-multiplexed-jndi" revision="2">
            <title>The <literal>JndiMultiplexedJBossCacheRegionFactory</literal></title>
            
            <para>
             The <literal>JndiMultiplexedJBossCacheRegionFactory</literal> 
-            supports an additional configuration option:
+            supports the following additional configuration options:
            </para>
            
            <variablelist>
@@ -399,7 +399,52 @@ hibernate.cache.region.factory_class=
                  </para>
                  </listitem>
                </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.entity</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for entity caches.
+                    Default value is <literal>optimistic-entity</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.collection</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for collection caches.
+                    No default value, as by default we try to use the same JBoss Cache
+                    instance that is used for entity caching.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.ts</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for timestamp caches.
+                    Default value is <literal>timestamps-cache</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
+               <varlistentry>
+                 <term><literal>hibernate.cache.region.jbc2.cfg.query</literal></term>
+                 <listitem>
+                 <para>
+                    Name of the configuration that should be used for query caches.
+                    By default, tries to use the same cache as is used for
+                    entity caching.  If there is no entity cache, the default 
+                    value is <literal>local-query</literal>.
+                 </para>
+                 </listitem>
+               </varlistentry>
             </variablelist>
+           
+           <para>
+            See <xref linkend="sessionfactory-multiplexed"/> for a discussion of
+            how the various <literal>hibernate.cache.region.jbc2.cfg</literal>
+            options combine to determine what JBoss Cache instances are used.
+           </para>
            
            <para>
             The <literal>JndiMultiplexedJBossCacheRegionFactory</literal> requires
@@ -409,11 +454,12 @@ hibernate.cache.region.factory_class=
             and bound in JNDI before the Hibernate <literal>SessionFactory</literal> 
             is created.
            </para>
+            
         </sect2>
     
     </sect1>
     
-    <sect1 id="jbc-config" revision="1">
+    <sect1 id="jbc-config" revision="2">
 
         <title>Configuring JBoss Cache</title>
 
@@ -500,7 +546,7 @@ hibernate.cache.region.factory_class=
       
         </sect2>
         
-        <sect2 id="jbc-config-detail" revision="1">
+        <sect2 id="jbc-config-detail" revision="2">
            <title>JBoss Cache Configuration Details</title>
            
            <para>
@@ -553,6 +599,29 @@ hibernate.cache.region.factory_class=
         PESSIMISTIC (default)
 -->
 <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>]]></programlisting>  
+       
+           </sect3>
+
+           <sect3 id="jbc-config-isolation" revision="1">
+              <title>IsolationLevel</title>
+           
+               <para>
+                 The JBoss Cache <emphasis>IsolationLevel</emphasis> attribute 
+                 configures whether READ_COMMITTED or REPEATABLE_READ semantics
+                 are needed if pessimistic locking is used. It has no effect if
+                 optimistic locking is used.  See <xref linkend="concepts-cache-attr-isolation"/>
+                 for a discussion of isolation levels. 
+               </para>
+              
+              <para>
+                The IsolationLevel is configured as follows:
+              </para>
+              
+              <programlisting><![CDATA[<!-- Isolation level:
+        READ_COMMITTED
+        REPEATABLE_READ
+-->
+<attribute name="IsolationLevel">READ_COMMITTED</attribute>]]></programlisting>  
        
            </sect3>
 
@@ -669,7 +738,7 @@ hibernate.cache.region.factory_class=
            
         </sect2>
         
-        <sect2 id="jbc-config-multiple-std" revision="1">
+        <sect2 id="jbc-config-multiple-std" revision="2">
             <title>Standard JBoss Cache Configurations</title>
             
             <para>
@@ -869,6 +938,17 @@ hibernate.cache.region.factory_class=
               stack, if more than one of these caches is created they will share
               their JGroups resources. See <xref linkend="jgroups-config-std"/> 
               for a description of the standard stacks.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+               The configurations that use PESSIMISTIC locking use isolation level
+               READ_COMMITTED.  There are also two other standard configurations
+               not shown in the table that use REPEATABLE_READ:
+               <literal>pessimistic-entity-repeatable</literal> and
+               <literal>pessimistic-shared-repeatable</literal>. In all other
+               respects those configurations are the same as the similarly named
+               non- "-repeatable" configurations shown in the table.
               </para>
             </listitem>
             

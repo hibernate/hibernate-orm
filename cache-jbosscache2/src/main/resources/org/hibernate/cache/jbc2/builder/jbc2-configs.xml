@@ -218,7 +218,7 @@
 
         <!-- Name of cluster. Needs to be the same for all members, in order
              to find each other -->
-        <attribute name="ClusterName">pessimistic-entity</attribute>
+        <attribute name="ClusterName">pessimistic-entity-rr</attribute>
         
         <!-- Use a UDP (multicast) based stack. A udp-sync stack might be
              slightly better (no JGroups FC) but we stick with udp to
@@ -674,7 +674,7 @@
 
         <!-- Name of cluster. Needs to be the same for all members, in order
              to find each other -->
-        <attribute name="ClusterName">pessimistic-shared</attribute>
+        <attribute name="ClusterName">pessimistic-shared-rr</attribute>
         
         <!-- Use a UDP (multicast) based stack. Need JGroups flow control (FC)
              because timestamp communication will not require a synchronous response.

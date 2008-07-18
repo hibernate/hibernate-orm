@@ -186,6 +186,10 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
         getDoesNotBlockPutTest("pessimistic-shared");
     }
     
+    public void testGetDoesNotBlockPutPessimisticRepeatableRead() throws Exception {
+        getDoesNotBlockPutTest("pessimistic-shared-repeatable");
+    }
+    
     private void getDoesNotBlockPutTest(String configName) throws Exception {
         
         Configuration cfg = createConfiguration(configName);

@@ -265,7 +265,8 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
             blockerLatch.countDown();
             unblocked = true;
             
-            if ("PESSIMISTIC".equals(jbc.getConfiguration().getNodeLockingSchemeString())) {
+            if ("PESSIMISTIC".equals(jbc.getConfiguration().getNodeLockingSchemeString())
+                  && "REPEATABLE_READ".equals(jbc.getConfiguration().getIsolationLevelString())) {
                 assertEquals(VALUE1, region.get(KEY));
             }
             else {

@@ -56,13 +56,9 @@
         <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
 
         <!--
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
+            READ_COMMITTED is as strong as necessary for most 2nd Level Cache usage.
         -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
         <!-- Valid modes are LOCAL
                              REPL_ASYNC

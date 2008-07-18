@@ -40,12 +40,8 @@
         <!-- Node locking scheme -->
         <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
 
-        <!-- Valid modes are LOCAL
-                             REPL_ASYNC
-                             REPL_SYNC
-                             INVALIDATION_ASYNC
-                             INVALIDATION_SYNC
-
+        <!-- Mode of communication with peer caches.
+        
              INVALIDATION_SYNC is highly recommended as the mode for use
              with entity and collection caches.
         -->
@@ -81,14 +77,15 @@
         <attribute name="LockAcquisitionTimeout">15000</attribute>
 
        <!--
-          Indicate whether to use marshalling or not. Set this to true if you are running under a scoped
-          class loader, e.g., inside an application server. Default is "false".
+          Indicate whether to use marshalling or not. Set this to true if you 
+          are running under a scoped class loader, e.g., inside an application 
+          server.
        -->
        <attribute name="UseRegionBasedMarshalling">true</attribute>
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
+      <!--  Eviction policy configurations. -->
       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
@@ -121,20 +118,13 @@
         <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
 
         <!--
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
+            READ_COMMITTED is as strong as necessary for most 
+            2nd Level Cache use cases.
         -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
-        <!-- Valid modes are LOCAL
-                             REPL_ASYNC
-                             REPL_SYNC
-                             INVALIDATION_ASYNC
-                             INVALIDATION_SYNC
-
+        <!-- Mode of communication with peer caches.
+        
              INVALIDATION_SYNC is highly recommended as the mode for use
              with entity and collection caches.
         -->
@@ -172,14 +162,100 @@
        <!--
           Indicate whether to use marshalling or not. Set this to true if you 
           are running under a scoped class loader, e.g., inside an application 
-          server. Default is "false".
+          server.
        -->
        <attribute name="UseRegionBasedMarshalling">true</attribute>
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
-      <attribute name="EvictionPolicyConfig">
+       <!--  Eviction policy configurations. -->
+       <attribute name="EvictionPolicyConfig">
+        <config>
+          <attribute name="wakeUpIntervalSeconds">5</attribute>
+          <!-- Name of the DEFAULT eviction policy class. -->
+          <attribute name="policyClass">org.jboss.cache.eviction.LRUPolicy</attribute>
+          <!--  Cache wide default -->
+          <region name="/_default_">
+            <!-- Evict LRU node once we have more than this number of nodes -->
+            <attribute name="maxNodes">10000</attribute>
+            <!-- And, evict any node that hasn't been accessed in this many seconds -->
+            <attribute name="timeToLiveSeconds">1000</attribute>
+            <!-- Don't evict a node that's been accessed within this many seconds. 
+                 Set this to a value greater than your max expected transaction length. -->
+            <attribute name="minTimeToLiveSeconds">120</attribute>
+          </region>
+          <!--  Don't ever evict modification timestamps -->
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
+        </config>
+     </attribute>
+
+    </cache-config>      
+    
+    
+
+    <!-- Same as "pessimistic-entity" but here we use REPEATABLE_READ
+         instead of READ_COMMITTED. REPEATABLE_READ is only useful if the 
+         application evicts/clears entities from the Hibernate Session and 
+         then expects to repeatably re-read them in the same transaction.
+         Otherwise, the Session's internal cache provides a repeatable-read 
+         semantic. Before choosing this config, carefully read the docs
+         and make sure you really need REPEATABLE_READ.
+    -->
+    <cache-config name="pessimistic-entity-repeatable">
+
+        <!-- Node locking scheme -->
+        <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
+
+        <!-- Here we  use REPEATABLE_READ. -->
+        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+
+        <!-- Mode of communication with peer caches.
+        
+             INVALIDATION_SYNC is highly recommended as the mode for use
+             with entity and collection caches.
+        -->
+        <attribute name="CacheMode">INVALIDATION_SYNC</attribute>
+
+        <!-- Name of cluster. Needs to be the same for all members, in order
+             to find each other -->
+        <attribute name="ClusterName">pessimistic-entity</attribute>
+        
+        <!-- Use a UDP (multicast) based stack. A udp-sync stack might be
+             slightly better (no JGroups FC) but we stick with udp to
+             help ensure this cache and others like timestamps-cache
+             that require FC can use the same underlying JGroups resources. -->
+        <attribute name="MultiplexerStack">udp</attribute>
+
+        <!-- Whether or not to fetch state on joining a cluster. -->
+        <attribute name="FetchInMemoryState">false</attribute>
+
+        <!--
+          The max amount of time (in milliseconds) we wait until the
+          state (ie. the contents of the cache) are retrieved from
+          existing members at startup. Ignored if FetchInMemoryState=false.
+        -->
+        <attribute name="StateRetrievalTimeout">20000</attribute>
+
+        <!--
+            Number of milliseconds to wait until all responses for a
+            synchronous call have been received.
+        -->
+        <attribute name="SyncReplTimeout">20000</attribute>
+
+        <!-- Max number of milliseconds to wait for a lock acquisition -->
+        <attribute name="LockAcquisitionTimeout">15000</attribute>
+
+       <!--
+          Indicate whether to use marshalling or not. Set this to true if you 
+          are running under a scoped class loader, e.g., inside an application 
+          server.
+       -->
+       <attribute name="UseRegionBasedMarshalling">true</attribute>
+       <!-- Must match the value of "useRegionBasedMarshalling" -->
+       <attribute name="InactiveOnStartup">true</attribute>
+
+       <!--  Eviction policy configurations. -->
+       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
           <!-- Name of the DEFAULT eviction policy class. -->
@@ -211,12 +287,16 @@
         <!-- Node locking scheme -->
         <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
 
+        <!-- Mode of communication with peer caches.
+        
+             LOCAL means don't communicate with other caches.
+        -->
         <attribute name="CacheMode">LOCAL</attribute>
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
 
-        <!--  Specific eviction policy configurations. This is LRU -->
+        <!--  Eviction policy configurations. -->
         <attribute name="EvictionPolicyConfig">
           <config>
             <attribute name="wakeUpIntervalSeconds">5</attribute>
@@ -242,30 +322,20 @@
     
 
     <!-- A query cache that replicates queries. Replication is asynchronous.
-          DO NOT STORE TIMESTAMPS IN THIS CACHE.
+         DO NOT STORE TIMESTAMPS IN THIS CACHE as no initial state transfer
+         is performed.
     -->
     <cache-config name="replicated-query">
 
         <!-- Node locking scheme -->
         <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
 
-        <!--
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
-        -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
-
-        <!-- Valid modes are LOCAL
-                             REPL_ASYNC
-                             REPL_SYNC
-                             INVALIDATION_ASYNC
-                             INVALIDATION_SYNC
-
-             INVALIDATION_SYNC is highly recommended as the mode for use
-             with entity and collection caches.
+        <!-- Mode of communication with peer caches.
+        
+             REPL_ASYNC means replicate but sender does not block waiting for
+             peers to acknowledge applying the change. Valid for queries as
+             the timestamp cache mechanism will allow Hibernate to discard
+             out-of-date queries.
         -->
         <attribute name="CacheMode">REPL_ASYNC</attribute>
 
@@ -304,8 +374,8 @@
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
-      <attribute name="EvictionPolicyConfig">
+       <!--  Eviction policy configurations. -->
+       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
           <!-- Name of the DEFAULT eviction policy class. -->
@@ -339,13 +409,9 @@
         <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
 
         <!--
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
+            READ_COMMITTED is as strong as necessary.
         -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
         <!-- Cannot be INVALIDATION. ASYNC for improved performance. -->
         <attribute name="CacheMode">REPL_ASYNC</attribute>
@@ -385,7 +451,7 @@
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
+      <!--  Eviction policy configurations. -->
       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
@@ -423,7 +489,9 @@
         -->
         <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
 
-        <!-- Must use REPL since used for timestamp caching. -->
+        <!-- Must use REPL since used for timestamp caching. 
+             Must use SYNC to maintain cache coherency for entities.
+        -->
         <attribute name="CacheMode">REPL_SYNC</attribute>
         
         <!-- With OPTIMISTIC  with replication we need to use synchronous commits. -->
@@ -466,7 +534,7 @@
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
+      <!--  Eviction policy configurations. -->
       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
@@ -503,29 +571,17 @@
              Hibernate will plug in its own transaction manager integration. 
         -->
 
-        <!-- Node locking scheme:
-                OPTIMISTIC
-                PESSIMISTIC (default)
-        -->
+        <!-- Node locking scheme -->
         <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
 
         <!--
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
+            READ_COMMITTED is as strong as necessary for most 
+            2nd Level Cache use cases.
         -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
-        <!-- Valid modes are LOCAL
-                             REPL_ASYNC
-                             REPL_SYNC
-                             INVALIDATION_ASYNC
-                             INVALIDATION_SYNC
-
-             INVALIDATION_SYNC is highly recommended as the mode for use
-             with entity and collection caches.
+        <!-- Must use REPL since used for timestamp caching. 
+             Must use SYNC to maintain cache coherency for entities.
         -->
         <attribute name="CacheMode">REPL_SYNC</attribute>
 
@@ -560,14 +616,101 @@
        <!--
           Indicate whether to use marshalling or not. Set this to true if you 
           are running under a scoped class loader, e.g., inside an application 
-          server. Default is "false".
+          server.
        -->
        <attribute name="UseRegionBasedMarshalling">true</attribute>
        <!-- Must match the value of "useRegionBasedMarshalling" -->
        <attribute name="InactiveOnStartup">true</attribute>
 
-      <!--  Specific eviction policy configurations. This is LRU -->
-      <attribute name="EvictionPolicyConfig">
+       <!--  Eviction policy configurations. -->
+       <attribute name="EvictionPolicyConfig">
+        <config>
+          <attribute name="wakeUpIntervalSeconds">5</attribute>
+          <!-- Name of the DEFAULT eviction policy class. -->
+          <attribute name="policyClass">org.jboss.cache.eviction.LRUPolicy</attribute>
+          <!--  Cache wide default -->
+          <region name="/_default_">
+            <!-- Evict LRU node once we have more than this number of nodes -->
+            <attribute name="maxNodes">10000</attribute>
+            <!-- And, evict any node that hasn't been accessed in this many seconds -->
+            <attribute name="timeToLiveSeconds">1000</attribute>
+            <!-- Don't evict a node that's been accessed within this many seconds. 
+                 Set this to a value greater than your max expected transaction length. -->
+            <attribute name="minTimeToLiveSeconds">120</attribute>
+          </region>
+          <!--  Don't ever evict modification timestamps -->
+          <region name="/TS" policyClass="org.jboss.cache.eviction.NullEvictionPolicy"/>
+        </config>
+     </attribute>
+
+    </cache-config>   
+    
+    
+
+    <!-- Same as "pessimistic-shared" but here we use REPEATABLE_READ
+         instead of READ_COMMITTED. REPEATABLE_READ is only useful if the 
+         application evicts/clears entities from the Hibernate Session and 
+         then expects to repeatably re-read them in the same transaction.
+         Otherwise, the Session's internal cache provides a repeatable-read 
+         semantic. Before choosing this config, carefully read the docs
+         and make sure you really need REPEATABLE_READ.
+    -->
+    <cache-config name="pessimistic-shared-repeatable">
+
+        <!-- TransactionManager configuration not required for Hibernate!
+             Hibernate will plug in its own transaction manager integration. 
+        -->
+
+        <!-- Node locking scheme -->
+        <attribute name="NodeLockingScheme">PESSIMISTIC</attribute>
+
+        <!-- Here we  use REPEATABLE_READ. -->
+        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+
+        <!-- Must use REPL since used for timestamp caching. 
+             Must use SYNC to maintain cache coherency for entities.
+        -->
+        <attribute name="CacheMode">REPL_SYNC</attribute>
+
+        <!-- Name of cluster. Needs to be the same for all members, in order
+             to find each other -->
+        <attribute name="ClusterName">pessimistic-shared</attribute>
+        
+        <!-- Use a UDP (multicast) based stack. Need JGroups flow control (FC)
+             because timestamp communication will not require a synchronous response.
+        -->
+        <attribute name="MultiplexerStack">udp</attribute>
+
+        <!-- Used for timestamps, so must fetch state. -->
+        <attribute name="FetchInMemoryState">true</attribute>
+
+        <!--
+          The max amount of time (in milliseconds) we wait until the
+          state (ie. the contents of the cache) are retrieved from
+          existing members at startup.
+        -->
+        <attribute name="StateRetrievalTimeout">20000</attribute>
+
+        <!--
+            Number of milliseconds to wait until all responses for a
+            synchronous call have been received.
+        -->
+        <attribute name="SyncReplTimeout">20000</attribute>
+
+        <!-- Max number of milliseconds to wait for a lock acquisition -->
+        <attribute name="LockAcquisitionTimeout">15000</attribute>
+
+       <!--
+          Indicate whether to use marshalling or not. Set this to true if you 
+          are running under a scoped class loader, e.g., inside an application 
+          server.
+       -->
+       <attribute name="UseRegionBasedMarshalling">true</attribute>
+       <!-- Must match the value of "useRegionBasedMarshalling" -->
+       <attribute name="InactiveOnStartup">true</attribute>
+
+       <!--  Eviction policy configurations. -->
+       <attribute name="EvictionPolicyConfig">
         <config>
           <attribute name="wakeUpIntervalSeconds">5</attribute>
           <!-- Name of the DEFAULT eviction policy class. -->

@@ -272,7 +272,7 @@
            
            <para>
              The FQN for the cache region where entities of a particular class
-             is stored is derived as follows:
+             are stored is derived as follows:
            </para>
            <para>
            <literal>/</literal> + <emphasis>Region Prefix</emphasis> + <literal>/</literal> 

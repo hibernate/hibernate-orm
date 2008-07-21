@@ -50,14 +50,7 @@
             Hibernate will plug in its own transaction manager integration.
         -->
 
-        <!--
-            Node isolation level : SERIALIZABLE
-                                 REPEATABLE_READ (default)
-                                 READ_COMMITTED
-                                 READ_UNCOMMITTED
-                                 NONE
-        -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
         <!--
              Valid modes are LOCAL

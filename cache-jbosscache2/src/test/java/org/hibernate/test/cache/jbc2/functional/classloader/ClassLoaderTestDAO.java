@@ -163,6 +163,42 @@ public class ClassLoaderTestDAO
        log.debug("Created account " + id);
    }
    
+   public Account getAccount(Integer id) throws Exception
+   {
+      log.debug("Getting account " + id);
+      tm.begin();
+      try {
+          Session session = sessionFactory.getCurrentSession();
+          Account acct = (Account) session.get(acctClass, id);
+          tm.commit();
+          return acct;
+      }
+      catch (Exception e) {
+          log.error("rolling back", e);
+          tm.rollback();
+          throw e;
+      }
+   }
+   
+   public Account getAccountWithRefresh(Integer id) throws Exception
+   {
+      log.debug("Getting account " + id + " with refresh");
+      tm.begin();
+      try {
+          Session session = sessionFactory.getCurrentSession();
+          Account acct  = (Account) session.get(acctClass, id);
+          session.refresh(acct);
+          acct = (Account) session.get(acctClass, id);
+          tm.commit();
+          return acct;
+      }
+      catch (Exception e) {
+          log.error("rolling back", e);
+          tm.rollback();
+          throw e;
+      }
+   }
+   
    public void updateAccountBalance(Integer id, Integer newBalance) throws Exception
    {
       log.debug("Updating account " + id + " to balance " + newBalance);

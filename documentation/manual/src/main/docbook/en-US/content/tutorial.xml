@@ -27,86 +27,120 @@
         <!ENTITY mdash "-">
 ]>
 
+        <!-- todo : need searate sections, one for each tutorial -->
+
 <chapter id="tutorial">
     <title>Introduction to Hibernate</title>
     
-    <sect1 id="tutorial-intro" revision="1">
+    <sect1 id="tutorial-intro">
         <title>Preface</title>
-        
-        <para>
-            This chapter is an introductory tutorial for new users of Hibernate. We start
-            with a simple command line application using an in-memory database and develop
-            it in easy to understand steps.
-        </para>
 
         <para>
-            This tutorial is intended for new users of Hibernate but requires Java and
-            SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-party
-            libraries we name are for JDK 1.4 and 5.0. You might need others for JDK 1.3.
-        </para>
-
-        <para>
-            The source code for the tutorial is included in the distribution in the
-            <literal>doc/reference/tutorial/</literal> directory.
+            This chapter is an introduction to Hibernate by way of a tutorial,
+            intended for new users of Hibernate.  We start with a simple
+            application using an in-memory database.  We build the
+            application in small, easy to understand steps.  The tutorial is
+            based on another, earlier one developed by Michael Gloegl.  All
+            code is contained in the <filename>tutorials/web</filename> directory
+            of the project source.
         </para>
 
     </sect1>
-    
-    <sect1 id="tutorial-firstapp" revision="2">
+
+    <important>
+        <para>
+            This tutorial expects the user have knowledge of both Java and
+            SQL.  If you are new or uncomfortable with either, it is advised
+            that you start with a good introduction to that technology prior
+            to attempting to learn Hibernate.  It will save time and effort
+            in the long run.
+        </para>
+    </important>
+
+    <note>
+        <para>
+            There is another tutorial/example application in the
+            <filename>/tutorials/eg</filename> directory of the project source.
+            That example is console based and as such would not have the
+            dependency on a servlet container to execute.  The basic setup is
+            the same as the instructions below.
+        </para>
+    </note>
+
+    <sect1 id="tutorial-firstapp">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
-            First, we'll create a simple console-based Hibernate application. We use an
-            Java database (HSQL DB), so we do not have to install any database server.
+            Let's assume we need a small database application that can store
+            events we want to attend, and information about the host(s) of
+            these events.  We will use an in-memory, Java database named HSQLDB
+            to avoid describing installation/setup of any particular database
+            servers.  Feel free to tweak this tutorial to use whatever database
+            you feel comfortable using.
+        </para>
+            
+        <para>
+            The first thing we need to do is set up our development environment,
+            and specifically to setup all the required dependencies to Hibernate
+            as well as other libraries.  Hibernate is built using Maven which 
+            amongst other features provides <literal>dependecy management</literal>;
+            moreover it provides <emphasis>transitive</emphasis>
+            <literal>dependecy management</literal> which simply means that to use
+            Hibernate we can simply define our dependency on Hibernate, Hibernate
+            itself defines the dependencies it needs which then become transitive
+            dependencies of our project.
         </para>
 
-        <para>
-            Let's assume we need a small database application that can store events we want to
-            attend, and information about the hosts of these events.
-        </para>
-            
-        <para>
-            The first thing we do, is set up our development directory and put all the
-            Java libraries we need into it. Download the Hibernate distribution from the
-            Hibernate website. Extract the package and place all required libraries
-            found in <literal>/lib</literal> into into the <literal>/lib</literal> directory
-            of your new development working directory. It should look like this:
-        </para>
-            
         <programlisting><![CDATA[.
-+lib
-  antlr.jar
-  cglib.jar
-  asm.jar
-  asm-attrs.jars
-  commons-collections.jar
-  commons-logging.jar
-  hibernate3.jar
-  jta.jar
-  dom4j.jar
-  log4j.jar ]]></programlisting>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-        <para>
-            This is the minimum set of required libraries (note that we also copied
-            hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of writing</emphasis>.
-            The Hibernate release you are using might require more or less libraries. See the
-            <literal>README.txt</literal> file in the <literal>lib/</literal> directory of the
-            Hibernate distribution for more information about required and optional third-party
-            libraries. (Actually, Log4j is not required but preferred by many developers.)
-        </para>
+    ...
+
+    <dependencies>
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
+
+        <!-- Because this is a web app, we also have a dependency on the servlet api. -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>]]></programlisting>
+
+        <note>
+            <para>
+                Essentially we are describing here the
+                <filename>/tutorials/web/pom.xml</filename> file.  See the
+                <ulink url="http://maven.org">Maven</ulink> site for more information.
+            </para>
+        </note>
+
+        <tip>
+            <para>
+                While not strictly necessary, most IDEs have integration with Maven
+                to read these POM files and automatically set up a project for you
+                which can save lots of time and effort.
+            </para>
+        </tip>
 
         <para>
             Next we create a class that represents the event we want to store in database.
         </para>
       
-        <sect2 id="tutorial-firstapp-firstclass" revision="1">
+        <sect2 id="tutorial-firstapp-firstclass">
             <title>The first class</title>
             
             <para>
                 Our first persistent class is a simple JavaBean class with some properties:
             </para>
 
-            <programlisting><![CDATA[package events;
+            <programlisting><![CDATA[package org.hibernate.tutorial.domain;
 
 import java.util.Date;
 
@@ -188,7 +222,7 @@ public class Event {
                 
         </sect2>
 
-        <sect2 id="tutorial-firstapp-mapping" revision="1">
+        <sect2 id="tutorial-firstapp-mapping">
             <title>The mapping file</title>
 
             <para>

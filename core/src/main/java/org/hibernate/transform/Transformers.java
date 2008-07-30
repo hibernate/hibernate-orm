@@ -31,7 +31,8 @@ final public class Transformers {
 	/**
 	 * Each row of results is a <tt>Map</tt> from alias to values/entities
 	 */
-	public static final ResultTransformer ALIAS_TO_ENTITY_MAP = new AliasToEntityMapResultTransformer();
+	public static final AliasToEntityMapResultTransformer ALIAS_TO_ENTITY_MAP =
+			AliasToEntityMapResultTransformer.INSTANCE;
 
 	/**
 	 * Each row of results is a <tt>List</tt> 

@@ -25,48 +25,18 @@
 package org.hibernate.transform;
 
 import java.util.List;
-import java.io.Serializable;
 
 /**
- * {@link ResultTransformer} implementation which limits the result tuple
- * to only the "root entity".
- * <p/>
- * Since this transformer is stateless, all instances would be considered equal.
- * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
+ * Provides the basic "noop" impls of the {@link ResultTransformer} contract.
  *
- * @author Gavin King
  * @author Steve Ebersole
  */
-public final class RootEntityResultTransformer extends BasicTransformerAdapter implements Serializable {
-
-	public static final RootEntityResultTransformer INSTANCE = new RootEntityResultTransformer();
-
-	/**
-	 * Instantiate RootEntityResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
-	 */
-	public RootEntityResultTransformer() {
-	}
-
-	/**
-	 * Return just the root entity from the row tuple.
-	 */
+public abstract class BasicTransformerAdapter implements ResultTransformer {
 	public Object transformTuple(Object[] tuple, String[] aliases) {
-		return tuple[ tuple.length-1 ];
+		return tuple;
 	}
 
-	/**
-	 * Serialization hook for ensuring singleton uniqueing.
-	 *
-	 * @return The singleton instance : {@link #INSTANCE}
-	 */
-	private Object readResolve() {
-		return INSTANCE;
-	}
-
-	public boolean equals(Object obj) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return RootEntityResultTransformer.class.isInstance( obj );
+	public List transformList(List list) {
+		return list;
 	}
 }

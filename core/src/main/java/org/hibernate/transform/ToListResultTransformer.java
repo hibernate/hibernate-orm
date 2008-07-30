@@ -26,19 +26,35 @@ package org.hibernate.transform;
 
 import java.util.Arrays;
 import java.util.List;
+import java.io.Serializable;
 
-public class ToListResultTransformer implements ResultTransformer {
+/**
+ * Tranforms each result row from a tuple into a {@link List}, such that what
+ * you end up with is a {@link List} of {@link List Lists}.
+ */
+public class ToListResultTransformer extends BasicTransformerAdapter implements Serializable {
 
-	public static final ResultTransformer INSTANCE = new ToListResultTransformer();
+	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 
-	private ToListResultTransformer() {}
+	/**
+	 * Disallow instantiation of ToListResultTransformer.
+	 */
+	private ToListResultTransformer() {
+	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object transformTuple(Object[] tuple, String[] aliases) {
-		return Arrays.asList(tuple);
+		return Arrays.asList( tuple );
 	}
 
-	public List transformList(List collection) {
-		return collection;
+	/**
+	 * Serialization hook for ensuring singleton uniqueing.
+	 *
+	 * @return The singleton instance : {@link #INSTANCE}
+	 */
+	private Object readResolve() {
+		return INSTANCE;
 	}
-
 }

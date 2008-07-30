@@ -24,19 +24,41 @@
  */
 package org.hibernate.transform;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
+ * ???
+ *
  * @author max
  */
-public class PassThroughResultTransformer implements ResultTransformer {
+public class PassThroughResultTransformer extends BasicTransformerAdapter implements Serializable {
+
+	public static final PassThroughResultTransformer INSTANCE = new PassThroughResultTransformer();
+
+	/**
+	 * Instamtiate a PassThroughResultTransformer.
+	 *
+	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 */
+	public PassThroughResultTransformer() {
+	}
 
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple.length==1 ? tuple[0] : tuple;
 	}
 
-	public List transformList(List collection) {
-		return collection;
+	/**
+	 * Serialization hook for ensuring singleton uniqueing.
+	 *
+	 * @return The singleton instance : {@link #INSTANCE}
+	 */
+	private Object readResolve() {
+		return INSTANCE;
+	}
+
+	public boolean equals(Object obj) {
+		// todo : we can remove this once the deprecated ctor can be made private...
+		return PassThroughResultTransformer.class.isInstance( obj );
 	}
 
 }

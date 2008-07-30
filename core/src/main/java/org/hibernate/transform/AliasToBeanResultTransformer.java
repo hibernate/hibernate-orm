@@ -33,64 +33,76 @@ import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 
 /**
- * Result transformer that allows to transform a result to 
- * a user specified class which will be populated via setter  
- * methods or fields matching the alias names. 
- * 
+ * Result transformer that allows to transform a result to
+ * a user specified class which will be populated via setter
+ * methods or fields matching the alias names.
+ * <p/>
  * <pre>
  * List resultWithAliasedBean = s.createCriteria(Enrolment.class)
- *			.createAlias("student", "st")
- *			.createAlias("course", "co")
- *			.setProjection( Projections.projectionList()
- *					.add( Projections.property("co.description"), "courseDescription" )
- *			)
- *			.setResultTransformer( new AliasToBeanResultTransformer(StudentDTO.class) )
- *			.list();
- *
+ * 			.createAlias("student", "st")
+ * 			.createAlias("course", "co")
+ * 			.setProjection( Projections.projectionList()
+ * 					.add( Projections.property("co.description"), "courseDescription" )
+ * 			)
+ * 			.setResultTransformer( new AliasToBeanResultTransformer(StudentDTO.class) )
+ * 			.list();
+ * <p/>
  *  StudentDTO dto = (StudentDTO)resultWithAliasedBean.get(0);
- *	</pre>
+ * 	</pre>
  *
  * @author max
- *
  */
 public class AliasToBeanResultTransformer implements ResultTransformer {
-	
+
+	// IMPL NOTE : due to the delayed population of setters (setters cached
+	// 		for performance), we really cannot pro0perly define equality for
+	// 		this transformer
+
 	private final Class resultClass;
+	private final PropertyAccessor propertyAccessor;
 	private Setter[] setters;
-	private PropertyAccessor propertyAccessor;
-	
+
 	public AliasToBeanResultTransformer(Class resultClass) {
-		if(resultClass==null) throw new IllegalArgumentException("resultClass cannot be null");
+		if ( resultClass == null ) {
+			throw new IllegalArgumentException( "resultClass cannot be null" );
+		}
 		this.resultClass = resultClass;
-		propertyAccessor = new ChainedPropertyAccessor(new PropertyAccessor[] { PropertyAccessorFactory.getPropertyAccessor(resultClass,null), PropertyAccessorFactory.getPropertyAccessor("field")}); 		
+		propertyAccessor = new ChainedPropertyAccessor(
+				new PropertyAccessor[] {
+						PropertyAccessorFactory.getPropertyAccessor( resultClass, null ),
+						PropertyAccessorFactory.getPropertyAccessor( "field" )
+				}
+		);
 	}
 
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Object result;
-		
+
 		try {
-			if(setters==null) {
+			if ( setters == null ) {
 				setters = new Setter[aliases.length];
-				for (int i = 0; i < aliases.length; i++) {
+				for ( int i = 0; i < aliases.length; i++ ) {
 					String alias = aliases[i];
-					if(alias != null) {
-						setters[i] = propertyAccessor.getSetter(resultClass, alias);
+					if ( alias != null ) {
+						setters[i] = propertyAccessor.getSetter( resultClass, alias );
 					}
 				}
 			}
 			result = resultClass.newInstance();
-			
-			for (int i = 0; i < aliases.length; i++) {
-				if(setters[i]!=null) {
-					setters[i].set(result, tuple[i], null);
+
+			for ( int i = 0; i < aliases.length; i++ ) {
+				if ( setters[i] != null ) {
+					setters[i].set( result, tuple[i], null );
 				}
 			}
-		} catch (InstantiationException e) {
-			throw new HibernateException("Could not instantiate resultclass: " + resultClass.getName());
-		} catch (IllegalAccessException e) {
-			throw new HibernateException("Could not instantiate resultclass: " + resultClass.getName());
 		}
-		
+		catch ( InstantiationException e ) {
+			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
+		}
+		catch ( IllegalAccessException e ) {
+			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
+		}
+
 		return result;
 	}
 
@@ -98,4 +110,10 @@ public class AliasToBeanResultTransformer implements ResultTransformer {
 		return collection;
 	}
 
+	public int hashCode() {
+		int result;
+		result = resultClass.hashCode();
+		result = 31 * result + propertyAccessor.hashCode();
+		return result;
+	}
 }

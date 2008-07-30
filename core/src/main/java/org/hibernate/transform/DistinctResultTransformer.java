@@ -25,49 +25,81 @@
 package org.hibernate.transform;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.io.Serializable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * Much like {@link RootEntityResultTransformer}, but we also distinct
- * the entity in the final result.
+ * Distinctions the result tuples in the final result based on the defined
+ * equality of the tuples.
  * <p/>
  * Since this transformer is stateless, all instances would be considered equal.
  * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
  *
- * @author Gavin King
  * @author Steve Ebersole
  */
-public class DistinctRootEntityResultTransformer implements ResultTransformer, Serializable {
+public class DistinctResultTransformer extends BasicTransformerAdapter implements Serializable {
 
-	public static final DistinctRootEntityResultTransformer INSTANCE = new DistinctRootEntityResultTransformer();
+	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
+
+	private static final Logger log = LoggerFactory.getLogger( DistinctResultTransformer.class );
 
 	/**
-	 * Instantiate a DistinctRootEntityResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * Helper class to handle distincting
 	 */
-	public DistinctRootEntityResultTransformer() {
+	private static final class Identity {
+		final Object entity;
+
+		private Identity(Object entity) {
+			this.entity = entity;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public boolean equals(Object other) {
+			return Identity.class.isInstance( other )
+					&& this.entity == ( ( Identity ) other ).entity;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public int hashCode() {
+			return System.identityHashCode( entity );
+		}
 	}
 
 	/**
-	 * Simply delegates to {@link RootEntityResultTransformer#transformTuple}.
-	 *
-	 * @param tuple The tuple to transform
-	 * @param aliases The tuple aliases
-	 * @return The transformed tuple row.
+	 * Disallow instantiation of DistinctResultTransformer.
 	 */
-	public Object transformTuple(Object[] tuple, String[] aliases) {
-		return RootEntityResultTransformer.INSTANCE.transformTuple( tuple, aliases );
+	private DistinctResultTransformer() {
 	}
 
 	/**
-	 * Simply delegates to {@link DistinctResultTransformer#transformList}.
-	 *
-	 * @param list The list to transform.
-	 * @return The transformed List.
+	 * Uniquely distinct each tuple row here.
 	 */
 	public List transformList(List list) {
-		return DistinctResultTransformer.INSTANCE.transformList( list );
+		List result = new ArrayList( list.size() );
+		Set distinct = new HashSet();
+		for ( int i = 0; i < list.size(); i++ ) {
+			Object entity = list.get( i );
+			if ( distinct.add( new Identity( entity ) ) ) {
+				result.add( entity );
+			}
+		}
+		if ( log.isDebugEnabled() ) {
+			log.debug(
+					"transformed: " +
+							list.size() + " rows to: " +
+							result.size() + " distinct results"
+			);
+		}
+		return result;
 	}
 
 	/**
@@ -77,10 +109,5 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 	 */
 	private Object readResolve() {
 		return INSTANCE;
-	}
-
-	public boolean equals(Object obj) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return DistinctRootEntityResultTransformer.class.isInstance( obj );
 	}
 }

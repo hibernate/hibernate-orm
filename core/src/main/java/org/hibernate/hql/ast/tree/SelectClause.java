@@ -1,4 +1,27 @@
-// $Id: SelectClause.java 10527 2006-09-25 15:13:41Z epbernard $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.hql.ast.tree;
 
 import java.lang.reflect.Constructor;
@@ -10,7 +33,6 @@ import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTAppender;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.type.Type;
 import org.hibernate.QueryException;
 
@@ -20,7 +42,7 @@ import antlr.collections.AST;
 /**
  * Represents the list of expressions in a SELECT clause.
  *
- * @author josh Sep 21, 2004 7:53:55 AM
+ * @author josh
  */
 public class SelectClause extends SelectExpressionList {
 

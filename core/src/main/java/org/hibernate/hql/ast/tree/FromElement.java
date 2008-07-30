@@ -1,4 +1,27 @@
-// $Id: FromElement.java 10852 2006-11-21 17:39:14Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.hql.ast.tree;
 
 import java.util.LinkedList;
@@ -31,10 +54,8 @@ import org.slf4j.LoggerFactory;
  * <li>A table name - The name of the table that is mapped to the Java class.</li>
  * <li>A table alias - The alias for the table that will be used in the resulting SQL.</li>
  * </ul>
- * <br>
- * User: josh<br>
- * Date: Dec 6, 2003<br>
- * Time: 10:28:17 AM<br>
+ *
+ * @author josh
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode {
 	private static final Logger log = LoggerFactory.getLogger( FromElement.class );

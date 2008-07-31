@@ -37,7 +37,7 @@ final public class Transformers {
 	/**
 	 * Each row of results is a <tt>List</tt> 
 	 */
-	public static final ResultTransformer TO_LIST = ToListResultTransformer.INSTANCE;
+	public static final ToListResultTransformer TO_LIST = ToListResultTransformer.INSTANCE;
 	
 	/**
 	 * Creates a resulttransformer that will inject aliased values into 

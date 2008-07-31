@@ -596,26 +596,24 @@ public abstract class AbstractBatcher implements Batcher {
 	}
 
 	public void closeConnection(Connection conn) throws HibernateException {
+		if ( conn == null ) {
+			log.debug( "found null connection on AbstractBatcher#closeConnection" );
+			// EARLY EXIT!!!!
+			return;
+		}
+
 		if ( log.isDebugEnabled() ) {
-			log.debug(
-					"closing JDBC connection" +
-					preparedStatementCountsToString() +
-					resultSetCountsToString()
-				);
+			log.debug( "closing JDBC connection" + preparedStatementCountsToString() + resultSetCountsToString() );
 		}
 
 		try {
 			if ( !conn.isClosed() ) {
-				JDBCExceptionReporter.logAndClearWarnings(conn);
+				JDBCExceptionReporter.logAndClearWarnings( conn );
 			}
-			factory.getConnectionProvider().closeConnection(conn);
+			factory.getConnectionProvider().closeConnection( conn );
 		}
-		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					factory.getSQLExceptionConverter(),
-			        sqle,
-			        "Cannot close connection"
-				);
+		catch ( SQLException sqle ) {
+			throw JDBCExceptionHelper.convert( factory.getSQLExceptionConverter(), sqle, "Cannot close connection" );
 		}
 	}
 

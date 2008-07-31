@@ -239,15 +239,17 @@ public class Isolater {
 				}
 			}
 			finally {
-				if ( transacted && wasAutoCommit ) {
-					try {
-						connection.setAutoCommit( true );
+				if ( connection != null ) {
+					if ( transacted && wasAutoCommit ) {
+						try {
+							connection.setAutoCommit( true );
+						}
+						catch( Throwable ignore ) {
+							log.trace( "was unable to reset connection back to auto-commit" );
+						}
 					}
-					catch( Throwable ignore ) {
-						log.trace( "was unable to reset connection back to auto-commit" );
-					}
+					session.getBatcher().closeConnection( connection );
 				}
-				session.getBatcher().closeConnection( connection );
 			}
 		}
 	}

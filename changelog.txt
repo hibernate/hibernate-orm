@@ -6,7 +6,44 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
-Changes in version 3.3.0.CR1 (2008.03.18)
+Changes in version 3.3.0.CR2 (2008.07.31)
+-------------------------------------------
+
+** Bug
+    * [HHH-1697] - OracleDialect fails to recognize sequence accessible through syonyms when validating schema
+    * [HHH-2604] - Isolator.JdbcDelegate masks the exception if it isn't possible to open a connection.
+    * [HHH-2683] - "datediff" is declared as NoArgSQLFunction in H2Dialect, but actually accepts 3 arguments.
+    * [HHH-3006] - ConcurrentModificationException in AbstractBatcher results in infinite loop
+    * [HHH-3229] - Merge can fail when there is a transient entity reachable by multiple paths and at least one path does not cascade on merge
+    * [HHH-3257] - Content images not displayed
+    * [HHH-3260] - Hibernate wraps a listener init or destroy exception into an AssertionFailure
+    * [HHH-3261] - Do not wrap exceptions raised by event listeners (at init or destroy time)
+    * [HHH-3265] - change license url in pom to http://www.gnu.org/licenses/lgpl-2.1.html
+    * [HHH-3266] - distribution bundle missing jta dependency
+    * [HHH-3272] - using of Integer.valueOf(int), which is not available in JDK 1.4
+    * [HHH-3282] - DB2Dialect should report supportsLobValueChangePropogation() == false
+    * [HHH-3309] - Serialize/Deserialize problem in AbstractLazyInitializer with entitymode.MAP.
+    * [HHH-3409] - ResultTransformers need smarter equals() and hashCode() impls
+
+** Improvement
+    * [HHH-1786] - JTASessionContext.CleanupSynch does not remove sessions from currentSessionMap
+    * [HHH-2060] - To be able to use <generator> with <composite-id>
+    * [HHH-2506] - Make javassist the default ByteCodeProvider
+    * [HHH-2875] - repackage cglib/asm under org.hibernate namespace
+    * [HHH-3269] - upgrade to jDocBook plugin version 2.1.1
+    * [HHH-3283] - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false
+    * [HHH-3358] - Enable JTATransactionFactory and JTATransaction factory to work without JNDI
+    * [HHH-3390] - Use READ_COMMITTED for JBC 2 cache
+
+** Patch
+    * [HHH-3294] - Version incorrectly incremented for unchanged persistent entity that is parent of a one to many relationship
+
+** Task
+    * [HHH-3270] - follow up on documentation license questions
+
+
+
+Changes in version 3.3.0.CR1 (2008.04.28)
 -------------------------------------------
 
 ** Bug

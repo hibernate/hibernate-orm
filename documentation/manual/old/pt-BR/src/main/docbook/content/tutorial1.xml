@@ -1444,7 +1444,7 @@ out.close();]]></programlisting>
                 That's it, the servlet is complete. A request to the servlet will be processed
                 in a single <literal>Session</literal> and <literal>Transaction</literal>. As
                 earlier in the standalone application, Hibernate can automatically bind these
-                ojects to the current thread of execution. This gives you the freedom to layer
+                objects to the current thread of execution. This gives you the freedom to layer
                 your code and access the <literal>SessionFactory</literal> in any way you like.
                 Usually you'd use a more sophisticated design and move the data access code
                 into data access objects (the DAO pattern). See the Hibernate Wiki for more

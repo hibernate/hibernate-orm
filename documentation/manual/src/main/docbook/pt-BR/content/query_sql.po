@@ -474,10 +474,10 @@ msgstr ""
 #: query_sql.xml:192
 #, no-c-format
 msgid ""
-"<![CDATA[String sql = \"SELECT ID as {c.id}, NAME as {c.name}, \" + \n"
-"         \"BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} "
+"<![CDATA[String sql = \"SELECT ID as {cat.id}, NAME as {cat.name}, \" + \n"
+"         \"BIRTHDATE as {cat.birthDate}, MOTHER_ID as {cat.mother}, {mother.*} "
 "\" +\n"
-"         \"FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID\";\n"
+"         \"FROM CAT_LOG cat, CAT_LOG mother WHERE {cat.mother} = cat.ID\";\n"
 "\n"
 "List loggedCats = sess.createSQLQuery(sql)\n"
 "        .addEntity(\"cat\", Cat.class)\n"

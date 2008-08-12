@@ -560,7 +560,7 @@ create table Address ( addressId bigint not null primary key )
     </property>
 </properties>
 <property name="effectiveEndDate" type="date"/>
-<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+<property name="effectiveStartDate" type="date" not-null="true"/>]]></programlisting>
 
         <para>
                         그때 우리는 다음을 사용하여 하나의 연관을 <emphasis>현재</emphasis> 인스턴스

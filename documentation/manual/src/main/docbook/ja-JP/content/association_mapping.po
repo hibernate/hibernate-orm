@@ -801,7 +801,7 @@ msgid ""
 "    </property>\n"
 "</properties>\n"
 "<property name=\"effectiveEndDate\" type=\"date\"/>\n"
-"<property name=\"effectiveStateDate\" type=\"date\" not-null=\"true\"/>]]>"
+"<property name=\"effectiveStartDate\" type=\"date\" not-null=\"true\"/>]]>"
 msgstr ""
 
 #. Tag: para

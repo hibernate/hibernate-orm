@@ -588,7 +588,7 @@ Joins de associações mais complexas são extremamente raros. O Hibernate torna
     </property>
 </properties>
 <property name="effectiveEndDate" type="date"/>
-<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+<property name="effectiveStartDate" type="date" not-null="true"/>]]></programlisting>
 
         <para>
             Then we can map an association to the <emphasis>current</emphasis> instance 

@@ -107,7 +107,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			Class idClass = persister.getIdentifierType().getReturnedClass();
 			if ( idClass != null && ! idClass.isInstance( event.getEntityId() ) ) {
 				throw new TypeMismatchException(
-						"Provided id of the wrong type. Expected: " + idClass + ", got " + event.getEntityId().getClass()
+						"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass + ", got " + event.getEntityId().getClass()
 				);
 			}
 		}

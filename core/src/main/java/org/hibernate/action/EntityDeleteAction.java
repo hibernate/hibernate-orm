@@ -127,7 +127,7 @@ public final class EntityDeleteAction extends EntityAction {
 				.getPreDeleteEventListeners();
 		boolean veto = false;
 		if (preListeners.length>0) {
-			PreDeleteEvent preEvent = new PreDeleteEvent( getInstance(), getId(), state, getPersister() );
+			PreDeleteEvent preEvent = new PreDeleteEvent( getInstance(), getId(), state, getPersister() ,(EventSource) getSession() );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				veto = preListeners[i].onPreDelete(preEvent) || veto;
 			}

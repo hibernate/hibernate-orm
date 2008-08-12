@@ -231,7 +231,7 @@ public final class EntityUpdateAction extends EntityAction {
 					state, 
 					previousState, 
 					getPersister(),
-					getSession()
+					(EventSource)getSession()
 				);
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				veto = preListeners[i].onPreUpdate(preEvent) || veto;

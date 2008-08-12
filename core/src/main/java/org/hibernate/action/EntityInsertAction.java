@@ -173,7 +173,7 @@ public final class EntityInsertAction extends EntityAction {
 				.getPreInsertEventListeners();
 		boolean veto = false;
 		if (preListeners.length>0) {
-			PreInsertEvent preEvent = new PreInsertEvent( getInstance(), getId(), state, getPersister(), getSession() );
+			PreInsertEvent preEvent = new PreInsertEvent( getInstance(), getId(), state, getPersister(), (EventSource)getSession() );
 			for ( int i = 0; i < preListeners.length; i++ ) {
 				veto = preListeners[i].onPreInsert(preEvent) || veto;
 			}

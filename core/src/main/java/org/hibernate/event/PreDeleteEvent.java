@@ -33,7 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * 
  * @author Gavin King
  */
-public class PreDeleteEvent {
+public class PreDeleteEvent extends AbstractEvent {
 	private Object entity;
 	private EntityPersister persister;
 	private Serializable id;
@@ -56,8 +56,10 @@ public class PreDeleteEvent {
 			Object entity, 
 			Serializable id,
 			Object[] deletedState,
-			EntityPersister persister
+			EntityPersister persister,
+			EventSource source
 	) {
+	    super(source);
 		this.entity = entity;
 		this.persister = persister;
 		this.id = id;

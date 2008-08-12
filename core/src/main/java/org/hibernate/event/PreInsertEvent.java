@@ -27,28 +27,26 @@ package org.hibernate.event;
 import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.engine.SessionImplementor;
 
 /**
  * Occurs before inserting an item in the datastore
  * 
  * @author Gavin King
  */
-public class PreInsertEvent {
+public class PreInsertEvent extends AbstractEvent {
 	private Object entity;
 	private EntityPersister persister;
 	private Object[] state;
 	private Serializable id;
-	private SessionImplementor source;
 
 	public PreInsertEvent(
 			Object entity,
 			Serializable id,
 			Object[] state,
 			EntityPersister persister,
-			SessionImplementor source
+			EventSource source
 	) {
-		this.source = source;
+		super(source);
 		this.entity = entity;
 		this.id = id;
 		this.state = state;
@@ -66,8 +64,5 @@ public class PreInsertEvent {
 	}
 	public Object[] getState() {
 		return state;
-	}
-	public SessionImplementor getSource() {
-		return source;
 	}
 }

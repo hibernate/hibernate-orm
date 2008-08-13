@@ -53,9 +53,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</url>
     </scm>
 
     <ciManagement>

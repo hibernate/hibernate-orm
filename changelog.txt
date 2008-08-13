@@ -6,6 +6,13 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.3.0.GA (2008.08.13)
+-------------------------------------------
+
+** Bug
+    * [HHH-3430] - distribution bundles cglib directly instead of the hibernate repackaging
+
+
 Changes in version 3.3.0.CR2 (2008.07.31)
 -------------------------------------------
 

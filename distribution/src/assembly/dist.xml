@@ -139,9 +139,7 @@
         <dependencySet>
             <outputDirectory>lib/bytecode/cglib</outputDirectory>
             <includes>
-                <include>cglib:cglib</include>
-                <include>asm:asm</include>
-                <include>asm:asm-attrs</include>
+                <include>org.hibernate:hibernate-cglib-repack</include>
             </includes>
         </dependencySet>
 

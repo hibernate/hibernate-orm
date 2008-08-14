@@ -32,7 +32,7 @@
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.3.1-SNAPSHOT</version>
+    <version>3.3.0.GA</version>
 
     <name>Hibernate Core Parent POM</name>
     <description>The base POM for all Hibernate Core modules.</description>
@@ -53,9 +53,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.GA</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.GA</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.0.GA</url>
     </scm>
 
     <ciManagement>

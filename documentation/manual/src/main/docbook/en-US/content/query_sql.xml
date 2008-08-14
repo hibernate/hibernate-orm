@@ -238,9 +238,9 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       declared in the mapping metadata. Notice that we may even use the
       property aliases in the where clause if we like.</para>
 
-      <programlisting><![CDATA[String sql = "SELECT ID as {cat.id}, NAME as {cat.name}, " + 
-         "BIRTHDATE as {cat.birthDate}, MOTHER_ID as {cat.mother}, {mother.*} " +
-         "FROM CAT_LOG cat, CAT_LOG mother WHERE {cat.mother} = cat.ID";
+      <programlisting><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
+         "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
+         "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
 
 List loggedCats = sess.createSQLQuery(sql)
         .addEntity("cat", Cat.class)

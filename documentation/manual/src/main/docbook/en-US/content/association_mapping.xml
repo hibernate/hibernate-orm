@@ -603,7 +603,7 @@ create table Address ( addressId bigint not null primary key )
     </property>
 </properties>
 <property name="effectiveEndDate" type="date"/>
-<property name="effectiveStartDate" type="date" not-null="true"/>]]></programlisting>
+<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
 
         <para>
             Then we can map an association to the <emphasis>current</emphasis> instance 

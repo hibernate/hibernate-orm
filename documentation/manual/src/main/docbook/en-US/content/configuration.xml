@@ -1228,13 +1228,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <title>Logging</title>
 
         <para>
-            Hibernate Annotations utilizes <ulink url="http://www.slf4j.org/">Simple Logging Facade for Java</ulink> 
-            (SLF4J) in order to log various system events. SLF4J can direct your logging output to 
-            several logging frameworks (NOP, Simple, log4j version 1.2, JDK 1.4 logging, JCL or logback) depending on your 
+            Hibernate utilizes <ulink url="http://www.slf4j.org/">Simple Logging Facade for Java</ulink>
+            (SLF4J) in order to log various system events. SLF4J can direct your logging output to
+            several logging frameworks (NOP, Simple, log4j version 1.2, JDK 1.4 logging, JCL or logback) depending on your
             chosen binding. In order to setup logging properly you will need <filename>slf4j-api.jar</filename> in
             your classpath together with the jar file for your preferred binding - <filename>slf4j-log4j12.jar</filename> 
             in the case of Log4J. See the SLF4J <ulink url="http://www.slf4j.org/manual.html">documentation</ulink> for more detail.
-            To use Log4j you will also need to place a <filename>log4j.properties</filename> file in your classpath, 
+            To use Log4j you will also need to place a <filename>log4j.properties</filename> file in your classpath,
             an example properties file is distributed with Hibernate in the <literal>src/</literal> directory.
         </para>
         

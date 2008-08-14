@@ -10,7 +10,15 @@ Changes in version 3.3.0.GA (2008.08.13)
 -------------------------------------------
 
 ** Bug
+    * [HHH-2021] - org.hibernate.cache.QueryKey has a fragile equals() method
+    * [HHH-3333] - build Wiki has a typo and includes a lie re:jdk version
+    * [HHH-3378] - DB2CustomSQLTest fails, need "RESULT SETS 1" in proc definitions
     * [HHH-3430] - distribution bundles cglib directly instead of the hibernate repackaging
+
+** Improvement
+    * [HHH-2926] - All *Event must inherit AbstractEvent
+    * [HHH-3247] - Provide more information in TypeMismatchException message
+
 
 
 Changes in version 3.3.0.CR2 (2008.07.31)

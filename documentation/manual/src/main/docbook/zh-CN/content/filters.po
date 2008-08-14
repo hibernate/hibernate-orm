@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:5
+#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr "过滤数据"
 
 #. Tag: para
-#: filters.xml:7
+#: filters.xml:31
 #, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
@@ -31,13 +31,13 @@ msgstr ""
 "Hibernate session您可以选择是否启用（或禁用）某个过滤器。"
 
 #. Tag: title
-#: filters.xml:14
+#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Hibernate 过滤器(filters)"
 
 #. Tag: para
-#: filters.xml:16
+#: filters.xml:40
 #, no-c-format
 msgid ""
 "Hibernate3 adds the ability to pre-define filter criteria and attach those "
@@ -56,7 +56,7 @@ msgstr ""
 "使用什么样的参数的。"
 
 #. Tag: para
-#: filters.xml:26
+#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -69,7 +69,7 @@ msgstr ""
 "def/&gt;</literal>节点："
 
 #. Tag: programlisting
-#: filters.xml:32
+#: filters.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\">\n"
@@ -78,13 +78,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:34
+#: filters.xml:58
 #, no-c-format
 msgid "Then, this filter can be attached to a class:"
 msgstr "定义好之后，就可以在某个类中使用这个过滤器："
 
 #. Tag: programlisting
-#: filters.xml:38
+#: filters.xml:62
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"myClass\" ...>\n"
@@ -95,13 +95,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:40
+#: filters.xml:64
 #, no-c-format
 msgid "or, to a collection:"
 msgstr "也可以在某个集合使用它："
 
 #. Tag: programlisting
-#: filters.xml:44
+#: filters.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<set ...>\n"
@@ -111,22 +111,22 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:46
+#: filters.xml:70
 #, no-c-format
 msgid "or, even to both (or multiples of each) at the same time."
 msgstr ""
 "可以在多个类或集合中使用某个过滤器；某个类或者集合中也可以使用多个过滤器。"
 
 #. Tag: para
-#: filters.xml:50
-#, no-c-format
+#: filters.xml:74
+#, fuzzy, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
 "literal>, and <literal>disableFilter(String filterName)</literal>. By "
 "default, filters are <emphasis>not</emphasis> enabled for a given session; "
 "they must be explcitly enabled through use of the <literal>Session."
-"enabledFilter()</literal> method, which returns an instance of the "
+"enableFilter()</literal> method, which returns an instance of the "
 "<literal>Filter</literal> interface. Using the simple filter defined above, "
 "this would look like:"
 msgstr ""
@@ -138,7 +138,7 @@ msgstr ""
 "literal>的实例。以上文定义的过滤器为例："
 
 #. Tag: programlisting
-#: filters.xml:59
+#: filters.xml:83
 #, no-c-format
 msgid ""
 "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
@@ -146,7 +146,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:61
+#: filters.xml:85
 #, no-c-format
 msgid ""
 "Note that methods on the org.hibernate.Filter interface do allow the method-"
@@ -156,14 +156,14 @@ msgstr ""
 "之后设定Filter参数这个“方法链”） Hibernate的其他部分也大多有这个特性。"
 
 #. Tag: para
-#: filters.xml:65
+#: filters.xml:89
 #, no-c-format
 msgid ""
 "A full example, using temporal data with an effective record date pattern:"
 msgstr "下面是一个比较完整的例子，使用了记录生效日期模式过滤有时效的数据："
 
 #. Tag: programlisting
-#: filters.xml:69
+#: filters.xml:93
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"effectiveDate\">\n"
@@ -201,7 +201,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:71
+#: filters.xml:95
 #, no-c-format
 msgid ""
 "Then, in order to ensure that you always get back currently effective "
@@ -212,7 +212,7 @@ msgstr ""
 "作之前先开启过滤器即可："
 
 #. Tag: programlisting
-#: filters.xml:76
+#: filters.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = ...;\n"
@@ -226,7 +226,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:78
+#: filters.xml:102
 #, no-c-format
 msgid ""
 "In the HQL above, even though we only explicitly mentioned a salary "
@@ -238,7 +238,7 @@ msgstr ""
 "将仅返回那些目前雇用 关系处于生效期的，并且薪水高于一百万美刀的雇员的数据。"
 
 #. Tag: para
-#: filters.xml:84
+#: filters.xml:108
 #, no-c-format
 msgid ""
 "Note: if you plan on using filters with outer joining (either through HQL or "
@@ -251,7 +251,7 @@ msgstr ""
 "joining）。并且通常来说，先写参数， 然后是操作符，最后写数据库字段名。"
 
 #. Tag: para
-#: filters.xml:91
+#: filters.xml:115
 #, no-c-format
 msgid ""
 "After being defined a filter might be attached to multiple entities and/or "
@@ -265,7 +265,7 @@ msgstr ""
 "&gt;</literal>被用来定义一个默认条件，它可能作为属性或者CDATA出现："
 
 #. Tag: programlisting
-#: filters.xml:98
+#: filters.xml:122
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
@@ -274,7 +274,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:100
+#: filters.xml:124
 #, no-c-format
 msgid ""
 "This default condition will then be used whenever the filter is attached to "

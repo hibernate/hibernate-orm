@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: session_api.xml:5
+#: session_api.xml:29
 #, no-c-format
 msgid "Working with objects"
 msgstr "Travailler avec des objets"
 
 #. Tag: para
-#: session_api.xml:7
+#: session_api.xml:31
 #, no-c-format
 msgid ""
 "Hibernate is a full object/relational mapping solution that not only shields "
@@ -36,7 +36,7 @@ msgstr ""
 "persistance dans les applications Java."
 
 #. Tag: para
-#: session_api.xml:16
+#: session_api.xml:40
 #, no-c-format
 msgid ""
 "In other words, Hibernate application developers should always think about "
@@ -52,19 +52,19 @@ msgstr ""
 "d'applications lors du réglage de la performance de leur système."
 
 #. Tag: title
-#: session_api.xml:24
+#: session_api.xml:48
 #, no-c-format
 msgid "Hibernate object states"
 msgstr "États des objets Hibernate"
 
 #. Tag: para
-#: session_api.xml:26
+#: session_api.xml:50
 #, no-c-format
 msgid "Hibernate defines and supports the following object states:"
 msgstr "Hibernate définit et comprend les états suivants :"
 
 #. Tag: para
-#: session_api.xml:32
+#: session_api.xml:56
 #, no-c-format
 msgid ""
 "<emphasis>Transient</emphasis> - an object is transient if it has just been "
@@ -87,7 +87,7 @@ msgstr ""
 "besoin d'être exécutées pour cette transistion)."
 
 #. Tag: para
-#: session_api.xml:44
+#: session_api.xml:68
 #, no-c-format
 msgid ""
 "<emphasis>Persistent</emphasis> - a persistent instance has a representation "
@@ -110,7 +110,7 @@ msgstr ""
 "objet devrait être rendu éphémère."
 
 #. Tag: para
-#: session_api.xml:55
+#: session_api.xml:79
 #, no-c-format
 msgid ""
 "<emphasis>Detached</emphasis> - a detached instance is an object that has "
@@ -135,7 +135,7 @@ msgstr ""
 "c'est-à-dire une unité de travail du point de vue de l'utilisateur."
 
 #. Tag: para
-#: session_api.xml:69
+#: session_api.xml:93
 #, no-c-format
 msgid ""
 "We'll now discuss the states and state transitions (and the Hibernate "
@@ -145,13 +145,13 @@ msgstr ""
 "méthodes d'Hibernate qui déclenchent une transition) plus en détails."
 
 #. Tag: title
-#: session_api.xml:77
+#: session_api.xml:101
 #, no-c-format
 msgid "Making objects persistent"
 msgstr "Rendre des objets persistants"
 
 #. Tag: para
-#: session_api.xml:79
+#: session_api.xml:103
 #, no-c-format
 msgid ""
 "Newly instantiated instances of a a persistent class are considered "
@@ -164,7 +164,7 @@ msgstr ""
 "avec une session :"
 
 #. Tag: programlisting
-#: session_api.xml:86
+#: session_api.xml:110
 #, no-c-format
 msgid ""
 "<![CDATA[DomesticCat fritz = new DomesticCat();\n"
@@ -175,7 +175,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:88
+#: session_api.xml:112
 #, no-c-format
 msgid ""
 "If <literal>Cat</literal> has a generated identifier, the identifier is "
@@ -197,7 +197,7 @@ msgstr ""
 "brouillon d'EJB3."
 
 #. Tag: para
-#: session_api.xml:100
+#: session_api.xml:124
 #, no-c-format
 msgid ""
 "<literal>persist()</literal> makes a transient instance persistent. However, "
@@ -217,7 +217,7 @@ msgstr ""
 "Session/persistence context."
 
 #. Tag: para
-#: session_api.xml:111
+#: session_api.xml:135
 #, no-c-format
 msgid ""
 "<literal>save()</literal> does guarantee to return an identifier. If an "
@@ -233,7 +233,7 @@ msgstr ""
 "running conversation with an extended Session/persistence context."
 
 #. Tag: para
-#: session_api.xml:121
+#: session_api.xml:145
 #, no-c-format
 msgid ""
 "Alternatively, you may assign the identifier using an overloaded version of "
@@ -243,7 +243,7 @@ msgstr ""
 "surchargée de <literal>save()</literal>."
 
 #. Tag: programlisting
-#: session_api.xml:126
+#: session_api.xml:150
 #, no-c-format
 msgid ""
 "<![CDATA[DomesticCat pk = new DomesticCat();\n"
@@ -256,7 +256,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:128
+#: session_api.xml:152
 #, no-c-format
 msgid ""
 "If the object you make persistent has associated objects (e.g. the "
@@ -277,7 +277,7 @@ msgstr ""
 "les objets dans le mauvais ordre."
 
 #. Tag: para
-#: session_api.xml:138
+#: session_api.xml:162
 #, no-c-format
 msgid ""
 "Usually you don't bother with this detail, as you'll very likely use "
@@ -294,13 +294,13 @@ msgstr ""
 "transitive est traitée plus loin dans ce chapitre."
 
 #. Tag: title
-#: session_api.xml:149
+#: session_api.xml:173
 #, no-c-format
 msgid "Loading an object"
 msgstr "Chargement d'un objet"
 
 #. Tag: para
-#: session_api.xml:151
+#: session_api.xml:175
 #, no-c-format
 msgid ""
 "The <literal>load()</literal> methods of <literal>Session</literal> gives "
@@ -315,13 +315,13 @@ msgstr ""
 "dans un état persistant."
 
 #. Tag: programlisting
-#: session_api.xml:158
+#: session_api.xml:182
 #, no-c-format
 msgid "<![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]>"
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:160
+#: session_api.xml:184
 #, no-c-format
 msgid ""
 "<![CDATA[// you need to wrap primitive identifiers\n"
@@ -331,14 +331,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:162
+#: session_api.xml:186
 #, no-c-format
 msgid "Alternatively, you can load state into a given instance:"
 msgstr ""
 "Alternativement, vous pouvez charger un état dans une instance donnée :"
 
 #. Tag: programlisting
-#: session_api.xml:166
+#: session_api.xml:190
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new DomesticCat();\n"
@@ -348,7 +348,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:168
+#: session_api.xml:192
 #, no-c-format
 msgid ""
 "Note that <literal>load()</literal> will throw an unrecoverable exception if "
@@ -371,7 +371,7 @@ msgstr ""
 "pour le mapping de la classe."
 
 #. Tag: para
-#: session_api.xml:179
+#: session_api.xml:203
 #, no-c-format
 msgid ""
 "If you are not certain that a matching row exists, you should use the "
@@ -384,7 +384,7 @@ msgstr ""
 "correspondante."
 
 #. Tag: programlisting
-#: session_api.xml:185
+#: session_api.xml:209
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);\n"
@@ -396,7 +396,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:187
+#: session_api.xml:211
 #, no-c-format
 msgid ""
 "You may even load an object using an SQL <literal>SELECT ... FOR UPDATE</"
@@ -408,13 +408,13 @@ msgstr ""
 "documentation de l'API pour plus d'informations."
 
 #. Tag: programlisting
-#: session_api.xml:192
+#: session_api.xml:216
 #, no-c-format
 msgid "<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:194
+#: session_api.xml:218
 #, no-c-format
 msgid ""
 "Note that any associated instances or contained collections are "
@@ -428,7 +428,7 @@ msgstr ""
 "ou <literal>all</literal> en tant que style de cascade pour l'association."
 
 #. Tag: para
-#: session_api.xml:201
+#: session_api.xml:225
 #, no-c-format
 msgid ""
 "It is possible to re-load an object and all its collections at any time, "
@@ -441,7 +441,7 @@ msgstr ""
 "initiliser certains propriétés de l'objet."
 
 #. Tag: programlisting
-#: session_api.xml:207
+#: session_api.xml:231
 #, no-c-format
 msgid ""
 "<![CDATA[sess.save(cat);\n"
@@ -450,7 +450,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:209
+#: session_api.xml:233
 #, no-c-format
 msgid ""
 "An important question usually appears at this point: How much does Hibernate "
@@ -465,13 +465,13 @@ msgstr ""
 "<xref linkend=\"performance-fetching\"/>."
 
 #. Tag: title
-#: session_api.xml:219
+#: session_api.xml:243
 #, no-c-format
 msgid "Querying"
 msgstr "Requêtage"
 
 #. Tag: para
-#: session_api.xml:221
+#: session_api.xml:245
 #, no-c-format
 msgid ""
 "If you don't know the identifiers of the objects you are looking for, you "
@@ -491,13 +491,13 @@ msgstr ""
 "objets."
 
 #. Tag: title
-#: session_api.xml:231
+#: session_api.xml:255
 #, no-c-format
 msgid "Executing queries"
 msgstr "Exécution de requêtes"
 
 #. Tag: para
-#: session_api.xml:233
+#: session_api.xml:257
 #, no-c-format
 msgid ""
 "HQL and native SQL queries are represented with an instance of <literal>org."
@@ -513,7 +513,7 @@ msgstr ""
 "literal> en utilisant la <literal>Session</literal> courante :"
 
 #. Tag: programlisting
-#: session_api.xml:240
+#: session_api.xml:264
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = session.createQuery(\n"
@@ -543,7 +543,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:242
+#: session_api.xml:266
 #, no-c-format
 msgid ""
 "A query is usually executed by invoking <literal>list()</literal>, the "
@@ -563,13 +563,13 @@ msgstr ""
 "seul objet."
 
 #. Tag: title
-#: session_api.xml:254
+#: session_api.xml:278
 #, no-c-format
 msgid "Iterating results"
 msgstr "Itération de résultats"
 
 #. Tag: para
-#: session_api.xml:256
+#: session_api.xml:280
 #, no-c-format
 msgid ""
 "Occasionally, you might be able to achieve better performance by executing "
@@ -594,7 +594,7 @@ msgstr ""
 "supplémentaires pour initialiser les instances réelles."
 
 #. Tag: programlisting
-#: session_api.xml:268
+#: session_api.xml:292
 #, no-c-format
 msgid ""
 "<![CDATA[// fetch ids\n"
@@ -613,13 +613,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:272
+#: session_api.xml:296
 #, no-c-format
 msgid "Queries that return tuples"
 msgstr "Requêtes qui retournent des tuples"
 
 #. Tag: para
-#: session_api.xml:274
+#: session_api.xml:298
 #, no-c-format
 msgid ""
 "Hibernate queries sometimes return tuples of objects, in which case each "
@@ -629,7 +629,7 @@ msgstr ""
 "chaque tuple est retourné comme un tableau :"
 
 #. Tag: programlisting
-#: session_api.xml:279
+#: session_api.xml:303
 #, no-c-format
 msgid ""
 "<![CDATA[Iterator kittensAndMothers = sess.createQuery(\n"
@@ -647,13 +647,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:284
+#: session_api.xml:308
 #, no-c-format
 msgid "Scalar results"
 msgstr "Résultats scalaires"
 
 #. Tag: para
-#: session_api.xml:286
+#: session_api.xml:310
 #, no-c-format
 msgid ""
 "Queries may specify a property of a class in the <literal>select</literal> "
@@ -666,7 +666,7 @@ msgstr ""
 "résultats \"scalaires\" (et pas des entités dans un état persistant)."
 
 #. Tag: programlisting
-#: session_api.xml:292
+#: session_api.xml:316
 #, no-c-format
 msgid ""
 "<![CDATA[Iterator results = sess.createQuery(\n"
@@ -686,13 +686,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:297
+#: session_api.xml:321
 #, no-c-format
 msgid "Bind parameters"
 msgstr "Lier des paramètres"
 
 #. Tag: para
-#: session_api.xml:299
+#: session_api.xml:323
 #, no-c-format
 msgid ""
 "Methods on <literal>Query</literal> are provided for binding values to named "
@@ -709,7 +709,7 @@ msgstr ""
 "caractères de la requête. Les avantages des paramètres nommés sont :"
 
 #. Tag: para
-#: session_api.xml:309
+#: session_api.xml:333
 #, no-c-format
 msgid ""
 "named parameters are insensitive to the order they occur in the query string"
@@ -718,19 +718,19 @@ msgstr ""
 "chaîne de la requête"
 
 #. Tag: para
-#: session_api.xml:315
+#: session_api.xml:339
 #, no-c-format
 msgid "they may occur multiple times in the same query"
 msgstr "ils peuvent apparaître plusieurs fois dans la même requête"
 
 #. Tag: para
-#: session_api.xml:320
+#: session_api.xml:344
 #, no-c-format
 msgid "they are self-documenting"
 msgstr "ils sont auto-documentés"
 
 #. Tag: programlisting
-#: session_api.xml:326
+#: session_api.xml:350
 #, no-c-format
 msgid ""
 "<![CDATA[//named parameter (preferred)\n"
@@ -741,7 +741,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:328
+#: session_api.xml:352
 #, no-c-format
 msgid ""
 "<![CDATA[//positional parameter\n"
@@ -751,7 +751,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:330
+#: session_api.xml:354
 #, no-c-format
 msgid ""
 "<![CDATA[//named parameter list\n"
@@ -765,13 +765,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:335
+#: session_api.xml:359
 #, no-c-format
 msgid "Pagination"
 msgstr "Pagination"
 
 #. Tag: para
-#: session_api.xml:337
+#: session_api.xml:361
 #, no-c-format
 msgid ""
 "If you need to specify bounds upon your result set (the maximum number of "
@@ -784,7 +784,7 @@ msgstr ""
 "l'interface <literal>Query</literal> :"
 
 #. Tag: programlisting
-#: session_api.xml:343
+#: session_api.xml:367
 #, no-c-format
 msgid ""
 "<![CDATA[Query q = sess.createQuery(\"from DomesticCat cat\");\n"
@@ -794,7 +794,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:345
+#: session_api.xml:369
 #, no-c-format
 msgid ""
 "Hibernate knows how to translate this limit query into the native SQL of "
@@ -804,13 +804,13 @@ msgstr ""
 "votre SGBD."
 
 #. Tag: title
-#: session_api.xml:353
+#: session_api.xml:377
 #, no-c-format
 msgid "Scrollable iteration"
 msgstr "Itération \"scrollable\""
 
 #. Tag: para
-#: session_api.xml:355
+#: session_api.xml:379
 #, no-c-format
 msgid ""
 "If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the "
@@ -824,7 +824,7 @@ msgstr ""
 "une navigation flexible dans les résultats de la requête."
 
 #. Tag: programlisting
-#: session_api.xml:362
+#: session_api.xml:386
 #, no-c-format
 msgid ""
 "<![CDATA[Query q = sess.createQuery(\"select cat.name, cat from DomesticCat "
@@ -854,7 +854,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:364
+#: session_api.xml:388
 #, no-c-format
 msgid ""
 "Note that an open database connection (and cursor) is required for this "
@@ -867,13 +867,13 @@ msgstr ""
 "de pagination hors ligne."
 
 #. Tag: title
-#: session_api.xml:373
+#: session_api.xml:397
 #, no-c-format
 msgid "Externalizing named queries"
 msgstr "Externaliser des requêtes nommées"
 
 #. Tag: para
-#: session_api.xml:375
+#: session_api.xml:399
 #, no-c-format
 msgid ""
 "You may also define named queries in the mapping document. (Remember to use "
@@ -886,7 +886,7 @@ msgstr ""
 "éléments XML.)"
 
 #. Tag: programlisting
-#: session_api.xml:381
+#: session_api.xml:405
 #, no-c-format
 msgid ""
 "<![CDATA[<query name=\"ByNameAndMaximumWeight\"><![CDATA[\n"
@@ -897,13 +897,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:383
+#: session_api.xml:407
 #, no-c-format
 msgid "Parameter binding and executing is done programatically:"
 msgstr "La liaison de paramètres et l'exécution sont fait par programmation :"
 
 #. Tag: programlisting
-#: session_api.xml:387
+#: session_api.xml:411
 #, no-c-format
 msgid ""
 "<![CDATA[Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
@@ -913,7 +913,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:389
+#: session_api.xml:413
 #, no-c-format
 msgid ""
 "Note that the actual program code is independent of the query language that "
@@ -926,7 +926,7 @@ msgstr ""
 "plaçant dans les fichiers de mapping."
 
 #. Tag: para
-#: session_api.xml:395
+#: session_api.xml:419
 #, no-c-format
 msgid ""
 "Also note that a query declaration inside a <literal>&lt;hibernate-"
@@ -943,13 +943,13 @@ msgstr ""
 "ByNameAndMaximumWeight</literal>."
 
 #. Tag: title
-#: session_api.xml:408
+#: session_api.xml:432
 #, no-c-format
 msgid "Filtering collections"
 msgstr "Filtrer des collections"
 
 #. Tag: para
-#: session_api.xml:409
+#: session_api.xml:433
 #, no-c-format
 msgid ""
 "A collection <emphasis>filter</emphasis> is a special type of query that may "
@@ -962,7 +962,7 @@ msgstr ""
 "l'élément de la collection courant."
 
 #. Tag: programlisting
-#: session_api.xml:415
+#: session_api.xml:439
 #, no-c-format
 msgid ""
 "<![CDATA[Collection blackKittens = session.createFilter(\n"
@@ -974,7 +974,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:417
+#: session_api.xml:441
 #, no-c-format
 msgid ""
 "The returned collection is considered a bag, and it's a copy of the given "
@@ -987,7 +987,7 @@ msgstr ""
 "comportement attendu)."
 
 #. Tag: para
-#: session_api.xml:423
+#: session_api.xml:447
 #, no-c-format
 msgid ""
 "Observe that filters do not require a <literal>from</literal> clause (though "
@@ -999,7 +999,7 @@ msgstr ""
 "sont pas limités à retourner des éléments de la collection eux-mêmes."
 
 #. Tag: programlisting
-#: session_api.xml:428
+#: session_api.xml:452
 #, no-c-format
 msgid ""
 "<![CDATA[Collection blackKittenMates = session.createFilter(\n"
@@ -1009,7 +1009,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:430
+#: session_api.xml:454
 #, no-c-format
 msgid ""
 "Even an empty filter query is useful, e.g. to load a subset of elements in a "
@@ -1019,7 +1019,7 @@ msgstr ""
 "ensemble d'éléments dans une énorme collection :"
 
 #. Tag: programlisting
-#: session_api.xml:435
+#: session_api.xml:459
 #, no-c-format
 msgid ""
 "<![CDATA[Collection tenKittens = session.createFilter(\n"
@@ -1029,13 +1029,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:440
+#: session_api.xml:464
 #, no-c-format
 msgid "Criteria queries"
 msgstr "Requêtes Criteria"
 
 #. Tag: para
-#: session_api.xml:442
+#: session_api.xml:466
 #, no-c-format
 msgid ""
 "HQL is extremely powerful but some developers prefer to build queries "
@@ -1049,7 +1049,7 @@ msgstr ""
 "requête <literal>Criteria</literal> pour ces cas :"
 
 #. Tag: programlisting
-#: session_api.xml:448
+#: session_api.xml:472
 #, no-c-format
 msgid ""
 "<![CDATA[Criteria crit = session.createCriteria(Cat.class);\n"
@@ -1059,7 +1059,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:450
+#: session_api.xml:474
 #, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
@@ -1070,13 +1070,13 @@ msgstr ""
 "sont traitées plus en détail dans <xref linkend=\"querycriteria\"/>."
 
 #. Tag: title
-#: session_api.xml:458
+#: session_api.xml:482
 #, no-c-format
 msgid "Queries in native SQL"
 msgstr "Requêtes en SQL natif"
 
 #. Tag: para
-#: session_api.xml:460
+#: session_api.xml:484
 #, no-c-format
 msgid ""
 "You may express a query in SQL, using <literal>createSQLQuery()</literal> "
@@ -1093,7 +1093,7 @@ msgstr ""
 "mettre les alias SQL entre accolades :"
 
 #. Tag: programlisting
-#: session_api.xml:468
+#: session_api.xml:492
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = session.createSQLQuery(\"SELECT {cat.*} FROM CAT {cat} "
@@ -1103,7 +1103,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:470
+#: session_api.xml:494
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = session.createSQLQuery(\n"
@@ -1116,7 +1116,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:472
+#: session_api.xml:496
 #, no-c-format
 msgid ""
 "SQL queries may contain named and positional parameters, just like Hibernate "
@@ -1129,13 +1129,13 @@ msgstr ""
 ">."
 
 #. Tag: title
-#: session_api.xml:483
+#: session_api.xml:507
 #, no-c-format
 msgid "Modifying persistent objects"
 msgstr "Modifier des objets persistants"
 
 #. Tag: para
-#: session_api.xml:485
+#: session_api.xml:509
 #, no-c-format
 msgid ""
 "<emphasis>Transactional persistent instances</emphasis> (ie. objects loaded, "
@@ -1161,7 +1161,7 @@ msgstr ""
 "literal> est ouverte :"
 
 #. Tag: programlisting
-#: session_api.xml:496
+#: session_api.xml:520
 #, no-c-format
 msgid ""
 "<![CDATA[DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long"
@@ -1171,7 +1171,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:498
+#: session_api.xml:522
 #, no-c-format
 msgid ""
 "Sometimes this programming model is inefficient since it would require both "
@@ -1187,7 +1187,7 @@ msgstr ""
 "détachées."
 
 #. Tag: emphasis
-#: session_api.xml:506
+#: session_api.xml:530
 #, fuzzy, no-c-format
 msgid ""
 "Note that Hibernate does not offer its own API for direct execution of "
@@ -1213,13 +1213,13 @@ msgstr ""
 "pour les astuces possibles d'opérations groupées."
 
 #. Tag: title
-#: session_api.xml:521
+#: session_api.xml:545
 #, no-c-format
 msgid "Modifying detached objects"
 msgstr "Modifier des objets détachés"
 
 #. Tag: para
-#: session_api.xml:523
+#: session_api.xml:547
 #, no-c-format
 msgid ""
 "Many applications need to retrieve an object in one transaction, send it to "
@@ -1236,7 +1236,7 @@ msgstr ""
 "versionnées pour assurer l'isolation pour les \"longues\" unités de travail."
 
 #. Tag: para
-#: session_api.xml:530
+#: session_api.xml:554
 #, no-c-format
 msgid ""
 "Hibernate supports this model by providing for reattachment of detached "
@@ -1248,7 +1248,7 @@ msgstr ""
 "<literal>Session.merge()</literal> :"
 
 #. Tag: programlisting
-#: session_api.xml:536
+#: session_api.xml:560
 #, no-c-format
 msgid ""
 "<![CDATA[// in the first session\n"
@@ -1265,7 +1265,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:538
+#: session_api.xml:562
 #, no-c-format
 msgid ""
 "If the <literal>Cat</literal> with identifier <literal>catId</literal> had "
@@ -1277,7 +1277,7 @@ msgstr ""
 "l'application a essayé de le réattacher, une exception aurait été levée."
 
 #. Tag: para
-#: session_api.xml:544
+#: session_api.xml:568
 #, no-c-format
 msgid ""
 "Use <literal>update()</literal> if you are sure that the session does not "
@@ -1298,7 +1298,7 @@ msgstr ""
 "exécutée."
 
 #. Tag: para
-#: session_api.xml:553
+#: session_api.xml:577
 #, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
@@ -1315,7 +1315,7 @@ msgstr ""
 "\"objectstate-transitive\"/>."
 
 #. Tag: para
-#: session_api.xml:560
+#: session_api.xml:584
 #, no-c-format
 msgid ""
 "The <literal>lock()</literal> method also allows an application to "
@@ -1327,7 +1327,7 @@ msgstr ""
 "doit être non modifiée !"
 
 #. Tag: programlisting
-#: session_api.xml:565
+#: session_api.xml:589
 #, no-c-format
 msgid ""
 "<![CDATA[//just reassociate:\n"
@@ -1339,7 +1339,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:567
+#: session_api.xml:591
 #, no-c-format
 msgid ""
 "Note that <literal>lock()</literal> can be used with various "
@@ -1354,7 +1354,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: session_api.xml:574
+#: session_api.xml:598
 #, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
@@ -1364,13 +1364,13 @@ msgstr ""
 "linkend=\"transactions-optimistic\"/>."
 
 #. Tag: title
-#: session_api.xml:581
+#: session_api.xml:605
 #, no-c-format
 msgid "Automatic state detection"
 msgstr "Détection automatique d'un état"
 
 #. Tag: para
-#: session_api.xml:583
+#: session_api.xml:607
 #, no-c-format
 msgid ""
 "Hibernate users have requested a general purpose method that either saves a "
@@ -1385,7 +1385,7 @@ msgstr ""
 "literal> implémente cette fonctionnalité."
 
 #. Tag: programlisting
-#: session_api.xml:590
+#: session_api.xml:614
 #, no-c-format
 msgid ""
 "<![CDATA[// in the first session\n"
@@ -1403,7 +1403,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:592
+#: session_api.xml:616
 #, no-c-format
 msgid ""
 "The usage and semantics of <literal>saveOrUpdate()</literal> seems to be "
@@ -1421,7 +1421,7 @@ msgstr ""
 "applications n'utiliseront jamais ces méthodes."
 
 #. Tag: para
-#: session_api.xml:600
+#: session_api.xml:624
 #, no-c-format
 msgid ""
 "Usually <literal>update()</literal> or <literal>saveOrUpdate()</literal> are "
@@ -1431,31 +1431,31 @@ msgstr ""
 "literal> sont utilisées dans le scénario suivant :"
 
 #. Tag: para
-#: session_api.xml:607
+#: session_api.xml:631
 #, no-c-format
 msgid "the application loads an object in the first session"
 msgstr "l'application charge un objet dans la première session"
 
 #. Tag: para
-#: session_api.xml:612
+#: session_api.xml:636
 #, no-c-format
 msgid "the object is passed up to the UI tier"
 msgstr "l'objet est passé à la couche utilisateur"
 
 #. Tag: para
-#: session_api.xml:617
+#: session_api.xml:641
 #, no-c-format
 msgid "some modifications are made to the object"
 msgstr "certaines modifications sont effectuées sur l'objet"
 
 #. Tag: para
-#: session_api.xml:622
+#: session_api.xml:646
 #, no-c-format
 msgid "the object is passed back down to the business logic tier"
 msgstr "l'objet est retourné à la couche logique métier"
 
 #. Tag: para
-#: session_api.xml:627
+#: session_api.xml:651
 #, no-c-format
 msgid ""
 "the application persists these modifications by calling <literal>update()</"
@@ -1465,19 +1465,19 @@ msgstr ""
 "literal> dans une seconde sessin"
 
 #. Tag: para
-#: session_api.xml:634
+#: session_api.xml:658
 #, no-c-format
 msgid "<literal>saveOrUpdate()</literal> does the following:"
 msgstr "<literal>saveOrUpdate()</literal> s'utilise dans le cas suivant :"
 
 #. Tag: para
-#: session_api.xml:640
+#: session_api.xml:664
 #, no-c-format
 msgid "if the object is already persistent in this session, do nothing"
 msgstr "si l'objet est déjà persistant dans cette session, ne rien faire"
 
 #. Tag: para
-#: session_api.xml:645
+#: session_api.xml:669
 #, no-c-format
 msgid ""
 "if another object associated with the session has the same identifier, throw "
@@ -1487,7 +1487,7 @@ msgstr ""
 "exception"
 
 #. Tag: para
-#: session_api.xml:651
+#: session_api.xml:675
 #, no-c-format
 msgid "if the object has no identifier property, <literal>save()</literal> it"
 msgstr ""
@@ -1495,7 +1495,7 @@ msgstr ""
 "literal>"
 
 #. Tag: para
-#: session_api.xml:656
+#: session_api.xml:680
 #, no-c-format
 msgid ""
 "if the object's identifier has the value assigned to a newly instantiated "
@@ -1505,7 +1505,7 @@ msgstr ""
 "instancié, appeler <literal>save()</literal>"
 
 #. Tag: para
-#: session_api.xml:662
+#: session_api.xml:686
 #, no-c-format
 msgid ""
 "if the object is versioned (by a <literal>&lt;version&gt;</literal> or "
@@ -1519,19 +1519,19 @@ msgstr ""
 "instancié, appeler <literal>save()</literal>"
 
 #. Tag: para
-#: session_api.xml:670
+#: session_api.xml:694
 #, no-c-format
 msgid "otherwise <literal>update()</literal> the object"
 msgstr "sinon mettre à jour l'objet avec <literal>update()</literal>"
 
 #. Tag: para
-#: session_api.xml:676
+#: session_api.xml:700
 #, no-c-format
 msgid "and <literal>merge()</literal> is very different:"
 msgstr "et <literal>merge()</literal> est très différent :"
 
 #. Tag: para
-#: session_api.xml:682
+#: session_api.xml:706
 #, no-c-format
 msgid ""
 "if there is a persistent instance with the same identifier currently "
@@ -1543,7 +1543,7 @@ msgstr ""
 "persistante"
 
 #. Tag: para
-#: session_api.xml:689
+#: session_api.xml:713
 #, no-c-format
 msgid ""
 "if there is no persistent instance currently associated with the session, "
@@ -1554,13 +1554,13 @@ msgstr ""
 "persistante"
 
 #. Tag: para
-#: session_api.xml:695
+#: session_api.xml:719
 #, no-c-format
 msgid "the persistent instance is returned"
 msgstr "l'instance persistante est retournée"
 
 #. Tag: para
-#: session_api.xml:700
+#: session_api.xml:724
 #, no-c-format
 msgid ""
 "the given instance does not become associated with the session, it remains "
@@ -1569,13 +1569,13 @@ msgstr ""
 "l'instance donnée ne devient pas associée à la session, elle reste détachée"
 
 #. Tag: title
-#: session_api.xml:710
+#: session_api.xml:734
 #, no-c-format
 msgid "Deleting persistent objects"
 msgstr "Suppression d'objets persistants"
 
 #. Tag: para
-#: session_api.xml:712
+#: session_api.xml:736
 #, no-c-format
 msgid ""
 "<literal>Session.delete()</literal> will remove an object's state from the "
@@ -1589,13 +1589,13 @@ msgstr ""
 "literal> comme rendant une instance persistante éphémère."
 
 #. Tag: programlisting
-#: session_api.xml:719
+#: session_api.xml:743
 #, no-c-format
 msgid "<![CDATA[sess.delete(cat);]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:721
+#: session_api.xml:745
 #, no-c-format
 msgid ""
 "You may delete objects in any order you like, without risk of foreign key "
@@ -1610,13 +1610,13 @@ msgstr ""
 "parent, mais oubliez d'effacer les enfants."
 
 #. Tag: title
-#: session_api.xml:732
+#: session_api.xml:756
 #, no-c-format
 msgid "Replicating object between two different datastores"
 msgstr "Réplication d'objets entre deux entrepôts de données"
 
 #. Tag: para
-#: session_api.xml:734
+#: session_api.xml:758
 #, no-c-format
 msgid ""
 "It is occasionally useful to be able to take a graph of persistent instances "
@@ -1628,7 +1628,7 @@ msgstr ""
 "regénérer les valeurs des identifiants."
 
 #. Tag: programlisting
-#: session_api.xml:740
+#: session_api.xml:764
 #, no-c-format
 msgid ""
 "<![CDATA[//retrieve a cat from one database\n"
@@ -1647,7 +1647,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:742
+#: session_api.xml:766
 #, no-c-format
 msgid ""
 "The <literal>ReplicationMode</literal> determines how <literal>replicate()</"
@@ -1658,7 +1658,7 @@ msgstr ""
 "données."
 
 #. Tag: para
-#: session_api.xml:749
+#: session_api.xml:773
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.IGNORE</literal> - ignore the object when there is "
@@ -1668,7 +1668,7 @@ msgstr ""
 "ligne existante dans la base de données avec le même identifiant"
 
 #. Tag: para
-#: session_api.xml:755
+#: session_api.xml:779
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.OVERWRITE</literal> - overwrite any existing "
@@ -1678,7 +1678,7 @@ msgstr ""
 "existante dans la base de données avec le même identifiant"
 
 #. Tag: para
-#: session_api.xml:761
+#: session_api.xml:785
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.EXCEPTION</literal> - throw an exception if there "
@@ -1688,7 +1688,7 @@ msgstr ""
 "ligne dans la base de données avec le même identifiant"
 
 #. Tag: para
-#: session_api.xml:767
+#: session_api.xml:791
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.LATEST_VERSION</literal> - overwrite the row if its "
@@ -1700,7 +1700,7 @@ msgstr ""
 "ignore l'objet sinon"
 
 #. Tag: para
-#: session_api.xml:775
+#: session_api.xml:799
 #, no-c-format
 msgid ""
 "Usecases for this feature include reconciling data entered into different "
@@ -1715,13 +1715,13 @@ msgstr ""
 "ACID, et plus."
 
 #. Tag: title
-#: session_api.xml:784
+#: session_api.xml:808
 #, no-c-format
 msgid "Flushing the Session"
 msgstr "Flush de la session"
 
 #. Tag: para
-#: session_api.xml:786
+#: session_api.xml:810
 #, no-c-format
 msgid ""
 "From time to time the <literal>Session</literal> will execute the SQL "
@@ -1735,32 +1735,32 @@ msgstr ""
 "par défaut aux points suivants :"
 
 #. Tag: para
-#: session_api.xml:795
+#: session_api.xml:819
 #, no-c-format
 msgid "before some query executions"
 msgstr "lors de certaines exécutions de requête"
 
 #. Tag: para
-#: session_api.xml:800
+#: session_api.xml:824
 #, no-c-format
 msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
 msgstr ""
 "lors d'un appel à <literal>org.hibernate.Transaction.commit()</literal>"
 
 #. Tag: para
-#: session_api.xml:805
+#: session_api.xml:829
 #, no-c-format
 msgid "from <literal>Session.flush()</literal>"
 msgstr "lors d'un appel à <literal>Session.flush()</literal>"
 
 #. Tag: para
-#: session_api.xml:811
+#: session_api.xml:835
 #, no-c-format
 msgid "The SQL statements are issued in the following order"
 msgstr "Les expressions SQL sont effectuées dans l'ordre suivant :"
 
 #. Tag: para
-#: session_api.xml:817
+#: session_api.xml:841
 #, no-c-format
 msgid ""
 "all entity insertions, in the same order the corresponding objects were "
@@ -1770,31 +1770,31 @@ msgstr ""
 "correspondants sauvegardés par l'appel à <literal>Session.save()</literal>"
 
 #. Tag: para
-#: session_api.xml:823
+#: session_api.xml:847
 #, no-c-format
 msgid "all entity updates"
 msgstr "mise à jours des entités"
 
 #. Tag: para
-#: session_api.xml:828
+#: session_api.xml:852
 #, no-c-format
 msgid "all collection deletions"
 msgstr "suppression des collections"
 
 #. Tag: para
-#: session_api.xml:833
+#: session_api.xml:857
 #, no-c-format
 msgid "all collection element deletions, updates and insertions"
 msgstr "suppression, mise à jour et insertion des éléments des collections"
 
 #. Tag: para
-#: session_api.xml:838
+#: session_api.xml:862
 #, no-c-format
 msgid "all collection insertions"
 msgstr "insertion des collections"
 
 #. Tag: para
-#: session_api.xml:843
+#: session_api.xml:867
 #, no-c-format
 msgid ""
 "all entity deletions, in the same order the corresponding objects were "
@@ -1805,7 +1805,7 @@ msgstr ""
 "</literal>"
 
 #. Tag: para
-#: session_api.xml:850
+#: session_api.xml:874
 #, no-c-format
 msgid ""
 "(An exception is that objects using <literal>native</literal> ID generation "
@@ -1815,7 +1815,7 @@ msgstr ""
 "literal> d'identifiants sont insérés lorsqu'ils sont sauvegardés.)"
 
 #. Tag: para
-#: session_api.xml:855
+#: session_api.xml:879
 #, no-c-format
 msgid ""
 "Except when you explicity <literal>flush()</literal>, there are absolutely "
@@ -1833,7 +1833,7 @@ msgstr ""
 "jamais de données périmées, ni des données fausses."
 
 #. Tag: para
-#: session_api.xml:863
+#: session_api.xml:887
 #, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
@@ -1856,7 +1856,7 @@ msgstr ""
 "moment (voir <xref linkend=\"transactions-optimistic-longsession\"/>)."
 
 #. Tag: programlisting
-#: session_api.xml:873
+#: session_api.xml:897
 #, no-c-format
 msgid ""
 "<![CDATA[sess = sf.openSession();\n"
@@ -1876,7 +1876,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:875
+#: session_api.xml:899
 #, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
@@ -1890,13 +1890,13 @@ msgstr ""
 "d'Hibernate, nous le traitons dans <xref linkend=\"transactions\"/>."
 
 #. Tag: title
-#: session_api.xml:884
+#: session_api.xml:908
 #, no-c-format
 msgid "Transitive persistence"
 msgstr "Persistance transitive"
 
 #. Tag: para
-#: session_api.xml:886
+#: session_api.xml:910
 #, no-c-format
 msgid ""
 "It is quite cumbersome to save, delete, or reattach individual objects, "
@@ -1908,7 +1908,7 @@ msgstr ""
 "est une relation parent/enfant. Considérez l'exemple suivant :"
 
 #. Tag: para
-#: session_api.xml:892
+#: session_api.xml:916
 #, no-c-format
 msgid ""
 "If the children in a parent/child relationship would be value typed (e.g. a "
@@ -1932,7 +1932,7 @@ msgstr ""
 "données."
 
 #. Tag: para
-#: session_api.xml:903
+#: session_api.xml:927
 #, no-c-format
 msgid ""
 "Now consider the same scenario with parent and child objects being entities, "
@@ -1953,7 +1953,7 @@ msgstr ""
 "accessibilité</emphasis> par défaut."
 
 #. Tag: para
-#: session_api.xml:912
+#: session_api.xml:936
 #, no-c-format
 msgid ""
 "For each basic operation of the Hibernate session - including "
@@ -1973,26 +1973,26 @@ msgstr ""
 "l'indiquer dans le document de mapping. Par exemple :"
 
 #. Tag: programlisting
-#: session_api.xml:921
+#: session_api.xml:945
 #, no-c-format
 msgid "<![CDATA[<one-to-one name=\"person\" cascade=\"persist\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:923
+#: session_api.xml:947
 #, no-c-format
 msgid "Cascade styles my be combined:"
 msgstr "Les styles de cascade peuvent être combinés :"
 
 #. Tag: programlisting
-#: session_api.xml:927
+#: session_api.xml:951
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one name=\"person\" cascade=\"persist,delete,lock\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:929
+#: session_api.xml:953
 #, no-c-format
 msgid ""
 "You may even use <literal>cascade=\"all\"</literal> to specify that "
@@ -2006,7 +2006,7 @@ msgstr ""
 "literal> spécifie qu'aucune opération ne sera cascadée."
 
 #. Tag: para
-#: session_api.xml:935
+#: session_api.xml:959
 #, no-c-format
 msgid ""
 "A special cascade style, <literal>delete-orphan</literal>, applies only to "
@@ -2020,13 +2020,13 @@ msgstr ""
 "qui est supprimé de l'association."
 
 #. Tag: para
-#: session_api.xml:942
+#: session_api.xml:966
 #, no-c-format
 msgid "Recommendations:"
 msgstr "Recommandations :"
 
 #. Tag: para
-#: session_api.xml:948
+#: session_api.xml:972
 #, no-c-format
 msgid ""
 "It doesn't usually make sense to enable cascade on a <literal>&lt;many-to-"
@@ -2041,7 +2041,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: session_api.xml:956
+#: session_api.xml:980
 #, no-c-format
 msgid ""
 "If the child object's lifespan is bounded by the lifespan of the parent "
@@ -2053,7 +2053,7 @@ msgstr ""
 "spécifiant <literal>cascade=\"all,delete-orphan\"</literal>."
 
 #. Tag: para
-#: session_api.xml:963
+#: session_api.xml:987
 #, no-c-format
 msgid ""
 "Otherwise, you might not need cascade at all. But if you think that you will "
@@ -2068,7 +2068,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: session_api.xml:971
+#: session_api.xml:995
 #, no-c-format
 msgid ""
 "Mapping an association (either a single valued association, or a collection) "
@@ -2083,7 +2083,7 @@ msgstr ""
 "jour/suppression de l'enfant ou des enfants."
 
 #. Tag: para
-#: session_api.xml:977
+#: session_api.xml:1001
 #, no-c-format
 msgid ""
 "Futhermore, a mere reference to a child from a persistent parent will result "
@@ -2103,7 +2103,7 @@ msgstr ""
 "opérations de cascade pour une relation parent/enfant est la suivante :"
 
 #. Tag: para
-#: session_api.xml:988
+#: session_api.xml:1012
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>persist()</literal>, all children are "
@@ -2113,7 +2113,7 @@ msgstr ""
 "passés à <literal>persist()</literal>"
 
 #. Tag: para
-#: session_api.xml:994
+#: session_api.xml:1018
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>merge()</literal>, all children are passed "
@@ -2123,7 +2123,7 @@ msgstr ""
 "passés à <literal>merge()</literal>"
 
 #. Tag: para
-#: session_api.xml:1000
+#: session_api.xml:1024
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>save()</literal>, <literal>update()</"
@@ -2135,7 +2135,7 @@ msgstr ""
 "à <literal>saveOrUpdate()</literal>"
 
 #. Tag: para
-#: session_api.xml:1006
+#: session_api.xml:1030
 #, no-c-format
 msgid ""
 "If a transient or detached child becomes referenced by a persistent parent, "
@@ -2145,7 +2145,7 @@ msgstr ""
 "il est passé à <literal>saveOrUpdate()</literal>"
 
 #. Tag: para
-#: session_api.xml:1012
+#: session_api.xml:1036
 #, no-c-format
 msgid ""
 "If a parent is deleted, all children are passed to <literal>delete()</"
@@ -2155,7 +2155,7 @@ msgstr ""
 "literal>"
 
 #. Tag: para
-#: session_api.xml:1017
+#: session_api.xml:1041
 #, no-c-format
 msgid ""
 "If a child is dereferenced by a persistent parent, <emphasis>nothing special "
@@ -2169,7 +2169,7 @@ msgstr ""
 "literal> soit paramétré, au quel cas l'enfant \"orphelin\" est supprimé."
 
 #. Tag: para
-#: session_api.xml:1026
+#: session_api.xml:1050
 #, no-c-format
 msgid ""
 "Finally, note that cascading of operations can be applied to an object graph "
@@ -2188,13 +2188,13 @@ msgstr ""
 "associées atteignables lors du flush de la <literal>Session</literal>."
 
 #. Tag: title
-#: session_api.xml:1038
+#: session_api.xml:1062
 #, no-c-format
 msgid "Using metadata"
 msgstr "Utilisation des méta-données"
 
 #. Tag: para
-#: session_api.xml:1040
+#: session_api.xml:1064
 #, no-c-format
 msgid ""
 "Hibernate requires a very rich meta-level model of all entity and value "
@@ -2214,7 +2214,7 @@ msgstr ""
 "associées)."
 
 #. Tag: para
-#: session_api.xml:1047
+#: session_api.xml:1071
 #, no-c-format
 msgid ""
 "Hibernate exposes metadata via the <literal>ClassMetadata</literal> and "
@@ -2228,7 +2228,7 @@ msgstr ""
 "peuvent être obtenues à partir de la <literal>SessionFactory</literal>."
 
 #. Tag: programlisting
-#: session_api.xml:1054
+#: session_api.xml:1078
 #, no-c-format
 msgid ""
 "<![CDATA[Cat fritz = ......;\n"

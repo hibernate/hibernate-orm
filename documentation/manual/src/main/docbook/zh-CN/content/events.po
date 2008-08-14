@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: events.xml:5
+#: events.xml:29
 #, no-c-format
 msgid "Interceptors and events"
 msgstr "拦截器与事件(Interceptors and events)"
 
 #. Tag: para
-#: events.xml:7
+#: events.xml:31
 #, no-c-format
 msgid ""
 "It is often useful for the application to react to certain events that occur "
@@ -28,13 +28,13 @@ msgstr ""
 "用的功能 以及允许对Hibernate功能进行扩展。"
 
 #. Tag: title
-#: events.xml:14
+#: events.xml:38
 #, no-c-format
 msgid "Interceptors"
 msgstr "拦截器(Interceptors)"
 
 #. Tag: para
-#: events.xml:16
+#: events.xml:40
 #, no-c-format
 msgid ""
 "The <literal>Interceptor</literal> interface provides callbacks from the "
@@ -57,7 +57,7 @@ msgstr ""
 "性。"
 
 #. Tag: para
-#: events.xml:27
+#: events.xml:51
 #, no-c-format
 msgid ""
 "You may either implement <literal>Interceptor</literal> directly or (better) "
@@ -67,7 +67,7 @@ msgstr ""
 "<literal>EmptyInterceptor</literal>。"
 
 #. Tag: programlisting
-#: events.xml:32
+#: events.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[package org.hibernate.test;\n"
@@ -156,7 +156,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:34
+#: events.xml:58
 #, no-c-format
 msgid ""
 "Interceptors come in two flavors: <literal>Session</literal>-scoped and "
@@ -166,7 +166,7 @@ msgstr ""
 "<literal>SessionFactory</literal>范围内的。"
 
 #. Tag: para
-#: events.xml:39
+#: events.xml:63
 #, no-c-format
 msgid ""
 "A <literal>Session</literal>-scoped interceptor is specified when a session "
@@ -178,13 +178,13 @@ msgstr ""
 "范围内的拦截器。"
 
 #. Tag: programlisting
-#: events.xml:45
+#: events.xml:69
 #, no-c-format
 msgid "<![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]>"
 msgstr ""
 
 #. Tag: para
-#: events.xml:47
+#: events.xml:71
 #, no-c-format
 msgid ""
 "A <literal>SessionFactory</literal>-scoped interceptor is registered with "
@@ -204,20 +204,20 @@ msgstr ""
 "session可能并发使用这个拦截器，要因此小心不要保存与session相关的状态。"
 
 #. Tag: programlisting
-#: events.xml:56
+#: events.xml:80
 #, no-c-format
 msgid ""
 "<![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]>"
 msgstr ""
 
 #. Tag: title
-#: events.xml:61
+#: events.xml:85
 #, no-c-format
 msgid "Event system"
 msgstr "事件系统(Event system)"
 
 #. Tag: para
-#: events.xml:63
+#: events.xml:87
 #, no-c-format
 msgid ""
 "If you have to react to particular events in your persistence layer, you may "
@@ -228,7 +228,7 @@ msgstr ""
 "统可以用来替代拦截器，也可以作为拦截器的补充来使用。"
 
 #. Tag: para
-#: events.xml:69
+#: events.xml:93
 #, no-c-format
 msgid ""
 "Essentially all of the methods of the <literal>Session</literal> interface "
@@ -258,7 +258,7 @@ msgstr ""
 "<literal>Session</literal>的<literal>load()</literal>方法的请求。"
 
 #. Tag: para
-#: events.xml:84
+#: events.xml:108
 #, no-c-format
 msgid ""
 "The listeners should be considered effectively singletons; meaning, they are "
@@ -269,7 +269,7 @@ msgstr ""
 "一个监听器实例，因此监听器 不应该保存任何状态（也就是不应该使用成员变量）。"
 
 #. Tag: para
-#: events.xml:89
+#: events.xml:113
 #, no-c-format
 msgid ""
 "A custom listener should implement the appropriate interface for the event "
@@ -289,7 +289,7 @@ msgstr ""
 "定制的加载事件(load event)的监听器："
 
 #. Tag: programlisting
-#: events.xml:99
+#: events.xml:123
 #, no-c-format
 msgid ""
 "<![CDATA[public class MyLoadListener implements LoadEventListener {\n"
@@ -306,7 +306,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:101
+#: events.xml:125
 #, no-c-format
 msgid ""
 "You also need a configuration entry telling Hibernate to use the listener in "
@@ -316,7 +316,7 @@ msgstr ""
 "器。"
 
 #. Tag: programlisting
-#: events.xml:106
+#: events.xml:130
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-configuration>\n"
@@ -332,13 +332,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:108
+#: events.xml:132
 #, no-c-format
 msgid "Instead, you may register it programmatically:"
 msgstr "看看用另一种方式，通过编程的方式来注册它。"
 
 #. Tag: programlisting
-#: events.xml:112
+#: events.xml:136
 #, no-c-format
 msgid ""
 "<![CDATA[Configuration cfg = new Configuration();\n"
@@ -348,7 +348,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:114
+#: events.xml:138
 #, no-c-format
 msgid ""
 "Listeners registered declaratively cannot share instances. If the same class "
@@ -363,7 +363,7 @@ msgstr ""
 "程的方式来进行注册。"
 
 #. Tag: para
-#: events.xml:122
+#: events.xml:146
 #, no-c-format
 msgid ""
 "Why implement an interface and define the specific type during "
@@ -377,13 +377,13 @@ msgstr ""
 "听的事件，可以让启用或者禁用对某个事件的监听的配置工作简单些。"
 
 #. Tag: title
-#: events.xml:132
+#: events.xml:156
 #, no-c-format
 msgid "Hibernate declarative security"
 msgstr "Hibernate的声明式安全机制"
 
 #. Tag: para
-#: events.xml:133
+#: events.xml:157
 #, no-c-format
 msgid ""
 "Usually, declarative security in Hibernate applications is managed in a "
@@ -396,7 +396,7 @@ msgstr ""
 "功能是一个建立在事件框架之上的可选的功能。"
 
 #. Tag: para
-#: events.xml:139
+#: events.xml:163
 #, no-c-format
 msgid ""
 "First, you must configure the appropriate event listeners, to enable the use "
@@ -406,7 +406,7 @@ msgstr ""
 "的功能。"
 
 #. Tag: programlisting
-#: events.xml:144
+#: events.xml:168
 #, no-c-format
 msgid ""
 "<![CDATA[<listener type=\"pre-delete\" class=\"org.hibernate.secure."
@@ -420,7 +420,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:146
+#: events.xml:170
 #, no-c-format
 msgid ""
 "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is "
@@ -433,7 +433,7 @@ msgstr ""
 "event&gt;</literal>的简写，对每一个事件类型都必须严格的有一个监听器与之对应。"
 
 #. Tag: para
-#: events.xml:152
+#: events.xml:176
 #, no-c-format
 msgid ""
 "Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to "
@@ -442,7 +442,7 @@ msgstr ""
 "接下来，仍然在<literal>hibernate.cfg.xml</literal>文件中，绑定角色的权限："
 
 #. Tag: programlisting
-#: events.xml:156
+#: events.xml:180
 #, no-c-format
 msgid ""
 "<![CDATA[<grant role=\"admin\" entity-name=\"User\" actions=\"insert,update,"
@@ -451,7 +451,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:158
+#: events.xml:182
 #, no-c-format
 msgid "The role names are the roles understood by your JACC provider."
 msgstr "这些角色的名字就是你的JACC provider所定义的角色的名字。"

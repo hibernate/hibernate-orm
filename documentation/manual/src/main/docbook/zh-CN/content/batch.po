@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: batch.xml:5
+#: batch.xml:29
 #, no-c-format
 msgid "Batch processing"
 msgstr "批量处理（Batch processing）"
 
 #. Tag: para
-#: batch.xml:7
+#: batch.xml:31
 #, no-c-format
 msgid ""
 "A naive approach to inserting 100 000 rows in the database using Hibernate "
@@ -26,7 +26,7 @@ msgstr ""
 "使用Hibernate将 100 000 条记录插入到数据库的一个很自然的做法可能是这样的"
 
 #. Tag: programlisting
-#: batch.xml:12
+#: batch.xml:36
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -40,7 +40,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:14
+#: batch.xml:38
 #, no-c-format
 msgid ""
 "This would fall over with an <literal>OutOfMemoryException</literal> "
@@ -54,7 +54,7 @@ msgstr ""
 "故。"
 
 #. Tag: para
-#: batch.xml:20
+#: batch.xml:44
 #, no-c-format
 msgid ""
 "In this chapter we'll show you how to avoid this problem. First, however, if "
@@ -67,13 +67,13 @@ msgstr ""
 "数量（batch size）参数设置到一个合适值 （比如，10-50之间）："
 
 #. Tag: programlisting
-#: batch.xml:27
+#: batch.xml:51
 #, no-c-format
 msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:29
+#: batch.xml:53
 #, no-c-format
 msgid ""
 "Note that Hibernate disables insert batching at the JDBC level transparently "
@@ -83,7 +83,7 @@ msgstr ""
 "明的关闭插入语句的批量执行。"
 
 #. Tag: para
-#: batch.xml:34
+#: batch.xml:58
 #, no-c-format
 msgid ""
 "You also might like to do this kind of work in a process where interaction "
@@ -91,13 +91,13 @@ msgid ""
 msgstr "你也可能想在执行批量处理时关闭二级缓存："
 
 #. Tag: programlisting
-#: batch.xml:39
+#: batch.xml:63
 #, no-c-format
 msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:41
+#: batch.xml:65
 #, no-c-format
 msgid ""
 "However, this is not absolutely necessary, since we can explicitly set the "
@@ -108,13 +108,13 @@ msgstr ""
 "闭与二级缓存的交互。"
 
 #. Tag: title
-#: batch.xml:47
+#: batch.xml:71
 #, no-c-format
 msgid "Batch inserts"
 msgstr "批量插入（Batch inserts）"
 
 #. Tag: para
-#: batch.xml:49
+#: batch.xml:73
 #, no-c-format
 msgid ""
 "When making new objects persistent, you must <literal>flush()</literal> and "
@@ -125,7 +125,7 @@ msgstr ""
 "稍后调用 <literal>clear()</literal> 来控制第一级缓存的大小。"
 
 #. Tag: programlisting
-#: batch.xml:55
+#: batch.xml:79
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -146,13 +146,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: batch.xml:60
+#: batch.xml:84
 #, no-c-format
 msgid "Batch updates"
 msgstr "批量更新（Batch updates）"
 
 #. Tag: para
-#: batch.xml:62
+#: batch.xml:86
 #, no-c-format
 msgid ""
 "For retrieving and updating data the same ideas apply. In addition, you need "
@@ -163,7 +163,7 @@ msgstr ""
 "使用 <literal>scroll()</literal> 方法以便充分利用服务器端游标所带来的好处。"
 
 #. Tag: programlisting
-#: batch.xml:68
+#: batch.xml:92
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -188,13 +188,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: batch.xml:73
+#: batch.xml:97
 #, no-c-format
 msgid "The StatelessSession interface"
 msgstr "StatelessSession (无状态session)接口"
 
 #. Tag: para
-#: batch.xml:74
+#: batch.xml:98
 #, no-c-format
 msgid ""
 "Alternatively, Hibernate provides a command-oriented API that may be used "
@@ -221,7 +221,7 @@ msgstr ""
 "session是低层的抽象，和低层JDBC相当接近。"
 
 #. Tag: programlisting
-#: batch.xml:89
+#: batch.xml:113
 #, no-c-format
 msgid ""
 "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
@@ -240,7 +240,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:91
+#: batch.xml:115
 #, no-c-format
 msgid ""
 "Note that in this code example, the <literal>Customer</literal> instances "
@@ -251,7 +251,7 @@ msgstr ""
 "(detach)。它们与任何持久化上下文都没有关系。"
 
 #. Tag: para
-#: batch.xml:97
+#: batch.xml:121
 #, no-c-format
 msgid ""
 "The <literal>insert(), update()</literal> and <literal>delete()</literal> "
@@ -270,13 +270,13 @@ msgstr ""
 "saveOrUpdate()</literal> 和<literal>delete()</literal> 操作有很大的不同。"
 
 #. Tag: title
-#: batch.xml:110
+#: batch.xml:134
 #, no-c-format
 msgid "DML-style operations"
 msgstr "DML(数据操作语言)风格的操作(DML-style operations)"
 
 #. Tag: para
-#: batch.xml:112
+#: batch.xml:136
 #, fuzzy, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
@@ -286,8 +286,8 @@ msgid ""
 "<literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</"
 "literal>) data directly in the database will not affect in-memory state. "
 "However, Hibernate provides methods for bulk SQL-style DML statement "
-"execution which are performed through the Hibernate Query Language (<xref "
-"linkend=\"queryhql\"/>HQL)."
+"execution which are performed through the Hibernate Query Language (<link "
+"linkend=\"queryhql\">HQL</link>)."
 msgstr ""
 "hence manipulating (using the SQL <literal>Data Manipulation Language</"
 "literal> (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</"
@@ -304,7 +304,7 @@ msgstr ""
 "的方法。"
 
 #. Tag: para
-#: batch.xml:122
+#: batch.xml:146
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
@@ -316,13 +316,13 @@ msgstr ""
 "literal> 有几点说明："
 
 #. Tag: para
-#: batch.xml:130
+#: batch.xml:154
 #, no-c-format
 msgid "In the from-clause, the FROM keyword is optional"
 msgstr "在FROM子句（from-clause）中，FROM关键字是可选的"
 
 #. Tag: para
-#: batch.xml:135
+#: batch.xml:159
 #, no-c-format
 msgid ""
 "There can only be a single entity named in the from-clause; it can "
@@ -335,10 +335,10 @@ msgstr ""
 "性引用都是非法的。"
 
 #. Tag: para
-#: batch.xml:143
+#: batch.xml:167
 #, fuzzy, no-c-format
 msgid ""
-"No <xref linkend=\"queryhql-joins-forms\"/>joins (either implicit or "
+"No <link linkend=\"queryhql-joins-forms\">joins</link> (either implicit or "
 "explicit) can be specified in a bulk HQL query. Sub-queries may be used in "
 "the where-clause; the subqueries, themselves, may contain joins."
 msgstr ""
@@ -347,13 +347,13 @@ msgstr ""
 "句中使用子查询，子查询本身可以包含join。"
 
 #. Tag: para
-#: batch.xml:150
+#: batch.xml:174
 #, no-c-format
 msgid "The where-clause is also optional."
 msgstr "整个WHERE子句是可选的。"
 
 #. Tag: para
-#: batch.xml:156
+#: batch.xml:180
 #, no-c-format
 msgid ""
 "As an example, to execute an HQL <literal>UPDATE</literal>, use the "
@@ -366,7 +366,7 @@ msgstr ""
 "<literal>PreparedStatement.executeUpdate()</literal>):"
 
 #. Tag: programlisting
-#: batch.xml:162
+#: batch.xml:186
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -385,12 +385,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:164
+#: batch.xml:188
 #, fuzzy, no-c-format
 msgid ""
-"HQL <literal>UPDATE</literal> statements, by default do not effect the <xref "
-"linkend=\"mapping-declaration-version\"/>version or the <xref linkend="
-"\"mapping-declaration-timestamp\"/>timestamp property values for the "
+"HQL <literal>UPDATE</literal> statements, by default do not effect the <link "
+"linkend=\"mapping-declaration-version\">version</link> or the <link linkend="
+"\"mapping-declaration-timestamp\">timestamp</link> property values for the "
 "affected entities; this is in keeping with the EJB3 specification. However, "
 "you can force Hibernate to properly reset the <literal>version</literal> or "
 "<literal>timestamp</literal> property values through the use of a "
@@ -407,7 +407,7 @@ msgstr ""
 "现的。"
 
 #. Tag: programlisting
-#: batch.xml:174
+#: batch.xml:198
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -423,7 +423,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:176
+#: batch.xml:200
 #, no-c-format
 msgid ""
 "Note that custom version types (<literal>org.hibernate.usertype."
@@ -434,7 +434,7 @@ msgstr ""
 "literal>)不允许和<literal>update versioned</literal>语句联用。"
 
 #. Tag: para
-#: batch.xml:181
+#: batch.xml:205
 #, no-c-format
 msgid ""
 "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
@@ -444,7 +444,7 @@ msgstr ""
 "()</literal> 方法:"
 
 #. Tag: programlisting
-#: batch.xml:186
+#: batch.xml:210
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -460,7 +460,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:188
+#: batch.xml:212
 #, no-c-format
 msgid ""
 "The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
@@ -483,7 +483,7 @@ msgstr ""
 "有继承关系的joined-subclass映射方式的子类的表。"
 
 #. Tag: para
-#: batch.xml:199
+#: batch.xml:223
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>INSERT</literal> statements is: "
@@ -494,7 +494,7 @@ msgstr ""
 "properties_list select_statement</literal>. 要注意的是:"
 
 #. Tag: para
-#: batch.xml:207
+#: batch.xml:231
 #, no-c-format
 msgid ""
 "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
@@ -503,7 +503,7 @@ msgstr ""
 "只支持INSERT INTO ... SELECT ...形式,不支持INSERT INTO ... VALUES ...形式."
 
 #. Tag: para
-#: batch.xml:210
+#: batch.xml:234
 #, no-c-format
 msgid ""
 "The properties_list is analogous to the <literal>column speficiation</"
@@ -519,7 +519,7 @@ msgstr ""
 "的属性无意义。换句话说，<literal>INSERT</literal>天生不支持多态。"
 
 #. Tag: para
-#: batch.xml:220
+#: batch.xml:244
 #, no-c-format
 msgid ""
 "select_statement can be any valid HQL select query, with the caveat that the "
@@ -542,7 +542,7 @@ msgstr ""
 "可能不加区分或者可以处理这种转换。"
 
 #. Tag: para
-#: batch.xml:232
+#: batch.xml:256
 #, no-c-format
 msgid ""
 "For the id property, the insert statement gives you two options. You can "
@@ -570,7 +570,7 @@ msgstr ""
 "它没有得到其值的途径。"
 
 #. Tag: para
-#: batch.xml:247
+#: batch.xml:271
 #, no-c-format
 msgid ""
 "For properties mapped as either <literal>version</literal> or "
@@ -587,13 +587,13 @@ msgstr ""
 "(种子值)</literal>）。"
 
 #. Tag: para
-#: batch.xml:257
+#: batch.xml:281
 #, no-c-format
 msgid "An example HQL <literal>INSERT</literal> statement execution:"
 msgstr "执行HQL <literal>INSERT</literal>语句的例子如下："
 
 #. Tag: programlisting
-#: batch.xml:261
+#: batch.xml:285
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"

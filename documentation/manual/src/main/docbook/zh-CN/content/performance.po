@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: performance.xml:5
+#: performance.xml:29
 #, no-c-format
 msgid "Improving performance"
 msgstr "提升性能"
 
 #. Tag: title
-#: performance.xml:8
+#: performance.xml:32
 #, no-c-format
 msgid "Fetching strategies"
 msgstr "抓取策略(Fetching strategies)"
 
 #. Tag: para
-#: performance.xml:10
+#: performance.xml:34
 #, no-c-format
 msgid ""
 "A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use "
@@ -37,13 +37,13 @@ msgstr ""
 "件查询（Criteria Query）</literal>中重载声明。"
 
 #. Tag: para
-#: performance.xml:17
+#: performance.xml:41
 #, no-c-format
 msgid "Hibernate3 defines the following fetching strategies:"
 msgstr "Hibernate3 定义了如下几种抓取策略："
 
 #. Tag: para
-#: performance.xml:23
+#: performance.xml:47
 #, no-c-format
 msgid ""
 "<emphasis>Join fetching</emphasis> - Hibernate retrieves the associated "
@@ -55,7 +55,7 @@ msgstr ""
 "得对象的关联实例或者关联集合。"
 
 #. Tag: para
-#: performance.xml:30
+#: performance.xml:54
 #, no-c-format
 msgid ""
 "<emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal> is "
@@ -69,7 +69,7 @@ msgstr ""
 "真正访问关联关系的时候，才会执行第二条select语句。"
 
 #. Tag: para
-#: performance.xml:39
+#: performance.xml:63
 #, no-c-format
 msgid ""
 "<emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal> "
@@ -85,7 +85,7 @@ msgstr ""
 "句。"
 
 #. Tag: para
-#: performance.xml:48
+#: performance.xml:72
 #, no-c-format
 msgid ""
 "<emphasis>Batch fetching</emphasis> - an optimization strategy for select "
@@ -98,13 +98,13 @@ msgstr ""
 "批对象实例或集合。"
 
 #. Tag: para
-#: performance.xml:57
+#: performance.xml:81
 #, no-c-format
 msgid "Hibernate also distinguishes between:"
 msgstr "Hibernate会区分下列各种情况："
 
 #. Tag: para
-#: performance.xml:63
+#: performance.xml:87
 #, no-c-format
 msgid ""
 "<emphasis>Immediate fetching</emphasis> - an association, collection or "
@@ -114,7 +114,7 @@ msgstr ""
 "合或属性被立即抓取。"
 
 #. Tag: para
-#: performance.xml:69
+#: performance.xml:93
 #, no-c-format
 msgid ""
 "<emphasis>Lazy collection fetching</emphasis> - a collection is fetched when "
@@ -125,7 +125,7 @@ msgstr ""
 "合进行了一次操作时，集合才被抓取。（对集合而言这是默认行为。）"
 
 #. Tag: para
-#: performance.xml:76
+#: performance.xml:100
 #, no-c-format
 msgid ""
 "<emphasis>\"Extra-lazy\" collection fetching</emphasis> - individual "
@@ -138,7 +138,7 @@ msgstr ""
 "要，Hibernate不会试图去把整个集合都抓取到内存里来（适用于非常大的集合）。"
 
 #. Tag: para
-#: performance.xml:84
+#: performance.xml:108
 #, no-c-format
 msgid ""
 "<emphasis>Proxy fetching</emphasis> - a single-valued association is fetched "
@@ -149,7 +149,7 @@ msgstr ""
 "个方法被调用，而非对其关键字进行get操作时才抓取。"
 
 #. Tag: para
-#: performance.xml:91
+#: performance.xml:115
 #, no-c-format
 msgid ""
 "<emphasis>\"No-proxy\" fetching</emphasis> - a single-valued association is "
@@ -166,7 +166,7 @@ msgstr ""
 "到。"
 
 #. Tag: para
-#: performance.xml:101
+#: performance.xml:125
 #, no-c-format
 msgid ""
 "<emphasis>Lazy attribute fetching</emphasis> - an attribute or single valued "
@@ -178,7 +178,7 @@ msgstr ""
 "方法很少是必要的。"
 
 #. Tag: para
-#: performance.xml:110
+#: performance.xml:134
 #, no-c-format
 msgid ""
 "We have two orthogonal notions here: <emphasis>when</emphasis> is the "
@@ -193,13 +193,13 @@ msgstr ""
 "定类的某个脱管的实例，知道有哪些数据是可以使用的。"
 
 #. Tag: title
-#: performance.xml:119
+#: performance.xml:143
 #, no-c-format
 msgid "Working with lazy associations"
 msgstr "操作延迟加载的关联"
 
 #. Tag: para
-#: performance.xml:121
+#: performance.xml:145
 #, no-c-format
 msgid ""
 "By default, Hibernate3 uses lazy select fetching for collections and lazy "
@@ -210,7 +210,7 @@ msgstr ""
 "抓取。对几乎是所有的应用而言，其绝大多数的关联，这种策略都是有效的。"
 
 #. Tag: para
-#: performance.xml:127
+#: performance.xml:151
 #, no-c-format
 msgid ""
 "<emphasis>Note:</emphasis> if you set <literal>hibernate."
@@ -223,7 +223,7 @@ msgstr ""
 "（这种优化也可能会在更细化的级别打开）。"
 
 #. Tag: para
-#: performance.xml:134
+#: performance.xml:158
 #, no-c-format
 msgid ""
 "However, lazy fetching poses one problem that you must be aware of. Access "
@@ -234,7 +234,7 @@ msgstr ""
 "外调用延迟集合会导致一次意外。比如："
 
 #. Tag: programlisting
-#: performance.xml:140
+#: performance.xml:164
 #, no-c-format
 msgid ""
 "<![CDATA[s = sessions.openSession();\n"
@@ -251,7 +251,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:142
+#: performance.xml:166
 #, no-c-format
 msgid ""
 "Since the permissions collection was not initialized when the "
@@ -266,7 +266,7 @@ msgstr ""
 "前。"
 
 #. Tag: para
-#: performance.xml:150
+#: performance.xml:174
 #, no-c-format
 msgid ""
 "Alternatively, we could use a non-lazy collection or association, by "
@@ -282,7 +282,7 @@ msgstr ""
 "入整个数据库到内存中！"
 
 #. Tag: para
-#: performance.xml:159
+#: performance.xml:183
 #, no-c-format
 msgid ""
 "On the other hand, we often want to choose join fetching (which is non-lazy "
@@ -297,13 +297,13 @@ msgstr ""
 "关联相一致的。"
 
 #. Tag: title
-#: performance.xml:170
+#: performance.xml:194
 #, no-c-format
 msgid "Tuning fetch strategies"
 msgstr "调整抓取策略（Tuning fetch strategies）"
 
 #. Tag: para
-#: performance.xml:172
+#: performance.xml:196
 #, no-c-format
 msgid ""
 "Select fetching (the default) is extremely vulnerable to N+1 selects "
@@ -313,7 +313,7 @@ msgstr ""
 "中定义使用连接抓取："
 
 #. Tag: programlisting
-#: performance.xml:177
+#: performance.xml:201
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"permissions\" \n"
@@ -324,13 +324,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: performance.xml:179
+#: performance.xml:203
 #, no-c-format
 msgid "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:181
+#: performance.xml:205
 #, no-c-format
 msgid ""
 "The <literal>fetch</literal> strategy defined in the mapping document "
@@ -339,31 +339,31 @@ msgstr ""
 "在映射文档中定义的<literal>抓取</literal>策略将会对以下列表条目产生影响："
 
 #. Tag: para
-#: performance.xml:187
+#: performance.xml:211
 #, no-c-format
 msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
 msgstr "通过<literal>get()</literal>或<literal>load()</literal>方法取得数据。"
 
 #. Tag: para
-#: performance.xml:192
+#: performance.xml:216
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
 msgstr "只有在关联之间进行导航时，才会隐式的取得数据。"
 
 #. Tag: para
-#: performance.xml:197
+#: performance.xml:221
 #, no-c-format
 msgid "<literal>Criteria</literal> queries"
 msgstr "条件查询"
 
 #. Tag: para
-#: performance.xml:202
+#: performance.xml:226
 #, no-c-format
 msgid "HQL queries if <literal>subselect</literal> fetching is used"
 msgstr "使用了<literal>subselect</literal>抓取的HQL查询"
 
 #. Tag: para
-#: performance.xml:208
+#: performance.xml:232
 #, no-c-format
 msgid ""
 "No matter what fetching strategy you use, the defined non-lazy graph is "
@@ -374,7 +374,7 @@ msgstr ""
 "意味着在一条HQL查询后紧跟着一系列的查询。"
 
 #. Tag: para
-#: performance.xml:214
+#: performance.xml:238
 #, no-c-format
 msgid ""
 "Usually, we don't use the mapping document to customize fetching. Instead, "
@@ -391,7 +391,7 @@ msgstr ""
 "<literal>setFetchMode(FetchMode.JOIN)</literal>语句。"
 
 #. Tag: para
-#: performance.xml:223
+#: performance.xml:247
 #, no-c-format
 msgid ""
 "If you ever feel like you wish you could change the fetching strategy used "
@@ -402,7 +402,7 @@ msgstr ""
 "<literal>load()</literal>语句中的数据抓取策略。例如："
 
 #. Tag: programlisting
-#: performance.xml:229
+#: performance.xml:253
 #, no-c-format
 msgid ""
 "<![CDATA[User user = (User) session.createCriteria(User.class)\n"
@@ -412,7 +412,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:231
+#: performance.xml:255
 #, no-c-format
 msgid ""
 "(This is Hibernate's equivalent of what some ORM solutions call a \"fetch "
@@ -421,7 +421,7 @@ msgstr ""
 "（这就是其他ORM解决方案的“抓取计划(fetch plan)”在Hibernate中的等价物。）"
 
 #. Tag: para
-#: performance.xml:235
+#: performance.xml:259
 #, no-c-format
 msgid ""
 "A completely different way to avoid problems with N+1 selects is to use the "
@@ -429,13 +429,13 @@ msgid ""
 msgstr "截然不同的一种避免N+1次查询的方法是，使用二级缓存。"
 
 #. Tag: title
-#: performance.xml:243
+#: performance.xml:267
 #, no-c-format
 msgid "Single-ended association proxies"
 msgstr "单端关联代理（Single-ended association proxies）"
 
 #. Tag: para
-#: performance.xml:245
+#: performance.xml:269
 #, no-c-format
 msgid ""
 "Lazy fetching for collections is implemented using Hibernate's own "
@@ -450,7 +450,7 @@ msgstr ""
 "在运行期二进制级（通过优异的CGLIB库）， 为持久对象实现了延迟载入代理。"
 
 #. Tag: para
-#: performance.xml:253
+#: performance.xml:277
 #, no-c-format
 msgid ""
 "By default, Hibernate3 generates proxies (at startup) for all persistent "
@@ -462,7 +462,7 @@ msgstr ""
 "one）</literal> 关联的延迟抓取。"
 
 #. Tag: para
-#: performance.xml:259
+#: performance.xml:283
 #, no-c-format
 msgid ""
 "The mapping file may declare an interface to use as the proxy interface for "
@@ -477,7 +477,7 @@ msgstr ""
 "样的构造函数</emphasis>"
 
 #. Tag: para
-#: performance.xml:266
+#: performance.xml:290
 #, no-c-format
 msgid ""
 "There are some gotchas to be aware of when extending this approach to "
@@ -485,7 +485,7 @@ msgid ""
 msgstr "在如此方式定义一个多态类的时候，有许多值得注意的常见性的问题，例如："
 
 #. Tag: programlisting
-#: performance.xml:271
+#: performance.xml:295
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
@@ -497,7 +497,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:273
+#: performance.xml:297
 #, no-c-format
 msgid ""
 "Firstly, instances of <literal>Cat</literal> will never be castable to "
@@ -508,7 +508,7 @@ msgstr ""
 "literal>, 即使它本身就是<literal>DomesticCat</literal>实例。"
 
 #. Tag: programlisting
-#: performance.xml:279
+#: performance.xml:303
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a "
@@ -521,13 +521,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:281
+#: performance.xml:305
 #, no-c-format
 msgid "Secondly, it is possible to break proxy <literal>==</literal>."
 msgstr "其次，代理的“<literal>==</literal>”可能不再成立。"
 
 #. Tag: programlisting
-#: performance.xml:285
+#: performance.xml:309
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // "
@@ -539,7 +539,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:287
+#: performance.xml:311
 #, no-c-format
 msgid ""
 "However, the situation is not quite as bad as it looks. Even though we now "
@@ -550,7 +550,7 @@ msgstr ""
 "指向这两个不同的代理对象， 但实际上，其底层应该是同一个实例对象："
 
 #. Tag: programlisting
-#: performance.xml:292
+#: performance.xml:316
 #, no-c-format
 msgid ""
 "<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
@@ -558,7 +558,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:294
+#: performance.xml:318
 #, no-c-format
 msgid ""
 "Third, you may not use a CGLIB proxy for a <literal>final</literal> class or "
@@ -566,7 +566,7 @@ msgid ""
 msgstr "第三，你不能对“final类”或“具有final方法的类”使用CGLIB代理。"
 
 #. Tag: para
-#: performance.xml:299
+#: performance.xml:323
 #, no-c-format
 msgid ""
 "Finally, if your persistent object acquires any resources upon instantiation "
@@ -579,7 +579,7 @@ msgstr ""
 "类。"
 
 #. Tag: para
-#: performance.xml:305
+#: performance.xml:329
 #, no-c-format
 msgid ""
 "These problems are all due to fundamental limitations in Java's single "
@@ -592,7 +592,7 @@ msgstr ""
 "映射文档中再指定这些接口。例如："
 
 #. Tag: programlisting
-#: performance.xml:311
+#: performance.xml:335
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
@@ -604,7 +604,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:313
+#: performance.xml:337
 #, no-c-format
 msgid ""
 "where <literal>CatImpl</literal> implements the interface <literal>Cat</"
@@ -621,7 +621,7 @@ msgstr ""
 "<literal>list()</literal>并不会返回代理对象。)"
 
 #. Tag: programlisting
-#: performance.xml:321
+#: performance.xml:345
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
@@ -631,7 +631,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:323
+#: performance.xml:347
 #, no-c-format
 msgid ""
 "Relationships are also lazily initialized. This means you must declare any "
@@ -642,14 +642,14 @@ msgstr ""
 "<literal>Cat</literal>，而不是<literal>CatImpl</literal>。"
 
 #. Tag: para
-#: performance.xml:328
+#: performance.xml:352
 #, no-c-format
 msgid ""
 "Certain operations do <emphasis>not</emphasis> require proxy initialization"
 msgstr "但是，在有些方法中是<emphasis>不需要</emphasis>使用代理的。例如："
 
 #. Tag: para
-#: performance.xml:334
+#: performance.xml:358
 #, no-c-format
 msgid ""
 "<literal>equals()</literal>, if the persistent class does not override "
@@ -659,7 +659,7 @@ msgstr ""
 "literal>方法。"
 
 #. Tag: para
-#: performance.xml:340
+#: performance.xml:364
 #, no-c-format
 msgid ""
 "<literal>hashCode()</literal>, if the persistent class does not override "
@@ -669,13 +669,13 @@ msgstr ""
 "literal>方法。"
 
 #. Tag: para
-#: performance.xml:346
+#: performance.xml:370
 #, no-c-format
 msgid "The identifier getter method"
 msgstr "标志符的getter方法。"
 
 #. Tag: para
-#: performance.xml:352
+#: performance.xml:376
 #, no-c-format
 msgid ""
 "Hibernate will detect persistent classes that override <literal>equals()</"
@@ -685,7 +685,7 @@ msgstr ""
 "()</literal>方法的持久化类。"
 
 #. Tag: para
-#: performance.xml:357
+#: performance.xml:381
 #, no-c-format
 msgid ""
 "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default "
@@ -698,13 +698,13 @@ msgstr ""
 "强，并且所有的操作都会导致立刻进行代理初始化。"
 
 #. Tag: title
-#: performance.xml:367
+#: performance.xml:391
 #, no-c-format
 msgid "Initializing collections and proxies"
 msgstr "实例化集合和代理（Initializing collections and proxies）"
 
 #. Tag: para
-#: performance.xml:369
+#: performance.xml:393
 #, no-c-format
 msgid ""
 "A <literal>LazyInitializationException</literal> will be thrown by Hibernate "
@@ -717,7 +717,7 @@ msgstr ""
 "下，访问一个实体所拥有的集合，或者访问其指向代理的属性时，会引发此异常。"
 
 #. Tag: para
-#: performance.xml:375
+#: performance.xml:399
 #, no-c-format
 msgid ""
 "Sometimes we need to ensure that a proxy or collection is initialized before "
@@ -732,7 +732,7 @@ msgstr ""
 "也不符合通常的代码规范。"
 
 #. Tag: para
-#: performance.xml:382
+#: performance.xml:406
 #, no-c-format
 msgid ""
 "The static methods <literal>Hibernate.initialize()</literal> and "
@@ -750,7 +750,7 @@ msgstr ""
 "合具有同样的功能。"
 
 #. Tag: para
-#: performance.xml:391
+#: performance.xml:415
 #, no-c-format
 msgid ""
 "Another option is to keep the <literal>Session</literal> open until all "
@@ -768,7 +768,7 @@ msgstr ""
 "题。有两种方法可以解决此问题："
 
 #. Tag: para
-#: performance.xml:402
+#: performance.xml:426
 #, no-c-format
 msgid ""
 "In a web-based application, a servlet filter can be used to close the "
@@ -789,7 +789,7 @@ msgstr ""
 "的， 请参见Hibernate wiki上的\"Open Session in View\"模式，你可以找到示例。"
 
 #. Tag: para
-#: performance.xml:415
+#: performance.xml:439
 #, no-c-format
 msgid ""
 "In an application with a separate business tier, the business logic must "
@@ -815,7 +815,7 @@ msgstr ""
 "那么这项任务将会变得简单的多。"
 
 #. Tag: para
-#: performance.xml:430
+#: performance.xml:454
 #, no-c-format
 msgid ""
 "You may also attach a previously loaded object to a new <literal>Session</"
@@ -830,7 +830,7 @@ msgstr ""
 "务，因为这将引入一个特殊的事务语义。"
 
 #. Tag: para
-#: performance.xml:440
+#: performance.xml:464
 #, no-c-format
 msgid ""
 "Sometimes you don't want to initialize a large collection, but still need "
@@ -840,7 +840,7 @@ msgstr ""
 "小）、或者集合的部分内容。"
 
 #. Tag: para
-#: performance.xml:445
+#: performance.xml:469
 #, no-c-format
 msgid ""
 "You can use a collection filter to get the size of a collection without "
@@ -848,7 +848,7 @@ msgid ""
 msgstr "你可以使用集合过滤器得到其集合的大小，而不必实例化整个集合："
 
 #. Tag: programlisting
-#: performance.xml:449
+#: performance.xml:473
 #, no-c-format
 msgid ""
 "<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" ).list"
@@ -856,7 +856,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:451
+#: performance.xml:475
 #, no-c-format
 msgid ""
 "The <literal>createFilter()</literal> method is also used to efficiently "
@@ -867,7 +867,7 @@ msgstr ""
 "容，而无需实例化整个集合："
 
 #. Tag: programlisting
-#: performance.xml:456
+#: performance.xml:480
 #, no-c-format
 msgid ""
 "<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0)."
@@ -875,13 +875,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:461
+#: performance.xml:485
 #, no-c-format
 msgid "Using batch fetching"
 msgstr "使用批量抓取（Using batch fetching）"
 
 #. Tag: para
-#: performance.xml:463
+#: performance.xml:487
 #, no-c-format
 msgid ""
 "Hibernate can make efficient use of batch fetching, that is, Hibernate can "
@@ -895,7 +895,7 @@ msgstr ""
 "你可以在两种批量抓取方案之间进行选择：在类级别和集合级别。"
 
 #. Tag: para
-#: performance.xml:469
+#: performance.xml:493
 #, no-c-format
 msgid ""
 "Batch fetching for classes/entities is easier to understand. Imagine you "
@@ -920,25 +920,25 @@ msgstr ""
 "改变其行为："
 
 #. Tag: programlisting
-#: performance.xml:479
+#: performance.xml:503
 #, no-c-format
 msgid "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:481
+#: performance.xml:505
 #, no-c-format
 msgid ""
 "Hibernate will now execute only three queries, the pattern is 10, 10, 5."
 msgstr "随之，Hibernate将只需要执行三次查询，分别为10、10、 5。"
 
 #. Tag: para
-#: performance.xml:485
-#, no-c-format
+#: performance.xml:509
+#, fuzzy, no-c-format
 msgid ""
 "You may also enable batch fetching of collections. For example, if each "
 "<literal>Person</literal> has a lazy collection of <literal>Cat</literal>s, "
-"and 10 persons are currently loaded in the <literal>Sesssion</literal>, "
+"and 10 persons are currently loaded in the <literal>Session</literal>, "
 "iterating through all persons will generate 10 <literal>SELECT</literal>s, "
 "one for every call to <literal>getCats()</literal>. If you enable batch "
 "fetching for the <literal>cats</literal> collection in the mapping of "
@@ -952,7 +952,7 @@ msgstr ""
 "取, 那么，Hibernate将可以预先抓取整个集合。请看例子："
 
 #. Tag: programlisting
-#: performance.xml:494
+#: performance.xml:518
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -963,7 +963,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:496
+#: performance.xml:520
 #, no-c-format
 msgid ""
 "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 "
@@ -977,7 +977,7 @@ msgstr ""
 "数。"
 
 #. Tag: para
-#: performance.xml:502
+#: performance.xml:526
 #, no-c-format
 msgid ""
 "Batch fetching of collections is particularly useful if you have a nested "
@@ -991,13 +991,13 @@ msgstr ""
 "path)</emphasis>（××） 是更好的解决方法。）"
 
 #. Tag: title
-#: performance.xml:511
+#: performance.xml:535
 #, no-c-format
 msgid "Using subselect fetching"
 msgstr "使用子查询抓取（Using subselect fetching）"
 
 #. Tag: para
-#: performance.xml:513
+#: performance.xml:537
 #, no-c-format
 msgid ""
 "If one lazy collection or single-valued proxy has to be fetched, Hibernate "
@@ -1009,13 +1009,13 @@ msgstr ""
 "载。"
 
 #. Tag: title
-#: performance.xml:524
+#: performance.xml:548
 #, no-c-format
 msgid "Using lazy property fetching"
 msgstr "使用延迟属性抓取（Using lazy property fetching）"
 
 #. Tag: para
-#: performance.xml:526
+#: performance.xml:550
 #, no-c-format
 msgid ""
 "Hibernate3 supports the lazy fetching of individual properties. This "
@@ -1032,7 +1032,7 @@ msgstr ""
 "有用，例如在原有表中拥有几百列数据、数据模型无法改动的情况下。"
 
 #. Tag: para
-#: performance.xml:535
+#: performance.xml:559
 #, no-c-format
 msgid ""
 "To enable lazy property loading, set the <literal>lazy</literal> attribute "
@@ -1042,7 +1042,7 @@ msgstr ""
 "入。"
 
 #. Tag: programlisting
-#: performance.xml:540
+#: performance.xml:564
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Document\">\n"
@@ -1058,7 +1058,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:542
+#: performance.xml:566
 #, no-c-format
 msgid ""
 "Lazy property loading requires buildtime bytecode instrumentation! If your "
@@ -1070,13 +1070,13 @@ msgstr ""
 "属性的延迟设置，仍然将其直接载入。"
 
 #. Tag: para
-#: performance.xml:548
+#: performance.xml:572
 #, no-c-format
 msgid "For bytecode instrumentation, use the following Ant task:"
 msgstr "你可以在Ant的Task中，进行如下定义，对持久类代码加入“二进制指令。”"
 
 #. Tag: programlisting
-#: performance.xml:552
+#: performance.xml:576
 #, no-c-format
 msgid ""
 "<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
@@ -1096,20 +1096,20 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:554
-#, no-c-format
+#: performance.xml:578
+#, fuzzy, no-c-format
 msgid ""
 "A different (better?) way to avoid unnecessary column reads, at least for "
 "read-only transactions is to use the projection features of HQL or Criteria "
 "queries. This avoids the need for buildtime bytecode processing and is "
-"certainly a prefered solution."
+"certainly a preferred solution."
 msgstr ""
 "还有一种可以优化的方法，它使用HQL或条件查询的投影（projection）特性，可以避免"
 "读取非必要的列， 这一点至少对只读事务是非常有用的。它无需在代码构建时“二进制"
 "指令”处理，因此是一个更加值得选择的解决方法。"
 
 #. Tag: para
-#: performance.xml:561
+#: performance.xml:585
 #, no-c-format
 msgid ""
 "You may force the usual eager fetching of properties using <literal>fetch "
@@ -1118,13 +1118,13 @@ msgstr ""
 "有时你需要在HQL中通过<literal>抓取所有属性</literal>，强行抓取所有内容。"
 
 #. Tag: title
-#: performance.xml:571
+#: performance.xml:595
 #, no-c-format
 msgid "The Second Level Cache"
 msgstr "二级缓存（The Second Level Cache）"
 
 #. Tag: para
-#: performance.xml:573
+#: performance.xml:597
 #, no-c-format
 msgid ""
 "A Hibernate <literal>Session</literal> is a transaction-level cache of "
@@ -1142,7 +1142,7 @@ msgstr ""
 "（即使可以将缓存数据设定为定期失效）。"
 
 #. Tag: para
-#: performance.xml:581
+#: performance.xml:605
 #, no-c-format
 msgid ""
 "You have the option to tell Hibernate which caching implementation to use by "
@@ -1161,162 +1161,180 @@ msgstr ""
 "意，在3.2版本之前，默认使用EhCache 作为缓存实现，但从3.2起就不再这样了。"
 
 #. Tag: title
-#: performance.xml:592
+#: performance.xml:616
 #, no-c-format
 msgid "Cache Providers"
 msgstr "缓存策略提供商（Cache Providers）"
 
 #. Tag: entry
-#: performance.xml:601 performance.xml:774
+#: performance.xml:625 performance.xml:813
 #, no-c-format
 msgid "Cache"
 msgstr "Cache"
 
 #. Tag: entry
-#: performance.xml:602
+#: performance.xml:626
 #, no-c-format
 msgid "Provider class"
 msgstr "Provider class"
 
 #. Tag: entry
-#: performance.xml:603
+#: performance.xml:627
 #, no-c-format
 msgid "Type"
 msgstr "Type"
 
 #. Tag: entry
-#: performance.xml:604
+#: performance.xml:628
 #, no-c-format
 msgid "Cluster Safe"
 msgstr "Cluster Safe"
 
 #. Tag: entry
-#: performance.xml:605
+#: performance.xml:629
 #, no-c-format
 msgid "Query Cache Supported"
 msgstr "Query Cache Supported"
 
 #. Tag: entry
-#: performance.xml:610 performance.xml:783
+#: performance.xml:634 performance.xml:822
 #, no-c-format
 msgid "Hashtable (not intended for production use)"
 msgstr "Hashtable (not intended for production use)"
 
 #. Tag: literal
-#: performance.xml:611
+#: performance.xml:635
 #, no-c-format
 msgid "org.hibernate.cache.HashtableCacheProvider"
 msgstr "org.hibernate.cache.HashtableCacheProvider"
 
 #. Tag: entry
-#: performance.xml:612
+#: performance.xml:636
 #, no-c-format
 msgid "memory"
 msgstr "memory"
 
 #. Tag: entry
-#: performance.xml:614 performance.xml:621 performance.xml:628
-#: performance.xml:784 performance.xml:785 performance.xml:786
-#: performance.xml:791 performance.xml:792 performance.xml:793
-#: performance.xml:798 performance.xml:799 performance.xml:800
-#: performance.xml:805 performance.xml:806 performance.xml:812
-#: performance.xml:815
+#: performance.xml:638 performance.xml:645 performance.xml:652
+#: performance.xml:823 performance.xml:824 performance.xml:825
+#: performance.xml:830 performance.xml:831 performance.xml:832
+#: performance.xml:837 performance.xml:838 performance.xml:839
+#: performance.xml:844 performance.xml:845 performance.xml:851
+#: performance.xml:854 performance.xml:858 performance.xml:861
 #, no-c-format
 msgid "<entry>yes</entry>"
 msgstr ""
 
 #. Tag: entry
-#: performance.xml:617 performance.xml:790
+#: performance.xml:641 performance.xml:829
 #, no-c-format
 msgid "EHCache"
 msgstr "EHCache"
 
 #. Tag: literal
-#: performance.xml:618
+#: performance.xml:642
 #, no-c-format
 msgid "org.hibernate.cache.EhCacheProvider"
 msgstr "org.hibernate.cache.EhCacheProvider"
 
 #. Tag: entry
-#: performance.xml:619 performance.xml:626
+#: performance.xml:643 performance.xml:650
 #, no-c-format
 msgid "memory, disk"
 msgstr "memory, disk"
 
 #. Tag: entry
-#: performance.xml:624 performance.xml:797
+#: performance.xml:648 performance.xml:836
 #, no-c-format
 msgid "OSCache"
 msgstr "OSCache"
 
 #. Tag: literal
-#: performance.xml:625
+#: performance.xml:649
 #, no-c-format
 msgid "org.hibernate.cache.OSCacheProvider"
 msgstr "org.hibernate.cache.OSCacheProvider"
 
 #. Tag: entry
-#: performance.xml:631 performance.xml:804
+#: performance.xml:655 performance.xml:843
 #, no-c-format
 msgid "SwarmCache"
 msgstr "SwarmCache"
 
 #. Tag: literal
-#: performance.xml:632
+#: performance.xml:656
 #, no-c-format
 msgid "org.hibernate.cache.SwarmCacheProvider"
 msgstr "org.hibernate.cache.SwarmCacheProvider"
 
 #. Tag: entry
-#: performance.xml:633
+#: performance.xml:657
 #, no-c-format
 msgid "clustered (ip multicast)"
 msgstr "clustered (ip multicast)"
 
 #. Tag: entry
-#: performance.xml:634
+#: performance.xml:658
 #, no-c-format
 msgid "yes (clustered invalidation)"
 msgstr "yes (clustered invalidation)"
 
 #. Tag: entry
-#: performance.xml:638 performance.xml:811
-#, no-c-format
-msgid "JBoss TreeCache"
+#: performance.xml:662 performance.xml:850
+#, fuzzy, no-c-format
+msgid "JBoss Cache 1.x"
 msgstr "JBoss TreeCache"
 
 #. Tag: literal
-#: performance.xml:639
+#: performance.xml:663
 #, no-c-format
 msgid "org.hibernate.cache.TreeCacheProvider"
 msgstr "org.hibernate.cache.TreeCacheProvider"
 
 #. Tag: entry
-#: performance.xml:640
+#: performance.xml:664 performance.xml:671
 #, no-c-format
 msgid "clustered (ip multicast), transactional"
 msgstr "clustered (ip multicast), transactional"
 
 #. Tag: entry
-#: performance.xml:641
+#: performance.xml:665
 #, no-c-format
 msgid "yes (replication)"
 msgstr "yes (replication)"
 
 #. Tag: entry
-#: performance.xml:642
+#: performance.xml:666 performance.xml:673
 #, no-c-format
 msgid "yes (clock sync req.)"
 msgstr "yes (clock sync req.)"
 
+#. Tag: entry
+#: performance.xml:669 performance.xml:857
+#, fuzzy, no-c-format
+msgid "JBoss Cache 2"
+msgstr "JBoss TreeCache"
+
+#. Tag: literal
+#: performance.xml:670
+#, fuzzy, no-c-format
+msgid "org.hibernate.cache.jbc2.JBossCacheRegionFactory"
+msgstr "org.hibernate.cache.EhCacheProvider"
+
+#. Tag: entry
+#: performance.xml:672
+#, fuzzy, no-c-format
+msgid "yes (replication or invalidation)"
+msgstr "yes (clustered invalidation)"
+
 #. Tag: title
-#: performance.xml:649
+#: performance.xml:680
 #, no-c-format
 msgid "Cache mappings"
 msgstr "缓存映射（Cache mappings）"
 
 #. Tag: para
-#: performance.xml:651
+#: performance.xml:682
 #, no-c-format
 msgid ""
 "The <literal>&lt;cache&gt;</literal> element of a class or collection "
@@ -1324,7 +1342,7 @@ msgid ""
 msgstr "类或者集合映射的“<literal>&lt;cache&gt;</literal>元素”可以有下列形式："
 
 #. Tag: programlisting
-#: performance.xml:662
+#: performance.xml:693
 #, no-c-format
 msgid ""
 "<![CDATA[<cache \n"
@@ -1335,7 +1353,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:665
+#: performance.xml:696
 #, no-c-format
 msgid ""
 "<literal>usage</literal> (required) specifies the caching strategy: "
@@ -1347,7 +1365,7 @@ msgstr ""
 "literal>或 <literal>read-only</literal>。"
 
 #. Tag: para
-#: performance.xml:674
+#: performance.xml:705
 #, no-c-format
 msgid ""
 "<literal>region</literal> (optional, defaults to the class or collection "
@@ -1357,7 +1375,7 @@ msgstr ""
 "role name)) 指定第二级缓存的区域名(name of the second level cache region)"
 
 #. Tag: para
-#: performance.xml:681
+#: performance.xml:712
 #, no-c-format
 msgid ""
 "<literal>include</literal> (optional, defaults to <literal>all</literal>) "
@@ -1370,10 +1388,10 @@ msgstr ""
 "的实体的属性可能无法被缓存"
 
 #. Tag: para
-#: performance.xml:691
-#, no-c-format
+#: performance.xml:722
+#, fuzzy, no-c-format
 msgid ""
-"Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</"
+"Alternatively (preferably?), you may specify <literal>&lt;class-cache&gt;</"
 "literal> and <literal>&lt;collection-cache&gt;</literal> elements in "
 "<literal>hibernate.cfg.xml</literal>."
 msgstr ""
@@ -1381,7 +1399,7 @@ msgstr ""
 "literal>和 <literal>&lt;collection-cache&gt;</literal> 元素。"
 
 #. Tag: para
-#: performance.xml:696
+#: performance.xml:727
 #, no-c-format
 msgid ""
 "The <literal>usage</literal> attribute specifies a <emphasis>cache "
@@ -1391,13 +1409,13 @@ msgstr ""
 "concurrency strategy）</emphasis>。"
 
 #. Tag: title
-#: performance.xml:703
+#: performance.xml:734
 #, no-c-format
 msgid "Strategy: read only"
 msgstr "策略：只读缓存（Strategy: read only）"
 
 #. Tag: para
-#: performance.xml:705
+#: performance.xml:736
 #, no-c-format
 msgid ""
 "If your application needs to read but never modify instances of a persistent "
@@ -1410,7 +1428,7 @@ msgstr ""
 "中，它也能完美地运作。"
 
 #. Tag: programlisting
-#: performance.xml:711
+#: performance.xml:742
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Immutable\" mutable=\"false\">\n"
@@ -1420,13 +1438,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:717
+#: performance.xml:748
 #, no-c-format
 msgid "Strategy: read/write"
 msgstr "策略:读/写缓存（Strategy: read/write）"
 
 #. Tag: para
-#: performance.xml:719
+#: performance.xml:750
 #, no-c-format
 msgid ""
 "If the application needs to update data, a <literal>read-write</literal> "
@@ -1452,7 +1470,7 @@ msgstr ""
 "置的缓存策略并不支持锁定功能。"
 
 #. Tag: programlisting
-#: performance.xml:730
+#: performance.xml:761
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Cat\" .... >\n"
@@ -1466,13 +1484,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:735
+#: performance.xml:766
 #, no-c-format
 msgid "Strategy: nonstrict read/write"
 msgstr "策略:非严格读/写缓存（Strategy: nonstrict read/write）"
 
 #. Tag: para
-#: performance.xml:737
+#: performance.xml:768
 #, no-c-format
 msgid ""
 "If the application only occasionally needs to update data (ie. if it is "
@@ -1492,13 +1510,13 @@ msgstr ""
 "literal>调用前， 整个事务已经结束。"
 
 #. Tag: title
-#: performance.xml:749
+#: performance.xml:780
 #, no-c-format
 msgid "Strategy: transactional"
 msgstr "策略:事务缓存（transactional）"
 
 #. Tag: para
-#: performance.xml:751
+#: performance.xml:782
 #, no-c-format
 msgid ""
 "The <literal>transactional</literal> cache strategy provides support for "
@@ -1510,11 +1528,26 @@ msgstr ""
 "JBoss TreeCache的支持。这样的缓存只能用于JTA环境中，你必须指定 为其"
 "<literal>hibernate.transaction.manager_lookup_class</literal>属性。"
 
+#. Tag: title
+#: performance.xml:791
+#, fuzzy, no-c-format
+msgid "Cache-provider/concurrency-strategy compatibility"
+msgstr ""
+"各种缓存提供商对缓存并发策略的支持情况（Cache Concurrency Strategy Support）"
+
 #. Tag: para
-#: performance.xml:759
-#, no-c-format
+#: performance.xml:794
+#, fuzzy, no-c-format
 msgid ""
-"None of the cache providers support all of the cache concurrency strategies. "
+"None of the cache providers support all of the cache concurrency strategies."
+msgstr ""
+"没有一种缓存提供商能够支持上列的所有缓存并发策略。下表中列出了各种提供器、及"
+"其各自适用的并发策略。"
+
+#. Tag: para
+#: performance.xml:799
+#, fuzzy, no-c-format
+msgid ""
 "The following table shows which providers are compatible with which "
 "concurrency strategies."
 msgstr ""
@@ -1522,44 +1555,44 @@ msgstr ""
 "其各自适用的并发策略。"
 
 #. Tag: title
-#: performance.xml:765
+#: performance.xml:804
 #, no-c-format
 msgid "Cache Concurrency Strategy Support"
 msgstr ""
 "各种缓存提供商对缓存并发策略的支持情况（Cache Concurrency Strategy Support）"
 
 #. Tag: entry
-#: performance.xml:775
+#: performance.xml:814
 #, no-c-format
 msgid "read-only"
 msgstr "read-only"
 
 #. Tag: entry
-#: performance.xml:776
+#: performance.xml:815
 #, no-c-format
 msgid "nonstrict-read-write"
 msgstr "nonstrict-read-write"
 
 #. Tag: entry
-#: performance.xml:777
+#: performance.xml:816
 #, no-c-format
 msgid "read-write"
 msgstr "read-write"
 
 #. Tag: entry
-#: performance.xml:778
+#: performance.xml:817
 #, no-c-format
 msgid "transactional"
 msgstr "transactional"
 
 #. Tag: title
-#: performance.xml:824
+#: performance.xml:872
 #, no-c-format
 msgid "Managing the caches"
 msgstr "管理缓存（Managing the caches）"
 
 #. Tag: para
-#: performance.xml:826
+#: performance.xml:874
 #, no-c-format
 msgid ""
 "Whenever you pass an object to <literal>save()</literal>, <literal>update()</"
@@ -1576,7 +1609,7 @@ msgstr ""
 "时, 该对象都将被加入到<literal>Session</literal>的内部缓存中。"
 
 #. Tag: para
-#: performance.xml:833
+#: performance.xml:881
 #, no-c-format
 msgid ""
 "When <literal>flush()</literal> is subsequently called, the state of that "
@@ -1591,7 +1624,7 @@ msgstr ""
 "<literal>evict()</literal> 方法，从一级缓存中去掉这些对象及其集合。"
 
 #. Tag: programlisting
-#: performance.xml:841
+#: performance.xml:889
 #, no-c-format
 msgid ""
 "<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll"
@@ -1604,7 +1637,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:843
+#: performance.xml:891
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> also provides a <literal>contains()</literal> "
@@ -1614,7 +1647,7 @@ msgstr ""
 "于当前session的缓存中。"
 
 #. Tag: para
-#: performance.xml:848
+#: performance.xml:896
 #, no-c-format
 msgid ""
 "To completely evict all objects from the session cache, call "
@@ -1624,7 +1657,7 @@ msgstr ""
 "</literal>。"
 
 #. Tag: para
-#: performance.xml:852
+#: performance.xml:900
 #, no-c-format
 msgid ""
 "For the second-level cache, there are methods defined on "
@@ -1635,7 +1668,7 @@ msgstr ""
 "缓存中实例、整个类、集合实例或者整个集合。"
 
 #. Tag: programlisting
-#: performance.xml:858
+#: performance.xml:906
 #, no-c-format
 msgid ""
 "<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
@@ -1647,7 +1680,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:860
+#: performance.xml:908
 #, no-c-format
 msgid ""
 "The <literal>CacheMode</literal> controls how a particular session interacts "
@@ -1656,7 +1689,7 @@ msgstr ""
 "<literal>CacheMode</literal>参数用于控制具体的Session如何与二级缓存进行交互。"
 
 #. Tag: para
-#: performance.xml:867
+#: performance.xml:915
 #, no-c-format
 msgid ""
 "<literal>CacheMode.NORMAL</literal> - read items from and write items to the "
@@ -1664,7 +1697,7 @@ msgid ""
 msgstr "<literal>CacheMode.NORMAL</literal> - 从二级缓存中读、写数据。"
 
 #. Tag: para
-#: performance.xml:872
+#: performance.xml:920
 #, no-c-format
 msgid ""
 "<literal>CacheMode.GET</literal> - read items from the second-level cache, "
@@ -1674,7 +1707,7 @@ msgstr ""
 "缓存写数据。"
 
 #. Tag: para
-#: performance.xml:878
+#: performance.xml:926
 #, no-c-format
 msgid ""
 "<literal>CacheMode.PUT</literal> - write items to the second-level cache, "
@@ -1684,7 +1717,7 @@ msgstr ""
 "据。"
 
 #. Tag: para
-#: performance.xml:884
+#: performance.xml:932
 #, no-c-format
 msgid ""
 "<literal>CacheMode.REFRESH</literal> - write items to the second-level "
@@ -1697,7 +1730,7 @@ msgstr ""
 "级缓存从数据库中读取数据，刷新缓存内容。"
 
 #. Tag: para
-#: performance.xml:892
+#: performance.xml:940
 #, no-c-format
 msgid ""
 "To browse the contents of a second-level or query cache region, use the "
@@ -1707,7 +1740,7 @@ msgstr ""
 "（Statistics）</literal> API。"
 
 #. Tag: programlisting
-#: performance.xml:897
+#: performance.xml:945
 #, no-c-format
 msgid ""
 "<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
@@ -1716,7 +1749,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:899
+#: performance.xml:947
 #, no-c-format
 msgid ""
 "You'll need to enable statistics, and, optionally, force Hibernate to keep "
@@ -1726,7 +1759,7 @@ msgstr ""
 "存内容。"
 
 #. Tag: programlisting
-#: performance.xml:904
+#: performance.xml:952
 #, no-c-format
 msgid ""
 "<![CDATA[hibernate.generate_statistics true\n"
@@ -1734,13 +1767,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:909
+#: performance.xml:957
 #, no-c-format
 msgid "The Query Cache"
 msgstr "查询缓存（The Query Cache）"
 
 #. Tag: para
-#: performance.xml:911
+#: performance.xml:959
 #, no-c-format
 msgid ""
 "Query result sets may also be cached. This is only useful for queries that "
@@ -1751,13 +1784,13 @@ msgstr ""
 "处。 要使用查询缓存，首先你必须打开它："
 
 #. Tag: programlisting
-#: performance.xml:916
+#: performance.xml:964
 #, no-c-format
 msgid "<![CDATA[hibernate.cache.use_query_cache true]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:918
+#: performance.xml:966
 #, no-c-format
 msgid ""
 "This setting causes the creation of two new cache regions - one holding "
@@ -1776,7 +1809,7 @@ msgstr ""
 "识符属性的值、以及各值类型的结果。 所以查询缓存通常会和二级缓存一起使用。"
 
 #. Tag: para
-#: performance.xml:928
+#: performance.xml:976
 #, no-c-format
 msgid ""
 "Most queries do not benefit from caching, so by default queries are not "
@@ -1789,7 +1822,7 @@ msgstr ""
 "调用会让查询在执行过程中时先从缓存中查找结果， 并将自己的结果集放到缓存中去。"
 
 #. Tag: para
-#: performance.xml:935
+#: performance.xml:983
 #, no-c-format
 msgid ""
 "If you require fine-grained control over query cache expiration policies, "
@@ -1800,7 +1833,7 @@ msgstr ""
 "setCacheRegion()</literal>方法， 为每个查询指定其命名的缓存区域。"
 
 #. Tag: programlisting
-#: performance.xml:941
+#: performance.xml:989
 #, no-c-format
 msgid ""
 "<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog.blogger "
@@ -1813,7 +1846,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:943
+#: performance.xml:991
 #, no-c-format
 msgid ""
 "If the query should force a refresh of its query cache region, you should "
@@ -1831,13 +1864,13 @@ msgstr ""
 "同样可以清除查询缓存区域。"
 
 #. Tag: title
-#: performance.xml:955
+#: performance.xml:1003
 #, no-c-format
 msgid "Understanding Collection performance"
 msgstr "理解集合性能（Understanding Collection performance）"
 
 #. Tag: para
-#: performance.xml:957
+#: performance.xml:1005
 #, no-c-format
 msgid ""
 "We've already spent quite some time talking about collections. In this "
@@ -1848,37 +1881,37 @@ msgstr ""
 "宜。"
 
 #. Tag: title
-#: performance.xml:964
+#: performance.xml:1012
 #, no-c-format
 msgid "Taxonomy"
 msgstr "分类（Taxonomy）"
 
 #. Tag: para
-#: performance.xml:966
+#: performance.xml:1014
 #, no-c-format
 msgid "Hibernate defines three basic kinds of collections:"
 msgstr "Hibernate定义了三种基本类型的集合："
 
 #. Tag: para
-#: performance.xml:970
+#: performance.xml:1018
 #, no-c-format
 msgid "collections of values"
 msgstr "值数据集合"
 
 #. Tag: para
-#: performance.xml:973
+#: performance.xml:1021
 #, no-c-format
 msgid "one to many associations"
 msgstr "一对多关联"
 
 #. Tag: para
-#: performance.xml:976
+#: performance.xml:1024
 #, no-c-format
 msgid "many to many associations"
 msgstr "多对多关联"
 
 #. Tag: para
-#: performance.xml:980
+#: performance.xml:1028
 #, no-c-format
 msgid ""
 "This classification distinguishes the various table and foreign key "
@@ -1893,25 +1926,25 @@ msgstr ""
 "删除集合行数据的主键的结构”。 因此得到了如下的分类："
 
 #. Tag: para
-#: performance.xml:991
+#: performance.xml:1039
 #, no-c-format
 msgid "indexed collections"
 msgstr "有序集合类"
 
 #. Tag: para
-#: performance.xml:994
+#: performance.xml:1042
 #, no-c-format
 msgid "sets"
 msgstr "集合（sets）"
 
 #. Tag: para
-#: performance.xml:997
+#: performance.xml:1045
 #, no-c-format
 msgid "bags"
 msgstr "包（bags)"
 
 #. Tag: para
-#: performance.xml:1001
+#: performance.xml:1049
 #, no-c-format
 msgid ""
 "All indexed collections (maps, lists, arrays) have a primary key consisting "
@@ -1926,13 +1959,13 @@ msgstr ""
 "以迅速找到该行数据。"
 
 #. Tag: para
-#: performance.xml:1009
-#, no-c-format
+#: performance.xml:1057
+#, fuzzy, no-c-format
 msgid ""
 "Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
 "element columns. This may be less efficient for some types of collection "
 "element, particularly composite elements or large text or binary fields; the "
-"database may not be able to index a complex primary key as efficently. On "
+"database may not be able to index a complex primary key as efficiently. On "
 "the other hand, for one to many or many to many associations, particularly "
 "in the case of synthetic identifiers, it is likely to be just as efficient. "
 "(Side-note: if you want <literal>SchemaExport</literal> to actually create "
@@ -1947,7 +1980,7 @@ msgstr ""
 "键， 你必须把所有的字段都声明为<literal>not-null=\"true\"</literal>。）"
 
 #. Tag: para
-#: performance.xml:1020
+#: performance.xml:1068
 #, no-c-format
 msgid ""
 "<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
@@ -1957,7 +1990,7 @@ msgstr ""
 "新。事实上， <literal>&lt;idbag&gt;</literal>拥有着最好的性能表现。"
 
 #. Tag: para
-#: performance.xml:1025
+#: performance.xml:1073
 #, no-c-format
 msgid ""
 "Bags are the worst case. Since a bag permits duplicate element values and "
@@ -1972,7 +2005,7 @@ msgstr ""
 "个集合。 因此Bag是非常低效的。"
 
 #. Tag: para
-#: performance.xml:1033
+#: performance.xml:1081
 #, no-c-format
 msgid ""
 "Note that for a one-to-many association, the \"primary key\" may not be the "
@@ -1985,14 +2018,14 @@ msgstr ""
 "何进行“定位”的。）"
 
 #. Tag: title
-#: performance.xml:1043
+#: performance.xml:1091
 #, no-c-format
 msgid ""
 "Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr "Lists, maps 和sets用于更新效率最高"
 
 #. Tag: para
-#: performance.xml:1045
+#: performance.xml:1093
 #, no-c-format
 msgid ""
 "From the discussion above, it should be clear that indexed collections and "
@@ -2003,7 +2036,7 @@ msgstr ""
 "拥有最好的性能。"
 
 #. Tag: para
-#: performance.xml:1051
+#: performance.xml:1099
 #, no-c-format
 msgid ""
 "There is, arguably, one more advantage that indexed collections have over "
@@ -2021,7 +2054,7 @@ msgstr ""
 "时“改变”才有效。再次强调：这段讨论对“一对多关联”并不适用。"
 
 #. Tag: para
-#: performance.xml:1060
+#: performance.xml:1108
 #, no-c-format
 msgid ""
 "After observing that arrays cannot be lazy, we would conclude that lists, "
@@ -2035,7 +2068,7 @@ msgstr ""
 "因为“set”的语义在关系模型中是最自然的。"
 
 #. Tag: para
-#: performance.xml:1068
+#: performance.xml:1116
 #, no-c-format
 msgid ""
 "However, in well-designed Hibernate domain models, we usually see that most "
@@ -2049,13 +2082,13 @@ msgstr ""
 "会在多对一的这一端进行处理。因此对于此类情况，无需考虑其集合的更新性能。"
 
 #. Tag: title
-#: performance.xml:1078
+#: performance.xml:1126
 #, no-c-format
 msgid "Bags and lists are the most efficient inverse collections"
 msgstr "Bag和list是反向集合类中效率最高的"
 
 #. Tag: para
-#: performance.xml:1080
+#: performance.xml:1128
 #, no-c-format
 msgid ""
 "Just before you ditch bags forever, there is a particular case in which bags "
@@ -2076,7 +2109,7 @@ msgstr ""
 "于下面的相同代码来说，速度会快得多。"
 
 #. Tag: programlisting
-#: performance.xml:1090
+#: performance.xml:1138
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
@@ -2087,13 +2120,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:1095
+#: performance.xml:1143
 #, no-c-format
 msgid "One shot delete"
 msgstr "一次性删除（One shot delete）"
 
 #. Tag: para
-#: performance.xml:1097
+#: performance.xml:1145
 #, no-c-format
 msgid ""
 "Occasionally, deleting collection elements one by one can be extremely "
@@ -2107,7 +2140,7 @@ msgstr ""
 "了。"
 
 #. Tag: para
-#: performance.xml:1104
+#: performance.xml:1152
 #, no-c-format
 msgid ""
 "Suppose we add a single element to a collection of size twenty and then "
@@ -2120,7 +2153,7 @@ msgstr ""
 "（除非集合类是一个bag)。 这当然是显而易见的。"
 
 #. Tag: para
-#: performance.xml:1110
+#: performance.xml:1158
 #, no-c-format
 msgid ""
 "However, suppose that we remove eighteen elements, leaving two and then add "
@@ -2129,13 +2162,13 @@ msgstr ""
 "但是，假设我们删除了18个数据，只剩下2个，然后新增3个。则有两种处理方式："
 
 #. Tag: para
-#: performance.xml:1117
+#: performance.xml:1165
 #, no-c-format
 msgid "delete eighteen rows one by one and then insert three rows"
 msgstr "逐一的删除这18个数据，再新增三个；"
 
 #. Tag: para
-#: performance.xml:1120
+#: performance.xml:1168
 #, no-c-format
 msgid ""
 "remove the whole collection (in one SQL <literal>DELETE</literal>) and "
@@ -2143,7 +2176,7 @@ msgid ""
 msgstr "删除整个集合类（只用一句DELETE语句），然后增加5个数据。"
 
 #. Tag: para
-#: performance.xml:1125
+#: performance.xml:1173
 #, no-c-format
 msgid ""
 "Hibernate isn't smart enough to know that the second option is probably "
@@ -2154,7 +2187,7 @@ msgstr ""
 "明也是好事，否则可能会引发意外的“数据库触发器”之类的问题。）"
 
 #. Tag: para
-#: performance.xml:1131
+#: performance.xml:1179
 #, no-c-format
 msgid ""
 "Fortunately, you can force this behaviour (ie. the second strategy) at any "
@@ -2167,7 +2200,7 @@ msgstr ""
 "用的。"
 
 #. Tag: para
-#: performance.xml:1137
+#: performance.xml:1185
 #, no-c-format
 msgid ""
 "Of course, one-shot-delete does not apply to collections mapped "
@@ -2176,13 +2209,13 @@ msgstr ""
 "显然，一次性删除并不适用于被映射为<literal>inverse=\"true\"</literal>的集合。"
 
 #. Tag: title
-#: performance.xml:1146
+#: performance.xml:1194
 #, no-c-format
 msgid "Monitoring performance"
 msgstr "监测性能（Monitoring performance）"
 
 #. Tag: para
-#: performance.xml:1148
+#: performance.xml:1196
 #, no-c-format
 msgid ""
 "Optimization is not much use without monitoring and access to performance "
@@ -2194,13 +2227,13 @@ msgstr ""
 "示意图，因此可以从 每个<literal>SessionFactory</literal>抓取其统计数据。"
 
 #. Tag: title
-#: performance.xml:1155
+#: performance.xml:1203
 #, no-c-format
 msgid "Monitoring a SessionFactory"
 msgstr "监测SessionFactory"
 
 #. Tag: para
-#: performance.xml:1157
+#: performance.xml:1205
 #, no-c-format
 msgid ""
 "You can access <literal>SessionFactory</literal> metrics in two ways. Your "
@@ -2212,7 +2245,7 @@ msgstr ""
 "<literal>统计</literal>数据。"
 
 #. Tag: para
-#: performance.xml:1163
+#: performance.xml:1211
 #, no-c-format
 msgid ""
 "Hibernate can also use JMX to publish metrics if you enable the "
@@ -2226,7 +2259,7 @@ msgstr ""
 "分配一个MBean。下面的代码即是其演示代码："
 
 #. Tag: programlisting
-#: performance.xml:1170
+#: performance.xml:1218
 #, no-c-format
 msgid ""
 "<![CDATA[// MBean service registration for a specific SessionFactory\n"
@@ -2242,7 +2275,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: performance.xml:1173
+#: performance.xml:1221
 #, no-c-format
 msgid ""
 "<![CDATA[// MBean service registration for all SessionFactory's\n"
@@ -2256,7 +2289,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1175
+#: performance.xml:1223
 #, no-c-format
 msgid ""
 "TODO: This doesn't make sense: In the first case, we retrieve and use the "
@@ -2270,7 +2303,7 @@ msgstr ""
 "literal> 得到SessionFactory，然后将MBean保存于其中。"
 
 #. Tag: para
-#: performance.xml:1180
+#: performance.xml:1228
 #, no-c-format
 msgid ""
 "You can (de)activate the monitoring for a <literal>SessionFactory</literal>"
@@ -2278,7 +2311,7 @@ msgstr ""
 "你可以通过以下方法打开或关闭<literal>SessionFactory</literal>的监测功能："
 
 #. Tag: para
-#: performance.xml:1185
+#: performance.xml:1233
 #, no-c-format
 msgid ""
 "at configuration time, set <literal>hibernate.generate_statistics</literal> "
@@ -2288,7 +2321,7 @@ msgstr ""
 "<literal>true</literal>或<literal>false</literal>；"
 
 #. Tag: para
-#: performance.xml:1192
+#: performance.xml:1240
 #, no-c-format
 msgid ""
 "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> "
@@ -2299,24 +2332,24 @@ msgstr ""
 "literal>"
 
 #. Tag: para
-#: performance.xml:1199
-#, no-c-format
+#: performance.xml:1247
+#, fuzzy, no-c-format
 msgid ""
-"Statistics can be reset programatically using the <literal>clear()</literal> "
-"method. A summary can be sent to a logger (info level) using the "
+"Statistics can be reset programmatically using the <literal>clear()</"
+"literal> method. A summary can be sent to a logger (info level) using the "
 "<literal>logSummary()</literal> method."
 msgstr ""
 "你也可以在程序中调用<literal>clear()</literal>方法重置统计数据，调用"
 "<literal>logSummary()</literal> 在日志中记录（info级别）其总结。"
 
 #. Tag: title
-#: performance.xml:1208
+#: performance.xml:1256
 #, no-c-format
 msgid "Metrics"
 msgstr "数据记录（Metrics）"
 
 #. Tag: para
-#: performance.xml:1210
+#: performance.xml:1258
 #, no-c-format
 msgid ""
 "Hibernate provides a number of metrics, from very basic to the specialized "
@@ -2329,7 +2362,7 @@ msgstr ""
 "分为三类："
 
 #. Tag: para
-#: performance.xml:1217
+#: performance.xml:1265
 #, no-c-format
 msgid ""
 "Metrics related to the general <literal>Session</literal> usage, such as "
@@ -2339,7 +2372,7 @@ msgstr ""
 "JDBC的连接数等；"
 
 #. Tag: para
-#: performance.xml:1223
+#: performance.xml:1271
 #, no-c-format
 msgid ""
 "Metrics related to he entities, collections, queries, and caches as a whole "
@@ -2347,7 +2380,7 @@ msgid ""
 msgstr "实体、集合、查询、缓存等内容的统一数据记录"
 
 #. Tag: para
-#: performance.xml:1229
+#: performance.xml:1277
 #, no-c-format
 msgid ""
 "Detailed metrics related to a particular entity, collection, query or cache "
@@ -2355,10 +2388,10 @@ msgid ""
 msgstr "和具体实体、集合、查询、缓存相关的详细数据记录"
 
 #. Tag: para
-#: performance.xml:1236
-#, no-c-format
+#: performance.xml:1284
+#, fuzzy, no-c-format
 msgid ""
-"For exampl,e you can check the cache hit, miss, and put ratio of entities, "
+"For example, you can check the cache hit, miss, and put ratio of entities, "
 "collections and queries, and the average time a query needs. Beware that the "
 "number of milliseconds is subject to approximation in Java. Hibernate is "
 "tied to the JVM precision, on some platforms this might even only be "
@@ -2369,7 +2402,7 @@ msgstr ""
 "精度和具体的JVM有关，在有些平台上其精度甚至只能精确到10秒。"
 
 #. Tag: para
-#: performance.xml:1243
+#: performance.xml:1291
 #, no-c-format
 msgid ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
@@ -2390,7 +2423,7 @@ msgstr ""
 "literal>的API文档以抓取更多信息。下面的代码则是个简单的例子："
 
 #. Tag: programlisting
-#: performance.xml:1253
+#: performance.xml:1301
 #, no-c-format
 msgid ""
 "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
@@ -2412,7 +2445,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1255
+#: performance.xml:1303
 #, no-c-format
 msgid ""
 "To work on all entities, collections, queries and region caches, you can "

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: basic_mapping.xml:5
+#: basic_mapping.xml:29
 #, no-c-format
 msgid "Basic O/R Mapping"
 msgstr "对象/关系数据库映射基础(Basic O/R Mapping)"
 
 #. Tag: title
-#: basic_mapping.xml:8
+#: basic_mapping.xml:32
 #, no-c-format
 msgid "Mapping declaration"
 msgstr "映射定义（Mapping declaration）"
 
 #. Tag: para
-#: basic_mapping.xml:10
+#: basic_mapping.xml:34
 #, no-c-format
 msgid ""
 "Object/relational mappings are usually defined in an XML document. The "
@@ -36,7 +36,7 @@ msgstr ""
 "档是按照持久化类的定义来创建的， 而非表的定义。"
 
 #. Tag: para
-#: basic_mapping.xml:17
+#: basic_mapping.xml:41
 #, no-c-format
 msgid ""
 "Note that, even though many Hibernate users choose to write the XML by hand, "
@@ -47,13 +47,13 @@ msgstr ""
 "映射文档， 包括XDoclet,Middlegen和AndroMDA。"
 
 #. Tag: para
-#: basic_mapping.xml:23
+#: basic_mapping.xml:47
 #, no-c-format
 msgid "Lets kick off with an example mapping:"
 msgstr "让我们从一个映射的例子开始："
 
 #. Tag: programlisting
-#: basic_mapping.xml:27
+#: basic_mapping.xml:51
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -123,7 +123,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:29
+#: basic_mapping.xml:53
 #, no-c-format
 msgid ""
 "We will now discuss the content of the mapping document. We will only "
@@ -137,13 +137,13 @@ msgstr ""
 "影响导出的数据库schema结果。 （比如，<literal> not-null</literal> 属性。）"
 
 #. Tag: title
-#: basic_mapping.xml:40
+#: basic_mapping.xml:64
 #, no-c-format
 msgid "Doctype"
 msgstr "Doctype"
 
 #. Tag: para
-#: basic_mapping.xml:42
+#: basic_mapping.xml:66
 #, no-c-format
 msgid ""
 "All XML mappings should declare the doctype shown. The actual DTD may be "
@@ -160,13 +160,13 @@ msgstr ""
 "的classpath目录检查XML文件里的DTD声明。"
 
 #. Tag: title
-#: basic_mapping.xml:52
+#: basic_mapping.xml:76
 #, no-c-format
 msgid "EntityResolver"
 msgstr "EntityResolver"
 
 #. Tag: para
-#: basic_mapping.xml:53
+#: basic_mapping.xml:77
 #, no-c-format
 msgid ""
 "As mentioned previously, Hibernate will first attempt to resolve DTDs in its "
@@ -187,7 +187,7 @@ msgstr ""
 "认两种不同的 systenId命名空间。"
 
 #. Tag: para
-#: basic_mapping.xml:61
+#: basic_mapping.xml:85
 #, no-c-format
 msgid ""
 "a <literal>hibernate namespace</literal> is recognized whenever the resolver "
@@ -200,7 +200,7 @@ msgstr ""
 "就试图通过加载Hibernate类的classloader来查找这些实体。"
 
 #. Tag: para
-#: basic_mapping.xml:70
+#: basic_mapping.xml:94
 #, no-c-format
 msgid ""
 "a <literal>user namespace</literal> is recognized whenever the resolver "
@@ -214,13 +214,13 @@ msgstr ""
 "文的classloader和(2)加载Hibernate class的classloader来查找这些实体。"
 
 #. Tag: para
-#: basic_mapping.xml:79
+#: basic_mapping.xml:103
 #, no-c-format
 msgid "An example of utilizing user namespacing:"
 msgstr "使用user namespace(用户命名空间)的例子："
 
 #. Tag: programlisting
-#: basic_mapping.xml:82
+#: basic_mapping.xml:106
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -241,24 +241,24 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:83
+#: basic_mapping.xml:107
 #, fuzzy, no-c-format
 msgid ""
 "Where <literal>types.xml</literal> is a resource in the <literal>your."
-"domain</literal> package and contains a custom <xref linkend=\"mapping-types-"
-"custom\"/>typedef."
+"domain</literal> package and contains a custom <link linkend=\"mapping-types-"
+"custom\">typedef</link>."
 msgstr ""
 "<literal>types.xml</literal>是<literal>your.domain</literal>包中的一个资源，"
 "它包含了一个定制的<xref linkend=\"mapping-types-custom\">typedef</xref>。"
 
 #. Tag: title
-#: basic_mapping.xml:91
+#: basic_mapping.xml:115
 #, no-c-format
 msgid "hibernate-mapping"
 msgstr "hibernate-mapping"
 
 #. Tag: para
-#: basic_mapping.xml:93
+#: basic_mapping.xml:117
 #, no-c-format
 msgid ""
 "This element has several optional attributes. The <literal>schema</literal> "
@@ -280,7 +280,7 @@ msgstr ""
 "语言中可以使用 非全限定名的类名。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:114
+#: basic_mapping.xml:138
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping\n"
@@ -295,19 +295,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:117
+#: basic_mapping.xml:141
 #, no-c-format
 msgid "<literal>schema</literal> (optional): The name of a database schema."
 msgstr "<literal>schema</literal> (可选): 数据库schema的名称。"
 
 #. Tag: para
-#: basic_mapping.xml:122
+#: basic_mapping.xml:146
 #, no-c-format
 msgid "<literal>catalog</literal> (optional): The name of a database catalog."
 msgstr "<literal>catalog</literal> (可选): 数据库catalog的名称。"
 
 #. Tag: para
-#: basic_mapping.xml:127
+#: basic_mapping.xml:151
 #, no-c-format
 msgid ""
 "<literal>default-cascade</literal> (optional - defaults to <literal>none</"
@@ -317,7 +317,7 @@ msgstr ""
 "默认的级联风格。"
 
 #. Tag: para
-#: basic_mapping.xml:133
+#: basic_mapping.xml:157
 #, no-c-format
 msgid ""
 "<literal>default-access</literal> (optional - defaults to <literal>property</"
@@ -329,7 +329,7 @@ msgstr ""
 "<literal>PropertyAccessor</literal>接口 自定义。"
 
 #. Tag: para
-#: basic_mapping.xml:140
+#: basic_mapping.xml:164
 #, no-c-format
 msgid ""
 "<literal>default-lazy</literal> (optional - defaults to <literal>true</"
@@ -341,7 +341,7 @@ msgstr ""
 "么样的默认加载风格。"
 
 #. Tag: para
-#: basic_mapping.xml:147
+#: basic_mapping.xml:171
 #, no-c-format
 msgid ""
 "<literal>auto-import</literal> (optional - defaults to <literal>true</"
@@ -352,7 +352,7 @@ msgstr ""
 "我们是否可以在查询语言中使用非全限定的类名（仅限于本映射文件中的类）。"
 
 #. Tag: para
-#: basic_mapping.xml:154
+#: basic_mapping.xml:178
 #, no-c-format
 msgid ""
 "<literal>package</literal> (optional): Specifies a package prefix to assume "
@@ -362,7 +362,7 @@ msgstr ""
 "限定的类名， 就使用这个作为包名。"
 
 #. Tag: para
-#: basic_mapping.xml:162
+#: basic_mapping.xml:186
 #, no-c-format
 msgid ""
 "If you have two persistent classes with the same (unqualified) name, you "
@@ -374,7 +374,7 @@ msgstr ""
 "你把一个“import过”的名字同时对应两个类， Hibernate会抛出一个异常。"
 
 #. Tag: para
-#: basic_mapping.xml:168
+#: basic_mapping.xml:192
 #, no-c-format
 msgid ""
 "Note that the <literal>hibernate-mapping</literal> element allows you to "
@@ -392,13 +392,13 @@ msgstr ""
 "或者如果使用继承，<literal>Animal.hbm.xml</literal>。"
 
 #. Tag: title
-#: basic_mapping.xml:181
+#: basic_mapping.xml:205
 #, no-c-format
 msgid "<title>class</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:183
+#: basic_mapping.xml:207
 #, no-c-format
 msgid ""
 "You may declare a persistent class using the <literal>class</literal> "
@@ -406,7 +406,7 @@ msgid ""
 msgstr "你可以使用<literal>class</literal>元素来定义一个持久化类："
 
 #. Tag: programlisting
-#: basic_mapping.xml:211
+#: basic_mapping.xml:235
 #, no-c-format
 msgid ""
 "<![CDATA[<class\n"
@@ -436,7 +436,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:214
+#: basic_mapping.xml:238
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional): The fully qualified Java class name of "
@@ -447,7 +447,7 @@ msgstr ""
 "属性不存在，Hibernate将假定这是一个非POJO的实体映射。"
 
 #. Tag: para
-#: basic_mapping.xml:221
+#: basic_mapping.xml:245
 #, no-c-format
 msgid ""
 "<literal>table</literal> (optional - defaults to the unqualified class "
@@ -456,7 +456,7 @@ msgstr ""
 "<literal>table</literal> (可选 - 默认是类的非全限定名): 对应的数据库表名。"
 
 #. Tag: para
-#: basic_mapping.xml:227
+#: basic_mapping.xml:251
 #, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -469,7 +469,7 @@ msgstr ""
 "和 <literal>not null</literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:234
+#: basic_mapping.xml:258
 #, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional, defaults to <literal>true</literal>): "
@@ -479,7 +479,7 @@ msgstr ""
 "的实例是可变的或者不可变的。"
 
 #. Tag: para
-#: basic_mapping.xml:240 basic_mapping.xml:2204
+#: basic_mapping.xml:264 basic_mapping.xml:2228
 #, fuzzy, no-c-format
 msgid ""
 "<literal>schema</literal> (optional): Override the schema name specified by "
@@ -493,7 +493,7 @@ msgstr ""
 "literal>元素指定的模式名称。"
 
 #. Tag: para
-#: basic_mapping.xml:246 basic_mapping.xml:2210
+#: basic_mapping.xml:270 basic_mapping.xml:2234
 #, fuzzy, no-c-format
 msgid ""
 "<literal>catalog</literal> (optional): Override the catalog name specified "
@@ -507,7 +507,7 @@ msgstr ""
 "mapping&gt;</literal>元素指定的目录名称。"
 
 #. Tag: para
-#: basic_mapping.xml:252
+#: basic_mapping.xml:276
 #, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): Specifies an interface to use for lazy "
@@ -517,7 +517,7 @@ msgstr ""
 "可以在这里使用该类自己的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:258
+#: basic_mapping.xml:282
 #, no-c-format
 msgid ""
 "<literal>dynamic-update</literal> (optional, defaults to <literal>false</"
@@ -529,7 +529,7 @@ msgstr ""
 "过的字段。"
 
 #. Tag: para
-#: basic_mapping.xml:265
+#: basic_mapping.xml:289
 #, no-c-format
 msgid ""
 "<literal>dynamic-insert</literal> (optional, defaults to <literal>false</"
@@ -541,7 +541,7 @@ msgstr ""
 "空值字段。"
 
 #. Tag: para
-#: basic_mapping.xml:272
+#: basic_mapping.xml:296
 #, no-c-format
 msgid ""
 "<literal>select-before-update</literal> (optional, defaults to "
@@ -562,7 +562,7 @@ msgstr ""
 "<literal>UPDATE</literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:282
+#: basic_mapping.xml:306
 #, no-c-format
 msgid ""
 "<literal>polymorphism</literal> (optional, defaults to <literal>implicit</"
@@ -574,7 +574,7 @@ msgstr ""
 "承策略中用到－译注）。"
 
 #. Tag: para
-#: basic_mapping.xml:288
+#: basic_mapping.xml:312
 #, no-c-format
 msgid ""
 "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</"
@@ -584,7 +584,7 @@ msgstr ""
 "件， 在抓取这个类的对象时会一直增加这个条件。"
 
 #. Tag: para
-#: basic_mapping.xml:294
+#: basic_mapping.xml:318
 #, no-c-format
 msgid ""
 "<literal>persister</literal> (optional): Specifies a custom "
@@ -594,7 +594,7 @@ msgstr ""
 "literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:299
+#: basic_mapping.xml:323
 #, no-c-format
 msgid ""
 "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) "
@@ -604,7 +604,7 @@ msgstr ""
 "根据标识符（identifier）抓取实例时使用的\"batch size\"（批次抓取数量）。"
 
 #. Tag: para
-#: basic_mapping.xml:305
+#: basic_mapping.xml:329
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional, defaults to <literal>version</"
@@ -614,7 +614,7 @@ msgstr ""
 "<literal>version</literal>): 决定乐观锁定的策略。"
 
 #. Tag: para
-#: basic_mapping.xml:311
+#: basic_mapping.xml:335
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional): Lazy fetching may be completely disabled "
@@ -624,7 +624,7 @@ msgstr ""
 "所有的延迟加载（Lazy fetching）功能将被全部禁用（disabled）。"
 
 #. Tag: para
-#: basic_mapping.xml:317
+#: basic_mapping.xml:341
 #, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional, defaults to the class name): "
@@ -640,7 +640,7 @@ msgstr ""
 "\"persistent-classes-dynamicmodels\"/> and <xref linkend=\"xml\"/>。"
 
 #. Tag: para
-#: basic_mapping.xml:327
+#: basic_mapping.xml:351
 #, no-c-format
 msgid ""
 "<literal>check</literal> (optional): A SQL expression used to generate a "
@@ -651,7 +651,7 @@ msgstr ""
 "加多行（multi-row）约束<emphasis>检查</emphasis>。"
 
 #. Tag: para
-#: basic_mapping.xml:333
+#: basic_mapping.xml:357
 #, no-c-format
 msgid ""
 "<literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on "
@@ -666,7 +666,7 @@ msgstr ""
 "重点， 它代表了一个存储元组（tuple）的物理位置。"
 
 #. Tag: para
-#: basic_mapping.xml:341
+#: basic_mapping.xml:365
 #, no-c-format
 msgid ""
 "<literal>subselect</literal> (optional): Maps an immutable and read-only "
@@ -678,7 +678,7 @@ msgstr ""
 "但最好不要这样做。更多的介绍请看下面内容。"
 
 #. Tag: para
-#: basic_mapping.xml:348
+#: basic_mapping.xml:372
 #, no-c-format
 msgid ""
 "<literal>abstract</literal> (optional): Used to mark abstract superclasses "
@@ -688,7 +688,7 @@ msgstr ""
 "literal>的继承结构 （hierarchies）中标识抽象超类。"
 
 #. Tag: para
-#: basic_mapping.xml:356
+#: basic_mapping.xml:380
 #, no-c-format
 msgid ""
 "It is perfectly acceptable for the named persistent class to be an "
@@ -703,7 +703,7 @@ msgstr ""
 "定类名，<literal>比如：Foo$Bar</literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:363
+#: basic_mapping.xml:387
 #, no-c-format
 msgid ""
 "Immutable classes, <literal>mutable=\"false\"</literal>, may not be updated "
@@ -714,7 +714,7 @@ msgstr ""
 "这可以让Hibernate做一些小小的性能优化。"
 
 #. Tag: para
-#: basic_mapping.xml:368
+#: basic_mapping.xml:392
 #, no-c-format
 msgid ""
 "The optional <literal>proxy</literal> attribute enables lazy initialization "
@@ -728,7 +728,7 @@ msgstr ""
 "的持久化对象才会被装载。参见下面的“用于延迟装载的代理”。"
 
 #. Tag: para
-#: basic_mapping.xml:375
+#: basic_mapping.xml:399
 #, no-c-format
 msgid ""
 "<emphasis>Implicit</emphasis> polymorphism means that instances of the class "
@@ -756,7 +756,7 @@ msgstr ""
 "型”的类，只包含部分表字段）。"
 
 #. Tag: para
-#: basic_mapping.xml:387
+#: basic_mapping.xml:411
 #, no-c-format
 msgid ""
 "The <literal>persister</literal> attribute lets you customize the "
@@ -776,7 +776,7 @@ msgstr ""
 "literal>，这是一个简单的例子 （“持久化”到一个<literal>Hashtable</literal>）。"
 
 #. Tag: para
-#: basic_mapping.xml:398
+#: basic_mapping.xml:422
 #, no-c-format
 msgid ""
 "Note that the <literal>dynamic-update</literal> and <literal>dynamic-insert</"
@@ -792,7 +792,7 @@ msgstr ""
 "否能够提高效率要视情形而定。请用你的智慧决定是否使用。"
 
 #. Tag: para
-#: basic_mapping.xml:406
+#: basic_mapping.xml:430
 #, no-c-format
 msgid ""
 "Use of <literal>select-before-update</literal> will usually decrease "
@@ -805,7 +805,7 @@ msgstr ""
 "库不必要的触发update。 这就很有用了。"
 
 #. Tag: para
-#: basic_mapping.xml:412
+#: basic_mapping.xml:436
 #, no-c-format
 msgid ""
 "If you enable <literal>dynamic-update</literal>, you will have a choice of "
@@ -814,19 +814,19 @@ msgstr ""
 "如果你打开了<literal>dynamic-update</literal>，你可以选择几种乐观锁定的策略："
 
 #. Tag: para
-#: basic_mapping.xml:418
+#: basic_mapping.xml:442
 #, no-c-format
 msgid "<literal>version</literal> check the version/timestamp columns"
 msgstr "<literal>version（版本检查）</literal> 检查version/timestamp字段"
 
 #. Tag: para
-#: basic_mapping.xml:423
+#: basic_mapping.xml:447
 #, no-c-format
 msgid "<literal>all</literal> check all columns"
 msgstr "<literal>all（全部）</literal> 检查全部字段"
 
 #. Tag: para
-#: basic_mapping.xml:428
+#: basic_mapping.xml:452
 #, no-c-format
 msgid ""
 "<literal>dirty</literal> check the changed columns, allowing some concurrent "
@@ -834,13 +834,13 @@ msgid ""
 msgstr "<literal>dirty（脏检查）</literal>只检察修改过的字段"
 
 #. Tag: para
-#: basic_mapping.xml:433
+#: basic_mapping.xml:457
 #, no-c-format
 msgid "<literal>none</literal> do not use optimistic locking"
 msgstr "<literal>none（不检查）</literal>不使用乐观锁定"
 
 #. Tag: para
-#: basic_mapping.xml:438
+#: basic_mapping.xml:462
 #, no-c-format
 msgid ""
 "We <emphasis>very</emphasis> strongly recommend that you use version/"
@@ -854,7 +854,7 @@ msgstr ""
 "外进行操作的策略（例如： 在使用<literal>Session.merge()</literal>的时候）。"
 
 #. Tag: para
-#: basic_mapping.xml:445
+#: basic_mapping.xml:469
 #, no-c-format
 msgid ""
 "There is no difference between a view and a base table for a Hibernate "
@@ -870,7 +870,7 @@ msgstr ""
 "（immutable）并且是 只读的实体到一个给定的SQL子查询表达式："
 
 #. Tag: programlisting
-#: basic_mapping.xml:453
+#: basic_mapping.xml:477
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Summary\">\n"
@@ -888,7 +888,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:455
+#: basic_mapping.xml:479
 #, no-c-format
 msgid ""
 "Declare the tables to synchronize this entity with, ensuring that auto-flush "
@@ -901,13 +901,13 @@ msgstr ""
 "literal>在属性元素 和一个嵌套映射元素中都可见。"
 
 #. Tag: title
-#: basic_mapping.xml:465
+#: basic_mapping.xml:489
 #, no-c-format
 msgid "<title>id</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:467
+#: basic_mapping.xml:491
 #, no-c-format
 msgid ""
 "Mapped classes <emphasis>must</emphasis> declare the primary key column of "
@@ -921,7 +921,7 @@ msgstr ""
 "literal> 元素定义了该属性到数据库表主键字段的映射。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:482
+#: basic_mapping.xml:506
 #, no-c-format
 msgid ""
 "<![CDATA[<id\n"
@@ -937,21 +937,21 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:485
+#: basic_mapping.xml:509
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional): The name of the identifier property."
 msgstr "<literal>name</literal> (可选): 标识属性的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:490
+#: basic_mapping.xml:514
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional): A name that indicates the Hibernate type."
 msgstr "<literal>type</literal> (可选): 标识Hibernate类型的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:495
+#: basic_mapping.xml:519
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -959,7 +959,7 @@ msgid ""
 msgstr "<literal>column</literal> (可选 - 默认为属性名): 主键字段的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:501
+#: basic_mapping.xml:525
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to a \"sensible\" "
@@ -973,9 +973,9 @@ msgstr ""
 "例区分开来。"
 
 #. Tag: para
-#: basic_mapping.xml:509 basic_mapping.xml:1017 basic_mapping.xml:1156
-#: basic_mapping.xml:1238 basic_mapping.xml:1345 basic_mapping.xml:1534
-#: basic_mapping.xml:1708 basic_mapping.xml:1878 basic_mapping.xml:2457
+#: basic_mapping.xml:533 basic_mapping.xml:1041 basic_mapping.xml:1180
+#: basic_mapping.xml:1262 basic_mapping.xml:1369 basic_mapping.xml:1558
+#: basic_mapping.xml:1732 basic_mapping.xml:1902 basic_mapping.xml:2481
 #, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -1011,7 +1011,7 @@ msgstr ""
 "Hibernate 用来访问属性值的策略。"
 
 #. Tag: para
-#: basic_mapping.xml:517
+#: basic_mapping.xml:541
 #, no-c-format
 msgid ""
 "If the <literal>name</literal> attribute is missing, it is assumed that the "
@@ -1019,7 +1019,7 @@ msgid ""
 msgstr "如果 <literal>name</literal>属性不存在，会认为这个类没有标识属性。"
 
 #. Tag: para
-#: basic_mapping.xml:522
+#: basic_mapping.xml:546
 #, no-c-format
 msgid ""
 "The <literal>unsaved-value</literal> attribute is almost never needed in "
@@ -1027,7 +1027,7 @@ msgid ""
 msgstr "<literal>unsaved-value</literal> 属性在Hibernate3中几乎不再需要。"
 
 #. Tag: para
-#: basic_mapping.xml:526
+#: basic_mapping.xml:550
 #, no-c-format
 msgid ""
 "There is an alternative <literal>&lt;composite-id&gt;</literal> declaration "
@@ -1038,13 +1038,13 @@ msgstr ""
 "数据。 我们强烈不建议使用这种方式。"
 
 #. Tag: title
-#: basic_mapping.xml:532
+#: basic_mapping.xml:556
 #, no-c-format
 msgid "Generator"
 msgstr "Generator"
 
 #. Tag: para
-#: basic_mapping.xml:534
+#: basic_mapping.xml:558
 #, no-c-format
 msgid ""
 "The optional <literal>&lt;generator&gt;</literal> child element names a Java "
@@ -1058,7 +1058,7 @@ msgstr ""
 "数， 用<literal>&lt;param&gt;</literal>元素来传递。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:541
+#: basic_mapping.xml:565
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1070,7 +1070,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:543
+#: basic_mapping.xml:567
 #, fuzzy, no-c-format
 msgid ""
 "All generators implement the interface <literal>org.hibernate.id."
@@ -1085,13 +1085,13 @@ msgstr ""
 "<placeholder-1/>"
 
 #. Tag: literal
-#: basic_mapping.xml:551
+#: basic_mapping.xml:575
 #, no-c-format
 msgid "increment"
 msgstr "increment"
 
 #. Tag: para
-#: basic_mapping.xml:553
+#: basic_mapping.xml:577
 #, no-c-format
 msgid ""
 "generates identifiers of type <literal>long</literal>, <literal>short</"
@@ -1104,13 +1104,13 @@ msgstr ""
 "用。 <emphasis>在集群下不要使用。</emphasis>"
 
 #. Tag: literal
-#: basic_mapping.xml:562
+#: basic_mapping.xml:586
 #, no-c-format
 msgid "identity"
 msgstr "identity"
 
 #. Tag: para
-#: basic_mapping.xml:564
+#: basic_mapping.xml:588
 #, no-c-format
 msgid ""
 "supports identity columns in DB2, MySQL, MS SQL Server, Sybase and "
@@ -1122,13 +1122,13 @@ msgstr ""
 "<literal>int</literal>类型的。"
 
 #. Tag: literal
-#: basic_mapping.xml:572
+#: basic_mapping.xml:596
 #, no-c-format
 msgid "sequence"
 msgstr "sequence"
 
 #. Tag: para
-#: basic_mapping.xml:574
+#: basic_mapping.xml:598
 #, no-c-format
 msgid ""
 "uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator in "
@@ -1140,13 +1140,13 @@ msgstr ""
 "<literal>short</literal>或者 <literal>int</literal>类型的。"
 
 #. Tag: literal
-#: basic_mapping.xml:582
+#: basic_mapping.xml:606
 #, no-c-format
 msgid "hilo"
 msgstr "hilo"
 
 #. Tag: para
-#: basic_mapping.xml:584
+#: basic_mapping.xml:608
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1162,13 +1162,13 @@ msgstr ""
 "高位值的来源。 高/低位算法生成的标识符只在一个特定的数据库中是唯一的。"
 
 #. Tag: literal
-#: basic_mapping.xml:594
+#: basic_mapping.xml:618
 #, no-c-format
 msgid "seqhilo"
 msgstr "seqhilo"
 
 #. Tag: para
-#: basic_mapping.xml:596
+#: basic_mapping.xml:620
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1180,13 +1180,13 @@ msgstr ""
 "（sequence)的名字。"
 
 #. Tag: literal
-#: basic_mapping.xml:604
+#: basic_mapping.xml:628
 #, no-c-format
 msgid "uuid"
 msgstr "uuid"
 
 #. Tag: para
-#: basic_mapping.xml:606
+#: basic_mapping.xml:630
 #, no-c-format
 msgid ""
 "uses a 128-bit UUID algorithm to generate identifiers of type string, unique "
@@ -1197,25 +1197,25 @@ msgstr ""
 "了IP地址）。UUID被编码为一个32位16进制数字的字符串。"
 
 #. Tag: literal
-#: basic_mapping.xml:614
+#: basic_mapping.xml:638
 #, no-c-format
 msgid "guid"
 msgstr "guid"
 
 #. Tag: para
-#: basic_mapping.xml:616
+#: basic_mapping.xml:640
 #, no-c-format
 msgid "uses a database-generated GUID string on MS SQL Server and MySQL."
 msgstr "在MS SQL Server 和 MySQL 中使用数据库生成的GUID字符串。"
 
 #. Tag: literal
-#: basic_mapping.xml:622
+#: basic_mapping.xml:646
 #, no-c-format
 msgid "native"
 msgstr "native"
 
 #. Tag: para
-#: basic_mapping.xml:624
+#: basic_mapping.xml:648
 #, no-c-format
 msgid ""
 "picks <literal>identity</literal>, <literal>sequence</literal> or "
@@ -1226,13 +1226,13 @@ msgstr ""
 "literal> 或者<literal>hilo</literal>中的一个。"
 
 #. Tag: literal
-#: basic_mapping.xml:632
+#: basic_mapping.xml:656
 #, no-c-format
 msgid "assigned"
 msgstr "assigned"
 
 #. Tag: para
-#: basic_mapping.xml:634
+#: basic_mapping.xml:658
 #, no-c-format
 msgid ""
 "lets the application to assign an identifier to the object before "
@@ -1243,13 +1243,13 @@ msgstr ""
 "<literal>&lt;generator&gt;</literal>元素没有指定时的默认生成策略。"
 
 #. Tag: literal
-#: basic_mapping.xml:642
+#: basic_mapping.xml:666
 #, no-c-format
 msgid "select"
 msgstr "select"
 
 #. Tag: para
-#: basic_mapping.xml:644
+#: basic_mapping.xml:668
 #, no-c-format
 msgid ""
 "retrieves a primary key assigned by a database trigger by selecting the row "
@@ -1257,13 +1257,13 @@ msgid ""
 msgstr "通过数据库触发器选择一些唯一主键的行并返回主键值来分配一个主键。"
 
 #. Tag: literal
-#: basic_mapping.xml:651
+#: basic_mapping.xml:675
 #, no-c-format
 msgid "foreign"
 msgstr "foreign"
 
 #. Tag: para
-#: basic_mapping.xml:653
+#: basic_mapping.xml:677
 #, no-c-format
 msgid ""
 "uses the identifier of another associated object. Usually used in "
@@ -1274,13 +1274,13 @@ msgstr ""
 "联合起来使用。"
 
 #. Tag: literal
-#: basic_mapping.xml:660
+#: basic_mapping.xml:684
 #, no-c-format
 msgid "sequence-identity"
 msgstr "sequence-identity"
 
 #. Tag: para
-#: basic_mapping.xml:662
+#: basic_mapping.xml:686
 #, no-c-format
 msgid ""
 "a specialized sequence generation strategy which utilizes a database "
@@ -1297,13 +1297,13 @@ msgstr ""
 "statements are disabled due to a bug in the Oracle drivers.）"
 
 #. Tag: title
-#: basic_mapping.xml:679
+#: basic_mapping.xml:703
 #, no-c-format
 msgid "Hi/lo algorithm"
 msgstr "高/低位算法（Hi/Lo Algorithm）"
 
 #. Tag: para
-#: basic_mapping.xml:680
+#: basic_mapping.xml:704
 #, no-c-format
 msgid ""
 "The <literal>hilo</literal> and <literal>seqhilo</literal> generators "
@@ -1318,7 +1318,7 @@ msgstr ""
 "情况下）。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:687
+#: basic_mapping.xml:711
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1331,7 +1331,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:689
+#: basic_mapping.xml:713
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1343,7 +1343,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:691
+#: basic_mapping.xml:715
 #, no-c-format
 msgid ""
 "Unfortunately, you can't use <literal>hilo</literal> when supplying your own "
@@ -1357,13 +1357,13 @@ msgstr ""
 "须正确地配置 <literal>hibernate.transaction.manager_lookup_class</literal>。"
 
 #. Tag: title
-#: basic_mapping.xml:700
+#: basic_mapping.xml:724
 #, no-c-format
 msgid "UUID algorithm"
 msgstr "UUID算法（UUID Algorithm ）"
 
 #. Tag: para
-#: basic_mapping.xml:701
+#: basic_mapping.xml:725
 #, no-c-format
 msgid ""
 "The UUID contains: IP address, startup time of the JVM (accurate to a "
@@ -1376,13 +1376,13 @@ msgstr ""
 "用JNI的前提下的能做的最好实现了。"
 
 #. Tag: title
-#: basic_mapping.xml:710
+#: basic_mapping.xml:734
 #, no-c-format
 msgid "Identity columns and sequences"
 msgstr "标识字段和序列（Identity columns and Sequences）"
 
 #. Tag: para
-#: basic_mapping.xml:711
+#: basic_mapping.xml:735
 #, no-c-format
 msgid ""
 "For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), "
@@ -1397,7 +1397,7 @@ msgstr ""
 "literal>风格的关键字生成。 这两种方式对于插入一个新的对象都需要两次SQL查询。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:719
+#: basic_mapping.xml:743
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
@@ -1408,7 +1408,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:721
+#: basic_mapping.xml:745
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\" unsaved-value=\"0"
@@ -1418,7 +1418,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:723
+#: basic_mapping.xml:747
 #, no-c-format
 msgid ""
 "For cross-platform development, the <literal>native</literal> strategy will "
@@ -1431,13 +1431,13 @@ msgstr ""
 "择哪一个，这取决于底层数据库的支持能力。"
 
 #. Tag: title
-#: basic_mapping.xml:732
+#: basic_mapping.xml:756
 #, no-c-format
 msgid "Assigned identifiers"
 msgstr "程序分配的标识符（Assigned Identifiers）"
 
 #. Tag: para
-#: basic_mapping.xml:733
+#: basic_mapping.xml:757
 #, no-c-format
 msgid ""
 "If you want the application to assign identifiers (as opposed to having "
@@ -1455,7 +1455,7 @@ msgstr ""
 "注）。这是没有指定<literal>&lt;generator&gt;</literal>元素时的默认行为"
 
 #. Tag: para
-#: basic_mapping.xml:742
+#: basic_mapping.xml:766
 #, no-c-format
 msgid ""
 "Choosing the <literal>assigned</literal> generator makes Hibernate use "
@@ -1470,20 +1470,20 @@ msgstr ""
 "来确定一个实例是瞬时的（transient） 还是脱管的（detached）。"
 
 #. Tag: title
-#: basic_mapping.xml:752
+#: basic_mapping.xml:776
 #, no-c-format
 msgid "Primary keys assigned by triggers"
 msgstr "触发器实现的主键生成器（Primary keys assigned by triggers）"
 
 #. Tag: para
-#: basic_mapping.xml:753
+#: basic_mapping.xml:777
 #, no-c-format
 msgid ""
 "For legacy schemas only (Hibernate does not generate DDL with triggers)."
 msgstr "仅仅用于遗留的schema中 (Hibernate不能使用触发器生成DDL)。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:757
+#: basic_mapping.xml:781
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
@@ -1494,7 +1494,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:759
+#: basic_mapping.xml:783
 #, no-c-format
 msgid ""
 "In the above example, there is a unique valued property named "
@@ -1507,13 +1507,13 @@ msgstr ""
 "的代理键（surrogate key） 的值由触发器生成。"
 
 #. Tag: title
-#: basic_mapping.xml:771
+#: basic_mapping.xml:795
 #, no-c-format
 msgid "Enhanced identifier generators"
 msgstr "Enhanced identifier generators"
 
 #. Tag: para
-#: basic_mapping.xml:773
+#: basic_mapping.xml:797
 #, no-c-format
 msgid ""
 "Starting with release 3.2.3, there are 2 new generators which represent a re-"
@@ -1533,7 +1533,7 @@ msgstr ""
 "current releases and can be referenced by FQN."
 
 #. Tag: para
-#: basic_mapping.xml:781
+#: basic_mapping.xml:805
 #, fuzzy, no-c-format
 msgid ""
 "The first of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1570,7 +1570,7 @@ msgstr ""
 "<placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:795
+#: basic_mapping.xml:819
 #, no-c-format
 msgid ""
 "<literal>sequence_name</literal> (optional, defaults to "
@@ -1582,7 +1582,7 @@ msgstr ""
 "to be used."
 
 #. Tag: para
-#: basic_mapping.xml:801
+#: basic_mapping.xml:825
 #, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional, defaults to <literal>1</"
@@ -1596,7 +1596,7 @@ msgstr ""
 "\"STARTS WITH\"."
 
 #. Tag: para
-#: basic_mapping.xml:808
+#: basic_mapping.xml:832
 #, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional, defaults to <literal>1</"
@@ -1610,7 +1610,7 @@ msgstr ""
 "named \"INCREMENT BY\"."
 
 #. Tag: para
-#: basic_mapping.xml:815
+#: basic_mapping.xml:839
 #, no-c-format
 msgid ""
 "<literal>force_table_use</literal> (optional, defaults to <literal>false</"
@@ -1622,7 +1622,7 @@ msgstr ""
 "though the dialect might support sequence?"
 
 #. Tag: para
-#: basic_mapping.xml:822
+#: basic_mapping.xml:846
 #, no-c-format
 msgid ""
 "<literal>value_column</literal> (optional, defaults to <literal>next_val</"
@@ -1634,7 +1634,7 @@ msgstr ""
 "table which is used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:829
+#: basic_mapping.xml:853
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional, defaults to <literal>none</"
@@ -1643,7 +1643,7 @@ msgstr ""
 "<literal>cascade</literal> (可选 -默认是<literal>none</literal>): 级联的类型"
 
 #. Tag: para
-#: basic_mapping.xml:836
+#: basic_mapping.xml:860
 #, fuzzy, no-c-format
 msgid ""
 "The second of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1669,7 +1669,7 @@ msgstr ""
 "parameters: <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:846
+#: basic_mapping.xml:870
 #, no-c-format
 msgid ""
 "<literal>table_name</literal> (optional, defaults to "
@@ -1679,7 +1679,7 @@ msgstr ""
 "<literal>hibernate_sequences</literal>): The name of the table to be used."
 
 #. Tag: para
-#: basic_mapping.xml:852
+#: basic_mapping.xml:876
 #, no-c-format
 msgid ""
 "<literal>value_column_name</literal> (optional, defaults to "
@@ -1691,7 +1691,7 @@ msgstr ""
 "used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:858
+#: basic_mapping.xml:882
 #, no-c-format
 msgid ""
 "<literal>segment_column_name</literal> (optional, defaults to "
@@ -1705,7 +1705,7 @@ msgstr ""
 "identifies which increment value to use."
 
 #. Tag: para
-#: basic_mapping.xml:865
+#: basic_mapping.xml:889
 #, no-c-format
 msgid ""
 "<literal>segment_value</literal> (optional, defaults to <literal>default</"
@@ -1717,7 +1717,7 @@ msgstr ""
 "pull increment values for this generator."
 
 #. Tag: para
-#: basic_mapping.xml:872
+#: basic_mapping.xml:896
 #, no-c-format
 msgid ""
 "<literal>segment_value_length</literal> (optional, defaults to <literal>255</"
@@ -1729,7 +1729,7 @@ msgstr ""
 "segment key column."
 
 #. Tag: para
-#: basic_mapping.xml:878
+#: basic_mapping.xml:902
 #, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional, defaults to <literal>1</"
@@ -1739,7 +1739,7 @@ msgstr ""
 "literal>): The initial value to be retrieved from the table."
 
 #. Tag: para
-#: basic_mapping.xml:884
+#: basic_mapping.xml:908
 #, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional, defaults to <literal>1</"
@@ -1749,7 +1749,7 @@ msgstr ""
 "literal>): The value by which subsequent calls to the table should differ."
 
 #. Tag: para
-#: basic_mapping.xml:890
+#: basic_mapping.xml:914
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional, defaults to <literal></literal>): See"
@@ -1757,13 +1757,13 @@ msgstr ""
 "<literal>cascade</literal> (可选 -默认是<literal>none</literal>): 级联的类型"
 
 #. Tag: title
-#: basic_mapping.xml:900
+#: basic_mapping.xml:924
 #, no-c-format
 msgid "Identifier generator optimization"
 msgstr "Identifier generator optimization"
 
 #. Tag: para
-#: basic_mapping.xml:901
+#: basic_mapping.xml:925
 #, fuzzy, no-c-format
 msgid ""
 "For identifier generators which store values in the database, it is "
@@ -1783,7 +1783,7 @@ msgstr ""
 "\"/> support this notion. <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:909
+#: basic_mapping.xml:933
 #, no-c-format
 msgid ""
 "<literal>none</literal> (generally this is the default if no optimizer was "
@@ -1795,7 +1795,7 @@ msgstr ""
 "each and every request."
 
 #. Tag: para
-#: basic_mapping.xml:915
+#: basic_mapping.xml:939
 #, no-c-format
 msgid ""
 "<literal>hilo</literal>: applies a hi/lo algorithm around the database "
@@ -1813,7 +1813,7 @@ msgstr ""
 "define a group \"hi value\"."
 
 #. Tag: para
-#: basic_mapping.xml:924
+#: basic_mapping.xml:948
 #, no-c-format
 msgid ""
 "<literal>pooled</literal>: like was discussed for <literal>hilo</literal>, "
@@ -1831,13 +1831,13 @@ msgstr ""
 "refers to the values coming from the database."
 
 #. Tag: title
-#: basic_mapping.xml:937
+#: basic_mapping.xml:961
 #, no-c-format
 msgid "composite-id"
 msgstr "composite-id"
 
 #. Tag: programlisting
-#: basic_mapping.xml:939
+#: basic_mapping.xml:963
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id\n"
@@ -1856,7 +1856,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:941
+#: basic_mapping.xml:965
 #, no-c-format
 msgid ""
 "For a table with a composite key, you may map multiple properties of the "
@@ -1869,7 +1869,7 @@ msgstr ""
 "性映射和<literal>&lt;key-many-to-one&gt;</literal>属性映射作为子元素。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:948
+#: basic_mapping.xml:972
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id>\n"
@@ -1879,7 +1879,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:950
+#: basic_mapping.xml:974
 #, no-c-format
 msgid ""
 "Your persistent class <emphasis>must</emphasis> override <literal>equals()</"
@@ -1891,7 +1891,7 @@ msgstr ""
 "<literal>Serializable</literal>接口也是必须的。"
 
 #. Tag: para
-#: basic_mapping.xml:956
+#: basic_mapping.xml:980
 #, no-c-format
 msgid ""
 "Unfortunately, this approach to composite identifiers means that a "
@@ -1909,7 +1909,7 @@ msgstr ""
 "这种用法。"
 
 #. Tag: para
-#: basic_mapping.xml:965
+#: basic_mapping.xml:989
 #, no-c-format
 msgid ""
 "A second approach is what we call a <emphasis>mapped</emphasis> composite "
@@ -1922,7 +1922,7 @@ msgstr ""
 "属性不但在持久化类出现，还形成一个独立的标识符类。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:971
+#: basic_mapping.xml:995
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id class=\"MedicareId\" mapped=\"true\">\n"
@@ -1932,7 +1932,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:973
+#: basic_mapping.xml:997
 #, no-c-format
 msgid ""
 "In this example, both the composite identifier class, <literal>MedicareId</"
@@ -1949,14 +1949,14 @@ msgstr ""
 "<literal>Serializable</literal>接口。这种方法的缺点是出现了明显的代码重复。"
 
 #. Tag: para
-#: basic_mapping.xml:982
+#: basic_mapping.xml:1006
 #, no-c-format
 msgid ""
 "The following attributes are used to specify a mapped composite identifier:"
 msgstr "下面列出的属性是用来指定一个映射式组合标识符的："
 
 #. Tag: para
-#: basic_mapping.xml:988
+#: basic_mapping.xml:1012
 #, no-c-format
 msgid ""
 "<literal>mapped</literal> (optional, defaults to <literal>false</literal>): "
@@ -1968,7 +1968,7 @@ msgstr ""
 "个映射式组合标识符，其包含的属性映射同时在实体类和组合标识符类中出现。"
 
 #. Tag: para
-#: basic_mapping.xml:996
+#: basic_mapping.xml:1020
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional, but required for a mapped composite "
@@ -1978,7 +1978,7 @@ msgstr ""
 "类使用的类名."
 
 #. Tag: para
-#: basic_mapping.xml:1003
+#: basic_mapping.xml:1027
 #, no-c-format
 msgid ""
 "We will describe a third, even more convenient approach where the composite "
@@ -1991,7 +1991,7 @@ msgstr ""
 "三种方法有效："
 
 #. Tag: para
-#: basic_mapping.xml:1011
+#: basic_mapping.xml:1035
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional, required for this approach): A property "
@@ -2001,7 +2001,7 @@ msgstr ""
 "型的名字 (参阅第9章)."
 
 #. Tag: para
-#: basic_mapping.xml:1023
+#: basic_mapping.xml:1047
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2012,7 +2012,7 @@ msgstr ""
 "合标识符的组件类的类名（参阅下一节）"
 
 #. Tag: para
-#: basic_mapping.xml:1030
+#: basic_mapping.xml:1054
 #, no-c-format
 msgid ""
 "This third approach, an <emphasis>identifier component</emphasis> is the one "
@@ -2022,13 +2022,13 @@ msgstr ""
 "对几乎所有应用都推荐使用的方式。"
 
 #. Tag: title
-#: basic_mapping.xml:1038
+#: basic_mapping.xml:1062
 #, no-c-format
 msgid "discriminator"
 msgstr "鉴别器（discriminator）"
 
 #. Tag: para
-#: basic_mapping.xml:1040
+#: basic_mapping.xml:1064
 #, no-c-format
 msgid ""
 "The <literal>&lt;discriminator&gt;</literal> element is required for "
@@ -2050,7 +2050,7 @@ msgstr ""
 "<literal>true_false</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1058
+#: basic_mapping.xml:1082
 #, no-c-format
 msgid ""
 "<![CDATA[<discriminator\n"
@@ -2063,7 +2063,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1061
+#: basic_mapping.xml:1085
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to <literal>class</literal>) "
@@ -2073,7 +2073,7 @@ msgstr ""
 "的名字"
 
 #. Tag: para
-#: basic_mapping.xml:1067
+#: basic_mapping.xml:1091
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>string</literal>) a "
@@ -2083,7 +2083,7 @@ msgstr ""
 "Hibernate字段类型的名字"
 
 #. Tag: para
-#: basic_mapping.xml:1073
+#: basic_mapping.xml:1097
 #, no-c-format
 msgid ""
 "<literal>force</literal> (optional - defaults to <literal>false</literal>) "
@@ -2094,7 +2094,7 @@ msgstr ""
 "制\"Hibernate指定允许的鉴别器值,即使当取得的所有实例都是根类的。"
 
 #. Tag: para
-#: basic_mapping.xml:1080
+#: basic_mapping.xml:1104
 #, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>) "
@@ -2108,7 +2108,7 @@ msgstr ""
 "不包含该列）"
 
 #. Tag: para
-#: basic_mapping.xml:1088
+#: basic_mapping.xml:1112
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional) an arbitrary SQL expression that is "
@@ -2119,7 +2119,7 @@ msgstr ""
 "体子类－译注）时执行。可用于基于内容的鉴别器。"
 
 #. Tag: para
-#: basic_mapping.xml:1096
+#: basic_mapping.xml:1120
 #, no-c-format
 msgid ""
 "Actual values of the discriminator column are specified by the "
@@ -2131,7 +2131,7 @@ msgstr ""
 "的。"
 
 #. Tag: para
-#: basic_mapping.xml:1102
+#: basic_mapping.xml:1126
 #, no-c-format
 msgid ""
 "The <literal>force</literal> attribute is (only) useful if the table "
@@ -2142,7 +2142,7 @@ msgstr ""
 "化类的附加辨别器值。 这种情况不会经常遇到。"
 
 #. Tag: para
-#: basic_mapping.xml:1108
+#: basic_mapping.xml:1132
 #, no-c-format
 msgid ""
 "Using the <literal>formula</literal> attribute you can declare an arbitrary "
@@ -2152,7 +2152,7 @@ msgstr ""
 "的类型。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1113
+#: basic_mapping.xml:1137
 #, no-c-format
 msgid ""
 "<![CDATA[<discriminator\n"
@@ -2161,13 +2161,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1118
+#: basic_mapping.xml:1142
 #, no-c-format
 msgid "version (optional)"
 msgstr "版本（version）(可选)"
 
 #. Tag: para
-#: basic_mapping.xml:1120
+#: basic_mapping.xml:1144
 #, no-c-format
 msgid ""
 "The <literal>&lt;version&gt;</literal> element is optional and indicates "
@@ -2179,7 +2179,7 @@ msgstr ""
 "别有用。（见后）"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1136
+#: basic_mapping.xml:1160
 #, no-c-format
 msgid ""
 "<![CDATA[<version\n"
@@ -2195,7 +2195,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1139
+#: basic_mapping.xml:1163
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -2204,14 +2204,14 @@ msgstr ""
 "<literal>column</literal> (可选 - 默认为属性名): 指定持有版本号的字段名。"
 
 #. Tag: para
-#: basic_mapping.xml:1145
+#: basic_mapping.xml:1169
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The name of a property of the persistent class."
 msgstr "<literal>name</literal>: 持久化类的属性名。"
 
 #. Tag: para
-#: basic_mapping.xml:1150
+#: basic_mapping.xml:1174
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>integer</literal>): "
@@ -2221,7 +2221,7 @@ msgstr ""
 "类型。"
 
 #. Tag: para
-#: basic_mapping.xml:1162
+#: basic_mapping.xml:1186
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>undefined</"
@@ -2236,20 +2236,20 @@ msgstr ""
 "开来。 （<literal>undefined</literal>指明应被使用的标识属性值。）"
 
 #. Tag: para
-#: basic_mapping.xml:1171
+#: basic_mapping.xml:1195
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
 "literal>): Specifies that this version property value is actually generated "
-"by the database. See the discussion of <xref linkend=\"mapping-generated\"/"
-">generated properties."
+"by the database. See the discussion of <link linkend=\"mapping-generated"
+"\">generated properties</link>."
 msgstr ""
 "<literal>generated</literal> (可选 - 默认是 <literal>never</literal>): 表明此"
 "版本属性值是否实际上是由数据库生成的。请参阅<xref linkend=\"mapping-generated"
 "\">generated properties</xref>部分的讨论。"
 
 #. Tag: para
-#: basic_mapping.xml:1178
+#: basic_mapping.xml:1202
 #, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>): "
@@ -2262,7 +2262,7 @@ msgstr ""
 "候，才可以设置为<literal>false</literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:1188
+#: basic_mapping.xml:1212
 #, no-c-format
 msgid ""
 "Version numbers may be of Hibernate type <literal>long</literal>, "
@@ -2274,7 +2274,7 @@ msgstr ""
 "literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:1193
+#: basic_mapping.xml:1217
 #, no-c-format
 msgid ""
 "A version or timestamp property should never be null for a detached "
@@ -2293,13 +2293,13 @@ msgstr ""
 "identifiers） 或复合主键时非常有用！</emphasis>"
 
 #. Tag: title
-#: basic_mapping.xml:1204
+#: basic_mapping.xml:1228
 #, no-c-format
 msgid "timestamp (optional)"
 msgstr "timestamp (可选)"
 
 #. Tag: para
-#: basic_mapping.xml:1206
+#: basic_mapping.xml:1230
 #, no-c-format
 msgid ""
 "The optional <literal>&lt;timestamp&gt;</literal> element indicates that the "
@@ -2313,7 +2313,7 @@ msgstr ""
 "然， 有时候应用程序可能在其他方面使用时间戳。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1222
+#: basic_mapping.xml:1246
 #, no-c-format
 msgid ""
 "<![CDATA[<timestamp\n"
@@ -2328,7 +2328,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1225
+#: basic_mapping.xml:1249
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -2336,7 +2336,7 @@ msgid ""
 msgstr "<literal>column</literal> (可选 - 默认为属性名): 持有时间戳的字段名。"
 
 #. Tag: para
-#: basic_mapping.xml:1231
+#: basic_mapping.xml:1255
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The name of a JavaBeans style property of Java type "
@@ -2347,7 +2347,7 @@ msgstr ""
 "<literal>Date</literal> 或者 <literal>Timestamp</literal>的。"
 
 #. Tag: para
-#: basic_mapping.xml:1244
+#: basic_mapping.xml:1268
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>null</"
@@ -2362,7 +2362,7 @@ msgstr ""
 "（<literal>undefined</literal> 指明使用标识属性值进行这种判断。）"
 
 #. Tag: para
-#: basic_mapping.xml:1253
+#: basic_mapping.xml:1277
 #, no-c-format
 msgid ""
 "<literal>source</literal> (optional - defaults to <literal>vm</literal>): "
@@ -2382,20 +2382,20 @@ msgstr ""
 "Oracle 8）。"
 
 #. Tag: para
-#: basic_mapping.xml:1265
+#: basic_mapping.xml:1289
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
 "literal>): Specifies that this timestamp property value is actually "
-"generated by the database. See the discussion of <xref linkend=\"mapping-"
-"generated\"/>generated properties."
+"generated by the database. See the discussion of <link linkend=\"mapping-"
+"generated\">generated properties</link>."
 msgstr ""
 "<literal>generated</literal> (可选 - 默认是 <literal>never</literal>): 指出时"
 "间戳值是否实际上是由数据库生成的.请参阅<xref linkend=\"mapping-generated"
 "\">generated properties</xref>的讨论。"
 
 #. Tag: para
-#: basic_mapping.xml:1274
+#: basic_mapping.xml:1298
 #, no-c-format
 msgid ""
 "Note that <literal>&lt;timestamp&gt;</literal> is equivalent to <literal>&lt;"
@@ -2409,13 +2409,13 @@ msgstr ""
 "价的。"
 
 #. Tag: title
-#: basic_mapping.xml:1284
+#: basic_mapping.xml:1308
 #, no-c-format
 msgid "property"
 msgstr "property"
 
 #. Tag: para
-#: basic_mapping.xml:1286
+#: basic_mapping.xml:1310
 #, no-c-format
 msgid ""
 "The <literal>&lt;property&gt;</literal> element declares a persistent, "
@@ -2425,7 +2425,7 @@ msgstr ""
 "属性。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1308
+#: basic_mapping.xml:1332
 #, no-c-format
 msgid ""
 "<![CDATA[<property\n"
@@ -2451,7 +2451,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1311
+#: basic_mapping.xml:1335
 #, no-c-format
 msgid ""
 "<literal>name</literal>: the name of the property, with an initial lowercase "
@@ -2459,7 +2459,7 @@ msgid ""
 msgstr "<literal>name</literal>: 属性的名字,以小写字母开头。"
 
 #. Tag: para
-#: basic_mapping.xml:1317
+#: basic_mapping.xml:1341
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -2470,14 +2470,14 @@ msgstr ""
 "以通过嵌套的<literal>&lt;column&gt;</literal>元素指定。"
 
 #. Tag: para
-#: basic_mapping.xml:1324
+#: basic_mapping.xml:1348
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional): a name that indicates the Hibernate type."
 msgstr "<literal>type</literal> (可选): 一个Hibernate类型的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:1329
+#: basic_mapping.xml:1353
 #, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2494,7 +2494,7 @@ msgstr ""
 "某些其他属性，或者通过一个trigger(触发器）或其他程序生成。"
 
 #. Tag: para
-#: basic_mapping.xml:1338
+#: basic_mapping.xml:1362
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -2505,7 +2505,7 @@ msgstr ""
 "（computed）</emphasis> 属性的值。计算属性没有和它对应的数据库字段。"
 
 #. Tag: para
-#: basic_mapping.xml:1351
+#: basic_mapping.xml:1375
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -2517,7 +2517,7 @@ msgstr ""
 "码增强）。"
 
 #. Tag: para
-#: basic_mapping.xml:1358
+#: basic_mapping.xml:1382
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Enable the DDL generation of a unique "
@@ -2528,7 +2528,7 @@ msgstr ""
 "它作为<literal>property-ref</literal>引用的目标。"
 
 #. Tag: para
-#: basic_mapping.xml:1365
+#: basic_mapping.xml:1389
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Enable the DDL generation of a "
@@ -2538,7 +2538,7 @@ msgstr ""
 "（nullability）的约束。"
 
 #. Tag: para
-#: basic_mapping.xml:1371
+#: basic_mapping.xml:1395
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -2551,26 +2551,26 @@ msgstr ""
 "决定这个属性发生脏数据时版本（version）的值是否增长。"
 
 #. Tag: para
-#: basic_mapping.xml:1379
+#: basic_mapping.xml:1403
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
 "literal>): Specifies that this property value is actually generated by the "
-"database. See the discussion of <xref linkend=\"mapping-generated\"/"
-">generated properties."
+"database. See the discussion of <link linkend=\"mapping-generated"
+"\">generated properties</link>."
 msgstr ""
 "<literal>generated</literal> (可选 - 默认为 <literal>never</literal>): 表明此"
 "属性值是否实际上是由数据库生成的。请参阅<xref linkend=\"mapping-generated"
 "\">generated properties</xref>的讨论。"
 
 #. Tag: para
-#: basic_mapping.xml:1388
+#: basic_mapping.xml:1412
 #, no-c-format
 msgid "<emphasis>typename</emphasis> could be:"
 msgstr "<emphasis>typename</emphasis>可以是如下几种："
 
 #. Tag: para
-#: basic_mapping.xml:1394
+#: basic_mapping.xml:1418
 #, no-c-format
 msgid ""
 "The name of a Hibernate basic type (eg. <literal>integer, string, character, "
@@ -2580,7 +2580,7 @@ msgstr ""
 "timestamp, float, binary, serializable, object, blob</literal>）。"
 
 #. Tag: para
-#: basic_mapping.xml:1400
+#: basic_mapping.xml:1424
 #, no-c-format
 msgid ""
 "The name of a Java class with a default basic type (eg. <literal>int, float, "
@@ -2592,13 +2592,13 @@ msgstr ""
 "literal>)。"
 
 #. Tag: para
-#: basic_mapping.xml:1406
+#: basic_mapping.xml:1430
 #, no-c-format
 msgid "The name of a serializable Java class."
 msgstr "一个可以序列化的Java类的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:1411
+#: basic_mapping.xml:1435
 #, no-c-format
 msgid ""
 "The class name of a custom type (eg. <literal>com.illflow.type.MyCustomType</"
@@ -2608,7 +2608,7 @@ msgstr ""
 "literal>)。"
 
 #. Tag: para
-#: basic_mapping.xml:1417
+#: basic_mapping.xml:1441
 #, no-c-format
 msgid ""
 "If you do not specify a type, Hibernate will use reflection upon the named "
@@ -2626,7 +2626,7 @@ msgstr ""
 "TIMESTAMP</literal>,或者为了指定一个自定义类型。）"
 
 #. Tag: para
-#: basic_mapping.xml:1427
+#: basic_mapping.xml:1451
 #, no-c-format
 msgid ""
 "The <literal>access</literal> attribute lets you control how Hibernate will "
@@ -2645,7 +2645,7 @@ msgstr ""
 "策略类的名字。"
 
 #. Tag: para
-#: basic_mapping.xml:1436
+#: basic_mapping.xml:1460
 #, no-c-format
 msgid ""
 "An especially powerful feature are derived properties. These properties are "
@@ -2659,7 +2659,7 @@ msgstr ""
 "翻译成一个SQL查询的<literal>SELECT</literal> 子查询语句。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1443
+#: basic_mapping.xml:1467
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -2672,7 +2672,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1445
+#: basic_mapping.xml:1469
 #, no-c-format
 msgid ""
 "Note that you can reference the entities own table by not declaring an alias "
@@ -2685,13 +2685,13 @@ msgstr ""
 "嵌套的<literal>&lt;formula&gt;</literal>映射元素。"
 
 #. Tag: title
-#: basic_mapping.xml:1455
+#: basic_mapping.xml:1479
 #, no-c-format
 msgid "many-to-one"
 msgstr "多对一（many-to-one）"
 
 #. Tag: para
-#: basic_mapping.xml:1457
+#: basic_mapping.xml:1481
 #, no-c-format
 msgid ""
 "An ordinary association to another persistent class is declared using a "
@@ -2704,7 +2704,7 @@ msgstr ""
 "引用目标表的 主键字段。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1485
+#: basic_mapping.xml:1509
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one\n"
@@ -2733,7 +2733,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1488 basic_mapping.xml:1669 basic_mapping.xml:1855
+#: basic_mapping.xml:1512 basic_mapping.xml:1693 basic_mapping.xml:1879
 #, fuzzy, no-c-format
 msgid "<literal>name</literal>: The name of the property."
 msgstr ""
@@ -2745,7 +2745,7 @@ msgstr ""
 "<literal>name</literal>: 属性名"
 
 #. Tag: para
-#: basic_mapping.xml:1493 basic_mapping.xml:2284
+#: basic_mapping.xml:1517 basic_mapping.xml:2308
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): The name of the foreign key column. "
@@ -2760,7 +2760,7 @@ msgstr ""
 "<literal>&lt;column&gt;</literal>指定。"
 
 #. Tag: para
-#: basic_mapping.xml:1500 basic_mapping.xml:1674
+#: basic_mapping.xml:1524 basic_mapping.xml:1698
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2774,7 +2774,7 @@ msgstr ""
 "名字。"
 
 #. Tag: para
-#: basic_mapping.xml:1506
+#: basic_mapping.xml:1530
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional): Specifies which operations should be "
@@ -2784,7 +2784,7 @@ msgstr ""
 "对象。"
 
 #. Tag: para
-#: basic_mapping.xml:1512 basic_mapping.xml:1695
+#: basic_mapping.xml:1536 basic_mapping.xml:1719
 #, fuzzy, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>select</literal>): "
@@ -2799,7 +2799,7 @@ msgstr ""
 "抓取或者序列选择抓取选择其一."
 
 #. Tag: para
-#: basic_mapping.xml:1518
+#: basic_mapping.xml:1542
 #, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2816,7 +2816,7 @@ msgstr ""
 "得到 或者通过trigger(触发器）、或其他程序生成。"
 
 #. Tag: para
-#: basic_mapping.xml:1527
+#: basic_mapping.xml:1551
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal>: (optional) The name of a property of the "
@@ -2827,7 +2827,7 @@ msgstr ""
 "本外键相对应。 如果没有指定，会使用对方关联类的主键。"
 
 #. Tag: para
-#: basic_mapping.xml:1540
+#: basic_mapping.xml:1564
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Enable the DDL generation of a unique "
@@ -2840,7 +2840,7 @@ msgstr ""
 "一的效果。"
 
 #. Tag: para
-#: basic_mapping.xml:1548
+#: basic_mapping.xml:1572
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Enable the DDL generation of a "
@@ -2849,7 +2849,7 @@ msgstr ""
 "<literal>not-null</literal> (可选): 使用DDL为外键字段生成一个非空约束。"
 
 #. Tag: para
-#: basic_mapping.xml:1554
+#: basic_mapping.xml:1578
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -2862,7 +2862,7 @@ msgstr ""
 "决定这个属性发生脏数据时版本（version）的值是否增长。"
 
 #. Tag: para
-#: basic_mapping.xml:1562
+#: basic_mapping.xml:1586
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -2878,7 +2878,7 @@ msgstr ""
 "强）。 <literal>lazy=\"false\"</literal>指定此关联总是被预先抓取。"
 
 #. Tag: para
-#: basic_mapping.xml:1572
+#: basic_mapping.xml:1596
 #, no-c-format
 msgid ""
 "<literal>not-found</literal> (optional - defaults to <literal>exception</"
@@ -2891,7 +2891,7 @@ msgstr ""
 "视为一个空（null）关联。"
 
 #. Tag: para
-#: basic_mapping.xml:1579 basic_mapping.xml:1733
+#: basic_mapping.xml:1603 basic_mapping.xml:1757
 #, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional): The entity name of the associated "
@@ -2899,7 +2899,7 @@ msgid ""
 msgstr "<literal>entity-name</literal> (可选): 被关联的类的实体名。"
 
 #. Tag: para
-#: basic_mapping.xml:1585
+#: basic_mapping.xml:1608
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -2909,7 +2909,7 @@ msgstr ""
 "算出的）</emphasis>外键值。"
 
 #. Tag: para
-#: basic_mapping.xml:1592
+#: basic_mapping.xml:1616
 #, no-c-format
 msgid ""
 "Setting a value of the <literal>cascade</literal> attribute to any "
@@ -2935,14 +2935,14 @@ msgstr ""
 "儿（orphan delete，删除不再被引用的值）."
 
 #. Tag: para
-#: basic_mapping.xml:1605
+#: basic_mapping.xml:1629
 #, no-c-format
 msgid ""
 "A typical <literal>many-to-one</literal> declaration looks as simple as this:"
 msgstr "一个典型的简单<literal>many-to-one</literal>定义例子："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1609
+#: basic_mapping.xml:1633
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"product\" class=\"Product\" column=\"PRODUCT_ID"
@@ -2950,7 +2950,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1611
+#: basic_mapping.xml:1635
 #, no-c-format
 msgid ""
 "The <literal>property-ref</literal> attribute should only be used for "
@@ -2968,7 +2968,7 @@ msgstr ""
 "SchemaExport工具进行的DDL生成。）"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1620
+#: basic_mapping.xml:1644
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"serialNumber\" unique=\"true\" type=\"string\" "
@@ -2976,13 +2976,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1622
+#: basic_mapping.xml:1646
 #, no-c-format
 msgid "Then the mapping for <literal>OrderItem</literal> might use:"
 msgstr "那么关于<literal>OrderItem</literal> 的映射可能是："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1626
+#: basic_mapping.xml:1650
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"product\" property-ref=\"serialNumber\" column="
@@ -2990,13 +2990,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1628
+#: basic_mapping.xml:1652
 #, no-c-format
 msgid "This is certainly not encouraged, however."
 msgstr "当然，我们决不鼓励这种用法。"
 
 #. Tag: para
-#: basic_mapping.xml:1632
+#: basic_mapping.xml:1656
 #, no-c-format
 msgid ""
 "If the referenced unique key comprises multiple properties of the associated "
@@ -3007,7 +3007,7 @@ msgstr ""
 "properties&gt;</literal>的元素 里面映射所有关联的属性。"
 
 #. Tag: para
-#: basic_mapping.xml:1637
+#: basic_mapping.xml:1661
 #, no-c-format
 msgid ""
 "If the referenced unique key is the property of a component, you may specify "
@@ -3015,7 +3015,7 @@ msgid ""
 msgstr "假若被引用的唯一主键是组件的属性，你可以指定属性路径："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1641
+#: basic_mapping.xml:1665
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"owner\" property-ref=\"identity.ssn\" column="
@@ -3023,13 +3023,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1646
+#: basic_mapping.xml:1670
 #, no-c-format
 msgid "one-to-one"
 msgstr "一对一"
 
 #. Tag: para
-#: basic_mapping.xml:1648
+#: basic_mapping.xml:1672
 #, no-c-format
 msgid ""
 "A one-to-one association to another persistent class is declared using a "
@@ -3038,7 +3038,7 @@ msgstr ""
 "持久化对象之间一对一的关联关系是通过<literal>one-to-one</literal>元素定义的。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1666
+#: basic_mapping.xml:1690
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one\n"
@@ -3059,7 +3059,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1680
+#: basic_mapping.xml:1704
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional) specifies which operations should be "
@@ -3069,7 +3069,7 @@ msgstr ""
 "象。"
 
 #. Tag: para
-#: basic_mapping.xml:1686
+#: basic_mapping.xml:1710
 #, no-c-format
 msgid ""
 "<literal>constrained</literal> (optional) specifies that a foreign key "
@@ -3085,7 +3085,7 @@ msgstr ""
 "顺序以及 决定该关联能否被委托(也在schema export tool中被使用)."
 
 #. Tag: para
-#: basic_mapping.xml:1701
+#: basic_mapping.xml:1725
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal>: (optional) The name of a property of the "
@@ -3096,7 +3096,7 @@ msgstr ""
 "类的主键相对应。如果没有指定，会使用对方关联类的主键。"
 
 #. Tag: para
-#: basic_mapping.xml:1714
+#: basic_mapping.xml:1738
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): Almost all one to one associations "
@@ -3111,7 +3111,7 @@ msgstr ""
 "找到例子）"
 
 #. Tag: para
-#: basic_mapping.xml:1722
+#: basic_mapping.xml:1746
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -3131,25 +3131,25 @@ msgstr ""
 "会采取预先抓取！</emphasis>"
 
 #. Tag: para
-#: basic_mapping.xml:1740
+#: basic_mapping.xml:1764
 #, no-c-format
 msgid "There are two varieties of one-to-one association:"
 msgstr "有两种不同的一对一关联："
 
 #. Tag: para
-#: basic_mapping.xml:1744
+#: basic_mapping.xml:1768
 #, no-c-format
 msgid "primary key associations"
 msgstr "主键关联"
 
 #. Tag: para
-#: basic_mapping.xml:1747
+#: basic_mapping.xml:1771
 #, no-c-format
 msgid "unique foreign key associations"
 msgstr "惟一外键关联"
 
 #. Tag: para
-#: basic_mapping.xml:1752
+#: basic_mapping.xml:1776
 #, no-c-format
 msgid ""
 "Primary key associations don't need an extra table column; if two rows are "
@@ -3163,7 +3163,7 @@ msgstr ""
 "它们被赋予同样的标识值！"
 
 #. Tag: para
-#: basic_mapping.xml:1759
+#: basic_mapping.xml:1783
 #, no-c-format
 msgid ""
 "For a primary key association, add the following mappings to "
@@ -3173,13 +3173,13 @@ msgstr ""
 "键一对一关联:"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1764
+#: basic_mapping.xml:1788
 #, no-c-format
 msgid "<![CDATA[<one-to-one name=\"person\" class=\"Person\"/>]]>"
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:1765
+#: basic_mapping.xml:1789
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" constrained=\"true"
@@ -3187,7 +3187,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1767
+#: basic_mapping.xml:1791
 #, no-c-format
 msgid ""
 "Now we must ensure that the primary keys of related rows in the PERSON and "
@@ -3198,7 +3198,7 @@ msgstr ""
 "<literal>foreign</literal>的特殊的hibernate标识符生成策略："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1773
+#: basic_mapping.xml:1797
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"person\" table=\"PERSON\">\n"
@@ -3215,7 +3215,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1775
+#: basic_mapping.xml:1799
 #, no-c-format
 msgid ""
 "A newly saved instance of <literal>Person</literal> is then assigned the "
@@ -3228,7 +3228,7 @@ msgstr ""
 "实例同样的关键字值。"
 
 #. Tag: para
-#: basic_mapping.xml:1781
+#: basic_mapping.xml:1805
 #, no-c-format
 msgid ""
 "Alternatively, a foreign key with a unique constraint, from "
@@ -3239,7 +3239,7 @@ msgstr ""
 "<literal>Person</literal>的例子，如果使用这种关联方式，可以表达成："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1786
+#: basic_mapping.xml:1810
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"person\" class=\"Person\" column=\"PERSON_ID\" "
@@ -3247,7 +3247,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1788
+#: basic_mapping.xml:1812
 #, no-c-format
 msgid ""
 "And this association may be made bidirectional by adding the following to "
@@ -3256,7 +3256,7 @@ msgstr ""
 "如果在<literal>Person</literal>的映射加入下面几句，这种关联就是双向的："
 
 #. Tag: programlisting
-#: basic_mapping.xml:1793
+#: basic_mapping.xml:1817
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" property-ref="
@@ -3264,13 +3264,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1798
+#: basic_mapping.xml:1822
 #, no-c-format
 msgid "natural-id"
 msgstr "自然ID(natural-id)"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1800
+#: basic_mapping.xml:1824
 #, no-c-format
 msgid ""
 "<![CDATA[<natural-id mutable=\"true|false\"/>\n"
@@ -3281,7 +3281,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1802
+#: basic_mapping.xml:1826
 #, no-c-format
 msgid ""
 "Even though we recommend the use of surrogate keys as primary keys, you "
@@ -3300,7 +3300,7 @@ msgstr ""
 "解）。"
 
 #. Tag: para
-#: basic_mapping.xml:1811
+#: basic_mapping.xml:1835
 #, no-c-format
 msgid ""
 "We strongly recommend that you implement <literal>equals()</literal> and "
@@ -3311,14 +3311,14 @@ msgstr ""
 "方法,来比较实体的自然键属性。"
 
 #. Tag: para
-#: basic_mapping.xml:1816
+#: basic_mapping.xml:1840
 #, no-c-format
 msgid ""
 "This mapping is not intended for use with entities with natural primary keys."
 msgstr "这一映射不是为了把自然键作为主键而准备的。"
 
 #. Tag: para
-#: basic_mapping.xml:1822
+#: basic_mapping.xml:1846
 #, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional, defaults to <literal>false</literal>): "
@@ -3329,13 +3329,13 @@ msgstr ""
 "下，自然标识属性被假定为不可变的（常量）。"
 
 #. Tag: title
-#: basic_mapping.xml:1832
+#: basic_mapping.xml:1856
 #, no-c-format
 msgid "component, dynamic-component"
 msgstr "组件(component), 动态组件(dynamic-component)"
 
 #. Tag: para
-#: basic_mapping.xml:1834
+#: basic_mapping.xml:1858
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element maps properties of a child "
@@ -3348,7 +3348,7 @@ msgstr ""
 "的“Components”一章。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1852
+#: basic_mapping.xml:1876
 #, no-c-format
 msgid ""
 "<![CDATA[<component\n"
@@ -3370,7 +3370,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1860
+#: basic_mapping.xml:1884
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -3380,7 +3380,7 @@ msgstr ""
 "字。"
 
 #. Tag: para
-#: basic_mapping.xml:1866 basic_mapping.xml:1955
+#: basic_mapping.xml:1890 basic_mapping.xml:1979
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal>: Do the mapped columns appear in SQL "
@@ -3394,7 +3394,7 @@ msgstr ""
 "literal>语句中?"
 
 #. Tag: para
-#: basic_mapping.xml:1872 basic_mapping.xml:1961
+#: basic_mapping.xml:1896 basic_mapping.xml:1985
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update</literal>: Do the mapped columns appear in SQL "
@@ -3408,7 +3408,7 @@ msgstr ""
 "literal>语句中?"
 
 #. Tag: para
-#: basic_mapping.xml:1884
+#: basic_mapping.xml:1908
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -3419,7 +3419,7 @@ msgstr ""
 "应在实例变量第一次被访问的时候延迟加载(需要编译时字节码装置器)"
 
 #. Tag: para
-#: basic_mapping.xml:1891
+#: basic_mapping.xml:1915
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3432,7 +3432,7 @@ msgstr ""
 "(Version)"
 
 #. Tag: para
-#: basic_mapping.xml:1899 basic_mapping.xml:1975
+#: basic_mapping.xml:1923 basic_mapping.xml:1999
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional - defaults to <literal>false</literal>): "
@@ -3443,7 +3443,7 @@ msgstr ""
 "射的所有字段上都有唯一性约束"
 
 #. Tag: para
-#: basic_mapping.xml:1908
+#: basic_mapping.xml:1932
 #, no-c-format
 msgid ""
 "The child <literal>&lt;property&gt;</literal> tags map properties of the "
@@ -3453,7 +3453,7 @@ msgstr ""
 "射。"
 
 #. Tag: para
-#: basic_mapping.xml:1913
+#: basic_mapping.xml:1937
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
@@ -3464,7 +3464,7 @@ msgstr ""
 "literal>子元素，在组件类内部就可以有一个指向其容器的实体的反向引用。"
 
 #. Tag: para
-#: basic_mapping.xml:1919
+#: basic_mapping.xml:1943
 #, no-c-format
 msgid ""
 "The <literal>&lt;dynamic-component&gt;</literal> element allows a "
@@ -3476,13 +3476,13 @@ msgstr ""
 "dynamic\"/>."
 
 #. Tag: title
-#: basic_mapping.xml:1928
+#: basic_mapping.xml:1952
 #, no-c-format
 msgid "properties"
 msgstr "properties"
 
 #. Tag: para
-#: basic_mapping.xml:1930
+#: basic_mapping.xml:1954
 #, no-c-format
 msgid ""
 "The <literal>&lt;properties&gt;</literal> element allows the definition of a "
@@ -3497,7 +3497,7 @@ msgstr ""
 "一种方便途径。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1946
+#: basic_mapping.xml:1970
 #, no-c-format
 msgid ""
 "<![CDATA[<properties\n"
@@ -3515,7 +3515,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1949
+#: basic_mapping.xml:1973
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The logical name of the grouping - <emphasis>not</"
@@ -3525,7 +3525,7 @@ msgstr ""
 "的名称."
 
 #. Tag: para
-#: basic_mapping.xml:1967
+#: basic_mapping.xml:1991
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3538,7 +3538,7 @@ msgstr ""
 "(Version)"
 
 #. Tag: para
-#: basic_mapping.xml:1984
+#: basic_mapping.xml:2008
 #, no-c-format
 msgid ""
 "For example, if we have the following <literal>&lt;properties&gt;</literal> "
@@ -3546,7 +3546,7 @@ msgid ""
 msgstr "例如，如果我们有如下的<literal>&lt;properties&gt;</literal>映射:"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1988
+#: basic_mapping.xml:2012
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -3562,7 +3562,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1990
+#: basic_mapping.xml:2014
 #, no-c-format
 msgid ""
 "Then we might have some legacy data association which refers to this unique "
@@ -3572,7 +3572,7 @@ msgstr ""
 "一键，而不是主键。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1995
+#: basic_mapping.xml:2019
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"person\"\n"
@@ -3584,7 +3584,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1997
+#: basic_mapping.xml:2021
 #, no-c-format
 msgid ""
 "We don't recommend the use of this kind of thing outside the context of "
@@ -3592,13 +3592,13 @@ msgid ""
 msgstr "我们并不推荐这样使用，除非在映射遗留数据的情况下。"
 
 #. Tag: title
-#: basic_mapping.xml:2005
+#: basic_mapping.xml:2029
 #, no-c-format
 msgid "subclass"
 msgstr "子类(subclass)"
 
 #. Tag: para
-#: basic_mapping.xml:2007
+#: basic_mapping.xml:2031
 #, no-c-format
 msgid ""
 "Finally, polymorphic persistence requires the declaration of each subclass "
@@ -3609,7 +3609,7 @@ msgstr ""
 "表”的策略来说，就需要使用<literal>&lt;subclass&gt;</literal>定义。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2020
+#: basic_mapping.xml:2044
 #, no-c-format
 msgid ""
 "<![CDATA[<subclass\n"
@@ -3629,14 +3629,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2023 basic_mapping.xml:2081 basic_mapping.xml:2144
+#: basic_mapping.xml:2047 basic_mapping.xml:2105 basic_mapping.xml:2168
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The fully qualified class name of the subclass."
 msgstr "<literal>name</literal>: 子类的全限定名。"
 
 #. Tag: para
-#: basic_mapping.xml:2028
+#: basic_mapping.xml:2052
 #, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -3646,7 +3646,7 @@ msgstr ""
 "区分每个独立的子类的值。"
 
 #. Tag: para
-#: basic_mapping.xml:2034 basic_mapping.xml:2091 basic_mapping.xml:2154
+#: basic_mapping.xml:2058 basic_mapping.xml:2115 basic_mapping.xml:2178
 #, fuzzy, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): Specifies a class or interface to use "
@@ -3663,7 +3663,7 @@ msgstr ""
 "用。"
 
 #. Tag: para
-#: basic_mapping.xml:2040 basic_mapping.xml:2097 basic_mapping.xml:2160
+#: basic_mapping.xml:2064 basic_mapping.xml:2121 basic_mapping.xml:2184
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional, defaults to <literal>true</literal>): "
@@ -3680,7 +3680,7 @@ msgstr ""
 "<literal>lazy=\"false\"</literal> 禁止使用延迟装载。"
 
 #. Tag: para
-#: basic_mapping.xml:2048
+#: basic_mapping.xml:2072
 #, no-c-format
 msgid ""
 "Each subclass should declare its own persistent properties and subclasses. "
@@ -3695,7 +3695,7 @@ msgstr ""
 "果没有指定，就会使用Java类的全限定名。"
 
 #. Tag: para
-#: basic_mapping.xml:2056 basic_mapping.xml:2114 basic_mapping.xml:2172
+#: basic_mapping.xml:2080 basic_mapping.xml:2138 basic_mapping.xml:2196
 #, fuzzy, no-c-format
 msgid ""
 "For information about inheritance mappings, see <xref linkend=\"inheritance"
@@ -3709,13 +3709,13 @@ msgstr ""
 "更多关于继承映射的信息，参考<xref linkend=\"inheritance\"/>。"
 
 #. Tag: title
-#: basic_mapping.xml:2063
+#: basic_mapping.xml:2087
 #, no-c-format
 msgid "joined-subclass"
 msgstr "连接的子类(joined-subclass)"
 
 #. Tag: para
-#: basic_mapping.xml:2065
+#: basic_mapping.xml:2089
 #, no-c-format
 msgid ""
 "Alternatively, each subclass may be mapped to its own table (table-per-"
@@ -3728,7 +3728,7 @@ msgstr ""
 "素。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2078
+#: basic_mapping.xml:2102
 #, no-c-format
 msgid ""
 "<![CDATA[<joined-subclass\n"
@@ -3754,7 +3754,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2086 basic_mapping.xml:2149
+#: basic_mapping.xml:2110 basic_mapping.xml:2173
 #, fuzzy, no-c-format
 msgid "<literal>table</literal>: The name of the subclass table."
 msgstr ""
@@ -3764,7 +3764,7 @@ msgstr ""
 "<literal>table</literal>: 子类的表名"
 
 #. Tag: para
-#: basic_mapping.xml:2105
+#: basic_mapping.xml:2129
 #, no-c-format
 msgid ""
 "No discriminator column is required for this mapping strategy. Each subclass "
@@ -3777,7 +3777,7 @@ msgstr ""
 "的映射可以被用如下方式重写："
 
 #. Tag: programlisting
-#: basic_mapping.xml:2112
+#: basic_mapping.xml:2136
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -3815,13 +3815,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2121
+#: basic_mapping.xml:2145
 #, no-c-format
 msgid "union-subclass"
 msgstr "联合子类(union-subclass)"
 
 #. Tag: para
-#: basic_mapping.xml:2123
+#: basic_mapping.xml:2147
 #, no-c-format
 msgid ""
 "A third option is to map only the concrete classes of an inheritance "
@@ -3841,7 +3841,7 @@ msgstr ""
 "的关联)，你需要使用<literal>&lt;union-subclass&gt;</literal>映射。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2141
+#: basic_mapping.xml:2165
 #, no-c-format
 msgid ""
 "<![CDATA[<union-subclass\n"
@@ -3866,20 +3866,20 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2168
+#: basic_mapping.xml:2192
 #, no-c-format
 msgid ""
 "No discriminator column or key column is required for this mapping strategy."
 msgstr "这种映射策略不需要指定辨别标志(discriminator)字段。"
 
 #. Tag: title
-#: basic_mapping.xml:2179
+#: basic_mapping.xml:2203
 #, no-c-format
 msgid "join"
 msgstr "连接(join)"
 
 #. Tag: para
-#: basic_mapping.xml:2181
+#: basic_mapping.xml:2205
 #, no-c-format
 msgid ""
 "Using the <literal>&lt;join&gt;</literal> element, it is possible to map "
@@ -3890,7 +3890,7 @@ msgstr ""
 "一个类的属性映射到多张表中。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2195
+#: basic_mapping.xml:2219
 #, no-c-format
 msgid ""
 "<![CDATA[<join\n"
@@ -3909,13 +3909,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2199
+#: basic_mapping.xml:2223
 #, no-c-format
 msgid "<literal>table</literal>: The name of the joined table."
 msgstr "<literal>table</literal>: 被连接表的名称。"
 
 #. Tag: para
-#: basic_mapping.xml:2216
+#: basic_mapping.xml:2240
 #, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
@@ -3937,7 +3937,7 @@ msgstr ""
 "join&gt;</literal>，依然会使用内连接得到。"
 
 #. Tag: para
-#: basic_mapping.xml:2229
+#: basic_mapping.xml:2253
 #, no-c-format
 msgid ""
 "<literal>inverse</literal> (optional - defaults to <literal>false</"
@@ -3948,7 +3948,7 @@ msgstr ""
 "开，Hibernate 不会插入或者更新此连接定义的属性。"
 
 #. Tag: para
-#: basic_mapping.xml:2236
+#: basic_mapping.xml:2260
 #, no-c-format
 msgid ""
 "<literal>optional</literal> (optional - defaults to <literal>false</"
@@ -3961,7 +3961,7 @@ msgstr ""
 "接来得到这些属性。"
 
 #. Tag: para
-#: basic_mapping.xml:2245
+#: basic_mapping.xml:2269
 #, no-c-format
 msgid ""
 "For example, the address information for a person can be mapped to a "
@@ -3971,7 +3971,7 @@ msgstr ""
 "的值类型语义)："
 
 #. Tag: programlisting
-#: basic_mapping.xml:2250
+#: basic_mapping.xml:2274
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\"\n"
@@ -3989,7 +3989,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2252
+#: basic_mapping.xml:2276
 #, no-c-format
 msgid ""
 "This feature is often only useful for legacy data models, we recommend fewer "
@@ -4001,13 +4001,13 @@ msgstr ""
 "型。然而，在单独的继承树上切换继承映射策略是有用的，后面会解释这点。"
 
 #. Tag: title
-#: basic_mapping.xml:2262
+#: basic_mapping.xml:2286
 #, no-c-format
 msgid "<title>key</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2264
+#: basic_mapping.xml:2288
 #, no-c-format
 msgid ""
 "We've seen the <literal>&lt;key&gt;</literal> element crop up a few times "
@@ -4020,7 +4020,7 @@ msgstr ""
 "经常使用。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2280
+#: basic_mapping.xml:2304
 #, no-c-format
 msgid ""
 "<![CDATA[<key\n"
@@ -4034,7 +4034,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2291
+#: basic_mapping.xml:2315
 #, no-c-format
 msgid ""
 "<literal>on-delete</literal> (optional, defaults to <literal>noaction</"
@@ -4045,7 +4045,7 @@ msgstr ""
 "外键关联是否打开数据库级别的级联删除。"
 
 #. Tag: para
-#: basic_mapping.xml:2298
+#: basic_mapping.xml:2322
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal> (optional): Specifies that the foreign key "
@@ -4056,7 +4056,7 @@ msgstr ""
 "给遗留数据)。"
 
 #. Tag: para
-#: basic_mapping.xml:2305
+#: basic_mapping.xml:2329
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Specifies that the foreign key "
@@ -4067,7 +4067,7 @@ msgstr ""
 "键都是主键的一部分)。"
 
 #. Tag: para
-#: basic_mapping.xml:2312
+#: basic_mapping.xml:2336
 #, no-c-format
 msgid ""
 "<literal>update</literal> (optional): Specifies that the foreign key should "
@@ -4078,7 +4078,7 @@ msgstr ""
 "都是主键的一部分)。"
 
 #. Tag: para
-#: basic_mapping.xml:2319
+#: basic_mapping.xml:2343
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Specifies that the foreign key should "
@@ -4089,7 +4089,7 @@ msgstr ""
 "键都是主键的一部分)。"
 
 #. Tag: para
-#: basic_mapping.xml:2327
+#: basic_mapping.xml:2351
 #, no-c-format
 msgid ""
 "We recommend that for systems where delete performance is important, all "
@@ -4105,7 +4105,7 @@ msgstr ""
 "性会绕过 Hibernate 通常对版本数据(versioned data)采用的乐观锁策略。"
 
 #. Tag: para
-#: basic_mapping.xml:2335
+#: basic_mapping.xml:2359
 #, no-c-format
 msgid ""
 "The <literal>not-null</literal> and <literal>update</literal> attributes are "
@@ -4120,13 +4120,13 @@ msgstr ""
 "定义此键字段。"
 
 #. Tag: title
-#: basic_mapping.xml:2345
+#: basic_mapping.xml:2369
 #, no-c-format
 msgid "column and formula elements"
 msgstr "字段和规则元素（column and formula elements）"
 
 #. Tag: para
-#: basic_mapping.xml:2346
+#: basic_mapping.xml:2370
 #, no-c-format
 msgid ""
 "Any mapping element which accepts a <literal>column</literal> attribute will "
@@ -4139,7 +4139,7 @@ msgstr ""
 "换<literal>&lt;formula&gt;</literal>属性。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2352
+#: basic_mapping.xml:2376
 #, no-c-format
 msgid ""
 "<![CDATA[<column\n"
@@ -4157,13 +4157,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2354
+#: basic_mapping.xml:2378
 #, no-c-format
 msgid "<![CDATA[<formula>SQL expression</formula>]]>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2356
+#: basic_mapping.xml:2380
 #, no-c-format
 msgid ""
 "<literal>column</literal> and <literal>formula</literal> attributes may even "
@@ -4174,7 +4174,7 @@ msgstr ""
 "属性或关联映射中被合并来表达，例如，一些奇异的连接条件。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2362
+#: basic_mapping.xml:2386
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"homeAddress\" class=\"Address\"\n"
@@ -4185,13 +4185,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2367
+#: basic_mapping.xml:2391
 #, no-c-format
 msgid "import"
 msgstr "引用(import)"
 
 #. Tag: para
-#: basic_mapping.xml:2369
+#: basic_mapping.xml:2393
 #, no-c-format
 msgid ""
 "Suppose your application has two persistent classes with the same name, and "
@@ -4205,13 +4205,13 @@ msgstr ""
 "式地“import(引用)”。你甚至可以引用没有被明确映射的类和接口。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2376
+#: basic_mapping.xml:2400
 #, no-c-format
 msgid "<![CDATA[<import class=\"java.lang.Object\" rename=\"Universe\"/>]]>"
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2383
+#: basic_mapping.xml:2407
 #, no-c-format
 msgid ""
 "<![CDATA[<import\n"
@@ -4221,7 +4221,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2386
+#: basic_mapping.xml:2410
 #, no-c-format
 msgid ""
 "<literal>class</literal>: The fully qualified class name of of any Java "
@@ -4229,7 +4229,7 @@ msgid ""
 msgstr "<literal>class</literal>: 任何Java类的全限定名。"
 
 #. Tag: para
-#: basic_mapping.xml:2391
+#: basic_mapping.xml:2415
 #, no-c-format
 msgid ""
 "<literal>rename</literal> (optional - defaults to the unqualified class "
@@ -4239,13 +4239,13 @@ msgstr ""
 "名字。"
 
 #. Tag: title
-#: basic_mapping.xml:2402
+#: basic_mapping.xml:2426
 #, no-c-format
 msgid "<title>any</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2404
+#: basic_mapping.xml:2428
 #, no-c-format
 msgid ""
 "There is one further type of property mapping. The <literal>&lt;any&gt;</"
@@ -4264,7 +4264,7 @@ msgstr ""
 "用它(比如，审计log，用户会话数据等等)。"
 
 #. Tag: para
-#: basic_mapping.xml:2414
+#: basic_mapping.xml:2438
 #, no-c-format
 msgid ""
 "The <literal>meta-type</literal> attribute lets the application specify a "
@@ -4278,7 +4278,7 @@ msgstr ""
 "识符属性。 你必须指定从meta-type的值到类名的映射。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2421
+#: basic_mapping.xml:2445
 #, no-c-format
 msgid ""
 "<![CDATA[<any name=\"being\" id-type=\"long\" meta-type=\"string\">\n"
@@ -4291,7 +4291,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2432
+#: basic_mapping.xml:2456
 #, no-c-format
 msgid ""
 "<![CDATA[<any\n"
@@ -4312,19 +4312,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2435
+#: basic_mapping.xml:2459
 #, no-c-format
 msgid "<literal>name</literal>: the property name."
 msgstr "<literal>name</literal>: 属性名"
 
 #. Tag: para
-#: basic_mapping.xml:2440
+#: basic_mapping.xml:2464
 #, no-c-format
 msgid "<literal>id-type</literal>: the identifier type."
 msgstr "<literal>id-type</literal>: 标识符类型"
 
 #. Tag: para
-#: basic_mapping.xml:2445
+#: basic_mapping.xml:2469
 #, no-c-format
 msgid ""
 "<literal>meta-type</literal> (optional - defaults to <literal>string</"
@@ -4334,7 +4334,7 @@ msgstr ""
 "别标志(discriminator)映射的任何类型"
 
 #. Tag: para
-#: basic_mapping.xml:2451
+#: basic_mapping.xml:2475
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional- defaults to <literal>none</literal>): "
@@ -4343,7 +4343,7 @@ msgstr ""
 "<literal>cascade</literal> (可选 -默认是<literal>none</literal>): 级联的类型"
 
 #. Tag: para
-#: basic_mapping.xml:2463
+#: basic_mapping.xml:2487
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -4356,19 +4356,19 @@ msgstr ""
 "(Version)"
 
 #. Tag: title
-#: basic_mapping.xml:2478
+#: basic_mapping.xml:2502
 #, no-c-format
 msgid "Hibernate Types"
 msgstr "Hibernate 的类型"
 
 #. Tag: title
-#: basic_mapping.xml:2481
+#: basic_mapping.xml:2505
 #, no-c-format
 msgid "Entities and values"
 msgstr "实体(Entities)和值(values)"
 
 #. Tag: para
-#: basic_mapping.xml:2483
+#: basic_mapping.xml:2507
 #, no-c-format
 msgid ""
 "To understand the behaviour of various Java language-level objects with "
@@ -4377,7 +4377,7 @@ msgstr ""
 "为了理解很多与持久化服务相关的Java语言级对象的行为，我们需要把它们分为两类："
 
 #. Tag: para
-#: basic_mapping.xml:2488
+#: basic_mapping.xml:2512
 #, no-c-format
 msgid ""
 "An <emphasis>entity</emphasis> exists independently of any other objects "
@@ -4397,7 +4397,7 @@ msgstr ""
 "大系统中的使用方法。实体支持循环引用和交叉引用，它们也可以加上版本信息。"
 
 #. Tag: para
-#: basic_mapping.xml:2499
+#: basic_mapping.xml:2523
 #, no-c-format
 msgid ""
 "An entity's persistent state consists of references to other entities and "
@@ -4417,7 +4417,7 @@ msgstr ""
 "息。值没有独立的标识，所以他们不能被两个实体或者集合共享。"
 
 #. Tag: para
-#: basic_mapping.xml:2510
+#: basic_mapping.xml:2534
 #, no-c-format
 msgid ""
 "Up until now, we've been using the term \"persistent class\" to refer to "
@@ -4441,13 +4441,13 @@ msgstr ""
 "索是共享引用指向这个类的单一实例，而组合或聚合通常被转化为值类型。"
 
 #. Tag: para
-#: basic_mapping.xml:2524
+#: basic_mapping.xml:2548
 #, no-c-format
 msgid "We'll revisit both concepts throughout the documentation."
 msgstr "我们会在本文档中重复碰到这两个概念。"
 
 #. Tag: para
-#: basic_mapping.xml:2528
+#: basic_mapping.xml:2552
 #, no-c-format
 msgid ""
 "The challenge is to map the Java type system (and the developers' definition "
@@ -4472,19 +4472,19 @@ msgstr ""
 "们会看到这点。"
 
 #. Tag: para
-#: basic_mapping.xml:2541
+#: basic_mapping.xml:2565
 #, no-c-format
 msgid "All built-in Hibernate types except collections support null semantics."
 msgstr "所有的Hibernate内建类型，除了collections以外，都支持空(null)语义。"
 
 #. Tag: title
-#: basic_mapping.xml:2548
+#: basic_mapping.xml:2572
 #, no-c-format
 msgid "Basic value types"
 msgstr "基本值类型"
 
 #. Tag: para
-#: basic_mapping.xml:2550
+#: basic_mapping.xml:2574
 #, fuzzy, no-c-format
 msgid ""
 "The built-in <emphasis>basic mapping types</emphasis> may be roughly "
@@ -4492,7 +4492,7 @@ msgid ""
 msgstr "内建的 <emphasis>基本映射类型</emphasis>可以大致分为 <placeholder-1/>"
 
 #. Tag: literal
-#: basic_mapping.xml:2555
+#: basic_mapping.xml:2579
 #, no-c-format
 msgid ""
 "integer, long, short, float, double, character, byte, boolean, yes_no, "
@@ -4502,7 +4502,7 @@ msgstr ""
 "true_false"
 
 #. Tag: para
-#: basic_mapping.xml:2558
+#: basic_mapping.xml:2582
 #, no-c-format
 msgid ""
 "Type mappings from Java primitives or wrapper classes to appropriate (vendor-"
@@ -4516,13 +4516,13 @@ msgstr ""
 "法。"
 
 #. Tag: literal
-#: basic_mapping.xml:2567
+#: basic_mapping.xml:2591
 #, no-c-format
 msgid "string"
 msgstr "string"
 
 #. Tag: para
-#: basic_mapping.xml:2569
+#: basic_mapping.xml:2593
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.String</literal> to <literal>VARCHAR</"
@@ -4532,13 +4532,13 @@ msgstr ""
 "Oracle的 <literal>VARCHAR2</literal>)的映射。"
 
 #. Tag: literal
-#: basic_mapping.xml:2576
+#: basic_mapping.xml:2600
 #, no-c-format
 msgid "date, time, timestamp"
 msgstr "date, time, timestamp"
 
 #. Tag: para
-#: basic_mapping.xml:2578
+#: basic_mapping.xml:2602
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Date</literal> and its subclasses to "
@@ -4549,13 +4549,13 @@ msgstr ""
 "<literal>TIME</literal> 和<literal>TIMESTAMP</literal> (或等价类型)的映射。"
 
 #. Tag: literal
-#: basic_mapping.xml:2586
+#: basic_mapping.xml:2610
 #, no-c-format
 msgid "calendar, calendar_date"
 msgstr "calendar, calendar_date"
 
 #. Tag: para
-#: basic_mapping.xml:2588
+#: basic_mapping.xml:2612
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Calendar</literal> to SQL types "
@@ -4565,13 +4565,13 @@ msgstr ""
 "literal>和 <literal>DATE</literal>(或等价类型)的映射。"
 
 #. Tag: literal
-#: basic_mapping.xml:2596
+#: basic_mapping.xml:2620
 #, no-c-format
 msgid "big_decimal, big_integer"
 msgstr "big_decimal, big_integer"
 
 #. Tag: para
-#: basic_mapping.xml:2598
+#: basic_mapping.xml:2622
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.math.BigDecimal</literal> and <literal>java."
@@ -4583,13 +4583,13 @@ msgstr ""
 "类型)的映射。"
 
 #. Tag: literal
-#: basic_mapping.xml:2606
+#: basic_mapping.xml:2630
 #, no-c-format
 msgid "locale, timezone, currency"
 msgstr "locale, timezone, currency"
 
 #. Tag: para
-#: basic_mapping.xml:2608
+#: basic_mapping.xml:2632
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Locale</literal>, <literal>java.util."
@@ -4606,13 +4606,13 @@ msgstr ""
 "literal>的实例被影射为它的<literal>ID</literal>。"
 
 #. Tag: literal
-#: basic_mapping.xml:2620
+#: basic_mapping.xml:2644
 #, fuzzy, no-c-format
 msgid "<literal>class</literal>"
 msgstr "<literal>all（全部）</literal> 检查全部字段"
 
 #. Tag: para
-#: basic_mapping.xml:2622
+#: basic_mapping.xml:2646
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.Class</literal> to <literal>VARCHAR</"
@@ -4624,25 +4624,25 @@ msgstr ""
 "射为它的全限定名。"
 
 #. Tag: literal
-#: basic_mapping.xml:2630
+#: basic_mapping.xml:2654
 #, no-c-format
 msgid "binary"
 msgstr "binary"
 
 #. Tag: para
-#: basic_mapping.xml:2632
+#: basic_mapping.xml:2656
 #, no-c-format
 msgid "Maps byte arrays to an appropriate SQL binary type."
 msgstr "把字节数组(byte arrays)映射为对应的 SQL二进制类型。"
 
 #. Tag: literal
-#: basic_mapping.xml:2638
+#: basic_mapping.xml:2662
 #, no-c-format
 msgid "text"
 msgstr "text"
 
 #. Tag: para
-#: basic_mapping.xml:2640
+#: basic_mapping.xml:2664
 #, no-c-format
 msgid ""
 "Maps long Java strings to a SQL <literal>CLOB</literal> or <literal>TEXT</"
@@ -4652,13 +4652,13 @@ msgstr ""
 "型。"
 
 #. Tag: literal
-#: basic_mapping.xml:2647
+#: basic_mapping.xml:2671
 #, no-c-format
 msgid "serializable"
 msgstr "serializable"
 
 #. Tag: para
-#: basic_mapping.xml:2649
+#: basic_mapping.xml:2673
 #, no-c-format
 msgid ""
 "Maps serializable Java types to an appropriate SQL binary type. You may also "
@@ -4669,13 +4669,13 @@ msgstr ""
 "型的可序列化Java类或者接口指定Hibernate类型<literal>serializable</literal>。"
 
 #. Tag: literal
-#: basic_mapping.xml:2658
+#: basic_mapping.xml:2682
 #, no-c-format
 msgid "clob, blob"
 msgstr "clob, blob"
 
 #. Tag: para
-#: basic_mapping.xml:2660
+#: basic_mapping.xml:2684
 #, no-c-format
 msgid ""
 "Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and "
@@ -4688,7 +4688,7 @@ msgstr ""
 "是无法重用的。(而且, 驱动程序对这种类型的支持充满着补丁和前后矛盾。)"
 
 #. Tag: literal
-#: basic_mapping.xml:2670
+#: basic_mapping.xml:2694
 #, no-c-format
 msgid ""
 "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, "
@@ -4698,7 +4698,7 @@ msgstr ""
 "imm_serializable, imm_binary"
 
 #. Tag: para
-#: basic_mapping.xml:2674
+#: basic_mapping.xml:2698
 #, no-c-format
 msgid ""
 "Type mappings for what are usually considered mutable Java types, where "
@@ -4716,7 +4716,7 @@ msgstr ""
 "个新的（不一样的）对象。"
 
 #. Tag: para
-#: basic_mapping.xml:2689
+#: basic_mapping.xml:2713
 #, no-c-format
 msgid ""
 "Unique identifiers of entities and collections may be of any basic type "
@@ -4728,7 +4728,7 @@ msgstr ""
 "后面会说到。)"
 
 #. Tag: para
-#: basic_mapping.xml:2695
+#: basic_mapping.xml:2719
 #, no-c-format
 msgid ""
 "The basic value types have corresponding <literal>Type</literal> constants "
@@ -4741,13 +4741,13 @@ msgstr ""
 "<literal>string</literal> 类型。"
 
 #. Tag: title
-#: basic_mapping.xml:2704
+#: basic_mapping.xml:2728
 #, no-c-format
 msgid "Custom value types"
 msgstr "自定义值类型"
 
 #. Tag: para
-#: basic_mapping.xml:2706
+#: basic_mapping.xml:2730
 #, no-c-format
 msgid ""
 "It is relatively easy for developers to create their own value types. For "
@@ -4770,7 +4770,7 @@ msgstr ""
 "literal>。"
 
 #. Tag: para
-#: basic_mapping.xml:2717
+#: basic_mapping.xml:2741
 #, no-c-format
 msgid ""
 "To implement a custom type, implement either <literal>org.hibernate."
@@ -4785,7 +4785,7 @@ msgstr ""
 "DoubleStringType</literal>这个例子，看看它是怎么做的。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2725
+#: basic_mapping.xml:2749
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"twoStrings\" type=\"org.hibernate.test."
@@ -4796,7 +4796,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2727
+#: basic_mapping.xml:2751
 #, no-c-format
 msgid ""
 "Notice the use of <literal>&lt;column&gt;</literal> tags to map a property "
@@ -4806,7 +4806,7 @@ msgstr ""
 "法。"
 
 #. Tag: para
-#: basic_mapping.xml:2732
+#: basic_mapping.xml:2756
 #, no-c-format
 msgid ""
 "The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</"
@@ -4819,7 +4819,7 @@ msgstr ""
 "接口为更特殊的使用方式提供支持。"
 
 #. Tag: para
-#: basic_mapping.xml:2738
+#: basic_mapping.xml:2762
 #, no-c-format
 msgid ""
 "You may even supply parameters to a <literal>UserType</literal> in the "
@@ -4834,7 +4834,7 @@ msgstr ""
 "使用<literal>&lt;type&gt;</literal>元素。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2746
+#: basic_mapping.xml:2770
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"priority\">\n"
@@ -4845,7 +4845,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2748
+#: basic_mapping.xml:2772
 #, no-c-format
 msgid ""
 "The <literal>UserType</literal> can now retrieve the value for the parameter "
@@ -4856,7 +4856,7 @@ msgstr ""
 "象中得到<literal>default</literal> 参数的值。"
 
 #. Tag: para
-#: basic_mapping.xml:2753
+#: basic_mapping.xml:2777
 #, no-c-format
 msgid ""
 "If you use a certain <literal>UserType</literal> very often, it may be "
@@ -4870,7 +4870,7 @@ msgstr ""
 "类型赋予一个名称，并且如果此类型是参数化的，还可以包含一系列默认的参数值。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2760
+#: basic_mapping.xml:2784
 #, no-c-format
 msgid ""
 "<![CDATA[<typedef class=\"com.mycompany.usertypes.DefaultValueIntegerType\" "
@@ -4880,13 +4880,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2762
+#: basic_mapping.xml:2786
 #, no-c-format
 msgid "<![CDATA[<property name=\"priority\" type=\"default_zero\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2764
+#: basic_mapping.xml:2788
 #, no-c-format
 msgid ""
 "It is also possible to override the parameters supplied in a typedef on a "
@@ -4894,7 +4894,7 @@ msgid ""
 msgstr "也可以根据具体案例通过属性映射中的类型参数覆盖在typedef中提供的参数。"
 
 #. Tag: para
-#: basic_mapping.xml:2769
+#: basic_mapping.xml:2793
 #, no-c-format
 msgid ""
 "Even though Hibernate's rich range of built-in types and support for "
@@ -4915,13 +4915,13 @@ msgstr ""
 "方法时，它可以保证映射文件不需要修改。"
 
 #. Tag: title
-#: basic_mapping.xml:2785
+#: basic_mapping.xml:2809
 #, no-c-format
 msgid "Mapping a class more than once"
 msgstr "多次映射同一个类"
 
 #. Tag: para
-#: basic_mapping.xml:2786
+#: basic_mapping.xml:2810
 #, no-c-format
 msgid ""
 "It is possible to provide more than one mapping for a particular persistent "
@@ -4937,7 +4937,7 @@ msgstr ""
 "时，允许你指定这个entity name（实体名字）。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2794
+#: basic_mapping.xml:2818
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Contract\" table=\"Contracts\"\n"
@@ -4960,7 +4960,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2796
+#: basic_mapping.xml:2820
 #, no-c-format
 msgid ""
 "Notice how associations are now specified using <literal>entity-name</"
@@ -4970,13 +4970,13 @@ msgstr ""
 "literal>的。"
 
 #. Tag: title
-#: basic_mapping.xml:2804
+#: basic_mapping.xml:2828
 #, no-c-format
 msgid "SQL quoted identifiers"
 msgstr "SQL中引号包围的标识符"
 
 #. Tag: para
-#: basic_mapping.xml:2805
+#: basic_mapping.xml:2829
 #, no-c-format
 msgid ""
 "You may force Hibernate to quote an identifier in the generated SQL by "
@@ -4991,7 +4991,7 @@ msgstr ""
 "SQL Server中是括号，MySQL中是反向引号)。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2812
+#: basic_mapping.xml:2836
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"LineItem\" table=\"`Line Item`\">\n"
@@ -5003,13 +5003,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2818
+#: basic_mapping.xml:2842
 #, no-c-format
 msgid "Metadata alternatives"
 msgstr "其他元数据(Metadata)"
 
 #. Tag: para
-#: basic_mapping.xml:2820
+#: basic_mapping.xml:2844
 #, no-c-format
 msgid ""
 "XML isn't for everyone, and so there are some alternative ways to define O/R "
@@ -5019,13 +5019,13 @@ msgstr ""
 "法。"
 
 #. Tag: title
-#: basic_mapping.xml:2825
+#: basic_mapping.xml:2849
 #, no-c-format
 msgid "Using XDoclet markup"
 msgstr "使用 XDoclet 标记"
 
 #. Tag: para
-#: basic_mapping.xml:2827
+#: basic_mapping.xml:2851
 #, no-c-format
 msgid ""
 "Many Hibernate users prefer to embed mapping information directly in "
@@ -5040,7 +5040,7 @@ msgstr ""
 "类的例子。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2834
+#: basic_mapping.xml:2858
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -5150,19 +5150,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2836
+#: basic_mapping.xml:2860
 #, no-c-format
 msgid "See the Hibernate web site for more examples of XDoclet and Hibernate."
 msgstr "参考Hibernate网站更多的Xdoclet和Hibernate的例子"
 
 #. Tag: title
-#: basic_mapping.xml:2843
+#: basic_mapping.xml:2867
 #, no-c-format
 msgid "Using JDK 5.0 Annotations"
 msgstr "使用 JDK 5.0 的注解(Annotation)"
 
 #. Tag: para
-#: basic_mapping.xml:2845
+#: basic_mapping.xml:2869
 #, no-c-format
 msgid ""
 "JDK 5.0 introduced XDoclet-style annotations at the language level, type-"
@@ -5185,13 +5185,13 @@ msgstr ""
 "部分下载，支持EJB3 (JSR-220)和Hibernate3的元数据。"
 
 #. Tag: para
-#: basic_mapping.xml:2856
+#: basic_mapping.xml:2880
 #, no-c-format
 msgid "This is an example of a POJO class annotated as an EJB entity bean:"
 msgstr "这是一个被注解为EJB entity bean 的POJO类的例子"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2860
+#: basic_mapping.xml:2884
 #, no-c-format
 msgid ""
 "<![CDATA[@Entity(access = AccessType.FIELD)\n"
@@ -5219,7 +5219,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2862
+#: basic_mapping.xml:2886
 #, no-c-format
 msgid ""
 "Note that support for JDK 5.0 Annotations (and JSR-220) is still work in "
@@ -5230,13 +5230,13 @@ msgstr ""
 "参阅Hibernate Annotations 模块。"
 
 #. Tag: title
-#: basic_mapping.xml:2871
+#: basic_mapping.xml:2895
 #, no-c-format
 msgid "Generated Properties"
 msgstr "数据库生成属性（Generated Properties）"
 
 #. Tag: para
-#: basic_mapping.xml:2872
+#: basic_mapping.xml:2896
 #, no-c-format
 msgid ""
 "Generated properties are properties which have their values generated by the "
@@ -5255,14 +5255,14 @@ msgstr ""
 "句，会立刻执行一条select来获得生成的值。"
 
 #. Tag: para
-#: basic_mapping.xml:2881
+#: basic_mapping.xml:2905
 #, fuzzy, no-c-format
 msgid ""
 "Properties marked as generated must additionally be non-insertable and non-"
-"updateable. Only <xref linkend=\"mapping-declaration-version\"/>versions, "
-"<xref linkend=\"mapping-declaration-timestamp\"/>timestamps, and <xref "
-"linkend=\"mapping-declaration-property\"/>simple properties can be marked as "
-"generated."
+"updateable. Only <link linkend=\"mapping-declaration-version\">versions</"
+"link>, <link linkend=\"mapping-declaration-timestamp\">timestamps</link>, "
+"and <link linkend=\"mapping-declaration-property\">simple properties</link> "
+"can be marked as generated."
 msgstr ""
 "被标明为generated的属性还必须是 non-insertable和 non-updateable的。只有<xref "
 "linkend=\"mapping-declaration-version\">versions</xref>，<xref linkend="
@@ -5271,7 +5271,7 @@ msgstr ""
 "generated。"
 
 #. Tag: para
-#: basic_mapping.xml:2888
+#: basic_mapping.xml:2912
 #, no-c-format
 msgid ""
 "<literal>never</literal> (the default) - means that the given property value "
@@ -5279,15 +5279,15 @@ msgid ""
 msgstr "<literal>never</literal> (默认) 标明此属性值不是从数据库中生成。"
 
 #. Tag: para
-#: basic_mapping.xml:2892
+#: basic_mapping.xml:2916
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal> - states that the given property value is "
 "generated on insert, but is not regenerated on subsequent updates. Things "
 "like created-date would fall into this category. Note that even thought "
-"<xref linkend=\"mapping-declaration-version\"/>version and <xref linkend="
-"\"mapping-declaration-timestamp\"/>timestamp properties can be marked as "
-"generated, this option is not available there..."
+"<link linkend=\"mapping-declaration-version\">version</link> and <link "
+"linkend=\"mapping-declaration-timestamp\">timestamp</link> properties can be "
+"marked as generated, this option is not available there..."
 msgstr ""
 "<literal>insert</literal> - 标明此属性值在insert的时候生成，但是不会在随后的"
 "update时重新生成。比如说创建日期就归属于这类。注意虽然<xref linkend="
@@ -5296,7 +5296,7 @@ msgstr ""
 "这个选项..."
 
 #. Tag: para
-#: basic_mapping.xml:2900
+#: basic_mapping.xml:2924
 #, no-c-format
 msgid ""
 "<literal>always</literal> - states that the property value is generated both "
@@ -5304,13 +5304,13 @@ msgid ""
 msgstr "<literal>always</literal> - 标明此属性值在insert和update时都会被生成。"
 
 #. Tag: title
-#: basic_mapping.xml:2907
+#: basic_mapping.xml:2931
 #, no-c-format
 msgid "Auxiliary Database Objects"
 msgstr "辅助数据库对象(Auxiliary Database Objects)"
 
 #. Tag: para
-#: basic_mapping.xml:2908
+#: basic_mapping.xml:2932
 #, no-c-format
 msgid ""
 "Allows CREATE and DROP of arbitrary database objects, in conjunction with "
@@ -5335,7 +5335,7 @@ msgstr ""
 "ALTER, INSERT，等等）。本质上有两种模式来定义辅助数据库对象..."
 
 #. Tag: para
-#: basic_mapping.xml:2917
+#: basic_mapping.xml:2941
 #, no-c-format
 msgid ""
 "The first mode is to explicitly list the CREATE and DROP commands out in the "
@@ -5343,7 +5343,7 @@ msgid ""
 msgstr "第一种模式是在映射文件中显式声明CREATE和DROP命令："
 
 #. Tag: programlisting
-#: basic_mapping.xml:2921
+#: basic_mapping.xml:2945
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -5356,7 +5356,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2922
+#: basic_mapping.xml:2946
 #, no-c-format
 msgid ""
 "The second mode is to supply a custom class which knows how to construct the "
@@ -5367,7 +5367,7 @@ msgstr ""
 "现<literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal>接口。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2927
+#: basic_mapping.xml:2951
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -5379,7 +5379,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2928
+#: basic_mapping.xml:2952
 #, no-c-format
 msgid ""
 "Additionally, these database objects can be optionally scoped such that they "
@@ -5387,7 +5387,7 @@ msgid ""
 msgstr "还有，这些数据库对象可以特别指定为仅在特定的方言中才使用。"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2932
+#: basic_mapping.xml:2956
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,25 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: architecture.xml:21
+#: architecture.xml:30
 #, no-c-format
 msgid "Architecture"
 msgstr "体系结构(Architecture)"
 
 #. Tag: title
-#: architecture.xml:24
+#: architecture.xml:33
 #, no-c-format
 msgid "Overview"
 msgstr "概况(Overview)"
 
 #. Tag: para
-#: architecture.xml:26
+#: architecture.xml:35
 #, no-c-format
 msgid "A (very) high-level view of the Hibernate architecture:"
 msgstr "一个非常简要的Hibernate体系结构的概要图："
 
 #. Tag: para
-#: architecture.xml:39
+#: architecture.xml:48
 #, no-c-format
 msgid ""
 "This diagram shows Hibernate using the database and configuration data to "
@@ -39,7 +39,7 @@ msgstr ""
 "及持久的对象）。"
 
 #. Tag: para
-#: architecture.xml:44
+#: architecture.xml:53
 #, no-c-format
 msgid ""
 "We would like to show a more detailed view of the runtime architecture. "
@@ -54,7 +54,7 @@ msgstr ""
 "子集："
 
 #. Tag: para
-#: architecture.xml:61
+#: architecture.xml:70
 #, no-c-format
 msgid ""
 "The \"full cream\" architecture abstracts the application away from the "
@@ -64,19 +64,19 @@ msgstr ""
 "Hibernate来处理这些细节。"
 
 #. Tag: para
-#: architecture.xml:75
+#: architecture.xml:84
 #, fuzzy, no-c-format
 msgid "Heres some definitions of the objects in the diagrams:"
 msgstr "图中各个对象的定义如下： <placeholder-1/>"
 
 #. Tag: term
-#: architecture.xml:80
+#: architecture.xml:89
 #, no-c-format
 msgid "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 msgstr "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:82
+#: architecture.xml:91
 #, no-c-format
 msgid ""
 "A threadsafe (immutable) cache of compiled mappings for a single database. A "
@@ -91,13 +91,13 @@ msgstr ""
 "选的二级缓存。"
 
 #. Tag: term
-#: architecture.xml:92
+#: architecture.xml:101
 #, no-c-format
 msgid "Session (<literal>org.hibernate.Session</literal>)"
 msgstr "Session (<literal>org.hibernate.Session</literal>)"
 
 #. Tag: para
-#: architecture.xml:94
+#: architecture.xml:103
 #, no-c-format
 msgid ""
 "A single-threaded, short-lived object representing a conversation between "
@@ -111,13 +111,13 @@ msgstr ""
 "化对象的必选（第一级）缓存，在遍历对象图或者根据持久化标识查找对象时会用到。"
 
 #. Tag: term
-#: architecture.xml:104
+#: architecture.xml:113
 #, no-c-format
 msgid "Persistent objects and collections"
 msgstr "持久的对象及其集合"
 
 #. Tag: para
-#: architecture.xml:106
+#: architecture.xml:115
 #, no-c-format
 msgid ""
 "Short-lived, single threaded objects containing persistent state and "
@@ -134,13 +134,13 @@ msgstr ""
 "据传输对象。）"
 
 #. Tag: term
-#: architecture.xml:117
+#: architecture.xml:126
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "瞬态(transient)和脱管(detached)的对象及其集合"
 
 #. Tag: para
-#: architecture.xml:119
+#: architecture.xml:128
 #, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
@@ -153,13 +153,13 @@ msgstr ""
 "关闭而脱离持久化的对象。"
 
 #. Tag: term
-#: architecture.xml:128
+#: architecture.xml:137
 #, no-c-format
 msgid "Transaction (<literal>org.hibernate.Transaction</literal>)"
 msgstr "事务Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:130
+#: architecture.xml:139
 #, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -176,7 +176,7 @@ msgstr ""
 "<literal>Transaction</literal>对象，事务边界的开启与关闭是必不可少的。"
 
 #. Tag: term
-#: architecture.xml:141
+#: architecture.xml:150
 #, no-c-format
 msgid ""
 "ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</"
@@ -186,7 +186,7 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:143
+#: architecture.xml:152
 #, no-c-format
 msgid ""
 "(Optional) A factory for (and pool of) JDBC connections. Abstracts "
@@ -199,7 +199,7 @@ msgstr ""
 "仅供开发者扩展/实现用，并不暴露给应用程序使用。"
 
 #. Tag: term
-#: architecture.xml:151
+#: architecture.xml:160
 #, no-c-format
 msgid ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
@@ -207,7 +207,7 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:153
+#: architecture.xml:162
 #, no-c-format
 msgid ""
 "(Optional) A factory for <literal>Transaction</literal> instances. Not "
@@ -217,13 +217,13 @@ msgstr ""
 "实现用，并不暴露给应用程序使用。"
 
 #. Tag: emphasis
-#: architecture.xml:160
+#: architecture.xml:169
 #, no-c-format
 msgid "Extension Interfaces"
 msgstr "扩展接口"
 
 #. Tag: para
-#: architecture.xml:162
+#: architecture.xml:171
 #, no-c-format
 msgid ""
 "Hibernate offers many optional extension interfaces you can implement to "
@@ -234,7 +234,7 @@ msgstr ""
 "为。 具体请参考API文档。"
 
 #. Tag: para
-#: architecture.xml:171
+#: architecture.xml:180
 #, no-c-format
 msgid ""
 "Given a \"lite\" architecture, the application bypasses the "
@@ -246,13 +246,13 @@ msgstr ""
 "literal> 等API直接跟JTA或JDBC打交道。"
 
 #. Tag: title
-#: architecture.xml:179
+#: architecture.xml:188
 #, no-c-format
 msgid "Instance states"
 msgstr "实例状态"
 
 #. Tag: para
-#: architecture.xml:180
+#: architecture.xml:189
 #, no-c-format
 msgid ""
 "An instance of a persistent classes may be in one of three different states, "
@@ -265,13 +265,13 @@ msgstr ""
 "<literal>Session</literal>对象就是这个所谓的持久化上下文："
 
 #. Tag: term
-#: architecture.xml:188
+#: architecture.xml:197
 #, no-c-format
 msgid "transient"
 msgstr "瞬态（transient）"
 
 #. Tag: para
-#: architecture.xml:190
+#: architecture.xml:199
 #, no-c-format
 msgid ""
 "The instance is not, and has never been associated with any persistence "
@@ -279,13 +279,13 @@ msgid ""
 msgstr "该实例从未与任何持久化上下文关联过。它没有持久化标识（相当于主键值）。"
 
 #. Tag: term
-#: architecture.xml:198
+#: architecture.xml:207
 #, no-c-format
 msgid "persistent"
 msgstr "持久化(persistent)"
 
 #. Tag: para
-#: architecture.xml:200
+#: architecture.xml:209
 #, no-c-format
 msgid ""
 "The instance is currently associated with a persistence context. It has a "
@@ -299,18 +299,18 @@ msgstr ""
 "保证</emphasis>持久化标识与Java标识（其值代表对象在内存中的位置）等价。"
 
 #. Tag: term
-#: architecture.xml:212
+#: architecture.xml:221
 #, no-c-format
 msgid "detached"
 msgstr "脱管(detached)"
 
 #. Tag: para
-#: architecture.xml:214
-#, no-c-format
+#: architecture.xml:223
+#, fuzzy, no-c-format
 msgid ""
 "The instance was once associated with a persistence context, but that "
 "context was closed, or the instance was serialized to another process. It "
-"has a persistent identity and, perhaps, a corrsponding row in the database. "
+"has a persistent identity and, perhaps, a corresponding row in the database. "
 "For detached instances, Hibernate makes no guarantees about the relationship "
 "between persistent identity and Java identity."
 msgstr ""
@@ -320,13 +320,13 @@ msgstr ""
 "系。"
 
 #. Tag: title
-#: architecture.xml:229
+#: architecture.xml:238
 #, no-c-format
 msgid "JMX Integration"
 msgstr "JMX整合"
 
 #. Tag: para
-#: architecture.xml:231
+#: architecture.xml:240
 #, no-c-format
 msgid ""
 "JMX is the J2EE standard for management of Java components. Hibernate may be "
@@ -338,7 +338,7 @@ msgstr ""
 "hibernate.jmx.HibernateService</literal>。"
 
 #. Tag: para
-#: architecture.xml:237
+#: architecture.xml:246
 #, no-c-format
 msgid ""
 "For an example how to deploy Hibernate as a JMX service on the JBoss "
@@ -350,7 +350,7 @@ msgstr ""
 "处："
 
 #. Tag: para
-#: architecture.xml:245
+#: architecture.xml:254
 #, no-c-format
 msgid ""
 "<emphasis>Session Management:</emphasis> The Hibernate <literal>Session</"
@@ -371,7 +371,7 @@ msgstr ""
 "用<literal>HibernateContext</literal>来访问<literal>Session</literal>。"
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:266
 #, no-c-format
 msgid ""
 "<emphasis>HAR deployment:</emphasis> Usually you deploy the Hibernate JMX "
@@ -389,14 +389,14 @@ msgstr ""
 "你的HAR文件中所有的映射文件。"
 
 #. Tag: para
-#: architecture.xml:268
+#: architecture.xml:277
 #, no-c-format
 msgid ""
 "Consult the JBoss AS user guide for more information about these options."
 msgstr "这些选项更多的描述，请参考JBoss 应用程序用户指南。"
 
 #. Tag: para
-#: architecture.xml:272
+#: architecture.xml:281
 #, no-c-format
 msgid ""
 "Another feature available as a JMX service are runtime Hibernate statistics. "
@@ -406,13 +406,13 @@ msgstr ""
 "参看 <xref linkend=\"configuration-optional-statistics\"/>."
 
 #. Tag: title
-#: architecture.xml:279
+#: architecture.xml:288
 #, no-c-format
 msgid "JCA Support"
 msgstr "对JCA的支持"
 
 #. Tag: para
-#: architecture.xml:280
+#: architecture.xml:289
 #, no-c-format
 msgid ""
 "Hibernate may also be configured as a JCA connector. Please see the website "
@@ -423,13 +423,13 @@ msgstr ""
 "请注意，Hibernate对JCA的支持，仍处于实验性阶段。"
 
 #. Tag: title
-#: architecture.xml:287
+#: architecture.xml:296
 #, no-c-format
 msgid "Contextual Sessions"
 msgstr "上下文相关的（Contextual）Session"
 
 #. Tag: para
-#: architecture.xml:288
+#: architecture.xml:297
 #, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" sessions, "
@@ -452,7 +452,7 @@ msgstr ""
 "session。"
 
 #. Tag: para
-#: architecture.xml:297
+#: architecture.xml:306
 #, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -475,7 +475,7 @@ msgstr ""
 "<literal>JTA</literal>的上下文相关session可以满足你一切需要。"
 
 #. Tag: para
-#: architecture.xml:307
+#: architecture.xml:316
 #, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -492,7 +492,7 @@ msgstr ""
 "下文(scope and context)的定义进行拔插。"
 
 #. Tag: para
-#: architecture.xml:314
+#: architecture.xml:323
 #, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -508,7 +508,7 @@ msgstr ""
 "session。Hibernate内置了此接口的三种实现。"
 
 #. Tag: para
-#: architecture.xml:324
+#: architecture.xml:333
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal> - current "
@@ -521,7 +521,7 @@ msgstr ""
 "情请参阅Javadoc。"
 
 #. Tag: para
-#: architecture.xml:332
+#: architecture.xml:341
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - current "
@@ -532,7 +532,7 @@ msgstr ""
 "session通过当前执行的线程来跟踪和界定。详情也请参阅Javadoc。"
 
 #. Tag: para
-#: architecture.xml:338
+#: architecture.xml:347
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal> - current "
@@ -546,14 +546,14 @@ msgstr ""
 "者关闭(close)任何<literal>Session</literal>。"
 
 #. Tag: para
-#: architecture.xml:347
-#, no-c-format
+#: architecture.xml:356
+#, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
 "transaction\" programming model, also known and used as <emphasis>session-"
 "per-request</emphasis>. The beginning and end of a Hibernate session is "
-"defined by the duration of a database transaction. If you use programatic "
-"transaction demarcation in plain JSE without JTA, you are adviced to use the "
+"defined by the duration of a database transaction. If you use programmatic "
+"transaction demarcation in plain JSE without JTA, you are advised to use the "
 "Hibernate <literal>Transaction</literal> API to hide the underlying "
 "transaction system from your code. If you use JTA, use the JTA interfaces to "
 "demarcate transactions. If you execute in an EJB container that supports "
@@ -571,7 +571,7 @@ msgstr ""
 "示例代码。"
 
 #. Tag: para
-#: architecture.xml:359
+#: architecture.xml:368
 #, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "

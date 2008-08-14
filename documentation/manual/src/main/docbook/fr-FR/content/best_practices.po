@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: best_practices.xml:5
+#: best_practices.xml:29
 #, no-c-format
 msgid "Best Practices"
 msgstr "Meilleures pratiques"
 
 #. Tag: term
-#: best_practices.xml:9
+#: best_practices.xml:33
 #, no-c-format
 msgid ""
 "Write fine-grained classes and map them using <literal>&lt;component&gt;</"
@@ -27,7 +27,7 @@ msgstr ""
 "component&gt;</literal>."
 
 #. Tag: para
-#: best_practices.xml:11
+#: best_practices.xml:35
 #, no-c-format
 msgid ""
 "Use an <literal>Address</literal> class to encapsulate <literal>street</"
@@ -40,13 +40,13 @@ msgstr ""
 "permet la réutilisation du code et simplifie la maintenance."
 
 #. Tag: term
-#: best_practices.xml:19
+#: best_practices.xml:43
 #, no-c-format
 msgid "Declare identifier properties on persistent classes."
 msgstr "Déclarez des propriétés d'identifiants dans les classes persistantes."
 
 #. Tag: para
-#: best_practices.xml:21
+#: best_practices.xml:45
 #, no-c-format
 msgid ""
 "Hibernate makes identifier properties optional. There are all sorts of "
@@ -59,13 +59,13 @@ msgstr ""
 "sans connotation métier)."
 
 #. Tag: term
-#: best_practices.xml:29
+#: best_practices.xml:53
 #, no-c-format
 msgid "Identify natural keys."
 msgstr "Identifiez les clefs naturelles."
 
 #. Tag: para
-#: best_practices.xml:31
+#: best_practices.xml:55
 #, no-c-format
 msgid ""
 "Identify natural keys for all entities, and map them using <literal>&lt;"
@@ -79,13 +79,13 @@ msgstr ""
 "composent la clef naturelle."
 
 #. Tag: term
-#: best_practices.xml:39
+#: best_practices.xml:63
 #, no-c-format
 msgid "Place each class mapping in its own file."
 msgstr "Placez chaque mapping de classe dans son propre fichier."
 
 #. Tag: para
-#: best_practices.xml:41
+#: best_practices.xml:65
 #, no-c-format
 msgid ""
 "Don't use a single monolithic mapping document. Map <literal>com.eg.Foo</"
@@ -97,25 +97,25 @@ msgstr ""
 "tout son sens lors d'un travail en équipe."
 
 #. Tag: term
-#: best_practices.xml:49
+#: best_practices.xml:73
 #, no-c-format
 msgid "Load mappings as resources."
 msgstr "Chargez les mappings comme des ressources."
 
 #. Tag: para
-#: best_practices.xml:51
+#: best_practices.xml:75
 #, no-c-format
 msgid "Deploy the mappings along with the classes they map."
 msgstr "Déployez les mappings en même temps que les classes qu'ils mappent."
 
 #. Tag: term
-#: best_practices.xml:57
+#: best_practices.xml:81
 #, no-c-format
 msgid "Consider externalising query strings."
 msgstr "Pensez à externaliser les chaînes de caractères."
 
 #. Tag: para
-#: best_practices.xml:59
+#: best_practices.xml:83
 #, no-c-format
 msgid ""
 "This is a good practice if your queries call non-ANSI-standard SQL "
@@ -127,13 +127,13 @@ msgstr ""
 "mapping rendra votre application plus portable."
 
 #. Tag: term
-#: best_practices.xml:67
+#: best_practices.xml:91
 #, no-c-format
 msgid "Use bind variables."
 msgstr "Utilisez les variables \"bindées\"."
 
 #. Tag: para
-#: best_practices.xml:69
+#: best_practices.xml:93
 #, no-c-format
 msgid ""
 "As in JDBC, always replace non-constant values by \"?\". Never use string "
@@ -146,13 +146,13 @@ msgstr ""
 "paramètres nommés dans les requêtes."
 
 #. Tag: term
-#: best_practices.xml:77
+#: best_practices.xml:101
 #, no-c-format
 msgid "Don't manage your own JDBC connections."
 msgstr "Ne gérez pas vous même les connexions JDBC."
 
 #. Tag: para
-#: best_practices.xml:79
+#: best_practices.xml:103
 #, no-c-format
 msgid ""
 "Hibernate lets the application manage JDBC connections. This approach should "
@@ -167,13 +167,13 @@ msgstr ""
 "ConnectionProvider</literal>."
 
 #. Tag: term
-#: best_practices.xml:87
+#: best_practices.xml:111
 #, no-c-format
 msgid "Consider using a custom type."
 msgstr "Pensez à utiliser les types utilisateurs."
 
 #. Tag: para
-#: best_practices.xml:89
+#: best_practices.xml:113
 #, no-c-format
 msgid ""
 "Suppose you have a Java type, say from some library, that needs to be "
@@ -189,13 +189,13 @@ msgstr ""
 "l'implémentation des transformations vers / depuis les types Hibernate."
 
 #. Tag: term
-#: best_practices.xml:98
+#: best_practices.xml:122
 #, no-c-format
 msgid "Use hand-coded JDBC in bottlenecks."
 msgstr "Utilisez du JDBC pur dans les goulets d'étranglement."
 
 #. Tag: para
-#: best_practices.xml:100
+#: best_practices.xml:124
 #, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
@@ -216,13 +216,13 @@ msgstr ""
 "même gestion des connexions."
 
 #. Tag: term
-#: best_practices.xml:110
+#: best_practices.xml:134
 #, no-c-format
 msgid "Understand <literal>Session</literal> flushing."
 msgstr "Comprendre le flush de <literal>Session</literal>."
 
 #. Tag: para
-#: best_practices.xml:112
+#: best_practices.xml:136
 #, no-c-format
 msgid ""
 "From time to time the Session synchronizes its persistent state with the "
@@ -238,7 +238,7 @@ msgstr ""
 "menées dans une transaction particulière."
 
 #. Tag: term
-#: best_practices.xml:121
+#: best_practices.xml:145
 #, no-c-format
 msgid "In a three tiered architecture, consider using detached objects."
 msgstr ""
@@ -246,7 +246,7 @@ msgstr ""
 "<literal>saveOrUpdate()</literal>."
 
 #. Tag: para
-#: best_practices.xml:123
+#: best_practices.xml:147
 #, no-c-format
 msgid ""
 "When using a servlet / session bean architecture, you could pass persistent "
@@ -263,7 +263,7 @@ msgstr ""
 "données."
 
 #. Tag: term
-#: best_practices.xml:132
+#: best_practices.xml:156
 #, no-c-format
 msgid "In a two tiered architecture, consider using long persistence contexts."
 msgstr ""
@@ -271,7 +271,7 @@ msgstr ""
 "session."
 
 #. Tag: para
-#: best_practices.xml:134
+#: best_practices.xml:158
 #, no-c-format
 msgid ""
 "Database Transactions have to be as short as possible for best scalability. "
@@ -302,13 +302,13 @@ msgstr ""
 "avec des données périmées."
 
 #. Tag: term
-#: best_practices.xml:148
+#: best_practices.xml:172
 #, no-c-format
 msgid "Don't treat exceptions as recoverable."
 msgstr "Considérez que les exceptions ne sont pas rattrapables."
 
 #. Tag: para
-#: best_practices.xml:150
+#: best_practices.xml:174
 #, no-c-format
 msgid ""
 "This is more of a necessary practice than a \"best\" practice. When an "
@@ -328,13 +328,13 @@ msgstr ""
 "données, utilisez <literal>Session.get()</literal> ou un requête."
 
 #. Tag: term
-#: best_practices.xml:160
+#: best_practices.xml:184
 #, no-c-format
 msgid "Prefer lazy fetching for associations."
 msgstr "Préférez le chargement tardif des associations."
 
 #. Tag: para
-#: best_practices.xml:162
+#: best_practices.xml:186
 #, no-c-format
 msgid ""
 "Use eager fetching sparingly. Use proxies and lazy collections for most "
@@ -356,7 +356,7 @@ msgstr ""
 "requête avec un <literal>left join fetch</literal>."
 
 #. Tag: term
-#: best_practices.xml:172
+#: best_practices.xml:196
 #, no-c-format
 msgid ""
 "Use the <emphasis>open session in view</emphasis> pattern, or a disciplined "
@@ -367,7 +367,7 @@ msgstr ""
 "éviter des problèmes avec des données non rapatriées."
 
 #. Tag: para
-#: best_practices.xml:177
+#: best_practices.xml:201
 #, no-c-format
 msgid ""
 "Hibernate frees the developer from writing tedious <emphasis>Data Transfer "
@@ -398,13 +398,13 @@ msgstr ""
 "à travers tout le processus de rendu de la vue."
 
 #. Tag: term
-#: best_practices.xml:191
+#: best_practices.xml:215
 #, no-c-format
 msgid "Consider abstracting your business logic from Hibernate."
 msgstr "Pensez à abstraite votre logique métier d'Hibernate."
 
 #. Tag: para
-#: best_practices.xml:193
+#: best_practices.xml:217
 #, no-c-format
 msgid ""
 "Hide (Hibernate) data-access code behind an interface. Combine the "
@@ -422,13 +422,13 @@ msgstr ""
 "pas valable pour une application avec cinq tables)."
 
 #. Tag: term
-#: best_practices.xml:203
+#: best_practices.xml:227
 #, no-c-format
 msgid "Don't use exotic association mappings."
 msgstr "N'utilisez pas d'associations de mapping exotiques."
 
 #. Tag: para
-#: best_practices.xml:205
+#: best_practices.xml:229
 #, no-c-format
 msgid ""
 "Good usecases for a real many-to-many associations are rare. Most of the "
@@ -448,13 +448,13 @@ msgstr ""
 "c'est vraiment nécessaire."
 
 #. Tag: term
-#: best_practices.xml:215
+#: best_practices.xml:239
 #, no-c-format
 msgid "Prefer bidirectional associations."
 msgstr "Préférez les associations bidirectionnelles."
 
 #. Tag: para
-#: best_practices.xml:217
+#: best_practices.xml:241
 #, no-c-format
 msgid ""
 "Unidirectional associations are more difficult to query. In a large "

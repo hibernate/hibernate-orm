@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: batch.xml:5
+#: batch.xml:29
 #, no-c-format
 msgid "Batch processing"
 msgstr "Traitement par paquet"
 
 #. Tag: para
-#: batch.xml:7
+#: batch.xml:31
 #, no-c-format
 msgid ""
 "A naive approach to inserting 100 000 rows in the database using Hibernate "
@@ -27,7 +27,7 @@ msgstr ""
 "utilisant Hibernate pourrait ressembler à ça :"
 
 #. Tag: programlisting
-#: batch.xml:12
+#: batch.xml:36
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -41,7 +41,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:14
+#: batch.xml:38
 #, no-c-format
 msgid ""
 "This would fall over with an <literal>OutOfMemoryException</literal> "
@@ -55,7 +55,7 @@ msgstr ""
 "insérées dans le cache de second niveau."
 
 #. Tag: para
-#: batch.xml:20
+#: batch.xml:44
 #, no-c-format
 msgid ""
 "In this chapter we'll show you how to avoid this problem. First, however, if "
@@ -71,13 +71,13 @@ msgstr ""
 "50) :"
 
 #. Tag: programlisting
-#: batch.xml:27
+#: batch.xml:51
 #, no-c-format
 msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:29
+#: batch.xml:53
 #, no-c-format
 msgid ""
 "Note that Hibernate disables insert batching at the JDBC level transparently "
@@ -87,7 +87,7 @@ msgstr ""
 "où l'interaction avec le cache de second niveau est complètement désactivé :"
 
 #. Tag: para
-#: batch.xml:34
+#: batch.xml:58
 #, no-c-format
 msgid ""
 "You also might like to do this kind of work in a process where interaction "
@@ -95,13 +95,13 @@ msgid ""
 msgstr "Insertions en paquet"
 
 #. Tag: programlisting
-#: batch.xml:39
+#: batch.xml:63
 #, no-c-format
 msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:41
+#: batch.xml:65
 #, no-c-format
 msgid ""
 "However, this is not absolutely necessary, since we can explicitly set the "
@@ -113,13 +113,13 @@ msgstr ""
 "literal> sur la session, pour contrôler la taille du cache de premier niveau."
 
 #. Tag: title
-#: batch.xml:47
+#: batch.xml:71
 #, no-c-format
 msgid "Batch inserts"
 msgstr "Paquet de mises à jour"
 
 #. Tag: para
-#: batch.xml:49
+#: batch.xml:73
 #, no-c-format
 msgid ""
 "When making new objects persistent, you must <literal>flush()</literal> and "
@@ -132,7 +132,7 @@ msgstr ""
 "de lignes de données."
 
 #. Tag: programlisting
-#: batch.xml:55
+#: batch.xml:79
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -153,13 +153,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: batch.xml:60
+#: batch.xml:84
 #, no-c-format
 msgid "Batch updates"
 msgstr "L'interface StatelessSession"
 
 #. Tag: para
-#: batch.xml:62
+#: batch.xml:86
 #, no-c-format
 msgid ""
 "For retrieving and updating data the same ideas apply. In addition, you need "
@@ -184,7 +184,7 @@ msgstr ""
 "proche de la couche JDBC sous-jacente."
 
 #. Tag: programlisting
-#: batch.xml:68
+#: batch.xml:92
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -209,7 +209,7 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: batch.xml:73
+#: batch.xml:97
 #, no-c-format
 msgid "The StatelessSession interface"
 msgstr ""
@@ -218,7 +218,7 @@ msgstr ""
 "sont jamais associées à un contexte de persistance."
 
 #. Tag: para
-#: batch.xml:74
+#: batch.xml:98
 #, no-c-format
 msgid ""
 "Alternatively, Hibernate provides a command-oriented API that may be used "
@@ -246,7 +246,7 @@ msgstr ""
 "par l'interface <literal>Session</literal>."
 
 #. Tag: programlisting
-#: batch.xml:89
+#: batch.xml:113
 #, no-c-format
 msgid ""
 "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
@@ -265,7 +265,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:91
+#: batch.xml:115
 #, no-c-format
 msgid ""
 "Note that in this code example, the <literal>Customer</literal> instances "
@@ -274,7 +274,7 @@ msgid ""
 msgstr "Opérations de style DML"
 
 #. Tag: para
-#: batch.xml:97
+#: batch.xml:121
 #, no-c-format
 msgid ""
 "The <literal>insert(), update()</literal> and <literal>delete()</literal> "
@@ -297,7 +297,7 @@ msgstr ""
 "(<xref linkend=\"queryhql\">HQL</xref>)."
 
 #. Tag: title
-#: batch.xml:110
+#: batch.xml:134
 #, no-c-format
 msgid "DML-style operations"
 msgstr ""
@@ -307,7 +307,7 @@ msgstr ""
 "noter :"
 
 #. Tag: para
-#: batch.xml:112
+#: batch.xml:136
 #, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
@@ -322,7 +322,7 @@ msgid ""
 msgstr "Dans la clause from, le mot-clef FROM est optionnel"
 
 #. Tag: para
-#: batch.xml:122
+#: batch.xml:146
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
@@ -336,7 +336,7 @@ msgstr ""
 "n'importe quelle référence de propriété d'être qualifiée."
 
 #. Tag: para
-#: batch.xml:130
+#: batch.xml:154
 #, no-c-format
 msgid "In the from-clause, the FROM keyword is optional"
 msgstr ""
@@ -345,7 +345,7 @@ msgstr ""
 "les sous-requêtes, elles-mêmes, peuvent contenir des jointures."
 
 #. Tag: para
-#: batch.xml:135
+#: batch.xml:159
 #, no-c-format
 msgid ""
 "There can only be a single entity named in the from-clause; it can "
@@ -355,7 +355,7 @@ msgid ""
 msgstr "La clause where est aussi optionnelle."
 
 #. Tag: para
-#: batch.xml:143
+#: batch.xml:167
 #, no-c-format
 msgid ""
 "No <link linkend=\"queryhql-joins-forms\">joins</link> (either implicit or "
@@ -368,7 +368,7 @@ msgstr ""
 "</literal> de JDBC) :"
 
 #. Tag: para
-#: batch.xml:150
+#: batch.xml:174
 #, no-c-format
 msgid "The where-clause is also optional."
 msgstr ""
@@ -376,7 +376,7 @@ msgstr ""
 "<literal>Query.executeUpdate()</literal> :"
 
 #. Tag: para
-#: batch.xml:156
+#: batch.xml:180
 #, no-c-format
 msgid ""
 "As an example, to execute an HQL <literal>UPDATE</literal>, use the "
@@ -398,7 +398,7 @@ msgstr ""
 "hiérarchie d'héritage."
 
 #. Tag: programlisting
-#: batch.xml:162
+#: batch.xml:186
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -417,7 +417,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:164
+#: batch.xml:188
 #, no-c-format
 msgid ""
 "HQL <literal>UPDATE</literal> statements, by default do not effect the <link "
@@ -435,7 +435,7 @@ msgstr ""
 "Quelques points sont à noter :"
 
 #. Tag: programlisting
-#: batch.xml:174
+#: batch.xml:198
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -451,7 +451,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:176
+#: batch.xml:200
 #, no-c-format
 msgid ""
 "Note that custom version types (<literal>org.hibernate.usertype."
@@ -462,7 +462,7 @@ msgstr ""
 "INSERT INTO ... VALUES ... ."
 
 #. Tag: para
-#: batch.xml:181
+#: batch.xml:205
 #, no-c-format
 msgid ""
 "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
@@ -478,7 +478,7 @@ msgstr ""
 "expressions <literal>INSERT</literal> par nature non polymorphiques."
 
 #. Tag: programlisting
-#: batch.xml:186
+#: batch.xml:210
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"
@@ -494,7 +494,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:188
+#: batch.xml:212
 #, no-c-format
 msgid ""
 "The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
@@ -522,7 +522,7 @@ msgstr ""
 "gérer la conversion."
 
 #. Tag: para
-#: batch.xml:199
+#: batch.xml:223
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>INSERT</literal> statements is: "
@@ -546,7 +546,7 @@ msgstr ""
 "select."
 
 #. Tag: para
-#: batch.xml:207
+#: batch.xml:231
 #, no-c-format
 msgid ""
 "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
@@ -561,7 +561,7 @@ msgstr ""
 "VersionType</literal> est utilisée)."
 
 #. Tag: para
-#: batch.xml:210
+#: batch.xml:234
 #, no-c-format
 msgid ""
 "The properties_list is analogous to the <literal>column speficiation</"
@@ -574,7 +574,7 @@ msgstr ""
 "Un exemple d'exécution d'une expression <literal>INSERT</literal> HQL :"
 
 #. Tag: para
-#: batch.xml:220
+#: batch.xml:244
 #, no-c-format
 msgid ""
 "select_statement can be any valid HQL select query, with the caveat that the "
@@ -590,7 +590,7 @@ msgid ""
 msgstr "translator-credits"
 
 #. Tag: para
-#: batch.xml:232
+#: batch.xml:256
 #, no-c-format
 msgid ""
 "For the id property, the insert statement gives you two options. You can "
@@ -609,7 +609,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:247
+#: batch.xml:271
 #, no-c-format
 msgid ""
 "For properties mapped as either <literal>version</literal> or "
@@ -621,13 +621,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: batch.xml:257
+#: batch.xml:281
 #, no-c-format
 msgid "An example HQL <literal>INSERT</literal> statement execution:"
 msgstr ""
 
 #. Tag: programlisting
-#: batch.xml:261
+#: batch.xml:285
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = sessionFactory.openSession();\n"

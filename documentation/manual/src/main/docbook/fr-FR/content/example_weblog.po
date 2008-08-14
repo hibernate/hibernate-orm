@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: example_weblog.xml:5
+#: example_weblog.xml:29
 #, no-c-format
 msgid "Example: Weblog Application"
 msgstr "Exemple : application Weblog"
 
 #. Tag: title
-#: example_weblog.xml:8
+#: example_weblog.xml:32
 #, no-c-format
 msgid "Persistent Classes"
 msgstr "Classes persistantes"
 
 #. Tag: para
-#: example_weblog.xml:10
+#: example_weblog.xml:34
 #, no-c-format
 msgid ""
 "The persistent classes represent a weblog, and an item posted in a weblog. "
@@ -35,7 +35,7 @@ msgstr ""
 "allons utiliser un \"bag\" trié au lieu d'un set."
 
 #. Tag: programlisting
-#: example_weblog.xml:16
+#: example_weblog.xml:40
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -69,7 +69,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: example_weblog.xml:18
+#: example_weblog.xml:42
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -118,19 +118,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: example_weblog.xml:23
+#: example_weblog.xml:47
 #, no-c-format
 msgid "Hibernate Mappings"
 msgstr "Mappings Hibernate"
 
 #. Tag: para
-#: example_weblog.xml:25
+#: example_weblog.xml:49
 #, no-c-format
 msgid "The XML mappings should now be quite straightforward."
 msgstr "Le mapping XML doit maintenant être relativement simple à vos yeux."
 
 #. Tag: programlisting
-#: example_weblog.xml:29
+#: example_weblog.xml:53
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -175,7 +175,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: example_weblog.xml:31
+#: example_weblog.xml:55
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -224,13 +224,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: example_weblog.xml:36
+#: example_weblog.xml:60
 #, no-c-format
 msgid "Hibernate Code"
 msgstr "Code Hibernate"
 
 #. Tag: para
-#: example_weblog.xml:38
+#: example_weblog.xml:62
 #, no-c-format
 msgid ""
 "The following class demonstrates some of the kinds of things we can do with "
@@ -240,7 +240,7 @@ msgstr ""
 "ces classes."
 
 #. Tag: programlisting
-#: example_weblog.xml:43
+#: example_weblog.xml:67
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"

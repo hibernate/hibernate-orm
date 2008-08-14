@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: basic_mapping.xml:5
+#: basic_mapping.xml:29
 #, no-c-format
 msgid "Basic O/R Mapping"
 msgstr "Mapping O/R basique"
 
 #. Tag: title
-#: basic_mapping.xml:8
+#: basic_mapping.xml:32
 #, no-c-format
 msgid "Mapping declaration"
 msgstr "Déclaration de Mapping"
 
 #. Tag: para
-#: basic_mapping.xml:10
+#: basic_mapping.xml:34
 #, no-c-format
 msgid ""
 "Object/relational mappings are usually defined in an XML document. The "
@@ -38,7 +38,7 @@ msgstr ""
 "et non des déclarations des tables."
 
 #. Tag: para
-#: basic_mapping.xml:17
+#: basic_mapping.xml:41
 #, no-c-format
 msgid ""
 "Note that, even though many Hibernate users choose to write the XML by hand, "
@@ -50,13 +50,13 @@ msgstr ""
 "ce document, notamment XDoclet, Middlegen et AndroMDA."
 
 #. Tag: para
-#: basic_mapping.xml:23
+#: basic_mapping.xml:47
 #, no-c-format
 msgid "Lets kick off with an example mapping:"
 msgstr "Démarrons avec un exemple de mapping :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:27
+#: basic_mapping.xml:51
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -126,7 +126,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:29
+#: basic_mapping.xml:53
 #, no-c-format
 msgid ""
 "We will now discuss the content of the mapping document. We will only "
@@ -142,13 +142,13 @@ msgstr ""
 "de schéma. (Par exemple l'attribut <literal>not-null</literal>.)"
 
 #. Tag: title
-#: basic_mapping.xml:40
+#: basic_mapping.xml:64
 #, no-c-format
 msgid "Doctype"
 msgstr "Doctype"
 
 #. Tag: para
-#: basic_mapping.xml:42
+#: basic_mapping.xml:66
 #, no-c-format
 msgid ""
 "All XML mappings should declare the doctype shown. The actual DTD may be "
@@ -166,13 +166,13 @@ msgstr ""
 "de DTD par rapport au contenu de votre classpath."
 
 #. Tag: title
-#: basic_mapping.xml:52
+#: basic_mapping.xml:76
 #, no-c-format
 msgid "EntityResolver"
 msgstr "EntityResolver"
 
 #. Tag: para
-#: basic_mapping.xml:53
+#: basic_mapping.xml:77
 #, no-c-format
 msgid ""
 "As mentioned previously, Hibernate will first attempt to resolve DTDs in its "
@@ -190,7 +190,7 @@ msgstr ""
 "namespaces."
 
 #. Tag: para
-#: basic_mapping.xml:61
+#: basic_mapping.xml:85
 #, no-c-format
 msgid ""
 "a <literal>hibernate namespace</literal> is recognized whenever the resolver "
@@ -204,7 +204,7 @@ msgstr ""
 "classlaoder which loaded the Hibernate classes."
 
 #. Tag: para
-#: basic_mapping.xml:70
+#: basic_mapping.xml:94
 #, no-c-format
 msgid ""
 "a <literal>user namespace</literal> is recognized whenever the resolver "
@@ -220,13 +220,13 @@ msgstr ""
 "Hibernate classes."
 
 #. Tag: para
-#: basic_mapping.xml:79
+#: basic_mapping.xml:103
 #, no-c-format
 msgid "An example of utilizing user namespacing:"
 msgstr "An example of utilizing user namespacing:"
 
 #. Tag: programlisting
-#: basic_mapping.xml:82
+#: basic_mapping.xml:106
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -247,7 +247,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:83
+#: basic_mapping.xml:107
 #, no-c-format
 msgid ""
 "Where <literal>types.xml</literal> is a resource in the <literal>your."
@@ -259,13 +259,13 @@ msgstr ""
 "custom\">typedef</link>."
 
 #. Tag: title
-#: basic_mapping.xml:91
+#: basic_mapping.xml:115
 #, no-c-format
 msgid "hibernate-mapping"
 msgstr "hibernate-mapping"
 
 #. Tag: para
-#: basic_mapping.xml:93
+#: basic_mapping.xml:117
 #, no-c-format
 msgid ""
 "This element has several optional attributes. The <literal>schema</literal> "
@@ -289,7 +289,7 @@ msgstr ""
 "classes non qualifiés dans le langage de requête."
 
 #. Tag: programlisting
-#: basic_mapping.xml:114
+#: basic_mapping.xml:138
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping\n"
@@ -304,7 +304,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:117
+#: basic_mapping.xml:141
 #, no-c-format
 msgid "<literal>schema</literal> (optional): The name of a database schema."
 msgstr ""
@@ -312,7 +312,7 @@ msgstr ""
 "données."
 
 #. Tag: para
-#: basic_mapping.xml:122
+#: basic_mapping.xml:146
 #, no-c-format
 msgid "<literal>catalog</literal> (optional): The name of a database catalog."
 msgstr ""
@@ -320,7 +320,7 @@ msgstr ""
 "données."
 
 #. Tag: para
-#: basic_mapping.xml:127
+#: basic_mapping.xml:151
 #, no-c-format
 msgid ""
 "<literal>default-cascade</literal> (optional - defaults to <literal>none</"
@@ -330,7 +330,7 @@ msgstr ""
 "<literal>none</literal>) : Un type de cascade par défaut."
 
 #. Tag: para
-#: basic_mapping.xml:133
+#: basic_mapping.xml:157
 #, no-c-format
 msgid ""
 "<literal>default-access</literal> (optional - defaults to <literal>property</"
@@ -343,7 +343,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: basic_mapping.xml:140
+#: basic_mapping.xml:164
 #, no-c-format
 msgid ""
 "<literal>default-lazy</literal> (optional - defaults to <literal>true</"
@@ -355,7 +355,7 @@ msgstr ""
 "literal> non spécifié : celui des mappings de classes et de collection."
 
 #. Tag: para
-#: basic_mapping.xml:147
+#: basic_mapping.xml:171
 #, no-c-format
 msgid ""
 "<literal>auto-import</literal> (optional - defaults to <literal>true</"
@@ -367,7 +367,7 @@ msgstr ""
 "(des classes de ce mapping) dans le langage de requête."
 
 #. Tag: para
-#: basic_mapping.xml:154
+#: basic_mapping.xml:178
 #, no-c-format
 msgid ""
 "<literal>package</literal> (optional): Specifies a package prefix to assume "
@@ -377,7 +377,7 @@ msgstr ""
 "les noms de classe non qualifiés du document de mapping."
 
 #. Tag: para
-#: basic_mapping.xml:162
+#: basic_mapping.xml:186
 #, no-c-format
 msgid ""
 "If you have two persistent classes with the same (unqualified) name, you "
@@ -389,7 +389,7 @@ msgstr ""
 "exception si vous essayez d'assigner à deux classes le même nom importé."
 
 #. Tag: para
-#: basic_mapping.xml:168
+#: basic_mapping.xml:192
 #, no-c-format
 msgid ""
 "Note that the <literal>hibernate-mapping</literal> element allows you to "
@@ -410,13 +410,13 @@ msgstr ""
 "<literal>Animal.hbm.xml</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:181
+#: basic_mapping.xml:205
 #, no-c-format
 msgid "<title>class</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:183
+#: basic_mapping.xml:207
 #, no-c-format
 msgid ""
 "You may declare a persistent class using the <literal>class</literal> "
@@ -425,7 +425,7 @@ msgstr ""
 "Déclarez une classe persistante avec l'élément <literal>class</literal> :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:211
+#: basic_mapping.xml:235
 #, no-c-format
 msgid ""
 "<![CDATA[<class\n"
@@ -455,7 +455,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:214
+#: basic_mapping.xml:238
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional): The fully qualified Java class name of "
@@ -467,7 +467,7 @@ msgstr ""
 "mapping ne se rapporte pas à une entité POJO."
 
 #. Tag: para
-#: basic_mapping.xml:221
+#: basic_mapping.xml:245
 #, no-c-format
 msgid ""
 "<literal>table</literal> (optional - defaults to the unqualified class "
@@ -477,7 +477,7 @@ msgstr ""
 "classe) : Le nom de sa table en base de données."
 
 #. Tag: para
-#: basic_mapping.xml:227
+#: basic_mapping.xml:251
 #, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -491,7 +491,7 @@ msgstr ""
 "<literal>not null</literal> sont autorisées."
 
 #. Tag: para
-#: basic_mapping.xml:234
+#: basic_mapping.xml:258
 #, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional, defaults to <literal>true</literal>): "
@@ -501,7 +501,7 @@ msgstr ""
 "défaut) : Spécifie que des instances de la classe sont (ou non) immuables."
 
 #. Tag: para
-#: basic_mapping.xml:240 basic_mapping.xml:2204
+#: basic_mapping.xml:264 basic_mapping.xml:2228
 #, fuzzy, no-c-format
 msgid ""
 "<literal>schema</literal> (optional): Override the schema name specified by "
@@ -515,7 +515,7 @@ msgstr ""
 "spécifié par l'élément de base <literal>&lt;hibernate-mapping&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:246 basic_mapping.xml:2210
+#: basic_mapping.xml:270 basic_mapping.xml:2234
 #, fuzzy, no-c-format
 msgid ""
 "<literal>catalog</literal> (optional): Override the catalog name specified "
@@ -529,7 +529,7 @@ msgstr ""
 "spécifié par l'élément de base <literal>&lt;hibernate-mapping&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:252
+#: basic_mapping.xml:276
 #, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): Specifies an interface to use for lazy "
@@ -540,7 +540,7 @@ msgstr ""
 "indiquer le nom de la classe elle-même."
 
 #. Tag: para
-#: basic_mapping.xml:258
+#: basic_mapping.xml:282
 #, no-c-format
 msgid ""
 "<literal>dynamic-update</literal> (optional, defaults to <literal>false</"
@@ -553,7 +553,7 @@ msgstr ""
 "ont été modifiées."
 
 #. Tag: para
-#: basic_mapping.xml:265
+#: basic_mapping.xml:289
 #, no-c-format
 msgid ""
 "<literal>dynamic-insert</literal> (optional, defaults to <literal>false</"
@@ -566,7 +566,7 @@ msgstr ""
 "non nulles."
 
 #. Tag: para
-#: basic_mapping.xml:272
+#: basic_mapping.xml:296
 #, no-c-format
 msgid ""
 "<literal>select-before-update</literal> (optional, defaults to "
@@ -588,7 +588,7 @@ msgstr ""
 "SQL est véritablement nécessaire."
 
 #. Tag: para
-#: basic_mapping.xml:282
+#: basic_mapping.xml:306
 #, no-c-format
 msgid ""
 "<literal>polymorphism</literal> (optional, defaults to <literal>implicit</"
@@ -600,7 +600,7 @@ msgstr ""
 "implicite ou explicite est utilisée."
 
 #. Tag: para
-#: basic_mapping.xml:288
+#: basic_mapping.xml:312
 #, no-c-format
 msgid ""
 "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</"
@@ -610,7 +610,7 @@ msgstr ""
 "literal> à utiliser lorsque l'on récupère des objets de cette classe."
 
 #. Tag: para
-#: basic_mapping.xml:294
+#: basic_mapping.xml:318
 #, no-c-format
 msgid ""
 "<literal>persister</literal> (optional): Specifies a custom "
@@ -620,7 +620,7 @@ msgstr ""
 "<literal>ClassPersister</literal> particulier."
 
 #. Tag: para
-#: basic_mapping.xml:299
+#: basic_mapping.xml:323
 #, no-c-format
 msgid ""
 "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) "
@@ -631,7 +631,7 @@ msgstr ""
 "classe par identifiant en une seule requête."
 
 #. Tag: para
-#: basic_mapping.xml:305
+#: basic_mapping.xml:329
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional, defaults to <literal>version</"
@@ -641,7 +641,7 @@ msgstr ""
 "<literal>version</literal>) : Détermine la stratégie de verrou optimiste."
 
 #. Tag: para
-#: basic_mapping.xml:311
+#: basic_mapping.xml:335
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional): Lazy fetching may be completely disabled "
@@ -652,7 +652,7 @@ msgstr ""
 "l'interface <literal>proxy</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:317
+#: basic_mapping.xml:341
 #, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional, defaults to the class name): "
@@ -670,7 +670,7 @@ msgstr ""
 "linkend=\"xml\"/> pour plus d'informations."
 
 #. Tag: para
-#: basic_mapping.xml:327
+#: basic_mapping.xml:351
 #, no-c-format
 msgid ""
 "<literal>check</literal> (optional): A SQL expression used to generate a "
@@ -682,7 +682,7 @@ msgstr ""
 "de schéma."
 
 #. Tag: para
-#: basic_mapping.xml:333
+#: basic_mapping.xml:357
 #, no-c-format
 msgid ""
 "<literal>rowid</literal> (optional): Hibernate can use so called ROWIDs on "
@@ -698,7 +698,7 @@ msgstr ""
 "Un ROWID représente la localisation physique d'un tuple enregistré."
 
 #. Tag: para
-#: basic_mapping.xml:341
+#: basic_mapping.xml:365
 #, no-c-format
 msgid ""
 "<literal>subselect</literal> (optional): Maps an immutable and read-only "
@@ -711,7 +711,7 @@ msgstr ""
 "plus d'information."
 
 #. Tag: para
-#: basic_mapping.xml:348
+#: basic_mapping.xml:372
 #, no-c-format
 msgid ""
 "<literal>abstract</literal> (optional): Used to mark abstract superclasses "
@@ -722,7 +722,7 @@ msgstr ""
 "subclass&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:356
+#: basic_mapping.xml:380
 #, no-c-format
 msgid ""
 "It is perfectly acceptable for the named persistent class to be an "
@@ -739,7 +739,7 @@ msgstr ""
 "des classes internes c'est à dire <literal>eg.Foo$Bar</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:363
+#: basic_mapping.xml:387
 #, no-c-format
 msgid ""
 "Immutable classes, <literal>mutable=\"false\"</literal>, may not be updated "
@@ -751,7 +751,7 @@ msgstr ""
 "faire quelques optimisations mineures sur les performances."
 
 #. Tag: para
-#: basic_mapping.xml:368
+#: basic_mapping.xml:392
 #, no-c-format
 msgid ""
 "The optional <literal>proxy</literal> attribute enables lazy initialization "
@@ -768,7 +768,7 @@ msgstr ""
 "chargement différé (lazy initialization)."
 
 #. Tag: para
-#: basic_mapping.xml:375
+#: basic_mapping.xml:399
 #, no-c-format
 msgid ""
 "<emphasis>Implicit</emphasis> polymorphism means that instances of the class "
@@ -802,7 +802,7 @@ msgstr ""
 "voir la partie design pattern du site communautaire)."
 
 #. Tag: para
-#: basic_mapping.xml:387
+#: basic_mapping.xml:411
 #, no-c-format
 msgid ""
 "The <literal>persister</literal> attribute lets you customize the "
@@ -825,7 +825,7 @@ msgstr ""
 "simple (d'une \"persistance\" vers une <literal>Hashtable</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:398
+#: basic_mapping.xml:422
 #, no-c-format
 msgid ""
 "Note that the <literal>dynamic-update</literal> and <literal>dynamic-insert</"
@@ -843,7 +843,7 @@ msgstr ""
 "amoindrir. A utiliser en connaissance de causes."
 
 #. Tag: para
-#: basic_mapping.xml:406
+#: basic_mapping.xml:430
 #, no-c-format
 msgid ""
 "Use of <literal>select-before-update</literal> will usually decrease "
@@ -857,7 +857,7 @@ msgstr ""
 "d'instances à une <literal>Session</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:412
+#: basic_mapping.xml:436
 #, no-c-format
 msgid ""
 "If you enable <literal>dynamic-update</literal>, you will have a choice of "
@@ -867,19 +867,19 @@ msgstr ""
 "stratégies de verrouillage optimiste (optimistic locking) sont les suivantes:"
 
 #. Tag: para
-#: basic_mapping.xml:418
+#: basic_mapping.xml:442
 #, no-c-format
 msgid "<literal>version</literal> check the version/timestamp columns"
 msgstr "<literal>version</literal> vérifie les colonnes version/timestamp"
 
 #. Tag: para
-#: basic_mapping.xml:423
+#: basic_mapping.xml:447
 #, no-c-format
 msgid "<literal>all</literal> check all columns"
 msgstr "<literal>all</literal> vérifie toutes les colonnes"
 
 #. Tag: para
-#: basic_mapping.xml:428
+#: basic_mapping.xml:452
 #, no-c-format
 msgid ""
 "<literal>dirty</literal> check the changed columns, allowing some concurrent "
@@ -889,13 +889,13 @@ msgstr ""
 "updates concurrents"
 
 #. Tag: para
-#: basic_mapping.xml:433
+#: basic_mapping.xml:457
 #, no-c-format
 msgid "<literal>none</literal> do not use optimistic locking"
 msgstr "<literal>none</literal> pas de verrouillage optimiste"
 
 #. Tag: para
-#: basic_mapping.xml:438
+#: basic_mapping.xml:462
 #, no-c-format
 msgid ""
 "We <emphasis>very</emphasis> strongly recommend that you use version/"
@@ -911,7 +911,7 @@ msgstr ""
 "lorsqu'on utilise <literal>Session.merge()</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:445
+#: basic_mapping.xml:469
 #, no-c-format
 msgid ""
 "There is no difference between a view and a base table for a Hibernate "
@@ -930,7 +930,7 @@ msgstr ""
 "immuable en lecture seule sur un sous-select SQL donné:"
 
 #. Tag: programlisting
-#: basic_mapping.xml:453
+#: basic_mapping.xml:477
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Summary\">\n"
@@ -948,7 +948,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:455
+#: basic_mapping.xml:479
 #, no-c-format
 msgid ""
 "Declare the tables to synchronize this entity with, ensuring that auto-flush "
@@ -963,13 +963,13 @@ msgstr ""
 "élément de mapping."
 
 #. Tag: title
-#: basic_mapping.xml:465
+#: basic_mapping.xml:489
 #, no-c-format
 msgid "<title>id</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:467
+#: basic_mapping.xml:491
 #, no-c-format
 msgid ""
 "Mapped classes <emphasis>must</emphasis> declare the primary key column of "
@@ -985,7 +985,7 @@ msgstr ""
 "cette propriété et la clef primaire en base."
 
 #. Tag: programlisting
-#: basic_mapping.xml:482
+#: basic_mapping.xml:506
 #, no-c-format
 msgid ""
 "<![CDATA[<id\n"
@@ -1001,7 +1001,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:485
+#: basic_mapping.xml:509
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional): The name of the identifier property."
@@ -1010,14 +1010,14 @@ msgstr ""
 "d'identifiant."
 
 #. Tag: para
-#: basic_mapping.xml:490
+#: basic_mapping.xml:514
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional): A name that indicates the Hibernate type."
 msgstr "<literal>type</literal> (optionnel) : Nom indiquant le type Hibernate."
 
 #. Tag: para
-#: basic_mapping.xml:495
+#: basic_mapping.xml:519
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -1027,7 +1027,7 @@ msgstr ""
 "défaut) : Nom de la clef primaire."
 
 #. Tag: para
-#: basic_mapping.xml:501
+#: basic_mapping.xml:525
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to a \"sensible\" "
@@ -1042,9 +1042,9 @@ msgstr ""
 "sauvegardées ou chargées dans une session précédente."
 
 #. Tag: para
-#: basic_mapping.xml:509 basic_mapping.xml:1017 basic_mapping.xml:1156
-#: basic_mapping.xml:1238 basic_mapping.xml:1345 basic_mapping.xml:1534
-#: basic_mapping.xml:1708 basic_mapping.xml:1878 basic_mapping.xml:2457
+#: basic_mapping.xml:533 basic_mapping.xml:1041 basic_mapping.xml:1180
+#: basic_mapping.xml:1262 basic_mapping.xml:1369 basic_mapping.xml:1558
+#: basic_mapping.xml:1732 basic_mapping.xml:1902 basic_mapping.xml:2481
 #, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -1092,7 +1092,7 @@ msgstr ""
 "propriété."
 
 #. Tag: para
-#: basic_mapping.xml:517
+#: basic_mapping.xml:541
 #, no-c-format
 msgid ""
 "If the <literal>name</literal> attribute is missing, it is assumed that the "
@@ -1102,7 +1102,7 @@ msgstr ""
 "classe ne possède pas de propriété identifiant."
 
 #. Tag: para
-#: basic_mapping.xml:522
+#: basic_mapping.xml:546
 #, no-c-format
 msgid ""
 "The <literal>unsaved-value</literal> attribute is almost never needed in "
@@ -1114,7 +1114,7 @@ msgstr ""
 "valeur par défaut."
 
 #. Tag: para
-#: basic_mapping.xml:526
+#: basic_mapping.xml:550
 #, no-c-format
 msgid ""
 "There is an alternative <literal>&lt;composite-id&gt;</literal> declaration "
@@ -1126,13 +1126,13 @@ msgstr ""
 "Son utilisation est fortement déconseillée pour d'autres cas."
 
 #. Tag: title
-#: basic_mapping.xml:532
+#: basic_mapping.xml:556
 #, no-c-format
 msgid "Generator"
 msgstr "Generator"
 
 #. Tag: para
-#: basic_mapping.xml:534
+#: basic_mapping.xml:558
 #, no-c-format
 msgid ""
 "The optional <literal>&lt;generator&gt;</literal> child element names a Java "
@@ -1148,7 +1148,7 @@ msgstr ""
 "<literal>&lt;param&gt;</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:541
+#: basic_mapping.xml:565
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1160,7 +1160,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:543
+#: basic_mapping.xml:567
 #, fuzzy, no-c-format
 msgid ""
 "All generators implement the interface <literal>org.hibernate.id."
@@ -1177,13 +1177,13 @@ msgstr ""
 "<placeholder-1/>"
 
 #. Tag: literal
-#: basic_mapping.xml:551
+#: basic_mapping.xml:575
 #, no-c-format
 msgid "increment"
 msgstr "increment"
 
 #. Tag: para
-#: basic_mapping.xml:553
+#: basic_mapping.xml:577
 #, no-c-format
 msgid ""
 "generates identifiers of type <literal>long</literal>, <literal>short</"
@@ -1197,13 +1197,13 @@ msgstr ""
 "en environnement clusterisé.</emphasis>"
 
 #. Tag: literal
-#: basic_mapping.xml:562
+#: basic_mapping.xml:586
 #, no-c-format
 msgid "identity"
 msgstr "identity"
 
 #. Tag: para
-#: basic_mapping.xml:564
+#: basic_mapping.xml:588
 #, no-c-format
 msgid ""
 "supports identity columns in DB2, MySQL, MS SQL Server, Sybase and "
@@ -1215,13 +1215,13 @@ msgstr ""
 "<literal>short</literal> ou <literal>int</literal>."
 
 #. Tag: literal
-#: basic_mapping.xml:572
+#: basic_mapping.xml:596
 #, no-c-format
 msgid "sequence"
 msgstr "sequence"
 
 #. Tag: para
-#: basic_mapping.xml:574
+#: basic_mapping.xml:598
 #, no-c-format
 msgid ""
 "uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator in "
@@ -1233,13 +1233,13 @@ msgstr ""
 "<literal>long</literal>, <literal>short</literal> ou <literal>int</literal>"
 
 #. Tag: literal
-#: basic_mapping.xml:582
+#: basic_mapping.xml:606
 #, no-c-format
 msgid "hilo"
 msgstr "hilo"
 
 #. Tag: para
-#: basic_mapping.xml:584
+#: basic_mapping.xml:608
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1257,13 +1257,13 @@ msgstr ""
 "pour une base de données particulière seulement."
 
 #. Tag: literal
-#: basic_mapping.xml:594
+#: basic_mapping.xml:618
 #, no-c-format
 msgid "seqhilo"
 msgstr "seqhilo"
 
 #. Tag: para
-#: basic_mapping.xml:596
+#: basic_mapping.xml:620
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1275,13 +1275,13 @@ msgstr ""
 "literal>, étant donné un nom de séquence en base."
 
 #. Tag: literal
-#: basic_mapping.xml:604
+#: basic_mapping.xml:628
 #, no-c-format
 msgid "uuid"
 msgstr "uuid"
 
 #. Tag: para
-#: basic_mapping.xml:606
+#: basic_mapping.xml:630
 #, no-c-format
 msgid ""
 "uses a 128-bit UUID algorithm to generate identifiers of type string, unique "
@@ -1293,26 +1293,26 @@ msgstr ""
 "en codé en une chaîne de nombre héxadécimaux de longueur 32."
 
 #. Tag: literal
-#: basic_mapping.xml:614
+#: basic_mapping.xml:638
 #, no-c-format
 msgid "guid"
 msgstr "guid"
 
 #. Tag: para
-#: basic_mapping.xml:616
+#: basic_mapping.xml:640
 #, no-c-format
 msgid "uses a database-generated GUID string on MS SQL Server and MySQL."
 msgstr ""
 "Utilise une chaîne GUID générée par la base pour MS SQL Server et MySQL."
 
 #. Tag: literal
-#: basic_mapping.xml:622
+#: basic_mapping.xml:646
 #, no-c-format
 msgid "native"
 msgstr "native"
 
 #. Tag: para
-#: basic_mapping.xml:624
+#: basic_mapping.xml:648
 #, no-c-format
 msgid ""
 "picks <literal>identity</literal>, <literal>sequence</literal> or "
@@ -1324,13 +1324,13 @@ msgstr ""
 "données sous-jacente."
 
 #. Tag: literal
-#: basic_mapping.xml:632
+#: basic_mapping.xml:656
 #, no-c-format
 msgid "assigned"
 msgstr "assigned"
 
 #. Tag: para
-#: basic_mapping.xml:634
+#: basic_mapping.xml:658
 #, no-c-format
 msgid ""
 "lets the application to assign an identifier to the object before "
@@ -1342,13 +1342,13 @@ msgstr ""
 "si aucun <literal>&lt;generator&gt;</literal> n'est spécifié."
 
 #. Tag: literal
-#: basic_mapping.xml:642
+#: basic_mapping.xml:666
 #, no-c-format
 msgid "select"
 msgstr "select"
 
 #. Tag: para
-#: basic_mapping.xml:644
+#: basic_mapping.xml:668
 #, no-c-format
 msgid ""
 "retrieves a primary key assigned by a database trigger by selecting the row "
@@ -1358,13 +1358,13 @@ msgstr ""
 "par une clef unique quelconque."
 
 #. Tag: literal
-#: basic_mapping.xml:651
+#: basic_mapping.xml:675
 #, no-c-format
 msgid "foreign"
 msgstr "foreign"
 
 #. Tag: para
-#: basic_mapping.xml:653
+#: basic_mapping.xml:677
 #, no-c-format
 msgid ""
 "uses the identifier of another associated object. Usually used in "
@@ -1376,13 +1376,13 @@ msgstr ""
 "la clef primaire."
 
 #. Tag: literal
-#: basic_mapping.xml:660
+#: basic_mapping.xml:684
 #, no-c-format
 msgid "sequence-identity"
 msgstr "sequence-identity"
 
 #. Tag: para
-#: basic_mapping.xml:662
+#: basic_mapping.xml:686
 #, no-c-format
 msgid ""
 "a specialized sequence generation strategy which utilizes a database "
@@ -1400,13 +1400,13 @@ msgstr ""
 "these insert statements are disabled due to a bug in the Oracle drivers."
 
 #. Tag: title
-#: basic_mapping.xml:679
+#: basic_mapping.xml:703
 #, no-c-format
 msgid "Hi/lo algorithm"
 msgstr "algorithme Hi/lo"
 
 #. Tag: para
-#: basic_mapping.xml:680
+#: basic_mapping.xml:704
 #, no-c-format
 msgid ""
 "The <literal>hilo</literal> and <literal>seqhilo</literal> generators "
@@ -1423,7 +1423,7 @@ msgstr ""
 "Oracle (quand la base sous-jacente le propose)."
 
 #. Tag: programlisting
-#: basic_mapping.xml:687
+#: basic_mapping.xml:711
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1436,7 +1436,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:689
+#: basic_mapping.xml:713
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
@@ -1448,7 +1448,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:691
+#: basic_mapping.xml:715
 #, no-c-format
 msgid ""
 "Unfortunately, you can't use <literal>hilo</literal> when supplying your own "
@@ -1464,13 +1464,13 @@ msgstr ""
 "<literal>hibernate.transaction.manager_lookup_class</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:700
+#: basic_mapping.xml:724
 #, no-c-format
 msgid "UUID algorithm"
 msgstr "UUID algorithm"
 
 #. Tag: para
-#: basic_mapping.xml:701
+#: basic_mapping.xml:725
 #, no-c-format
 msgid ""
 "The UUID contains: IP address, startup time of the JVM (accurate to a "
@@ -1484,13 +1484,13 @@ msgstr ""
 "partir de Java, c'est donc le mieux que l'on puisse faire sans utiliser JNI."
 
 #. Tag: title
-#: basic_mapping.xml:710
+#: basic_mapping.xml:734
 #, no-c-format
 msgid "Identity columns and sequences"
 msgstr "Colonnes identifiantes et séquences"
 
 #. Tag: para
-#: basic_mapping.xml:711
+#: basic_mapping.xml:735
 #, no-c-format
 msgid ""
 "For databases which support identity columns (DB2, MySQL, Sybase, MS SQL), "
@@ -1507,7 +1507,7 @@ msgstr ""
 "nécessitent deux requêtes SQL pour insérer un objet."
 
 #. Tag: programlisting
-#: basic_mapping.xml:719
+#: basic_mapping.xml:743
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
@@ -1518,7 +1518,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:721
+#: basic_mapping.xml:745
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\" unsaved-value=\"0"
@@ -1528,7 +1528,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:723
+#: basic_mapping.xml:747
 #, no-c-format
 msgid ""
 "For cross-platform development, the <literal>native</literal> strategy will "
@@ -1542,13 +1542,13 @@ msgstr ""
 "possibilités offertes par la base sous-jacente."
 
 #. Tag: title
-#: basic_mapping.xml:732
+#: basic_mapping.xml:756
 #, no-c-format
 msgid "Assigned identifiers"
 msgstr "Identifiants assignés"
 
 #. Tag: para
-#: basic_mapping.xml:733
+#: basic_mapping.xml:757
 #, no-c-format
 msgid ""
 "If you want the application to assign identifiers (as opposed to having "
@@ -1568,7 +1568,7 @@ msgstr ""
 "pas d'élément <literal>&lt;generator&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:742
+#: basic_mapping.xml:766
 #, no-c-format
 msgid ""
 "Choosing the <literal>assigned</literal> generator makes Hibernate use "
@@ -1584,13 +1584,13 @@ msgstr ""
 "<literal>Interceptor.isUnsaved()</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:752
+#: basic_mapping.xml:776
 #, no-c-format
 msgid "Primary keys assigned by triggers"
 msgstr "Clefs primaires assignées par trigger"
 
 #. Tag: para
-#: basic_mapping.xml:753
+#: basic_mapping.xml:777
 #, no-c-format
 msgid ""
 "For legacy schemas only (Hibernate does not generate DDL with triggers)."
@@ -1599,7 +1599,7 @@ msgstr ""
 "génère pas de DDL avec des triggers)"
 
 #. Tag: programlisting
-#: basic_mapping.xml:757
+#: basic_mapping.xml:781
 #, no-c-format
 msgid ""
 "<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
@@ -1610,7 +1610,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:759
+#: basic_mapping.xml:783
 #, no-c-format
 msgid ""
 "In the above example, there is a unique valued property named "
@@ -1624,13 +1624,13 @@ msgstr ""
 "générée par trigger."
 
 #. Tag: title
-#: basic_mapping.xml:771
+#: basic_mapping.xml:795
 #, no-c-format
 msgid "Enhanced identifier generators"
 msgstr "Enhanced identifier generators"
 
 #. Tag: para
-#: basic_mapping.xml:773
+#: basic_mapping.xml:797
 #, no-c-format
 msgid ""
 "Starting with release 3.2.3, there are 2 new generators which represent a re-"
@@ -1650,7 +1650,7 @@ msgstr ""
 "current releases and can be referenced by FQN."
 
 #. Tag: para
-#: basic_mapping.xml:781
+#: basic_mapping.xml:805
 #, fuzzy, no-c-format
 msgid ""
 "The first of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1687,7 +1687,7 @@ msgstr ""
 "<placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:795
+#: basic_mapping.xml:819
 #, no-c-format
 msgid ""
 "<literal>sequence_name</literal> (optional, defaults to "
@@ -1699,7 +1699,7 @@ msgstr ""
 "to be used."
 
 #. Tag: para
-#: basic_mapping.xml:801
+#: basic_mapping.xml:825
 #, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional, defaults to <literal>1</"
@@ -1713,7 +1713,7 @@ msgstr ""
 "\"STARTS WITH\"."
 
 #. Tag: para
-#: basic_mapping.xml:808
+#: basic_mapping.xml:832
 #, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional, defaults to <literal>1</"
@@ -1727,7 +1727,7 @@ msgstr ""
 "named \"INCREMENT BY\"."
 
 #. Tag: para
-#: basic_mapping.xml:815
+#: basic_mapping.xml:839
 #, no-c-format
 msgid ""
 "<literal>force_table_use</literal> (optional, defaults to <literal>false</"
@@ -1739,7 +1739,7 @@ msgstr ""
 "though the dialect might support sequence?"
 
 #. Tag: para
-#: basic_mapping.xml:822
+#: basic_mapping.xml:846
 #, no-c-format
 msgid ""
 "<literal>value_column</literal> (optional, defaults to <literal>next_val</"
@@ -1751,7 +1751,7 @@ msgstr ""
 "table which is used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:829
+#: basic_mapping.xml:853
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional, defaults to <literal>none</"
@@ -1761,7 +1761,7 @@ msgstr ""
 "literal>) : le style de cascade."
 
 #. Tag: para
-#: basic_mapping.xml:836
+#: basic_mapping.xml:860
 #, fuzzy, no-c-format
 msgid ""
 "The second of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1787,7 +1787,7 @@ msgstr ""
 "parameters: <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:846
+#: basic_mapping.xml:870
 #, no-c-format
 msgid ""
 "<literal>table_name</literal> (optional, defaults to "
@@ -1797,7 +1797,7 @@ msgstr ""
 "<literal>hibernate_sequences</literal>): The name of the table to be used."
 
 #. Tag: para
-#: basic_mapping.xml:852
+#: basic_mapping.xml:876
 #, no-c-format
 msgid ""
 "<literal>value_column_name</literal> (optional, defaults to "
@@ -1809,7 +1809,7 @@ msgstr ""
 "used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:858
+#: basic_mapping.xml:882
 #, no-c-format
 msgid ""
 "<literal>segment_column_name</literal> (optional, defaults to "
@@ -1823,7 +1823,7 @@ msgstr ""
 "identifies which increment value to use."
 
 #. Tag: para
-#: basic_mapping.xml:865
+#: basic_mapping.xml:889
 #, no-c-format
 msgid ""
 "<literal>segment_value</literal> (optional, defaults to <literal>default</"
@@ -1835,7 +1835,7 @@ msgstr ""
 "pull increment values for this generator."
 
 #. Tag: para
-#: basic_mapping.xml:872
+#: basic_mapping.xml:896
 #, no-c-format
 msgid ""
 "<literal>segment_value_length</literal> (optional, defaults to <literal>255</"
@@ -1847,7 +1847,7 @@ msgstr ""
 "segment key column."
 
 #. Tag: para
-#: basic_mapping.xml:878
+#: basic_mapping.xml:902
 #, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional, defaults to <literal>1</"
@@ -1857,7 +1857,7 @@ msgstr ""
 "literal>): The initial value to be retrieved from the table."
 
 #. Tag: para
-#: basic_mapping.xml:884
+#: basic_mapping.xml:908
 #, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional, defaults to <literal>1</"
@@ -1867,7 +1867,7 @@ msgstr ""
 "literal>): The value by which subsequent calls to the table should differ."
 
 #. Tag: para
-#: basic_mapping.xml:890
+#: basic_mapping.xml:914
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional, defaults to <literal></literal>): See"
@@ -1876,13 +1876,13 @@ msgstr ""
 "literal>) : le style de cascade."
 
 #. Tag: title
-#: basic_mapping.xml:900
+#: basic_mapping.xml:924
 #, no-c-format
 msgid "Identifier generator optimization"
 msgstr "Identifier generator optimization"
 
 #. Tag: para
-#: basic_mapping.xml:901
+#: basic_mapping.xml:925
 #, fuzzy, no-c-format
 msgid ""
 "For identifier generators which store values in the database, it is "
@@ -1902,7 +1902,7 @@ msgstr ""
 "\"/> support this notion. <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:909
+#: basic_mapping.xml:933
 #, no-c-format
 msgid ""
 "<literal>none</literal> (generally this is the default if no optimizer was "
@@ -1914,7 +1914,7 @@ msgstr ""
 "each and every request."
 
 #. Tag: para
-#: basic_mapping.xml:915
+#: basic_mapping.xml:939
 #, no-c-format
 msgid ""
 "<literal>hilo</literal>: applies a hi/lo algorithm around the database "
@@ -1932,7 +1932,7 @@ msgstr ""
 "define a group \"hi value\"."
 
 #. Tag: para
-#: basic_mapping.xml:924
+#: basic_mapping.xml:948
 #, no-c-format
 msgid ""
 "<literal>pooled</literal>: like was discussed for <literal>hilo</literal>, "
@@ -1950,13 +1950,13 @@ msgstr ""
 "refers to the values coming from the database."
 
 #. Tag: title
-#: basic_mapping.xml:937
+#: basic_mapping.xml:961
 #, no-c-format
 msgid "composite-id"
 msgstr "composite-id"
 
 #. Tag: programlisting
-#: basic_mapping.xml:939
+#: basic_mapping.xml:963
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id\n"
@@ -1975,7 +1975,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:941
+#: basic_mapping.xml:965
 #, no-c-format
 msgid ""
 "For a table with a composite key, you may map multiple properties of the "
@@ -1990,7 +1990,7 @@ msgstr ""
 "literal> comme fils."
 
 #. Tag: programlisting
-#: basic_mapping.xml:948
+#: basic_mapping.xml:972
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id>\n"
@@ -2000,7 +2000,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:950
+#: basic_mapping.xml:974
 #, no-c-format
 msgid ""
 "Your persistent class <emphasis>must</emphasis> override <literal>equals()</"
@@ -2013,7 +2013,7 @@ msgstr ""
 "l'interface <literal>Serializable</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:956
+#: basic_mapping.xml:980
 #, no-c-format
 msgid ""
 "Unfortunately, this approach to composite identifiers means that a "
@@ -2034,7 +2034,7 @@ msgstr ""
 "\" et ne la recommandons pas pour des applications complexes."
 
 #. Tag: para
-#: basic_mapping.xml:965
+#: basic_mapping.xml:989
 #, no-c-format
 msgid ""
 "A second approach is what we call a <emphasis>mapped</emphasis> composite "
@@ -2048,7 +2048,7 @@ msgstr ""
 "particulière."
 
 #. Tag: programlisting
-#: basic_mapping.xml:971
+#: basic_mapping.xml:995
 #, no-c-format
 msgid ""
 "<![CDATA[<composite-id class=\"MedicareId\" mapped=\"true\">\n"
@@ -2058,7 +2058,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:973
+#: basic_mapping.xml:997
 #, no-c-format
 msgid ""
 "In this example, both the composite identifier class, <literal>MedicareId</"
@@ -2077,7 +2077,7 @@ msgstr ""
 "de cette approche est la duplication du code."
 
 #. Tag: para
-#: basic_mapping.xml:982
+#: basic_mapping.xml:1006
 #, no-c-format
 msgid ""
 "The following attributes are used to specify a mapped composite identifier:"
@@ -2085,7 +2085,7 @@ msgstr ""
 "Les attributs suivants servent à configurer un identifiant composé mappé :"
 
 #. Tag: para
-#: basic_mapping.xml:988
+#: basic_mapping.xml:1012
 #, no-c-format
 msgid ""
 "<literal>mapped</literal> (optional, defaults to <literal>false</literal>): "
@@ -2099,7 +2099,7 @@ msgstr ""
 "identifiante)."
 
 #. Tag: para
-#: basic_mapping.xml:996
+#: basic_mapping.xml:1020
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional, but required for a mapped composite "
@@ -2109,7 +2109,7 @@ msgstr ""
 "mappé) : La classe composant utilisée comme identifiant composé."
 
 #. Tag: para
-#: basic_mapping.xml:1003
+#: basic_mapping.xml:1027
 #, no-c-format
 msgid ""
 "We will describe a third, even more convenient approach where the composite "
@@ -2123,7 +2123,7 @@ msgstr ""
 "s'appliquent que pour cette dernière approche :"
 
 #. Tag: para
-#: basic_mapping.xml:1011
+#: basic_mapping.xml:1035
 #, no-c-format
 msgid ""
 "<literal>name</literal> (optional, required for this approach): A property "
@@ -2134,7 +2134,7 @@ msgstr ""
 "chapitre 9)."
 
 #. Tag: para
-#: basic_mapping.xml:1023
+#: basic_mapping.xml:1047
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2146,7 +2146,7 @@ msgstr ""
 "(voir prochaine section)."
 
 #. Tag: para
-#: basic_mapping.xml:1030
+#: basic_mapping.xml:1054
 #, no-c-format
 msgid ""
 "This third approach, an <emphasis>identifier component</emphasis> is the one "
@@ -2156,13 +2156,13 @@ msgstr ""
 "applications."
 
 #. Tag: title
-#: basic_mapping.xml:1038
+#: basic_mapping.xml:1062
 #, no-c-format
 msgid "discriminator"
 msgstr "discriminator"
 
 #. Tag: para
-#: basic_mapping.xml:1040
+#: basic_mapping.xml:1064
 #, no-c-format
 msgid ""
 "The <literal>&lt;discriminator&gt;</literal> element is required for "
@@ -2186,7 +2186,7 @@ msgstr ""
 "<literal>yes_no</literal>, <literal>true_false</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1058
+#: basic_mapping.xml:1082
 #, no-c-format
 msgid ""
 "<![CDATA[<discriminator\n"
@@ -2199,7 +2199,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1061
+#: basic_mapping.xml:1085
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to <literal>class</literal>) "
@@ -2209,7 +2209,7 @@ msgstr ""
 "literal>) le nom de la colonne discriminante."
 
 #. Tag: para
-#: basic_mapping.xml:1067
+#: basic_mapping.xml:1091
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>string</literal>) a "
@@ -2219,7 +2219,7 @@ msgstr ""
 "un nom indiquant le type Hibernate."
 
 #. Tag: para
-#: basic_mapping.xml:1073
+#: basic_mapping.xml:1097
 #, no-c-format
 msgid ""
 "<literal>force</literal> (optional - defaults to <literal>false</literal>) "
@@ -2231,7 +2231,7 @@ msgstr ""
 "quand on récupère toutes les instances de la classe de base."
 
 #. Tag: para
-#: basic_mapping.xml:1080
+#: basic_mapping.xml:1104
 #, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>) "
@@ -2245,7 +2245,7 @@ msgstr ""
 "la colonne dans les <literal>INSERT</literal> SQL)."
 
 #. Tag: para
-#: basic_mapping.xml:1088
+#: basic_mapping.xml:1112
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional) an arbitrary SQL expression that is "
@@ -2257,7 +2257,7 @@ msgstr ""
 "le contenu."
 
 #. Tag: para
-#: basic_mapping.xml:1096
+#: basic_mapping.xml:1120
 #, no-c-format
 msgid ""
 "Actual values of the discriminator column are specified by the "
@@ -2269,7 +2269,7 @@ msgstr ""
 "class&gt;</literal> et <literal>&lt;subclass&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1102
+#: basic_mapping.xml:1126
 #, no-c-format
 msgid ""
 "The <literal>force</literal> attribute is (only) useful if the table "
@@ -2281,7 +2281,7 @@ msgstr ""
 "une classe persistante. Ce ne sera généralement pas le cas."
 
 #. Tag: para
-#: basic_mapping.xml:1108
+#: basic_mapping.xml:1132
 #, no-c-format
 msgid ""
 "Using the <literal>formula</literal> attribute you can declare an arbitrary "
@@ -2292,7 +2292,7 @@ msgstr ""
 "ligne :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1113
+#: basic_mapping.xml:1137
 #, no-c-format
 msgid ""
 "<![CDATA[<discriminator\n"
@@ -2301,13 +2301,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1118
+#: basic_mapping.xml:1142
 #, no-c-format
 msgid "version (optional)"
 msgstr "version (optionnel)"
 
 #. Tag: para
-#: basic_mapping.xml:1120
+#: basic_mapping.xml:1144
 #, no-c-format
 msgid ""
 "The <literal>&lt;version&gt;</literal> element is optional and indicates "
@@ -2320,7 +2320,7 @@ msgstr ""
 "(voir plus-bas)."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1136
+#: basic_mapping.xml:1160
 #, no-c-format
 msgid ""
 "<![CDATA[<version\n"
@@ -2336,7 +2336,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1139
+#: basic_mapping.xml:1163
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -2346,7 +2346,7 @@ msgstr ""
 "propriété) : Le nom de la colonne contenant le numéro de version."
 
 #. Tag: para
-#: basic_mapping.xml:1145
+#: basic_mapping.xml:1169
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The name of a property of the persistent class."
@@ -2354,7 +2354,7 @@ msgstr ""
 "<literal>name</literal> : Le nom d'un attribut de la classe persistante."
 
 #. Tag: para
-#: basic_mapping.xml:1150
+#: basic_mapping.xml:1174
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>integer</literal>): "
@@ -2364,7 +2364,7 @@ msgstr ""
 "literal>) : Le type du numéro de version."
 
 #. Tag: para
-#: basic_mapping.xml:1162
+#: basic_mapping.xml:1186
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>undefined</"
@@ -2381,7 +2381,7 @@ msgstr ""
 "valeur de l'atribut identifiant devrait être utilisé)."
 
 #. Tag: para
-#: basic_mapping.xml:1171
+#: basic_mapping.xml:1195
 #, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2395,7 +2395,7 @@ msgstr ""
 "properties</xref>."
 
 #. Tag: para
-#: basic_mapping.xml:1178
+#: basic_mapping.xml:1202
 #, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>): "
@@ -2410,7 +2410,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1188
+#: basic_mapping.xml:1212
 #, no-c-format
 msgid ""
 "Version numbers may be of Hibernate type <literal>long</literal>, "
@@ -2422,7 +2422,7 @@ msgstr ""
 "<literal>timestamp</literal> ou <literal>calendar</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1193
+#: basic_mapping.xml:1217
 #, no-c-format
 msgid ""
 "A version or timestamp property should never be null for a detached "
@@ -2443,13 +2443,13 @@ msgstr ""
 "des clefs composées !</emphasis>"
 
 #. Tag: title
-#: basic_mapping.xml:1204
+#: basic_mapping.xml:1228
 #, no-c-format
 msgid "timestamp (optional)"
 msgstr "timestamp (optionnel)"
 
 #. Tag: para
-#: basic_mapping.xml:1206
+#: basic_mapping.xml:1230
 #, no-c-format
 msgid ""
 "The optional <literal>&lt;timestamp&gt;</literal> element indicates that the "
@@ -2465,7 +2465,7 @@ msgstr ""
 "l'application peut parfois utiliser l'horodatage à d'autres fins."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1222
+#: basic_mapping.xml:1246
 #, no-c-format
 msgid ""
 "<![CDATA[<timestamp\n"
@@ -2480,7 +2480,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1225
+#: basic_mapping.xml:1249
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): The "
@@ -2490,7 +2490,7 @@ msgstr ""
 "propriété) : Le nom d'une colonne contenant le timestamp."
 
 #. Tag: para
-#: basic_mapping.xml:1231
+#: basic_mapping.xml:1255
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The name of a JavaBeans style property of Java type "
@@ -2502,7 +2502,7 @@ msgstr ""
 "persistante."
 
 #. Tag: para
-#: basic_mapping.xml:1244
+#: basic_mapping.xml:1268
 #, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>null</"
@@ -2519,7 +2519,7 @@ msgstr ""
 "de l'attribut identifiant devrait être utilisée)."
 
 #. Tag: para
-#: basic_mapping.xml:1253
+#: basic_mapping.xml:1277
 #, no-c-format
 msgid ""
 "<literal>source</literal> (optional - defaults to <literal>vm</literal>): "
@@ -2541,7 +2541,7 @@ msgstr ""
 "provoquant des erreurs de précision (Oracle 8 par exemple)."
 
 #. Tag: para
-#: basic_mapping.xml:1265
+#: basic_mapping.xml:1289
 #, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2554,7 +2554,7 @@ msgstr ""
 "données cf. <xref linkend=\"mapping-generated\">generated properties</xref>."
 
 #. Tag: para
-#: basic_mapping.xml:1274
+#: basic_mapping.xml:1298
 #, no-c-format
 msgid ""
 "Note that <literal>&lt;timestamp&gt;</literal> is equivalent to <literal>&lt;"
@@ -2566,13 +2566,13 @@ msgstr ""
 "version type=\"timestamp\"&gt;</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:1284
+#: basic_mapping.xml:1308
 #, no-c-format
 msgid "property"
 msgstr "property"
 
 #. Tag: para
-#: basic_mapping.xml:1286
+#: basic_mapping.xml:1310
 #, no-c-format
 msgid ""
 "The <literal>&lt;property&gt;</literal> element declares a persistent, "
@@ -2582,7 +2582,7 @@ msgstr ""
 "classe au sens JavaBean."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1308
+#: basic_mapping.xml:1332
 #, no-c-format
 msgid ""
 "<![CDATA[<property\n"
@@ -2608,7 +2608,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1311
+#: basic_mapping.xml:1335
 #, no-c-format
 msgid ""
 "<literal>name</literal>: the name of the property, with an initial lowercase "
@@ -2618,7 +2618,7 @@ msgstr ""
 "minuscule."
 
 #. Tag: para
-#: basic_mapping.xml:1317
+#: basic_mapping.xml:1341
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -2630,14 +2630,14 @@ msgstr ""
 "élément(s) <literal>&lt;column&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1324
+#: basic_mapping.xml:1348
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional): a name that indicates the Hibernate type."
 msgstr "<literal>type</literal> (optionnel) : nom indiquant le type Hibernate."
 
 #. Tag: para
-#: basic_mapping.xml:1329
+#: basic_mapping.xml:1353
 #, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2654,7 +2654,7 @@ msgstr ""
 "données (utile si vous savez qu'un trigger affectera la valeur à la colonne)."
 
 #. Tag: para
-#: basic_mapping.xml:1338
+#: basic_mapping.xml:1362
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -2666,7 +2666,7 @@ msgstr ""
 "calculées ne possède pas leur propre mapping."
 
 #. Tag: para
-#: basic_mapping.xml:1351
+#: basic_mapping.xml:1375
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -2678,7 +2678,7 @@ msgstr ""
 "quand on accède à la variable d'instance pour la première fois."
 
 #. Tag: para
-#: basic_mapping.xml:1358
+#: basic_mapping.xml:1382
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Enable the DDL generation of a unique "
@@ -2690,7 +2690,7 @@ msgstr ""
 "<literal>property-ref</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1365
+#: basic_mapping.xml:1389
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Enable the DDL generation of a "
@@ -2700,7 +2700,7 @@ msgstr ""
 "non nullité pour les colonnes."
 
 #. Tag: para
-#: basic_mapping.xml:1371
+#: basic_mapping.xml:1395
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -2715,7 +2715,7 @@ msgstr ""
 "propriété est marquée obsolète (dirty)."
 
 #. Tag: para
-#: basic_mapping.xml:1379
+#: basic_mapping.xml:1403
 #, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2728,13 +2728,13 @@ msgstr ""
 "<xref linkend=\"mapping-generated\">generated properties</xref>."
 
 #. Tag: para
-#: basic_mapping.xml:1388
+#: basic_mapping.xml:1412
 #, no-c-format
 msgid "<emphasis>typename</emphasis> could be:"
 msgstr "<emphasis>typename</emphasis> peut être:"
 
 #. Tag: para
-#: basic_mapping.xml:1394
+#: basic_mapping.xml:1418
 #, no-c-format
 msgid ""
 "The name of a Hibernate basic type (eg. <literal>integer, string, character, "
@@ -2744,7 +2744,7 @@ msgstr ""
 "date, timestamp, float, binary, serializable, object, blob</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1400
+#: basic_mapping.xml:1424
 #, no-c-format
 msgid ""
 "The name of a Java class with a default basic type (eg. <literal>int, float, "
@@ -2756,13 +2756,13 @@ msgstr ""
 "Clob</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1406
+#: basic_mapping.xml:1430
 #, no-c-format
 msgid "The name of a serializable Java class."
 msgstr "Nom d'une classe Java sérialisable."
 
 #. Tag: para
-#: basic_mapping.xml:1411
+#: basic_mapping.xml:1435
 #, no-c-format
 msgid ""
 "The class name of a custom type (eg. <literal>com.illflow.type.MyCustomType</"
@@ -2772,7 +2772,7 @@ msgstr ""
 "MyCustomType</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1417
+#: basic_mapping.xml:1441
 #, no-c-format
 msgid ""
 "If you do not specify a type, Hibernate will use reflection upon the named "
@@ -2793,7 +2793,7 @@ msgstr ""
 "ou pour préciser un type spécifique)."
 
 #. Tag: para
-#: basic_mapping.xml:1427
+#: basic_mapping.xml:1451
 #, no-c-format
 msgid ""
 "The <literal>access</literal> attribute lets you control how Hibernate will "
@@ -2813,7 +2813,7 @@ msgstr ""
 "<literal>org.hibernate.property.PropertyAccessor</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1436
+#: basic_mapping.xml:1460
 #, no-c-format
 msgid ""
 "An especially powerful feature are derived properties. These properties are "
@@ -2829,7 +2829,7 @@ msgstr ""
 "literal> dans la requête SQL qui charge une instance :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1443
+#: basic_mapping.xml:1467
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -2842,7 +2842,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1445
+#: basic_mapping.xml:1469
 #, no-c-format
 msgid ""
 "Note that you can reference the entities own table by not declaring an alias "
@@ -2857,13 +2857,13 @@ msgstr ""
 "l'attribut si vous le souhaitez."
 
 #. Tag: title
-#: basic_mapping.xml:1455
+#: basic_mapping.xml:1479
 #, no-c-format
 msgid "many-to-one"
 msgstr "many-to-one"
 
 #. Tag: para
-#: basic_mapping.xml:1457
+#: basic_mapping.xml:1481
 #, no-c-format
 msgid ""
 "An ordinary association to another persistent class is declared using a "
@@ -2877,7 +2877,7 @@ msgstr ""
 "référence la ou les clef(s) primaire(s) dans la table cible."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1485
+#: basic_mapping.xml:1509
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one\n"
@@ -2906,7 +2906,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1488 basic_mapping.xml:1669 basic_mapping.xml:1855
+#: basic_mapping.xml:1512 basic_mapping.xml:1693 basic_mapping.xml:1879
 #, fuzzy, no-c-format
 msgid "<literal>name</literal>: The name of the property."
 msgstr ""
@@ -2920,7 +2920,7 @@ msgstr ""
 "déterminé par réflexion) : le nom de la classe (fille) du composant."
 
 #. Tag: para
-#: basic_mapping.xml:1493 basic_mapping.xml:2284
+#: basic_mapping.xml:1517 basic_mapping.xml:2308
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): The name of the foreign key column. "
@@ -2937,7 +2937,7 @@ msgstr ""
 "<literal>&lt;column&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1500 basic_mapping.xml:1674
+#: basic_mapping.xml:1524 basic_mapping.xml:1698
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2951,7 +2951,7 @@ msgstr ""
 "être cascadées de l'objet père vers l'objet associé."
 
 #. Tag: para
-#: basic_mapping.xml:1506
+#: basic_mapping.xml:1530
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional): Specifies which operations should be "
@@ -2961,7 +2961,7 @@ msgstr ""
 "être propagées de l'objet père vers les objets associés."
 
 #. Tag: para
-#: basic_mapping.xml:1512 basic_mapping.xml:1695
+#: basic_mapping.xml:1536 basic_mapping.xml:1719
 #, fuzzy, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>select</literal>): "
@@ -2977,7 +2977,7 @@ msgstr ""
 "n'est pas spécifié, la clef primaire de la classe associée est utilisée."
 
 #. Tag: para
-#: basic_mapping.xml:1518
+#: basic_mapping.xml:1542
 #, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2994,7 +2994,7 @@ msgstr ""
 "données (utile si vous savez qu'un trigger affectera la valeur à la colonne)."
 
 #. Tag: para
-#: basic_mapping.xml:1527
+#: basic_mapping.xml:1551
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal>: (optional) The name of a property of the "
@@ -3006,7 +3006,7 @@ msgstr ""
 "spécifié, la clef primaire de la classe associée est utilisée."
 
 #. Tag: para
-#: basic_mapping.xml:1540
+#: basic_mapping.xml:1564
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Enable the DDL generation of a unique "
@@ -3020,7 +3020,7 @@ msgstr ""
 "association one-to-one."
 
 #. Tag: para
-#: basic_mapping.xml:1548
+#: basic_mapping.xml:1572
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Enable the DDL generation of a "
@@ -3030,7 +3030,7 @@ msgstr ""
 "de non nullité pour la clef étrangère."
 
 #. Tag: para
-#: basic_mapping.xml:1554
+#: basic_mapping.xml:1578
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3045,7 +3045,7 @@ msgstr ""
 "(dirty)."
 
 #. Tag: para
-#: basic_mapping.xml:1562
+#: basic_mapping.xml:1586
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -3065,7 +3065,7 @@ msgstr ""
 "literal> indique que l'association sera toujours chargée."
 
 #. Tag: para
-#: basic_mapping.xml:1572
+#: basic_mapping.xml:1596
 #, no-c-format
 msgid ""
 "<literal>not-found</literal> (optional - defaults to <literal>exception</"
@@ -3079,7 +3079,7 @@ msgstr ""
 "ligne manquante comme une association nulle."
 
 #. Tag: para
-#: basic_mapping.xml:1579 basic_mapping.xml:1733
+#: basic_mapping.xml:1603 basic_mapping.xml:1757
 #, fuzzy, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional): The entity name of the associated "
@@ -3092,7 +3092,7 @@ msgstr ""
 "Il existe deux types d'associations one-to-one :"
 
 #. Tag: para
-#: basic_mapping.xml:1585
+#: basic_mapping.xml:1608
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -3102,7 +3102,7 @@ msgstr ""
 "valeur pour une clé étrangère calculée."
 
 #. Tag: para
-#: basic_mapping.xml:1592
+#: basic_mapping.xml:1616
 #, no-c-format
 msgid ""
 "Setting a value of the <literal>cascade</literal> attribute to any "
@@ -3130,7 +3130,7 @@ msgstr ""
 "supportent pas orphan delete."
 
 #. Tag: para
-#: basic_mapping.xml:1605
+#: basic_mapping.xml:1629
 #, no-c-format
 msgid ""
 "A typical <literal>many-to-one</literal> declaration looks as simple as this:"
@@ -3138,7 +3138,7 @@ msgstr ""
 "Une déclaration <literal>many-to-one</literal> typique est aussi simple que :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1609
+#: basic_mapping.xml:1633
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"product\" class=\"Product\" column=\"PRODUCT_ID"
@@ -3146,7 +3146,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1611
+#: basic_mapping.xml:1635
 #, no-c-format
 msgid ""
 "The <literal>property-ref</literal> attribute should only be used for "
@@ -3166,7 +3166,7 @@ msgstr ""
 "literal> contrôle la génération DDL par Hibernate avec l'outil SchemaExport.)"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1620
+#: basic_mapping.xml:1644
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"serialNumber\" unique=\"true\" type=\"string\" "
@@ -3174,13 +3174,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1622
+#: basic_mapping.xml:1646
 #, no-c-format
 msgid "Then the mapping for <literal>OrderItem</literal> might use:"
 msgstr "Ainsi le mapping pour <literal>OrderItem</literal> peut utiliser :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1626
+#: basic_mapping.xml:1650
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"product\" property-ref=\"serialNumber\" column="
@@ -3188,13 +3188,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1628
+#: basic_mapping.xml:1652
 #, no-c-format
 msgid "This is certainly not encouraged, however."
 msgstr "bien que ce ne soit certainement pas encouragé."
 
 #. Tag: para
-#: basic_mapping.xml:1632
+#: basic_mapping.xml:1656
 #, no-c-format
 msgid ""
 "If the referenced unique key comprises multiple properties of the associated "
@@ -3206,7 +3206,7 @@ msgstr ""
 "<literal>&lt;properties&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1637
+#: basic_mapping.xml:1661
 #, no-c-format
 msgid ""
 "If the referenced unique key is the property of a component, you may specify "
@@ -3214,7 +3214,7 @@ msgid ""
 msgstr "one-to-one"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1641
+#: basic_mapping.xml:1665
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"owner\" property-ref=\"identity.ssn\" column="
@@ -3222,7 +3222,7 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1646
+#: basic_mapping.xml:1670
 #, no-c-format
 msgid "one-to-one"
 msgstr ""
@@ -3230,7 +3230,7 @@ msgstr ""
 "avec l'élément <literal>one-to-one</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:1648
+#: basic_mapping.xml:1672
 #, no-c-format
 msgid ""
 "A one-to-one association to another persistent class is declared using a "
@@ -3238,7 +3238,7 @@ msgid ""
 msgstr "<literal>name</literal> : Le nom de la propriété."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1666
+#: basic_mapping.xml:1690
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one\n"
@@ -3259,7 +3259,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1680
+#: basic_mapping.xml:1704
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional) specifies which operations should be "
@@ -3273,7 +3273,7 @@ msgstr ""
 "par l'outil d'export de schéma)."
 
 #. Tag: para
-#: basic_mapping.xml:1686
+#: basic_mapping.xml:1710
 #, no-c-format
 msgid ""
 "<literal>constrained</literal> (optional) specifies that a foreign key "
@@ -3288,7 +3288,7 @@ msgstr ""
 "séquentiel."
 
 #. Tag: para
-#: basic_mapping.xml:1701
+#: basic_mapping.xml:1725
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal>: (optional) The name of a property of the "
@@ -3300,7 +3300,7 @@ msgstr ""
 "de la propriété."
 
 #. Tag: para
-#: basic_mapping.xml:1714
+#: basic_mapping.xml:1738
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): Almost all one to one associations "
@@ -3319,7 +3319,7 @@ msgstr ""
 "impossible et Hibernate chargera automatiquement l'association !</emphasis>"
 
 #. Tag: para
-#: basic_mapping.xml:1722
+#: basic_mapping.xml:1746
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -3335,19 +3335,19 @@ msgstr ""
 "associated class."
 
 #. Tag: para
-#: basic_mapping.xml:1740
+#: basic_mapping.xml:1764
 #, no-c-format
 msgid "There are two varieties of one-to-one association:"
 msgstr "associations par clef primaire"
 
 #. Tag: para
-#: basic_mapping.xml:1744
+#: basic_mapping.xml:1768
 #, no-c-format
 msgid "primary key associations"
 msgstr "association par clef étrangère unique"
 
 #. Tag: para
-#: basic_mapping.xml:1747
+#: basic_mapping.xml:1771
 #, no-c-format
 msgid "unique foreign key associations"
 msgstr ""
@@ -3359,7 +3359,7 @@ msgstr ""
 "d'identifiant !"
 
 #. Tag: para
-#: basic_mapping.xml:1752
+#: basic_mapping.xml:1776
 #, no-c-format
 msgid ""
 "Primary key associations don't need an extra table column; if two rows are "
@@ -3372,7 +3372,7 @@ msgstr ""
 "<literal>Employee</literal> et <literal>Person</literal>, respectivement."
 
 #. Tag: para
-#: basic_mapping.xml:1759
+#: basic_mapping.xml:1783
 #, no-c-format
 msgid ""
 "For a primary key association, add the following mappings to "
@@ -3384,13 +3384,13 @@ msgstr ""
 "<literal>foreign</literal> :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1764
+#: basic_mapping.xml:1788
 #, no-c-format
 msgid "<![CDATA[<one-to-one name=\"person\" class=\"Person\"/>]]>"
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:1765
+#: basic_mapping.xml:1789
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" constrained=\"true"
@@ -3398,7 +3398,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1767
+#: basic_mapping.xml:1791
 #, no-c-format
 msgid ""
 "Now we must ensure that the primary keys of related rows in the PERSON and "
@@ -3411,7 +3411,7 @@ msgstr ""
 "literal> de cette <literal>Person</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1773
+#: basic_mapping.xml:1797
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"person\" table=\"PERSON\">\n"
@@ -3428,7 +3428,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1775
+#: basic_mapping.xml:1799
 #, no-c-format
 msgid ""
 "A newly saved instance of <literal>Person</literal> is then assigned the "
@@ -3441,7 +3441,7 @@ msgstr ""
 "indiquée ainsi :"
 
 #. Tag: para
-#: basic_mapping.xml:1781
+#: basic_mapping.xml:1805
 #, no-c-format
 msgid ""
 "Alternatively, a foreign key with a unique constraint, from "
@@ -3452,7 +3452,7 @@ msgstr ""
 "mapping de <literal>Person</literal> :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1786
+#: basic_mapping.xml:1810
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"person\" class=\"Person\" column=\"PERSON_ID\" "
@@ -3460,7 +3460,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1788
+#: basic_mapping.xml:1812
 #, no-c-format
 msgid ""
 "And this association may be made bidirectional by adding the following to "
@@ -3468,7 +3468,7 @@ msgid ""
 msgstr "natural-id"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1793
+#: basic_mapping.xml:1817
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" property-ref="
@@ -3476,7 +3476,7 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:1798
+#: basic_mapping.xml:1822
 #, no-c-format
 msgid "natural-id"
 msgstr ""
@@ -3490,7 +3490,7 @@ msgstr ""
 "documentera."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1800
+#: basic_mapping.xml:1824
 #, no-c-format
 msgid ""
 "<![CDATA[<natural-id mutable=\"true|false\"/>\n"
@@ -3501,7 +3501,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1802
+#: basic_mapping.xml:1826
 #, no-c-format
 msgid ""
 "Even though we recommend the use of surrogate keys as primary keys, you "
@@ -3517,7 +3517,7 @@ msgstr ""
 "l'entité."
 
 #. Tag: para
-#: basic_mapping.xml:1811
+#: basic_mapping.xml:1835
 #, no-c-format
 msgid ""
 "We strongly recommend that you implement <literal>equals()</literal> and "
@@ -3528,7 +3528,7 @@ msgstr ""
 "clés naturelles."
 
 #. Tag: para
-#: basic_mapping.xml:1816
+#: basic_mapping.xml:1840
 #, no-c-format
 msgid ""
 "This mapping is not intended for use with entities with natural primary keys."
@@ -3538,7 +3538,7 @@ msgstr ""
 "immuable (constants)."
 
 #. Tag: para
-#: basic_mapping.xml:1822
+#: basic_mapping.xml:1846
 #, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional, defaults to <literal>false</literal>): "
@@ -3547,7 +3547,7 @@ msgid ""
 msgstr "component, dynamic-component"
 
 #. Tag: title
-#: basic_mapping.xml:1832
+#: basic_mapping.xml:1856
 #, no-c-format
 msgid "component, dynamic-component"
 msgstr ""
@@ -3557,7 +3557,7 @@ msgstr ""
 "\"Components\" plus bas."
 
 #. Tag: para
-#: basic_mapping.xml:1834
+#: basic_mapping.xml:1858
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element maps properties of a child "
@@ -3567,7 +3567,7 @@ msgid ""
 msgstr "<literal>name</literal> : Nom de la propriété"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1852
+#: basic_mapping.xml:1876
 #, no-c-format
 msgid ""
 "<![CDATA[<component\n"
@@ -3589,7 +3589,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1860
+#: basic_mapping.xml:1884
 #, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -3599,7 +3599,7 @@ msgstr ""
 "dans les <literal>INSERT</literal>s ?"
 
 #. Tag: para
-#: basic_mapping.xml:1866 basic_mapping.xml:1955
+#: basic_mapping.xml:1890 basic_mapping.xml:1979
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal>: Do the mapped columns appear in SQL "
@@ -3613,7 +3613,7 @@ msgstr ""
 "dans les <literal>UPDATE</literal>s ?"
 
 #. Tag: para
-#: basic_mapping.xml:1872 basic_mapping.xml:1961
+#: basic_mapping.xml:1896 basic_mapping.xml:1985
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update</literal>: Do the mapped columns appear in SQL "
@@ -3631,7 +3631,7 @@ msgstr ""
 "obsolète (dirty)."
 
 #. Tag: para
-#: basic_mapping.xml:1884
+#: basic_mapping.xml:1908
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -3645,7 +3645,7 @@ msgstr ""
 "obsolète (dirty)."
 
 #. Tag: para
-#: basic_mapping.xml:1891
+#: basic_mapping.xml:1915
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3658,7 +3658,7 @@ msgstr ""
 "colonnes mappées de ce composant."
 
 #. Tag: para
-#: basic_mapping.xml:1899 basic_mapping.xml:1975
+#: basic_mapping.xml:1923 basic_mapping.xml:1999
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unique</literal> (optional - defaults to <literal>false</literal>): "
@@ -3673,7 +3673,7 @@ msgstr ""
 "literal> suivant :"
 
 #. Tag: para
-#: basic_mapping.xml:1908
+#: basic_mapping.xml:1932
 #, no-c-format
 msgid ""
 "The child <literal>&lt;property&gt;</literal> tags map properties of the "
@@ -3684,7 +3684,7 @@ msgstr ""
 "classe composant comme une référence arrière vers l'entité contenante."
 
 #. Tag: para
-#: basic_mapping.xml:1913
+#: basic_mapping.xml:1937
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
@@ -3697,7 +3697,7 @@ msgstr ""
 "\"components-dynamic\"/>."
 
 #. Tag: para
-#: basic_mapping.xml:1919
+#: basic_mapping.xml:1943
 #, no-c-format
 msgid ""
 "The <literal>&lt;dynamic-component&gt;</literal> element allows a "
@@ -3706,7 +3706,7 @@ msgid ""
 msgstr "properties"
 
 #. Tag: title
-#: basic_mapping.xml:1928
+#: basic_mapping.xml:1952
 #, no-c-format
 msgid "properties"
 msgstr ""
@@ -3717,7 +3717,7 @@ msgstr ""
 "un moyen pratique de définir une contrainte d'unicité multi-colonnes."
 
 #. Tag: para
-#: basic_mapping.xml:1930
+#: basic_mapping.xml:1954
 #, no-c-format
 msgid ""
 "The <literal>&lt;properties&gt;</literal> element allows the definition of a "
@@ -3730,7 +3730,7 @@ msgstr ""
 "emphasis> le véritable nom d'une propriété."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1946
+#: basic_mapping.xml:1970
 #, no-c-format
 msgid ""
 "<![CDATA[<properties\n"
@@ -3748,7 +3748,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1949
+#: basic_mapping.xml:1973
 #, no-c-format
 msgid ""
 "<literal>name</literal>: The logical name of the grouping - <emphasis>not</"
@@ -3758,7 +3758,7 @@ msgstr ""
 "dans les <literal>INSERT</literal>s ?"
 
 #. Tag: para
-#: basic_mapping.xml:1967
+#: basic_mapping.xml:1991
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3771,7 +3771,7 @@ msgstr ""
 "colonnes mappées de ce composant."
 
 #. Tag: para
-#: basic_mapping.xml:1984
+#: basic_mapping.xml:2008
 #, no-c-format
 msgid ""
 "For example, if we have the following <literal>&lt;properties&gt;</literal> "
@@ -3782,7 +3782,7 @@ msgstr ""
 "<literal>Person</literal> au lieu de la clef primaire :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:1988
+#: basic_mapping.xml:2012
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -3798,7 +3798,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1990
+#: basic_mapping.xml:2014
 #, no-c-format
 msgid ""
 "Then we might have some legacy data association which refers to this unique "
@@ -3808,7 +3808,7 @@ msgstr ""
 "contexte de mapping de données héritées d'anciens systèmes."
 
 #. Tag: programlisting
-#: basic_mapping.xml:1995
+#: basic_mapping.xml:2019
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"person\"\n"
@@ -3820,7 +3820,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1997
+#: basic_mapping.xml:2021
 #, no-c-format
 msgid ""
 "We don't recommend the use of this kind of thing outside the context of "
@@ -3828,7 +3828,7 @@ msgid ""
 msgstr "subclass"
 
 #. Tag: title
-#: basic_mapping.xml:2005
+#: basic_mapping.xml:2029
 #, no-c-format
 msgid "subclass"
 msgstr ""
@@ -3838,7 +3838,7 @@ msgstr ""
 "subclass&gt;</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:2007
+#: basic_mapping.xml:2031
 #, no-c-format
 msgid ""
 "Finally, polymorphic persistence requires the declaration of each subclass "
@@ -3847,7 +3847,7 @@ msgid ""
 msgstr "<literal>name</literal> : Le nom complet de la sous-classe."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2020
+#: basic_mapping.xml:2044
 #, no-c-format
 msgid ""
 "<![CDATA[<subclass\n"
@@ -3867,7 +3867,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2023 basic_mapping.xml:2081 basic_mapping.xml:2144
+#: basic_mapping.xml:2047 basic_mapping.xml:2105 basic_mapping.xml:2168
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal>: The fully qualified class name of the subclass."
@@ -3881,7 +3881,7 @@ msgstr ""
 "<literal>name</literal> : Le nom Java complet de la sous-classe."
 
 #. Tag: para
-#: basic_mapping.xml:2028
+#: basic_mapping.xml:2052
 #, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -3891,7 +3891,7 @@ msgstr ""
 "utiliser pour les chargements à la demande des proxies (lazy)."
 
 #. Tag: para
-#: basic_mapping.xml:2034 basic_mapping.xml:2091 basic_mapping.xml:2154
+#: basic_mapping.xml:2058 basic_mapping.xml:2115 basic_mapping.xml:2178
 #, fuzzy, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): Specifies a class or interface to use "
@@ -3909,7 +3909,7 @@ msgstr ""
 "le chargement différé des proxies."
 
 #. Tag: para
-#: basic_mapping.xml:2040 basic_mapping.xml:2097 basic_mapping.xml:2160
+#: basic_mapping.xml:2064 basic_mapping.xml:2121 basic_mapping.xml:2184
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional, defaults to <literal>true</literal>): "
@@ -3932,7 +3932,7 @@ msgstr ""
 "chargement à la demande."
 
 #. Tag: para
-#: basic_mapping.xml:2048
+#: basic_mapping.xml:2072
 #, no-c-format
 msgid ""
 "Each subclass should declare its own persistent properties and subclasses. "
@@ -3945,7 +3945,7 @@ msgstr ""
 "\"/>."
 
 #. Tag: para
-#: basic_mapping.xml:2056 basic_mapping.xml:2114 basic_mapping.xml:2172
+#: basic_mapping.xml:2080 basic_mapping.xml:2138 basic_mapping.xml:2196
 #, no-c-format
 msgid ""
 "For information about inheritance mappings, see <xref linkend=\"inheritance"
@@ -3955,13 +3955,13 @@ msgstr ""
 "\"inheritance\"/>."
 
 #. Tag: title
-#: basic_mapping.xml:2063
+#: basic_mapping.xml:2087
 #, no-c-format
 msgid "joined-subclass"
 msgstr "joined-subclass"
 
 #. Tag: para
-#: basic_mapping.xml:2065
+#: basic_mapping.xml:2089
 #, no-c-format
 msgid ""
 "Alternatively, each subclass may be mapped to its own table (table-per-"
@@ -3975,7 +3975,7 @@ msgstr ""
 "classe. L'élément <literal>&lt;joined-subclass&gt;</literal> est utilisé."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2078
+#: basic_mapping.xml:2102
 #, no-c-format
 msgid ""
 "<![CDATA[<joined-subclass\n"
@@ -4001,7 +4001,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2086 basic_mapping.xml:2149
+#: basic_mapping.xml:2110 basic_mapping.xml:2173
 #, fuzzy, no-c-format
 msgid "<literal>table</literal>: The name of the subclass table."
 msgstr ""
@@ -4011,7 +4011,7 @@ msgstr ""
 "<literal>table</literal> : nom de la table de la sous-classe."
 
 #. Tag: para
-#: basic_mapping.xml:2105
+#: basic_mapping.xml:2129
 #, no-c-format
 msgid ""
 "No discriminator column is required for this mapping strategy. Each subclass "
@@ -4025,7 +4025,7 @@ msgstr ""
 "literal>. Le mapping au début de ce chapitre serait ré-écrit ainsi :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2112
+#: basic_mapping.xml:2136
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -4063,13 +4063,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2121
+#: basic_mapping.xml:2145
 #, no-c-format
 msgid "union-subclass"
 msgstr "union-subclass"
 
 #. Tag: para
-#: basic_mapping.xml:2123
+#: basic_mapping.xml:2147
 #, no-c-format
 msgid ""
 "A third option is to map only the concrete classes of an inheritance "
@@ -4093,7 +4093,7 @@ msgstr ""
 "vous devez utiliser le mapping <literal>&lt;union-subclass&gt;</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2141
+#: basic_mapping.xml:2165
 #, no-c-format
 msgid ""
 "<![CDATA[<union-subclass\n"
@@ -4118,7 +4118,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2168
+#: basic_mapping.xml:2192
 #, no-c-format
 msgid ""
 "No discriminator column or key column is required for this mapping strategy."
@@ -4127,13 +4127,13 @@ msgstr ""
 "stratégie de mapping."
 
 #. Tag: title
-#: basic_mapping.xml:2179
+#: basic_mapping.xml:2203
 #, no-c-format
 msgid "join"
 msgstr "join"
 
 #. Tag: para
-#: basic_mapping.xml:2181
+#: basic_mapping.xml:2205
 #, no-c-format
 msgid ""
 "Using the <literal>&lt;join&gt;</literal> element, it is possible to map "
@@ -4144,7 +4144,7 @@ msgstr ""
 "mapper des propriétés d'une classe sur plusieurs tables."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2195
+#: basic_mapping.xml:2219
 #, no-c-format
 msgid ""
 "<![CDATA[<join\n"
@@ -4163,13 +4163,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2199
+#: basic_mapping.xml:2223
 #, no-c-format
 msgid "<literal>table</literal>: The name of the joined table."
 msgstr "<literal>table</literal> : Le nom de la table jointe."
 
 #. Tag: para
-#: basic_mapping.xml:2216
+#: basic_mapping.xml:2240
 #, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
@@ -4195,7 +4195,7 @@ msgstr ""
 "ses super-classes."
 
 #. Tag: para
-#: basic_mapping.xml:2229
+#: basic_mapping.xml:2253
 #, no-c-format
 msgid ""
 "<literal>inverse</literal> (optional - defaults to <literal>false</"
@@ -4207,7 +4207,7 @@ msgstr ""
 "mettre à jour les propriétés définies par cette jointure."
 
 #. Tag: para
-#: basic_mapping.xml:2236
+#: basic_mapping.xml:2260
 #, no-c-format
 msgid ""
 "<literal>optional</literal> (optional - defaults to <literal>false</"
@@ -4221,7 +4221,7 @@ msgstr ""
 "toujours une jointure externe pour charger les propriétés."
 
 #. Tag: para
-#: basic_mapping.xml:2245
+#: basic_mapping.xml:2269
 #, no-c-format
 msgid ""
 "For example, the address information for a person can be mapped to a "
@@ -4232,7 +4232,7 @@ msgstr ""
 "valeur pour toutes ses propriétés) :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2250
+#: basic_mapping.xml:2274
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\"\n"
@@ -4250,7 +4250,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2252
+#: basic_mapping.xml:2276
 #, no-c-format
 msgid ""
 "This feature is often only useful for legacy data models, we recommend fewer "
@@ -4265,13 +4265,13 @@ msgstr ""
 "dans une hiérarchie simple ainsi qu'il est expliqué plus tard."
 
 #. Tag: title
-#: basic_mapping.xml:2262
+#: basic_mapping.xml:2286
 #, no-c-format
 msgid "<title>key</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2264
+#: basic_mapping.xml:2288
 #, no-c-format
 msgid ""
 "We've seen the <literal>&lt;key&gt;</literal> element crop up a few times "
@@ -4286,7 +4286,7 @@ msgstr ""
 "d'origine."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2280
+#: basic_mapping.xml:2304
 #, no-c-format
 msgid ""
 "<![CDATA[<key\n"
@@ -4300,7 +4300,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2291
+#: basic_mapping.xml:2315
 #, no-c-format
 msgid ""
 "<literal>on-delete</literal> (optional, defaults to <literal>noaction</"
@@ -4312,7 +4312,7 @@ msgstr ""
 "possibilité au niveau base de données de suppression en cascade."
 
 #. Tag: para
-#: basic_mapping.xml:2298
+#: basic_mapping.xml:2322
 #, no-c-format
 msgid ""
 "<literal>property-ref</literal> (optional): Specifies that the foreign key "
@@ -4324,7 +4324,7 @@ msgstr ""
 "d'origine (Pour les données de systèmes legacy)."
 
 #. Tag: para
-#: basic_mapping.xml:2305
+#: basic_mapping.xml:2329
 #, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): Specifies that the foreign key "
@@ -4336,7 +4336,7 @@ msgstr ""
 "fait partie de la clef primaire)."
 
 #. Tag: para
-#: basic_mapping.xml:2312
+#: basic_mapping.xml:2336
 #, no-c-format
 msgid ""
 "<literal>update</literal> (optional): Specifies that the foreign key should "
@@ -4348,7 +4348,7 @@ msgstr ""
 "clef primaire)."
 
 #. Tag: para
-#: basic_mapping.xml:2319
+#: basic_mapping.xml:2343
 #, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): Specifies that the foreign key should "
@@ -4360,7 +4360,7 @@ msgstr ""
 "la clef primaire)."
 
 #. Tag: para
-#: basic_mapping.xml:2327
+#: basic_mapping.xml:2351
 #, no-c-format
 msgid ""
 "We recommend that for systems where delete performance is important, all "
@@ -4379,7 +4379,7 @@ msgstr ""
 "versionnées."
 
 #. Tag: para
-#: basic_mapping.xml:2335
+#: basic_mapping.xml:2359
 #, no-c-format
 msgid ""
 "The <literal>not-null</literal> and <literal>update</literal> attributes are "
@@ -4395,13 +4395,13 @@ msgstr ""
 "<literal>&lt;key not-null=\"true\"&gt;</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:2345
+#: basic_mapping.xml:2369
 #, no-c-format
 msgid "column and formula elements"
 msgstr "éléments column et formula"
 
 #. Tag: para
-#: basic_mapping.xml:2346
+#: basic_mapping.xml:2370
 #, no-c-format
 msgid ""
 "Any mapping element which accepts a <literal>column</literal> attribute will "
@@ -4415,7 +4415,7 @@ msgstr ""
 "l'attribut <literal>formula</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2352
+#: basic_mapping.xml:2376
 #, no-c-format
 msgid ""
 "<![CDATA[<column\n"
@@ -4433,13 +4433,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2354
+#: basic_mapping.xml:2378
 #, no-c-format
 msgid "<![CDATA[<formula>SQL expression</formula>]]>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2356
+#: basic_mapping.xml:2380
 #, no-c-format
 msgid ""
 "<literal>column</literal> and <literal>formula</literal> attributes may even "
@@ -4452,7 +4452,7 @@ msgstr ""
 "exotiques."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2362
+#: basic_mapping.xml:2386
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"homeAddress\" class=\"Address\"\n"
@@ -4463,13 +4463,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2367
+#: basic_mapping.xml:2391
 #, no-c-format
 msgid "import"
 msgstr "import"
 
 #. Tag: para
-#: basic_mapping.xml:2369
+#: basic_mapping.xml:2393
 #, no-c-format
 msgid ""
 "Suppose your application has two persistent classes with the same name, and "
@@ -4486,13 +4486,13 @@ msgstr ""
 "mappées explicitement."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2376
+#: basic_mapping.xml:2400
 #, no-c-format
 msgid "<![CDATA[<import class=\"java.lang.Object\" rename=\"Universe\"/>]]>"
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2383
+#: basic_mapping.xml:2407
 #, no-c-format
 msgid ""
 "<![CDATA[<import\n"
@@ -4502,7 +4502,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2386
+#: basic_mapping.xml:2410
 #, no-c-format
 msgid ""
 "<literal>class</literal>: The fully qualified class name of of any Java "
@@ -4510,7 +4510,7 @@ msgid ""
 msgstr "<literal>class</literal> : Nom Java complet de la classe."
 
 #. Tag: para
-#: basic_mapping.xml:2391
+#: basic_mapping.xml:2415
 #, no-c-format
 msgid ""
 "<literal>rename</literal> (optional - defaults to the unqualified class "
@@ -4520,13 +4520,13 @@ msgstr ""
 "Java (sans package)) : Nom pouvant être utilisé dans le langage de requête."
 
 #. Tag: title
-#: basic_mapping.xml:2402
+#: basic_mapping.xml:2426
 #, no-c-format
 msgid "<title>any</title>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2404
+#: basic_mapping.xml:2428
 #, no-c-format
 msgid ""
 "There is one further type of property mapping. The <literal>&lt;any&gt;</"
@@ -4550,7 +4550,7 @@ msgstr ""
 "utilisateur, etc...)."
 
 #. Tag: para
-#: basic_mapping.xml:2414
+#: basic_mapping.xml:2438
 #, no-c-format
 msgid ""
 "The <literal>meta-type</literal> attribute lets the application specify a "
@@ -4566,7 +4566,7 @@ msgstr ""
 "partir de valeurs du méta-type sur les noms des classes."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2421
+#: basic_mapping.xml:2445
 #, no-c-format
 msgid ""
 "<![CDATA[<any name=\"being\" id-type=\"long\" meta-type=\"string\">\n"
@@ -4579,7 +4579,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2432
+#: basic_mapping.xml:2456
 #, no-c-format
 msgid ""
 "<![CDATA[<any\n"
@@ -4600,19 +4600,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2435
+#: basic_mapping.xml:2459
 #, no-c-format
 msgid "<literal>name</literal>: the property name."
 msgstr "<literal>name</literal> : le nom de la propriété."
 
 #. Tag: para
-#: basic_mapping.xml:2440
+#: basic_mapping.xml:2464
 #, no-c-format
 msgid "<literal>id-type</literal>: the identifier type."
 msgstr "<literal>id-type</literal> : le type identifiant."
 
 #. Tag: para
-#: basic_mapping.xml:2445
+#: basic_mapping.xml:2469
 #, no-c-format
 msgid ""
 "<literal>meta-type</literal> (optional - defaults to <literal>string</"
@@ -4622,7 +4622,7 @@ msgstr ""
 "literal>) : Tout type permis pour un mapping par discriminateur."
 
 #. Tag: para
-#: basic_mapping.xml:2451
+#: basic_mapping.xml:2475
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional- defaults to <literal>none</literal>): "
@@ -4632,7 +4632,7 @@ msgstr ""
 "literal>) : le style de cascade."
 
 #. Tag: para
-#: basic_mapping.xml:2463
+#: basic_mapping.xml:2487
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -4646,19 +4646,19 @@ msgstr ""
 "incrément de version doit avoir lieu quand cette propriété est marquée dirty."
 
 #. Tag: title
-#: basic_mapping.xml:2478
+#: basic_mapping.xml:2502
 #, no-c-format
 msgid "Hibernate Types"
 msgstr "Hibernate Types"
 
 #. Tag: title
-#: basic_mapping.xml:2481
+#: basic_mapping.xml:2505
 #, no-c-format
 msgid "Entities and values"
 msgstr "Entités et valeurs"
 
 #. Tag: para
-#: basic_mapping.xml:2483
+#: basic_mapping.xml:2507
 #, no-c-format
 msgid ""
 "To understand the behaviour of various Java language-level objects with "
@@ -4668,7 +4668,7 @@ msgstr ""
 "service de persistance, nous avons besoin de les classer en deux groupes :"
 
 #. Tag: para
-#: basic_mapping.xml:2488
+#: basic_mapping.xml:2512
 #, no-c-format
 msgid ""
 "An <emphasis>entity</emphasis> exists independently of any other objects "
@@ -4693,7 +4693,7 @@ msgstr ""
 "partagées. Elles peuvent aussi être versionnées."
 
 #. Tag: para
-#: basic_mapping.xml:2499
+#: basic_mapping.xml:2523
 #, no-c-format
 msgid ""
 "An entity's persistent state consists of references to other entities and "
@@ -4718,7 +4718,7 @@ msgstr ""
 "entités ou collections."
 
 #. Tag: para
-#: basic_mapping.xml:2510
+#: basic_mapping.xml:2534
 #, no-c-format
 msgid ""
 "Up until now, we've been using the term \"persistent class\" to refer to "
@@ -4748,14 +4748,14 @@ msgstr ""
 "value type."
 
 #. Tag: para
-#: basic_mapping.xml:2524
+#: basic_mapping.xml:2548
 #, no-c-format
 msgid "We'll revisit both concepts throughout the documentation."
 msgstr ""
 "Nous nous pencherons sur ces deux concepts tout au long de la documentation."
 
 #. Tag: para
-#: basic_mapping.xml:2528
+#: basic_mapping.xml:2552
 #, no-c-format
 msgid ""
 "The challenge is to map the Java type system (and the developers' definition "
@@ -4784,7 +4784,7 @@ msgstr ""
 "tard."
 
 #. Tag: para
-#: basic_mapping.xml:2541
+#: basic_mapping.xml:2565
 #, no-c-format
 msgid "All built-in Hibernate types except collections support null semantics."
 msgstr ""
@@ -4792,13 +4792,13 @@ msgstr ""
 "autorisent la valeur null."
 
 #. Tag: title
-#: basic_mapping.xml:2548
+#: basic_mapping.xml:2572
 #, no-c-format
 msgid "Basic value types"
 msgstr "Basic value types"
 
 #. Tag: para
-#: basic_mapping.xml:2550
+#: basic_mapping.xml:2574
 #, fuzzy, no-c-format
 msgid ""
 "The built-in <emphasis>basic mapping types</emphasis> may be roughly "
@@ -4808,7 +4808,7 @@ msgstr ""
 "grossièrement être rangés dans les catégories suivantes : <placeholder-1/>"
 
 #. Tag: literal
-#: basic_mapping.xml:2555
+#: basic_mapping.xml:2579
 #, no-c-format
 msgid ""
 "integer, long, short, float, double, character, byte, boolean, yes_no, "
@@ -4818,7 +4818,7 @@ msgstr ""
 "true_false"
 
 #. Tag: para
-#: basic_mapping.xml:2558
+#: basic_mapping.xml:2582
 #, no-c-format
 msgid ""
 "Type mappings from Java primitives or wrapper classes to appropriate (vendor-"
@@ -4833,13 +4833,13 @@ msgstr ""
 "<literal>java.lang.Boolean</literal>."
 
 #. Tag: literal
-#: basic_mapping.xml:2567
+#: basic_mapping.xml:2591
 #, no-c-format
 msgid "string"
 msgstr "string"
 
 #. Tag: para
-#: basic_mapping.xml:2569
+#: basic_mapping.xml:2593
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.String</literal> to <literal>VARCHAR</"
@@ -4849,13 +4849,13 @@ msgstr ""
 "<literal>VARCHAR</literal> (ou le <literal>VARCHAR2</literal> Oracle)."
 
 #. Tag: literal
-#: basic_mapping.xml:2576
+#: basic_mapping.xml:2600
 #, no-c-format
 msgid "date, time, timestamp"
 msgstr "date, time, timestamp"
 
 #. Tag: para
-#: basic_mapping.xml:2578
+#: basic_mapping.xml:2602
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Date</literal> and its subclasses to "
@@ -4867,13 +4867,13 @@ msgstr ""
 "<literal>TIMESTAMP</literal> (ou équivalent)."
 
 #. Tag: literal
-#: basic_mapping.xml:2586
+#: basic_mapping.xml:2610
 #, no-c-format
 msgid "calendar, calendar_date"
 msgstr "calendar, calendar_date"
 
 #. Tag: para
-#: basic_mapping.xml:2588
+#: basic_mapping.xml:2612
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Calendar</literal> to SQL types "
@@ -4883,13 +4883,13 @@ msgstr ""
 "SQL <literal>TIMESTAMP</literal> et <literal>DATE</literal> (ou équivalent)."
 
 #. Tag: literal
-#: basic_mapping.xml:2596
+#: basic_mapping.xml:2620
 #, no-c-format
 msgid "big_decimal, big_integer"
 msgstr "big_decimal, big_integer"
 
 #. Tag: para
-#: basic_mapping.xml:2598
+#: basic_mapping.xml:2622
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.math.BigDecimal</literal> and <literal>java."
@@ -4901,13 +4901,13 @@ msgstr ""
 "le <literal>NUMBER</literal> Oracle)."
 
 #. Tag: literal
-#: basic_mapping.xml:2606
+#: basic_mapping.xml:2630
 #, no-c-format
 msgid "locale, timezone, currency"
 msgstr "locale, timezone, currency"
 
 #. Tag: para
-#: basic_mapping.xml:2608
+#: basic_mapping.xml:2632
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Locale</literal>, <literal>java.util."
@@ -4925,13 +4925,13 @@ msgstr ""
 "sont mappées sur leur <literal>ID</literal>."
 
 #. Tag: literal
-#: basic_mapping.xml:2620
+#: basic_mapping.xml:2644
 #, fuzzy, no-c-format
 msgid "<literal>class</literal>"
 msgstr "<literal>all</literal> vérifie toutes les colonnes"
 
 #. Tag: para
-#: basic_mapping.xml:2622
+#: basic_mapping.xml:2646
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.Class</literal> to <literal>VARCHAR</"
@@ -4943,25 +4943,25 @@ msgstr ""
 "objet <literal>Class</literal> est mappé sur son nom Java complet."
 
 #. Tag: literal
-#: basic_mapping.xml:2630
+#: basic_mapping.xml:2654
 #, no-c-format
 msgid "binary"
 msgstr "binary"
 
 #. Tag: para
-#: basic_mapping.xml:2632
+#: basic_mapping.xml:2656
 #, no-c-format
 msgid "Maps byte arrays to an appropriate SQL binary type."
 msgstr "Mappe les tableaux de bytes vers le type binaire SQL approprié."
 
 #. Tag: literal
-#: basic_mapping.xml:2638
+#: basic_mapping.xml:2662
 #, no-c-format
 msgid "text"
 msgstr "text"
 
 #. Tag: para
-#: basic_mapping.xml:2640
+#: basic_mapping.xml:2664
 #, no-c-format
 msgid ""
 "Maps long Java strings to a SQL <literal>CLOB</literal> or <literal>TEXT</"
@@ -4971,13 +4971,13 @@ msgstr ""
 "<literal>CLOB</literal> ou <literal>TEXT</literal>."
 
 #. Tag: literal
-#: basic_mapping.xml:2647
+#: basic_mapping.xml:2671
 #, no-c-format
 msgid "serializable"
 msgstr "serializable"
 
 #. Tag: para
-#: basic_mapping.xml:2649
+#: basic_mapping.xml:2673
 #, no-c-format
 msgid ""
 "Maps serializable Java types to an appropriate SQL binary type. You may also "
@@ -4990,13 +4990,13 @@ msgstr ""
 "défaut un type de base."
 
 #. Tag: literal
-#: basic_mapping.xml:2658
+#: basic_mapping.xml:2682
 #, no-c-format
 msgid "clob, blob"
 msgstr "clob, blob"
 
 #. Tag: para
-#: basic_mapping.xml:2660
+#: basic_mapping.xml:2684
 #, no-c-format
 msgid ""
 "Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and "
@@ -5011,7 +5011,7 @@ msgstr ""
 "pilotes est moyennement bonne)."
 
 #. Tag: literal
-#: basic_mapping.xml:2670
+#: basic_mapping.xml:2694
 #, no-c-format
 msgid ""
 "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, "
@@ -5021,7 +5021,7 @@ msgstr ""
 "imm_serializable, imm_binary"
 
 #. Tag: para
-#: basic_mapping.xml:2674
+#: basic_mapping.xml:2698
 #, no-c-format
 msgid ""
 "Type mappings for what are usually considered mutable Java types, where "
@@ -5041,7 +5041,7 @@ msgstr ""
 "doit assigner un nouvel (non identique) objet à la propriété."
 
 #. Tag: para
-#: basic_mapping.xml:2689
+#: basic_mapping.xml:2713
 #, no-c-format
 msgid ""
 "Unique identifiers of entities and collections may be of any basic type "
@@ -5054,7 +5054,7 @@ msgstr ""
 "composites sont aussi permis, voir plus bas)."
 
 #. Tag: para
-#: basic_mapping.xml:2695
+#: basic_mapping.xml:2719
 #, no-c-format
 msgid ""
 "The basic value types have corresponding <literal>Type</literal> constants "
@@ -5068,13 +5068,13 @@ msgstr ""
 "<literal>string</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:2704
+#: basic_mapping.xml:2728
 #, no-c-format
 msgid "Custom value types"
 msgstr "Types de valeur définis par l'utilisateur"
 
 #. Tag: para
-#: basic_mapping.xml:2706
+#: basic_mapping.xml:2730
 #, no-c-format
 msgid ""
 "It is relatively easy for developers to create their own value types. For "
@@ -5099,7 +5099,7 @@ msgstr ""
 "literal>, <literal>SURNAME</literal>."
 
 #. Tag: para
-#: basic_mapping.xml:2717
+#: basic_mapping.xml:2741
 #, no-c-format
 msgid ""
 "To implement a custom type, implement either <literal>org.hibernate."
@@ -5115,7 +5115,7 @@ msgstr ""
 "DoubleStringType</literal> pour voir ce qu'il est possible de faire."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2725
+#: basic_mapping.xml:2749
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"twoStrings\" type=\"org.hibernate.test."
@@ -5126,7 +5126,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2727
+#: basic_mapping.xml:2751
 #, no-c-format
 msgid ""
 "Notice the use of <literal>&lt;column&gt;</literal> tags to map a property "
@@ -5136,7 +5136,7 @@ msgstr ""
 "mapper une propriété sur des colonnes multiples."
 
 #. Tag: para
-#: basic_mapping.xml:2732
+#: basic_mapping.xml:2756
 #, no-c-format
 msgid ""
 "The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</"
@@ -5150,7 +5150,7 @@ msgstr ""
 "spécialisées."
 
 #. Tag: para
-#: basic_mapping.xml:2738
+#: basic_mapping.xml:2762
 #, no-c-format
 msgid ""
 "You may even supply parameters to a <literal>UserType</literal> in the "
@@ -5167,7 +5167,7 @@ msgstr ""
 "vos fichiers de mapping."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2746
+#: basic_mapping.xml:2770
 #, no-c-format
 msgid ""
 "<![CDATA[<property name=\"priority\">\n"
@@ -5178,7 +5178,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2748
+#: basic_mapping.xml:2772
 #, no-c-format
 msgid ""
 "The <literal>UserType</literal> can now retrieve the value for the parameter "
@@ -5190,7 +5190,7 @@ msgstr ""
 "<literal>Properties</literal> qui lui est passé."
 
 #. Tag: para
-#: basic_mapping.xml:2753
+#: basic_mapping.xml:2777
 #, no-c-format
 msgid ""
 "If you use a certain <literal>UserType</literal> very often, it may be "
@@ -5206,7 +5206,7 @@ msgstr ""
 "valeurs de paramètres par défaut si ce type est paramétré."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2760
+#: basic_mapping.xml:2784
 #, no-c-format
 msgid ""
 "<![CDATA[<typedef class=\"com.mycompany.usertypes.DefaultValueIntegerType\" "
@@ -5216,13 +5216,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: basic_mapping.xml:2762
+#: basic_mapping.xml:2786
 #, no-c-format
 msgid "<![CDATA[<property name=\"priority\" type=\"default_zero\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2764
+#: basic_mapping.xml:2788
 #, no-c-format
 msgid ""
 "It is also possible to override the parameters supplied in a typedef on a "
@@ -5232,7 +5232,7 @@ msgstr ""
 "cas par cas en utilisant des paramètres type sur le mapping de la propriété."
 
 #. Tag: para
-#: basic_mapping.xml:2769
+#: basic_mapping.xml:2793
 #, no-c-format
 msgid ""
 "Even though Hibernate's rich range of built-in types and support for "
@@ -5257,13 +5257,13 @@ msgstr ""
 "futurs dans votre façon de représenter des valeurs monétaires."
 
 #. Tag: title
-#: basic_mapping.xml:2785
+#: basic_mapping.xml:2809
 #, no-c-format
 msgid "Mapping a class more than once"
 msgstr "Mapper une classe plus d'une fois"
 
 #. Tag: para
-#: basic_mapping.xml:2786
+#: basic_mapping.xml:2810
 #, no-c-format
 msgid ""
 "It is possible to provide more than one mapping for a particular persistent "
@@ -5282,7 +5282,7 @@ msgstr ""
 "nommées."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2794
+#: basic_mapping.xml:2818
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Contract\" table=\"Contracts\"\n"
@@ -5305,7 +5305,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2796
+#: basic_mapping.xml:2820
 #, no-c-format
 msgid ""
 "Notice how associations are now specified using <literal>entity-name</"
@@ -5315,13 +5315,13 @@ msgstr ""
 "<literal>entity-name</literal> au lieu de <literal>class</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:2804
+#: basic_mapping.xml:2828
 #, no-c-format
 msgid "SQL quoted identifiers"
 msgstr "SQL quoted identifiers"
 
 #. Tag: para
-#: basic_mapping.xml:2805
+#: basic_mapping.xml:2829
 #, no-c-format
 msgid ""
 "You may force Hibernate to quote an identifier in the generated SQL by "
@@ -5337,7 +5337,7 @@ msgstr ""
 "mais des parenthèses pour SQL server et des backticks pour MySQL)."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2812
+#: basic_mapping.xml:2836
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"LineItem\" table=\"`Line Item`\">\n"
@@ -5349,13 +5349,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: basic_mapping.xml:2818
+#: basic_mapping.xml:2842
 #, no-c-format
 msgid "Metadata alternatives"
 msgstr "alternatives Metadata"
 
 #. Tag: para
-#: basic_mapping.xml:2820
+#: basic_mapping.xml:2844
 #, no-c-format
 msgid ""
 "XML isn't for everyone, and so there are some alternative ways to define O/R "
@@ -5365,13 +5365,13 @@ msgstr ""
 "définir des metatda de mappings O/R dans Hibernate."
 
 #. Tag: title
-#: basic_mapping.xml:2825
+#: basic_mapping.xml:2849
 #, no-c-format
 msgid "Using XDoclet markup"
 msgstr "utilisation de XDoclet"
 
 #. Tag: para
-#: basic_mapping.xml:2827
+#: basic_mapping.xml:2851
 #, no-c-format
 msgid ""
 "Many Hibernate users prefer to embed mapping information directly in "
@@ -5388,7 +5388,7 @@ msgstr ""
 "<literal>Cat</literal> avec des mappings XDoclet."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2834
+#: basic_mapping.xml:2858
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -5498,20 +5498,20 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2836
+#: basic_mapping.xml:2860
 #, no-c-format
 msgid "See the Hibernate web site for more examples of XDoclet and Hibernate."
 msgstr ""
 "Voyez le site web de Hibernate pour plus d'exemples sur XDoclet et Hibernate."
 
 #. Tag: title
-#: basic_mapping.xml:2843
+#: basic_mapping.xml:2867
 #, no-c-format
 msgid "Using JDK 5.0 Annotations"
 msgstr "Utilisation des annotations JDK 5.0"
 
 #. Tag: para
-#: basic_mapping.xml:2845
+#: basic_mapping.xml:2869
 #, no-c-format
 msgid ""
 "JDK 5.0 introduced XDoclet-style annotations at the language level, type-"
@@ -5538,13 +5538,13 @@ msgstr ""
 "télécharger. EJB3 (JSR-220) et les métadata Hibernate3 sont supportés."
 
 #. Tag: para
-#: basic_mapping.xml:2856
+#: basic_mapping.xml:2880
 #, no-c-format
 msgid "This is an example of a POJO class annotated as an EJB entity bean:"
 msgstr "Ceci est un exemple d'une classe POJO annotée comme un EJB entité :"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2860
+#: basic_mapping.xml:2884
 #, no-c-format
 msgid ""
 "<![CDATA[@Entity(access = AccessType.FIELD)\n"
@@ -5572,7 +5572,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2862
+#: basic_mapping.xml:2886
 #, no-c-format
 msgid ""
 "Note that support for JDK 5.0 Annotations (and JSR-220) is still work in "
@@ -5584,13 +5584,13 @@ msgstr ""
 "pour plus de détails."
 
 #. Tag: title
-#: basic_mapping.xml:2871
+#: basic_mapping.xml:2895
 #, no-c-format
 msgid "Generated Properties"
 msgstr "Propriétés générées"
 
 #. Tag: para
-#: basic_mapping.xml:2872
+#: basic_mapping.xml:2896
 #, no-c-format
 msgid ""
 "Generated properties are properties which have their values generated by the "
@@ -5613,7 +5613,7 @@ msgstr ""
 "pour récupérer les valeurs générées."
 
 #. Tag: para
-#: basic_mapping.xml:2881
+#: basic_mapping.xml:2905
 #, no-c-format
 msgid ""
 "Properties marked as generated must additionally be non-insertable and non-"
@@ -5629,7 +5629,7 @@ msgstr ""
 "\">simple properties</xref> peuvent être marqués comme générées."
 
 #. Tag: para
-#: basic_mapping.xml:2888
+#: basic_mapping.xml:2912
 #, no-c-format
 msgid ""
 "<literal>never</literal> (the default) - means that the given property value "
@@ -5639,7 +5639,7 @@ msgstr ""
 "n'est pas générée dans la base de données."
 
 #. Tag: para
-#: basic_mapping.xml:2892
+#: basic_mapping.xml:2916
 #, no-c-format
 msgid ""
 "<literal>insert</literal> - states that the given property value is "
@@ -5658,7 +5658,7 @@ msgstr ""
 "comme générées, cette option n'est pas disponible à cet endroit..."
 
 #. Tag: para
-#: basic_mapping.xml:2900
+#: basic_mapping.xml:2924
 #, no-c-format
 msgid ""
 "<literal>always</literal> - states that the property value is generated both "
@@ -5668,13 +5668,13 @@ msgstr ""
 "générée à l'insert comme aux updates."
 
 #. Tag: title
-#: basic_mapping.xml:2907
+#: basic_mapping.xml:2931
 #, no-c-format
 msgid "Auxiliary Database Objects"
 msgstr "Objets auxiliaires de la base de données"
 
 #. Tag: para
-#: basic_mapping.xml:2908
+#: basic_mapping.xml:2932
 #, no-c-format
 msgid ""
 "Allows CREATE and DROP of arbitrary database objects, in conjunction with "
@@ -5695,7 +5695,7 @@ msgstr ""
 "deux modes pour définir les objets auxiliaires de base de données..."
 
 #. Tag: para
-#: basic_mapping.xml:2917
+#: basic_mapping.xml:2941
 #, no-c-format
 msgid ""
 "The first mode is to explicitly list the CREATE and DROP commands out in the "
@@ -5705,7 +5705,7 @@ msgstr ""
 "dans le fichier de mapping:"
 
 #. Tag: programlisting
-#: basic_mapping.xml:2921
+#: basic_mapping.xml:2945
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -5718,7 +5718,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2922
+#: basic_mapping.xml:2946
 #, no-c-format
 msgid ""
 "The second mode is to supply a custom class which knows how to construct the "
@@ -5731,7 +5731,7 @@ msgstr ""
 "AuxiliaryDatabaseObject</literal>."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2927
+#: basic_mapping.xml:2951
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -5743,7 +5743,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2928
+#: basic_mapping.xml:2952
 #, no-c-format
 msgid ""
 "Additionally, these database objects can be optionally scoped such that they "
@@ -5753,7 +5753,7 @@ msgstr ""
 "optionnellement traités selon l'utilisation de dialectes particuliers.."
 
 #. Tag: programlisting
-#: basic_mapping.xml:2932
+#: basic_mapping.xml:2956
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"

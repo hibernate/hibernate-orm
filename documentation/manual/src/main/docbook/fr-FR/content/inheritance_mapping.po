@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,31 +11,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: inheritance_mapping.xml:5
+#: inheritance_mapping.xml:29
 #, no-c-format
 msgid "Inheritance Mapping"
 msgstr "Mapping d'héritage de classe"
 
 #. Tag: title
-#: inheritance_mapping.xml:8
+#: inheritance_mapping.xml:32
 #, no-c-format
 msgid "The Three Strategies"
 msgstr "Les trois stratégies"
 
 #. Tag: para
-#: inheritance_mapping.xml:10
+#: inheritance_mapping.xml:34
 #, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
 msgstr "Hibernate supporte les trois stratégies d'héritage de base :"
 
 #. Tag: para
-#: inheritance_mapping.xml:16
+#: inheritance_mapping.xml:40
 #, no-c-format
 msgid "table per class hierarchy"
 msgstr "une table par hiérarchie de classe (table per class hierarchy)"
 
 #. Tag: para
-#: inheritance_mapping.xml:21
+#: inheritance_mapping.xml:45
 #, fuzzy, no-c-format
 msgid "<para>table per subclass</para>"
 msgstr ""
@@ -45,13 +45,13 @@ msgstr ""
 "une table par classe fille"
 
 #. Tag: para
-#: inheritance_mapping.xml:26
+#: inheritance_mapping.xml:50
 #, no-c-format
 msgid "table per concrete class"
 msgstr "une table par classe concrète (table per concrete class)"
 
 #. Tag: para
-#: inheritance_mapping.xml:32
+#: inheritance_mapping.xml:56
 #, no-c-format
 msgid ""
 "In addition, Hibernate supports a fourth, slightly different kind of "
@@ -61,13 +61,13 @@ msgstr ""
 "qui supporte le polymorphisme :"
 
 #. Tag: para
-#: inheritance_mapping.xml:39
+#: inheritance_mapping.xml:63
 #, no-c-format
 msgid "implicit polymorphism"
 msgstr "le polymorphisme implicite"
 
 #. Tag: para
-#: inheritance_mapping.xml:45
+#: inheritance_mapping.xml:69
 #, no-c-format
 msgid ""
 "It is possible to use different mapping strategies for different branches of "
@@ -94,7 +94,7 @@ msgstr ""
 "literal> (voir dessous)."
 
 #. Tag: para
-#: inheritance_mapping.xml:59
+#: inheritance_mapping.xml:83
 #, no-c-format
 msgid ""
 "It is possible to define <literal>subclass</literal>, <literal>union-"
@@ -121,7 +121,7 @@ msgstr ""
 "impose encore de définir les classes mères avant les classes filles."
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:70
+#: inheritance_mapping.xml:94
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -134,13 +134,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: inheritance_mapping.xml:74
+#: inheritance_mapping.xml:98
 #, no-c-format
 msgid "Table per class hierarchy"
 msgstr "Une table par hiérarchie de classe"
 
 #. Tag: para
-#: inheritance_mapping.xml:76
+#: inheritance_mapping.xml:100
 #, no-c-format
 msgid ""
 "Suppose we have an interface <literal>Payment</literal>, with implementors "
@@ -154,7 +154,7 @@ msgstr ""
 "hiérarchie serait :"
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:83
+#: inheritance_mapping.xml:107
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
@@ -178,7 +178,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:85
+#: inheritance_mapping.xml:109
 #, no-c-format
 msgid ""
 "Exactly one table is required. There is one big limitation of this mapping "
@@ -191,19 +191,19 @@ msgstr ""
 "literal>."
 
 #. Tag: title
-#: inheritance_mapping.xml:94
+#: inheritance_mapping.xml:118
 #, no-c-format
 msgid "Table per subclass"
 msgstr "Une table par classe fille"
 
 #. Tag: para
-#: inheritance_mapping.xml:96
+#: inheritance_mapping.xml:120
 #, no-c-format
 msgid "A table per subclass mapping would look like:"
 msgstr "La stratégie une table par classe fille serait :"
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:100
+#: inheritance_mapping.xml:124
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
@@ -229,7 +229,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:102
+#: inheritance_mapping.xml:126
 #, no-c-format
 msgid ""
 "Four tables are required. The three subclass tables have primary key "
@@ -241,13 +241,13 @@ msgstr ""
 "association un-vers-un)."
 
 #. Tag: title
-#: inheritance_mapping.xml:111
+#: inheritance_mapping.xml:135
 #, no-c-format
 msgid "Table per subclass, using a discriminator"
 msgstr "Une table par classe fille, en utilisant un discriminant"
 
 #. Tag: para
-#: inheritance_mapping.xml:113
+#: inheritance_mapping.xml:137
 #, no-c-format
 msgid ""
 "Note that Hibernate's implementation of table per subclass requires no "
@@ -271,7 +271,7 @@ msgstr ""
 "<literal>&lt;join&gt;</literal>, comme suit :"
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:125
+#: inheritance_mapping.xml:149
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
@@ -304,7 +304,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:127
+#: inheritance_mapping.xml:151
 #, no-c-format
 msgid ""
 "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate "
@@ -317,14 +317,14 @@ msgstr ""
 "sur la classe mère."
 
 #. Tag: title
-#: inheritance_mapping.xml:136
+#: inheritance_mapping.xml:160
 #, no-c-format
 msgid "Mixing table per class hierarchy with table per subclass"
 msgstr ""
 "Mélange d'une table par hiérarchie de classe avec une table par classe fille"
 
 #. Tag: para
-#: inheritance_mapping.xml:138
+#: inheritance_mapping.xml:162
 #, no-c-format
 msgid ""
 "You may even mix the table per hierarchy and table per subclass strategies "
@@ -334,7 +334,7 @@ msgstr ""
 "classe et d'une table par classe fille en utilisant cette approche :"
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:143
+#: inheritance_mapping.xml:167
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
@@ -360,7 +360,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:145
+#: inheritance_mapping.xml:169
 #, no-c-format
 msgid ""
 "For any of these mapping strategies, a polymorphic association to the root "
@@ -372,7 +372,7 @@ msgstr ""
 "<literal>&lt;many-to-one&gt;</literal>."
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:151
+#: inheritance_mapping.xml:175
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment"
@@ -380,13 +380,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: inheritance_mapping.xml:156
+#: inheritance_mapping.xml:180
 #, no-c-format
 msgid "Table per concrete class"
 msgstr "Une table par classe concrète"
 
 #. Tag: para
-#: inheritance_mapping.xml:158
+#: inheritance_mapping.xml:182
 #, no-c-format
 msgid ""
 "There are two ways we could go about mapping the table per concrete class "
@@ -397,7 +397,7 @@ msgstr ""
 "literal>."
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:163
+#: inheritance_mapping.xml:187
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\">\n"
@@ -420,7 +420,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:165
+#: inheritance_mapping.xml:189
 #, no-c-format
 msgid ""
 "Three tables are involved for the subclasses. Each table defines columns for "
@@ -431,7 +431,7 @@ msgstr ""
 "propriétés héritéés."
 
 #. Tag: para
-#: inheritance_mapping.xml:170
+#: inheritance_mapping.xml:194
 #, no-c-format
 msgid ""
 "The limitation of this approach is that if a property is mapped on the "
@@ -449,7 +449,7 @@ msgstr ""
 "\" d'une hiérarchie."
 
 #. Tag: para
-#: inheritance_mapping.xml:179
+#: inheritance_mapping.xml:203
 #, no-c-format
 msgid ""
 "If your superclass is abstract, map it with <literal>abstract=\"true\"</"
@@ -463,19 +463,19 @@ msgstr ""
 "dessus) est requise pour contenir des instances de la classe mère."
 
 #. Tag: title
-#: inheritance_mapping.xml:189
+#: inheritance_mapping.xml:213
 #, no-c-format
 msgid "Table per concrete class, using implicit polymorphism"
 msgstr "Une table par classe concrète, en utilisant le polymorphisme implicite"
 
 #. Tag: para
-#: inheritance_mapping.xml:191
+#: inheritance_mapping.xml:215
 #, no-c-format
 msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr "Une approche alternative est l'emploi du polymorphisme implicite :"
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:195
+#: inheritance_mapping.xml:219
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
@@ -504,7 +504,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:197
+#: inheritance_mapping.xml:221
 #, no-c-format
 msgid ""
 "Notice that nowhere do we mention the <literal>Payment</literal> interface "
@@ -523,7 +523,7 @@ msgstr ""
 "literal> dans le mapping)."
 
 #. Tag: para
-#: inheritance_mapping.xml:207
+#: inheritance_mapping.xml:231
 #, no-c-format
 msgid ""
 "The disadvantage of this approach is that Hibernate does not generate SQL "
@@ -534,7 +534,7 @@ msgstr ""
 "polymorphiques."
 
 #. Tag: para
-#: inheritance_mapping.xml:212
+#: inheritance_mapping.xml:236
 #, no-c-format
 msgid ""
 "For this mapping strategy, a polymorphic association to <literal>Payment</"
@@ -545,7 +545,7 @@ msgstr ""
 "<literal>&lt;any&gt;</literal>."
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:217
+#: inheritance_mapping.xml:241
 #, no-c-format
 msgid ""
 "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
@@ -558,13 +558,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: inheritance_mapping.xml:222
+#: inheritance_mapping.xml:246
 #, no-c-format
 msgid "Mixing implicit polymorphism with other inheritance mappings"
 msgstr "Mélange du polymorphisme implicite avec d'autres mappings d'héritage"
 
 #. Tag: para
-#: inheritance_mapping.xml:224
+#: inheritance_mapping.xml:248
 #, no-c-format
 msgid ""
 "There is one further thing to notice about this mapping. Since the "
@@ -582,7 +582,7 @@ msgstr ""
 "polymorphiques pour l'interface <literal>Payment</literal>)."
 
 #. Tag: programlisting
-#: inheritance_mapping.xml:232
+#: inheritance_mapping.xml:256
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
@@ -615,7 +615,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: inheritance_mapping.xml:234
+#: inheritance_mapping.xml:258
 #, no-c-format
 msgid ""
 "Once again, we don't mention <literal>Payment</literal> explicitly. If we "
@@ -636,13 +636,13 @@ msgstr ""
 "<literal>NonelectronicTransaction</literal>."
 
 #. Tag: title
-#: inheritance_mapping.xml:249
+#: inheritance_mapping.xml:273
 #, no-c-format
 msgid "Limitations"
 msgstr "Limitations"
 
 #. Tag: para
-#: inheritance_mapping.xml:251
+#: inheritance_mapping.xml:275
 #, no-c-format
 msgid ""
 "There are certain limitations to the \"implicit polymorphism\" approach to "
@@ -656,7 +656,7 @@ msgstr ""
 "subclass&gt;</literal>."
 
 #. Tag: para
-#: inheritance_mapping.xml:258
+#: inheritance_mapping.xml:282
 #, no-c-format
 msgid ""
 "The following table shows the limitations of table per concrete-class "
@@ -666,128 +666,128 @@ msgstr ""
 "concrète, et du polymorphisme implicite, dans Hibernate."
 
 #. Tag: title
-#: inheritance_mapping.xml:264
+#: inheritance_mapping.xml:288
 #, no-c-format
 msgid "Features of inheritance mappings"
 msgstr "Caractéristiques du mapping d'héritage"
 
 #. Tag: entry
-#: inheritance_mapping.xml:276
+#: inheritance_mapping.xml:300
 #, no-c-format
 msgid "Inheritance strategy"
 msgstr "Stratégie d'héritage"
 
 #. Tag: entry
-#: inheritance_mapping.xml:277
+#: inheritance_mapping.xml:301
 #, no-c-format
 msgid "Polymorphic many-to-one"
 msgstr "many-to-one polymorphique"
 
 #. Tag: entry
-#: inheritance_mapping.xml:278
+#: inheritance_mapping.xml:302
 #, no-c-format
 msgid "Polymorphic one-to-one"
 msgstr "one-to-one polymorphique"
 
 #. Tag: entry
-#: inheritance_mapping.xml:279
+#: inheritance_mapping.xml:303
 #, no-c-format
 msgid "Polymorphic one-to-many"
 msgstr "one-to-many polymorphique"
 
 #. Tag: entry
-#: inheritance_mapping.xml:280
+#: inheritance_mapping.xml:304
 #, no-c-format
 msgid "Polymorphic many-to-many"
 msgstr "many-to-many polymorphique"
 
 #. Tag: entry
-#: inheritance_mapping.xml:281
+#: inheritance_mapping.xml:305
 #, no-c-format
 msgid "Polymorphic <literal>load()/get()</literal>"
 msgstr ""
 
 #. Tag: entry
-#: inheritance_mapping.xml:282
+#: inheritance_mapping.xml:306
 #, no-c-format
 msgid "Polymorphic queries"
 msgstr "Requêtes polymorphiques"
 
 #. Tag: entry
-#: inheritance_mapping.xml:283
+#: inheritance_mapping.xml:307
 #, no-c-format
 msgid "Polymorphic joins"
 msgstr "Jointures polymorphiques"
 
 #. Tag: entry
-#: inheritance_mapping.xml:284
+#: inheritance_mapping.xml:308
 #, no-c-format
 msgid "Outer join fetching"
 msgstr "Récupération par jointure externe"
 
 #. Tag: entry
-#: inheritance_mapping.xml:289
+#: inheritance_mapping.xml:313
 #, no-c-format
 msgid "table per class-hierarchy"
 msgstr "une table par hiérarchie de classe"
 
 #. Tag: literal
-#: inheritance_mapping.xml:290 inheritance_mapping.xml:301
-#: inheritance_mapping.xml:312
+#: inheritance_mapping.xml:314 inheritance_mapping.xml:325
+#: inheritance_mapping.xml:336
 #, no-c-format
 msgid "&lt;many-to-one&gt;"
 msgstr "&lt;many-to-one&gt;"
 
 #. Tag: literal
-#: inheritance_mapping.xml:291 inheritance_mapping.xml:302
-#: inheritance_mapping.xml:313
+#: inheritance_mapping.xml:315 inheritance_mapping.xml:326
+#: inheritance_mapping.xml:337
 #, no-c-format
 msgid "&lt;one-to-one&gt;"
 msgstr "&lt;one-to-one&gt;"
 
 #. Tag: literal
-#: inheritance_mapping.xml:292 inheritance_mapping.xml:303
+#: inheritance_mapping.xml:316 inheritance_mapping.xml:327
 #, no-c-format
 msgid "&lt;one-to-many&gt;"
 msgstr "&lt;one-to-many&gt;"
 
 #. Tag: literal
-#: inheritance_mapping.xml:293 inheritance_mapping.xml:304
-#: inheritance_mapping.xml:315
+#: inheritance_mapping.xml:317 inheritance_mapping.xml:328
+#: inheritance_mapping.xml:339
 #, no-c-format
 msgid "&lt;many-to-many&gt;"
 msgstr "&lt;many-to-many&gt;"
 
 #. Tag: literal
-#: inheritance_mapping.xml:294 inheritance_mapping.xml:305
-#: inheritance_mapping.xml:316
+#: inheritance_mapping.xml:318 inheritance_mapping.xml:329
+#: inheritance_mapping.xml:340
 #, no-c-format
 msgid "s.get(Payment.class, id)"
 msgstr "s.get(Payment.class, id)"
 
 #. Tag: literal
-#: inheritance_mapping.xml:295 inheritance_mapping.xml:306
-#: inheritance_mapping.xml:317 inheritance_mapping.xml:328
+#: inheritance_mapping.xml:319 inheritance_mapping.xml:330
+#: inheritance_mapping.xml:341 inheritance_mapping.xml:352
 #, no-c-format
 msgid "from Payment p"
 msgstr "from Payment p"
 
 #. Tag: literal
-#: inheritance_mapping.xml:296 inheritance_mapping.xml:307
-#: inheritance_mapping.xml:318
+#: inheritance_mapping.xml:320 inheritance_mapping.xml:331
+#: inheritance_mapping.xml:342
 #, no-c-format
 msgid "from Order o join o.payment p"
 msgstr "from Order o join o.payment p"
 
 #. Tag: emphasis
-#: inheritance_mapping.xml:297 inheritance_mapping.xml:308
-#: inheritance_mapping.xml:319
+#: inheritance_mapping.xml:321 inheritance_mapping.xml:332
+#: inheritance_mapping.xml:343
 #, no-c-format
 msgid "supported"
 msgstr "supportée"
 
 #. Tag: entry
-#: inheritance_mapping.xml:300
+#: inheritance_mapping.xml:324
 #, fuzzy, no-c-format
 msgid "<entry>table per subclass</entry>"
 msgstr ""
@@ -797,13 +797,13 @@ msgstr ""
 "une table par classe fille"
 
 #. Tag: entry
-#: inheritance_mapping.xml:311
+#: inheritance_mapping.xml:335
 #, no-c-format
 msgid "table per concrete-class (union-subclass)"
 msgstr "une table par classe concrète (union-subclass)"
 
 #. Tag: entry
-#: inheritance_mapping.xml:314
+#: inheritance_mapping.xml:338
 #, no-c-format
 msgid ""
 "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
@@ -811,20 +811,20 @@ msgid ""
 msgstr ""
 
 #. Tag: entry
-#: inheritance_mapping.xml:322
+#: inheritance_mapping.xml:346
 #, no-c-format
 msgid "table per concrete class (implicit polymorphism)"
 msgstr "une table par classe concrète (polymorphisme implicite)"
 
 #. Tag: literal
-#: inheritance_mapping.xml:323
+#: inheritance_mapping.xml:347
 #, no-c-format
 msgid "&lt;any&gt;"
 msgstr "&lt;any&gt;"
 
 #. Tag: emphasis
-#: inheritance_mapping.xml:324 inheritance_mapping.xml:325
-#: inheritance_mapping.xml:329 inheritance_mapping.xml:330
+#: inheritance_mapping.xml:348 inheritance_mapping.xml:349
+#: inheritance_mapping.xml:353 inheritance_mapping.xml:354
 #, fuzzy, no-c-format
 msgid "not supported"
 msgstr ""
@@ -838,13 +838,13 @@ msgstr ""
 "non supportée"
 
 #. Tag: literal
-#: inheritance_mapping.xml:326
+#: inheritance_mapping.xml:350
 #, no-c-format
 msgid "&lt;many-to-any&gt;"
 msgstr "&lt;many-to-any&gt;"
 
 #. Tag: literal
-#: inheritance_mapping.xml:327
+#: inheritance_mapping.xml:351
 #, no-c-format
 msgid ""
 "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"

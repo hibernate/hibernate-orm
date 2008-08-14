@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,25 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: query_criteria.xml:5
+#: query_criteria.xml:29
 #, no-c-format
 msgid "Criteria Queries"
 msgstr "条件查询(Criteria Queries)"
 
 #. Tag: para
-#: query_criteria.xml:7
+#: query_criteria.xml:31
 #, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
 msgstr "具有一个直观的、可扩展的条件查询API是Hibernate的特色。"
 
 #. Tag: title
-#: query_criteria.xml:12
+#: query_criteria.xml:36
 #, no-c-format
 msgid "Creating a <literal>Criteria</literal> instance"
 msgstr "创建一个<literal>Criteria</literal> 实例"
 
 #. Tag: para
-#: query_criteria.xml:14
+#: query_criteria.xml:38
 #, no-c-format
 msgid ""
 "The interface <literal>org.hibernate.Criteria</literal> represents a query "
@@ -40,7 +40,7 @@ msgstr ""
 "<literal>Session</literal>是 <literal>Criteria</literal>实例的工厂。"
 
 #. Tag: programlisting
-#: query_criteria.xml:20
+#: query_criteria.xml:44
 #, no-c-format
 msgid ""
 "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
@@ -49,13 +49,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:25
+#: query_criteria.xml:49
 #, no-c-format
 msgid "Narrowing the result set"
 msgstr "限制结果集内容"
 
 #. Tag: para
-#: query_criteria.xml:27
+#: query_criteria.xml:51
 #, no-c-format
 msgid ""
 "An individual query criterion is an instance of the interface <literal>org."
@@ -68,7 +68,7 @@ msgstr ""
 "获得某些内置<literal>Criterion</literal>类型的工厂方法。"
 
 #. Tag: programlisting
-#: query_criteria.xml:35
+#: query_criteria.xml:59
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -78,13 +78,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:37
+#: query_criteria.xml:61
 #, no-c-format
 msgid "Restrictions may be grouped logically."
 msgstr "约束可以按逻辑分组。"
 
 #. Tag: programlisting
-#: query_criteria.xml:41
+#: query_criteria.xml:65
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -97,7 +97,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:43
+#: query_criteria.xml:67
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -113,7 +113,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:45
+#: query_criteria.xml:69
 #, no-c-format
 msgid ""
 "There are quite a range of built-in criterion types (<literal>Restrictions</"
@@ -124,7 +124,7 @@ msgstr ""
 "类), 但是尤其有用的是可以允许你直接使用SQL。"
 
 #. Tag: programlisting
-#: query_criteria.xml:50
+#: query_criteria.xml:74
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -134,7 +134,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:52
+#: query_criteria.xml:76
 #, no-c-format
 msgid ""
 "The <literal>{alias}</literal> placeholder with be replaced by the row alias "
@@ -142,7 +142,7 @@ msgid ""
 msgstr "<literal>{alias}</literal>占位符应当被替换为被查询实体的列别名。"
 
 #. Tag: para
-#: query_criteria.xml:57
+#: query_criteria.xml:81
 #, no-c-format
 msgid ""
 "An alternative approach to obtaining a criterion is to get it from a "
@@ -153,7 +153,7 @@ msgstr ""
 "<literal>Property.forName()</literal> 创建一个<literal>Property</literal>。"
 
 #. Tag: programlisting
-#: query_criteria.xml:63
+#: query_criteria.xml:87
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -171,13 +171,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:68
+#: query_criteria.xml:92
 #, no-c-format
 msgid "Ordering the results"
 msgstr "结果集排序"
 
 #. Tag: para
-#: query_criteria.xml:70
+#: query_criteria.xml:94
 #, no-c-format
 msgid ""
 "You may order the results using <literal>org.hibernate.criterion.Order</"
@@ -186,7 +186,7 @@ msgstr ""
 "你可以使用<literal>org.hibernate.criterion.Order</literal>来为查询结果排序。"
 
 #. Tag: programlisting
-#: query_criteria.xml:74
+#: query_criteria.xml:98
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -198,7 +198,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:76
+#: query_criteria.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -210,13 +210,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:81
+#: query_criteria.xml:105
 #, no-c-format
 msgid "Associations"
 msgstr "关联"
 
 #. Tag: para
-#: query_criteria.xml:83
+#: query_criteria.xml:107
 #, no-c-format
 msgid ""
 "You may easily specify constraints upon related entities by navigating "
@@ -226,7 +226,7 @@ msgstr ""
 "立 约束。"
 
 #. Tag: programlisting
-#: query_criteria.xml:88
+#: query_criteria.xml:112
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -237,7 +237,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:90
+#: query_criteria.xml:114
 #, no-c-format
 msgid ""
 "note that the second <literal>createCriteria()</literal> returns a new "
@@ -249,13 +249,13 @@ msgstr ""
 "的元素。"
 
 #. Tag: para
-#: query_criteria.xml:96
+#: query_criteria.xml:120
 #, no-c-format
 msgid "The following, alternate form is useful in certain circumstances."
 msgstr "接下来，替换形态在某些情况下也是很有用的。"
 
 #. Tag: programlisting
-#: query_criteria.xml:100
+#: query_criteria.xml:124
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -266,7 +266,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:102
+#: query_criteria.xml:126
 #, no-c-format
 msgid ""
 "(<literal>createAlias()</literal> does not create a new instance of "
@@ -276,7 +276,7 @@ msgstr ""
 "实例。)"
 
 #. Tag: para
-#: query_criteria.xml:107
+#: query_criteria.xml:131
 #, no-c-format
 msgid ""
 "Note that the kittens collections held by the <literal>Cat</literal> "
@@ -289,7 +289,7 @@ msgstr ""
 "你必须使用<literal>ResultTransformer</literal>。"
 
 #. Tag: programlisting
-#: query_criteria.xml:114
+#: query_criteria.xml:138
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -306,13 +306,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:119
+#: query_criteria.xml:143
 #, no-c-format
 msgid "Dynamic association fetching"
 msgstr "动态关联抓取"
 
 #. Tag: para
-#: query_criteria.xml:121
+#: query_criteria.xml:145
 #, no-c-format
 msgid ""
 "You may specify association fetching semantics at runtime using "
@@ -321,7 +321,7 @@ msgstr ""
 "你可以使用<literal>setFetchMode()</literal>在运行时定义动态关联抓取的语义。"
 
 #. Tag: programlisting
-#: query_criteria.xml:126
+#: query_criteria.xml:150
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -332,7 +332,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:128
+#: query_criteria.xml:152
 #, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
@@ -343,13 +343,13 @@ msgstr ""
 "literal>。 查看<xref linkend=\"performance-fetching\"/>可以获得更多信息。"
 
 #. Tag: title
-#: query_criteria.xml:136
+#: query_criteria.xml:160
 #, no-c-format
 msgid "Example queries"
 msgstr "查询示例"
 
 #. Tag: para
-#: query_criteria.xml:138
+#: query_criteria.xml:162
 #, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Example</literal> allows you to "
@@ -359,7 +359,7 @@ msgstr ""
 "建一个条件查询。"
 
 #. Tag: programlisting
-#: query_criteria.xml:143
+#: query_criteria.xml:167
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new Cat();\n"
@@ -371,7 +371,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:145
+#: query_criteria.xml:169
 #, no-c-format
 msgid ""
 "Version properties, identifiers and associations are ignored. By default, "
@@ -379,13 +379,13 @@ msgid ""
 msgstr "版本属性、标识符和关联被忽略。默认情况下值为null的属性将被排除。"
 
 #. Tag: para
-#: query_criteria.xml:150
+#: query_criteria.xml:174
 #, no-c-format
 msgid "You can adjust how the <literal>Example</literal> is applied."
 msgstr "你可以自行调整<literal>Example</literal>使之更实用。"
 
 #. Tag: programlisting
-#: query_criteria.xml:154
+#: query_criteria.xml:178
 #, no-c-format
 msgid ""
 "<![CDATA[Example example = Example.create(cat)\n"
@@ -400,13 +400,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:156
+#: query_criteria.xml:180
 #, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
 msgstr "你甚至可以使用examples在关联对象上放置条件。"
 
 #. Tag: programlisting
-#: query_criteria.xml:160
+#: query_criteria.xml:184
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -417,13 +417,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:165
+#: query_criteria.xml:189
 #, no-c-format
 msgid "Projections, aggregation and grouping"
 msgstr "投影(Projections)、聚合（aggregation）和分组（grouping）"
 
 #. Tag: para
-#: query_criteria.xml:166
+#: query_criteria.xml:190
 #, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Projections</literal> is a "
@@ -435,7 +435,7 @@ msgstr ""
 "()</literal>应用投影到一个查询。"
 
 #. Tag: programlisting
-#: query_criteria.xml:172
+#: query_criteria.xml:196
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -445,7 +445,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:174
+#: query_criteria.xml:198
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -459,7 +459,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:176
+#: query_criteria.xml:200
 #, no-c-format
 msgid ""
 "There is no explicit \"group by\" necessary in a criteria query. Certain "
@@ -471,7 +471,7 @@ msgstr ""
 "子句中。"
 
 #. Tag: para
-#: query_criteria.xml:182
+#: query_criteria.xml:206
 #, no-c-format
 msgid ""
 "An alias may optionally be assigned to a projection, so that the projected "
@@ -482,7 +482,7 @@ msgstr ""
 "是两种不同的实现方式："
 
 #. Tag: programlisting
-#: query_criteria.xml:188
+#: query_criteria.xml:212
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -493,7 +493,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:190
+#: query_criteria.xml:214
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -503,7 +503,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:192
+#: query_criteria.xml:216
 #, no-c-format
 msgid ""
 "The <literal>alias()</literal> and <literal>as()</literal> methods simply "
@@ -516,7 +516,7 @@ msgstr ""
 "个投影到一个投影列表中时 你可以为它指定一个别名："
 
 #. Tag: programlisting
-#: query_criteria.xml:199
+#: query_criteria.xml:223
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -532,7 +532,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:201
+#: query_criteria.xml:225
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
@@ -547,7 +547,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:203
+#: query_criteria.xml:227
 #, no-c-format
 msgid ""
 "You can also use <literal>Property.forName()</literal> to express "
@@ -555,7 +555,7 @@ msgid ""
 msgstr "你也可以使用<literal>Property.forName()</literal>来表示投影："
 
 #. Tag: programlisting
-#: query_criteria.xml:207
+#: query_criteria.xml:231
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -565,7 +565,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:209
+#: query_criteria.xml:233
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -581,13 +581,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:214
+#: query_criteria.xml:238
 #, no-c-format
 msgid "Detached queries and subqueries"
 msgstr "离线(detached)查询和子查询"
 
 #. Tag: para
-#: query_criteria.xml:215
+#: query_criteria.xml:239
 #, no-c-format
 msgid ""
 "The <literal>DetachedCriteria</literal> class lets you create a query "
@@ -598,7 +598,7 @@ msgstr ""
 "并且可以使用任意的 <literal>Session</literal>来执行它。"
 
 #. Tag: programlisting
-#: query_criteria.xml:220
+#: query_criteria.xml:244
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
@@ -613,7 +613,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:222
+#: query_criteria.xml:246
 #, no-c-format
 msgid ""
 "A <literal>DetachedCriteria</literal> may also be used to express a "
@@ -624,7 +624,7 @@ msgstr ""
 "以通过 <literal>Subqueries</literal>或者<literal>Property</literal>获得。"
 
 #. Tag: programlisting
-#: query_criteria.xml:228
+#: query_criteria.xml:252
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
@@ -635,7 +635,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:230
+#: query_criteria.xml:254
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
@@ -646,13 +646,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:232
+#: query_criteria.xml:256
 #, no-c-format
 msgid "Even correlated subqueries are possible:"
 msgstr "甚至相互关联的子查询也是有可能的："
 
 #. Tag: programlisting
-#: query_criteria.xml:236
+#: query_criteria.xml:260
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
@@ -665,13 +665,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:245
+#: query_criteria.xml:269
 #, no-c-format
 msgid "Queries by natural identifier"
 msgstr "根据自然标识查询(Queries by natural identifier)"
 
 #. Tag: para
-#: query_criteria.xml:247
+#: query_criteria.xml:271
 #, no-c-format
 msgid ""
 "For most queries, including criteria queries, the query cache is not very "
@@ -687,7 +687,7 @@ msgstr ""
 "了特别规约。"
 
 #. Tag: para
-#: query_criteria.xml:255
+#: query_criteria.xml:279
 #, no-c-format
 msgid ""
 "First, you should map the natural key of your entity using <literal>&lt;"
@@ -697,7 +697,7 @@ msgstr ""
 "键，然后打开第二级缓存。"
 
 #. Tag: programlisting
-#: query_criteria.xml:260
+#: query_criteria.xml:284
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"User\">\n"
@@ -714,7 +714,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:262
+#: query_criteria.xml:286
 #, no-c-format
 msgid ""
 "Note that this functionality is not intended for use with entities with "
@@ -722,13 +722,13 @@ msgid ""
 msgstr "注意,此功能对具有<emphasis>mutable</emphasis>自然键的entity并不适用。"
 
 #. Tag: para
-#: query_criteria.xml:267
+#: query_criteria.xml:291
 #, no-c-format
 msgid "Next, enable the Hibernate query cache."
 msgstr "然后，打开Hibernate 查询缓存。"
 
 #. Tag: para
-#: query_criteria.xml:271
+#: query_criteria.xml:295
 #, no-c-format
 msgid ""
 "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
@@ -738,7 +738,7 @@ msgstr ""
 "存算法。"
 
 #. Tag: programlisting
-#: query_criteria.xml:276
+#: query_criteria.xml:300
 #, no-c-format
 msgid ""
 "<![CDATA[session.createCriteria(User.class)\n"

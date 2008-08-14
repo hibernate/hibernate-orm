@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: best_practices.xml:5
+#: best_practices.xml:29
 #, no-c-format
 msgid "Best Practices"
 msgstr "最佳实践(Best Practices)"
 
 #. Tag: term
-#: best_practices.xml:9
+#: best_practices.xml:33
 #, no-c-format
 msgid ""
 "Write fine-grained classes and map them using <literal>&lt;component&gt;</"
@@ -26,7 +26,7 @@ msgstr ""
 "设计细颗粒度的持久类并且使用<literal>&lt;component&gt;</literal>来实现映射。"
 
 #. Tag: para
-#: best_practices.xml:11
+#: best_practices.xml:35
 #, no-c-format
 msgid ""
 "Use an <literal>Address</literal> class to encapsulate <literal>street</"
@@ -39,13 +39,13 @@ msgstr ""
 "literal>. 这将有利于代码重用和简化代码重构(refactoring)的工作。"
 
 #. Tag: term
-#: best_practices.xml:19
+#: best_practices.xml:43
 #, no-c-format
 msgid "Declare identifier properties on persistent classes."
 msgstr "对持久类声明标识符属性( identifier properties)。"
 
 #. Tag: para
-#: best_practices.xml:21
+#: best_practices.xml:45
 #, no-c-format
 msgid ""
 "Hibernate makes identifier properties optional. There are all sorts of "
@@ -56,13 +56,13 @@ msgstr ""
 "建议标识符应该是“人造”的(自动生成，不涉及业务含义)。"
 
 #. Tag: term
-#: best_practices.xml:29
+#: best_practices.xml:53
 #, no-c-format
 msgid "Identify natural keys."
 msgstr "使用自然键(natural keys)标识"
 
 #. Tag: para
-#: best_practices.xml:31
+#: best_practices.xml:55
 #, no-c-format
 msgid ""
 "Identify natural keys for all entities, and map them using <literal>&lt;"
@@ -75,13 +75,13 @@ msgstr ""
 "自然键的属性进行比较。"
 
 #. Tag: term
-#: best_practices.xml:39
+#: best_practices.xml:63
 #, no-c-format
 msgid "Place each class mapping in its own file."
 msgstr "为每个持久类写一个映射文件"
 
 #. Tag: para
-#: best_practices.xml:41
+#: best_practices.xml:65
 #, no-c-format
 msgid ""
 "Don't use a single monolithic mapping document. Map <literal>com.eg.Foo</"
@@ -93,25 +93,25 @@ msgstr ""
 "别有意义。"
 
 #. Tag: term
-#: best_practices.xml:49
+#: best_practices.xml:73
 #, no-c-format
 msgid "Load mappings as resources."
 msgstr "把映射文件作为资源加载"
 
 #. Tag: para
-#: best_practices.xml:51
+#: best_practices.xml:75
 #, no-c-format
 msgid "Deploy the mappings along with the classes they map."
 msgstr "把映射文件和他们的映射类放在一起进行部署。"
 
 #. Tag: term
-#: best_practices.xml:57
+#: best_practices.xml:81
 #, no-c-format
 msgid "Consider externalising query strings."
 msgstr "考虑把查询字符串放在程序外面"
 
 #. Tag: para
-#: best_practices.xml:59
+#: best_practices.xml:83
 #, no-c-format
 msgid ""
 "This is a good practice if your queries call non-ANSI-standard SQL "
@@ -122,13 +122,13 @@ msgstr ""
 "串放在映射文件中可以让程序具有更好的可移植性。"
 
 #. Tag: term
-#: best_practices.xml:67
+#: best_practices.xml:91
 #, no-c-format
 msgid "Use bind variables."
 msgstr "使用绑定变量"
 
 #. Tag: para
-#: best_practices.xml:69
+#: best_practices.xml:93
 #, no-c-format
 msgid ""
 "As in JDBC, always replace non-constant values by \"?\". Never use string "
@@ -139,13 +139,13 @@ msgstr ""
 "串值来构造非常量值！更好的办法是在查询中使用命名参数。"
 
 #. Tag: term
-#: best_practices.xml:77
+#: best_practices.xml:101
 #, no-c-format
 msgid "Don't manage your own JDBC connections."
 msgstr "不要自己来管理JDBC connections"
 
 #. Tag: para
-#: best_practices.xml:79
+#: best_practices.xml:103
 #, no-c-format
 msgid ""
 "Hibernate lets the application manage JDBC connections. This approach should "
@@ -158,13 +158,13 @@ msgstr ""
 "现<literal>org.hibernate.connection.ConnectionProvider</literal>"
 
 #. Tag: term
-#: best_practices.xml:87
+#: best_practices.xml:111
 #, no-c-format
 msgid "Consider using a custom type."
 msgstr "考虑使用用户自定义类型(custom type)"
 
 #. Tag: para
-#: best_practices.xml:89
+#: best_practices.xml:113
 #, no-c-format
 msgid ""
 "Suppose you have a Java type, say from some library, that needs to be "
@@ -179,13 +179,13 @@ msgstr ""
 "互转换。"
 
 #. Tag: term
-#: best_practices.xml:98
+#: best_practices.xml:122
 #, no-c-format
 msgid "Use hand-coded JDBC in bottlenecks."
 msgstr "在性能瓶颈的地方使用硬编码的JDBC"
 
 #. Tag: para
-#: best_practices.xml:100
+#: best_practices.xml:124
 #, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
@@ -210,13 +210,13 @@ msgstr ""
 "connection provider。"
 
 #. Tag: term
-#: best_practices.xml:110
+#: best_practices.xml:134
 #, no-c-format
 msgid "Understand <literal>Session</literal> flushing."
 msgstr "理解<literal>Session</literal>清洗（ flushing）"
 
 #. Tag: para
-#: best_practices.xml:112
+#: best_practices.xml:136
 #, no-c-format
 msgid ""
 "From time to time the Session synchronizes its persistent state with the "
@@ -230,13 +230,13 @@ msgstr ""
 "作，或者更进一步，在一个特定的transaction中改变查询和其它操作的顺序。"
 
 #. Tag: term
-#: best_practices.xml:121
+#: best_practices.xml:145
 #, no-c-format
 msgid "In a three tiered architecture, consider using detached objects."
 msgstr "在三层结构中，考虑使用托管对象（detached object）"
 
 #. Tag: para
-#: best_practices.xml:123
+#: best_practices.xml:147
 #, no-c-format
 msgid ""
 "When using a servlet / session bean architecture, you could pass persistent "
@@ -251,13 +251,13 @@ msgstr ""
 "()</literal>来与数据库同步。"
 
 #. Tag: term
-#: best_practices.xml:132
+#: best_practices.xml:156
 #, no-c-format
 msgid "In a two tiered architecture, consider using long persistence contexts."
 msgstr "在两层结构中，考虑使用长持久上下文(long persistence contexts)."
 
 #. Tag: para
-#: best_practices.xml:134
+#: best_practices.xml:158
 #, no-c-format
 msgid ""
 "Database Transactions have to be as short as possible for best scalability. "
@@ -282,13 +282,13 @@ msgstr ""
 "(Application Transaction)中，否则你的数据可能会过期失效。"
 
 #. Tag: term
-#: best_practices.xml:148
+#: best_practices.xml:172
 #, no-c-format
 msgid "Don't treat exceptions as recoverable."
 msgstr "不要把异常看成可恢复的"
 
 #. Tag: para
-#: best_practices.xml:150
+#: best_practices.xml:174
 #, no-c-format
 msgid ""
 "This is more of a necessary practice than a \"best\" practice. When an "
@@ -306,13 +306,13 @@ msgstr ""
 "存在，应该使用<literal>Session.get()</literal>或者进行一次查询."
 
 #. Tag: term
-#: best_practices.xml:160
+#: best_practices.xml:184
 #, no-c-format
 msgid "Prefer lazy fetching for associations."
 msgstr "对于关联优先考虑lazy fetching"
 
 #. Tag: para
-#: best_practices.xml:162
+#: best_practices.xml:186
 #, no-c-format
 msgid ""
 "Use eager fetching sparingly. Use proxies and lazy collections for most "
@@ -331,7 +331,7 @@ msgstr ""
 "fetch</literal>。"
 
 #. Tag: term
-#: best_practices.xml:172
+#: best_practices.xml:196
 #, no-c-format
 msgid ""
 "Use the <emphasis>open session in view</emphasis> pattern, or a disciplined "
@@ -341,7 +341,7 @@ msgstr ""
 "配期(assembly phase)</emphasis>策略来避免再次抓取数据带来的问题"
 
 #. Tag: para
-#: best_practices.xml:177
+#: best_practices.xml:201
 #, no-c-format
 msgid ""
 "Hibernate frees the developer from writing tedious <emphasis>Data Transfer "
@@ -367,13 +367,13 @@ msgstr ""
 "化数据访问的基本需求。"
 
 #. Tag: term
-#: best_practices.xml:191
+#: best_practices.xml:215
 #, no-c-format
 msgid "Consider abstracting your business logic from Hibernate."
 msgstr "考虑把Hibernate代码从业务逻辑代码中抽象出来"
 
 #. Tag: para
-#: best_practices.xml:193
+#: best_practices.xml:217
 #, no-c-format
 msgid ""
 "Hide (Hibernate) data-access code behind an interface. Combine the "
@@ -390,13 +390,13 @@ msgstr ""
 "的应用程序并不适合。)"
 
 #. Tag: term
-#: best_practices.xml:203
+#: best_practices.xml:227
 #, no-c-format
 msgid "Don't use exotic association mappings."
 msgstr "不要用怪异的连接映射"
 
 #. Tag: para
-#: best_practices.xml:205
+#: best_practices.xml:229
 #, no-c-format
 msgid ""
 "Good usecases for a real many-to-many associations are rare. Most of the "
@@ -412,13 +412,13 @@ msgstr ""
 "是否真的必须这么做。"
 
 #. Tag: term
-#: best_practices.xml:215
+#: best_practices.xml:239
 #, no-c-format
 msgid "Prefer bidirectional associations."
 msgstr "偏爱双向关联"
 
 #. Tag: para
-#: best_practices.xml:217
+#: best_practices.xml:241
 #, no-c-format
 msgid ""
 "Unidirectional associations are more difficult to query. In a large "

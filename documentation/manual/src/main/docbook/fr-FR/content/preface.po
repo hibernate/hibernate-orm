@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: preface.xml:21
+#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "Préface"
 
 #. Tag: para
-#: preface.xml:23
+#: preface.xml:31
 #, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
@@ -35,7 +35,7 @@ msgstr ""
 "des données et sa représentation relationnelle basée sur un schéma SQL."
 
 #. Tag: para
-#: preface.xml:31
+#: preface.xml:39
 #, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
@@ -51,7 +51,7 @@ msgstr ""
 "des données via SQL et JDBC."
 
 #. Tag: para
-#: preface.xml:38
+#: preface.xml:46
 #, no-c-format
 msgid ""
 "Hibernates goal is to relieve the developer from 95 percent of common data "
@@ -75,7 +75,7 @@ msgstr ""
 "représentation tabulaire à une représentation sous forme de graphe d'objets."
 
 #. Tag: para
-#: preface.xml:48
+#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
@@ -85,7 +85,7 @@ msgstr ""
 "même en Java, suivez ces quelques étapes :"
 
 #. Tag: para
-#: preface.xml:55
+#: preface.xml:63
 #, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
@@ -96,7 +96,7 @@ msgstr ""
 "d'instructions étape par étape."
 
 #. Tag: para
-#: preface.xml:63
+#: preface.xml:71
 #, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\"/> to understand the environments where "
@@ -106,7 +106,7 @@ msgstr ""
 "dans lesquels Hibernate peut être utilisé."
 
 #. Tag: para
-#: preface.xml:69
+#: preface.xml:77
 #, no-c-format
 msgid ""
 "Have a look at the <literal>eg/</literal> directory in the Hibernate "
@@ -125,7 +125,7 @@ msgstr ""
 "Windows tapez <literal>build eg</literal>."
 
 #. Tag: para
-#: preface.xml:80
+#: preface.xml:88
 #, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
@@ -143,7 +143,7 @@ msgstr ""
 "exemple pour Java Persistence with Hibernate."
 
 #. Tag: para
-#: preface.xml:90
+#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
 msgstr ""
@@ -151,7 +151,7 @@ msgstr ""
 "le site web Hibernate."
 
 #. Tag: para
-#: preface.xml:95
+#: preface.xml:103
 #, no-c-format
 msgid ""
 "Third party demos, examples, and tutorials are linked on the Hibernate "
@@ -161,7 +161,7 @@ msgstr ""
 "site web Hibernate."
 
 #. Tag: para
-#: preface.xml:101
+#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
@@ -174,7 +174,7 @@ msgstr ""
 "etc)."
 
 #. Tag: para
-#: preface.xml:109
+#: preface.xml:117
 #, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
@@ -190,7 +190,7 @@ msgstr ""
 "diffusion de développement."
 
 #. Tag: para
-#: preface.xml:117
+#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "

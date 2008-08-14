@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: collection_mapping.xml:5
+#: collection_mapping.xml:29
 #, no-c-format
 msgid "Collection Mapping"
 msgstr "Mapping des collections"
 
 #. Tag: title
-#: collection_mapping.xml:8
+#: collection_mapping.xml:32
 #, no-c-format
 msgid "Persistent collections"
 msgstr "Collections persistantes"
 
 #. Tag: para
-#: collection_mapping.xml:10
+#: collection_mapping.xml:34
 #, no-c-format
 msgid ""
 "Hibernate requires that persistent collection-valued fields be declared as "
@@ -33,7 +33,7 @@ msgstr ""
 "soient déclarés comme des types d'interface, par exemple :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:15
+#: collection_mapping.xml:39
 #, no-c-format
 msgid ""
 "<![CDATA[public class Product {\n"
@@ -48,7 +48,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:17
+#: collection_mapping.xml:41
 #, no-c-format
 msgid ""
 "The actual interface might be <literal>java.util.Set</literal>, "
@@ -67,7 +67,7 @@ msgstr ""
 "literal>.)"
 
 #. Tag: para
-#: collection_mapping.xml:26
+#: collection_mapping.xml:50
 #, no-c-format
 msgid ""
 "Notice how we initialized the instance variable with an instance of "
@@ -87,7 +87,7 @@ msgstr ""
 "à Hibernate de <literal>Set</literal>. Prenez garde aux erreurs :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:36
+#: collection_mapping.xml:60
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new DomesticCat();\n"
@@ -102,7 +102,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:38
+#: collection_mapping.xml:62
 #, no-c-format
 msgid ""
 "The persistent collections injected by Hibernate behave like "
@@ -116,7 +116,7 @@ msgstr ""
 "<literal>ArrayList</literal>, selon le type de l'interface."
 
 #. Tag: para
-#: collection_mapping.xml:45
+#: collection_mapping.xml:69
 #, no-c-format
 msgid ""
 "Collections instances have the usual behavior of value types. They are "
@@ -140,7 +140,7 @@ msgstr ""
 "collection vide."
 
 #. Tag: para
-#: collection_mapping.xml:56
+#: collection_mapping.xml:80
 #, no-c-format
 msgid ""
 "You shouldn't have to worry much about any of this. Use persistent "
@@ -153,13 +153,28 @@ msgstr ""
 "bidirectionnelles (traitée plus loin)."
 
 #. Tag: title
-#: collection_mapping.xml:65
+#: collection_mapping.xml:89
 #, no-c-format
 msgid "Collection mappings"
 msgstr "Mapper une collection"
 
 #. Tag: para
-#: collection_mapping.xml:67
+#: collection_mapping.xml:92
+#, no-c-format
+msgid ""
+"There are quite a range of mappings that can be generated for collections, "
+"covering many common relational models. We suggest you experiment with the "
+"schema generation tool to get a feeling for how various mapping declarations "
+"translate to database tables."
+msgstr ""
+"Il y a pas mal de variétés de mappings qui peuvent être générés pour les "
+"collections, couvrant beaucoup des modèles relationnels communs. Nous vous "
+"suggérons d'expérimenter avec l'outil de génération de schéma pour avoir une "
+"idée de comment traduire les différentes déclarations de mapping vers des "
+"table de la base de données."
+
+#. Tag: para
+#: collection_mapping.xml:99
 #, no-c-format
 msgid ""
 "The Hibernate mapping element used for mapping a collection depends upon the "
@@ -172,7 +187,7 @@ msgstr ""
 "literal>."
 
 #. Tag: programlisting
-#: collection_mapping.xml:73
+#: collection_mapping.xml:105
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Product\">\n"
@@ -185,7 +200,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:75
+#: collection_mapping.xml:107
 #, no-c-format
 msgid ""
 "Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;"
@@ -201,7 +216,7 @@ msgstr ""
 "literal> est représentatif :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:100
+#: collection_mapping.xml:132
 #, no-c-format
 msgid ""
 "<![CDATA[<map\n"
@@ -230,14 +245,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:103
+#: collection_mapping.xml:135
 #, no-c-format
 msgid "<literal>name</literal> the collection property name"
 msgstr ""
 "<literal>name</literal> : le nom de la propriété contenant la collection"
 
 #. Tag: para
-#: collection_mapping.xml:108
+#: collection_mapping.xml:140
 #, no-c-format
 msgid ""
 "<literal>table</literal> (optional - defaults to property name) the name of "
@@ -248,7 +263,7 @@ msgstr ""
 "many)"
 
 #. Tag: para
-#: collection_mapping.xml:114
+#: collection_mapping.xml:146
 #, no-c-format
 msgid ""
 "<literal>schema</literal> (optional) the name of a table schema to override "
@@ -258,7 +273,7 @@ msgstr ""
 "schéma déclaré dans l'élément racine"
 
 #. Tag: para
-#: collection_mapping.xml:120
+#: collection_mapping.xml:152
 #, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may "
@@ -273,7 +288,7 @@ msgstr ""
 "pas la collection (approprié pour de très grosses collections)"
 
 #. Tag: para
-#: collection_mapping.xml:129
+#: collection_mapping.xml:161
 #, no-c-format
 msgid ""
 "<literal>inverse</literal> (optional - defaults to <literal>false</literal>) "
@@ -284,7 +299,7 @@ msgstr ""
 "l'association bidirectionnelle"
 
 #. Tag: para
-#: collection_mapping.xml:135
+#: collection_mapping.xml:167
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional - defaults to <literal>none</literal>) "
@@ -294,7 +309,7 @@ msgstr ""
 "literal>) : active les opérations de cascade vers les entités filles"
 
 #. Tag: para
-#: collection_mapping.xml:141
+#: collection_mapping.xml:173
 #, no-c-format
 msgid ""
 "<literal>sort</literal> (optional) specify a sorted collection with "
@@ -305,7 +320,7 @@ msgstr ""
 "donnée (implémentant Comparator)"
 
 #. Tag: para
-#: collection_mapping.xml:147
+#: collection_mapping.xml:179
 #, no-c-format
 msgid ""
 "<literal>order-by</literal> (optional, JDK1.4 only) specify a table column "
@@ -319,7 +334,7 @@ msgstr ""
 "en option <literal>asc</literal> ou <literal>desc</literal>"
 
 #. Tag: para
-#: collection_mapping.xml:154
+#: collection_mapping.xml:186
 #, no-c-format
 msgid ""
 "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</"
@@ -332,7 +347,7 @@ msgstr ""
 "données disponibles)"
 
 #. Tag: para
-#: collection_mapping.xml:161
+#: collection_mapping.xml:193
 #, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional, defaults to <literal>select</literal>) "
@@ -345,7 +360,7 @@ msgstr ""
 "séquentiels"
 
 #. Tag: para
-#: collection_mapping.xml:168
+#: collection_mapping.xml:200
 #, no-c-format
 msgid ""
 "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) "
@@ -356,7 +371,7 @@ msgstr ""
 "instances de cette collection en initialisation tardive"
 
 #. Tag: para
-#: collection_mapping.xml:174
+#: collection_mapping.xml:206
 #, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -368,7 +383,7 @@ msgstr ""
 "de la propriété"
 
 #. Tag: para
-#: collection_mapping.xml:180
+#: collection_mapping.xml:212
 #, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -382,7 +397,7 @@ msgstr ""
 "un vers plusieurs, il est souvent raisonnable de désactiver ce paramètre)"
 
 #. Tag: para
-#: collection_mapping.xml:188
+#: collection_mapping.xml:220
 #, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
@@ -395,13 +410,13 @@ msgstr ""
 "cas)"
 
 #. Tag: title
-#: collection_mapping.xml:198
+#: collection_mapping.xml:230
 #, no-c-format
 msgid "Collection foreign keys"
 msgstr "Les clefs étrangères d'une collection"
 
 #. Tag: para
-#: collection_mapping.xml:200
+#: collection_mapping.xml:232
 #, no-c-format
 msgid ""
 "Collection instances are distinguished in the database by the foreign key of "
@@ -417,7 +432,7 @@ msgstr ""
 "collection est mappée par l'élément <literal>&lt;key&gt;</literal>."
 
 #. Tag: para
-#: collection_mapping.xml:208
+#: collection_mapping.xml:240
 #, no-c-format
 msgid ""
 "There may be a nullability constraint on the foreign key column. For most "
@@ -431,13 +446,13 @@ msgstr ""
 "avoir besoin de spécifier <literal>not-null=\"true\"</literal>."
 
 #. Tag: programlisting
-#: collection_mapping.xml:215
+#: collection_mapping.xml:247
 #, no-c-format
 msgid "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:217
+#: collection_mapping.xml:249
 #, no-c-format
 msgid ""
 "The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
@@ -446,13 +461,13 @@ msgstr ""
 "literal>."
 
 #. Tag: programlisting
-#: collection_mapping.xml:221
+#: collection_mapping.xml:253
 #, no-c-format
 msgid "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:223
+#: collection_mapping.xml:255
 #, no-c-format
 msgid ""
 "See the previous chapter for a full definition of the <literal>&lt;key&gt;</"
@@ -462,13 +477,13 @@ msgstr ""
 "<literal>&lt;key&gt;</literal>."
 
 #. Tag: title
-#: collection_mapping.xml:231
+#: collection_mapping.xml:263
 #, no-c-format
 msgid "Collection elements"
 msgstr "Les éléments d'une collection"
 
 #. Tag: para
-#: collection_mapping.xml:233
+#: collection_mapping.xml:265
 #, no-c-format
 msgid ""
 "Collections may contain almost any other Hibernate type, including all basic "
@@ -489,7 +504,7 @@ msgstr ""
 "considéré être l'état retenu par la collection."
 
 #. Tag: para
-#: collection_mapping.xml:242
+#: collection_mapping.xml:274
 #, no-c-format
 msgid ""
 "The contained type is referred to as the <emphasis>collection element type</"
@@ -508,13 +523,13 @@ msgstr ""
 "suivants sont utilisés pour mapper des associations d'entité."
 
 #. Tag: title
-#: collection_mapping.xml:254
+#: collection_mapping.xml:286
 #, no-c-format
 msgid "Indexed collections"
 msgstr "Collections indexées"
 
 #. Tag: para
-#: collection_mapping.xml:256
+#: collection_mapping.xml:288
 #, no-c-format
 msgid ""
 "All collection mappings, except those with set and bag semantics, need an "
@@ -544,7 +559,7 @@ msgstr ""
 "de zéro par défaut)."
 
 #. Tag: sect2
-#: collection_mapping.xml:267
+#: collection_mapping.xml:299
 #, no-c-format
 msgid ""
 "<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id="
@@ -590,7 +605,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:348
+#: collection_mapping.xml:380
 #, no-c-format
 msgid ""
 "If your table doesn't have an index column, and you still wish to use "
@@ -605,29 +620,14 @@ msgstr ""
 "sac (NdT : bag) ne garde pas son ordre quand il est récupéré de la base de "
 "données, mais il peut être optionnellement trié ou ordonné."
 
-#. Tag: para
-#: collection_mapping.xml:357
-#, no-c-format
-msgid ""
-"There are quite a range of mappings that can be generated for collections, "
-"covering many common relational models. We suggest you experiment with the "
-"schema generation tool to get a feeling for how various mapping declarations "
-"translate to database tables."
-msgstr ""
-"Il y a pas mal de variétés de mappings qui peuvent être générés pour les "
-"collections, couvrant beaucoup des modèles relationnels communs. Nous vous "
-"suggérons d'expérimenter avec l'outil de génération de schéma pour avoir une "
-"idée de comment traduire les différentes déclarations de mapping vers des "
-"table de la base de données."
-
 #. Tag: title
-#: collection_mapping.xml:364
+#: collection_mapping.xml:390
 #, no-c-format
 msgid "Collections of values and many-to-many associations"
 msgstr "Collections de valeurs et associations plusieurs-vers-plusieurs"
 
 #. Tag: para
-#: collection_mapping.xml:366
+#: collection_mapping.xml:392
 #, no-c-format
 msgid ""
 "Any collection of values or many-to-many association requires a dedicated "
@@ -642,7 +642,7 @@ msgstr ""
 "(s) d'index."
 
 #. Tag: para
-#: collection_mapping.xml:373
+#: collection_mapping.xml:399
 #, no-c-format
 msgid ""
 "For a collection of values, we use the <literal>&lt;element&gt;</literal> "
@@ -652,7 +652,7 @@ msgstr ""
 "element&gt;</literal>."
 
 #. Tag: sect2
-#: collection_mapping.xml:375
+#: collection_mapping.xml:401
 #, no-c-format
 msgid ""
 "<programlistingco> <areaspec> <area id=\"element1b\" coords=\"2 50\"/> <area "
@@ -723,13 +723,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:480
+#: collection_mapping.xml:506
 #, no-c-format
 msgid "Some examples, first, a set of strings:"
 msgstr "Quelques exemples, d'abord, un ensemble de chaînes de caractères :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:484
+#: collection_mapping.xml:510
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
@@ -739,7 +739,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:486
+#: collection_mapping.xml:512
 #, no-c-format
 msgid ""
 "A bag containing integers (with an iteration order determined by the "
@@ -749,7 +749,7 @@ msgstr ""
 "l'attribut <literal>order-by</literal>) :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:491
+#: collection_mapping.xml:517
 #, no-c-format
 msgid ""
 "<![CDATA[<bag name=\"sizes\" \n"
@@ -761,7 +761,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:493
+#: collection_mapping.xml:519
 #, no-c-format
 msgid "An array of entities - in this case, a many to many association:"
 msgstr ""
@@ -769,7 +769,7 @@ msgstr ""
 "plusieurs :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:497
+#: collection_mapping.xml:523
 #, no-c-format
 msgid ""
 "<![CDATA[<array name=\"addresses\" \n"
@@ -782,13 +782,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:499
+#: collection_mapping.xml:525
 #, no-c-format
 msgid "A map from string indices to dates:"
 msgstr "Une map de chaînes de caractères vers des dates :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:503
+#: collection_mapping.xml:529
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"holidays\" \n"
@@ -802,13 +802,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:505
+#: collection_mapping.xml:531
 #, no-c-format
 msgid "A list of components (discussed in the next chapter):"
 msgstr "Une liste de composants (discute dans le prochain chapitre) :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:509
+#: collection_mapping.xml:535
 #, no-c-format
 msgid ""
 "<![CDATA[<list name=\"carComponents\" \n"
@@ -824,13 +824,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:514
+#: collection_mapping.xml:540
 #, no-c-format
 msgid "One-to-many associations"
 msgstr "Association un-vers-plusieurs"
 
 #. Tag: para
-#: collection_mapping.xml:516
+#: collection_mapping.xml:542
 #, no-c-format
 msgid ""
 "A <emphasis>one to many association</emphasis> links the tables of two "
@@ -843,7 +843,7 @@ msgstr ""
 "normales :"
 
 #. Tag: para
-#: collection_mapping.xml:524
+#: collection_mapping.xml:550
 #, no-c-format
 msgid ""
 "An instance of the contained entity class may not belong to more than one "
@@ -853,7 +853,7 @@ msgstr ""
 "d'une instance de la collection"
 
 #. Tag: para
-#: collection_mapping.xml:530
+#: collection_mapping.xml:556
 #, no-c-format
 msgid ""
 "An instance of the contained entity class may not appear at more than one "
@@ -863,7 +863,7 @@ msgstr ""
 "plus d'une valeur d'index de la collection"
 
 #. Tag: para
-#: collection_mapping.xml:537
+#: collection_mapping.xml:563
 #, no-c-format
 msgid ""
 "An association from <literal>Product</literal> to <literal>Part</literal> "
@@ -877,7 +877,7 @@ msgstr ""
 "to-many&gt;</literal> indique que c'est une association un vers plusieurs."
 
 #. Tag: programlisting
-#: collection_mapping.xml:550
+#: collection_mapping.xml:576
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-many \n"
@@ -890,13 +890,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:553
+#: collection_mapping.xml:579
 #, no-c-format
 msgid "<literal>class</literal> (required): The name of the associated class."
 msgstr "<literal>class</literal> (requis) : le nom de la classe associée"
 
 #. Tag: para
-#: collection_mapping.xml:558
+#: collection_mapping.xml:584
 #, no-c-format
 msgid ""
 "<literal>not-found</literal> (optional - defaults to <literal>exception</"
@@ -910,7 +910,7 @@ msgstr ""
 "ligne manquante comme une association nulle"
 
 #. Tag: para
-#: collection_mapping.xml:565
+#: collection_mapping.xml:591
 #, fuzzy, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional): The entity name of the associated "
@@ -924,7 +924,7 @@ msgstr ""
 "associée, comme une alternative à <literal>class</literal>."
 
 #. Tag: para
-#: collection_mapping.xml:573
+#: collection_mapping.xml:599
 #, no-c-format
 msgid ""
 "Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need "
@@ -936,7 +936,7 @@ msgstr ""
 "de la table nulle part."
 
 #. Tag: para
-#: collection_mapping.xml:579
+#: collection_mapping.xml:605
 #, no-c-format
 msgid ""
 "<emphasis>Very important note:</emphasis> If the foreign key column of a "
@@ -956,7 +956,7 @@ msgstr ""
 "associations bidirectionnelles plus tard dans ce chapitre."
 
 #. Tag: para
-#: collection_mapping.xml:588
+#: collection_mapping.xml:614
 #, no-c-format
 msgid ""
 "This example shows a map of <literal>Part</literal> entities by name (where "
@@ -968,7 +968,7 @@ msgstr ""
 "literal>). Notez l'utilisation d'un index basé sur une formule."
 
 #. Tag: programlisting
-#: collection_mapping.xml:594
+#: collection_mapping.xml:620
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"parts\"\n"
@@ -980,19 +980,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:600
+#: collection_mapping.xml:626
 #, no-c-format
 msgid "Advanced collection mappings"
 msgstr "Mappings de collection avancés"
 
 #. Tag: title
-#: collection_mapping.xml:603
+#: collection_mapping.xml:629
 #, no-c-format
 msgid "Sorted collections"
 msgstr "Collections triées"
 
 #. Tag: para
-#: collection_mapping.xml:605
+#: collection_mapping.xml:631
 #, no-c-format
 msgid ""
 "Hibernate supports collections implementing <literal>java.util.SortedMap</"
@@ -1004,7 +1004,7 @@ msgstr ""
 "spécifier un comparateur dans le fichier de mapping :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:610
+#: collection_mapping.xml:636
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"aliases\" \n"
@@ -1022,7 +1022,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:612
+#: collection_mapping.xml:638
 #, no-c-format
 msgid ""
 "Allowed values of the <literal>sort</literal> attribute are "
@@ -1034,7 +1034,7 @@ msgstr ""
 "classe implémentant <literal>java.util.Comparator</literal>."
 
 #. Tag: para
-#: collection_mapping.xml:618
+#: collection_mapping.xml:644
 #, no-c-format
 msgid ""
 "Sorted collections actually behave like <literal>java.util.TreeSet</literal> "
@@ -1044,7 +1044,7 @@ msgstr ""
 "TreeSet</literal> ou <literal>java.util.TreeMap</literal>."
 
 #. Tag: para
-#: collection_mapping.xml:623
+#: collection_mapping.xml:649
 #, no-c-format
 msgid ""
 "If you want the database itself to order the collection elements use the "
@@ -1063,7 +1063,7 @@ msgstr ""
 "pas en mémoire."
 
 #. Tag: programlisting
-#: collection_mapping.xml:632
+#: collection_mapping.xml:658
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower"
@@ -1080,7 +1080,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:634
+#: collection_mapping.xml:660
 #, no-c-format
 msgid ""
 "Note that the value of the <literal>order-by</literal> attribute is an SQL "
@@ -1090,7 +1090,7 @@ msgstr ""
 "SQL, pas un ordre HQL !"
 
 #. Tag: para
-#: collection_mapping.xml:639
+#: collection_mapping.xml:665
 #, no-c-format
 msgid ""
 "Associations may even be sorted by some arbitrary criteria at runtime using "
@@ -1100,7 +1100,7 @@ msgstr ""
 "l'exécution en utilisant un <literal>filter()</literal> de collection."
 
 #. Tag: programlisting
-#: collection_mapping.xml:644
+#: collection_mapping.xml:670
 #, no-c-format
 msgid ""
 "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name"
@@ -1108,13 +1108,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:649
+#: collection_mapping.xml:675
 #, no-c-format
 msgid "Bidirectional associations"
 msgstr "Associations bidirectionnelles"
 
 #. Tag: para
-#: collection_mapping.xml:651
+#: collection_mapping.xml:677
 #, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional association</emphasis> allows navigation from both "
@@ -1126,31 +1126,31 @@ msgstr ""
 "bidirectionnelles sont supportées : <placeholder-1/>"
 
 #. Tag: term
-#: collection_mapping.xml:658
+#: collection_mapping.xml:684
 #, no-c-format
 msgid "one-to-many"
 msgstr "un-vers-plusieurs (NdT : one-to-many)"
 
 #. Tag: para
-#: collection_mapping.xml:660
+#: collection_mapping.xml:686
 #, no-c-format
 msgid "set or bag valued at one end, single-valued at the other"
 msgstr "ensemble ou sac à une extrémité, une seule valeur à l'autre"
 
 #. Tag: term
-#: collection_mapping.xml:666
+#: collection_mapping.xml:692
 #, no-c-format
 msgid "many-to-many"
 msgstr "plusieurs-vers-plusieurs (NdT : many-to-many)"
 
 #. Tag: para
-#: collection_mapping.xml:668
+#: collection_mapping.xml:694
 #, no-c-format
 msgid "set or bag valued at both ends"
 msgstr "ensemble ou sac aux deux extrémités"
 
 #. Tag: para
-#: collection_mapping.xml:677
+#: collection_mapping.xml:703
 #, no-c-format
 msgid ""
 "You may specify a bidirectional many-to-many association simply by mapping "
@@ -1165,7 +1165,7 @@ msgstr ""
 "ne peut pas être une collection indexée)."
 
 #. Tag: para
-#: collection_mapping.xml:684
+#: collection_mapping.xml:710
 #, no-c-format
 msgid ""
 "Here's an example of a bidirectional many-to-many association; each category "
@@ -1176,7 +1176,7 @@ msgstr ""
 "plusieurs catégories :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:689
+#: collection_mapping.xml:715
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Category\">\n"
@@ -1201,7 +1201,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:691
+#: collection_mapping.xml:717
 #, no-c-format
 msgid ""
 "Changes made only to the inverse end of the association are <emphasis>not</"
@@ -1218,7 +1218,7 @@ msgstr ""
 "plusieurs-vers-plusieurs en Java :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:699
+#: collection_mapping.xml:725
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -1233,7 +1233,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:701
+#: collection_mapping.xml:727
 #, no-c-format
 msgid ""
 "The non-inverse side is used to save the in-memory representation to the "
@@ -1243,7 +1243,7 @@ msgstr ""
 "mémoire dans la base de données."
 
 #. Tag: para
-#: collection_mapping.xml:705
+#: collection_mapping.xml:731
 #, no-c-format
 msgid ""
 "You may define a bidirectional one-to-many association by mapping a one-to-"
@@ -1256,7 +1256,7 @@ msgstr ""
 "valuée <literal>inverse=\"true\"</literal>."
 
 #. Tag: programlisting
-#: collection_mapping.xml:711
+#: collection_mapping.xml:737
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1279,7 +1279,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:713
+#: collection_mapping.xml:739
 #, no-c-format
 msgid ""
 "Mapping one end of an association with <literal>inverse=\"true\"</literal> "
@@ -1290,13 +1290,13 @@ msgstr ""
 "orthogonaux !"
 
 #. Tag: title
-#: collection_mapping.xml:721
+#: collection_mapping.xml:747
 #, no-c-format
 msgid "Bidirectional associations with indexed collections"
 msgstr "Associations bidirectionnelles avec des collections indexées"
 
 #. Tag: para
-#: collection_mapping.xml:722
+#: collection_mapping.xml:748
 #, no-c-format
 msgid ""
 "A bidirectional association where one end is represented as a <literal>&lt;"
@@ -1313,7 +1313,7 @@ msgstr ""
 "la collection :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:729
+#: collection_mapping.xml:755
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1340,7 +1340,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:731
+#: collection_mapping.xml:757
 #, no-c-format
 msgid ""
 "But, if there is no such property on the child class, we can't think of the "
@@ -1357,7 +1357,7 @@ msgstr ""
 "pourrions utiliser le mapping suivant :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:738
+#: collection_mapping.xml:764
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1385,7 +1385,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:740
+#: collection_mapping.xml:766
 #, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
@@ -1397,13 +1397,13 @@ msgstr ""
 "cela entraîne-t-il réellement des expressions updates inutiles ?"
 
 #. Tag: title
-#: collection_mapping.xml:748
+#: collection_mapping.xml:774
 #, no-c-format
 msgid "Ternary associations"
 msgstr "Associations ternaires"
 
 #. Tag: para
-#: collection_mapping.xml:750
+#: collection_mapping.xml:776
 #, no-c-format
 msgid ""
 "There are three possible approaches to mapping a ternary association. One is "
@@ -1414,7 +1414,7 @@ msgstr ""
 "qu'index :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:755
+#: collection_mapping.xml:781
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"contracts\">\n"
@@ -1425,7 +1425,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:757
+#: collection_mapping.xml:783
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"connections\">\n"
@@ -1436,7 +1436,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:759
+#: collection_mapping.xml:785
 #, no-c-format
 msgid ""
 "A second approach is to simply remodel the association as an entity class. "
@@ -1446,7 +1446,7 @@ msgstr ""
 "classe d'entité. C'est l'approche la plus commune."
 
 #. Tag: para
-#: collection_mapping.xml:764
+#: collection_mapping.xml:790
 #, no-c-format
 msgid ""
 "A final alternative is to use composite elements, which we will discuss "
@@ -1456,13 +1456,13 @@ msgstr ""
 "discuterons plus tard."
 
 #. Tag: literal
-#: collection_mapping.xml:771
+#: collection_mapping.xml:797
 #, no-c-format
 msgid "Using an &lt;idbag&gt;"
 msgstr "Utiliser un <literal>&lt;idbag&gt;</literal>"
 
 #. Tag: para
-#: collection_mapping.xml:773
+#: collection_mapping.xml:799
 #, no-c-format
 msgid ""
 "If you've fully embraced our view that composite keys are a bad thing and "
@@ -1488,7 +1488,7 @@ msgstr ""
 "valeurs vers une table avec une clef subrogée."
 
 #. Tag: para
-#: collection_mapping.xml:784
+#: collection_mapping.xml:810
 #, no-c-format
 msgid ""
 "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</"
@@ -1499,7 +1499,7 @@ msgstr ""
 "sémantique de sac."
 
 #. Tag: programlisting
-#: collection_mapping.xml:789
+#: collection_mapping.xml:815
 #, no-c-format
 msgid ""
 "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
@@ -1512,7 +1512,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:791
+#: collection_mapping.xml:817
 #, no-c-format
 msgid ""
 "As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id "
@@ -1527,7 +1527,7 @@ msgstr ""
 "ligne particulière."
 
 #. Tag: para
-#: collection_mapping.xml:798
+#: collection_mapping.xml:824
 #, no-c-format
 msgid ""
 "Note that the update performance of an <literal>&lt;idbag&gt;</literal> is "
@@ -1542,7 +1542,7 @@ msgstr ""
 "liste, une map ou un ensemble."
 
 #. Tag: para
-#: collection_mapping.xml:805
+#: collection_mapping.xml:831
 #, no-c-format
 msgid ""
 "In the current implementation, the <literal>native</literal> identifier "
@@ -1554,13 +1554,13 @@ msgstr ""
 "identifiants de collection <literal>&lt;idbag&gt;</literal>."
 
 #. Tag: title
-#: collection_mapping.xml:829
+#: collection_mapping.xml:855
 #, no-c-format
 msgid "Collection examples"
 msgstr "Exemples de collections"
 
 #. Tag: para
-#: collection_mapping.xml:831
+#: collection_mapping.xml:857
 #, no-c-format
 msgid ""
 "The previous sections are pretty confusing. So lets look at an example. This "
@@ -1570,7 +1570,7 @@ msgstr ""
 "classe :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:836
+#: collection_mapping.xml:862
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -1592,7 +1592,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:838
+#: collection_mapping.xml:864
 #, no-c-format
 msgid ""
 "has a collection of <literal>Child</literal> instances. If each child has at "
@@ -1603,7 +1603,7 @@ msgstr ""
 "plusieurs :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:844
+#: collection_mapping.xml:870
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1629,13 +1629,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:846
+#: collection_mapping.xml:872
 #, no-c-format
 msgid "This maps to the following table definitions:"
 msgstr "Ceci mappe les définitions de tables suivantes :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:850
+#: collection_mapping.xml:876
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1645,7 +1645,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:852
+#: collection_mapping.xml:878
 #, no-c-format
 msgid ""
 "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-"
@@ -1655,7 +1655,7 @@ msgstr ""
 "vers-plusieurs unidirectionnelle :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:857
+#: collection_mapping.xml:883
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1683,13 +1683,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:859
+#: collection_mapping.xml:885
 #, no-c-format
 msgid "Notice the <literal>NOT NULL</literal> constraint:"
 msgstr "Notez la contrainte <literal>NOT NULL</literal> :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:863
+#: collection_mapping.xml:889
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1701,7 +1701,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:865
+#: collection_mapping.xml:891
 #, no-c-format
 msgid ""
 "Alternatively, if you absolutely insist that this association should be "
@@ -1713,7 +1713,7 @@ msgstr ""
 "literal> sur le mapping <literal>&lt;key&gt;</literal> :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:871
+#: collection_mapping.xml:897
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1739,7 +1739,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:873
+#: collection_mapping.xml:899
 #, no-c-format
 msgid ""
 "On the other hand, if a child might have multiple parents, a many-to-many "
@@ -1749,7 +1749,7 @@ msgstr ""
 "association plusieurs-vers-plusieurs est plus appropriée :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:878
+#: collection_mapping.xml:904
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1775,13 +1775,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:880
+#: collection_mapping.xml:906
 #, no-c-format
 msgid "Table definitions:"
 msgstr "Définitions des tables :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:884
+#: collection_mapping.xml:910
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1796,7 +1796,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:886
+#: collection_mapping.xml:912
 #, no-c-format
 msgid ""
 "For more examples and a complete walk-through a parent/child relationship "
@@ -1806,7 +1806,7 @@ msgstr ""
 "enfant, voir see <xref linkend=\"example-parentchild\"/>."
 
 #. Tag: para
-#: collection_mapping.xml:891
+#: collection_mapping.xml:917
 #, no-c-format
 msgid ""
 "Even more exotic association mappings are possible, we will catalog all "

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: xml.xml:5
+#: xml.xml:29
 #, no-c-format
 msgid "XML Mapping"
 msgstr "XML映射"
 
 #. Tag: emphasis
-#: xml.xml:7
+#: xml.xml:31
 #, no-c-format
 msgid ""
 "Note that this is an experimental feature in Hibernate 3.0 and is under "
@@ -25,13 +25,13 @@ msgid ""
 msgstr "注意这是Hibernate 3.0的一个实验性的特性。这一特性仍在积极开发中。"
 
 #. Tag: title
-#: xml.xml:13
+#: xml.xml:37
 #, no-c-format
 msgid "Working with XML data"
 msgstr "用XML数据进行工作"
 
 #. Tag: para
-#: xml.xml:15
+#: xml.xml:39
 #, no-c-format
 msgid ""
 "Hibernate lets you work with persistent XML data in much the same way you "
@@ -43,7 +43,7 @@ msgstr ""
 "析过的XML树 可以被认为是代替POJO的另外一种在对象层面上表示关系型数据的途径."
 
 #. Tag: para
-#: xml.xml:22
+#: xml.xml:46
 #, no-c-format
 msgid ""
 "Hibernate supports dom4j as API for manipulating XML trees. You can write "
@@ -61,7 +61,7 @@ msgstr ""
 "(合并操作merge()目前还不支持)。"
 
 #. Tag: para
-#: xml.xml:32
+#: xml.xml:56
 #, no-c-format
 msgid ""
 "This feature has many applications including data import/export, "
@@ -71,7 +71,7 @@ msgstr ""
 "及 基于XSLT的报表。"
 
 #. Tag: para
-#: xml.xml:37
+#: xml.xml:61
 #, no-c-format
 msgid ""
 "A single mapping may be used to simultaneously map properties of a class and "
@@ -82,19 +82,19 @@ msgstr ""
 "类， 它也可以用来只映射XML文档。"
 
 #. Tag: title
-#: xml.xml:44
+#: xml.xml:68
 #, no-c-format
 msgid "Specifying XML and class mapping together"
 msgstr "指定同时映射XML和类"
 
 #. Tag: para
-#: xml.xml:46
+#: xml.xml:70
 #, no-c-format
 msgid "Here is an example of mapping a POJO and XML simultaneously:"
 msgstr "这是一个同时映射POJO和XML的例子："
 
 #. Tag: programlisting
-#: xml.xml:50
+#: xml.xml:74
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Account\" \n"
@@ -120,19 +120,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: xml.xml:54
+#: xml.xml:78
 #, no-c-format
 msgid "Specifying only an XML mapping"
 msgstr "只定义XML映射"
 
 #. Tag: para
-#: xml.xml:56
+#: xml.xml:80
 #, no-c-format
 msgid "Here is an example where there is no POJO class:"
 msgstr "这是一个不映射POJO的例子："
 
 #. Tag: programlisting
-#: xml.xml:60
+#: xml.xml:84
 #, no-c-format
 msgid ""
 "<![CDATA[<class entity-name=\"Account\" \n"
@@ -161,7 +161,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:62
+#: xml.xml:86
 #, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
@@ -173,13 +173,13 @@ msgstr ""
 "你可以在HQL查询中引用它。"
 
 #. Tag: title
-#: xml.xml:73
+#: xml.xml:97
 #, no-c-format
 msgid "XML mapping metadata"
 msgstr "XML映射元数据"
 
 #. Tag: para
-#: xml.xml:75
+#: xml.xml:99
 #, no-c-format
 msgid ""
 "Many Hibernate mapping elements accept the <literal>node</literal> "
@@ -192,25 +192,25 @@ msgstr ""
 "一："
 
 #. Tag: para
-#: xml.xml:84
+#: xml.xml:108
 #, no-c-format
 msgid "<literal>\"element-name\"</literal> - map to the named XML element"
 msgstr "<literal>\"element-name\"</literal> - 映射为指定的XML元素"
 
 #. Tag: para
-#: xml.xml:87
+#: xml.xml:111
 #, no-c-format
 msgid "<literal>\"@attribute-name\"</literal> - map to the named XML attribute"
 msgstr "<literal>\"@attribute-name\"</literal> - 映射为指定的XML属性"
 
 #. Tag: para
-#: xml.xml:90
+#: xml.xml:114
 #, no-c-format
 msgid "<literal>\".\"</literal> - map to the parent element"
 msgstr "<literal>\".\"</literal> - 映射为父元素"
 
 #. Tag: para
-#: xml.xml:93
+#: xml.xml:117
 #, no-c-format
 msgid ""
 "<literal>\"element-name/@attribute-name\"</literal> - map to the named "
@@ -220,7 +220,7 @@ msgstr ""
 "性"
 
 #. Tag: para
-#: xml.xml:100
+#: xml.xml:124
 #, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
@@ -239,7 +239,7 @@ msgstr ""
 "本身不出现)，而集合则根本不出现。"
 
 #. Tag: para
-#: xml.xml:110
+#: xml.xml:134
 #, no-c-format
 msgid ""
 "You should be careful not to leave <literal>embed-xml=\"true\"</literal> for "
@@ -249,7 +249,7 @@ msgstr ""
 "literal>)，因为XML不能很好地处理 循环引用!"
 
 #. Tag: programlisting
-#: xml.xml:115
+#: xml.xml:139
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Customer\" \n"
@@ -289,7 +289,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:117
+#: xml.xml:141
 #, no-c-format
 msgid ""
 "in this case, we have decided to embed the collection of account ids, but "
@@ -299,7 +299,7 @@ msgstr ""
 "据。下面的HQL查询："
 
 #. Tag: programlisting
-#: xml.xml:122
+#: xml.xml:146
 #, no-c-format
 msgid ""
 "<![CDATA[from Customer c left join fetch c.accounts where c.lastName like :"
@@ -307,13 +307,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:124
+#: xml.xml:148
 #, no-c-format
 msgid "Would return datasets such as this:"
 msgstr "返回的数据集将是这样："
 
 #. Tag: programlisting
-#: xml.xml:128
+#: xml.xml:152
 #, no-c-format
 msgid ""
 "<![CDATA[<customer id=\"123456789\">\n"
@@ -329,7 +329,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:130
+#: xml.xml:154
 #, no-c-format
 msgid ""
 "If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
@@ -339,7 +339,7 @@ msgstr ""
 "(<literal>embed-xml=\"true\"</literal>)， 则数据看上去就像这样："
 
 #. Tag: programlisting
-#: xml.xml:135
+#: xml.xml:159
 #, no-c-format
 msgid ""
 "<![CDATA[<customer id=\"123456789\">\n"
@@ -361,13 +361,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: xml.xml:141
+#: xml.xml:165
 #, no-c-format
 msgid "Manipulating XML data"
 msgstr "操作XML数据"
 
 #. Tag: para
-#: xml.xml:143
+#: xml.xml:167
 #, no-c-format
 msgid ""
 "Let's rearead and update XML documents in the application. We do this by "
@@ -376,7 +376,7 @@ msgstr ""
 "让我们来读入和更新应用程序中的XML文档。通过获取一个dom4j会话可以做到这一点："
 
 #. Tag: programlisting
-#: xml.xml:148
+#: xml.xml:172
 #, no-c-format
 msgid ""
 "<![CDATA[Document doc = ....;\n"
@@ -400,7 +400,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: xml.xml:150
+#: xml.xml:174
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = factory.openSession();\n"
@@ -422,7 +422,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:152
+#: xml.xml:176
 #, no-c-format
 msgid ""
 "It is extremely useful to combine this feature with Hibernate's "

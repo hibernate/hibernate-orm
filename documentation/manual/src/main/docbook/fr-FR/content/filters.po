@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:5
+#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr "Filtrer les données"
 
 #. Tag: para
-#: filters.xml:7
+#: filters.xml:31
 #, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
@@ -31,13 +31,13 @@ msgstr ""
 "pour une session Hibernate particulière."
 
 #. Tag: title
-#: filters.xml:14
+#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Filtres Hibernate"
 
 #. Tag: para
-#: filters.xml:16
+#: filters.xml:40
 #, no-c-format
 msgid ""
 "Hibernate3 adds the ability to pre-define filter criteria and attach those "
@@ -60,7 +60,7 @@ msgstr ""
 "données, mais paramétrées dans l'application."
 
 #. Tag: para
-#: filters.xml:26
+#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -74,7 +74,7 @@ msgstr ""
 "<literal>&lt;hibernate-mapping/&gt;</literal> :"
 
 #. Tag: programlisting
-#: filters.xml:32
+#: filters.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\">\n"
@@ -83,13 +83,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:34
+#: filters.xml:58
 #, no-c-format
 msgid "Then, this filter can be attached to a class:"
 msgstr "Puis, ce filtre peut être attaché à une classe :"
 
 #. Tag: programlisting
-#: filters.xml:38
+#: filters.xml:62
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"myClass\" ...>\n"
@@ -100,13 +100,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:40
+#: filters.xml:64
 #, no-c-format
 msgid "or, to a collection:"
 msgstr "ou à une collection :"
 
 #. Tag: programlisting
-#: filters.xml:44
+#: filters.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<set ...>\n"
@@ -116,21 +116,21 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:46
+#: filters.xml:70
 #, no-c-format
 msgid "or, even to both (or multiples of each) at the same time."
 msgstr "ou même aux deux (ou à plusieurs de chaque) en même temps."
 
 #. Tag: para
-#: filters.xml:50
-#, no-c-format
+#: filters.xml:74
+#, fuzzy, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
 "literal>, and <literal>disableFilter(String filterName)</literal>. By "
 "default, filters are <emphasis>not</emphasis> enabled for a given session; "
 "they must be explcitly enabled through use of the <literal>Session."
-"enabledFilter()</literal> method, which returns an instance of the "
+"enableFilter()</literal> method, which returns an instance of the "
 "<literal>Filter</literal> interface. Using the simple filter defined above, "
 "this would look like:"
 msgstr ""
@@ -144,7 +144,7 @@ msgstr ""
 "défini au-dessus ressemblerait à :"
 
 #. Tag: programlisting
-#: filters.xml:59
+#: filters.xml:83
 #, no-c-format
 msgid ""
 "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
@@ -152,7 +152,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:61
+#: filters.xml:85
 #, no-c-format
 msgid ""
 "Note that methods on the org.hibernate.Filter interface do allow the method-"
@@ -162,7 +162,7 @@ msgstr ""
 "chaînage de beaucoup de méthodes communes d'Hibernate."
 
 #. Tag: para
-#: filters.xml:65
+#: filters.xml:89
 #, no-c-format
 msgid ""
 "A full example, using temporal data with an effective record date pattern:"
@@ -171,7 +171,7 @@ msgstr ""
 "date d'enregistrement effectif :"
 
 #. Tag: programlisting
-#: filters.xml:69
+#: filters.xml:93
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"effectiveDate\">\n"
@@ -209,7 +209,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:71
+#: filters.xml:95
 #, no-c-format
 msgid ""
 "Then, in order to ensure that you always get back currently effective "
@@ -221,7 +221,7 @@ msgstr ""
 "session avant de récupérer des données des employés :"
 
 #. Tag: programlisting
-#: filters.xml:76
+#: filters.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = ...;\n"
@@ -235,7 +235,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:78
+#: filters.xml:102
 #, no-c-format
 msgid ""
 "In the HQL above, even though we only explicitly mentioned a salary "
@@ -249,7 +249,7 @@ msgstr ""
 "salaire supérieur à un million de dollars."
 
 #. Tag: para
-#: filters.xml:84
+#: filters.xml:108
 #, no-c-format
 msgid ""
 "Note: if you plan on using filters with outer joining (either through HQL or "
@@ -264,7 +264,7 @@ msgstr ""
 "d'abord, suivi du(des) nom(s) de colonne après l'opérateur."
 
 #. Tag: para
-#: filters.xml:91
+#: filters.xml:115
 #, no-c-format
 msgid ""
 "After being defined a filter might be attached to multiple entities and/or "
@@ -275,7 +275,7 @@ msgid ""
 msgstr "translator-credits"
 
 #. Tag: programlisting
-#: filters.xml:98
+#: filters.xml:122
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
@@ -284,7 +284,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:100
+#: filters.xml:124
 #, no-c-format
 msgid ""
 "This default condition will then be used whenever the filter is attached to "

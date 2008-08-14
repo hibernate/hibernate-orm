@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 01:01+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: example_parentchild.xml:5
+#: example_parentchild.xml:29
 #, no-c-format
 msgid "Example: Parent/Child"
 msgstr "示例：父子关系(Parent Child Relationships)"
 
 #. Tag: para
-#: example_parentchild.xml:7
+#: example_parentchild.xml:31
 #, no-c-format
 msgid ""
 "One of the very first things that new users try to do with Hibernate is to "
@@ -47,13 +47,13 @@ msgstr ""
 "优美的parent / child关系。这一点也不难！"
 
 #. Tag: title
-#: example_parentchild.xml:21
+#: example_parentchild.xml:45
 #, no-c-format
 msgid "A note about collections"
 msgstr "关于collections需要注意的一点"
 
 #. Tag: para
-#: example_parentchild.xml:23
+#: example_parentchild.xml:47
 #, no-c-format
 msgid ""
 "Hibernate collections are considered to be a logical part of their owning "
@@ -64,7 +64,7 @@ msgstr ""
 "要！它主要体现为以下几点："
 
 #. Tag: para
-#: example_parentchild.xml:30
+#: example_parentchild.xml:54
 #, no-c-format
 msgid ""
 "When we remove / add an object from / to a collection, the version number of "
@@ -72,7 +72,7 @@ msgid ""
 msgstr "当删除或增加collection中对象的时候，collection所属者的版本值会递增。"
 
 #. Tag: para
-#: example_parentchild.xml:36
+#: example_parentchild.xml:60
 #, no-c-format
 msgid ""
 "If an object that was removed from a collection is an instance of a value "
@@ -86,7 +86,7 @@ msgstr ""
 "被删除。同样的，向collection增加一个value type的实例将会使之立即被持久化。"
 
 #. Tag: para
-#: example_parentchild.xml:44
+#: example_parentchild.xml:68
 #, no-c-format
 msgid ""
 "On the other hand, if an entity is removed from a collection (a one-to-many "
@@ -101,7 +101,7 @@ msgstr ""
 "使与它关联的实体消失掉！同样的，向collection增加一个实体不会使之被持久化。"
 
 #. Tag: para
-#: example_parentchild.xml:54
+#: example_parentchild.xml:78
 #, no-c-format
 msgid ""
 "Instead, the default behaviour is that adding an entity to a collection "
@@ -115,13 +115,13 @@ msgstr ""
 "关系则是完全不适合的，在这种关系下，子对象的生存绑定于父对象的生存周期。"
 
 #. Tag: title
-#: example_parentchild.xml:64
+#: example_parentchild.xml:88
 #, no-c-format
 msgid "Bidirectional one-to-many"
 msgstr "双向的一对多关系(Bidirectional one-to-many)"
 
 #. Tag: para
-#: example_parentchild.xml:66
+#: example_parentchild.xml:90
 #, no-c-format
 msgid ""
 "Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> "
@@ -129,7 +129,7 @@ msgid ""
 msgstr "假设我们要实现一个简单的从Parent到Child的&lt;one-to-many&gt;关联。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:71
+#: example_parentchild.xml:95
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\">\n"
@@ -139,13 +139,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:73
+#: example_parentchild.xml:97
 #, no-c-format
 msgid "If we were to execute the following code"
 msgstr "如果我们运行下面的代码"
 
 #. Tag: programlisting
-#: example_parentchild.xml:77
+#: example_parentchild.xml:101
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = .....;\n"
@@ -156,20 +156,20 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:79
+#: example_parentchild.xml:103
 #, no-c-format
 msgid "Hibernate would issue two SQL statements:"
 msgstr "Hibernate会产生两条SQL语句："
 
 #. Tag: para
-#: example_parentchild.xml:85
+#: example_parentchild.xml:109
 #, no-c-format
 msgid ""
 "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
 msgstr "一条<literal>INSERT</literal>语句，为<literal>c</literal>创建一条记录"
 
 #. Tag: para
-#: example_parentchild.xml:88
+#: example_parentchild.xml:112
 #, no-c-format
 msgid ""
 "an <literal>UPDATE</literal> to create the link from <literal>p</literal> to "
@@ -179,7 +179,7 @@ msgstr ""
 "literal>的连接"
 
 #. Tag: para
-#: example_parentchild.xml:95
+#: example_parentchild.xml:119
 #, no-c-format
 msgid ""
 "This is not only inefficient, but also violates any <literal>NOT NULL</"
@@ -192,7 +192,7 @@ msgstr ""
 "束的问题："
 
 #. Tag: programlisting
-#: example_parentchild.xml:101
+#: example_parentchild.xml:125
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\">\n"
@@ -202,13 +202,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:103
+#: example_parentchild.xml:127
 #, no-c-format
 msgid "However, this is not the recommended solution."
 msgstr "然而，这并非是推荐的解决方法。"
 
 #. Tag: para
-#: example_parentchild.xml:106
+#: example_parentchild.xml:130
 #, no-c-format
 msgid ""
 "The underlying cause of this behaviour is that the link (the foreign key "
@@ -222,7 +222,7 @@ msgstr ""
 "INSERT语句中被创建。因此解决的办法就是把这个连接添加到Child的映射中。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:113
+#: example_parentchild.xml:137
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/"
@@ -230,7 +230,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:115
+#: example_parentchild.xml:139
 #, no-c-format
 msgid ""
 "(We also need to add the <literal>parent</literal> property to the "
@@ -239,7 +239,7 @@ msgstr ""
 "（我们还需要为类<literal>Child</literal>添加<literal>parent</literal>属性）"
 
 #. Tag: para
-#: example_parentchild.xml:119
+#: example_parentchild.xml:143
 #, no-c-format
 msgid ""
 "Now that the <literal>Child</literal> entity is managing the state of the "
@@ -250,7 +250,7 @@ msgstr ""
 "接，我们使用<literal>inverse</literal>属性。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:124
+#: example_parentchild.xml:148
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\">\n"
@@ -260,13 +260,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:126
+#: example_parentchild.xml:150
 #, no-c-format
 msgid "The following code would be used to add a new <literal>Child</literal>"
 msgstr "下面的代码是用来添加一个新的<literal>Child</literal>"
 
 #. Tag: programlisting
-#: example_parentchild.xml:130
+#: example_parentchild.xml:154
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -278,13 +278,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:132
+#: example_parentchild.xml:156
 #, no-c-format
 msgid "And now, only one SQL <literal>INSERT</literal> would be issued!"
 msgstr "现在，只会有一条<literal>INSERT</literal>语句被执行！"
 
 #. Tag: para
-#: example_parentchild.xml:136
+#: example_parentchild.xml:160
 #, no-c-format
 msgid ""
 "To tighten things up a bit, we could create an <literal>addChild()</literal> "
@@ -294,7 +294,7 @@ msgstr ""
 "<literal>addChild()</literal>方法。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:141
+#: example_parentchild.xml:165
 #, no-c-format
 msgid ""
 "<![CDATA[public void addChild(Child c) {\n"
@@ -304,13 +304,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:143
+#: example_parentchild.xml:167
 #, no-c-format
 msgid "Now, the code to add a <literal>Child</literal> looks like"
 msgstr "现在，添加<literal>Child</literal>的代码就是这样"
 
 #. Tag: programlisting
-#: example_parentchild.xml:147
+#: example_parentchild.xml:171
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -321,13 +321,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: example_parentchild.xml:152
+#: example_parentchild.xml:176
 #, no-c-format
 msgid "Cascading life cycle"
 msgstr "级联生命周期（Cascading life cycle）"
 
 #. Tag: para
-#: example_parentchild.xml:154
+#: example_parentchild.xml:178
 #, no-c-format
 msgid ""
 "The explicit call to <literal>save()</literal> is still annoying. We will "
@@ -337,7 +337,7 @@ msgstr ""
 "题。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:159
+#: example_parentchild.xml:183
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all\">\n"
@@ -347,13 +347,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:161
+#: example_parentchild.xml:185
 #, no-c-format
 msgid "This simplifies the code above to"
 msgstr "这样上面的代码可以简化为："
 
 #. Tag: programlisting
-#: example_parentchild.xml:165
+#: example_parentchild.xml:189
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -363,7 +363,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:167
+#: example_parentchild.xml:191
 #, no-c-format
 msgid ""
 "Similarly, we don't need to iterate over the children when saving or "
@@ -374,7 +374,7 @@ msgstr ""
 "下面的代码会删除对象<literal>p</literal>及其所有子对象对应的数据库记录。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:172
+#: example_parentchild.xml:196
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -383,13 +383,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:174
+#: example_parentchild.xml:198
 #, no-c-format
 msgid "However, this code"
 msgstr "然而，这段代码"
 
 #. Tag: programlisting
-#: example_parentchild.xml:178
+#: example_parentchild.xml:202
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -400,7 +400,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:180
+#: example_parentchild.xml:204
 #, no-c-format
 msgid ""
 "will not remove <literal>c</literal> from the database; it will ony remove "
@@ -413,7 +413,7 @@ msgstr ""
 "式调用<literal>delete()</literal>来删除<literal>Child</literal>。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:186
+#: example_parentchild.xml:210
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
@@ -424,7 +424,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:188
+#: example_parentchild.xml:212
 #, no-c-format
 msgid ""
 "Now, in our case, a <literal>Child</literal> can't really exist without its "
@@ -437,7 +437,7 @@ msgstr ""
 "\"all-delete-orphan\"</literal>。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:194
+#: example_parentchild.xml:218
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all-delete-orphan"
@@ -448,7 +448,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:196
+#: example_parentchild.xml:220
 #, no-c-format
 msgid ""
 "Note: even though the collection mapping specifies <literal>inverse=\"true"
@@ -463,7 +463,7 @@ msgstr ""
 "literal>是不够的。"
 
 #. Tag: title
-#: example_parentchild.xml:206
+#: example_parentchild.xml:230
 #, no-c-format
 msgid "Cascades and <literal>unsaved-value</literal>"
 msgstr ""
@@ -471,7 +471,7 @@ msgstr ""
 "literal>）"
 
 #. Tag: para
-#: example_parentchild.xml:208
+#: example_parentchild.xml:232
 #, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
@@ -499,7 +499,7 @@ msgstr ""
 "的了。</emphasis>"
 
 #. Tag: para
-#: example_parentchild.xml:220
+#: example_parentchild.xml:244
 #, no-c-format
 msgid ""
 "The following code will update <literal>parent</literal> and <literal>child</"
@@ -509,7 +509,7 @@ msgstr ""
 "插入<literal>newChild</literal>对象。"
 
 #. Tag: programlisting
-#: example_parentchild.xml:225
+#: example_parentchild.xml:249
 #, no-c-format
 msgid ""
 "<![CDATA[//parent and child were both loaded in a previous session\n"
@@ -521,7 +521,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: example_parentchild.xml:227
+#: example_parentchild.xml:251
 #, no-c-format
 msgid ""
 "Well, that's all very well for the case of a generated identifier, but what "
@@ -539,13 +539,13 @@ msgstr ""
 "查询第二级缓存，或者最坏的情况，查询数据库，来确认是否此行存在。"
 
 #. Tag: title
-#: example_parentchild.xml:260
+#: example_parentchild.xml:284
 #, no-c-format
 msgid "Conclusion"
 msgstr "结论"
 
 #. Tag: para
-#: example_parentchild.xml:262
+#: example_parentchild.xml:286
 #, no-c-format
 msgid ""
 "There is quite a bit to digest here and it might look confusing first time "
@@ -556,7 +556,7 @@ msgstr ""
 "常好。大部分Hibernate应用程序都会经常用到父子对象模式。"
 
 #. Tag: para
-#: example_parentchild.xml:267
+#: example_parentchild.xml:291
 #, no-c-format
 msgid ""
 "We mentioned an alternative in the first paragraph. None of the above issues "

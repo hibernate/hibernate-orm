@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: transactions.xml:5
+#: transactions.xml:29
 #, no-c-format
 msgid "Transactions And Concurrency"
 msgstr "Transactions et accès concurrents"
 
 #. Tag: para
-#: transactions.xml:7
+#: transactions.xml:31
 #, no-c-format
 msgid ""
 "The most important point about Hibernate and concurrency control is that it "
@@ -34,7 +34,7 @@ msgstr ""
 "transaction de la base de données que vous utilisez."
 
 #. Tag: para
-#: transactions.xml:14
+#: transactions.xml:38
 #, no-c-format
 msgid ""
 "Hibernate does not lock objects in memory. Your application can expect the "
@@ -52,7 +52,7 @@ msgstr ""
 "de valeurs scalaires)."
 
 #. Tag: para
-#: transactions.xml:22
+#: transactions.xml:46
 #, no-c-format
 msgid ""
 "In addition to versioning for automatic optimistic concurrency control, "
@@ -67,7 +67,7 @@ msgstr ""
 "plus tard dans ce chapitre."
 
 #. Tag: para
-#: transactions.xml:29
+#: transactions.xml:53
 #, no-c-format
 msgid ""
 "We start the discussion of concurrency control in Hibernate with the "
@@ -82,13 +82,13 @@ msgstr ""
 "transactions applicatives."
 
 #. Tag: title
-#: transactions.xml:36
+#: transactions.xml:60
 #, no-c-format
 msgid "Session and transaction scopes"
 msgstr "Gestion de session et délimitation de transactions"
 
 #. Tag: para
-#: transactions.xml:38
+#: transactions.xml:62
 #, no-c-format
 msgid ""
 "A <literal>SessionFactory</literal> is an expensive-to-create, threadsafe "
@@ -103,7 +103,7 @@ msgstr ""
 "l'application, et être partagé par tous les threads d'une application."
 
 #. Tag: para
-#: transactions.xml:44
+#: transactions.xml:68
 #, no-c-format
 msgid ""
 "A <literal>Session</literal> is an inexpensive, non-threadsafe object that "
@@ -121,7 +121,7 @@ msgstr ""
 "nécessaire."
 
 #. Tag: para
-#: transactions.xml:52
+#: transactions.xml:76
 #, no-c-format
 msgid ""
 "To complete this picture you also have to think about database transactions. "
@@ -141,7 +141,7 @@ msgstr ""
 "ce que l'unité de travail soit achevée."
 
 #. Tag: para
-#: transactions.xml:61
+#: transactions.xml:85
 #, no-c-format
 msgid ""
 "What is the scope of a unit of work? Can a single Hibernate "
@@ -158,13 +158,13 @@ msgstr ""
 "transactions à la base de données?"
 
 #. Tag: title
-#: transactions.xml:69
+#: transactions.xml:93
 #, no-c-format
 msgid "Unit of work"
 msgstr "Unité de travail"
 
 #. Tag: para
-#: transactions.xml:71
+#: transactions.xml:95
 #, no-c-format
 msgid ""
 "First, don't use the <emphasis>session-per-operation</emphasis> antipattern, "
@@ -203,12 +203,12 @@ msgstr ""
 "faire évoluer."
 
 #. Tag: para
-#: transactions.xml:87
-#, no-c-format
+#: transactions.xml:111
+#, fuzzy, no-c-format
 msgid ""
 "The most common pattern in a multi-user client/server application is "
 "<emphasis>session-per-request</emphasis>. In this model, a request from the "
-"client is send to the server (where the Hibernate persistence layer runs), a "
+"client is sent to the server (where the Hibernate persistence layer runs), a "
 "new Hibernate <literal>Session</literal> is opened, and all database "
 "operations are executed in this unit of work. Once the work has been "
 "completed (and the response for the client has been prepared), the session "
@@ -233,13 +233,13 @@ msgstr ""
 "majorité des applications."
 
 #. Tag: para
-#: transactions.xml:99
-#, no-c-format
+#: transactions.xml:123
+#, fuzzy, no-c-format
 msgid ""
 "The challenge lies in the implementation. Hibernate provides built-in "
 "management of the \"current session\" to simplify this pattern. All you have "
 "to do is start a transaction when a server request has to be processed, and "
-"end the transaction before the response is send to the client. You can do "
+"end the transaction before the response is sent to the client. You can do "
 "this in any way you like, common solutions are <literal>ServletFilter</"
 "literal>, AOP interceptor with a pointcut on the service methods, or a proxy/"
 "interception container. An EJB container is a standardized way to implement "
@@ -263,7 +263,7 @@ msgstr ""
 "facilité l'utilisation et la portabilité du code."
 
 #. Tag: para
-#: transactions.xml:112
+#: transactions.xml:136
 #, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
@@ -282,7 +282,7 @@ msgstr ""
 "\"architecture-current-session\"/>."
 
 #. Tag: para
-#: transactions.xml:120
+#: transactions.xml:144
 #, no-c-format
 msgid ""
 "Sometimes it is convenient to extend the scope of a <literal>Session</"
@@ -309,13 +309,13 @@ msgstr ""
 "emphasis> pattern.."
 
 #. Tag: title
-#: transactions.xml:135
+#: transactions.xml:159
 #, no-c-format
 msgid "Long conversations"
 msgstr "Longue conversation"
 
 #. Tag: para
-#: transactions.xml:137
+#: transactions.xml:161
 #, no-c-format
 msgid ""
 "The session-per-request pattern is not the only useful concept you can use "
@@ -333,7 +333,7 @@ msgstr ""
 "Considérez l'exemple suivant:"
 
 #. Tag: para
-#: transactions.xml:147
+#: transactions.xml:171
 #, no-c-format
 msgid ""
 "The first screen of a dialog opens, the data seen by the user has been "
@@ -345,7 +345,7 @@ msgstr ""
 "transaction de base de données. L'usager est libre de modifier ces objets."
 
 #. Tag: para
-#: transactions.xml:154
+#: transactions.xml:178
 #, no-c-format
 msgid ""
 "The user clicks \"Save\" after 5 minutes and expects his modifications to be "
@@ -358,7 +358,7 @@ msgstr ""
 "produite durant ce laps de temps."
 
 #. Tag: para
-#: transactions.xml:162
+#: transactions.xml:186
 #, no-c-format
 msgid ""
 "We call this unit of work, from the point of view of the user, a long "
@@ -372,7 +372,7 @@ msgstr ""
 "application."
 
 #. Tag: para
-#: transactions.xml:168
+#: transactions.xml:192
 #, no-c-format
 msgid ""
 "A first naive implementation might keep the <literal>Session</literal> and "
@@ -391,11 +391,11 @@ msgstr ""
 "de gérer un grand nombre d'usagers concurrents."
 
 #. Tag: para
-#: transactions.xml:176
-#, no-c-format
+#: transactions.xml:200
+#, fuzzy, no-c-format
 msgid ""
 "Clearly, we have to use several database transactions to implement the "
-"converastion. In this case, maintaining isolation of business processes "
+"conversation. In this case, maintaining isolation of business processes "
 "becomes the partial responsibility of the application tier. A single "
 "conversation usually spans several database transactions. It will be atomic "
 "if only one of these database transactions (the last one) stores the updated "
@@ -415,12 +415,12 @@ msgstr ""
 "certaines fonctionnalités d'Hibernate:"
 
 #. Tag: para
-#: transactions.xml:189
-#, no-c-format
+#: transactions.xml:213
+#, fuzzy, no-c-format
 msgid ""
 "<emphasis>Automatic Versioning</emphasis> - Hibernate can do automatic "
 "optimistic concurrency control for you, it can automatically detect if a "
-"concurrent modification occured during user think time. Usually we only "
+"concurrent modification occurred during user think time. Usually we only "
 "check at the end of the conversation."
 msgstr ""
 "<emphasis>Versionnage Automatique</emphasis> - Hibernate peut gérer "
@@ -429,7 +429,7 @@ msgstr ""
 "d'un usager."
 
 #. Tag: para
-#: transactions.xml:197
+#: transactions.xml:221
 #, no-c-format
 msgid ""
 "<emphasis>Detached Objects</emphasis> - If you decide to use the already "
@@ -449,8 +449,8 @@ msgstr ""
 "automatique est utilisé afin d'isoler les modifications concurrentes."
 
 #. Tag: para
-#: transactions.xml:207
-#, no-c-format
+#: transactions.xml:231
+#, fuzzy, no-c-format
 msgid ""
 "<emphasis>Extended (or Long) Session</emphasis> - The Hibernate "
 "<literal>Session</literal> may be disconnected from the underlying JDBC "
@@ -459,7 +459,7 @@ msgid ""
 "<emphasis>session-per-conversation</emphasis> and makes even reattachment "
 "unnecessary. Automatic versioning is used to isolate concurrent "
 "modifications and the <literal>Session</literal> is usually not allowed to "
-"be flushed automatically, but explicitely."
+"be flushed automatically, but explicitly."
 msgstr ""
 "<emphasis>Session Longues (conversation)</emphasis> - Une <literal>Session</"
 "literal> Hibernate peut être déconnectée de la couche JDBC sous-jacente "
@@ -470,7 +470,7 @@ msgstr ""
 "automatique est utilisé afin d'isoler les modifications concurrentes."
 
 #. Tag: para
-#: transactions.xml:220
+#: transactions.xml:244
 #, no-c-format
 msgid ""
 "Both <emphasis>session-per-request-with-detached-objects</emphasis> and "
@@ -485,13 +485,13 @@ msgstr ""
 "section au sujet du contrôle optimiste de concurrence."
 
 #. Tag: title
-#: transactions.xml:229
+#: transactions.xml:253
 #, no-c-format
 msgid "Considering object identity"
 msgstr "L'identité des objets"
 
 #. Tag: para
-#: transactions.xml:231
+#: transactions.xml:255
 #, no-c-format
 msgid ""
 "An application may concurrently access the same persistent state in two "
@@ -506,31 +506,31 @@ msgstr ""
 "donc deux notions de l'identité d'un objet:"
 
 #. Tag: term
-#: transactions.xml:240
+#: transactions.xml:264
 #, no-c-format
 msgid "Database Identity"
 msgstr "Identité BD"
 
 #. Tag: literal
-#: transactions.xml:243
+#: transactions.xml:267
 #, no-c-format
 msgid "foo.getId().equals( bar.getId() )"
 msgstr "foo.getId().equals( bar.getId() )"
 
 #. Tag: term
-#: transactions.xml:248
+#: transactions.xml:272
 #, no-c-format
 msgid "JVM Identity"
 msgstr "Identité JVM"
 
 #. Tag: literal
-#: transactions.xml:251
+#: transactions.xml:275
 #, no-c-format
 msgid "foo==bar"
 msgstr "foo==bar"
 
 #. Tag: para
-#: transactions.xml:257
+#: transactions.xml:281
 #, fuzzy, no-c-format
 msgid ""
 "Then for objects attached to a <emphasis>particular</emphasis> "
@@ -554,7 +554,7 @@ msgstr ""
 "literal> est appelé."
 
 #. Tag: para
-#: transactions.xml:266
+#: transactions.xml:290
 #, no-c-format
 msgid ""
 "This approach leaves Hibernate and the database to worry about concurrency; "
@@ -577,7 +577,7 @@ msgstr ""
 "<literal>== </literal> pour comparer des objets."
 
 #. Tag: para
-#: transactions.xml:275
+#: transactions.xml:299
 #, no-c-format
 msgid ""
 "However, an application that uses <literal>==</literal> outside of a "
@@ -625,13 +625,13 @@ msgstr ""
 "l'identité et de l'égalité en Java."
 
 #. Tag: title
-#: transactions.xml:296
+#: transactions.xml:320
 #, no-c-format
 msgid "Common issues"
 msgstr "Problèmes communs"
 
 #. Tag: para
-#: transactions.xml:298
+#: transactions.xml:322
 #, no-c-format
 msgid ""
 "Never use the anti-patterns <emphasis>session-per-user-session</emphasis> or "
@@ -649,7 +649,7 @@ msgstr ""
 "implications de chacun des patterns avant de prendre votre décision."
 
 #. Tag: para
-#: transactions.xml:307
+#: transactions.xml:331
 #, no-c-format
 msgid ""
 "A <literal>Session</literal> is not thread-safe. Things which are supposed "
@@ -672,7 +672,7 @@ msgstr ""
 "literal> ."
 
 #. Tag: para
-#: transactions.xml:318
+#: transactions.xml:342
 #, no-c-format
 msgid ""
 "An exception thrown by Hibernate means you have to rollback your database "
@@ -696,7 +696,7 @@ msgstr ""
 "non traitables et requièrent la reprise du processus d?affaire ayant échoué.)"
 
 #. Tag: para
-#: transactions.xml:330
+#: transactions.xml:354
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in persistent "
@@ -725,16 +725,16 @@ msgstr ""
 "information périmée."
 
 #. Tag: title
-#: transactions.xml:348
+#: transactions.xml:372
 #, no-c-format
 msgid "Database transaction demarcation"
 msgstr "Démarcation des transactions"
 
 #. Tag: para
-#: transactions.xml:350
-#, no-c-format
+#: transactions.xml:374
+#, fuzzy, no-c-format
 msgid ""
-"Datatabase (or system) transaction boundaries are always necessary. No "
+"Database (or system) transaction boundaries are always necessary. No "
 "communication with the database can occur outside of a database transaction "
 "(this seems to confuse many developers who are used to the auto-commit "
 "mode). Always use clear transaction boundaries, even for read-only "
@@ -754,7 +754,7 @@ msgstr ""
 "de lecture."
 
 #. Tag: para
-#: transactions.xml:360
+#: transactions.xml:384
 #, no-c-format
 msgid ""
 "A Hibernate application can run in non-managed (i.e. standalone, simple Web- "
@@ -785,13 +785,13 @@ msgstr ""
 "flush()</literal> sont faits automatiquement."
 
 #. Tag: para
-#: transactions.xml:370
-#, no-c-format
+#: transactions.xml:394
+#, fuzzy, no-c-format
 msgid ""
 "However, it is often desirable to keep your persistence layer portable "
 "between non-managed resource-local environments, and systems that can rely "
 "on JTA but use BMT instead of CMT. In both cases you'd use programmatic "
-"transaction demaracation. Hibernate offers a wrapper API called "
+"transaction demarcation. Hibernate offers a wrapper API called "
 "<literal>Transaction</literal> that translates into the native transaction "
 "system of your deployment environment. This API is actually optional, but we "
 "strongly encourage its use unless you are in a CMT session bean."
@@ -804,7 +804,7 @@ msgstr ""
 "Bean (EJB avec transactions gérées automatiquement par le container EJB)."
 
 #. Tag: para
-#: transactions.xml:379
+#: transactions.xml:403
 #, no-c-format
 msgid ""
 "Usually, ending a <literal>Session</literal> involves four distinct phases:"
@@ -813,31 +813,31 @@ msgstr ""
 "<literal>Session</literal>"
 
 #. Tag: para
-#: transactions.xml:385
+#: transactions.xml:409
 #, no-c-format
 msgid "flush the session"
 msgstr "flush de la session"
 
 #. Tag: para
-#: transactions.xml:390
+#: transactions.xml:414
 #, no-c-format
 msgid "commit the transaction"
 msgstr "commit de la transaction"
 
 #. Tag: para
-#: transactions.xml:395
+#: transactions.xml:419
 #, no-c-format
 msgid "close the session"
 msgstr "Fermeture de la session (Close)"
 
 #. Tag: para
-#: transactions.xml:400
+#: transactions.xml:424
 #, no-c-format
 msgid "handle exceptions"
 msgstr "Gestion des exceptions"
 
 #. Tag: para
-#: transactions.xml:406
+#: transactions.xml:430
 #, no-c-format
 msgid ""
 "Flushing the session has been discussed earlier, we'll now have a closer "
@@ -850,13 +850,13 @@ msgstr ""
 "J2EE."
 
 #. Tag: title
-#: transactions.xml:413
+#: transactions.xml:437
 #, no-c-format
 msgid "Non-managed environment"
 msgstr "Environnement non managé"
 
 #. Tag: para
-#: transactions.xml:415
+#: transactions.xml:439
 #, no-c-format
 msgid ""
 "If a Hibernate persistence layer runs in a non-managed environment, database "
@@ -870,7 +870,7 @@ msgstr ""
 "la transaction se fera donc de la manière suivante:"
 
 #. Tag: programlisting
-#: transactions.xml:422
+#: transactions.xml:446
 #, no-c-format
 msgid ""
 "<![CDATA[// Non-managed environment idiom\n"
@@ -894,7 +894,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:424
+#: transactions.xml:448
 #, no-c-format
 msgid ""
 "You don't have to <literal>flush()</literal> the <literal>Session</literal> "
@@ -915,7 +915,7 @@ msgstr ""
 "managé ET les environnements JTA."
 
 #. Tag: para
-#: transactions.xml:433
+#: transactions.xml:457
 #, no-c-format
 msgid ""
 "A much more flexible solution is Hibernate's built-in \"current session\" "
@@ -925,7 +925,7 @@ msgstr ""
 "que nous avons déjà rencontré:"
 
 #. Tag: programlisting
-#: transactions.xml:438
+#: transactions.xml:462
 #, no-c-format
 msgid ""
 "<![CDATA[// Non-managed environment idiom with getCurrentSession()\n"
@@ -944,7 +944,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:440
+#: transactions.xml:464
 #, no-c-format
 msgid ""
 "You will very likely never see these code snippets in a regular application; "
@@ -968,7 +968,7 @@ msgstr ""
 "tard dans ce chapitre."
 
 #. Tag: para
-#: transactions.xml:450
+#: transactions.xml:474
 #, no-c-format
 msgid ""
 "Note that you should select <literal>org.hibernate.transaction."
@@ -982,13 +982,13 @@ msgstr ""
 "current_session_context_class</literal>."
 
 #. Tag: title
-#: transactions.xml:459
+#: transactions.xml:483
 #, no-c-format
 msgid "Using JTA"
 msgstr "Utilisation de JTA"
 
 #. Tag: para
-#: transactions.xml:461
+#: transactions.xml:485
 #, no-c-format
 msgid ""
 "If your persistence layer runs in an application server (e.g. behind EJB "
@@ -1003,7 +1003,7 @@ msgstr ""
 "Hibernate propose deux stratégies pour réussir cette intégration."
 
 #. Tag: para
-#: transactions.xml:468
+#: transactions.xml:492
 #, no-c-format
 msgid ""
 "If you use bean-managed transactions (BMT) Hibernate will tell the "
@@ -1018,7 +1018,7 @@ msgstr ""
 "les deux types d'environnements."
 
 #. Tag: programlisting
-#: transactions.xml:474
+#: transactions.xml:498
 #, no-c-format
 msgid ""
 "<![CDATA[// BMT idiom\n"
@@ -1042,7 +1042,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:476
+#: transactions.xml:500
 #, no-c-format
 msgid ""
 "If you want to use a transaction-bound <literal>Session</literal>, that is, "
@@ -1052,7 +1052,7 @@ msgid ""
 msgstr "Ou encore, avec la gestion automatique de contexte:"
 
 #. Tag: programlisting
-#: transactions.xml:482
+#: transactions.xml:506
 #, no-c-format
 msgid ""
 "<![CDATA[// BMT idiom with getCurrentSession()\n"
@@ -1075,18 +1075,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:484
-#, no-c-format
+#: transactions.xml:508
+#, fuzzy, no-c-format
 msgid ""
 "With CMT, transaction demarcation is done in session bean deployment "
-"descriptors, not programatically, hence, the code is reduced to:"
+"descriptors, not programmatically, hence, the code is reduced to:"
 msgstr ""
 "Avec CMT, la démarcation des transactions est faite dans les descripteurs de "
 "déploiement des Beans Sessions et non de manière programmmatique, ceci "
 "réduit le code:"
 
 #. Tag: programlisting
-#: transactions.xml:489
+#: transactions.xml:513
 #, no-c-format
 msgid ""
 "<![CDATA[// CMT idiom\n"
@@ -1098,7 +1098,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:491
+#: transactions.xml:515
 #, no-c-format
 msgid ""
 "In a CMT/EJB even rollback happens automatically, since an unhandled "
@@ -1115,8 +1115,8 @@ msgstr ""
 "<literal>Transaction</literal> d'Hibernate dans CMT.</emphasis>"
 
 #. Tag: para
-#: transactions.xml:499
-#, no-c-format
+#: transactions.xml:523
+#, fuzzy, no-c-format
 msgid ""
 "Note that you should choose <literal>org.hibernate.transaction."
 "JTATransactionFactory</literal> if you use JTA directly (BMT), and "
@@ -1125,7 +1125,7 @@ msgid ""
 "to also set <literal>hibernate.transaction.manager_lookup_class</literal>. "
 "Furthermore, make sure that your <literal>hibernate."
 "current_session_context_class</literal> is either unset (backwards "
-"compatiblity), or set to <literal>\"jta\"</literal>."
+"compatibility), or set to <literal>\"jta\"</literal>."
 msgstr ""
 "Notez que le fichier de configuration Hibernate devrait contenir les valeurs "
 "<literal>org.hibernate.transaction.JTATransactionFactory</literal> dans un "
@@ -1139,8 +1139,8 @@ msgstr ""
 "versions précédentes)."
 
 #. Tag: para
-#: transactions.xml:508
-#, no-c-format
+#: transactions.xml:532
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>getCurrentSession()</literal> operation has one downside in a "
 "JTA environment. There is one caveat to the use of <literal>after_statement</"
@@ -1150,7 +1150,7 @@ msgid ""
 "<literal>Iterator</literal> instances returned by <literal>scroll()</"
 "literal> or <literal>iterate()</literal>. You <emphasis>must</emphasis> "
 "release the underlying database cursor by calling <literal>ScrollableResults."
-"close()</literal> or <literal>Hibernate.close(Iterator)</literal> explicity "
+"close()</literal> or <literal>Hibernate.close(Iterator)</literal> explicitly "
 "from a <literal>finally</literal> block. (Of course, most applications can "
 "easily avoid using <literal>scroll()</literal> or <literal>iterate()</"
 "literal> at all from the JTA or CMT code.)"
@@ -1170,13 +1170,13 @@ msgstr ""
 "CMT.)"
 
 #. Tag: title
-#: transactions.xml:524
+#: transactions.xml:548
 #, no-c-format
 msgid "Exception handling"
 msgstr "Gestion des exceptions"
 
 #. Tag: para
-#: transactions.xml:526
+#: transactions.xml:550
 #, no-c-format
 msgid ""
 "If the <literal>Session</literal> throws an exception (including any "
@@ -1199,7 +1199,7 @@ msgstr ""
 "<literal>close()</literal> dans un bloc <literal>finally</literal> ."
 
 #. Tag: para
-#: transactions.xml:537
+#: transactions.xml:561
 #, no-c-format
 msgid ""
 "The <literal>HibernateException</literal>, which wraps most of the errors "
@@ -1227,12 +1227,12 @@ msgstr ""
 "non traitables et vous devez les traiter comme telles."
 
 #. Tag: para
-#: transactions.xml:549
-#, no-c-format
+#: transactions.xml:573
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate wraps <literal>SQLException</literal>s thrown while interacting "
 "with the database in a <literal>JDBCException</literal>. In fact, Hibernate "
-"will attempt to convert the eexception into a more meningful subclass of "
+"will attempt to convert the exception into a more meaningful subclass of "
 "<literal>JDBCException</literal>. The underlying <literal>SQLException</"
 "literal> is always available via <literal>JDBCException.getCause()</"
 "literal>. Hibernate converts the <literal>SQLException</literal> into an "
@@ -1261,7 +1261,7 @@ msgstr ""
 "Les sous-types standard de <literal>JDBCException</literal> sont:"
 
 #. Tag: para
-#: transactions.xml:565
+#: transactions.xml:589
 #, no-c-format
 msgid ""
 "<literal>JDBCConnectionException</literal> - indicates an error with the "
@@ -1271,7 +1271,7 @@ msgstr ""
 "communication avec la couche JDBC sous-jacente."
 
 #. Tag: para
-#: transactions.xml:571
+#: transactions.xml:595
 #, no-c-format
 msgid ""
 "<literal>SQLGrammarException</literal> - indicates a grammar or syntax "
@@ -1281,7 +1281,7 @@ msgstr ""
 "de syntaxe avec la requête SQL envoyée."
 
 #. Tag: para
-#: transactions.xml:577
+#: transactions.xml:601
 #, no-c-format
 msgid ""
 "<literal>ConstraintViolationException</literal> - indicates some form of "
@@ -1291,7 +1291,7 @@ msgstr ""
 "contrainte d'intégrité."
 
 #. Tag: para
-#: transactions.xml:583
+#: transactions.xml:607
 #, no-c-format
 msgid ""
 "<literal>LockAcquisitionException</literal> - indicates an error acquiring a "
@@ -1301,7 +1301,7 @@ msgstr ""
 "verrouillage lors de l'éxécution de la requête."
 
 #. Tag: para
-#: transactions.xml:589
+#: transactions.xml:613
 #, no-c-format
 msgid ""
 "<literal>GenericJDBCException</literal> - a generic exception which did not "
@@ -1311,14 +1311,14 @@ msgstr ""
 "d'une autre catégorie."
 
 #. Tag: title
-#: transactions.xml:599
+#: transactions.xml:623
 #, no-c-format
 msgid "Transaction timeout"
 msgstr "Timeout de transaction"
 
 #. Tag: para
-#: transactions.xml:601
-#, no-c-format
+#: transactions.xml:625
+#, fuzzy, no-c-format
 msgid ""
 "One extremely important feature provided by a managed environment like EJB "
 "that is never provided for non-managed code is transaction timeout. "
@@ -1328,7 +1328,7 @@ msgid ""
 "However, Hibernate can at least control data access operations, ensuring "
 "that database level deadlocks and queries with huge result sets are limited "
 "by a defined timeout. In a managed environment, Hibernate can delegate "
-"transaction timeout to JTA. This functioanlity is abstracted by the "
+"transaction timeout to JTA. This functionality is abstracted by the "
 "Hibernate <literal>Transaction</literal> object."
 msgstr ""
 "L'un des avantages fournis par les environnements transactionnels JTA (tels "
@@ -1345,7 +1345,7 @@ msgstr ""
 "est abstraite par l'objet <literal>Transaction</literal> ."
 
 #. Tag: programlisting
-#: transactions.xml:614
+#: transactions.xml:638
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -1370,7 +1370,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:616
+#: transactions.xml:640
 #, no-c-format
 msgid ""
 "Note that <literal>setTimeout()</literal> may not be called in a CMT bean, "
@@ -1381,13 +1381,13 @@ msgstr ""
 "déclarative."
 
 #. Tag: title
-#: transactions.xml:626
+#: transactions.xml:650
 #, no-c-format
 msgid "Optimistic concurrency control"
 msgstr "Contrôle de consurrence optimiste"
 
 #. Tag: para
-#: transactions.xml:628
+#: transactions.xml:652
 #, no-c-format
 msgid ""
 "The only approach that is consistent with high concurrency and high "
@@ -1410,13 +1410,13 @@ msgstr ""
 "application en prévenant la perte de mises à jour."
 
 #. Tag: title
-#: transactions.xml:639
+#: transactions.xml:663
 #, no-c-format
 msgid "Application version checking"
 msgstr "Gestion du versionnage au niveau applicatif"
 
 #. Tag: para
-#: transactions.xml:641
+#: transactions.xml:665
 #, no-c-format
 msgid ""
 "In an implementation without much help from Hibernate, each interaction with "
@@ -1437,7 +1437,7 @@ msgstr ""
 "chapitre."
 
 #. Tag: programlisting
-#: transactions.xml:650
+#: transactions.xml:674
 #, no-c-format
 msgid ""
 "<![CDATA[// foo is an instance loaded by a previous Session\n"
@@ -1455,7 +1455,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:652
+#: transactions.xml:676
 #, no-c-format
 msgid ""
 "The <literal>version</literal> property is mapped using <literal>&lt;"
@@ -1467,7 +1467,7 @@ msgstr ""
 "automatiquement à chaque flush() si l'entité doit être mise à jour."
 
 #. Tag: para
-#: transactions.xml:658
+#: transactions.xml:682
 #, no-c-format
 msgid ""
 "Of course, if you are operating in a low-data-concurrency environment and "
@@ -1489,12 +1489,12 @@ msgstr ""
 "données."
 
 #. Tag: para
-#: transactions.xml:667
-#, no-c-format
+#: transactions.xml:691
+#, fuzzy, no-c-format
 msgid ""
 "Clearly, manual version checking is only feasible in very trivial "
 "circumstances and not practical for most applications. Often not only single "
-"instances, but complete graphs of modified ojects have to be checked. "
+"instances, but complete graphs of modified objects have to be checked. "
 "Hibernate offers automatic version checking with either an extended "
 "<literal>Session</literal> or detached instances as the design paradigm."
 msgstr ""
@@ -1508,13 +1508,13 @@ msgstr ""
 "versions d'objets."
 
 #. Tag: title
-#: transactions.xml:678
+#: transactions.xml:702
 #, no-c-format
 msgid "Extended session and automatic versioning"
 msgstr "Les sessions longues et le versionnage automatique."
 
 #. Tag: para
-#: transactions.xml:680
+#: transactions.xml:704
 #, no-c-format
 msgid ""
 "A single <literal>Session</literal> instance and its persistent instances "
@@ -1535,7 +1535,7 @@ msgstr ""
 "les plus récentes dans la BD."
 
 #. Tag: para
-#: transactions.xml:689
+#: transactions.xml:713
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> is disconnected from any underlying JDBC "
@@ -1552,7 +1552,7 @@ msgstr ""
 "rechargement de tous les objets à chaque transaction."
 
 #. Tag: programlisting
-#: transactions.xml:697
+#: transactions.xml:721
 #, no-c-format
 msgid ""
 "<![CDATA[// foo is an instance loaded earlier by the old session\n"
@@ -1567,7 +1567,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:698
+#: transactions.xml:722
 #, no-c-format
 msgid ""
 "The <literal>foo</literal> object still knows which <literal>Session</"
@@ -1600,7 +1600,7 @@ msgstr ""
 "jour."
 
 #. Tag: para
-#: transactions.xml:713
+#: transactions.xml:737
 #, no-c-format
 msgid ""
 "This pattern is problematic if the <literal>Session</literal> is too big to "
@@ -1616,7 +1616,7 @@ msgstr ""
 "utilisant <literal>hibernate.connection.release_mode</literal> ."
 
 #. Tag: para
-#: transactions.xml:723
+#: transactions.xml:747
 #, no-c-format
 msgid ""
 "(Note that earlier Hibernate versions required explicit disconnection and "
@@ -1633,7 +1633,7 @@ msgstr ""
 "être rapidement périmés."
 
 #. Tag: para
-#: transactions.xml:729
+#: transactions.xml:753
 #, no-c-format
 msgid ""
 "Also note that you should keep the disconnected <literal>Session</literal> "
@@ -1649,7 +1649,7 @@ msgstr ""
 "pas la conserver dans la session <literal>HttpSession</literal> .)"
 
 #. Tag: para
-#: transactions.xml:737
+#: transactions.xml:761
 #, no-c-format
 msgid ""
 "The extended session pattern, or <emphasis>session-per-conversation</"
@@ -1665,13 +1665,13 @@ msgstr ""
 "for examples."
 
 #. Tag: title
-#: transactions.xml:747
+#: transactions.xml:771
 #, no-c-format
 msgid "Detached objects and automatic versioning"
 msgstr "Les objets détachés et le versionnage automatique"
 
 #. Tag: para
-#: transactions.xml:749
+#: transactions.xml:773
 #, no-c-format
 msgid ""
 "Each interaction with the persistent store occurs in a new <literal>Session</"
@@ -1692,7 +1692,7 @@ msgstr ""
 "literal> , ou <literal>Session.merge()</literal> ."
 
 #. Tag: programlisting
-#: transactions.xml:757
+#: transactions.xml:781
 #, no-c-format
 msgid ""
 "<![CDATA[// foo is an instance loaded by a previous Session\n"
@@ -1706,18 +1706,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:759
-#, no-c-format
+#: transactions.xml:783
+#, fuzzy, no-c-format
 msgid ""
 "Again, Hibernate will check instance versions during flush, throwing an "
-"exception if conflicting updates occured."
+"exception if conflicting updates occurred."
 msgstr ""
 "Encore une fois, Hibernate vérifiera la version des instances devant être "
 "actualisées durant le flush(). Une exception sera lancée si des conflits "
 "sont détectés."
 
 #. Tag: para
-#: transactions.xml:764
+#: transactions.xml:788
 #, no-c-format
 msgid ""
 "You may also call <literal>lock()</literal> instead of <literal>update()</"
@@ -1732,13 +1732,13 @@ msgstr ""
 "modifié."
 
 #. Tag: title
-#: transactions.xml:773
+#: transactions.xml:797
 #, no-c-format
 msgid "Customizing automatic versioning"
 msgstr "Personnaliser le versionnage automatique"
 
 #. Tag: para
-#: transactions.xml:775
+#: transactions.xml:799
 #, no-c-format
 msgid ""
 "You may disable Hibernate's automatic version increment for particular "
@@ -1752,8 +1752,8 @@ msgstr ""
 "d'incrémenter leur numéro de version s'ils sont mis à jour."
 
 #. Tag: para
-#: transactions.xml:782
-#, no-c-format
+#: transactions.xml:806
+#, fuzzy, no-c-format
 msgid ""
 "Legacy database schemas are often static and can't be modified. Or, other "
 "applications might also access the same database and don't know how to "
@@ -1761,7 +1761,7 @@ msgid ""
 "rely on a particular column in a table. To force a version check without a "
 "version or timestamp property mapping, with a comparison of the state of all "
 "fields in a row, turn on <literal>optimistic-lock=\"all\"</literal> in the "
-"<literal>&lt;class&gt;</literal> mapping. Note that this concepetually only "
+"<literal>&lt;class&gt;</literal> mapping. Note that this conceptually only "
 "works if Hibernate can compare the old and new state, i.e. if you use a "
 "single long <literal>Session</literal> and not session-per-request-with-"
 "detached-objects."
@@ -1782,7 +1782,7 @@ msgstr ""
 "request-with-detached- objects</literal> devient alors impossible."
 
 #. Tag: para
-#: transactions.xml:793
+#: transactions.xml:817
 #, no-c-format
 msgid ""
 "Sometimes concurrent modification can be permitted as long as the changes "
@@ -1797,15 +1797,15 @@ msgstr ""
 "être actualisés lors du flush()."
 
 #. Tag: para
-#: transactions.xml:799
-#, no-c-format
+#: transactions.xml:823
+#, fuzzy, no-c-format
 msgid ""
 "In both cases, with dedicated version/timestamp columns or with full/dirty "
 "field comparison, Hibernate uses a single <literal>UPDATE</literal> "
 "statement (with an appropriate <literal>WHERE</literal> clause) per entity "
 "to execute the version check and update the information. If you use "
 "transitive persistence to cascade reattachment to associated entities, "
-"Hibernate might execute uneccessary updates. This is usually not a problem, "
+"Hibernate might execute unnecessary updates. This is usually not a problem, "
 "but <emphasis>on update</emphasis> triggers in the database might be "
 "executed even when no changes have been made to detached instances. You can "
 "customize this behavior by setting <literal>select-before-update=\"true\"</"
@@ -1830,17 +1830,17 @@ msgstr ""
 "commande d'UPDATE."
 
 #. Tag: title
-#: transactions.xml:817
+#: transactions.xml:841
 #, no-c-format
 msgid "Pessimistic Locking"
 msgstr "Verouillage pessimiste"
 
 #. Tag: para
-#: transactions.xml:819
-#, no-c-format
+#: transactions.xml:843
+#, fuzzy, no-c-format
 msgid ""
-"It is not intended that users spend much time worring about locking "
-"strategies. Its usually enough to specify an isolation level for the JDBC "
+"It is not intended that users spend much time worrying about locking "
+"strategies. It's usually enough to specify an isolation level for the JDBC "
 "connections and then simply let the database do all the work. However, "
 "advanced users may sometimes wish to obtain exclusive pessimistic locks, or "
 "re-obtain locks at the start of a new transaction."
@@ -1853,7 +1853,7 @@ msgstr ""
 "enregistrement et le réobtenir au lancement d'une nouvelle transaction."
 
 #. Tag: para
-#: transactions.xml:826
+#: transactions.xml:850
 #, no-c-format
 msgid ""
 "Hibernate will always use the locking mechanism of the database, never lock "
@@ -1863,7 +1863,7 @@ msgstr ""
 "données et ne verrouillera jamais les objets en mémoire!"
 
 #. Tag: para
-#: transactions.xml:831
+#: transactions.xml:855
 #, no-c-format
 msgid ""
 "The <literal>LockMode</literal> class defines the different lock levels that "
@@ -1874,7 +1874,7 @@ msgstr ""
 "par les mécanismes suivants:"
 
 #. Tag: para
-#: transactions.xml:838
+#: transactions.xml:862
 #, no-c-format
 msgid ""
 "<literal>LockMode.WRITE</literal> is acquired automatically when Hibernate "
@@ -1884,7 +1884,7 @@ msgstr ""
 "actualise ou insert un enregistrement."
 
 #. Tag: para
-#: transactions.xml:844
+#: transactions.xml:868
 #, no-c-format
 msgid ""
 "<literal>LockMode.UPGRADE</literal> may be acquired upon explicit user "
@@ -1896,7 +1896,7 @@ msgstr ""
 "base de données supportant cette syntaxe."
 
 #. Tag: para
-#: transactions.xml:850
+#: transactions.xml:874
 #, no-c-format
 msgid ""
 "<literal>LockMode.UPGRADE_NOWAIT</literal> may be acquired upon explicit "
@@ -1908,7 +1908,7 @@ msgstr ""
 "Oracle."
 
 #. Tag: para
-#: transactions.xml:856
+#: transactions.xml:880
 #, no-c-format
 msgid ""
 "<literal>LockMode.READ</literal> is acquired automatically when Hibernate "
@@ -1921,7 +1921,7 @@ msgstr ""
 "explicitement via une requête."
 
 #. Tag: para
-#: transactions.xml:863
+#: transactions.xml:887
 #, no-c-format
 msgid ""
 "<literal>LockMode.NONE</literal> represents the absence of a lock. All "
@@ -1937,7 +1937,7 @@ msgstr ""
 "dans cet état."
 
 #. Tag: para
-#: transactions.xml:872
+#: transactions.xml:896
 #, no-c-format
 msgid ""
 "The \"explicit user request\" is expressed in one of the following ways:"
@@ -1946,7 +1946,7 @@ msgstr ""
 "manières suivantes:"
 
 #. Tag: para
-#: transactions.xml:878
+#: transactions.xml:902
 #, no-c-format
 msgid ""
 "A call to <literal>Session.load()</literal>, specifying a <literal>LockMode</"
@@ -1956,19 +1956,19 @@ msgstr ""
 "verrouillage <literal>LockMode</literal> ."
 
 #. Tag: para
-#: transactions.xml:883
+#: transactions.xml:907
 #, no-c-format
 msgid "A call to <literal>Session.lock()</literal>."
 msgstr "Un appel à <literal>Session.lock()</literal> ."
 
 #. Tag: para
-#: transactions.xml:888
+#: transactions.xml:912
 #, no-c-format
 msgid "A call to <literal>Query.setLockMode()</literal>."
 msgstr "Une appel à <literal>Query.setLockMode()</literal> ."
 
 #. Tag: para
-#: transactions.xml:894
+#: transactions.xml:918
 #, no-c-format
 msgid ""
 "If <literal>Session.load()</literal> is called with <literal>UPGRADE</"
@@ -1988,7 +1988,7 @@ msgstr ""
 "appellera la méthode <literal>lock()</literal> pour cet objet."
 
 #. Tag: para
-#: transactions.xml:903
+#: transactions.xml:927
 #, no-c-format
 msgid ""
 "<literal>Session.lock()</literal> performs a version number check if the "
@@ -2004,7 +2004,7 @@ msgstr ""
 "requête <literal>SELECT ... FOR UPDATE</literal> sera utilisée.)"
 
 #. Tag: para
-#: transactions.xml:910
+#: transactions.xml:934
 #, no-c-format
 msgid ""
 "If the database does not support the requested lock mode, Hibernate will use "
@@ -2016,13 +2016,13 @@ msgstr ""
 "exception. Ceci assurera la portabilité de votre application."
 
 #. Tag: title
-#: transactions.xml:919
+#: transactions.xml:943
 #, no-c-format
 msgid "Connection Release Modes"
 msgstr "Mode de libération de Connection"
 
 #. Tag: para
-#: transactions.xml:921
+#: transactions.xml:945
 #, no-c-format
 msgid ""
 "The legacy (2.x) behavior of Hibernate in regards to JDBC connection "
@@ -2047,11 +2047,11 @@ msgstr ""
 "par <literal>org.hibernate.ConnectionReleaseMode</literal>:"
 
 #. Tag: para
-#: transactions.xml:935
-#, no-c-format
+#: transactions.xml:959
+#, fuzzy, no-c-format
 msgid ""
 "<literal>ON_CLOSE</literal> - is essentially the legacy behavior described "
-"above. The Hibernate session obatins a connection when it first needs to "
+"above. The Hibernate session obtains a connection when it first needs to "
 "perform some JDBC access and holds unto that connection until the session is "
 "closed."
 msgstr ""
@@ -2060,7 +2060,7 @@ msgstr ""
 "jusqu'à ce que la session se ferme."
 
 #. Tag: para
-#: transactions.xml:942
+#: transactions.xml:966
 #, no-c-format
 msgid ""
 "<literal>AFTER_TRANSACTION</literal> - says to release connections after a "
@@ -2070,7 +2070,7 @@ msgstr ""
 "après qu'une <literal>org.hibernate.Transaction</literal> se soit achevée."
 
 #. Tag: para
-#: transactions.xml:948
+#: transactions.xml:972
 #, no-c-format
 msgid ""
 "<literal>AFTER_STATEMENT</literal> (also referred to as aggressive release) "
@@ -2087,7 +2087,7 @@ msgstr ""
 "de l'utilisation de <literal>org.hibernate.ScrollableResults</literal>."
 
 #. Tag: para
-#: transactions.xml:958
+#: transactions.xml:982
 #, no-c-format
 msgid ""
 "The configuration parameter <literal>hibernate.connection.release_mode</"
@@ -2098,7 +2098,7 @@ msgstr ""
 "utiliser. Les valeurs possibles sont:"
 
 #. Tag: para
-#: transactions.xml:965
+#: transactions.xml:989
 #, no-c-format
 msgid ""
 "<literal>auto</literal> (the default) - this choice delegates to the release "
@@ -2119,7 +2119,7 @@ msgstr ""
 "une erreur dans le code de l'utilisateur."
 
 #. Tag: para
-#: transactions.xml:975
+#: transactions.xml:999
 #, no-c-format
 msgid ""
 "<literal>on_close</literal> - says to use ConnectionReleaseMode.ON_CLOSE. "
@@ -2131,7 +2131,7 @@ msgstr ""
 "versions précédentes, mais ne devrait plus être utilisé."
 
 #. Tag: para
-#: transactions.xml:981
+#: transactions.xml:1005
 #, no-c-format
 msgid ""
 "<literal>after_transaction</literal> - says to use ConnectionReleaseMode."
@@ -2148,7 +2148,7 @@ msgstr ""
 "AFTER_STATEMENT."
 
 #. Tag: para
-#: transactions.xml:989
+#: transactions.xml:1013
 #, no-c-format
 msgid ""
 "<literal>after_statement</literal> - says to use ConnectionReleaseMode."

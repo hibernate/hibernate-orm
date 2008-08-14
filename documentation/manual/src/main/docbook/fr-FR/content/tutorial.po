@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:48+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,139 +11,129 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: tutorial.xml:7
+#: tutorial.xml:33
 #, no-c-format
 msgid "Introduction to Hibernate"
 msgstr "Introduction à Hibernate"
 
 #. Tag: title
-#: tutorial.xml:10
+#: tutorial.xml:36
 #, no-c-format
 msgid "Preface"
 msgstr "Préface"
 
 #. Tag: para
-#: tutorial.xml:12
+#: tutorial.xml:38
 #, no-c-format
 msgid ""
-"This chapter is an introductory tutorial for new users of Hibernate. We "
-"start with a simple command line application using an in-memory database and "
-"develop it in easy to understand steps."
+"This chapter is an introduction to Hibernate by way of a tutorial, intended "
+"for new users of Hibernate. We start with a simple application using an in-"
+"memory database. We build the application in small, easy to understand "
+"steps. The tutorial is based on another, earlier one developed by Michael "
+"Gloegl. All code is contained in the <filename>tutorials/web</filename> "
+"directory of the project source."
 msgstr ""
-"Ce chapitre est un didacticiel introductif destiné aux nouveaux utilisateurs "
-"d'Hibernate. Nous commençons avec une simple application en ligne de "
-"commande utilisant une base de données en mémoire, et la développons en "
-"étapes faciles à comprendre."
 
 #. Tag: para
-#: tutorial.xml:18
+#: tutorial.xml:51
 #, no-c-format
 msgid ""
-"This tutorial is intended for new users of Hibernate but requires Java and "
-"SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-party "
-"libraries we name are for JDK 1.4 and 5.0. You might need others for JDK 1.3."
+"This tutorial expects the user have knowledge of both Java and SQL. If you "
+"are new or uncomfortable with either, it is advised that you start with a "
+"good introduction to that technology prior to attempting to learn Hibernate. "
+"It will save time and effort in the long run."
 msgstr ""
-"Ce didacticiel est destiné aux nouveaux utilisateurs d'Hibernate mais "
-"requiert des connaissances Java et SQL. Il est basé sur un didacticiel de "
-"Michael Gloegl, les bibliothèques tierces que nous nommons sont pour les JDK "
-"1.4 et 5.0. Vous pourriez avoir besoin d'autres bibliothèques pour le JDK "
-"1.3."
 
 #. Tag: para
-#: tutorial.xml:24
+#: tutorial.xml:61
 #, no-c-format
 msgid ""
-"The source code for the tutorial is included in the distribution in the "
-"<literal>doc/reference/tutorial/</literal> directory."
+"There is another tutorial/example application in the <filename>/tutorials/"
+"eg</filename> directory of the project source. That example is console based "
+"and as such would not have the dependency on a servlet container to execute. "
+"The basic setup is the same as the instructions below."
 msgstr ""
-"Le code source de ce tutoriel est inclus dans la distribution dans le "
-"répertoire <literal>doc/reference/tutorial/</literal>."
 
 #. Tag: title
-#: tutorial.xml:32
+#: tutorial.xml:71
 #, no-c-format
 msgid "Part 1 - The first Hibernate Application"
 msgstr "Partie 1 - Première application Hibernate"
 
 #. Tag: para
-#: tutorial.xml:34
-#, no-c-format
-msgid ""
-"First, we'll create a simple console-based Hibernate application. We use an "
-"Java database (HSQL DB), so we do not have to install any database server."
-msgstr ""
-"D'abord, nous créerons une simple application Hibernate en console. Nous "
-"utilisons une base de données en mémoire (HSQL DB), donc nous n'avons pas à "
-"installer de serveur de base de données."
-
-#. Tag: para
-#: tutorial.xml:39
+#: tutorial.xml:73
 #, no-c-format
 msgid ""
 "Let's assume we need a small database application that can store events we "
-"want to attend, and information about the hosts of these events."
+"want to attend, and information about the host(s) of these events. We will "
+"use an in-memory, Java database named HSQLDB to avoid describing "
+"installation/setup of any particular database servers. Feel free to tweak "
+"this tutorial to use whatever database you feel comfortable using."
 msgstr ""
-"Supposons que nous ayons besoin d'une petite application de base de données "
-"qui puisse stocker des événements que nous voulons suivre, et des "
-"informations à propos des hôtes de ces événements."
 
 #. Tag: para
-#: tutorial.xml:44
+#: tutorial.xml:82
 #, no-c-format
 msgid ""
-"The first thing we do, is set up our development directory and put all the "
-"Java libraries we need into it. Download the Hibernate distribution from the "
-"Hibernate website. Extract the package and place all required libraries "
-"found in <literal>/lib</literal> into into the <literal>/lib</literal> "
-"directory of your new development working directory. It should look like "
-"this:"
+"The first thing we need to do is set up our development environment, and "
+"specifically to setup all the required dependencies to Hibernate as well as "
+"other libraries. Hibernate is built using Maven which amongst other features "
+"provides <literal>dependecy management</literal>; moreover it provides "
+"<emphasis>transitive</emphasis> <literal>dependecy management</literal> "
+"which simply means that to use Hibernate we can simply define our dependency "
+"on Hibernate, Hibernate itself defines the dependencies it needs which then "
+"become transitive dependencies of our project."
 msgstr ""
-"La première chose que nous faisons est de configurer notre répertoire de "
-"développement et de mettre toutes les bibliothèques dont nous avons besoin "
-"dedans. Téléchargez la distribution Hibernate à partir du site web "
-"d'Hibernate. Extrayez le paquet et placez toutes les bibliothèques requises "
-"trouvées dans <literal>/lib</literal> dans le répertoire <literal>/lib</"
-"literal> de votre nouveau répertoire de travail. Il devrait ressembler à ça :"
 
 #. Tag: programlisting
-#: tutorial.xml:52
+#: tutorial.xml:94
 #, no-c-format
 msgid ""
 "<![CDATA[.\n"
-"+lib\n"
-"  antlr.jar\n"
-"  cglib.jar\n"
-"  asm.jar\n"
-"  asm-attrs.jars\n"
-"  commons-collections.jar\n"
-"  commons-logging.jar\n"
-"  hibernate3.jar\n"
-"  jta.jar\n"
-"  dom4j.jar\n"
-"  log4j.jar ]]>"
+"<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
+"         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+"         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven."
+"apache.org/xsd/maven-4.0.0.xsd\">\n"
+"\n"
+"    ...\n"
+"\n"
+"    <dependencies>\n"
+"        <dependency>\n"
+"            <groupId>${groupId}</groupId>\n"
+"            <artifactId>hibernate-core</artifactId>\n"
+"        </dependency>\n"
+"\n"
+"        <!-- Because this is a web app, we also have a dependency on the "
+"servlet api. -->\n"
+"        <dependency>\n"
+"            <groupId>javax.servlet</groupId>\n"
+"            <artifactId>servlet-api</artifactId>\n"
+"        </dependency>\n"
+"    </dependencies>\n"
+"\n"
+"</project>]]>"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:54
+#: tutorial.xml:97
 #, no-c-format
 msgid ""
-"This is the minimum set of required libraries (note that we also copied "
-"hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of "
-"writing</emphasis>. The Hibernate release you are using might require more "
-"or less libraries. See the <literal>README.txt</literal> file in the "
-"<literal>lib/</literal> directory of the Hibernate distribution for more "
-"information about required and optional third-party libraries. (Actually, "
-"Log4j is not required but preferred by many developers.)"
+"Essentially we are describing here the <filename>/tutorials/web/pom.xml</"
+"filename> file. See the <ulink url=\"http://maven.org\">Maven</ulink> site "
+"for more information."
 msgstr ""
-"Ceci est l'ensemble minimum de bibliothèques requises (notez que nous avons "
-"aussi copié hibernate3.jar, l'archive principale) pour Hibernate. Lisez le "
-"fichier <literal>README.txt</literal> dans le répertoire <literal>lib/</"
-"literal> de la distribution Hibernate pour plus d'informations à propos des "
-"biliothèques tierces requises et optionnelles. (En fait, log4j n'est pas "
-"requis mais préféré par beaucoup de développeurs.)"
 
 #. Tag: para
-#: tutorial.xml:63
+#: tutorial.xml:105
+#, no-c-format
+msgid ""
+"While not strictly necessary, most IDEs have integration with Maven to read "
+"these POM files and automatically set up a project for you which can save "
+"lots of time and effort."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:112
 #, no-c-format
 msgid ""
 "Next we create a class that represents the event we want to store in "
@@ -153,13 +143,13 @@ msgstr ""
 "stocker dans notre base de données."
 
 #. Tag: title
-#: tutorial.xml:68
+#: tutorial.xml:117
 #, no-c-format
 msgid "The first class"
 msgstr "La première classe"
 
 #. Tag: para
-#: tutorial.xml:70
+#: tutorial.xml:119
 #, no-c-format
 msgid ""
 "Our first persistent class is a simple JavaBean class with some properties:"
@@ -168,10 +158,10 @@ msgstr ""
 "quelques propriétés :"
 
 #. Tag: programlisting
-#: tutorial.xml:74
+#: tutorial.xml:123
 #, no-c-format
 msgid ""
-"<![CDATA[package events;\n"
+"<![CDATA[package org.hibernate.tutorial.domain;\n"
 "\n"
 "import java.util.Date;\n"
 "\n"
@@ -210,7 +200,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:76
+#: tutorial.xml:125
 #, no-c-format
 msgid ""
 "You can see that this class uses standard JavaBean naming conventions for "
@@ -229,7 +219,7 @@ msgstr ""
 "classe via reflexion."
 
 #. Tag: para
-#: tutorial.xml:84
+#: tutorial.xml:133
 #, no-c-format
 msgid ""
 "The <literal>id</literal> property holds a unique identifier value for a "
@@ -260,7 +250,7 @@ msgstr ""
 "l'ajuster à la conception de votre application."
 
 #. Tag: para
-#: tutorial.xml:96
+#: tutorial.xml:145
 #, no-c-format
 msgid ""
 "The no-argument constructor is a requirement for all persistent classes; "
@@ -276,7 +266,7 @@ msgstr ""
 "récupération des données efficaces sans instrumentation du bytecode."
 
 #. Tag: para
-#: tutorial.xml:103
+#: tutorial.xml:152
 #, no-c-format
 msgid ""
 "Place this Java source file in a directory called <literal>src</literal> in "
@@ -288,7 +278,7 @@ msgstr ""
 "ressembler à ça :"
 
 #. Tag: programlisting
-#: tutorial.xml:108
+#: tutorial.xml:157
 #, no-c-format
 msgid ""
 "<![CDATA[.\n"
@@ -300,7 +290,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:110
+#: tutorial.xml:159
 #, no-c-format
 msgid "In the next step, we tell Hibernate about this persistent class."
 msgstr ""
@@ -308,13 +298,13 @@ msgstr ""
 "persistante."
 
 #. Tag: title
-#: tutorial.xml:117
+#: tutorial.xml:166
 #, no-c-format
 msgid "The mapping file"
 msgstr "Le fichier de mapping"
 
 #. Tag: para
-#: tutorial.xml:119
+#: tutorial.xml:168
 #, no-c-format
 msgid ""
 "Hibernate needs to know how to load and store objects of the persistent "
@@ -329,13 +319,13 @@ msgstr ""
 "utiliser."
 
 #. Tag: para
-#: tutorial.xml:126
+#: tutorial.xml:175
 #, no-c-format
 msgid "The basic structure of a mapping file looks like this:"
 msgstr "La structure basique de ce fichier de mapping ressemble à ça :"
 
 #. Tag: programlisting
-#: tutorial.xml:130
+#: tutorial.xml:179
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -349,7 +339,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:132
+#: tutorial.xml:181
 #, no-c-format
 msgid ""
 "Note that the Hibernate DTD is very sophisticated. You can use it for auto-"
@@ -373,7 +363,7 @@ msgstr ""
 "distribution Hibernate."
 
 #. Tag: para
-#: tutorial.xml:143
+#: tutorial.xml:192
 #, no-c-format
 msgid ""
 "We will omit the DTD declaration in future examples to shorten the code. It "
@@ -383,7 +373,7 @@ msgstr ""
 "raccourcir le code. Bien sûr il n'est pas optionnel."
 
 #. Tag: para
-#: tutorial.xml:148
+#: tutorial.xml:197
 #, no-c-format
 msgid ""
 "Between the two <literal>hibernate-mapping</literal> tags, include a "
@@ -398,7 +388,7 @@ msgstr ""
 "base de données SQL :"
 
 #. Tag: programlisting
-#: tutorial.xml:155
+#: tutorial.xml:204
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -411,7 +401,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:157
+#: tutorial.xml:206
 #, no-c-format
 msgid ""
 "So far we told Hibernate how to persist and load object of class "
@@ -432,7 +422,7 @@ msgstr ""
 "subrogée :"
 
 #. Tag: programlisting
-#: tutorial.xml:165
+#: tutorial.xml:214
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -447,10 +437,10 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:167
-#, no-c-format
+#: tutorial.xml:216
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>id</literal> element is the declaration of the identifer "
+"The <literal>id</literal> element is the declaration of the identifier "
 "property, <literal>name=\"id\"</literal> declares the name of the Java "
 "property - Hibernate will use the getter and setter methods to access the "
 "property. The column attribute tells Hibernate which column of the "
@@ -475,7 +465,7 @@ msgstr ""
 "stratégie que vous avez écrit en extension)."
 
 #. Tag: para
-#: tutorial.xml:180
+#: tutorial.xml:229
 #, no-c-format
 msgid ""
 "Finally we include declarations for the persistent properties of the class "
@@ -487,7 +477,7 @@ msgstr ""
 "classe n'est considérée comme persistante :"
 
 #. Tag: programlisting
-#: tutorial.xml:186
+#: tutorial.xml:235
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -505,7 +495,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:188
+#: tutorial.xml:237
 #, no-c-format
 msgid ""
 "Just as with the <literal>id</literal> element, the <literal>name</literal> "
@@ -519,7 +509,7 @@ msgstr ""
 "getters/setters utiliser."
 
 #. Tag: para
-#: tutorial.xml:195
+#: tutorial.xml:244
 #, no-c-format
 msgid ""
 "Why does the <literal>date</literal> property mapping include the "
@@ -538,7 +528,7 @@ msgstr ""
 "différent pour le mapping."
 
 #. Tag: para
-#: tutorial.xml:204
+#: tutorial.xml:253
 #, no-c-format
 msgid ""
 "The next interesting thing is that the <literal>title</literal> mapping also "
@@ -576,7 +566,7 @@ msgstr ""
 "un <literal>timestamp</literal>."
 
 #. Tag: para
-#: tutorial.xml:220
+#: tutorial.xml:269
 #, no-c-format
 msgid ""
 "This mapping file should be saved as <literal>Event.hbm.xml</literal>, right "
@@ -593,7 +583,7 @@ msgstr ""
 "structure du répertoire devrait ressembler à ça :"
 
 #. Tag: programlisting
-#: tutorial.xml:228
+#: tutorial.xml:277
 #, no-c-format
 msgid ""
 "<![CDATA[.\n"
@@ -606,19 +596,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:230
+#: tutorial.xml:279
 #, no-c-format
 msgid "We continue with the main configuration of Hibernate."
 msgstr "Nous poursuivons avec la configuration principale d'Hibernate."
 
 #. Tag: title
-#: tutorial.xml:237
+#: tutorial.xml:286
 #, no-c-format
 msgid "Hibernate configuration"
 msgstr "Configuration d'Hibernate"
 
 #. Tag: para
-#: tutorial.xml:239
+#: tutorial.xml:288
 #, no-c-format
 msgid ""
 "We now have a persistent class and its mapping file in place. It is time to "
@@ -636,7 +626,7 @@ msgstr ""
 "répertoire <literal>lib/</literal> du dossier de développement."
 
 #. Tag: para
-#: tutorial.xml:247
+#: tutorial.xml:296
 #, no-c-format
 msgid ""
 "Create a directory called <literal>data</literal> in the root of the "
@@ -659,7 +649,7 @@ msgstr ""
 "répertoire <literal>data/</literal> et redémarrez HSQL DB à nouveau."
 
 #. Tag: para
-#: tutorial.xml:257
+#: tutorial.xml:306
 #, no-c-format
 msgid ""
 "Hibernate is the layer in your application which connects to this database, "
@@ -682,7 +672,7 @@ msgstr ""
 "logiciel de gestion de pools JDBC tiers avec une qualité de production."
 
 #. Tag: para
-#: tutorial.xml:267
+#: tutorial.xml:316
 #, no-c-format
 msgid ""
 "For Hibernate's configuration, we can use a simple <literal>hibernate."
@@ -697,7 +687,7 @@ msgstr ""
 "de configuration XML :"
 
 #. Tag: programlisting
-#: tutorial.xml:273
+#: tutorial.xml:322
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version='1.0' encoding='utf-8'?>\n"
@@ -746,7 +736,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:275
+#: tutorial.xml:324
 #, no-c-format
 msgid ""
 "Note that this XML configuration uses a different DTD. We configure "
@@ -763,7 +753,7 @@ msgstr ""
 "configuration différents (pour un démarrage plus facile)."
 
 #. Tag: para
-#: tutorial.xml:283
+#: tutorial.xml:332
 #, no-c-format
 msgid ""
 "The first four <literal>property</literal> elements contain the necessary "
@@ -790,7 +780,7 @@ msgstr ""
 "persistantes."
 
 #. Tag: para
-#: tutorial.xml:296
+#: tutorial.xml:345
 #, no-c-format
 msgid ""
 "Copy this file into the source directory, so it will end up in the root of "
@@ -803,13 +793,13 @@ msgstr ""
 "appelé <literal>hibernate.cfg.xml</literal> dans la racine du classpath."
 
 #. Tag: title
-#: tutorial.xml:305
+#: tutorial.xml:354
 #, no-c-format
 msgid "Building with Ant"
 msgstr "Construction avec Ant"
 
 #. Tag: para
-#: tutorial.xml:307
+#: tutorial.xml:356
 #, no-c-format
 msgid ""
 "We'll now build the tutorial with Ant. You will need to have Ant installed - "
@@ -830,13 +820,13 @@ msgstr ""
 "directement dans le répertoire de développement."
 
 #. Tag: para
-#: tutorial.xml:316
+#: tutorial.xml:365
 #, no-c-format
 msgid "A basic build file looks like this:"
 msgstr "Un fichier de construction basique ressemble à ça :"
 
 #. Tag: programlisting
-#: tutorial.xml:320
+#: tutorial.xml:369
 #, no-c-format
 msgid ""
 "<![CDATA[<project name=\"hibernate-tutorial\" default=\"compile\">\n"
@@ -874,7 +864,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:322
+#: tutorial.xml:371
 #, no-c-format
 msgid ""
 "This will tell Ant to add all files in the lib directory ending with "
@@ -889,7 +879,7 @@ msgstr ""
 "lancez Ant maintenant, vous devriez obtenir cette sortie :"
 
 #. Tag: programlisting
-#: tutorial.xml:329
+#: tutorial.xml:378
 #, no-c-format
 msgid ""
 "<![CDATA[C:\\hibernateTutorial\\>ant\n"
@@ -906,13 +896,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:334
+#: tutorial.xml:383
 #, no-c-format
 msgid "Startup and helpers"
 msgstr "Démarrage et aides"
 
 #. Tag: para
-#: tutorial.xml:336
+#: tutorial.xml:385
 #, no-c-format
 msgid ""
 "It's time to load and store some <literal>Event</literal> objects, but first "
@@ -935,7 +925,7 @@ msgstr ""
 "literal> est un objet global \"thread-safe\", instancié une seule fois."
 
 #. Tag: para
-#: tutorial.xml:346
+#: tutorial.xml:395
 #, no-c-format
 msgid ""
 "We'll create a <literal>HibernateUtil</literal> helper class which takes "
@@ -947,7 +937,7 @@ msgstr ""
 "plus facile. Regardons l'implémentation :"
 
 #. Tag: programlisting
-#: tutorial.xml:352
+#: tutorial.xml:401
 #, no-c-format
 msgid ""
 "<![CDATA[package util;\n"
@@ -980,7 +970,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:354
+#: tutorial.xml:403
 #, no-c-format
 msgid ""
 "This class does not only produce the global <literal>SessionFactory</"
@@ -996,7 +986,7 @@ msgstr ""
 "depuis JNDI dans un serveur d'applications."
 
 #. Tag: para
-#: tutorial.xml:361
+#: tutorial.xml:410
 #, no-c-format
 msgid ""
 "If you give the <literal>SessionFactory</literal> a name in your "
@@ -1014,7 +1004,7 @@ msgstr ""
 "référence Hibernate."
 
 #. Tag: para
-#: tutorial.xml:370
+#: tutorial.xml:419
 #, no-c-format
 msgid ""
 "Place <literal>HibernateUtil.java</literal> in the development source "
@@ -1024,7 +1014,7 @@ msgstr ""
 "développement, et ensuite <literal>Event.java</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:375
+#: tutorial.xml:424
 #, no-c-format
 msgid ""
 "<![CDATA[.\n"
@@ -1042,7 +1032,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:377
+#: tutorial.xml:426
 #, no-c-format
 msgid ""
 "This should again compile without problems. We finally need to configure a "
@@ -1067,7 +1057,7 @@ msgstr ""
 "affiché sur la sortie standard."
 
 #. Tag: para
-#: tutorial.xml:387
+#: tutorial.xml:436
 #, no-c-format
 msgid ""
 "The tutorial infrastructure is complete - and we are ready to do some real "
@@ -1077,13 +1067,13 @@ msgstr ""
 "effectuer un travail réel avec Hibernate."
 
 #. Tag: title
-#: tutorial.xml:395
+#: tutorial.xml:444
 #, no-c-format
 msgid "Loading and storing objects"
 msgstr "Charger et stocker des objets"
 
 #. Tag: para
-#: tutorial.xml:397
+#: tutorial.xml:446
 #, no-c-format
 msgid ""
 "Finally, we can use Hibernate to load and store objects. We write an "
@@ -1095,7 +1085,7 @@ msgstr ""
 "méthode <literal>main()</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:402
+#: tutorial.xml:451
 #, no-c-format
 msgid ""
 "<![CDATA[package events;\n"
@@ -1137,7 +1127,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:404
+#: tutorial.xml:453
 #, no-c-format
 msgid ""
 "We create a new <literal>Event</literal> object, and hand it over to "
@@ -1152,7 +1142,7 @@ msgstr ""
 "literal> avant de lancer ça."
 
 #. Tag: para
-#: tutorial.xml:411
+#: tutorial.xml:460
 #, no-c-format
 msgid ""
 "A <literal>Session</literal> is a single unit of work. For now we'll keep "
@@ -1171,7 +1161,7 @@ msgstr ""
 "<literal>Session</literal> Hibernate."
 
 #. Tag: para
-#: tutorial.xml:419
+#: tutorial.xml:468
 #, no-c-format
 msgid ""
 "What does <literal>sessionFactory.getCurrentSession()</literal> do? First, "
@@ -1196,7 +1186,7 @@ msgstr ""
 "thread java courant d'exécution. Ceci n'est pas totalement vrai."
 
 #. Tag: para
-#: tutorial.xml:430
+#: tutorial.xml:479
 #, no-c-format
 msgid ""
 "A <literal>Session</literal> begins when it is first needed, when the first "
@@ -1223,7 +1213,7 @@ msgstr ""
 "d'utiliser Hibernate."
 
 #. Tag: para
-#: tutorial.xml:441
+#: tutorial.xml:490
 #, no-c-format
 msgid ""
 "Related to the unit of work scope, should the Hibernate <literal>Session</"
@@ -1249,7 +1239,7 @@ msgstr ""
 "an anti-pattern. A real (web) application is shown later in this tutorial."
 
 #. Tag: para
-#: tutorial.xml:452
+#: tutorial.xml:501
 #, no-c-format
 msgid ""
 "Have a look at <xref linkend=\"transactions\"/> for more information about "
@@ -1261,7 +1251,7 @@ msgstr ""
 "erreurs et rollback sur l'exemple précédent."
 
 #. Tag: para
-#: tutorial.xml:458
+#: tutorial.xml:507
 #, no-c-format
 msgid ""
 "To run this first routine we have to add a callable target to the Ant build "
@@ -1271,7 +1261,7 @@ msgstr ""
 "dans le fichier de construction de Ant :"
 
 #. Tag: programlisting
-#: tutorial.xml:462
+#: tutorial.xml:511
 #, no-c-format
 msgid ""
 "<![CDATA[<target name=\"run\" depends=\"compile\">\n"
@@ -1284,7 +1274,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:464
+#: tutorial.xml:513
 #, no-c-format
 msgid ""
 "The value of the <literal>action</literal> argument is set on the command "
@@ -1294,13 +1284,13 @@ msgstr ""
 "commande qui appelle la cible :"
 
 #. Tag: programlisting
-#: tutorial.xml:469
+#: tutorial.xml:518
 #, no-c-format
 msgid "<![CDATA[C:\\hibernateTutorial\\>ant run -Daction=store]]>"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:471
+#: tutorial.xml:520
 #, no-c-format
 msgid ""
 "You should see, after compilation, Hibernate starting up and, depending on "
@@ -1312,7 +1302,7 @@ msgstr ""
 "trouverez la ligne suivante :"
 
 #. Tag: programlisting
-#: tutorial.xml:476
+#: tutorial.xml:525
 #, no-c-format
 msgid ""
 "<![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) "
@@ -1320,7 +1310,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:478
+#: tutorial.xml:527
 #, no-c-format
 msgid ""
 "This is the <literal>INSERT</literal> executed by Hibernate, the question "
@@ -1334,7 +1324,7 @@ msgstr ""
 "<literal>log4j.properties</literal>."
 
 #. Tag: para
-#: tutorial.xml:484
+#: tutorial.xml:533
 #, no-c-format
 msgid ""
 "Now we'd like to list stored events as well, so we add an option to the main "
@@ -1344,7 +1334,7 @@ msgstr ""
 "ajoutons une option à la méthode principale :"
 
 #. Tag: programlisting
-#: tutorial.xml:488
+#: tutorial.xml:537
 #, no-c-format
 msgid ""
 "<![CDATA[if (args[0].equals(\"store\")) {\n"
@@ -1361,14 +1351,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:490
+#: tutorial.xml:539
 #, no-c-format
 msgid "We also add a new <literal>listEvents() method</literal>:"
 msgstr ""
 "Nous ajoutons aussi une nouvelle méthode <literal>listEvents()</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:494
+#: tutorial.xml:543
 #, no-c-format
 msgid ""
 "<![CDATA[private List listEvents() {\n"
@@ -1387,7 +1377,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:496
+#: tutorial.xml:545
 #, no-c-format
 msgid ""
 "What we do here is use an HQL (Hibernate Query Language) query to load all "
@@ -1403,13 +1393,13 @@ msgstr ""
 "Vous pouvez créer des requêtes plus complexes avec HQL, bien sûr."
 
 #. Tag: para
-#: tutorial.xml:503
+#: tutorial.xml:552
 #, no-c-format
 msgid "Now, to execute and test all of this, follow these steps:"
 msgstr "Maintenant, pour exécuter et tester tout ça, suivez ces étapes :"
 
 #. Tag: para
-#: tutorial.xml:509
+#: tutorial.xml:558
 #, no-c-format
 msgid ""
 "Run <literal>ant run -Daction=store</literal> to store something into the "
@@ -1421,12 +1411,12 @@ msgstr ""
 "de la base de données grâce à hbm2ddl."
 
 #. Tag: para
-#: tutorial.xml:515
-#, no-c-format
+#: tutorial.xml:564
+#, fuzzy, no-c-format
 msgid ""
 "Now disable hbm2ddl by commenting out the property in your "
 "<literal>hibernate.cfg.xml</literal> file. Usually you only leave it turned "
-"on in continous unit testing, but another run of hbm2ddl would "
+"on in continuous unit testing, but another run of hbm2ddl would "
 "<emphasis>drop</emphasis> everything you have stored - the <literal>create</"
 "literal> configuration setting actually translates into \"drop all tables "
 "from the schema, then re-create all tables, when the SessionFactory is build"
@@ -1441,7 +1431,7 @@ msgstr ""
 "lorsque la SessionFactory est construite\"."
 
 #. Tag: para
-#: tutorial.xml:525
+#: tutorial.xml:574
 #, no-c-format
 msgid ""
 "If you now call Ant with <literal>-Daction=list</literal>, you should see "
@@ -1453,7 +1443,7 @@ msgstr ""
 "bien sûr aussi appeler l'action <literal>store</literal> plusieurs fois."
 
 #. Tag: para
-#: tutorial.xml:531
+#: tutorial.xml:580
 #, no-c-format
 msgid ""
 "Note: Most new Hibernate users fail at this point and we see questions about "
@@ -1471,13 +1461,13 @@ msgstr ""
 "mapping and/or database schema, you have to re-enable hbm2ddl once again."
 
 #. Tag: title
-#: tutorial.xml:544
+#: tutorial.xml:593
 #, no-c-format
 msgid "Part 2 - Mapping associations"
 msgstr "Partie 2 - Mapper des associations"
 
 #. Tag: para
-#: tutorial.xml:546
+#: tutorial.xml:595
 #, no-c-format
 msgid ""
 "We mapped a persistent entity class to a table. Let's build on this and add "
@@ -1490,20 +1480,20 @@ msgstr ""
 "ils participent."
 
 #. Tag: title
-#: tutorial.xml:552
+#: tutorial.xml:601
 #, no-c-format
 msgid "Mapping the Person class"
 msgstr "Mapper la classe Person"
 
 #. Tag: para
-#: tutorial.xml:554
+#: tutorial.xml:603
 #, no-c-format
 msgid "The first cut of the <literal>Person</literal> class is simple:"
 msgstr ""
 "La première version de la classe <literal>Person</literal> est simple :"
 
 #. Tag: programlisting
-#: tutorial.xml:558
+#: tutorial.xml:607
 #, no-c-format
 msgid ""
 "<![CDATA[package events;\n"
@@ -1523,7 +1513,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:560
+#: tutorial.xml:609
 #, no-c-format
 msgid ""
 "Create a new mapping file called <literal>Person.hbm.xml</literal> (don't "
@@ -1533,7 +1523,7 @@ msgstr ""
 "(n'oubliez pas la référence à la DTD)"
 
 #. Tag: programlisting
-#: tutorial.xml:565
+#: tutorial.xml:614
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1551,14 +1541,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:567
+#: tutorial.xml:616
 #, no-c-format
 msgid "Finally, add the new mapping to Hibernate's configuration:"
 msgstr ""
 "Finalement, ajoutez la nouveau mapping à la configuration d'Hibernate :"
 
 #. Tag: programlisting
-#: tutorial.xml:571
+#: tutorial.xml:620
 #, no-c-format
 msgid ""
 "<![CDATA[<mapping resource=\"events/Event.hbm.xml\"/>\n"
@@ -1566,7 +1556,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:573
+#: tutorial.xml:622
 #, no-c-format
 msgid ""
 "We'll now create an association between these two entities. Obviously, "
@@ -1580,13 +1570,13 @@ msgstr ""
 "traiter sont : direction, cardinalité et comportement de la collection."
 
 #. Tag: title
-#: tutorial.xml:583
+#: tutorial.xml:632
 #, no-c-format
 msgid "A unidirectional Set-based association"
 msgstr "Une association unidirectionnelle basée sur Set"
 
 #. Tag: para
-#: tutorial.xml:585
+#: tutorial.xml:634
 #, no-c-format
 msgid ""
 "We'll add a collection of events to the <literal>Person</literal> class. "
@@ -1604,7 +1594,7 @@ msgstr ""
 "contiendra pas d'éléments dupliqués et l'ordre ne nous importe pas."
 
 #. Tag: para
-#: tutorial.xml:592
+#: tutorial.xml:641
 #, no-c-format
 msgid ""
 "We need a unidirectional, many-valued associations, implemented with a "
@@ -1616,7 +1606,7 @@ msgstr ""
 "les classes Java et mappons les :"
 
 #. Tag: programlisting
-#: tutorial.xml:597
+#: tutorial.xml:646
 #, no-c-format
 msgid ""
 "<![CDATA[public class Person {\n"
@@ -1634,7 +1624,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:599
+#: tutorial.xml:648
 #, no-c-format
 msgid ""
 "Before we map this association, think about the other side. Clearly, we "
@@ -1661,7 +1651,7 @@ msgstr ""
 "conséquent nous utilisons un mapping Hibernate many-to-many:"
 
 #. Tag: programlisting
-#: tutorial.xml:610
+#: tutorial.xml:659
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"events.Person\" table=\"PERSON\">\n"
@@ -1681,7 +1671,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:612
+#: tutorial.xml:661
 #, no-c-format
 msgid ""
 "Hibernate supports all kinds of collection mappings, a <literal>&lt;set&gt;</"
@@ -1711,13 +1701,13 @@ msgstr ""
 "collection)."
 
 #. Tag: para
-#: tutorial.xml:624
+#: tutorial.xml:673
 #, no-c-format
 msgid "The database schema for this mapping is therefore:"
 msgstr "Le schéma de base de données pour ce mapping est donc :"
 
 #. Tag: programlisting
-#: tutorial.xml:628
+#: tutorial.xml:677
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -1736,13 +1726,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:633
+#: tutorial.xml:682
 #, no-c-format
 msgid "Working the association"
 msgstr "Travailler avec l'association"
 
 #. Tag: para
-#: tutorial.xml:635
+#: tutorial.xml:684
 #, no-c-format
 msgid ""
 "Let's bring some people and events together in a new method in "
@@ -1752,7 +1742,7 @@ msgstr ""
 "méthode dans <literal>EventManager</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:639
+#: tutorial.xml:688
 #, no-c-format
 msgid ""
 "<![CDATA[private void addPersonToEvent(Long personId, Long eventId) {\n"
@@ -1771,7 +1761,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:641
+#: tutorial.xml:690
 #, no-c-format
 msgid ""
 "After loading a <literal>Person</literal> and an <literal>Event</literal>, "
@@ -1811,7 +1801,7 @@ msgstr ""
 "configuration pour la classe <literal>CurrentSessionContext</literal>."
 
 #. Tag: para
-#: tutorial.xml:656
+#: tutorial.xml:705
 #, no-c-format
 msgid ""
 "You might of course load person and event in different units of work. Or you "
@@ -1828,7 +1818,7 @@ msgstr ""
 "détachée:"
 
 #. Tag: programlisting
-#: tutorial.xml:663
+#: tutorial.xml:712
 #, no-c-format
 msgid ""
 "<![CDATA[private void addPersonToEvent(Long personId, Long eventId) {\n"
@@ -1866,7 +1856,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:665
+#: tutorial.xml:714
 #, no-c-format
 msgid ""
 "The call to <literal>update</literal> makes a detached object persistent "
@@ -1883,7 +1873,7 @@ msgstr ""
 "pour retourner cet identifiant)."
 
 #. Tag: para
-#: tutorial.xml:672
+#: tutorial.xml:721
 #, no-c-format
 msgid ""
 "Well, this is not much use in our current situation, but it's an important "
@@ -1902,7 +1892,7 @@ msgstr ""
 "d'un événement - la méthode <literal>save()</literal> les retourne."
 
 #. Tag: programlisting
-#: tutorial.xml:680
+#: tutorial.xml:729
 #, no-c-format
 msgid ""
 "<![CDATA[else if (args[0].equals(\"addpersontoevent\")) {\n"
@@ -1915,7 +1905,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:682
+#: tutorial.xml:731
 #, no-c-format
 msgid ""
 "This was an example of an association between two equally important classes, "
@@ -1947,7 +1937,7 @@ msgstr ""
 "<literal>Address</literal> ou <literal>MonetaryAmount</literal>, par exemple."
 
 #. Tag: para
-#: tutorial.xml:695
+#: tutorial.xml:744
 #, no-c-format
 msgid ""
 "You can also design a collection of value types. This is conceptually very "
@@ -1959,13 +1949,13 @@ msgstr ""
 "entités, mais très ressemblant en Java."
 
 #. Tag: title
-#: tutorial.xml:703
+#: tutorial.xml:752
 #, no-c-format
 msgid "Collection of values"
 msgstr "Collection de valeurs"
 
 #. Tag: para
-#: tutorial.xml:705
+#: tutorial.xml:754
 #, no-c-format
 msgid ""
 "We add a collection of value typed objects to the <literal>Person</literal> "
@@ -1979,7 +1969,7 @@ msgstr ""
 "encore un <literal>Set</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:710
+#: tutorial.xml:759
 #, no-c-format
 msgid ""
 "<![CDATA[private Set emailAddresses = new HashSet();\n"
@@ -1994,13 +1984,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:712
+#: tutorial.xml:761
 #, no-c-format
 msgid "The mapping of this <literal>Set</literal>:"
 msgstr "Le mapping de ce <literal>Set</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:716
+#: tutorial.xml:765
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"emailAddresses\" table=\"PERSON_EMAIL_ADDR\">\n"
@@ -2010,7 +2000,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:718
+#: tutorial.xml:767
 #, no-c-format
 msgid ""
 "The difference compared with the earlier mapping is the <literal>element</"
@@ -2037,13 +2027,13 @@ msgstr ""
 "valeurs de <literal>String</literal> seront réellement stockées."
 
 #. Tag: para
-#: tutorial.xml:728
+#: tutorial.xml:777
 #, no-c-format
 msgid "Have a look at the updated schema:"
 msgstr "Regardons le schéma mis à jour :"
 
 #. Tag: programlisting
-#: tutorial.xml:732
+#: tutorial.xml:781
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -2069,7 +2059,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:734
+#: tutorial.xml:783
 #, no-c-format
 msgid ""
 "You can see that the primary key of the collection table is in fact a "
@@ -2083,7 +2073,7 @@ msgstr ""
 "exactement la sémantique dont nous avons besoin pour un ensemble en Java."
 
 #. Tag: para
-#: tutorial.xml:740
+#: tutorial.xml:789
 #, no-c-format
 msgid ""
 "You can now try and add elements to this collection, just like we did before "
@@ -2094,7 +2084,7 @@ msgstr ""
 "événements. C'est le même code en Java."
 
 #. Tag: programlisting
-#: tutorial.xml:745
+#: tutorial.xml:794
 #, no-c-format
 msgid ""
 "<![CDATA[private void addEmailToPerson(Long personId, String emailAddress) "
@@ -2114,10 +2104,10 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:747
-#, no-c-format
+#: tutorial.xml:796
+#, fuzzy, no-c-format
 msgid ""
-"This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the "
+"This time we didn't use a <emphasis>fetch</emphasis> query to initialize the "
 "collection. Hence, the call to its getter method will trigger an additional "
 "select to initialize it, so we can add an element to it. Monitor the SQL log "
 "and try to optimize this with an eager fetch."
@@ -2129,13 +2119,13 @@ msgstr ""
 "chargement aggressif."
 
 #. Tag: title
-#: tutorial.xml:757
+#: tutorial.xml:806
 #, no-c-format
 msgid "Bi-directional associations"
 msgstr "Associations bidirectionnelles"
 
 #. Tag: para
-#: tutorial.xml:759
+#: tutorial.xml:808
 #, no-c-format
 msgid ""
 "Next we are going to map a bi-directional association - making the "
@@ -2154,7 +2144,7 @@ msgstr ""
 "vues et récupérées de toutes les manières possibles."
 
 #. Tag: para
-#: tutorial.xml:767
+#: tutorial.xml:816
 #, no-c-format
 msgid ""
 "First, add a collection of participants to the <literal>Event</literal> "
@@ -2164,7 +2154,7 @@ msgstr ""
 "literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:771
+#: tutorial.xml:820
 #, no-c-format
 msgid ""
 "<![CDATA[private Set participants = new HashSet();\n"
@@ -2179,7 +2169,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:773
+#: tutorial.xml:822
 #, no-c-format
 msgid ""
 "Now map this side of the association too, in <literal>Event.hbm.xml</"
@@ -2189,7 +2179,7 @@ msgstr ""
 "xml</literal>."
 
 #. Tag: programlisting
-#: tutorial.xml:777
+#: tutorial.xml:826
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"participants\" table=\"PERSON_EVENT\" inverse=\"true"
@@ -2200,7 +2190,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:779
+#: tutorial.xml:828
 #, no-c-format
 msgid ""
 "As you see, these are normal <literal>set</literal> mappings in both mapping "
@@ -2218,7 +2208,7 @@ msgstr ""
 "mapping de la collection des <literal>Event</literal>s."
 
 #. Tag: para
-#: tutorial.xml:787
+#: tutorial.xml:836
 #, no-c-format
 msgid ""
 "What this means is that Hibernate should take the other side - the "
@@ -2233,13 +2223,13 @@ msgstr ""
 "est créé."
 
 #. Tag: title
-#: tutorial.xml:796
+#: tutorial.xml:845
 #, no-c-format
 msgid "Working bi-directional links"
 msgstr "Travailler avec des liens bidirectionnels"
 
 #. Tag: para
-#: tutorial.xml:798
+#: tutorial.xml:847
 #, no-c-format
 msgid ""
 "First, keep in mind that Hibernate does not affect normal Java semantics. "
@@ -2264,10 +2254,10 @@ msgstr ""
 "vous ne devriez jamais oublier de le faire."
 
 #. Tag: para
-#: tutorial.xml:808
-#, no-c-format
+#: tutorial.xml:857
+#, fuzzy, no-c-format
 msgid ""
-"Many developers program defensive and create link management methods to "
+"Many developers program defensively and create link management methods to "
 "correctly set both sides, e.g. in <literal>Person</literal>:"
 msgstr ""
 "Beaucoup de développeurs programment de manière défensive et créent des "
@@ -2275,7 +2265,7 @@ msgstr ""
 "exemple dans <literal>Person</literal> :"
 
 #. Tag: programlisting
-#: tutorial.xml:813
+#: tutorial.xml:862
 #, no-c-format
 msgid ""
 "<![CDATA[protected Set getEvents() {\n"
@@ -2298,7 +2288,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:815
+#: tutorial.xml:864
 #, no-c-format
 msgid ""
 "Notice that the get and set methods for the collection are now protected - "
@@ -2314,7 +2304,7 @@ msgstr ""
 "probablement faire de même avec la collection de l'autre côté."
 
 #. Tag: para
-#: tutorial.xml:822
+#: tutorial.xml:871
 #, no-c-format
 msgid ""
 "What about the <literal>inverse</literal> mapping attribute? For you, and "
@@ -2349,20 +2339,20 @@ msgstr ""
 "vers-plusieurs vous pouvez choisir n'importe quel côté, il n'y a pas de "
 "différence."
 
-#. Tag: para
-#: tutorial.xml:837
-#, no-c-format
-msgid "Let's turn this into a small web application."
-msgstr "Let's turn this into a small web application."
-
 #. Tag: title
-#: tutorial.xml:844
+#: tutorial.xml:889
 #, no-c-format
 msgid "Part 3 - The EventManager web application"
 msgstr "Part 3 - L'application web EventManager"
 
 #. Tag: para
-#: tutorial.xml:846
+#: tutorial.xml:891
+#, fuzzy, no-c-format
+msgid "Let's turn the following discussion into a small web application..."
+msgstr "Let's turn this into a small web application."
+
+#. Tag: para
+#: tutorial.xml:895
 #, no-c-format
 msgid ""
 "A Hibernate web application uses <literal>Session</literal> and "
@@ -2379,13 +2369,13 @@ msgstr ""
 "pour saisir d'autres évènements."
 
 #. Tag: title
-#: tutorial.xml:854
+#: tutorial.xml:903
 #, no-c-format
 msgid "Writing the basic servlet"
 msgstr "Ecrire la servlet de base"
 
 #. Tag: para
-#: tutorial.xml:856
+#: tutorial.xml:905
 #, no-c-format
 msgid ""
 "Create a new class in your source directory, in the <literal>events</"
@@ -2395,7 +2385,7 @@ msgstr ""
 "<literal>events</literal>:"
 
 #. Tag: programlisting
-#: tutorial.xml:861
+#: tutorial.xml:910
 #, no-c-format
 msgid ""
 "<![CDATA[package events;\n"
@@ -2409,7 +2399,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:863
+#: tutorial.xml:912
 #, no-c-format
 msgid ""
 "The servlet handles HTTP <literal>GET</literal> requests only, hence, the "
@@ -2419,7 +2409,7 @@ msgstr ""
 "method we implement is <literal>doGet()</literal>:"
 
 #. Tag: programlisting
-#: tutorial.xml:868
+#: tutorial.xml:917
 #, no-c-format
 msgid ""
 "<![CDATA[protected void doGet(HttpServletRequest request,\n"
@@ -2449,7 +2439,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:870
+#: tutorial.xml:919
 #, fuzzy, no-c-format
 msgid ""
 "The pattern we are applying here is called <emphasis>session-per-request</"
@@ -2470,7 +2460,7 @@ msgstr ""
 "n'utilisons pas le mode auto-commit dans les applications)."
 
 #. Tag: para
-#: tutorial.xml:879
+#: tutorial.xml:928
 #, no-c-format
 msgid ""
 "Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> "
@@ -2485,7 +2475,7 @@ msgstr ""
 "the current Java thread."
 
 #. Tag: para
-#: tutorial.xml:886
+#: tutorial.xml:935
 #, no-c-format
 msgid ""
 "Next, the possible actions of the request are processed and the response "
@@ -2495,11 +2485,11 @@ msgstr ""
 "HTML est rendue. Nous en parlerons plus tard."
 
 #. Tag: para
-#: tutorial.xml:891
+#: tutorial.xml:940
 #, fuzzy, no-c-format
 msgid ""
 "Finally, the unit of work ends when processing and rendering is complete. If "
-"any problem occured during processing or rendering, an exception will be "
+"any problem occurred during processing or rendering, an exception will be "
 "thrown and the database transaction rolled back. This completes the "
 "<literal>session-per-request</literal> pattern. Instead of the transaction "
 "demarcation code in every servlet you could also write a servlet filter. See "
@@ -2518,20 +2508,20 @@ msgstr ""
 "pour le rendu de vos vues."
 
 #. Tag: title
-#: tutorial.xml:905
+#: tutorial.xml:954
 #, no-c-format
 msgid "Processing and rendering"
 msgstr "Procéder et rendre"
 
 #. Tag: para
-#: tutorial.xml:907
+#: tutorial.xml:956
 #, no-c-format
 msgid ""
 "Let's implement the processing of the request and rendering of the page."
 msgstr "Implémentons l'exécution de la requête et le rendu de la page."
 
 #. Tag: programlisting
-#: tutorial.xml:911
+#: tutorial.xml:960
 #, no-c-format
 msgid ""
 "<![CDATA[// Write HTML header\n"
@@ -2563,7 +2553,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:913
+#: tutorial.xml:962
 #, fuzzy, no-c-format
 msgid ""
 "Granted, this coding style with a mix of Java and HTML would not scale in a "
@@ -2582,7 +2572,7 @@ msgstr ""
 "fait que sortir de l'HTML:"
 
 #. Tag: programlisting
-#: tutorial.xml:922
+#: tutorial.xml:971
 #, no-c-format
 msgid ""
 "<![CDATA[private void printEventForm(PrintWriter out) {\n"
@@ -2597,7 +2587,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:924
+#: tutorial.xml:973
 #, no-c-format
 msgid ""
 "The <literal>listEvents()</literal> method uses the Hibernate "
@@ -2607,7 +2597,7 @@ msgstr ""
 "literal> Hibernate liée au thread courant pour exécuter la requête:"
 
 #. Tag: programlisting
-#: tutorial.xml:930
+#: tutorial.xml:979
 #, no-c-format
 msgid ""
 "<![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat "
@@ -2637,7 +2627,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:932
+#: tutorial.xml:981
 #, no-c-format
 msgid ""
 "Finally, the <literal>store</literal> action is dispatched to the "
@@ -2649,7 +2639,7 @@ msgstr ""
 "<literal>Session</literal> du thread courant:"
 
 #. Tag: programlisting
-#: tutorial.xml:938
+#: tutorial.xml:987
 #, no-c-format
 msgid ""
 "<![CDATA[protected void createAndStoreEvent(String title, Date theDate) {\n"
@@ -2663,13 +2653,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:940
-#, no-c-format
+#: tutorial.xml:989
+#, fuzzy, no-c-format
 msgid ""
 "That's it, the servlet is complete. A request to the servlet will be "
 "processed in a single <literal>Session</literal> and <literal>Transaction</"
 "literal>. As earlier in the standalone application, Hibernate can "
-"automatically bind these ojects to the current thread of execution. This "
+"automatically bind these objects to the current thread of execution. This "
 "gives you the freedom to layer your code and access the "
 "<literal>SessionFactory</literal> in any way you like. Usually you'd use a "
 "more sophisticated design and move the data access code into data access "
@@ -2685,13 +2675,13 @@ msgstr ""
 "Voir le wiki Hibernate pour plus d'exemples."
 
 #. Tag: title
-#: tutorial.xml:954
+#: tutorial.xml:1003
 #, no-c-format
 msgid "Deploying and testing"
 msgstr "Déployer et tester"
 
 #. Tag: para
-#: tutorial.xml:956
+#: tutorial.xml:1005
 #, no-c-format
 msgid ""
 "To deploy this application you have to create a web archive, a WAR. Add the "
@@ -2701,7 +2691,7 @@ msgstr ""
 "Ajoutez la cible Ant suivante dans votre <literal>build.xml</literal>:"
 
 #. Tag: programlisting
-#: tutorial.xml:961
+#: tutorial.xml:1010
 #, no-c-format
 msgid ""
 "<![CDATA[<target name=\"war\" depends=\"compile\">\n"
@@ -2716,7 +2706,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:963
+#: tutorial.xml:1012
 #, no-c-format
 msgid ""
 "This target creates a file called <literal>hibernate-tutorial.war</literal> "
@@ -2730,7 +2720,7 @@ msgstr ""
 "racine de votre projet:"
 
 #. Tag: programlisting
-#: tutorial.xml:969
+#: tutorial.xml:1018
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -2753,14 +2743,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:971
-#, no-c-format
+#: tutorial.xml:1020
+#, fuzzy, no-c-format
 msgid ""
 "Before you compile and deploy the web application, note that an additional "
 "library is required: <literal>jsdk.jar</literal>. This is the Java servlet "
 "development kit, if you don't have this library already, get it from the Sun "
 "website and copy it to your library directory. However, it will be only used "
-"for compliation and excluded from the WAR package."
+"for compilation and excluded from the WAR package."
 msgstr ""
 "Avant de compiler et déployer l'application web, notez qu'une bibliothèque "
 "supplémentaire est requise: <literal>servlet.jar</literal>. C'est le kit de "
@@ -2771,7 +2761,7 @@ msgstr ""
 "pour la compilation et sera exclue du paackage WAR."
 
 #. Tag: para
-#: tutorial.xml:979
+#: tutorial.xml:1028
 #, no-c-format
 msgid ""
 "To build and deploy call <literal>ant war</literal> in your project "
@@ -2788,7 +2778,7 @@ msgstr ""
 "application."
 
 #. Tag: para
-#: tutorial.xml:987
+#: tutorial.xml:1036
 #, no-c-format
 msgid ""
 "Once deployed and Tomcat is running, access the application at "
@@ -2806,13 +2796,13 @@ msgstr ""
 "vérifier qu'aucune exception ne survienne."
 
 #. Tag: title
-#: tutorial.xml:1000
+#: tutorial.xml:1049
 #, no-c-format
 msgid "Summary"
 msgstr "Résumé"
 
 #. Tag: para
-#: tutorial.xml:1002
+#: tutorial.xml:1051
 #, no-c-format
 msgid ""
 "This tutorial covered the basics of writing a simple standalone Hibernate "
@@ -2822,7 +2812,7 @@ msgstr ""
 "Hibernate ainsi qu'une petite application web."
 
 #. Tag: para
-#: tutorial.xml:1007
+#: tutorial.xml:1056
 #, no-c-format
 msgid ""
 "If you already feel confident with Hibernate, continue browsing through the "
@@ -2841,10 +2831,89 @@ msgstr ""
 "fonctionnalités des requêtes (<xref linkend=\"objectstate-querying\"/>)."
 
 #. Tag: para
-#: tutorial.xml:1015
+#: tutorial.xml:1064
 #, no-c-format
 msgid ""
 "Don't forget to check the Hibernate website for more (specialized) tutorials."
 msgstr ""
 "N'oubliez pas de vérifier le site web d'Hibernate pour d'autres didacticiels "
 "(plus spécialisés)."
+
+#~ msgid ""
+#~ "This chapter is an introductory tutorial for new users of Hibernate. We "
+#~ "start with a simple command line application using an in-memory database "
+#~ "and develop it in easy to understand steps."
+#~ msgstr ""
+#~ "Ce chapitre est un didacticiel introductif destiné aux nouveaux "
+#~ "utilisateurs d'Hibernate. Nous commençons avec une simple application en "
+#~ "ligne de commande utilisant une base de données en mémoire, et la "
+#~ "développons en étapes faciles à comprendre."
+
+#~ msgid ""
+#~ "This tutorial is intended for new users of Hibernate but requires Java "
+#~ "and SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-"
+#~ "party libraries we name are for JDK 1.4 and 5.0. You might need others "
+#~ "for JDK 1.3."
+#~ msgstr ""
+#~ "Ce didacticiel est destiné aux nouveaux utilisateurs d'Hibernate mais "
+#~ "requiert des connaissances Java et SQL. Il est basé sur un didacticiel de "
+#~ "Michael Gloegl, les bibliothèques tierces que nous nommons sont pour les "
+#~ "JDK 1.4 et 5.0. Vous pourriez avoir besoin d'autres bibliothèques pour le "
+#~ "JDK 1.3."
+
+#~ msgid ""
+#~ "The source code for the tutorial is included in the distribution in the "
+#~ "<literal>doc/reference/tutorial/</literal> directory."
+#~ msgstr ""
+#~ "Le code source de ce tutoriel est inclus dans la distribution dans le "
+#~ "répertoire <literal>doc/reference/tutorial/</literal>."
+
+#~ msgid ""
+#~ "First, we'll create a simple console-based Hibernate application. We use "
+#~ "an Java database (HSQL DB), so we do not have to install any database "
+#~ "server."
+#~ msgstr ""
+#~ "D'abord, nous créerons une simple application Hibernate en console. Nous "
+#~ "utilisons une base de données en mémoire (HSQL DB), donc nous n'avons pas "
+#~ "à installer de serveur de base de données."
+
+#~ msgid ""
+#~ "Let's assume we need a small database application that can store events "
+#~ "we want to attend, and information about the hosts of these events."
+#~ msgstr ""
+#~ "Supposons que nous ayons besoin d'une petite application de base de "
+#~ "données qui puisse stocker des événements que nous voulons suivre, et des "
+#~ "informations à propos des hôtes de ces événements."
+
+#~ msgid ""
+#~ "The first thing we do, is set up our development directory and put all "
+#~ "the Java libraries we need into it. Download the Hibernate distribution "
+#~ "from the Hibernate website. Extract the package and place all required "
+#~ "libraries found in <literal>/lib</literal> into into the <literal>/lib</"
+#~ "literal> directory of your new development working directory. It should "
+#~ "look like this:"
+#~ msgstr ""
+#~ "La première chose que nous faisons est de configurer notre répertoire de "
+#~ "développement et de mettre toutes les bibliothèques dont nous avons "
+#~ "besoin dedans. Téléchargez la distribution Hibernate à partir du site web "
+#~ "d'Hibernate. Extrayez le paquet et placez toutes les bibliothèques "
+#~ "requises trouvées dans <literal>/lib</literal> dans le répertoire "
+#~ "<literal>/lib</literal> de votre nouveau répertoire de travail. Il "
+#~ "devrait ressembler à ça :"
+
+#~ msgid ""
+#~ "This is the minimum set of required libraries (note that we also copied "
+#~ "hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of "
+#~ "writing</emphasis>. The Hibernate release you are using might require "
+#~ "more or less libraries. See the <literal>README.txt</literal> file in the "
+#~ "<literal>lib/</literal> directory of the Hibernate distribution for more "
+#~ "information about required and optional third-party libraries. (Actually, "
+#~ "Log4j is not required but preferred by many developers.)"
+#~ msgstr ""
+#~ "Ceci est l'ensemble minimum de bibliothèques requises (notez que nous "
+#~ "avons aussi copié hibernate3.jar, l'archive principale) pour Hibernate. "
+#~ "Lisez le fichier <literal>README.txt</literal> dans le répertoire "
+#~ "<literal>lib/</literal> de la distribution Hibernate pour plus "
+#~ "d'informations à propos des biliothèques tierces requises et "
+#~ "optionnelles. (En fait, log4j n'est pas requis mais préféré par beaucoup "
+#~ "de développeurs.)"

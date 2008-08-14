@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: component_mapping.xml:5
+#: component_mapping.xml:29
 #, no-c-format
 msgid "Component Mapping"
 msgstr "Mapping de composants"
 
 #. Tag: para
-#: component_mapping.xml:7
+#: component_mapping.xml:31
 #, no-c-format
 msgid ""
 "The notion of a <emphasis>component</emphasis> is re-used in several "
@@ -27,13 +27,13 @@ msgstr ""
 "contextes, avec différents objectifs, à travers Hibernate."
 
 #. Tag: title
-#: component_mapping.xml:13
+#: component_mapping.xml:37
 #, no-c-format
 msgid "Dependent objects"
 msgstr "Objects dépendants"
 
 #. Tag: para
-#: component_mapping.xml:15
+#: component_mapping.xml:39
 #, no-c-format
 msgid ""
 "A component is a contained object that is persisted as a value type, not an "
@@ -48,7 +48,7 @@ msgstr ""
 "personne de cette façon:"
 
 #. Tag: programlisting
-#: component_mapping.xml:21
+#: component_mapping.xml:45
 #, no-c-format
 msgid ""
 "<![CDATA[public class Person {\n"
@@ -79,7 +79,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: component_mapping.xml:23
+#: component_mapping.xml:47
 #, no-c-format
 msgid ""
 "<![CDATA[public class Name {\n"
@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:25
+#: component_mapping.xml:49
 #, no-c-format
 msgid ""
 "Now <literal>Name</literal> may be persisted as a component of "
@@ -123,13 +123,13 @@ msgstr ""
 "( par exemple getId() ) qui sont propres aux entités."
 
 #. Tag: para
-#: component_mapping.xml:32
+#: component_mapping.xml:56
 #, no-c-format
 msgid "Our Hibernate mapping would look like:"
 msgstr "Nous serions alors amené à mapper ce composant de cette façon:"
 
 #. Tag: programlisting
-#: component_mapping.xml:36
+#: component_mapping.xml:60
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
@@ -147,7 +147,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:38
+#: component_mapping.xml:62
 #, no-c-format
 msgid ""
 "The person table would have the columns <literal>pid</literal>, "
@@ -159,7 +159,7 @@ msgstr ""
 "literal> and <literal>last</literal>."
 
 #. Tag: para
-#: component_mapping.xml:46
+#: component_mapping.xml:70
 #, no-c-format
 msgid ""
 "Like all value types, components do not support shared references. In other "
@@ -181,7 +181,7 @@ msgstr ""
 "programmatif devrait être satisfaisant dans la plupart des cas."
 
 #. Tag: para
-#: component_mapping.xml:55
+#: component_mapping.xml:79
 #, no-c-format
 msgid ""
 "The properties of a component may be of any Hibernate type (collections, "
@@ -196,7 +196,7 @@ msgstr ""
 "supporter un modèle objet très granulaire."
 
 #. Tag: para
-#: component_mapping.xml:62
+#: component_mapping.xml:86
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
@@ -207,7 +207,7 @@ msgstr ""
 "propriétés une référence au <literal>&lt;parent&gt;</literal> conteneur."
 
 #. Tag: programlisting
-#: component_mapping.xml:68
+#: component_mapping.xml:92
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
@@ -226,13 +226,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: component_mapping.xml:73
+#: component_mapping.xml:97
 #, no-c-format
 msgid "Collections of dependent objects"
 msgstr "Collection d'objets dépendants"
 
 #. Tag: para
-#: component_mapping.xml:75
+#: component_mapping.xml:99
 #, no-c-format
 msgid ""
 "Collections of components are supported (eg. an array of type <literal>Name</"
@@ -246,7 +246,7 @@ msgstr ""
 "composite-element&gt;</literal>."
 
 #. Tag: programlisting
-#: component_mapping.xml:82
+#: component_mapping.xml:106
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"someNames\" table=\"some_names\" lazy=\"true\">\n"
@@ -260,7 +260,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:84
+#: component_mapping.xml:108
 #, no-c-format
 msgid ""
 "Note: if you define a <literal>Set</literal> of composite elements, it is "
@@ -272,7 +272,7 @@ msgstr ""
 "et <literal>hashCode()</literal> correctement."
 
 #. Tag: para
-#: component_mapping.xml:90
+#: component_mapping.xml:114
 #, no-c-format
 msgid ""
 "Composite elements may contain components but not collections. If your "
@@ -295,7 +295,7 @@ msgstr ""
 "différentes)"
 
 #. Tag: para
-#: component_mapping.xml:102
+#: component_mapping.xml:126
 #, no-c-format
 msgid ""
 "Please note that a composite element mapping doesn't support null-able "
@@ -318,7 +318,7 @@ msgstr ""
 "literal> ou <literal>&lt;idbag&gt;</literal>."
 
 #. Tag: para
-#: component_mapping.xml:113
+#: component_mapping.xml:137
 #, no-c-format
 msgid ""
 "A special case of a composite element is a composite element with a nested "
@@ -339,7 +339,7 @@ msgstr ""
 "de l'association."
 
 #. Tag: programlisting
-#: component_mapping.xml:123
+#: component_mapping.xml:147
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Order\" .... >\n"
@@ -358,7 +358,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:125
+#: component_mapping.xml:149
 #, no-c-format
 msgid ""
 "Of course, there can't be a reference to the purchae on the other side, for "
@@ -373,13 +373,13 @@ msgstr ""
 "n'autorise pas les références partagées."
 
 #. Tag: para
-#: component_mapping.xml:133
+#: component_mapping.xml:157
 #, no-c-format
 msgid "Even ternary (or quaternary, etc) associations are possible:"
 msgstr "Même les associations ternaires ou quaternaires sont possibles:"
 
 #. Tag: programlisting
-#: component_mapping.xml:135
+#: component_mapping.xml:159
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Order\" .... >\n"
@@ -395,7 +395,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:137
+#: component_mapping.xml:161
 #, no-c-format
 msgid ""
 "Composite elements may appear in queries using the same syntax as "
@@ -405,13 +405,13 @@ msgstr ""
 "même syntaxe que associations"
 
 #. Tag: title
-#: component_mapping.xml:145
+#: component_mapping.xml:169
 #, no-c-format
 msgid "Components as Map indices"
 msgstr "Utiliser les composants comme index de map"
 
 #. Tag: para
-#: component_mapping.xml:147
+#: component_mapping.xml:171
 #, no-c-format
 msgid ""
 "The <literal>&lt;composite-map-key&gt;</literal> element lets you map a "
@@ -425,13 +425,13 @@ msgstr ""
 "<literal>equals()</literal> dans la classe du composant."
 
 #. Tag: title
-#: component_mapping.xml:156
+#: component_mapping.xml:180
 #, no-c-format
 msgid "Components as composite identifiers"
 msgstr "Utiliser un composant comme identifiant"
 
 #. Tag: para
-#: component_mapping.xml:158
+#: component_mapping.xml:182
 #, no-c-format
 msgid ""
 "You may use a component as an identifier of an entity class. Your component "
@@ -441,13 +441,13 @@ msgstr ""
 "cela la classe du composant doit respecter certaines règles."
 
 #. Tag: para
-#: component_mapping.xml:165
+#: component_mapping.xml:189
 #, no-c-format
 msgid "It must implement <literal>java.io.Serializable</literal>."
 msgstr "Elle doit implémenter <literal>java.io.Serializable</literal>."
 
 #. Tag: para
-#: component_mapping.xml:170
+#: component_mapping.xml:194
 #, no-c-format
 msgid ""
 "It must re-implement <literal>equals()</literal> and <literal>hashCode()</"
@@ -458,7 +458,7 @@ msgstr ""
 "dans la base de données."
 
 #. Tag: emphasis
-#: component_mapping.xml:179
+#: component_mapping.xml:203
 #, no-c-format
 msgid ""
 "Note: in Hibernate3, the second requirement is not an absolutely hard "
@@ -468,7 +468,7 @@ msgstr ""
 "mais faîtes le quand même."
 
 #. Tag: para
-#: component_mapping.xml:183
+#: component_mapping.xml:207
 #, no-c-format
 msgid ""
 "You can't use an <literal>IdentifierGenerator</literal> to generate "
@@ -479,7 +479,7 @@ msgstr ""
 "identifiants."
 
 #. Tag: para
-#: component_mapping.xml:188
+#: component_mapping.xml:212
 #, no-c-format
 msgid ""
 "Use the <literal>&lt;composite-id&gt;</literal> tag (with nested "
@@ -495,7 +495,7 @@ msgstr ""
 "<literal>Order</literal>."
 
 #. Tag: programlisting
-#: component_mapping.xml:196
+#: component_mapping.xml:220
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"OrderLine\">\n"
@@ -519,7 +519,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:198
+#: component_mapping.xml:222
 #, no-c-format
 msgid ""
 "Now, any foreign keys referencing the <literal>OrderLine</literal> table are "
@@ -532,7 +532,7 @@ msgstr ""
 "<literal>OrderLine</literal> devrait être mappé de la façon suivante :"
 
 #. Tag: programlisting
-#: component_mapping.xml:204
+#: component_mapping.xml:228
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"orderLine\" class=\"OrderLine\">\n"
@@ -544,7 +544,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:206
+#: component_mapping.xml:230
 #, no-c-format
 msgid ""
 "(Note that the <literal>&lt;column&gt;</literal> tag is an alternative to "
@@ -554,7 +554,7 @@ msgstr ""
 "l'attribut <literal>column</literal> que l'on utilise partout.)"
 
 #. Tag: para
-#: component_mapping.xml:211
+#: component_mapping.xml:235
 #, no-c-format
 msgid ""
 "A <literal>many-to-many</literal> association to <literal>OrderLine</"
@@ -564,7 +564,7 @@ msgstr ""
 "<literal>OrderLine</literal> utilisera aussi une clé étrangère composite:"
 
 #. Tag: programlisting
-#: component_mapping.xml:216
+#: component_mapping.xml:240
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"undeliveredOrderLines\">\n"
@@ -578,7 +578,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:218
+#: component_mapping.xml:242
 #, no-c-format
 msgid ""
 "The collection of <literal>OrderLine</literal>s in <literal>Order</literal> "
@@ -588,7 +588,7 @@ msgstr ""
 "literal> utilisera:"
 
 #. Tag: programlisting
-#: component_mapping.xml:223
+#: component_mapping.xml:247
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"orderLines\" inverse=\"true\">\n"
@@ -601,7 +601,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:225
+#: component_mapping.xml:249
 #, no-c-format
 msgid ""
 "(The <literal>&lt;one-to-many&gt;</literal> element, as usual, declares no "
@@ -611,7 +611,7 @@ msgstr ""
 "déclare pas de colonne.)"
 
 #. Tag: para
-#: component_mapping.xml:229
+#: component_mapping.xml:253
 #, no-c-format
 msgid ""
 "If <literal>OrderLine</literal> itself owns a collection, it also has a "
@@ -621,7 +621,7 @@ msgstr ""
 "aura aussi une clé composite étrangère."
 
 #. Tag: programlisting
-#: component_mapping.xml:234
+#: component_mapping.xml:258
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"OrderLine\">\n"
@@ -642,19 +642,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: component_mapping.xml:239
+#: component_mapping.xml:263
 #, no-c-format
 msgid "Dynamic components"
 msgstr "Composant Dynamique"
 
 #. Tag: para
-#: component_mapping.xml:241
+#: component_mapping.xml:265
 #, no-c-format
 msgid "You may even map a property of type <literal>Map</literal>:"
 msgstr "Vous pouvez même mapper une propriété de type <literal>Map</literal>:"
 
 #. Tag: programlisting
-#: component_mapping.xml:245
+#: component_mapping.xml:269
 #, no-c-format
 msgid ""
 "<![CDATA[<dynamic-component name=\"userAttributes\">\n"
@@ -665,7 +665,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: component_mapping.xml:247
+#: component_mapping.xml:271
 #, no-c-format
 msgid ""
 "The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are "

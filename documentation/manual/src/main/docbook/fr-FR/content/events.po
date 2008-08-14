@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: events.xml:5
+#: events.xml:29
 #, no-c-format
 msgid "Interceptors and events"
 msgstr "Les intercepteurs et les événements"
 
 #. Tag: para
-#: events.xml:7
+#: events.xml:31
 #, no-c-format
 msgid ""
 "It is often useful for the application to react to certain events that occur "
@@ -30,13 +30,13 @@ msgstr ""
 "d'Hibernate."
 
 #. Tag: title
-#: events.xml:14
+#: events.xml:38
 #, no-c-format
 msgid "Interceptors"
 msgstr "Intercepteurs"
 
 #. Tag: para
-#: events.xml:16
+#: events.xml:40
 #, no-c-format
 msgid ""
 "The <literal>Interceptor</literal> interface provides callbacks from the "
@@ -60,7 +60,7 @@ msgstr ""
 "un <literal>Auditable</literal> est mis à jour."
 
 #. Tag: para
-#: events.xml:27
+#: events.xml:51
 #, no-c-format
 msgid ""
 "You may either implement <literal>Interceptor</literal> directly or (better) "
@@ -70,7 +70,7 @@ msgstr ""
 "(mieux) étendre <literal>EmptyInterceptor</literal>."
 
 #. Tag: programlisting
-#: events.xml:32
+#: events.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[package org.hibernate.test;\n"
@@ -159,7 +159,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:34
+#: events.xml:58
 #, no-c-format
 msgid ""
 "Interceptors come in two flavors: <literal>Session</literal>-scoped and "
@@ -169,7 +169,7 @@ msgstr ""
 "<literal>SessionFactory</literal>-scoped."
 
 #. Tag: para
-#: events.xml:39
+#: events.xml:63
 #, no-c-format
 msgid ""
 "A <literal>Session</literal>-scoped interceptor is specified when a session "
@@ -181,13 +181,13 @@ msgstr ""
 "accepting an <literal>Interceptor</literal>."
 
 #. Tag: programlisting
-#: events.xml:45
+#: events.xml:69
 #, no-c-format
 msgid "<![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]>"
 msgstr ""
 
 #. Tag: para
-#: events.xml:47
+#: events.xml:71
 #, no-c-format
 msgid ""
 "A <literal>SessionFactory</literal>-scoped interceptor is registered with "
@@ -209,20 +209,20 @@ msgstr ""
 "multiple sessions will use this interceptor (potentially) concurrently."
 
 #. Tag: programlisting
-#: events.xml:56
+#: events.xml:80
 #, no-c-format
 msgid ""
 "<![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]>"
 msgstr ""
 
 #. Tag: title
-#: events.xml:61
+#: events.xml:85
 #, no-c-format
 msgid "Event system"
 msgstr "Système d'événements"
 
 #. Tag: para
-#: events.xml:63
+#: events.xml:87
 #, no-c-format
 msgid ""
 "If you have to react to particular events in your persistence layer, you may "
@@ -235,7 +235,7 @@ msgstr ""
 "être utilisé en supplément ou en remplacement des interceptors."
 
 #. Tag: para
-#: events.xml:69
+#: events.xml:93
 #, no-c-format
 msgid ""
 "Essentially all of the methods of the <literal>Session</literal> interface "
@@ -270,7 +270,7 @@ msgstr ""
 "<literal>Session</literal>."
 
 #. Tag: para
-#: events.xml:84
+#: events.xml:108
 #, no-c-format
 msgid ""
 "The listeners should be considered effectively singletons; meaning, they are "
@@ -282,7 +282,7 @@ msgstr ""
 "pas sauvegarder des états de variables d'instance."
 
 #. Tag: para
-#: events.xml:89
+#: events.xml:113
 #, no-c-format
 msgid ""
 "A custom listener should implement the appropriate interface for the event "
@@ -304,7 +304,7 @@ msgstr ""
 "un exemple de listener personnalisé pour l'événement de chargement :"
 
 #. Tag: programlisting
-#: events.xml:99
+#: events.xml:123
 #, no-c-format
 msgid ""
 "<![CDATA[public class MyLoadListener implements LoadEventListener {\n"
@@ -321,7 +321,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:101
+#: events.xml:125
 #, no-c-format
 msgid ""
 "You also need a configuration entry telling Hibernate to use the listener in "
@@ -331,7 +331,7 @@ msgstr ""
 "d'utiliser ce listener en plus du listener par défaut :"
 
 #. Tag: programlisting
-#: events.xml:106
+#: events.xml:130
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-configuration>\n"
@@ -347,13 +347,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:108
+#: events.xml:132
 #, no-c-format
 msgid "Instead, you may register it programmatically:"
 msgstr "Vous pouvez aussi l'inscrire par programmation :"
 
 #. Tag: programlisting
-#: events.xml:112
+#: events.xml:136
 #, no-c-format
 msgid ""
 "<![CDATA[Configuration cfg = new Configuration();\n"
@@ -363,7 +363,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:114
+#: events.xml:138
 #, no-c-format
 msgid ""
 "Listeners registered declaratively cannot share instances. If the same class "
@@ -380,7 +380,7 @@ msgstr ""
 "d'inscription par programmation."
 
 #. Tag: para
-#: events.xml:122
+#: events.xml:146
 #, no-c-format
 msgid ""
 "Why implement an interface and define the specific type during "
@@ -396,13 +396,13 @@ msgstr ""
 "pendant la configuration."
 
 #. Tag: title
-#: events.xml:132
+#: events.xml:156
 #, no-c-format
 msgid "Hibernate declarative security"
 msgstr "Sécurité déclarative d'Hibernate"
 
 #. Tag: para
-#: events.xml:133
+#: events.xml:157
 #, no-c-format
 msgid ""
 "Usually, declarative security in Hibernate applications is managed in a "
@@ -417,7 +417,7 @@ msgstr ""
 "d'événements."
 
 #. Tag: para
-#: events.xml:139
+#: events.xml:163
 #, no-c-format
 msgid ""
 "First, you must configure the appropriate event listeners, to enable the use "
@@ -427,7 +427,7 @@ msgstr ""
 "permettre l'utilisation d'autorisations JAAS."
 
 #. Tag: programlisting
-#: events.xml:144
+#: events.xml:168
 #, no-c-format
 msgid ""
 "<![CDATA[<listener type=\"pre-delete\" class=\"org.hibernate.secure."
@@ -441,7 +441,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:146
+#: events.xml:170
 #, no-c-format
 msgid ""
 "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is "
@@ -455,7 +455,7 @@ msgstr ""
 "listener pour un type d'événement particulier."
 
 #. Tag: para
-#: events.xml:152
+#: events.xml:176
 #, no-c-format
 msgid ""
 "Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to "
@@ -465,7 +465,7 @@ msgstr ""
 "permissions aux rôles :"
 
 #. Tag: programlisting
-#: events.xml:156
+#: events.xml:180
 #, no-c-format
 msgid ""
 "<![CDATA[<grant role=\"admin\" entity-name=\"User\" actions=\"insert,update,"
@@ -474,7 +474,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: events.xml:158
+#: events.xml:182
 #, no-c-format
 msgid "The role names are the roles understood by your JACC provider."
 msgstr "Les noms de rôle sont les rôles compris par votre fournisseur JAAC."

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: persistent_classes.xml:5
+#: persistent_classes.xml:29
 #, no-c-format
 msgid "Persistent Classes"
 msgstr "Classes persistantes"
 
 #. Tag: para
-#: persistent_classes.xml:7
+#: persistent_classes.xml:31
 #, no-c-format
 msgid ""
 "Persistent classes are classes in an application that implement the entities "
@@ -32,7 +32,7 @@ msgstr ""
 "une instance peut être éphémère (NdT : transient) ou détachée."
 
 #. Tag: para
-#: persistent_classes.xml:14
+#: persistent_classes.xml:38
 #, no-c-format
 msgid ""
 "Hibernate works best if these classes follow some simple rules, also known "
@@ -50,13 +50,13 @@ msgstr ""
 "<literal>Map</literal>, par exemple."
 
 #. Tag: title
-#: persistent_classes.xml:23
+#: persistent_classes.xml:47
 #, no-c-format
 msgid "A simple POJO example"
 msgstr "Un exemple simple de POJO"
 
 #. Tag: para
-#: persistent_classes.xml:25
+#: persistent_classes.xml:49
 #, no-c-format
 msgid "Most Java applications require a persistent class representing felines."
 msgstr ""
@@ -64,7 +64,7 @@ msgstr ""
 "les félins."
 
 #. Tag: programlisting
-#: persistent_classes.xml:29
+#: persistent_classes.xml:53
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -148,19 +148,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:31
+#: persistent_classes.xml:55
 #, no-c-format
 msgid "There are four main rules to follow here:"
 msgstr "Il y a quatre règles à suivre ici :"
 
 #. Tag: title
-#: persistent_classes.xml:37
+#: persistent_classes.xml:61
 #, no-c-format
 msgid "Implement a no-argument constructor"
 msgstr "Implémenter un constructeur sans argument"
 
 #. Tag: para
-#: persistent_classes.xml:39
+#: persistent_classes.xml:63
 #, no-c-format
 msgid ""
 "<literal>Cat</literal> has a no-argument constructor. All persistent classes "
@@ -179,13 +179,13 @@ msgstr ""
 "Hibernate."
 
 #. Tag: title
-#: persistent_classes.xml:49
+#: persistent_classes.xml:73
 #, no-c-format
 msgid "Provide an identifier property (optional)"
 msgstr "Fournir une propriété d'indentifiant (optionnel)"
 
 #. Tag: para
-#: persistent_classes.xml:51
+#: persistent_classes.xml:75
 #, no-c-format
 msgid ""
 "<literal>Cat</literal> has a property called <literal>id</literal>. This "
@@ -208,7 +208,7 @@ msgstr ""
 "composites plus tard)."
 
 #. Tag: para
-#: persistent_classes.xml:60
+#: persistent_classes.xml:84
 #, no-c-format
 msgid ""
 "The identifier property is strictly optional. You can leave them off and let "
@@ -220,7 +220,7 @@ msgstr ""
 "interne. Toutefois, nous ne le recommandons pas."
 
 #. Tag: para
-#: persistent_classes.xml:65
+#: persistent_classes.xml:89
 #, no-c-format
 msgid ""
 "In fact, some functionality is available only to classes which declare an "
@@ -230,7 +230,7 @@ msgstr ""
 "déclarant un identifiant de propriété :"
 
 #. Tag: para
-#: persistent_classes.xml:72
+#: persistent_classes.xml:96
 #, fuzzy, no-c-format
 msgid ""
 "Transitive reattachment for detached objects (cascade update or cascade "
@@ -241,19 +241,19 @@ msgstr ""
 "\"/>"
 
 #. Tag: literal
-#: persistent_classes.xml:79
+#: persistent_classes.xml:103
 #, no-c-format
 msgid "Session.saveOrUpdate()"
 msgstr "Session.saveOrUpdate()"
 
 #. Tag: literal
-#: persistent_classes.xml:84
+#: persistent_classes.xml:108
 #, no-c-format
 msgid "Session.merge()"
 msgstr "Session.merge()"
 
 #. Tag: para
-#: persistent_classes.xml:89
+#: persistent_classes.xml:113
 #, no-c-format
 msgid ""
 "We recommend you declare consistently-named identifier properties on "
@@ -265,13 +265,13 @@ msgstr ""
 "(ie. non primitif)."
 
 #. Tag: title
-#: persistent_classes.xml:96
+#: persistent_classes.xml:120
 #, no-c-format
 msgid "Prefer non-final classes (optional)"
 msgstr "Favoriser les classes non finales (optionnel)"
 
 #. Tag: para
-#: persistent_classes.xml:97
+#: persistent_classes.xml:121
 #, no-c-format
 msgid ""
 "A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon "
@@ -283,7 +283,7 @@ msgstr ""
 "l'implémentation d'une interface qui déclare toutes les méthodes publiques."
 
 #. Tag: para
-#: persistent_classes.xml:102
+#: persistent_classes.xml:126
 #, no-c-format
 msgid ""
 "You can persist <literal>final</literal> classes that do not implement an "
@@ -296,7 +296,7 @@ msgstr ""
 "qui limitera vos possibilités d'ajustement des performances."
 
 #. Tag: para
-#: persistent_classes.xml:107
+#: persistent_classes.xml:131
 #, no-c-format
 msgid ""
 "You should also avoid declaring <literal>public final</literal> methods on "
@@ -310,14 +310,14 @@ msgstr ""
 "désactiver les proxies en paramétrant <literal>lazy=\"false\"</literal>."
 
 #. Tag: title
-#: persistent_classes.xml:115
+#: persistent_classes.xml:139
 #, no-c-format
 msgid "Declare accessors and mutators for persistent fields (optional)"
 msgstr ""
 "Déclarer les accesseurs et mutateurs des attributs persistants (optionnel)"
 
 #. Tag: para
-#: persistent_classes.xml:117
+#: persistent_classes.xml:141
 #, no-c-format
 msgid ""
 "<literal>Cat</literal> declares accessor methods for all its persistent "
@@ -340,7 +340,7 @@ msgstr ""
 "champs pour des propriétés particulières, si besoin est."
 
 #. Tag: para
-#: persistent_classes.xml:127
+#: persistent_classes.xml:151
 #, no-c-format
 msgid ""
 "Properties need <emphasis>not</emphasis> be declared public - Hibernate can "
@@ -353,13 +353,13 @@ msgstr ""
 "literal>."
 
 #. Tag: title
-#: persistent_classes.xml:138
+#: persistent_classes.xml:162
 #, no-c-format
 msgid "Implementing inheritance"
 msgstr "Implémenter l'héritage"
 
 #. Tag: para
-#: persistent_classes.xml:140
+#: persistent_classes.xml:164
 #, no-c-format
 msgid ""
 "A subclass must also observe the first and second rules. It inherits its "
@@ -369,7 +369,7 @@ msgstr ""
 "hérite sa propriété d'identifiant de <literal>Cat</literal>."
 
 #. Tag: programlisting
-#: persistent_classes.xml:145
+#: persistent_classes.xml:169
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -387,7 +387,7 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: persistent_classes.xml:149
+#: persistent_classes.xml:173
 #, no-c-format
 msgid ""
 "Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
@@ -395,7 +395,7 @@ msgstr ""
 "Implémenter <literal>equals()</literal> et <literal>hashCode()</literal>"
 
 #. Tag: para
-#: persistent_classes.xml:151
+#: persistent_classes.xml:175
 #, no-c-format
 msgid ""
 "You have to override the <literal>equals()</literal> and <literal>hashCode()"
@@ -405,7 +405,7 @@ msgstr ""
 "<literal>hashCode()</literal> si vous"
 
 #. Tag: para
-#: persistent_classes.xml:157
+#: persistent_classes.xml:181
 #, no-c-format
 msgid ""
 "intend to put instances of persistent classes in a <literal>Set</literal> "
@@ -417,13 +417,13 @@ msgstr ""
 "associations pluri-valuées) <emphasis>et</emphasis>"
 
 #. Tag: para
-#: persistent_classes.xml:164
+#: persistent_classes.xml:188
 #, no-c-format
 msgid "intend to use reattachment of detached instances"
 msgstr "avez l'intention d'utiliser le réattachement d'instances détachées"
 
 #. Tag: para
-#: persistent_classes.xml:170
+#: persistent_classes.xml:194
 #, no-c-format
 msgid ""
 "Hibernate guarantees equivalence of persistent identity (database row) and "
@@ -440,7 +440,7 @@ msgstr ""
 "correcte pour les <literal>Set</literal>s."
 
 #. Tag: para
-#: persistent_classes.xml:178
+#: persistent_classes.xml:202
 #, no-c-format
 msgid ""
 "The most obvious way is to implement <literal>equals()</literal>/"
@@ -478,7 +478,7 @@ msgstr ""
 "et l'égalité."
 
 #. Tag: para
-#: persistent_classes.xml:192
+#: persistent_classes.xml:216
 #, no-c-format
 msgid ""
 "We recommend implementing <literal>equals()</literal> and <literal>hashCode()"
@@ -495,7 +495,7 @@ msgstr ""
 "(une clé candidate <emphasis>naturelle</emphasis>) :"
 
 #. Tag: programlisting
-#: persistent_classes.xml:200
+#: persistent_classes.xml:224
 #, no-c-format
 msgid ""
 "<![CDATA[public class Cat {\n"
@@ -524,7 +524,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:202
+#: persistent_classes.xml:226
 #, no-c-format
 msgid ""
 "Note that a business key does not have to be as solid as a database primary "
@@ -538,13 +538,13 @@ msgstr ""
 "une clef métier."
 
 #. Tag: title
-#: persistent_classes.xml:212
+#: persistent_classes.xml:236
 #, no-c-format
 msgid "Dynamic models"
 msgstr "Modèles dynamiques"
 
 #. Tag: emphasis
-#: persistent_classes.xml:215
+#: persistent_classes.xml:239
 #, no-c-format
 msgid ""
 "Note that the following features are currently considered experimental and "
@@ -554,7 +554,7 @@ msgstr ""
 "expérimentales et peuvent changer dans un futur proche."
 
 #. Tag: para
-#: persistent_classes.xml:219
+#: persistent_classes.xml:243
 #, no-c-format
 msgid ""
 "Persistent entities don't necessarily have to be represented as POJO classes "
@@ -571,7 +571,7 @@ msgstr ""
 "classes persistantes, seulement des fichiers de mapping."
 
 #. Tag: para
-#: persistent_classes.xml:227
+#: persistent_classes.xml:251
 #, no-c-format
 msgid ""
 "By default, Hibernate works in normal POJO mode. You may set a default "
@@ -586,7 +586,7 @@ msgstr ""
 "\"configuration-optional-properties\"/>)."
 
 #. Tag: para
-#: persistent_classes.xml:234
+#: persistent_classes.xml:258
 #, no-c-format
 msgid ""
 "The following examples demonstrates the representation using <literal>Map</"
@@ -599,7 +599,7 @@ msgstr ""
 "nom de classe :"
 
 #. Tag: programlisting
-#: persistent_classes.xml:240
+#: persistent_classes.xml:264
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -638,7 +638,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:242
+#: persistent_classes.xml:266
 #, no-c-format
 msgid ""
 "Note that even though associations are declared using target class names, "
@@ -650,7 +650,7 @@ msgstr ""
 "dynamique au lieu d'un POJO."
 
 #. Tag: para
-#: persistent_classes.xml:249
+#: persistent_classes.xml:273
 #, no-c-format
 msgid ""
 "After setting the default entity mode to <literal>dynamic-map</literal> for "
@@ -663,7 +663,7 @@ msgstr ""
 "literal>s :"
 
 #. Tag: programlisting
-#: persistent_classes.xml:255
+#: persistent_classes.xml:279
 #, no-c-format
 msgid ""
 "<![CDATA[Session s = openSession();\n"
@@ -690,7 +690,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:257
+#: persistent_classes.xml:281
 #, no-c-format
 msgid ""
 "The advantages of a dynamic mapping are quick turnaround time for "
@@ -709,7 +709,7 @@ msgstr ""
 "tard."
 
 #. Tag: para
-#: persistent_classes.xml:265
+#: persistent_classes.xml:289
 #, no-c-format
 msgid ""
 "Entity representation modes can also be set on a per <literal>Session</"
@@ -719,7 +719,7 @@ msgstr ""
 "<literal>Session</literal> :"
 
 #. Tag: programlisting
-#: persistent_classes.xml:270
+#: persistent_classes.xml:294
 #, no-c-format
 msgid ""
 "<![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);\n"
@@ -737,7 +737,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:273
+#: persistent_classes.xml:297
 #, no-c-format
 msgid ""
 "Please note that the call to <literal>getSession()</literal> using an "
@@ -759,7 +759,7 @@ msgstr ""
 "transaction et de la connexion à l'unité de travail primaire."
 
 #. Tag: para
-#: persistent_classes.xml:283
+#: persistent_classes.xml:307
 #, no-c-format
 msgid ""
 "More information about the XML representation capabilities can be found in "
@@ -769,13 +769,13 @@ msgstr ""
 "dans <xref linkend=\"xml\"/>."
 
 #. Tag: title
-#: persistent_classes.xml:291
+#: persistent_classes.xml:315
 #, no-c-format
 msgid "Tuplizers"
 msgstr "Tuplizers"
 
 #. Tag: para
-#: persistent_classes.xml:293
+#: persistent_classes.xml:317
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.tuple.Tuplizer</literal>, and its sub-interfaces, are "
@@ -811,7 +811,7 @@ msgstr ""
 "composants."
 
 #. Tag: para
-#: persistent_classes.xml:308
+#: persistent_classes.xml:332
 #, no-c-format
 msgid ""
 "Users may also plug in their own tuplizers. Perhaps you require that a "
@@ -834,7 +834,7 @@ msgstr ""
 "notre entité utilisateur :"
 
 #. Tag: programlisting
-#: persistent_classes.xml:317
+#: persistent_classes.xml:341
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -874,8 +874,14 @@ msgid ""
 "}]]>"
 msgstr ""
 
+#. Tag: title
+#: persistent_classes.xml:347
+#, no-c-format
+msgid "Extentsions"
+msgstr ""
+
 #. Tag: para
-#: persistent_classes.xml:322
+#: persistent_classes.xml:348
 #, no-c-format
 msgid ""
 "TODO: Document user-extension framework in the property and proxy packages"

@@ -24,12 +24,11 @@
  */
 package org.hibernate.loader.collection;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
 
@@ -49,18 +48,16 @@ public class OneToManyLoader extends CollectionLoader {
 	public OneToManyLoader(
 			QueryableCollection oneToManyPersister, 
 			SessionFactoryImplementor session, 
-			Map enabledFilters)
-	throws MappingException {
-		this(oneToManyPersister, 1, session, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this( oneToManyPersister, 1, session, loadQueryInfluencers );
 	}
 
 	public OneToManyLoader(
 			QueryableCollection oneToManyPersister, 
 			int batchSize, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-		this(oneToManyPersister, batchSize, null, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this( oneToManyPersister, batchSize, null, factory, loadQueryInfluencers );
 	}
 
 	public OneToManyLoader(
@@ -68,22 +65,19 @@ public class OneToManyLoader extends CollectionLoader {
 			int batchSize, 
 			String subquery, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-
-		super(oneToManyPersister, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( oneToManyPersister, factory, loadQueryInfluencers );
 		
 		JoinWalker walker = new OneToManyJoinWalker(
 				oneToManyPersister, 
 				batchSize, 
 				subquery, 
 				factory, 
-				enabledFilters
-			);
+				loadQueryInfluencers
+		);
 		initFromWalker( walker );
 
 		postInstantiate();
-
 		log.debug( "Static select for one-to-many " + oneToManyPersister.getRole() + ": " + getSQLString() );
 	}
 

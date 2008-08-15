@@ -32,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaJoinWalker;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
@@ -76,8 +77,9 @@ public abstract class SubqueryExpression implements Criterion {
 				factory,
 				criteriaImpl,
 				criteriaImpl.getEntityOrClassName(),
-				new HashMap(),
-				innerQuery.getRootSQLALias());
+				LoadQueryInfluencers.NONE,
+				innerQuery.getRootSQLALias()
+		);
 
 		String sql = walker.getSQLString();
 

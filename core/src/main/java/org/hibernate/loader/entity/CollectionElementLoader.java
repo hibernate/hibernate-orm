@@ -27,7 +27,6 @@ package org.hibernate.loader.entity;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -61,9 +61,8 @@ public class CollectionElementLoader extends OuterJoinLoader {
 	public CollectionElementLoader(
 			QueryableCollection collectionPersister,
 			SessionFactoryImplementor factory, 
-			Map enabledFilters) 
-	throws MappingException {
-		super(factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( factory, loadQueryInfluencers );
 
 		this.keyType = collectionPersister.getKeyType();
 		this.indexType = collectionPersister.getIndexType();
@@ -79,7 +78,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 				1, 
 				LockMode.NONE, 
 				factory, 
-				enabledFilters
+				loadQueryInfluencers
 			);
 		initFromWalker( walker );
 
@@ -130,5 +129,4 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		return true;
 	}
 
-	
 }

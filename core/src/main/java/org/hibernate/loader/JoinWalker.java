@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
@@ -39,6 +38,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.JoinHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.Fetch;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -69,7 +71,7 @@ public class JoinWalker {
 	private final SessionFactoryImplementor factory;
 	protected final List associations = new ArrayList();
 	private final Set visitedAssociationKeys = new HashSet();
-	private final Map enabledFilters;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
@@ -81,6 +83,14 @@ public class JoinWalker {
 	protected String[] aliases;
 	protected LockMode[] lockModeArray;
 	protected String sql;
+
+	protected JoinWalker(
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		this.factory = factory;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+
+	}
 	
 	public String[] getCollectionSuffixes() {
 		return collectionSuffixes;
@@ -169,14 +179,9 @@ public class JoinWalker {
 	protected Dialect getDialect() {
 		return factory.getDialect();
 	}
-	
-	protected Map getEnabledFilters() {
-		return enabledFilters;
-	}
 
-	protected JoinWalker(SessionFactoryImplementor factory, Map enabledFilters) {
-		this.factory = factory;
-		this.enabledFilters = enabledFilters;
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 	/**
@@ -184,15 +189,13 @@ public class JoinWalker {
 	 * of associations to be fetched by outerjoin (if necessary)
 	 */
 	private void addAssociationToJoinTreeIfNecessary(
-		final AssociationType type,
-		final String[] aliasedLhsColumns,
-		final String alias,
-		final String path,
-		int currentDepth,
-		final int joinType)
-	throws MappingException {
-		
-		if (joinType>=0) {	
+			final AssociationType type,
+			final String[] aliasedLhsColumns,
+			final String alias,
+			final String path,
+			int currentDepth,
+			final int joinType) throws MappingException {
+		if ( joinType >= 0 ) {
 			addAssociationToJoinTree(
 					type, 
 					aliasedLhsColumns, 
@@ -200,9 +203,8 @@ public class JoinWalker {
 					path,
 					currentDepth,
 					joinType
-				);
+			);
 		}
-
 	}
 
 	/**
@@ -210,35 +212,37 @@ public class JoinWalker {
 	 * of associations to be fetched by outerjoin 
 	 */
 	private void addAssociationToJoinTree(
-		final AssociationType type,
-		final String[] aliasedLhsColumns,
-		final String alias,
-		final String path,
-		final int currentDepth,
-		final int joinType)
-	throws MappingException {
+			final AssociationType type,
+			final String[] aliasedLhsColumns,
+			final String alias,
+			String path,
+			final int currentDepth,
+			final int joinType) throws MappingException {
 
 		Joinable joinable = type.getAssociatedJoinable( getFactory() );
 
-		String subalias = generateTableAlias(
-				associations.size()+1, //before adding to collection!
-				path, 
-				joinable
-			);
+		// important to generate alias based on size of association collection
+		// *before* adding this join to that collection
+		String subalias = generateTableAlias( associations.size() + 1, path, joinable );
 
+		// NOTE : it should be fine to continue to pass only filters below
+		// (instead of LoadQueryInfluencers) since "from that point on" we
+		// only need to worry about restrictions (and not say adding more
+		// joins)
 		OuterJoinableAssociation assoc = new OuterJoinableAssociation(
 				type, 
 				alias, 
 				aliasedLhsColumns, 
 				subalias, 
 				joinType, 
-				getFactory(), 
-				enabledFilters
-			);
-		assoc.validateJoin(path);
-		associations.add(assoc);
+				getFactory(),
+				loadQueryInfluencers.getEnabledFilters()
+		);
+		assoc.validateJoin( path );
+		associations.add( assoc );
 
-		int nextDepth = currentDepth+1;
+		int nextDepth = currentDepth + 1;
+//		path = "";
 		if ( !joinable.isCollection() ) {
 			if (joinable instanceof OuterJoinLoadable) {
 				walkEntityTree(
@@ -263,11 +267,19 @@ public class JoinWalker {
 	}
 
 	/**
-	 * For an entity class, return a list of associations to be fetched by outerjoin
+	 * Walk the association tree for an entity, adding associations which should
+	 * be join fetched to the {@link #associations} inst var.  This form is the
+	 * entry point into the walking for a given entity, starting the recursive
+	 * calls into {@link #walkEntityTree(OuterJoinLoadable, String, String, int)}.
+	 *
+	 * @param persister The persister representing the entity to be walked.
+	 * @param alias The (root) alias to use for this entity/persister.
+	 * @throws org.hibernate.MappingException ???
 	 */
-	protected final void walkEntityTree(OuterJoinLoadable persister, String alias)
-	throws MappingException {
-		walkEntityTree(persister, alias, "", 0);
+	protected final void walkEntityTree(
+			OuterJoinLoadable persister,
+			String alias) throws MappingException {
+		walkEntityTree( persister, alias, "", 0 );
 	}
 
 	/**
@@ -344,38 +356,49 @@ public class JoinWalker {
 	}
 	
 	/**
-	 * Walk the tree for a particular entity association
+	 * Process a particular association owned by the entity
+	 *
+	 * @param associationType The type representing the association to be
+	 * processed.
+	 * @param persister The owner of the association to be processed.
+	 * @param propertyNumber The property number for the association
+	 * (relative to the persister).
+	 * @param alias The entity alias
+	 * @param path The path to the association
+	 * @param nullable is the association nullable (which I think is supposed
+	 * to indicate inner/outer join semantics).
+	 * @param currentDepth The current join depth
+	 * @throws org.hibernate.MappingException ???
 	 */
-	private final void walkEntityAssociationTree(
-		final AssociationType associationType,
-		final OuterJoinLoadable persister,
-		final int propertyNumber,
-		final String alias,
-		final String path,
-		final boolean nullable,
-		final int currentDepth)
-	throws MappingException {
-
+	private void walkEntityAssociationTree(
+			final AssociationType associationType,
+			final OuterJoinLoadable persister,
+			final int propertyNumber,
+			final String alias,
+			final String path,
+			final boolean nullable,
+			final int currentDepth) throws MappingException {
 		String[] aliasedLhsColumns = JoinHelper.getAliasedLHSColumnNames(
 				associationType, alias, propertyNumber, persister, getFactory()
-			);
-
+		);
 		String[] lhsColumns = JoinHelper.getLHSColumnNames(
 				associationType, propertyNumber, persister, getFactory()
-			);
+		);
 		String lhsTable = JoinHelper.getLHSTableName(associationType, propertyNumber, persister);
 
 		String subpath = subPath( path, persister.getSubclassPropertyName(propertyNumber) );
 		int joinType = getJoinType(
-				associationType,
-				persister.getFetchMode(propertyNumber),
+				persister,
 				subpath,
+				propertyNumber,
+				associationType,
+				persister.getFetchMode( propertyNumber ),
+				persister.getCascadeStyle( propertyNumber ),
 				lhsTable,
 				lhsColumns,
 				nullable,
-				currentDepth, 
-				persister.getCascadeStyle(propertyNumber)
-			);
+				currentDepth
+		);
 		addAssociationToJoinTreeIfNecessary(
 				associationType,
 				aliasedLhsColumns,
@@ -383,27 +406,110 @@ public class JoinWalker {
 				subpath,
 				currentDepth,
 				joinType
-			);
-
+		);
 	}
 
 	/**
-	 * For an entity class, add to a list of associations to be fetched 
-	 * by outerjoin
+	 * Determine the appropriate type of join (if any) to use to fetch the
+	 * given association.
+	 *
+	 * @param persister The owner of the association.
+	 * @param path The path to the association
+	 * @param propertyNumber The property number representing the association.
+	 * @param associationType The association type.
+	 * @param metadataFetchMode The metadata-defined fetch mode.
+	 * @param metadataCascadeStyle The metadata-defined cascade style.
+	 * @param lhsTable The owner table
+	 * @param lhsColumns The owner join columns
+	 * @param nullable Is the association nullable.
+	 * @param currentDepth Current join depth
+	 * @return type of join to use ({@link JoinFragment#INNER_JOIN},
+	 * {@link JoinFragment#LEFT_OUTER_JOIN}, or -1 to indicate no joining.
+	 * @throws MappingException ??
 	 */
-	private final void walkEntityTree(
-		final OuterJoinLoadable persister,
-		final String alias,
-		final String path,
-		final int currentDepth) 
-	throws MappingException {
+	protected int getJoinType(
+			OuterJoinLoadable persister,
+			final String path,
+			int propertyNumber,
+			AssociationType associationType,
+			FetchMode metadataFetchMode,
+			CascadeStyle metadataCascadeStyle,
+			String lhsTable,
+			String[] lhsColumns,
+			final boolean nullable,
+			final int currentDepth) throws MappingException {
+		return getJoinType(
+				associationType,
+				metadataFetchMode,
+				path,
+				lhsTable,
+				lhsColumns,
+				nullable,
+				currentDepth,
+				metadataCascadeStyle
+		);
+	}
 
+	/**
+	 * Determine the appropriate associationType of join (if any) to use to fetch the
+	 * given association.
+	 *
+	 * @param associationType The association associationType.
+	 * @param config The metadata-defined fetch mode.
+	 * @param path The path to the association
+	 * @param lhsTable The owner table
+	 * @param lhsColumns The owner join columns
+	 * @param nullable Is the association nullable.
+	 * @param currentDepth Current join depth
+	 * @param cascadeStyle The metadata-defined cascade style.
+	 * @return type of join to use ({@link JoinFragment#INNER_JOIN},
+	 * {@link JoinFragment#LEFT_OUTER_JOIN}, or -1 to indicate no joining.
+	 * @throws MappingException ??
+	 */
+	private int getJoinType(
+			AssociationType associationType,
+			FetchMode config,
+			String path,
+			String lhsTable,
+			String[] lhsColumns,
+			boolean nullable,
+			int currentDepth,
+			CascadeStyle cascadeStyle) throws MappingException {
+		if  ( !isJoinedFetchEnabled( associationType, config, cascadeStyle ) ) {
+			return -1;
+		}
+		if ( isTooDeep(currentDepth) || ( associationType.isCollectionType() && isTooManyCollections() ) ) {
+			return -1;
+		}
+		if ( isDuplicateAssociation( lhsTable, lhsColumns, associationType ) ) {
+			return -1;
+		}
+		return getJoinType( nullable, currentDepth );
+	}
+
+	/**
+	 * Walk the association tree for an entity, adding associations which should
+	 * be join fetched to the {@link #associations} inst var.  This form is the
+	 * entry point into the walking for a given entity, starting the recursive
+	 * calls into {@link #walkEntityTree(OuterJoinLoadable, String, String, int)}.
+	 *
+	 * @param persister The persister representing the entity to be walked.
+	 * @param alias The (root) alias to use for this entity/persister.
+	 * @param path todo this seems to be rooted at the *root* persister
+	 * @param currentDepth The current join depth
+	 * @throws org.hibernate.MappingException ???
+	 */
+	private void walkEntityTree(
+			final OuterJoinLoadable persister,
+			final String alias,
+			final String path,
+			final int currentDepth) throws MappingException {
 		int n = persister.countSubclassProperties();
-		for ( int i=0; i<n; i++ ) {
+		for ( int i = 0; i < n; i++ ) {
 			Type type = persister.getSubclassPropertyType(i);
 			if ( type.isAssociationType() ) {
 				walkEntityAssociationTree(
-					(AssociationType) type,
+					( AssociationType ) type,
 					persister,
 					i,
 					alias,
@@ -414,7 +520,7 @@ public class JoinWalker {
 			}
 			else if ( type.isComponentType() ) {
 				walkComponentTree(
-					(AbstractComponentType) type,
+					( AbstractComponentType ) type,
 					i,
 					0,
 					persister,
@@ -428,28 +534,34 @@ public class JoinWalker {
 
 	/**
 	 * For a component, add to a list of associations to be fetched by outerjoin
+	 *
+	 *
+	 * @param componentType The component type to be walked.
+	 * @param propertyNumber The property number for the component property (relative to
+	 * persister).
+	 * @param begin todo unknowm
+	 * @param persister The owner of the component property
+	 * @param alias The root alias
+	 * @param path The property access path
+	 * @param currentDepth The current join depth
+	 * @throws org.hibernate.MappingException ???
 	 */
 	private void walkComponentTree(
-		final AbstractComponentType componentType,
-		final int propertyNumber,
-		int begin,
-		final OuterJoinLoadable persister,
-		final String alias,
-		final String path,
-		final int currentDepth
-	) throws MappingException {
-
+			final AbstractComponentType componentType,
+			final int propertyNumber,
+			int begin,
+			final OuterJoinLoadable persister,
+			final String alias,
+			final String path,
+			final int currentDepth) throws MappingException {
 		Type[] types = componentType.getSubtypes();
 		String[] propertyNames = componentType.getPropertyNames();
-		for ( int i=0; i <types.length; i++ ) {
-
+		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i].isAssociationType() ) {
 				AssociationType associationType = (AssociationType) types[i];
-
 				String[] aliasedLhsColumns = JoinHelper.getAliasedLHSColumnNames(
 					associationType, alias, propertyNumber, begin, persister, getFactory()
 				);
-
 				String[] lhsColumns = JoinHelper.getLHSColumnNames(
 					associationType, propertyNumber, begin, persister, getFactory()
 				);
@@ -458,15 +570,17 @@ public class JoinWalker {
 				String subpath = subPath( path, propertyNames[i] );
 				final boolean[] propertyNullability = componentType.getPropertyNullability();
 				final int joinType = getJoinType(
+						persister,
+						subpath,
+						propertyNumber,
 						associationType,
 						componentType.getFetchMode(i),
-						subpath,
+						componentType.getCascadeStyle(i),
 						lhsTable,
 						lhsColumns,
 						propertyNullability==null || propertyNullability[i],
-						currentDepth, 
-						componentType.getCascadeStyle(i)
-					);
+						currentDepth
+				);
 				addAssociationToJoinTreeIfNecessary(			
 						associationType,
 						aliasedLhsColumns,
@@ -474,23 +588,22 @@ public class JoinWalker {
 						subpath,
 						currentDepth,
 						joinType
-					);
+				);
 
 			}
 			else if ( types[i].isComponentType() ) {
 				String subpath = subPath( path, propertyNames[i] );
 				walkComponentTree(
-						(AbstractComponentType) types[i],
+						( AbstractComponentType ) types[i],
 						propertyNumber,
 						begin,
 						persister,
 						alias,
 						subpath,
 						currentDepth
-					);
+				);
 			}
-			
-			begin+=types[i].getColumnSpan( getFactory() );
+			begin += types[i].getColumnSpan( getFactory() );
 		}
 
 	}
@@ -499,13 +612,12 @@ public class JoinWalker {
 	 * For a composite element, add to a list of associations to be fetched by outerjoin
 	 */
 	private void walkCompositeElementTree(
-		final AbstractComponentType compositeType,
-		final String[] cols,
-		final QueryableCollection persister,
-		final String alias,
-		final String path,
-		final int currentDepth) 
-	throws MappingException {
+			final AbstractComponentType compositeType,
+			final String[] cols,
+			final QueryableCollection persister,
+			final String alias,
+			final String path,
+			final int currentDepth) throws MappingException {
 
 		Type[] types = compositeType.getSubtypes();
 		String[] propertyNames = compositeType.getPropertyNames();
@@ -571,42 +683,15 @@ public class JoinWalker {
 	}
 
 	/**
-	 * Get the join type (inner, outer, etc) or -1 if the
-	 * association should not be joined. Override on
-	 * subclasses.
-	 */
-	protected int getJoinType(
-			AssociationType type, 
-			FetchMode config, 
-			String path, 
-			String lhsTable,
-			String[] lhsColumns,
-			boolean nullable,
-			int currentDepth, 
-			CascadeStyle cascadeStyle)
-	throws MappingException {
-		
-		if  ( !isJoinedFetchEnabled(type, config, cascadeStyle) ) return -1;
-		
-		if ( isTooDeep(currentDepth) || ( type.isCollectionType() && isTooManyCollections() ) ) return -1;
-		
-		final boolean dupe = isDuplicateAssociation(lhsTable,  lhsColumns, type);
-		if (dupe) return -1;
-		
-		return getJoinType(nullable, currentDepth);
-		
-	}
-	
-	/**
 	 * Use an inner join if it is a non-null association and this
 	 * is the "first" join in a series
 	 */
 	protected int getJoinType(boolean nullable, int currentDepth) {
 		//TODO: this is too conservative; if all preceding joins were 
 		//      also inner joins, we could use an inner join here
-		return !nullable && currentDepth==0 ? 
-					JoinFragment.INNER_JOIN : 
-					JoinFragment.LEFT_OUTER_JOIN;
+		return !nullable && currentDepth == 0
+				? JoinFragment.INNER_JOIN
+				: JoinFragment.LEFT_OUTER_JOIN;
 	}
 
 	protected boolean isTooDeep(int currentDepth) {
@@ -654,8 +739,7 @@ public class JoinWalker {
 	protected String generateTableAlias(
 			final int n,
 			final String path,
-			final Joinable joinable
-	) {
+			final Joinable joinable) {
 		return StringHelper.generateAlias( joinable.getName(), n );
 	}
 

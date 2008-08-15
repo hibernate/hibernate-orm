@@ -25,10 +25,12 @@
 package org.hibernate.loader;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.EntityType;
@@ -54,15 +56,17 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
 
-    private Map enabledFilters;
-    
-    protected final Dialect getDialect() {
+    private LoadQueryInfluencers loadQueryInfluencers;
+
+	protected final Dialect getDialect() {
     	return getFactory().getDialect();
     }
 
-	public OuterJoinLoader(SessionFactoryImplementor factory, Map enabledFilters) {
-		super(factory);
-		this.enabledFilters = enabledFilters;
+	public OuterJoinLoader(
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		super( factory );
+		this.loadQueryInfluencers = loadQueryInfluencers;
 	}
 
 	protected String[] getSuffixes() {
@@ -92,9 +96,9 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected LockMode[] getLockModes(Map lockModes) {
 		return lockModeArray;
 	}
-	
-	public Map getEnabledFilters() {
-		return enabledFilters;
+
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 	protected final String[] getAliases() {

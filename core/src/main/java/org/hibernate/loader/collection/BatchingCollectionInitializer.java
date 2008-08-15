@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -77,42 +78,38 @@ public class BatchingCollectionInitializer implements CollectionInitializer {
 	}
 
 	public static CollectionInitializer createBatchingOneToManyInitializer(
-		final QueryableCollection persister,
-		final int maxBatchSize,
-		final SessionFactoryImplementor factory,
-		final Map enabledFilters)
-	throws MappingException {
-
-		if ( maxBatchSize>1 ) {
+			final QueryableCollection persister,
+			final int maxBatchSize,
+			final SessionFactoryImplementor factory,
+			final LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		if ( maxBatchSize > 1 ) {
 			int[] batchSizesToCreate = ArrayHelper.getBatchSizes(maxBatchSize);
 			Loader[] loadersToCreate = new Loader[ batchSizesToCreate.length ];
 			for ( int i=0; i<batchSizesToCreate.length; i++ ) {
-				loadersToCreate[i] = new OneToManyLoader(persister, batchSizesToCreate[i], factory, enabledFilters);
+				loadersToCreate[i] = new OneToManyLoader( persister, batchSizesToCreate[i], factory, loadQueryInfluencers );
 			}
-			return new BatchingCollectionInitializer(persister, batchSizesToCreate, loadersToCreate);
+			return new BatchingCollectionInitializer( persister, batchSizesToCreate, loadersToCreate );
 		}
 		else {
-			return new OneToManyLoader(persister, factory, enabledFilters);
+			return new OneToManyLoader( persister, factory, loadQueryInfluencers );
 		}
 	}
 
 	public static CollectionInitializer createBatchingCollectionInitializer(
-		final QueryableCollection persister,
-		final int maxBatchSize,
-		final SessionFactoryImplementor factory,
-		final Map enabledFilters)
-	throws MappingException {
-
-		if ( maxBatchSize>1 ) {
+			final QueryableCollection persister,
+			final int maxBatchSize,
+			final SessionFactoryImplementor factory,
+			final LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		if ( maxBatchSize > 1 ) {
 			int[] batchSizesToCreate = ArrayHelper.getBatchSizes(maxBatchSize);
 			Loader[] loadersToCreate = new Loader[ batchSizesToCreate.length ];
 			for ( int i=0; i<batchSizesToCreate.length; i++ ) {
-				loadersToCreate[i] = new BasicCollectionLoader(persister, batchSizesToCreate[i], factory, enabledFilters);
+				loadersToCreate[i] = new BasicCollectionLoader( persister, batchSizesToCreate[i], factory, loadQueryInfluencers );
 			}
 			return new BatchingCollectionInitializer(persister, batchSizesToCreate, loadersToCreate);
 		}
 		else {
-			return new BasicCollectionLoader(persister, factory, enabledFilters);
+			return new BasicCollectionLoader( persister, factory, loadQueryInfluencers );
 		}
 	}
 

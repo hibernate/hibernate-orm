@@ -52,7 +52,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntry;
@@ -69,6 +68,7 @@ import org.hibernate.engine.Versioning;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.ValueInclusion;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
@@ -109,7 +109,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.VersionType;
 import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
 
@@ -195,6 +194,8 @@ public abstract class AbstractEntityPersister
 
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
+
+	private final Set affectingFetchProfileNames = new HashSet();
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
@@ -1667,26 +1668,27 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SessionImplementor session)
-			throws HibernateException {
-		return getAppropriateUniqueKeyLoader( propertyName, session.getEnabledFilters() )
-				.loadByUniqueKey( session, uniqueKey );
+	public Object loadByUniqueKey(
+			String propertyName,
+			Object uniqueKey,
+			SessionImplementor session) throws HibernateException {
+		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
 	}
 
-	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, Map enabledFilters) {
-
-		final boolean useStaticLoader = ( enabledFilters == null || enabledFilters.isEmpty() )
+	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SessionImplementor session) {
+		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
+				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()
 				&& propertyName.indexOf('.')<0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			return (EntityLoader) uniqueKeyLoaders.get( propertyName );
+			return ( EntityLoader ) uniqueKeyLoaders.get( propertyName );
 		}
 		else {
 			return createUniqueKeyLoader(
-					propertyMapping.toType(propertyName),
-					propertyMapping.toColumns(propertyName),
-					enabledFilters
-				);
+					propertyMapping.toType( propertyName ),
+					propertyMapping.toColumns( propertyName ),
+					session.getLoadQueryInfluencers()
+			);
 		}
 	}
 
@@ -1705,21 +1707,31 @@ public abstract class AbstractEntityPersister
 						createUniqueKeyLoader(
 								propertyTypes[i],
 								getPropertyColumnNames( i ),
-								CollectionHelper.EMPTY_MAP
-							)
-					);
+								LoadQueryInfluencers.NONE
+						)
+				);
 				//TODO: create uk loaders for component properties
 			}
 		}
 	}
 
-	private EntityLoader createUniqueKeyLoader(Type uniqueKeyType, String[] columns, Map enabledFilters) {
+	private EntityLoader createUniqueKeyLoader(
+			Type uniqueKeyType,
+			String[] columns,
+			LoadQueryInfluencers loadQueryInfluencers) {
 		if ( uniqueKeyType.isEntityType() ) {
 			String className = ( ( EntityType ) uniqueKeyType ).getAssociatedEntityName();
 			uniqueKeyType = getFactory().getEntityPersister( className ).getIdentifierType();
 		}
-
-		return new EntityLoader( this, columns, uniqueKeyType, 1, LockMode.NONE, getFactory(), enabledFilters );
+		return new EntityLoader(
+				this,
+				columns,
+				uniqueKeyType,
+				1,
+				LockMode.NONE,
+				getFactory(),
+				loadQueryInfluencers
+		);
 	}
 
 	protected String getSQLWhereString(String alias) {
@@ -1770,13 +1782,21 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected UniqueEntityLoader createEntityLoader(LockMode lockMode, Map enabledFilters) throws MappingException {
+	protected UniqueEntityLoader createEntityLoader(
+			LockMode lockMode,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		//TODO: disable batch loading if lockMode > READ?
-		return BatchingEntityLoader.createBatchingEntityLoader( this, batchSize, lockMode, getFactory(), enabledFilters );
+		return BatchingEntityLoader.createBatchingEntityLoader(
+				this,
+				batchSize,
+				lockMode,
+				getFactory(),
+				loadQueryInfluencers
+		);
 	}
 
 	protected UniqueEntityLoader createEntityLoader(LockMode lockMode) throws MappingException {
-		return createEntityLoader( lockMode, CollectionHelper.EMPTY_MAP );
+		return createEntityLoader( lockMode, LoadQueryInfluencers.NONE );
 	}
 
 	protected boolean check(int rows, Serializable id, int tableNumber, Expectation expectation, PreparedStatement statement) throws HibernateException {
@@ -3072,21 +3092,49 @@ public abstract class AbstractEntityPersister
 		return loader.load( id, optionalObject, session );
 	}
 
+	public void registerAffectingFetchProfile(String fetchProfileName) {
+		affectingFetchProfileNames.add( fetchProfileName );
+	}
+
+	private boolean isAffectedByEnabledFetchProfiles(SessionImplementor session) {
+		Iterator itr = session.getLoadQueryInfluencers().getEnabledFetchProfileNames().iterator();
+		while ( itr.hasNext() ) {
+			if ( affectingFetchProfileNames.contains( itr.next() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isAffectedByEnabledFilters(SessionImplementor session) {
+		return session.getLoadQueryInfluencers().hasEnabledFilters()
+				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
+	}
+
 	private UniqueEntityLoader getAppropriateLoader(LockMode lockMode, SessionImplementor session) {
-		final Map enabledFilters = session.getEnabledFilters();
 		if ( queryLoader != null ) {
+			// if the user specified a custom query loader we need to that
+			// regardless of any other consideration
 			return queryLoader;
 		}
-		else if ( enabledFilters == null || enabledFilters.isEmpty() ) {
-			if ( session.getFetchProfile()!=null && LockMode.UPGRADE.greaterThan(lockMode) ) {
-				return (UniqueEntityLoader) loaders.get( session.getFetchProfile() );
-			}
-			else {
-				return (UniqueEntityLoader) loaders.get( lockMode );
-			}
+		else if ( isAffectedByEnabledFilters( session ) ) {
+			// because filters affect the rows returned (because they add
+			// restirctions) these need to be next in precendence
+			return createEntityLoader( lockMode, session.getLoadQueryInfluencers() );
+		}
+		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan( lockMode ) ) {
+			// Next, we consider whether an 'internal' fetch profile has been set.
+			// This indicates a special fetch profile Hibernate needs applied
+			// (for its merge loading process e.g.).
+			return ( UniqueEntityLoader ) loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
+		}
+		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
+			// If the session has associated influencers we need to adjust the
+			// SQL query used for loading based on those influencers
+			return createEntityLoader( lockMode, session.getLoadQueryInfluencers() );
 		}
 		else {
-			return createEntityLoader( lockMode, enabledFilters );
+			return ( UniqueEntityLoader ) loaders.get( lockMode );
 		}
 	}
 

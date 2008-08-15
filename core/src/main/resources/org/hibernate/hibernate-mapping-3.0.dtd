@@ -19,11 +19,12 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 <!ELEMENT hibernate-mapping (
 	meta*, 
 	typedef*, 
-	import*, 
+	import*,
 	(class|subclass|joined-subclass|union-subclass)*,
     resultset*,
 	(query|sql-query)*,
 	filter-def*,
+	fetch-profile*,
     database-object*
 )>
 	<!ATTLIST hibernate-mapping schema CDATA #IMPLIED>									<!-- default: none -->
@@ -78,6 +79,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 	((join*,subclass*)|joined-subclass*|union-subclass*),
 	loader?,sql-insert?,sql-update?,sql-delete?,
 	filter*,
+    fetch-profile*,
     resultset*,
 	(query|sql-query)*
 )>
@@ -133,6 +135,22 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 	<!ATTLIST filter name CDATA #REQUIRED>
 	<!ATTLIST filter condition CDATA #IMPLIED>
 
+<!--
+-->
+<!ELEMENT fetch-profile (fetch*)>
+    <!ATTLIST fetch-profile name CDATA #REQUIRED>
+
+<!--
+    The <fetch> element defines a single path to which the fetch
+    refers, as well as the style of fetch to apply.  The 'root' of the
+    path is different depending upon the context in which the
+    containing <fetch-profile/> occurs; within a <class/> element,
+    the entity-name of the containing class mapping is assumed...
+-->
+<!ELEMENT fetch EMPTY>
+    <!ATTLIST fetch entity CDATA #IMPLIED> <!-- Implied as long as the containing fetch profile is contained in a class mapping -->
+    <!ATTLIST fetch association CDATA #REQUIRED>
+    <!ATTLIST fetch style (join|select) "join">
 
 <!-- A join allows some properties of a class to be persisted to a second table -->
 
@@ -231,6 +249,7 @@ application through a property of the Java class. -->
 	join*, 
 	subclass*,
 	loader?,sql-insert?,sql-update?,sql-delete?,
+    fetch-profile*,
     resultset*,
 	(query|sql-query)*
 )>
@@ -263,6 +282,7 @@ application through a property of the Java class. -->
 	(property|many-to-one|one-to-one|component|dynamic-component|properties|any|map|set|list|bag|idbag|array|primitive-array)*, 
 	joined-subclass*,
 	loader?,sql-insert?,sql-update?,sql-delete?,
+    fetch-profile*,
     resultset*,
 	(query|sql-query)*
 )>
@@ -298,6 +318,7 @@ application through a property of the Java class. -->
 	(property|many-to-one|one-to-one|component|dynamic-component|properties|any|map|set|list|bag|idbag|array|primitive-array)*,
 	union-subclass*,
 	loader?,sql-insert?,sql-update?,sql-delete?,
+    fetch-profile*,
     resultset*,
 	(query|sql-query)*
 )>

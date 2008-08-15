@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -41,6 +40,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -75,9 +75,8 @@ public class CriteriaLoader extends OuterJoinLoader {
 			final SessionFactoryImplementor factory, 
 			final CriteriaImpl criteria, 
 			final String rootEntityName,
-			final Map enabledFilters)
-	throws HibernateException {
-		super(factory, enabledFilters);
+			final LoadQueryInfluencers loadQueryInfluencers) throws HibernateException {
+		super( factory, loadQueryInfluencers );
 
 		translator = new CriteriaQueryTranslator(
 				factory, 
@@ -94,7 +93,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 				factory, 
 				criteria, 
 				rootEntityName, 
-				enabledFilters
+				loadQueryInfluencers
 			);
 
 		initFromWalker(walker);

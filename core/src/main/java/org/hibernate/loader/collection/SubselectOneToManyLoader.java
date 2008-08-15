@@ -35,6 +35,7 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
 
@@ -57,10 +58,8 @@ public class SubselectOneToManyLoader extends OneToManyLoader {
 			QueryParameters queryParameters,
 			Map namedParameterLocMap,
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-		
-		super(persister, 1, subquery, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( persister, 1, subquery, factory, loadQueryInfluencers );
 
 		keys = new Serializable[ entityKeys.size() ];
 		Iterator iter = entityKeys.iterator();
@@ -73,11 +72,9 @@ public class SubselectOneToManyLoader extends OneToManyLoader {
 		this.types = queryParameters.getFilteredPositionalParameterTypes();
 		this.values = queryParameters.getFilteredPositionalParameterValues();
 		this.namedParameterLocMap = namedParameterLocMap;
-		
 	}
 
-	public void initialize(Serializable id, SessionImplementor session)
-	throws HibernateException {
+	public void initialize(Serializable id, SessionImplementor session) throws HibernateException {
 		loadCollectionSubselect( 
 				session, 
 				keys, 
@@ -85,7 +82,7 @@ public class SubselectOneToManyLoader extends OneToManyLoader {
 				types,
 				namedParameters,
 				getKeyType() 
-			);
+		);
 	}
 
 	public int[] getNamedParameterLocs(String name) {

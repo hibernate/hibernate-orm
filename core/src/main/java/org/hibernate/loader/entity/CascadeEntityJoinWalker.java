@@ -30,6 +30,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
@@ -41,7 +42,7 @@ public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 
 	public CascadeEntityJoinWalker(OuterJoinLoadable persister, CascadingAction action, SessionFactoryImplementor factory) 
 	throws MappingException {
-		super( persister, factory, CollectionHelper.EMPTY_MAP );
+		super( persister, factory, LoadQueryInfluencers.NONE );
 		this.cascadeAction = action;
 		StringBuffer whereCondition = whereString( getAlias(), persister.getIdentifierColumnNames(), 1 )
 				//include the discriminator and class-level where, but not filters

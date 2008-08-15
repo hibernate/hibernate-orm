@@ -36,6 +36,12 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 
+/**
+ * Part of the Hibernate SQL rendering internals.  This class represents
+ * a joinable association.
+ *
+ * @author Gavin King
+ */
 public final class OuterJoinableAssociation {
 	private final AssociationType joinableType;
 	private final Joinable joinable;
@@ -48,14 +54,13 @@ public final class OuterJoinableAssociation {
 	private final Map enabledFilters;
 
 	public OuterJoinableAssociation(
-		AssociationType joinableType,
-		String lhsAlias,
-		String[] lhsColumns,
-		String rhsAlias,
-		int joinType,
-		SessionFactoryImplementor factory,
-		Map enabledFilters)
-	throws MappingException {
+			AssociationType joinableType,
+			String lhsAlias,
+			String[] lhsColumns,
+			String rhsAlias,
+			int joinType,
+			SessionFactoryImplementor factory,
+			Map enabledFilters) throws MappingException {
 		this.joinableType = joinableType;
 		this.lhsAlias = lhsAlias;
 		this.lhsColumns = lhsColumns;

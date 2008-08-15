@@ -198,4 +198,8 @@ public class SessionFactoryStub implements SessionFactory {
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		return getImpl().getFilterDefinition( filterName );
 	}
+
+	public boolean containsFetchProfileDefition(String name) {
+		return getImpl().containsFetchProfileDefition( name );
+	}
 }

@@ -22,39 +22,27 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.loader.entity;
+package org.hibernate;
 
-import org.hibernate.MappingException;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.loader.JoinWalker;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+/**
+ * Used to indicate a request against an unknown profile name.
+ *
+ * @author Steve Ebersole
+ */
+public class UnknownProfileException extends HibernateException {
+	private final String name;
 
-public class CascadeEntityLoader extends AbstractEntityLoader {
-	
-	public CascadeEntityLoader(
-			OuterJoinLoadable persister,
-			CascadingAction action,
-			SessionFactoryImplementor factory) throws MappingException {
-		super(
-				persister, 
-				persister.getIdentifierType(), 
-				factory,
-				LoadQueryInfluencers.NONE
-		);
-
-		JoinWalker walker = new CascadeEntityJoinWalker(
-				persister, 
-				action,
-				factory
-		);
-		initFromWalker( walker );
-
-		postInstantiate();
-		
-		log.debug( "Static select for action " + action + " on entity " + entityName + ": " + getSQLString() );
-
+	public UnknownProfileException(String name) {
+		super( "Unknow fetch profile [" + name + "]" );
+		this.name = name;
 	}
 
+	/**
+	 * The unknown fetch profile name.
+	 *
+	 * @return The unknown fetch profile name.
+	 */
+	public String getName() {
+		return name;
+	}
 }

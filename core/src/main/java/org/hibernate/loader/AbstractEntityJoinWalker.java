@@ -26,13 +26,16 @@ package org.hibernate.loader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.Fetch;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
@@ -51,55 +54,60 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	private final OuterJoinLoadable persister;
 	private final String alias;
 
-	public AbstractEntityJoinWalker(OuterJoinLoadable persister, SessionFactoryImplementor factory, Map enabledFilters) {
-		this( persister, factory, enabledFilters, null );
+	public AbstractEntityJoinWalker(
+			OuterJoinLoadable persister,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		this( persister, factory, loadQueryInfluencers, null );
 	}
 
-	public AbstractEntityJoinWalker(OuterJoinLoadable persister, SessionFactoryImplementor factory, Map enabledFilters, String alias) {
-		super( factory, enabledFilters );
+	public AbstractEntityJoinWalker(
+			OuterJoinLoadable persister,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers,
+			String alias) {
+		super( factory, loadQueryInfluencers );
 		this.persister = persister;
 		this.alias = ( alias == null ) ? generateRootAlias( persister.getEntityName() ) : alias;
 	}
 
 	protected final void initAll(
-		final String whereString,
-		final String orderByString,
-		final LockMode lockMode)
-	throws MappingException {
+			final String whereString,
+			final String orderByString,
+			final LockMode lockMode) throws MappingException {
 		walkEntityTree( persister, getAlias() );
 		List allAssociations = new ArrayList();
 		allAssociations.addAll(associations);
-		allAssociations.add( new OuterJoinableAssociation(
-				persister.getEntityType(),
-				null,
-				null,
-				alias,
-				JoinFragment.LEFT_OUTER_JOIN,
-				getFactory(),
-				CollectionHelper.EMPTY_MAP
-			) );
-
+		allAssociations.add(
+				new OuterJoinableAssociation(
+						persister.getEntityType(),
+						null,
+						null,
+						alias,
+						JoinFragment.LEFT_OUTER_JOIN,
+						getFactory(),
+						CollectionHelper.EMPTY_MAP
+				)
+		);
 		initPersisters(allAssociations, lockMode);
 		initStatementString( whereString, orderByString, lockMode);
 	}
 
 	protected final void initProjection(
-		final String projectionString,
-		final String whereString,
-		final String orderByString,
-		final String groupByString,
-		final LockMode lockMode)
-	throws MappingException {
+			final String projectionString,
+			final String whereString,
+			final String orderByString,
+			final String groupByString,
+			final LockMode lockMode) throws MappingException {
 		walkEntityTree( persister, getAlias() );
 		persisters = new Loadable[0];
 		initStatementString(projectionString, whereString, orderByString, groupByString, lockMode);
 	}
 
 	private void initStatementString(
-		final String condition,
-		final String orderBy,
-		final LockMode lockMode)
-	throws MappingException {
+			final String condition,
+			final String orderBy,
+			final LockMode lockMode) throws MappingException {
 		initStatementString(null, condition, orderBy, "", lockMode);
 	}
 
@@ -149,7 +157,33 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	 * The superclass deliberately excludes collections
 	 */
 	protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {
-		return isJoinedFetchEnabledInMapping(config, type);
+		return isJoinedFetchEnabledInMapping( config, type );
+	}
+
+	protected final boolean isJoinFetchEnabledByProfile(OuterJoinLoadable persister, String path, int propertyNumber) {
+		if ( !getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
+			// perf optimization
+			return false;
+		}
+
+		// ugh, this stuff has to be made easier...
+		String rootPropertyName = persister.getSubclassPropertyName( propertyNumber );
+		int pos = path.lastIndexOf( rootPropertyName );
+		String relativePropertyPath = pos >= 0
+				? path.substring( pos )
+				: rootPropertyName;
+		String fetchRole = persister.getEntityName() + "." + relativePropertyPath;
+
+		Iterator profiles = getLoadQueryInfluencers().getEnabledFetchProfileNames().iterator();
+		while ( profiles.hasNext() ) {
+			final String profileName = ( String ) profiles.next();
+			final FetchProfile profile = getFactory().getFetchProfile( profileName );
+			final Fetch fetch = profile.getFetchByRole( fetchRole );
+			if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public abstract String getComment();

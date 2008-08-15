@@ -58,6 +58,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -561,7 +562,7 @@ public abstract class AbstractCollectionPersister
 
 	public void postInstantiate() throws MappingException {
 		initializer = queryLoaderName == null ?
-				createCollectionInitializer( CollectionHelper.EMPTY_MAP ) :
+				createCollectionInitializer( LoadQueryInfluencers.NONE ) :
 				new NamedQueryCollectionInitializer( queryLoaderName, this );
 	}
 
@@ -601,7 +602,7 @@ public abstract class AbstractCollectionPersister
 			return initializer;
 		}
 		else {
-			return createCollectionInitializer( session.getEnabledFilters() );
+			return createCollectionInitializer( session.getLoadQueryInfluencers() );
 		}
 	}
 
@@ -637,7 +638,7 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session);
 
-	protected abstract CollectionInitializer createCollectionInitializer(Map enabledFilters)
+	protected abstract CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException;
 
 	public CollectionRegionAccessStrategy getCacheAccessStrategy() {

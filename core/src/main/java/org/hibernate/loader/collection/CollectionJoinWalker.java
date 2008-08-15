@@ -24,9 +24,8 @@
  */
 package org.hibernate.loader.collection;
 
-import java.util.Map;
-
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.util.StringHelper;
 
@@ -40,8 +39,8 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class CollectionJoinWalker extends JoinWalker {
 	
-	public CollectionJoinWalker(SessionFactoryImplementor factory, Map enabledFilters) {
-		super( factory, enabledFilters );
+	public CollectionJoinWalker(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
+		super( factory, loadQueryInfluencers );
 	}
 
 	protected StringBuffer whereString(String alias, String[] columnNames, String subselect, int batchSize) {

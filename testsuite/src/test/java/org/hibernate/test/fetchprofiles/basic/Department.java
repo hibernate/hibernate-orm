@@ -22,39 +22,47 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.loader.entity;
+package org.hibernate.test.fetchprofiles.basic;
 
-import org.hibernate.MappingException;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.loader.JoinWalker;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+/**
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
+ */
+public class Department {
+	private Long id;
+	private String code;
+	private String name;
 
-public class CascadeEntityLoader extends AbstractEntityLoader {
-	
-	public CascadeEntityLoader(
-			OuterJoinLoadable persister,
-			CascadingAction action,
-			SessionFactoryImplementor factory) throws MappingException {
-		super(
-				persister, 
-				persister.getIdentifierType(), 
-				factory,
-				LoadQueryInfluencers.NONE
-		);
-
-		JoinWalker walker = new CascadeEntityJoinWalker(
-				persister, 
-				action,
-				factory
-		);
-		initFromWalker( walker );
-
-		postInstantiate();
-		
-		log.debug( "Static select for action " + action + " on entity " + entityName + ": " + getSQLString() );
-
+	public Department() {
 	}
 
+	public Department(String code, String name) {
+		this.code = code;
+		this.name = name;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

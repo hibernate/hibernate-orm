@@ -25,13 +25,16 @@
 package org.hibernate.loader.entity;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.Iterator;
 
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.Fetch;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
@@ -52,28 +55,47 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			int batchSize, 
 			LockMode lockMode,
 			SessionFactoryImplementor factory, 
-			Map enabledFilters) 
-	throws MappingException {
-		super(persister, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( persister, factory, loadQueryInfluencers );
 
 		this.lockMode = lockMode;
 		
 		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
-			//include the discriminator and class-level where, but not filters
-			.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
+				//include the discriminator and class-level where, but not filters
+				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
 		initAll( whereCondition.toString(), "", lockMode );
-		
 	}
 
-	/**
-	 * Disable outer join fetching if this loader obtains an
-	 * upgrade lock mode
-	 */
-	protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {
-		return lockMode.greaterThan(LockMode.READ) ?
-			false :
-			super.isJoinedFetchEnabled(type, config, cascadeStyle);
+	protected int getJoinType(
+			OuterJoinLoadable persister,
+			String path,
+			int propertyNumber,
+			AssociationType associationType,
+			FetchMode metadataFetchMode,
+			CascadeStyle metadataCascadeStyle,
+			String lhsTable,
+			String[] lhsColumns,
+			boolean nullable,
+			int currentDepth) throws MappingException {
+		// NOTE : we override this form here specifically to account for
+		// fetch profiles.
+		// TODO : how to best handle criteria queries?
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
+			return -1;
+		}
+		if ( isTooDeep( currentDepth )
+				|| ( associationType.isCollectionType() && isTooManyCollections() ) ) {
+			return -1;
+		}
+		if ( !isJoinedFetchEnabledInMapping( metadataFetchMode, associationType )
+				&& !isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
+			return -1;
+		}
+		if ( isDuplicateAssociation( lhsTable, lhsColumns, associationType ) ) {
+			return -1;
+		}
+		return getJoinType( nullable, currentDepth );
 	}
 
 	public String getComment() {

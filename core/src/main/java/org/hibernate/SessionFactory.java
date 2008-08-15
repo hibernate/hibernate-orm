@@ -244,4 +244,13 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * @throws HibernateException If no filter defined with the given name.
 	 */
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException;
+
+	/**
+	 * Determine if this session factory contains a fetch profile definition
+	 * registered under the given name.
+	 *
+	 * @param name The name to check
+	 * @return True if there is such a fetch profile; false otherwise.
+	 */
+	public boolean containsFetchProfileDefition(String name);
 }

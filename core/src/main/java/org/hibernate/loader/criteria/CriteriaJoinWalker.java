@@ -26,7 +26,6 @@ package org.hibernate.loader.criteria;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Criteria;
@@ -35,6 +34,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.Joinable;
@@ -78,8 +78,8 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			final SessionFactoryImplementor factory, 
 			final CriteriaImpl criteria, 
 			final String rootEntityName,
-			final Map enabledFilters) {
-		this(persister, translator, factory, criteria, rootEntityName, enabledFilters, null);
+			final LoadQueryInfluencers loadQueryInfluencers) {
+		this( persister, translator, factory, criteria, rootEntityName, loadQueryInfluencers, null );
 	}
 
 	public CriteriaJoinWalker(
@@ -88,9 +88,9 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			final SessionFactoryImplementor factory,
 			final CriteriaImpl criteria,
 			final String rootEntityName,
-			final Map enabledFilters,
+			final LoadQueryInfluencers loadQueryInfluencers,
 			final String alias) {
-		super(persister, factory, enabledFilters, alias);
+		super( persister, factory, loadQueryInfluencers, alias );
 
 		this.translator = translator;
 
@@ -119,16 +119,17 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	}
 
 	protected int getJoinType(
-			AssociationType type, 
-			FetchMode config, 
-			String path,
+			OuterJoinLoadable persister,
+			final String path,
+			int propertyNumber,
+			AssociationType associationType,
+			FetchMode metadataFetchMode,
+			CascadeStyle metadataCascadeStyle,
 			String lhsTable,
 			String[] lhsColumns,
-			boolean nullable,
-			int currentDepth, CascadeStyle cascadeStyle)
-	throws MappingException {
-
-		if ( translator.isJoin(path) ) {
+			final boolean nullable,
+			final int currentDepth) throws MappingException {
+		if ( translator.isJoin( path ) ) {
 			return translator.getJoinType( path );
 		}
 		else {
@@ -136,23 +137,30 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				return -1;
 			}
 			else {
-				FetchMode fetchMode = translator.getRootCriteria()
-					.getFetchMode(path);
-				if ( isDefaultFetchMode(fetchMode) ) {
-					return super.getJoinType(
-							type, 
-							config, 
-							path, 
-							lhsTable, 
-							lhsColumns, 
-							nullable,
-							currentDepth, cascadeStyle
+				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path );
+				if ( isDefaultFetchMode( fetchMode ) ) {
+					if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
+						return getJoinType( nullable, currentDepth );
+					}
+					else {
+						return super.getJoinType(
+								persister,
+								path,
+								propertyNumber,
+								associationType,
+								metadataFetchMode,
+								metadataCascadeStyle,
+								lhsTable,
+								lhsColumns,
+								nullable,
+								currentDepth
 						);
+					}
 				}
 				else {
-					if ( fetchMode==FetchMode.JOIN ) {
-						isDuplicateAssociation(lhsTable, lhsColumns, type); //deliberately ignore return value!
-						return getJoinType(nullable, currentDepth);
+					if ( fetchMode == FetchMode.JOIN ) {
+						isDuplicateAssociation( lhsTable, lhsColumns, associationType ); //deliberately ignore return value!
+						return getJoinType( nullable, currentDepth );
 					}
 					else {
 						return -1;
@@ -172,7 +180,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	 */
 	protected String getWhereFragment() throws MappingException {
 		return super.getWhereFragment() +
-			( (Queryable) getPersister() ).filterFragment( getAlias(), getEnabledFilters() );
+			( (Queryable) getPersister() ).filterFragment( getAlias(), getLoadQueryInfluencers().getEnabledFilters() );
 	}
 	
 	protected String generateTableAlias(int n, String path, Joinable joinable) {

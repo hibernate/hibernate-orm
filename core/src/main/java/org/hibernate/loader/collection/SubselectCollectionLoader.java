@@ -35,6 +35,7 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
 
@@ -57,10 +58,8 @@ public class SubselectCollectionLoader extends BasicCollectionLoader {
 			QueryParameters queryParameters,
 			Map namedParameterLocMap,
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-		
-		super(persister, 1, subquery, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( persister, 1, subquery, factory, loadQueryInfluencers );
 
 		keys = new Serializable[ entityKeys.size() ];
 		Iterator iter = entityKeys.iterator();
@@ -77,7 +76,7 @@ public class SubselectCollectionLoader extends BasicCollectionLoader {
 	}
 
 	public void initialize(Serializable id, SessionImplementor session)
-	throws HibernateException {
+			throws HibernateException {
 		loadCollectionSubselect( 
 				session, 
 				keys, 
@@ -85,7 +84,7 @@ public class SubselectCollectionLoader extends BasicCollectionLoader {
 				types,
 				namedParameters,
 				getKeyType() 
-			);
+		);
 	}
 
 	public int[] getNamedParameterLocs(String name) {

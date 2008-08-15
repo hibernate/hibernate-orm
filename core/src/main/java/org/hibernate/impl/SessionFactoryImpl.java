@@ -84,6 +84,9 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
@@ -100,6 +103,7 @@ import org.hibernate.persister.PersisterFactory;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.stat.Statistics;
@@ -156,6 +160,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Map namedSqlQueries;
 	private final transient Map sqlResultSetMappings;
 	private final transient Map filters;
+	private final transient Map fetchProfiles;
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
 	private final transient Settings settings;
@@ -198,6 +203,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			public void sessionFactoryClosed(SessionFactory factory) {
 			}
 		};
+
 		this.filters = new HashMap();
 		this.filters.putAll( cfg.getFilterDefinitions() );
 
@@ -411,6 +417,43 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			};
 		}
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
+
+		// this needs to happen after persisters are all ready to go...
+		this.fetchProfiles = new HashMap();
+		itr = cfg.getFetchProfiles().values().iterator();
+		while ( itr.hasNext() ) {
+			final org.hibernate.mapping.FetchProfile mappingProfile =
+					( org.hibernate.mapping.FetchProfile ) itr.next();
+			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
+			Iterator fetches = mappingProfile.getFetches().iterator();
+			while ( fetches.hasNext() ) {
+				final org.hibernate.mapping.FetchProfile.Fetch mappingFetch =
+						( org.hibernate.mapping.FetchProfile.Fetch ) fetches.next();
+				// resolve the persister owning the fetch
+				final String entityName = getImportedClassName( mappingFetch.getEntity() );
+				final EntityPersister owner = ( EntityPersister ) ( entityName == null ? null : entityPersisters.get( entityName ) );
+				if ( owner == null ) {
+					throw new HibernateException(
+							"Unable to resolve entity reference [" + mappingFetch.getEntity()
+									+ "] in fetch profile [" + fetchProfile.getName() + "]"
+					);
+				}
+
+				// validate the specified association fetch
+				Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
+				if ( associationType == null || !associationType.isAssociationType() ) {
+					throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
+				}
+
+				// resolve the style
+				final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
+
+				// then construct the fetch instance...
+				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
+				( ( Loadable ) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+			}
+			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+		}
 
 		this.observer.sessionFactoryCreated( this );
 	}
@@ -1004,6 +1047,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return def;
 	}
 
+	public boolean containsFetchProfileDefition(String name) {
+		return fetchProfiles.containsKey( name );
+	}
+
 	public Set getDefinedFilterNames() {
 		return filters.keySet();
 	}
@@ -1061,6 +1108,14 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return entityNotFoundDelegate;
 	}
 
+	public SQLFunctionRegistry getSqlFunctionRegistry() {
+		return sqlFunctionRegistry;
+	}
+
+	public FetchProfile getFetchProfile(String name) {
+		return ( FetchProfile ) fetchProfiles.get( name );
+	}
+
 	/**
 	 * Custom serialization hook used during Session serialization.
 	 *
@@ -1101,9 +1156,5 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			}
 		}
 		return ( SessionFactoryImpl ) result;
-	}
-
-	public SQLFunctionRegistry getSqlFunctionRegistry() {
-		return sqlFunctionRegistry;
 	}
 }

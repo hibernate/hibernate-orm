@@ -40,6 +40,7 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.CollectionInitializer;
@@ -338,8 +339,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 *
 	 * @see org.hibernate.loader.collection.OneToManyLoader
 	 */
-	protected CollectionInitializer createCollectionInitializer(java.util.Map enabledFilters) throws MappingException {
-		return BatchingCollectionInitializer.createBatchingOneToManyInitializer( this, batchSize, getFactory(), enabledFilters );
+	protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers) 
+			throws MappingException {
+		return BatchingCollectionInitializer.createBatchingOneToManyInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
 
 	public String fromJoinFragment(String alias,
@@ -375,12 +377,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				subselect.getQueryParameters(),
 				subselect.getNamedParameterLocMap(),
 				session.getFactory(),
-				session.getEnabledFilters() 
+				session.getLoadQueryInfluencers()
 			);
 	}
 
 	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
-		return new CollectionElementLoader( this, getFactory(), session.getEnabledFilters() )
+		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
 				.loadElement( session, key, incrementIndexByBase(index) );
 	}
 

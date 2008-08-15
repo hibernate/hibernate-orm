@@ -89,6 +89,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -157,6 +158,9 @@ public final class HbmBinder {
 
 			if ( "filter-def".equals( elementName ) ) {
 				parseFilterDef( element, mappings );
+			}
+			else if ( "fetch-profile".equals( elementName ) ) {
+				parseFetchProfile( element, mappings, null );
 			}
 			else if ( "typedef".equals( elementName ) ) {
 				bindTypeDef( element, mappings );
@@ -546,8 +550,13 @@ public final class HbmBinder {
 		bindDom4jRepresentation( node, persistentClass, mappings, inheritedMetas );
 		bindMapRepresentation( node, persistentClass, mappings, inheritedMetas );
 
-		bindPersistentClassCommonValues( node, persistentClass, mappings, inheritedMetas );
+		Iterator itr = node.elementIterator( "fetch-profile" );
+		while ( itr.hasNext() ) {
+			final Element profileElement = ( Element ) itr.next();
+			parseFetchProfile( profileElement, mappings, entityName );
+		}
 
+		bindPersistentClassCommonValues( node, persistentClass, mappings, inheritedMetas );
 	}
 
 	private static void bindPojoRepresentation(Element node, PersistentClass entity,
@@ -2961,6 +2970,25 @@ public final class HbmBinder {
 		}
 		log.debug( "Applying filter [" + name + "] as [" + condition + "]" );
 		filterable.addFilter( name, condition );
+	}
+
+	private static void parseFetchProfile(Element element, Mappings mappings, String containingEntityName) {
+		String profileName = element.attributeValue( "name" );
+		FetchProfile profile = mappings.findOrCreateFetchProfile( profileName );
+		Iterator itr = element.elementIterator( "fetch" );
+		while ( itr.hasNext() ) {
+			final Element fetchElement = ( Element ) itr.next();
+			final String association = fetchElement.attributeValue( "association" );
+			final String style = fetchElement.attributeValue( "style" );
+			String entityName = fetchElement.attributeValue( "entity" );
+			if ( entityName == null ) {
+				entityName = containingEntityName;
+			}
+			if ( entityName == null ) {
+				throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + association + "]" );
+			}
+			profile.addFetch( entityName, association, style );
+		}
 	}
 
 	private static String getSubselect(Element element) {

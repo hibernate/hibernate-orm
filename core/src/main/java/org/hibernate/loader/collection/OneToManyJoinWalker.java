@@ -27,11 +27,11 @@ package org.hibernate.loader.collection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -67,10 +67,8 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 			int batchSize, 
 			String subquery, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-
-		super(factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( factory, loadQueryInfluencers );
 
 		this.oneToManyPersister = oneToManyPersister;
 
@@ -93,7 +91,6 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 		
 		initPersisters(allAssociations, LockMode.NONE);
 		initStatementString(elementPersister, alias, batchSize, subquery);
-
 	}
 
 	private void initStatementString(
@@ -115,7 +112,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 				subquery,
 				batchSize
 			);
-		String filter = oneToManyPersister.filterFragment( alias, getEnabledFilters() );
+		String filter = oneToManyPersister.filterFragment( alias, getLoadQueryInfluencers().getEnabledFilters() );
 		whereString.insert( 0, StringHelper.moveAndToBeginning(filter) );
 
 		JoinFragment ojf = mergeOuterJoins(associations);

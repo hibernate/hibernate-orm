@@ -34,9 +34,12 @@ import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.CascadeStyle;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
 import org.hibernate.type.AssociationType;
@@ -58,10 +61,9 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 			int batchSize, 
 			String subquery, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 
-		super(factory, enabledFilters);
+		super( factory, loadQueryInfluencers );
 
 		this.collectionPersister = collectionPersister;
 
@@ -71,26 +73,25 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 
 		List allAssociations = new ArrayList();
 		allAssociations.addAll(associations);
-		allAssociations.add( new OuterJoinableAssociation( 
-				collectionPersister.getCollectionType(),
-				null, 
-				null, 
-				alias, 
-				JoinFragment.LEFT_OUTER_JOIN, 
-				getFactory(), 
-				CollectionHelper.EMPTY_MAP 
-			) );
-
+		allAssociations.add(
+				new OuterJoinableAssociation(
+						collectionPersister.getCollectionType(),
+						null,
+						null,
+						alias,
+						JoinFragment.LEFT_OUTER_JOIN,
+						getFactory(),
+						CollectionHelper.EMPTY_MAP
+				)
+		);
 		initPersisters(allAssociations, LockMode.NONE);
 		initStatementString(alias, batchSize, subquery);
-
 	}
 
 	private void initStatementString(
 		final String alias,
 		final int batchSize,
-		final String subquery)
-	throws MappingException {
+		final String subquery) throws MappingException {
 
 		final int joins = countEntityPersisters( associations );
 		final int collectionJoins = countCollectionPersisters( associations ) + 1;
@@ -106,7 +107,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 			);
 
 		String manyToManyOrderBy = "";
-		String filter = collectionPersister.filterFragment( alias, getEnabledFilters() );
+		String filter = collectionPersister.filterFragment( alias, getLoadQueryInfluencers().getEnabledFilters() );
 		if ( collectionPersister.isManyToMany() ) {
 			// from the collection of associations, locate OJA for the
 			// ManyToOne corresponding to this persister to fully
@@ -121,9 +122,9 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 					// we found it
 					filter += collectionPersister.getManyToManyFilterFragment( 
 							oja.getRHSAlias(), 
-							getEnabledFilters() 
+							getLoadQueryInfluencers().getEnabledFilters() 
 						);
-						manyToManyOrderBy += collectionPersister.getManyToManyOrderByString( oja.getRHSAlias() );
+					manyToManyOrderBy += collectionPersister.getManyToManyOrderByString( oja.getRHSAlias() );
 				}
 			}
 		}
@@ -151,37 +152,36 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 		sql = select.toStatementString();
 	}
 
-	/**
-	 * We can use an inner join for first many-to-many association
-	 */
 	protected int getJoinType(
-			AssociationType type, 
-			FetchMode config, 
-			String path, 
-			Set visitedAssociations,
+			OuterJoinLoadable persister,
+			String path,
+			int propertyNumber,
+			AssociationType associationType,
+			FetchMode metadataFetchMode,
+			CascadeStyle metadataCascadeStyle,
 			String lhsTable,
 			String[] lhsColumns,
 			boolean nullable,
-			int currentDepth)
-	throws MappingException {
-
+			int currentDepth) throws MappingException {
 		int joinType = super.getJoinType(
-				type, 
-				config, 
-				path, 
-				lhsTable, 
-				lhsColumns, 
-				nullable, 
-				currentDepth,
-				null
-			);
+				persister,
+				path,
+				propertyNumber,
+				associationType,
+				metadataFetchMode,
+				metadataCascadeStyle,
+				lhsTable,
+				lhsColumns,
+				nullable,
+				currentDepth
+		);
 		//we can use an inner join for the many-to-many
 		if ( joinType==JoinFragment.LEFT_OUTER_JOIN && "".equals(path) ) {
 			joinType=JoinFragment.INNER_JOIN;
 		}
 		return joinType;
 	}
-	
+
 	public String toString() {
 		return getClass().getName() + '(' + collectionPersister.getRole() + ')';
 	}

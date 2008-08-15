@@ -37,6 +37,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.engine.query.QueryPlanCache;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.cache.QueryCache;
@@ -219,5 +220,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public EntityNotFoundDelegate getEntityNotFoundDelegate();
 
 	public SQLFunctionRegistry getSqlFunctionRegistry();
-		
+
+	/**
+	 * Retrieve fetch profile by name.
+	 *
+	 * @param name The name of the profile to retrieve.
+	 * @return The profile definition
+	 */
+	public FetchProfile getFetchProfile(String name);
+
 }

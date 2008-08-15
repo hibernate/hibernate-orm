@@ -114,6 +114,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
@@ -163,6 +164,7 @@ public class Configuration implements Serializable {
 	 */
 	protected Map sqlResultSetMappings;
 	protected Map filterDefinitions;
+	protected Map fetchProfiles;
 	protected List secondPasses;
 	protected List propertyReferences;
 //	protected List extendsQueue;
@@ -202,6 +204,7 @@ public class Configuration implements Serializable {
 		entityResolver = XMLHelper.DEFAULT_DTD_RESOLVER;
 		eventListeners = new EventListeners();
 		filterDefinitions = new HashMap();
+		fetchProfiles = new HashMap();
 //		extendsQueue = new ArrayList();
 		extendsQueue = new HashMap();
 		auxiliaryDatabaseObjects = new ArrayList();
@@ -720,6 +723,7 @@ public class Configuration implements Serializable {
 				namingStrategy,
 				typeDefs,
 				filterDefinitions,
+				fetchProfiles,
 				extendsQueue,
 				auxiliaryDatabaseObjects,
 				tableNameBinding,
@@ -2179,6 +2183,14 @@ public class Configuration implements Serializable {
 
 	public void addFilterDefinition(FilterDefinition definition) {
 		filterDefinitions.put( definition.getFilterName(), definition );
+	}
+
+	public Map getFetchProfiles() {
+		return fetchProfiles;
+	}
+
+	public void addFetchProfile(FetchProfile fetchProfile) {
+		fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {

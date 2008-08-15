@@ -813,4 +813,40 @@ public interface Session extends Serializable {
 	 * @see #disconnect()
 	 */
 	void reconnect(Connection connection) throws HibernateException;
+
+	/**
+	 * Is a particular fetch profile enabled on this session?
+	 *
+	 * @param name The name of the profile to be checked.
+	 * @return True if fetch profile is enabled; false if not.
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 * match any known profile names
+	 *
+	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 */
+	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
+
+	/**
+	 * Enable a particular fetch profile on this session.  No-op if requested
+	 * profile is already enabled.
+	 *
+	 * @param name The name of the fetch profile to be enabled.
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 * match any known profile names
+	 *
+	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 */
+	public void enableFetchProfile(String name) throws UnknownProfileException;
+
+	/**
+	 * Disable a particular fetch profile on this session.  No-op if requested
+	 * profile is already disabled.
+	 *
+	 * @param name The name of the fetch profile to be disabled.
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 * match any known profile names
+	 *
+	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 */
+	public void disableFetchProfile(String name) throws UnknownProfileException;
 }

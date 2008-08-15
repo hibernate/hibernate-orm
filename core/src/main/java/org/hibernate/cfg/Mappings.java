@@ -46,6 +46,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -77,6 +78,7 @@ public class Mappings implements Serializable {
 	protected final List propertyReferences;
 	protected final NamingStrategy namingStrategy;
 	protected final Map filterDefinitions;
+	protected final Map fetchProfiles;
 	protected final List auxiliaryDatabaseObjects;
 
 	protected final Map extendsQueue;
@@ -111,12 +113,12 @@ public class Mappings implements Serializable {
 			final NamingStrategy namingStrategy,
 			final Map typeDefs,
 			final Map filterDefinitions,
+			final Map fetchProfiles,
 //			final List extendsQueue,
 			final Map extendsQueue,
 			final List auxiliaryDatabaseObjects,
 			final Map tableNamebinding,
-			final Map columnNameBindingPerTable
-			) {
+			final Map columnNameBindingPerTable) {
 		this.classes = classes;
 		this.collections = collections;
 		this.queries = queries;
@@ -129,6 +131,7 @@ public class Mappings implements Serializable {
 		this.namingStrategy = namingStrategy;
 		this.typeDefs = typeDefs;
 		this.filterDefinitions = filterDefinitions;
+		this.fetchProfiles = fetchProfiles;
 		this.extendsQueue = extendsQueue;
 		this.auxiliaryDatabaseObjects = auxiliaryDatabaseObjects;
 		this.tableNameBinding = tableNamebinding;
@@ -418,7 +421,20 @@ public class Mappings implements Serializable {
 	public FilterDefinition getFilterDefinition(String name) {
 		return (FilterDefinition) filterDefinitions.get(name);
 	}
-	
+
+	public Map getFetchProfiles() {
+		return fetchProfiles;
+	}
+
+	public FetchProfile findOrCreateFetchProfile(String name) {
+		FetchProfile profile = ( FetchProfile ) fetchProfiles.get( name );
+		if ( profile == null ) {
+			profile = new FetchProfile( name );
+			fetchProfiles.put( name, profile );
+		}
+		return profile;
+	}
+
 	public boolean isDefaultLazy() {
 		return defaultLazy;
 	}

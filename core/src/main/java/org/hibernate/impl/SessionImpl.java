@@ -66,6 +66,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
@@ -76,6 +77,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Status;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
@@ -167,10 +169,8 @@ public final class SessionImpl extends AbstractSessionImpl
 	private transient boolean flushBeforeCompletionEnabled;
 	private transient boolean autoCloseSessionEnabled;
 	private transient ConnectionReleaseMode connectionReleaseMode;
-	
-	private transient String fetchProfile;
 
-	private transient Map enabledFilters = new HashMap();
+	private transient LoadQueryInfluencers loadQueryInfluencers;
 
 	private transient Session rootSession;
 	private transient Map childSessionsByEntityMode;
@@ -194,6 +194,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		this.flushBeforeCompletionEnabled = false;
 		this.autoCloseSessionEnabled = false;
 		this.connectionReleaseMode = null;
+
+		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().openSession();
@@ -238,6 +240,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.connectionReleaseMode = connectionReleaseMode;
 		this.jdbcContext = new JDBCContext( this, connection, interceptor );
+
+		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().openSession();
@@ -1048,75 +1052,6 @@ public final class SessionImpl extends AbstractSessionImpl
 		flush();
 	}
 
-	public Filter getEnabledFilter(String filterName) {
-		checkTransactionSynchStatus();
-		return (Filter) enabledFilters.get(filterName);
-	}
-
-	public Filter enableFilter(String filterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		FilterImpl filter = new FilterImpl( factory.getFilterDefinition(filterName) );
-		enabledFilters.put(filterName, filter);
-		return filter;
-	}
-
-	public void disableFilter(String filterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		enabledFilters.remove(filterName);
-	}
-
-	public Object getFilterParameterValue(String filterParameterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		String[] parsed = parseFilterParameterName(filterParameterName);
-		FilterImpl filter = (FilterImpl) enabledFilters.get( parsed[0] );
-		if (filter == null) {
-			throw new IllegalArgumentException("Filter [" + parsed[0] + "] currently not enabled");
-		}
-		return filter.getParameter( parsed[1] );
-	}
-
-	public Type getFilterParameterType(String filterParameterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		String[] parsed = parseFilterParameterName(filterParameterName);
-		FilterDefinition filterDef = factory.getFilterDefinition( parsed[0] );
-		if (filterDef == null) {
-			throw new IllegalArgumentException("Filter [" + parsed[0] + "] not defined");
-		}
-		Type type = filterDef.getParameterType( parsed[1] );
-		if (type == null) {
-			// this is an internal error of some sort...
-			throw new InternalError("Unable to locate type for filter parameter");
-		}
-		return type;
-	}
-
-	public Map getEnabledFilters() {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		// First, validate all the enabled filters...
-		//TODO: this implementation has bad performance
-		Iterator itr = enabledFilters.values().iterator();
-		while ( itr.hasNext() ) {
-			final Filter filter = (Filter) itr.next();
-			filter.validate();
-		}
-		return enabledFilters;
-	}
-
-	private String[] parseFilterParameterName(String filterParameterName) {
-		int dot = filterParameterName.indexOf('.');
-		if (dot <= 0) {
-			throw new IllegalArgumentException("Invalid filter-parameter name format"); // TODO: what type?
-		}
-		String filterName = filterParameterName.substring(0, dot);
-		String parameterName = filterParameterName.substring(dot+1);
-		return new String[] {filterName, parameterName};
-	}
-
 
 	/**
 	 * Retrieve a list of persistent objects using a hibernate query
@@ -1432,7 +1367,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		return listFilter( collection, filter, new QueryParameters( new Type[]{null, type}, new Object[]{null, value} ) );
 	}
 
-	public Collection filter(Object collection, String filter, Object[] values, Type[] types) 
+	public Collection filter(Object collection, String filter, Object[] values, Type[] types)
 	throws HibernateException {
 		Object[] vals = new Object[values.length + 1];
 		Type[] typs = new Type[types.length + 1];
@@ -1491,7 +1426,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		return plan;
 	}
 
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) 
+	public List listFilter(Object collection, String filter, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1511,7 +1446,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		return results;
 	}
 
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) 
+	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1552,7 +1487,7 @@ public final class SessionImpl extends AbstractSessionImpl
 				factory,
 				criteria,
 				entityName,
-				getEnabledFilters()
+				getLoadQueryInfluencers()
 		);
 		autoFlushIfRequired( loader.getQuerySpaces() );
 		dontFlushFromFind++;
@@ -1579,7 +1514,7 @@ public final class SessionImpl extends AbstractSessionImpl
 					factory,
 					criteria,
 					implementors[i],
-					getEnabledFilters()
+					getLoadQueryInfluencers()
 				);
 
 			spaces.addAll( loaders[i].getQuerySpaces() );
@@ -1680,7 +1615,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		);
 	}
 
-	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) 
+	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1734,7 +1669,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		return factory;
 	}
 	
-	public void initializeCollection(PersistentCollection collection, boolean writing) 
+	public void initializeCollection(PersistentCollection collection, boolean writing)
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1882,22 +1817,106 @@ public final class SessionImpl extends AbstractSessionImpl
 		// nothing to do in a stateful session
 	}
 
-	public String getFetchProfile() {
-		checkTransactionSynchStatus();
-		return fetchProfile;
-	}
-
 	public JDBCContext getJDBCContext() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return jdbcContext;
 	}
 
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
+	}
+
+	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Filter getEnabledFilter(String filterName) {
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.getEnabledFilter( filterName );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Filter enableFilter(String filterName) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.enableFilter( filterName );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void disableFilter(String filterName) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		loadQueryInfluencers.disableFilter( filterName );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object getFilterParameterValue(String filterParameterName) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.getFilterParameterValue( filterParameterName );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Type getFilterParameterType(String filterParameterName) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.getFilterParameterType( filterParameterName );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Map getEnabledFilters() {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.getEnabledFilters();
+	}
+
+
+	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String getFetchProfile() {
+		checkTransactionSynchStatus();
+		return loadQueryInfluencers.getInternalFetchProfile();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setFetchProfile(String fetchProfile) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		this.fetchProfile = fetchProfile;
+		loadQueryInfluencers.setInternalFetchProfile( fetchProfile );
 	}
+
+
+	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
+		return loadQueryInfluencers.isFetchProfileEnabled( name );
+	}
+
+	public void enableFetchProfile(String name) throws UnknownProfileException {
+		loadQueryInfluencers.enableFetchProfile( name );
+	}
+
+	public void disableFetchProfile(String name) throws UnknownProfileException {
+		loadQueryInfluencers.disableFetchProfile( name );
+	}
+
 
 	private void checkTransactionSynchStatus() {
 		if ( jdbcContext != null && !isClosed() ) {
@@ -1923,7 +1942,6 @@ public final class SessionImpl extends AbstractSessionImpl
 		cacheMode = CacheMode.parse( ( String ) ois.readObject() );
 		flushBeforeCompletionEnabled = ois.readBoolean();
 		autoCloseSessionEnabled = ois.readBoolean();
-		fetchProfile = ( String ) ois.readObject();
 		interceptor = ( Interceptor ) ois.readObject();
 
 		factory = SessionFactoryImpl.deserialize( ois );
@@ -1936,12 +1954,13 @@ public final class SessionImpl extends AbstractSessionImpl
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
 
-		enabledFilters = ( Map ) ois.readObject();
+		loadQueryInfluencers = ( LoadQueryInfluencers ) ois.readObject();
+
 		childSessionsByEntityMode = ( Map ) ois.readObject();
 
-		Iterator iter = enabledFilters.values().iterator();
+		Iterator iter = loadQueryInfluencers.getEnabledFilters().values().iterator();
 		while ( iter.hasNext() ) {
-			( ( FilterImpl ) iter.next() ).afterDeserialize(factory);
+			( ( FilterImpl ) iter.next() ).afterDeserialize( factory );
 		}
 
 		if ( isRootSession && childSessionsByEntityMode != null ) {
@@ -1975,7 +1994,6 @@ public final class SessionImpl extends AbstractSessionImpl
 		oos.writeObject( cacheMode.toString() );
 		oos.writeBoolean( flushBeforeCompletionEnabled );
 		oos.writeBoolean( autoCloseSessionEnabled );
-		oos.writeObject( fetchProfile );
 		// we need to writeObject() on this since interceptor is user defined
 		oos.writeObject( interceptor );
 
@@ -1989,7 +2007,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		actionQueue.serialize( oos );
 
 		// todo : look at optimizing these...
-		oos.writeObject( enabledFilters );
+		oos.writeObject( loadQueryInfluencers );
 		oos.writeObject( childSessionsByEntityMode );
 	}
 }

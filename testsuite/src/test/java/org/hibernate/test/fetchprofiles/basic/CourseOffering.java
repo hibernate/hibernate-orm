@@ -22,39 +22,69 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.loader.entity;
+package org.hibernate.test.fetchprofiles.basic;
 
-import org.hibernate.MappingException;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.loader.JoinWalker;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+import java.util.Set;
+import java.util.HashSet;
 
-public class CascadeEntityLoader extends AbstractEntityLoader {
-	
-	public CascadeEntityLoader(
-			OuterJoinLoadable persister,
-			CascadingAction action,
-			SessionFactoryImplementor factory) throws MappingException {
-		super(
-				persister, 
-				persister.getIdentifierType(), 
-				factory,
-				LoadQueryInfluencers.NONE
-		);
+/**
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
+ */
+public class CourseOffering {
+	private Long id;
+	private Course course;
+	private int semester;
+	private int year;
+	private Set enrollments = new HashSet();
 
-		JoinWalker walker = new CascadeEntityJoinWalker(
-				persister, 
-				action,
-				factory
-		);
-		initFromWalker( walker );
-
-		postInstantiate();
-		
-		log.debug( "Static select for action " + action + " on entity " + entityName + ": " + getSQLString() );
-
+	public CourseOffering() {
 	}
 
+	public CourseOffering(Course course, int semester, int year) {
+		this.course = course;
+		this.semester = semester;
+		this.year = year;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Course getCourse() {
+		return course;
+	}
+
+	public void setCourse(Course course) {
+		this.course = course;
+	}
+
+	public int getSemester() {
+		return semester;
+	}
+
+	public void setSemester(int semester) {
+		this.semester = semester;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public Set getEnrollments() {
+		return enrollments;
+	}
+
+	public void setEnrollments(Set enrollments) {
+		this.enrollments = enrollments;
+	}
 }

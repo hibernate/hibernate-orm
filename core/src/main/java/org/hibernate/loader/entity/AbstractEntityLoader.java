@@ -29,12 +29,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
@@ -52,8 +54,8 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 			OuterJoinLoadable persister, 
 			Type uniqueKeyType, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters) {
-		super( factory, enabledFilters );
+			LoadQueryInfluencers loadQueryInfluencers) {
+		super( factory, loadQueryInfluencers );
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = persister.getEntityName();
 		this.persister = persister;

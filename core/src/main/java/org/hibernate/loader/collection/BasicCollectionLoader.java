@@ -24,12 +24,11 @@
  */
 package org.hibernate.loader.collection;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
 
@@ -49,18 +48,16 @@ public class BasicCollectionLoader extends CollectionLoader {
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister, 
 			SessionFactoryImplementor session, 
-			Map enabledFilters)
-	throws MappingException {
-		this(collectionPersister, 1, session, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this( collectionPersister, 1, session, loadQueryInfluencers );
 	}
 
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister, 
 			int batchSize, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-		this(collectionPersister, batchSize, null, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this( collectionPersister, batchSize, null, factory, loadQueryInfluencers );
 	}
 	
 	protected BasicCollectionLoader(
@@ -68,18 +65,16 @@ public class BasicCollectionLoader extends CollectionLoader {
 			int batchSize, 
 			String subquery, 
 			SessionFactoryImplementor factory, 
-			Map enabledFilters)
-	throws MappingException {
-		
-		super(collectionPersister, factory, enabledFilters);
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( collectionPersister, factory, loadQueryInfluencers );
 		
 		JoinWalker walker = new BasicCollectionJoinWalker(
 				collectionPersister, 
 				batchSize, 
 				subquery, 
 				factory, 
-				enabledFilters
-			);
+				loadQueryInfluencers
+		);
 		initFromWalker( walker );
 
 		postInstantiate();

@@ -22,39 +22,35 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.loader.entity;
+package org.hibernate.engine.profile;
 
-import org.hibernate.MappingException;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.loader.JoinWalker;
-import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.entity.EntityPersister;
 
-public class CascadeEntityLoader extends AbstractEntityLoader {
-	
-	public CascadeEntityLoader(
-			OuterJoinLoadable persister,
-			CascadingAction action,
-			SessionFactoryImplementor factory) throws MappingException {
-		super(
-				persister, 
-				persister.getIdentifierType(), 
-				factory,
-				LoadQueryInfluencers.NONE
-		);
+/**
+ * Models the association of a given fetch.
+ *
+ * @author Steve Ebersole
+ */
+public class Association {
+	private final EntityPersister owner;
+	private final String associationPath;
+	private final String role;
 
-		JoinWalker walker = new CascadeEntityJoinWalker(
-				persister, 
-				action,
-				factory
-		);
-		initFromWalker( walker );
-
-		postInstantiate();
-		
-		log.debug( "Static select for action " + action + " on entity " + entityName + ": " + getSQLString() );
-
+	public Association(EntityPersister owner, String associationPath) {
+		this.owner = owner;
+		this.associationPath = associationPath;
+		this.role = owner.getEntityName() + '.' + associationPath;
 	}
 
+	public EntityPersister getOwner() {
+		return owner;
+	}
+
+	public String getAssociationPath() {
+		return associationPath;
+	}
+
+	public String getRole() {
+		return role;
+	}
 }

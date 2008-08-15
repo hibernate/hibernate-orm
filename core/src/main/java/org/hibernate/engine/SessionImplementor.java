@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
@@ -237,6 +238,7 @@ public interface SessionImplementor extends Serializable {
 	 * @param filterParameterName The filter parameter name in the format
 	 * {FILTER_NAME.PARAMETER_NAME}.
 	 * @return The filter parameter value.
+	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	public Object getFilterParameterValue(String filterParameterName);
 
@@ -245,6 +247,8 @@ public interface SessionImplementor extends Serializable {
 	 *
 	 * @param filterParameterName The filter parameter name in the format
 	 * {FILTER_NAME.PARAMETER_NAME}.
+	 * @return The filter param type
+	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	public Type getFilterParameterType(String filterParameterName);
 
@@ -253,6 +257,7 @@ public interface SessionImplementor extends Serializable {
 	 * name, with values corresponding to the {@link org.hibernate.impl.FilterImpl}
 	 * instance.
 	 * @return The currently enabled filters.
+	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	public Map getEnabledFilters();
 	
@@ -307,9 +312,21 @@ public interface SessionImplementor extends Serializable {
 
 	public void afterScrollOperation();
 
-	public void setFetchProfile(String name);
-
+	/**
+	 * Get the <i>internal</i> fetch profile currently associated with this session.
+	 *
+	 * @return The current internal fetch profile, or null if none currently associated.
+	 * @deprecated use #getLoadQueryInfluencers instead
+	 */
 	public String getFetchProfile();
+
+	/**
+	 * Set the current <i>internal</i> fetch profile for this session.
+	 *
+	 * @param name The internal fetch profile name to use
+	 * @deprecated use #getLoadQueryInfluencers instead
+	 */
+	public void setFetchProfile(String name);
 
 	public JDBCContext getJDBCContext();
 
@@ -322,4 +339,12 @@ public interface SessionImplementor extends Serializable {
 	 * @return True if the session is closed; false otherwise.
 	 */
 	public boolean isClosed();
+
+	/**
+	 * Get the load query influencers associated with this session.
+	 *
+	 * @return the load query influencers associated with this session;
+	 * should never be null.
+	 */
+	public LoadQueryInfluencers getLoadQueryInfluencers();
 }

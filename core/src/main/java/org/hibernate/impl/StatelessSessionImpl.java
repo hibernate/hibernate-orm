@@ -57,6 +57,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Versioning;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
@@ -527,12 +528,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		String entityName = criteria.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
-				getOuterJoinLoadable(entityName),
+				getOuterJoinLoadable( entityName ),
 		        factory,
 		        criteria,
 		        entityName,
-		        getEnabledFilters()
-			);
+		        getLoadQueryInfluencers()
+		);
 		return loader.scroll(this, scrollMode);
 	}
 
@@ -548,7 +549,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 			        factory,
 			        criteria,
 			        implementors[i],
-			        getEnabledFilters()
+			        getLoadQueryInfluencers()
 			);
 		}
 
@@ -621,6 +622,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	public JDBCContext getJDBCContext() {
 		return jdbcContext;
+	}
+
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return null;
 	}
 
 	public void setFetchProfile(String name) {}

@@ -42,6 +42,7 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.CollectionInitializer;
@@ -315,9 +316,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	 *
 	 * @see org.hibernate.loader.collection.BasicCollectionLoader
 	 */
-	protected CollectionInitializer createCollectionInitializer(java.util.Map enabledFilters)
+	protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException {
-		return BatchingCollectionInitializer.createBatchingCollectionInitializer( this, batchSize, getFactory(), enabledFilters );
+		return BatchingCollectionInitializer.createBatchingCollectionInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
 
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
@@ -336,8 +337,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				subselect.getQueryParameters(),
 				subselect.getNamedParameterLocMap(),
 				session.getFactory(),
-				session.getEnabledFilters() 
-			);
+				session.getLoadQueryInfluencers() 
+		);
 	}
 
 }

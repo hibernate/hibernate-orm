@@ -28,12 +28,14 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -111,19 +113,18 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 		final int maxBatchSize,
 		final LockMode lockMode,
 		final SessionFactoryImplementor factory,
-		final Map enabledFilters)
-	throws MappingException {
+		final LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 
 		if ( maxBatchSize>1 ) {
 			int[] batchSizesToCreate = ArrayHelper.getBatchSizes(maxBatchSize);
 			Loader[] loadersToCreate = new Loader[ batchSizesToCreate.length ];
 			for ( int i=0; i<batchSizesToCreate.length; i++ ) {
-				loadersToCreate[i] = new EntityLoader(persister, batchSizesToCreate[i], lockMode, factory, enabledFilters);
+				loadersToCreate[i] = new EntityLoader(persister, batchSizesToCreate[i], lockMode, factory, loadQueryInfluencers);
 			}
 			return new BatchingEntityLoader(persister, batchSizesToCreate, loadersToCreate);
 		}
 		else {
-			return new EntityLoader(persister, lockMode, factory, enabledFilters);
+			return new EntityLoader(persister, lockMode, factory, loadQueryInfluencers);
 		}
 	}
 

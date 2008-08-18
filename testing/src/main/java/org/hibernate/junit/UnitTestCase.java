@@ -62,8 +62,11 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 			log.info( "Starting test [" + fullTestName() + "]" );
 			super.runBare();
 			if ( doValidate ) {
-				fail( "Test marked as FailureExpected, but did not fail!" );
+				throw new FailureExpectedTestPassedException( "Test marked as FailureExpected, but did not fail!" );
 			}
+		}
+		catch ( FailureExpectedTestPassedException t ) {
+			throw t;
 		}
 		catch( Throwable t ) {
 			if ( doValidate ) {
@@ -75,6 +78,12 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		}
 		finally {
 			log.info( "Completed test [" + fullTestName() + "]" );
+		}
+	}
+
+	private static class FailureExpectedTestPassedException extends Exception {
+		public FailureExpectedTestPassedException(String message) {
+			super( message );
 		}
 	}
 

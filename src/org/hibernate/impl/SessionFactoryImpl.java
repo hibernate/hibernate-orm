@@ -799,15 +799,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		settings.getCacheProvider().stop();
 
+		if ( settings.isAutoDropSchema() ) {
+			schemaExport.drop( false, true );
+		}
+
 		try {
 			settings.getConnectionProvider().close();
 		}
 		finally {
 			SessionFactoryObjectFactory.removeInstance(uuid, name, properties);
-		}
-
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport.drop( false, true );
 		}
 
 	}

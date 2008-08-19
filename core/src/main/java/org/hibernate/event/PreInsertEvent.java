@@ -29,39 +29,39 @@ import java.io.Serializable;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Occurs before inserting an item in the datastore
- * 
+ * Represents a <tt>pre-insert</tt> event, which occurs just prior to
+ * performing the insert of an entity into the database.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class PreInsertEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
+public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 	private Object[] state;
-	private Serializable id;
 
+	/**
+	 * Constructs an event containing the pertinent information.
+	 *
+	 * @param entity The entity to be inserted.
+	 * @param id The id to use in the insertion.
+	 * @param state The state to be inserted.
+	 * @param persister The entity's persister.
+	 * @param source The session from which the event originated.
+	 */
 	public PreInsertEvent(
 			Object entity,
 			Serializable id,
 			Object[] state,
 			EntityPersister persister,
-			EventSource source
-	) {
-		super(source);
-		this.entity = entity;
-		this.id = id;
+			EventSource source) {
+		super( source, entity, id, persister );
 		this.state = state;
-		this.persister = persister;
 	}
 
-	public Object getEntity() {
-		return entity;
-	}
-	public Serializable getId() {
-		return id;
-	}
-	public EntityPersister getPersister() {
-		return persister;
-	}
+	/**
+	 * Getter for property 'state'.  These are the values to be inserted.
+	 *
+	 * @return Value for property 'state'.
+	 */
 	public Object[] getState() {
 		return state;
 	}

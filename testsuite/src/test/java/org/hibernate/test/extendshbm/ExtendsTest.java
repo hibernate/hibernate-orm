@@ -150,7 +150,7 @@ public class ExtendsTest extends UnitTestCase {
 		}
 	}
 
-	public void testEntityNamesWithPackageFailureExpected() {
+	public void testEntityNamesWithPackage() {
 		Configuration cfg = new Configuration();
 		try {
 			cfg.addResource( getBaseForMappings() + "extendshbm/packageentitynames.hbm.xml" );

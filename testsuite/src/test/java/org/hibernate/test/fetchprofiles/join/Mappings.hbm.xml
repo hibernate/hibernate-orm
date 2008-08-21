@@ -28,7 +28,7 @@
   ~
   -->
 
-<hibernate-mapping package="org.hibernate.test.fetchprofiles.basic">
+<hibernate-mapping package="org.hibernate.test.fetchprofiles.join">
 
     <class name="Department">
     	<id name="id" type="long">

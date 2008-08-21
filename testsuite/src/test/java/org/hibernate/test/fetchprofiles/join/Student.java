@@ -22,30 +22,22 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.test.fetchprofiles.basic;
-
-import java.util.Set;
-import java.util.HashSet;
+package org.hibernate.test.fetchprofiles.join;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class CourseOffering {
+public class Student {
 	private Long id;
-	private Course course;
-	private int semester;
-	private int year;
-	private Set enrollments = new HashSet();
+	private String name;
 
-	public CourseOffering() {
+	public Student() {
 	}
 
-	public CourseOffering(Course course, int semester, int year) {
-		this.course = course;
-		this.semester = semester;
-		this.year = year;
+	public Student(String name) {
+		this.name = name;
 	}
 
 	public Long getId() {
@@ -56,35 +48,11 @@ public class CourseOffering {
 		this.id = id;
 	}
 
-	public Course getCourse() {
-		return course;
+	public String getName() {
+		return name;
 	}
 
-	public void setCourse(Course course) {
-		this.course = course;
-	}
-
-	public int getSemester() {
-		return semester;
-	}
-
-	public void setSemester(int semester) {
-		this.semester = semester;
-	}
-
-	public int getYear() {
-		return year;
-	}
-
-	public void setYear(int year) {
-		this.year = year;
-	}
-
-	public Set getEnrollments() {
-		return enrollments;
-	}
-
-	public void setEnrollments(Set enrollments) {
-		this.enrollments = enrollments;
+	public void setName(String name) {
+		this.name = name;
 	}
 }

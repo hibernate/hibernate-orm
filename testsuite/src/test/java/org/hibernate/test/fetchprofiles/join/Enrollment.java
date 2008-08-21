@@ -22,24 +22,25 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.test.fetchprofiles.basic;
+package org.hibernate.test.fetchprofiles.join;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class Department {
+public class Enrollment {
 	private Long id;
-	private String code;
-	private String name;
+	private CourseOffering offering;
+	private Student student;
+	private int finalGrade;
 
-	public Department() {
+	public Enrollment() {
 	}
 
-	public Department(String code, String name) {
-		this.code = code;
-		this.name = name;
+	public Enrollment(CourseOffering offering, Student student) {
+		this.offering = offering;
+		this.student = student;
 	}
 
 	public Long getId() {
@@ -50,19 +51,27 @@ public class Department {
 		this.id = id;
 	}
 
-	public String getCode() {
-		return code;
+	public CourseOffering getOffering() {
+		return offering;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
+	public void setOffering(CourseOffering offering) {
+		this.offering = offering;
 	}
 
-	public String getName() {
-		return name;
+	public Student getStudent() {
+		return student;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setStudent(Student student) {
+		this.student = student;
+	}
+
+	public int getFinalGrade() {
+		return finalGrade;
+	}
+
+	public void setFinalGrade(int finalGrade) {
+		this.finalGrade = finalGrade;
 	}
 }

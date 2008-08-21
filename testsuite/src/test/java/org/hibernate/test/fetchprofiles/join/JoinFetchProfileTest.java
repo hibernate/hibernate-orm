@@ -22,7 +22,10 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.test.fetchprofiles.basic;
+package org.hibernate.test.fetchprofiles.join;
+
+import java.util.List;
+import java.util.Iterator;
 
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
@@ -33,17 +36,19 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
 
 /**
- * TODO : javadoc
+ * Various tests related to join-style fetch profiles.
  *
  * @author Steve Ebersole
  */
-public class BasicFetchProfileTest extends FunctionalTestCase {
-	public BasicFetchProfileTest(String string) {
+public class JoinFetchProfileTest extends FunctionalTestCase {
+	private List sections;
+
+	public JoinFetchProfileTest(String string) {
 		super( string );
 	}
 
 	public String[] getMappings() {
-		return new String[] { "fetchprofiles/basic/Mappings.hbm.xml" };
+		return new String[] { "fetchprofiles/join/Mappings.hbm.xml" };
 	}
 
 	public String getCacheConcurrencyStrategy() {
@@ -272,6 +277,31 @@ public class BasicFetchProfileTest extends FunctionalTestCase {
 						assertEquals( 2, sfi().getStatistics().getEntityLoadCount() ); // course + department
 						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( course.getCode().getDepartment() ) );
+						session.getTransaction().commit();
+						session.close();
+					}
+				}
+		);
+	}
+
+	/**
+	 * fetch-profiles should have no effect what-so-ever on the direct results of the HQL query.
+	 *
+	 * TODO : this is actually not strictly true.  what we should have happen is to subsequently load those fetches
+	 */
+	public void testHQL() {
+		performWithStandardData(
+				new TestCode() {
+					public void perform(TestData data) {
+						Session session = openSession();
+						session.beginTransaction();
+						session.enableFetchProfile( "offering.details" );
+						session.enableFetchProfile( "enrollment.details" );
+						List sections = session.createQuery( "from CourseOffering" ).list();
+						int sectionCount = sections.size();
+						assertEquals( "unexpected CourseOffering count", 1, sectionCount );
+						assertEquals( 1, sfi().getStatistics().getEntityLoadCount() );
+						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}

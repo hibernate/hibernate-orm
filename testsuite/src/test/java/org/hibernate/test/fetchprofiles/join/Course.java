@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.test.fetchprofiles.basic;
+package org.hibernate.test.fetchprofiles.join;
 
 /**
  * TODO : javadoc

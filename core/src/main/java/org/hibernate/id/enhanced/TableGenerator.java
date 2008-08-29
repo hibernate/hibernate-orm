@@ -128,7 +128,7 @@ import org.hibernate.util.StringHelper;
 public class TableGenerator extends TransactionHelper implements PersistentIdentifierGenerator, Configurable {
 	private static final Logger log = LoggerFactory.getLogger( TableGenerator.class );
 
-	public static final String CONFIG_PREFER_SEGMENT_PER_ENTITY = "hibernate.id.enhanced.table.prefer_segment_per_entity";
+	public static final String CONFIG_PREFER_SEGMENT_PER_ENTITY = "prefer_entity_table_as_segment_value";
 
 	public static final String TABLE_PARAM = "table_name";
 	public static final String DEF_TABLE = "hibernate_sequences";

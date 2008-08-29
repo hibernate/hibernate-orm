@@ -30,8 +30,9 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	private final String valueColumnName;
 	private final int initialValue;
 	private final int incrementSize;
-	private final String select;
-	private final String update;
+	private final String selectQuery;
+	private final String updateQuery;
+
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
@@ -41,31 +42,46 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		this.incrementSize = incrementSize;
 		this.valueColumnName = valueColumnName;
 
-		select = "select " + valueColumnName + " id_val" +
+		selectQuery = "select " + valueColumnName + " id_val" +
 				" from " + dialect.appendLockHint( LockMode.UPGRADE, tableName ) +
 				dialect.getForUpdateString();
 
-		update = "update " + tableName +
+		updateQuery = "update " + tableName +
 				" set " + valueColumnName + "= ?" +
 				" where " + valueColumnName + "=?";
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String getName() {
 		return tableName;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public int getIncrementSize() {
 		return incrementSize;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public int getTimesAccessed() {
 		return accessCounter;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
 			public long getNextValue() {
@@ -74,13 +90,19 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		};
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
-				"create table " + tableName + " ( " + valueColumnName + " " + dialect.getTypeName( Types.BIGINT ) + " )",
+				dialect.getCreateTableString() + " " + tableName + " ( " + valueColumnName + " " + dialect.getTypeName( Types.BIGINT ) + " )",
 				"insert into " + tableName + " values ( " + initialValue + " )"
 		};
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		StringBuffer sqlDropString = new StringBuffer().append( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
@@ -97,42 +119,40 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		long result;
 		int rows;
 		do {
-			sql = select;
-			SQL_LOG.debug( sql );
-			PreparedStatement qps = conn.prepareStatement( select );
+			SQL_LOG.debug( selectQuery );
+			PreparedStatement selectPS = conn.prepareStatement( selectQuery );
 			try {
-				ResultSet rs = qps.executeQuery();
-				if ( !rs.next() ) {
+				ResultSet selectRS = selectPS.executeQuery();
+				if ( !selectRS.next() ) {
 					String err = "could not read a hi value - you need to populate the table: " + tableName;
 					log.error( err );
 					throw new IdentifierGenerationException( err );
 				}
-				result = rs.getLong( 1 );
-				rs.close();
+				result = selectRS.getLong( 1 );
+				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
 				log.error( "could not read a hi value", sqle );
 				throw sqle;
 			}
 			finally {
-				qps.close();
+				selectPS.close();
 			}
 
-			sql = update;
-			SQL_LOG.debug( sql );
-			PreparedStatement ups = conn.prepareStatement( update );
+			SQL_LOG.debug( updateQuery );
+			PreparedStatement updatePS = conn.prepareStatement( updateQuery );
 			try {
 				int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-				ups.setLong( 1, result + increment );
-				ups.setLong( 2, result );
-				rows = ups.executeUpdate();
+				updatePS.setLong( 1, result + increment );
+				updatePS.setLong( 2, result );
+				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
 				log.error( "could not update hi value in: " + tableName, sqle );
 				throw sqle;
 			}
 			finally {
-				ups.close();
+				updatePS.close();
 			}
 		} while ( rows == 0 );
 

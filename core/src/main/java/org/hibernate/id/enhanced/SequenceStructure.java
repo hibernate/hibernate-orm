@@ -58,18 +58,30 @@ public class SequenceStructure implements DatabaseStructure {
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String getName() {
 		return sequenceName;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public int getIncrementSize() {
 		return incrementSize;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public int getTimesAccessed() {
 		return accessCounter;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
 			public long getNextValue() {
@@ -112,15 +124,24 @@ public class SequenceStructure implements DatabaseStructure {
 		};
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
 		return dialect.getCreateSequenceStrings( sequenceName, initialValue, sourceIncrementSize );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return dialect.getDropSequenceStrings( sequenceName );
 	}

@@ -76,10 +76,19 @@ public class OptimizerFactory {
 		return new NoopOptimizer( returnClass, incrementSize );
 	}
 
+	/**
+	 * Common support for optimizer implementations.
+	 */
 	public static abstract class OptimizerSupport implements Optimizer {
 		protected final Class returnClass;
 		protected final int incrementSize;
 
+		/**
+		 * Construct an optimizer
+		 *
+		 * @param returnClass The expected id class.
+		 * @param incrementSize The increment size
+		 */
 		protected OptimizerSupport(Class returnClass, int incrementSize) {
 			if ( returnClass == null ) {
 				throw new HibernateException( "return class is required" );
@@ -88,19 +97,39 @@ public class OptimizerFactory {
 			this.incrementSize = incrementSize;
 		}
 
-		protected Serializable make(long value) {
+		/**
+		 * Take the primitive long value and "make" (or wrap) it into the
+		 * {@link #getReturnClass id type}.
+		 *
+		 * @param value The primitive value to make/wrap.
+		 * @return The wrapped value.
+		 */
+		protected final Serializable make(long value) {
 			return IdentifierGeneratorFactory.createNumber( value, returnClass );
 		}
 
-		public Class getReturnClass() {
+		/**
+		 * Getter for property 'returnClass'.  This is the Java
+		 * class which is used to represent the id (e.g. {@link java.lang.Long}).
+		 *
+		 * @return Value for property 'returnClass'.
+		 */
+		public final Class getReturnClass() {
 			return returnClass;
 		}
 
-		public int getIncrementSize() {
+		/**
+		 * {@inheritDoc}
+		 */
+		public final int getIncrementSize() {
 			return incrementSize;
 		}
 	}
 
+	/**
+	 * An optimizer that performs no optimization.  The database is hit for
+	 * every request.
+	 */
 	public static class NoopOptimizer extends OptimizerSupport {
 		private long lastSourceValue = -1;
 
@@ -108,6 +137,9 @@ public class OptimizerFactory {
 			super( returnClass, incrementSize );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue == -1 ) {
 				while( lastSourceValue <= 0 ) {
@@ -120,15 +152,25 @@ public class OptimizerFactory {
 			return make( lastSourceValue );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public long getLastSourceValue() {
 			return lastSourceValue;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public boolean applyIncrementSizeToSourceValues() {
 			return false;
 		}
 	}
 
+	/**
+	 * Optimizer which applies a 'hilo' algorithm in memory to achieve
+	 * optimization.
+	 */
 	public static class HiLoOptimizer extends OptimizerSupport {
 		private long lastSourceValue = -1;
 		private long value;
@@ -144,6 +186,9 @@ public class OptimizerFactory {
 			}
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue < 0 ) {
 				lastSourceValue = callback.getNextValue();
@@ -161,23 +206,43 @@ public class OptimizerFactory {
 		}
 
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public long getLastSourceValue() {
 			return lastSourceValue;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public boolean applyIncrementSizeToSourceValues() {
 			return false;
 		}
 
+		/**
+		 * Getter for property 'lastValue'.
+		 *
+		 * @return Value for property 'lastValue'.
+		 */
 		public long getLastValue() {
 			return value - 1;
 		}
 
+		/**
+		 * Getter for property 'hiValue'.
+		 *
+		 * @return Value for property 'hiValue'.
+		 */
 		public long getHiValue() {
 			return hiValue;
 		}
 	}
 
+	/**
+	 * Optimizer which uses a pool of values, storing the next low value of the
+	 * range in the database.
+	 */
 	public static class PooledOptimizer extends OptimizerSupport {
 		private long value;
 		private long hiValue = -1;
@@ -192,6 +257,9 @@ public class OptimizerFactory {
 			}
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( hiValue < 0 ) {
 				value = callback.getNextValue();
@@ -211,14 +279,25 @@ public class OptimizerFactory {
 			return make( value++ );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public long getLastSourceValue() {
 			return hiValue;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public boolean applyIncrementSizeToSourceValues() {
 			return true;
 		}
 
+		/**
+		 * Getter for property 'lastValue'.
+		 *
+		 * @return Value for property 'lastValue'.
+		 */
 		public long getLastValue() {
 			return value - 1;
 		}

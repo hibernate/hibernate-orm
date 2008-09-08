@@ -30,9 +30,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
@@ -41,18 +41,18 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * @author Simon Johnston
- *
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an 
  * override for the identity column generator as well as for the case statement
  * issue documented at:
  * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
+ *
+ * @author Simon Johnston
  */
 public class DerbyDialect extends DB2Dialect {
 
 	public DerbyDialect() {
 		super();
-		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(","||",")" ) );
+		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new DerbyTrimFunctionEmulation() );
 	}
 

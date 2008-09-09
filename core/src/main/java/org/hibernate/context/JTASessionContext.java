@@ -101,13 +101,17 @@ public class JTASessionContext implements CurrentSessionContext {
 			throw new HibernateException( "Problem locating/validating JTA transaction", t );
 		}
 
-		Session currentSession = ( Session ) currentSessionMap.get( txn );
+		final Object txnIdentifier = factory.getSettings().getTransactionManagerLookup() == null
+				? txn
+				: factory.getSettings().getTransactionManagerLookup().getTransactionIdentifier( txn );
+
+		Session currentSession = ( Session ) currentSessionMap.get( txnIdentifier );
 
 		if ( currentSession == null ) {
 			currentSession = buildOrObtainSession();
 
 			try {
-				txn.registerSynchronization( buildCleanupSynch( txn ) );
+				txn.registerSynchronization( buildCleanupSynch( txnIdentifier ) );
 			}
 			catch ( Throwable t ) {
 				try {
@@ -119,17 +123,21 @@ public class JTASessionContext implements CurrentSessionContext {
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
 
-			Object txnIdentifier = factory.getSettings().getTransactionManagerLookup() == null
-					? txn
-					: factory.getSettings().getTransactionManagerLookup().getTransactionIdentifier( txn );
 			currentSessionMap.put( txnIdentifier, currentSession );
 		}
 
 		return currentSession;
 	}
 
-	private CleanupSynch buildCleanupSynch(Transaction txn) {
-		return new CleanupSynch( txn, this );
+	/**
+	 * Builds a {@link CleanupSynch} capable of cleaning up the the current session map as an after transaction
+	 * callback.
+	 *
+	 * @param transactionIdentifier The transaction identifier under which the current session is registered.
+	 * @return The cleanup synch.
+	 */
+	private CleanupSynch buildCleanupSynch(Object transactionIdentifier) {
+		return new CleanupSynch( transactionIdentifier, this );
 	}
 
 	/**
@@ -180,11 +188,11 @@ public class JTASessionContext implements CurrentSessionContext {
 	 * JTA transaction synch used for cleanup of the internal session map.
 	 */
 	protected static class CleanupSynch implements Synchronization {
-		private Transaction txn;
+		private Object transactionIdentifier;
 		private JTASessionContext context;
 
-		public CleanupSynch(Transaction txn, JTASessionContext context) {
-			this.txn = txn;
+		public CleanupSynch(Object transactionIdentifier, JTASessionContext context) {
+			this.transactionIdentifier = transactionIdentifier;
 			this.context = context;
 		}
 
@@ -198,7 +206,7 @@ public class JTASessionContext implements CurrentSessionContext {
 		 * {@inheritDoc}
 		 */
 		public void afterCompletion(int i) {
-			context.currentSessionMap.remove( txn );
+			context.currentSessionMap.remove( transactionIdentifier );
 		}
 	}
 }

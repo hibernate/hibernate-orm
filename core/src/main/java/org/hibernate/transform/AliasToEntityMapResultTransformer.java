@@ -43,14 +43,14 @@ public class AliasToEntityMapResultTransformer extends BasicTransformerAdapter i
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();
 
 	/**
-	 * Instantiate AliasToEntityMapResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * Disallow instantiation of AliasToEntityMapResultTransformer.
 	 */
-	public AliasToEntityMapResultTransformer() {
-		// todo : make private
+	private AliasToEntityMapResultTransformer() {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Map result = new HashMap(tuple.length);
 		for ( int i=0; i<tuple.length; i++ ) {
@@ -69,31 +69,5 @@ public class AliasToEntityMapResultTransformer extends BasicTransformerAdapter i
 	 */
 	private Object readResolve() {
 		return INSTANCE;
-	}
-
-
-	// all AliasToEntityMapResultTransformer are considered equal ~~~~~~~~~~~~~
-
-	/**
-	 * All AliasToEntityMapResultTransformer are considered equal
-	 *
-	 * @param other The other instance to check for equality
-	 * @return True if (non-null) other is a instance of
-	 * AliasToEntityMapResultTransformer.
-	 */
-	public boolean equals(Object other) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return other != null && AliasToEntityMapResultTransformer.class.isInstance( other );
-	}
-
-	/**
-	 * All AliasToEntityMapResultTransformer are considered equal
-	 *
-	 * @return We simply return the hashCode of the
-	 * AliasToEntityMapResultTransformer class name string.
-	 */
-	public int hashCode() {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return getClass().getName().hashCode();
 	}
 }

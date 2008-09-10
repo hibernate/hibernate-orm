@@ -36,13 +36,14 @@ public class PassThroughResultTransformer extends BasicTransformerAdapter implem
 	public static final PassThroughResultTransformer INSTANCE = new PassThroughResultTransformer();
 
 	/**
-	 * Instamtiate a PassThroughResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * Disallow instantiation of PassThroughResultTransformer.
 	 */
-	public PassThroughResultTransformer() {
+	private PassThroughResultTransformer() {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple.length==1 ? tuple[0] : tuple;
 	}
@@ -54,11 +55,6 @@ public class PassThroughResultTransformer extends BasicTransformerAdapter implem
 	 */
 	private Object readResolve() {
 		return INSTANCE;
-	}
-
-	public boolean equals(Object obj) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return PassThroughResultTransformer.class.isInstance( obj );
 	}
 
 }

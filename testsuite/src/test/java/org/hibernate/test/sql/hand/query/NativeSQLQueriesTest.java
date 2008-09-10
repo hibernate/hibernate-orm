@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import junit.framework.Test;
 
@@ -29,6 +30,7 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
+import org.hibernate.transform.BasicTransformerAdapter;
 
 /**
  * Tests of various features of native SQL queries.
@@ -177,7 +179,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 			       "     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER, ORGANIZATION org2" )
 		.addEntity("org", Organization.class)
 		.addJoin("emp", "org.employments")
-		.setResultTransformer(new DistinctRootEntityResultTransformer())
+		.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
 		.list();
 		assertEquals( l.size(), 2 );
 
@@ -608,13 +610,16 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		}
 	}
 
-	private static class UpperCasedAliasToEntityMapResultTransformer extends AliasToEntityMapResultTransformer {
+	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {
 		public Object transformTuple(Object[] tuple, String[] aliases) {
-			String[] ucAliases = new String[aliases.length];
-			for ( int i = 0; i < aliases.length; i++ ) {
-				ucAliases[i] = aliases[i].toUpperCase();
+			Map result = new HashMap( tuple.length );
+			for ( int i = 0; i < tuple.length; i++ ) {
+				String alias = aliases[i];
+				if ( alias != null ) {
+					result.put( alias.toUpperCase(), tuple[i] );
+				}
 			}
-			return super.transformTuple( tuple, ucAliases );
+			return result;
 		}
 	}
 }

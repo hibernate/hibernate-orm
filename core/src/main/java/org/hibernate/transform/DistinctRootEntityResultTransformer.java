@@ -42,11 +42,9 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 	public static final DistinctRootEntityResultTransformer INSTANCE = new DistinctRootEntityResultTransformer();
 
 	/**
-	 * Instantiate a DistinctRootEntityResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * Disallow instantiation of DistinctRootEntityResultTransformer.
 	 */
-	public DistinctRootEntityResultTransformer() {
+	private DistinctRootEntityResultTransformer() {
 	}
 
 	/**
@@ -79,8 +77,4 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 		return INSTANCE;
 	}
 
-	public boolean equals(Object obj) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return DistinctRootEntityResultTransformer.class.isInstance( obj );
-	}
 }

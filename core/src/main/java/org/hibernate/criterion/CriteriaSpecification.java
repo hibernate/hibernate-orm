@@ -43,22 +43,22 @@ public interface CriteriaSpecification {
 	/**
 	 * Each row of results is a <tt>Map</tt> from alias to entity instance
 	 */
-	public static final ResultTransformer ALIAS_TO_ENTITY_MAP = new AliasToEntityMapResultTransformer();
+	public static final ResultTransformer ALIAS_TO_ENTITY_MAP = AliasToEntityMapResultTransformer.INSTANCE;
 
 	/**
 	 * Each row of results is an instance of the root entity
 	 */
-	public static final ResultTransformer ROOT_ENTITY = new RootEntityResultTransformer();
+	public static final ResultTransformer ROOT_ENTITY = RootEntityResultTransformer.INSTANCE;
 
 	/**
 	 * Each row of results is a distinct instance of the root entity
 	 */
-	public static final ResultTransformer DISTINCT_ROOT_ENTITY = new DistinctRootEntityResultTransformer();
+	public static final ResultTransformer DISTINCT_ROOT_ENTITY = DistinctRootEntityResultTransformer.INSTANCE;
 
 	/**
 	 * This result transformer is selected implicitly by calling <tt>setProjection()</tt>
 	 */
-	public static final ResultTransformer PROJECTION = new PassThroughResultTransformer();
+	public static final ResultTransformer PROJECTION = PassThroughResultTransformer.INSTANCE;
 
 	/**
 	 * Specifies joining to an entity based on an inner join.

@@ -25,6 +25,7 @@
 package org.hibernate.cache;
 
 import java.io.Serializable;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,11 +49,16 @@ public class QueryKey implements Serializable {
 	private final Map namedParameters;
 	private final EntityMode entityMode;
 	private final Set filters;
-	private final int hashCode;
 	
 	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling transformed/non-transformed results.
 	private final ResultTransformer customTransformer;
-	
+
+	/**
+	 * For performance reasons, the hashCode is cached; however, it is marked transient so that it can be
+	 * recalculated as part of the serialization process which allows distributed query caches to work properly.
+	 */
+	private transient int hashCode;
+
 	public QueryKey(String queryString, QueryParameters queryParameters, Set filters, EntityMode entityMode) {
 		this.sqlQueryString = queryString;
 		this.types = queryParameters.getPositionalParameterTypes();
@@ -70,7 +76,26 @@ public class QueryKey implements Serializable {
 		this.entityMode = entityMode;
 		this.filters = filters;
 		this.customTransformer = queryParameters.getResultTransformer();
-		this.hashCode = getHashCode();
+		this.hashCode = generateHashCode();
+	}
+
+	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		this.hashCode = generateHashCode();
+	}
+
+	private int generateHashCode() {
+		int result = 13;
+		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
+		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
+		for ( int i=0; i<values.length; i++ ) {
+			result = 37 * result + ( values[i]==null ? 0 : types[i].getHashCode( values[i], entityMode ) );
+		}
+		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
+		result = 37 * result + ( filters==null ? 0 : filters.hashCode() );
+		result = 37 * result + ( customTransformer==null ? 0 : customTransformer.hashCode() );
+		result = 37 * result + sqlQueryString.hashCode();
+		return result;
 	}
 	
 	public boolean equals(Object other) {
@@ -97,20 +122,6 @@ public class QueryKey implements Serializable {
 	
 	public int hashCode() {
 		return hashCode;
-	}
-	
-	private int getHashCode() {
-		int result = 13;
-		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
-		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
-		for ( int i=0; i<values.length; i++ ) {
-			result = 37 * result + ( values[i]==null ? 0 : types[i].getHashCode( values[i], entityMode ) );
-		}
-		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
-		result = 37 * result + ( filters==null ? 0 : filters.hashCode() );
-		result = 37 * result + ( customTransformer==null ? 0 : customTransformer.hashCode() );
-		result = 37 * result + sqlQueryString.hashCode();
-		return result;
 	}
 
 	public String toString() {

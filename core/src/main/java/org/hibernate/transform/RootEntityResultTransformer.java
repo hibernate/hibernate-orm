@@ -24,7 +24,6 @@
  */
 package org.hibernate.transform;
 
-import java.util.List;
 import java.io.Serializable;
 
 /**
@@ -42,11 +41,9 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	public static final RootEntityResultTransformer INSTANCE = new RootEntityResultTransformer();
 
 	/**
-	 * Instantiate RootEntityResultTransformer.
-	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * Disallow instantiation of RootEntityResultTransformer.
 	 */
-	public RootEntityResultTransformer() {
+	private RootEntityResultTransformer() {
 	}
 
 	/**
@@ -63,10 +60,5 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	 */
 	private Object readResolve() {
 		return INSTANCE;
-	}
-
-	public boolean equals(Object obj) {
-		// todo : we can remove this once the deprecated ctor can be made private...
-		return RootEntityResultTransformer.class.isInstance( obj );
 	}
 }

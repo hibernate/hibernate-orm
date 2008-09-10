@@ -55,7 +55,7 @@ import org.hibernate.property.Setter;
 public class AliasToBeanResultTransformer implements ResultTransformer {
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached
-	// 		for performance), we really cannot pro0perly define equality for
+	// 		for performance), we really cannot properly define equality for
 	// 		this transformer
 
 	private final Class resultClass;

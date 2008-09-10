@@ -279,7 +279,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.enableFilter( "effectiveDate" ).setParameter( "asOfDate", new Date() );
 
 		Product prod = ( Product ) session.createCriteria( Product.class )
-		        .setResultTransformer( new DistinctRootEntityResultTransformer() )
+		        .setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
 		        .add( Restrictions.eq( "id", testData.prod1Id ) )
 		        .uniqueResult();
 

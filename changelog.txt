@@ -12,6 +12,7 @@ Changes in version 3.3.1.GA (2008.09.10)
 ** Bug
     * [HHH-2694] - create-drop with c3p0 causes SQLException
     * [HHH-3231] - org.hibernate.id.enhanced.TableGenerator throws "IllegalArgumentException: alias not found: tbl" under Oracle
+    * [HHH-3392] - Query Cache entries are not distributable
     * [HHH-3472] - JTASessionContext broken for WebSphere
 
 ** Improvement
@@ -20,8 +21,6 @@ Changes in version 3.3.1.GA (2008.09.10)
     * [HHH-3424] - concat() with param binding fails function on derby
     * [HHH-3454] - Allow enhanced.TableGenerator to segment itself per entity as default
     * [HHH-3456] - Make o.h.id.enhanced.SequenceStyleGenerator more extension-friendly
-
-** New Feature
     * [HHH-3471] - Provide true-false type that maps to int values
 
 ** Task

@@ -44,7 +44,7 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	/**
 	 * Instantiate RootEntityResultTransformer.
 	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one (to be removed in 3.4).
 	 */
 	public RootEntityResultTransformer() {
 	}
@@ -65,8 +65,13 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 		return INSTANCE;
 	}
 
-	public boolean equals(Object obj) {
+	public int hashCode() {
 		// todo : we can remove this once the deprecated ctor can be made private...
-		return RootEntityResultTransformer.class.isInstance( obj );
+		return RootEntityResultTransformer.class.getName().hashCode();
+	}
+
+	public boolean equals(Object other) {
+		// todo : we can remove this once the deprecated ctor can be made private...
+		return other != null && RootEntityResultTransformer.class.isInstance( other );
 	}
 }

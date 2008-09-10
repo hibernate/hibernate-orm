@@ -28,11 +28,11 @@ import java.util.List;
 import java.io.Serializable;
 
 /**
- * Much like {@link RootEntityResultTransformer}, but we also distinct
- * the entity in the final result.
+ * Much like {@link RootEntityResultTransformer}, but we also distinct the entity in the final result.
  * <p/>
- * Since this transformer is stateless, all instances would be considered equal.
- * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
+ * Since this transformer is stateless, all instances would be considered equal.  So for optimization purposes
+ * we limit it to a single, singleton {@link #INSTANCE instance} (this is not quite true yet: see deprecation notice
+ * on {@link #DistinctRootEntityResultTransformer() constructor}).
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -43,8 +43,10 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 
 	/**
 	 * Instantiate a DistinctRootEntityResultTransformer.
+	 * <p/>
+	 * todo : make private, see deprecation notice
 	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one (to be removed in 3.4).
 	 */
 	public DistinctRootEntityResultTransformer() {
 	}
@@ -79,8 +81,16 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 		return INSTANCE;
 	}
 
-	public boolean equals(Object obj) {
+
+	// all DistinctRootEntityResultTransformer are considered equal ~~~~~~~~~~~
+
+	public int hashCode() {
 		// todo : we can remove this once the deprecated ctor can be made private...
-		return DistinctRootEntityResultTransformer.class.isInstance( obj );
+		return DistinctRootEntityResultTransformer.class.getName().hashCode();
+	}
+
+	public boolean equals(Object other) {
+		// todo : we can remove this once the deprecated ctor can be made private...
+		return other != null && DistinctRootEntityResultTransformer.class.isInstance( other );
 	}
 }

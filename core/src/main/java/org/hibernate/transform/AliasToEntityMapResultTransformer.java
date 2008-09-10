@@ -29,11 +29,12 @@ import java.util.Map;
 import java.io.Serializable;
 
 /**
- * {@link ResultTransformer} implementation which builds a map for each "row",
- * made up  of each aliased value where the alias is the map key.
+ * {@link ResultTransformer} implementation which builds a map for each "row", made up  of each aliased value
+ * where the alias is the map key.
  * <p/>
- * Since this transformer is stateless, all instances would be considered equal.
- * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
+ * Since this transformer is stateless, all instances would be considered equal.  So for optimization purposes
+ * we limit it to a single, singleton {@link #INSTANCE instance} (this is not quite true yet, see deprecation notice
+ * on {@link #AliasToEntityMapResultTransformer() constructor}).
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -44,13 +45,17 @@ public class AliasToEntityMapResultTransformer extends BasicTransformerAdapter i
 
 	/**
 	 * Instantiate AliasToEntityMapResultTransformer.
+	 * <p/>
+	 * todo : make private, see deprecation...
 	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one (to be removed in 3.4).
 	 */
 	public AliasToEntityMapResultTransformer() {
-		// todo : make private
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Map result = new HashMap(tuple.length);
 		for ( int i=0; i<tuple.length; i++ ) {
@@ -78,8 +83,7 @@ public class AliasToEntityMapResultTransformer extends BasicTransformerAdapter i
 	 * All AliasToEntityMapResultTransformer are considered equal
 	 *
 	 * @param other The other instance to check for equality
-	 * @return True if (non-null) other is a instance of
-	 * AliasToEntityMapResultTransformer.
+	 * @return True if (non-null) other is a instance of AliasToEntityMapResultTransformer.
 	 */
 	public boolean equals(Object other) {
 		// todo : we can remove this once the deprecated ctor can be made private...
@@ -89,8 +93,7 @@ public class AliasToEntityMapResultTransformer extends BasicTransformerAdapter i
 	/**
 	 * All AliasToEntityMapResultTransformer are considered equal
 	 *
-	 * @return We simply return the hashCode of the
-	 * AliasToEntityMapResultTransformer class name string.
+	 * @return We simply return the hashCode of the AliasToEntityMapResultTransformer class name string.
 	 */
 	public int hashCode() {
 		// todo : we can remove this once the deprecated ctor can be made private...

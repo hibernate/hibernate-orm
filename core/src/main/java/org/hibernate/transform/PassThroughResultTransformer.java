@@ -38,7 +38,7 @@ public class PassThroughResultTransformer extends BasicTransformerAdapter implem
 	/**
 	 * Instamtiate a PassThroughResultTransformer.
 	 *
-	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one.
+	 * @deprecated Use the {@link #INSTANCE} reference instead of explicitly creating a new one (to be removed in 3.4).
 	 */
 	public PassThroughResultTransformer() {
 	}
@@ -56,9 +56,14 @@ public class PassThroughResultTransformer extends BasicTransformerAdapter implem
 		return INSTANCE;
 	}
 
-	public boolean equals(Object obj) {
+	public int hashCode() {
 		// todo : we can remove this once the deprecated ctor can be made private...
-		return PassThroughResultTransformer.class.isInstance( obj );
+		return PassThroughResultTransformer.class.getName().hashCode();
+	}
+
+	public boolean equals(Object other) {
+		// todo : we can remove this once the deprecated ctor can be made private...
+		return other != null && PassThroughResultTransformer.class.isInstance( other );
 	}
 
 }

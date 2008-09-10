@@ -1716,7 +1716,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session = openSession();
 
 		results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
-				.setResultTransformer(new DistinctRootEntityResultTransformer())
+				.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
 				.list();
 		assertEquals( "Incorrect result size", 2, results.size());
 		assertTrue( "Incorrect return type", results.get(0) instanceof Animal );

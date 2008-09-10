@@ -6,6 +6,28 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.3.1.GA (2008.09.10)
+-------------------------------------------
+
+** Bug
+    * [HHH-2694] - create-drop with c3p0 causes SQLException
+    * [HHH-3231] - org.hibernate.id.enhanced.TableGenerator throws "IllegalArgumentException: alias not found: tbl" under Oracle
+    * [HHH-3472] - JTASessionContext broken for WebSphere
+
+** Improvement
+    * [HHH-2686] - Include a primary key in the sequence table used by id.enhanced.TableGenerator
+    * [HHH-3249] - Make o.h.id.enhanced.TableGenerator more extension-friendly
+    * [HHH-3424] - concat() with param binding fails function on derby
+    * [HHH-3454] - Allow enhanced.TableGenerator to segment itself per entity as default
+    * [HHH-3456] - Make o.h.id.enhanced.SequenceStyleGenerator more extension-friendly
+
+** New Feature
+    * [HHH-3471] - Provide true-false type that maps to int values
+
+** Task
+    * [HHH-3474] - Upgrade to use slf4j 1.5 (1.5.2)
+
+
 Changes in version 3.3.0.SP1 (2008.08.19)
 -------------------------------------------
 

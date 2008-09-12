@@ -1526,7 +1526,7 @@ public abstract class Loader {
 	 * LIMIT clause.
 	 */
 	private static boolean useLimit(final RowSelection selection, final Dialect dialect) {
-		return dialect.supportsLimit() && ( hasMaxRows( selection ) || dialect.forceLimitUsage() );
+		return dialect.supportsLimit() && hasMaxRows( selection );
 	}
 
 	/**
@@ -1659,7 +1659,7 @@ public abstract class Loader {
 		}
 		int firstRow = getFirstRow( selection );
 		int lastRow = getMaxOrLimit( selection, dialect );
-		boolean hasFirstRow = firstRow > 0 && dialect.supportsLimitOffset();
+		boolean hasFirstRow = dialect.supportsLimitOffset() && ( firstRow > 0 || dialect.forceLimitUsage() );
 		boolean reverse = dialect.bindLimitParametersInReverseOrder();
 		if ( hasFirstRow ) {
 			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );

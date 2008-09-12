@@ -49,7 +49,7 @@ public class EhCache implements Cache {
 
 	private static final int SIXTY_THOUSAND_MS = 60000;
 
-	private net.sf.ehcache.Cache cache;
+	private net.sf.ehcache.Ehcache cache;
 
 	/**
 	 * Creates a new Hibernate pluggable cache based on a cache name.
@@ -57,7 +57,7 @@ public class EhCache implements Cache {
 	 *
 	 * @param cache The underlying EhCache instance to use.
 	 */
-	public EhCache(net.sf.ehcache.Cache cache) {
+	public EhCache(net.sf.ehcache.Ehcache cache) {
 		this.cache = cache;
 	}
 

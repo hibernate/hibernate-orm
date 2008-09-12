@@ -625,7 +625,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	}
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return null;
+		return LoadQueryInfluencers.NONE;
 	}
 
 	public void setFetchProfile(String name) {}

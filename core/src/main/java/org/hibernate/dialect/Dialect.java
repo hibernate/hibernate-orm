@@ -768,6 +768,16 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * Generally, if there is no limit applied to a Hibernate query we do not apply any limits
+	 * to the SQL query.  This option forces that the limit be written to the SQL query.
+	 *
+	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
+	 */
+	public boolean forceLimitUsage() {
+		return true;
+	}
+
+	/**
 	 * Does this dialect's LIMIT support (if any) additionally
 	 * support specifying an offset?
 	 *

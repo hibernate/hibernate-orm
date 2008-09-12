@@ -1526,7 +1526,7 @@ public abstract class Loader {
 	 * LIMIT clause.
 	 */
 	private static boolean useLimit(final RowSelection selection, final Dialect dialect) {
-		return dialect.supportsLimit() && hasMaxRows( selection );
+		return dialect.supportsLimit() && ( hasMaxRows( selection ) || dialect.forceLimitUsage() );
 	}
 
 	/**

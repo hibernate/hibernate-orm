@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.io.Serializable;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
@@ -36,7 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.impl.FilterImpl;
 
 /**
- * Centralize all options which can influence the SQL query needed to load and
+ * Centralize all options which can influence the SQL query needed to load an
  * entity.  Currently such influencers are defined as:<ul>
  * <li>filters</li>
  * <li>fetch profiles</li>
@@ -45,7 +46,7 @@ import org.hibernate.impl.FilterImpl;
  *
  * @author Steve Ebersole
  */
-public class LoadQueryInfluencers {
+public class LoadQueryInfluencers implements Serializable {
 	/**
 	 * Static reference useful for cases where we are creating load SQL
 	 * outside the context of any influencers.  One such example is

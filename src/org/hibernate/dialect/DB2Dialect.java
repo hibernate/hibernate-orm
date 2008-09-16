@@ -357,6 +357,10 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
+	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
+		return false;
+	}
+
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean supportsEmptyInList() {

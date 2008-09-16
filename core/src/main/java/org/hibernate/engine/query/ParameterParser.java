@@ -46,8 +46,10 @@ public class ParameterParser {
 		public void other(char character);
 	}
 
+	/**
+	 * Direct instantiation of ParameterParser disallowed.
+	 */
 	private ParameterParser() {
-		// disallow instantiation
 	}
 
 	/**
@@ -60,12 +62,10 @@ public class ParameterParser {
 	 *
 	 * @param sqlString The string to be parsed/tokenized.
 	 * @param recognizer The thing which handles recognition events.
-	 * @throws QueryException
+	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
 	public static void parse(String sqlString, Recognizer recognizer) throws QueryException {
-		boolean hasMainOutputParameter = sqlString.indexOf( "call" ) > 0 &&
-		                                 sqlString.indexOf( "?" ) < sqlString.indexOf( "call" ) &&
-		                                 sqlString.indexOf( "=" ) < sqlString.indexOf( "call" );
+		boolean hasMainOutputParameter = startsWithEscapeCallTemplate( sqlString );
 		boolean foundMainOutputParam = false;
 
 		int stringLength = sqlString.length();
@@ -89,8 +89,9 @@ public class ParameterParser {
 					int chopLocation = right < 0 ? sqlString.length() : right;
 					String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {
-						throw new QueryException("Space is not allowed after parameter prefix ':' '"
-								+ sqlString + "'");
+						throw new QueryException(
+								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
+						);
 					}
 					recognizer.namedParameter( param, indx );
 					indx = chopLocation - 1;
@@ -127,6 +128,36 @@ public class ParameterParser {
 				}
 			}
 		}
+	}
+
+	public static boolean startsWithEscapeCallTemplate(String sqlString) {
+		if ( ! ( sqlString.startsWith( "{" ) && sqlString.endsWith( "}" ) ) ) {
+			return false;
+		}
+
+		int chopLocation = sqlString.indexOf( "call" );
+		if ( chopLocation <= 0 ) {
+			return false;
+		}
+
+		final String checkString = sqlString.substring( 1, chopLocation + 4 );
+		final String fixture = "?=call";
+		int fixturePosition = 0;
+		boolean matches = true;
+		for ( int i = 0, max = checkString.length(); i < max; i++ ) {
+			final char c = Character.toLowerCase( checkString.charAt( i ) );
+			if ( Character.isWhitespace( c ) ) {
+				continue;
+			}
+			if ( c == fixture.charAt( fixturePosition ) ) {
+				fixturePosition++;
+				continue;
+			}
+			matches = false;
+			break;
+		}
+
+		return matches;
 	}
 
 }

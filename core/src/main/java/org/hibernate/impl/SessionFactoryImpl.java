@@ -420,7 +420,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		// this needs to happen after persisters are all ready to go...
 		this.fetchProfiles = new HashMap();
-		itr = cfg.getFetchProfiles().values().iterator();
+		itr = cfg.iterateFetchProfiles();
 		while ( itr.hasNext() ) {
 			final org.hibernate.mapping.FetchProfile mappingProfile =
 					( org.hibernate.mapping.FetchProfile ) itr.next();

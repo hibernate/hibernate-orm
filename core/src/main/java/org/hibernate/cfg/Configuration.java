@@ -66,11 +66,15 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.DuplicateMappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Mapping;
+import org.hibernate.engine.NamedQueryDefinition;
+import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.DirtyCheckEventListener;
@@ -115,6 +119,9 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.mapping.DenormalizedTable;
+import org.hibernate.mapping.TypeDef;
+import org.hibernate.mapping.Column;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
@@ -156,67 +163,72 @@ public class Configuration implements Serializable {
 	protected Map collections;
 	protected Map tables;
 	protected List auxiliaryDatabaseObjects;
-	protected Map sqlFunctions;
+
 	protected Map namedQueries;
 	protected Map namedSqlQueries;
-	/**
-	 * Map<String, SqlResultSetMapping> result set name, result set description
-	 */
-	protected Map sqlResultSetMappings;
+	protected Map/*<String, SqlResultSetMapping>*/ sqlResultSetMappings;
+
+	protected Map typeDefs;
 	protected Map filterDefinitions;
 	protected Map fetchProfiles;
+
+	protected Map tableNameBinding;
+	protected Map columnNameBindingPerTable;
+
 	protected List secondPasses;
 	protected List propertyReferences;
 //	protected List extendsQueue;
 	protected Map extendsQueue;
-	protected Map tableNameBinding;
-	protected Map columnNameBindingPerTable;
+
+	protected Map sqlFunctions;
+
 	private Interceptor interceptor;
 	private Properties properties;
 	private EntityResolver entityResolver;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 
 	protected transient XMLHelper xmlHelper;
-	protected transient Map typeDefs;
-
 	protected NamingStrategy namingStrategy;
+	private SessionFactoryObserver sessionFactoryObserver;
 
 	private EventListeners eventListeners;
 
 	protected final SettingsFactory settingsFactory;
 
-	private SessionFactoryObserver sessionFactoryObserver;
+	private transient Mapping mapping = buildMapping();
 
 	protected void reset() {
 		classes = new HashMap();
 		imports = new HashMap();
 		collections = new HashMap();
 		tables = new TreeMap();
+
 		namedQueries = new HashMap();
 		namedSqlQueries = new HashMap();
 		sqlResultSetMappings = new HashMap();
-		xmlHelper = new XMLHelper();
+
 		typeDefs = new HashMap();
+		filterDefinitions = new HashMap();
+		fetchProfiles = new HashMap();
+		auxiliaryDatabaseObjects = new ArrayList();
+
+		tableNameBinding = new HashMap();
+		columnNameBindingPerTable = new HashMap();
+
 		propertyReferences = new ArrayList();
 		secondPasses = new ArrayList();
+//		extendsQueue = new ArrayList();
+		extendsQueue = new HashMap();
+
+		namingStrategy = DefaultNamingStrategy.INSTANCE;
+		xmlHelper = new XMLHelper();
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = Environment.getProperties();
 		entityResolver = XMLHelper.DEFAULT_DTD_RESOLVER;
 		eventListeners = new EventListeners();
-		filterDefinitions = new HashMap();
-		fetchProfiles = new HashMap();
-//		extendsQueue = new ArrayList();
-		extendsQueue = new HashMap();
-		auxiliaryDatabaseObjects = new ArrayList();
-		tableNameBinding = new HashMap();
-		columnNameBindingPerTable = new HashMap();
-		namingStrategy = DefaultNamingStrategy.INSTANCE;
+
 		sqlFunctions = new HashMap();
 	}
-
-	private transient Mapping mapping = buildMapping();
-
-
 
 	protected Configuration(SettingsFactory settingsFactory) {
 		this.settingsFactory = settingsFactory;
@@ -710,25 +722,7 @@ public class Configuration implements Serializable {
 	 * mappings to.
 	 */
 	public Mappings createMappings() {
-		return new Mappings(
-				classes,
-				collections,
-				tables,
-				namedQueries,
-				namedSqlQueries,
-				sqlResultSetMappings,
-				imports,
-				secondPasses,
-				propertyReferences,
-				namingStrategy,
-				typeDefs,
-				filterDefinitions,
-				fetchProfiles,
-				extendsQueue,
-				auxiliaryDatabaseObjects,
-				tableNameBinding,
-				columnNameBindingPerTable
-			);
+		return new MappingsImpl();
 	}
 
 
@@ -2185,8 +2179,8 @@ public class Configuration implements Serializable {
 		filterDefinitions.put( definition.getFilterName(), definition );
 	}
 
-	public Map getFetchProfiles() {
-		return fetchProfiles;
+	public Iterator iterateFetchProfiles() {
+		return fetchProfiles.values().iterator();
 	}
 
 	public void addFetchProfile(FetchProfile fetchProfile) {
@@ -2211,5 +2205,495 @@ public class Configuration implements Serializable {
 
 	public void setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
 		this.sessionFactoryObserver = sessionFactoryObserver;
+	}
+
+
+	// Mappings impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Internal implementation of the Mappings interface giving access to the Configuration's internal
+	 * <tt>metadata repository</tt> state ({@link Configuration#classes}, {@link Configuration#tables}, etc).
+	 */
+	protected class MappingsImpl implements Mappings, Serializable {
+
+		private String schemaName;
+
+		public String getSchemaName() {
+			return schemaName;
+		}
+
+		public void setSchemaName(String schemaName) {
+			this.schemaName = schemaName;
+		}
+
+
+		private String catalogName;
+
+		public String getCatalogName() {
+			return catalogName;
+		}
+
+		public void setCatalogName(String catalogName) {
+			this.catalogName = catalogName;
+		}
+
+
+		private String defaultPackage;
+
+		public String getDefaultPackage() {
+			return defaultPackage;
+		}
+
+		public void setDefaultPackage(String defaultPackage) {
+			this.defaultPackage = defaultPackage;
+		}
+
+
+		private boolean autoImport;
+
+		public boolean isAutoImport() {
+			return autoImport;
+		}
+
+		public void setAutoImport(boolean autoImport) {
+			this.autoImport = autoImport;
+		}
+
+
+		private boolean defaultLazy;
+
+		public boolean isDefaultLazy() {
+			return defaultLazy;
+		}
+
+		public void setDefaultLazy(boolean defaultLazy) {
+			this.defaultLazy = defaultLazy;
+		}
+
+
+		private String defaultCascade;
+
+		public String getDefaultCascade() {
+			return defaultCascade;
+		}
+
+		public void setDefaultCascade(String defaultCascade) {
+			this.defaultCascade = defaultCascade;
+		}
+
+
+		private String defaultAccess;
+
+		public String getDefaultAccess() {
+			return defaultAccess;
+		}
+
+		public void setDefaultAccess(String defaultAccess) {
+			this.defaultAccess = defaultAccess;
+		}
+
+
+		public NamingStrategy getNamingStrategy() {
+			return namingStrategy;
+		}
+
+		public void setNamingStrategy(NamingStrategy namingStrategy) {
+			Configuration.this.namingStrategy = namingStrategy;
+		}
+
+
+		public Iterator iterateClasses() {
+			return classes.values().iterator();
+		}
+
+		public PersistentClass getClass(String entityName) {
+			return ( PersistentClass ) classes.get( entityName );
+		}
+
+		public PersistentClass locatePersistentClassByEntityName(String entityName) {
+			PersistentClass persistentClass = ( PersistentClass ) classes.get( entityName );
+			if ( persistentClass == null ) {
+				String actualEntityName = ( String ) imports.get( entityName );
+				if ( StringHelper.isNotEmpty( actualEntityName ) ) {
+					persistentClass = ( PersistentClass ) classes.get( actualEntityName );
+				}
+			}
+			return persistentClass;
+		}
+
+		public void addClass(PersistentClass persistentClass) throws DuplicateMappingException {
+			Object old = classes.put( persistentClass.getEntityName(), persistentClass );
+			if ( old != null ) {
+				throw new DuplicateMappingException( "class/entity", persistentClass.getEntityName() );
+			}
+		}
+
+		public void addImport(String entityName, String rename) throws DuplicateMappingException {
+			String existing = ( String ) imports.put( rename, entityName );
+			if ( existing != null ) {
+				if ( existing.equals( entityName ) ) {
+					log.info( "duplicate import: {} -> {}", entityName, rename );
+				}
+				else {
+					throw new DuplicateMappingException(
+							"duplicate import: " + rename + " refers to both " + entityName +
+									" and " + existing + " (try using auto-import=\"false\")",
+							"import",
+							rename
+					);
+				}
+			}
+		}
+
+		public Collection getCollection(String role) {
+			return ( Collection ) collections.get( role );
+		}
+
+		public Iterator iterateCollections() {
+			return collections.values().iterator();
+		}
+
+		public void addCollection(Collection collection) throws DuplicateMappingException {
+			Object old = collections.put( collection.getRole(), collection );
+			if ( old != null ) {
+				throw new DuplicateMappingException( "collection role", collection.getRole() );
+			}
+		}
+
+		public Table getTable(String schema, String catalog, String name) {
+			String key = Table.qualify(catalog, schema, name);
+			return (Table) tables.get(key);
+		}
+
+		public Iterator iterateTables() {
+			return tables.values().iterator();
+		}
+
+		public Table addTable(
+				String schema,
+				String catalog,
+				String name,
+				String subselect,
+				boolean isAbstract) {
+			String key = subselect == null ? Table.qualify( catalog, schema, name ) : subselect;
+			Table table = ( Table ) tables.get( key );
+
+			if ( table == null ) {
+				table = new Table();
+				table.setAbstract( isAbstract );
+				table.setName( name );
+				table.setSchema( schema );
+				table.setCatalog( catalog );
+				table.setSubselect( subselect );
+				tables.put( key, table );
+			}
+			else {
+				if ( !isAbstract ) {
+					table.setAbstract( false );
+				}
+			}
+
+			return table;
+		}
+
+		public Table addDenormalizedTable(
+				String schema,
+				String catalog,
+				String name,
+				boolean isAbstract,
+				String subselect,
+				Table includedTable) throws DuplicateMappingException {
+			String key = subselect == null ? Table.qualify(catalog, schema, name) : subselect;
+			if ( tables.containsKey( key ) ) {
+				throw new DuplicateMappingException( "table", name );
+			}
+
+			Table table = new DenormalizedTable( includedTable );
+			table.setAbstract( isAbstract );
+			table.setName( name );
+			table.setSchema( schema );
+			table.setCatalog( catalog );
+			table.setSubselect( subselect );
+
+			tables.put( key, table );
+			return table;
+		}
+
+		public NamedQueryDefinition getQuery(String name) {
+			return ( NamedQueryDefinition ) namedQueries.get( name );
+		}
+
+		public void addQuery(String name, NamedQueryDefinition query) throws DuplicateMappingException {
+			checkQueryName( name );
+			namedQueries.put( name.intern(), query );
+		}
+
+		private void checkQueryName(String name) throws DuplicateMappingException {
+			if ( namedQueries.containsKey( name ) || namedSqlQueries.containsKey( name ) ) {
+				throw new DuplicateMappingException( "query", name );
+			}
+		}
+
+		public NamedSQLQueryDefinition getSQLQuery(String name) {
+			return ( NamedSQLQueryDefinition ) namedSqlQueries.get( name );
+		}
+
+		public void addSQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
+			checkQueryName( name );
+			namedSqlQueries.put( name.intern(), query );
+		}
+
+		public ResultSetMappingDefinition getResultSetMapping(String name) {
+			return (ResultSetMappingDefinition) sqlResultSetMappings.get(name);
+		}
+
+		public void addResultSetMapping(ResultSetMappingDefinition sqlResultSetMapping) throws DuplicateMappingException {
+			Object old = sqlResultSetMappings.put( sqlResultSetMapping.getName(), sqlResultSetMapping );
+			if ( old != null ) {
+				throw new DuplicateMappingException( "resultSet",  sqlResultSetMapping.getName() );
+			}
+
+		}
+
+		public TypeDef getTypeDef(String typeName) {
+			return ( TypeDef ) typeDefs.get( typeName );
+		}
+
+		public void addTypeDef(String typeName, String typeClass, Properties paramMap) {
+			TypeDef def = new TypeDef( typeClass, paramMap );
+			typeDefs.put( typeName, def );
+			log.debug( "Added " + typeName + " with class " + typeClass );
+		}
+
+		public Map getFilterDefinitions() {
+			return filterDefinitions;
+		}
+
+		public FilterDefinition getFilterDefinition(String name) {
+			return ( FilterDefinition ) filterDefinitions.get( name );
+		}
+
+		public void addFilterDefinition(FilterDefinition definition) {
+			filterDefinitions.put( definition.getFilterName(), definition );
+		}
+
+		public FetchProfile findOrCreateFetchProfile(String name) {
+			FetchProfile profile = ( FetchProfile ) fetchProfiles.get( name );
+			if ( profile == null ) {
+				profile = new FetchProfile( name );
+				fetchProfiles.put( name, profile );
+			}
+			return profile;
+		}
+
+		public Iterator iterateAuxliaryDatabaseObjects() {
+			return auxiliaryDatabaseObjects.iterator();
+		}
+
+		public ListIterator iterateAuxliaryDatabaseObjectsInReverse() {
+			return auxiliaryDatabaseObjects.listIterator( auxiliaryDatabaseObjects.size() );
+		}
+
+		public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+			auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
+		}
+
+		/**
+		 * Internal struct used to help track physical table names to logical table names.
+		 */
+		private class TableDescription implements Serializable {
+			final String logicalName;
+			final Table denormalizedSupertable;
+
+			TableDescription(String logicalName, Table denormalizedSupertable) {
+				this.logicalName = logicalName;
+				this.denormalizedSupertable = denormalizedSupertable;
+			}
+		}
+
+		public String getLogicalTableName(Table table) throws MappingException {
+			return getLogicalTableName( table.getQuotedSchema(), table.getCatalog(), table.getQuotedName() );
+		}
+
+		private String getLogicalTableName(String schema, String catalog, String physicalName) throws MappingException {
+			String key = buildTableNameKey( schema, catalog, physicalName );
+			TableDescription descriptor = (TableDescription) tableNameBinding.get( key );
+			if (descriptor == null) {
+				throw new MappingException( "Unable to find physical table: " + physicalName);
+			}
+			return descriptor.logicalName;
+		}
+
+		public void addTableBinding(
+				String schema,
+				String catalog,
+				String logicalName,
+				String physicalName,
+				Table denormalizedSuperTable) throws DuplicateMappingException {
+			String key = buildTableNameKey( schema, catalog, physicalName );
+			TableDescription tableDescription = new TableDescription( logicalName, denormalizedSuperTable );
+			TableDescription oldDescriptor = ( TableDescription ) tableNameBinding.put( key, tableDescription );
+			if ( oldDescriptor != null && ! oldDescriptor.logicalName.equals( logicalName ) ) {
+				//TODO possibly relax that
+				throw new DuplicateMappingException(
+						"Same physical table name [" + physicalName + "] references several logical table names: [" +
+								oldDescriptor.logicalName + "], [" + logicalName + ']',
+						"table",
+						physicalName
+				);
+			}
+		}
+
+		private String buildTableNameKey(String schema, String catalog, String finalName) {
+			StringBuffer keyBuilder = new StringBuffer();
+			if (schema != null) keyBuilder.append( schema );
+			keyBuilder.append( ".");
+			if (catalog != null) keyBuilder.append( catalog );
+			keyBuilder.append( ".");
+			keyBuilder.append( finalName );
+			return keyBuilder.toString();
+		}
+
+		/**
+		 * Internal struct used to maintain xref between physical and logical column
+		 * names for a table.  Mainly this is used to ensure that the defined
+		 * {@link NamingStrategy} is not creating duplicate column names.
+		 */
+		private class TableColumnNameBinding implements Serializable {
+			private final String tableName;
+			private Map/*<String, String>*/ logicalToPhysical = new HashMap();
+			private Map/*<String, String>*/ physicalToLogical = new HashMap();
+
+			private TableColumnNameBinding(String tableName) {
+				this.tableName = tableName;
+			}
+
+			public void addBinding(String logicalName, Column physicalColumn) {
+				bindLogicalToPhysical( logicalName, physicalColumn );
+				bindPhysicalToLogical( logicalName, physicalColumn );
+			}
+
+			private void bindLogicalToPhysical(String logicalName, Column physicalColumn) throws DuplicateMappingException {
+				final String logicalKey = logicalName.toLowerCase();
+				final String physicalName = physicalColumn.getQuotedName();
+				final String existingPhysicalName = ( String ) logicalToPhysical.put( logicalKey, physicalName );
+				if ( existingPhysicalName != null ) {
+					boolean areSamePhysicalColumn = physicalColumn.isQuoted()
+							? existingPhysicalName.equals( physicalName )
+							: existingPhysicalName.equalsIgnoreCase( physicalName );
+					if ( ! areSamePhysicalColumn ) {
+						throw new DuplicateMappingException(
+								" Table [" + tableName + "] contains logical column name [" + logicalName
+										+ "] referenced by multiple physical column names: [" + existingPhysicalName
+										+ "], [" + physicalName + "]",
+								"column-binding",
+								tableName + "." + logicalName
+						);
+					}
+				}
+			}
+
+			private void bindPhysicalToLogical(String logicalName, Column physicalColumn) throws DuplicateMappingException {
+				final String physicalName = physicalColumn.getQuotedName();
+				final String existingLogicalName = ( String ) physicalToLogical.put( physicalName, logicalName );
+				if ( existingLogicalName != null && ! existingLogicalName.equals( logicalName ) ) {
+					throw new DuplicateMappingException(
+							" Table [" + tableName + "] contains phyical column name [" + physicalName
+									+ "] represented by different logical column names: [" + existingLogicalName
+									+ "], [" + logicalName + "]",
+							"column-binding",
+							tableName + "." + physicalName
+					);
+				}
+			}
+		}
+
+		public void addColumnBinding(String logicalName, Column physicalColumn, Table table) throws DuplicateMappingException {
+			TableColumnNameBinding binding = ( TableColumnNameBinding ) columnNameBindingPerTable.get( table );
+			if ( binding == null ) {
+				binding = new TableColumnNameBinding( table.getName() );
+				columnNameBindingPerTable.put( table, binding );
+			}
+			binding.addBinding( logicalName, physicalColumn );
+		}
+
+		public String getPhysicalColumnName(String logicalName, Table table) throws MappingException {
+			logicalName = logicalName.toLowerCase();
+			String finalName = null;
+			Table currentTable = table;
+			do {
+				TableColumnNameBinding binding = ( TableColumnNameBinding ) columnNameBindingPerTable.get( currentTable );
+				if ( binding != null ) {
+					finalName = ( String ) binding.logicalToPhysical.get( logicalName );
+				}
+				String key = buildTableNameKey(
+						currentTable.getSchema(), currentTable.getCatalog(), currentTable.getName()
+				);
+				TableDescription description = ( TableDescription ) tableNameBinding.get( key );
+				if ( description != null ) {
+					currentTable = description.denormalizedSupertable;
+				}
+			} while ( finalName == null && currentTable != null );
+
+			if ( finalName == null ) {
+				throw new MappingException(
+						"Unable to find column with logical name " + logicalName + " in table " + table.getName()
+				);
+			}
+			return finalName;
+		}
+
+		public String getLogicalColumnName(String physicalName, Table table) throws MappingException {
+			String logical = null;
+			Table currentTable = table;
+			TableDescription description = null;
+			do {
+				TableColumnNameBinding binding = ( TableColumnNameBinding ) columnNameBindingPerTable.get( currentTable );
+				if ( binding != null ) {
+					logical = ( String ) binding.physicalToLogical.get( physicalName );
+				}
+				String key = buildTableNameKey(
+						currentTable.getSchema(), currentTable.getCatalog(), currentTable.getName()
+				);
+				description = ( TableDescription ) tableNameBinding.get( key );
+				if ( description != null ) {
+					currentTable = description.denormalizedSupertable;
+				}
+			}
+			while ( logical == null && currentTable != null && description != null );
+			if ( logical == null ) {
+				throw new MappingException(
+						"Unable to find logical column name from physical name "
+								+ physicalName + " in table " + table.getName()
+				);
+			}
+			return logical;
+		}
+
+		public void addSecondPass(SecondPass sp) {
+			addSecondPass( sp, false );
+		}
+
+		public void addSecondPass(SecondPass sp, boolean onTopOfTheQueue) {
+			if ( onTopOfTheQueue ) {
+				secondPasses.add( 0, sp );
+			}
+			else {
+				secondPasses.add( sp );
+			}
+		}
+
+		public void addPropertyReference(String referencedClass, String propertyName) {
+			propertyReferences.add( new PropertyReference( referencedClass, propertyName, false ) );
+		}
+
+		public void addUniquePropertyReference(String referencedClass, String propertyName) {
+			propertyReferences.add( new PropertyReference( referencedClass, propertyName, true ) );
+		}
+
+		public void addToExtendsQueue(ExtendsQueueEntry entry) {
+			extendsQueue.put( entry, null );
+		}
+
 	}
 }

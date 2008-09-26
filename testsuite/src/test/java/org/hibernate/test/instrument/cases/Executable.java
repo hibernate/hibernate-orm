@@ -5,6 +5,6 @@ package org.hibernate.test.instrument.cases;
  */
 public interface Executable {
 	public void prepare();
-	public void execute();
+	public void execute() throws Exception;
 	public void complete();
 }

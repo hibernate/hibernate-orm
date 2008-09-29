@@ -126,7 +126,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertEquals( 1, results.size() );
 		results = s.createQuery( "from Human where name is not null" ).list();
 		assertEquals( 3, results.size() );
-		s.createQuery( "from Human where ? is null" ).setParameter( 0, null ).list();
+		String query =
+				getDialect() instanceof DB2Dialect ?
+						"from Human where cast(? as string) is null" :
+						"from Human where ? is null"
+				;
+		s.createQuery( query ).setParameter( 0, null ).list();
+
 		s.getTransaction().commit();
 		s.close();
 
@@ -203,13 +209,29 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.beginTransaction();
 		s.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0" ).setLong( "param", 1 ).list();
 		s.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0" ).setLong( "param", 1 ).list();
-		if ( ! ( getDialect() instanceof HSQLDialect ) ) {
-			// HSQLDB does not like the abs(? - ?) syntax...
+		if ( ( getDialect() instanceof HSQLDialect ) || ( getDialect() instanceof DB2Dialect ) ) {
+			// HSQLDB and DB2 don't like the abs(? - ?) syntax. bit work if at least one parameter is typed...
+			s.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
+			s.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();			
+		} 
+		else {
 			s.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
 		}
-		s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setString( "foo", "foo" ).list();
+
+		if ( getDialect() instanceof DB2Dialect ) {
+			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setString( "foo", "foo" ).list();			
+		}
+		else {
+			s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setString( "foo", "foo" ).list();
+		}
 		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setLong( "param", 1 ).list();
-		s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
+		if ( getDialect() instanceof DB2Dialect ) {
+			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setString( "bar", "xyz" ).list();			
+		}
+		else {
+			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
+		}
 		if ( ! ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
 			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" ).setLong( "param", 1 ).list();
 		}

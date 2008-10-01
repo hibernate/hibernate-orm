@@ -97,6 +97,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private String sql;
 
 	private ParameterTranslations paramTranslations;
+	private List collectedParameterSpecifications;
+
 
 	/**
 	 * Creates a new AST-based query translator.
@@ -240,6 +242,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				log.debug( "SQL: " + sql );
 			}
 			gen.getParseErrorHandler().throwQueryException();
+			collectedParameterSpecifications = gen.getCollectedParameters();
 		}
 	}
 
@@ -563,8 +566,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {
 			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameters() );
+//			paramTranslations = new ParameterTranslationsImpl( collectedParameterSpecifications );
 		}
 		return paramTranslations;
+	}
+
+	public List getCollectedParameterSpecifications() {
+		return collectedParameterSpecifications;
 	}
 
 	public static class JavaConstantConverter implements NodeTraverser.VisitationStrategy {

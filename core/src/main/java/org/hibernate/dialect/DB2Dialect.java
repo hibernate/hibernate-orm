@@ -393,4 +393,9 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+
+
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
 }

@@ -19,39 +19,63 @@ public class TestLazyPropertyCustomTypeExecutable extends AbstractExecutable {
 		return new String[] { "org/hibernate/test/instrument/domain/Problematic.hbm.xml" };
 	}
 
-	public void execute() {
+	public void execute() throws Exception {
 		Session s = getFactory().openSession();
-		s.beginTransaction();
 		Problematic p = new Problematic();
-		p.setName( "whatever" );
-		p.setBytes( new byte[] { 1, 0, 1, 1, 0 } );
-		s.save( p );
-		s.getTransaction().commit();
-		s.close();
+		try {
+			s.beginTransaction();
+			p.setName( "whatever" );
+			p.setBytes( new byte[] { 1, 0, 1, 1, 0 } );
+			s.save( p );
+			s.getTransaction().commit();
+		} catch (Exception e) {
+			s.getTransaction().rollback();
+			throw e;
+		} finally {
+			s.close();
+		}
 
 		// this access should be ok because p1 is not a lazy proxy 
 		s = getFactory().openSession();
-		s.beginTransaction();
-		Problematic p1 = (Problematic) s.get( Problematic.class, p.getId() );
-		Assert.assertTrue( FieldInterceptionHelper.isInstrumented( p1 ) );
-		p1.getRepresentation();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			s.beginTransaction();
+			Problematic p1 = (Problematic) s.get( Problematic.class, p.getId() );
+			Assert.assertTrue( FieldInterceptionHelper.isInstrumented( p1 ) );
+			p1.getRepresentation();
+			s.getTransaction().commit();
+		} catch (Exception e) {
+			s.getTransaction().rollback();
+			throw e;
+		} finally {
+			s.close();
+		}
 		
 		s = getFactory().openSession();
-		s.beginTransaction();
-		p1 = (Problematic) s.createQuery( "from Problematic" ).setReadOnly(true ).list().get( 0 );
-		p1.getRepresentation();
-		s.getTransaction().commit();
-		s.close();
+		try {
+			s.beginTransaction();
+			Problematic p1 = (Problematic) s.createQuery( "from Problematic" ).setReadOnly(true ).list().get( 0 );
+			p1.getRepresentation();
+			s.getTransaction().commit();
+		} catch (Exception e) {
+			s.getTransaction().rollback();
+			throw e;
+		} finally {
+			s.close();
+		}
 		
 		s = getFactory().openSession();
-		s.beginTransaction();
-		p1 = (Problematic) s.load( Problematic.class, p.getId() );
-		Assert.assertFalse( FieldInterceptionHelper.isInstrumented( p1 ) );
-		p1.setRepresentation( p.getRepresentation() );
-		s.getTransaction().commit();
-		s.close();
+		try {
+			s.beginTransaction();
+			Problematic p1 = (Problematic) s.load( Problematic.class, p.getId() );
+			Assert.assertFalse( FieldInterceptionHelper.isInstrumented( p1 ) );
+			p1.setRepresentation( p.getRepresentation() );
+			s.getTransaction().commit();
+		} catch (Exception e) {
+			s.getTransaction().rollback();
+			throw e;
+		} finally {
+			s.close();
+		}
 	}
 
 	protected void cleanup() {

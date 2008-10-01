@@ -31,9 +31,14 @@ import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.RestrictableStatement;
 import org.hibernate.hql.ast.tree.SqlFragment;
+import org.hibernate.hql.ast.tree.Node;
+import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.util.StringHelper;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.Type;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 
 import antlr.ASTFactory;
 import antlr.collections.AST;
@@ -49,25 +54,34 @@ import org.slf4j.LoggerFactory;
 public class SyntheticAndFactory implements HqlSqlTokenTypes {
 	private static final Logger log = LoggerFactory.getLogger( SyntheticAndFactory.class );
 
-	private ASTFactory astFactory;
+	private HqlSqlWalker hqlSqlWalker;
 	private AST thetaJoins;
 	private AST filters;
 
-	public SyntheticAndFactory(ASTFactory astFactory) {
-		this.astFactory = astFactory;
+	public SyntheticAndFactory(HqlSqlWalker hqlSqlWalker) {
+		this.hqlSqlWalker = hqlSqlWalker;
 	}
 
-	public void addWhereFragment(JoinFragment joinFragment, String whereFragment, QueryNode query, FromElement fromElement) {
+	private Node create(int tokenType, String text) {
+		return ( Node ) ASTUtil.create( hqlSqlWalker.getASTFactory(), tokenType, text );
+	}
 
+	public void addWhereFragment(
+			JoinFragment joinFragment,
+			String whereFragment,
+			QueryNode query,
+			FromElement fromElement,
+			HqlSqlWalker hqlSqlWalker) {
 		if ( whereFragment == null ) {
+			return;
+		}
+
+		if ( !fromElement.useWhereFragment() && !joinFragment.hasThetaJoins() ) {
 			return;
 		}
 
 		whereFragment = whereFragment.trim();
 		if ( StringHelper.isEmpty( whereFragment ) ) {
-			return;
-		}
-		else if ( !fromElement.useWhereFragment() && !joinFragment.hasThetaJoins() ) {
 			return;
 		}
 
@@ -77,11 +91,33 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			whereFragment = whereFragment.substring( 4 );
 		}
 
-		if ( log.isDebugEnabled() ) log.debug( "Using WHERE fragment [" + whereFragment + "]" );
+		log.debug( "Using unprocessed WHERE-fragment [{}]", whereFragment );
 
-		SqlFragment fragment = ( SqlFragment ) ASTUtil.create( astFactory, SQL_TOKEN, whereFragment );
+		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
 		fragment.setFromElement( fromElement );
+
+		if ( hqlSqlWalker.isFilter() ) {
+			if ( whereFragment.indexOf( '?' ) >= 0 ) {
+				Type collectionFilterKeyType = hqlSqlWalker.getSessionFactoryHelper()
+						.requireQueryableCollection( hqlSqlWalker.getCollectionFilterRole() )
+						.getKeyType();
+				CollectionFilterKeyParameterSpecification paramSpec = new CollectionFilterKeyParameterSpecification(
+						hqlSqlWalker.getCollectionFilterRole(),
+						collectionFilterKeyType,
+						0
+				);
+				fragment.addEmbeddedParameter( paramSpec );
+			}
+		}
+
+		JoinProcessor.processDynamicFilterParameters(
+				whereFragment,
+				fragment,
+				hqlSqlWalker
+		);
+
+		log.debug( "Using processed WHERE-fragment [{}]", fragment.getText() );
 
 		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,
@@ -91,7 +127,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				// Find or create the WHERE clause
 				AST where = query.getWhereClause();
 				// Create a new FILTERS node as a parent of all filters
-				filters = astFactory.create( FILTERS, "{filter conditions}" );
+				filters = create( FILTERS, "{filter conditions}" );
 				// Put the FILTERS node before the HQL condition and theta joins
 				ASTUtil.insertChild( where, filters );
 			}
@@ -104,7 +140,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				// Find or create the WHERE clause
 				AST where = query.getWhereClause();
 				// Create a new THETA_JOINS node as a parent of all filters
-				thetaJoins = astFactory.create( THETA_JOINS, "{theta joins}" );
+				thetaJoins = create( THETA_JOINS, "{theta joins}" );
 				// Put the THETA_JOINS node before the HQL condition, after the filters.
 				if (filters==null) {
 					ASTUtil.insertChild( where, thetaJoins );
@@ -120,7 +156,11 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 
 	}
 
-	public void addDiscriminatorWhereFragment(RestrictableStatement statement, Queryable persister, Map enabledFilters, String alias) {
+	public void addDiscriminatorWhereFragment(
+			RestrictableStatement statement,
+			Queryable persister,
+			Map enabledFilters,
+			String alias) {
 		String whereFragment = persister.filterFragment( alias, enabledFilters ).trim();
 		if ( "".equals( whereFragment ) ) {
 			return;
@@ -140,13 +180,19 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		// At some point we probably want to apply an additional grammar to
 		// properly tokenize this where fragment into constituent parts
 		// focused on the operators embedded within the fragment.
-		AST discrimNode = astFactory.create( SQL_TOKEN, whereFragment );
+		SqlFragment discrimNode = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
+
+		JoinProcessor.processDynamicFilterParameters(
+				whereFragment,
+				discrimNode,
+				hqlSqlWalker
+		);
 
 		if ( statement.getWhereClause().getNumberOfChildren() == 0 ) {
 			statement.getWhereClause().setFirstChild( discrimNode );
 		}
 		else {
-			AST and = astFactory.create( AND, "{and}" );
+			AST and = create( AND, "{and}" );
 			AST currentFirstChild = statement.getWhereClause().getFirstChild();
 			and.setFirstChild( discrimNode );
 			and.addChild( currentFirstChild );

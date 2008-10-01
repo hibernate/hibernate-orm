@@ -24,14 +24,13 @@
  */
 package org.hibernate.criterion;
 
-import java.util.HashMap;
-
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaJoinWalker;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
@@ -53,49 +52,67 @@ public abstract class SubqueryExpression implements Criterion {
 	protected Type[] getTypes() {
 		return types;
 	}
-	
+
 	protected SubqueryExpression(String op, String quantifier, DetachedCriteria dc) {
 		this.criteriaImpl = dc.getCriteriaImpl();
 		this.quantifier = quantifier;
 		this.op = op;
 	}
-	
+
 	protected abstract String toLeftSqlString(Criteria criteria, CriteriaQuery outerQuery);
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		final OuterJoinLoadable persister = (OuterJoinLoadable) factory.getEntityPersister( criteriaImpl.getEntityOrClassName() );
+		final OuterJoinLoadable persister =
+				( OuterJoinLoadable ) factory.getEntityPersister( criteriaImpl.getEntityOrClassName() );
 
 		createAndSetInnerQuery( criteriaQuery, factory );
-		
+		criteriaImpl.setSession( deriveRootSession( criteria ) );
+
 		CriteriaJoinWalker walker = new CriteriaJoinWalker(
 				persister,
 				innerQuery,
 				factory,
 				criteriaImpl,
 				criteriaImpl.getEntityOrClassName(),
-				new HashMap(),
-				innerQuery.getRootSQLALias());
+				criteriaImpl.getSession().getEnabledFilters(),
+				innerQuery.getRootSQLALias()
+		);
 
 		String sql = walker.getSQLString();
 
-		final StringBuffer buf = new StringBuffer()
-			.append( toLeftSqlString(criteria, criteriaQuery) );
-		if (op!=null) buf.append(' ').append(op).append(' ');
-		if (quantifier!=null) buf.append(quantifier).append(' ');
-		return buf.append('(').append(sql).append(')')
-			.toString();
+		final StringBuffer buf = new StringBuffer( toLeftSqlString(criteria, criteriaQuery) );
+		if ( op != null ) {
+			buf.append( ' ' ).append( op ).append( ' ' );
+		}
+		if ( quantifier != null ) {
+			buf.append( quantifier ).append( ' ' );
+		}
+		return buf.append( '(' ).append( sql ).append( ')' )
+				.toString();
 	}
 
-	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
+	private SessionImplementor deriveRootSession(Criteria criteria) {
+		if ( criteria instanceof CriteriaImpl ) {
+			return ( ( CriteriaImpl ) criteria ).getSession();
+		}
+		else if ( criteria instanceof CriteriaImpl.Subcriteria ) {
+			return deriveRootSession( ( ( CriteriaImpl.Subcriteria ) criteria ).getParent() );
+		}
+		else {
+			// could happen for custom Criteria impls.  Not likely, but...
+			// 		for long term solution, see HHH-3514
+			return null;
+		}
+	}
+
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 		//the following two lines were added to ensure that this.params is not null, which
 		//can happen with two-deep nested subqueries
 		SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		createAndSetInnerQuery(criteriaQuery, factory);
-		
+
 		Type[] ppTypes = params.getPositionalParameterTypes();
 		Object[] ppValues = params.getPositionalParameterValues();
 		TypedValue[] tv = new TypedValue[ppTypes.length];
@@ -106,12 +123,12 @@ public abstract class SubqueryExpression implements Criterion {
 	}
 
 	/**
-	 * Creates the inner query used to extract some useful information about
-	 * types, since it is needed in both methods.
-	 * @param criteriaQuery
-	 * @param factory
+	 * Creates the inner query used to extract some useful information about types, since it is needed in both methods.
+	 *
+	 * @param criteriaQuery The criteria query
+	 * @param factory The session factory.
 	 */
-	private void createAndSetInnerQuery(CriteriaQuery criteriaQuery, final SessionFactoryImplementor factory) {
+	private void createAndSetInnerQuery(CriteriaQuery criteriaQuery, SessionFactoryImplementor factory) {
 		if ( innerQuery == null ) {
 			//with two-deep subqueries, the same alias would get generated for
 			//both using the old method (criteriaQuery.generateSQLAlias()), so

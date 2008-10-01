@@ -27,6 +27,7 @@ package org.hibernate.hql.ast.exec;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
@@ -54,6 +55,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 
 	private final Queryable persister;
 	private final String sql;
+	private final List parameterSpecifications;
 
 	public BasicExecutor(HqlSqlWalker walker, Queryable persister) {
 		super( walker, log );
@@ -63,6 +65,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 			gen.statement( walker.getAST() );
 			sql = gen.getSQL();
 			gen.getParseErrorHandler().throwQueryException();
+			parameterSpecifications = gen.getCollectedParameters();
 		}
 		catch ( RecognitionException e ) {
 			throw QuerySyntaxException.convert( e );
@@ -83,10 +86,10 @@ public class BasicExecutor extends AbstractStatementExecutor {
 		try {
 			try {
 				st = session.getBatcher().prepareStatement( sql );
-				Iterator paramSpecifications = getWalker().getParameters().iterator();
+				Iterator parameterSpecifications = this.parameterSpecifications.iterator();
 				int pos = 1;
-				while ( paramSpecifications.hasNext() ) {
-					final ParameterSpecification paramSpec = ( ParameterSpecification ) paramSpecifications.next();
+				while ( parameterSpecifications.hasNext() ) {
+					final ParameterSpecification paramSpec = ( ParameterSpecification ) parameterSpecifications.next();
 					pos += paramSpec.bind( st, parameters, session, pos );
 				}
 				if ( selection != null ) {

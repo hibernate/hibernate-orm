@@ -27,16 +27,20 @@ package org.hibernate.hql.ast;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Arrays;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.SqlGeneratorBase;
 import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.Node;
+import org.hibernate.hql.ast.tree.ParameterNode;
+import org.hibernate.hql.ast.tree.ParameterContainer;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does
@@ -64,6 +68,12 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	private LinkedList outputStack = new LinkedList();
 
+	private List collectedParameters = new ArrayList();
+
+	public List getCollectedParameters() {
+		return collectedParameters;
+	}
+
 	protected void out(String s) {
 		writer.clause( s );
 	}
@@ -74,6 +84,18 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 		else {
 			super.out( n );
+		}
+
+		if ( n instanceof ParameterNode ) {
+			collectedParameters.add( ( ( ParameterNode ) n ).getHqlParameterSpecification() );
+		}
+		else if ( n instanceof ParameterContainer ) {
+			if ( ( ( ParameterContainer ) n ).hasEmbeddedParameters() ) {
+				ParameterSpecification[] specifications = ( ( ParameterContainer ) n ).getEmbeddedParameters();
+				if ( specifications != null ) {
+					collectedParameters.addAll( Arrays.asList( specifications ) );
+				}
+			}
 		}
 	}
 

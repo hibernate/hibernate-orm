@@ -32,14 +32,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * Relates to an explicit query positional (or ordinal) parameter.
+ * Parameter bind specification for an explicit  positional (or ordinal) parameter.
  *
  * @author Steve Ebersole
  */
 public class PositionalParameterSpecification extends AbstractExplicitParameterSpecification implements ParameterSpecification {
-
 	private final int hqlPosition;
 
+	/**
+	 * Constructs a position/ordinal parameter bind specification.
+	 *
+	 * @param sourceLine See {@link #getSourceLine()}
+	 * @param sourceColumn See {@link #getSourceColumn()}
+	 * @param hqlPosition The position in the source query, relative to the other source positional parameters.
+	 */
 	public PositionalParameterSpecification(int sourceLine, int sourceColumn, int hqlPosition) {
 		super( sourceLine, sourceColumn );
 		this.hqlPosition = hqlPosition;
@@ -63,10 +69,18 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 		return type.getColumnSpan( session.getFactory() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String renderDisplayInfo() {
 		return "ordinal=" + hqlPosition + ", expectedType=" + getExpectedType();
 	}
 
+	/**
+	 * Getter for property 'hqlPosition'.
+	 *
+	 * @return Value for property 'hqlPosition'.
+	 */
 	public int getHqlPosition() {
 		return hqlPosition;
 	}

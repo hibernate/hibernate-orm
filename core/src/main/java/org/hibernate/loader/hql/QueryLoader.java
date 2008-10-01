@@ -506,8 +506,8 @@ public class QueryLoader extends BasicLoader {
 			final QueryParameters queryParameters,
 			final int startIndex,
 			final SessionImplementor session) throws SQLException {
-		int position = bindFilterParameterValues( statement, queryParameters, startIndex, session );
-		List parameterSpecs = queryTranslator.getSqlAST().getWalker().getParameters();
+		int position = startIndex;
+		List parameterSpecs = queryTranslator.getCollectedParameterSpecifications();
 		Iterator itr = parameterSpecs.iterator();
 		while ( itr.hasNext() ) {
 			ParameterSpecification spec = ( ParameterSpecification ) itr.next();

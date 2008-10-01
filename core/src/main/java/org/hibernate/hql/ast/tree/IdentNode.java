@@ -38,6 +38,7 @@ import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 
 import java.util.List;
+import java.util.Collections;
 
 /**
  * Represents an identifier all by itself, which may be a function name,
@@ -127,6 +128,14 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 					// EARLY EXIT!!!  return so the resolve call explicitly coming from DotNode can
 					// resolve this...
 					return;
+				}
+				else if ( result == UNKNOWN ) {
+					final SQLFunction sqlFunction = getSessionFactoryHelper().findSQLFunction( getText() );
+					if ( sqlFunction != null ) {
+						setText( sqlFunction.render( Collections.EMPTY_LIST, getSessionFactoryHelper().getFactory() ) );
+						setDataType( sqlFunction.getReturnType( null, getSessionFactoryHelper().getFactory() ) );
+						setResolved();
+					}
 				}
 			}
 
@@ -283,26 +292,29 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	public Type getDataType() {
 		Type type = super.getDataType();
-		if (type != null) return type;
+		if ( type != null ) {
+			return type;
+		}
 		FromElement fe = getFromElement();
-		if (fe != null) return fe.getDataType();
-		SQLFunction sf = getWalker().getSessionFactoryHelper().findSQLFunction(getText());
-		return sf == null ? null : sf.getReturnType(null, null);
+		if ( fe != null ) {
+			return fe.getDataType();
+		}
+		return null;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {
-		if (nakedPropertyRef) {
+		if ( nakedPropertyRef ) {
 			// do *not* over-write the column text, as that has already been
 			// "rendered" during resolve
-			ColumnHelper.generateSingleScalarColumn(this, i);
+			ColumnHelper.generateSingleScalarColumn( this, i );
 		}
 		else {
 			FromElement fe = getFromElement();
-			if (fe != null) {
-				setText(fe.renderScalarIdentifierSelect(i));
+			if ( fe != null ) {
+				setText( fe.renderScalarIdentifierSelect( i ) );
 			}
 			else {
-				ColumnHelper.generateSingleScalarColumn(this, i);
+				ColumnHelper.generateSingleScalarColumn( this, i );
 			}
 		}
 	}
@@ -310,19 +322,19 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	public String getDisplayText() {
 		StringBuffer buf = new StringBuffer();
 
-		if (getType() == SqlTokenTypes.ALIAS_REF) {
-			buf.append("{alias=").append(getOriginalText());
-			if (getFromElement() == null) {
-				buf.append(", no from element");
+		if ( getType() == SqlTokenTypes.ALIAS_REF ) {
+			buf.append( "{alias=" ).append( getOriginalText() );
+			if ( getFromElement() == null ) {
+				buf.append( ", no from element" );
 			}
 			else {
-				buf.append(", className=").append(getFromElement().getClassName());
-				buf.append(", tableAlias=").append(getFromElement().getTableAlias());
+				buf.append( ", className=" ).append( getFromElement().getClassName() );
+				buf.append( ", tableAlias=" ).append( getFromElement().getTableAlias() );
 			}
-			buf.append("}");
+			buf.append( "}" );
 		}
 		else {
-			buf.append("{originalText=" + getOriginalText()).append("}");
+			buf.append( "{originalText=" ).append( getOriginalText() ).append( "}" );
 		}
 		return buf.toString();
 	}

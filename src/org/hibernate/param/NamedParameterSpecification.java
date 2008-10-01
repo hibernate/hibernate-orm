@@ -9,14 +9,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * Relates to an explicit query named-parameter.
+ * Parameter bind specification for an explicit named parameter.
  *
  * @author Steve Ebersole
  */
 public class NamedParameterSpecification extends AbstractExplicitParameterSpecification implements ParameterSpecification {
-
 	private final String name;
 
+	/**
+	 * Constructs a named parameter bind specification.
+	 *
+	 * @param sourceLine See {@link #getSourceLine()}
+	 * @param sourceColumn See {@link #getSourceColumn()} 
+	 * @param name The named parameter name.
+	 */
 	public NamedParameterSpecification(int sourceLine, int sourceColumn, String name) {
 		super( sourceLine, sourceColumn );
 		this.name = name;
@@ -39,10 +45,18 @@ public class NamedParameterSpecification extends AbstractExplicitParameterSpecif
 		return typedValue.getType().getColumnSpan( session.getFactory() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String renderDisplayInfo() {
 		return "name=" + name + ", expectedType=" + getExpectedType();
 	}
 
+	/**
+	 * Getter for property 'name'.
+	 *
+	 * @return Value for property 'name'.
+	 */
 	public String getName() {
 		return name;
 	}

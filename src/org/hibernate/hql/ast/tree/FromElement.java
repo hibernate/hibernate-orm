@@ -3,8 +3,10 @@ package org.hibernate.hql.ast.tree;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.hibernate.QueryException;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.CollectionProperties;
@@ -36,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * Date: Dec 6, 2003<br>
  * Time: 10:28:17 AM<br>
  */
-public class FromElement extends HqlSqlWalkerNode implements DisplayableNode {
+public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, ParameterContainer {
 	private static final Log log = LogFactory.getLog( FromElement.class );
 
 	private String className;
@@ -547,5 +549,24 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode {
 
 	public boolean isDereferencedBySubclassProperty() {
 		return dereferencedBySubclassProperty;
+	}
+
+
+	// ParameterContainer impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private List embeddedParameters;
+
+	public void addEmbeddedParameter(ParameterSpecification specification) {
+		if ( embeddedParameters == null ) {
+			embeddedParameters = new ArrayList();
+		}
+		embeddedParameters.add( specification );
+	}
+
+	public boolean hasEmbeddedParameters() {
+		return embeddedParameters != null && ! embeddedParameters.isEmpty();
+	}
+
+	public ParameterSpecification[] getEmbeddedParameters() {
+		return ( ParameterSpecification[] ) embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
 	}
 }

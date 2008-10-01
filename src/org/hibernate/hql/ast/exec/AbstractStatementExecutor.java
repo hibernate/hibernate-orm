@@ -4,6 +4,8 @@ package org.hibernate.hql.ast.exec;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.BulkOperationCleanupAction;
@@ -34,6 +36,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 
 	private final Log log;
 	private final HqlSqlWalker walker;
+	private List idSelectParameterSpecifications = Collections.EMPTY_LIST;
 
 	public AbstractStatementExecutor(HqlSqlWalker walker, Log log) {
 		this.walker = walker;
@@ -46,6 +49,10 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 
 	protected SessionFactoryImplementor getFactory() {
 		return walker.getSessionFactoryHelper().getFactory();
+	}
+
+	protected List getIdSelectParameterSpecifications() {
+		return idSelectParameterSpecifications;
 	}
 
 	protected abstract Queryable[] getAffectedQueryables();
@@ -80,6 +87,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 				SqlGenerator sqlGenerator = new SqlGenerator( getFactory() );
 				sqlGenerator.whereClause( whereClause );
 				userWhereClause = sqlGenerator.getSQL().substring( 7 );  // strip the " where "
+				idSelectParameterSpecifications = sqlGenerator.getCollectedParameters();
 			}
 			catch ( RecognitionException e ) {
 				throw new HibernateException( "Unable to generate id select for DML operation", e );

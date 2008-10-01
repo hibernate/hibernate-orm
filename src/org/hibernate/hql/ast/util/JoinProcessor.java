@@ -4,21 +4,28 @@ package org.hibernate.hql.ast.util;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
-import java.util.Collections;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Collection;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.param.DynamicFilterParameterSpecification;
+import org.hibernate.type.Type;
+import org.hibernate.impl.FilterImpl;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
+import org.hibernate.engine.QueryParameters;
 import org.hibernate.hql.antlr.SqlTokenTypes;
-import org.hibernate.hql.ast.QueryTranslatorImpl;
+import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.FromClause;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.DotNode;
+import org.hibernate.hql.ast.tree.ParameterContainer;
+import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.util.StringHelper;
-
-import antlr.ASTFactory;
+import org.hibernate.util.ArrayHelper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,18 +41,17 @@ public class JoinProcessor implements SqlTokenTypes {
 
 	private static final Log log = LogFactory.getLog( JoinProcessor.class );
 
-	private QueryTranslatorImpl queryTranslatorImpl;
-	private SyntheticAndFactory andFactory;
+	private final HqlSqlWalker walker;
+	private final SyntheticAndFactory syntheticAndFactory;
 
 	/**
 	 * Constructs a new JoinProcessor.
 	 *
-	 * @param astFactory		  The factory for AST node creation.
-	 * @param queryTranslatorImpl The query translator.
+	 * @param walker The walker to which we are bound, giving us access to needed resources.
 	 */
-	public JoinProcessor(ASTFactory astFactory, QueryTranslatorImpl queryTranslatorImpl) {
-		this.andFactory = new SyntheticAndFactory( astFactory );
-		this.queryTranslatorImpl = queryTranslatorImpl;
+	public JoinProcessor(HqlSqlWalker walker) {
+		this.walker = walker;
+		this.syntheticAndFactory = new SyntheticAndFactory( walker );
 	}
 
 	/**
@@ -69,7 +75,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		}
 	}
 
-	public void processJoins(QueryNode query, boolean inSubquery) {
+	public void processJoins(QueryNode query) {
 		final FromClause fromClause = query.getFromClause();
 
 		final List fromElements;
@@ -108,22 +114,21 @@ public class JoinProcessor implements SqlTokenTypes {
 								log.trace( "forcing inclusion of extra joins [alias=" + alias + ", containsTableAlias=" + containsTableAlias + "]" );
 								return true;
 							}
-							boolean shallowQuery = queryTranslatorImpl.isShallowQuery();
+							boolean shallowQuery = walker.isShallowQuery();
 							boolean includeSubclasses = fromElement.isIncludeSubclasses();
 							boolean subQuery = fromClause.isSubQuery();
 							return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
 						}
 					}
 			);
-			addJoinNodes( query, join, fromElement, inSubquery );
+			addJoinNodes( query, join, fromElement );
 		}
 
 	}
 
-	private void addJoinNodes(QueryNode query, JoinSequence join, FromElement fromElement, boolean inSubquery) {
-		// Generate FROM and WHERE fragments for the from element.
+	private void addJoinNodes(QueryNode query, JoinSequence join, FromElement fromElement) {
 		JoinFragment joinFragment = join.toJoinFragment(
-				inSubquery ? Collections.EMPTY_MAP : queryTranslatorImpl.getEnabledFilters(),
+				walker.getEnabledFilters(),
 				fromElement.useFromFragment() || fromElement.isDereferencedBySuperclassOrSubclassProperty(),
 				fromElement.getWithClauseFragment(),
 				fromElement.getWithClauseJoinAlias()
@@ -143,13 +148,24 @@ public class JoinProcessor implements SqlTokenTypes {
 
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
-			String fromFragment = processFromFragment( frag, join );
+			String fromFragment = processFromFragment( frag, join ).trim();
 			if ( log.isDebugEnabled() ) {
 				log.debug( "Using FROM fragment [" + fromFragment + "]" );
 			}
-			fromElement.setText( fromFragment.trim() ); // Set the text of the fromElement.
+			processDynamicFilterParameters(
+					fromFragment,
+					fromElement,
+					walker
+			);
 		}
-		andFactory.addWhereFragment( joinFragment, whereFrag, query, fromElement );
+
+		syntheticAndFactory.addWhereFragment(
+				joinFragment,
+				whereFrag,
+				query,
+				fromElement,
+				walker
+		);
 	}
 
 	private String processFromFragment(String frag, JoinSequence join) {
@@ -159,6 +175,58 @@ public class JoinProcessor implements SqlTokenTypes {
 			fromFragment = fromFragment.substring( 2 );
 		}
 		return fromFragment;
+	}
+
+	public static void processDynamicFilterParameters(
+			final String sqlFragment,
+			final ParameterContainer container,
+			final HqlSqlWalker walker) {
+		if ( walker.getEnabledFilters().isEmpty()
+				&& ( ! hasDynamicFilterParam( sqlFragment ) )
+				&& ( ! ( hasCollectionFilterParam( sqlFragment ) ) ) ) {
+			return;
+		}
+
+		Dialect dialect = walker.getSessionFactoryHelper().getFactory().getDialect();
+		String symbols = new StringBuffer().append( ParserHelper.HQL_SEPARATORS )
+				.append( dialect.openQuote() )
+				.append( dialect.closeQuote() )
+				.toString();
+		StringTokenizer tokens = new StringTokenizer( sqlFragment, symbols, true );
+		StringBuffer result = new StringBuffer();
+
+		while ( tokens.hasMoreTokens() ) {
+			final String token = tokens.nextToken();
+			if ( token.startsWith( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
+				final String filterParameterName = token.substring( 1 );
+				final String[] parts = QueryParameters.parseFilterParameterName( filterParameterName );
+				final FilterImpl filter = ( FilterImpl ) walker.getEnabledFilters().get( parts[0] );
+				final Object value = filter.getParameter( parts[1] );
+				final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
+				final String typeBindFragment = StringHelper.join(
+						",",
+						ArrayHelper.fillArray( "?", type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() ) )
+				);
+				final String bindFragment = ( value != null && Collection.class.isInstance( value ) )
+						? StringHelper.join( ",", ArrayHelper.fillArray( typeBindFragment, ( ( Collection ) value ).size() ) )
+						: typeBindFragment;
+				result.append( bindFragment );
+				container.addEmbeddedParameter( new DynamicFilterParameterSpecification( parts[0], parts[1], type ) );
+			}
+			else {
+				result.append( token );
+			}
+		}
+
+		container.setText( result.toString() );
+	}
+
+	private static boolean hasDynamicFilterParam(String sqlFragment) {
+		return sqlFragment.indexOf( ParserHelper.HQL_VARIABLE_PREFIX ) < 0;
+	}
+
+	private static boolean hasCollectionFilterParam(String sqlFragment) {
+		return sqlFragment.indexOf( "?" ) < 0;
 	}
 
 }

@@ -31,7 +31,7 @@ public class InstrumentTest extends UnitTestCase {
 		return new TestSuite( InstrumentTest.class );
 	}
 
-	public void testDirtyCheck() {
+	public void testDirtyCheck() throws Exception {
 		execute( new TestDirtyCheckExecutable() );
 	}
 
@@ -43,31 +43,31 @@ public class InstrumentTest extends UnitTestCase {
 		execute( new TestLazyExecutable() );
 	}
 
-	public void testLazyManyToOne() {
+	public void testLazyManyToOne() throws Exception {
 		execute( new TestLazyManyToOneExecutable() );
 	}
 
-	public void testSetFieldInterceptor() {
+	public void testSetFieldInterceptor() throws Exception {
 		execute( new TestInjectFieldInterceptorExecutable() );
 	}
 
-	public void testPropertyInitialized() {
+	public void testPropertyInitialized() throws Exception {
 		execute( new TestIsPropertyInitializedExecutable() );
 	}
 
-	public void testManyToOneProxy() {
+	public void testManyToOneProxy() throws Exception {
 		execute( new TestManyToOneProxyExecutable() );
 	}
 
-	public void testLazyPropertyCustomTypeExecutable() {
+	public void testLazyPropertyCustomTypeExecutable() throws Exception {
 		execute( new TestLazyPropertyCustomTypeExecutable() );
 	}
 
-	public void testSharedPKOneToOne() {
+	public void testSharedPKOneToOne() throws Exception {
 		execute( new TestSharedPKOneToOneExecutable() );
 	}
 
-	private void execute(Executable executable) {
+	private void execute(Executable executable) throws Exception {
 		executable.prepare();
 		try {
 			executable.execute();

@@ -22,26 +22,50 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.param;
+package org.hibernate.test.filter.hql;
 
 /**
- * An additional contract for parameters which originate from parameters explicitly encountered in the source statement
- * (HQL or native-SQL).
+ * Base of inheritence hierarchy
  *
  * @author Steve Ebersole
  */
-public interface ExplicitParameterSpecification extends ParameterSpecification {
-	/**
-	 * Retrieves the line number on which this parameter occurs in the source query.
-	 *
-	 * @return The line number.
-	 */
-	public int getSourceLine();
+public class Person {
+	private Long id;
+	private String name;
+	private char sex;
 
 	/**
-	 * Retrieves the column number (within the {@link #getSourceLine()}) where this parameter occurs.
-	 *
-	 * @return The column number.
+	 * Used by persistence
 	 */
-	public int getSourceColumn();
+	protected Person() {
+	}
+
+	public Person(String name, char sex) {
+		this.name = name;
+		this.sex = sex;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	private void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public char getSex() {
+		return sex;
+	}
+
+	public void setSex(char sex) {
+		this.sex = sex;
+	}
 }

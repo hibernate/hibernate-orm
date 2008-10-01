@@ -32,13 +32,12 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
 
 /**
- * A specialized ParameterSpecification impl for dealing with a collection-key
- * as part of a collection filter compilation.
+ * A specialized ParameterSpecification impl for dealing with a collection-key as part of a collection filter
+ * compilation.
  *
  * @author Steve Ebersole
  */
 public class CollectionFilterKeyParameterSpecification implements ParameterSpecification {
-
 	private final String collectionRole;
 	private final Type keyType;
 	private final int queryParameterPosition;
@@ -57,6 +56,9 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 		this.queryParameterPosition = queryParameterPosition;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public int bind(
 			PreparedStatement statement,
 			QueryParameters qp,
@@ -67,14 +69,23 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 		return keyType.getColumnSpan( session.getFactory() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Type getExpectedType() {
 		return keyType;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setExpectedType(Type expectedType) {
 		// todo : throw exception?
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String renderDisplayInfo() {
 		return "collection-filter-key=" + collectionRole;
 	}

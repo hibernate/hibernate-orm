@@ -231,6 +231,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return collectionFilterRole != null;
 	}
 
+	public String getCollectionFilterRole() {
+		return collectionFilterRole;
+	}
+
 	public SessionFactoryHelper getSessionFactoryHelper() {
 		return sessionFactoryHelper;
 	}
@@ -553,8 +557,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 			// After that, process the JOINs.
 			// Invoke a delegate to do the work, as this is farily complex.
-			JoinProcessor joinProcessor = new JoinProcessor( astFactory, queryTranslatorImpl );
-			joinProcessor.processJoins( qn, isSubQuery() );
+			JoinProcessor joinProcessor = new JoinProcessor( this );
+			joinProcessor.processJoins( qn );
 
 			// Attach any mapping-defined "ORDER BY" fragments
 			Iterator itr = qn.getFromClause().getProjectionList().iterator();
@@ -592,13 +596,21 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		// Make #@%$^#^&# sure no alias is applied to the table name
 		fromElement.setText( persister.getTableName() );
 
-		// append any filter fragments; the EMPTY_MAP is used under the assumption that
-		// currently enabled filters should not affect this process
-		if ( persister.getDiscriminatorType() != null ) {
-			new SyntheticAndFactory( getASTFactory() ).addDiscriminatorWhereFragment(
+//		// append any filter fragments; the EMPTY_MAP is used under the assumption that
+//		// currently enabled filters should not affect this process
+//		if ( persister.getDiscriminatorType() != null ) {
+//			new SyntheticAndFactory( getASTFactory() ).addDiscriminatorWhereFragment(
+//			        statement,
+//			        persister,
+//			        java.util.Collections.EMPTY_MAP,
+//			        fromElement.getTableAlias()
+//			);
+//		}
+		if ( persister.getDiscriminatorType() != null || ! queryTranslatorImpl.getEnabledFilters().isEmpty() ) {
+			new SyntheticAndFactory( this ).addDiscriminatorWhereFragment(
 			        statement,
 			        persister,
-			        java.util.Collections.EMPTY_MAP,
+			        queryTranslatorImpl.getEnabledFilters(),
 			        fromElement.getTableAlias()
 			);
 		}

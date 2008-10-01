@@ -107,7 +107,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			try {
 				try {
 					ps = session.getBatcher().prepareStatement( idInsertSelect );
-					Iterator paramSpecifications = getWalker().getParameters().iterator();
+					Iterator paramSpecifications = getIdSelectParameterSpecifications().iterator();
 					int pos = 1;
 					while ( paramSpecifications.hasNext() ) {
 						final ParameterSpecification paramSpec = ( ParameterSpecification ) paramSpecifications.next();

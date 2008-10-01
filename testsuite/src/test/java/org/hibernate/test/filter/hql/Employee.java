@@ -22,26 +22,32 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.param;
+package org.hibernate.test.filter.hql;
+
+import java.util.Date;
 
 /**
- * An additional contract for parameters which originate from parameters explicitly encountered in the source statement
- * (HQL or native-SQL).
+ * Leaf subclass
  *
  * @author Steve Ebersole
  */
-public interface ExplicitParameterSpecification extends ParameterSpecification {
-	/**
-	 * Retrieves the line number on which this parameter occurs in the source query.
-	 *
-	 * @return The line number.
-	 */
-	public int getSourceLine();
+public class Employee extends User {
+	private Date hireDate;
 
-	/**
-	 * Retrieves the column number (within the {@link #getSourceLine()}) where this parameter occurs.
-	 *
-	 * @return The column number.
-	 */
-	public int getSourceColumn();
+	protected Employee() {
+		super();
+	}
+
+	public Employee(String name, char sex, String username, Date hireDate) {
+		super( name, sex, username );
+		this.hireDate = hireDate;
+	}
+
+	public Date getHireDate() {
+		return hireDate;
+	}
+
+	public void setHireDate(Date hireDate) {
+		this.hireDate = hireDate;
+	}
 }

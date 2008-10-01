@@ -18,11 +18,15 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.Criteria;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -209,6 +213,305 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.close();
 		testData.release();
 	}
+
+	public void testCriteriaControl() {
+		TestData testData = new TestData();
+		testData.prepare();
+
+		// the subquery...
+		DetachedCriteria subquery = DetachedCriteria.forClass( Salesperson.class )
+				.setProjection( Property.forName( "name" ) );
+
+		Session session = openSession();
+		session.beginTransaction();
+		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
+
+		List result = session.createCriteria( Order.class )
+				.add( Subqueries.in( "steve", subquery ) )
+				.list();
+		assertEquals( 1, result.size() );
+
+		session.getTransaction().commit();
+		session.close();
+
+		testData.release();
+	}
+
+	public void testCriteriaSubqueryWithFilters() {
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Criteria-subquery test
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		log.info("Starting Criteria-subquery filter tests");
+		TestData testData = new TestData();
+		testData.prepare();
+
+		Session session = openSession();
+		session.enableFilter("region").setParameter("region", "APAC");
+
+		log.info("Criteria query against Department with a subquery on Salesperson in the APAC reqion...");
+		DetachedCriteria salespersonSubquery = DetachedCriteria.forClass(Salesperson.class)
+				.add(Restrictions.eq("name", "steve"))
+				.setProjection(Property.forName("department"));
+
+		Criteria departmentsQuery = session.createCriteria(Department.class).add(Subqueries.propertyIn("id", salespersonSubquery));
+		List departments = departmentsQuery.list();
+
+		assertEquals("Incorrect department count", 1, departments.size());
+
+		log.info("Criteria query against Department with a subquery on Salesperson in the FooBar reqion...");
+
+		session.enableFilter("region").setParameter("region", "Foobar");
+		departments = departmentsQuery.list();
+
+		assertEquals("Incorrect department count", 0, departments.size());
+
+		log.info("Criteria query against Order with a subquery for line items with a subquery on product and sold by a given sales person...");
+		session.enableFilter("region").setParameter("region", "APAC");
+
+		DetachedCriteria lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
+				.add(Restrictions.ge("quantity", 1L))
+				.createCriteria("product")
+				.add(Restrictions.eq("name", "Acme Hair Gel"))
+				.setProjection(Property.forName("id"));
+
+		List orders = session.createCriteria(Order.class)
+				.add(Subqueries.exists(lineItemSubquery))
+				.add(Restrictions.eq("buyer", "gavin"))
+				.list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of last month");
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
+
+		DetachedCriteria productSubquery = DetachedCriteria.forClass(Product.class)
+				.add(Restrictions.eq("name", "Acme Hair Gel"))
+				.setProjection(Property.forName("id"));
+
+		lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
+				.add(Restrictions.ge("quantity", 1L))
+				.createCriteria("product")
+				.add(Subqueries.propertyIn("id", productSubquery))
+				.setProjection(Property.forName("id"));
+
+		orders = session.createCriteria(Order.class)
+				.add(Subqueries.exists(lineItemSubquery))
+				.add(Restrictions.eq("buyer", "gavin"))
+				.list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of 4 months ago");
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.fourMonthsAgo.getTime());
+
+		orders = session.createCriteria(Order.class)
+				.add(Subqueries.exists(lineItemSubquery))
+				.add(Restrictions.eq("buyer", "gavin"))
+				.list();
+
+		assertEquals("Incorrect orders count", 0, orders.size());
+
+		session.close();
+		testData.release();
+	}
+
+	public void testHQLSubqueryWithFilters() {
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// HQL subquery with filters test
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		log.info("Starting HQL subquery with filters tests");
+		TestData testData = new TestData();
+		testData.prepare();
+
+		Session session = openSession();
+		session.enableFilter("region").setParameter("region", "APAC");
+
+		log.info("query against Department with a subquery on Salesperson in the APAC reqion...");
+
+		List departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)").setString(0, "steve").list();
+
+		assertEquals("Incorrect department count", 1, departments.size());
+
+		log.info("query against Department with a subquery on Salesperson in the FooBar reqion...");
+
+		session.enableFilter("region").setParameter("region", "Foobar");
+		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)").setString(0, "steve").list();
+
+		assertEquals("Incorrect department count", 0, departments.size());
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region for a given buyer");
+		session.enableFilter("region").setParameter("region", "APAC");
+
+		List orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ? and p.name = ?) and o.buyer = ?")
+				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of last month");
+
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
+
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
+				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of 4 months ago");
+
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.fourMonthsAgo.getTime());
+
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
+				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+
+		assertEquals("Incorrect orders count", 0, orders.size());
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of last month with named types");
+
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
+
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= :quantity and li.product in (select p.id from Product p where p.name = :name)) and o.buyer = :buyer")
+				.setLong("quantity", 1L).setString("name", "Acme Hair Gel").setString("buyer", "gavin").list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+		log.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of last month with mixed types");
+
+		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
+
+		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = :buyer")
+				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString("buyer", "gavin").list();
+
+		assertEquals("Incorrect orders count", 1, orders.size());
+
+		session.close();
+		testData.release();
+	}
+
+	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingPositionalParameter() {
+		TestData testData = new TestData();
+		testData.prepare();
+
+		Session session = openSession();
+		session.beginTransaction();
+
+		final String queryString = "from Order o where ? in ( select sp.name from Salesperson sp )";
+
+		// first a control-group query
+		List result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		assertEquals( 2, result.size() );
+
+		// now lets enable filters on Order...
+		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
+		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		assertEquals( 1, result.size() );
+
+		// now, lets additionally enable filter on Salesperson.  First a valid one...
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
+		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		assertEquals( 1, result.size() );
+
+		// ... then a silly one...
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "gamma quadrant" } );
+		result = session.createQuery( queryString ).setParameter( 0, "steve" ).list();
+		assertEquals( 0, result.size() );
+
+		session.getTransaction().commit();
+		session.close();
+
+		testData.release();
+	}
+
+	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingNamedParameter() {
+		TestData testData = new TestData();
+		testData.prepare();
+
+		Session session = openSession();
+		session.beginTransaction();
+
+		final String queryString = "from Order o where :salesPersonName in ( select sp.name from Salesperson sp )";
+
+		// first a control-group query
+		List result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+		assertEquals( 2, result.size() );
+
+		// now lets enable filters on Order...
+		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
+		result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+		assertEquals( 1, result.size() );
+
+		// now, lets additionally enable filter on Salesperson.  First a valid one...
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
+		result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+		assertEquals( 1, result.size() );
+
+		// ... then a silly one...
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "gamma quadrant" } );
+		result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+		assertEquals( 0, result.size() );
+
+		session.getTransaction().commit();
+		session.close();
+
+		testData.release();
+	}
+
+	public void testFiltersOnSimpleHqlDelete() {
+		Session session = openSession();
+		session.beginTransaction();
+		Salesperson sp = new Salesperson();
+		sp.setName( "steve" );
+		sp.setRegion( "NA" );
+		session.persist( sp );
+		Salesperson sp2 = new Salesperson();
+		sp2.setName( "john" );
+		sp2.setRegion( "APAC" );
+		session.persist( sp2 );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.enableFilter( "region" ).setParameter( "region", "NA" );
+		int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
+		assertEquals( 1, count );
+		session.delete( sp2 );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	public void testFiltersOnMultiTableHqlDelete() {
+		Session session = openSession();
+		session.beginTransaction();
+		Salesperson sp = new Salesperson();
+		sp.setName( "steve" );
+		sp.setRegion( "NA" );
+		session.persist( sp );
+		Salesperson sp2 = new Salesperson();
+		sp2.setName( "john" );
+		sp2.setRegion( "APAC" );
+		session.persist( sp2 );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.enableFilter( "region" ).setParameter( "region", "NA" );
+		int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
+		assertEquals( 1, count );
+		session.delete( sp2 );
+		session.getTransaction().commit();
+		session.close();
+	}
+
 
 	public void testGetFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

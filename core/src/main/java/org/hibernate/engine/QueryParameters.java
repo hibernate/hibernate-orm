@@ -26,7 +26,6 @@ package org.hibernate.engine;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
+import org.hibernate.impl.FilterImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.pretty.Printer;
@@ -50,7 +50,7 @@ import org.hibernate.util.ArrayHelper;
  * @author Gavin King
  */
 public final class QueryParameters {
-	private static final Logger log = LoggerFactory.getLogger(QueryParameters.class);
+	private static final Logger log = LoggerFactory.getLogger( QueryParameters.class );
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
@@ -69,29 +69,28 @@ public final class QueryParameters {
 	private boolean callable = false;
 	private boolean autodiscovertypes = false;
 	private boolean isNaturalKeyLookup;
-	
+
 	private final ResultTransformer resultTransformer; // why is all others non final ?
-	
+
 	private String processedSQL;
 	private Type[] processedPositionalParameterTypes;
 	private Object[] processedPositionalParameterValues;
-	
+
 	public QueryParameters() {
 		this( ArrayHelper.EMPTY_TYPE_ARRAY, ArrayHelper.EMPTY_OBJECT_ARRAY );
 	}
 
 	public QueryParameters(Type type, Object value) {
-		this( new Type[] {type}, new Object[] {value} );
+		this( new Type[] { type }, new Object[] { value } );
 	}
 
 	public QueryParameters(
-		final Type[] positionalParameterTypes,
-		final Object[] postionalParameterValues,
-		final Object optionalObject,
-		final String optionalEntityName,
-		final Serializable optionalObjectId
-	) {
-		this(positionalParameterTypes, postionalParameterValues);
+			final Type[] positionalParameterTypes,
+			final Object[] postionalParameterValues,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalObjectId) {
+		this( positionalParameterTypes, postionalParameterValues );
 		this.optionalObject = optionalObject;
 		this.optionalId = optionalObjectId;
 		this.optionalEntityName = optionalEntityName;
@@ -99,42 +98,24 @@ public final class QueryParameters {
 	}
 
 	public QueryParameters(
-		final Type[] positionalParameterTypes,
-		final Object[] postionalParameterValues
-	) {
-		this(
-			positionalParameterTypes,
-			postionalParameterValues, 
-			null, 
-			null, 
-			false, 
-			null, 
-			null,
-			false,
-			null
-		);
+			final Type[] positionalParameterTypes,
+			final Object[] postionalParameterValues) {
+		this( positionalParameterTypes, postionalParameterValues, null, null, false, null, null, false, null );
 	}
 
 	public QueryParameters(
-		final Type[] positionalParameterTypes,
-		final Object[] postionalParameterValues,
-		final Serializable[] collectionKeys
-	) {
-		this(
-			positionalParameterTypes,
-			postionalParameterValues,
-			null,
-			collectionKeys
-		);
+			final Type[] positionalParameterTypes,
+			final Object[] postionalParameterValues,
+			final Serializable[] collectionKeys) {
+		this( positionalParameterTypes, postionalParameterValues, null, collectionKeys );
 	}
 
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] postionalParameterValues,
 			final Map namedParameters,
-			final Serializable[] collectionKeys
-		) {
-			this(
+			final Serializable[] collectionKeys) {
+		this(
 				positionalParameterTypes,
 				postionalParameterValues,
 				namedParameters,
@@ -142,37 +123,36 @@ public final class QueryParameters {
 				null,
 				false,
 				false,
-				null, 
+				null,
 				null,
 				collectionKeys,
 				null
-			);
-		}
+		);
+	}
 
 	public QueryParameters(
-		final Type[] positionalParameterTypes,
-		final Object[] positionalParameterValues,
-		final Map lockModes,
-		final RowSelection rowSelection,
-		final boolean cacheable,
-		final String cacheRegion,
-		//final boolean forceCacheRefresh,
-		final String comment,
-		final boolean isLookupByNaturalKey,
-		final ResultTransformer transformer
-	) {
+			final Type[] positionalParameterTypes,
+			final Object[] positionalParameterValues,
+			final Map lockModes,
+			final RowSelection rowSelection,
+			final boolean cacheable,
+			final String cacheRegion,
+			//final boolean forceCacheRefresh,
+			final String comment,
+			final boolean isLookupByNaturalKey,
+			final ResultTransformer transformer) {
 		this(
-			positionalParameterTypes,
-			positionalParameterValues,
-			null,
-			lockModes,
-			rowSelection,
-			false,
-			cacheable,
-			cacheRegion, 
-			comment,
-			null,
-			transformer
+				positionalParameterTypes,
+				positionalParameterValues,
+				null,
+				lockModes,
+				rowSelection,
+				false,
+				cacheable,
+				cacheRegion,
+				comment,
+				null,
+				transformer
 		);
 		isNaturalKeyLookup = isLookupByNaturalKey;
 	}
@@ -189,8 +169,7 @@ public final class QueryParameters {
 			//final boolean forceCacheRefresh,
 			final String comment,
 			final Serializable[] collectionKeys,
-			ResultTransformer transformer			
-	) {
+			ResultTransformer transformer) {
 		this.positionalParameterTypes = positionalParameterTypes;
 		this.positionalParameterValues = positionalParameterValues;
 		this.namedParameters = namedParameters;
@@ -204,36 +183,35 @@ public final class QueryParameters {
 		this.readOnly = readOnly;
 		this.resultTransformer = transformer;
 	}
-	
+
 	public QueryParameters(
-		final Type[] positionalParameterTypes,
-		final Object[] positionalParameterValues,
-		final Map namedParameters,
-		final Map lockModes,
-		final RowSelection rowSelection,
-		final boolean readOnly,
-		final boolean cacheable,
-		final String cacheRegion,
-		//final boolean forceCacheRefresh,
-		final String comment,
-		final Serializable[] collectionKeys,
-		final Object optionalObject,
-		final String optionalEntityName,
-		final Serializable optionalId,
-		final ResultTransformer transformer
-	) {
+			final Type[] positionalParameterTypes,
+			final Object[] positionalParameterValues,
+			final Map namedParameters,
+			final Map lockModes,
+			final RowSelection rowSelection,
+			final boolean readOnly,
+			final boolean cacheable,
+			final String cacheRegion,
+			//final boolean forceCacheRefresh,
+			final String comment,
+			final Serializable[] collectionKeys,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			final ResultTransformer transformer) {
 		this(
-			positionalParameterTypes, 
-			positionalParameterValues, 
-			namedParameters, 
-			lockModes, 
-			rowSelection, 
-			readOnly, 
-			cacheable, 
-			cacheRegion,
-			comment,
-			collectionKeys,
-			transformer
+				positionalParameterTypes,
+				positionalParameterValues,
+				namedParameters,
+				lockModes,
+				rowSelection,
+				readOnly,
+				cacheable,
+				cacheRegion,
+				comment,
+				collectionKeys,
+				transformer
 		);
 		this.optionalEntityName = optionalEntityName;
 		this.optionalId = optionalId;
@@ -241,7 +219,7 @@ public final class QueryParameters {
 	}
 
 	public boolean hasRowSelection() {
-		return rowSelection!=null;
+		return rowSelection != null;
 	}
 
 	public Map getNamedParameters() {
@@ -259,7 +237,7 @@ public final class QueryParameters {
 	public RowSelection getRowSelection() {
 		return rowSelection;
 	}
-	
+
 	public ResultTransformer getResultTransformer() {
 		return resultTransformer;
 	}
@@ -289,15 +267,15 @@ public final class QueryParameters {
 	}
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
-		Printer print = new Printer(factory);
-		if (positionalParameterValues.length!=0) {
+		Printer print = new Printer( factory );
+		if ( positionalParameterValues.length != 0 ) {
 			log.trace(
-					"parameters: " + 
-					print.toString(positionalParameterTypes, positionalParameterValues) 
-				);
+					"parameters: " +
+							print.toString( positionalParameterTypes, positionalParameterValues )
+			);
 		}
-		if (namedParameters!=null) {
-			log.trace( "named parameters: " + print.toString(namedParameters) );
+		if ( namedParameters != null ) {
+			log.trace( "named parameters: " + print.toString( namedParameters ) );
 		}
 	}
 
@@ -318,13 +296,13 @@ public final class QueryParameters {
 	}
 
 	public void validateParameters() throws QueryException {
-		int types = positionalParameterTypes==null ? 0 : positionalParameterTypes.length;
-		int values = positionalParameterValues==null ? 0 : positionalParameterValues.length;
-		if (types!=values) {
+		int types = positionalParameterTypes == null ? 0 : positionalParameterTypes.length;
+		int values = positionalParameterValues == null ? 0 : positionalParameterValues.length;
+		if ( types != values ) {
 			throw new QueryException(
-					"Number of positional parameter types:" + types + 
-					" does not match number of positional parameters: " + values
-				);
+					"Number of positional parameter types:" + types +
+							" does not match number of positional parameters: " + values
+			);
 		}
 	}
 
@@ -385,44 +363,49 @@ public final class QueryParameters {
 	}
 
 	public void setCallable(boolean callable) {
-		this.callable = callable;		
+		this.callable = callable;
 	}
 
 	public boolean isCallable() {
 		return callable;
 	}
-	
+
 	public boolean hasAutoDiscoverScalarTypes() {
 		return autodiscovertypes;
 	}
 
 	public void processFilters(String sql, SessionImplementor session) {
-		
-		if ( session.getEnabledFilters().size()==0 || sql.indexOf(ParserHelper.HQL_VARIABLE_PREFIX)<0 ) {
+		processFilters( sql, session.getLoadQueryInfluencers().getEnabledFilters(), session.getFactory() );
+	}
+
+	public void processFilters(String sql, Map filters, SessionFactoryImplementor factory) {
+		if ( filters.size() == 0 || sql.indexOf( ParserHelper.HQL_VARIABLE_PREFIX ) < 0 ) {
 			// HELLA IMPORTANT OPTIMIZATION!!!
 			processedPositionalParameterValues = getPositionalParameterValues();
 			processedPositionalParameterTypes = getPositionalParameterTypes();
 			processedSQL = sql;
 		}
 		else {
-			
-			Dialect dialect = session.getFactory().getDialect();
+			final Dialect dialect = factory.getDialect();
 			String symbols = new StringBuffer().append( ParserHelper.HQL_SEPARATORS )
 					.append( dialect.openQuote() )
 					.append( dialect.closeQuote() )
 					.toString();
 			StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
 			StringBuffer result = new StringBuffer();
-		
+
 			List parameters = new ArrayList();
 			List parameterTypes = new ArrayList();
-		
+
+			int positionalIndex = 0;
 			while ( tokens.hasMoreTokens() ) {
 				final String token = tokens.nextToken();
 				if ( token.startsWith( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
-					String filterParameterName = token.substring( 1 );
-					Object value = session.getFilterParameterValue( filterParameterName );
-					Type type = session.getFilterParameterType( filterParameterName );
+					final String filterParameterName = token.substring( 1 );
+					final String[] parts = LoadQueryInfluencers.parseFilterParameterName( filterParameterName );
+					final FilterImpl filter = ( FilterImpl ) filters.get( parts[0] );
+					final Object value = filter.getParameter( parts[1] );
+					final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
 					if ( value != null && Collection.class.isAssignableFrom( value.getClass() ) ) {
 						Iterator itr = ( ( Collection ) value ).iterator();
 						while ( itr.hasNext() ) {
@@ -442,15 +425,17 @@ public final class QueryParameters {
 					}
 				}
 				else {
+					if ( "?".equals( token ) && positionalIndex < getPositionalParameterValues().length ) {
+						parameters.add( getPositionalParameterValues()[positionalIndex] );
+						parameterTypes.add( getPositionalParameterTypes()[positionalIndex] );
+						positionalIndex++;
+					}
 					result.append( token );
 				}
 			}
-			parameters.addAll( Arrays.asList( getPositionalParameterValues() ) );
-			parameterTypes.addAll( Arrays.asList( getPositionalParameterTypes() ) );
 			processedPositionalParameterValues = parameters.toArray();
-			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[0] );
+			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[parameterTypes.size()] );
 			processedSQL = result.toString();
-			
 		}
 	}
 
@@ -481,16 +466,16 @@ public final class QueryParameters {
 	public QueryParameters createCopyUsing(RowSelection selection) {
 		QueryParameters copy = new QueryParameters(
 				this.positionalParameterTypes,
-		        this.positionalParameterValues,
-		        this.namedParameters,
-		        this.lockModes,
-	            selection,
-		        this.readOnly,
-		        this.cacheable,
-	            this.cacheRegion,
-		        this.comment,
-		        this.collectionKeys,
-		        this.optionalObject,
+				this.positionalParameterValues,
+				this.namedParameters,
+				this.lockModes,
+				selection,
+				this.readOnly,
+				this.cacheable,
+				this.cacheRegion,
+				this.comment,
+				this.collectionKeys,
+				this.optionalObject,
 				this.optionalEntityName,
 				this.optionalId,
 				this.resultTransformer
@@ -501,5 +486,5 @@ public final class QueryParameters {
 		return copy;
 	}
 
-	
+
 }

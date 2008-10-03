@@ -1,4 +1,27 @@
-// $Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.hql.ast.tree;
 
 import antlr.SemanticException;
@@ -15,13 +38,14 @@ import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 
 import java.util.List;
+import java.util.Collections;
 
 /**
  * Represents an identifier all by itself, which may be a function name,
  * a class alias, or a form of naked property-ref depending on the
  * context.
  *
- * @author josh Aug 16, 2004 7:20:55 AM
+ * @author josh
  */
 public class IdentNode extends FromReferenceNode implements SelectExpression {
 
@@ -104,6 +128,18 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 					// EARLY EXIT!!!  return so the resolve call explicitly coming from DotNode can
 					// resolve this...
 					return;
+				}
+				else if ( result == UNKNOWN ) {
+					final SQLFunction sqlFunction = getSessionFactoryHelper().findSQLFunction( getText() );
+					if ( sqlFunction != null ) {
+						String text = sqlFunction.render( Collections.EMPTY_LIST, getSessionFactoryHelper().getFactory() );
+						if ( text.endsWith( "()" ) ) {
+							text = text.substring( 0, text.length() - 2 );
+						}
+						setText( text );
+						setDataType( sqlFunction.getReturnType( null, getSessionFactoryHelper().getFactory() ) );
+						setResolved();
+					}
 				}
 			}
 
@@ -260,26 +296,30 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	public Type getDataType() {
 		Type type = super.getDataType();
-		if (type != null) return type;
+		if ( type != null ) {
+			return type;
+		}
 		FromElement fe = getFromElement();
-		if (fe != null) return fe.getDataType();
-		SQLFunction sf = getWalker().getSessionFactoryHelper().findSQLFunction(getText());
-		return sf == null ? null : sf.getReturnType(null, null);
+		if (fe != null) {
+			return fe.getDataType();
+		}
+		SQLFunction sf = getWalker().getSessionFactoryHelper().findSQLFunction( getText() );
+		return sf == null ? null : sf.getReturnType( null, null );
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {
-		if (nakedPropertyRef) {
+		if ( nakedPropertyRef ) {
 			// do *not* over-write the column text, as that has already been
 			// "rendered" during resolve
-			ColumnHelper.generateSingleScalarColumn(this, i);
+			ColumnHelper.generateSingleScalarColumn( this, i );
 		}
 		else {
 			FromElement fe = getFromElement();
-			if (fe != null) {
-				setText(fe.renderScalarIdentifierSelect(i));
+			if ( fe != null ) {
+				setText( fe.renderScalarIdentifierSelect( i ) );
 			}
 			else {
-				ColumnHelper.generateSingleScalarColumn(this, i);
+				ColumnHelper.generateSingleScalarColumn( this, i );
 			}
 		}
 	}
@@ -287,19 +327,19 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	public String getDisplayText() {
 		StringBuffer buf = new StringBuffer();
 
-		if (getType() == SqlTokenTypes.ALIAS_REF) {
-			buf.append("{alias=").append(getOriginalText());
-			if (getFromElement() == null) {
-				buf.append(", no from element");
+		if ( getType() == SqlTokenTypes.ALIAS_REF ) {
+			buf.append( "{alias=" ).append( getOriginalText() );
+			if ( getFromElement() == null ) {
+				buf.append( ", no from element" );
 			}
 			else {
-				buf.append(", className=").append(getFromElement().getClassName());
-				buf.append(", tableAlias=").append(getFromElement().getTableAlias());
+				buf.append( ", className=" ).append( getFromElement().getClassName() );
+				buf.append( ", tableAlias=" ).append( getFromElement().getTableAlias() );
 			}
-			buf.append("}");
+			buf.append( "}" );
 		}
 		else {
-			buf.append("{originalText=" + getOriginalText()).append("}");
+			buf.append( "{originalText=" ).append( getOriginalText() ).append( "}" );
 		}
 		return buf.toString();
 	}

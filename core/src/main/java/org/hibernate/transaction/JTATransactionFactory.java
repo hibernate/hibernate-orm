@@ -156,12 +156,13 @@ public class JTATransactionFactory implements TransactionFactory {
 	 * @return The appropriate {@link UserTransaction} reference.
 	 */
 	protected UserTransaction getUserTransaction() {
-		log.trace( "Attempting to locate UserTransaction via JNDI [{}]", getUserTransactionName() );
+		final String utName = getUserTransactionName();
+		log.trace( "Attempting to locate UserTransaction via JNDI [{}]", utName );
 
 		try {
-			UserTransaction ut = ( UserTransaction ) getInitialContext().lookup( getUserTransactionName() );
+			UserTransaction ut = ( UserTransaction ) getInitialContext().lookup( utName );
 			if ( ut == null ) {
-				throw new TransactionException( "Naming service lookup for UserTransaction returned null [" + getUserTransactionName() +"]" );
+				throw new TransactionException( "Naming service lookup for UserTransaction returned null [" + utName +"]" );
 			}
 
 			log.trace( "Obtained UserTransaction" );
@@ -169,7 +170,7 @@ public class JTATransactionFactory implements TransactionFactory {
 			return ut;
 		}
 		catch ( NamingException ne ) {
-			throw new TransactionException( "Could not find UserTransaction in JNDI [" + getUserTransaction() + "]", ne );
+			throw new TransactionException( "Could not find UserTransaction in JNDI [" + utName + "]", ne );
 		}
 	}
 

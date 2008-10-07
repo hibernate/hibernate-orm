@@ -74,13 +74,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 
 	/**
-	 * Return the entity-mode handled by this tuplizer instance.
-	 *
-	 * @return The entity-mode
-	 */
-	protected abstract EntityMode getEntityMode();
-
-	/**
 	 * Build an appropriate Getter for the given property.
 	 *
 	 * @param mappedProperty The property to be accessed via the built Getter.

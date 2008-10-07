@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.bytecode.ReflectionOptimizer;
@@ -43,6 +44,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.classic.Validatable;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.mapping.PersistentClass;
@@ -70,7 +72,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private final boolean lifecycleImplementor;
 	private final boolean validatableImplementor;
 	private final Set lazyPropertyNames = new HashSet();
-	private ReflectionOptimizer optimizer;
+	private final ReflectionOptimizer optimizer;
 
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super( entityMetamodel, mappedEntity );
@@ -109,6 +111,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
         // determine all interfaces needed by the resulting proxy
@@ -199,11 +204,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
-		// TODO : YUCK!!!  finx after HHH-1907 is complete
+		// TODO : YUCK!!!  fix after HHH-1907 is complete
 		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		if ( optimizer == null ) {
 			return new PojoInstantiator( persistentClass, null );
@@ -213,6 +221,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
 		if ( !getEntityMetamodel().hasLazyProperties() && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			setPropertyValuesWithOptimizer( entity, values );
@@ -222,6 +233,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object[] getPropertyValues(Object entity) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
@@ -231,6 +245,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
@@ -248,36 +265,60 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		return optimizer.getAccessOptimizer().getPropertyValues( object );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public EntityMode getEntityMode() {
 		return EntityMode.POJO;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class getMappedClass() {
 		return mappedClass;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isLifecycleImplementor() {
 		return lifecycleImplementor;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isValidatableImplementor() {
 		return validatableImplementor;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getGetter( mappedEntity.getMappedClass() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getSetter( mappedEntity.getMappedClass() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class getConcreteProxyClass() {
 		return proxyInterface;
 	}
 
     //TODO: need to make the majority of this functionality into a top-level support class for custom impl support
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
 		if ( isInstrumented() ) {
 			Set lazyProps = lazyPropertiesAreUnfetched && getEntityMetamodel().hasLazyProperties() ?
@@ -288,6 +329,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean hasUninitializedLazyProperties(Object entity) {
 		if ( getEntityMetamodel().hasLazyProperties() ) {
 			FieldInterceptor callback = FieldInterceptionHelper.extractFieldInterceptor( entity );
@@ -298,8 +342,37 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isInstrumented() {
 		return FieldInterceptionHelper.isInstrumented( getMappedClass() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
+		final Class concreteEntityClass = entityInstance.getClass();
+		if ( concreteEntityClass == getMappedClass() ) {
+			return getEntityName();
+		}
+		else {
+			String entityName = getEntityMetamodel().findEntityNameByEntityClass( concreteEntityClass );
+			if ( entityName == null ) {
+				throw new HibernateException(
+						"Unable to resolve entity name from Class [" + concreteEntityClass.getName() + "]"
+								+ " expected instance/subclass of [" + getEntityName() + "]"
+				);
+			}
+			return entityName;
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public EntityNameResolver[] getEntityNameResolvers() {
+		return null;
+	}
 }

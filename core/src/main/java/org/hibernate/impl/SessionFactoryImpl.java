@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.LinkedHashSet;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -58,6 +59,8 @@ import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.EntityRegion;
@@ -117,6 +120,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
+import org.hibernate.util.EmptyIterator;
 
 
 /**
@@ -177,6 +181,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserver observer;
+	private final transient HashMap entityNameResolvers = new HashMap();
 
 	private final QueryPlanCache queryPlanCache = new QueryPlanCache( this );
 
@@ -325,11 +330,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		// after *all* persisters and named queries are registered
 		Iterator iter = entityPersisters.values().iterator();
 		while ( iter.hasNext() ) {
-			( (EntityPersister) iter.next() ).postInstantiate();
+			final EntityPersister persister = ( ( EntityPersister ) iter.next() );
+			persister.postInstantiate();
+			registerEntityNameResolvers( persister );
+
 		}
 		iter = collectionPersisters.values().iterator();
 		while ( iter.hasNext() ) {
-			( (CollectionPersister) iter.next() ).postInstantiate();
+			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
+			persister.postInstantiate();
 		}
 
 		//JNDI + Serialization:
@@ -456,6 +465,41 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	private void registerEntityNameResolvers(EntityPersister persister) {
+		Iterator itr = persister.getEntityMetamodel().getTuplizerMapping().iterateTuplizers();
+		while ( itr.hasNext() ) {
+			final EntityTuplizer tuplizer = ( EntityTuplizer ) itr.next();
+			registerEntityNameResolvers( tuplizer );
+		}
+	}
+
+	private void registerEntityNameResolvers(EntityTuplizer tuplizer) {
+		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
+		if ( resolvers == null ) {
+			return;
+		}
+
+		for ( int i = 0; i < resolvers.length; i++ ) {
+			registerEntityNameResolver( resolvers[i], tuplizer.getEntityMode() );
+		}
+	}
+
+	public void registerEntityNameResolver(EntityNameResolver resolver, EntityMode entityMode) {
+		LinkedHashSet resolversForMode = ( LinkedHashSet ) entityNameResolvers.get( entityMode );
+		if ( resolversForMode == null ) {
+			resolversForMode = new LinkedHashSet();
+			entityNameResolvers.put( entityMode, resolversForMode );
+		}
+		resolversForMode.add( resolver );
+	}
+
+	public Iterator iterateEntityNameResolvers(EntityMode entityMode) {
+		Set actualEntityNameResolvers = ( Set ) entityNameResolvers.get( entityMode );
+		return actualEntityNameResolvers == null
+				? EmptyIterator.INSTANCE
+				: actualEntityNameResolvers.iterator();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {

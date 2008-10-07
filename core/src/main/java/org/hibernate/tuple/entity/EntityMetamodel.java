@@ -122,20 +122,9 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set subclassEntityNames = new HashSet();
+	private final Map entityNameByInheritenceClassNameMap = new HashMap();
 
 	private final EntityEntityModeToTuplizerMapping tuplizerMapping;
-
-	public EntityTuplizer getTuplizer(EntityMode entityMode) {
-		return (EntityTuplizer) tuplizerMapping.getTuplizer( entityMode );
-	}
-
-	public EntityTuplizer getTuplizerOrNull(EntityMode entityMode) {
-		return ( EntityTuplizer ) tuplizerMapping.getTuplizerOrNull( entityMode );
-	}
-
-	public EntityMode guessEntityMode(Object object) {
-		return tuplizerMapping.guessEntityMode( object );
-	}
 
 	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -322,6 +311,15 @@ public class EntityMetamodel implements Serializable {
 		}
 		subclassEntityNames.add( name );
 
+		if ( persistentClass.hasPojoRepresentation() ) {
+			entityNameByInheritenceClassNameMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+			iter = persistentClass.getSubclassIterator();
+			while ( iter.hasNext() ) {
+				final PersistentClass pc = ( PersistentClass ) iter.next();
+				entityNameByInheritenceClassNameMap.put( pc.getMappedClass(), pc.getEntityName() );
+			}
+		}
+
 		tuplizerMapping = new EntityEntityModeToTuplizerMapping( persistentClass, this );
 	}
 
@@ -393,6 +391,22 @@ public class EntityMetamodel implements Serializable {
 					);
 			}
 		}
+	}
+
+	public EntityEntityModeToTuplizerMapping getTuplizerMapping() {
+		return tuplizerMapping;
+	}
+
+	public EntityTuplizer getTuplizer(EntityMode entityMode) {
+		return (EntityTuplizer) tuplizerMapping.getTuplizer( entityMode );
+	}
+
+	public EntityTuplizer getTuplizerOrNull(EntityMode entityMode) {
+		return ( EntityTuplizer ) tuplizerMapping.getTuplizerOrNull( entityMode );
+	}
+
+	public EntityMode guessEntityMode(Object object) {
+		return tuplizerMapping.guessEntityMode( object );
 	}
 
 	public int[] getNaturalIdentifierProperties() {
@@ -553,6 +567,16 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean isAbstract() {
 		return isAbstract;
+	}
+
+	/**
+	 * Return the entity-name mapped to the given class within our inheritence hierarchy, if any.
+	 *
+	 * @param inheritenceClass The class for which to resolve the entity-name.
+	 * @return The mapped entity-name, or null if no such mapping was found.
+	 */
+	public String findEntityNameByEntityClass(Class inheritenceClass) {
+		return ( String ) entityNameByInheritenceClassNameMap.get( inheritenceClass.getName() );
 	}
 
 	public String toString() {

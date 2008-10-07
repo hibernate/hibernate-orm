@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.mapping.PersistentClass;
@@ -111,5 +113,38 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	public boolean isInstrumented() {
 		return false;
+	}
+
+	public EntityNameResolver[] getEntityNameResolvers() {
+		return new EntityNameResolver[] { BasicEntityNameResolver.INSTANCE };
+	}
+
+	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
+		// TODO : do we need an explicit isInstance check here, or is that asserted prior to here?
+		return extractEmbeddedEntityName( ( Map ) entityInstance );
+	}
+
+	public static String extractEmbeddedEntityName(Map entity) {
+		return ( String ) entity.get( DynamicMapInstantiator.KEY );
+	}
+
+	public static class BasicEntityNameResolver implements EntityNameResolver {
+		public static final BasicEntityNameResolver INSTANCE = new BasicEntityNameResolver();
+
+		public String resolveEntityName(Object entity) {
+			final String entityName = extractEmbeddedEntityName( ( Map ) entity );
+			if ( entityName == null ) {
+				throw new HibernateException( "Could not determine type of dynamic map entity" );
+			}
+			return entityName;
+		}
+
+		public boolean equals(Object obj) {
+			return getClass().equals( obj.getClass() );
+		}
+
+		public int hashCode() {
+			return getClass().hashCode();
+		}
 	}
 }

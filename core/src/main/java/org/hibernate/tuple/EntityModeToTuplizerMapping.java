@@ -55,6 +55,15 @@ public abstract class EntityModeToTuplizerMapping implements Serializable {
 	}
 
 	/**
+	 * Allow iteration over all defined {@link Tuplizer Tuplizers}.
+	 *
+	 * @return Iterator over defined tuplizers
+	 */
+	public Iterator iterateTuplizers() {
+		return tuplizers.values().iterator();
+	}
+
+	/**
 	 * Given a supposed instance of an entity/component, guess its entity mode.
 	 *
 	 * @param object The supposed instance of the entity/component.

@@ -668,15 +668,35 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public boolean hasUninitializedLazyProperties(Object object, EntityMode entityMode);
 
 	/**
-	 * Set the identifier and version of the given instance back
-	 * to its "unsaved" value, returning the id
-	 * @param currentId TODO
-	 * @param currentVersion TODO
+	 * Set the identifier and version of the given instance back to its "unsaved" value.
+	 *
+	 * @param entity The entity instance
+	 * @param currentId The currently assigned identifier value.
+	 * @param currentVersion The currently assigned version value.
+	 * @param entityMode The entity mode represented by the entity instance.
 	 */
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode);
 
 	/**
-	 * Get the persister for an instance of this class or a subclass
+	 * A request has already identified the entity-name of this persister as the mapping for the given instance.
+	 * However, we still need to account for possible subclassing and potentially re-route to the more appropriate
+	 * persister.
+	 * <p/>
+	 * For example, a request names <tt>Animal</tt> as the entity-name which gets resolved to this persister.  But the
+	 * actual instance is really an instance of <tt>Cat</tt> which is a subclass of <tt>Animal</tt>.  So, here the
+	 * <tt>Animal</tt> persister is being asked to return the persister specific to <tt>Cat</tt>.
+	 * <p/>
+	 * It is also possible that the instance is actually an <tt>Animal</tt> instance in the above example in which
+	 * case we would retrn <tt>this</tt> from this method.
+	 *
+	 * @param instance The entity instance
+	 * @param factory Reference to the SessionFactory
+	 * @param entityMode The entity mode represented by the entity instance.
+	 *
+	 * @return The appropriate persister
+	 *
+	 * @throws HibernateException Indicates that instance was deemed to not be a subclass of the entity mapped by
+	 * this persister.
 	 */
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory, EntityMode entityMode);
 }

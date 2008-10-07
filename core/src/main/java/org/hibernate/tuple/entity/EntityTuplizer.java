@@ -28,8 +28,11 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.EntityMode;
 import org.hibernate.tuple.Tuplizer;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Defines further responsibilities reagarding tuplization based on
@@ -42,6 +45,12 @@ import org.hibernate.engine.SessionImplementor;
  * @author Steve Ebersole
  */
 public interface EntityTuplizer extends Tuplizer {
+	/**
+	 * Return the entity-mode handled by this tuplizer instance.
+	 *
+	 * @return The entity-mode
+	 */
+	public EntityMode getEntityMode();
 
     /**
      * Create an entity instance initialized with the given identifier.
@@ -176,11 +185,11 @@ public interface EntityTuplizer extends Tuplizer {
 	 */
 	public boolean isValidatableImplementor();
 
-	// TODO: getConcreteProxyClass() is solely used (externally) to perform narrowProxy()
-	// would be great to fully encapsulate that narrowProxy() functionality within the
-	// Tuplizer, itself, with a Tuplizer.narrowProxy(..., PersistentContext) method
 	/**
 	 * Returns the java class to which generated proxies will be typed.
+	 * <p/>
+	 * todo : look at fully encapsulating {@link org.hibernate.engine.PersistenceContext#narrowProxy} here,
+	 * since that is the only external use of this method
 	 *
 	 * @return The java class to which generated proxies will be typed
 	 */
@@ -198,4 +207,35 @@ public interface EntityTuplizer extends Tuplizer {
 	 * Is it an instrumented POJO?
 	 */
 	public boolean isInstrumented();
+
+	/**
+	 * Get any {@link EntityNameResolver EntityNameResolvers} associated with this {@link Tuplizer}.
+	 *
+	 * @return The associated resolvers.  May be null or empty.
+	 */
+	public EntityNameResolver[] getEntityNameResolvers();
+
+	/**
+	 * Given an entity instance, determine the most appropriate (most targeted) entity-name which represents it.
+	 * This is called in situations where we already know an entity name for the given entityInstance; we are being
+	 * asked to determine if there is a more appropriate entity-name to use, specifically within an inheritence
+	 * hierarchy.
+	 * <p/>
+	 * For example, consider a case where a user calls <tt>session.update( "Animal", cat );</tt>.  Here, the
+	 * user has explicitly provided <tt>Animal</tt> as the entity-name.  However, they have passed in an instance
+	 * of <tt>Cat</tt> which is a subclass of <tt>Animal</tt>.  In this case, we would return <tt>Cat</tt> as the
+	 * entity-name.
+	 * <p/>
+	 * <tt>null</tt> may be returned from calls to this method.  The meaining of <tt>null</tt> in that case is assumed
+	 * to be that we should use whatever explicit entity-name the user provided (<tt>Animal</tt> rather than <tt>Cat</tt>
+	 * in the example above).
+	 *
+	 * @param entityInstance The entity instance.
+	 * @param factory Reference to the SessionFactory.
+	 *
+	 * @return The most appropriate entity name to use.
+	 *
+	 * @throws HibernateException If we are unable to determine an entity-name within the inheritence hierarchy.
+	 */
+	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory);
 }

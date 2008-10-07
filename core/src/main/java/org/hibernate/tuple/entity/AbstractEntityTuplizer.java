@@ -74,13 +74,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 
 	/**
-	 * Return the entity-mode handled by this tuplizer instance.
-	 *
-	 * @return The entity-mode
-	 */
-	protected abstract EntityMode getEntityMode();
-
-	/**
 	 * Build an appropriate Getter for the given property.
 	 *
 	 * @param mappedProperty The property to be accessed via the built Getter.
@@ -326,7 +319,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 * @return The property value extracted.
 	 */
 	protected Object getComponentValue(ComponentType type, Object component, String propertyPath) {
-		
 		int loc = propertyPath.indexOf('.');
 		String basePropertyName = loc>0 ?
 			propertyPath.substring(0, loc) : propertyPath;

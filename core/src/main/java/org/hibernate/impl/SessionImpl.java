@@ -66,6 +66,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
@@ -139,7 +140,7 @@ import org.hibernate.util.StringHelper;
  *
  * @author Gavin King
  */
-public final class SessionImpl extends AbstractSessionImpl 
+public final class SessionImpl extends AbstractSessionImpl
 		implements EventSource, org.hibernate.classic.Session, JDBCContext.Context {
 
 	// todo : need to find a clean way to handle the "event source" role
@@ -174,6 +175,30 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	private transient Session rootSession;
 	private transient Map childSessionsByEntityMode;
+
+	private EntityNameResolver entityNameResolver = new EntityNameResolver() {
+		public String resolveEntityName(Object entity) {
+			String entityName = interceptor.getEntityName( entity );
+			if ( entityName != null ) {
+				return entityName;
+			}
+
+			Iterator itr = factory.iterateEntityNameResolvers( entityMode );
+			while ( itr.hasNext() ) {
+				final EntityNameResolver resolver = ( EntityNameResolver ) itr.next();
+				entityName = resolver.resolveEntityName( entity );
+				if ( entityName != null ) {
+					break;
+				}
+			}
+			if ( entityName != null ) {
+				return entityName;
+			}
+
+			// the old-time stand-by...
+			return entity.getClass().getName();
+		}
+	};
 
 	/**
 	 * Constructor used in building "child sessions".
@@ -1789,23 +1814,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public String guessEntityName(Object object) throws HibernateException {
 		errorIfClosed();
-		String entity = interceptor.getEntityName( object );
-		if ( entity == null ) {
-			if ( object instanceof Map ) {
-				entity = (String) ( (Map) object ).get( DynamicMapInstantiator.KEY );
-				if ( entity == null ) {
-					throw new HibernateException( "could not determine type of dynamic entity" );
-				}
-			}
-			else if ( object instanceof Element ) {
-				// TODO : really need to keep a map of nodeName -> entityName, but that would mean nodeName being distinct
-				entity = ( (Element) object ).getName();
-			}
-			else {
-				entity = object.getClass().getName();
-			}
-		}
-		return entity;
+		return entityNameResolver.resolveEntityName( object );
 	}
 
 	public void cancelQuery() throws HibernateException {

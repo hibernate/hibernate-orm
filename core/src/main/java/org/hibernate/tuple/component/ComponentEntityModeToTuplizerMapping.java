@@ -29,8 +29,6 @@ import org.hibernate.tuple.Tuplizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.util.ReflectHelper;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -47,7 +45,8 @@ import java.io.Serializable;
  */
 class ComponentEntityModeToTuplizerMapping extends EntityModeToTuplizerMapping implements Serializable {
 
-	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
+	// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
+	private ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
 
 	public ComponentEntityModeToTuplizerMapping(Component component) {
 		PersistentClass owner = component.getOwner();
@@ -59,24 +58,24 @@ class ComponentEntityModeToTuplizerMapping extends EntityModeToTuplizerMapping i
 		}
 
 		// Build the dynamic-map tuplizer...
-		Tuplizer dynamicMapTuplizer = null;
-		String tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.MAP );
-		if ( tuplizerImpl == null ) {
-			dynamicMapTuplizer = new DynamicMapComponentTuplizer( component );
+		Tuplizer dynamicMapTuplizer;
+		String tuplizerClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.MAP );
+		if ( tuplizerClassName == null ) {
+			dynamicMapTuplizer = componentTuplizerFactory.constructDefaultTuplizer( EntityMode.MAP, component );
 		}
 		else {
-			dynamicMapTuplizer = buildComponentTuplizer( tuplizerImpl, component );
+			dynamicMapTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 		}
 
 		// then the pojo tuplizer, using the dynamic-map tuplizer if no pojo representation is available
-		tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.POJO );
-		Tuplizer pojoTuplizer = null;
+		tuplizerClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.POJO );
+		Tuplizer pojoTuplizer;
 		if ( owner.hasPojoRepresentation() && component.hasPojoRepresentation() ) {
-			if ( tuplizerImpl == null ) {
-				pojoTuplizer = new PojoComponentTuplizer( component );
+			if ( tuplizerClassName == null ) {
+				pojoTuplizer = componentTuplizerFactory.constructDefaultTuplizer( EntityMode.POJO, component );
 			}
 			else {
-				pojoTuplizer = buildComponentTuplizer( tuplizerImpl, component );
+				pojoTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 			}
 		}
 		else {
@@ -84,14 +83,14 @@ class ComponentEntityModeToTuplizerMapping extends EntityModeToTuplizerMapping i
 		}
 
 		// then dom4j tuplizer, if dom4j representation is available
-		Tuplizer dom4jTuplizer = null;
-		tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.DOM4J );
+		Tuplizer dom4jTuplizer;
+		tuplizerClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.DOM4J );
 		if ( owner.hasDom4jRepresentation() ) {
-			if ( tuplizerImpl == null ) {
-				dom4jTuplizer = new Dom4jComponentTuplizer( component );
+			if ( tuplizerClassName == null ) {
+				dom4jTuplizer = componentTuplizerFactory.constructDefaultTuplizer( EntityMode.DOM4J, component );
 			}
 			else {
-				dom4jTuplizer = buildComponentTuplizer( tuplizerImpl, component );
+				dom4jTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 			}
 		}
 		else {
@@ -113,21 +112,12 @@ class ComponentEntityModeToTuplizerMapping extends EntityModeToTuplizerMapping i
 		if ( !userSuppliedTuplizerImpls.isEmpty() ) {
 			Iterator itr = userSuppliedTuplizerImpls.entrySet().iterator();
 			while ( itr.hasNext() ) {
-				Map.Entry entry = ( Map.Entry ) itr.next();
-				EntityMode entityMode = ( EntityMode ) entry.getKey();
-				ComponentTuplizer tuplizer = buildComponentTuplizer( ( String ) entry.getValue(), component );
+				final Map.Entry entry = ( Map.Entry ) itr.next();
+				final EntityMode entityMode = ( EntityMode ) entry.getKey();
+				final String userTuplizerClassName = ( String ) entry.getValue();
+				ComponentTuplizer tuplizer = componentTuplizerFactory.constructTuplizer( userTuplizerClassName, component );
 				addTuplizer( entityMode, tuplizer );
 			}
-		}
-	}
-
-	private ComponentTuplizer buildComponentTuplizer(String tuplizerImpl, Component component) {
-		try {
-			Class implClass = ReflectHelper.classForName( tuplizerImpl );
-			return ( ComponentTuplizer ) implClass.getConstructor( COMPONENT_TUP_CTOR_SIG ).newInstance( new Object[] { component } );
-		}
-		catch( Throwable t ) {
-			throw new HibernateException( "Could not build tuplizer [" + tuplizerImpl + "]", t );
 		}
 	}
 }

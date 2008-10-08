@@ -27,6 +27,7 @@ package org.hibernate.hql.ast.tree;
 import antlr.SemanticException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -289,7 +290,8 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		if ( fe != null ) {
 			return fe.getDataType();
 		}
-		return null;
+		SQLFunction sf = getWalker().getSessionFactoryHelper().findSQLFunction( getText() );
+		return sf == null ? null : sf.getReturnType( null, null );
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {

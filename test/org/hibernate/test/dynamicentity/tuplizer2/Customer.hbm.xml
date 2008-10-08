@@ -31,7 +31,6 @@
 <hibernate-mapping package="org.hibernate.test.dynamicentity">
 
     <class name="Person" table="t_person" discriminator-value="person" abstract="false">
-        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer2.MyEntityTuplizer" entity-mode="pojo"/>
 		<id name="id">
             <generator class="native"/>
         </id>
@@ -46,13 +45,11 @@
         </set>
 
         <subclass name="Customer" discriminator-value="customer" abstract="false">
-            <tuplizer class="org.hibernate.test.dynamicentity.tuplizer2.MyEntityTuplizer" entity-mode="pojo"/>
             <many-to-one name="company" cascade="none" column="comp_id"/>
     	</subclass>
     </class>
 
 	<class name="Company" table="t_company" abstract="false">
-        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer2.MyEntityTuplizer" entity-mode="pojo"/>
 		<id name="id">
             <generator class="native"/>
         </id>
@@ -60,7 +57,6 @@
 	</class>
 
     <class name="Address" table="t_address" abstract="false">
-        <tuplizer class="org.hibernate.test.dynamicentity.tuplizer2.MyEntityTuplizer" entity-mode="pojo"/>
         <id name="id">
             <generator class="native"/>
         </id>

@@ -14,6 +14,7 @@ import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.EntityMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Settings that affect the behaviour of Hibernate at runtime.
@@ -67,6 +68,8 @@ public final class Settings {
 	private boolean dataDefinitionInTransactionSupported;
 	private boolean strictJPAQLCompliance;
 	private boolean namedQueryStartupCheckingEnabled;
+	private EntityTuplizerFactory entityTuplizerFactory;
+//	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 
 	/**
@@ -257,6 +260,14 @@ public final class Settings {
 		return namedQueryStartupCheckingEnabled;
 	}
 
+	public EntityTuplizerFactory getEntityTuplizerFactory() {
+		return entityTuplizerFactory;
+	}
+
+//	public ComponentTuplizerFactory getComponentTuplizerFactory() {
+//		return componentTuplizerFactory;
+//	}
+
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -439,6 +450,14 @@ public final class Settings {
 	void setNamedQueryStartupCheckingEnabled(boolean namedQueryStartupCheckingEnabled) {
 		this.namedQueryStartupCheckingEnabled = namedQueryStartupCheckingEnabled;
 	}
+
+	void setEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
+		this.entityTuplizerFactory = entityTuplizerFactory;
+	}
+
+//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
+//		this.componentTuplizerFactory = componentTuplizerFactory;
+//	}
 
 
 //	public BytecodeProvider getBytecodeProvider() {

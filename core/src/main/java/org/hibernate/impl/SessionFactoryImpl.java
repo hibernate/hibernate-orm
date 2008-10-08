@@ -468,6 +468,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	private void registerEntityNameResolvers(EntityPersister persister) {
+		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizerMapping() == null ) {
+			return;
+		}
 		Iterator itr = persister.getEntityMetamodel().getTuplizerMapping().iterateTuplizers();
 		while ( itr.hasNext() ) {
 			final EntityTuplizer tuplizer = ( EntityTuplizer ) itr.next();

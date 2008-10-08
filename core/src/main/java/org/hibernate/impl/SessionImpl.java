@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +72,6 @@ import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
@@ -127,8 +125,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.SessionStatisticsImpl;
-import org.hibernate.tuple.DynamicMapInstantiator;
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
@@ -177,29 +173,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	private transient Session rootSession;
 	private transient Map childSessionsByEntityMode;
 
-	private EntityNameResolver entityNameResolver = new EntityNameResolver() {
-		public String resolveEntityName(Object entity) {
-			String entityName = interceptor.getEntityName( entity );
-			if ( entityName != null ) {
-				return entityName;
-			}
-
-			Iterator itr = factory.iterateEntityNameResolvers( entityMode );
-			while ( itr.hasNext() ) {
-				final EntityNameResolver resolver = ( EntityNameResolver ) itr.next();
-				entityName = resolver.resolveEntityName( entity );
-				if ( entityName != null ) {
-					break;
-				}
-			}
-			if ( entityName != null ) {
-				return entityName;
-			}
-
-			// the old-time stand-by...
-			return entity.getClass().getName();
-		}
-	};
+	private EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
 	/**
 	 * Constructor used in building "child sessions".
@@ -1944,6 +1918,8 @@ public final class SessionImpl extends AbstractSessionImpl
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		log.trace( "deserializing session" );
 
+		entityNameResolver = new CoordinatingEntityNameResolver();
+
 		boolean isRootSession = ois.readBoolean();
 		connectionReleaseMode = ConnectionReleaseMode.parse( ( String ) ois.readObject() );
 		entityMode = EntityMode.parse( ( String ) ois.readObject() );
@@ -2019,5 +1995,29 @@ public final class SessionImpl extends AbstractSessionImpl
 		// todo : look at optimizing these...
 		oos.writeObject( loadQueryInfluencers );
 		oos.writeObject( childSessionsByEntityMode );
+	}
+
+	private class CoordinatingEntityNameResolver implements EntityNameResolver {
+		public String resolveEntityName(Object entity) {
+			String entityName = interceptor.getEntityName( entity );
+			if ( entityName != null ) {
+				return entityName;
+			}
+
+			Iterator itr = factory.iterateEntityNameResolvers( entityMode );
+			while ( itr.hasNext() ) {
+				final EntityNameResolver resolver = ( EntityNameResolver ) itr.next();
+				entityName = resolver.resolveEntityName( entity );
+				if ( entityName != null ) {
+					break;
+				}
+			}
+			if ( entityName != null ) {
+				return entityName;
+			}
+
+			// the old-time stand-by...
+			return entity.getClass().getName();
+		}
 	}
 }

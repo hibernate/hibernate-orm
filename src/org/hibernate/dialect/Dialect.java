@@ -1585,12 +1585,23 @@ public abstract class Dialect {
 
 	/**
 	 * Does this dialect support parameters within the select clause of
-	 * INSERT ... SELECT ... statements?
+	 * INSERT ... SELECT ... ? ... statements?
 	 *
 	 * @return True if this is supported; false otherwise.
 	 * @since 3.2
 	 */
 	public boolean supportsParametersInInsertSelect() {
+		return true;
+	}
+
+	/**
+	 * Does this dialect support casted parameters within the select clause of
+	 * INSERT ... SELECT ... cast( ? as <type> ) statements?
+	 *
+	 * @return True if this is supported; false otherwise.
+	 * @since 3.2
+	 */
+	public boolean supportsCastedParametersInInsertSelect() {
 		return true;
 	}
 

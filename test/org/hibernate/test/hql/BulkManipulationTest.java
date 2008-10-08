@@ -415,11 +415,14 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
 			return;
 		}
+
 		// dialects which do not allow a parameter in the select portion of an INSERT ... SELECT statement
 		// will also be problematic for this test because the timestamp here is vm-based as opposed to
 		// db-based.
-		if ( !getDialect().supportsParametersInInsertSelect() ) {
-			reportSkip( "dialect does not support parameter in INSERT ... SELECT", "test bulk inserts with generated id and generated timestamp");
+		if ( !getDialect().supportsParametersInInsertSelect() &&
+				!getDialect().supportsCastedParametersInInsertSelect() ) {
+			reportSkip( "dialect does not support parameter in INSERT ... SELECT",
+				"test bulk inserts with generated id and generated timestamp");
 			return;
 		}
 
@@ -470,7 +473,6 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-
 
 	// UPDATES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

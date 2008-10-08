@@ -45,7 +45,6 @@ import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.util.StringHelper;
-import org.hibernate.util.EmptyIterator;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;

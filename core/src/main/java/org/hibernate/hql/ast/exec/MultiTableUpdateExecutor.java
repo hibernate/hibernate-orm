@@ -131,9 +131,10 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 			try {
 				try {
 					ps = session.getBatcher().prepareStatement( idInsertSelect );
-					int parameterStart = getWalker().getNumberOfParametersInSetClause();
-					List allParams = getIdSelectParameterSpecifications();
-					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
+//					int parameterStart = getWalker().getNumberOfParametersInSetClause();
+//					List allParams = getIdSelectParameterSpecifications();
+//					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
+					Iterator whereParams = getIdSelectParameterSpecifications().iterator();
 					int sum = 1; // jdbc params are 1-based
 					while ( whereParams.hasNext() ) {
 						sum += ( ( ParameterSpecification ) whereParams.next() ).bind( ps, parameters, session, sum );

@@ -31,6 +31,7 @@ import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.Session;
 import org.hibernate.Hibernate;
+import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -61,6 +62,7 @@ public class ImprovedTuplizerDynamicEntityTest extends FunctionalTestCase {
 
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
+		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
 	}
 
 	public static TestSuite suite() {

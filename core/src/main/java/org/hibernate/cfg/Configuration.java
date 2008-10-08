@@ -67,6 +67,8 @@ import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -182,6 +184,9 @@ public class Configuration implements Serializable {
 
 	protected Map sqlFunctions;
 
+	private EntityTuplizerFactory entityTuplizerFactory;
+//	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
+
 	private Interceptor interceptor;
 	private Properties properties;
 	private EntityResolver entityResolver;
@@ -196,6 +201,15 @@ public class Configuration implements Serializable {
 	protected final SettingsFactory settingsFactory;
 
 	private transient Mapping mapping = buildMapping();
+
+	protected Configuration(SettingsFactory settingsFactory) {
+		this.settingsFactory = settingsFactory;
+		reset();
+	}
+
+	public Configuration() {
+		this( new SettingsFactory() );
+	}
 
 	protected void reset() {
 		classes = new HashMap();
@@ -228,16 +242,18 @@ public class Configuration implements Serializable {
 		eventListeners = new EventListeners();
 
 		sqlFunctions = new HashMap();
+
+		entityTuplizerFactory = new EntityTuplizerFactory();
+//		componentTuplizerFactory = new ComponentTuplizerFactory();
 	}
 
-	protected Configuration(SettingsFactory settingsFactory) {
-		this.settingsFactory = settingsFactory;
-		reset();
+	public EntityTuplizerFactory getEntityTuplizerFactory() {
+		return entityTuplizerFactory;
 	}
 
-	public Configuration() {
-		this( new SettingsFactory() );
-	}
+//	public ComponentTuplizerFactory getComponentTuplizerFactory() {
+//		return componentTuplizerFactory;
+//	}
 
 	/**
 	 * Iterate the entity mappings
@@ -2092,11 +2108,18 @@ public class Configuration implements Serializable {
 	public Settings buildSettings() throws HibernateException {
 		Properties clone = ( Properties ) properties.clone();
 		PropertiesHelper.resolvePlaceHolders( clone );
-		return settingsFactory.buildSettings( clone );
+		return buildSettingsInternal( clone );
 	}
 
 	public Settings buildSettings(Properties props) throws HibernateException {
-		return settingsFactory.buildSettings( props );
+		return buildSettingsInternal( props );
+	}
+
+	private Settings buildSettingsInternal(Properties props) {
+		final Settings settings = settingsFactory.buildSettings( props );
+		settings.setEntityTuplizerFactory( this.getEntityTuplizerFactory() );
+//		settings.setComponentTuplizerFactory( this.getComponentTuplizerFactory() );
+		return settings;
 	}
 
 	public Map getNamedSQLQueries() {

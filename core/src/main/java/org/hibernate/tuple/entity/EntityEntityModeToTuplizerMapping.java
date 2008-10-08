@@ -28,8 +28,6 @@ import org.hibernate.tuple.EntityModeToTuplizerMapping;
 import org.hibernate.tuple.Tuplizer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.util.ReflectHelper;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -46,8 +44,6 @@ import java.io.Serializable;
  */
 public class EntityEntityModeToTuplizerMapping extends EntityModeToTuplizerMapping implements Serializable {
 
-	private static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
-
 	/**
 	 * Instantiates a EntityEntityModeToTuplizerMapping based on the given
 	 * entity mapping and metamodel definitions.
@@ -56,6 +52,10 @@ public class EntityEntityModeToTuplizerMapping extends EntityModeToTuplizerMappi
 	 * @param em The entity metamodel definition.
 	 */
 	public EntityEntityModeToTuplizerMapping(PersistentClass mappedEntity, EntityMetamodel em) {
+		final EntityTuplizerFactory entityTuplizerFactory = em.getSessionFactory()
+				.getSettings()
+				.getEntityTuplizerFactory();
+
 		// create our own copy of the user-supplied tuplizer impl map
 		Map userSuppliedTuplizerImpls = new HashMap();
 		if ( mappedEntity.getTuplizerMap() != null ) {
@@ -63,24 +63,24 @@ public class EntityEntityModeToTuplizerMapping extends EntityModeToTuplizerMappi
 		}
 
 		// Build the dynamic-map tuplizer...
-		Tuplizer dynamicMapTuplizer = null;
-		String tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.MAP );
-		if ( tuplizerImpl == null ) {
-			dynamicMapTuplizer = new DynamicMapEntityTuplizer( em, mappedEntity );
+		Tuplizer dynamicMapTuplizer;
+		String tuplizerImplClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.MAP );
+		if ( tuplizerImplClassName == null ) {
+			dynamicMapTuplizer = entityTuplizerFactory.constructDefaultTuplizer( EntityMode.MAP, em, mappedEntity );
 		}
 		else {
-			dynamicMapTuplizer = buildEntityTuplizer( tuplizerImpl, mappedEntity, em );
+			dynamicMapTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerImplClassName, em, mappedEntity );
 		}
 
 		// then the pojo tuplizer, using the dynamic-map tuplizer if no pojo representation is available
-		Tuplizer pojoTuplizer = null;
-		tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.POJO );
+		Tuplizer pojoTuplizer;
+		tuplizerImplClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.POJO );
 		if ( mappedEntity.hasPojoRepresentation() ) {
-			if ( tuplizerImpl == null ) {
-				pojoTuplizer = new PojoEntityTuplizer( em, mappedEntity );
+			if ( tuplizerImplClassName == null ) {
+				pojoTuplizer = entityTuplizerFactory.constructDefaultTuplizer( EntityMode.POJO, em, mappedEntity );
 			}
 			else {
-				pojoTuplizer = buildEntityTuplizer( tuplizerImpl, mappedEntity, em );
+				pojoTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerImplClassName, em, mappedEntity );
 			}
 		}
 		else {
@@ -88,14 +88,14 @@ public class EntityEntityModeToTuplizerMapping extends EntityModeToTuplizerMappi
 		}
 
 		// then dom4j tuplizer, if dom4j representation is available
-		Tuplizer dom4jTuplizer = null;
-		tuplizerImpl = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.DOM4J );
+		Tuplizer dom4jTuplizer;
+		tuplizerImplClassName = ( String ) userSuppliedTuplizerImpls.remove( EntityMode.DOM4J );
 		if ( mappedEntity.hasDom4jRepresentation() ) {
-			if ( tuplizerImpl == null ) {
-				dom4jTuplizer = new Dom4jEntityTuplizer( em, mappedEntity );
+			if ( tuplizerImplClassName == null ) {
+				dom4jTuplizer = entityTuplizerFactory.constructDefaultTuplizer( EntityMode.DOM4J, em, mappedEntity );
 			}
 			else {
-				dom4jTuplizer = buildEntityTuplizer( tuplizerImpl, mappedEntity, em );
+				dom4jTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerImplClassName, em, mappedEntity );
 			}
 		}
 		else {
@@ -117,21 +117,12 @@ public class EntityEntityModeToTuplizerMapping extends EntityModeToTuplizerMappi
 		if ( !userSuppliedTuplizerImpls.isEmpty() ) {
 			Iterator itr = userSuppliedTuplizerImpls.entrySet().iterator();
 			while ( itr.hasNext() ) {
-				Map.Entry entry = ( Map.Entry ) itr.next();
-				EntityMode entityMode = ( EntityMode ) entry.getKey();
-				EntityTuplizer tuplizer = buildEntityTuplizer( ( String ) entry.getValue(), mappedEntity, em );
+				final Map.Entry entry = ( Map.Entry ) itr.next();
+				final EntityMode entityMode = ( EntityMode ) entry.getKey();
+				final String tuplizerClassName = ( String ) entry.getValue();
+				final EntityTuplizer tuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, em, mappedEntity );
 				addTuplizer( entityMode, tuplizer );
 			}
-		}
-	}
-
-	private static EntityTuplizer buildEntityTuplizer(String className, PersistentClass pc, EntityMetamodel em) {
-		try {
-			Class implClass = ReflectHelper.classForName( className );
-			return ( EntityTuplizer ) implClass.getConstructor( ENTITY_TUP_CTOR_SIG ).newInstance( new Object[] { em, pc } );
-		}
-		catch( Throwable t ) {
-			throw new HibernateException( "Could not build tuplizer [" + className + "]", t );
 		}
 	}
 }

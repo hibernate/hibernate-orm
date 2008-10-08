@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.connection.ConnectionProvider;
@@ -92,6 +94,8 @@ public final class Settings {
 	private boolean dataDefinitionInTransactionSupported;
 	private boolean strictJPAQLCompliance;
 	private boolean namedQueryStartupCheckingEnabled;
+	private EntityTuplizerFactory entityTuplizerFactory;
+//	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 
 	/**
@@ -286,8 +290,16 @@ public final class Settings {
 		return namedQueryStartupCheckingEnabled;
 	}
 
+	public EntityTuplizerFactory getEntityTuplizerFactory() {
+		return entityTuplizerFactory;
+	}
 
-	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//	public ComponentTuplizerFactory getComponentTuplizerFactory() {
+//		return componentTuplizerFactory;
+//	}
+
+
+// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 //	void setShowSqlEnabled(boolean b) {
 //		showSql = b;
@@ -472,6 +484,14 @@ public final class Settings {
 	void setNamedQueryStartupCheckingEnabled(boolean namedQueryStartupCheckingEnabled) {
 		this.namedQueryStartupCheckingEnabled = namedQueryStartupCheckingEnabled;
 	}
+
+	void setEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
+		this.entityTuplizerFactory = entityTuplizerFactory;
+	}
+
+//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
+//		this.componentTuplizerFactory = componentTuplizerFactory;
+//	}
 
 
 //	public BytecodeProvider getBytecodeProvider() {

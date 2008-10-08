@@ -109,7 +109,6 @@ public abstract class AbstractEntityPersister
 	private final boolean isLazyPropertiesCacheable;
 	private final CacheEntryStructure cacheEntryStructure;
 	private final EntityMetamodel entityMetamodel;
-	private final Map entityNameBySubclass = new HashMap();
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final String[] rootTableKeyColumnNames;
@@ -432,15 +431,6 @@ public abstract class AbstractEntityPersister
 				(CacheEntryStructure) new UnstructuredCacheEntry();
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, factory );
-
-		if ( persistentClass.hasPojoRepresentation() ) {
-			//TODO: this is currently specific to pojos, but need to be available for all entity-modes
-			Iterator iter = persistentClass.getSubclassIterator();
-			while ( iter.hasNext() ) {
-				PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameBySubclass.put( pc.getMappedClass(), pc.getEntityName() );
-			}
-		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		int batch = persistentClass.getBatchSize();
@@ -3231,10 +3221,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getEntityType();
 	}
 
-	private String getSubclassEntityName(Class clazz) {
-		return ( String ) entityNameBySubclass.get( clazz );
-	}
-
 	public boolean isPolymorphic() {
 		return entityMetamodel.isPolymorphic();
 	}
@@ -3623,29 +3609,17 @@ public abstract class AbstractEntityPersister
 		getTuplizer( entityMode ).resetIdentifier( entity, currentId, currentVersion );
 	}
 
-	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory, EntityMode entityMode) {
+	public EntityPersister getSubclassEntityPersister(
+			Object instance,
+			SessionFactoryImplementor factory,
+			EntityMode entityMode) {
 		if ( !hasSubclasses() ) {
 			return this;
 		}
 		else {
-			// TODO : really need a way to do something like :
-			//      getTuplizer(entityMode).determineConcreteSubclassEntityName(instance)
-			Class clazz = instance.getClass();
-			if ( clazz == getMappedClass( entityMode ) ) {
-				return this;
-			}
-			else {
-				String subclassEntityName = getSubclassEntityName( clazz );
-				if ( subclassEntityName == null ) {
-					throw new HibernateException(
-							"instance not of expected entity type: " + clazz.getName() +
-							" is not a: " + getEntityName()
-						);
-				}
-				else {
-					return factory.getEntityPersister( subclassEntityName );
-				}
-			}
+			final String concreteEntityName = getTuplizer( entityMode )
+					.determineConcreteSubclassEntityName( instance, factory );
+			return factory.getEntityPersister( concreteEntityName );
 		}
 	}
 

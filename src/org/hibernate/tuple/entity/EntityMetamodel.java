@@ -1,4 +1,27 @@
-// $Id: EntityMetamodel.java 9210 2006-02-03 22:15:19Z steveebersole $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
@@ -99,20 +122,9 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set subclassEntityNames = new HashSet();
+	private final Map entityNameByInheritenceClassNameMap = new HashMap();
 
 	private final EntityEntityModeToTuplizerMapping tuplizerMapping;
-
-	public EntityTuplizer getTuplizer(EntityMode entityMode) {
-		return (EntityTuplizer) tuplizerMapping.getTuplizer( entityMode );
-	}
-
-	public EntityTuplizer getTuplizerOrNull(EntityMode entityMode) {
-		return ( EntityTuplizer ) tuplizerMapping.getTuplizerOrNull( entityMode );
-	}
-
-	public EntityMode guessEntityMode(Object object) {
-		return tuplizerMapping.guessEntityMode( object );
-	}
 
 	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -299,6 +311,15 @@ public class EntityMetamodel implements Serializable {
 		}
 		subclassEntityNames.add( name );
 
+		if ( persistentClass.hasPojoRepresentation() ) {
+			entityNameByInheritenceClassNameMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+			iter = persistentClass.getSubclassIterator();
+			while ( iter.hasNext() ) {
+				final PersistentClass pc = ( PersistentClass ) iter.next();
+				entityNameByInheritenceClassNameMap.put( pc.getMappedClass(), pc.getEntityName() );
+			}
+		}
+
 		tuplizerMapping = new EntityEntityModeToTuplizerMapping( persistentClass, this );
 	}
 
@@ -370,6 +391,22 @@ public class EntityMetamodel implements Serializable {
 					);
 			}
 		}
+	}
+
+	public EntityEntityModeToTuplizerMapping getTuplizerMapping() {
+		return tuplizerMapping;
+	}
+
+	public EntityTuplizer getTuplizer(EntityMode entityMode) {
+		return (EntityTuplizer) tuplizerMapping.getTuplizer( entityMode );
+	}
+
+	public EntityTuplizer getTuplizerOrNull(EntityMode entityMode) {
+		return ( EntityTuplizer ) tuplizerMapping.getTuplizerOrNull( entityMode );
+	}
+
+	public EntityMode guessEntityMode(Object object) {
+		return tuplizerMapping.guessEntityMode( object );
 	}
 
 	public int[] getNaturalIdentifierProperties() {
@@ -530,6 +567,16 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean isAbstract() {
 		return isAbstract;
+	}
+
+	/**
+	 * Return the entity-name mapped to the given class within our inheritence hierarchy, if any.
+	 *
+	 * @param inheritenceClass The class for which to resolve the entity-name.
+	 * @return The mapped entity-name, or null if no such mapping was found.
+	 */
+	public String findEntityNameByEntityClass(Class inheritenceClass) {
+		return ( String ) entityNameByInheritenceClassNameMap.get( inheritenceClass.getName() );
 	}
 
 	public String toString() {

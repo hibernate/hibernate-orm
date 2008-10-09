@@ -1617,14 +1617,25 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Does this dialect support parameters within the select clause of
-	 * INSERT ... SELECT ... statements?
+	 * Does this dialect support parameters within the <tt>SELECT</tt> clause of
+	 * <tt>INSERT ... SELECT ...</tt> statements?
 	 *
 	 * @return True if this is supported; false otherwise.
 	 * @since 3.2
 	 */
 	public boolean supportsParametersInInsertSelect() {
 		return true;
+	}
+
+	/**
+	 * Does this dialect require that parameters appearing in the <tt>SELECT</tt> clause be wrapped in <tt>cast()</tt>
+	 * calls to tell the db parser the expected type.
+	 *
+	 * @return True if select clause parameter must be cast()ed
+	 * @since 3.2
+	 */
+	public boolean requiresCastingOfParametersInSelectClause() {
+		return false;
 	}
 
 	/**

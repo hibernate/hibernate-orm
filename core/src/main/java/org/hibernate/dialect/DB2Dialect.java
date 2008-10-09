@@ -374,10 +374,26 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * DB2 is know to support parameters in the <tt>SELECT</tt> clause, but only in casted form
+	 * (see {@link #requiresCastingOfParametersInSelectClause()}).
+	 *
+	 * @return True.
+	 */
 	public boolean supportsParametersInInsertSelect() {
-		// DB2 known to not support parameters within the select
-		// clause of an SQL INSERT ... SELECT ... statement
-		return false;
+		return true;
+	}
+
+	/**
+	 * DB2 in fact does require that parameters appearing in the select clause be wrapped in cast() calls
+	 * to tell the DB parser the type of the select value.
+	 *
+	 * @return True.
+	 */
+	public boolean requiresCastingOfParametersInSelectClause() {
+		return true;
 	}
 
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {

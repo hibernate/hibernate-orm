@@ -683,10 +683,38 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			AST versionValueNode = null;
 
 			if ( sessionFactoryHelper.getFactory().getDialect().supportsParametersInInsertSelect() ) {
+				int sqlTypes[] = versionType.sqlTypes( sessionFactoryHelper.getFactory() );
+				if ( sqlTypes == null || sqlTypes.length == 0 ) {
+					throw new IllegalStateException( versionType.getClass() + ".sqlTypes() returns null or empty array" );
+				}
+				if ( sqlTypes.length > 1 ) {
+					throw new IllegalStateException(
+							versionType.getClass() +
+									".sqlTypes() returns > 1 element; only single-valued versions are allowed."
+					);
+				}
 				versionValueNode = getASTFactory().create( HqlSqlTokenTypes.PARAM, "?" );
 				ParameterSpecification paramSpec = new VersionTypeSeedParameterSpecification( versionType );
 				( ( ParameterNode ) versionValueNode ).setHqlParameterSpecification( paramSpec );
 				parameters.add( 0, paramSpec );
+
+				if ( sessionFactoryHelper.getFactory().getDialect().requiresCastingOfParametersInSelectClause() ) {
+					// we need to wrtap the param in a cast()
+					MethodNode versionMethodNode = ( MethodNode ) getASTFactory().create( HqlSqlTokenTypes.METHOD_CALL, "(" );
+					AST methodIdentNode = getASTFactory().create( HqlSqlTokenTypes.IDENT, "cast" );
+					versionMethodNode.addChild( methodIdentNode );
+					versionMethodNode.initializeMethodNode(methodIdentNode, true );
+					AST castExprListNode = getASTFactory().create( HqlSqlTokenTypes.EXPR_LIST, "exprList" );
+					methodIdentNode.setNextSibling( castExprListNode );
+					castExprListNode.addChild( versionValueNode );
+					versionValueNode.setNextSibling(
+							getASTFactory().create(
+									HqlSqlTokenTypes.IDENT,
+									sessionFactoryHelper.getFactory().getDialect().getTypeName( sqlTypes[0] ) )
+					);
+					processFunction( versionMethodNode, true );
+					versionValueNode = versionMethodNode;
+				}
 			}
 			else {
 				if ( isIntegral( versionType ) ) {

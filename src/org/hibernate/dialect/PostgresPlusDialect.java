@@ -34,6 +34,11 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 
+/**
+ * An SQL dialect for Postgres Plus
+ *
+ * @author Jim Mlodgenski
+ */
 public class PostgresPlusDialect extends PostgreSQLDialect {
 
 	public PostgresPlusDialect() {

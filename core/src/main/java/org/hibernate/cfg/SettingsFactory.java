@@ -120,28 +120,17 @@ public class SettingsFactory implements Serializable {
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
 					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
 					metaReportsDDLInTxnSupported = !meta.dataDefinitionIgnoredInTransactions();
-
-					if ( Environment.jvmSupportsGetGeneratedKeys() ) {
-						try {
-							Boolean result = (Boolean) DatabaseMetaData.class.getMethod("supportsGetGeneratedKeys", null)
-								.invoke(meta, null);
-							metaSupportsGetGeneratedKeys = result.booleanValue();
-						}
-						catch (AbstractMethodError ame) {
-							metaSupportsGetGeneratedKeys = false;
-						}
-						catch (Exception e) {
-							metaSupportsGetGeneratedKeys = false;
-						}
-					}
-
+					metaSupportsGetGeneratedKeys  = meta.supportsGetGeneratedKeys();
+				}
+				catch (SQLException sqle) {
+					log.warn("Could not obtain connection metadata", sqle);
 				}
 				finally {
 					connections.closeConnection(conn);
 				}
 			}
 			catch (SQLException sqle) {
-				log.warn("Could not obtain connection metadata", sqle);
+				log.warn("Could not obtain connection to query metadata", sqle);
 			}
 			catch (UnsupportedOperationException uoe) {
 				// user supplied JDBC connections

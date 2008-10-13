@@ -237,7 +237,7 @@ public final class Environment {
 	public static final String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
 	/**
-	 * Hibernate SQL <tt>Dialect</tt> class
+	 * Hibernate SQL {@link org.hibernate.dialect.Dialect} class
 	 */
 	public static final String DIALECT ="hibernate.dialect";
 	/**
@@ -516,7 +516,9 @@ public final class Environment {
 	private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
 	/**
-	 * Issues warnings to the user when any obsolete property names are used.
+	 * Issues warnings to the user when any obsolete or renamed property names are used.
+	 *
+	 * @param props The specified properties.
 	 */
 	public static void verifyProperties(Properties props) {
 		Iterator iter = props.keySet().iterator();
@@ -605,7 +607,9 @@ public final class Environment {
 			getGeneratedKeysSupport = false;
 		}
 		JVM_SUPPORTS_GET_GENERATED_KEYS = getGeneratedKeysSupport;
-		if (!JVM_SUPPORTS_GET_GENERATED_KEYS) log.info("JVM does not support Statement.getGeneratedKeys()");
+		if (!JVM_SUPPORTS_GET_GENERATED_KEYS) {
+			log.info("JVM does not support Statement.getGeneratedKeys()");
+		}
 
 		boolean linkedHashSupport;
 		try {
@@ -616,10 +620,16 @@ public final class Environment {
 			linkedHashSupport = false;
 		}
 		JVM_SUPPORTS_LINKED_HASH_COLLECTIONS = linkedHashSupport;
-		if (!JVM_SUPPORTS_LINKED_HASH_COLLECTIONS) log.info("JVM does not support LinkedHasMap, LinkedHashSet - ordered maps and sets disabled");
+		if (!JVM_SUPPORTS_LINKED_HASH_COLLECTIONS) {
+			log.info("JVM does not support LinkedHasMap, LinkedHashSet - ordered maps and sets disabled");
+		}
 
-		JVM_HAS_TIMESTAMP_BUG = new Timestamp(123456789).getTime() != 123456789;
-		if (JVM_HAS_TIMESTAMP_BUG) log.info("using workaround for JVM bug in java.sql.Timestamp");
+		long x = 123456789;
+		JVM_HAS_TIMESTAMP_BUG = new Timestamp(x).getTime() != x;
+		if (JVM_HAS_TIMESTAMP_BUG) {
+			log.info("using workaround for JVM bug in java.sql.Timestamp");
+		}
+
 		Timestamp t = new Timestamp(0);
 		t.setNanos(5 * 1000000);
 		JVM_HAS_JDK14_TIMESTAMP = t.getTime() == 5;
@@ -636,21 +646,37 @@ public final class Environment {
 	}
 
 	/**
-	 * Does this JVM have the IBM JDK 1.3.1. The bug is <tt>new Timestamp(x).getTime()!=x</tt>.
+	 * Does this JVM's implementation of {@link java.sql.Timestamp} have a bug in which the following is true:<code>
+	 * new java.sql.Timestamp( x ).getTime() != x
+	 * </code>
+	 * <p/>
+	 * NOTE : IBM JDK 1.3.1 the only known JVM to exhibit this behavior.
+	 *
+	 * @return True if the JVM's {@link Timestamp} implementa
 	 */
 	public static boolean jvmHasTimestampBug() {
 		return JVM_HAS_TIMESTAMP_BUG;
 	}
 
 	/**
-	 * Does this JVM handle <tt>Timestamp</tt> in the JDK 1.4 compliant way?
+	 * Does this JVM handle {@link java.sql.Timestamp} in the JDK 1.4 compliant way wrt to nano rolling>
+	 *
+	 * @return True if the JDK 1.4 (JDBC3) specification for {@link java.sql.Timestamp} nano rolling is adhered to.
+	 *
+	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
 	 */
 	public static boolean jvmHasJDK14Timestamp() {
 		return JVM_HAS_JDK14_TIMESTAMP;
 	}
 
 	/**
-	 * Does this JVM support <tt>LinkedHashSet</tt>, <tt>LinkedHashMap</tt>.
+	 * Does this JVM support {@link java.util.LinkedHashSet} and {@link java.util.LinkedHashMap}?
+	 * <p/>
+	 * Note, this is true for JDK 1.4 and above; hence the deprecation.
+	 *
+	 * @return True if {@link java.util.LinkedHashSet} and {@link java.util.LinkedHashMap} are available.
+	 *
+	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
 	 * @see java.util.LinkedHashSet
 	 * @see java.util.LinkedHashMap
 	 */
@@ -658,29 +684,50 @@ public final class Environment {
 		return JVM_SUPPORTS_LINKED_HASH_COLLECTIONS;
 	}
 
+	/**
+	 * Does this JDK/JVM define the JDBC {@link Statement} interface with a 'getGeneratedKeys' method?
+	 * <p/>
+	 * Note, this is true for JDK 1.4 and above; hence the deprecation.
+	 *
+	 * @return True if generated keys can be retrieved via Statement; false otherwise.
+	 *
+	 * @see Statement
+	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
+	 */
 	public static boolean jvmSupportsGetGeneratedKeys() {
 		return JVM_SUPPORTS_GET_GENERATED_KEYS;
 	}
 
 	/**
-	 * Should we use streams to bind binary types to JDBC IN parameters.
-	 * Property <tt>hibernate.jdbc.use_streams_for_binary</tt>.
-	 * @see Environment#USE_STREAMS_FOR_BINARY
+	 * Should we use streams to bind binary types to JDBC IN parameters?
+	 *
+	 * @return True if streams should be used for binary data handling; false otherwise.
+	 *
+	 * @see #USE_STREAMS_FOR_BINARY
 	 */
 	public static boolean useStreamsForBinary() {
 		return ENABLE_BINARY_STREAMS;
 	}
 
 	/**
-	 * Should we use CGLIB reflection optimizer.
-	 * Property <tt>hibernate.jdbc.use_refection_optimizer</tt>.
-	 * @see Environment#USE_REFLECTION_OPTIMIZER
+	 * Should we use reflection optimization?
+	 *
+	 * @return True if reflection optimization should be used; false otherwise.
+	 *
+	 * @see #USE_REFLECTION_OPTIMIZER
+	 * @see #getBytecodeProvider()
+	 * @see BytecodeProvider#getReflectionOptimizer
 	 */
 	public static boolean useReflectionOptimizer() {
 		return ENABLE_REFLECTION_OPTIMIZER;
 	}
 
-	private Environment() { throw new UnsupportedOperationException(); }
+	/**
+	 * Disallow instantiation
+	 */
+	private Environment() {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Return <tt>System</tt> properties, extended by any properties specified

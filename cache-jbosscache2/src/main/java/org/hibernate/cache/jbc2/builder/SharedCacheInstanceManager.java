@@ -190,7 +190,7 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
     protected Cache createSharedCache(Settings settings, Properties properties)
     {
         String configResource = PropertiesHelper.getString(CACHE_RESOURCE_PROP, properties, DEFAULT_CACHE_RESOURCE);
-        return DefaultCacheFactory.getInstance().createCache(configResource, false);
+        return new DefaultCacheFactory().createCache(configResource, false);
     }
     
     /**

@@ -144,14 +144,7 @@ public final class ReflectHelper {
 	 */
 	public static boolean implementsInterface(Class clazz, Class intf) {
 		assert intf.isInterface() : "Interface to check was not an interface";
-
-		Class[] interfaces = clazz.getInterfaces();
-		for ( int i = 0; i < interfaces.length; i++ ) {
-			if ( intf.isAssignableFrom( interfaces[i] ) ) {
-				return true;
-			}
-		}
-		return false;
+		return intf.isAssignableFrom( clazz );
 	}
 
 	/**

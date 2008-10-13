@@ -25,7 +25,6 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -47,7 +46,7 @@ import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.connection.ConnectionProviderFactory;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectFactory;
+import org.hibernate.dialect.resolver.DialectFactory;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLExceptionConverterFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
@@ -64,23 +63,24 @@ import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 
 /**
- * Reads configuration properties and configures a <tt>Settings</tt> instance.
+ * Reads configuration properties and builds a {@link Settings} instance.
  *
  * @author Gavin King
  */
 public class SettingsFactory implements Serializable {
+	private static final Logger log = LoggerFactory.getLogger( SettingsFactory.class );
+	private static final long serialVersionUID = -1194386144994524825L;
 
 	public static final String DEF_CACHE_REG_FACTORY = NoCachingRegionFactory.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(SettingsFactory.class);
 
 	protected SettingsFactory() {
 	}
-	
+
 	public Settings buildSettings(Properties props) {
 		Settings settings = new Settings();
-		
+
 		//SessionFactory name:
-		
+
 		String sessionFactoryName = props.getProperty(Environment.SESSION_FACTORY_NAME);
 		settings.setSessionFactoryName(sessionFactoryName);
 
@@ -91,17 +91,17 @@ public class SettingsFactory implements Serializable {
 
 		//Interrogate JDBC metadata
 
-		String databaseName = null;
-		int databaseMajorVersion = 0;
 		boolean metaSupportsScrollable = false;
 		boolean metaSupportsGetGeneratedKeys = false;
 		boolean metaSupportsBatchUpdates = false;
 		boolean metaReportsDDLCausesTxnCommit = false;
 		boolean metaReportsDDLInTxnSupported = true;
+		Dialect dialect = null;
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-		// The need for it is intended to be alleviated with 3.3 developement, thus it is
+		// The need for it is intended to be alleviated with future developement, thus it is
 		// not defined as an Environment constant...
+		//
 		// it is used to control whether we should consult the JDBC metadata to determine
 		// certain Settings default values; it is useful to *not* do this when the database
 		// may not be available (mainly in tools usage).
@@ -111,46 +111,48 @@ public class SettingsFactory implements Serializable {
 				Connection conn = connections.getConnection();
 				try {
 					DatabaseMetaData meta = conn.getMetaData();
-					databaseName = meta.getDatabaseProductName();
-					databaseMajorVersion = getDatabaseMajorVersion(meta);
-					log.info("RDBMS: " + databaseName + ", version: " + meta.getDatabaseProductVersion() );
-					log.info("JDBC driver: " + meta.getDriverName() + ", version: " + meta.getDriverVersion() );
+					log.info( "RDBMS: " + meta.getDatabaseProductName() + ", version: " + meta.getDatabaseProductVersion() );
+					log.info( "JDBC driver: " + meta.getDriverName() + ", version: " + meta.getDriverVersion() );
 
-					metaSupportsScrollable = meta.supportsResultSetType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+					dialect = DialectFactory.buildDialect( props, conn );
+
+					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
 					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
 					metaReportsDDLInTxnSupported = !meta.dataDefinitionIgnoredInTransactions();
-					metaSupportsGetGeneratedKeys  = meta.supportsGetGeneratedKeys();
+					metaSupportsGetGeneratedKeys = meta.supportsGetGeneratedKeys();
 				}
-				catch (SQLException sqle) {
-					log.warn("Could not obtain connection metadata", sqle);
+				catch ( SQLException sqle ) {
+					log.warn( "Could not obtain connection metadata", sqle );
 				}
 				finally {
-					connections.closeConnection(conn);
+					connections.closeConnection( conn );
 				}
 			}
-			catch (SQLException sqle) {
-				log.warn("Could not obtain connection to query metadata", sqle);
+			catch ( SQLException sqle ) {
+				log.warn( "Could not obtain connection to query metadata", sqle );
+				dialect = DialectFactory.buildDialect( props );
 			}
-			catch (UnsupportedOperationException uoe) {
+			catch ( UnsupportedOperationException uoe ) {
 				// user supplied JDBC connections
+				dialect = DialectFactory.buildDialect( props );
 			}
 		}
+		else {
+			dialect = DialectFactory.buildDialect( props );
+		}
+
 		settings.setDataDefinitionImplicitCommit( metaReportsDDLCausesTxnCommit );
 		settings.setDataDefinitionInTransactionSupported( metaReportsDDLInTxnSupported );
+		settings.setDialect( dialect );
 
-
-		//SQL Dialect:
-		Dialect dialect = determineDialect( props, databaseName, databaseMajorVersion );
-		settings.setDialect(dialect);
-		
 		//use dialect default properties
 		final Properties properties = new Properties();
 		properties.putAll( dialect.getDefaultProperties() );
-		properties.putAll(props);
-		
+		properties.putAll( props );
+
 		// Transaction settings:
-		
+
 		TransactionFactory transactionFactory = createTransactionFactory(properties);
 		settings.setTransactionFactory(transactionFactory);
 		settings.setTransactionManagerLookup( createTransactionManagerLookup(properties) );
@@ -173,7 +175,7 @@ public class SettingsFactory implements Serializable {
 		if (batchSize>0) log.info("JDBC batch updates for versioned data: " + enabledDisabled(jdbcBatchVersionedData) );
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
 		settings.setBatcherFactory( createBatcherFactory(properties, batchSize) );
-		
+
 		boolean useScrollableResultSets = PropertiesHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, metaSupportsScrollable);
 		log.info("Scrollable result sets: " + enabledDisabled(useScrollableResultSets) );
 		settings.setScrollableResultSetsEnabled(useScrollableResultSets);
@@ -224,7 +226,7 @@ public class SettingsFactory implements Serializable {
 		boolean comments = PropertiesHelper.getBoolean(Environment.USE_SQL_COMMENTS, properties);
 		log.info( "Generate SQL with comments: " + enabledDisabled(comments) );
 		settings.setCommentsEnabled(comments);
-		
+
 		boolean orderUpdates = PropertiesHelper.getBoolean(Environment.ORDER_UPDATES, properties);
 		log.info( "Order SQL updates by primary key: " + enabledDisabled(orderUpdates) );
 		settings.setOrderUpdatesEnabled(orderUpdates);
@@ -232,9 +234,9 @@ public class SettingsFactory implements Serializable {
 		boolean orderInserts = PropertiesHelper.getBoolean(Environment.ORDER_INSERTS, properties);
 		log.info( "Order SQL inserts for batching: " + enabledDisabled( orderInserts ) );
 		settings.setOrderInsertsEnabled( orderInserts );
-		
+
 		//Query parser settings:
-		
+
 		settings.setQueryTranslatorFactory( createQueryTranslatorFactory(properties) );
 
 		Map querySubstitutions = PropertiesHelper.toMap(Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties);
@@ -244,7 +246,7 @@ public class SettingsFactory implements Serializable {
 		boolean jpaqlCompliance = PropertiesHelper.getBoolean( Environment.JPAQL_STRICT_COMPLIANCE, properties, false );
 		settings.setStrictJPAQLCompliance( jpaqlCompliance );
 		log.info( "JPA-QL strict compliance: " + enabledDisabled( jpaqlCompliance ) );
-		
+
 		// Second-level / query cache:
 
 		boolean useSecondLevelCache = PropertiesHelper.getBoolean(Environment.USE_SECOND_LEVEL_CACHE, properties, true);
@@ -275,9 +277,9 @@ public class SettingsFactory implements Serializable {
 		settings.setStructuredCacheEntriesEnabled(useStructuredCacheEntries);
 
 		if (useQueryCache) settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
-		
+
 		//SQL Exception converter:
-		
+
 		SQLExceptionConverter sqlExceptionConverter;
 		try {
 			sqlExceptionConverter = SQLExceptionConverterFactory.buildSQLExceptionConverter( dialect, properties );
@@ -302,13 +304,13 @@ public class SettingsFactory implements Serializable {
 		boolean useStatistics = PropertiesHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
 		log.info( "Statistics: " + enabledDisabled(useStatistics) );
 		settings.setStatisticsEnabled(useStatistics);
-		
+
 		boolean useIdentifierRollback = PropertiesHelper.getBoolean(Environment.USE_IDENTIFIER_ROLLBACK, properties);
 		log.info( "Deleted entity synthetic identifier rollback: " + enabledDisabled(useIdentifierRollback) );
 		settings.setIdentifierRollbackEnabled(useIdentifierRollback);
-		
+
 		//Schema export:
-		
+
 		String autoSchemaExport = properties.getProperty(Environment.HBM2DDL_AUTO);
 		if ( "validate".equals(autoSchemaExport) ) settings.setAutoValidateSchema(true);
 		if ( "update".equals(autoSchemaExport) ) settings.setAutoUpdateSchema(true);
@@ -348,24 +350,10 @@ public class SettingsFactory implements Serializable {
 		}
 	}
 
-	private int getDatabaseMajorVersion(DatabaseMetaData meta) {
-		try {
-			Method gdbmvMethod = DatabaseMetaData.class.getMethod("getDatabaseMajorVersion", null);
-			return ( (Integer) gdbmvMethod.invoke(meta, null) ).intValue();
-		}
-		catch (NoSuchMethodException nsme) {
-			return 0;
-		}
-		catch (Throwable t) {
-			log.debug("could not get database version from JDBC metadata");
-			return 0;
-		}
-	}
-
 	private static String enabledDisabled(boolean value) {
 		return value ? "enabled" : "disabled";
 	}
-	
+
 	protected QueryCacheFactory createQueryCacheFactory(Properties properties) {
 		String queryCacheFactoryClassName = PropertiesHelper.getString(
 				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.StandardQueryCacheFactory"
@@ -401,7 +389,7 @@ public class SettingsFactory implements Serializable {
 			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
 		}
 	}
-	
+
 	protected QueryTranslatorFactory createQueryTranslatorFactory(Properties properties) {
 		String className = PropertiesHelper.getString(
 				Environment.QUERY_TRANSLATOR, properties, "org.hibernate.hql.ast.ASTQueryTranslatorFactory"
@@ -414,7 +402,7 @@ public class SettingsFactory implements Serializable {
 			throw new HibernateException("could not instantiate QueryTranslatorFactory: " + className, cnfe);
 		}
 	}
-	
+
 	protected BatcherFactory createBatcherFactory(Properties properties, int batchSize) {
 		String batcherClass = properties.getProperty(Environment.BATCH_STRATEGY);
 		if (batcherClass==null) {
@@ -432,21 +420,17 @@ public class SettingsFactory implements Serializable {
 			}
 		}
 	}
-	
+
 	protected ConnectionProvider createConnectionProvider(Properties properties) {
 		return ConnectionProviderFactory.newConnectionProvider(properties);
 	}
-	
+
 	protected TransactionFactory createTransactionFactory(Properties properties) {
 		return TransactionFactoryFactory.buildTransactionFactory(properties);
 	}
-	
+
 	protected TransactionManagerLookup createTransactionManagerLookup(Properties properties) {
-		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);		
+		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);
 	}
 
-	private Dialect determineDialect(Properties props, String databaseName, int databaseMajorVersion) {
-		return DialectFactory.buildDialect( props, databaseName, databaseMajorVersion );
-	}
-	
 }

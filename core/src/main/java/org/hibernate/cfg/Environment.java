@@ -240,6 +240,13 @@ public final class Environment {
 	 * Hibernate SQL {@link org.hibernate.dialect.Dialect} class
 	 */
 	public static final String DIALECT ="hibernate.dialect";
+
+	/**
+	 * {@link org.hibernate.dialect.resolver.DialectResolver} classes to register with the
+	 * {@link org.hibernate.dialect.resolver.DialectFactory}
+	 */
+	public static final String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
+
 	/**
 	 * A default database schema (owner) name to use for unqualified tablenames
 	 */

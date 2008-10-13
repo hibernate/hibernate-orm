@@ -140,7 +140,8 @@ public class EntityTuplizerFactory implements Serializable {
 	}
 
 	private boolean hasProperConstructor(Class tuplizerClass) {
-		return getProperConstructor( tuplizerClass ) != null;
+		return getProperConstructor( tuplizerClass ) != null
+				&& ! ReflectHelper.isAbstractClass( tuplizerClass );
 	}
 
 	private Constructor getProperConstructor(Class clazz) {

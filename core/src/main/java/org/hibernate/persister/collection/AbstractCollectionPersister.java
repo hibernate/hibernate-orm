@@ -80,12 +80,12 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
 
@@ -113,7 +113,6 @@ public abstract class AbstractCollectionPersister
 	private final String sqlDetectRowByIndexString;
 	private final String sqlDetectRowByElementString;
 
-	private final String sqlOrderByString;
 	protected final String sqlWhereString;
 	private final String sqlOrderByStringTemplate;
 	private final String sqlWhereStringTemplate;
@@ -197,7 +196,7 @@ public abstract class AbstractCollectionPersister
 	private final String manyToManyWhereString;
 	private final String manyToManyWhereTemplate;
 
-	private final String manyToManyOrderByString;
+	private final boolean hasManyToManyOrder;
 	private final String manyToManyOrderByTemplate;
 
 	// custom sql
@@ -266,12 +265,7 @@ public abstract class AbstractCollectionPersister
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = (String) iter.next();
 		}
-		
-		sqlOrderByString = collection.getOrderBy();
-		hasOrder = sqlOrderByString != null;
-		sqlOrderByStringTemplate = hasOrder ?
-				Template.renderOrderByStringTemplate(sqlOrderByString, dialect, factory.getSqlFunctionRegistry()) :
-				null;
+
 		sqlWhereString = StringHelper.isNotEmpty( collection.getWhere() ) ? "( " + collection.getWhere() + ") " : null;
 		hasWhere = sqlWhereString != null;
 		sqlWhereStringTemplate = hasWhere ?
@@ -540,7 +534,26 @@ public abstract class AbstractCollectionPersister
 					);
 			}
 		}
-			
+
+		hasOrder = collection.getOrderBy() != null;
+		if ( hasOrder ) {
+			ColumnMapper mapper = new ColumnMapper() {
+				public String[] map(String reference) {
+					return elementPropertyMapping.toColumns( reference );
+				}
+			};
+			sqlOrderByStringTemplate = Template.renderOrderByStringTemplate(
+					collection.getOrderBy(),
+					mapper,
+					factory,
+					dialect,
+					factory.getSqlFunctionRegistry()
+			);
+		}
+		else {
+			sqlOrderByStringTemplate = null;
+		}
+
 		// Handle any filters applied to this collection
 		filterHelper = new FilterHelper( collection.getFilterMap(), dialect, factory.getSqlFunctionRegistry() );
 
@@ -552,10 +565,25 @@ public abstract class AbstractCollectionPersister
 		manyToManyWhereTemplate = manyToManyWhereString == null ?
 				null :
 				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getSqlFunctionRegistry() );
-		manyToManyOrderByString = collection.getManyToManyOrdering();
-		manyToManyOrderByTemplate = manyToManyOrderByString == null
-				? null
-	            : Template.renderOrderByStringTemplate( manyToManyOrderByString, factory.getDialect(), factory.getSqlFunctionRegistry() );
+
+		hasManyToManyOrder = collection.getManyToManyOrdering() != null;
+		if ( hasManyToManyOrder ) {
+			ColumnMapper mapper = new ColumnMapper() {
+				public String[] map(String reference) {
+					return elementPropertyMapping.toColumns( reference );
+				}
+			};
+			manyToManyOrderByTemplate = Template.renderOrderByStringTemplate(
+					collection.getManyToManyOrdering(),
+					mapper,
+					factory,
+					dialect,
+					factory.getSqlFunctionRegistry()
+			);
+		}
+		else {
+			manyToManyOrderByTemplate = null;
+		}
 
 		initCollectionPropertyMap();
 	}
@@ -658,17 +686,15 @@ public abstract class AbstractCollectionPersister
 	}
 
 	public String getSQLOrderByString(String alias) {
-		return hasOrdering() ? 
-			StringHelper.replace( sqlOrderByStringTemplate, Template.TEMPLATE, alias ) : "";
+		return hasOrdering()
+				? StringHelper.replace( sqlOrderByStringTemplate, Template.TEMPLATE, alias )
+				: "";
 	}
 
 	public String getManyToManyOrderByString(String alias) {
-		if ( isManyToMany() && manyToManyOrderByString != null ) {
-			return StringHelper.replace( manyToManyOrderByTemplate, Template.TEMPLATE, alias );
-		}
-		else {
-			return "";
-		}
+		return hasManyToManyOrdering()
+				? StringHelper.replace( manyToManyOrderByTemplate, Template.TEMPLATE, alias )
+				: "";
 	}
 	public FetchMode getFetchMode() {
 		return fetchMode;
@@ -679,7 +705,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	public boolean hasManyToManyOrdering() {
-		return isManyToMany() && manyToManyOrderByTemplate != null;
+		return isManyToMany() && hasManyToManyOrder;
 	}
 
 	public boolean hasWhere() {

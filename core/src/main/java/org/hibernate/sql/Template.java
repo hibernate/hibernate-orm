@@ -30,6 +30,10 @@ import java.util.StringTokenizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.util.StringHelper;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
+import org.hibernate.sql.ordering.antlr.TranslationContext;
+import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -233,93 +237,79 @@ public final class Template {
 		return result.toString();
 	}
 
-	/**
-	 * Takes order by clause provided in the mapping attribute and interpolates the alias.
-	 * Handles asc, desc, SQL functions, quoted identifiers.
-	 */
-	public static String renderOrderByStringTemplate(String sqlOrderByString, Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		//TODO: make this a bit nicer
-		String symbols = new StringBuffer()
-			.append("=><!+-*/()',|&`")
-			.append(StringHelper.WHITESPACE)
-			.append( dialect.openQuote() )
-			.append( dialect.closeQuote() )
-			.toString();
-		StringTokenizer tokens = new StringTokenizer(sqlOrderByString, symbols, true);
-		
-		StringBuffer result = new StringBuffer();
-		boolean quoted = false;
-		boolean quotedIdentifier = false;
-		
-		boolean hasMore = tokens.hasMoreTokens();
-		String nextToken = hasMore ? tokens.nextToken() : null;
-		while (hasMore) {
-			String token = nextToken;
-			String lcToken = token.toLowerCase();
-			hasMore = tokens.hasMoreTokens();
-			nextToken = hasMore ? tokens.nextToken() : null;
-			
-			boolean isQuoteCharacter = false;
-			
-			if ( !quotedIdentifier && "'".equals(token) ) {
-				quoted = !quoted;
-				isQuoteCharacter = true;
-			}
-			
-			if ( !quoted ) {
-				
-				boolean isOpenQuote;
-				if ( "`".equals(token) ) {
-					isOpenQuote = !quotedIdentifier;
-					token = lcToken = isOpenQuote ? 
-						new Character( dialect.openQuote() ).toString() :
-						new Character( dialect.closeQuote() ).toString();
-					quotedIdentifier = isOpenQuote;	
-					isQuoteCharacter = true;
-				}
-				else if ( !quotedIdentifier && ( dialect.openQuote()==token.charAt(0) ) ) {
-					isOpenQuote = true;
-					quotedIdentifier = true;	
-					isQuoteCharacter = true;
-				}
-				else if ( quotedIdentifier && ( dialect.closeQuote()==token.charAt(0) ) ) {
-					quotedIdentifier = false;
-					isQuoteCharacter = true;
-					isOpenQuote = false;
-				}
-				else {
-					isOpenQuote = false;
-				}
-				
-				if (isOpenQuote) {
-					result.append(TEMPLATE).append('.');
-				}
-				
-			}
-	
-			boolean quotedOrWhitespace = quoted || 
-				quotedIdentifier || 
-				isQuoteCharacter || 
-				Character.isWhitespace( token.charAt(0) );
-			
-			if (quotedOrWhitespace) {
-				result.append(token);
-			}
-			else if (
-				isIdentifier(token, dialect) &&
-				!isFunctionOrKeyword(lcToken, nextToken, dialect, functionRegistry)
-			) {
-				result.append(TEMPLATE)
-					.append('.')
-					.append( dialect.quote(token) );
-			}
-			else {
-				result.append(token);
-			}
+	public static class NoOpColumnMapper implements ColumnMapper {
+		public static final NoOpColumnMapper INSTANCE = new NoOpColumnMapper();
+		public String[] map(String reference) {
+			return new String[] { reference };
 		}
-		return result.toString();
 	}
-	
+
+	/**
+	 * Performs order-by template rendering without {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
+	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE}
+	 *
+	 * @param orderByFragment The order-by fragment to render.
+	 * @param dialect The SQL dialect being used.
+	 * @param functionRegistry The SQL function registry
+	 *
+	 * @return The rendered <tt>ORDER BY</tt> template.
+	 * 
+	 * @see #renderOrderByStringTemplate(String,ColumnMapper,SessionFactoryImplementor,Dialect,SQLFunctionRegistry)
+	 */
+	public static String renderOrderByStringTemplate(
+			String orderByFragment,
+			Dialect dialect,
+			SQLFunctionRegistry functionRegistry) {
+		return renderOrderByStringTemplate(
+				orderByFragment,
+				NoOpColumnMapper.INSTANCE,
+				null,
+				dialect,
+				functionRegistry
+		);
+	}
+
+	/**
+	 * Performs order-by template rendering allowing {@link ColumnMapper column mapping}.  An <tt>ORDER BY</tt> template
+	 * has all column references "qualified" with a placeholder identified by {@link Template#TEMPLATE} which can later
+	 * be used to easily inject the SQL alias.
+	 *
+	 * @param orderByFragment The order-by fragment to render.
+	 * @param columnMapper The column mapping strategy to use.
+	 * @param sessionFactory The session factory.
+	 * @param dialect The SQL dialect being used.
+	 * @param functionRegistry The SQL function registry
+	 *
+	 * @return The rendered <tt>ORDER BY</tt> template.
+	 */
+	public static String renderOrderByStringTemplate(
+			String orderByFragment,
+			final ColumnMapper columnMapper,
+			final SessionFactoryImplementor sessionFactory,
+			final Dialect dialect,
+			final SQLFunctionRegistry functionRegistry) {
+		TranslationContext context = new TranslationContext() {
+			public SessionFactoryImplementor getSessionFactory() {
+				return sessionFactory;
+			}
+
+			public Dialect getDialect() {
+				return dialect;
+			}
+
+			public SQLFunctionRegistry getSqlFunctionRegistry() {
+				return functionRegistry;
+			}
+
+			public ColumnMapper getColumnMapper() {
+				return columnMapper;
+			}
+		};
+
+		OrderByFragmentTranslator translator = new OrderByFragmentTranslator( context );
+		return translator.render( orderByFragment );
+	}
+
 	private static boolean isNamedParameter(String token) {
 		return token.startsWith(":");
 	}

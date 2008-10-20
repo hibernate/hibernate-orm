@@ -77,7 +77,7 @@
                 <artifactId>antlr-maven-plugin</artifactId>
                 <version>${antlrPluginVersion}</version>
                 <configuration>
-                    <grammars>hql.g,hql-sql.g,sql-gen.g</grammars>
+                    <grammars>hql.g,hql-sql.g,sql-gen.g,order-by.g,order-by-render.g</grammars>
                 </configuration>
                 <executions>
                     <execution>

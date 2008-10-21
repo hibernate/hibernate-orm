@@ -98,7 +98,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 				ResultSet rs = st.executeQuery();
 				try {
 					rs.next();
-					Serializable result = IdentifierGeneratorFactory.get(
+					Serializable result = IdentifierGeneratorHelper.get(
 							rs, identifierType
 						);
 					if ( log.isDebugEnabled() ) {

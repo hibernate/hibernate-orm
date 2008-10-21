@@ -39,28 +39,6 @@ import org.hibernate.dialect.Dialect;
 public interface IdentifierGeneratorFactory {
 
 	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
-	 * continued generated id checking.  Currently this is only used in the case of the
-	 * {@link org.hibernate.id.ForeignGenerator foreign} generator as a way to signal that we should use the associated
-	 * entity's id value.
-	 */
-	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
-		public String toString() {
-			return "SHORT_CIRCUIT_INDICATOR";
-		}
-	};
-
-	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's identifier will
-	 * be generated as part of the datbase insertion.
-	 */
-	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		public String toString() {
-			return "POST_INSERT_INDICATOR";
-		}
-	};
-
-	/**
 	 * Allow injection of the dialect to use.
 	 *
 	 * @param dialect The dialect

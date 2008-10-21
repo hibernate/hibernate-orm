@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.id.IdentifierGeneratorFactory;
+import org.hibernate.id.IdentifierGeneratorHelper;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -105,7 +105,7 @@ public class OptimizerFactory {
 		 * @return The wrapped value.
 		 */
 		protected final Serializable make(long value) {
-			return IdentifierGeneratorFactory.createNumber( value, returnClass );
+			return IdentifierGeneratorHelper.createNumber( value, returnClass );
 		}
 
 		/**

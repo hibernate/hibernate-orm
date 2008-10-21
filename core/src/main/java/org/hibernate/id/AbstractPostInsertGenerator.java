@@ -39,6 +39,6 @@ public abstract class AbstractPostInsertGenerator implements PostInsertIdentifie
 	 * {@inheritDoc} 
 	 */
 	public Serializable generate(SessionImplementor s, Object obj) {
-		return IdentifierGeneratorFactory.POST_INSERT_INDICATOR;
+		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 }

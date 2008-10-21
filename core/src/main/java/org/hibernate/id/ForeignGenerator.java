@@ -27,7 +27,6 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
@@ -48,27 +47,61 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class ForeignGenerator implements IdentifierGenerator, Configurable {
-
-	private String propertyName;
 	private String entityName;
+	private String propertyName;
 
 	/**
-	 * @see org.hibernate.id.IdentifierGenerator#generate(org.hibernate.engine.SessionImplementor, java.lang.Object)
+	 * Getter for property 'entityName'.
+	 *
+	 * @return Value for property 'entityName'.
 	 */
-	public Serializable generate(SessionImplementor sessionImplementor, Object object)
-	throws HibernateException {
-		
-		Session session = (Session) sessionImplementor;
+	public String getEntityName() {
+		return entityName;
+	}
+
+	/**
+	 * Getter for property 'propertyName'.
+	 *
+	 * @return Value for property 'propertyName'.
+	 */
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	/**
+	 * Getter for property 'role'.  Role is the {@link #getPropertyName property name} qualified by the
+	 * {@link #getEntityName entity name}.
+	 *
+	 * @return Value for property 'role'.
+	 */
+	public String getRole() {
+		return getEntityName() + '.' + getPropertyName();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void configure(Type type, Properties params, Dialect d) {
+		propertyName = params.getProperty( "property" );
+		entityName = params.getProperty( ENTITY_NAME );
+		if ( propertyName==null ) {
+			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Serializable generate(SessionImplementor sessionImplementor, Object object) {
+		Session session = ( Session ) sessionImplementor;
 
 		Object associatedObject = sessionImplementor.getFactory()
-		        .getClassMetadata( entityName )
+				.getClassMetadata( entityName )
 		        .getPropertyValue( object, propertyName, session.getEntityMode() );
-		
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
-					"attempted to assign id from null one-to-one property: " + 
-					propertyName
-				);
+					"attempted to assign id from null one-to-one property [" + getRole() + "]"
+			);
 		}
 		
 		EntityType type = (EntityType) sessionImplementor.getFactory()
@@ -81,7 +114,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 					type.getAssociatedEntityName(), 
 					associatedObject, 
 					sessionImplementor
-				); 
+			);
 		}
 		catch (TransientObjectException toe) {
 			id = session.save( type.getAssociatedEntityName(), associatedObject );
@@ -89,23 +122,9 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 		if ( session.contains(object) ) {
 			//abort the save (the object is already saved by a circular cascade)
-			return IdentifierGeneratorFactory.SHORT_CIRCUIT_INDICATOR;
+			return IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
 		}
 		return id;
 	}
-
-	/**
-	 * @see org.hibernate.id.Configurable#configure(org.hibernate.type.Type, java.util.Properties, org.hibernate.dialect.Dialect)
-	 */
-	public void configure(Type type, Properties params, Dialect d)
-		throws MappingException {
-
-		propertyName = params.getProperty("property");
-		entityName = params.getProperty(ENTITY_NAME);
-		if (propertyName==null) throw new MappingException(
-			"param named \"property\" is required for foreign id generation strategy"
-		);
-	}
-
 }

@@ -95,7 +95,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			ResultSet rs = null;
 			try {
 				rs = insert.getGeneratedKeys();
-				return IdentifierGeneratorFactory.getGeneratedIdentity(
+				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,
 						persister.getIdentifierType()
 				);
@@ -142,7 +142,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 			ResultSet rs = insert.getResultSet();
 			try {
-				return IdentifierGeneratorFactory.getGeneratedIdentity( rs, persister.getIdentifierType() );
+				return IdentifierGeneratorHelper.getGeneratedIdentity( rs, persister.getIdentifierType() );
 			}
 			finally {
 				rs.close();
@@ -184,7 +184,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				SessionImplementor session,
 		        ResultSet rs,
 		        Object object) throws SQLException {
-			return IdentifierGeneratorFactory.getGeneratedIdentity( rs, persister.getIdentifierType() );
+			return IdentifierGeneratorHelper.getGeneratedIdentity( rs, persister.getIdentifierType() );
 		}
 	}
 

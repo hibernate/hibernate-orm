@@ -78,7 +78,7 @@ public class TableHiLoGenerator extends TableGenerator {
 			//keep the behavior consistent even for boundary usages
 			long val = ( (Number) super.generate(session, obj) ).longValue();
 			if (val == 0) val = ( (Number) super.generate(session, obj) ).longValue();
-			return IdentifierGeneratorFactory.createNumber( val, returnClass );
+			return IdentifierGeneratorHelper.createNumber( val, returnClass );
 		}
 		if (lo>maxLo) {
 			long hival = ( (Number) super.generate(session, obj) ).longValue();
@@ -87,7 +87,7 @@ public class TableHiLoGenerator extends TableGenerator {
 			log.debug("new hi value: " + hival);
 		}
 
-		return IdentifierGeneratorFactory.createNumber( hi + lo++, returnClass );
+		return IdentifierGeneratorHelper.createNumber( hi + lo++, returnClass );
 
 	}
 

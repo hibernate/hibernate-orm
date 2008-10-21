@@ -60,7 +60,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 	private static final Logger log = LoggerFactory.getLogger( SequenceIdentityGenerator.class );
 
 	public Serializable generate(SessionImplementor s, Object obj) {
-		return IdentifierGeneratorFactory.POST_INSERT_INDICATOR;
+		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
@@ -101,7 +101,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 
 		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
-			return IdentifierGeneratorFactory.getGeneratedIdentity(
+			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
 			        getPersister().getIdentifierType()
 			);

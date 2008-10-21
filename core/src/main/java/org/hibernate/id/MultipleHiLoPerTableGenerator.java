@@ -209,7 +209,7 @@ public class MultipleHiLoPerTableGenerator
 			//keep the behavior consistent even for boundary usages
 			int val = ( (Integer) doWorkInNewTransaction(session) ).intValue();
 			if (val == 0) val = ( (Integer) doWorkInNewTransaction(session) ).intValue();
-			return IdentifierGeneratorFactory.createNumber( val, returnClass );
+			return IdentifierGeneratorHelper.createNumber( val, returnClass );
 		}
 		if (lo>maxLo) {
 			int hival = ( (Integer) doWorkInNewTransaction(session) ).intValue();
@@ -217,7 +217,7 @@ public class MultipleHiLoPerTableGenerator
 			hi = hival * (maxLo+1);
 			log.debug("new hi value: " + hival);
 		}
-		return IdentifierGeneratorFactory.createNumber( hi + lo++, returnClass );
+		return IdentifierGeneratorHelper.createNumber( hi + lo++, returnClass );
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {

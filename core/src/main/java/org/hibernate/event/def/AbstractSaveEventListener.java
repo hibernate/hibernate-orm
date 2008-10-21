@@ -47,7 +47,7 @@ import org.hibernate.engine.Status;
 import org.hibernate.engine.Versioning;
 import org.hibernate.event.EventSource;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGeneratorFactory;
+import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -123,10 +123,10 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}
-		else if ( generatedId == IdentifierGeneratorFactory.SHORT_CIRCUIT_INDICATOR ) {
+		else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
 			return source.getIdentifier( entity );
 		}
-		else if ( generatedId == IdentifierGeneratorFactory.POST_INSERT_INDICATOR ) {
+		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
 			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
 		}
 		else {

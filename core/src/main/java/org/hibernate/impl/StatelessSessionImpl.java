@@ -62,7 +62,7 @@ import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
-import org.hibernate.id.IdentifierGeneratorFactory;
+import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.jdbc.Batcher;
 import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.loader.criteria.CriteriaLoader;
@@ -110,7 +110,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 				persister.setPropertyValues( entity, state, EntityMode.POJO );
 			}
 		}
-		if ( id == IdentifierGeneratorFactory.POST_INSERT_INDICATOR ) {
+		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
 			id = persister.insert(state, entity, this);
 		}
 		else {

@@ -27,7 +27,7 @@ package org.hibernate.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
-import org.hibernate.id.IdentifierGeneratorFactory;
+import org.hibernate.id.IdentifierGeneratorHelper;
 
 /**
  * A strategy for determining if a version value is an version of
@@ -91,7 +91,7 @@ public class VersionValue {
 			}
 		}
 		public Object getDefaultValue(Object currentValue) {
-			return IdentifierGeneratorFactory.createNumber( -1l, currentValue.getClass() );
+			return IdentifierGeneratorHelper.createNumber( -1l, currentValue.getClass() );
 		}
 		public String toString() {
 			return "VERSION_NEGATIVE";

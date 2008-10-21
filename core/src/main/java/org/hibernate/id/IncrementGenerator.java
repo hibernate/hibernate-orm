@@ -67,7 +67,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		if (sql!=null) {
 			getNext( session );
 		}
-		return IdentifierGeneratorFactory.createNumber(next++, returnClass);
+		return IdentifierGeneratorHelper.createNumber(next++, returnClass);
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect)

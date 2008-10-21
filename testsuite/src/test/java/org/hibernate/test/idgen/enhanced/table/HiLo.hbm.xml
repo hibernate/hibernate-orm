@@ -5,9 +5,11 @@
 
 <hibernate-mapping package="org.hibernate.test.idgen.enhanced.table">
 
+    <identifier-generator name="table" class="org.hibernate.id.enhanced.TableGenerator"/>
+
     <class name="Entity" table="ID_TBL_HILO_ENTITY">
         <id name="id" column="ID" type="long">
-            <generator class="org.hibernate.id.enhanced.TableGenerator">
+            <generator class="table">
                 <param name="table_name">ID_TBL_HILO_TBL</param>
                 <param name="segment_value">test</param>
                 <param name="initial_value">1</param>

@@ -162,6 +162,9 @@ public final class HbmBinder {
 			else if ( "fetch-profile".equals( elementName ) ) {
 				parseFetchProfile( element, mappings, null );
 			}
+			else if ( "identifier-generator".equals( elementName ) ) {
+				parseIdentifierGeneratorRegistration( element, mappings );
+			}
 			else if ( "typedef".equals( elementName ) ) {
 				bindTypeDef( element, mappings );
 			}
@@ -198,6 +201,26 @@ public final class HbmBinder {
 				bindAuxiliaryDatabaseObject( element, mappings );
 			}
 		}
+	}
+
+	private static void parseIdentifierGeneratorRegistration(Element element, Mappings mappings) {
+		String strategy = element.attributeValue( "name" );
+		if ( StringHelper.isEmpty( strategy ) ) {
+			throw new MappingException( "'name' attribute expected for identifier-generator elements" );
+		}
+		String generatorClassName = element.attributeValue( "class" );
+		if ( StringHelper.isEmpty( generatorClassName ) ) {
+			throw new MappingException( "'class' attribute expected for identifier-generator [identifier-generator@name=" + strategy + "]" );
+		}
+
+		try {
+			Class generatorClass = ReflectHelper.classForName( generatorClassName );
+			mappings.getIdentifierGeneratorFactory().register( strategy, generatorClass );
+		}
+		catch ( ClassNotFoundException e ) {
+			throw new MappingException( "Unable to locate identifier-generator class [name=" + strategy + ", class=" + generatorClassName + "]" );
+		}
+
 	}
 
 	private static void bindImport(Element importNode, Mappings mappings) {

@@ -34,9 +34,9 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.Mapping;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentifierGeneratorFactory;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ReflectHelper;
@@ -120,6 +120,7 @@ public class SimpleValue implements KeyValue {
 	}
 
 	public IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect, 
 			String defaultCatalog, 
 			String defaultSchema, 
@@ -171,13 +172,9 @@ public class SimpleValue implements KeyValue {
 		if (identifierGeneratorProperties!=null) {
 			params.putAll(identifierGeneratorProperties);
 		}
-		
-		return IdentifierGeneratorFactory.create(
-				identifierGeneratorStrategy,
-				getType(),
-				params,
-				dialect
-			);
+
+		identifierGeneratorFactory.setDialect( dialect );
+		return identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
 		
 	}
 
@@ -210,9 +207,10 @@ public class SimpleValue implements KeyValue {
 		return identifierGeneratorStrategy;
 	}
 	
-	public boolean isIdentityColumn(Dialect dialect) {
-		return IdentifierGeneratorFactory.getIdentifierGeneratorClass(identifierGeneratorStrategy, dialect)
-				.equals(IdentityGenerator.class);
+	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
+		identifierGeneratorFactory.setDialect( dialect );
+		return identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
+				.equals( IdentityGenerator.class );
 	}
 
 	/**

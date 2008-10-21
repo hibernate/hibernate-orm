@@ -108,6 +108,8 @@ import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEventListener;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
@@ -202,6 +204,8 @@ public class Configuration implements Serializable {
 
 	private transient Mapping mapping = buildMapping();
 
+	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory;
+
 	protected Configuration(SettingsFactory settingsFactory) {
 		this.settingsFactory = settingsFactory;
 		reset();
@@ -245,6 +249,8 @@ public class Configuration implements Serializable {
 
 		entityTuplizerFactory = new EntityTuplizerFactory();
 //		componentTuplizerFactory = new ComponentTuplizerFactory();
+
+		identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 	}
 
 	public EntityTuplizerFactory getEntityTuplizerFactory() {
@@ -750,43 +756,37 @@ public class Configuration implements Serializable {
 
 		Iterator iter = classes.values().iterator();
 		while ( iter.hasNext() ) {
-			PersistentClass pc = (PersistentClass) iter.next();
-
+			PersistentClass pc = ( PersistentClass ) iter.next();
 			if ( !pc.isInherited() ) {
-
-				IdentifierGenerator ig = pc.getIdentifier()
-						.createIdentifierGenerator(
-								dialect,
-								defaultCatalog,
-								defaultSchema,
-								(RootClass) pc
-							);
+				IdentifierGenerator ig = pc.getIdentifier().createIdentifierGenerator(
+						getIdentifierGeneratorFactory(),
+						dialect,
+						defaultCatalog,
+						defaultSchema,
+						(RootClass) pc
+				);
 
 				if ( ig instanceof PersistentIdentifierGenerator ) {
 					generators.put( ( (PersistentIdentifierGenerator) ig ).generatorKey(), ig );
 				}
-
 			}
 		}
 
 		iter = collections.values().iterator();
 		while ( iter.hasNext() ) {
-			Collection collection = (Collection) iter.next();
-
+			Collection collection = ( Collection ) iter.next();
 			if ( collection.isIdentified() ) {
-
-				IdentifierGenerator ig = ( (IdentifierCollection) collection ).getIdentifier()
-						.createIdentifierGenerator(
-								dialect,
-								defaultCatalog,
-								defaultSchema,
-								null
-							);
+				IdentifierGenerator ig = ( ( IdentifierCollection ) collection ).getIdentifier().createIdentifierGenerator(
+						getIdentifierGeneratorFactory(),
+						dialect,
+						defaultCatalog,
+						defaultSchema,
+						null
+				);
 
 				if ( ig instanceof PersistentIdentifierGenerator ) {
 					generators.put( ( (PersistentIdentifierGenerator) ig ).generatorKey(), ig );
 				}
-
 			}
 		}
 
@@ -2147,8 +2147,21 @@ public class Configuration implements Serializable {
 		return this;
 	}
 
+	/**
+	 * Retrieve the IdentifierGeneratorFactory in effect for this configuration.
+	 *
+	 * @return This configuration's IdentifierGeneratorFactory.
+	 */
+	public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return identifierGeneratorFactory;
+	}
+
 	public Mapping buildMapping() {
 		return new Mapping() {
+			public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+				return identifierGeneratorFactory;
+			}
+
 			/**
 			 * Returns the identifier type of a mapped class
 			 */
@@ -2718,5 +2731,8 @@ public class Configuration implements Serializable {
 			extendsQueue.put( entry, null );
 		}
 
+		public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+			return identifierGeneratorFactory;
+		}
 	}
 }

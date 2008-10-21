@@ -32,6 +32,7 @@ import java.util.ListIterator;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
@@ -518,4 +519,11 @@ public interface Mappings {
 	 * @param entry The entry to add.
 	 */
 	public void addToExtendsQueue(ExtendsQueueEntry entry);
+
+	/**
+	 * Retrieve the IdentifierGeneratorFactory in effect for this mapping.
+	 *
+	 * @return The IdentifierGeneratorFactory
+	 */
+	public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory();
 }

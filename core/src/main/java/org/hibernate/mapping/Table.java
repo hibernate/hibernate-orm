@@ -392,7 +392,7 @@ public class Table implements RelationalModel, Serializable {
 				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
 				.append( " (" );
 
-		boolean identityColumn = idValue != null && idValue.isIdentityColumn( dialect );
+		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
 
 		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
 		String pkname = null;

@@ -96,6 +96,7 @@ import org.hibernate.event.EventListeners;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -233,11 +234,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			PersistentClass model = (PersistentClass) classes.next();
 			if ( !model.isInherited() ) {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+						cfg.getIdentifierGeneratorFactory(),
 						settings.getDialect(),
 				        settings.getDefaultCatalogName(),
 				        settings.getDefaultSchemaName(),
 				        (RootClass) model
-					);
+				);
 				identifierGenerators.put( model.getEntityName(), generator );
 			}
 		}
@@ -465,6 +467,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return null;
 	}
 
 	private void registerEntityNameResolvers(EntityPersister persister) {

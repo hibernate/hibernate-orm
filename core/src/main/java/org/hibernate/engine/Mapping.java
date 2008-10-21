@@ -25,6 +25,7 @@
 package org.hibernate.engine;
 
 import org.hibernate.MappingException;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.Type;
 
 /**
@@ -38,6 +39,12 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface Mapping {
+	/**
+	 * Allow access to the id generator factory, though this is only needed/allowed from configuration.
+	 * @return
+	 * @deprecated temporary solution 
+	 */
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 	public Type getIdentifierType(String className) throws MappingException;
 	public String getIdentifierPropertyName(String className) throws MappingException;
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException;

@@ -17,8 +17,10 @@ arbitrary number of queries, and import declarations of arbitrary classes.
  -->
 
 <!ELEMENT hibernate-mapping (
-	meta*, 
-	typedef*, 
+	meta*,
+	identifier-generator*,
+	typedef*,
+	filter-def*,
 	import*,
 	(class|subclass|joined-subclass|union-subclass)*,
     resultset*,
@@ -36,7 +38,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 	<!ATTLIST hibernate-mapping package CDATA #IMPLIED>									<!-- default: none -->
 
 <!--
-	META element definition; used to assign meta-level attributes to a class
+	<meta.../> is used to assign meta-level attributes to a class
 	or property.  Is currently used by codegenerator as a placeholder for
 	values that is not directly related to OR mappings.
 -->
@@ -45,7 +47,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 	<!ATTLIST meta inherit (true|false) "true">
 
 <!--
-	TYPEDEF element definition; defines a new name for a Hibernate type. May
+    <identifier-generator.../> allows customized short-naming of IdentifierGenerator implementations.
+-->
+<!ELEMENT identifier-generator EMPTY>
+    <!ATTLIST identifier-generator name CDATA #REQUIRED>
+    <!ATTLIST identifier-generator class CDATA #REQUIRED>
+
+<!--
+	<typedef.../> allows defining a customized type mapping for a Hibernate type. May
 	contain parameters for parameterizable types.
 -->
 <!ELEMENT typedef (param*)>

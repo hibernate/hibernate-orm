@@ -421,12 +421,13 @@ public abstract class AbstractCollectionPersister
 			identifierColumnName = col.getQuotedName(dialect);
 			identifierColumnAlias = col.getAlias(dialect);
 			//unquotedIdentifierColumnName = identifierColumnAlias;
-			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator( 
+			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
+					cfg.getIdentifierGeneratorFactory(),
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName(),
 					null
-				);
+			);
 		}
 		else {
 			identifierType = null;

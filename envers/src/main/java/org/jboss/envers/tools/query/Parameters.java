@@ -1,0 +1,242 @@
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Copyright 2008, Red Hat Middleware LLC, and others contributors as indicated
+ * by the @authors tag. All rights reserved.
+ *
+ * See the copyright.txt in the distribution for a  full listing of individual
+ * contributors. This copyrighted material is made available to anyone wishing
+ * to use,  modify, copy, or redistribute it subject to the terms and
+ * conditions of the GNU Lesser General Public License, v. 2.1.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT A WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License, v.2.1 along with this distribution; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ * Red Hat Author(s): Adam Warski
+ */
+package org.jboss.envers.tools.query;
+
+import org.jboss.envers.tools.MutableInteger;
+import org.jboss.envers.tools.MutableBoolean;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * Parameters of a query, built using {@link QueryBuilder}.
+ * @author Adam Warski (adam at warski dot org)
+ */
+public class Parameters {
+    public final static String AND = "and";
+    public final static String OR = "or";
+    
+    /**
+     * Main alias of the entity.
+     */
+    private final String alias;
+    /**
+     * Connective between these parameters - "and" or "or".
+     */
+    private final String connective;
+    /**
+     * For use by the parameter generator. Must be the same in all "child" (and parent) parameters.
+     */
+    private final MutableInteger queryParamCounter;
+
+    /**
+     * A list of sub-parameters (parameters with a different connective).
+     */
+    private final List<Parameters> subParameters;
+    /**
+     * A list of negated parameters.
+     */
+    private final List<Parameters> negatedParameters;
+    /**
+     * A list of complete where-expressions.
+     */
+    private final List<String> expressions;
+    /**
+     * Values of parameters used in expressions.
+     */
+    private final Map<String, Object> localQueryParamValues;
+
+    Parameters(String alias, String connective, MutableInteger queryParamCounter) {
+        this.alias = alias;
+        this.connective = connective;
+        this.queryParamCounter = queryParamCounter;
+
+        subParameters = new ArrayList<Parameters>();
+        negatedParameters = new ArrayList<Parameters>();
+        expressions = new ArrayList<String>();
+        localQueryParamValues = new HashMap<String, Object>();
+    }
+
+    private String generateQueryParam() {
+        return "_p" + queryParamCounter.getAndIncrease();
+    }
+
+    /**
+     * Adds sub-parameters with a new connective. That is, the parameters will be grouped in parentheses in the
+     * generated query, e.g.: ... and (exp1 or exp2) and ..., assuming the old connective is "and", and the
+     * new connective is "or".
+     * @param newConnective New connective of the parameters.
+     * @return Sub-parameters with the given connective.
+     */
+    public Parameters addSubParameters(String newConnective) {
+        if (connective.equals(newConnective)) {
+            return this;
+        } else {
+            Parameters newParams = new Parameters(alias, newConnective, queryParamCounter);
+            subParameters.add(newParams);
+            return newParams;
+        }
+    }
+
+    /**
+     * Adds negated parameters, by default with the "and" connective. These paremeters will be grouped in parentheses
+     * in the generated query and negated, e.g. ... not (exp1 and exp2) ...
+     * @return Negated sub paremters.
+     */
+    public Parameters addNegatedParameters() {
+        Parameters newParams = new Parameters(alias, AND, queryParamCounter);
+        negatedParameters.add(newParams);
+        return newParams;
+    }
+
+    public void addWhere(String left, String op, String right) {
+        addWhere(left, true, op, right, true);
+    }
+
+    public void addWhere(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
+        StringBuilder expression = new StringBuilder();
+
+        if (addAliasLeft) { expression.append(alias).append("."); }
+        expression.append(left);
+
+        expression.append(" ").append(op).append(" ");
+
+        if (addAliasRight) { expression.append(alias).append("."); }
+        expression.append(right);
+
+        expressions.add(expression.toString());
+    }
+
+    public void addWhereWithParam(String left, String op, Object paramValue) {
+        addWhereWithParam(left, true, op, paramValue);
+    }
+
+    public void addWhereWithParam(String left, boolean addAlias, String op, Object paramValue) {
+        String paramName = generateQueryParam();
+        localQueryParamValues.put(paramName, paramValue);
+
+        addWhereWithNamedParam(left, addAlias, op, paramName);
+    }
+
+    public void addWhereWithNamedParam(String left, String op, String paramName) {
+        addWhereWithNamedParam(left, true, op, paramName);
+    }
+
+    public void addWhereWithNamedParam(String left, boolean addAlias, String op, String paramName) {
+        StringBuilder expression = new StringBuilder();
+
+        if (addAlias) { expression.append(alias).append("."); }
+        expression.append(left);
+        expression.append(" ").append(op).append(" ");
+        expression.append(":").append(paramName);
+
+        expressions.add(expression.toString());
+    }
+
+    public void addWhereWithParams(String left, String opStart, Object[] paramValues, String opEnd) {
+        StringBuilder expression = new StringBuilder();
+
+        expression.append(alias).append(".").append(left).append(" ").append(opStart);
+
+        for (int i=0; i<paramValues.length; i++) {
+            Object paramValue = paramValues[i];
+            String paramName = generateQueryParam();
+            localQueryParamValues.put(paramName, paramValue);
+            expression.append(":").append(paramName);
+
+            if (i != paramValues.length-1) {
+                expression.append(", ");
+            }
+        }
+
+        expression.append(opEnd);
+
+        expressions.add(expression.toString());
+    }
+
+    public void addWhere(String left, String op, QueryBuilder right) {
+        addWhere(left, true, op, right);
+    }
+
+    public void addWhere(String left, boolean addAlias, String op, QueryBuilder right) {
+        StringBuilder expression = new StringBuilder();
+
+        if (addAlias) {
+            expression.append(alias).append(".");
+        }
+
+        expression.append(left);
+        
+        expression.append(" ").append(op).append(" ");
+
+        expression.append("(");
+        right.build(expression, localQueryParamValues);
+        expression.append(")");        
+
+        expressions.add(expression.toString());
+    }
+
+    private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {
+        if (!isFirst.isSet()) {
+            sb.append(" ").append(connective).append(" ");
+        }
+
+        sb.append(toAppend);
+
+        isFirst.unset();
+    }
+
+    boolean isEmpty() {
+        return expressions.size() == 0 && subParameters.size() == 0 && negatedParameters.size() == 0;
+    }
+
+    void build(StringBuilder sb, Map<String, Object> queryParamValues) {
+        MutableBoolean isFirst = new MutableBoolean(true);
+
+        for (String expression : expressions) {
+            append(sb, expression, isFirst);
+        }
+
+        for (Parameters sub : subParameters) {
+            if (!subParameters.isEmpty()) {
+                append(sb, "(", isFirst);
+                sub.build(sb, queryParamValues);
+                sb.append(")");
+            }
+        }
+
+        for (Parameters negated : negatedParameters) {
+            if (!negatedParameters.isEmpty()) {
+                append(sb, "not (", isFirst);
+                negated.build(sb, queryParamValues);
+                sb.append(")");
+            }
+        }
+
+        queryParamValues.putAll(localQueryParamValues);
+    }
+}
+

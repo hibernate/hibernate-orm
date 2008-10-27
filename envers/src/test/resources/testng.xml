@@ -1,0 +1,40 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Envers">
+    <test name="All">
+        <packages>
+            <package name="org.jboss.envers.test.integration.basic" />
+            <package name="org.jboss.envers.test.integration.cache" />
+            <package name="org.jboss.envers.test.integration.collection" />
+            <package name="org.jboss.envers.test.integration.collection.mapkey" /> 
+            <package name="org.jboss.envers.test.integration.components" />
+            <package name="org.jboss.envers.test.integration.customtype" />
+            <package name="org.jboss.envers.test.integration.data" />
+            <package name="org.jboss.envers.test.integration.flush" />
+            <package name="org.jboss.envers.test.integration.ids" />
+            <package name="org.jboss.envers.test.integration.inheritance.single" />
+            <package name="org.jboss.envers.test.integration.inheritance.single.childrelation" />
+            <package name="org.jboss.envers.test.integration.inheritance.single.relation" />
+            <package name="org.jboss.envers.test.integration.manytomany" />
+            <package name="org.jboss.envers.test.integration.manytomany.ternary" />
+            <package name="org.jboss.envers.test.integration.manytomany.unidirectional" />
+            <package name="org.jboss.envers.test.integration.naming" />
+            <package name="org.jboss.envers.test.integration.naming.ids" />
+            <package name="org.jboss.envers.test.integration.notinsertable" />
+            <package name="org.jboss.envers.test.integration.onetomany" />
+            <package name="org.jboss.envers.test.integration.onetomany.detached" />
+            <package name="org.jboss.envers.test.integration.onetoone.bidirectional" />
+            <package name="org.jboss.envers.test.integration.onetoone.bidirectional.ids" />
+            <package name="org.jboss.envers.test.integration.onetoone.unidirectional" />
+            <package name="org.jboss.envers.test.integration.properties" />
+            <package name="org.jboss.envers.test.integration.query" />
+            <package name="org.jboss.envers.test.integration.query.ids" />
+            <package name="org.jboss.envers.test.integration.reventity" />
+            <package name="org.jboss.envers.test.integration.revfordate" />
+            <package name="org.jboss.envers.test.integration.sameids" />
+            <package name="org.jboss.envers.test.integration.secondary" />
+            <package name="org.jboss.envers.test.integration.secondary.ids" />
+            <package name="org.jboss.envers.test.integration.superclass" />
+        </packages>
+    </test>
+</suite>

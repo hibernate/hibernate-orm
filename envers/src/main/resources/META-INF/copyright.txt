@@ -1,0 +1,1 @@
+(c) 2008, Adam Warski, JBoss Inc.

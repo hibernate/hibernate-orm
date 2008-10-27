@@ -1,0 +1,99 @@
+/*
+ * Envers. http://www.jboss.org/envers
+ *
+ * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License, v. 2.1.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT A WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License, v.2.1 along with this distribution; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ *
+ * Red Hat Author(s): Adam Warski
+ */
+package org.jboss.envers.entities;
+
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * Configuration of the user entities: property mapping of the entities, relations, inheritance.
+ * @author Adam Warski (adam at warski dot org)
+ */
+public class EntitiesConfigurations {
+    private Map<String, EntityConfiguration> entitiesConfigurations;
+
+    // Map versions entity name -> entity name
+    private Map<String, String> entityNamesForVersionsEntityNames = new HashMap<String, String>();
+
+    public EntitiesConfigurations(Map<String, EntityConfiguration> entitiesConfigurations) {
+        this.entitiesConfigurations = entitiesConfigurations;
+
+        generateBidirectionRelationInfo();
+        generateVersionsEntityToEntityNames();
+    }
+
+    private void generateVersionsEntityToEntityNames() {
+        entityNamesForVersionsEntityNames = new HashMap<String, String>();
+
+        for (String entityName : entitiesConfigurations.keySet()) {
+            entityNamesForVersionsEntityNames.put(entitiesConfigurations.get(entityName).getVersionsEntityName(),
+                    entityName);
+        }
+    }
+
+    private void generateBidirectionRelationInfo() {
+        // Checking each relation if it is bidirectional. If so, storing that information.
+        for (String entityName : entitiesConfigurations.keySet()) {
+            EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
+            // Iterating over all relations from that entity
+            for (RelationDescription relDesc : entCfg.getRelationsIterator()) {
+                // If this is an "owned" relation, checking the related entity, if it has a relation that has
+                // a mapped-by attribute to the currently checked. If so, this is a bidirectional relation.
+                if (relDesc.getRelationType() == RelationType.TO_ONE ||
+                        relDesc.getRelationType() == RelationType.TO_MANY_MIDDLE) {
+                    for (RelationDescription other : entitiesConfigurations.get(relDesc.getToEntityName()).getRelationsIterator()) {
+                        if (relDesc.getFromPropertyName().equals(other.getMappedByPropertyName()) &&
+                                (entityName.equals(other.getToEntityName()))) {
+                            relDesc.setBidirectional(true);
+                            other.setBidirectional(true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public EntityConfiguration get(String entityName) {
+        return entitiesConfigurations.get(entityName);
+    }
+
+    public String getEntityNameForVersionsEntityName(String versionsEntityName) {
+        return entityNamesForVersionsEntityNames.get(versionsEntityName);
+    }
+
+    public boolean isVersioned(String entityName) {
+        return get(entityName) != null;
+    }
+
+    public RelationDescription getRelationDescription(String entityName, String propertyName) {
+        EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
+        RelationDescription relDesc = entCfg.getRelationDescription(propertyName);
+        if (relDesc != null) {
+            return relDesc;
+        } else if (entCfg.getParentEntityName() != null) {
+            // The field may be declared in a superclass ...
+            return getRelationDescription(entCfg.getParentEntityName(), propertyName);
+        } else {
+            return null;
+        }
+    }
+}

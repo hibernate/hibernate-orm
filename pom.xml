@@ -53,6 +53,7 @@
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
+        <module>envers</module>
         <module>jmx</module>
         <module>testing</module>
         <module>testsuite</module>

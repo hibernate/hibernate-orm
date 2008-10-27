@@ -1,51 +1,54 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.configuration;
 
-import org.jboss.envers.entities.EntitiesConfigurations;
-import org.jboss.envers.configuration.metadata.VersionsMetadataGenerator;
-import org.jboss.envers.configuration.metadata.PersistentClassVersioningData;
-import org.jboss.envers.configuration.metadata.AnnotationsMetadataReader;
-import org.jboss.envers.configuration.metadata.EntityXmlMappingData;
-import org.jboss.envers.tools.graph.GraphTopologicalSort;
-import org.jboss.envers.tools.reflection.YReflectionManager;
-import org.jboss.envers.tools.StringTools;
-import org.dom4j.io.DOMWriter;
-import org.dom4j.io.XMLWriter;
-import org.dom4j.io.OutputFormat;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.hibernate.mapping.PersistentClass;
+import org.dom4j.io.DOMWriter;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+import org.jboss.envers.configuration.metadata.AnnotationsMetadataReader;
+import org.jboss.envers.configuration.metadata.EntityXmlMappingData;
+import org.jboss.envers.configuration.metadata.PersistentClassVersioningData;
+import org.jboss.envers.configuration.metadata.VersionsMetadataGenerator;
+import org.jboss.envers.entities.EntitiesConfigurations;
+import org.jboss.envers.tools.StringTools;
+import org.jboss.envers.tools.graph.GraphTopologicalSort;
+import org.jboss.envers.tools.reflection.YReflectionManager;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.io.ByteArrayOutputStream;
-import java.io.Writer;
-import java.io.PrintWriter;
-import java.io.IOException;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Adam Warski (adam at warski dot org)

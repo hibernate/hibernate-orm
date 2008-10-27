@@ -1,45 +1,46 @@
 /*
- * JBoss, Home of Professional Open Source
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008, Red Hat Middleware LLC, and others contributors as indicated
- * by the @authors tag. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * See the copyright.txt in the distribution for a  full listing of individual
- * contributors. This copyrighted material is made available to anyone wishing
- * to use,  modify, copy, or redistribute it subject to the terms and
- * conditions of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT A WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
  * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.configuration.metadata;
 
+import java.util.Iterator;
+
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Component;
-import org.hibernate.type.Type;
-import org.hibernate.type.ImmutableType;
-import org.hibernate.MappingException;
-import org.jboss.envers.entities.mapper.SimpleMapperBuilder;
-import org.jboss.envers.entities.mapper.id.SimpleIdMapperBuilder;
-import org.jboss.envers.entities.mapper.id.MultipleIdMapper;
-import org.jboss.envers.entities.mapper.id.EmbeddedIdMapper;
-import org.jboss.envers.entities.mapper.id.SingleIdMapper;
-import org.jboss.envers.entities.IdMappingData;
 import org.jboss.envers.ModificationStore;
+import org.jboss.envers.entities.IdMappingData;
+import org.jboss.envers.entities.mapper.SimpleMapperBuilder;
+import org.jboss.envers.entities.mapper.id.EmbeddedIdMapper;
+import org.jboss.envers.entities.mapper.id.MultipleIdMapper;
+import org.jboss.envers.entities.mapper.id.SimpleIdMapperBuilder;
+import org.jboss.envers.entities.mapper.id.SingleIdMapper;
 
-import java.util.Iterator;
+import org.hibernate.MappingException;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.type.ImmutableType;
+import org.hibernate.type.Type;
 
 /**
  * Generates metadata for primary identifiers (ids) of versions entities.

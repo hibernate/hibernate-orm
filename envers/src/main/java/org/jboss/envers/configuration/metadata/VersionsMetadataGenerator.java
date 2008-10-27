@@ -1,47 +1,60 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.configuration.metadata;
 
-import org.hibernate.type.*;
-import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.*;
-import org.hibernate.mapping.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.dom4j.Element;
-import org.jboss.envers.entities.EntityConfiguration;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.mapper.*;
-import org.jboss.envers.tools.StringTools;
 import org.jboss.envers.ModificationStore;
 import org.jboss.envers.VersionsJoinTable;
+import org.jboss.envers.configuration.GlobalConfiguration;
+import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
+import org.jboss.envers.entities.EntityConfiguration;
+import org.jboss.envers.entities.IdMappingData;
+import org.jboss.envers.entities.mapper.CompositeMapperBuilder;
+import org.jboss.envers.entities.mapper.ExtendedPropertyMapper;
+import org.jboss.envers.entities.mapper.MultiPropertyMapper;
+import org.jboss.envers.entities.mapper.SubclassPropertyMapper;
 import org.jboss.envers.entity.VersionsInheritanceEntityPersister;
+import org.jboss.envers.tools.StringTools;
 import org.jboss.envers.tools.log.YLog;
 import org.jboss.envers.tools.log.YLogManager;
 
-import java.util.*;
-import java.util.List;
-import java.util.Map;
+import org.hibernate.MappingException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)

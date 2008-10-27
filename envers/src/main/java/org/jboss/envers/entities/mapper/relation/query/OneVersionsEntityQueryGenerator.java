@@ -1,40 +1,41 @@
 /*
- * JBoss, Home of Professional Open Source
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008, Red Hat Middleware LLC, and others contributors as indicated
- * by the @authors tag. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * See the copyright.txt in the distribution for a  full listing of individual
- * contributors. This copyrighted material is made available to anyone wishing
- * to use,  modify, copy, or redistribute it subject to the terms and
- * conditions of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT A WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
  * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.entities.mapper.relation.query;
 
-import org.jboss.envers.entities.mapper.id.QueryParameterData;
-import org.jboss.envers.entities.mapper.id.IdMapper;
-import org.jboss.envers.entities.mapper.relation.MiddleIdData;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import org.jboss.envers.RevisionType;
-import org.jboss.envers.tools.query.QueryBuilder;
-import org.jboss.envers.tools.query.Parameters;
-import org.hibernate.Query;
-
 import java.util.Collections;
+
+import org.jboss.envers.RevisionType;
+import org.jboss.envers.configuration.GlobalConfiguration;
+import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
+import org.jboss.envers.entities.mapper.id.IdMapper;
+import org.jboss.envers.entities.mapper.id.QueryParameterData;
+import org.jboss.envers.entities.mapper.relation.MiddleIdData;
+import org.jboss.envers.reader.VersionsReaderImplementor;
+import org.jboss.envers.tools.query.Parameters;
+import org.jboss.envers.tools.query.QueryBuilder;
+
+import org.hibernate.Query;
 
 /**
  * Selects data from a versions entity.

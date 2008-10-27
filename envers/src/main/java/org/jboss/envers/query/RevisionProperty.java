@@ -1,33 +1,35 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.query;
 
-import org.jboss.envers.query.criteria.VersionsCriterion;
-import org.jboss.envers.query.criteria.RevisionVersionsExpression;
-import org.jboss.envers.query.order.VersionsOrder;
-import org.jboss.envers.query.order.RevisionVersionsOrder;
-import org.jboss.envers.query.projection.VersionsProjection;
-import org.jboss.envers.query.projection.RevisionVersionsProjection;
 import org.jboss.envers.configuration.VersionsConfiguration;
+import org.jboss.envers.query.criteria.RevisionVersionsExpression;
+import org.jboss.envers.query.criteria.VersionsCriterion;
+import org.jboss.envers.query.order.RevisionVersionsOrder;
+import org.jboss.envers.query.order.VersionsOrder;
+import org.jboss.envers.query.projection.RevisionVersionsProjection;
+import org.jboss.envers.query.projection.VersionsProjection;
 import org.jboss.envers.tools.Triple;
 
 /**

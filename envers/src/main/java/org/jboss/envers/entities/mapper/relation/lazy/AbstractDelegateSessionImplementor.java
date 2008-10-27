@@ -1,43 +1,58 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.entities.mapper.relation.lazy;
 
-import org.hibernate.engine.*;
+import java.io.Serializable;
+import java.sql.Connection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.CacheMode;
+import org.hibernate.EntityMode;
+import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.Query;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Transaction;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.PersistenceContext;
+import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
-import org.hibernate.*;
 import org.hibernate.event.EventListeners;
-import org.hibernate.type.Type;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.jdbc.Batcher;
 import org.hibernate.jdbc.JDBCContext;
-import org.hibernate.collection.PersistentCollection;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Map;
-import java.sql.Connection;
+import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)

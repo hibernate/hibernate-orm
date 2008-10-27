@@ -1,41 +1,61 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.event;
 
-import org.hibernate.event.*;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.collection.PersistentCollection;
+import java.io.Serializable;
+
 import org.jboss.envers.configuration.VersionsConfiguration;
 import org.jboss.envers.entities.RelationDescription;
 import org.jboss.envers.entities.RelationType;
-import org.jboss.envers.synchronization.VersionsSync;
-import org.jboss.envers.synchronization.work.*;
-import org.jboss.envers.tools.Tools;
-import org.jboss.envers.entities.mapper.id.IdMapper;
 import org.jboss.envers.entities.mapper.PersistentCollectionChangeData;
+import org.jboss.envers.entities.mapper.id.IdMapper;
+import org.jboss.envers.synchronization.VersionsSync;
+import org.jboss.envers.synchronization.work.AddWorkUnit;
+import org.jboss.envers.synchronization.work.CollectionChangeWorkUnit;
+import org.jboss.envers.synchronization.work.DelWorkUnit;
+import org.jboss.envers.synchronization.work.ModWorkUnit;
+import org.jboss.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
+import org.jboss.envers.tools.Tools;
 
-import java.io.Serializable;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.CollectionEntry;
+import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.event.Initializable;
+import org.hibernate.event.PostCollectionRecreateEvent;
+import org.hibernate.event.PostCollectionRecreateEventListener;
+import org.hibernate.event.PostDeleteEvent;
+import org.hibernate.event.PostDeleteEventListener;
+import org.hibernate.event.PostInsertEvent;
+import org.hibernate.event.PostInsertEventListener;
+import org.hibernate.event.PostUpdateEvent;
+import org.hibernate.event.PostUpdateEventListener;
+import org.hibernate.event.PreCollectionRemoveEvent;
+import org.hibernate.event.PreCollectionRemoveEventListener;
+import org.hibernate.event.PreCollectionUpdateEvent;
+import org.hibernate.event.PreCollectionUpdateEventListener;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Adam Warski (adam at warski dot org)

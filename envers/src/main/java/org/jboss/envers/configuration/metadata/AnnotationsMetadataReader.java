@@ -1,38 +1,45 @@
 /*
- * Envers. http://www.jboss.org/envers
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright 2008  Red Hat Middleware, LLC. All rights reserved.
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT A WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License, v.2.1 along with this distribution; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
- *
- * Red Hat Author(s): Adam Warski
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.jboss.envers.configuration.metadata;
 
-import javax.persistence.Version;
+import java.lang.annotation.Annotation;
 import javax.persistence.MapKey;
+import javax.persistence.Version;
 
+import org.jboss.envers.SecondaryVersionsTable;
+import org.jboss.envers.SecondaryVersionsTables;
+import org.jboss.envers.Unversioned;
+import org.jboss.envers.Versioned;
+import org.jboss.envers.VersionsJoinTable;
+import org.jboss.envers.VersionsTable;
 import org.jboss.envers.configuration.GlobalConfiguration;
 import org.jboss.envers.tools.reflection.YClass;
 import org.jboss.envers.tools.reflection.YProperty;
 import org.jboss.envers.tools.reflection.YReflectionManager;
-import org.jboss.envers.*;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.MappingException;
 
-import java.lang.annotation.Annotation;
+import org.hibernate.MappingException;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.

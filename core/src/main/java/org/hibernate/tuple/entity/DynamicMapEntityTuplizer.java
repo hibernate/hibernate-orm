@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple.entity;
 
@@ -57,6 +56,9 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		super(entityMetamodel, mappedEntity);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public EntityMode getEntityMode() {
 		return EntityMode.MAP;
 	}
@@ -70,18 +72,30 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
         return new DynamicMapInstantiator( mappingInfo );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
 
 		ProxyFactory pf = new MapProxyFactory();
@@ -103,24 +117,38 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		return pf;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class getMappedClass() {
 		return Map.class;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class getConcreteProxyClass() {
 		return Map.class;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isInstrumented() {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return new EntityNameResolver[] { BasicEntityNameResolver.INSTANCE };
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
-		// TODO : do we need an explicit isInstance check here, or is that asserted prior to here?
 		return extractEmbeddedEntityName( ( Map ) entityInstance );
 	}
 
@@ -131,6 +159,9 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	public static class BasicEntityNameResolver implements EntityNameResolver {
 		public static final BasicEntityNameResolver INSTANCE = new BasicEntityNameResolver();
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public String resolveEntityName(Object entity) {
 			final String entityName = extractEmbeddedEntityName( ( Map ) entity );
 			if ( entityName == null ) {
@@ -139,10 +170,16 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 			return entityName;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public boolean equals(Object obj) {
 			return getClass().equals( obj.getClass() );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public int hashCode() {
 			return getClass().hashCode();
 		}

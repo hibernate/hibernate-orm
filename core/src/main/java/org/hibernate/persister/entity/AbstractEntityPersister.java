@@ -3690,7 +3690,14 @@ public abstract class AbstractEntityPersister
 		else {
 			final String concreteEntityName = getTuplizer( entityMode )
 					.determineConcreteSubclassEntityName( instance, factory );
-			return factory.getEntityPersister( concreteEntityName );
+			if ( concreteEntityName == null || getEntityName().equals( concreteEntityName ) ) {
+				// the contract of EntityTuplizer.determineConcreteSubclassEntityName says that returning null
+				// is an indication that the specified entity-name (this.getEntityName) should be used.
+				return this;
+			}
+			else {
+				return factory.getEntityPersister( concreteEntityName );
+			}
 		}
 	}
 

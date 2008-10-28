@@ -42,6 +42,12 @@
     <name>Hibernate Commons Annotations</name>
     <description>Common reflection code used in support of annotation processing</description>
 
+    <!-- Annotations and Commons-Annotations both use the ANN JIRA key -->
+    <issueManagement>
+        <system>jira</system>
+        <url>http://opensource.atlassian.com/projects/hibernate/browse/ANN</url>
+    </issueManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.hibernate</groupId>

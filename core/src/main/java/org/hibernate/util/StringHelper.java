@@ -412,5 +412,45 @@ public final class StringHelper {
 		}
 		return filter;
 	}
-	
+
+	/**
+	 * Determine if the given string is quoted (wrapped by '`' characters at beginning and end).
+	 *
+	 * @param name The name to check.
+	 * @return True if the given string starts and ends with '`'; false otherwise.
+	 */
+	public static boolean isQuoted(String name) {
+		return name != null && name.length() != 0 && name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`';
+	}
+
+	/**
+	 * Return a representation of the given name ensuring quoting (wrapped with '`' characters).  If already wrapped
+	 * return name.
+	 *
+	 * @param name The name to quote.
+	 * @return The quoted version.
+	 */
+	public static String quote(String name) {
+		if ( name == null || name.length() == 0 || isQuoted( name ) ) {
+			return name;
+		}
+		else {
+			return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
+		}
+	}
+
+	/**
+	 * Return the unquoted version of name (stripping the start and end '`' chanracters if present).
+	 *
+	 * @param name The name to be unquoted.
+	 * @return The unquoted version.
+	 */
+	public static String unquote(String name) {
+		if ( isQuoted( name ) ) {
+			return name.substring( 1, name.length() - 1 );
+		}
+		else {
+			return name;
+		}
+	}
 }

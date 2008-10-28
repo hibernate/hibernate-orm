@@ -1,0 +1,9 @@
+## Oracle
+
+hibernate.dialect org.hibernate.dialect.OracleDialect
+#hibernate.dialect org.hibernate.dialect.Oracle9Dialect
+hibernate.connection.driver_class oracle.jdbc.driver.OracleDriver
+hibernate.connection.username hibernate
+hibernate.connection.password hibernate
+hibernate.connection.url jdbc:oracle:thin:@localhost:1521:hibernate
+

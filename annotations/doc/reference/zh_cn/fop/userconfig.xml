@@ -1,0 +1,114 @@
+<!--<!DOCTYPE configuration SYSTEM "config.dtd">-->
+<!-- 
+     this file contains templates which allow an user easy 
+     configuration of Fop. Actually normally you don't need this configuration 
+     file, but if you need to change configuration, you should
+     always use this file and *not* config.xml. 
+     Usage: java org.apache.fop.apps.Fop -c userconfig.xml -fo fo-file -pdf pdf-file
+-->
+
+
+<configuration>
+
+<!--  
+baseDir: normally the base directory is the directory where the fo file is 
+         located. if you want to specify your own, uncomment this entry.
+         This value can also be a URL. Actually, the value is converted to 
+         a URL.
+-->
+<!-- 
+  <entry>
+    <key>baseDir</key>
+    <value></value>
+  </entry>
+-->
+
+<!--  
+fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
+         it isn't specified, the value from baseDir is used.
+-->
+<!-- 
+  <entry>
+    <key>fontBaseDir</key>
+    <value></value>
+  </entry>
+-->
+
+<!--
+************************************************************************
+                        HYPHENATION 
+************************************************************************
+-->
+  
+<!--
+   hyphenation directory 
+   if you want to specify your own directory with hyphenation pattern
+   then uncomment the next entry and add the directory name
+-->
+
+<!--
+  <entry>
+    <key>hyphenation-dir</key>
+    <value>/java/xml-fop/hyph</value>
+  </entry>
+-->
+
+<!--
+************************************************************************
+  Add fonts here
+************************************************************************
+-->
+
+<fonts>
+ <!-- example -->
+ <!--
+ <font metrics-file="arial.xml" kerning="yes" embed-file="arial.ttf">
+    <font-triplet name="Arial" style="normal" weight="normal"/>
+    <font-triplet name="ArialMT" style="normal" weight="normal"/>
+ </font>
+ <font metrics-file="arialb.xml" kerning="yes" embed-file="arialb.ttf">
+    <font-triplet name="Arial" style="normal" weight="bold"/>
+    <font-triplet name="ArialMT" style="normal" weight="bold"/>
+ </font>
+ <font metrics-file="ariali.xml" kerning="yes" embed-file="ariali.ttf">
+    <font-triplet name="Arial" style="italic" weight="normal"/>
+    <font-triplet name="ArialMT" style="italic" weight="normal"/>
+ </font>
+ <font metrics-file="arialbi.xml" kerning="yes" embed-file="arialbi.ttf">
+    <font-triplet name="Arial" style="italic" weight="bold"/>
+    <font-triplet name="ArialMT" style="italic" weight="bold"/>
+ </font>
+ -->
+ <!-- Example Japanese fonts
+ <font metrics-file="msgothic.xml" embed-file="D:\winnt\font\msgothic.ttc" kerning="yes">
+    <font-triplet name="Gothic" style="normal" weight="normal"/>
+    <font-triplet name="Gothic" style="normal" weight="bold"/>
+    <font-triplet name="Gothic" style="italic" weight="normal"/>
+    <font-triplet name="Gothic" style="italic" weight="bold"/>
+ </font>
+ <font metrics-file="msmincho.xml" embed-file="Cyberbit.ttf" kerning="yes">
+    <font-triplet name="Mincho" style="normal" weight="normal"/>
+    <font-triplet name="Mincho" style="normal" weight="bold"/>
+    <font-triplet name="Mincho" style="italic" weight="normal"/>
+    <font-triplet name="Mincho" style="italic" weight="bold"/>
+   </font>
+  -->
+ <font metrics-file="simhei.xml" embed-file="simhei.ttf" kerning="yes">
+	<font-triplet name="simhei" style="normal" weight="normal"/> 
+	<font-triplet name="simhei" style="normal" weight="bold"/> 
+	<font-triplet name="simhei" style="italic" weight="normal"/> 
+	<font-triplet name="simhei" style="italic" weight="bold"/> 
+ </font>
+ <font metrics-file="simsun.xml" embed-file="simsun.ttc" kerning="yes">
+	<font-triplet name="simsun" style="normal" weight="normal"/> 
+	<font-triplet name="simsun" style="normal" weight="bold"/> 
+	<font-triplet name="simsun" style="italic" weight="normal"/> 
+	<font-triplet name="simsun" style="italic" weight="bold"/> 
+ </font>
+</fonts>
+
+
+</configuration>
+
+
+

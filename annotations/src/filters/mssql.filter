@@ -1,0 +1,9 @@
+## MS SQL Server
+
+hibernate.dialect org.hibernate.dialect.SQLServerDialect
+hibernate.connection.driver_class net.sourceforge.jtds.jdbc.Driver
+hibernate.connection.username hibernate
+hibernate.connection.password hibernate
+hibernate.connection.url jdbc:jtds:sqlserver://localhost/hibernate
+
+

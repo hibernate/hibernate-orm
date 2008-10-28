@@ -1,0 +1,22 @@
+<refentry id="htmlhelp.button.home.url">
+<refmeta>
+<refentrytitle>htmlhelp.button.home.url</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.home.url</refname>
+<refpurpose>URL address of page accessible by Home button</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.home.url.frag'>
+<xsl:param name="htmlhelp.button.home.url"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>URL address of page accessible by Home button.</para>
+
+</refsect1>
+</refentry>

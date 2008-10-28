@@ -1,0 +1,711 @@
+2004-03-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* root.properties.xml: Added line-height-shift-adjustment=disregard-shifts to the root properties
+
+	* table.properties.xml: Clarified description pointing to the distinction between table.properties and table.table.properties
+
+	* table.table.properties.xml: New file.
+
+2004-02-13  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* htmlhelp.hhp.windows.xml, htmlhelp.show.toolbar.text.xml: 
+	remove stray single quotes for ID values;
+	was causing generation of invalid filenames & breaking downstream builds
+
+2004-01-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* footer.column.widths.xml, header.column.widths.xml: Add quotes to make the parameters strings; '1 1 1' is not a valid number
+
+2004-01-29  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* footer.column.widths.xml, header.column.widths.xml: New file.
+
+2003-12-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* article.appendix.title.properties.xml: Fixed typo in use-attribute-sets attribute
+
+	* title.margin.left.xml: Fix typo in parameter end tag
+
+2003-12-10  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* marker.section.level.xml: New file.
+
+2003-12-07  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* article.appendix.title.properties.xml: New file.
+
+2003-12-05  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* refentry.pagebreak.xml: New file.
+
+	* refentry.title.properties.xml: Added space-before properties since page breaks are now optional.
+	Added a description paragraph.
+
+2003-12-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* subscript.properties.xml, superscript.properties.xml: 
+	New file.
+
+2003-11-29  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.display.progress.xml, htmlhelp.enhanced.decompilation.xml, htmlhelp.hhc.width.xml, htmlhelp.hhp.windows.xml, htmlhelp.remember.window.position.xml, htmlhelp.show.toolbar.text.xml, htmlhelp.window.geometry.xml: 
+	New file.
+
+2003-11-25  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* title.margin.left.xml: Set to zero if passivetex.extensions != 0 since PassiveTeX
+	cannot handle the math expression with negative values.
+
+2003-10-04  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* index.preferred.page.properties.xml: New file.
+
+2003-09-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* formal.object.properties.xml: Use keep-together.within-column, not keep-together as that's a compound property inherited by fo:inline and other elements with bad effects
+
+2003-09-24  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* xep.index.item.properties.xml: Fixed the ulink reference to xep.
+
+2003-09-23  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* manifest.in.base.dir.xml: New file.
+
+2003-09-10  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* section.level1.properties.xml, section.level2.properties.xml, section.level3.properties.xml, section.level4.properties.xml, section.level5.properties.xml, section.level6.properties.xml: 
+	Add use-attribute-set="section.properties" to each set.
+
+2003-09-09  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* section.level1.properties.xml, section.level2.properties.xml, section.level3.properties.xml, section.level4.properties.xml, section.level5.properties.xml, section.level6.properties.xml: 
+	New file.
+
+	* section.properties.xml: New file.
+
+2003-09-02  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* title.margin.left.xml: Must add unit indicator if set value to zero.
+
+2003-08-29  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* footer.content.properties.xml, header.content.properties.xml: 
+	Changed $body.font.family to $body.fontset to include
+	symbol.font.family fonts in headers and footers.
+
+2003-08-28  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* root.properties.xml: Changed body.font.family to body.fontset and
+	title.font.family to title.fontset in font-family property
+	attributes, in order to append symbol.font.family parameter value.
+
+	* symbol.font.family.xml: New file.
+
+2003-08-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* formal.title.placement.xml: Added task
+
+2003-08-14  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* variablelist.max.termlength.xml: New file.
+
+2003-07-25  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* insert.xref.page.number.xml: Changed from a boolean to a string with values yes, no, maybe
+	to support xrefstyle attribute on xrefs.
+
+	* xref.label-page.separator.xml, xref.label-title.separator.xml, xref.title-page.separator.xml: 
+	New file.
+
+2003-07-22  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* eclipse.autolabel.xml, eclipse.plugin.id.xml, eclipse.plugin.name.xml, eclipse.plugin.provider.xml: 
+	New file.
+
+2003-06-22  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* qanda.title.level1.properties.xml, qanda.title.level2.properties.xml, qanda.title.level3.properties.xml, qanda.title.level4.properties.xml, qanda.title.level5.properties.xml, qanda.title.level6.properties.xml, qanda.title.properties.xml: 
+	New file.
+
+2003-06-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* column.gap.back.xml, column.gap.body.xml, column.gap.front.xml, column.gap.index.xml, column.gap.lot.xml, column.gap.titlepage.xml: 
+	New file.
+
+	* suppress.footer.navigation.xml, suppress.header.navigation.xml: 
+	Fixed id values
+
+	* use.role.for.mediaobject.xml: Editorial nit.
+
+2003-05-27  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.hhc.folders.instead.books.xml: Notice of HTML Help limitation.
+
+2003-05-15  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* axf.extensions.xml, xep.extensions.xml: Added support for AntennaHouse XSL Formatter. You can use axf.extensions=1 setting to generate bookmarks, document info and to merge duplicate page numbers in index.
+
+2003-05-14  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* xep.index.item.properties.xml: New file.
+
+2003-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* formal.object.properties.xml: Keep formal object titles together
+
+2003-05-07  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* admon.textlabel.xml: New file.
+
+	* admon.textlabel.xml: Set default to 1.
+
+	* admon.textlabel.xml: Changed admon.textlabel doc.
+
+2003-04-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ebnf.assignment.xml, ebnf.statement.terminator.xml, root.properties.xml: 
+	New file.
+
+	* generate.section.toc.level.xml: Whitespace
+
+2003-02-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* component.title.properties.xml: No longer used; causes confusion. Buh-bye.
+
+2003-02-07  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* toc.max.depth.xml: New file.
+
+2003-01-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* footer.content.properties.xml, header.content.properties.xml: 
+	Don't set the margin-right to the title.margin.left. D'Oh.
+
+	* monospace.properties.xml: Remove font-size; it just looks ugly in the general case
+
+2003-01-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* glossterm.auto.link.xml: Whitespace
+
+2003-01-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* entry.propagates.style.xml: New file.
+
+	* footnote.number.format.xml, footnote.number.symbols.xml, table.footnote.number.format.xml, table.footnote.number.symbols.xml: 
+	New file.
+
+	* glossentry.show.acronym.xml: New file.
+
+	* section.title.level1.properties.xml, section.title.level2.properties.xml, section.title.level3.properties.xml, section.title.level4.properties.xml, section.title.level5.properties.xml, section.title.level6.properties.xml: 
+	Make section title font sizes a function of the body size, not an absolute size. And let's use magsteps while we're at it.
+
+	* ulink.footnote.number.format.xml: New file.
+
+	* ulink.footnotes.xml: It is too implemented. :-)
+
+	* verbatim.properties.xml: Put space below verbatim blocks too.
+
+	* xref.with.number.and.title.xml: New file.
+
+2003-01-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* body.font.master.xml, css.decoration.xml, double.sided.xml: 
+	Whitespace
+
+	* formal.title.properties.xml: Make font size 1.2 times the body size, not a fixed 12pt
+
+2003-01-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* equation.properties.xml, example.properties.xml, figure.properties.xml, procedure.properties.xml, table.properties.xml: 
+	New file.
+
+	* formal.object.properties.xml: Whitespace and documentation changes
+
+	* ignore.image.scaling.xml: New file.
+
+2002-12-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* use.role.as.xrefstyle.xml: Updated documentation; added an example showing how to use xrefstyle in the stylesheets
+
+2002-12-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admonition.properties.xml, admonition.title.properties.xml: 
+	Whitespace and documentation tweaks
+
+2002-12-17  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* preferred.mediaobject.role.xml: Fixed build problems with new parameters.
+
+	* profile.role.xml: Ooops. No DTD, no entites :-(
+
+	* profile.role.xml: Added warning against usage of role attribute for profiling.
+
+2002-12-06  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* preferred.mediaobject.role.xml, use.role.for.mediaobject.xml: 
+	New file.
+
+2002-10-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* table.frame.border.thickness.xml, toc.margin.properties.xml, verbatim.properties.xml, xref.properties.xml: 
+	Documentation updates
+
+2002-10-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* footer.content.properties.xml, header.content.properties.xml: 
+	Updated header/footer properties to avoid missmatched margins caused by title.margin.left
+
+2002-10-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* monospace.properties.xml: Bug #589631: Make monospace font size 0.9em rather than 0.9*body.font.size so that it works in different contexts (like chapter titles
+
+2002-10-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* footer.content.properties.xml, header.content.properties.xml: 
+	New file.
+
+2002-10-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* generate.toc.xml: Specify titles for ToCs
+
+	* table.border.color.xml, table.border.padding.xml, table.border.style.xml, table.border.thickness.xml, table.cell.border.color.xml, table.cell.border.style.xml, table.cell.border.thickness.xml, table.frame.border.color.xml, table.frame.border.style.xml, table.frame.border.thickness.xml: 
+	Made separate parameters for table frame and table cell border properties
+
+2002-10-01  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* section.title.level1.properties.xml, section.title.level2.properties.xml, section.title.level3.properties.xml, section.title.level4.properties.xml, section.title.level5.properties.xml: 
+	Moved font sizes one level to compensate for change of
+	the section.level template returning a number that
+	matches the section level. The result should be no
+	change in output font sizes for section titles.
+
+2002-09-30  <dcramer@users.sourceforge.net>
+
+	* list.block.spacing.xml: Adding space-after so there will be space after lists within paras (where there's text after the list.
+
+2002-09-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* default.float.class.xml: New file.
+
+	* default.image.width.xml: New file.
+
+	* funcsynopsis.tabular.threshold.xml: New file.
+
+2002-09-19  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* formal.title.properties.xml: Removed 'keep-with-next' from 'formal.title.properties' because
+	template now uses $placement value to determine if keep-with-next
+	or keep-with-previous should be used.
+
+2002-09-05  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* monospace.verbatim.properties.xml: Make monospaced verbatim environments text-aligned to the start.
+
+2002-09-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* generate.toc.xml: Suppress ToC in article/appendix by default
+
+	* graphicsize.extension.xml, l10n.gentext.default.language.xml, l10n.gentext.language.xml, l10n.gentext.use.xref.language.xml: 
+	New file.
+
+2002-09-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* body.font.family.xml, dingbat.font.family.xml, monospace.font.family.xml, sans.font.family.xml, title.font.family.xml: 
+	Roll-back font families to single words
+
+2002-08-26  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* chunk.tocs.and.lots.xml: New file.
+
+	* generate.toc.xml: Fixed typo in parameter reference
+
+2002-08-22  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.use.hhk.xml: New file.
+
+2002-08-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* make.index.markup.xml: Fixed typo
+
+	* make.index.markup.xml: New file.
+
+2002-07-26  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* headers.on.blank.pages.xml: With the new scheme, this should be 1
+
+2002-07-22  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* html.extra.head.links.xml: Changed the default from 1 to 0 because this feature
+	is not supported in all browsers, and because it
+	reduces processing performance by 20-30%.
+
+2002-07-19  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* bibliography.numbered.xml, menuchoice.menu.separator.xml, menuchoice.separator.xml, section.title.level1.properties.xml, section.title.level2.properties.xml, section.title.level3.properties.xml, section.title.level4.properties.xml, section.title.level5.properties.xml, section.title.level6.properties.xml: 
+	New file.
+
+	* monospace.properties.xml, monospace.verbatim.properties.xml: 
+	Split monospaced properties from verbatim properties
+
+	* section.title.properties.xml: Tweaked documentation
+
+2002-07-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* html.cellpadding.xml, html.cellspacing.xml: New file.
+
+	* para.propagates.style.xml: New file.
+
+2002-07-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* body.margin.bottom.xml, body.margin.top.xml, page.margin.bottom.xml, page.margin.top.xml, region.after.extent.xml, region.before.extent.xml: 
+	Tweak page head/foot margins
+
+2002-07-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* glossary.collection.xml: Bug #522017: describe how to make intra-glossary cross references
+
+2002-07-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* sidebar.properties.xml: New file.
+
+2002-07-06  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* target.database.document.xml: Changed the default value to empty string to remove
+	error message about trying to open a non-existent file.
+
+	* target.database.document.xml: Changed name of default master data file to olinkdb.xml
+	because it was too similar to targets.db used for
+	the document data files.
+
+2002-07-05  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* collect.xref.targets.xml, current.docid.xml, olink.base.uri.xml, olink.doctitle.xml, target.database.document.xml, targets.filename.xml, use.local.olink.style.xml: 
+	Removed the xml declaration at the top of the new param files
+	as it seems to trouble the parser.
+
+	* collect.xref.targets.xml, current.docid.xml, olink.base.uri.xml, olink.doctitle.xml, target.database.document.xml, targets.filename.xml, use.local.olink.style.xml: 
+	New file.
+
+2002-07-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* chunk.datafile.xml: Removed parameter: no longer (never?) used
+
+2002-07-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* footer.rule.xml, footers.on.blank.pages.xml, header.rule.xml, headers.on.blank.pages.xml: 
+	New file.
+
+	* insert.xref.page.number.xml: Improve description especially now that it works
+
+2002-07-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* column.count.back.xml, column.count.body.xml, column.count.front.xml, column.count.index.xml, column.count.lot.xml, column.count.of.index.xml, column.count.titlepage.xml, column.count.xml, draft.mode.xml: 
+	Completely rewrote pagesetup.xsl: new/changed column count, draft mode, and margin parameters
+
+2002-07-02  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* generate.toc.xml: Added sect1 through sect5, which allows such section ToCs to be
+	controlled by just setting the generate.section.toc.level
+	parameter.
+
+	* generate.toc.xml: Forgot to close my <para> tag.
+
+2002-07-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* page.margin.top.xml, region.before.extent.xml: Completely rewrote pagesetup.xsl: new/changed column count, draft mode, and margin parameters
+
+2002-06-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admon.graphics.xml, callout.graphics.path.xml, callout.graphics.xml: 
+	Whitespace
+
+2002-06-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* glossary.as.blocks.xml, glosslist.as.blocks.xml, glossterm.separation.xml, glossterm.width.xml: 
+	New file.
+
+2002-06-26  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* table.border.color.xml: Don't set table border color in HTML; allow a top-level CSS stylesheet to set it
+
+2002-06-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* chunker.output.cdata-section-elements.xml, chunker.output.doctype-public.xml, chunker.output.doctype-system.xml, chunker.output.encoding.xml, chunker.output.indent.xml, chunker.output.media-type.xml, chunker.output.method.xml, chunker.output.omit-xml-declaration.xml, chunker.output.standalone.xml, default.encoding.xml: 
+	Created a complete and consistent set of chunking parameters
+
+2002-06-13  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.button.back.xml, htmlhelp.button.forward.xml, htmlhelp.button.hideshow.xml, htmlhelp.button.home.url.xml, htmlhelp.button.home.xml, htmlhelp.button.jump1.title.xml, htmlhelp.button.jump1.url.xml, htmlhelp.button.jump1.xml, htmlhelp.button.jump2.title.xml, htmlhelp.button.jump2.url.xml, htmlhelp.button.jump2.xml, htmlhelp.button.locate.xml, htmlhelp.button.next.xml, htmlhelp.button.options.xml, htmlhelp.button.prev.xml, htmlhelp.button.print.xml, htmlhelp.button.refresh.xml, htmlhelp.button.stop.xml, htmlhelp.button.zoom.xml, htmlhelp.hhc.binary.xml, htmlhelp.hhk.xml, htmlhelp.hhp.window.xml, htmlhelp.show.advanced.search.xml, htmlhelp.show.favorities.xml, htmlhelp.show.menu.xml: 
+	New file.
+
+	* htmlhelp.only.xml: New file.
+
+2002-06-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* output.method.xml, saxon.character.representation.xml: 
+	Created a complete and consistent set of chunking parameters
+
+2002-06-12  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* refentry.generate.name.xml, refentry.generate.title.xml: 
+	Clarified explanation so no one else reports bugs like #563473.
+
+	* suppress.footer.navigation.xml, suppress.header.navigation.xml: 
+	New file.
+
+2002-06-11  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* body.font.family.xml, dingbat.font.family.xml, monospace.font.family.xml, sans.font.family.xml, title.font.family.xml: 
+	Add generic fallbacks to font family specifications
+
+	* make.graphic.viewport.xml, nominal.image.depth.xml, nominal.image.width.xml, use.embed.for.svg.xml: 
+	New file.
+
+	* refentry.title.properties.xml, section.title.properties.xml: 
+	New file.
+
+	* use.embed.for.svg.xml: Turn off use.embed.for.svg by default (it generates invalid html)
+
+2002-06-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* html.stylesheet.xml: Updated documentation to reflect that html.stylesheet can now take a list of URIs
+
+2002-06-07  <dcramer@users.sourceforge.net>
+
+	* variablelist.as.blocks.xml: Fixing a couple of typos I made
+
+2002-06-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* generate.meta.abstract.xml, use.role.as.xrefstyle.xml: 
+	New file.
+
+	* variablelist.as.blocks.xml: Patch 521141: document variablelist pi
+
+2002-05-24  <dcramer@users.sourceforge.net>
+
+	* callout.unicode.number.limit.xml, callout.unicode.start.character.xml: 
+	Updating docs.
+
+2002-05-23  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* use.svg.xml: New file.
+
+2002-05-14  Michael Smith <xmldoc@users.sourceforge.net>
+
+	* generate.manifest.xml, manifest.xml: added descriptions
+
+2002-05-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* compact.list.item.spacing.xml: New file.
+
+	* html.extra.head.links.xml: New file.
+
+2002-05-10  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* generate.manifest.xml, manifest.xml: New file.
+
+2002-05-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* points.per.em.xml: New file.
+
+	* using.chunker.xml: Obsolete parameter
+
+2002-04-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* generate.toc.xml: Improve documentation
+
+	* shade.verbatim.style.xml: Support shade.verbatim in FO; stop using vendor test to decide what extension function to call for line numbering
+
+	* verbatim.properties.xml: Whitespace
+
+2002-03-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* emphasis.propagates.style.xml: Whitespace
+
+	* generate.appendix.toc.xml, generate.article.toc.xml, generate.book.equation.lot.xml, generate.book.example.lot.xml, generate.book.figure.lot.xml, generate.book.table.lot.xml, generate.book.toc.xml, generate.chapter.toc.xml, generate.component.toc.xml, generate.division.equation.lot.xml, generate.division.example.lot.xml, generate.division.figure.lot.xml, generate.division.table.lot.xml, generate.division.toc.xml, generate.part.toc.xml, generate.preface.toc.xml, generate.qandadiv.toc.xml, generate.qandaset.toc.xml, generate.reference.toc.xml, generate.section.toc.xml, generate.set.toc.xml, generate.toc.xml: 
+	Replace generate.*.toc and generate.*.lot with single generate.toc parameter.
+
+2002-03-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* formal.procedures.xml: Fixed typos
+
+	* formal.title.placement.xml: New file.
+
+2002-03-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* generate.id.attributes.xml: New file.
+
+2002-03-03  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* profile.arch.xml, profile.attribute.xml, profile.condition.xml, profile.conformance.xml, profile.lang.xml, profile.os.xml, profile.revision.xml, profile.revisionflag.xml, profile.role.xml, profile.security.xml, profile.separator.xml, profile.userlevel.xml, profile.value.xml, profile.vendor.xml: 
+	New file.
+
+2002-03-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* blockquote.properties.xml: Added space-after properties to blockquotes
+
+	* formal.title.properties.xml: Added space-after properties
+
+	* stylesheet.result.type.xml: Move stylesheet.result.type out of param and put it explicitly in each stylesheet because it has to be different
+
+	* table.cell.padding.xml: New file.
+
+	* ulink.hyphenate.xml: Make ulink hyphenation character the empty string by default
+
+2002-02-25  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* chunk.quietly.xml: New file.
+
+2002-02-21  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* tex.math.delims.xml, tex.math.file.xml, tex.math.in.alt.xml: 
+	Better control over delimiters for TeX equations. Added parameter tex.math.delims, when is set to 0, no delimiters (like $ and $$) are output. Same can be done for single equation by <?dbtex delims="no"?>.
+
+2002-02-11  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* column.count.of.index.xml: New file.
+
+2002-02-10  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.default.topic.xml: New file.
+
+2002-02-09  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.hhc.show.root.xml: New file.
+
+2002-02-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* chunk.toc.xml, manual.toc.xml: New file.
+
+	* informal.object.properties.xml: New file.
+
+2002-02-03  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.title.xml: New file.
+
+2002-01-29  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* draft.watermark.image.xml: New file.
+
+2002-01-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* html.cleanup.xml, make.valid.html.xml: Added html.cleanup parameter; if non-zero, do some post-processing of RTFs to improve formatting
+
+	* ulink.hyphenate.xml: New file.
+
+2002-01-22  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.hhc.folders.instead.books.xml: New file.
+
+2002-01-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* body.margin.bottom.xml, body.margin.top.xml, page.margin.bottom.xml, page.margin.outer.xml, page.margin.top.xml, page.width.xml, region.after.extent.xml, region.before.extent.xml: 
+	Rationalize margins; see new docs in the FO section
+
+	* formal.object.properties.xml: Removed bogus keep
+
+	* pixels.per.inch.xml: New file.
+
+	* ulink.footnotes.xml, ulink.show.xml: New file.
+
+2002-01-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* bibliography.collection.xml, glossary.collection.xml: 
+	Added documentation
+
+2002-01-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* firstterm.only.link.xml, glossary.collection.xml: New file.
+
+2002-01-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* format.variablelist.as.list.xml, variablelist.as.table.xml: 
+	Renamed format.variablelist.as.table to variablelist.as.table
+
+	* variablelist.as.blocks.xml: New file.
+
+	* variablelist.as.table.xml: Fixed doc typos
+
+2002-01-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* blockquote.properties.xml, make.valid.html.xml, output.method.xml, refentry.generate.name.xml, refentry.generate.title.xml: 
+	New and updated parameters
+
+2001-12-15  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* tex.math.in.alt.xml: Improved support for TeX math inside equations.
+
+2001-12-06  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* tex.math.file.xml, tex.math.in.alt.xml: New file.
+
+2001-12-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admonition.properties.xml: New file.
+
+	* admonition.title.properties.xml, chunk.first.sections.xml, chunk.section.depth.xml, line-height.xml: 
+	New parameters
+
+	* toc.indent.width.xml: New file.
+
+2001-11-28  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.alias.file.xml, htmlhelp.force.map.and.alias.xml, htmlhelp.map.file.xml: 
+	New file.
+
+	* htmlhelp.hhc.section.depth.xml: New file.
+
+2001-11-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* punct.honorific.xml: New file.
+
+	* segmentedlist.as.table.xml: New file.
+
+2001-11-18  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* glossterm.auto.link.xml: New file.
+
+2001-11-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admon.graphics.extension.xml, admon.graphics.path.xml, admon.graphics.xml, admon.style.xml, admonition.title.properties.xml, alignment.xml, annotate.toc.xml, appendix.autolabel.xml, arbortext.extensions.xml, author.othername.in.middle.xml, autotoc.label.separator.xml, base.dir.xml, biblioentry.item.separator.xml, bibliography.collection.xml, body.font.family.xml, body.font.master.xml, body.font.size.xml, body.margin.bottom.xml, body.margin.top.xml, bridgehead.in.toc.xml, callout.defaultcolumn.xml, callout.graphics.extension.xml, callout.graphics.number.limit.xml, callout.graphics.path.xml, callout.graphics.xml, callout.list.table.xml, callout.unicode.font.xml, callout.unicode.number.limit.xml, callout.unicode.start.character.xml, callout.unicode.xml, callouts.extension.xml, chapter.autolabel.xml, chunk.datafile.xml, chunk.first.sections.xml, chunk.sections.xml, citerefentry.link.xml, column.count.xml, component.title.properties.xml, css.decoration.xml, default.encoding.xml, default.table.width.xml, default.units.xml, dingbat.font.family.xml, double.sided.xml, ebnf.table.bgcolor.xml, ebnf.table.border.xml, emphasis.propagates.style.xml, footnote.font.size.xml, fop.extensions.xml, formal.object.properties.xml, formal.procedures.xml, formal.title.properties.xml, format.variablelist.as.list.xml, funcsynopsis.decoration.xml, funcsynopsis.style.xml, function.parens.xml, generate.appendix.toc.xml, generate.article.toc.xml, generate.book.equation.lot.xml, generate.book.example.lot.xml, generate.book.figure.lot.xml, generate.book.table.lot.xml, generate.book.toc.xml, generate.chapter.toc.xml, generate.component.toc.xml, generate.division.equation.lot.xml, generate.division.example.lot.xml, generate.division.figure.lot.xml, generate.division.table.lot.xml, generate.division.toc.xml, generate.index.xml, generate.legalnotice.link.xml, generate.part.toc.xml, generate.preface.toc.xml, generate.qandadiv.toc.xml, generate.qandaset.toc.xml, generate.reference.toc.xml, generate.section.toc.level.xml, generate.section.toc.xml, generate.set.toc.xml, graphic.default.extension.xml, html.base.xml, html.ext.xml, html.longdesc.link.xml, html.longdesc.xml, html.stylesheet.type.xml, html.stylesheet.xml, htmlhelp.autolabel.xml, htmlhelp.chm.xml, htmlhelp.encoding.xml, htmlhelp.enumerate.images.xml, htmlhelp.hhc.xml, htmlhelp.hhp.tail.xml, htmlhelp.hhp.xml, hyphenate.xml, inherit.keywords.xml, insert.xref.page.number.xml, label.from.part.xml, linenumbering.everyNth.xml, linenumbering.extension.xml, linenumbering.separator.xml, linenumbering.width.xml, link.mailto.url.xml, list.block.spacing.xml, list.item.spacing.xml, make.single.year.ranges.xml, make.year.ranges.xml, monospace.font.family.xml, monospace.verbatim.properties.xml, navig.graphics.extension.xml, navig.graphics.path.xml, navig.graphics.xml, navig.showtitles.xml, nominal.table.width.xml, normal.para.spacing.xml, olink.fragid.xml, olink.outline.ext.xml, olink.pubid.xml, olink.resolver.xml, olink.sysid.xml, page.height.portrait.xml, page.height.xml, page.margin.bottom.xml, page.margin.inner.xml, page.margin.outer.xml, page.margin.top.xml, page.orientation.xml, page.width.portrait.xml, page.width.xml, paper.type.xml, part.autolabel.xml, passivetex.extensions.xml, phrase.propagates.style.xml, preface.autolabel.xml, process.empty.source.toc.xml, process.source.toc.xml, qanda.defaultlabel.xml, qanda.inherit.numeration.xml, qandadiv.autolabel.xml, refentry.generate.name.xml, refentry.separator.xml, refentry.xref.manvolnum.xml, region.after.extent.xml, region.before.extent.xml, root.filename.xml, rootid.xml, runinhead.default.title.end.punct.xml, runinhead.title.end.punct.xml, sans.font.family.xml, saxon.callouts.xml, saxon.character.representation.xml, saxon.linenumbering.xml, saxon.tablecolumns.xml, section.autolabel.xml, section.label.includes.component.label.xml, shade.verbatim.style.xml, shade.verbatim.xml, show.comments.xml, show.revisionflag.xml, spacing.paras.xml, stylesheet.result.type.xml, suppress.navigation.xml, table.border.color.xml, table.border.padding.xml, table.border.style.xml, table.border.thickness.xml, table.borders.with.css.xml, table.entry.padding.xml, tablecolumns.extension.xml, template.xml, textinsert.extension.xml, title.font.family.xml, title.margin.left.xml, toc.list.type.xml, toc.margin.properties.xml, toc.section.depth.xml, ulink.target.xml, use.extensions.xml, use.id.as.filename.xml, use.id.function.xml, using.chunker.xml, verbatim.properties.xml, xep.extensions.xml, xref.properties.xml: 
+	Move the obvious ID value from the src:fragment to the refentry in parameter reference pages
+
+2001-11-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admonition.title.properties.xml, autotoc.label.separator.xml, body.margin.top.xml, callout.unicode.xml, component.title.properties.xml, formal.object.properties.xml, formal.title.properties.xml, generate.appendix.toc.xml, generate.article.toc.xml, generate.book.equation.lot.xml, generate.book.example.lot.xml, generate.book.figure.lot.xml, generate.book.table.lot.xml, generate.book.toc.xml, generate.chapter.toc.xml, generate.index.xml, generate.part.toc.xml, generate.preface.toc.xml, generate.reference.toc.xml, generate.set.toc.xml, list.block.spacing.xml, list.item.spacing.xml, monospace.verbatim.properties.xml: 
+	Documentation improvements from Dave Pawson
+
+2001-11-06  Robert Stayton <bobstayton@users.sourceforge.net>
+
+	* navig.graphics.extension.xml, navig.graphics.path.xml, navig.graphics.xml, navig.showtitles.xml: 
+	New file.
+
+2001-11-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* normal.para.spacing.xml: Documentation improvements from Dave Pawson
+
+2001-11-05  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* htmlhelp.autolabel.xml, htmlhelp.chm.xml, htmlhelp.encoding.xml, htmlhelp.enumerate.images.xml, htmlhelp.hhc.xml, htmlhelp.hhp.tail.xml, htmlhelp.hhp.xml: 
+	New file.
+
+2001-10-16  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* html.longdesc.link.xml, html.longdesc.xml: New file.
+
+2001-10-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* table.borders.with.css.xml, table.entry.padding.xml: 
+	New file.
+
+2001-10-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* table.border.color.xml, table.border.padding.xml, table.border.style.xml, table.border.thickness.xml, template.xml, title.margin.left.xml: 
+	New params for FOs
+
+2001-10-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* admon.graphics.extension.xml, admon.graphics.path.xml, admon.graphics.xml, admon.style.xml, admonition.title.properties.xml, alignment.xml, annotate.toc.xml, appendix.autolabel.xml, arbortext.extensions.xml, author.othername.in.middle.xml, autotoc.label.separator.xml, base.dir.xml, biblioentry.item.separator.xml, bibliography.collection.xml, body.font.family.xml, body.font.master.xml, body.font.size.xml, body.margin.bottom.xml, body.margin.top.xml, bridgehead.in.toc.xml, callout.defaultcolumn.xml, callout.graphics.extension.xml, callout.graphics.number.limit.xml, callout.graphics.path.xml, callout.graphics.xml, callout.list.table.xml, callout.unicode.font.xml, callout.unicode.number.limit.xml, callout.unicode.start.character.xml, callout.unicode.xml, callouts.extension.xml, chapter.autolabel.xml, chunk.datafile.xml, chunk.first.sections.xml, chunk.sections.xml, citerefentry.link.xml, column.count.xml, component.title.properties.xml, css.decoration.xml, default.encoding.xml, default.table.width.xml, default.units.xml, dingbat.font.family.xml, double.sided.xml, ebnf.table.bgcolor.xml, ebnf.table.border.xml, emphasis.propagates.style.xml, footnote.font.size.xml, fop.extensions.xml, formal.object.properties.xml, formal.procedures.xml, formal.title.properties.xml, format.variablelist.as.list.xml, funcsynopsis.decoration.xml, funcsynopsis.style.xml, function.parens.xml, generate.appendix.toc.xml, generate.article.toc.xml, generate.book.equation.lot.xml, generate.book.example.lot.xml, generate.book.figure.lot.xml, generate.book.table.lot.xml, generate.book.toc.xml, generate.chapter.toc.xml, generate.component.toc.xml, generate.division.equation.lot.xml, generate.division.example.lot.xml, generate.division.figure.lot.xml, generate.division.table.lot.xml, generate.division.toc.xml, generate.index.xml, generate.legalnotice.link.xml, generate.part.toc.xml, generate.preface.toc.xml, generate.qandadiv.toc.xml, generate.qandaset.toc.xml, generate.reference.toc.xml, generate.section.toc.level.xml, generate.section.toc.xml, generate.set.toc.xml, graphic.default.extension.xml, html.base.xml, html.ext.xml, html.stylesheet.type.xml, html.stylesheet.xml, hyphenate.xml, inherit.keywords.xml, insert.xref.page.number.xml, label.from.part.xml, linenumbering.everyNth.xml, linenumbering.extension.xml, linenumbering.separator.xml, linenumbering.width.xml, link.mailto.url.xml, list.block.spacing.xml, list.item.spacing.xml, make.single.year.ranges.xml, make.year.ranges.xml, monospace.font.family.xml, monospace.verbatim.properties.xml, nominal.table.width.xml, normal.para.spacing.xml, olink.fragid.xml, olink.outline.ext.xml, olink.pubid.xml, olink.resolver.xml, olink.sysid.xml, page.height.portrait.xml, page.height.xml, page.margin.bottom.xml, page.margin.inner.xml, page.margin.outer.xml, page.margin.top.xml, page.orientation.xml, page.width.portrait.xml, page.width.xml, paper.type.xml, part.autolabel.xml, passivetex.extensions.xml, phrase.propagates.style.xml, preface.autolabel.xml, process.empty.source.toc.xml, process.source.toc.xml, qanda.defaultlabel.xml, qanda.inherit.numeration.xml, qandadiv.autolabel.xml, refentry.generate.name.xml, refentry.separator.xml, refentry.xref.manvolnum.xml, region.after.extent.xml, region.before.extent.xml, root.filename.xml, rootid.xml, runinhead.default.title.end.punct.xml, runinhead.title.end.punct.xml, sans.font.family.xml, saxon.callouts.xml, saxon.character.representation.xml, saxon.linenumbering.xml, saxon.tablecolumns.xml, section.autolabel.xml, section.label.includes.component.label.xml, shade.verbatim.style.xml, shade.verbatim.xml, show.comments.xml, show.revisionflag.xml, spacing.paras.xml, stylesheet.result.type.xml, suppress.navigation.xml, tablecolumns.extension.xml, template.xml, textinsert.extension.xml, title.font.family.xml, toc.list.type.xml, toc.margin.properties.xml, toc.section.depth.xml, ulink.target.xml, use.extensions.xml, use.id.as.filename.xml, use.id.function.xml, using.chunker.xml, verbatim.properties.xml, xep.extensions.xml, xref.properties.xml: 
+	New file.
+

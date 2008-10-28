@@ -1,0 +1,23 @@
+<refentry id="html.cellpadding">
+<refmeta>
+<refentrytitle>html.cellpadding</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.cellpadding</refname>
+<refpurpose>Default value for cellpadding in HTML tables</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.cellpadding.frag'>
+<xsl:param name="html.cellpadding" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If specified, this value will be used as the default cellpadding value
+in HTML tables.</para>
+
+</refsect1>
+</refentry>

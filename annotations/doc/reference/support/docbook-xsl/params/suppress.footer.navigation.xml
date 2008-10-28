@@ -1,0 +1,22 @@
+<refentry id="suppress.footer.navigation">
+<refmeta>
+<refentrytitle>suppress.footer.navigation</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>suppress.footer.navigation</refname>
+<refpurpose>Disable footer navigation</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='suppress.footer.navigation.frag'><xsl:param name="suppress.footer.navigation">0</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>
+If <literal>suppress.footer.navigation</literal> is turned on, footer
+navigation will be suppressed.</para>
+
+</refsect1>
+</refentry>

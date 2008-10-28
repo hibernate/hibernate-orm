@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="validator">
+  <title>Hibernate验证器</title>
+
+  <para>注解是一种为领域模型(domain model)指定不变约束的简洁而幽雅的方法。例如，你能
+  表示一个属性永远不为null，一个帐户余额一定是正值，等等。这些域模型约束通过为bean中的属性添加
+  注解来加以声明。随后一个验证器(validator)会读取并检查这些约束。验证机制可以执行于应用程序中的
+  不同层（表现层、数据访问层），而不必复述任何（前述）这些规则。Hibernate验证器正为这一目的而设计的。</para>
+
+  <para>Hibernate验证器工作在两个层次上。第一层，它能检查内存中一个类的实例是否违反约束。
+  第二层，它能将约束应用于Hibernate元模型上，并将它们融入生成的数据库schema中。</para>
+  
+  <para>每个约束注解（constraint annotation）和一个验证器实现关联，该验证器负责检查位于实体实例上的约束。
+  一个验证器也能(可选地)将约束应用于Hibernate元模型上，让Hibernate生成表示这一约束的DDL。使用合适的事件监听器，你能
+  让Hibernate在插入和更新时执行检查操作。Hibernate验证器并不局限于同Hibernate一起使用。
+  你能在你应用程序的任何地方方便地使用它。</para>
+
+  <para>在运行时检查实例时，Hibernate验证器返回违反约束的信息，
+  这些信息以一个<classname>InvalidValue</classname>数组的形式返回。
+  除了众多其他信息外，<classname>InvalidValue</classname>包含了一个错误描述消
+  息，该信息可以内嵌与注解相捆绑的参数值（例如长度限制），以及能被提取至ResourceBundle的消息字串。</para>
+
+  <sect1 id="validator-constraints">
+    <title>约束</title>
+
+    <sect2>
+      <title>什么是约束？</title>
+
+      <para>约束通过注解表示。一个约束通常有一些用来参数化约束限制的属性。约束应用于带注解的元素。</para>
+    </sect2>
+
+    <sect2>
+      <title>内建约束</title>
+
+      <para>Hibernate验证器有些内建约束，这些约束覆盖了大多数的基本数据检查。随后我们会看到，
+      你不必受制于这些内置约束，因为一分钟内就可以写出你自己的约束。</para>
+
+      <table>
+        <title>内建约束</title>
+
+        <tgroup cols="4">
+          <colspec align="center" />
+
+          <thead>
+            <row>
+              <entry>注解</entry>
+
+              <entry>应用目标</entry>
+
+              <entry>运行时检查</entry>
+
+              <entry>Hibernate元数据影响</entry>
+            </row>
+          </thead>
+
+          <tbody>
+          
+            <row>
+              <entry>@Length(min=, max=)</entry>
+
+              <entry>属性(String)</entry>
+
+              <entry>检查字符串长度是否符合范围</entry>
+
+              <entry>列长度会被设到最大值</entry>
+            </row>
+
+            <row>
+              <entry>@Max(value=)</entry>
+
+              <entry>属性 (以numeric或者string类型来表示一个数字)</entry>
+
+              <entry>检查值是否小于或等于最大值</entry>
+
+              <entry>对列增加一个检查约束</entry>
+            </row>
+
+            <row>
+              <entry>@Min(value=)</entry>
+
+              <entry>属性(以numeric或者string类型来表示一个数字)</entry>
+
+              <entry>检查值是否大于或等于最小值</entry>
+
+              <entry>对列增加一个检查约束</entry>
+            </row>
+
+            <row>
+              <entry>@NotNull</entry>
+
+              <entry>属性</entry>
+
+              <entry>检查值是否非空(not null)</entry>
+
+              <entry>列不为空</entry>
+            </row>
+
+            <row>
+              <entry>@Past</entry>
+
+              <entry>属性(date或calendar)</entry>
+
+              <entry>检查日期是否是过去时</entry>
+
+              <entry>对列增加一个检查约束</entry>
+            </row>
+
+            <row>
+              <entry>@Future</entry>
+
+              <entry>属性 (date 或 calendar)</entry>
+
+              <entry>检查日期是否是将来时</entry>
+
+              <entry>无</entry>
+            </row>
+
+            <row>
+              <entry>@Pattern(regex="regexp", flag=)</entry>
+
+              <entry>属性 (string)</entry>
+
+              <entry>检查属性是否与给定匹配标志的正则表达式相匹配(见<classname> 
+              java.util.regex.Pattern </classname>)</entry>
+
+              <entry>无</entry>
+            </row>
+
+            <row>
+              <entry>@Range(min=, max=)</entry>
+
+              <entry>属性(以numeric或者string类型来表示一个数字)</entry>
+
+              <entry>检查值是否在最小和最大值之间(包括临界值)</entry>
+
+              <entry>对列增加一个检查约束</entry>
+            </row>
+            
+            <row>
+              <entry>@Size(min=, max=)</entry>
+
+              <entry>属性 (array, collection, map)</entry>
+
+              <entry>检查元素大小是否在最小和最大值之间(包括临界值)</entry>
+
+              <entry>无</entry>
+            </row>
+
+            <row>
+              <entry>@AssertFalse</entry>
+
+              <entry>属性</entry>
+
+              <entry>检查方法的演算结果是否为false(对以代码方式而不是注解表示的约束很有用)</entry>
+
+              <entry>无</entry>
+            </row>
+
+            <row>
+              <entry>@AssertTrue</entry>
+
+              <entry>属性</entry>
+
+              <entry>检查方法的演算结果是否为true(对以代码方式而不是注解表示的约束很有用)</entry>
+
+              <entry>无</entry>
+            </row>
+
+            <row>
+              <entry>@Valid</entry>
+
+              <entry>属性 (object)</entry>
+
+              <entry>对关联对象递归的进行验证。如果对象是集合或数组，就递归地验证其元素。如果对象是Map，则递归验证其值元素。</entry>
+
+              <entry>无</entry>
+            </row>
+
+	        <row>
+              <entry>@Email</entry>
+
+              <entry>属性（String）</entry>
+
+              <entry>检查字符串是否符合有效的email地址规范。</entry>
+
+              <entry>无</entry>
+            </row>
+
+          </tbody>
+        </tgroup>
+      </table>
+    </sect2>
+
+    <sect2 id="validator-constraints-error" xreflabel="Error messages">
+      <title id="validator-constraints-error">错误信息</title>
+
+      <para>Hibernate验证器提供了一组默认的错误提示信息，它们被翻译成多种语言(如果你的语言不在其中，请给
+      我们寄一个补丁)。你可以在<filename>org.hibernate.validator.resources.DefaultValidatorMessages.properties</filename>
+      之外创建<filename>ValidatorMessages.properties</filename>或<filename>ValidatorMessages_loc.properties</filename>
+      文件并改变相应的键值，籍此覆盖那些（默认）信息。你甚至可以在写自己的验证器
+      注解时添加你自己的附加消息集。</para>
+
+      <para>或者你可以以编程方式检查bean的验证规则并提供相应的<classname>ResourceBundle</classname>。</para>
+    </sect2>
+
+    <sect2>
+      <title>编写你自己的约束</title>
+
+      <para>扩展内建约束集是极其方便的。任何约束都包括两部分：约束<emphasis>描述符</emphasis>(注解)
+      和约束<emphasis>验证器</emphasis>(实现类)。下面是一个简单的用户定义描述符：</para>
+
+      <programlisting>@ValidatorClass(CapitalizedValidator.class)
+@Target(METHOD) 
+@Retention(RUNTIME)
+@Documented
+public @interface Capitalized {
+    CapitalizeType type() default Capitalize.FIRST;
+    String message() default "has incorrect capitalization";
+}</programlisting>
+
+      <para><literal>type</literal>参数描述属性应该如何被大写。这是一个完全依赖于注解业务(逻辑)的用户
+      参数。</para>
+
+      <para><literal>message</literal>是用于描述约束违规的默认字符串，它是强制要求的。你可以采取硬编码的方式，
+      或者通过Java ResourceBundle机制将message的部分/全部内容提取至外部文件。一旦发现message中{parameter}字符串，
+      就会在{parameter}这个位置注入相应的参数值(在我们的例子里Capitalization is not {type}会生成 Capitalization is not FIRST)，
+      可以将message对应的整个字符串提取至外部文件ValidatorMessages.properties，这也是一种良好实践。
+      见<xref linkend="validator-constraints-error" />。</para>
+
+      <programlisting>@ValidatorClass(CapitalizedValidator.class)
+@Target(METHOD) 
+@Retention(RUNTIME)
+@Documented
+public @interface Capitalized {
+    CapitalizeType type() default Capitalize.FIRST;
+    String message() default "{validator.capitalized}";
+}
+
+...
+#in ValidatorMessages.properties
+validator.capitalized=<literal>Capitalization is not {type}</literal></programlisting>
+
+      <para>如你所见{}符号是递归的。</para>
+
+      <para>为了将一个描述符连接到它的验证器实现，我们使用<literal>@ValidatorClass</literal>
+      元注解。验证器类参数必须指定一个实现了<literal>Validator&lt;ConstraintAnnotation&gt;</literal>
+      的类。</para>
+
+      <para>我们现在要实现验证器(也就是实现规则检查)。一个验证器实现能检查一个属性的值
+      (实现<literal>PropertyConstraint</literal>)，并且/或者可以修改hibernate映射元数据
+      (实现<literal>PersistentClassConstraint</literal>)，籍此表示数据库级的约束。</para>
+
+      <programlisting>public class CapitalizedValidator 
+        implements Validator&lt;Capitalized&gt;, PropertyConstraint {
+    private CapitalizeType type;
+
+    //part of the Validator&lt;Annotation&gt; contract, 
+    //allows to get and use the annotation values
+    public void initialize(Capitalized parameters) {
+        type = parameters.type();
+    }
+
+    //part of the property constraint contract
+    public boolean isValid(Object value) {
+        if (value==null) return true;
+        if ( !(value instanceof String) ) return false;
+        String string = (String) value;
+        if (type == CapitalizeType.ALL) {
+            return string.equals( string.toUpperCase() );
+        }
+        else {
+            String first = string.substring(0,1);
+            return first.equals( first.toUpperCase();
+        }
+    }
+}</programlisting>
+
+      <para>如果违反约束，<literal>isValid()</literal>方法将返回false。更多例子请参考内建验证器实现。</para>
+
+      <para>至此我们只看到属性级的验证，你还可以写一个Bean级别的验证注解。Bean自身会被传递给验证器，
+      而不是bean的属性实例。只要对bean自身进行注解即可激活验证检查。在单元测试套件中还可以找到一个小例子。</para>
+    </sect2>
+
+    <sect2>
+      <title>注解你的领域模型</title>
+
+      <para>既然你现在已经熟悉注解了，那么对语法也应该很清楚了。</para>
+
+      <programlisting>public class Address {
+    private String line1;
+    private String line2;
+    private String zip;
+    private String state;
+    private String country;
+    private long id;
+    
+    // a not null string of 20 characters maximum
+    @Length(max=20) 
+    @NotNull
+    public String getCountry() {
+        return country;
+    }
+    
+    // a non null string
+    @NotNull
+    public String getLine1() {
+        return line1;
+    }
+
+    //no constraint    
+    public String getLine2() {
+        return line2;
+    }
+    
+    // a not null string of 3 characters maximum
+    @Length(max=3) @NotNull
+    public String getState() {
+        return state;
+    }
+
+    // a not null numeric string of 5 characters maximum
+    // if the string is longer, the message will 
+    //be searched in the resource bundle at key 'long'
+    @Length(max=5, message="{long}")
+    @Pattern(regex="[0-9]+")
+    @NotNull
+    public String getZip() {
+        return zip;
+    }
+    
+    // should always be true
+    @AssertTrue
+    public boolean isValid() {
+        return true;
+    }
+
+    // a numeric between 1 and 2000
+    @Id @Min(1)
+    @Range(max=2000)
+    public long getId() {
+        return id;
+    }
+}</programlisting>
+
+      <para>上面的例子只展示了公共属性验证，你还可以对任何可见度的字段(field)进行注解。</para>
+
+      <programlisting>@MyBeanConstraint(max=45)
+public class Dog {
+    @AssertTrue private boolean isMale;
+    @NotNull protected String getName() { ... };
+    ...
+}</programlisting>
+
+      <para>你可以对接口进行注解。Hibernate验证器会检查给定bean所扩展或实现的所有父类和接口，
+      籍以读取相应的验证器注解(信息)。</para>
+
+      <programlisting>public interface Named {
+    @NotNull String getName();
+    ...
+}
+
+public class Dog implements Named {
+
+    @AssertTrue private boolean isMale;
+
+    public String getName() { ... };
+
+}</programlisting>
+
+      <para>在验证Dog bean时会检查name属性的有效性(不为null)。</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>使用验证器框架</title>
+
+    <para>Hibernate验证器旨在实现多层数据验证，我们在一处表示约束(带注解的域模型)，然后将其运用于
+    应用程序的不同层。</para>
+
+    <sect2>
+      <title>数据库schema层次验证</title>
+
+      <para>无须额外手续，Hibernate Annotations会自动将你为实体定义的约束翻译为映射元数据。例如，如果你的实体
+      的一个属性注解为<literal>@NotNull</literal>，在Hibernate生成的DDL schema中这列会被定义为
+      <literal>not null</literal>。</para>
+    </sect2>
+
+    <sect2>
+      <title>Hibernate基于事件的验证</title>
+
+      <para>Hibernate验证器有两个内建Hibernate事件监听器。当一个<literal>PreInsertEvent</literal>
+      或<literal>PreUpdateEvent</literal>发生时，监听器会验证该实体实例的所有约束，如有违反会抛出一个异常。
+      基本上，在Hibernate执行任何插入和更新前对象会被检查。这是激活验证过程的最便捷最简单的方法。当遇到约束
+      违规时，事件会引发一个运行时<classname>InvalidStateException</classname>，该异常包含一个描述每个错误的
+      <literal>InvalidValue</literal>数组。</para>
+
+      <programlisting>&lt;hibernate-configuration&gt;
+    ...
+    &lt;event type="pre-update"&gt;
+        &lt;listener 
+          class="org.hibernate.validator.event.ValidatePreUpdateEventListener"/&gt;
+    &lt;/event&gt;
+    &lt;event type="pre-insert"&gt;
+        &lt;listener 
+          class="org.hibernate.validator.event.ValidatePreInsertEventListener"/&gt;
+    &lt;/event&gt;
+&lt;/hibernate-configuration&gt;</programlisting>
+
+      <para><note>
+          <para>在使用Hibernate Entity Manager时，Validation框架会被自动激活。如果bean不带验证注解，
+          就不会有性能损失。</para>
+        </note></para>
+    </sect2>
+
+    <sect2>
+      <title>程序级验证</title>
+
+      <para>Hibernate验证器能应用于你应用程序代码中的任何地方。</para>
+
+      <programlisting>ClassValidator personValidator = new ClassValidator( Person.class );
+ClassValidator addressValidator = new ClassValidator( Address.class, ResourceBundle.getBundle("messages", Locale.ENGLISH) );
+
+InvalidValue[] validationMessages = addressValidator.getInvalidValues(address);</programlisting>
+
+      <para>头两行为执行类检查而准备Hibernate验证器。第一行依赖于嵌入在Hibernate验证器内的错误
+      消息(见<xref linkend="validator-constraints-error" />)，第二行为这些消息准备资源包。这些代码只执行一次，
+      并将验证器进行缓存处理，这种方式是一种良好实践。</para>
+
+      <para>第三行真正验证了<literal>Address</literal>实例并返回一个<literal>InvalidValue</literal>数组。
+      你的应用程序逻辑随后可以对错误做出响应。</para>
+
+      <para>除了针对整个bean你还可以对某个特定属性进行检查。这对于一个属性一个属性的用户交互情形或许是有用的。</para>
+
+      <programlisting>ClassValidator addressValidator = new ClassValidator( Address.class, ResourceBundle.getBundle("messages", Locale.ENGLISH) );
+
+//only get city property invalid values
+InvalidValue[] validationMessages = addressValidator.getInvalidValues(address, "city");
+
+//only get potential city property invalid values
+InvalidValue[] validationMessages = addressValidator.getPotentialInvalidValues("city", "Paris")</programlisting>
+    </sect2>
+
+    <sect2>
+      <title>验证信息</title>
+
+      <para>作为一个验证信息的载体，hibernate提供了一个<classname>InvalidValue</classname>数组。
+      每个<literal>InvalidValue</literal>有一组，这些方法分别描述相应的个体问题。</para>
+
+      <para><methodname>getBeanClass()</methodname>获取失败的bean类型。</para>
+
+      <para><methodname>getBean()</methodname>获取验证失败的实例(如果有的话，当使用
+      <methodname>getPotentianInvalidValues()</methodname>时则不会取到) </para>
+
+      <para><methodname>getValue()</methodname>获取验证失败的值</para>
+
+      <para><methodname>getMessage()</methodname>获取合适的国际化错误消息</para>
+
+      <para><methodname>getRootBean()</methodname>获取产生问题的根bean实例(在与<literal>@Valid</literal>连用
+      时很有用)，如用getPotentianInvalidValues()则返回null。</para>
+
+      <para><literal>getPropertyPath()</literal>获取“问题”属性从根bean开始的带点的路径</para>
+    </sect2>
+  </sect1>
+</chapter>

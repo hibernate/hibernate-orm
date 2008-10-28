@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="xml-overriding" label="Overriding metadata through XML">
+  <title>Overriding metadata through XML</title>
+
+  <para>The primary target for metadata in EJB3 is annotations, but the EJB3
+  specification provides a way to override or replace the annotation defined
+  metadata through an XML deployment descriptor. In the current release only
+  pure EJB3 annotations overriding are supported. If you wish to use Hibernate
+  specific features in some entities, you'll have to either use annotations or
+  fallback to hbm files. You can of course mix and match annotated entities
+  and entities describes in hbm files.</para>
+
+  <para>The unit test suite shows some additional XML file samples.</para>
+
+  <section id="xml-overriding-principles">
+    <title>Principles</title>
+
+    <para>The XML deployment descriptor structure has been designed to reflect
+    the annotations one. So if you know the annotations structure, using the
+    XML schema will be straightforward for you.</para>
+
+    <para>You can define one ot more XML files describing your metadata, these
+    files will be merged by the overriding engine.</para>
+
+    <section>
+      <title>Global level metadata</title>
+
+      <para>You can define global level metadata available for all XML files.
+      You must not define these metadata more than once per deployment.</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;persistence-unit-metadata&gt;
+        &lt;xml-mapping-metadata-complete/&gt;
+        &lt;persistence-unit-defaults&gt;
+            &lt;schema&gt;myschema&lt;/schema&gt;
+            &lt;catalog&gt;mycatalog&lt;/catalog&gt;
+            &lt;cascade-persist/&gt;
+        &lt;/persistence-unit-defaults&gt;
+    &lt;/persistence-unit-metadata&gt;</programlisting>
+
+      <para><literal>xml-mapping-metadata-complete</literal> means that all
+      entity, mapped-superclasses and embeddable metadata should be picked up
+      from XML (ie ignore annotations).</para>
+
+      <para><literal>schema / catalog</literal> will override all default
+      definitions of schema and catalog in the metadata (both XML and
+      annotations).</para>
+
+      <para><literal>cascade-persist</literal> means that all associations
+      have PERSIST as a cascade type. We recommend you to not use this
+      feature.</para>
+    </section>
+
+    <section id="xml-overriding-principles-entity" revision="1">
+      <title>Entity level metadata</title>
+
+      <para>You can either define or override metadata informations on a given
+      entity.</para>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="3 85" id="aa1" />
+
+          <area coords="9 85" id="aa2" />
+
+          <area coords="10 85" id="aa3" />
+
+          <area coords="11 85" id="aa4" />
+
+          <area coords="17 85" id="aa5" />
+
+          <area coords="23 85" id="aa6" />
+
+          <area coords="24 85" id="aa7" />
+
+          <area coords="25 85" id="aa8" />
+
+          <area coords="26 85" id="aa9" />
+
+          <area coords="31 85" id="aa10" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Administration" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;table name="tbl_admin"&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;firstname&lt;/column-name&gt;
+                &lt;column-name&gt;lastname&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/table&gt;
+        &lt;secondary-table name="admin2"&gt;
+            &lt;primary-key-join-column name="admin_id" referenced-column-name="id"/&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;address&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/secondary-table&gt;
+        &lt;id-class class="SocialSecurityNumber"/&gt;
+        &lt;inheritance strategy="JOINED"/&gt;
+        &lt;sequence-generator name="seqhilo" sequence-name="seqhilo"/&gt;
+        &lt;table-generator name="table" table="tablehilo"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="aa1">
+            <para><literal>entity-mappings</literal>: entity-mappings is the
+            root element for all XML files. You must declare the xml schema,
+            the schema file is included in the hibernate-annotations.jar file,
+            no internet access will be processed by Hibernate
+            Annotations.</para>
+          </callout>
+
+          <callout arearefs="aa2">
+            <para><literal>package</literal> (optional): default package used
+            for all non qualified class names in the given deployment
+            descriptor file.</para>
+          </callout>
+
+          <callout arearefs="aa3">
+            <para><literal>entity</literal>: desribes an entity.</para>
+
+            <para><literal>metadata-complete</literal> defines whether the
+            metadata description for this element is complete or not (in other
+            words, if annotations present at the class level should be
+            considered or not).</para>
+
+            <para>An entity has to have a <literal>class</literal> attribute
+            refering the java class the metadata applies on.</para>
+
+            <para>You can overrides entity name through the
+            <literal>name</literal> attribute, if none is defined and if an
+            <literal>@Entity.name</literal> is present, then it is used
+            (provided that metadata complete is not set).</para>
+
+            <para>For metadata complete (see below) element, you can define an
+            <literal>access</literal> (either <literal>FIELD</literal> or
+            <literal>PROPERTY</literal> (default)). For non medatada complete
+            element, if <literal>access</literal> is not defined, the @Id
+            position will lead position, if <literal>access</literal> is
+            defined, the value is used.</para>
+          </callout>
+
+          <callout arearefs="aa4">
+            <para><literal>table</literal>: you can declare table properties
+            (name, schema, catalog), if none is defined, the java annotation
+            is used.</para>
+
+            <para>You can define one or several unique constraints as seen in
+            the example</para>
+          </callout>
+
+          <callout arearefs="aa5">
+            <para><literal>secondary-table</literal>: defines a secondary
+            table very much like a regular table except that you can define
+            the primary key / foreign key column(s) through the
+            <literal>primary-key-join-column</literal> element. On non
+            metadata complete, annotation secondary tables are used only if
+            there is no <literal>secondary-table</literal> definition,
+            annotations are ignored otherwise.</para>
+          </callout>
+
+          <callout arearefs="aa6">
+            <para><literal>id-class</literal>: defines the id class in a
+            similar way <literal>@IdClass</literal> does</para>
+          </callout>
+
+          <callout arearefs="aa7">
+            <para><literal>inheritance</literal>: defines the inheritance
+            strategy (<literal>JOINED</literal>,
+            <literal>TABLE_PER_CLASS</literal>,
+            <literal>SINGLE_TABLE</literal>), Available only at the root
+            entity level</para>
+          </callout>
+
+          <callout arearefs="aa8">
+            <para><literal>sequence-generator</literal>: defines a sequence
+            generator</para>
+          </callout>
+
+          <callout arearefs="aa9">
+            <para><literal>table-generator</literal>: defines a table
+            generator</para>
+          </callout>
+
+          <callout arearefs="aa10">
+            <para><literal><literal>primary-key-join-column</literal></literal>:
+            defines the primary key join column for sub entities when JOINED
+            inheritance strategy is used</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="11 85" id="ab1" />
+
+          <area coords="18 85" id="ab2" />
+
+          <area coords="22  85" id="ab3" />
+
+          <area coords="28 85" id="ab4" />
+
+          <area coords="34 85" id="ab5" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Music" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;discriminator-value&gt;Generic&lt;/discriminator-value&gt;
+        &lt;discriminator-column length="34"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        &lt;named-query name="adminById"&gt;
+            &lt;query&gt;select m from Administration m where m.id = :id&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-query&gt;
+        &lt;named-native-query name="allAdmin" result-set-mapping="adminrs"&gt;
+            &lt;query&gt;select *, count(taxpayer_id) as taxPayerNumber 
+            from Administration, TaxPayer
+            where taxpayer_admin_id = admin_id group by ...&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-native-query&gt;
+        &lt;sql-result-set-mapping name="adminrs"&gt;
+            &lt;entity-result entity-class="Administration"&gt;
+                &lt;field-result name="name" column="fld_name"/&gt;
+            &lt;/entity-result&gt;
+            &lt;column-result name="taxPayerNumber"/&gt;
+        &lt;/sql-result-set-mapping&gt;
+        &lt;attribute-override name="ground"&gt;
+            &lt;column name="fld_ground" unique="true" scale="2"/&gt;
+        &lt;/attribute-override&gt;
+        &lt;association-override name="referer"&gt;
+            &lt;join-column name="referer_id" referenced-column-name="id"/&gt;
+        &lt;/association-override&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="ab1">
+            <para><literal>discriminator-value /
+            discriminator-column</literal>: defines the discriminator value
+            and the column holding it when the SINGLE_TABLE inheritance
+            strategy is chosen</para>
+          </callout>
+
+          <callout arearefs="ab2">
+            <para><literal>named-query</literal>: defines named queries and
+            possibly the hints associated to them. Those definitions are
+            additive to the one defined in annotations, if two definitions
+            have the same name, the XML one has priority.</para>
+          </callout>
+
+          <callout arearefs="ab3">
+            <para><literal>named-native-query</literal>: defines an named
+            native query and its sql result set mapping. Alternatively, you
+            can define the <literal>result-class</literal>. Those definitions
+            are additive to the one defined in annotations, if two definitions
+            have the same name, the XML one has priority.</para>
+          </callout>
+
+          <callout arearefs="ab4">
+            <para><literal>sql-result-set-mapping</literal>: describes the
+            result set mapping structure. You can define both entity and
+            column mappings. Those definitions are additive to the one defined
+            in annotations, if two definitions have the same name, the XML one
+            has priority</para>
+          </callout>
+
+          <callout arearefs="ab5">
+            <para><literal>attribute-override /
+            association-override</literal>: defines a column or join column
+            overriding. This overriding is additive to the one defined in
+            annotations</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
+
+      <para>Same applies for <literal>&lt;embeddable&gt;</literal> and
+      <literal>&lt;mapped-superclass&gt;</literal>.</para>
+    </section>
+
+    <section>
+      <title>Property level metadata</title>
+
+      <para>You can of course defines XML overriding for properties. If
+      metadata complete is defined, then additional properties (ie at the Java
+      level) will be ignored. Otherwise, once you start overriding a property,
+      all annotations on the given property are ignored. All property level
+      metadata behave in <literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> or
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;id name="id"&gt;
+            &lt;column name="fld_id"/&gt;
+            &lt;generated-value generator="generator" strategy="SEQUENCE"/&gt;
+            &lt;temporal&gt;DATE&lt;/temporal&gt;
+            &lt;sequence-generator name="generator" sequence-name="seq"/&gt;
+        &lt;/id&gt;
+        &lt;version name="version"/&gt;
+        &lt;embedded name="embeddedObject"&gt;
+            &lt;attribute-override name"subproperty"&gt;
+                &lt;column name="my_column"/&gt;
+            &lt;/attribute-override&gt;
+        &lt;/embedded&gt;
+        &lt;basic name="status" optional="false"&gt;
+            &lt;enumerated&gt;STRING&lt;/enumerated&gt;
+        &lt;/basic&gt;
+        &lt;basic name="serial" optional="true"&gt;
+            &lt;column name="serialbytes"/&gt;
+            &lt;lob/&gt;
+        &lt;/basic&gt;
+        &lt;basic name="terminusTime" fetch="LAZY"&gt;
+            &lt;temporal&gt;TIMESTAMP&lt;/temporal&gt;
+        &lt;/basic&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>You can override a property through <literal>id</literal>,
+      <literal>embedded-id</literal>, <literal>version</literal>,
+      <literal>embedded</literal> and <literal>basic</literal>. Each of these
+      elements can have subelements accordingly: <literal>lob</literal>,
+      <literal>temporal</literal>, <literal>enumerated</literal>,
+      <literal>column</literal>.</para>
+    </section>
+
+    <section>
+      <title>Association level metadata</title>
+
+      <para>You can define XML overriding for associations. All association
+      level metadata behave in <literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> or
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;one-to-many name="players" fetch="EAGER"&gt;
+            &lt;map-key name="name"/&gt;
+            &lt;join-column name="driver"/&gt;
+            &lt;join-column name="number"/&gt;
+        &lt;/one-to-many&gt;
+        &lt;many-to-many name="roads" target-entity="Administration"&gt;
+            &lt;order-by&gt;maxSpeed&lt;/order-by&gt;
+            &lt;join-table name="bus_road"&gt;
+                &lt;join-column name="driver"/&gt;
+                &lt;join-column name="number"/&gt;
+                &lt;inverse-join-column name="road_id"/&gt;
+                &lt;unique-constraint&gt;
+                    &lt;column-name&gt;driver&lt;/column-name&gt;
+                    &lt;column-name&gt;number&lt;/column-name&gt;
+                &lt;/unique-constraint&gt;
+            &lt;/join-table&gt;
+        &lt;/many-to-many&gt;
+        &lt;many-to-many name="allTimeDrivers" mapped-by="drivenBuses"&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>You can override an association through
+      <literal>one-to-many</literal>, <literal>one-to-one</literal>,
+      <literal>many-to-one</literal>, and <literal>many-to-many</literal>.
+      Each of these elements can have subelements accordingly:
+      <literal>join-table</literal> (which can have
+      <literal>join-column</literal>s and
+      <literal>inverse-join-column</literal>s),
+      <literal><literal>join-column</literal>s</literal>,
+      <literal>map-key</literal>, and <literal>order-by</literal>.
+      <literal>mapped-by</literal> and <literal>target-entity</literal> can be
+      defined as attributes when it makes sense. Once again the structure is
+      reflects the annotations structure. You can find all semantic
+      informations in the chapter describing annotations.</para>
+    </section>
+  </section>
+</chapter>

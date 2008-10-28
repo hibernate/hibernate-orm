@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.show.advanced.search">
+<refmeta>
+<refentrytitle>htmlhelp.show.advanced.search</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.show.advanced.search</refname>
+<refpurpose>Should be advanced search available?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.show.advanced.search.frag'>
+<xsl:param name="htmlhelp.show.advanced.search" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want advanced search features in your help, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

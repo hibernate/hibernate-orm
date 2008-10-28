@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="additionalmodules">
+  <title>Additional modules</title>
+
+  <para>Hibernate Annotations mainly focus on persistence metadata. The
+  project also have a nice integration with two Hibernate modules.</para>
+
+  <section>
+    <title>Hibernate Validator</title>
+
+    <section>
+      <title>Description</title>
+
+      <para>Annotations are a very convenient and elegant way to specify
+      invariant constraints for a domain model. You can, for example, express
+      that a property should never be null, that the account balance should be
+      strictly positive, etc. These domain model constraints are declared in
+      the bean itself by annotating its properties. A validator can then read
+      them and check for constraint violations. The validation mechanism can
+      be executed in different layers in your application without having to
+      duplicate any of these rules (presentation layer, data access layer).
+      Following the DRY principle, Hibernate Validator has been designed for
+      that purpose.</para>
+
+      <para>Hibernate Validator works at two levels. First, it is able to
+      check in-memory instances of a class for constraint violations. Second,
+      it can apply the constraints to the Hibernate metamodel and incorporate
+      them into the generated database schema.</para>
+
+      <para>Each constraint annotation is associated to a validator
+      implementation responsible for checking the constraint on the entity
+      instance. A validator can also (optionally) apply the constraint to the
+      Hibernate metamodel, allowing Hibernate to generate DDL that expresses
+      the constraint. With the appropriate event listener, you can execute the
+      checking operation on inserts and updates done by Hibernate. Hibernate
+      Validator is not limited to use with Hibernate. You can easily use it
+      anywhere in your application.</para>
+
+      <para>When checking instances at runtime, Hibernate Validator returns
+      information about constraint violations in an array of
+      <classname>InvalidValue</classname> s. Among other information, the
+      <classname>InvalidValue</classname> contains an error description
+      message that can embed the parameter values bundle with the annotation
+      (eg. length limit), and message strings that may be externalized to a
+      <classname>ResourceBundle</classname> .</para>
+    </section>
+
+    <section>
+      <title>Integration with Hibernate Annotations</title>
+
+      <para>If Hibernate Validator
+      (<filename>hibernate-validator.jar</filename>) is available in the
+      classpath, Hibernate Annotations will integrate in two ways:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Constraints will be applied to the Data Definition Language.
+          In other words, the database schema will reflect the constraints
+          (provided that you use the hbm2ddl tool).</para>
+        </listitem>
+
+        <listitem>
+          <para>Before an entity change is applied to the database (insert or
+          update), the entity is validated. Validation errors, if any, will be
+          carried over through an
+          <classname>InvalidStateException</classname>.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>For entities free of validation rules, the runtime performance
+      cost is null.</para>
+
+      <para>To disable constraint propagation to DDL, set up
+      <literal>hibernate.validator.apply_to_ddl</literal> to false in the
+      configuration file. Such a need is very uncommon and not
+      recommended.</para>
+
+      <para>To disable pre-entity change validation, set up
+      <literal>hibernate.validator.autoregister_listeners</literal> to false
+      in the configuration file. Such a need is very uncommon and not
+      recommended.</para>
+
+      <para>Check the Hibernate Validator reference documentation for more
+      information.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>Hibernate Search</title>
+
+    <section>
+      <title>Description</title>
+
+      <para>Full text search engines like <productname>Apache
+      Lucene</productname> are a very powerful technology to bring free
+      text/efficient queries to applications. If suffers several mismatches
+      when dealing with a object domain model (keeping the index up to date,
+      mismatch between the index structure and the domain model, querying
+      mismatch...) Hibernate Search indexes your domain model thanks to a few
+      annotations, takes care of the database / index synchronization and
+      brings you back regular managed objects from free text queries.
+      Hibernate Search is using <ulink url="http://lucene.apache.org">Apache
+      Lucene</ulink> under the cover.</para>
+    </section>
+
+    <section>
+      <title>Integration with Hibernate Annotations</title>
+
+      <para>Hibernate Search integrates with Hibernate Annotations
+      transparently provided that hibernate-search.jar is present in the
+      classpath. If you do not wish to automatically register Hibernate Search
+      event listeners, you can set
+      <literal>hibernate.search.autoregister_listeners</literal> to false.
+      Such a need is very uncommon and not recommended.</para>
+
+      <para>Check the Hibernate Search reference documentation for more
+      information.</para>
+    </section>
+  </section>
+</chapter>

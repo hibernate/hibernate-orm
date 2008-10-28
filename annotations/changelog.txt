@@ -1,0 +1,736 @@
+Hibernate Annotations Changelog
+===============================
+
+3.4.0.GA (20-08-2008)
+----------------------
+
+** Bug
+    * [ANN-761] - Typo in documentation
+
+
+** Improvement
+    * [ANN-765] - Update of "Preface" section in documentation
+    * [ANN-766] - Test updates due to the usage of (oracle) reserved keywords as properties
+
+
+
+** Task
+    * [ANN-767] - Refactor build to allow filtering of resources
+
+
+3.4.0.CR2 (01-08-2008)
+----------------------
+
+** Bug
+    * [ANN-716] - Join table name cannot be resolved when using custom EJB3NamingStrategy
+    * [ANN-718] - @JoinTable / @JoinColumn fails when using backticks in PK field name
+    * [ANN-722] - ANN-694 alive: FK circularity error under certain circumstances
+    * [ANN-723] - Impossible to bind a SortedMap collection
+    * [ANN-730] - Still incorrect FK circularity errors
+    * [ANN-742] - Primary key should not be set on nullable column
+    * [ANN-748] - @JoinColumn overrides scale and percision in ManyToOne map..
+    * [ANN-750] - @NaturalId not working when placed on single *ToOne property
+
+
+** Improvement
+    * [ANN-625] - @OrderBy usage on a joined classes (when using join table) produces incorred SQL syntax.
+    * [ANN-733] - @Immutable documentation improvement
+    * [ANN-744] - Enumerated Primary Key
+
+
+3.4.0.CR1 (27-05-2008)
+----------------------
+
+** Improvement
+    * [ANN-741] - Move to slf4j
+
+** New Feature
+    * [ANN-713] - Use an ant task to deploy the maven artifacts
+    * [ANN-736] - Add pom
+    * [ANN-737] - Make build independent of Hibernate Core structure
+    * [ANN-738] - Move to Hibernate Core 3.3
+
+
+3.3.1.GA (14-03-2008)
+---------------------
+
+** Bug
+    * [ANN-610] - Copy/paste errors in reference docs
+    * [ANN-694] - Incorrect report of FK circularity error when the @*ToOne property name starts with the identifier property name
+    * [ANN-696] - @Type with Maps from Element to Element applies to both key to value type.
+
+
+** Improvement
+    * [ANN-701] - Better error message on incorrect use of @CollectionId
+
+** New Feature
+    * [ANN-607] - Release the hibernate-commons-annotations source at Sourceforce
+    * [ANN-709] - Express @Type on a Map key
+
+** Patch
+    * [ANN-706] - Typo's in reference manuals
+
+
+3.3.1.CR1 (06-03-2008)
+----------------------
+
+** Bug
+    * [ANN-509] - referencedColumnName to non primary key foreign key column causes MappingException
+    * [ANN-590] - Alphabetical order issue when @ManyToOne is used in PrimaryKey and explicit referencedColumnName are used
+    * [ANN-653] - Exception when overriding collection mapping with @AssociationOverride
+    * [ANN-673] - Guaranty column order in genereted schema
+    * [ANN-676] - Composite PK/FK and the alphabetical order of class names
+    * [ANN-683] - AnnotationConfiguration hashCode collisions produce random binding failures
+    * [ANN-698] - Unbound property when default field access is used lead to unbound AnnotationException
+    * [ANN-699] - AnnotationBinder.mustBeSkipped references org.hibernate.tool.instrument.javassist.FieldHandler (hardcoded String-Reference)
+    * [ANN-700] - Hibernate's @NamedQuery always sets flushMode
+
+
+** Improvement
+    * [ANN-650] - Explicitly disallow @Version on @Embedded and throw meaningful Exception
+    * [ANN-690] - Override relevant Configuration methods in AnnotationConfiguration for method chaining
+
+** New Feature
+    * [ANN-442] - Support @GenericGenerators (Paul Cowan)
+    * [ANN-695] - Transparent integration of the new Hibernate Search collection event listeners
+
+
+3.3.1.Beta1 (31-10-2007)
+------------------------
+
+** Bug
+    * [ANN-434] - Confusing error message with @EmbeddedId and @Id
+    * [ANN-602] - SecondaryTable with EmbeddedId or IdClass containing @ManyToOne fail
+    * [ANN-608] - NullPointerException from AnnotationConfiguration with specific order of calling addResource and addPackage when package-info.java present
+    * [ANN-613] - NPE when mappedBy property is wrong on a @OneToOne
+    * [ANN-616] - Mistakes in 2.4.6.2.3 of Manual
+    * [ANN-617] - NullPointerException when handling @OrderBy
+    * [ANN-618] - @AccessType("propery") cannot be overriden by @AccessType("field")
+    * [ANN-619] - @OneToOne in primary key fails
+    * [ANN-621] - Unable to handle JOINED stragegy when the root entity id contains a @ManyToOne
+    * [ANN-631] - Mistake in "2.2.5.2. Many-to-one"
+    * [ANN-634] - @CollectionOfElements cannot be combined with @Filter (or @Where) and EAGER fetching
+    * [ANN-637] - @o.h.a.Table.indexes returns obscur message when the table does not exist
+    * [ANN-643] - Missing .configure() on session factory creation examples
+    * [ANN-647] - @Where JavaDoc does not specify that it describes a SQL fragment
+    * [ANN-648] - o.h.a.Table.comment and o.h.a.Table.indexes fail on secondary tables
+
+
+** Improvement
+    * [ANN-605] - docs say @Enumerated(STRING), should be @Enumerated(EnumType.STRING)
+    * [ANN-606] - @Immutable does not throw error or warning on usage on subclass
+    * [ANN-633] - JAR file should contain vendor- and versioning information
+    * [ANN-671] - Log "Validator not present" only once
+
+** New Feature
+    * [ANN-28] - @Any
+    * [ANN-122] - Add @NaturalId annotation (Nicol‡s Lichtmaier)
+
+** Patch
+    * [ANN-575] - Mistakes in "2.2.5.1. One-to-one"
+    * [ANN-576] - Mistake in "2.2.5.2. Many-to-one"
+    * [ANN-577] - Improvement in "2.2.5.3.2.3. Unidirectional with join table"
+    * [ANN-578] - Improvement in "2.2.5.3.3.1. Definition"
+    * [ANN-579] - Mistake in "2.2.5.3.3.1. Definition"
+    * [ANN-580] - Mistake in "2.2.2.3. Embedded objects (aka components)"
+    * [ANN-581] - Improvement in "2.4.8. Filters"
+    * [ANN-588] - ProxyBreakingTest fails on case sensitive file systems
+    * [ANN-595] - Remove FlushModeType.NEVER
+
+
+3.3.0.GA (19-03-2007)
+---------------------
+
+** Bug
+    * [ANN-515] - Fields are not correctly quoted in @OneToMany relationships when specified
+    * [ANN-516] - @OrderBy added to wrong table in inheritance relationship
+    * [ANN-517] - Default NodeName value not set in HAN leading to NPE in DOM4J mode (Daniel)
+    * [ANN-521] - package-list file is missing from javax.persistence documentation
+    * [ANN-531] - EntityMode.DOM4J does not deserialize collection entities
+    * [ANN-544] - @SqlDeleteAll wrt to Collections
+    * [ANN-547] - Typo in Docs: 2.2.2.2 Declaring Column Attributes
+    * [ANN-549] - key column of a true map should be not null when a join table is used
+    * [ANN-551] - Guaranty the same parameter ordering when overriding SQL across VMs and compilations (S¿ren Pedersen)
+    * [ANN-554] - NPE with @Id on @OneToOne
+    * [ANN-555] - Fix typo @Tables.values to @Table.value
+    * [ANN-556] - @OneToOne(mappedBy might fail depending on alphebetical order
+    * [ANN-559] - Undefined filter definition leads to NPE rather than a proper exception
+    * [ANN-560] - Quoting clashes with defaults in NamingStrategy
+    * [ANN-567] - Ability to specify a custom persister on a collection (Shawn Clowater)
+    * [ANN-570] - @DiscriminatorForumla typo
+    * [ANN-574] - CascadeType ALL is not equals to REMOVE+REFRESH+PERSIST+MERGE
+
+
+** Improvement
+    * [ANN-26] - @OptimisticLock(excluded=true) (Logi Ragnarsson)
+    * [ANN-104] - Allow SQL customization for CRUD on secondary tables
+    * [ANN-252] - AnnotationConfiguration silently ignores classes that are annotated with wrong Entity, or not annotated.
+    * [ANN-444] - Ability to define fetch mode, inverse and optional for a Secondary table
+    * [ANN-492] - IdClass of a composite id + ManyToOne associations in id = Repeated column error (testcase patch)
+    * [ANN-502] - Cannot fully disable integration with Hibernate Validator
+    * [ANN-525] - @ForeignKey for secondary tables and joined subclasses
+    * [ANN-529] - MapBinder can generate SQL statements not supported by Oracle 10g
+    * [ANN-532] - Better exception when @UniqueConstraint refers to a wrong column name
+    * [ANN-535] - Force property insertability/updatability when @Generated is used
+    * [ANN-542] - @Immutable for entities and collections
+    * [ANN-553] - Remove classpath dependency between Hibernate Annotations and Hibernate Validator
+
+** New Feature
+    * [ANN-103] - Allow to specify fetching strategy for secondary table
+    * [ANN-505] - Support @Tuplizer
+    * [ANN-552] - Transparent event integration for Search and Validator
+
+
+** Task
+    * [ANN-584] - Move Validator and Search to their own project
+
+
+3.2.1.GA (8-12-2006)
+--------------------
+
+** Bug
+    * [ANN-395] - @Embedded can not map interface
+    * [ANN-425] - Property not found when defined in a @IdClass and referenced by a @OneToMany
+    * [ANN-430] - @ManyToOne results in default outer join eager fetch, should be lazy
+    * [ANN-448] - @OrderBy does not work with an association table when Set is used for collection
+    * [ANN-450] - @MapKey does not work with embedded fields
+    * [ANN-452] - Check lucene behavior on rollback()
+    * [ANN-458] - Hibernate Validator initialization always requires keys in ValidatorMessges.properties
+    * [ANN-466] - Discriminator values longer than 31 break in PostgreSQL
+    * [ANN-471] - lazily resolve default messages in DefaultMessageInterpolator
+    * [ANN-473] - Unable to define unique constraints on a denormalized table (union-subclass)
+    * [ANN-474] - <sequence-generator> and <table-generator> at the entity level can override those at the property level in JPA XML
+    * [ANN-477] - @Formula doesn't work in entities referenced by @JoinColumn(referencedColumnName="...")
+    * [ANN-491] - Collection mapped with javax.persistence.MapKey isn't loaded properly.
+    * [ANN-499] - @IdClass and @ManyToOne leads to repeated column exception
+
+
+** Improvement
+    * [ANN-37] - Support for SQL Overriding (László Benke, Assaf Berg)
+    * [ANN-387] - lucene integration does not support Inheritance
+    * [ANN-422] - Add targetEntity to MapKeyManyToMany annotation
+    * [ANN-449] - @Min, @Max store value as Integer.  @Range stores values as Long.
+    * [ANN-456] - ClassValidator sould be able to get a reflectionManager from the caller (ie the event listener)
+    * [ANN-460] - Support for several entity types per Index
+    * [ANN-468] - IdFieldBridge should be introduced to cope with additional constraints on Brigdes used by document ids
+    * [ANN-475] - Make ClassValidator independent from javax.persistence annotations
+    * [ANN-476] - EJB3 naming strategy struggles with quoted identifiers when generating composed table/column names
+    * [ANN-497] - Reuse the same synchronization queue per transaction for Search operations
+
+** New Feature
+    * [ANN-363] - Support for a @FieldBridge
+    * [ANN-364] - @Boost or equivalent on entity and on fields
+    * [ANN-383] - Align with Lucene 2 APIs for annotations
+    * [ANN-384] - Reindex an object on a per instance basis (not triggered by a change)
+    * [ANN-454] - Support for Built-in bridges in Lucene
+    * [ANN-455] - Comprehensive built-in type support
+    * [ANN-457] - Support field annotations in Hibernate Lucene (Richard Hallier)
+    * [ANN-463] - @DateBridge
+    * [ANN-478] - French translation (Vincent Ricard)
+    * [ANN-482] - Use of transaction Synchronization rather than post-commit-* events
+    * [ANN-493] - @NonEmpty
+
+** Patch
+    * [ANN-445] - Add dutch (Nederlands) validator_nl.properties for hibernate validator
+    * [ANN-465] - SingleTableTest.testDefaultDiscriminatorColumn fix
+    * [ANN-498] - Add Spanish Validation Bundle
+    * [ANN-500] - Swedish default messages
+
+** Task
+    * [ANN-479] - Various optimizations of the Xlayer (reflection layer)
+    * [ANN-483] - reorganize lucene packaging
+    * [ANN-488] - Rename org.hibernate.lucene to org.hibernate.search
+
+
+3.2.0.GA (16-10-2006)
+---------------------
+Same code base as 3.2.0.CR3
+
+** Task
+    * [ANN-459] - Add EJB 3.0 JavaDoc to the distribution
+
+
+3.2.0.CR3 (04-10-2006)
+----------------------
+** Bug
+    * [ANN-408] - map a entity to integer map is not possible
+
+
+** Improvement
+    * [ANN-346] - Introduce @FilterJoinTable to complete @Filter on association involving a join table
+    * [ANN-447] - Introduce @WhereJoinTable to complete @Where on association involving a join table
+
+** New Feature
+    * [ANN-443] - Define a hibernate.validator.interpolator_class
+
+
+3.2.0.CR2 (16-09-2006)
+----------------------
+** Bug
+    * [ANN-181] - Do not fail on unbound attributes marked as @Type
+    * [ANN-243] - @MapKey doesn't properly refer to column name mapped to property (quoted column)
+    * [ANN-345] - EJB3NamingStrategy should be Serializable
+    * [ANN-359] - @MappedSuperclass overriding fails on EJB3 DD
+    * [ANN-362] - Specification of table @Table name with quotes using backticks fails with @OneToMany mapping
+    * [ANN-368] - Keywords first letter is not decapilalized
+    * [ANN-369] - @CollectionOfElements on a Map uses reserved word "key" as column name
+    * [ANN-370] - Lucene updates are not thread safe
+    * [ANN-375] - @Email validator failed a valid email address
+    * [ANN-379] -  Map<Entity, Entity> fails due to unique constraint on map-key column
+    * [ANN-382] - Id involving many to one may fail depending on the entity process ordering
+    * [ANN-393] - Documentation errors in Many-toMany Annotation explanation
+    * [ANN-405] - JPA XML overriding wrong when default schema and *-to-one association
+    * [ANN-409] - Enum constants in HQL leads to ClassCastException
+    * [ANN-411] - @Generated(INSERT) properties does not update columns
+    * [ANN-412] - Generator definition (@Table,  @Generic,  @Sequence) no longer taken into account at field level
+    * [ANN-414] - Map, OneToMany, join table or @ManyToMany does not work on MySQL and on composite keys
+    * [ANN-415] - <named-native-query result-class leads to CCE
+    * [ANN-416] - Mapping of inheritance with several generic superclasses fails
+    * [ANN-421] - Unable to map no packaged classes when JPA XML is used
+    * [ANN-423] - @Min/@Max broken with BigInteger/BigDecimal
+    * [ANN-424] - column overriding fails on composite elements when defined at the entity level
+    * [ANN-426] - Validator keep a JavaXFactory in a static variable creating memleaks on redeployement
+    * [ANN-427] - throw "java.lang.IllegalStateException: Property parent has an unbound type and no explicit target entity." on generic type
+
+
+** Improvement
+    * [ANN-7] - Document usage of @IndexColumn in one-to-many with indexed collection
+    * [ANN-36] - @ForceDiscriminator (Serg Prasolov)
+    * [ANN-39] - @CollectionId for idbags
+    * [ANN-47] - Allow to set an enum parameter on a query
+    * [ANN-261] - Allow specifying foreign key constraint name using annotations (inspired by David Hay)
+    * [ANN-265] - Fall back to default validator message if the key is not found
+    * [ANN-343] - validator messages in brazilian portuguese
+    * [ANN-350] - Support ejb3 dd when no schema locator is defined
+    * [ANN-351] - Validator Brazilian translation
+    * [ANN-355] - Make XML overriding rules for access type smoother
+    * [ANN-356] - Clear the PC on Rollback on RESOURCE_LOCAL Transactions
+    * [ANN-371] - Abstract DocumentBuilder from the underlying Directory implementation
+    * [ANN-373] - imports are not done for the full entityname
+    * [ANN-374] - Map - OneToMany w or w/o join table creates bad sql
+    * [ANN-381] - Make possible to specify an @EmbeddedId's field in a @OneToMany's mappedBy property
+    * [ANN-397] - Incomplete AnnotationException at org.hibernate.cfg.annotations.TableBinder
+    * [ANN-399] - Class validator should not WARN on unbound properties not involved in validation
+
+** New Feature
+    * [ANN-284] - @OrderBy clash with @Formula Properties
+    * [ANN-349] - Add @FlushModeType.MANUAL
+    * [ANN-367] - Upgrade to Lucene 2.0.0 (Sylvain Vieujot)
+    * [ANN-372] - @Boost factor on document and fields
+    * [ANN-378] - Chinese translation (Xiaogang Cao)
+    * [ANN-385] - Abstract the Lucene directory implementation and allow configuration based definition
+    * [ANN-386] - Add support for RAMDirectory
+    * [ANN-419] - Support SortedMap
+    * [ANN-440] - MessageIntrospector hook introduced in HibernateValidator
+
+
+** Task
+    * [ANN-410] - Depreciate EJB 3 Package annotations
+
+
+3.2.0.CR1 (13-05-2006)
+----------------------
+** Bug
+    * [ANN-95] - Cannot create a unique constraint on columns belonging to both the superclass and the class
+    * [ANN-97] - JoinColumn with referencedColumnName clashes with unique=true on target column
+    * [ANN-118] - Duplicate unique constraint may be created
+    * [ANN-281] - @Mapkey broken if key is Entity
+    * [ANN-288] - Hibernate chokes on methods in entities starting with get...() and returning int[]
+    * [ANN-289] - @OneToOne and @Column fails
+    * [ANN-305] - ImprovedNamingStrategy not compatible with Hibernate annotations (@Index in particular)
+    * [ANN-306] - "Unbound" @Transient properties not properly being ignored
+    * [ANN-307] - BindHelper.findPropertiesByColumns behaviour is non deterministic due to HashSet being used
+    * [ANN-310] - Dist is missing resource files
+    * [ANN-329] - Entity.name is ignored in inheritance mapping
+    * [ANN-330] - Entity name not used to build default table name (classname is used instead)
+    * [ANN-331] - Extra element concatenated to default columns in collection of elements
+    * [ANN-333] - CollectionOfElements not using specified JoinTable
+    * [ANN-335] - AnnotationBinder just throws NPE if @OneToMany annotation is not on a Collection or Array
+    * [ANN-339] - @OrderBy does not work when an association table is involved
+    * [ANN-340] - Hard dependency to CGLIB classes in mustBeSkipped()
+
+
+** Improvement
+    * [ANN-120] - Map, OneToMany, join table or @ManyToMany does not work
+    * [ANN-195] - Potentially move from TableA_TableB to EntityA_EntityB on join tables is the spec remains
+    * [ANN-293] - Unidirectional @ManyToMany should throw and error or warning when target entity cannot be resolved
+    * [ANN-323] - XML overriding should have precedence over annotations for queries, rs, generators
+    * [ANN-325] - entity described in XML should be part of the mapped entities
+    * [ANN-327] - Support for Map<Entity,Entity>
+    * [ANN-337] - XML result-set-mapping should overrides @SqlResultSetMapping
+    * [ANN-338] - @Temporal no longer has default value
+
+** New Feature
+    * [ANN-40] - @Parent
+    * [ANN-89] - Support generated=true property option for automatic refresh
+    * [ANN-158] - Support for @ManyToOne or @OneToOne @JoinTable (bidirectional)
+    * [ANN-224] - Ability to override fetching and lazy options through annotations
+    * [ANN-276] - Proper support of @OneToOne @PrimaryKeyJoinColumns
+
+
+3.1.0.Beta10b Preview (27-04-2006)
+----------------------------------
+** Bug
+    * [ANN-292] - @EmbeddedId object containing only @ManyToOne fails / wrong pk generation when@EmbeddedId contains @ManyToOne
+    * [ANN-295] - Generators behave like allocationSize+1
+    * [ANN-300] - @OneToOne(optional=false) does not create foreign key
+    * [ANN-301] - Validator won't validate "new" (=transient) bean when bean is CGLIB-instrumented
+    * [ANN-319] - Make Hibernate Annotations types Serializable and thread safe
+    * [ANN-321] - Discriminator column wo @DiscriminatorColumn has the wrong varchar length
+    * [ANN-328] - @javax.persistence.MapKey broken
+
+
+** Improvement
+    * [ANN-316] - Do not escape el expressions like #{foo} expressions in Validation messages
+
+** New Feature
+    * [ANN-1] - Support Map
+    * [ANN-296] - Support for allocationSize in @SequenceGenerator
+    * [ANN-304] - Display the version number at init time to avoid user confusion regarding the version used
+    * [ANN-322] - Allow EJB3 style XML Overriding
+
+
+3.1beta9 Preview (27-03-2006)
+-----------------------------
+** Bug
+    * [ANN-16] - Annotations: composite pk with two manytoone not working
+    * [ANN-98] - Wrong unsaved-value strategy for IdClass entities
+    * [ANN-196] - sequence should increase by assocationSize rather than regular hilo
+    * [ANN-197] - table generator should stock hi * low_max instead of hi
+    * [ANN-211] - ClassValidator throws NPE during flush
+    * [ANN-230] - Id Annotation - bad example of GeneratedValue
+    * [ANN-234] - @NotNull syntax doesn't make join column null in conjunction with @OneToOne or @ManyToOne
+    * [ANN-236] - @OneToMany(mappedBy) cannot referenced an hbm file described entity
+    * [ANN-240] - @AttributeOverride only works in @Entity, not @MappedSuperclass
+    * [ANN-241] - @Index broken on property when no  columnName is defined
+    * [ANN-253] - Do not raise unresolved type exception if targetEntity is defined on the association annotation
+    * [ANN-254] - References to invalid CascadeType.CREATE in documentation
+    * [ANN-255] - Validator problem with @Valid @Embedded objects
+    * [ANN-256] - Incorrect classloader used for ResourceBundle loading in JavaEE environment
+    * [ANN-257] - referencedColumnName is not recognized on a many-to-one to a composite primary key
+    * [ANN-258] - OneToOne annotation: Hibernate is not respecting the optional=true behaviour
+    * [ANN-266] - @Temporal on Calendar is not mapped properly
+    * [ANN-269] - doc error in example validation annotation
+    * [ANN-274] - @AttributeOverride ignored when defined on an @Entity having a @MappedSuperclass annotated with @IdClass
+    * [ANN-280] - Index not work
+    * [ANN-282] - @IdClass including @Id claims no identifier property rather than @Id not authorized
+
+
+** Improvement
+    * [ANN-146] - @NotNull should be ignored for SINGLE_TABLE subclass properties
+    * [ANN-208] - Enable @Valid for Collections, Maps and Arrays
+    * [ANN-223] - Entity name should be the default for discriminator value (not the fqcn)
+    * [ANN-233] - @Email not documented
+    * [ANN-245] - Better doc on MapKey explaining that the column is shared between the key and the referenced property
+    * [ANN-262] - @org.hibernate.annotatios.Table.name remaned in @...Table.appliesTo
+    * [ANN-271] - Change @EntityResult(Class entityClass) ( was @EntityResult(String name) )
+    * [ANN-272] - Remove TYPE @Target on @JoinColumn(s)
+    * [ANN-275] - Default discriminator column is DTYPE rather than TYPE
+    * [ANN-291] - addUnderscore changed to protected visibility in DefaultComponentSafeNamingStrategy as an extension point
+
+** New Feature
+    * [ANN-15] - Use of @ManyToOne in a @EmbeddedId
+    * [ANN-226] - Allow Associations within an @Embeddable Class
+    * [ANN-259] - @OnDelete for @OneToOne and @ManyToOne (Radim Tlusty, Mat?j Kraus)
+    * [ANN-270] - Add @SqlResultSetMappings
+    * [ANN-273] - @AssociationOverride(s) similar to @AttributeOverride(s)
+    * [ANN-287] - Abstraction layer on top of reflection calls (Paolo Perrotta, Davide Marchignoli)
+
+
+** Task
+    * [ANN-228] - Get rid of the compliance and limitation section in the doc.
+    * [ANN-239] - DefaultValidatorMessages_de.properties: translation errors
+
+	
+3.1beta8 Preview (20-01-2006)
+-----------------------------
+** Bug
+    * [ANN-132] - transient fields are considered to be persistent when not annotated with @Transient
+    * [ANN-162] - OneToMany mapping from annotated to hbm loaded class fails with infinite loop
+    * [ANN-175] - extractType executed on @Transient and fail when the return type is <T extends MembershipData>  T
+    * [ANN-176] - Endless loop when annotated class references by ManyToOne class mapped in .hbm.xml
+    * [ANN-177] - unable to use referencedColumnName = joined subclass primary column name
+    * [ANN-178] - Different handling column naming with @JoinColumn between 3.1beta5 and 3.1beta7
+    * [ANN-180] - Indexed collection, field access, onetomany+mappedby seems to fail
+    * [ANN-187] - Unable to referenceColumnName a column (property) of the super class
+    * [ANN-193] - @IdClass should work on @MappedSuperclass
+    * [ANN-199] - NPE when mappedBy property is wrong on a @OneToOne
+    * [ANN-214] - Annotation website documentation syntax error
+
+** New Feature
+    * [ANN-147] - Allow embeddable subclasses in the middle of a class hierarchy
+    * [ANN-172] - Delegates the SQL type of enum to @Enumerated
+    * [ANN-188] - @Email for validator
+    * [ANN-190] - @TableGenerator as per the pfd instead of @GeneratorIdTable & co
+    * [ANN-191] - Non entity classes in between entity classes in the hierarchy
+    * [ANN-200] - Support of @Basic, @Lob, @Enumerated, @Temporal as per the PFD
+    * [ANN-209] - @Named(Native)Query(hints=...)
+
+
+** Improvement
+    * [ANN-17] - Support dotted annotation when declaring resultsets
+    * [ANN-56] - @AccessType: Support mixed field/property access strategies for an Entity
+    * [ANN-192] - Access type guessed from position of @Id or @EmbeddedId
+    * [ANN-194] - Access type guessed from owner entity for Embeddable objects
+    * [ANN-198] - Better error message when @ManyToOne references an unknown entity
+    * [ANN-201] - Rename @EmbeddableSuperclass into @MappedSuperclass
+    * [ANN-203] - Move to @Id @GeneratedValue(strategy=AUTO, generator="blah")
+    * [ANN-204] - @TableGenerator instead of @TableGenerator and @GeneratedIdTable
+    * [ANN-205] - @NamedQuery(query=...) instead of @NamedQuery(queryString=...) same for @NamedNativeQuery
+    * [ANN-215] - Support SqlResutSetMapping with dotted notation in arbitrary order
+    * [ANN-216] - Support scalar queries through @ColumnResult
+    * [ANN-218] - @SecondaryTable(PrimaryKeyJoinColumn[] pkJoinColumns) instead of @SecondaryTable(JoinColumn[] joins() )
+    * [ANN-219] - @JoinTable(name, catalog, schema, uniqueConstraints) instead of @JoinTable(table=@Table())
+    * [ANN-220] - @Column(table=) and @JoinColumn(table=) instead of @Column(secondaryTable=)
+    * [ANN-221] - @Inheritance(strategy), @DiscriminatorColumn(discriminatorType), @DiscriminatorValue instead of @Inheritance
+    * [ANN-225] - @EntityListeners replace @EntityListener
+
+
+3.1beta7 Preview (13-12-2005)
+-----------------------------
+
+** Bug
+    * [ANN-114] - NPE when SecondaryTable uses a non pk reference column in @JoinColumn
+    * [ANN-115] - @Index does not work on joincolumns
+    * [ANN-117] - setOrphanDelete not set causing some delete-orphan .clear() to fail
+    * [ANN-123] - Support for Generics superclass
+    * [ANN-124] - FIELD constant thing is wrong in the doc
+    * [ANN-133] - Bytecode enhancement process adds non-transient properties to beans
+    * [ANN-135] - Inconsistent range check between Range Validator class and generated DDL.
+    * [ANN-136] - Validator annotations not applied to the hibernate metamodel for id properties
+    * [ANN-139] - SINGLE_TABLE inheritance raise an WrongClassException under certain circumstances
+    * [ANN-142] - Automatic Generation of Composite IDs - Annonation declaration fails
+    * [ANN-151] - <subclass extends= broken when using AnnotationConfiguration
+    * [ANN-152] - Indexes generated by the LuceneEventListener are deleted at startup (Mattias Arbin)
+    * [ANN-156] - MapKey Cannot Map @Id when using @IdClass
+    * [ANN-165] - @Length(min=4) ie wo max generate a varchar(Integer.MAX_VALUE)
+    * [ANN-171] - Class cast exception during processing of non getter generic methods
+    * [ANN-173] - ClassValidator.getInvalidValues  should not depend on equals() for circularity check
+
+** New Feature
+    * [ANN-111] - add function for validating properties before bean creation
+    * [ANN-116] - fetch validators from implemented interfaces
+    * [ANN-125] - Validator does not preserve method hierarchy in InvalidValue[]
+    * [ANN-127] - Add @Future
+    * [ANN-128] - Externalize EJB3 namings to NamingStrategy
+
+
+** Improvement
+    * [ANN-119] - Embedded international error messages
+    * [ANN-121] - Named Queries should be package level visible
+    * [ANN-126] - mention usage of columnDefinition as part of @Column in docs
+    * [ANN-138] - Support collections of value types with separate annotation
+    * [ANN-148] - EnumType should be aware of DababaseMetadata.storesUpperCaseIdentifiers() and co (Tim Fennell)
+    * [ANN-149] - Do not check lazy/uninitialized fields in Validator
+    * [ANN-153] - Customize the parent directory for indexes generated by LuceneEventListener (Mattias Arbin)
+    * [ANN-154] - Customize Analyzer subclass for the LuceneEventListener (Mattias Arbin)
+    * [ANN-168] - @FilterDef should support condition
+    * [ANN-170] - Keep user order of hbm files (to ease the typedef usage)
+
+
+3.1beta6 Preview (07-10-2005)
+-----------------------------
+ * ANN-105 More exception handling in AnnotationConfiguration
+ * ANN-109 @Index does not support join columns references
+ * ANN-93 Make Hibernate Validator Serializable Friendly
+
+3.1beta5 Preview (14-09-2005)
+-----------------------------
+ * ANN-70 Lucene integration
+ * ANN-13 Support for referencedColumnName referencing non PK columns for @ManyToMany
+ * ANN-63 Use metadata.getUserName() when guessing Enum backing type (Scott Haug)
+ * ANN-38 Finish the optional=false support
+ * ANN-69 Expand the resource bundle message itself in the Validator framework
+ * ANN-68 Apply validator on a particular property (Jesus Marin)
+ * ANN-41 Allow field validations and validate private method (Chris Wood)
+ * ANN-75 Support named (native) query parameters (from Carlos Gonzalez)
+ * ANN-73 Use an eager strategy for the second join of a ManyToMany
+ * ANN-74 Allow configuration artefacts (hbm, classes) loading precedence
+ * ANN-79 Support collection of composite elements
+ * ANN-19 Annotations should support collections of primitive and core types
+ * ANN-77 Support primitive arrays
+ * ANN-20 Support dotted annotation when using overriding (Alexei Akhounov)
+ * ANN-55 @Proxy annotation should take proxyClass argument
+ * ANN-2 Bidirectional true @OneToOne
+ * ANN-80 @NotFound(action=NotFoundAction.IGNORE)
+ * ANN-57 @Table ignores unique contraint in association table
+ * ANN-3 Support of component inside SecondaryTable
+ * ANN-87 @InheritanceJoinColumn rename is incomplete
+ * ANN-81 ColumnDefinition not assigned when using @Column and @JoinColumn
+ * ANN-34 Second passes binded to HbmBinder.SecondPass
+ * NPE on Index and Unique constrains when column name has case inconsistency
+ * ANN-86 @Index not used on properties having no @Column
+ * ANN-49 Super class of Embeddable not mapped correctly (Alexei Akhounov)
+ * ANN-66 Null enums don't store to database correctly
+ * ANN-65 Validator ignores components (the DDL still ignores it)
+ * ANN-60 NPE when @EmbeddableSuperclass has a superclass @Entity
+ * ANN-90 mention usage of @Column together with @Id explicitly
+ * ANN-18 Document bean-level validator mecanism
+
+3.1beta4 Preview (04-08-2005)
+-----------------------------
+ * ANN-54 EnumType fails to find the Enum in setParameterValues(Properties)
+ * ANN-32 Support index creation
+ * ANN-22 Hibernate 3 Annotations should support all Id generators
+ * ANN-51 redeclaring id in entity subclass raises ClassCastException
+ * ANN-43 @MapKey throw exception if key is id or a component subproperty
+ * ANN-52 Exception when @OrderBy contains the id property or a component subproperty
+ * ANN-13 Support for referencedColumnName referencing non PK columns for @ManyToOne, @OneToOne and @OneToMany
+ * ANN-46 Raise a warning on @Filter on subclasses
+ * ANN-48 @UniqueConstraint reorders columns (Chris Wood)
+ * ANN-6 enum did not worked for enums persisted in string based columns (MySql and Oracle)
+ * ANN-8 array of primitive no longer create a non null column
+ * ANN-45 Proper support for @Basic byte[]
+ * ANN-44 Don't mandate to list embedded superclasses
+ * ANN-42 Don't mandate resultset to be defined before named native queries
+ * ANN-11 More robust support for enum persistence (wider range of SQL types)
+ * HBX-307 Remove @Serialized and support @Lob tagging of a serializable type
+
+3.1beta3 Preview (24-06-2005)
+-----------------------------
+ * Rename @AssociationTable to @JoinTable
+ * HBX-213 support of @IdClass
+ * change targetEntity from String to Class
+ * HBX-305 Support Java5 Enums
+ * Add @Basic(optional=false) and Lob(optional=false)
+ * HBX-284 AnnotationOverride in inheritance in conjunction with @EmbeddedSuperclass
+ * HBX-304 @AttributeOverride instead of @Embedded(override=@AttributeOverride) or @EmbeddedId(...)
+ * HBX-290 All collection binder exception now show the collection role
+ * HBX-299 Fix test suite error on MySql
+ * HBX-302 @MapKey(name="propertyName") to map a map using a property of the associated class as a map key
+ * HBX-201 @Formula on properties or fields.
+ * Support @EntityResult(discriminatorColumn)
+ * Relax List usage as per the spec (non indexed list are defaulted to bag semantic)
+ * HBX-300 enable HQL order by fragment using @javax.persistence.OrderBy
+ * HBX-298 FKs on association tables are forced not null
+ * HBX-297 Primitive types creates a non null constrained column if defaulted and not SINGLE_TABLE (HBX-301)
+ * HBX-287 @DiscriminatorFormula
+ * HBX-205 @OnDelete(action=OnDeleteAction.CASCADE) for joined subclasses and collections
+ * Change @OneToOne(usePkasFk=true) into @PrimaryKeyJoinColumn
+ * Rename @InheritanceJoinColumn/@InheritanceJoinColumns to @PrimaryKeyJoinColumn/@PrimaryKeyJoinColumns
+ * Support @Basic(temporalType=...)
+ * HBX-282 protect @ManyToMany from abusive not joined filters
+ * Align with @NamedNativeQuery/@NamedNativeQueries
+ * HBX-283 Better getter resolution
+ * HBX-75 Implicit inheritance join columns declaration in composite PK
+ * HBX-54 Explicit exception when @Id is missing
+ * HBX-210 Fix NPE when the @Id was on the superclass of the root entity in conjonction with @OneToOne use
+ * HBX-280/HBX-157 Support @EmbeddabledSuperclass
+
+3.0beta2 Preview (27-05-2005)
+-----------------------------
+ * HBX-87 fetching method is now used even when loading through a query
+ * Add the validate framework and bind it to the annotation binder.
+ * HBX-199 Support @Columns and thus multi-column properties (ie composite user types)
+ * HBX-206 Support @OrderBy and @Sort
+ * HBX-203/HBX-81 Support Hibernate cascade strategies through @Cascade (Pablo Nussembaum)
+ * HBX-47 Persist is cascaded on flush operation when using the EJB3 event listeners
+ * HBX-125 Support for named native SQL queries (not Scalar results)
+ * HBX-225 @Type annotation now work for @Id and @Version (Pablo Nussembaum, Emmanuel Bernard)
+ * HBX-248 TABLE_PER_CLASS no longer limited to leaf entities and use union-subclass as its strategy
+ * HBX-186 inheritance strategy no longer have to be defined on every entity (only on root entry)
+ * HBX-53 Annotated classes can be defined in any arbitrary order
+ * Support Array through @IndexColumn (Anthony Patricio)
+ * HBX-216 Ignore static fields and properties
+ * HBX-229/HBX-134 Filter javac generated methods that compensate type erasure aka bridge method (Rogério Gatto)
+ * HBX-184 Support List mappings through @IndexColumn (Matthiew Inger, Emmanuel Bernard)
+ * HBX-187 Move to a CollectionBinder structure (Matthiew Inger, Emmanuel Bernard)
+ * Fix of CascadeType.REMOVE
+
+3.0beta1 Preview (07-04-2005) based on the EJB3 Early Draft 2
+-------------------------------------------------------------
+ * support parameters in @Type (HBX-197)
+ * support @TypeDef at package and class level
+ * HBX-166 support @Lob for Character[],char[], String, byte[] and Byte[] (experimental)
+ * HBX-159/HBX-140 add @Filter(s) and @FilterDef(s) (Matthew Inger, Magnus Sandberg)
+ * HBX-44 @OneToOne support composite PK
+ * @OneToOne is supported except for true bidirectional @OneToOne
+ * Add @Cache annotation: allow to define caching on root entities and on collections (,eg @Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL, region="specificCacheRegion") )
+ * Support @OneToMany default (ie using an association table)
+ * HBX-164 insertable/updatable of @JoinColumn now work in @ManyToOne processing (Mario Ivankovits, Emmanuel Bernard)
+ * HBX-153 @Id(generate=GeneratorType.AUTO, generator="my_potential_sequence") now work (Pablo Nussembaum)
+ * Support @ManyToMany wo @AssociationTable (ie defaults)
+ * Support @ManyToMany(mappedBy)
+ * Support @OneToMany(mappedBy) (no JoinColumn needed on the @OneToMany side)
+ * Appropriate default value when no @JoinColumn is defined in a ManyToOne
+ * rename @GeneratorTable to @GeneratedIdTable
+ * rename CREATE to PERSIST, add REFRESH cascade style
+ * support Mapping Defaults for Non-Relationship Fields or Properties algorithm as defined in the EJB3 spec
+ * support @Serialized
+ * support @Lob for java.sql.Clob and java.sql.Blob
+ * allow embedded object declaration wo @Embeddable (if @Embedded or @EmbeddedId is present in the property)
+ * support for @EmbeddedId
+ * rename DependentAttribute to AttributeOverride, Dependent to Embedded and DependentObject to Embeddable
+ * support @ManyToOne in embedded objects
+ * support for @NamedQuery and @NamedQueries (EJBQL)
+ * move javax.ejb.* into javax.persistence.* and update copyright header
+
+3.0alpha3 (28-02-2005)
+----------------------
+* HBX-116 Support for Where clause in classes and collections @Where(clause="")
+* HBX-115 Support for class proxying configuration: @Proxy(lazy=false, proxyClassName="my.Interface")
+* HBX-88 Support for hibernate type abstraction through @Type (only on basic properties for now)
+* HBX-108 Support @BatchSize(size=n) for entities and collections
+* HBX-107 implements @org.hibernate.annotations.Entity
+* HBX-103 handle abstract classes
+* HBX-83 precision & scale support for column (Bogdan Ghidireac)
+
+3.0alpha2 (25-01-2005)
+----------------------
+* HBX-61 Support for @UniqueConstraint (except primaryKey=true)
+* HBX-60 Support for a proper @TableGenerator (using MultipleHiLoPerTableGenerator)
+* HBX-63 Support @GeneratorTable
+* HBX-68 Add declarative configuration of annotated classes
+* HBX-74 Rollback the HB-1315 fix: dialect no longer have to be set in hibernate.properties
+
+
+Hibernate-annotations-3.0alpha1 based on the EJB3 Early Draft 1 (6.01.2005)
+---------------------------------------------------------------------------
+* Support for EJB3 annotations:
+ - @Transient
+ - @Column (not primaryKey)
+ - @JoinColumn (referencedColumnName - only for a reference to a PK, not primaryKey)
+ - @Version
+ - @Basic
+ - @Entity
+ - @Table (not uniqueConstraints)
+ - @AccessType
+ - @Id
+ - @CascadeType
+ - @FetchType
+ - @GeneratorType (NONE, IDENTITY, TABLE, SEQUENCE)
+ - @TableGenerator (with scope visibility)
+ - @SequenceGenerator (with scope visibility, does not support initialValue() and allocationSize())
+ - *not* @GeneratorTable (will have to write a new TableHiloGenerator, but it can wait)
+ - @ManyToOne (not optional)
+ - @OneToMany (Set and Collection, generics version or not, JoinColumn not guessed)
+ - @OneToOne
+     but not optional
+     no composite PK/FK
+ - @ManyToMany
+ - @AssociationTable (Has to be on both sides)
+ - @Inheritance
+ - @InheritanceType (has to be defined on every classes of the hierarchy for JOINED strategy,
+                     not very clear about the TABLE_PER_CLASS strategy)
+ - @DiscriminatorColumn
+ - @DiscriminatorType
+ - @InheritanceJoinColumn
+ - @InheritanceJoinColumns
+     this annotation for Composite PK Entities has to be explicit, I do not respect the implicit semantic of the EJB3 spec
+ - @SecondaryTable (@OneToMany @JoinColumn(secondaryTable="..." does not work yet due to H3 core issue HHH-36
+ - @SecondaryTables
+     this annotation for Composite PK Entities has to be explicit, I do not respect the implicit semantic of the EJB3 spec
+ - @DependentObject
+ - @Dependent
+ - @DependentAttribute (only for basic properties as per the spec)
+ - @Id in conjunction with @DependentObject (composite primary keys)
+ - @JoinColumns in conjunction with @ManytoOne, @OneToMany, @ManytoMany
+      - note that the composite FK columns have to be in the same table (no != secondary tables). This is probably a weird case and certainly a not recommanded one.
+
+
+Still missing or incomplete features compared to the EJB3 spec
+--------------------------------------------------------------
+ - use of referencedColumnName for column other than the PK ones @ManyToMany (HBX-62)
+ - Support for a true bidirectional one to one relationship (HBX-177)
+ - support for initialValue and allocationSize in @SequenceGenerator (HBX-59)
+ - finish support of optional=false (HBX-190)

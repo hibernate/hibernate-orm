@@ -1,0 +1,18 @@
+<refentry id="procedure.properties">
+<refnamediv>
+<refname>procedure.properties</refname>
+<refpurpose>Properties associated with a procedure</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='procedure.properties.frag'>
+<xsl:attribute-set name="procedure.properties" use-attribute-sets="formal.object.properties"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The styling for procedures.</para>
+
+</refsect1>
+</refentry>

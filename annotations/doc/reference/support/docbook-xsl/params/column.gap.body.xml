@@ -1,0 +1,23 @@
+<refentry id="column.gap.body">
+<refmeta>
+<refentrytitle>column.gap.body</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.gap.body</refname>
+<refpurpose>Gap between columns in the body</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.gap.body.frag'>
+<xsl:param name="column.gap.body" select="'12pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the gap between columns in body matter (if
+<parameter>column.count.body</parameter> is greater than one).</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="html.cellspacing">
+<refmeta>
+<refentrytitle>html.cellspacing</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.cellspacing</refname>
+<refpurpose>Default value for cellspacing in HTML tables</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.cellspacing.frag'>
+<xsl:param name="html.cellspacing" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If specified, this value will be used as the default cellspacing value
+in HTML tables.</para>
+
+</refsect1>
+</refentry>

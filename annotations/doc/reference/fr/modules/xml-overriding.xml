@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<chapter id="xml-overriding">
+  <title>Surcharger des méta-données à travers du XML</title>
+
+  <para>La cible primaire pour les méta-données dans EJB3 sont les annotations,
+  mais la spécification EJB3 fournit un moyen de surcharger ou remplacer les
+  méta-données définies par des annotations à travers un descripteur de
+  déploiement XML. Dans la version courante, seule la surcharge des annotations
+  pure EJB3 est prise en charge. Si vous souhaitez utiliser des caractéristiques
+  spécifiques à Hibernate dans des entités, vous devrez utiliser les annotations
+  ou vous replier sur les fichiers hbm. Vous pouvez bien sûr mélanger et faire
+  correspondre des entités annotées et des entités décrites dans des fichiers
+  hbm.</para>
+
+  <para>La suite de test unitaires montre des exemples supplémentaires de
+  fichier XML.</para>
+
+  <section id="xml-overriding-principles">
+    <title>Principes</title>
+
+    <para>La structure du descripteur de déploiement XML a été conçue pour
+    refléter celle des annotations. Donc si vous connaissez la structure des
+    annotations, utiliser le schéma XML sera facile pour vous.</para>
+
+    <para>Vous pouvez définir un ou plusieurs fichiers XML décrivant vos
+    méta-données, ces fichiers seront fusionnés par le moteur de surcharge.</para>
+
+    <section>
+      <title>Méta-données de niveau global</title>
+
+      <para>Vous pouvez définir des méta-données de niveau global disponibles
+      pour tous les fichiers XML. Vous ne devez pas définir ces méta-données
+      plus d'une fois par déploiement.</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;persistence-unit-metadata&gt;
+        &lt;xml-mapping-metadata-complete/&gt;
+        &lt;persistence-unit-defaults&gt;
+            &lt;schema&gt;myschema&lt;/schema&gt;
+            &lt;catalog&gt;mycatalog&lt;/catalog&gt;
+            &lt;cascade-persist/&gt;
+        &lt;/persistence-unit-defaults&gt;
+    &lt;/persistence-unit-metadata&gt;</programlisting>
+
+      <para><literal>xml-mapping-metadata-complete</literal> signifie que toutes
+      les entités, classes mères mappées et méta-données devraient être
+      récupérées à partir du XML (c'est-à-dire ignorer les annotations).</para>
+
+      <para><literal>schema / catalog</literal> surchargera toutes les
+      définitions par défaut de schéma et de catalogue dans les méta-données
+      (XML et annotations).</para>
+
+      <para><literal>cascade-persist</literal> signifie que toutes les
+      associations ont PERSIST comme type de cascade. Nous vous recommandons de
+      ne pas utiliser cette fonctionnalité.</para>
+    </section>
+
+    <section id="xml-overriding-principles-entity" revision="1">
+      <title>Méta-données de niveau entité</title>
+
+      <para>Vous pouvez définir ou surcharger des informations de méta-données
+      sur une entité donnée.</para>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="3 85" id="aa1" />
+
+          <area coords="9 85" id="aa2" />
+
+          <area coords="10 85" id="aa3" />
+
+          <area coords="11 85" id="aa4" />
+
+          <area coords="17 85" id="aa5" />
+
+          <area coords="23 85" id="aa6" />
+
+          <area coords="24 85" id="aa7" />
+
+          <area coords="25 85" id="aa8" />
+
+          <area coords="26 85" id="aa9" />
+
+          <area coords="31 85" id="aa10" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Administration" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;table name="tbl_admin"&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;firstname&lt;/column-name&gt;
+                &lt;column-name&gt;lastname&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/table&gt;
+        &lt;secondary-table name="admin2"&gt;
+            &lt;primary-key-join-column name="admin_id" referenced-column-name="id"/&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;address&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/secondary-table&gt;
+        &lt;id-class class="SocialSecurityNumber"/&gt;
+        &lt;inheritance strategy="JOINED"/&gt;
+        &lt;sequence-generator name="seqhilo" sequence-name="seqhilo"/&gt;
+        &lt;table-generator name="table" table="tablehilo"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="aa1">
+            <para><literal>entity-mappings</literal> : entity-mappings est
+            l'élément racine pour tous les fichiers XML. Vous devez déclarer le
+            schéma xml, le fichier du schéma est inclus dans le fichier
+            hibernate-annotations.jar, aucun accès à internet ne sera effectué
+            par Hibernate Annotations.</para>
+          </callout>
+
+          <callout arearefs="aa2">
+            <para><literal>package</literal> (optionnel) : package par défaut
+            utilisé pour tous les noms de classes sans package dans le fichier
+            de descripteur de déploiement donné.</para>
+          </callout>
+
+          <callout arearefs="aa3">
+            <para><literal>entity</literal> : décrit une entité.</para>
+
+            <para><literal>metadata-complete</literal> définit si la description
+            des méta-données pour cet élément est complète ou pas (en d'autres
+            mots, si les annotations présentes au niveau de la classe devraient
+            être prises en compte ou pas).</para>
+
+            <para>Une entité doit avoir un attribut <literal>class</literal>
+            référençant une classe java à laquelle s'applique les
+            méta-données.</para>
+
+            <para>Vous pouvez surcharger un nom d'entité avec l'attribut
+            <literal>name</literal>, si aucun n'est défini et si une annotation
+            <literal>@Entity.name</literal> est présente, alors elle est
+            utilisée (et établit que les méta-données ne sont pas
+            complètes).</para>
+
+            <para>Pour un élément avec des méta-données complètes (voir
+            ci-dessous), vous pouvez définir un attribut
+            <literal>access</literal> (soit <literal>FIELD</literal>, soit
+            <literal>PROPERTY</literal> (valeur par défaut)). Pour un élément
+            avec des méta-données incomplètes, si <literal>access</literal>
+            n'est pas défini, la position de @Id permettra de le déterminer, si
+            <literal>access</literal> est défini, sa valeur est utilisée.</para>
+          </callout>
+
+          <callout arearefs="aa4">
+            <para><literal>table</literal> : vous pouvez déclarer des propriétés
+            de table (nom, schéma, catalogue), si aucune n'est définie,
+            l'annotation java est utilisée.</para>
+
+            <para>Vous pouvez définir une ou plusieurs contraintes d'unicité
+            comme dans l'exemple.</para>
+          </callout>
+
+          <callout arearefs="aa5">
+            <para><literal>secondary-table</literal> : définit une table
+            secondaire très semblable à une table habituelle excepté que vous
+            pouvez définir les colonnes de clef primaire / clef étrangère avec
+            l'élément <literal>primary-key-join-column</literal>. Sur des
+            méta-données incomplètes, les annotations de table secondaire sont
+            utilisées seulement s'il n'y a pas de <literal>secondary-table</literal>
+            de défini, sinon les annotations sont ignorées.</para>
+          </callout>
+
+          <callout arearefs="aa6">
+            <para><literal>id-class</literal> : définit la classe identifiante
+            comme le fait <literal>@IdClass</literal>.</para>
+          </callout>
+
+          <callout arearefs="aa7">
+            <para><literal>inheritance</literal> : définit la stratégie
+            d'héritage (<literal>JOINED</literal>,
+            <literal>TABLE_PER_CLASS</literal>,
+            <literal>SINGLE_TABLE</literal>) ; disponible seulement au niveau de
+            l'élément racine.</para>
+          </callout>
+
+          <callout arearefs="aa8">
+            <para><literal>sequence-generator</literal> : définit un générateur
+            de séquence.</para>
+          </callout>
+
+          <callout arearefs="aa9">
+            <para><literal>table-generator</literal> : définit un générateur de
+            table.</para>
+          </callout>
+
+          <callout arearefs="aa10">
+            <para><literal><literal>primary-key-join-column</literal></literal> :
+            définit la colonne de jointure sur la clef primaire pour les
+            entités filles lorsque la stratégie d'héritage utilisée est
+            JOINED.</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="11 85" id="ab1" />
+
+          <area coords="18 85" id="ab2" />
+
+          <area coords="22  85" id="ab3" />
+
+          <area coords="28 85" id="ab4" />
+
+          <area coords="34 85" id="ab5" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Music" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;discriminator-value&gt;Generic&lt;/discriminator-value&gt;
+        &lt;discriminator-column length="34"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        &lt;named-query name="adminById"&gt;
+            &lt;query&gt;select m from Administration m where m.id = :id&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-query&gt;
+        &lt;named-native-query name="allAdmin" result-set-mapping="adminrs"&gt;
+            &lt;query&gt;select *, count(taxpayer_id) as taxPayerNumber
+            from Administration, TaxPayer
+            where taxpayer_admin_id = admin_id group by ...&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-native-query&gt;
+        &lt;sql-result-set-mapping name="adminrs"&gt;
+            &lt;entity-result entity-class="Administration"&gt;
+                &lt;field-result name="name" column="fld_name"/&gt;
+            &lt;/entity-result&gt;
+            &lt;column-result name="taxPayerNumber"/&gt;
+        &lt;/sql-result-set-mapping&gt;
+        &lt;attribute-override name="ground"&gt;
+            &lt;column name="fld_ground" unique="true" scale="2"/&gt;
+        &lt;/attribute-override&gt;
+        &lt;association-override name="referer"&gt;
+            &lt;join-column name="referer_id" referenced-column-name="id"/&gt;
+        &lt;/association-override&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="ab1">
+            <para><literal>discriminator-value /
+            discriminator-column</literal> : définissent la colonne et la valeur
+            discriminantes lorsque la stratégie d'héritage choisie est
+            SINGLE_TABLE.</para>
+          </callout>
+
+          <callout arearefs="ab2">
+            <para><literal>named-query</literal> : définit les requêtes nommées
+            et potentiellement les indices qui leur sont associés. Ces
+            définitions sont ajoutées à celles définies dans les annotations,
+            si deux définitions ont le même nom, la version XML a la
+            priorité.</para>
+          </callout>
+
+          <callout arearefs="ab3">
+            <para><literal>named-native-query</literal> : définit une requête
+            SQL nommée et le mapping de son résultat. Alternativement, vous
+            pouvez définir <literal>result-class</literal>. Ces définitions
+            sont ajoutées à celles definies dans les annotations, si deux
+            définitions ont le même nom, la version XML a la priorité.</para>
+          </callout>
+
+          <callout arearefs="ab4">
+            <para><literal>sql-result-set-mapping</literal> : décrit la
+            structure du mapping des résultats. Vous pouvez définir des mappings
+            de colonnes et d'entité. Ces définitions sont ajoutées à celles
+            définies dans les annotations, si deux définitions ont le même nom,
+            la version XML a la priorité.</para>
+          </callout>
+
+          <callout arearefs="ab5">
+            <para><literal>attribute-override /
+            association-override</literal> : surcharge la définition d'une
+            colonne ou d'une colonne de jointure. Cette surcharge est ajoutée à
+            celle définie dans les annotations.</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
+
+      <para>La même chose s'applique à <literal>&lt;embeddable&gt;</literal> et
+      <literal>&lt;mapped-superclass&gt;</literal>.</para>
+    </section>
+
+    <section>
+      <title>Méta-données de niveau propriété</title>
+
+      <para>Vous pouvez bien sûr définir des surcharges XML pour des propriétés.
+      Si les méta-données sont définies comme incomplètes, alors les propriétés
+      supplémentaires (c'est-à-dire au niveau Java) seront ignorées. Toutes les
+      méta-données de niveau propriété sont définies par
+      <literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> ou
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;id name="id"&gt;
+            &lt;column name="fld_id"/&gt;
+            &lt;generated-value generator="generator" strategy="SEQUENCE"/&gt;
+            &lt;temporal&gt;DATE&lt;/temporal&gt;
+            &lt;sequence-generator name="generator" sequence-name="seq"/&gt;
+        &lt;/id&gt;
+        &lt;version name="version"/&gt;
+        &lt;embedded name="embeddedObject"&gt;
+            &lt;attribute-override name"subproperty"&gt;
+                &lt;column name="my_column"/&gt;
+            &lt;/attribute-override&gt;
+        &lt;/embedded&gt;
+        &lt;basic name="status" optional="false"&gt;
+            &lt;enumerated&gt;STRING&lt;/enumerated&gt;
+        &lt;/basic&gt;
+        &lt;basic name="serial" optional="true"&gt;
+            &lt;column name="serialbytes"/&gt;
+            &lt;lob/&gt;
+        &lt;/basic&gt;
+        &lt;basic name="terminusTime" fetch="LAZY"&gt;
+            &lt;temporal&gt;TIMESTAMP&lt;/temporal&gt;
+        &lt;/basic&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>Vous pouvez surcharger une propriété avec <literal>id</literal>,
+      <literal>embedded-id</literal>, <literal>version</literal>,
+      <literal>embedded</literal> et <literal>basic</literal>. Chacun de ces
+      éléments peuvent avoir des sous-éléments : <literal>lob</literal>,
+      <literal>temporal</literal>, <literal>enumerated</literal>,
+      <literal>column</literal>.</para>
+    </section>
+
+    <section>
+      <title>Méta-données au niveau association</title>
+
+      <para>Vous pouvez définir des surcharges XML pour les associations. Toutes
+      les méta-données de niveau association sont définies par
+      <literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> ou
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;one-to-many name="players" fetch="EAGER"&gt;
+            &lt;map-key name="name"/&gt;
+            &lt;join-column name="driver"/&gt;
+            &lt;join-column name="number"/&gt;
+        &lt;/one-to-many&gt;
+        &lt;many-to-many name="roads" target-entity="Administration"&gt;
+            &lt;order-by&gt;maxSpeed&lt;/order-by&gt;
+            &lt;join-table name="bus_road"&gt;
+                &lt;join-column name="driver"/&gt;
+                &lt;join-column name="number"/&gt;
+                &lt;inverse-join-column name="road_id"/&gt;
+                &lt;unique-constraint&gt;
+                    &lt;column-name&gt;driver&lt;/column-name&gt;
+                    &lt;column-name&gt;number&lt;/column-name&gt;
+                &lt;/unique-constraint&gt;
+            &lt;/join-table&gt;
+        &lt;/many-to-many&gt;
+        &lt;many-to-many name="allTimeDrivers" mapped-by="drivenBuses"&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>Vous pouvez surcharger une association avec
+      <literal>one-to-many</literal>, <literal>one-to-one</literal>,
+      <literal>many-to-one</literal>, et <literal>many-to-many</literal>.
+      Chacun de ces éléments peut avoir des sous-éléments :
+      <literal>join-table</literal> (qui peut avoir des
+      <literal>join-column</literal>s et des
+      <literal>inverse-join-column</literal>s),
+      <literal><literal>join-column</literal>s</literal>,
+      <literal>map-key</literal>, et <literal>order-by</literal>.
+      <literal>mapped-by</literal> et <literal>target-entity</literal> peuvent
+      être définis en tant qu'attributs lorsque cela a du sens. Une fois de plus
+      la structure est le reflet de la structure des annotations. Vous pouvez
+      trouver toutes les informations de sémantique dans le chapitre décrivant
+      les annotations.</para>
+    </section>
+  </section>
+</chapter>

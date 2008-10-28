@@ -1,0 +1,232 @@
+<!--
+
+  Hibernate Annotations ANT build script.
+
+  You need JDK 5.0 installed to build Hibernate Annotations.
+
+-->
+
+<project name="Hibernate Annotations" default="dist" basedir="."
+	xmlns:ivy="antlib:fr.jayasoft.ivy.ant">
+	
+	<!-- Give user a chance to override without editing this file
+	(and without typing -D each time it compiles it) -->
+	<property file="build.properties"/>
+	<property file="${user.home}/.ant.properties"/>
+	
+	<!-- Name of project and version, used to create filenames -->
+	<property name="Name" value="Hibernate Annotations"/>
+	<property name="name" value="hibernate-annotations"/>
+	<property name="version" value="3.4.0.GA"/>
+	<property name="javadoc.packagenames" value="org.hibernate.*"/>
+	<property name="jdbc.dir" value="jdbc"/>
+	<property name="copy.test" value="true"/>
+	<property name="javac.source" value="1.5"/>
+	<property name="javac.target" value="1.5"/>
+	<property name="common.dir" value="${basedir}"/>
+	<property name="ivy.dep.dir" value="${basedir}/build/lib"/>
+	
+	<available property="jpa-present" file="${basedir}/../jpa-api" type="dir"/>
+	<property name="jpa-javadoc.dir" value="${dist.doc.dir}/jpa-api"/>
+	
+	<import file="${common.dir}/common-build.xml"/>
+	
+	<path id="lib.moduleclass.path">
+		<fileset dir="${ivy.dep.dir}/core">
+			<include name="*.jar"/>
+		</fileset>
+		<fileset dir="${common-build.basedir}/lib/build">
+			<!-- ${build.lib.dir} fails in reference doc build -->
+			<include name="junitext-*.jar"/>
+		</fileset>
+	</path>
+	
+	<path id="junit.moduleclasspath">
+		<pathelement location="${src.dir}"/>
+		<pathelement location="${test.dir}"/>
+		<fileset dir="${jdbc.dir}">
+			<include name="**/*.jar"/>
+			<include name="**/*.zip"/>
+		</fileset>
+		<fileset dir="${ivy.dep.dir}/test">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="init">
+		<antcall target="common-build.init"/>
+		<tstamp>
+			<format property="now" pattern="yyyyMMddhhmmss"/>
+		</tstamp>
+		<mkdir dir="${ivy.dep.dir}/core"/>
+		<mkdir dir="${ivy.dep.dir}/test"/>
+		<ivy:configure file="${ivy.jar.dir}/ivyconf.xml"/>
+	</target>
+		
+	<target name="compile" depends="init,get.deps.core"
+		description="Compile the Java source code">
+		
+		<available classname="org.eclipse.core.launcher.Main"
+			property="build.compiler"
+			value="org.eclipse.jdt.core.JDTCompilerAdapter"
+			classpath="${java.class.path}"/>
+		<javac srcdir="${src.dir}" destdir="${classes.dir}"
+			classpathref="lib.class.path" debug="${javac.debug}"
+			optimize="${javac.optimize}" nowarn="on" source="${javac.source}"
+			target="${javac.target}">
+			<src path="${src.dir}"/>
+		</javac>
+		<copy todir="${classes.dir}">
+			<fileset dir="${src.dir}">
+				<include name="**/resources/*.properties"/>
+				<include name="**/*.xsd"/>
+			</fileset>
+		</copy>
+	</target>
+		
+	<target name="compiletest" depends="compile,get.deps.test"
+		description="Compile the tests">
+		<available classname="org.eclipse.core.launcher.Main"
+			property="build.compiler"
+			value="org.eclipse.jdt.core.JDTCompilerAdapter"
+			classpath="${java.class.path}"/>
+		<javac destdir="${testclasses.dir}" classpathref="junit.classpath"
+			debug="${javac.debug}" optimize="${javac.optimize}" nowarn="on"
+			source="${javac.source}" target="${javac.target}">
+			<src refid="testsrc.path"/>
+		</javac>
+	</target>
+	
+	<target name="jar" depends="compile"
+		description="Build the distribution .jar file">
+		<mkdir dir="${classes.dir}/META-INF"/>
+		<manifest file="${classes.dir}/META-INF/MANIFEST.MF">
+			<attribute name="Implementation-Title" value="${Name}"/>
+			<attribute name="Implementation-Version" value="${version}"/>
+			<attribute name="Implementation-Vendor" value="hibernate.org"/>
+			<attribute name="Implementation-Vendor-Id" value="hibernate.org"/>
+			<attribute name="Implementation-URL"
+				value="http://annotations.hibernate.org"/>
+			<attribute name="Specification-Title" value="Java Persistence"/>
+			<attribute name="Specification-Version" value="1.0"/>
+			<attribute name="Specification-Vendor" value="jcp.org"/>
+		</manifest>
+		<antcall target="common-build.jar"/>
+		<delete file="${dist.dir}/ivy.xml"/>
+		<!-- delete last produced ivy file to be sure a new one will be generated -->
+		<ivy:resolve conf="default"/>
+		<ivy:publish artifactspattern="${dist.dir}/[artifact].[ext]"
+			resolver="local" pubrevision="latest" pubdate="${now}"
+			status="integration"/>
+	</target>
+	
+	<target name="junit" depends="compiletest">
+		<for list="${targetdb}" param="db">
+			<sequential>
+				<antcall target="test-resources">
+					<param name="db" value="@{db}"/>
+				</antcall>
+				<mkdir dir="${testreports.dir}/@{db}"/>
+				<echo>Running against db: @{db}</echo>
+				<junit printsummary="yes" haltonfailure="yes" forkmode="once">
+					<classpath refid="junit.classpath"/>
+					<formatter type="plain"/>
+					<formatter type="xml"/>
+					<batchtest fork="yes" todir="${testreports.dir}/@{db}"
+						haltonfailure="no">
+						<fileset refid="junit.batchtestset"/>
+					</batchtest>
+				</junit>
+			</sequential>
+		</for>
+	</target>
+	
+	<!-- Run a single unit test. -->
+	<target name="junitsingle" depends="compiletest"
+		description="Run a single test suite (requires testname and jdbc.driver properties)">
+		<for list="${targetdb}" param="db">
+			<sequential>
+				<antcall target="test-resources">
+					<param name="db" value="@{db}"/>
+				</antcall>
+				<mkdir dir="${testreports.dir}/@{db}"/>
+				<echo>Running against db: @{db}</echo>
+				<junit printsummary="yes" fork="yes" haltonfailure="yes">
+					<classpath refid="junit.classpath"/>
+					<formatter type="plain"/>
+					<formatter type="xml"/>
+					<test fork="yes" todir="${testreports.dir}/@{db}"
+						haltonfailure="no" name="${testname}"/>
+				</junit>
+			</sequential>
+		</for>
+	</target>
+	
+	<target name="jpa-javadoc" if="jpa-present">
+		<mkdir dir="${jpa-javadoc.dir}"/>
+		<ant dir="../jpa-api" target="javadoc" inheritAll="false"/>
+		<copy todir="${jpa-javadoc.dir}">
+			<fileset dir="${basedir}/../jpa-api/build/api">
+				<include name="**/*.*"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<!-- Some of this can probably be moved to common-build... -->
+	<target name="dist"
+		depends="get.deps.core,get.deps.test,jar,javadoc,jpa-javadoc,copysource,copytest,copylib,extras"
+		description="Build everything">
+		
+		<ant inheritall="false" dir="${basedir}/doc/reference"/>
+		<copy todir="${dist.dir}/doc/reference" failonerror="false">
+			<fileset dir="${basedir}/doc/reference/build">
+				<include name="**/*.*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${dist.dir}" failonerror="false">
+			<fileset dir="${common.dir}">
+				<include name="common-build.xml"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist.dir}/ivy" failonerror="false">
+			<fileset dir="${ivy.jar.dir}">
+				<include name="**/*.*"/>
+			</fileset>
+		</copy>
+		
+		<!-- copy dependencies -->
+		<copy todir="${dist.lib.dir}" failonerror="false">
+			<fileset dir="${ivy.dep.dir}/core">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+		<mkdir dir="${dist.lib.dir}/test"/>
+		<copy todir="${dist.lib.dir}/test" failonerror="false">
+			<fileset dir="${ivy.dep.dir}/test">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+		
+		
+		<!-- ivy uses the module name without hibernate- (to mimic the directory names). Revert the situation -->
+		<move file="${dist.lib.dir}/commons-annotations.jar"
+			tofile="${dist.lib.dir}/hibernate-commons-annotations.jar"
+			failonerror="false"/>
+		
+		<copy file="${basedir}/build.properties.dist"
+			tofile="${dist.dir}/build.properties" failonerror="false">
+		</copy>
+		<antcall target="common-build.dist"/>
+	</target>
+	
+	<target name="zip-dist" description="zip the dist">
+		<zip zipfile="${dist.dir}-${version}.zip">
+			<zipfileset prefix="${name}-${version}" dir="${dist.dir}"/>
+		</zip>
+		<tar compression="gzip" tarfile="${dist.dir}-${version}.tar.gz">
+			<tarfileset prefix="${name}-${version}" dir="${dist.dir}"/>
+		</tar>
+	</target>
+	
+</project>

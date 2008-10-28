@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="xml-overriding">
+  <title>通过XML覆写元数据</title>
+
+  <para>在EJB3中元数据的主要目标是使用注释,但是EJB3规范也提供通过XML部署文件来覆写或者替换元数据注释.
+  在当前的发布版本仅仅支持EJB3注释的覆写,如果你想使用Hibernate特有的一些实体注释,
+  你有两种选择:一,只使用注释;二,使用原来的hbm 映射文件.你当然还是可以同时使用注释实体和hbm XML映射文件的实体.</para>
+
+  <para>在测试套件中有一些附加的XML文件的样例.</para>
+
+  <section>
+    <title>原则</title>
+
+    <para>XML部署文件结构被设计为直接映射注释结构,所以如果你知道注释的结构,那么使用XML语法是很简单的.</para>
+
+
+    <para>你可以定义一个或者多个XML文件来描述你的元数据,这些文件会被覆写引擎合并(merged).</para>
+
+    <section>
+      <title>全局级别的元数据</title>
+
+      <para>你可以使用XML文件来定义全局元数据,对每一个部署文件你不能定义多于一个的元数据.</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;persistence-unit-metadata&gt;
+        &lt;xml-mapping-metadata-complete/&gt;
+        &lt;persistence-unit-defaults&gt;
+            &lt;schema&gt;myschema&lt;/schema&gt;
+            &lt;catalog&gt;mycatalog&lt;/catalog&gt;
+            &lt;cascade-persist/&gt;
+        &lt;/persistence-unit-defaults&gt;
+    &lt;/persistence-unit-metadata&gt;</programlisting>
+
+      <para><literal>xml-mapping-metadata-complete</literal> 意味着所有的实体,mapped-superclasses和嵌套的元数据应该从XML文件中启用(忽略注释).</para>
+
+
+      <para><literal>schema / catalog</literal> 将覆写所有在元数据中默认定义的schema 和 catalog(包括XML和注释).</para>
+
+      <para><literal>cascade-persist</literal> 意味着所有注释作为一个 cascade type 都是PERSIST的. 我们推荐你不要使用该特性.</para>
+    </section>
+
+    <section>
+      <title>实体级别的元数据</title>
+
+      <para>你也可以在一个给定的实体上定义或者覆写元数据</para>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="3 85" id="aa1" />
+
+          <area coords="9 85" id="aa2" />
+
+          <area coords="10 85" id="aa3" />
+
+          <area coords="11 85" id="aa4" />
+
+          <area coords="17 85" id="aa5" />
+
+          <area coords="23 85" id="aa6" />
+
+          <area coords="24 85" id="aa7" />
+
+          <area coords="25 85" id="aa8" />
+
+          <area coords="26 85" id="aa9" />
+
+          <area coords="31 85" id="aa10" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Administration" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;table name="tbl_admin"&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;firstname&lt;/column-name&gt;
+                &lt;column-name&gt;lastname&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/table&gt;
+        &lt;secondary-table name="admin2"&gt;
+            &lt;primary-key-join-column name="admin_id" referenced-column-name="id"/&gt;
+            &lt;unique-constraint&gt;
+                &lt;column-name&gt;address&lt;/column-name&gt;
+            &lt;/unique-constraint&gt;
+        &lt;/secondary-table&gt;
+        &lt;id-class class="SocialSecurityNumber"/&gt;
+        &lt;inheritance strategy="JOINED"/&gt;
+        &lt;sequence-generator name="seqhilo" sequence-name="seqhilo"/&gt;
+        &lt;table-generator name="table" table="tablehilo"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="aa1">
+            <para><literal>entity-mappings</literal>:entity-mappings 是所有XML文件的根元素.你必须定义XML Schema, 该文件包含在hibernate-annotations.jar中,使用Hibernate Annotations 不需要访问网络.</para>
+          </callout>
+
+          <callout arearefs="aa2">
+            <para><literal>package</literal> (可选的): 作为默认的package用于在一个给定的部署描述文件中所有没有限定的类.</para>
+          </callout>
+
+          <callout arearefs="aa3">
+            <para><literal>entity</literal>: 描述一个实体. </para>
+
+            <para><literal>metadata-complete</literal> 定义对于该元素是否全部使用元数据(换句话来说就是,如果注释出现在类级别应该考虑或者忽略).</para>
+
+            <para>一个实体不得不有一个 class 属性来引用 元数据所应用的类. </para>
+
+            <para>通过<literal>name</literal>属性你可以覆写实体的名字,
+			如果没有定义并且<literal>@Entity.name</literal>出现了的话,那么就使用该注释(假如metadata complete 没有被设置).</para>
+
+            <para>
+			对于metadata complete (参考下面)元素, 你可以定义一个  <literal>access</literal>(<literal>FIELD</literal> 或者 <literal>PROPERTY</literal>(默认值)),
+			对于非metadata complete 元素,使用注释的access type.</para>
+          </callout>
+
+          <callout arearefs="aa4">
+            <para><literal>table</literal>:  你可以声明table 属性(name, schema, catalog), 如果没有定义, 将使用Java注释.</para>
+
+            <para>就象例子中所示的那样你可以定义一个或者多个unique constraints</para>
+          </callout>
+
+          <callout arearefs="aa5">
+            <para><literal>secondary-table</literal>: 定义一个secondary-table,除了你可以通过<literal>primary-key-join-column </literal>元素定义 primary key / foreign key 列以外是和一般的table一样的. 在非metadata complete下, annotation secondary tables 仅仅在没有<literal>secondary-table </literal>定义的情况下使用, 否则 注释将被忽略.</para>
+          </callout>
+
+          <callout arearefs="aa6">
+            <para><literal>id-class</literal>: 和<literal>@IdClass</literal>一样定义一个id class.</para>
+          </callout>
+
+          <callout arearefs="aa7">
+            <para><literal>inheritance</literal>: 
+			定义继承策略(<literal>JOINED</literal>,
+            <literal>TABLE_PER_CLASS</literal>,
+            <literal>SINGLE_TABLE</literal>), 仅仅在根实体级别可以使用.</para>
+          </callout>
+
+          <callout arearefs="aa8">
+            <para><literal>sequence-generator</literal>: 定义一个序列产生器.</para>
+          </callout>
+
+          <callout arearefs="aa9">
+            <para><literal>table-generator</literal>: 定义一个table generator</para>
+          </callout>
+
+          <callout arearefs="aa10">
+            <para><literal><literal>primary-key-join-column</literal></literal>:
+            当 JOINED 继承策略使用时,为sub entities定义一个 primary key join column.</para>
+          </callout>
+        </calloutlist>
+
+
+      </programlistingco>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="11 85" id="ab1" />
+
+          <area coords="18 85" id="ab2" />
+
+          <area coords="22  85" id="ab3" />
+
+          <area coords="28 85" id="ab4" />
+
+          <area coords="34 85" id="ab5" />
+        </areaspec>
+
+        <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;entity-mappings 
+  xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+  version="1.0"&gt;
+
+    &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
+    &lt;entity class="Music" access="PROPERTY" metadata-complete="true"&gt;
+        &lt;discriminator-value&gt;Generic&lt;/discriminator-value&gt;
+        &lt;discriminator-column length="34"/&gt;
+        ...
+    &lt;/entity&gt;
+
+    &lt;entity class="PostalAdministration"&gt;
+        &lt;primary-key-join-column name="id"/&gt;
+        &lt;named-query name="adminById"&gt;
+            &lt;query&gt;select m from Administration m where m.id = :id&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-query&gt;
+        &lt;named-native-query name="allAdmin" result-set-mapping="adminrs"&gt;
+            &lt;query&gt;select *, count(taxpayer_id) as taxPayerNumber 
+            from Administration, TaxPayer
+            where taxpayer_admin_id = admin_id group by ...&lt;/query&gt;
+            &lt;hint name="org.hibernate.timeout" value="200"/&gt;
+        &lt;/named-native-query&gt;
+        &lt;sql-result-set-mapping name="adminrs"&gt;
+            &lt;entity-result entity-class="Administration"&gt;
+                &lt;field-result name="name" column="fld_name"/&gt;
+            &lt;/entity-result&gt;
+            &lt;column-result name="taxPayerNumber"/&gt;
+        &lt;/sql-result-set-mapping&gt;
+        &lt;attribute-override name="ground"&gt;
+            &lt;column name="fld_ground" unique="true" scale="2"/&gt;
+        &lt;/attribute-override&gt;
+        &lt;association-override name="referer"&gt;
+            &lt;join-column name="referer_id" referenced-column-name="id"/&gt;
+        &lt;/association-override&gt;
+        ...
+    &lt;/entity&gt;
+&lt;/entity-mappings&gt;</programlisting>
+
+        <calloutlist>
+          <callout arearefs="ab1">
+            <para><literal>discriminator-value /
+            discriminator-column</literal>: 当SINGLE_TABLE继承策略使用时,定义鉴别器值 和 保存该值的列.</para>
+          </callout>
+
+          <callout arearefs="ab2">
+            <para><literal>named-query</literal>: 定义命名查询和一些相关的可能的线索. 该定义附加在注释的定义中,如果两个都定义了相同的名字,那么XML将优先考虑.</para>
+          </callout>
+
+          <callout arearefs="ab3">
+            <para><literal>named-native-query</literal>: 定义一个命名本地查询 和他的 sql result set  映射. 作为另外一种选择,你可以定义<literal>result-class</literal>. 这些定义附加在注释的定义中.如果两个定义了同样的名字,XML文件优先考虑.</para>
+          </callout>
+
+          <callout arearefs="ab4">
+            <para><literal>sql-result-set-mapping</literal>: 描述了 result set mapping 的结构. 你可以定义 实体和列映射. 这些定义附加在注释的定义中,如果定义了同样的名字,XML文件优先考虑.</para>
+          </callout>
+
+          <callout arearefs="ab5">
+            <para><literal>attribute-override /
+            association-override</literal>: 定义一列或者join column overriding. 该overriding 附加在注释的定义中.</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
+
+      <para>一些应用于 <literal>&lt;embeddable&gt;</literal> 和
+      <literal>&lt;mapped-superclass&gt;</literal>.</para>
+    </section>
+
+    <section>
+      <title>属性级别的元数据</title>
+
+      <para>
+	  你当然可以定义XML来覆写属性. 如果metadata complete 给定义了,那么附加的属性(如: 在Java 级别的)将被忽略.
+另外,一旦你开始覆写一个属性,在该属性上的所有注释都会被忽略.所有属性级别的元数据应用于<literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> 或
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;id name="id"&gt;
+            &lt;column name="fld_id"/&gt;
+            &lt;generated-value generator="generator" strategy="SEQUENCE"/&gt;
+            &lt;temporal&gt;DATE&lt;/temporal&gt;
+            &lt;sequence-generator name="generator" sequence-name="seq"/&gt;
+        &lt;/id&gt;
+        &lt;version name="version"/&gt;
+        &lt;embedded name="embeddedObject"&gt;
+            &lt;attribute-override name"subproperty"&gt;
+                &lt;column name="my_column"/&gt;
+            &lt;/attribute-override&gt;
+        &lt;/embedded&gt;
+        &lt;basic name="status" optional="false"&gt;
+            &lt;enumerated&gt;STRING&lt;/enumerated&gt;
+        &lt;/basic&gt;
+        &lt;basic name="serial" optional="true"&gt;
+            &lt;column name="serialbytes"/&gt;
+            &lt;lob/&gt;
+        &lt;/basic&gt;
+        &lt;basic name="terminusTime" fetch="LAZY"&gt;
+            &lt;temporal&gt;TIMESTAMP&lt;/temporal&gt;
+        &lt;/basic&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>
+	  通过 <literal>id</literal>,
+      <literal>embedded-id</literal>, <literal>version</literal>,
+      <literal>embedded</literal> 和 <literal>basic</literal>你可以覆写一个属性,
+	  这些元素中的每一个元素都有相应的subelements：<literal>lob</literal>,
+      <literal>temporal</literal>, <literal>enumerated</literal>,
+      <literal>column</literal>.</para>
+
+    </section>
+
+    <section>
+      <title>关联级别的元数据</title>
+
+      <para>你可以定义XML覆写关联注释. 所有的关联级别的元数据作用于
+	   <literal>entity/attributes</literal>,
+      <literal>mapped-superclass/attributes</literal> 或
+      <literal>embeddable/attributes</literal>.</para>
+
+      <programlisting>    &lt;attributes&gt;
+        &lt;one-to-many name="players" fetch="EAGER"&gt;
+            &lt;map-key name="name"/&gt;
+            &lt;join-column name="driver"/&gt;
+            &lt;join-column name="number"/&gt;
+        &lt;/one-to-many&gt;
+        &lt;many-to-many name="roads" target-entity="Administration"&gt;
+            &lt;order-by&gt;maxSpeed&lt;/order-by&gt;
+            &lt;join-table name="bus_road"&gt;
+                &lt;join-column name="driver"/&gt;
+                &lt;join-column name="number"/&gt;
+                &lt;inverse-join-column name="road_id"/&gt;
+                &lt;unique-constraint&gt;
+                    &lt;column-name&gt;driver&lt;/column-name&gt;
+                    &lt;column-name&gt;number&lt;/column-name&gt;
+                &lt;/unique-constraint&gt;
+            &lt;/join-table&gt;
+        &lt;/many-to-many&gt;
+        &lt;many-to-many name="allTimeDrivers" mapped-by="drivenBuses"&gt;
+    &lt;/attributes&gt;</programlisting>
+
+      <para>通过<literal>one-to-many</literal>, <literal>one-to-one</literal>,
+      <literal>many-to-one</literal>, 和 <literal>many-to-many</literal>.
+	  你可以重写一个关联关系.这些元素中的每一个都有相应的subelements. <literal>join-table</literal>  (可以有
+	  <literal>join-column</literal>和
+      <literal>inverse-join-column</literal>),
+      <literal><literal>join-column</literal></literal>,
+      <literal>map-key</literal>, 和 <literal>order-by</literal>.
+      <literal>mapped-by</literal> 和 <literal>target-entity</literal>
+	  当他们有意义的时候可以定义属性. 再一次强调 该结构映射于注释的结构.在描述注释的一章中 你可以找到所有的语义信息.</para>
+
+
+    </section>
+  </section>
+</chapter>

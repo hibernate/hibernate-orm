@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<chapter id="lucene" revision="1">
+  <title>Intégration de Lucene avec Hibernate</title>
+
+  <para>Lucene est une bibliothèque de la fondation Apache fournissant un moteur
+  de recherche en Java hautement performant. Hibernate Annotations inclut un
+  ensemble d'annotations qui vous permettent de marquer n'importe quel objet
+  du modèle de données comme indexable et de laisser Hibernate maintenir un
+  index Lucene de toutes les instances persistées via Hibernate.</para>
+
+  <para>Hibernate Lucene est un projet en cours et de nouvelles fonctionnalités
+  sont en préparation. Donc attendez-vous à certains changements avec les
+  versions ultérieures.</para>
+
+  <section id="lucene-mapping">
+    <title>Mapper les entités sur l'index</title>
+
+    <para>Tout d'abord, nous devons déclarer une classe persistante comme
+    étant indexable. Ceci se fait en annotant la classe avec
+    <literal>@Indexed</literal> :</para>
+
+    <programlisting>@Entity
+@Indexed(index="indexes/essays")
+public class Essay {
+    ...
+}</programlisting>
+
+    <para>L'attribut <literal>index</literal> indique à Hibernate quel est le
+    nom du répertoire Lucene (en général un répertoire de votre système de
+    fichiers). Si vous souhaitez définir un répertoire de départ pour tous vos
+    index Lucene, vous pouvez utiliser la propriété
+    <literal>hibernate.lucene.default.indexDir</literal> dans votre fichier de
+    configuration.</para>
+
+    <para>Les index Lucene contiennent quatre types de champs :
+    <emphasis>keyword</emphasis>, <emphasis>text</emphasis>,
+    <emphasis>unstored</emphasis> et <emphasis>unindexed</emphasis>. Hibernate
+    Annotations fournit des annotations pour marquer une propriété d'une entité
+    comme étant d'un des trois premiers types.</para>
+
+    <programlisting>@Entity
+@Indexed(index="indexes/essays")
+public class Essay {
+    ...
+
+    @Id
+    @Keyword(id=true)
+    public Long getId() { return id; }
+
+    @Text(name="Abstract")
+    public String getSummary() { return summary; }
+
+    @Lob
+    @Unstored
+    public String getText() { return text; }
+
+}</programlisting>
+
+    <para>Ces annotations définissent un index avec trois champs :
+    <literal>id</literal>, <literal>Abstract</literal> et
+    <literal>text</literal>. Notez que par défaut le nom du champ n'a plus de
+    majuscules, en suivant la spécification JavaBean.</para>
+
+    <para>Note : vous <emphasis>devez</emphasis> spécifier
+    <literal>@Keyword(id=true)</literal> sur la propriété identifiante de
+    votre entité.</para>
+
+    <para>Lucene a la notion of <emphasis>boost factor</emphasis>. C'est un
+    moyen de donner plus de poids à un champ ou à un élément indexé durant la
+    procédure d'indexation. Vous pouvez utiliser <literal>@Boost</literal> au
+    niveau du champ ou de la classe.</para>
+
+    <para>La classe analyste utilisée pour indexer les éléments est
+    configurable par la propriété
+    <literal>hibernate.lucene.analyzer</literal>. Si aucune n'est définie,
+    <classname>org.apache.lucene.analysis.standard.StandardAnalyzer</classname>
+    est utilisée par défaut.</para>
+  </section>
+
+  <section id="lucene-configuration">
+    <title>Configuration</title>
+
+    <section id="lucene-configuration-directory">
+      <title>Configuration du directory</title>
+
+      <para>Lucene a une notion de Directory où l'index est stocké.
+      L'implémentation de Directory peut être personnalisée mais Lucene arrive,
+      avec deux implémentations prêtes à l'emploi complètes, une sur un système
+      de fichiers et une en mémoire. Hibernate Lucene a la notion de
+      <literal>DirectoryProvider</literal> qui gère la configuration et
+      l'initialisation du Directory Lucene.</para>
+
+      <table>
+        <title>Liste des Directory Providers intégrés</title>
+
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry align="center">Classe</entry>
+
+              <entry align="center">Description</entry>
+
+              <entry align="center">Propriétés</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>org.hibernate.lucene.store.FSDirectoryProvider</entry>
+
+              <entry>Directory base sur le système de fichiers. Le répertoire
+              utilisé sera
+              &lt;indexBase&gt;/&lt;<literal>@Index.name</literal>&gt;</entry>
+
+              <entry><literal>indexBase</literal> : répertoire de départ</entry>
+            </row>
+
+            <row>
+              <entry>org.hibernate.lucene.store.RAMDirectoryProvider</entry>
+
+              <entry>Directory utilisant la mémoire, le directory sera
+              uniquement identifié par l'élément
+              <literal>@Index.name</literal></entry>
+
+              <entry>aucune</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>Si les directory providers intégrés ne répondent pas à vos besoins,
+      vous pouvez écrire votre propre directory provider en implémentant
+      l'interface
+      <classname>org.hibernate.store.DirectoryProvider</classname>.</para>
+
+      <para>Chaque entité indexée est associée à un index Lucene (un index peut
+      être partagé par différentes entités mais ce n'est pas le cas en général).
+      Vous pouvez configurer l'index à travers des propriétés préfixées par
+      <literal><literal>hibernate.lucene.&lt;indexname&gt;</literal></literal>.
+      Les propriétés par défaut héritées par tous les index peuvent être
+      définies en utilisant le préfixe hibernate.lucene.default.</para>
+
+      <para>Pour définir le directory provider d'un index donné, utilisez
+      <literal>hibernate.lucene.&lt;indexname&gt;.directory_provider</literal>.</para>
+
+      <programlisting>hibernate.lucene.default.directory_provider org.hibernate.lucene.store.FSDirectoryProvider
+hibernate.lucene.default.indexDir=/usr/lucene/indexes
+
+hibernate.lucene.Rules.directory_provider org.hibernate.lucene.store.RAMDirectoryProvider
+</programlisting>
+
+      <para>appliqué à</para>
+
+      <programlisting>@Indexed(name="Status")
+public class Status { ... }
+
+@Indexed(name="Rules")
+public class Rule { ... }</programlisting>
+
+      <para>Ceci créera un directory système de fichiers dans
+      <filename>/usr/lucene/indexes/Status</filename> où les entités Status
+      seront indexées, et utilisera un directory mémoire nommé
+      <literal>Rules</literal> où les entités Rule seront indexées.</para>
+
+      <para>Donc vous pouvez facilement définir des règles générales comme le
+      directory provider et le répertoire de départ, et surcharger ces valeurs
+      par défaut plus tard pour chaque index.</para>
+
+      <para>En écrivant votre propre DirectoryProvider, vous pouvez aussi
+      bénéficier de ce mécanisme de configuration.</para>
+    </section>
+
+    <section id="lucene-configuration-event">
+      <title>Activer l'indexation automatique</title>
+
+      <para>Finalement, nous activons le <literal>LuceneEventListener</literal>
+      pour les trois événements Hibernate qui ont lieu après que les changements
+      sont validés dans la base de données.</para>
+
+      <programlisting>&lt;hibernate-configuration&gt;
+    ...
+    &lt;event type="post-commit-update"
+        &lt;listener
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+    &lt;event type="post-commit-insert"
+        &lt;listener
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+    &lt;event type="post-commit-delete"
+        &lt;listener
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+&lt;/hibernate-configuration&gt;</programlisting>
+    </section>
+  </section>
+</chapter>

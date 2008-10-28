@@ -1,0 +1,24 @@
+<refentry id="l10n.gentext.default.language">
+<refmeta>
+<refentrytitle>l10n.gentext.default.language</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>l10n.gentext.default.language</refname>
+<refpurpose>Sets the default language for generated text</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='l10n.gentext.default.language.frag'>
+<xsl:param name="l10n.gentext.default.language" select="'en'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The value of the <parameter>l10n.gentext.default.language</parameter>
+parameter is used as the language for generated text if no setting is provided
+in the source document.</para>
+
+</refsect1>
+</refentry>

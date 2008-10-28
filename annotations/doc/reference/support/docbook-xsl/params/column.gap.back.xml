@@ -1,0 +1,23 @@
+<refentry id="column.gap.back">
+<refmeta>
+<refentrytitle>column.gap.back</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.gap.back</refname>
+<refpurpose>Gap between columns in back matter</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.gap.back.frag'>
+<xsl:param name="column.gap.back" select="'12pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the gap between columns in back matter (if
+<parameter>column.count.back</parameter> is greater than one).</para>
+
+</refsect1>
+</refentry>

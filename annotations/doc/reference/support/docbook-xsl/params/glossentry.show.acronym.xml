@@ -1,0 +1,29 @@
+<refentry id="glossentry.show.acronym">
+<refmeta>
+<refentrytitle>glossentry.show.acronym</refentrytitle>
+<refmiscinfo role="type">list</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>glossentry.show.acronym</refname>
+<refpurpose>Display <sgmltag>glossentry</sgmltag> acronyms?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='glossentry.show.acronym.frag'>
+<xsl:param name="glossentry.show.acronym" select="'no'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>A setting of <quote>yes</quote> means they should be displayed;
+<quote>no</quote> means they shouldn't. If <quote>primary</quote> is used,
+then they are shown as the primary text for the entry.</para>
+
+<note>
+<para>This setting controls both <sgmltag>acronym</sgmltag> and
+<sgmltag>abbrev</sgmltag> elements in the <sgmltag>glossentry</sgmltag>.</para>
+</note>
+
+</refsect1>
+</refentry>

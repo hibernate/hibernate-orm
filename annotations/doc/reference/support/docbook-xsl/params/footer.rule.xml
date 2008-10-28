@@ -1,0 +1,22 @@
+<refentry id="footer.rule">
+<refmeta>
+<refentrytitle>footer.rule</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>footer.rule</refname>
+<refpurpose>Rule over footers?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='footer.rule.frag'>
+<xsl:param name="footer.rule" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, a rule will be drawn above the page footers.</para>
+
+</refsect1>
+</refentry>

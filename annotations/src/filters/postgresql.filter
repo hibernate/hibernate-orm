@@ -1,0 +1,8 @@
+## PostgreSQL
+
+hibernate.dialect org.hibernate.dialect.PostgreSQLDialect
+hibernate.connection.driver_class org.postgresql.Driver
+hibernate.connection.username hibernate
+hibernate.connection.password hibernate
+hibernate.connection.url jdbc:postgresql:hibernate
+

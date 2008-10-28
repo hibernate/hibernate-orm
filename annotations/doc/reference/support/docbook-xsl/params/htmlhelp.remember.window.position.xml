@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.remember.window.position">
+<refmeta>
+<refentrytitle>htmlhelp.remember.window.position</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.remember.window.position</refname>
+<refpurpose>Remember help window position?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.remember.window.position.frag'>
+<xsl:param name="htmlhelp.remember.window.position" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>To remember help window position between starts set this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,3 @@
+common.dir=.
+src.dir=src
+test.dir=test

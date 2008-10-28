@@ -1,0 +1,30 @@
+<refentry id="html.stylesheet">
+<refmeta>
+<refentrytitle>html.stylesheet</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.stylesheet</refname>
+<refpurpose>Name of the stylesheet(s) to use in the generated HTML</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.stylesheet.frag'>
+<xsl:param name="html.stylesheet" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>html.stylesheet</parameter> parameter is either empty,
+indicating that no stylesheet <sgmltag>LINK</sgmltag> tag should be generated
+in the HTML output, or it is a list of one or more stylesheets.</para>
+
+<para>Multiple stylesheets are space-delimited. If you need to
+reference a stylesheet URI that includes a space, encode it with
+<literal>%20</literal>. A seprate HTML <sgmltag>LINK</sgmltag> element will
+be generated for each stylesheet in the order they are listed in the
+parameter.</para>
+
+</refsect1>
+</refentry>

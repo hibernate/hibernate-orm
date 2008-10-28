@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Nov 9, 2006 6:27:53 PM by Hibernate Tools 3.2.0.beta7 -->
+<hibernate-mapping>
+    <class name="org.hibernate.test.annotations.xml.hbm.AImpl" table="A"
+           proxy="org.hibernate.test.annotations.xml.hbm.A">
+        <id name="AId" column="aID" type="java.lang.Integer">
+            <generator class="identity"/>
+        </id>
+    </class>
+</hibernate-mapping>

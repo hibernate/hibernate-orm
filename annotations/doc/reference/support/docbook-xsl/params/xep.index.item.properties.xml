@@ -1,0 +1,24 @@
+<refentry id="xep.index.item.properties">
+<refnamediv>
+<refname>xep.index.item.properties</refname>
+<refpurpose>Properties associated with XEP index-items</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='xep.index.item.properties.frag'>
+<xsl:attribute-set name="xep.index.item.properties">
+  <xsl:attribute name="merge-subsequent-page-numbers">true</xsl:attribute>
+  <xsl:attribute name="link-back">true</xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Properties associated with XEP index-items. For more info see
+the section "Indexes" in
+<ulink
+    url="http://xep.xattic.com/xep/doc/spec.html"/>.</para>
+
+</refsect1>
+</refentry>

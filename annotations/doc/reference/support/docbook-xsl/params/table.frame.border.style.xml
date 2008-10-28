@@ -1,0 +1,22 @@
+<refentry id="table.frame.border.style">
+<refmeta>
+<refentrytitle>table.frame.border.style</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.frame.border.style</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.frame.border.style.frag'>
+<xsl:param name="table.frame.border.style" select="'solid'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

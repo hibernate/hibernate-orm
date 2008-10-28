@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter>
+  <title id="setup" revision="1">创建一个注解项目</title>
+
+  <section id="setup-requirements">
+    <title>系统需求</title>
+
+    <itemizedlist>
+      <listitem>
+        <para>首先从Hibernate官方网站下载并解压Hibernate Annotations的发布包。</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>这个版本(预览版)要求使用Hibernate 3.2.0.CR2或更高版本。请不要和老版本的Hibernate 3.x混合起来使用。</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para>这个版本在Hibernate core 3.2.0.CR2的基础上工作良好。</para>
+      </listitem>
+
+      <listitem>
+        <para>首先确定你已经安装了JDK 5.0。当然就算使用低版本的JDK，
+        Xdoclet也可以提供（基于注解的）元数据所带来的部分功能。
+        不过请注意本文档只描述跟JDK5.0注解有关的内容，关于Xdoclet请参考相关文档。</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section id="setup-configuration">
+    <title>系统配置</title>
+
+    <para>首先就是设置classpath(当然是在IDE中创建了一个新项目之后)。 <itemizedlist>
+        <listitem>
+          <para>将Hibernate3核心文件以及其依赖的第三方库文件(请参考lib/README.txt文件)加入到你的classpath里面。</para>
+        </listitem>
+
+        <listitem>
+          <para>将<filename>hibernate-annotations.jar</filename>
+          和<filename>lib/ejb3-persistence.jar</filename>加入到你的classpath里面。</para>
+        </listitem>
+
+        <listitem>
+          <para>如果要使用 <xref linkend="lucene" />，还需要将lucene的jar文件加入你的classpath。</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>我们推荐在一个包装器(wrapper)类<classname>HibernateUtil</classname>
+    的静态初始化代码块中启动Hibernate。或许你在Hibernate文档的其他很多地方看到过这个类，
+    但是要在你的项目中使用注解，还需要对这个辅助(helper)类进行扩展。扩展如下:
+    <programlisting>package hello;
+
+import org.hibernate.*;
+import org.hibernate.cfg.*;
+import test.*;
+import test.animals.Dog;
+
+public class HibernateUtil {
+
+private static final SessionFactory sessionFactory;
+
+    static {
+        try {
+
+            sessionFactory = new <emphasis role="bold">AnnotationConfiguration()</emphasis>.buildSessionFactory();
+        } catch (Throwable ex) {
+            // Log exception!
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
+
+    public static Session getSession()
+            throws HibernateException {
+        return sessionFactory.openSession();
+    }
+}
+            </programlisting></para>
+
+    <para>这里比较有意思的是使用到了<classname>AnnotationConfiguration</classname>类。
+    在XML配置文件(通常是<filename>hibernate.cfg.xml</filename>)中则定义了包和经过注解的类。下面的xml和前面的声明等价:
+    </para>
+
+    <programlisting>&lt;!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
+
+        &lt;hibernate-configuration&gt;
+          &lt;session-factory&gt;
+            <emphasis role="bold">&lt;mapping package="test.animals"/&gt;
+            &lt;mapping class="test.Flight"/&gt;
+            &lt;mapping class="test.Sky"/&gt;
+            &lt;mapping class="test.Person"/&gt;
+            &lt;mapping class="test.animals.Dog"/&gt;</emphasis>
+<emphasis role="bold">            &lt;mapping resource="test/animals/orm.xml"/&gt;</emphasis>
+          &lt;/session-factory&gt;
+        &lt;/hibernate-configuration&gt;
+        </programlisting>
+
+    <para>注意现在你可以混合使用hbm.xml和注解。资源元素(resource element)可以是hbm文件也可以是EJB3 XML发布描述符，此差别对于配置过程是透明的。</para>
+
+    <para>除了上面的方式,你还可以通过编程的方式定义包括注解的类和包</para>
+
+    <programlisting>            sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
+                    .addPackage("test.animals") //the fully qualified package name
+                    .addAnnotatedClass(Flight.class)
+                    .addAnnotatedClass(Sky.class)
+                    .addAnnotatedClass(Person.class)
+                    .addAnnotatedClass(Dog.class)</emphasis>
+                    .buildSessionFactory();</programlisting>
+
+    <para>你也可以使用Hibernate Entity Manager来完成以上功能。Hibernate Entity Manager有自己的一套配置机制，详情请参考相关文档。</para>
+
+    <para>除了启动方式和配置文件有所改变之外，结合注解来使用Hibernate API和以前没有什么区别，
+    在其他方面你还是可以继续保持以前的习惯和喜好(<filename>hibernate.properties</filename>，
+    <filename>hibernate.cfg.xml</filename>， programmatic APIs等等)。
+    甚至对于同一个<classname>SessionFactory</classname>，你都可以混合带注解的持久类以及传统的bm.cfg.xml声明方式。
+    然而你不能多次声明同一个类(要么通过注解要么通过hbm.xml配置文件)，
+    而且在一个映射实体的类继承层次中，这两个配置策略不能同时使用.
+    </para>
+
+    <para>为了简化从hbm文件到注解的迁移过程，
+    配置机制将自动检测在注解和hbm文件中重复的映射。
+    默认情况下hbm文件中的声明比类中的注解元数据具有更高的优先级。
+    这种优先级的设定是以类为单位的。
+    你也可以通过<literal>hibernate.mapping.precedence</literal>修改这种优先级。
+    默认的值是<literal>hbm, class</literal>，
+    如果改为<literal>class,hbm</literal>，当发生冲突的时候，类中的注解将比hbm文件具有更高的优先级。
+    </para>
+  </section>
+</chapter>

@@ -1,0 +1,23 @@
+<refentry id="generate.meta.abstract">
+<refmeta>
+<refentrytitle>generate.meta.abstract</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>generate.meta.abstract</refname>
+<refpurpose>Generate HTML <sgmltag>META</sgmltag> element from <sgmltag>abstract</sgmltag>?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='generate.meta.abstract.frag'>
+<xsl:param name="generate.meta.abstract" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, document abstracts will be reproduced in the HTML
+<sgmltag>HEAD</sgmltag> with <sgmltag class="starttag">meta name="description" content="..."</sgmltag>.</para>
+
+</refsect1>
+</refentry>

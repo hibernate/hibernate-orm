@@ -1,0 +1,91 @@
+<refentry id="use.role.as.xrefstyle">
+<refmeta>
+<refentrytitle>use.role.as.xrefstyle</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.role.as.xrefstyle</refname>
+<refpurpose>Use <sgmltag class="attribute">role</sgmltag> attribute for
+<sgmltag class="attribute">xrefstyle</sgmltag> on <sgmltag>xref</sgmltag>?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.role.as.xrefstyle.frag'>
+<xsl:param name="use.role.as.xrefstyle" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the <sgmltag class="attribute">role</sgmltag> attribute on
+<sgmltag>xref</sgmltag> will be used to select the cross reference style.
+The <ulink url="http://www.oasis-open.org/docbook/">DocBook
+Technical Committee</ulink> recently added an
+<sgmltag class="attribute">xrefstyle</sgmltag> attribute for this purpose.
+If the <sgmltag class="attribute">xrefstyle</sgmltag> attribute
+is present, <sgmltag class="attribute">role</sgmltag> will be ignored, regardless
+of this setting.</para>
+
+<para>Until an official DocBook release that includes the new
+attribute, this flag allows <sgmltag class="attribute">role</sgmltag>
+to serve that purpose.</para>
+
+</refsect1>
+
+<refsect1><title>Example</title>
+
+<para>The following small stylesheet shows how to configure the stylesheets to make
+use of the cross reference style:</para>
+
+<programlisting><![CDATA[<?xml version="1.0"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                version="1.0">
+
+<xsl:import href="../xsl/html/docbook.xsl"/>
+
+<xsl:output method="html"/>
+
+<xsl:param name="local.l10n.xml" select="document('')"/>
+<l:i18n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0">
+  <l:l10n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0" language="en">
+   <l:context name="xref">
+      <l:template name="chapter" style="title" text="Chapter %n, %t"/>
+      <l:template name="chapter" text="Chapter %n"/>
+    </l:context>
+  </l:l10n>
+</l:i18n>
+
+</xsl:stylesheet>]]></programlisting>
+
+<para>With this stylesheet, the cross references in the following document:</para>
+
+<programlisting><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+                  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book id="book"><title>Book</title>
+
+<preface>
+<title>Preface</title>
+
+<para>Normal: <xref linkend="ch1"/>.</para>
+<para>Title: <xref xrefstyle="title" linkend="ch1"/>.</para>
+
+</preface>
+
+<chapter id="ch1">
+<title>First Chapter</title>
+
+<para>Irrelevant.</para>
+
+</chapter>
+</book>]]></programlisting>
+
+<para>will appear as:</para>
+
+<informalexample>
+<para>Normal: Chapter 1.</para>
+<para>Title: Chapter 1, <emphasis>First Chapter</emphasis>.</para>
+</informalexample>
+</refsect1>
+
+</refentry>

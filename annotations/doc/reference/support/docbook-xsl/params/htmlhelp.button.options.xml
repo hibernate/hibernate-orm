@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.options">
+<refmeta>
+<refentrytitle>htmlhelp.button.options</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.options</refname>
+<refpurpose>Should be Options button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.options.frag'>
+<xsl:param name="htmlhelp.button.options" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Options button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Nov 9, 2006 6:27:53 PM by Hibernate Tools 3.2.0.beta7 -->
+<hibernate-mapping>
+    <joined-subclass name="org.hibernate.test.annotations.xml.hbm.BImpl" table="B"
+                     proxy="org.hibernate.test.annotations.xml.hbm.B"
+                     extends="org.hibernate.test.annotations.xml.hbm.AImpl">
+        <key column="aID"/>
+        <property name="BId" column="bID" type="java.lang.Integer"
+                  not-null="true"/>
+    </joined-subclass>
+</hibernate-mapping>

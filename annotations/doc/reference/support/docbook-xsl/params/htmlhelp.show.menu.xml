@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.show.menu">
+<refmeta>
+<refentrytitle>htmlhelp.show.menu</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.show.menu</refname>
+<refpurpose>Should be menu shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.show.menu.frag'>
+<xsl:param name="htmlhelp.show.menu" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want application menu in your HTML Help file, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

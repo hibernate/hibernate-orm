@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Used to demonstrate the declarative configuration
+  of both hbm files and annotated classes
+  See hibernate.cfg.xml and ConfigurationTest
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.annotations">
+
+    <class name="Boat" table="BoatInXml">
+
+        <id name="id">
+            <generator class="native"/>
+        </id>
+
+        <property name="size" column="boat_size"/>
+
+    </class>
+
+</hibernate-mapping>

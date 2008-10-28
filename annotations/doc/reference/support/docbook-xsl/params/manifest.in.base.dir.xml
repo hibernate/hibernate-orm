@@ -1,0 +1,24 @@
+<refentry id="manifest.in.base.dir">
+<refmeta>
+<refentrytitle>manifest.in.base.dir</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>manifest.in.base.dir</refname>
+<refpurpose>Should be manifest file written in $base.dir?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='manifest.in.base.dir.frag'>
+<xsl:param name="manifest.in.base.dir" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero manifest file and project files for HTML Help and
+Eclipse Help are written into <parameter>base.dir</parameter> instead
+of current directory.</para>
+
+</refsect1>
+</refentry>

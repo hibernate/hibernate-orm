@@ -1,0 +1,22 @@
+<refentry id="headers.on.blank.pages">
+<refmeta>
+<refentrytitle>headers.on.blank.pages</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>headers.on.blank.pages</refname>
+<refpurpose>Put headers on blank pages?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='headers.on.blank.pages.frag'>
+<xsl:param name="headers.on.blank.pages" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, headers will be placed on blank pages.</para>
+
+</refsect1>
+</refentry>

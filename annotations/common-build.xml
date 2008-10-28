@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="common-build" default="dist"
+	xmlns:artifact="urn:maven-artifact-ant" xmlns:ivy="antlib:fr.jayasoft.ivy.ant">
+	<description>Common properties and targets for the HibernateExt
+		project</description>
+	
+	
+	<!-- my.basedir property can be used to refer to files/directories relatively to the common-build.xml file -->
+	<dirname property="common-build.basedir" file="${ant.file.common-build}"/>
+	
+	<!-- Give user a chance to override without editing this file
+	(and without typing -D each time it compiles it) -->
+	<property file="${common-build.basedir}/build.properties"/>
+	<property file="${user.home}/.ant.properties"/>
+	
+	<property name="src.dir" location="src/java"/> 
+	<property name="test.dir" location="src/test"/>
+	<property name="test.resources.dir" location="src/test-resources"/>
+	<property name="filter.dir" location="src/filters"/>
+	<property name="lib.dir" location="lib"/>
+	<property name="build.dir" location="build"/>
+	<property name="classes.dir" location="${build.dir}/classes"/>
+	<property name="testclasses.dir" location="${build.dir}/testclasses"/>
+	<property name="testreports.dir" location="${build.dir}/test-reports"/>
+	<property name="dist.target.dir" location="target"/>
+	<property name="dist.dir" location="${dist.target.dir}/${name}"/>
+	<property name="instrumenttest.out.dir" value="${build.dir}/test-reports/instrument"/>
+	<property name="doc.dir" location="doc"/>
+	<property name="doc.api.dir" location="${doc.dir}/api"/>
+	<property name="doc.reference.dir" location="${doc.dir}/reference"/>
+	
+	<property name="dist.doc.dir" location="${dist.dir}/doc"/>
+	<property name="dist.api.dir" location="${dist.dir}/doc/api"/>
+	
+	<property name="dist.src.dir" location="${dist.dir}/src"/>
+	<property name="dist.test.dir" location="${dist.dir}/test"/>
+	<property name="dist.lib.dir" location="${dist.dir}/lib"/>
+	<property name="jar.name" value="${name}"/>
+	<property name="jar.file.name" value="${dist.dir}/${jar.name}.jar"/>
+	<property name="jartest.file.name" value="${dist.dir}/${jar.name}-tests.jar"/>
+	
+	<property name="javadoc" value="http://java.sun.com/j2se/1.4/docs/api"/>
+	<property name="javac.debug" value="on"/>
+	<property name="javac.optimize" value="off"/>
+	<property name="javac.source" value="1.4"/>
+	<property name="javac.target" value="1.4"/>
+	
+	<property name="pom.file" value="${build.dir}/pom.xml"/>
+	<property name="src.jar" value="${build.dir}/src.jar"/>
+	
+	<taskdef name="junit"
+		classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+		<classpath>
+			<fileset dir="${common-build.basedir}/lib/build">
+				<!-- ${build.lib.dir} fails in reference doc build -->
+				<include name="junit-*.jar"/>
+				<include name="ant-junit-*.jar"/>
+			</fileset>
+		</classpath>
+	</taskdef>
+	
+	<taskdef name="junitreport"
+		classname="org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator">
+		<classpath>
+			<fileset dir="${common-build.basedir}/lib/build">
+				<!-- ${build.lib.dir} fails in reference doc build -->
+				<include name="junit-*.jar"/>
+				<include name="ant-junit-*.jar"/>
+			</fileset>
+		</classpath>
+	</taskdef>
+	
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<fileset dir="${common-build.basedir}/lib/build">
+				<!-- ${build.lib.dir} fails in reference doc build -->
+				<include name="ant-contrib-*.jar"/>
+			</fileset>
+		</classpath>
+	</taskdef>
+	
+	<!-- ivy load -->
+	<property name="ivy.jar.dir" value="${common-build.basedir}/ivy"/>
+	<property name="ivy.conf.dir" value="${common-build.basedir}"/>
+	<path id="ivy.lib.path">
+		<fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+	</path>
+	<taskdef resource="fr/jayasoft/ivy/ant/antlib.xml"
+		uri="antlib:fr.jayasoft.ivy.ant" classpathref="ivy.lib.path"/>
+	
+	<!-- maven task load -->
+	<path id="maven-ant-tasks.path" path="${ivy.jar.dir}/maven-ant-tasks.jar"/>
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+		uri="urn:maven-artifact-ant" classpathref="maven-ant-tasks.path"/>
+	
+	<artifact:remoteRepository id="offline.repository.jboss.org"
+		url="file://${offline.repository.jboss.org}"/>
+	
+	<path id="lib.class.path">
+		<path refid="lib.moduleclass.path"/>
+		<pathelement path="${clover.jar}"/>
+	</path>
+	
+	<!-- overridable in modules -->
+	<path id="lib.moduleclass.path"/>
+	
+	<patternset id="support.files">
+		<include name="**/*.jpg"/>
+		<include name="**/*.gif"/>
+		<include name="**/*.dtd"/>
+		<include name="**/*.xsd"/>
+		<include name="**/*.xml"/>
+		<include name="**/*.xslt"/>
+		
+		<!-- exclude everything we don't want in the jar -->
+		<exclude name="${build.dir}/**/*"/>
+		<exclude name="${doc.dir}/**/*"/>
+		<exclude name="classes/**/*"/>
+		<exclude name="build.xml"/>
+		<exclude name="**/*.properties"/>
+		<exclude name="**/*.ccf"/>
+		<exclude name="**/*.cfg.xml"/>
+		<exclude name="**/ehcache.xml"/>
+	</patternset>
+	
+	<patternset id="source.files">
+		<include name="**/*.java"/>
+		<include name="**/*.properties"/>
+	</patternset>
+	
+	<!-- junit paths/filesets -->
+	<fileset dir="${testclasses.dir}" id="junit.batchtestset">
+		<include name="**/*Test.class"/>
+	</fileset>
+	
+	<path id="testsrc.path">
+		<pathelement location="${test.dir}"/>
+	</path>
+		
+	<path id="junit.classpath">
+		<pathelement path="${classes.dir}"/>
+		<pathelement path="${testclasses.dir}"/>
+		<path refid="lib.class.path"/>
+		<path refid="junit.moduleclasspath"/>
+		<path location="${clover.jar}"/>
+	</path>
+	
+	<!-- Determine the database against which to run  tests-->
+	<if>
+		<equals arg1="${targetdb}" arg2="$${targetdb}"/>
+		<then>
+			<echo message="No target database specified using default HSQLDB"/>
+			<property name="targetdb" value="hsqldb"/>
+		</then>
+	</if>
+	
+	<!-- Clover tasks -->
+	<target name="with.clover">
+		<clover-setup initString="clover_coverage.db"/>
+	</target>
+	
+	<target name="cloverreport.html" depends="with.clover"
+		description="Generate a clover report from the current clover database.">
+		<clover-report>
+			<current outfile="${clover.out.dir}">
+				<format type="html"/>
+			</current>
+		</clover-report>
+	</target>
+	
+	<target name="cloverreport"
+		depends="with.clover,junitreport,cloverreport.html"
+		description="Run the tests and generate a clover report">
+	</target>
+	
+	<!-- Tasks -->
+	<target name="clean" description="Cleans up build and dist directories">
+		<delete dir="${build.dir}"/>
+		<delete dir="${dist.target.dir}"/>
+		<delete dir="${clover.out.dir}"/>
+	</target>
+	
+	<target name="init" description="Initialize the build">
+		<tstamp>
+			<format property="subversion" pattern="yyyy-MM-dd hh:mm:ss"/>
+		</tstamp>
+		<tstamp>
+			<format property="releasedate" pattern="dd-MM-yyyy"/>
+		</tstamp>
+		<echo message="Build ${Name}-${version} (${subversion})"/>
+		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${testclasses.dir}"/>
+		<copy todir="${classes.dir}">
+			<fileset dir="${src.dir}">
+				<patternset refid="support.files"/>
+			</fileset>
+		</copy>
+		<filter token="version" value="${version}"/>
+        <filter token="releasedate" value="${releasedate}"/>
+		<copy todir="${build.dir}" filtering="true">
+			<fileset dir=".">
+				<include name="readme.txt"/>
+				<include name="lgpl.txt"/>
+                <include name="pom.xml"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="get.deps.core" depends="init"
+		description="retrieve the core dependencies">
+		<ivy:resolve conf="default"/>
+		<ivy:retrieve pattern="${ivy.dep.dir}/core/[artifact].[ext]"
+			conf="default"/>
+	</target>	
+	
+	<target name="get.deps.test" depends="init"
+		description="retrieve the test dependencies">
+		<ivy:resolve conf="test"/>
+		<ivy:retrieve pattern="${ivy.dep.dir}/test/[artifact].[ext]" conf="test"/>
+	</target>	
+				
+	<target name="copytest" description="Copy tests to dist dir" if="copy.test">
+		<mkdir dir="${dist.test.dir}"/>
+		<copy todir="${dist.test.dir}">
+			<fileset dir="${test.dir}"/>
+		</copy>
+	</target>
+	
+	<target name="copysource" depends="copytest"
+		description="Copy sources to dist dir">
+		<mkdir dir="${dist.src.dir}"/>
+		<copy todir="${dist.src.dir}">
+			<fileset dir="${src.dir}">
+				<patternset refid="source.files"/>
+			</fileset>
+			<fileset dir="${src.dir}">
+				<patternset refid="support.files"/>
+			</fileset>
+		</copy>
+		<mkdir dir="${dist.src.dir}"/>
+		<copy todir="${dist.src.dir}">
+			<fileset dir="${src.dir}">
+				<patternset refid="source.files"/>
+			</fileset>
+			<fileset dir="${src.dir}">
+				<patternset refid="support.files"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="copylib" description="Copy jars to lib dir">
+		<mkdir dir="${dist.lib.dir}"/>
+		<copy todir="${dist.lib.dir}" verbose="true">
+			<fileset dir="${lib.dir}">
+				<include name="**/*.jar"/>
+				<exclude name="log4j.jar"/>
+				<exclude name="checkstyle*.jar"/>
+				<include name="*.txt"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="copydoc" description="Copy doc to dist dir" if="copy.doc">
+		<mkdir dir="${dist.doc.dir}"/>
+		<copy todir="${dist.doc.dir}">
+			<fileset dir="${doc.dir}">
+				<include name="**/*.html"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="jar" depends="compile"
+		description="Build the distribution .jar file">
+		<mkdir dir="${dist.dir}"/>
+		<jar filesetmanifest="merge" jarfile="${jar.file.name}"
+			basedir="${classes.dir}"/>
+	</target>
+	
+	<target name="jartest" depends="compiletest"
+		description="Build the distribution .jar file">
+		<mkdir dir="${dist.dir}"/>
+		<jar filesetmanifest="merge" jarfile="${jartest.file.name}"
+			basedir="${testclasses.dir}"/>
+	</target>
+	
+	<!-- DOCUMENTATION -->
+	
+	<target name="javadoc"
+		description="Compile the Javadoc API documentation to dist dir">
+		<mkdir dir="${dist.api.dir}"/>
+		<javadoc packagenames="${javadoc.packagenames}"
+			classpathref="lib.class.path" destdir="${dist.api.dir}" use="true"
+			protected="true" version="true"
+			windowtitle="${Name} API Documentation"
+			Overview="${doc.api.dir}/package.html"
+			doctitle="${Name} API Documentation"
+			stylesheetfile="${doc.api.dir}/jdstyle.css" link="${javadoc}">
+			<packageset dir="${src.dir}" defaultexcludes="yes">
+				<include name="**/*"/>
+			</packageset>
+		</javadoc>
+	</target>
+	
+	<target name="extras" description="Copies miscellaneous files to root dir">
+		<copy todir="${dist.dir}/bin" failonerror="false">
+			<fileset dir="bin">
+				<include name="*.bat"/>
+			</fileset>
+		</copy>
+		<copy file="${build.dir}/readme.txt" todir="${dist.dir}"/>
+		<copy file="lgpl.txt" todir="${dist.dir}"/>
+		<copy file="changelog.txt" todir="${dist.dir}"/>
+		<copy file="build.xml" todir="${dist.dir}"/>
+		<replace file="${dist.dir}/build.xml">
+			<replacetoken><![CDATA[../${name}-${version}]]>
+			</replacetoken>
+			<replacevalue><![CDATA[../${name}]]>
+			</replacevalue>
+		</replace>
+	</target>
+	
+	<target name="dist" depends="jar,javadoc,copysource,copydoc,extras"
+		description="Build everything">
+		<zip zipfile="${dist.dir}-${version}.zip">
+			<zipfileset prefix="${name}-${version}" dir="${dist.dir}"/>
+		</zip>
+		<tar compression="gzip" tarfile="${dist.dir}-${version}.tar.gz">
+			<tarfileset prefix="${name}-${version}" dir="${dist.dir}"/>
+		</tar>
+	</target>
+	
+	<target name="info" description="Echoes useful system properties">
+		<echo message="java.vm.info=${java.vm.info}"/>
+		<echo message="java.vm.name=${java.vm.name}"/>
+		<echo message="java.vm.vendor=${java.vm.vendor}"/>
+		<echo message="java.vm.version=${java.vm.version}"/>
+		<echo message="os.arch=${os.arch}"/>
+		<echo message="os.name=${os.name}"/>
+		<echo message="os.version=${os.version}"/>
+		<echo message="java.home = ${java.home}"/>
+		<echo message="java.class.path = ${java.class.path}"/>
+		<echo message="build.compiler = ${build.compiler}"/>
+		<echo message="file.encoding=${file.encoding}"/>
+		<echo message="user.home = ${user.home}"/>
+		<echo message="user.language=${user.language}"/>
+	</target>
+	
+	<target name="test-resources" description="Copies and filters test resources">
+		<filter filtersfile="${filter.dir}/${db}.filter"/>
+		<mkdir dir="${testclasses.dir}"/>
+		<copy todir="${testclasses.dir}" filtering="true" overwrite="true">
+			<fileset dir="${test.resources.dir}">
+				<include name="*.properties"/>
+				<include name="*.xml"/>
+			</fileset>
+		</copy>
+	</target>
+		
+	<target name="instrument" depends="compiletest"
+		description="Instrument the persistent classes"> <!-- depends="jar" -->
+		
+		<taskdef name="instrument"
+			classname="org.hibernate.tool.instrument.javassist.InstrumentTask">
+			<classpath refid="junit.classpath"/>
+		</taskdef>
+		
+		<instrument verbose="true">
+			<fileset dir="${testclasses.dir}/org/hibernate/test">
+				<include name="**/*.class"/>
+				<exclude name="**/*Test$*.class"/>
+				<exclude name="**/*Test.class"/>
+				<exclude name="**/*Tests.class"/>
+			</fileset>
+		</instrument>
+	</target>	
+	
+	<target name="junitinstrument" depends="compiletest,instrument"
+		description="Run the instrument test suite">
+		<for list="${targetdb}" param="db">
+			<sequential>
+				<antcall target="test-resources">
+					<param name="db" value="@{db}"/>
+				</antcall>
+				<mkdir dir="${instrumenttest.out.dir}/@{db}"/>
+				<echo>Running against db: @{db}</echo>
+				<junit printsummary="yes" haltonfailure="yes" dir="${basedir}"
+					maxmemory="256M" fork="yes" forkmode="perBatch">
+					<classpath refid="junit.classpath"/>
+					<formatter type="plain"/>
+					<formatter type="xml"/>
+					<batchtest todir="${instrumenttest.out.dir}/@{db}" haltonfailure="no">
+						<fileset refid="junit.batchtestset"/>
+					</batchtest>
+				</junit>
+			</sequential>
+		</for>
+	</target>
+	
+	<target name="junitreport" depends="">
+		<junitreport todir="${testreports.dir}">
+			<fileset dir="${testreports.dir}">
+				<include name="TEST-*.xml"/>
+			</fileset>
+			<report format="frames" todir="${testreports.dir}"/>
+		</junitreport>
+	</target>
+		
+	<target name="checkstyle" description="Check coding style">
+		<taskdef resource="checkstyletask.properties">
+			<classpath>
+				<path refid="lib.class.path"/>
+				<fileset dir="${common-build.basedir}/lib">
+					<include name="checkstyle*.jar"/>
+				</fileset>
+			</classpath>
+		</taskdef>
+		
+		<checkstyle config="${common-build.basedir}/checkstyle_checks.xml">
+			<fileset dir="${src.dir}">
+				<include name="**/*.java"/>
+			</fileset>
+			<formatter type="plain"/>
+		</checkstyle>
+	</target>
+	
+	<target name="patch" depends="checkstyle" description="Create a patch">
+		<cvs command="-q diff -u -N" output="patch.txt"/>
+	</target>
+	
+	<!-- maven deploy: to be used by the subbuild and delcare deps on jar -->
+	<target name="deploy" depends="jar">
+		<fail unless="offline.repository.jboss.org"
+			message="offline.repository.jboss.org must be defined"/>
+		<jar jarfile="${src.jar}" basedir="${src.dir}">
+			<include name="**/*.java"/>
+			<exclude name="**/test/*.java"/>
+			<!-- patternset refid="meta.files" / -->
+		</jar>
+		
+		<artifact:pom id="maven.project" file="${pom.file}"/>
+		
+		<artifact:install file="${jar.file.name}">
+			<pom refid="maven.project"/>
+		</artifact:install>
+		
+		<artifact:deploy file="${jar.file.name}">
+			<pom refid="maven.project"/>
+			<remoteRepository refId="offline.repository.jboss.org">
+			</remoteRepository>
+			<attach file="${src.jar}" classifier="sources"/>
+			<attach file="${jar.file.name}" classifier=""/>
+		</artifact:deploy>
+	</target>
+	
+</project>

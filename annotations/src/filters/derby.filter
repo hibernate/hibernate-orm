@@ -1,0 +1,9 @@
+## Derby
+
+hibernate.dialect org.hibernate.dialect.DerbyDialect
+hibernate.connection.driver_class org.apache.derby.jdbc.EmbeddedDriver
+hibernate.connection.username 
+hibernate.connection.password 
+hibernate.connection.url jdbc:derby:/hibernate;create=true
+
+

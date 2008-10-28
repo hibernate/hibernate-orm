@@ -1,0 +1,20 @@
+<refentry id="toc.max.depth">
+<refmeta>
+<refentrytitle>toc.max.depth</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>toc.max.depth</refname>
+<refpurpose>How maximaly deep should be each TOC?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='toc.max.depth.frag'><xsl:param name="toc.max.depth">8</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the maximal depth of TOC on all levels.</para>
+
+</refsect1>
+</refentry>

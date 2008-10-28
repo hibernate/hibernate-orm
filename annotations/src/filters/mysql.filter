@@ -1,0 +1,7 @@
+## MySQL
+
+hibernate.dialect org.hibernate.dialect.MySQLDialect
+hibernate.connection.driver_class com.mysql.jdbc.Driver
+hibernate.connection.url jdbc:mysql://localhost/hibernate
+hibernate.connection.username hibernate
+hibernate.connection.password hibernate

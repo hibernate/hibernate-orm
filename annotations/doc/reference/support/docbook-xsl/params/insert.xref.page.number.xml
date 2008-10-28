@@ -1,0 +1,52 @@
+<refentry id="insert.xref.page.number">
+<refmeta>
+<refentrytitle>insert.xref.page.number</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>insert.xref.page.number</refname>
+<refpurpose>Turns page numbers in xrefs on and off</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='insert.xref.page.number.frag'>
+<xsl:param name="insert.xref.page.number">no</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The value of this parameter determines if
+cross references (<sgmltag>xref</sgmltag>s) in
+printed output will
+include page number citations.
+It has three possible values.
+</para>
+<variablelist>
+<varlistentry>
+<term>no</term>
+<listitem><para>No page number references will be generated.
+</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>yes</term>
+<listitem><para>Page number references will be generated
+for all <sgmltag>xref</sgmltag> elements.
+The style of page reference may be changed
+if an <sgmltag class="attribute">xrefstyle</sgmltag>
+attribute is used.
+</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>maybe</term>
+<listitem><para>Page number references will not be generated
+for an <sgmltag>xref</sgmltag> element unless 
+it has an
+<sgmltag class="attribute">xrefstyle</sgmltag>
+attribute whose value specifies a page reference.
+</para></listitem>
+</varlistentry>
+</variablelist>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter>
+  <title id="setup" revision="1">Setting up an annotations project</title>
+
+  <section id="setup-requirements" revision="2">
+    <title>Requirements</title>
+
+    <itemizedlist>
+      <listitem>
+        <para><ulink url="http://www.hibernate.org/6.html">Download</ulink>
+        and unpack the Hibernate Annotations distribution from the Hibernate
+        website.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>This release requires Hibernate Core 3.3 and
+        above.</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para>This release is known to work on Hibernate Core 3.3.0.SP1</para>
+      </listitem>
+
+      <listitem>
+        <para>Make sure you have JDK 5.0 installed or above. You can of course
+        continue using XDoclet and get some of the benefits of
+        annotation-based metadata with older JDK versions. Note that this
+        document only describes JDK 5.0 annotations and you have to refer to
+        the XDoclet documentation for more information.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section id="setup-configuration" revision="2">
+    <title>Configuration</title>
+
+    <para>First, set up your classpath (after you have created a new project
+    in your favorite IDE): <itemizedlist>
+        <listitem>
+          <para>Copy all Hibernate3 core and required 3rd party library files
+          (see lib/README.txt in Hibernate).</para>
+        </listitem>
+
+        <listitem>
+          <para>Copy <filename>hibernate-annotations.jar</filename>,
+          <filename>lib/hibernate-comons-annotations.jar</filename> and
+          <filename>lib/ejb3-persistence.jar</filename> from the Hibernate
+          Annotations distribution to your classpath as well.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>If you wish to use <ulink
+    url="http://validator.hibernate.org">Hibernate Validator</ulink>, download
+    it from the Hibernate website and add
+    <filename>hibernate-validator.jar</filename> in your classpath.</para>
+
+    <para>If you wish to use <ulink
+    url="http://search.hibernate.org">Hibernate Search</ulink>, download it
+    from the Hibernate website and add
+    <filename>hibernate-search.jar</filename> and
+    <filename>lucene-core-x.y.z.jar</filename> in your classpath.</para>
+
+    <para>We also recommend a small wrapper class to startup Hibernate in a
+    static initializer block, known as <classname>HibernateUtil</classname>.
+    You might have seen this class in various forms in other areas of the
+    Hibernate documentation. For Annotation support you have to enhance this
+    helper class as follows: <programlisting>package hello;
+
+import org.hibernate.*;
+import org.hibernate.cfg.*;
+import test.*;
+import test.animals.Dog;
+
+public class HibernateUtil {
+
+private static final SessionFactory sessionFactory;
+
+    static {
+        try {
+
+            sessionFactory = new <emphasis role="bold">AnnotationConfiguration()</emphasis>
+                    configure().buildSessionFactory();
+        } catch (Throwable ex) {
+            // Log exception!
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
+
+    public static Session getSession()
+            throws HibernateException {
+        return sessionFactory.openSession();
+    }
+}
+            </programlisting></para>
+
+    <para>Interesting here is the use of
+    <classname>AnnotationConfiguration</classname>. The packages and annotated
+    classes are declared in your regular XML configuration file (usually
+    <filename>hibernate.cfg.xml</filename>). Here is the equivalent of the
+    above declaration:</para>
+
+    <programlisting>&lt;!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
+
+        &lt;hibernate-configuration&gt;
+          &lt;session-factory&gt;
+            <emphasis role="bold">&lt;mapping package="test.animals"/&gt;
+            &lt;mapping class="test.Flight"/&gt;
+            &lt;mapping class="test.Sky"/&gt;
+            &lt;mapping class="test.Person"/&gt;
+            &lt;mapping class="test.animals.Dog"/&gt;</emphasis>
+<emphasis role="bold">            &lt;mapping resource="test/animals/orm.xml"/&gt;</emphasis>
+          &lt;/session-factory&gt;
+        &lt;/hibernate-configuration&gt;
+        </programlisting>
+
+    <para>Note that you can mix the hbm.xml use and the new annotation one.
+    The resource element can be either an hbm file or an EJB3 XML deployment
+    descriptor. The distinction is transparent for your configuration
+    process.</para>
+
+    <para>Alternatively, you can define the annotated classes and packages
+    using the programmatic API</para>
+
+    <programlisting>            sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
+                    .addPackage("test.animals") //the fully qualified package name
+                    .addAnnotatedClass(Flight.class)
+                    .addAnnotatedClass(Sky.class)
+                    .addAnnotatedClass(Person.class)
+                    .addAnnotatedClass(Dog.class)</emphasis>
+<emphasis role="bold">                    .addResource("test/animals/orm.xml")</emphasis>
+                    configure()..buildSessionFactory();</programlisting>
+
+    <para>You can also use the Hibernate EntityManager which has its own
+    configuration mechanism. Please refer to this project documentation for
+    more details.</para>
+
+    <para>There is no other difference in the way you use Hibernate APIs with
+    annotations, except for this startup routine change or in the
+    configuration file. You can use your favorite configuration method for
+    other properties ( <filename>hibernate.properties</filename>,
+    <filename>hibernate.cfg.xml</filename>, programmatic APIs, etc). You can
+    even mix annotated persistent classes and classic
+    <filename>hbm.cfg.xml</filename> declarations with the same
+    <classname>SessionFactory</classname>. You can however not declare a class
+    several times (whether annotated or through hbm.xml). You cannot mix
+    configuration strategies (hbm vs annotations) in a mapped entity hierarchy
+    either.</para>
+
+    <para>To ease the migration process from hbm files to annotations, the
+    configuration mechanism detects the mapping duplication between
+    annotations and hbm files. HBM files are then prioritized over annotated
+    metadata on a class to class basis. You can change the priority using
+    <literal>hibernate.mapping.precedence</literal> property. The default is
+    <literal>hbm, class</literal>, changing it to <literal>class,
+    hbm</literal> will prioritize the annotated classes over hbm files when a
+    conflict occurs.</para>
+  </section>
+
+  <section>
+    <title id="setup-properties">Properties</title>
+
+    <para>Asides from the Hibernate core properties, Hibernate Annotations
+    reacts to the following one</para>
+  </section>
+
+  <section>
+    <title>Logging</title>
+
+    <para>Hibernate Annotations utilizes <ulink
+    url="http://www.slf4j.org/">Simple Logging Facade for Java</ulink> (SLF4J)
+    in order to log various system events. SLF4J can direct your logging
+    output to several logging frameworks (NOP, Simple, log4j version 1.2, JDK
+    1.4 logging, JCL or logback) depending on your chosen binding. In order to
+    setup logging properly you will need <filename>slf4j-api.jar</filename> in
+    your classpath together with the jar file for your preferred binding -
+    <filename>slf4j-log4j12.jar</filename> in the case of Log4J. See the SLF4J
+    <ulink type=""
+    url="http://www.slf4j.org/manual.html">documentation</ulink> for more
+    detail.</para>
+
+    <para>The logging categories interesting for Hibernate Annotations
+    are:</para>
+
+    <table>
+      <title>Hibernate Annotations Log Categories</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry align="center">Category</entry>
+
+            <entry align="center">Function</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry><emphasis>org.hibernate.cfg</emphasis></entry>
+
+            <entry>Log all configuration related events (not only
+            annotations).</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>For further category configuration refer to the <ulink
+    url="http://www.hibernate.org/hib_docs/v3/reference/en/html_single/#configuration-logging">Logging</ulink>
+    in the Hibernate Core documentation.</para>
+  </section>
+</chapter>

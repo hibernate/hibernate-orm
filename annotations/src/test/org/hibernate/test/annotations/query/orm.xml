@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="1.0"
+        >
+    <named-query name="plane.getAll">
+        <query>select p from Plane p</query>
+    </named-query>
+    <named-native-query name="night.getAll.bySQL" result-set-mapping="sqlmapping">
+        <query>select id, night_duration, night_date as dte, area_id from Night where night_duration > ?</query>
+    </named-native-query>
+    <named-native-query name="getAreaByNative" result-class="org.hibernate.test.annotations.query.Area">
+        <query>select * from tbl_area</query>
+    </named-native-query>
+    <sql-result-set-mapping name="sqlmapping">
+        <entity-result entity-class="org.hibernate.test.annotations.query.Night">
+            <field-result name="id" column="id"/>
+            <field-result name="duration" column="night_duration"/>
+            <field-result name="date" column="dte"/>
+            <field-result name="area" column="area_id"/>
+        </entity-result>
+    </sql-result-set-mapping>
+</entity-mappings>

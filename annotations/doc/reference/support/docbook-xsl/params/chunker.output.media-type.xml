@@ -1,0 +1,27 @@
+<refentry id="chunker.output.media-type">
+<refmeta>
+<refentrytitle>chunker.output.media-type</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>chunker.output.media-type</refname>
+<refpurpose>Media type to use in generated pages</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>&lt;xsl:param name="chunker.output.media-type" select="''"/>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter specifies the media type that should be used by
+the chunking stylesheet. Not all processors support specification of
+this parameter.
+</para>
+
+<note>
+<para>This parameter is documented here, but the declaration is actually
+in the <filename>chunker.xsl</filename> stylesheet module.</para>
+</note>
+
+</refsect1>
+</refentry>

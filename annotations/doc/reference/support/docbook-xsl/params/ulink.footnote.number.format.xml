@@ -1,0 +1,23 @@
+<refentry id="ulink.footnote.number.format">
+<refmeta>
+<refentrytitle>ulink.footnote.number.format</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ulink.footnote.number.format</refname>
+<refpurpose>Identifies the format used for <sgmltag>ulink</sgmltag> footnote numbers</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ulink.footnote.number.format.frag'>
+<xsl:param name="ulink.footnote.number.format" select="'1'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>ulink.footnote.number.format</parameter> specifies the format
+to use for footnote numeration (1, i, I, a, or A).</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.back">
+<refmeta>
+<refentrytitle>htmlhelp.button.back</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.back</refname>
+<refpurpose>Should be Back button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.back.frag'>
+<xsl:param name="htmlhelp.button.back" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Back button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,22 @@
+<refentry id="table.frame.border.thickness">
+<refmeta>
+<refentrytitle>table.frame.border.thickness</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.frame.border.thickness</refname>
+<refpurpose>Specifies the thickness of the frame border</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.frame.border.thickness.frag'>
+<xsl:param name="table.frame.border.thickness" select="'0.5pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the thickness of the border on the table's frame.</para>
+
+</refsect1>
+</refentry>

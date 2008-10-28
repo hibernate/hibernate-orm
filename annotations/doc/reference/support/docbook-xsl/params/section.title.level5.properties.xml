@@ -1,0 +1,27 @@
+<refentry id="section.title.level5.properties">
+<refmeta>
+<refentrytitle>section.title.level5.properties</refentrytitle>
+<refmiscinfo role="type">attribute set</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>section.title.level5.properties</refname>
+<refpurpose>Properties for level-1 section titles</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='section.title.level5.properties.frag'>
+<xsl:attribute-set name="section.title.level5.properties">
+  <xsl:attribute name="font-size">
+    <xsl:value-of select="$body.font.master"/>
+    <xsl:text>pt</xsl:text>
+  </xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The properties of level-5 section titles.</para>
+
+</refsect1>
+</refentry>

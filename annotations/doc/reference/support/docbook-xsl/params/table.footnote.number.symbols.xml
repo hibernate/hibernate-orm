@@ -1,0 +1,34 @@
+<refentry id="table.footnote.number.symbols">
+<refmeta>
+<refentrytitle>table.footnote.number.symbols</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.footnote.number.symbols</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.footnote.number.symbols.frag'>
+<xsl:param name="table.footnote.number.symbols" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If <parameter>table.footnote.number.symbols</parameter> is not the empty string,
+table footnotes will use the characters it contains as footnote symbols. For example,
+<quote>*&amp;#x2020;&amp;#x2021;&amp;#x25CA;&amp;#x2720;</quote> will identify
+footnotes with <quote>*</quote>, <quote>&#x2020;</quote>, <quote>&#x2021;</quote>,
+<quote>&#x25CA;</quote>, and <quote>&#x2720;</quote>. If there are more footnotes
+than symbols, the stylesheets will fall back to numbered footnotes using
+<parameter>table.footnote.number.format</parameter>.</para>
+
+<para>The use of symbols for footnotes depends on the ability of your
+processor (or browser) to render the symbols you select. Not all systems are
+capable of displaying the full range of Unicode characters. If the quoted characters
+in the preceding paragraph are not displayed properly, that's a good indicator
+that you may have trouble using those symbols for footnotes.</para>
+
+</refsect1>
+</refentry>

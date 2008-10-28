@@ -1,0 +1,9 @@
+We're using the DocBook XSL distribution for HTML and PDF
+generation. The best results can be achieved with the
+Saxon XSLT processor (don't use Xalan!) and the Apache
+FOP library.
+
+The documentation is generated with the distribution
+build.xml target 'doc<pdf|html|htmlsingle>'.
+
+christian@hibernate.org

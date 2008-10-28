@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
+"../support/docbook-dtd/docbookx.dtd" [
+<!ENTITY setup SYSTEM "modules/setup.xml">
+<!ENTITY entity SYSTEM "modules/entity.xml">
+<!ENTITY xml-overriding SYSTEM "modules/xml-overriding.xml">
+<!ENTITY validator SYSTEM "modules/validator.xml">
+<!ENTITY lucene SYSTEM "modules/lucene.xml">
+]>
+<book lang="zh_cn">
+  <bookinfo>
+    <title>Hibernate Annotations</title>
+
+    <subtitle>参考文档</subtitle>
+
+    <releaseinfo>3.2.0 CR1</releaseinfo>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/hibernate_logo_a.png" format="png" />
+      </imageobject>
+    </mediaobject>
+  </bookinfo>
+
+  <toc></toc>
+
+  <preface id="preface" revision="2">
+    <title>前言</title>
+
+    <para>WARNING! This is a translated version of the English Hibernate
+    reference documentation. The translated version might not be up to date!
+    However, the differences should only be very minor. Consult the English
+    reference documentation if you are missing information or encounter a
+    translation error. If you like to contribute to a particular translation,
+    contact us on the Hibernate developer mailing list.</para>
+
+    <para>Translator(s): RedSaga Translate Team 满江红翻译团队
+    &lt;caoxg@yahoo.com&gt;</para>
+
+    <sect1 id="preface-translate-comments-zh-cn">
+      <title>翻译说明</title>
+
+      <para>本文档的翻译是在网络上协作进行的，也会不断根据Hibernate的升级进行更新。提供此文档的目的是为了减缓学习Hibernate的坡度，而非代替原文档。我们建议所有有能力的读者都直接阅读英文原文。若您对翻译有异议，或发现翻译错误，敬请不吝赐教，报告到如下地址：http://wiki.redsaga.com/confluence/display/HART/Home</para>
+
+      <table frame="topbot" id="redsaga-translate-team">
+        <title>Hibernate Annotation v3翻译团队</title>
+
+        <tgroup cols="6" colsep="1" rowsep="1">
+          <colspec colname="c1" colwidth="1*" />
+
+          <colspec colname="c2" colwidth="2*" />
+
+          <colspec colname="c3" colwidth="2*" />
+
+          <colspec colname="c4" colwidth="2*" />
+
+          <colspec colname="c5" colwidth="2*" />
+
+          <thead>
+            <row>
+              <entry align="center">序号</entry>
+
+              <entry align="center">标题</entry>
+
+              <entry align="center">中文标题</entry>
+
+              <entry align="center">翻译</entry>
+
+              <entry align="center">1审</entry>
+
+              <entry align="center"> 2审</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>--</entry>
+
+              <entry>Contents</entry>
+
+              <entry>目录</entry>
+
+              <entry>Liu Chang</entry>
+
+              <entry></entry>
+
+              <entry></entry>
+            </row>
+
+            <row>
+              <entry>#1</entry>
+
+              <entry>Setting up an annotations projec</entry>
+
+              <entry>创建一个注解项目</entry>
+
+              <entry>melthaw</entry>
+
+              <entry>Zheng Shuai</entry>
+
+              <entry>superq</entry>
+            </row>
+
+            <row>
+              <entry>#2</entry>
+
+              <entry>Entity Beans-Introduction</entry>
+
+              <entry>实体Bean-简介</entry>
+
+              <entry>melthaw</entry>
+
+              <entry>Zheng Shuai</entry>
+
+              <entry>superq</entry>
+            </row>
+
+            <row>
+              <entry>#3</entry>
+
+              <entry>Entity Beans-Mapping with EJB3 Annotations</entry>
+
+              <entry>实体Bean-用EJB3注解进行映射</entry>
+
+              <entry>melthaw</entry>
+
+              <entry>Zheng Shuai</entry>
+
+              <entry>superq, Liu Chang, Sean Chan</entry>
+            </row>
+
+            <row>
+              <entry>#4</entry>
+
+              <entry>Entity Beans-Mapping Queries</entry>
+
+              <entry>实体Bean-映射查询</entry>
+
+              <entry>melthaw</entry>
+
+              <entry>Zheng Shuai</entry>
+
+              <entry>superq, Liu Chang, Sean Chan</entry>
+            </row>
+
+            <row>
+              <entry>#5</entry>
+
+              <entry>Entity Beans-Hibernate Annotation Extensions</entry>
+
+              <entry>实体Bean-Hibernate独有的注解扩展</entry>
+
+              <entry>Sean Chan</entry>
+
+              <entry>morning</entry>
+
+              <entry>melthaw</entry>
+            </row>
+
+            <row>
+              <entry>#6</entry>
+
+              <entry>Overriding metadata through XML</entry>
+
+              <entry>通过XML覆写元数据</entry>
+
+              <entry>icess</entry>
+
+              <entry>melthaw</entry>
+
+              <entry>Sean Chan</entry>
+            </row>
+
+            <row>
+              <entry>#7</entry>
+
+              <entry>Hibernate Validator</entry>
+
+              <entry>Hibernate验证器</entry>
+
+              <entry>DigitalSonic</entry>
+
+              <entry>morning</entry>
+
+              <entry>melthaw</entry>
+            </row>
+
+            <row>
+              <entry>#8</entry>
+
+              <entry>Hibernate Lucene Integration</entry>
+
+              <entry>Hibernate与Lucene集成</entry>
+
+              <entry>mochow</entry>
+
+              <entry>morning</entry>
+
+              <entry>melthaw</entry>
+            </row>
+
+            <row>
+              <entry>#9</entry>
+
+              <entry>Appendix:Glossary</entry>
+
+              <entry>附录:术语表</entry>
+
+              <entry>mochow</entry>
+
+              <entry>Liu Chang</entry>
+
+              <entry>曹晓钢</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>关于我们</para>
+
+      <variablelist spacing="compact">
+        <varlistentry>
+          <term>满江红.开源, http://www.redsaga.com</term>
+
+          <listitem>
+            <para>从成立之初就致力于Java开放源代码在中国的传播与发展,与国内多个Java团体及出版社有深入交流。坚持少说多做的原则，目前有两个团队，“OpenDoc团队”与“翻译团队”，本翻译文档即为翻译团队作品。OpenDoc团队已经推出包括Hibernate、iBatis、Spring、WebWork的多份开放文档，并于2005年5月在Hibernate开放文档基础上扩充成书，出版了原创书籍：《深入浅出Hibernate》，本书400余页，适合各个层次的Hibernate用户。(http://www.redsaga.com/hibernate_book.html)敬请支持。</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>致谢</term>
+
+          <listitem>
+            <para>在我们翻译Hibernate
+            Annotation参考文档的同时，还有一位热心的朋友也在进行着同样的工作，这位朋友就是icess(冰雨)，由icess翻译的中文版的地址：
+            http://icess.my.china.com/hibernate/a/ref/index.htm</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect1>
+
+    <sect1 id="preface-translate-licence-zh-cn">
+      <title>版权声明</title>
+
+      <para>Hibernate英文文档属于Hibernate发行包的一部分，遵循LGPL协议。本翻译版本同样遵循LGPL协议。参与翻译的译者一致同意放弃除署名权外对本翻译版本的其它权利要求。</para>
+
+      <para>您可以自由链接、下载、传播此文档，或者放置在您的网站上，甚至作为产品的一部分发行。但前提是必须保证全文完整转载，包括完整的版权信息和作译者声明，并不能违反LGPL协议。这里“完整”的含义是，不能进行任何删除/增添/注解。若有删除/增添/注解，必须逐段明确声明那些部分并非本文档的一部分。</para>
+    </sect1>
+  </preface>
+
+  <preface>
+    <title>前言</title>
+
+    <para>正如其他的ORM工具,Hibernate同样需要元数据来控制在不同数据表达形式之间的转化. 在Hibernate
+    2.x里,多数情况下表示映射关系的元数据保存在XML文本文件中.
+    还有一种方式就是Xdoclet,它可以在编译时利用Javadoc中的源码注释信息来进行预处理.
+    现在新的JDK标准（JDK1.5以上）也支持类似的注解功能,但相比之下很多工具对此提供了更强大更好用的支持. 以IntelliJ
+    IDEA和Eclipse为例,这些IDE工具为JDK 5.0注解功能提供了自动完成和语法高亮功能. 注解被直接编译到字节码里,并
+    在运行时（对于Hibernate来讲就是启动的时候）通过反射读取这些注解, 因此外部XML文件就不再需要了.</para>
+
+    <para>EJB3规范最终认可了透明化ORM的成功范例以及市场对于这种技术的兴趣.
+    EJB3规范标准化了ORM的基础API而且在任何ORM持久化机制中使用元数据. <emphasis>Hibernate
+    EntityManager</emphasis>实现了EJB3持久化规范中定义的编程接口和生命周期规则. 在<emphasis>Hibernate
+    Core</emphasis>的基础上再结合 <emphasis>Hibernate
+    Annotations</emphasis>就实现了一套完整(并且独立)的EJB3持久化解决方案.
+    你可以结合三者来使用,也可以抛开EJB3编程接口和生命周期规则而独立使用注解, 甚至只单独使用<emphasis>Hibernate
+    Core</emphasis>. 这些都取决于项目的商业和技术上的实际需求. Hibernate允许你直接使用native APIs,如果有需要,
+    甚至可以直接操作JDBC和SQL.</para>
+
+    <para>注意本文档基于Hibernate Annotations的预览版(遵从EJB 3.0/JSR-220最终草案).
+    这个版本和新规范中定义的最终概念已经非常接近了.我们的目标是提供一套完整的ORM注解,
+    包括EJB3的标准注解以及Hibernate3的扩展（后者是EJB3规范中没有涉及到的）. 最终通过注解你可以完成任何可能的映射.详情参考<xref
+    linkend="compliance" />.</para>
+
+    <para>EJB3最终草案修改了部分注解,
+    http://www.hibernate.org/371.html提供了从上一个版本到最新版本的迁移指南.</para>
+  </preface>
+
+  &setup;
+
+  &entity;
+
+  &xml-overriding;
+
+  &validator;
+
+  &lucene;
+
+  <appendix>
+    <title id="glossary">术语表</title>
+
+    <para>Redsaga的wiki上维护了本文翻译过程中所参照的中英文对照的术语表,地址:http://wiki.redsaga.com/confluence/display/HART/glossary.</para>
+  </appendix>
+</book>

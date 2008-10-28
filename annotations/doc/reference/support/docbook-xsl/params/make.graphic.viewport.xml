@@ -1,0 +1,30 @@
+<refentry id="make.graphic.viewport">
+<refmeta>
+<refentrytitle>make.graphic.viewport</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>make.graphic.viewport</refname>
+<refpurpose>Use tables in HTML to make viewports for graphics</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='make.graphic.viewport.frag'>
+<xsl:param name="make.graphic.viewport" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The HTML <sgmltag>img</sgmltag> element only supports the notion
+of content-area scaling; it doesn't support the distinction between a
+content-area and a viewport-area, so we have to make some compromises.</para>
+
+<para>If <parameter>make.graphic.viewport</parameter> is non-zero, a table
+will be used to frame the image. This creates an effective viewport-area.
+</para>
+
+<para>Tables and alignment don't work together, so this parameter is ignored
+if alignment is specified on an image.</para>
+</refsect1>
+</refentry>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.annotations.inheritance.joined">
+
+    <class name="Parent">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <set name="financialAssets" fetch="join" cascade="refresh" inverse="true">
+            <key column="PARENT_ID"/>
+            <one-to-many class="FinancialAsset"/>
+        </set>
+        <set name="propertyAssets" fetch="join" cascade="refresh" inverse="true">
+            <key column="PARENT_ID"/>
+            <one-to-many class="PropertyAsset"/>
+        </set>
+    </class>
+    <class name="Asset">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <many-to-one name="parent" column="PARENT_ID" property-ref="parent"/>
+        <joined-subclass name="FinancialAsset">
+            <key column="ID"/>
+            <property name="price"/>
+        </joined-subclass>
+        <joined-subclass name="PropertyAsset">
+            <key column="ID"/>
+            <property name="price"/>
+        </joined-subclass>
+    </class>
+
+</hibernate-mapping>

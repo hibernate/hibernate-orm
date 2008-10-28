@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Used to test the interaction of hbm files with a subclass
+  extends attribute and annotated classes.
+
+  See ConfigurationTest
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.annotations">
+
+    <joined-subclass name="Ferry" table="FerryJoined" extends="org.hibernate.test.annotations.Boat">
+        <key column="id"/>
+        <property name="sea"/>
+
+    </joined-subclass>
+
+</hibernate-mapping>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  Used to demonstrate the declarative configuration
+  of both hbm files and annotated classes
+  See hibernate.cfg.xml and ConfigurationTest
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.annotations.loader">
+
+    <sql-query name="loadByTeam">
+        <load-collection alias="p" role="Team.players"/>
+        select {p.*} from Player p where p.team_id = ?
+    </sql-query>
+
+</hibernate-mapping>

@@ -1,0 +1,28 @@
+<refentry id="draft.mode">
+<refmeta>
+<refentrytitle>draft.mode</refentrytitle>
+<refmiscinfo role="type">list</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>draft.mode</refname>
+<refpurpose>Select draft mode</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='draft.mode.frag'>
+<xsl:param name="draft.mode" select="'maybe'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Selects draft mode. If <parameter>draft.mode</parameter> is
+<quote><literal>yes</literal></quote>, the entire document will be treated
+as a draft. If it is <quote><literal>no</literal></quote>, the entire document
+will be treated as a final copy. If it is <quote><literal>maybe</literal></quote>,
+individual sections will be treated as draft or final independently, depending
+on how their <sgmltag class="attribute">status</sgmltag> attribute is set.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="lucene">
+  <title id="lucene">Hibernate与Lucene集成</title>
+
+  <para>Lucene是一个高性能的java搜索引擎库，可以从 Apache软件基金组织获取。
+  Hibernate Annotations包括一个注解包，它允许把任何域模型对象标记为可索引的，
+  并且对任何经由Hibernate进行持续化的实例，Hibernate 都会为之维护一个对应的Lucene索引。</para>
+
+  <sect1 id="lucene-intro">
+    <title>使用Lucene为实体建立索引</title>
+
+    <sect2>
+      <title>注解领域模型</title>
+
+      <para>首先，必须将一个持久类声明为
+      <literal>@Indexed</literal>:</para>
+
+      <programlisting>@Entity
+@Indexed(index="indexes/essays")
+public class Essay {
+    ...
+}</programlisting>
+
+      <para>属性<literal>index</literal>是告诉Hibernate， Lucene索引信息所在的位置（你文件系统的某个目录）。
+	  如果你想为所有的Lucene索引定义一个根目录，你可以在配置文件中用属性<literal>hibernate.lucene.index_dir</literal>进行配置。
+	  </para>
+
+      <para>Lucene索引包括四种字段：<emphasis>keyword</emphasis> 字段，<emphasis>text</emphasis>
+      字段，<emphasis>unstored</emphasis>字段和<emphasis>unindexed</emphasis>字段。
+      Hibernate注解提供了将实体属性标记为前三种被索引字段的注解。</para>
+
+      <programlisting>@Entity
+@Indexed(index="indexes/essays")
+public class Essay {
+    ...
+
+    @Id
+    @Keyword(id=true)
+    public Long getId() { return id; }
+    
+    @Text(name="Abstract")
+    public String getSummary() { return summary; }
+    
+    @Lob
+    @Unstored
+    public String getText() { return text; }
+    
+}</programlisting>
+
+      <para>这些注解定义了一个带有三个字段的索引:
+      <literal>Id</literal>, <literal>Abstract</literal> 和
+      <literal>Text</literal>.</para>
+
+      <para>注意:你必须在你的实体类的标志属性上指定
+      <literal>@Keyword(id=true)</literal> .</para>
+
+	  <para>用于对元素建立索引的分析器类是可以通过<literal>hibernate.lucene.analyzer</literal>属性进行配置的。
+	  如果没有定义，则把 <classname>org.apache.lucene.analysis.standard.StandardAnalyzer</classname>作为缺省。</para>
+
+    </sect2>
+
+    <sect2>
+      <title>启用自动索引</title>
+
+      <para>我们激活用于帧听三类Hibernate事件的 <literal>LuceneEventListener</literal>，
+	  这些事件会在变更被提交至数据库后产生。</para>
+
+      <programlisting>&lt;hibernate-configuration&gt;
+    ...
+    &lt;event type="post-commit-update" 
+        &lt;listener  
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+    &lt;event type="post-commit-insert" 
+        &lt;listener 
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+    &lt;event type="post-commit-delete" 
+        &lt;listener 
+            class="org.hibernate.lucene.event.LuceneEventListener"/&gt;
+    &lt;/event&gt;
+&lt;/hibernate-configuration&gt;</programlisting>
+    </sect2>
+  </sect1>
+</chapter>
+

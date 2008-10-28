@@ -55,6 +55,7 @@
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
         <module>commons-annotations</module>
+        <module>annotations</module>
         <module>envers</module>
         <module>jmx</module>
         <module>testing</module>

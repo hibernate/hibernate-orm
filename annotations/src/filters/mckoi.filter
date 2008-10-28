@@ -1,9 +1,0 @@
-## Mckoi
-
-hibernate.dialect org.hibernate.dialect.MckoiDialect
-hibernate.connection.driver_class com.mckoi.JDBCDriver
-hibernate.connection.username hibernate
-hibernate.connection.password hibernate
-hibernate.connection.url jdbc:mckoi://localhost/hibernate
-
-

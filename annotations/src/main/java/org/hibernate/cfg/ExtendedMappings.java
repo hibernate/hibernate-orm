@@ -1,14 +1,31 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.cfg;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
@@ -22,8 +39,6 @@ import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 /**
  * Allow annotation related mappings
@@ -32,251 +47,113 @@ import org.slf4j.Logger;
  *
  * @author Emmanuel Bernard
  */
-public class ExtendedMappings extends Mappings {
-
-	private final Logger log = LoggerFactory.getLogger( ExtendedMappings.class );
-
-	private final Map<String, IdGenerator> namedGenerators;
-	private final Map<String, Map<String, Join>> joins;
-	private final Map<String, AnnotatedClassType> classTypes;
-	private final Map<String, Properties> generatorTables;
-	private final Map<Table, List<String[]>> tableUniqueConstraints;
-	private final Map<String, String> mappedByResolver;
-	private final Map<String, String> propertyRefResolver;
-	private final ReflectionManager reflectionManager;
-	private final Set<String> defaultNamedQueryNames;
-	private final Set<String> defaultNamedNativeQueryNames;
-	private final Set<String> defaultSqlResulSetMappingNames;
-	private final Set<String> defaultNamedGenerators;
-	private final Map<String, AnyMetaDef> anyMetaDefs;
-
-	ExtendedMappings(
-			Map classes, Map collections, Map tables, Map queries, Map sqlqueries, Map sqlResultSetMappings,
-			Set<String> defaultNamedQueryNames, Set<String> defaultNamedNativeQueryNames,
-			Set<String> defaultSqlResulSetMappingNames, Set<String> defaultNamedGenerators, Map imports,
-			List secondPasses, List propertyReferences, NamingStrategy namingStrategy, Map typeDefs,
-			Map filterDefinitions, Map namedGenerators, Map<String, Map<String, Join>> joins, Map<String,
-			AnnotatedClassType> classTypes, Map extendsQueue, Map<String, TableDescription> tableNameBinding,
-											Map<Table, ColumnNames> columnNameBindingPerTable,
-											final List auxiliaryDatabaseObjects,
-											Map<String, Properties> generatorTables,
-											Map<Table, List<String[]>> tableUniqueConstraints,
-											Map<String, String> mappedByResolver,
-											Map<String, String> propertyRefResolver,
-											Map<String, AnyMetaDef> anyMetaDefs,
-											ReflectionManager reflectionManager
-	) {
-		super(
-				classes,
-				collections,
-				tables,
-				queries,
-				sqlqueries,
-				sqlResultSetMappings,
-				imports,
-				secondPasses,
-				propertyReferences,
-				namingStrategy,
-				typeDefs,
-				filterDefinitions,
-				extendsQueue,
-				auxiliaryDatabaseObjects,
-				tableNameBinding,
-				columnNameBindingPerTable
-		);
-		this.namedGenerators = namedGenerators;
-		this.joins = joins;
-		this.classTypes = classTypes;
-		this.generatorTables = generatorTables;
-		this.tableUniqueConstraints = tableUniqueConstraints;
-		this.mappedByResolver = mappedByResolver;
-		this.propertyRefResolver = propertyRefResolver;
-		this.reflectionManager = reflectionManager;
-		this.defaultNamedQueryNames = defaultNamedQueryNames;
-		this.defaultNamedNativeQueryNames = defaultNamedNativeQueryNames;
-		this.defaultSqlResulSetMappingNames = defaultSqlResulSetMappingNames;
-		this.defaultNamedGenerators = defaultNamedGenerators;
-		this.anyMetaDefs = anyMetaDefs;
-	}
-
-	public void addGenerator(IdGenerator generator) throws MappingException {
-		if ( !defaultNamedGenerators.contains( generator.getName() ) ) {
-			Object old = namedGenerators.put( generator.getName(), generator );
-			if ( old != null ) log.warn( "duplicate generator name: {}", generator.getName() );
-		}
-	}
-
-	public void addJoins(PersistentClass persistentClass, Map<String, Join> joins) throws MappingException {
-		Object old = this.joins.put( persistentClass.getEntityName(), joins );
-		if ( old != null ) log.warn( "duplicate joins for class: {}", persistentClass.getEntityName() );
-	}
-
-	public AnnotatedClassType addClassType(XClass clazz) {
-		AnnotatedClassType type;
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			type = AnnotatedClassType.ENTITY;
-		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			type = AnnotatedClassType.EMBEDDABLE;
-		}
-		else if ( clazz.isAnnotationPresent( MappedSuperclass.class ) ) {
-			type = AnnotatedClassType.EMBEDDABLE_SUPERCLASS;
-		}
-		else {
-			type = AnnotatedClassType.NONE;
-		}
-		classTypes.put( clazz.getName(), type );
-		return type;
-	}
+public interface ExtendedMappings extends Mappings {
 
 	/**
-	 * get and maintain a cache of class type.
-	 * A class can be an entity, a embedded objet or nothing.
+	 * Adds a default id generator.
+	 *
+	 * @param generator The id generator
 	 */
-	public AnnotatedClassType getClassType(XClass clazz) {
-		AnnotatedClassType type = classTypes.get( clazz.getName() );
-		if ( type == null ) {
-			return addClassType( clazz );
-		}
-		else {
-			return type;
-		}
-	}
+	public void addDefaultGenerator(IdGenerator generator);
 
-	public IdGenerator getGenerator(String name) {
-		return getGenerator( name, null );
-	}
-
-	public Map<String, Join> getJoins(String persistentClass) {
-		return joins.get( persistentClass );
-	}
+	/**
+	 * Retrieve the id-generator by name.
+	 *
+	 * @param name The generator name.
+	 * @return The generator, or null.
+	 */
+	public IdGenerator getGenerator(String name);
 
 	/**
 	 * Try to find the generator from the localGenerators
 	 * and then from the global generator list
 	 *
-	 * @param name			generator name
-	 * @param localGenerators local generators to find to
+	 * @param name generator name
+	 * @param localGenerators local generators
 	 * @return the appropriate idgenerator or null if not found
 	 */
-	public IdGenerator getGenerator(String name, Map<String, IdGenerator> localGenerators) {
-		if ( localGenerators != null ) {
-			IdGenerator result = localGenerators.get( name );
-			if ( result != null ) return result;
-		}
-		return namedGenerators.get( name );
-	}
+	public IdGenerator getGenerator(String name, Map<String, IdGenerator> localGenerators);
 
-	public void addGeneratorTable(String name, Properties params) {
-		Object old = generatorTables.put( name, params );
-		if ( old != null ) log.warn( "duplicate generator table: {}", name );
-	}
+	/**
+	 * Add a generator.
+	 *
+	 * @param generator The generator to add.
+	 */
+	public void addGenerator(IdGenerator generator);
 
-	public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables) {
-		if ( localGeneratorTables != null ) {
-			Properties result = localGeneratorTables.get( name );
-			if ( result != null ) return result;
-		}
-		return generatorTables.get( name );
-	}
+	/**
+	 * Add a generator table properties.
+	 *
+	 * @param name The generator name
+	 * @param params The generator table properties.
+	 */
+	public void addGeneratorTable(String name, Properties params);
 
-	public void addUniqueConstraints(Table table, List uniqueConstraints) {
-		List oldConstraints = tableUniqueConstraints.get( table );
-		if ( oldConstraints == null ) {
-			oldConstraints = new ArrayList();
-			tableUniqueConstraints.put( table, oldConstraints );
-		}
-		oldConstraints.addAll( uniqueConstraints );
-	}
+	/**
+	 * Retrieve the properties related to a generator table.
+	 *
+	 * @param name generator name
+	 * @param localGeneratorTables local generator tables
+	 * @return The properties, or null.
+	 */
+	public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables);
 
-	public Map<Table, List<String[]>> getTableUniqueConstraints() {
-		return tableUniqueConstraints;
-	}
+	/**
+	 * Retrieve join metadata for a particular persistent entity.
+	 *
+	 * @param entityName The entity name
+	 * @return The join metadata
+	 */
+	public Map<String, Join> getJoins(String entityName);
 
-	public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {
-		mappedByResolver.put( entityName + "." + propertyName, inversePropertyName );
-	}
+	/**
+	 * Add join metadata for a persistent entity.
+	 *
+	 * @param persistentClass The persistent entity metadata.
+	 * @param joins The join metadata to add.
+	 * @throws MappingException
+	 */
+	public void addJoins(PersistentClass persistentClass, Map<String, Join> joins);
 
-	public String getFromMappedBy(String entityName, String propertyName) {
-		return mappedByResolver.get( entityName + "." + propertyName );
-	}
+	/**
+	 * Get and maintain a cache of class type.
+	 *
+	 * @param clazz The XClass mapping
+	 * @return The class type.
+	 */
+	public AnnotatedClassType getClassType(XClass clazz);
 
-	public void addPropertyReferencedAssociation(String entityName, String propertyName, String propertyRef) {
-		propertyRefResolver.put( entityName + "." + propertyName, propertyRef );
-	}
+	/**
+	 * Add a class type.
+	 *
+	 * @param clazz The XClass mapping.
+	 * @return The class type.
+	 */
+	public AnnotatedClassType addClassType(XClass clazz);
 
-	public String getPropertyReferencedAssociation(String entityName, String propertyName) {
-		return propertyRefResolver.get( entityName + "." + propertyName );
-	}
+	public Map<Table, List<String[]>> getTableUniqueConstraints();
 
-	@Override
-	public void addUniquePropertyReference(String referencedClass, String propertyName) {
-		super.addUniquePropertyReference( referencedClass, propertyName );
-	}
+	public void addUniqueConstraints(Table table, List uniqueConstraints);
 
-	@Override
-	public void addPropertyReference(String referencedClass, String propertyName) {
-		super.addPropertyReference( referencedClass, propertyName );
-	}
+	public void addMappedBy(String entityName, String propertyName, String inversePropertyName);
 
-	public ReflectionManager getReflectionManager() {
-		return reflectionManager;
-	}
+	public String getFromMappedBy(String entityName, String propertyName);
 
-	public void addDefaultQuery(String name, NamedQueryDefinition query) {
-		super.addQuery( name, query );
-		defaultNamedQueryNames.add( name );
-	}
+	public void addPropertyReferencedAssociation(String entityName, String propertyName, String propertyRef);
 
-	public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query) {
-		super.addSQLQuery( name, query );
-		defaultNamedNativeQueryNames.add( name );
-	}
+	public String getPropertyReferencedAssociation(String entityName, String propertyName);
 
-	public void addDefaultGenerator(IdGenerator idGen) {
-		this.addGenerator( idGen );
-		defaultNamedGenerators.add( idGen.getName() );
+	public ReflectionManager getReflectionManager();
 
-	}
+	public void addDefaultQuery(String name, NamedQueryDefinition query);
 
-	public void addDefaultResultSetMapping(ResultSetMappingDefinition definition) {
-		final String name = definition.getName();
-		if ( !defaultSqlResulSetMappingNames.contains( name )
-				&& super.getResultSetMapping( name ) != null ) {
-			resultSetMappings.remove( name );
-		}
-		super.addResultSetMapping( definition );
-		defaultSqlResulSetMappingNames.add( name );
-	}
+	public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query);
 
-	@Override
-	public void addQuery(String name, NamedQueryDefinition query) throws MappingException {
-		if ( !defaultNamedQueryNames.contains( name ) ) super.addQuery( name, query );
-	}
+	public void addDefaultResultSetMapping(ResultSetMappingDefinition definition);
 
-	@Override
-	public void addResultSetMapping(ResultSetMappingDefinition definition) {
-		if ( !defaultSqlResulSetMappingNames.contains( definition.getName() ) )
-			super.addResultSetMapping( definition );
-	}
+	public Map getClasses();
 
-	@Override
-	public void addSQLQuery(String name, NamedSQLQueryDefinition query) throws MappingException {
-		if ( !defaultNamedNativeQueryNames.contains( name ) ) super.addSQLQuery( name, query );
-	}
+	public void addAnyMetaDef(AnyMetaDef defAnn) throws AnnotationException;
 
-	public Map getClasses() {
-		return classes;
-	}
-
-	public void addAnyMetaDef(AnyMetaDef defAnn) {
-		if ( anyMetaDefs.containsKey( defAnn.name() ) ) {
-			throw new AnnotationException( "Two @AnyMetaDef with the same name defined: " + defAnn.name() );
-		}
-		anyMetaDefs.put( defAnn.name(), defAnn );
-	}
-
-	public AnyMetaDef getAnyMetaDef(String name) {
-		return anyMetaDefs.get( name );
-	}
+	public AnyMetaDef getAnyMetaDef(String name);
 }

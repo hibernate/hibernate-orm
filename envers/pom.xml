@@ -75,63 +75,17 @@
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-annotations</artifactId>
-            <exclusions>
-                <!-- todo : only needed until we migrate annotations/em back to core -->
-                <exclusion>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.sf.ehcache</groupId>
-                    <artifactId>ehcache</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>asm</groupId>
-                    <artifactId>asm</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>asm</groupId>
-                    <artifactId>asm-attrs</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>hibernate-commons-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-commons-annotations</artifactId>
-            <exclusions>
-                <!-- todo : only needed until we migrate annotations/em back to core -->
-                <exclusion>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.sf.ehcache</groupId>
-                    <artifactId>ehcache</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>asm</groupId>
-                    <artifactId>asm</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>asm</groupId>
-                    <artifactId>asm-attrs</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>hibernate-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <exclusions>
-                <!-- todo : only needed until we migrate annotations/em back to core -->
+                <!-- todo : only needed until we migrate EM back to core -->
                 <exclusion>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate</artifactId>
@@ -196,17 +150,15 @@
                 <artifactId>persistence-api</artifactId>
                 <version>1.0</version>
             </dependency>
-            <!-- todo : change to work like hibernate-core after we import annotations and em back into core -->
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-annotations</artifactId>
-                <version>3.3.0.ga</version>
+                <version>${version}</version>
             </dependency>
-            <!-- todo : change to work like hibernate-core after we import annotations and em back into core -->
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-commons-annotations</artifactId>
-                <version>3.3.0.ga</version>
+                <version>${version}</version>
             </dependency>
             <!-- todo : change to work like hibernate-core after we import annotations and em back into core -->
             <dependency>

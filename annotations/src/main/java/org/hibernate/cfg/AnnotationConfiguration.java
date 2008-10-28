@@ -1,4 +1,26 @@
-// $Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.cfg;
 
 import java.io.File;
@@ -22,6 +44,7 @@ import java.util.StringTokenizer;
 
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Embeddable;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -33,6 +56,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.DuplicateMappingException;
+import org.hibernate.engine.NamedQueryDefinition;
+import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -46,6 +73,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.IdGenerator;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
@@ -81,7 +109,7 @@ public class AnnotationConfiguration extends Configuration {
 	public static final String ARTEFACT = "hibernate.mapping.precedence";
 	public static final String DEFAULT_PRECEDENCE = "hbm, class";
 
-	private Map namedGenerators;
+	private Map<String,IdGenerator> namedGenerators;
 	private Map<String, Map<String, Join>> joins;
 	private Map<String, AnnotatedClassType> classTypes;
 	private Set<String> defaultNamedQueryNames;
@@ -184,35 +212,7 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	public ExtendedMappings createExtendedMappings() {
-		return new ExtendedMappings(
-				classes,
-				collections,
-				tables,
-				namedQueries,
-				namedSqlQueries,
-				sqlResultSetMappings,
-				defaultNamedQueryNames,
-				defaultNamedNativeQueryNames,
-				defaultSqlResulSetMappingNames,
-				defaultNamedGenerators,
-				imports,
-				secondPasses,
-				propertyReferences,
-				namingStrategy,
-				typeDefs,
-				filterDefinitions,
-				namedGenerators,
-				joins,
-				classTypes,
-				extendsQueue,
-				tableNameBinding, columnNameBindingPerTable, auxiliaryDatabaseObjects,
-				generatorTables,
-				tableUniqueConstraints,
-				mappedByResolver,
-				propertyRefResolver,
-				anyMetaDefs,
-				reflectionManager
-		);
+		return new ExtendedMappingsImpl();
 	}
 
 	@Override
@@ -490,14 +490,14 @@ public class AnnotationConfiguration extends Configuration {
 	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
 	 * Checking all dependencies recursively seems quite expensive, but the original code just relied 
 	 * on some sort of table name sorting which failed in certain circumstances.
+	 * <p/>
+	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
 	 * 
 	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready 
 	 * for processing.
 	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
 	 * @param startTable Table name to start recursive algorithm.
 	 * @param currentTable The current table name used to check for 'new' dependencies.
-	 * 
-	 * @see ANN-722 ANN-730
 	 */
 	private void buildRecursiveOrderedFkSecondPasses(
 			List orderedFkSecondPasses,
@@ -1069,5 +1069,203 @@ public class AnnotationConfiguration extends Configuration {
 	//not a public API
 	public ReflectionManager getReflectionManager() {
 		return reflectionManager;
+	}
+
+	protected class ExtendedMappingsImpl extends MappingsImpl implements ExtendedMappings {
+//		private final Map<String, IdGenerator> namedGenerators;
+//		private final Map<String, Map<String, Join>> joins;
+//		private final Map<String, AnnotatedClassType> classTypes;
+//		private final Map<String, Properties> generatorTables;
+//		private final Map<Table, List<String[]>> tableUniqueConstraints;
+//		private final Map<String, String> mappedByResolver;
+//		private final Map<String, String> propertyRefResolver;
+//		private final ReflectionManager reflectionManager;
+//		private final Set<String> defaultNamedQueryNames;
+//		private final Set<String> defaultNamedNativeQueryNames;
+//		private final Set<String> defaultSqlResulSetMappingNames;
+//		private final Set<String> defaultNamedGenerators;
+//		private final Map<String, AnyMetaDef> anyMetaDefs;
+
+		public void addDefaultGenerator(IdGenerator generator) {
+			this.addGenerator( generator );
+			defaultNamedGenerators.add( generator.getName() );
+		}
+
+		public IdGenerator getGenerator(String name) {
+			return getGenerator( name, null );
+		}
+
+		public IdGenerator getGenerator(String name, Map<String, IdGenerator> localGenerators) {
+			if ( localGenerators != null ) {
+				IdGenerator result = localGenerators.get( name );
+				if ( result != null ) {
+					return result;
+				}
+			}
+			return namedGenerators.get( name );
+		}
+
+		public void addGenerator(IdGenerator generator) {
+			if ( !defaultNamedGenerators.contains( generator.getName() ) ) {
+				IdGenerator old = namedGenerators.put( generator.getName(), generator );
+				if ( old != null ) {
+					log.warn( "duplicate generator name {}", old.getName() );
+				}
+			}
+		}
+
+		public void addGeneratorTable(String name, Properties params) {
+			Object old = generatorTables.put( name, params );
+			if ( old != null ) {
+				log.warn( "duplicate generator table: {}", name );
+			}
+		}
+
+		public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables) {
+			if ( localGeneratorTables != null ) {
+				Properties result = localGeneratorTables.get( name );
+				if ( result != null ) {
+					return result;
+				}
+			}
+			return generatorTables.get( name );
+		}
+
+		public Map<String, Join> getJoins(String entityName) {
+			return joins.get( entityName );
+		}
+
+		public void addJoins(PersistentClass persistentClass, Map<String, Join> joins) {
+			Object old = AnnotationConfiguration.this.joins.put( persistentClass.getEntityName(), joins );
+			if ( old != null ) {
+				log.warn( "duplicate joins for class: {}", persistentClass.getEntityName() );
+			}
+		}
+
+		public AnnotatedClassType getClassType(XClass clazz) {
+			AnnotatedClassType type = classTypes.get( clazz.getName() );
+			if ( type == null ) {
+				return addClassType( clazz );
+			}
+			else {
+				return type;
+			}
+		}
+
+		public AnnotatedClassType addClassType(XClass clazz) {
+			AnnotatedClassType type;
+			if ( clazz.isAnnotationPresent( Entity.class ) ) {
+				type = AnnotatedClassType.ENTITY;
+			}
+			else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+				type = AnnotatedClassType.EMBEDDABLE;
+			}
+			else if ( clazz.isAnnotationPresent( MappedSuperclass.class ) ) {
+				type = AnnotatedClassType.EMBEDDABLE_SUPERCLASS;
+			}
+			else {
+				type = AnnotatedClassType.NONE;
+			}
+			classTypes.put( clazz.getName(), type );
+			return type;
+		}
+
+		public Map<Table, List<String[]>> getTableUniqueConstraints() {
+			return tableUniqueConstraints;
+		}
+
+		public void addUniqueConstraints(Table table, List uniqueConstraints) {
+			List oldConstraints = tableUniqueConstraints.get( table );
+			if ( oldConstraints == null ) {
+				oldConstraints = new ArrayList();
+				tableUniqueConstraints.put( table, oldConstraints );
+			}
+			oldConstraints.addAll( uniqueConstraints );
+		}
+
+		public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {
+			mappedByResolver.put( entityName + "." + propertyName, inversePropertyName );
+		}
+
+		public String getFromMappedBy(String entityName, String propertyName) {
+			return mappedByResolver.get( entityName + "." + propertyName );
+		}
+
+		public void addPropertyReferencedAssociation(String entityName, String propertyName, String propertyRef) {
+			propertyRefResolver.put( entityName + "." + propertyName, propertyRef );
+		}
+
+		public String getPropertyReferencedAssociation(String entityName, String propertyName) {
+			return propertyRefResolver.get( entityName + "." + propertyName );
+		}
+
+		@Override
+		public void addUniquePropertyReference(String referencedClass, String propertyName) {
+			super.addUniquePropertyReference( referencedClass, propertyName );
+		}
+
+		@Override
+		public void addPropertyReference(String referencedClass, String propertyName) {
+			super.addPropertyReference( referencedClass, propertyName );
+		}
+
+		public ReflectionManager getReflectionManager() {
+			return reflectionManager;
+		}
+
+		public void addDefaultQuery(String name, NamedQueryDefinition query) {
+			super.addQuery( name, query );
+			defaultNamedQueryNames.add( name );
+		}
+
+		public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query) {
+			super.addSQLQuery( name, query );
+			defaultNamedNativeQueryNames.add( name );
+		}
+
+		public void addDefaultResultSetMapping(ResultSetMappingDefinition definition) {
+			final String name = definition.getName();
+			if ( !defaultSqlResulSetMappingNames.contains( name )
+					&& super.getResultSetMapping( name ) != null ) {
+				removeResultSetMapping( name );
+			}
+			super.addResultSetMapping( definition );
+			defaultSqlResulSetMappingNames.add( name );
+		}
+
+		@Override
+		public void addQuery(String name, NamedQueryDefinition query) throws DuplicateMappingException {
+			if ( !defaultNamedQueryNames.contains( name ) ) {
+				super.addQuery( name, query );
+			}
+		}
+
+		@Override
+		public void addResultSetMapping(ResultSetMappingDefinition definition) throws DuplicateMappingException {
+			if ( !defaultSqlResulSetMappingNames.contains( definition.getName() ) )
+				super.addResultSetMapping( definition );
+		}
+
+		@Override
+		public void addSQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
+			if ( !defaultNamedNativeQueryNames.contains( name ) ) {
+				super.addSQLQuery( name, query );
+			}
+		}
+
+		public Map getClasses() {
+			return classes;
+		}
+
+		public void addAnyMetaDef(AnyMetaDef defAnn) throws AnnotationException {
+			if ( anyMetaDefs.containsKey( defAnn.name() ) ) {
+				throw new AnnotationException( "Two @AnyMetaDef with the same name defined: " + defAnn.name() );
+			}
+			anyMetaDefs.put( defAnn.name(), defAnn );
+		}
+
+		public AnyMetaDef getAnyMetaDef(String name) {
+			return anyMetaDefs.get( name );
+		}
 	}
 }

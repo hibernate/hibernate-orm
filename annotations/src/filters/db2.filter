@@ -1,9 +1,0 @@
-## DB2
-
-hibernate.dialect org.hibernate.dialect.DB2Dialect
-hibernate.connection.driver_class COM.ibm.db2.jdbc.app.DB2Driver
-hibernate.connection.username hibernate
-hibernate.connection.password hibernate
-hibernate.connection.url jdbc:db2:hibernate
-
-

@@ -2488,7 +2488,10 @@ public class Configuration implements Serializable {
 			if ( old != null ) {
 				throw new DuplicateMappingException( "resultSet",  sqlResultSetMapping.getName() );
 			}
+		}
 
+		protected void removeResultSetMapping(String name) {
+			sqlResultSetMappings.remove( name );
 		}
 
 		public TypeDef getTypeDef(String typeName) {

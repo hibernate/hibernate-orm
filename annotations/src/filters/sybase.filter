@@ -1,9 +1,0 @@
-## Sybase
-
-hibernate.dialect org.hibernate.dialect.SybaseDialect
-hibernate.connection.driver_class com.sybase.jdbc2.jdbc.SybDriver
-hibernate.connection.username hibernate
-hibernate.connection.password hibernate
-hibernate.connection.url jdbc:sybase:Tds:co3061835-a:5000/hibernate
-
-

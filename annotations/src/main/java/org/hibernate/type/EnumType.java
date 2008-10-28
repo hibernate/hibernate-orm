@@ -1,4 +1,26 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.type;
 
 import java.io.IOException;
@@ -15,7 +37,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.util.StringHelper;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
@@ -25,10 +47,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Enum type mapper
  * Try and find the appropriate SQL type depending on column metadata
- *
+ * <p/>
+ * TODO implements readobject/writeobject to recalculate the enumclasses
  * @author Emmanuel Bernard
  */
-//TODO implements readobject/writeobject to recalculate the enumclasses
 public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
 	/**
 	 * This is the old scheme where logging of parameter bindings and value extractions

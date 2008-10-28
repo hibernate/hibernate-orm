@@ -24,8 +24,9 @@
   ~ Boston, MA  02110-1301  USA
   ~
   -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -53,6 +54,7 @@
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
+        <module>commons-annotations</module>
         <module>envers</module>
         <module>jmx</module>
         <module>testing</module>

@@ -25,6 +25,7 @@
 package org.hibernate.engine;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.slf4j.Logger;
@@ -375,7 +376,7 @@ public final class Cascade {
 				if ( log.isTraceEnabled() ) {
 					log.trace("deleting orphaned entity instance: " + entityName);
 				}
-				eventSource.delete( entityName, orphan, false, null );
+				eventSource.delete( entityName, orphan, false, new HashSet() );
 			}
 		}
 	}

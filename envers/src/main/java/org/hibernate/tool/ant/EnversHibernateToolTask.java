@@ -24,9 +24,9 @@
 package org.hibernate.tool.ant;
 
 import org.apache.tools.ant.BuildException;
-import org.jboss.envers.ant.AnnotationConfigurationTaskWithEnvers;
-import org.jboss.envers.ant.ConfigurationTaskWithEnvers;
-import org.jboss.envers.ant.JPAConfigurationTaskWithEnvers;
+import org.hibernate.envers.ant.AnnotationConfigurationTaskWithEnvers;
+import org.hibernate.envers.ant.ConfigurationTaskWithEnvers;
+import org.hibernate.envers.ant.JPAConfigurationTaskWithEnvers;
 
 /**
  * @author Adam Warski (adam at warski dot org)

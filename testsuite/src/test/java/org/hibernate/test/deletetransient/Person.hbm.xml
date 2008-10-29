@@ -29,6 +29,28 @@
             <generator class="increment"/>
         </id>
         <property name="info" type="string"/>
+        <set name="suites" lazy="true" inverse="false" cascade="all-delete-orphan">
+            <key column="ADDRESS_ID"/>
+            <one-to-many class="Suite"/>
+        </set>
     </class>
-	
+
+    <class name="Suite" table="T_SUITE">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="location" type="string"/>
+        <set name="notes" lazy="true" inverse="false" cascade="all-delete-orphan">
+            <key column="SUITE_ID"/>
+            <one-to-many class="Note"/>
+        </set>
+    </class>
+
+    <class name="Note" table="T_NOTE">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="description" type="string"/>
+    </class>    
+
 </hibernate-mapping>

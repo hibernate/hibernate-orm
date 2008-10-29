@@ -1,5 +1,8 @@
 package org.hibernate.test.deletetransient;
 
+import java.util.Set;
+import java.util.HashSet;
+
 /**
  * todo: describe Address
  *
@@ -8,6 +11,7 @@ package org.hibernate.test.deletetransient;
 public class Address {
 	private Long id;
 	private String info;
+	private Set suites = new HashSet();
 
 	public Address() {
 	}
@@ -30,5 +34,13 @@ public class Address {
 
 	public void setInfo(String info) {
 		this.info = info;
+	}
+
+	public Set getSuites() {
+		return suites;
+	}
+
+	public void setSuites(Set suites) {
+		this.suites = suites;
 	}
 }

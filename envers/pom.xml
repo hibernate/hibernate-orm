@@ -36,7 +36,7 @@
                     <systemProperties>
                     </systemProperties>
                     <suiteXmlFiles>
-                        <suiteXmlFile>resources/test/testng.xml</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
                 </configuration>
             </plugin>
@@ -91,6 +91,11 @@
                     <artifactId>hibernate</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>javassist</groupId>
+                    <artifactId>javassist</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- OMG, YUCK YUCK YUCK -->
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-validator</artifactId>
                 </exclusion>

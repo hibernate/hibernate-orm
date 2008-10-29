@@ -48,7 +48,7 @@ import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.impl.FetchingScrollableResultsImpl;
 import org.hibernate.impl.ScrollableResultsImpl;
 import org.hibernate.jdbc.ColumnNameCache;
-import org.hibernate.jdbc.ResultSetWrapper;
+import org.hibernate.jdbc.ResultSetWrapperProxy;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -1638,7 +1638,7 @@ public abstract class Loader {
 		}
 		int firstRow = getFirstRow( selection );
 		int lastRow = getMaxOrLimit( selection, dialect );
-		boolean hasFirstRow = firstRow > 0 && dialect.supportsLimitOffset();
+		boolean hasFirstRow = dialect.supportsLimitOffset() && ( firstRow > 0 || dialect.forceLimitUsage() );
 		boolean reverse = dialect.bindLimitParametersInReverseOrder();
 		if ( hasFirstRow ) {
 			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );
@@ -1814,7 +1814,7 @@ public abstract class Loader {
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
 				log.debug("Wrapping result set [" + rs + "]");
-				return new ResultSetWrapper( rs, retreiveColumnNameToIndexCache( rs ) );
+				return ResultSetWrapperProxy.generateProxy( rs, retreiveColumnNameToIndexCache( rs ) );
 			}
 			catch(SQLException e) {
 				log.info("Error wrapping result set", e);

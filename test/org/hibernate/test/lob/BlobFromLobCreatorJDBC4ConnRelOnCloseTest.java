@@ -25,43 +25,30 @@
  */
 package org.hibernate.test.lob;
 
-import java.sql.Blob;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
 import junit.framework.Test;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
+import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * This class extends AbstractBlobTest so that LOBs are created using the
- * Hibernate.createBlob() APIs. These APIs do not use the connection to
- * create LOBs.
+ * This class extends BlobFromLobCreatorJDBC4Test to run tests
+ * using connection release mode "on_close".
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BlobTest extends AbstractBlobTest {
+public class BlobFromLobCreatorJDBC4ConnRelOnCloseTest extends BlobFromLobCreatorJDBC4Test {
 
-	public BlobTest(String name) {
+	public BlobFromLobCreatorJDBC4ConnRelOnCloseTest(String name) {
 		super( name );
 	}
 
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.RELEASE_CONNECTIONS, "on_close" );
+	}
+
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BlobTest.class );
-	}
-
-	protected Blob createBlobLocator(Session s, byte[] bytes) {
-		return Hibernate.createBlob( bytes );
-	}
-
-	protected Blob createBlobLocatorFromStream(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ) );
-	}
-
-	protected Blob createBlobLocatorFromStreamUsingLength(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ), bytes.length );
+		return new FunctionalTestClassTestSuite( BlobFromLobCreatorJDBC4ConnRelOnCloseTest.class );
 	}
 }
-

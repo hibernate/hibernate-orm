@@ -32,6 +32,7 @@ public final class Settings {
 	private int defaultBatchFetchSize;
 	private boolean scrollableResultSetsEnabled;
 	private boolean getGeneratedKeysEnabled;
+	private boolean useConnectionForLobCreationEnabled;
 	private String defaultSchemaName;
 	private String defaultCatalogName;
 	private Integer jdbcFetchSize;
@@ -122,6 +123,10 @@ public final class Settings {
 
 	public boolean isGetGeneratedKeysEnabled() {
 		return getGeneratedKeysEnabled;
+	}
+
+	public boolean isUseConnectionForLobCreationEnabled() {
+		return useConnectionForLobCreationEnabled;
 	}
 
 	public boolean isMinimalPutsEnabled() {
@@ -317,6 +322,10 @@ public final class Settings {
 
 	void setGetGeneratedKeysEnabled(boolean b) {
 		getGeneratedKeysEnabled = b;
+	}
+
+	void setUseConnectionForLobCreationEnabled(boolean b) {
+		useConnectionForLobCreationEnabled = b;		
 	}
 
 	void setJdbcFetchSize(Integer integer) {

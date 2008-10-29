@@ -1,4 +1,4 @@
-//$Id$
+// $Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -21,14 +21,39 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.lob;
+package org.hibernate.exception;
 
-import java.sql.Blob;
+import org.hibernate.JDBCException;
+
+import java.sql.SQLException;
 
 /**
- * @author Gavin King
+ * Implementation of JDBCException that indicates that the current statement
+ * was automatically rolled back by the database becuase of deadlock or other
+ * transaction serialization failures.
+ *
+ * @author Gail Badner
  */
-public interface BlobImpl extends Blob {
+public class TransactionRollbackException extends JDBCException {
+	/**
+	 * Constructor for TransactionRollbackException.
+	 *
+	 * @param message Optional message.
+	 * @param root    The underlying exception.
+	 */
+	public TransactionRollbackException(String message, SQLException root) {
+		super( message, root );
+	}
+
+	/**
+	 * Constructor for TransactionRollbackException.
+	 *
+	 * @param message Optional message.
+	 * @param root    The underlying exception.
+	 * @param sql     the SQL statement involved in the exception.
+	 */
+	public TransactionRollbackException(String message, SQLException root, String sql) {
+		super( message, root, sql );
+	}
 }

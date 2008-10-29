@@ -14,10 +14,8 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.lob.BlobImpl;
-import org.hibernate.lob.ClobImpl;
-import org.hibernate.lob.SerializableBlob;
-import org.hibernate.lob.SerializableClob;
+import org.hibernate.lob.LobCreator;
+import org.hibernate.lob.LobCreatorFactory;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.AnyType;
@@ -348,13 +346,30 @@ public final class Hibernate {
 	}
 
 	/**
+	 * If the setting for Environment#USE_CONNECTION_FOR_LOB_CREATION is true, then the
+	 * returned LobCreator will use the Connection to create LOBs. If it is false, then
+	 * the returned LobCreator will not use the Connection to create LOBs.
+	 *
+	 * If the property is not set, then the returned LobCreator will use the connection to
+	 * create LOBs only if the JVM and JDBC driver support this JDBC4 functionality.
+	 *
+	 * (@see Environment#USE_CONNECTION_FOR_LOB_CREATION)
+	 *
+	 * @param session The session.
+	 * @return the LobCreator
+	 */
+	public static LobCreator getLobCreator(Session session) {
+		return LobCreatorFactory.createLobCreator( session );
+	}
+
+	/**
 	 * Create a new <tt>Blob</tt>. The returned object will be initially immutable.
 	 *
 	 * @param bytes a byte array
 	 * @return the Blob
 	 */
 	public static Blob createBlob(byte[] bytes) {
-		return new SerializableBlob( new BlobImpl( bytes ) );
+		return LobCreatorFactory.createLobCreator().createBlob( bytes );
 	}
 
 	/**
@@ -364,8 +379,8 @@ public final class Hibernate {
 	 * @param length the number of bytes in the stream
 	 * @return the Blob
 	 */
-	public static Blob createBlob(InputStream stream, int length) {
-		return new SerializableBlob( new BlobImpl( stream, length ) );
+	public static Blob createBlob(InputStream stream, int length) throws HibernateException, IOException {
+		return LobCreatorFactory.createLobCreator().createBlob( stream, length );
 	}
 
 	/**
@@ -375,8 +390,8 @@ public final class Hibernate {
 	 * @return the Blob
 	 * @throws IOException
 	 */
-	public static Blob createBlob(InputStream stream) throws IOException {
-		return new SerializableBlob( new BlobImpl( stream, stream.available() ) );
+	public static Blob createBlob(InputStream stream) throws HibernateException, IOException {
+		return LobCreatorFactory.createLobCreator().createBlob( stream, stream.available() );
 	}
 
 	/**
@@ -384,8 +399,8 @@ public final class Hibernate {
 	 *
 	 * @param string a <tt>String</tt>
 	 */
-	public static Clob createClob(String string) {
-		return new SerializableClob( new ClobImpl( string ) );
+	public static Clob createClob(String string) throws HibernateException {
+		return LobCreatorFactory.createLobCreator().createClob( string );
 	}
 
 	/**
@@ -394,8 +409,8 @@ public final class Hibernate {
 	 * @param reader a character stream
 	 * @param length the number of characters in the stream
 	 */
-	public static Clob createClob(Reader reader, int length) {
-		return new SerializableClob( new ClobImpl( reader, length ) );
+	public static Clob createClob(Reader reader, int length) throws HibernateException, IOException {
+		return LobCreatorFactory.createLobCreator().createClob( reader, length );
 	}
 
 	/**

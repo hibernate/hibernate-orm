@@ -25,43 +25,41 @@
  */
 package org.hibernate.test.lob;
 
-import java.sql.Blob;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.sql.SQLException;
 
 import junit.framework.Test;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
+import org.hibernate.lob.LobCreatorImplJDBC4;
+import org.hibernate.lob.LobCreatorImplJDBC3;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * This class extends AbstractBlobTest so that LOBs are created using the
- * Hibernate.createBlob() APIs. These APIs do not use the connection to
- * create LOBs.
+ * This class extends AbstractBlobFromLobCreatorTest to provide logic to
+ * determine if the correct LobCreator impl is used when
+ * Environment.USE_CONNECTION_FOR_LOB_CREATION is not set. The actual impl
+ * will depend on whether the JVM and driver support creating LOBs using
+ * the connection.
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BlobTest extends AbstractBlobTest {
+public class BlobFromLobCreatorDefaultTest extends AbstractBlobFromLobCreatorTest {
 
-	public BlobTest(String name) {
+	public BlobFromLobCreatorDefaultTest(String name) {
 		super( name );
 	}
 
+	protected Boolean getUseConnectionForLobCreationPropertyValue() {
+		return null;
+	}
+
+	protected Class getExpectedLobCreatorClass() throws SQLException {
+		return ( jvmAndDriverSupportUseConnectionForLobCreation() ?
+				LobCreatorImplJDBC4.class :
+				LobCreatorImplJDBC3.class 
+		);
+	}
+
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BlobTest.class );
-	}
-
-	protected Blob createBlobLocator(Session s, byte[] bytes) {
-		return Hibernate.createBlob( bytes );
-	}
-
-	protected Blob createBlobLocatorFromStream(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ) );
-	}
-
-	protected Blob createBlobLocatorFromStreamUsingLength(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ), bytes.length );
+		return new FunctionalTestClassTestSuite( BlobFromLobCreatorDefaultTest.class );
 	}
 }
-

@@ -1,4 +1,27 @@
 //$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
@@ -29,6 +52,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.SQLStateExceptionConverterJDBC4;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.TableHiLoGenerator;
@@ -804,6 +828,17 @@ public abstract class Dialect {
 		return false;
 	}
 
+
+	/**
+	 * Generally, if there is no limit applied to a Hibernate query we do not apply any limits
+	 * to the SQL query.  This option forces that the limit be written to the SQL query.
+	 *
+	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
+	 */
+	public boolean forceLimitUsage() {
+		return false;
+	}
+	
 	/**
 	 * Given a limit and an offset, apply the limit clause to the query.
 	 *
@@ -813,7 +848,7 @@ public abstract class Dialect {
 	 * @return The modified query statement with the limit applied.
 	 */
 	public String getLimitString(String query, int offset, int limit) {
-		return getLimitString( query, offset > 0 );
+		return getLimitString( query, ( offset > 0 || forceLimitUsage() )  );
 	}
 
 	/**
@@ -1170,9 +1205,14 @@ public abstract class Dialect {
 	 */
 	public SQLExceptionConverter buildSQLExceptionConverter() {
 		// The default SQLExceptionConverter for all dialects is based on SQLState
-		// since SQLErrorCode is extremely vendor-specific.  Specific Dialects
+		// since SQLErrorCode is extremely vendor-specific.  If JDBC4 is supported,
+		// then the default SQLExceptionConverter will convert based on JDBC4
+		// SQLException if the SQLState is not recognized. Specific Dialects
 		// may override to return whatever is most appropriate for that vendor.
-		return new SQLStateConverter( getViolatedConstraintNameExtracter() );
+		return ( Environment.jvmSupportsJDBC4() ?
+				new SQLStateExceptionConverterJDBC4( getViolatedConstraintNameExtracter() ) :
+				new SQLStateConverter( getViolatedConstraintNameExtracter() )
+		);
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {

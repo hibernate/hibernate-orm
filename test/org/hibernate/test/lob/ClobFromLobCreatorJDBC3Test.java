@@ -25,43 +25,35 @@
  */
 package org.hibernate.test.lob;
 
-import java.sql.Blob;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
 import junit.framework.Test;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
+import org.hibernate.lob.LobCreatorImplJDBC3;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * This class extends AbstractBlobTest so that LOBs are created using the
- * Hibernate.createBlob() APIs. These APIs do not use the connection to
- * create LOBs.
+ * This class extends AbstractClobFromLobCreatorTest to determine if the
+ * correct LobCreator impl is used when Environment.USE_CONNECTION_FOR_LOB_CREATION
+ * is set to false. The actual impl should be the JDBC3 LobCreator, even when
+ * the JVM and JDBC driver support JDBC4. The JDBC3 LobCreator does not use the
+ * Connection to create LOBs.
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BlobTest extends AbstractBlobTest {
+public class ClobFromLobCreatorJDBC3Test extends AbstractClobFromLobCreatorTest {
 
-	public BlobTest(String name) {
+	public ClobFromLobCreatorJDBC3Test(String name) {
 		super( name );
 	}
 
+	protected Boolean getUseConnectionForLobCreationPropertyValue() {
+		return Boolean.FALSE;
+	}
+
+	protected Class getExpectedLobCreatorClass() {
+		return LobCreatorImplJDBC3.class;
+	}
+
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BlobTest.class );
-	}
-
-	protected Blob createBlobLocator(Session s, byte[] bytes) {
-		return Hibernate.createBlob( bytes );
-	}
-
-	protected Blob createBlobLocatorFromStream(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ) );
-	}
-
-	protected Blob createBlobLocatorFromStreamUsingLength(Session s, byte[] bytes) throws IOException {
-		return Hibernate.createBlob( new ByteArrayInputStream( bytes ), bytes.length );
+		return new FunctionalTestClassTestSuite( ClobFromLobCreatorJDBC3Test.class );
 	}
 }
-

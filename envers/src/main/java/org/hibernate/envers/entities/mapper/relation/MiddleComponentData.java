@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation;
+package org.hibernate.envers.entities.mapper.relation;
 
-import org.jboss.envers.entities.mapper.relation.component.MiddleComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleComponentMapper;
 
 /**
  * A data holder for a middle relation component (which is either the collection element or index):

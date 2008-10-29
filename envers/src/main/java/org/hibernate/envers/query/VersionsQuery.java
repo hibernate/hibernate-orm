@@ -21,16 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query;
+package org.hibernate.envers.query;
 
 import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.query.criteria.VersionsCriterion;
-import org.jboss.envers.query.order.VersionsOrder;
-import org.jboss.envers.query.projection.VersionsProjection;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.query.criteria.VersionsCriterion;
+import org.hibernate.envers.query.order.VersionsOrder;
+import org.hibernate.envers.query.projection.VersionsProjection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

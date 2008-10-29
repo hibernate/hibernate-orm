@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.reflection;
+package org.hibernate.envers.tools.reflection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 
-import org.jboss.envers.exception.VersionsException;
+import org.hibernate.envers.exception.VersionsException;
 
 /**
  * @author Adam Warski (adam at warski dot org)

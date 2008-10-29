@@ -24,22 +24,22 @@
         <property name="format_sql">true</property>
 
         <event type="post-insert">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
         <event type="post-update">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
         <event type="post-delete">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
         <event type="pre-collection-update">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
         <event type="pre-collection-remove">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
         <event type="post-collection-recreate">
-            <listener class="org.jboss.envers.event.VersionsEventListener" />
+            <listener class="org.hibernate.envers.envers.event.VersionsEventListener" />
         </event>
     </session-factory>
 </hibernate-configuration>

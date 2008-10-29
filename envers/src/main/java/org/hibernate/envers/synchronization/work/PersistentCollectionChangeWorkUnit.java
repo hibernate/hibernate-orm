@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.synchronization.work;
+package org.hibernate.envers.synchronization.work;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentCollection;

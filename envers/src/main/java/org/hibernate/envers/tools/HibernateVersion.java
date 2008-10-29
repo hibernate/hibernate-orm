@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools;
+package org.hibernate.envers.tools;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;

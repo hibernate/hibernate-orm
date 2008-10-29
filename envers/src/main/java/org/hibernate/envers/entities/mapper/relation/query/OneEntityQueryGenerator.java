@@ -21,18 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.query;
+package org.hibernate.envers.entities.mapper.relation.query;
 
 import java.util.Collections;
 
-import org.jboss.envers.RevisionType;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.mapper.id.QueryParameterData;
-import org.jboss.envers.entities.mapper.relation.MiddleComponentData;
-import org.jboss.envers.entities.mapper.relation.MiddleIdData;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import org.jboss.envers.tools.query.Parameters;
-import org.jboss.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.mapper.id.QueryParameterData;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 import org.hibernate.Query;
 

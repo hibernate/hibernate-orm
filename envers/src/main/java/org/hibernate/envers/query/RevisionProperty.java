@@ -21,16 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query;
+package org.hibernate.envers.query;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.query.criteria.RevisionVersionsExpression;
-import org.jboss.envers.query.criteria.VersionsCriterion;
-import org.jboss.envers.query.order.RevisionVersionsOrder;
-import org.jboss.envers.query.order.VersionsOrder;
-import org.jboss.envers.query.projection.RevisionVersionsProjection;
-import org.jboss.envers.query.projection.VersionsProjection;
-import org.jboss.envers.tools.Triple;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.query.criteria.RevisionVersionsExpression;
+import org.hibernate.envers.query.criteria.VersionsCriterion;
+import org.hibernate.envers.query.order.RevisionVersionsOrder;
+import org.hibernate.envers.query.order.VersionsOrder;
+import org.hibernate.envers.query.projection.RevisionVersionsProjection;
+import org.hibernate.envers.query.projection.VersionsProjection;
+import org.hibernate.envers.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)

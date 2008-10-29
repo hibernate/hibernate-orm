@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.ListIterator;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U> {
-    public ListProxy(org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<List<U>> initializor) {
+    public ListProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<List<U>> initializor) {
         super(initializor);
     }
 

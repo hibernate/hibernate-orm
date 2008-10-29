@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Comparator;
 import java.util.SortedSet;
@@ -30,7 +30,7 @@ import java.util.SortedSet;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SortedSetProxy<U> extends CollectionProxy<U, SortedSet<U>> implements SortedSet<U> {
-    public SortedSetProxy(org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<SortedSet<U>> initializor) {
+    public SortedSetProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<SortedSet<U>> initializor) {
         super(initializor);
     }
 

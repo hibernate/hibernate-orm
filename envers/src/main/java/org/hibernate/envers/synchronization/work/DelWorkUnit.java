@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.synchronization.work;
+package org.hibernate.envers.synchronization.work;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.envers.RevisionType;
-import org.jboss.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.VersionsConfiguration;
 
 import org.hibernate.Session;
 

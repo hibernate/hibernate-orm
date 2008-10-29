@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.reflection;
+package org.hibernate.envers.tools.reflection;
 
 import java.util.Map;
 
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.tools.ConcurrentReferenceHashMap;
-import org.jboss.envers.tools.Pair;
-import static org.jboss.envers.tools.Pair.make;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
+import org.hibernate.envers.tools.Pair;
+import static org.hibernate.envers.tools.Pair.make;
 
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.Getter;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.synchronization.work;
+package org.hibernate.envers.synchronization.work;
 
 /**
  * Possible outcomes of selecting which work unit to keep, in case there are two work units for the same entity

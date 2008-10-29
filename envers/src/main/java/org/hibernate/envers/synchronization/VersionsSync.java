@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.synchronization;
+package org.hibernate.envers.synchronization;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Queue;
 import javax.transaction.Synchronization;
 
-import org.jboss.envers.revisioninfo.RevisionInfoGenerator;
-import org.jboss.envers.synchronization.work.VersionsWorkUnit;
-import org.jboss.envers.tools.Pair;
+import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
+import org.hibernate.envers.synchronization.work.VersionsWorkUnit;
+import org.hibernate.envers.tools.Pair;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;

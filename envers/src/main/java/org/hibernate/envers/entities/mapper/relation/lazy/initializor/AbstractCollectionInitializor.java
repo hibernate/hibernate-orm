@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.initializor;
+package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
 import java.util.List;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.EntityInstantiator;
-import org.jboss.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.jboss.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.EntityInstantiator;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
 
 /**
  * Initializes a persistent collection.

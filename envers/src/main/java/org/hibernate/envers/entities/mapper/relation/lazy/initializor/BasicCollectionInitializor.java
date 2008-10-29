@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.initializor;
+package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.mapper.relation.MiddleComponentData;
-import org.jboss.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
 
 /**
  * Initializes a non-indexed java collection (set or list, eventually sorted).

@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query.impl;
+package org.hibernate.envers.query.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.envers.RevisionType;
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.query.criteria.VersionsCriterion;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import org.jboss.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.query.criteria.VersionsCriterion;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)

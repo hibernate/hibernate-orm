@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,20 +29,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.dom4j.Element;
-import org.jboss.envers.ModificationStore;
-import org.jboss.envers.VersionsJoinTable;
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.EntityConfiguration;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.entities.mapper.CompositeMapperBuilder;
-import org.jboss.envers.entities.mapper.ExtendedPropertyMapper;
-import org.jboss.envers.entities.mapper.MultiPropertyMapper;
-import org.jboss.envers.entities.mapper.SubclassPropertyMapper;
-import org.jboss.envers.entity.VersionsInheritanceEntityPersister;
-import org.jboss.envers.tools.StringTools;
-import org.jboss.envers.tools.log.YLog;
-import org.jboss.envers.tools.log.YLogManager;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.EntityConfiguration;
+import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
+import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
+import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
+import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.envers.entity.VersionsInheritanceEntityPersister;
+import org.hibernate.envers.tools.StringTools;
+import org.hibernate.envers.tools.log.YLog;
+import org.hibernate.envers.tools.log.YLogManager;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -104,7 +104,7 @@ public final class VersionsMetadataGenerator {
     void addRevisionType(Element any_mapping) {
         Element revTypeProperty = MetadataTools.addProperty(any_mapping, verEntCfg.getRevisionTypePropName(),
                 verEntCfg.getRevisionTypePropType(), true, false);
-        revTypeProperty.addAttribute("type", "org.jboss.envers.entities.RevisionTypeType");
+        revTypeProperty.addAttribute("type", "org.hibernate.envers.entities.RevisionTypeType");
     }
 
     private ModificationStore getStoreForProperty(Property property, PropertyStoreInfo propertyStoreInfo,

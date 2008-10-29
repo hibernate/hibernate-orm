@@ -21,16 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.ModificationStore;
-import org.jboss.envers.VersionsJoinTable;
-import org.jboss.envers.VersionsTable;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.VersionsTable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

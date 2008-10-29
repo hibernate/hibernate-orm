@@ -21,19 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.mapper.relation.MiddleComponentData;
-import org.jboss.envers.entities.mapper.relation.MiddleIdData;
-import org.jboss.envers.entities.mapper.relation.query.OneEntityQueryGenerator;
-import org.jboss.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.jboss.envers.entities.mapper.relation.query.ThreeEntityQueryGenerator;
-import org.jboss.envers.entities.mapper.relation.query.TwoEntityQueryGenerator;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.entities.mapper.relation.query.OneEntityQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.ThreeEntityQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.TwoEntityQueryGenerator;
 
 /**
  * Builds query generators, for reading collection middle tables, along with any related entities.

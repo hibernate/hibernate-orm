@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.reader;
+package org.hibernate.envers.reader;
 
 import java.util.Map;
 
-import static org.jboss.envers.tools.Tools.newHashMap;
-import org.jboss.envers.tools.Triple;
-import static org.jboss.envers.tools.Triple.make;
+import static org.hibernate.envers.tools.Tools.newHashMap;
+import org.hibernate.envers.tools.Triple;
+import static org.hibernate.envers.tools.Triple.make;
 
 /**
  * First level cache for versioned entities, versions reader-scoped. Each entity is uniquely identified by a

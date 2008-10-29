@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.synchronization;
+package org.hibernate.envers.synchronization;
 
 import java.util.Map;
 
-import org.jboss.envers.revisioninfo.RevisionInfoGenerator;
-import org.jboss.envers.tools.ConcurrentReferenceHashMap;
+import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
+import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
 
 import org.hibernate.Transaction;
 import org.hibernate.event.EventSource;

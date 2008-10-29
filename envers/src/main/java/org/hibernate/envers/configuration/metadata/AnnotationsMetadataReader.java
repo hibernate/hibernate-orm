@@ -21,22 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.lang.annotation.Annotation;
 import javax.persistence.MapKey;
 import javax.persistence.Version;
 
-import org.jboss.envers.SecondaryVersionsTable;
-import org.jboss.envers.SecondaryVersionsTables;
-import org.jboss.envers.Unversioned;
-import org.jboss.envers.Versioned;
-import org.jboss.envers.VersionsJoinTable;
-import org.jboss.envers.VersionsTable;
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.tools.reflection.YClass;
-import org.jboss.envers.tools.reflection.YProperty;
-import org.jboss.envers.tools.reflection.YReflectionManager;
+import org.hibernate.envers.SecondaryVersionsTable;
+import org.hibernate.envers.SecondaryVersionsTables;
+import org.hibernate.envers.Unversioned;
+import org.hibernate.envers.Versioned;
+import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.VersionsTable;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.tools.reflection.YClass;
+import org.hibernate.envers.tools.reflection.YProperty;
+import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PersistentClass;

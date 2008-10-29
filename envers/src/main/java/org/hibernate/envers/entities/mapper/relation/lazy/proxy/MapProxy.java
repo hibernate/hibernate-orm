@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor;
+import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -36,7 +36,7 @@ public class MapProxy<K, V> implements Map<K, V> {
     private Initializor<Map<K, V>> initializor;
     protected Map<K, V> delegate;
 
-    public MapProxy(org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<Map<K, V>> initializor) {
+    public MapProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<Map<K, V>> initializor) {
         this.initializor = initializor;
     }
 

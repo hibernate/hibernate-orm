@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 
-import org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor;
+import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -38,7 +38,7 @@ public class SortedMapProxy<K, V> implements SortedMap<K, V> {
     private Initializor<SortedMap<K, V>> initializor;
     protected SortedMap<K, V> delegate;
 
-    public SortedMapProxy(org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<SortedMap<K, V>> initializor) {
+    public SortedMapProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<SortedMap<K, V>> initializor) {
         this.initializor = initializor;
     }
 

@@ -21,10 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.revisioninfo;
+package org.hibernate.envers.revisioninfo;
 
-import org.jboss.envers.RevisionListener;
-import org.jboss.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;

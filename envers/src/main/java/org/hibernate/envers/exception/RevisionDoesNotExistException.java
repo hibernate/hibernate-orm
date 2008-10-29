@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.exception;
+package org.hibernate.envers.exception;
 
 import java.util.Date;
 

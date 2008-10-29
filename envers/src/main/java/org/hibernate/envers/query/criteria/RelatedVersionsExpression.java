@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query.criteria;
+package org.hibernate.envers.query.criteria;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.RelationDescription;
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.tools.query.Parameters;
-import org.jboss.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.RelationDescription;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)

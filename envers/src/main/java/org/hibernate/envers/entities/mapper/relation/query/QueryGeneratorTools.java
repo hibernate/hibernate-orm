@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.query;
+package org.hibernate.envers.entities.mapper.relation.query;
 
-import org.jboss.envers.configuration.GlobalConfiguration;
-import org.jboss.envers.entities.mapper.relation.MiddleComponentData;
-import org.jboss.envers.entities.mapper.relation.MiddleIdData;
-import org.jboss.envers.tools.query.Parameters;
-import org.jboss.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.graph;
+package org.hibernate.envers.tools.graph;
 
 import java.util.ArrayList;
 import java.util.HashMap;

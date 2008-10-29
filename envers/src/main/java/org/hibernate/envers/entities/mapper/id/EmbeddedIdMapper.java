@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.id;
+package org.hibernate.envers.entities.mapper.id;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;

@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers;
+package org.hibernate.envers;
 
 import java.util.Date;
 import java.util.List;
 
-import org.jboss.envers.exception.NotVersionedException;
-import org.jboss.envers.exception.RevisionDoesNotExistException;
-import org.jboss.envers.query.VersionsQueryCreator;
+import org.hibernate.envers.exception.NotVersionedException;
+import org.hibernate.envers.exception.RevisionDoesNotExistException;
+import org.hibernate.envers.query.VersionsQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)

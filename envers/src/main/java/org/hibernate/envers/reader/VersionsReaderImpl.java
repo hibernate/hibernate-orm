@@ -21,21 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.reader;
+package org.hibernate.envers.reader;
 
 import java.util.Date;
 import java.util.List;
 import javax.persistence.NoResultException;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.exception.NotVersionedException;
-import org.jboss.envers.exception.RevisionDoesNotExistException;
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.query.RevisionProperty;
-import org.jboss.envers.query.VersionsQueryCreator;
-import org.jboss.envers.query.VersionsRestrictions;
-import static org.jboss.envers.tools.ArgumentsTools.checkNotNull;
-import static org.jboss.envers.tools.ArgumentsTools.checkPositive;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.exception.NotVersionedException;
+import org.hibernate.envers.exception.RevisionDoesNotExistException;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.query.RevisionProperty;
+import org.hibernate.envers.query.VersionsQueryCreator;
+import org.hibernate.envers.query.VersionsRestrictions;
+import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;

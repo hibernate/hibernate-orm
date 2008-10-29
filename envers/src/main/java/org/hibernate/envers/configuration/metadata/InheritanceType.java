@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.JoinedSubclass;

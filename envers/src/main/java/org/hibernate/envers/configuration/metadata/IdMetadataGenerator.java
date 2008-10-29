@@ -21,19 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.Iterator;
 
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
-import org.jboss.envers.ModificationStore;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.entities.mapper.SimpleMapperBuilder;
-import org.jboss.envers.entities.mapper.id.EmbeddedIdMapper;
-import org.jboss.envers.entities.mapper.id.MultipleIdMapper;
-import org.jboss.envers.entities.mapper.id.SimpleIdMapperBuilder;
-import org.jboss.envers.entities.mapper.id.SingleIdMapper;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
+import org.hibernate.envers.entities.mapper.id.EmbeddedIdMapper;
+import org.hibernate.envers.entities.mapper.id.MultipleIdMapper;
+import org.hibernate.envers.entities.mapper.id.SimpleIdMapperBuilder;
+import org.hibernate.envers.entities.mapper.id.SingleIdMapper;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Component;

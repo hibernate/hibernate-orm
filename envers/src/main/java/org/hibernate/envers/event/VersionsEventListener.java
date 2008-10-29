@@ -21,22 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.event;
+package org.hibernate.envers.event;
 
 import java.io.Serializable;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.RelationDescription;
-import org.jboss.envers.entities.RelationType;
-import org.jboss.envers.entities.mapper.PersistentCollectionChangeData;
-import org.jboss.envers.entities.mapper.id.IdMapper;
-import org.jboss.envers.synchronization.VersionsSync;
-import org.jboss.envers.synchronization.work.AddWorkUnit;
-import org.jboss.envers.synchronization.work.CollectionChangeWorkUnit;
-import org.jboss.envers.synchronization.work.DelWorkUnit;
-import org.jboss.envers.synchronization.work.ModWorkUnit;
-import org.jboss.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
-import org.jboss.envers.tools.Tools;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.RelationDescription;
+import org.hibernate.envers.entities.RelationType;
+import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.synchronization.VersionsSync;
+import org.hibernate.envers.synchronization.work.AddWorkUnit;
+import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
+import org.hibernate.envers.synchronization.work.DelWorkUnit;
+import org.hibernate.envers.synchronization.work.ModWorkUnit;
+import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
+import org.hibernate.envers.tools.Tools;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.PersistentCollection;

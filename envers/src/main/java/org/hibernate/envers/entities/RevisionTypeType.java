@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities;
+package org.hibernate.envers.entities;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -29,7 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.jboss.envers.RevisionType;
+import org.hibernate.envers.RevisionType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.UserType;

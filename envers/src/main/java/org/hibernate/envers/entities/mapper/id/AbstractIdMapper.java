@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.id;
+package org.hibernate.envers.entities.mapper.id;
 
 import java.util.Iterator;
 import java.util.List;
 
-import org.jboss.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.Parameters;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.query;
+package org.hibernate.envers.entities.mapper.relation.query;
 
-import org.jboss.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
 
 import org.hibernate.Query;
 

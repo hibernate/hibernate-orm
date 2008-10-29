@@ -21,10 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation;
+package org.hibernate.envers.entities.mapper.relation;
 
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 
 /**
  * Data that is used by all collection mappers, regardless of the type.  

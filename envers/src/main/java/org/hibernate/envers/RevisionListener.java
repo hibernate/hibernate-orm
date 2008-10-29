@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers;
+package org.hibernate.envers;
 
 /**
  * An implementation of this class, having a no-arg constructor, should be passed as an argument to the

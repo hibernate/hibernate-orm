@@ -2,8 +2,8 @@
 <persistence xmlns="http://java.sun.com/xml/ns/persistence" version="1.0">
     <persistence-unit name="ConsolePU">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
-        <class>org.jboss.envers.demo.Address</class>
-        <class>org.jboss.envers.demo.Person</class>
+        <class>org.hibernate.envers.envers.demo.Address</class>
+        <class>org.hibernate.envers.envers.demo.Person</class>
         <exclude-unlisted-classes />
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
@@ -22,9 +22,9 @@
             <!--<property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>-->
             
-            <property name="hibernate.ejb.event.post-insert" value="org.jboss.envers.event.VersionsEventListener" />
-            <property name="hibernate.ejb.event.post-update" value="org.jboss.envers.event.VersionsEventListener" />
-            <property name="hibernate.ejb.event.post-delete" value="org.jboss.envers.event.VersionsEventListener" />
+            <property name="hibernate.ejb.event.post-insert" value="org.hibernate.envers.envers.event.VersionsEventListener" />
+            <property name="hibernate.ejb.event.post-update" value="org.hibernate.envers.envers.event.VersionsEventListener" />
+            <property name="hibernate.ejb.event.post-delete" value="org.hibernate.envers.envers.event.VersionsEventListener" />
         </properties>
     </persistence-unit>
 </persistence>

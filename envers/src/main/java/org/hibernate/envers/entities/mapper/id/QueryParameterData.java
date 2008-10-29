@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.id;
+package org.hibernate.envers.entities.mapper.id;
 
 import org.hibernate.Query;
 

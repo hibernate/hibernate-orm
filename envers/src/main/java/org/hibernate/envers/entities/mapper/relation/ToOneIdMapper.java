@@ -21,21 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation;
+package org.hibernate.envers.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.mapper.PersistentCollectionChangeData;
-import org.jboss.envers.entities.mapper.PropertyMapper;
-import org.jboss.envers.entities.mapper.id.IdMapper;
-import org.jboss.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import org.jboss.envers.tools.Tools;
-import org.jboss.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;

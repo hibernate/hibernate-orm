@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.ant;
+package org.hibernate.envers.ant;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.VersionsConfiguration;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.ant.ConfigurationTask;

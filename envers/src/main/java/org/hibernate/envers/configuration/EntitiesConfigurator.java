@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,14 +37,14 @@ import org.dom4j.Element;
 import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.jboss.envers.configuration.metadata.AnnotationsMetadataReader;
-import org.jboss.envers.configuration.metadata.EntityXmlMappingData;
-import org.jboss.envers.configuration.metadata.PersistentClassVersioningData;
-import org.jboss.envers.configuration.metadata.VersionsMetadataGenerator;
-import org.jboss.envers.entities.EntitiesConfigurations;
-import org.jboss.envers.tools.StringTools;
-import org.jboss.envers.tools.graph.GraphTopologicalSort;
-import org.jboss.envers.tools.reflection.YReflectionManager;
+import org.hibernate.envers.configuration.metadata.AnnotationsMetadataReader;
+import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
+import org.hibernate.envers.configuration.metadata.PersistentClassVersioningData;
+import org.hibernate.envers.configuration.metadata.VersionsMetadataGenerator;
+import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.tools.StringTools;
+import org.hibernate.envers.tools.graph.GraphTopologicalSort;
+import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;

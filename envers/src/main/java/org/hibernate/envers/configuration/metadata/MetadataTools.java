@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.Iterator;
 import javax.persistence.JoinColumn;
@@ -29,7 +29,7 @@ import javax.persistence.JoinColumn;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.jboss.envers.tools.StringTools;
+import org.hibernate.envers.tools.StringTools;
 
 import org.hibernate.mapping.Column;
 

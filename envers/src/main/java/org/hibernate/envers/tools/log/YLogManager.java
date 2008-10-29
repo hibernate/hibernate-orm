@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.log;
+package org.hibernate.envers.tools.log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.jboss.envers.exception.VersionsException;
+import org.hibernate.envers.exception.VersionsException;
 
 /**
  * A class for creating logging facades either to loggers obtained from

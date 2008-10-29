@@ -28,7 +28,7 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-package org.jboss.envers.tools;
+package org.hibernate.envers.tools;
 
 import java.io.IOException;
 import java.io.Serializable;

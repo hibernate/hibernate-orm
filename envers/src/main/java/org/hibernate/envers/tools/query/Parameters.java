@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.query;
+package org.hibernate.envers.tools.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.tools.MutableBoolean;
-import org.jboss.envers.tools.MutableInteger;
+import org.hibernate.envers.tools.MutableBoolean;
+import org.hibernate.envers.tools.MutableInteger;
 
 /**
  * Parameters of a query, built using {@link QueryBuilder}.

@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers;
+package org.hibernate.envers;
 
 import javax.persistence.EntityManager;
 
-import org.jboss.envers.event.VersionsEventListener;
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.reader.VersionsReaderImpl;
-import static org.jboss.envers.tools.ArraysTools.arrayIncludesInstanceOf;
+import org.hibernate.envers.event.VersionsEventListener;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.reader.VersionsReaderImpl;
+import static org.hibernate.envers.tools.ArraysTools.arrayIncludesInstanceOf;
 
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
@@ -44,7 +44,7 @@ public class VersionsReaderFactory {
     /**
      * Create a versions reader associated with an open session.
      * <b>WARNING:</b> Using Envers with Hibernate (not with Hibernate Entity Manager/JPA) is experimental,
-     * if possible, use {@link org.jboss.envers.VersionsReaderFactory#get(javax.persistence.EntityManager)}.
+     * if possible, use {@link org.hibernate.envers.VersionsReaderFactory#get(javax.persistence.EntityManager)}.
      * @param session An open session.
      * @return A versions reader associated with the given sesison. It shouldn't be used
      * after the session is closed.
@@ -65,7 +65,7 @@ public class VersionsReaderFactory {
             }
         }
 
-        throw new VersionsException("You need install the org.jboss.envers.event.VersionsEventListener " +
+        throw new VersionsException("You need install the org.hibernate.envers.event.VersionsEventListener " +
                 "class as post insert, update and delete event listener.");
     }
 

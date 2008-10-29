@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,14 +50,14 @@ public class VersionsEntitiesConfiguration {
     public VersionsEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
 
-        versionsTablePrefix = properties.getProperty("org.jboss.envers.versionsTablePrefix", "");
-        versionsTableSuffix = properties.getProperty("org.jboss.envers.versionsTableSuffix", "_versions");
+        versionsTablePrefix = properties.getProperty("org.hibernate.envers.versionsTablePrefix", "");
+        versionsTableSuffix = properties.getProperty("org.hibernate.envers.versionsTableSuffix", "_versions");
 
         originalIdPropName = "originalId";
 
-        revisionPropName = properties.getProperty("org.jboss.envers.revisionFieldName", "_revision");
+        revisionPropName = properties.getProperty("org.hibernate.envers.revisionFieldName", "_revision");
 
-        revisionTypePropName = properties.getProperty("org.jboss.envers.revisionTypeFieldName", "_revision_type");
+        revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "_revision_type");
         revisionTypePropType = "byte";
 
         customVersionsTablesNames = new HashMap<String, String>();

@@ -21,24 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query;
+package org.hibernate.envers.query;
 
 import java.util.Collection;
 
-import org.jboss.envers.query.criteria.AggregatedFieldVersionsExpression;
-import org.jboss.envers.query.criteria.BetweenVersionsExpression;
-import org.jboss.envers.query.criteria.IdentifierEqVersionsExpression;
-import org.jboss.envers.query.criteria.InVersionsExpression;
-import org.jboss.envers.query.criteria.LogicalVersionsExpression;
-import org.jboss.envers.query.criteria.NotNullVersionsExpression;
-import org.jboss.envers.query.criteria.NotVersionsExpression;
-import org.jboss.envers.query.criteria.NullVersionsExpression;
-import org.jboss.envers.query.criteria.PropertyVersionsExpression;
-import org.jboss.envers.query.criteria.RelatedVersionsExpression;
-import org.jboss.envers.query.criteria.SimpleVersionsExpression;
-import org.jboss.envers.query.criteria.VersionsConjunction;
-import org.jboss.envers.query.criteria.VersionsCriterion;
-import org.jboss.envers.query.criteria.VersionsDisjunction;
+import org.hibernate.envers.query.criteria.AggregatedFieldVersionsExpression;
+import org.hibernate.envers.query.criteria.BetweenVersionsExpression;
+import org.hibernate.envers.query.criteria.IdentifierEqVersionsExpression;
+import org.hibernate.envers.query.criteria.InVersionsExpression;
+import org.hibernate.envers.query.criteria.LogicalVersionsExpression;
+import org.hibernate.envers.query.criteria.NotNullVersionsExpression;
+import org.hibernate.envers.query.criteria.NotVersionsExpression;
+import org.hibernate.envers.query.criteria.NullVersionsExpression;
+import org.hibernate.envers.query.criteria.PropertyVersionsExpression;
+import org.hibernate.envers.query.criteria.RelatedVersionsExpression;
+import org.hibernate.envers.query.criteria.SimpleVersionsExpression;
+import org.hibernate.envers.query.criteria.VersionsConjunction;
+import org.hibernate.envers.query.criteria.VersionsCriterion;
+import org.hibernate.envers.query.criteria.VersionsDisjunction;
 
 import org.hibernate.criterion.MatchMode;
 

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.util.Properties;
 
@@ -43,20 +43,20 @@ public class GlobalConfiguration {
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
      a correlated subquery, for example: e.p <operator> (select max(e2.p) where e2.p2 = e.p2 ...).
      Normally, this should be "=". However, HSQLDB has an issue related to that, so as a workaround,
-     "in" is used. See {@link org.jboss.envers.test.various.HsqlTest}.
+     "in" is used. See {@link org.hibernate.envers.test.various.HsqlTest}.
      */
     private final String correlatedSubqueryOperator;
 
     public GlobalConfiguration(Properties properties) {
-        String generateRevisionsForCollectionsStr = properties.getProperty("org.jboss.envers.revisionOnCollectionChange",
+        String generateRevisionsForCollectionsStr = properties.getProperty("org.hibernate.envers.revisionOnCollectionChange",
                 "true");
         generateRevisionsForCollections = Boolean.parseBoolean(generateRevisionsForCollectionsStr);
 
-        String warnOnUnsupportedTypesStr = properties.getProperty("org.jboss.envers.warnOnUnsupportedTypes",
+        String warnOnUnsupportedTypesStr = properties.getProperty("org.hibernate.envers.warnOnUnsupportedTypes",
                 "false");
         warnOnUnsupportedTypes = Boolean.parseBoolean(warnOnUnsupportedTypesStr);
 
-        String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.jboss.envers.unversionedOptimisticLockingField",
+        String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.hibernate.envers.unversionedOptimisticLockingField",
                 "false");
         unversionedOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
 

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Set;
 
@@ -29,7 +29,7 @@ import java.util.Set;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SetProxy<U> extends CollectionProxy<U, Set<U>> implements Set<U> {
-    public SetProxy(org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<Set<U>> initializor) {
+    public SetProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<Set<U>> initializor) {
         super(initializor);
     }
 }

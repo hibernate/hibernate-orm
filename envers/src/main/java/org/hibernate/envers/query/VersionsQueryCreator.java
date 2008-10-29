@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query;
+package org.hibernate.envers.query;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.query.impl.EntitiesAtRevisionQuery;
-import org.jboss.envers.query.impl.RevisionsOfEntityQuery;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import static org.jboss.envers.tools.ArgumentsTools.checkNotNull;
-import static org.jboss.envers.tools.ArgumentsTools.checkPositive;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;
+import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
+import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -63,8 +63,8 @@ public class VersionsQueryCreator {
      * <ol>
      * <li>the entity instance</li>
      * <li>revision entity, corresponding to the revision at which the entity was modified. If no custom
-     * revision entity is used, this will be an instance of {@link org.jboss.envers.DefaultRevisionEntity}</li>
-     * <li>type of the revision (an enum instance of class {@link org.jboss.envers.RevisionType})</li>.
+     * revision entity is used, this will be an instance of {@link org.hibernate.envers.DefaultRevisionEntity}</li>
+     * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>.
      * </ol>
      * Additional conditions that the results must satisfy may be specified.
      * @param c Class of the entities for which to query.

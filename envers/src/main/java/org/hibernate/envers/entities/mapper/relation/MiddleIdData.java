@@ -21,11 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation;
+package org.hibernate.envers.entities.mapper.relation;
 
-import org.jboss.envers.configuration.VersionsEntitiesConfiguration;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
 
 /**
  * A class holding information about ids, which form a virtual "relation" from a middle-table. Middle-tables are used

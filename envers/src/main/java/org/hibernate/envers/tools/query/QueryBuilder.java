@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.tools.query;
+package org.hibernate.envers.tools.query;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.tools.MutableInteger;
-import org.jboss.envers.tools.Pair;
-import org.jboss.envers.tools.StringTools;
+import org.hibernate.envers.tools.MutableInteger;
+import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.tools.StringTools;
 
 /**
  * A class for incrementaly building a HQL query.

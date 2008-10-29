@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jboss.envers.tools.Tools;
-import org.jboss.envers.tools.graph.GraphDefiner;
+import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.tools.graph.GraphDefiner;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;

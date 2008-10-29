@@ -21,18 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation.lazy.proxy;
+package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor;
+import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U> {
-    private org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
+    private org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
     protected T delegate;
 
     public CollectionProxy(Initializor<T> initializor) {

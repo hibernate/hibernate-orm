@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities;
+package org.hibernate.envers.entities;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.mapper.id.IdMapper;
-import org.jboss.envers.exception.VersionsException;
-import org.jboss.envers.reader.VersionsReaderImplementor;
-import org.jboss.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 /**
  * @author Adam Warski (adam at warski dot org)

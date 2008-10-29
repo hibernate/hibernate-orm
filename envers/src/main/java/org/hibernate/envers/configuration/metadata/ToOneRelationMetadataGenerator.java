@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import org.dom4j.Element;
-import org.jboss.envers.entities.EntityConfiguration;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.entities.mapper.CompositeMapperBuilder;
-import org.jboss.envers.entities.mapper.id.IdMapper;
-import org.jboss.envers.entities.mapper.relation.OneToOneNotOwningMapper;
-import org.jboss.envers.entities.mapper.relation.ToOneIdMapper;
+import org.hibernate.envers.entities.EntityConfiguration;
+import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.relation.OneToOneNotOwningMapper;
+import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.OneToOne;

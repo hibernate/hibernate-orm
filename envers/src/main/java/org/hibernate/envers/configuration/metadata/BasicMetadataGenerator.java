@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.Iterator;
 import java.util.Properties;
 
 import org.dom4j.Element;
-import org.jboss.envers.ModificationStore;
-import org.jboss.envers.entities.mapper.CompositeMapperBuilder;
-import org.jboss.envers.entities.mapper.SimpleMapperBuilder;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
+import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;

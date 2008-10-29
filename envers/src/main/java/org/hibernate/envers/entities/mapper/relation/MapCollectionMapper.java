@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.entities.mapper.relation;
+package org.hibernate.envers.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.entities.mapper.PropertyMapper;
-import org.jboss.envers.entities.mapper.relation.lazy.initializor.Initializor;
-import org.jboss.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
-import org.jboss.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
+import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
+import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
+import org.hibernate.envers.reader.VersionsReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
 

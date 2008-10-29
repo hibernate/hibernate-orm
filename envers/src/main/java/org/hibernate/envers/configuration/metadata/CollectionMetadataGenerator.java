@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -36,31 +36,31 @@ import java.util.TreeSet;
 import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
-import org.jboss.envers.ModificationStore;
-import org.jboss.envers.VersionsJoinTable;
-import org.jboss.envers.entities.EntityConfiguration;
-import org.jboss.envers.entities.IdMappingData;
-import org.jboss.envers.entities.mapper.CompositeMapperBuilder;
-import org.jboss.envers.entities.mapper.relation.BasicCollectionMapper;
-import org.jboss.envers.entities.mapper.relation.CommonCollectionMapperData;
-import org.jboss.envers.entities.mapper.relation.ListCollectionMapper;
-import org.jboss.envers.entities.mapper.relation.MapCollectionMapper;
-import org.jboss.envers.entities.mapper.relation.MiddleComponentData;
-import org.jboss.envers.entities.mapper.relation.MiddleIdData;
-import org.jboss.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
-import org.jboss.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
-import org.jboss.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
-import org.jboss.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
-import org.jboss.envers.entities.mapper.relation.component.MiddleSimpleComponentMapper;
-import org.jboss.envers.entities.mapper.relation.lazy.proxy.ListProxy;
-import org.jboss.envers.entities.mapper.relation.lazy.proxy.MapProxy;
-import org.jboss.envers.entities.mapper.relation.lazy.proxy.SetProxy;
-import org.jboss.envers.entities.mapper.relation.lazy.proxy.SortedMapProxy;
-import org.jboss.envers.entities.mapper.relation.lazy.proxy.SortedSetProxy;
-import org.jboss.envers.entities.mapper.relation.query.OneVersionsEntityQueryGenerator;
-import org.jboss.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.jboss.envers.tools.StringTools;
-import org.jboss.envers.tools.Tools;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.entities.EntityConfiguration;
+import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
+import org.hibernate.envers.entities.mapper.relation.BasicCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.CommonCollectionMapperData;
+import org.hibernate.envers.entities.mapper.relation.ListCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.MapCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleSimpleComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.ListProxy;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.MapProxy;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SetProxy;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedMapProxy;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedSetProxy;
+import org.hibernate.envers.entities.mapper.relation.query.OneVersionsEntityQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.tools.StringTools;
+import org.hibernate.envers.tools.Tools;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
@@ -104,7 +104,7 @@ public final class CollectionMetadataGenerator {
      * @param mainGenerator Main generator, giving access to configuration and the basic mapper.
      * @param propertyName Name of the property that references the collection in the referencing entity.
      * @param propertyValue Value of the collection, as mapped by Hibernate.
-     * @param currentMapper Mapper, to which the appropriate {@link org.jboss.envers.entities.mapper.PropertyMapper}
+     * @param currentMapper Mapper, to which the appropriate {@link org.hibernate.envers.entities.mapper.PropertyMapper}
      * will be added.
      * @param referencingEntityName Name of the entity that owns this collection.
      * @param xmlMappingData In case this collection requires a middle table, additional mapping documents will

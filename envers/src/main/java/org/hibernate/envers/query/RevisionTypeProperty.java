@@ -21,11 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.query;
+package org.hibernate.envers.query;
 
-import org.jboss.envers.configuration.VersionsConfiguration;
-import org.jboss.envers.query.projection.VersionsProjection;
-import org.jboss.envers.tools.Triple;
+import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.query.projection.VersionsProjection;
+import org.hibernate.envers.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)

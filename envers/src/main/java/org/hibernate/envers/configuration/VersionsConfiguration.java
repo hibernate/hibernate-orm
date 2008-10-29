@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
 
-import org.jboss.envers.entities.EntitiesConfigurations;
-import org.jboss.envers.revisioninfo.RevisionInfoNumberReader;
-import org.jboss.envers.revisioninfo.RevisionInfoQueryCreator;
-import org.jboss.envers.synchronization.VersionsSyncManager;
-import org.jboss.envers.tools.reflection.YReflectionManager;
+import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
+import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
+import org.hibernate.envers.synchronization.VersionsSyncManager;
+import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.cfg.Configuration;
 

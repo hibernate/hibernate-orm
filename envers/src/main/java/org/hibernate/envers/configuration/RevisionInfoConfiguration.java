@@ -21,28 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.jboss.envers.configuration;
+package org.hibernate.envers.configuration;
 
 import java.util.Iterator;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.jboss.envers.DefaultRevisionEntity;
-import org.jboss.envers.RevisionEntity;
-import org.jboss.envers.RevisionListener;
-import org.jboss.envers.RevisionNumber;
-import org.jboss.envers.RevisionTimestamp;
-import org.jboss.envers.Versioned;
-import org.jboss.envers.configuration.metadata.MetadataTools;
-import org.jboss.envers.revisioninfo.DefaultRevisionInfoGenerator;
-import org.jboss.envers.revisioninfo.RevisionInfoGenerator;
-import org.jboss.envers.revisioninfo.RevisionInfoNumberReader;
-import org.jboss.envers.revisioninfo.RevisionInfoQueryCreator;
-import org.jboss.envers.tools.MutableBoolean;
-import org.jboss.envers.tools.reflection.YClass;
-import org.jboss.envers.tools.reflection.YProperty;
-import org.jboss.envers.tools.reflection.YReflectionManager;
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
+import org.hibernate.envers.Versioned;
+import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
+import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
+import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
+import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
+import org.hibernate.envers.tools.MutableBoolean;
+import org.hibernate.envers.tools.reflection.YClass;
+import org.hibernate.envers.tools.reflection.YProperty;
+import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -60,7 +60,7 @@ public class RevisionInfoConfiguration {
     private String revisionPropType;
 
     public RevisionInfoConfiguration() {
-        revisionInfoEntityName = "org.jboss.envers.DefaultRevisionEntity";
+        revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
         revisionInfoIdName = "id";
         revisionInfoTimestampName = "timestamp";
         revisionInfoTimestampType = "long";

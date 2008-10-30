@@ -1,7 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -16,7 +15,7 @@
     <packaging>jar</packaging>
 
     <name>Hibernate Envers</name>
-    <description>Support for entity historizing</description>
+    <description>Support for entity auditing</description>
 
     <build>
         <plugins>
@@ -126,19 +125,12 @@
             <artifactId>ant</artifactId>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>5.8</version>
             <scope>test</scope>
             <classifier>jdk15</classifier>
-        </dependency>
-        <dependency>
-            <groupId>hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>1.8.0.7</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
@@ -197,5 +189,4 @@
         <!-- for now, at least, lets aggregate them -->
         <jbossenvers.reports.aggregate>true</jbossenvers.reports.aggregate>
     </properties>
-
 </project>

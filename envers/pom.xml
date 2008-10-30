@@ -1,6 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -94,6 +95,10 @@
                     <artifactId>javassist</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>jboss</groupId>
+                    <artifactId>javassist</artifactId>
+                </exclusion>
+                <exclusion>
                     <!-- OMG, YUCK YUCK YUCK -->
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-validator</artifactId>
@@ -129,18 +134,20 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>5.8</version>
-            <scope>test</scope>
             <classifier>jdk15</classifier>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.6</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.0.79</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.4.GA</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -189,4 +196,5 @@
         <!-- for now, at least, lets aggregate them -->
         <jbossenvers.reports.aggregate>true</jbossenvers.reports.aggregate>
     </properties>
+
 </project>

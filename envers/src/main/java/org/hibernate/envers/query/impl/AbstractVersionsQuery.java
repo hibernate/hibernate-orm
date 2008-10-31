@@ -30,14 +30,14 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.query.VersionsQuery;
-import org.hibernate.envers.query.criteria.VersionsCriterion;
-import org.hibernate.envers.query.order.VersionsOrder;
-import org.hibernate.envers.query.projection.VersionsProjection;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.AuditQuery;
+import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.envers.query.order.AuditOrder;
+import org.hibernate.envers.query.projection.AuditProjection;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.tools.query.QueryBuilder;
@@ -50,9 +50,9 @@ import org.hibernate.Query;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractVersionsQuery implements VersionsQuery {
+public abstract class AbstractVersionsQuery implements AuditQuery {
     protected EntityInstantiator entityInstantiator;
-    protected List<VersionsCriterion> criterions;
+    protected List<AuditCriterion> criterions;
 
     protected String entityName;
     protected String versionsEntityName;
@@ -61,15 +61,15 @@ public abstract class AbstractVersionsQuery implements VersionsQuery {
     protected boolean hasProjection;
     protected boolean hasOrder;
 
-    protected final VersionsConfiguration verCfg;
-    private final VersionsReaderImplementor versionsReader;
+    protected final AuditConfiguration verCfg;
+    private final AuditReaderImplementor versionsReader;
 
-    protected AbstractVersionsQuery(VersionsConfiguration verCfg, VersionsReaderImplementor versionsReader,
+    protected AbstractVersionsQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                     Class<?> cls) {
         this.verCfg = verCfg;
         this.versionsReader = versionsReader;
 
-        criterions = new ArrayList<VersionsCriterion>();
+        criterions = new ArrayList<AuditCriterion>();
         entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
 
         entityName = cls.getName();
@@ -94,13 +94,13 @@ public abstract class AbstractVersionsQuery implements VersionsQuery {
         return query.list();
     }
 
-    public abstract List list() throws VersionsException;
+    public abstract List list() throws AuditException;
 
-    public List getResultList() throws VersionsException {
+    public List getResultList() throws AuditException {
         return list();
     }
 
-    public Object getSingleResult() throws VersionsException, NonUniqueResultException, NoResultException {
+    public Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException {
         List result = list();
 
         if (result == null || result.size() == 0) {
@@ -114,33 +114,33 @@ public abstract class AbstractVersionsQuery implements VersionsQuery {
         return result.get(0);
     }
 
-    public VersionsQuery add(VersionsCriterion criterion) {
+    public AuditQuery add(AuditCriterion criterion) {
         criterions.add(criterion);
         return this;
     }
 
     // Projection and order
 
-    public VersionsQuery addProjection(String function, String propertyName) {
+    public AuditQuery addProjection(String function, String propertyName) {
         hasProjection = true;
         qb.addProjection(function, propertyName, false);
         return this;
     }
 
-    public VersionsQuery addProjection(VersionsProjection projection) {
+    public AuditQuery addProjection(AuditProjection projection) {
         Triple<String, String, Boolean> projectionData = projection.getData(verCfg);
         hasProjection = true;
         qb.addProjection(projectionData.getFirst(), projectionData.getSecond(), projectionData.getThird());
         return this;
     }
 
-    public VersionsQuery addOrder(String propertyName, boolean asc) {
+    public AuditQuery addOrder(String propertyName, boolean asc) {
         hasOrder = true;
         qb.addOrder(propertyName, asc);
         return this;
     }
 
-    public VersionsQuery addOrder(VersionsOrder order) {
+    public AuditQuery addOrder(AuditOrder order) {
         Pair<String, Boolean> orderData = order.getData(verCfg);
         return addOrder(orderData.getFirst(), orderData.getSecond());
     }
@@ -157,47 +157,47 @@ public abstract class AbstractVersionsQuery implements VersionsQuery {
     private Integer timeout;
     private LockMode lockMode;
 
-    public VersionsQuery setMaxResults(int maxResults) {
+    public AuditQuery setMaxResults(int maxResults) {
         this.maxResults = maxResults;
         return this;
     }
 
-    public VersionsQuery setFirstResult(int firstResult) {
+    public AuditQuery setFirstResult(int firstResult) {
         this.firstResult = firstResult;
         return this;
     }
 
-    public VersionsQuery setCacheable(boolean cacheable) {
+    public AuditQuery setCacheable(boolean cacheable) {
         this.cacheable = cacheable;
         return this;
     }
 
-    public VersionsQuery setCacheRegion(String cacheRegion) {
+    public AuditQuery setCacheRegion(String cacheRegion) {
         this.cacheRegion = cacheRegion;
         return this;
     }
 
-    public VersionsQuery setComment(String comment) {
+    public AuditQuery setComment(String comment) {
         this.comment = comment;
         return this;
     }
 
-    public VersionsQuery setFlushMode(FlushMode flushMode) {
+    public AuditQuery setFlushMode(FlushMode flushMode) {
         this.flushMode = flushMode;
         return this;
     }
 
-    public VersionsQuery setCacheMode(CacheMode cacheMode) {
+    public AuditQuery setCacheMode(CacheMode cacheMode) {
         this.cacheMode = cacheMode;
         return this;
     }
 
-    public VersionsQuery setTimeout(int timeout) {
+    public AuditQuery setTimeout(int timeout) {
         this.timeout = timeout;
         return this;
     }
 
-    public VersionsQuery setLockMode(LockMode lockMode) {
+    public AuditQuery setLockMode(LockMode lockMode) {
         this.lockMode = lockMode;
         return this;
     }

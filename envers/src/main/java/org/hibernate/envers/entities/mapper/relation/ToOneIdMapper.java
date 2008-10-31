@@ -28,12 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
@@ -63,8 +63,8 @@ public class ToOneIdMapper implements PropertyMapper {
         return !Tools.objectsEqual(newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+                                   AuditReaderImplementor versionsReader, Number revision) {
         if (obj == null) {
             return;
         }

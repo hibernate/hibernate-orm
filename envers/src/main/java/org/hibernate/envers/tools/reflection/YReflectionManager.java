@@ -25,7 +25,7 @@ package org.hibernate.envers.tools.reflection;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -57,9 +57,9 @@ public class YReflectionManager {
         try {
             return new YClass(ymc, ymc.getReflectionManager_classForNameMethod().invoke(delegate, className, caller));
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -67,9 +67,9 @@ public class YReflectionManager {
         try {
             return (Boolean) ymc.getReflectionManager_equalsMethod().invoke(delegate, class1.getDelegate(), class2);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

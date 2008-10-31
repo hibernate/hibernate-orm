@@ -23,16 +23,16 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SimpleVersionsExpression implements VersionsCriterion {
+public class SimpleVersionsExpression implements AuditCriterion {
     private String propertyName;
     private Object value;
     private String op;
@@ -43,14 +43,14 @@ public class SimpleVersionsExpression implements VersionsCriterion {
         this.op = op;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(verCfg, entityName, propertyName);
 
         if (relatedEntity == null) {
             parameters.addWhereWithParam(propertyName, op, value);
         } else {
             if (!"=".equals(op) && !"<>".equals(op)) {
-                throw new VersionsException("This type of operation: " + op + " (" + entityName + "." + propertyName +
+                throw new AuditException("This type of operation: " + op + " (" + entityName + "." + propertyName +
                         ") isn't supported and can't be used in queries.");
             }
 

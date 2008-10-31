@@ -32,7 +32,7 @@ import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.RevisionProperty;
 import org.hibernate.envers.query.RevisionTypeProperty;
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -108,7 +108,7 @@ public class SimpleQuery extends AbstractEntityTest {
     public void testEntitiesIdQuery() {
         StrIntTestEntity ver2 = (StrIntTestEntity) getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 2)
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.idEq(id2))
                 .getSingleResult();
 
         assert ver2.equals(new StrIntTestEntity("a", 20, id2));
@@ -118,17 +118,17 @@ public class SimpleQuery extends AbstractEntityTest {
     public void testEntitiesPropertyEqualsQuery() {
         List ver1 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 1)
-                .add(VersionsRestrictions.eq("str1", "a"))
+                .add(AuditRestrictions.eq("str1", "a"))
                 .getResultList();
 
         List ver2 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 2)
-                .add(VersionsRestrictions.eq("str1", "a"))
+                .add(AuditRestrictions.eq("str1", "a"))
                 .getResultList();
 
         List ver3 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 3)
-                .add(VersionsRestrictions.eq("str1", "a"))
+                .add(AuditRestrictions.eq("str1", "a"))
                 .getResultList();
 
         assert new HashSet(ver1).equals(TestTools.makeSet(new StrIntTestEntity("a", 10, id1),
@@ -142,17 +142,17 @@ public class SimpleQuery extends AbstractEntityTest {
     public void testEntitiesPropertyLeQuery() {
         List ver1 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 1)
-                .add(VersionsRestrictions.le("number", 10))
+                .add(AuditRestrictions.le("number", 10))
                 .getResultList();
 
         List ver2 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 2)
-                .add(VersionsRestrictions.le("number", 10))
+                .add(AuditRestrictions.le("number", 10))
                 .getResultList();
 
         List ver3 = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(StrIntTestEntity.class, 3)
-                .add(VersionsRestrictions.le("number", 10))
+                .add(AuditRestrictions.le("number", 10))
                 .getResultList();
 
         assert new HashSet(ver1).equals(TestTools.makeSet(new StrIntTestEntity("a", 10, id1),
@@ -168,22 +168,22 @@ public class SimpleQuery extends AbstractEntityTest {
         List revs_id1 = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.le("str1", "a"))
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.le("str1", "a"))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         List revs_id2 = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.le("str1", "a"))
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.le("str1", "a"))
+                .add(AuditRestrictions.idEq(id2))
                 .getResultList();
 
         List revs_id3 = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.le("str1", "a"))
-                .add(VersionsRestrictions.idEq(id3))
+                .add(AuditRestrictions.le("str1", "a"))
+                .add(AuditRestrictions.idEq(id3))
                 .getResultList();
 
         assert Arrays.asList(1).equals(revs_id1);
@@ -195,7 +195,7 @@ public class SimpleQuery extends AbstractEntityTest {
     public void testSelectEntitiesQuery() {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, true, false)
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         assert result.size() == 2;
@@ -208,7 +208,7 @@ public class SimpleQuery extends AbstractEntityTest {
     public void testSelectEntitiesAndRevisionsQuery() {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         assert result.size() == 3;
@@ -231,7 +231,7 @@ public class SimpleQuery extends AbstractEntityTest {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionTypeProperty.revisionType())
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         assert result.size() == 3;

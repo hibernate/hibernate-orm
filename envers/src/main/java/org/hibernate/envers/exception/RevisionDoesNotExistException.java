@@ -28,7 +28,7 @@ import java.util.Date;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionDoesNotExistException extends VersionsException {
+public class RevisionDoesNotExistException extends AuditException {
     private Number revision;
     private Date date;
 

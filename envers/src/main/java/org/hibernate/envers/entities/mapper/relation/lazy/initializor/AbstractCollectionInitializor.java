@@ -25,25 +25,25 @@ package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
 import java.util.List;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * Initializes a persistent collection.
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractCollectionInitializor<T> implements Initializor<T> {
-    private final VersionsReaderImplementor versionsReader;
+    private final AuditReaderImplementor versionsReader;
     private final RelationQueryGenerator queryGenerator;
     private final Object primaryKey;
     
     protected final Number revision;
     protected final EntityInstantiator entityInstantiator;
 
-    public AbstractCollectionInitializor(VersionsConfiguration verCfg,
-                                         VersionsReaderImplementor versionsReader,
+    public AbstractCollectionInitializor(AuditConfiguration verCfg,
+                                         AuditReaderImplementor versionsReader,
                                          RelationQueryGenerator queryGenerator,
                                          Object primaryKey, Number revision) {
         this.versionsReader = versionsReader;

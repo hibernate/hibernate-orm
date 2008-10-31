@@ -26,11 +26,11 @@ package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * Initializes a map.
@@ -41,8 +41,8 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
     private final MiddleComponentData elementComponentData;
     private final MiddleComponentData indexComponentData;
 
-    public MapCollectionInitializor(VersionsConfiguration verCfg,
-                                    VersionsReaderImplementor versionsReader,
+    public MapCollectionInitializor(AuditConfiguration verCfg,
+                                    AuditReaderImplementor versionsReader,
                                     RelationQueryGenerator queryGenerator,
                                     Object primaryKey, Number revision,
                                     Class<? extends T> collectionClass,
@@ -59,9 +59,9 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
         try {
             return collectionClass.newInstance();
         } catch (InstantiationException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

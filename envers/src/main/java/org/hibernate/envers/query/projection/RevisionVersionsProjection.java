@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.query.projection;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionVersionsProjection implements VersionsProjection {
+public class RevisionVersionsProjection implements AuditProjection {
     public static enum ProjectionType {
         MAX,
         MIN,
@@ -44,7 +44,7 @@ public class RevisionVersionsProjection implements VersionsProjection {
         this.type = type;
     }
 
-    public Triple<String, String, Boolean> getData(VersionsConfiguration verCfg) {
+    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
         String revisionPropPath = verCfg.getVerEntCfg().getRevisionPropPath();
 
         switch (type) {

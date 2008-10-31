@@ -23,14 +23,14 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BetweenVersionsExpression implements VersionsCriterion {
+public class BetweenVersionsExpression implements AuditCriterion {
     private String propertyName;
     private Object lo;
     private Object hi;
@@ -41,7 +41,7 @@ public class BetweenVersionsExpression implements VersionsCriterion {
         this.hi = hi;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         CriteriaTools.checkPropertyNotARelation(verCfg, entityName, propertyName);
         parameters.addWhereWithParam(propertyName, ">=", lo);
         parameters.addWhereWithParam(propertyName, "<=", hi);

@@ -28,7 +28,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -104,8 +104,8 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
         List revs_id1 = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.maximizeProperty("number")
-                    .add(VersionsRestrictions.idEq(id2)))
+                .add(AuditRestrictions.maximizeProperty("number")
+                    .add(AuditRestrictions.idEq(id2)))
                 .getResultList();
 
         assert Arrays.asList(2, 3, 4).equals(revs_id1);
@@ -116,8 +116,8 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.minimizeProperty("number")
-                    .add(VersionsRestrictions.eq("str1", "a")))
+                .add(AuditRestrictions.minimizeProperty("number")
+                    .add(AuditRestrictions.eq("str1", "a")))
                 .getResultList();
 
         assert Arrays.asList(1).equals(result);

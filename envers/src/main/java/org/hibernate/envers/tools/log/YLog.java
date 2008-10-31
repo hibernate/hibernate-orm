@@ -26,7 +26,7 @@ package org.hibernate.envers.tools.log;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * A simple logger facade which delegates through reflection to a logging delegate.
@@ -44,19 +44,19 @@ public class YLog {
         try {
             errorMethod = delegate.getClass().getMethod("error", argClass);
         } catch (NoSuchMethodException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
 
         try {
             warnMethod = delegate.getClass().getMethod("warn", argClass);
         } catch (NoSuchMethodException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
 
         try {
             infoMethod = delegate.getClass().getMethod("info", argClass);
         } catch (NoSuchMethodException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -64,9 +64,9 @@ public class YLog {
         try {
             errorMethod.invoke(delegate, message);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -74,9 +74,9 @@ public class YLog {
         try {
             warnMethod.invoke(delegate, message);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -84,9 +84,9 @@ public class YLog {
         try {
             infoMethod.invoke(delegate, message);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 }

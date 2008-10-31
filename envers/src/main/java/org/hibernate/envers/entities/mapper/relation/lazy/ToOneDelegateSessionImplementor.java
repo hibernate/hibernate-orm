@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy;
 
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.HibernateException;
 
@@ -31,12 +31,12 @@ import org.hibernate.HibernateException;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImplementor {
-    private final VersionsReaderImplementor versionsReader;
+    private final AuditReaderImplementor versionsReader;
     private final Class<?> entityClass;
     private final Object entityId;
     private final Number revision;
 
-    public ToOneDelegateSessionImplementor(VersionsReaderImplementor versionsReader,
+    public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
                                            Class<?> entityClass, Object entityId, Number revision) {
         super(versionsReader.getSessionImplementor());
         this.versionsReader = versionsReader;

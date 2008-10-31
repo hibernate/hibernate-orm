@@ -40,7 +40,7 @@ import org.dom4j.io.XMLWriter;
 import org.hibernate.envers.configuration.metadata.AnnotationsMetadataReader;
 import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
 import org.hibernate.envers.configuration.metadata.PersistentClassVersioningData;
-import org.hibernate.envers.configuration.metadata.VersionsMetadataGenerator;
+import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.graph.GraphTopologicalSort;
@@ -55,9 +55,9 @@ import org.hibernate.mapping.PersistentClass;
  */
 public class EntitiesConfigurator {
     public EntitiesConfigurations configure(Configuration cfg, YReflectionManager reflectionManager,
-                                            GlobalConfiguration globalCfg, VersionsEntitiesConfiguration verEntCfg,
+                                            GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
-        VersionsMetadataGenerator versionsMetaGen = new VersionsMetadataGenerator(cfg, globalCfg, verEntCfg,
+        AuditMetadataGenerator versionsMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
                 revisionInfoRelationMapping);
         DOMWriter writer = new DOMWriter();
 

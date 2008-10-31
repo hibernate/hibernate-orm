@@ -26,14 +26,14 @@ package org.hibernate.envers.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AggregatedFieldVersionsExpression implements VersionsCriterion, ExtendableCriterion {
+public class AggregatedFieldVersionsExpression implements AuditCriterion, ExtendableCriterion {
     public static enum AggregatedMode {
         MAX,
         MIN
@@ -41,20 +41,20 @@ public class AggregatedFieldVersionsExpression implements VersionsCriterion, Ext
 
     private String propertyName;
     private AggregatedMode mode;
-    private List<VersionsCriterion> criterions;
+    private List<AuditCriterion> criterions;
 
     public AggregatedFieldVersionsExpression(String propertyName, AggregatedMode mode) {
         this.propertyName = propertyName;
         this.mode = mode;
-        criterions = new ArrayList<VersionsCriterion>();
+        criterions = new ArrayList<AuditCriterion>();
     }
 
-    public AggregatedFieldVersionsExpression add(VersionsCriterion criterion) {
+    public AggregatedFieldVersionsExpression add(AuditCriterion criterion) {
         criterions.add(criterion);
         return this;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         CriteriaTools.checkPropertyNotARelation(verCfg, entityName, propertyName);
 
         // This will be the aggregated query, containing all the specified conditions
@@ -62,7 +62,7 @@ public class AggregatedFieldVersionsExpression implements VersionsCriterion, Ext
 
         // Adding all specified conditions both to the main query, as well as to the
         // aggregated one.
-        for (VersionsCriterion versionsCriteria : criterions) {
+        for (AuditCriterion versionsCriteria : criterions) {
             versionsCriteria.addToQuery(verCfg, entityName, qb, parameters);
             versionsCriteria.addToQuery(verCfg, entityName, subQb, subQb.getRootParameters());
         }

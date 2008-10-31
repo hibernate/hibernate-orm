@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
 
@@ -61,7 +61,7 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         return parentDiffs || mainDiffs;
     }
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey, VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         parentMapper.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
         main.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
     }

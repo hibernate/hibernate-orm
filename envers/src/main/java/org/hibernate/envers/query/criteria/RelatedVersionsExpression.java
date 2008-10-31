@@ -23,16 +23,16 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RelatedVersionsExpression implements VersionsCriterion {
+public class RelatedVersionsExpression implements AuditCriterion {
     private String propertyName;
     private Object id;
     private boolean equals;
@@ -43,11 +43,11 @@ public class RelatedVersionsExpression implements VersionsCriterion {
         this.equals = equals;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(verCfg, entityName, propertyName);
 
         if (relatedEntity == null) {
-            throw new VersionsException("This criterion can only be used on a property that is " +
+            throw new AuditException("This criterion can only be used on a property that is " +
                     "a relation to another property.");
         } else {
             relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, propertyName, equals);

@@ -25,12 +25,12 @@ package org.hibernate.envers.event;
 
 import java.io.Serializable;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.synchronization.VersionsSync;
+import org.hibernate.envers.synchronization.AuditSync;
 import org.hibernate.envers.synchronization.work.AddWorkUnit;
 import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.synchronization.work.DelWorkUnit;
@@ -63,9 +63,9 @@ import org.hibernate.persister.entity.EntityPersister;
 public class VersionsEventListener implements PostInsertEventListener, PostUpdateEventListener,
         PostDeleteEventListener, PreCollectionUpdateEventListener, PreCollectionRemoveEventListener,
         PostCollectionRecreateEventListener, Initializable {
-    private VersionsConfiguration verCfg;
+    private AuditConfiguration verCfg;
 
-    private void generateBidirectionalCollectionChangeWorkUnits(VersionsSync verSync, EntityPersister entityPersister,
+    private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, EntityPersister entityPersister,
                                                                 String entityName, Object[] newState, Object[] oldState) {
         // Checking if this is enabled in configuration ...
         if (!verCfg.getGlobalCfg().isGenerateRevisionsForCollections()) {
@@ -108,7 +108,7 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            VersionsSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             verSync.addWorkUnit(new AddWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId(),
                     event.getPersister(), event.getState()));
@@ -121,7 +121,7 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            VersionsSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             verSync.addWorkUnit(new ModWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId(),
                     event.getPersister(), event.getState(), event.getOldState()));
@@ -134,7 +134,7 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            VersionsSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             verSync.addWorkUnit(new DelWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId()));
 
@@ -142,7 +142,7 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
         }
     }
 
-    private void generateBidirectionalCollectionChangeWorkUnits(VersionsSync verSync, AbstractCollectionEvent event,
+    private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, AbstractCollectionEvent event,
                                                                 PersistentCollectionChangeWorkUnit workUnit) {
         // Checking if this is enabled in configuration ...
         if (!verCfg.getGlobalCfg().isGenerateRevisionsForCollections()) {
@@ -173,7 +173,7 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
         String entityName = event.getAffectedOwnerEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            VersionsSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             PersistentCollectionChangeWorkUnit workUnit = new PersistentCollectionChangeWorkUnit(entityName, verCfg,
                     newColl, collectionEntry.getRole(), oldColl, event.getAffectedOwnerIdOrNull());
@@ -209,10 +209,10 @@ public class VersionsEventListener implements PostInsertEventListener, PostUpdat
 
     @SuppressWarnings({"unchecked"})
     public void initialize(Configuration cfg) {
-        verCfg = VersionsConfiguration.getFor(cfg);
+        verCfg = AuditConfiguration.getFor(cfg);
     }
 
-    public VersionsConfiguration getVerCfg() {
+    public AuditConfiguration getVerCfg() {
         return verCfg;
     }
 }

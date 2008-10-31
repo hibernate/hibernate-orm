@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
 
@@ -54,8 +54,8 @@ public interface PropertyMapper {
      * @param versionsReader VersionsReader for reading relations
      * @param revision Revision at which the object is read, for reading relations
      */
-    void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                            VersionsReaderImplementor versionsReader, Number revision);
+    void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+                            AuditReaderImplementor versionsReader, Number revision);
 
     /**
      * Maps collection changes

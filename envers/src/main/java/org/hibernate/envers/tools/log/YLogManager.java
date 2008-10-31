@@ -26,7 +26,7 @@ package org.hibernate.envers.tools.log;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * A class for creating logging facades either to loggers obtained from
@@ -47,7 +47,7 @@ public class YLogManager {
                 getLogMethod = logFactoryClass.getMethod("getLog", Class.class);
                 argClass = Object.class;
             } catch (NoSuchMethodException e) {
-                throw new VersionsException("No 'getLog' method in org.apache.commons.logging.LogFactory.");
+                throw new AuditException("No 'getLog' method in org.apache.commons.logging.LogFactory.");
             }
         } catch (ClassNotFoundException e) {
             try {
@@ -56,10 +56,10 @@ public class YLogManager {
                     getLogMethod = loggerFactoryClass.getMethod("getLogger", Class.class);
                     argClass = String.class;
                 } catch (NoSuchMethodException e1) {
-                    throw new VersionsException("No 'getLogger' method in org.slf4j.LoggerFactory.");
+                    throw new AuditException("No 'getLogger' method in org.slf4j.LoggerFactory.");
                 }
             } catch (ClassNotFoundException e1) {
-                throw new VersionsException("No org.apache.commons.logging.LogFactory or org.slf4j.LoggerFactory found.");
+                throw new AuditException("No org.apache.commons.logging.LogFactory or org.slf4j.LoggerFactory found.");
             }
         }
     }
@@ -68,9 +68,9 @@ public class YLogManager {
         try {
             return new YLog(getLogMethod.invoke(null, cls), argClass);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

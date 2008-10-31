@@ -41,9 +41,9 @@ import org.hibernate.mapping.Value;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class ToOneRelationMetadataGenerator {
-    private final VersionsMetadataGenerator mainGenerator;
+    private final AuditMetadataGenerator mainGenerator;
 
-    ToOneRelationMetadataGenerator(VersionsMetadataGenerator versionsMetadataGenerator) {
+    ToOneRelationMetadataGenerator(AuditMetadataGenerator versionsMetadataGenerator) {
         mainGenerator = versionsMetadataGenerator;
     }
 

@@ -27,11 +27,11 @@ import java.util.Collections;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
@@ -45,7 +45,7 @@ public final class OneVersionsEntityQueryGenerator implements RelationQueryGener
     private final String queryString;
     private final MiddleIdData referencingIdData;
 
-    public OneVersionsEntityQueryGenerator(GlobalConfiguration globalCfg, VersionsEntitiesConfiguration verEntCfg,
+    public OneVersionsEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                                            MiddleIdData referencingIdData, String referencedEntityName,
                                            IdMapper referencedIdMapper) {
         this.referencingIdData = referencingIdData;
@@ -97,7 +97,7 @@ public final class OneVersionsEntityQueryGenerator implements RelationQueryGener
         queryString = sb.toString();
     }
 
-    public Query getQuery(VersionsReaderImplementor versionsReader, Object primaryKey, Number revision) {
+    public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
         query.setParameter("revision", revision);
         query.setParameter("delrevisiontype", RevisionType.DEL);

@@ -25,7 +25,7 @@ package org.hibernate.envers.tools.reflection;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -54,7 +54,7 @@ public class YMethodsAndClasses {
             try {
                 xClassClass = cl.loadClass("org.hibernate.reflection.XClass");
             } catch (ClassNotFoundException e1) {
-                throw new VersionsException("No XClass found.");
+                throw new AuditException("No XClass found.");
             }
         }
 
@@ -65,7 +65,7 @@ public class YMethodsAndClasses {
             try {
                 xPropertyClass = cl.loadClass("org.hibernate.reflection.XProperty");
             } catch (ClassNotFoundException e1) {
-                throw new VersionsException("No XProperty found.");
+                throw new AuditException("No XProperty found.");
             }
         }
 

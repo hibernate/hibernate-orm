@@ -26,7 +26,7 @@ package org.hibernate.envers.tools.reflection;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -44,9 +44,9 @@ public class YProperty {
         try {
             return (String) ymc.getXProperty_getNameMethod().invoke(delegate);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -55,9 +55,9 @@ public class YProperty {
             //noinspection unchecked
             return (T) ymc.getXProperty_getAnnotationMethod().invoke(delegate, annotation);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -65,9 +65,9 @@ public class YProperty {
         try {
             return new YClass(ymc, ymc.getXProperty_getTypeMethod().invoke(delegate));
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 }

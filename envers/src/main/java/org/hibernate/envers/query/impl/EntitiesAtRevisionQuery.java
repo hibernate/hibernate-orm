@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
-import org.hibernate.envers.query.criteria.VersionsCriterion;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
@@ -39,8 +39,8 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 public class EntitiesAtRevisionQuery extends AbstractVersionsQuery {
     private final Number revision;
 
-    public EntitiesAtRevisionQuery(VersionsConfiguration verCfg,
-                                   VersionsReaderImplementor versionsReader, Class<?> cls,
+    public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
+                                   AuditReaderImplementor versionsReader, Class<?> cls,
                                    Number revision) {
         super(verCfg, versionsReader, cls);
         this.revision = revision;
@@ -59,7 +59,7 @@ public class EntitiesAtRevisionQuery extends AbstractVersionsQuery {
 
         QueryBuilder maxRevQb = qb.newSubQueryBuilder(versionsEntityName, "e2");
 
-        VersionsEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
 
         String revisionPropertyPath = verEntCfg.getRevisionPropPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
@@ -77,7 +77,7 @@ public class EntitiesAtRevisionQuery extends AbstractVersionsQuery {
         // e.revision = (SELECT max(...) ...)
         qb.getRootParameters().addWhere(revisionPropertyPath, verCfg.getGlobalCfg().getCorrelatedSubqueryOperator(), maxRevQb);
         // all specified conditions
-        for (VersionsCriterion criterion : criterions) {
+        for (AuditCriterion criterion : criterions) {
             criterion.addToQuery(verCfg, entityName, qb, qb.getRootParameters());
         }
 

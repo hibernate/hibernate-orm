@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.entities.mapper.relation.query.OneEntityQueryGenerator;
@@ -42,12 +42,12 @@ import org.hibernate.envers.entities.mapper.relation.query.TwoEntityQueryGenerat
  */
 public final class QueryGeneratorBuilder {
     private final GlobalConfiguration globalCfg;
-    private final VersionsEntitiesConfiguration verEntCfg;
+    private final AuditEntitiesConfiguration verEntCfg;
     private final MiddleIdData referencingIdData;
     private final String versionsMiddleEntityName;
     private final List<MiddleIdData> idDatas;
 
-    QueryGeneratorBuilder(GlobalConfiguration globalCfg, VersionsEntitiesConfiguration verEntCfg,
+    QueryGeneratorBuilder(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                           MiddleIdData referencingIdData, String versionsMiddleEntityName) {
         this.globalCfg = globalCfg;
         this.verEntCfg = verEntCfg;

@@ -47,9 +47,9 @@ import org.hibernate.type.Type;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class IdMetadataGenerator {
-    private final VersionsMetadataGenerator mainGenerator;
+    private final AuditMetadataGenerator mainGenerator;
 
-    IdMetadataGenerator(VersionsMetadataGenerator versionsMetadataGenerator) {
+    IdMetadataGenerator(AuditMetadataGenerator versionsMetadataGenerator) {
         mainGenerator = versionsMetadataGenerator;
     }
 

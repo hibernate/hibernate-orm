@@ -27,11 +27,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * Initializes a non-indexed java collection (set or list, eventually sorted).
@@ -41,8 +41,8 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
     private final Class<? extends T> collectionClass;
     private final MiddleComponentData elementComponentData;
 
-    public BasicCollectionInitializor(VersionsConfiguration verCfg,
-                                       VersionsReaderImplementor versionsReader,
+    public BasicCollectionInitializor(AuditConfiguration verCfg,
+                                       AuditReaderImplementor versionsReader,
                                        RelationQueryGenerator queryGenerator,
                                        Object primaryKey, Number revision,
                                        Class<? extends T> collectionClass,
@@ -57,9 +57,9 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
         try {
             return collectionClass.newInstance();
         } catch (InstantiationException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

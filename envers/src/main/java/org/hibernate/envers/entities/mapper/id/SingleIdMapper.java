@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.property.Getter;
@@ -56,7 +56,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 
     public void add(String propertyName, ModificationStore modStore) {
         if (this.propertyName != null) {
-            throw new VersionsException("Only one property can be added!");
+            throw new AuditException("Only one property can be added!");
         }
 
         this.propertyName = propertyName;

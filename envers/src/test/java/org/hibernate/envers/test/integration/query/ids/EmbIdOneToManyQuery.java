@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
@@ -105,32 +105,32 @@ public class EmbIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedToId3() {
         Set rev1_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 1)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
                 .getResultList());
 
         Set rev1 = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 1)
-                .add(VersionsRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
+                .add(AuditRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
                 .getResultList());
 
         Set rev2_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 2)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
                 .getResultList());
 
         Set rev2 = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 2)
-                .add(VersionsRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
+                .add(AuditRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
                 .getResultList());
 
         Set rev3_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 3)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
                 .getResultList());
 
         Set rev3 = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 3)
-                .add(VersionsRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
+                .add(AuditRestrictions.eq("reference", new SetRefEdEmbIdEntity(id3, null)))
                 .getResultList());
 
         assert rev1.equals(rev1_related);
@@ -147,17 +147,17 @@ public class EmbIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedToId4() {
         Set rev1_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 1)
-                .add(VersionsRestrictions.relatedIdEq("reference", id4))
+                .add(AuditRestrictions.relatedIdEq("reference", id4))
                 .getResultList());
 
         Set rev2_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 2)
-                .add(VersionsRestrictions.relatedIdEq("reference", id4))
+                .add(AuditRestrictions.relatedIdEq("reference", id4))
                 .getResultList());
 
         Set rev3_related = new HashSet(getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 3)
-                .add(VersionsRestrictions.relatedIdEq("reference", id4))
+                .add(AuditRestrictions.relatedIdEq("reference", id4))
                 .getResultList());
 
         assert rev1_related.equals(TestTools.makeSet());
@@ -169,20 +169,20 @@ public class EmbIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedByIng1ToId3() {
         List rev1_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 1)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         Object rev2_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 2)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id1))
                 .getSingleResult();
 
         Object rev3_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 3)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3)) 
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id1))
                 .getSingleResult();
 
         assert rev1_related.size() == 0;
@@ -194,20 +194,20 @@ public class EmbIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedByIng2ToId3() {
         List rev1_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 1)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id2))
                 .getResultList();
 
         List rev2_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 2)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id2))
                 .getResultList();
 
         Object rev3_related = getVersionsReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngEmbIdEntity.class, 3)
-                .add(VersionsRestrictions.relatedIdEq("reference", id3))
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditRestrictions.idEq(id2))
                 .getSingleResult();
 
         assert rev1_related.size() == 0;

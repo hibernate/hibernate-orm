@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
@@ -48,7 +48,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 
     public void add(String propertyName, ModificationStore modStore) {
         if (this.propertyName != null) {
-            throw new VersionsException("Only one property can be added!");
+            throw new AuditException("Only one property can be added!");
         }
 
         this.propertyName = propertyName;
@@ -60,7 +60,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         return !Tools.objectsEqual(newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey, VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;
         }

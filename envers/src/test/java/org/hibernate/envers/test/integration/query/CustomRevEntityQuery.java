@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
@@ -79,7 +79,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     public void testRevisionsOfId1Query() {
         List<Object[]> result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getResultList();
 
         assert result.get(0)[0].equals(new StrIntTestEntity("a", 10, id1));
@@ -95,7 +95,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     public void testRevisionsOfId2Query() {
         List<Object[]> result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.idEq(id2))
                 .getResultList();
 
         assert result.get(0)[0].equals(new StrIntTestEntity("b", 15, id2));

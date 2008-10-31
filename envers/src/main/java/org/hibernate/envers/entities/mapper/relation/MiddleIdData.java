@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 
@@ -50,7 +50,7 @@ public final class MiddleIdData {
      */
     private final String versionsEntityName;
 
-    public MiddleIdData(VersionsEntitiesConfiguration verEntCfg, IdMappingData mappingData, String prefix,
+    public MiddleIdData(AuditEntitiesConfiguration verEntCfg, IdMappingData mappingData, String prefix,
                         String entityName) {
         this.originalMapper = mappingData.getIdMapper();
         this.prefixedMapper = mappingData.getIdMapper().prefixMappedProperties(prefix);

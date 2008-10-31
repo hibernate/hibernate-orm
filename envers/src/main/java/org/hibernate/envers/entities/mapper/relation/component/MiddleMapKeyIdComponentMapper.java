@@ -25,7 +25,7 @@ package org.hibernate.envers.entities.mapper.relation.component;
 
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.tools.query.Parameters;
@@ -37,10 +37,10 @@ import org.hibernate.envers.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class MiddleMapKeyIdComponentMapper implements MiddleComponentMapper {
-    private final VersionsEntitiesConfiguration verEntCfg;
+    private final AuditEntitiesConfiguration verEntCfg;
     private final IdMapper relatedIdMapper;
 
-    public MiddleMapKeyIdComponentMapper(VersionsEntitiesConfiguration verEntCfg, IdMapper relatedIdMapper) {
+    public MiddleMapKeyIdComponentMapper(AuditEntitiesConfiguration verEntCfg, IdMapper relatedIdMapper) {
         this.verEntCfg = verEntCfg;
         this.relatedIdMapper = relatedIdMapper;
     }

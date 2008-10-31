@@ -26,7 +26,7 @@ package org.hibernate.envers.exception;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotVersionedException extends VersionsException {
+public class NotVersionedException extends AuditException {
     private final String entityName;
 
     public NotVersionedException(String entityName, String message) {

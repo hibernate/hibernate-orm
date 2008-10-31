@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.NoResultException;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.query.VersionsRestrictions;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.NonUniqueResultException;
@@ -58,7 +58,7 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
         return false;
     }
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey, VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (obj == null) {
             return;
         }
@@ -69,11 +69,11 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
 
         try {
             value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, revision)
-                    .add(VersionsRestrictions.relatedIdEq(owningReferencePropertyName, primaryKey)).getSingleResult();
+                    .add(AuditRestrictions.relatedIdEq(owningReferencePropertyName, primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             value = null;
         } catch (NonUniqueResultException e) {
-            throw new VersionsException("Many versions results for one-to-one relationship: (" + owningEntityName +
+            throw new AuditException("Many versions results for one-to-one relationship: (" + owningEntityName +
                     ", " + owningReferencePropertyName + ")");
         }
 

@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.hibernate.envers.exception.NotVersionedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.query.VersionsQueryCreator;
+import org.hibernate.envers.query.AuditQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -106,5 +106,5 @@ public interface AuditReader {
      * created and later executed. Shouldn't be used after the associated Session or EntityManager
      * is closed.
      */
-    VersionsQueryCreator createQuery();
+    AuditQueryCreator createQuery();
 }

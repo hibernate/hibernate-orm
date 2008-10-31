@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * Initializes a map.
@@ -40,8 +40,8 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
     private final MiddleComponentData elementComponentData;
     private final MiddleComponentData indexComponentData;
 
-    public ListCollectionInitializor(VersionsConfiguration verCfg,
-                                    VersionsReaderImplementor versionsReader,
+    public ListCollectionInitializor(AuditConfiguration verCfg,
+                                    AuditReaderImplementor versionsReader,
                                     RelationQueryGenerator queryGenerator,
                                     Object primaryKey, Number revision,
                                     MiddleComponentData elementComponentData,

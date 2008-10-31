@@ -23,107 +23,107 @@
  */
 package org.hibernate.envers.query;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.criteria.RevisionVersionsExpression;
-import org.hibernate.envers.query.criteria.VersionsCriterion;
+import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.order.RevisionVersionsOrder;
-import org.hibernate.envers.query.order.VersionsOrder;
+import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.RevisionVersionsProjection;
-import org.hibernate.envers.query.projection.VersionsProjection;
+import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"JavaDoc"})
-public class RevisionProperty implements VersionsProjection {
+public class RevisionProperty implements AuditProjection {
     private RevisionProperty() { }
 
     /**
      * Apply a "greater than" constraint on the revision number
      */
-    public static VersionsCriterion gt(Integer revision) {
+    public static AuditCriterion gt(Integer revision) {
         return new RevisionVersionsExpression(revision, ">");
     }
 
     /**
      * Apply a "greater than or equal" constraint on the revision number
      */
-    public static VersionsCriterion ge(Integer revision) {
+    public static AuditCriterion ge(Integer revision) {
         return new RevisionVersionsExpression(revision, ">=");
     }
 
     /**
      * Apply a "less than" constraint on the revision number
      */
-    public static VersionsCriterion lt(Integer revision) {
+    public static AuditCriterion lt(Integer revision) {
         return new RevisionVersionsExpression(revision, "<");
     }
 
     /**
      * Apply a "less than or equal" constraint on the revision number
      */
-    public static VersionsCriterion le(Integer revision) {
+    public static AuditCriterion le(Integer revision) {
         return new RevisionVersionsExpression(revision, "<=");
     }
 
     /**
      * Sort the results by revision in ascending order
      */
-    public static VersionsOrder asc() {
+    public static AuditOrder asc() {
         return new RevisionVersionsOrder(true);
     }
 
     /**
      * Sort the results by revision in descending order
      */
-    public static VersionsOrder desc() {
+    public static AuditOrder desc() {
         return new RevisionVersionsOrder(false);
     }
 
     /**
      * Select the maximum revision
      */
-    public static VersionsProjection max() {
+    public static AuditProjection max() {
         return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.MAX);
     }
 
     /**
      * Select the minimum revision
      */
-    public static VersionsProjection min() {
+    public static AuditProjection min() {
         return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.MIN);
     }
 
     /**
      * Count revisions
      */
-    public static VersionsProjection count() {
+    public static AuditProjection count() {
         return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.COUNT);
     }
 
     /**
      * Count distinct revisions
      */
-    public static VersionsProjection countDistinct() {
+    public static AuditProjection countDistinct() {
         return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.COUNT_DISTINCT);
     }
 
     /**
      * Distinct revisions
      */
-    public static VersionsProjection distinct() {
+    public static AuditProjection distinct() {
         return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.DISTINCT);
     }
 
     /**
      * Projection the revision number
      */
-    public static VersionsProjection revisionNumber() {
+    public static AuditProjection revisionNumber() {
         return new RevisionProperty();
     }
 
-    public Triple<String, String, Boolean> getData(VersionsConfiguration verCfg) {
+    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
         return Triple.make(null, verCfg.getVerEntCfg().getRevisionPropPath(), false);
     }
 }

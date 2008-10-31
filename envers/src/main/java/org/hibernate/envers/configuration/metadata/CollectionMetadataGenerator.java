@@ -85,7 +85,7 @@ import org.hibernate.type.Type;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class CollectionMetadataGenerator {
-    private final VersionsMetadataGenerator mainGenerator;
+    private final AuditMetadataGenerator mainGenerator;
     private final String propertyName;
     private final Collection propertyValue;
     private final CompositeMapperBuilder currentMapper;
@@ -113,7 +113,7 @@ public final class CollectionMetadataGenerator {
      * @param mapKey The value of the name() property of the MapKey annotation on this property. Null, if this
      * property isn't annotated with this annotation.
      */
-    public CollectionMetadataGenerator(VersionsMetadataGenerator mainGenerator, String propertyName,
+    public CollectionMetadataGenerator(AuditMetadataGenerator mainGenerator, String propertyName,
                                        Collection propertyValue, CompositeMapperBuilder currentMapper,
                                        String referencingEntityName, EntityXmlMappingData xmlMappingData,
                                        AuditJoinTable joinTable, String mapKey) {

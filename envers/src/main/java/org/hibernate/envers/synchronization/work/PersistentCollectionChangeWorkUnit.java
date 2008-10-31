@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 
 import org.hibernate.Session;
@@ -37,11 +37,11 @@ import org.hibernate.collection.PersistentCollection;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class PersistentCollectionChangeWorkUnit extends AbstractVersionsWorkUnit implements VersionsWorkUnit {
+public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
     private final List<PersistentCollectionChangeData> collectionChanges;
     private final String referencingPropertyName;
 
-    public PersistentCollectionChangeWorkUnit(String entityName, VersionsConfiguration verCfg,
+    public PersistentCollectionChangeWorkUnit(String entityName, AuditConfiguration verCfg,
                                               PersistentCollection collection, String role,
                                               Serializable snapshot, Serializable id) {
         super(entityName, verCfg, null);
@@ -58,7 +58,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractVersionsWorkUnit
 
     @SuppressWarnings({"unchecked"})
     public void perform(Session session, Object revisionData) {
-        VersionsEntitiesConfiguration entitiesCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration entitiesCfg = verCfg.getVerEntCfg();
 
         for (PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges) {
             // Setting the revision number

@@ -23,20 +23,20 @@
  */
 package org.hibernate.envers.query.order;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionVersionsOrder implements VersionsOrder {
+public class RevisionVersionsOrder implements AuditOrder {
     private final boolean asc;
 
     public RevisionVersionsOrder(boolean asc) {
         this.asc = asc;
     }
 
-    public Pair<String, Boolean> getData(VersionsConfiguration verCfg) {
+    public Pair<String, Boolean> getData(AuditConfiguration verCfg) {
         String revisionPropPath = verCfg.getVerEntCfg().getRevisionPropPath();
         return Pair.make(revisionPropPath, asc);
     }

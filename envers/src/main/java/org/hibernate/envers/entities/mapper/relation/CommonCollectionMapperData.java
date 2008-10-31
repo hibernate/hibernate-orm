@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation;
 
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 
 /**
@@ -31,13 +31,13 @@ import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerato
  * @author Adam Warski (adam at warski dot org)
  */
 public final class CommonCollectionMapperData {
-    private final VersionsEntitiesConfiguration verEntCfg;
+    private final AuditEntitiesConfiguration verEntCfg;
     private final String versionsMiddleEntityName;
     private final String collectionReferencingPropertyName;
     private final MiddleIdData referencingIdData;
     private final RelationQueryGenerator queryGenerator;
 
-    public CommonCollectionMapperData(VersionsEntitiesConfiguration verEntCfg, String versionsMiddleEntityName,
+    public CommonCollectionMapperData(AuditEntitiesConfiguration verEntCfg, String versionsMiddleEntityName,
                                       String collectionReferencingPropertyName, MiddleIdData referencingIdData,
                                       RelationQueryGenerator queryGenerator) {
         this.verEntCfg = verEntCfg;
@@ -47,7 +47,7 @@ public final class CommonCollectionMapperData {
         this.queryGenerator = queryGenerator;
     }
 
-    public VersionsEntitiesConfiguration getVerEntCfg() {
+    public AuditEntitiesConfiguration getVerEntCfg() {
         return verEntCfg;
     }
 

@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.ant;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.ant.ConfigurationTask;
@@ -33,7 +33,7 @@ import org.hibernate.tool.ant.ConfigurationTask;
  */
 public class ConfigurationTaskWithEnvers extends ConfigurationTask {
     protected void doConfiguration(Configuration configuration) {
-        VersionsConfiguration.getFor(configuration);
+        AuditConfiguration.getFor(configuration);
 
         super.doConfiguration(configuration);
     }

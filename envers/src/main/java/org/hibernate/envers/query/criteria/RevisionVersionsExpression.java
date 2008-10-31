@@ -23,14 +23,14 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionVersionsExpression implements VersionsCriterion {
+public class RevisionVersionsExpression implements AuditCriterion {
     private Object value;
     private String op;
 
@@ -39,7 +39,7 @@ public class RevisionVersionsExpression implements VersionsCriterion {
         this.op = op;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         parameters.addWhereWithParam(verCfg.getVerEntCfg().getRevisionPropPath(), op, value);
     }
 }

@@ -28,7 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -50,9 +50,9 @@ public class YClass {
         try {
             return (String) ymc.getXClass_getNameMethod().invoke(delegate);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -60,9 +60,9 @@ public class YClass {
         try {
             return new YClass(ymc, ymc.getXClass_getSuperclassMethod().invoke(delegate));
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -72,9 +72,9 @@ public class YClass {
         try {
             delegates = (List) ymc.getXClass_getDeclaredPropertiesMethod().invoke(delegate, accessMode);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
 
         List<YProperty> ret = new ArrayList<YProperty>();
@@ -90,9 +90,9 @@ public class YClass {
             //noinspection unchecked
             return (T) ymc.getXClass_getAnnotationMethod().invoke(delegate, annotation);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 }

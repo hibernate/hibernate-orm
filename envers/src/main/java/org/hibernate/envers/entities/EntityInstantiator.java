@@ -27,20 +27,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class EntityInstantiator {
-    private final VersionsConfiguration verCfg;
-    private final VersionsReaderImplementor versionsReader;
+    private final AuditConfiguration verCfg;
+    private final AuditReaderImplementor versionsReader;
 
-    public EntityInstantiator(VersionsConfiguration verCfg, VersionsReaderImplementor versionsReader) {
+    public EntityInstantiator(AuditConfiguration verCfg, AuditReaderImplementor versionsReader) {
         this.verCfg = verCfg;
         this.versionsReader = versionsReader;
     }
@@ -82,7 +82,7 @@ public class EntityInstantiator {
             Class<?> cls = ReflectionTools.loadClass(entityName);
             ret = cls.newInstance();
         } catch (Exception e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
 
         // Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional

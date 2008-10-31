@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.query.criteria.VersionsCriterion;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.proxy.HibernateProxy;
 
@@ -43,8 +43,8 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
     private final boolean selectEntitiesOnly;
     private final boolean selectDeletedEntities;
 
-    public RevisionsOfEntityQuery(VersionsConfiguration verCfg,
-                                  VersionsReaderImplementor versionsReader,
+    public RevisionsOfEntityQuery(AuditConfiguration verCfg,
+                                  AuditReaderImplementor versionsReader,
                                   Class<?> cls, boolean selectEntitiesOnly,
                                   boolean selectDeletedEntities) {
         super(verCfg, versionsReader, cls);
@@ -54,7 +54,7 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
     }
 
     private Number getRevisionNumber(Map versionsEntity) {
-        VersionsEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
 
         String originalId = verEntCfg.getOriginalIdPropName();
         String revisionPropertyName = verEntCfg.getRevisionPropName();
@@ -70,8 +70,8 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
     }
 
     @SuppressWarnings({"unchecked"})
-    public List list() throws VersionsException {
-        VersionsEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+    public List list() throws AuditException {
+        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
 
         /*
         The query that should be executed in the versions table:
@@ -87,7 +87,7 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
         }
 
         // all specified conditions, transformed
-        for (VersionsCriterion criterion : criterions) {
+        for (AuditCriterion criterion : criterions) {
             criterion.addToQuery(verCfg, entityName, qb, qb.getRootParameters());
         }
 

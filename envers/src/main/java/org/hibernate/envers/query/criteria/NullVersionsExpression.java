@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
@@ -31,14 +31,14 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NullVersionsExpression implements VersionsCriterion {
+public class NullVersionsExpression implements AuditCriterion {
     private String propertyName;
 
     public NullVersionsExpression(String propertyName) {
         this.propertyName = propertyName;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(verCfg, entityName, propertyName);
 
         if (relatedEntity == null) {

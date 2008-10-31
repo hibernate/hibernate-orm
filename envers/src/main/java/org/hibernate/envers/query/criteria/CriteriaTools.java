@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,16 +34,16 @@ import org.hibernate.envers.exception.VersionsException;
 public class CriteriaTools {
     private CriteriaTools() { }
 
-    public static void checkPropertyNotARelation(VersionsConfiguration verCfg, String entityName,
-                                                 String propertyName) throws VersionsException {
+    public static void checkPropertyNotARelation(AuditConfiguration verCfg, String entityName,
+                                                 String propertyName) throws AuditException {
         if (verCfg.getEntCfg().get(entityName).isRelation(propertyName)) {
-            throw new VersionsException("This criterion cannot be used on a property that is " +
+            throw new AuditException("This criterion cannot be used on a property that is " +
                     "a relation to another property.");
         }
     }
 
-    public static RelationDescription getRelatedEntity(VersionsConfiguration verCfg, String entityName,
-                                                       String propertyName) throws VersionsException {
+    public static RelationDescription getRelatedEntity(AuditConfiguration verCfg, String entityName,
+                                                       String propertyName) throws AuditException {
         RelationDescription relationDesc = verCfg.getEntCfg().getRelationDescription(entityName, propertyName);
 
         if (relationDesc == null) {
@@ -54,7 +54,7 @@ public class CriteriaTools {
             return relationDesc;
         }
 
-        throw new VersionsException("This type of relation (" + entityName + "." + propertyName +
+        throw new AuditException("This type of relation (" + entityName + "." + propertyName +
                 ") isn't supported and can't be used in queries.");
     }
 }

@@ -25,7 +25,7 @@ package org.hibernate.envers.tools.reflection;
 
 import java.util.Map;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
 import org.hibernate.envers.tools.Pair;
 import static org.hibernate.envers.tools.Pair.make;
@@ -55,7 +55,7 @@ public class ReflectionTools {
         try {
             return Thread.currentThread().getContextClassLoader().loadClass(name);
         } catch (ClassNotFoundException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

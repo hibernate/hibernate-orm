@@ -23,25 +23,25 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class LogicalVersionsExpression implements VersionsCriterion {
-    private VersionsCriterion lhs;
-    private VersionsCriterion rhs;
+public class LogicalVersionsExpression implements AuditCriterion {
+    private AuditCriterion lhs;
+    private AuditCriterion rhs;
     private String op;
 
-    public LogicalVersionsExpression(VersionsCriterion lhs, VersionsCriterion rhs, String op) {
+    public LogicalVersionsExpression(AuditCriterion lhs, AuditCriterion rhs, String op) {
         this.lhs = lhs;
         this.rhs = rhs;
         this.op = op;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         Parameters opParameters = parameters.addSubParameters(op);
 
         lhs.addToQuery(verCfg, entityName, qb, opParameters.addSubParameters("and"));

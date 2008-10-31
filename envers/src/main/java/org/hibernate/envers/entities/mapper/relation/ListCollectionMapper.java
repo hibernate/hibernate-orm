@@ -28,12 +28,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.ListCollectionInitializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.ListProxy;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Tools;
 
@@ -53,7 +53,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
         this.indexComponentData = indexComponentData;
     }
 
-    protected Initializor<List> getInitializor(VersionsConfiguration verCfg, VersionsReaderImplementor versionsReader,
+    protected Initializor<List> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                                Object primaryKey, Number revision) {
         return new ListCollectionInitializor(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
                 primaryKey, revision, elementComponentData, indexComponentData);

@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,11 +36,11 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AddWorkUnit extends AbstractVersionsWorkUnit implements VersionsWorkUnit {
+public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
     private final Object[] state;
     private final String[] propertyNames;
 
-    public AddWorkUnit(String entityName, VersionsConfiguration verCfg, Serializable id,
+    public AddWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id,
                        EntityPersister entityPersister, Object[] state) {
         super(entityName, verCfg, id);
 

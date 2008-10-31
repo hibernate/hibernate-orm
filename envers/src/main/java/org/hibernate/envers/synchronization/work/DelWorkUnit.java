@@ -28,15 +28,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class DelWorkUnit extends AbstractVersionsWorkUnit implements VersionsWorkUnit {
-    public DelWorkUnit(String entityName, VersionsConfiguration verCfg, Serializable id) {
+public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
+    public DelWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id) {
         super(entityName, verCfg, id);
     }
 

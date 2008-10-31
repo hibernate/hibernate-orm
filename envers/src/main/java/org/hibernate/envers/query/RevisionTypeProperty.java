@@ -23,25 +23,25 @@
  */
 package org.hibernate.envers.query;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.query.projection.VersionsProjection;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Triple;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"JavaDoc"})
-public class RevisionTypeProperty implements VersionsProjection {
+public class RevisionTypeProperty implements AuditProjection {
     private RevisionTypeProperty() { }
 
     /**
      * Projection on the revision type
      */
-    public static VersionsProjection revisionType() {
+    public static AuditProjection revisionType() {
         return new RevisionTypeProperty();
     }
 
-    public Triple<String, String, Boolean> getData(VersionsConfiguration verCfg) {
+    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
         return Triple.make(null, verCfg.getVerEntCfg().getRevisionTypePropName(), false);
     }
 }

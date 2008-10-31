@@ -28,7 +28,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -88,7 +88,7 @@ public class DeletedEntities extends AbstractEntityTest {
     public void testRevisionsOfEntityWithoutDelete() {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, false)
-                .add(VersionsRestrictions.idEq(id2))
+                .add(AuditRestrictions.idEq(id2))
                 .getResultList();
 
         assert result.size() == 1;

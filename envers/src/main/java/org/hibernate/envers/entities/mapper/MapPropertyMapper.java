@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.VersionsConfiguration;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
@@ -70,7 +70,7 @@ public class MapPropertyMapper implements PropertyMapper, CompositeMapperBuilder
         return delegate.mapToMapFromEntity(newData, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey, VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;
         }
@@ -83,7 +83,7 @@ public class MapPropertyMapper implements PropertyMapper, CompositeMapperBuilder
             setter.set(obj, subObj, null);
             delegate.mapToEntityFromMap(verCfg, subObj, (Map) data.get(propertyName), primaryKey, versionsReader, revision);
         } catch (Exception e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

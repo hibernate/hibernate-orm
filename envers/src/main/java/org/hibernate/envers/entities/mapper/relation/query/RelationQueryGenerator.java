@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.query;
 
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.Query;
 
@@ -34,5 +34,5 @@ import org.hibernate.Query;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface RelationQueryGenerator {
-    Query getQuery(VersionsReaderImplementor versionsReader, Object primaryKey, Number revision);
+    Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision);
 }

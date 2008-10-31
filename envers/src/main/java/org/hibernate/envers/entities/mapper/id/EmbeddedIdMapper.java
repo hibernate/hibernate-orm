@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.property.Getter;
@@ -78,7 +78,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
                 idMapper.mapToEntityFromMap(subObj, data);
             }
         } catch (Exception e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 

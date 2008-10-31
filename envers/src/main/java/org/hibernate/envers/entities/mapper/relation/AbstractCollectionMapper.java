@@ -35,12 +35,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
-import org.hibernate.envers.exception.VersionsException;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
@@ -63,7 +63,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
         try {
             proxyConstructor = proxyClass.getConstructor(Initializor.class);
         } catch (NoSuchMethodException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 
@@ -131,22 +131,22 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
         return false;
     }
 
-    protected abstract Initializor<T> getInitializor(VersionsConfiguration verCfg,
-                                                     VersionsReaderImplementor versionsReader, Object primaryKey,
+    protected abstract Initializor<T> getInitializor(AuditConfiguration verCfg,
+                                                     AuditReaderImplementor versionsReader, Object primaryKey,
                                                      Number revision);
 
-    public void mapToEntityFromMap(VersionsConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   VersionsReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+                                   AuditReaderImplementor versionsReader, Number revision) {
         Setter setter = ReflectionTools.getSetter(obj.getClass(),
                 commonCollectionMapperData.getCollectionReferencingPropertyName());
         try {
             setter.set(obj, proxyConstructor.newInstance(getInitializor(verCfg, versionsReader, primaryKey, revision)), null);
         } catch (InstantiationException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (IllegalAccessException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         } catch (InvocationTargetException e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
     }
 }

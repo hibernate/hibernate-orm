@@ -27,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.exception.VersionsException;
+import org.hibernate.envers.exception.AuditException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -51,7 +51,7 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
         try {
             ret = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass).newInstance();
         } catch (Exception e) {
-            throw new VersionsException(e);
+            throw new AuditException(e);
         }
 
         for (SingleIdMapper mapper : ids.values()) {

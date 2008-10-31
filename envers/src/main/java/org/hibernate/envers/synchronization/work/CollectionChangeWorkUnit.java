@@ -28,17 +28,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CollectionChangeWorkUnit extends AbstractVersionsWorkUnit implements VersionsWorkUnit {
+public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
     private final Object entity;
 
-    public CollectionChangeWorkUnit(String entityName, VersionsConfiguration verCfg, Serializable id, Object entity) {
+    public CollectionChangeWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id, Object entity) {
         super(entityName, verCfg, id);
 
         this.entity = entity;

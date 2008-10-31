@@ -28,7 +28,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -126,7 +126,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(RevisionProperty.le(3))
-                .add(VersionsRestrictions.eq("str1", "a"))
+                .add(AuditRestrictions.eq("str1", "a"))
                 .getResultList();
 
         assert Arrays.asList(1).equals(result);
@@ -138,7 +138,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(RevisionProperty.gt(1))
-                .add(VersionsRestrictions.lt("number", 10))
+                .add(AuditRestrictions.lt("number", 10))
                 .getResultList();
 
         assert Arrays.asList(3, 4).equals(result);
@@ -152,7 +152,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .addProjection(RevisionProperty.count())
                 .addProjection(RevisionProperty.countDistinct())
                 .addProjection(RevisionProperty.min())
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getSingleResult();
 
         assert (Integer) result[0] == 4;
@@ -166,7 +166,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
         List result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .addOrder(RevisionProperty.desc())
                 .getResultList();
 
@@ -179,7 +179,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
         Object result = getVersionsReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.count())
-                .add(VersionsRestrictions.idEq(id1))
+                .add(AuditRestrictions.idEq(id1))
                 .getSingleResult();
 
         assert (Long) result == 4;

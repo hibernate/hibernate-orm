@@ -27,11 +27,11 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
-import org.hibernate.envers.reader.VersionsReaderImplementor;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
 
@@ -50,7 +50,7 @@ public final class MapCollectionMapper<T extends Map> extends AbstractCollection
         this.indexComponentData = indexComponentData;
     }
 
-    protected Initializor<T> getInitializor(VersionsConfiguration verCfg, VersionsReaderImplementor versionsReader,
+    protected Initializor<T> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                             Object primaryKey, Number revision) {
         return new MapCollectionInitializor<T>(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
                 primaryKey, revision, collectionClass, elementComponentData, indexComponentData);

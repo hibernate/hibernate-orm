@@ -25,7 +25,7 @@ package org.hibernate.envers.entities.mapper.relation.component;
 
 import java.util.Map;
 
-import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
+import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.tools.query.Parameters;
 
@@ -34,9 +34,9 @@ import org.hibernate.envers.tools.query.Parameters;
  */
 public final class MiddleSimpleComponentMapper implements MiddleComponentMapper {
     private final String propertyName;
-    private final VersionsEntitiesConfiguration verEntCfg;
+    private final AuditEntitiesConfiguration verEntCfg;
 
-    public MiddleSimpleComponentMapper(VersionsEntitiesConfiguration verEntCfg, String propertyName) {
+    public MiddleSimpleComponentMapper(AuditEntitiesConfiguration verEntCfg, String propertyName) {
         this.propertyName = propertyName;
         this.verEntCfg = verEntCfg;
     }

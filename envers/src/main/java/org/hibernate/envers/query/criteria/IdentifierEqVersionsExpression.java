@@ -23,21 +23,21 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.VersionsConfiguration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class IdentifierEqVersionsExpression implements VersionsCriterion {
+public class IdentifierEqVersionsExpression implements AuditCriterion {
     private Object id;
 
     public IdentifierEqVersionsExpression(Object id) {
         this.id = id;
     }
 
-    public void addToQuery(VersionsConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         verCfg.getEntCfg().get(entityName).getIdMapper()
                 .addIdEqualsToQuery(parameters, id, verCfg.getVerEntCfg().getOriginalIdPropName(), true);
     }

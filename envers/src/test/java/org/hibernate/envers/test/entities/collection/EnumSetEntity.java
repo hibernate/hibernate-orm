@@ -31,7 +31,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import org.hibernate.annotations.CollectionOfElements;
 
@@ -47,12 +47,12 @@ public class EnumSetEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @CollectionOfElements
     @Enumerated(EnumType.STRING)
     private Set<E1> enums1;
 
-    @Versioned
+    @Audited
     @CollectionOfElements
     @Enumerated(EnumType.ORDINAL)
     private Set<E2> enums2;

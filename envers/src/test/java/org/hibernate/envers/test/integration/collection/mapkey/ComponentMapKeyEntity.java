@@ -31,7 +31,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
 
@@ -44,7 +44,7 @@ public class ComponentMapKeyEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @ManyToMany
     @MapKey(name = "comp1")
     private Map<Component1, ComponentTestEntity> idmap;

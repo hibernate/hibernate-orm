@@ -33,7 +33,7 @@ import org.hibernate.envers.query.VersionsQueryCreator;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public interface VersionsReader {
+public interface AuditReader {
     /**
      * Find an entity by primary key at the given revision.
      * @param cls Class of the entity.

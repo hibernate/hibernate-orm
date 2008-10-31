@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,7 +41,7 @@ public class MulIdTestEntity {
     @Id
     private Integer id2;
 
-    @Versioned
+    @Audited
     private String str1;
 
     public MulIdTestEntity() {

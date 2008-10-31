@@ -34,7 +34,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -43,7 +43,7 @@ import org.hibernate.envers.Versioned;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "discriminator", discriminatorType = DiscriminatorType.INTEGER)
 @DiscriminatorValue("1")
-@Versioned
+@Audited
 public class ParentIngEntity {
     @Id
     @GeneratedValue

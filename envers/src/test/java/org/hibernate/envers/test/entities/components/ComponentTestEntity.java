@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -40,7 +40,7 @@ public class ComponentTestEntity {
     private Integer id;
 
     @Embedded
-    @Versioned
+    @Audited
     private Component1 comp1;
 
     @Embedded

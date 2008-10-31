@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.sameids;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -36,7 +36,7 @@ public class SameIdTestEntity1 {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String str1;
 
     public SameIdTestEntity1() {

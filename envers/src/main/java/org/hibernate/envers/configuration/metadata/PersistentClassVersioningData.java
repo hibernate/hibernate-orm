@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.VersionsJoinTable;
-import org.hibernate.envers.VersionsTable;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditTable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,18 +41,18 @@ public class PersistentClassVersioningData {
         propertyStoreInfo = new PropertyStoreInfo(new HashMap<String, ModificationStore>());
         secondaryTableDictionary = new HashMap<String, String>();
         unversionedProperties = new ArrayList<String>();
-        versionsJoinTables = new HashMap<String, VersionsJoinTable>();
+        versionsJoinTables = new HashMap<String, AuditJoinTable>();
         mapKeys = new HashMap<String, String>();
     }
 
     public PropertyStoreInfo propertyStoreInfo;
-    public VersionsTable versionsTable;
+    public AuditTable versionsTable;
     public Map<String, String> secondaryTableDictionary;
     public List<String> unversionedProperties;
     /**
      * A map from property names to custom join tables definitions.
      */
-    public Map<String, VersionsJoinTable> versionsJoinTables;
+    public Map<String, AuditJoinTable> versionsJoinTables;
     /**
      * A map from property names to the value of the related property names in a map key annotation. An empty string,
      * if the property name is not specified in the mapkey annotation.

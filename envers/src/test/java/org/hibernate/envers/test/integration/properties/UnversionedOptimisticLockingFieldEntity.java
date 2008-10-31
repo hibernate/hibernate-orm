@@ -28,12 +28,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Version;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Nicolas Doroskevich
  */
-@Versioned
+@Audited
 @Entity
 public class UnversionedOptimisticLockingFieldEntity {
 	

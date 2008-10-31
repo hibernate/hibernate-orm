@@ -29,7 +29,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -40,16 +40,16 @@ public class Address {
     @GeneratedValue
     private int id;
 
-    @Versioned
+    @Audited
     private String streetName;
 
-    @Versioned
+    @Audited
     private Integer houseNumber;
 
-    @Versioned
+    @Audited
     private Integer flatNumber;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy = "address")
     private Set<Person> persons;
 

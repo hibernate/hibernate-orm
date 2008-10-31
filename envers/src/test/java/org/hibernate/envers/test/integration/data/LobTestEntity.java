@@ -29,7 +29,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,15 +41,15 @@ public class LobTestEntity {
     private Integer id;
 
     @Lob
-    @Versioned
+    @Audited
     private String stringLob;
 
     @Lob
-    @Versioned
+    @Audited
     private byte[] byteLob;
 
     @Lob
-    @Versioned
+    @Audited
     private char[] charLob;
 
     public LobTestEntity() {

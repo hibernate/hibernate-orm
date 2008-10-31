@@ -25,14 +25,14 @@ package org.hibernate.envers.test.integration.superclass;
 
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @MappedSuperclass
 public class SuperclassOfEntity {
-    @Versioned
+    @Audited
     private String str;
 
     public SuperclassOfEntity() {

@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.onetoone.unidirectional;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * Unidirectional ReferencEd Entity
@@ -37,7 +37,7 @@ public class UniRefEdEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
     public UniRefEdEntity() {

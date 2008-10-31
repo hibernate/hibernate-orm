@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import org.hibernate.annotations.CollectionOfElements;
 
@@ -42,7 +42,7 @@ public class StringSetEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @CollectionOfElements
     private Set<String> strings;
 

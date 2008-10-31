@@ -29,7 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * ReferencEd entity
@@ -44,10 +44,10 @@ public class JoinMulIdNamingRefEdEntity {
     @Id
     private Integer id2;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     private List<JoinMulIdNamingRefIngEntity> reffering;
 

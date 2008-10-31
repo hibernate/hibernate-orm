@@ -29,8 +29,8 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.SecondaryTable;
 
-import org.hibernate.envers.SecondaryVersionsTable;
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.SecondaryAuditTable;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.MulId;
 
 /**
@@ -38,8 +38,8 @@ import org.hibernate.envers.test.entities.ids.MulId;
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryVersionsTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_mulid_versions")
-@Versioned
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_mulid_versions")
+@Audited
 @IdClass(MulId.class)
 public class SecondaryMulIdTestEntity {
     @Id

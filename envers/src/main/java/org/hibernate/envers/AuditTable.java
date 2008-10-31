@@ -29,12 +29,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When applied to a class, indicates that all of its properties should be versioned.
- * When applied to a field, indicates that this field should be versioned.
  * @author Adam Warski (adam at warski dot org)
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
-public @interface Versioned {
-    ModificationStore modStore()    default ModificationStore.FULL;
+@Target(ElementType.TYPE)
+public @interface AuditTable {
+    String value();
+
+    /**
+     * @return The schema of the table. Defaults to the schema of the annotated entity.
+     */
+    String schema() default "";
+
+    /**
+     * @return The catalog of the table. Defaults to the catalog of the annotated entity.
+     */
+    String catalog() default "";
 }

@@ -29,13 +29,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@Versioned
+@Audited
 public class ReferencedEntity {
     @Id
     @GeneratedValue

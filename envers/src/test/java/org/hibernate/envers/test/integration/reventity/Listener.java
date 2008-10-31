@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.Date;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.VersionsReader;
+import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -96,14 +96,14 @@ public class Listener extends AbstractEntityTest {
 
     @Test
     public void testDatesForRevisions() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(1)).intValue() == 1;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(2)).intValue() == 2;
     }
 
     @Test
     public void testRevisionsForDates() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
 
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2))).getTime() <= timestamp2;
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2)).intValue()+1).getTime() > timestamp2;
@@ -113,7 +113,7 @@ public class Listener extends AbstractEntityTest {
 
     @Test
     public void testFindRevision() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
 
         ListenerRevEntity rev1Data = vr.findRevision(ListenerRevEntity.class, 1);
         ListenerRevEntity rev2Data = vr.findRevision(ListenerRevEntity.class, 2);

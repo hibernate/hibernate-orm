@@ -28,14 +28,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Unversioned;
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@Versioned
+@Audited
 public class UnversionedEntity {
     @Id
     @GeneratedValue
@@ -45,7 +45,7 @@ public class UnversionedEntity {
     private String data1;
 
     @Basic
-    @Unversioned
+    @NotAudited
     private String data2;
 
     public UnversionedEntity() {

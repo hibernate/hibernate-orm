@@ -38,19 +38,19 @@ import org.hibernate.event.PostInsertEventListener;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class VersionsReaderFactory {
-    private VersionsReaderFactory() { }
+public class AuditReaderFactory {
+    private AuditReaderFactory() { }
 
     /**
      * Create a versions reader associated with an open session.
      * <b>WARNING:</b> Using Envers with Hibernate (not with Hibernate Entity Manager/JPA) is experimental,
-     * if possible, use {@link org.hibernate.envers.VersionsReaderFactory#get(javax.persistence.EntityManager)}.
+     * if possible, use {@link AuditReaderFactory#get(javax.persistence.EntityManager)}.
      * @param session An open session.
      * @return A versions reader associated with the given sesison. It shouldn't be used
      * after the session is closed.
      * @throws VersionsException When the given required listeners aren't installed.
      */
-    public static VersionsReader get(Session session) throws VersionsException {
+    public static AuditReader get(Session session) throws VersionsException {
         SessionImplementor sessionImpl = (SessionImplementor) session;
 
         EventListeners listeners = sessionImpl.getListeners();
@@ -77,7 +77,7 @@ public class VersionsReaderFactory {
      * @throws VersionsException When the given entity manager is not based on Hibernate, or if the required
      * listeners aren't installed.
      */
-    public static VersionsReader get(EntityManager entityManager) throws VersionsException {
+    public static AuditReader get(EntityManager entityManager) throws VersionsException {
         if (entityManager.getDelegate() instanceof Session) {
             return get((Session) entityManager.getDelegate());
         }

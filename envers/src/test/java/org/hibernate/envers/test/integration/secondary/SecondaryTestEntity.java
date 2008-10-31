@@ -29,14 +29,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@Versioned
+@Audited
 public class SecondaryTestEntity {
     @Id
     @GeneratedValue

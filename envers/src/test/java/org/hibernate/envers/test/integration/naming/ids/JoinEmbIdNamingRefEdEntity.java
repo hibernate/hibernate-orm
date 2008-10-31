@@ -29,7 +29,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * ReferencEd entity
@@ -41,10 +41,10 @@ public class JoinEmbIdNamingRefEdEntity {
     @GeneratedValue
     private EmbIdNaming id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     private List<JoinEmbIdNamingRefIngEntity> reffering;
 

@@ -28,7 +28,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -39,11 +39,11 @@ public class RefIngMapKeyEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @ManyToOne
     private RefEdMapKeyEntity reference;
 
-    @Versioned
+    @Audited
     private String data;
 
     public Integer getId() {

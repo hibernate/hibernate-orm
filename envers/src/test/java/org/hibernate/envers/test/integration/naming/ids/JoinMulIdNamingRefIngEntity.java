@@ -30,7 +30,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * ReferencIng entity
@@ -45,10 +45,10 @@ public class JoinMulIdNamingRefIngEntity {
     @Id
     private Integer id2;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToOne
     @JoinColumns({@JoinColumn(name = "ID2_reference", referencedColumnName = "ID_2"),
         @JoinColumn(name = "ID1_reference", referencedColumnName = "ID_1")})

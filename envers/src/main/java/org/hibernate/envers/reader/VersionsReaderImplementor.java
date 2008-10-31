@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.reader;
 
-import org.hibernate.envers.VersionsReader;
+import org.hibernate.envers.AuditReader;
 
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
@@ -32,7 +32,7 @@ import org.hibernate.engine.SessionImplementor;
  * An interface exposed by a VersionsReader to library-facing classes.
  * @author Adam Warski (adam at warski dot org)
  */
-public interface VersionsReaderImplementor extends VersionsReader {
+public interface VersionsReaderImplementor extends AuditReader {
     SessionImplementor getSessionImplementor();
     Session getSession();
     FirstLevelCache getFirstLevelCache();

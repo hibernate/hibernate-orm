@@ -29,8 +29,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
-import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -41,13 +41,13 @@ public class VersionsJoinTableTestEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany
     @JoinColumn(name = "VJT_ID")
-    @VersionsJoinTable(name = "VERSIONS_JOIN_TABLE_TEST", inverseJoinColumns = @JoinColumn(name = "STR_ID"))
+    @AuditJoinTable(name = "VERSIONS_JOIN_TABLE_TEST", inverseJoinColumns = @JoinColumn(name = "STR_ID"))
     private Set<StrTestEntity> collection;
 
     public VersionsJoinTableTestEntity() {

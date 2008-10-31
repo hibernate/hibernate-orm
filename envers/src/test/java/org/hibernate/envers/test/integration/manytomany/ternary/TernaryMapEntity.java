@@ -30,7 +30,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
@@ -45,7 +45,7 @@ public class TernaryMapEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @ManyToMany
     @MapKeyManyToMany
     private Map<IntTestEntity, StrTestEntity> map;

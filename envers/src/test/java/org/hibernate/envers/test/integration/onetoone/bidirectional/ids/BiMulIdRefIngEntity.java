@@ -28,7 +28,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.OneToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.MulId;
 
 /**
@@ -43,10 +43,10 @@ public class BiMulIdRefIngEntity {
     @Id
     private Integer id2;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToOne
     private BiMulIdRefEdEntity reference;
 

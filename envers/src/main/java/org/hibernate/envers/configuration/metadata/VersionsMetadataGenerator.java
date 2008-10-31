@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.dom4j.Element;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.VersionsEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityConfiguration;
@@ -132,7 +132,7 @@ public final class VersionsMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     void addValue(Element parent, String name, Value value, CompositeMapperBuilder currentMapper,
                   ModificationStore store, String entityName, EntityXmlMappingData xmlMappingData,
-                  VersionsJoinTable joinTable, String mapKey, boolean insertable, boolean firstPass) {
+                  AuditJoinTable joinTable, String mapKey, boolean insertable, boolean firstPass) {
         Type type = value.getType();
 
         // only first pass

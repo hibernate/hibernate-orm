@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -40,10 +40,10 @@ public class MapUniEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToMany
     private Map<String, StrTestEntity> map;
 

@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * Entity owning the many-to-many relation
@@ -39,10 +39,10 @@ public class SetOwningEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToMany
     private Set<SetOwnedEntity> references;
 

@@ -28,14 +28,14 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
 @DiscriminatorValue("2")
-@Versioned
+@Audited
 public class ChildIngEntity extends ParentNotIngEntity {
     @Basic
     private Long number;

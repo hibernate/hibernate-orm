@@ -27,7 +27,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.EmbId;
 
 /**
@@ -39,10 +39,10 @@ public class SetRefIngEmbIdEntity {
     @EmbeddedId
     private EmbId id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToOne
     private SetRefEdEmbIdEntity reference;
 

@@ -30,7 +30,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -41,10 +41,10 @@ public class DetachedNamingTestEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany
     @JoinTable(name = "UNI_NAMING_TEST",
         joinColumns = @JoinColumn(name = "ID_1"),

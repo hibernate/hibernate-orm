@@ -29,16 +29,16 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
-import org.hibernate.envers.SecondaryVersionsTable;
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.SecondaryAuditTable;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryVersionsTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_versions")
-@Versioned
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_versions")
+@Audited
 public class SecondaryNamingTestEntity {
     @Id
     @GeneratedValue

@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * ReferencEd entity
@@ -39,10 +39,10 @@ public class ListRefEdEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     private List<ListRefIngEntity> reffering;
 

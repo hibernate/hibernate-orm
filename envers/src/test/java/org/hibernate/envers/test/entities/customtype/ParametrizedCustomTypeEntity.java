@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -44,7 +44,7 @@ public class ParametrizedCustomTypeEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @Type(type = "param")
     private String str;
 

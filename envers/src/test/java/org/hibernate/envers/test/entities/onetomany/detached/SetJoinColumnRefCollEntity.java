@@ -29,7 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -41,10 +41,10 @@ public class SetJoinColumnRefCollEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany
     @JoinColumn(name = "SJCR_ID")
     private Set<StrTestEntity> collection;

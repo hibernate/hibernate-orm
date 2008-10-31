@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * Many-to-many not-owning entity
@@ -39,10 +39,10 @@ public class ListOwnedEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToMany(mappedBy="references")
     private List<ListOwningEntity> referencing;
 

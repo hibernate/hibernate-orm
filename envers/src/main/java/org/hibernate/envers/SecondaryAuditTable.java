@@ -33,6 +33,8 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SecondaryVersionsTables {
-    SecondaryVersionsTable[] value();
+public @interface SecondaryAuditTable {
+    String secondaryTableName();
+
+    String secondaryVersionsTableName();
 }

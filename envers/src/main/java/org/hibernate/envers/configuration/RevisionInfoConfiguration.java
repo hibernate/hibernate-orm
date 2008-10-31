@@ -28,12 +28,8 @@ import java.util.Iterator;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.hibernate.envers.DefaultRevisionEntity;
-import org.hibernate.envers.RevisionEntity;
-import org.hibernate.envers.RevisionListener;
-import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.*;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
@@ -181,7 +177,7 @@ public class RevisionInfoConfiguration {
                 }
 
                 // Checking if custom revision entity isn't versioned
-                if (clazz.getAnnotation(Versioned.class) != null) {
+                if (clazz.getAnnotation(Audited.class) != null) {
                     throw new MappingException("An entity annotated with @RevisionEntity cannot be versioned!");
                 }
 

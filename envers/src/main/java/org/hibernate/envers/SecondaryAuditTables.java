@@ -27,33 +27,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.persistence.JoinColumn;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD})
-public @interface VersionsJoinTable {
-    /**
-     * @return Name of the join table. Defaults to a concatenation of the names of the primary table of the entity
-     * owning the association and of the primary table of the entity referenced by the association.
-     */
-    String name() default "";
-
-    /**
-     * @return The schema of the join table. Defaults to the schema of the entity owning the association.
-     */
-    String schema() default "";
-
-    /**
-     * @return The catalog of the join table. Defaults to the catalog of the entity owning the association.
-     */
-    String catalog() default "";
-
-    /**
-     * @return The foreign key columns of the join table which reference the primary table of the entity that does not
-     * own the association (i.e. the inverse side of the association).
-     */
-    JoinColumn[] inverseJoinColumns() default {};
+public @interface SecondaryAuditTables {
+    SecondaryAuditTable[] value();
 }

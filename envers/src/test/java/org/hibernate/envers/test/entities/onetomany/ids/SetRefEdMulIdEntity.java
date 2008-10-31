@@ -29,7 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.MulId;
 
 /**
@@ -45,10 +45,10 @@ public class SetRefEdMulIdEntity {
     @Id
     private Integer id2;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     private Set<SetRefIngMulIdEntity> reffering;
 

@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * Unidirectional ReferencIng Entity
@@ -38,10 +38,10 @@ public class UniRefIngEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToOne
     private UniRefEdEntity reference;
 

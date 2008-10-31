@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -38,7 +38,7 @@ public class SerializableTestEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     private SerObject obj;
 
     public SerializableTestEntity() {

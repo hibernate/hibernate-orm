@@ -28,7 +28,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -39,13 +39,13 @@ public class Person {
     @GeneratedValue
     private int id;
 
-    @Versioned
+    @Audited
     private String name;
 
-    @Versioned
+    @Audited
     private String surname;
 
-    @Versioned
+    @Audited
     @ManyToOne
     private Address address;
 

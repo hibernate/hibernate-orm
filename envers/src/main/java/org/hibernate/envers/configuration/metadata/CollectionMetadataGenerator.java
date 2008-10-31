@@ -37,7 +37,7 @@ import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.VersionsJoinTable;
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
@@ -91,7 +91,7 @@ public final class CollectionMetadataGenerator {
     private final CompositeMapperBuilder currentMapper;
     private final String referencingEntityName;
     private final EntityXmlMappingData xmlMappingData;
-    private final VersionsJoinTable joinTable;
+    private final AuditJoinTable joinTable;
     private final String mapKey;
 
     private final EntityConfiguration referencingEntityConfiguration;
@@ -116,7 +116,7 @@ public final class CollectionMetadataGenerator {
     public CollectionMetadataGenerator(VersionsMetadataGenerator mainGenerator, String propertyName,
                                        Collection propertyValue, CompositeMapperBuilder currentMapper,
                                        String referencingEntityName, EntityXmlMappingData xmlMappingData,
-                                       VersionsJoinTable joinTable, String mapKey) {
+                                       AuditJoinTable joinTable, String mapKey) {
         this.mainGenerator = mainGenerator;
         this.propertyName = propertyName;
         this.propertyValue = propertyValue;
@@ -474,8 +474,8 @@ public final class CollectionMetadataGenerator {
         return middleEntityXmlId;
     }
 
-    private VersionsJoinTable getDefaultVersionsJoinTable() {
-        return new VersionsJoinTable() {
+    private AuditJoinTable getDefaultVersionsJoinTable() {
+        return new AuditJoinTable() {
             public String name() { return ""; }
             public String schema() { return ""; }
             public String catalog() { return ""; }

@@ -26,7 +26,7 @@ package org.hibernate.envers.test.entities.ids;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -36,7 +36,7 @@ public class EmbIdTestEntity {
     @EmbeddedId
     private EmbId id;
 
-    @Versioned
+    @Audited
     private String str1;
 
     public EmbIdTestEntity() {

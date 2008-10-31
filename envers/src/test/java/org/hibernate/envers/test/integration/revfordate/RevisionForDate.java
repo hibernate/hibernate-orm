@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.revfordate;
 import java.util.Date;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.VersionsReader;
+import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -99,7 +99,7 @@ public class RevisionForDate extends AbstractEntityTest {
 
     @Test
     public void testDatesForRevisions() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(1)).intValue() == 1;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(2)).intValue() == 2;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(3)).intValue() == 3;
@@ -107,7 +107,7 @@ public class RevisionForDate extends AbstractEntityTest {
 
     @Test
     public void testRevisionsForDates() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
 
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2))).getTime() <= timestamp2;
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2)).intValue()+1).getTime() > timestamp2;

@@ -30,7 +30,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * ReferencEd entity
@@ -43,10 +43,10 @@ public class JoinNamingRefEdEntity {
     @Column(name = "jnree_id")
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     private List<JoinNamingRefIngEntity> reffering;
 

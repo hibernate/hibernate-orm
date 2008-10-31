@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.reventity;
 import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.VersionsReader;
+import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -64,7 +64,7 @@ public class LongRevNumber extends AbstractEntityTest {
 
     @Test
     public void testFindRevision() {
-        VersionsReader vr = getVersionsReader();
+        AuditReader vr = getVersionsReader();
 
         assert vr.findRevision(LongRevNumberRevEntity.class, 1l).getCustomId() == 1l;
         assert vr.findRevision(LongRevNumberRevEntity.class, 2l).getCustomId() == 2l;

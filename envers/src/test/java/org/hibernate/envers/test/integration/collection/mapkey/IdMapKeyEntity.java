@@ -31,7 +31,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -43,7 +43,7 @@ public class IdMapKeyEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @ManyToMany
     @MapKey
     private Map<Integer, StrTestEntity> idmap;

@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * Entity owning the many-to-many relation
@@ -40,10 +40,10 @@ public class MapOwningEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @ManyToMany
     private Map<String, MapOwnedEntity> references = new HashMap<String, MapOwnedEntity>();
 

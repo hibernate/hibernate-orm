@@ -31,7 +31,7 @@ import javax.persistence.Id;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,7 +42,7 @@ public class RefEdMapKeyEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy="reference")
     @MapKey(name = "data")
     private Map<String, RefIngMapKeyEntity> idmap;

@@ -29,15 +29,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.envers.Versioned;
-import org.hibernate.envers.VersionsTable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.AuditTable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
 @Table(name="naming_test_entity_1")
-@VersionsTable("naming_test_entity_1_versions")
+@AuditTable("naming_test_entity_1_versions")
 public class NamingTestEntity1 {
     @Id
     @GeneratedValue
@@ -45,7 +45,7 @@ public class NamingTestEntity1 {
     private Integer id;
 
     @Column(name = "nte_data")
-    @Versioned
+    @Audited
     private String data;
 
     public NamingTestEntity1() {

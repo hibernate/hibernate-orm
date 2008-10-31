@@ -29,7 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
@@ -41,15 +41,15 @@ public class DoubleSetRefCollEntity {
     @Id
     private Integer id;
 
-    @Versioned
+    @Audited
     private String data;
 
-    @Versioned
+    @Audited
     @OneToMany
     @JoinTable(name = "DOUBLE_STR_1")
     private Set<StrTestEntity> collection;
 
-    @Versioned
+    @Audited
     @OneToMany
     @JoinTable(name = "DOUBLE_STR_2")
     private Set<StrTestEntity> collection2;

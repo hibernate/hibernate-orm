@@ -27,12 +27,8 @@ import java.lang.annotation.Annotation;
 import javax.persistence.MapKey;
 import javax.persistence.Version;
 
-import org.hibernate.envers.SecondaryVersionsTable;
-import org.hibernate.envers.SecondaryVersionsTables;
-import org.hibernate.envers.Unversioned;
-import org.hibernate.envers.Versioned;
-import org.hibernate.envers.VersionsJoinTable;
-import org.hibernate.envers.VersionsTable;
+import org.hibernate.envers.SecondaryAuditTable;
+import org.hibernate.envers.*;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.tools.reflection.YClass;
 import org.hibernate.envers.tools.reflection.YProperty;
@@ -67,7 +63,7 @@ public final class AnnotationsMetadataReader {
     }
 
     private void addPropertyVersioned(YProperty property) {
-        Versioned ver = property.getAnnotation(Versioned.class);
+        Audited ver = property.getAnnotation(Audited.class);
         if (ver != null) {
             versioningData.propertyStoreInfo.propertyStores.put(property.getName(), ver.modStore());
         }
@@ -83,7 +79,7 @@ public final class AnnotationsMetadataReader {
     private void addPropertyUnversioned(YProperty property) {
         // check if a property is declared as unversioned to exclude it
         // useful if a class is versioned but some properties should be excluded
-        Unversioned unVer = property.getAnnotation(Unversioned.class);
+        NotAudited unVer = property.getAnnotation(NotAudited.class);
         if (unVer != null) {
             versioningData.unversionedProperties.add(property.getName());
         } else {
@@ -99,7 +95,7 @@ public final class AnnotationsMetadataReader {
     }
 
     private void addPropertyJoinTables(YProperty property) {
-        VersionsJoinTable joinTable = property.getAnnotation(VersionsJoinTable.class);
+        AuditJoinTable joinTable = property.getAnnotation(AuditJoinTable.class);
         if (joinTable != null) {
             versioningData.versionsJoinTables.put(property.getName(), joinTable);
         }
@@ -125,7 +121,7 @@ public final class AnnotationsMetadataReader {
     }
 
     private void addDefaultVersioned(YClass clazz) {
-        Versioned defaultVersioned = clazz.getAnnotation(Versioned.class);
+        Audited defaultVersioned = clazz.getAnnotation(Audited.class);
 
         if (defaultVersioned != null) {
             versioningData.propertyStoreInfo.defaultStore = defaultVersioned.modStore();
@@ -133,7 +129,7 @@ public final class AnnotationsMetadataReader {
     }
 
     private void addVersionsTable(YClass clazz) {
-        VersionsTable versionsTable = clazz.getAnnotation(VersionsTable.class);
+        AuditTable versionsTable = clazz.getAnnotation(AuditTable.class);
         if (versionsTable != null) {
             versioningData.versionsTable = versionsTable;
         } else {
@@ -143,15 +139,15 @@ public final class AnnotationsMetadataReader {
 
     private void addVersionsSecondaryTables(YClass clazz) {
         // Getting information on secondary tables
-        SecondaryVersionsTable secondaryVersionsTable1 = clazz.getAnnotation(SecondaryVersionsTable.class);
+        SecondaryAuditTable secondaryVersionsTable1 = clazz.getAnnotation(SecondaryAuditTable.class);
         if (secondaryVersionsTable1 != null) {
             versioningData.secondaryTableDictionary.put(secondaryVersionsTable1.secondaryTableName(),
                     secondaryVersionsTable1.secondaryVersionsTableName());
         }
 
-        SecondaryVersionsTables secondaryVersionsTables = clazz.getAnnotation(SecondaryVersionsTables.class);
+        SecondaryAuditTables secondaryVersionsTables = clazz.getAnnotation(SecondaryAuditTables.class);
         if (secondaryVersionsTables != null) {
-            for (SecondaryVersionsTable secondaryVersionsTable2 : secondaryVersionsTables.value()) {
+            for (SecondaryAuditTable secondaryVersionsTable2 : secondaryVersionsTables.value()) {
                 versioningData.secondaryTableDictionary.put(secondaryVersionsTable2.secondaryTableName(),
                         secondaryVersionsTable2.secondaryVersionsTableName());
             }
@@ -177,8 +173,8 @@ public final class AnnotationsMetadataReader {
         return versioningData;
     }
 
-    private VersionsTable getDefaultVersionsTable() {
-        return new VersionsTable() {
+    private AuditTable getDefaultVersionsTable() {
+        return new AuditTable() {
             public String value() { return ""; }
             public String schema() { return ""; }
             public String catalog() { return ""; }

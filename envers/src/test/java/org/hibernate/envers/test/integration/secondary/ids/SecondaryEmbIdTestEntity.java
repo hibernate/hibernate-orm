@@ -28,8 +28,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 
-import org.hibernate.envers.SecondaryVersionsTable;
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.SecondaryAuditTable;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.EmbId;
 
 /**
@@ -37,8 +37,8 @@ import org.hibernate.envers.test.entities.ids.EmbId;
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryVersionsTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_embid_versions")
-@Versioned
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_embid_versions")
+@Audited
 public class SecondaryEmbIdTestEntity {
     @Id
     private EmbId id;

@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
@@ -43,7 +43,7 @@ public class StringListEntity {
     @GeneratedValue
     private Integer id;
 
-    @Versioned
+    @Audited
     @CollectionOfElements
     @IndexColumn(name = "list_index")
     private List<String> strings;

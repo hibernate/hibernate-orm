@@ -27,8 +27,8 @@ import java.io.IOException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.envers.VersionsReader;
-import org.hibernate.envers.VersionsReaderFactory;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -40,7 +40,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 public abstract class AbstractEntityTest {
     private EntityManagerFactory emf;
     private EntityManager entityManager;
-    private VersionsReader versionsReader;
+    private AuditReader versionsReader;
     private Ejb3Configuration cfg;
 
     public abstract void configure(Ejb3Configuration cfg);
@@ -52,7 +52,7 @@ public abstract class AbstractEntityTest {
         }
         
         entityManager = emf.createEntityManager();
-        versionsReader = VersionsReaderFactory.get(entityManager);
+        versionsReader = AuditReaderFactory.get(entityManager);
     }
 
     @BeforeClass
@@ -69,7 +69,7 @@ public abstract class AbstractEntityTest {
         return entityManager;
     }
 
-    public VersionsReader getVersionsReader() {
+    public AuditReader getVersionsReader() {
         return versionsReader;
     }
 

@@ -1,0 +1,33 @@
+<refentry id="glossary.as.blocks">
+<refmeta>
+<refentrytitle>glossary.as.blocks</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>glossary.as.blocks</refname>
+<refpurpose>Present glossarys using blocks instead of lists?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='glossary.as.blocks.frag'>
+<xsl:param name="glossary.as.blocks" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, <sgmltag>glossary</sgmltag>s will be formatted as
+blocks.</para>
+
+<para>If you have long <sgmltag>glossterm</sgmltag>s, proper list
+markup in the FO case may produce unattractive lists. By setting this
+parameter, you can force the stylesheets to produce block markup
+instead of proper lists.</para>
+
+<para>You can override this setting with a processing instruction as the
+child of <sgmltag>glossary</sgmltag>: <sgmltag class="pi">dbfo
+glossary-presentation="blocks"</sgmltag> or <sgmltag class="pi">dbfo
+glossary-presentation="list"</sgmltag></para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.use.hhk">
+<refmeta>
+<refentrytitle>htmlhelp.use.hhk</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.use.hhk</refname>
+<refpurpose>Should be index built using HHK file?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.use.hhk.frag'>
+<xsl:param name="htmlhelp.use.hhk" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, index is created using HHK file. This provides some
+new features.</para>
+
+</refsect1>
+</refentry>

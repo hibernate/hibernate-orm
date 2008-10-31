@@ -1,0 +1,22 @@
+<refentry id="nominal.image.depth">
+<refmeta>
+<refentrytitle>nominal.image.depth</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>nominal.image.depth</refname>
+<refpurpose>Nominal image depth</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='nominal.image.depth.frag'>
+<xsl:param name="nominal.image.depth" select="4 * $pixels.per.inch"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>See <parameter>nominal.image.width</parameter>.</para>
+
+</refsect1>
+</refentry>

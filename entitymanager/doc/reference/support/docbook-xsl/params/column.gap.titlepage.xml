@@ -1,0 +1,24 @@
+<refentry id="column.gap.titlepage">
+<refmeta>
+<refentrytitle>column.gap.titlepage</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.gap.titlepage</refname>
+<refpurpose>Gap between columns on title pages</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.gap.titlepage.frag'>
+<xsl:param name="column.gap.titlepage" select="'12pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the gap between columns on title pages (if
+<parameter>column.count.titlepage</parameter> is greater than one).</para>
+
+
+</refsect1>
+</refentry>

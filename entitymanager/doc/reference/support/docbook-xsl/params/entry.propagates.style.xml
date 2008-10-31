@@ -1,0 +1,25 @@
+<refentry id="entry.propagates.style">
+<refmeta>
+<refentrytitle>entry.propagates.style</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>entry.propagates.style</refname>
+<refpurpose>Pass entry role attribute through to HTML?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='entry.propagates.style.frag'>
+<xsl:param name="entry.propagates.style" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, the role attribute of <sgmltag>entry</sgmltag> elements
+will be passed through to the HTML as a class attribute on the
+<sgmltag>td</sgmltag> or <sgmltag>th</sgmltag> generated for the table
+cell.</para>
+
+</refsect1>
+</refentry>

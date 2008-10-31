@@ -1,0 +1,22 @@
+<refentry id="default.float.class">
+<refmeta>
+<refentrytitle>default.float.class</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>default.float.class</refname>
+<refpurpose>Specifies the default float class</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='default.float.class.frag'>
+<xsl:param name="default.float.class" select="'before'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

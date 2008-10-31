@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.show.toolbar.text">
+<refmeta>
+<refentrytitle>htmlhelp.show.toolbar.text</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.show.toolbar.text</refname>
+<refpurpose>Show text under toolbar buttons?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.show.toolbar.text.frag'>
+<xsl:param name="htmlhelp.show.toolbar.text" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>You can switch off display of texts under toolbar buttons by
+setting this parameter to 0.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.jump2">
+<refmeta>
+<refentrytitle>htmlhelp.button.jump2</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.jump2</refname>
+<refpurpose>Should be Jump2 button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.jump2.frag'>
+<xsl:param name="htmlhelp.button.jump2" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Jump2 button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

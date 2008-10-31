@@ -1,0 +1,35 @@
+<refentry id="ebnf.assignment">
+<refmeta>
+<refentrytitle>ebnf.assignment</refentrytitle>
+<refmiscinfo role="type">rtf</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ebnf.assignment</refname>
+<refpurpose>The EBNF production assignment operator</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ebnf.assignment.frag'>
+<xsl:param condition="html" name="ebnf.assignment">
+<tt>::=</tt>
+</xsl:param>
+<xsl:param condition="fo" name="ebnf.assignment"
+           xmlns:fo="http://www.w3.org/1999/XSL/Format">
+  <fo:inline font-family="{$monospace.font.family}">
+    <xsl:text>::=</xsl:text>
+  </fo:inline>
+</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>ebnf.assignment</parameter> parameter determines what
+text is used to show <quote>assignment</quote> in <sgmltag>production</sgmltag>s
+in <sgmltag>productionset</sgmltag>s.</para>
+
+<para>While <quote><literal>::=</literal></quote> is common, so are several
+other operators.</para>
+
+</refsect1>
+</refentry>

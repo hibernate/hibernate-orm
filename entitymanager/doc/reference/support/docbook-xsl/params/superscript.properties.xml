@@ -1,0 +1,24 @@
+<refentry id="superscript.properties">
+<refmeta>
+<refentrytitle>superscript.properties</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>superscript.properties</refname>
+<refpurpose>Properties associated with superscripts</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='superscript.properties.frag'>
+<xsl:attribute-set name="superscript.properties">
+  <xsl:attribute name="font-size">75%</xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies styling properties for superscripts.</para>
+
+</refsect1>
+</refentry>

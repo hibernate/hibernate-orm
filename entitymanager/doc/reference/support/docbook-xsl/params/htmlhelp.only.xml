@@ -1,0 +1,25 @@
+<refentry id="htmlhelp.only">
+<refmeta>
+<refentrytitle>htmlhelp.only</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.only</refname>
+<refpurpose>Should be only project files generated?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.only.frag'>
+<xsl:param name="htmlhelp.only" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want to play with various HTML Help parameters and you
+don't need to regenerate all HTML files, you can set this parameter to
+1. This setting will not process whole document, only project files
+(hhp, hhc, hhk,...) will be generated.</para>
+
+</refsect1>
+</refentry>

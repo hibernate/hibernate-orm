@@ -1,0 +1,5 @@
+common.dir=.
+src.dir=src
+test.dir=test
+resources.dir=resources
+testresources.dir=test-resources

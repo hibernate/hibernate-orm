@@ -1,0 +1,22 @@
+<refentry id="glosslist.as.blocks">
+<refmeta>
+<refentrytitle>glosslist.as.blocks</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>glosslist.as.blocks</refname>
+<refpurpose>Use blocks for glosslists?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='glosslist.as.blocks.frag'>
+<xsl:param name="glosslist.as.blocks" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>See <parameter>glossary.as.blocks</parameter>.</para>
+
+</refsect1>
+</refentry>

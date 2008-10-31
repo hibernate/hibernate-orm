@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<chapter id="queryhql">
+  <title>EJB-QL: The Object Query Language</title>
+
+  <para>
+    EJB3-QL has been heavily inspired by HQL, the native Hibernate Query Language. Both
+    are therefore very close to SQL, but portable and independent of the database schema.
+    People familiar with HQL shouldn't have any problem using EJB-QL. Actually, you
+    use the same query API for EJB-QL and HQL queries. Portable EJB3 applications however
+    should stick to EJB-QL or similar vendor extensions are needed.
+    </para>
+
+  <sect1 id="queryhql-casesensitivity">
+    <title>Case Sensitivity</title>
+
+    <para>Queries are case-insensitive, except for names of Java classes and
+    properties. So <literal>SeLeCT</literal> is the same as
+    <literal>sELEct</literal> is the same as <literal>SELECT</literal> but
+    <literal>org.hibernate.eg.FOO</literal> is not
+    <literal>org.hibernate.eg.Foo</literal> and <literal>foo.barSet</literal>
+    is not <literal>foo.BARSET</literal>.</para>
+
+    <para>This manual uses lowercase EJBQL keywords. Some users find queries
+    with uppercase keywords more readable, but we find this convention ugly
+    when embedded in Java code.</para>
+  </sect1>
+
+  <sect1 id="queryhql-from">
+    <title>The from clause</title>
+
+    <para>The simplest possible EJB-QL query is of the form:</para>
+
+    <programlisting>select c from eg.Cat c</programlisting>
+
+    <para>which simply returns all instances of the class
+    <literal>eg.Cat</literal>. Unlike HQL, the select clause is not optional
+    in EJB-QL. We don't usually need to qualify the class name, since the
+    entity name defaults to the unqualified class name
+    (<literal>@Entity</literal>). So we almost always just write:</para>
+
+    <programlisting>select c from Cat c</programlisting>
+
+    <para>As you may have noticed you can assign aliases to classes, the
+    <literal>as</literal> keywork is optional. An alias allows you to refer
+    to <literal>Cat</literal> in other parts of the query.</para>
+
+    <programlisting>select cat from Cat as cat</programlisting>
+
+    <para>Multiple classes may appear, resulting in a cartesian product or
+    "cross" join.</para>
+
+    <programlisting>select form, param from Formula as form, Parameter as param</programlisting>
+
+    <para>It is considered good practice to name query aliases using an
+    initial lowercase, consistent with Java naming standards for local
+    variables (eg. <literal>domesticCat</literal>).</para>
+  </sect1>
+
+  <sect1 id="queryhql-joins" revision="1">
+    <title>Associations and joins</title>
+
+    <para>You may also assign aliases to associated entities, or even to
+    elements of a collection of values, using a
+    <literal>join</literal>.</para>
+
+    <programlisting>select cat, mate, kitten from Cat as cat 
+    inner join cat.mate as mate
+    left outer join cat.kittens as kitten</programlisting>
+
+    <programlisting>select cat from Cat as cat left join cat.mate.kittens as kittens</programlisting>
+
+    <para>The supported join types are borrowed from ANSI SQL</para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
+        <para><literal>inner join</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>left outer join</literal></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The <literal>inner join</literal>, <literal>left outer
+    join</literal> constructs may be abbreviated.</para>
+
+    <programlisting>select cat, mate, kitten from Cat as cat 
+    join cat.mate as mate
+    left join cat.kittens as kitten</programlisting>
+
+    <para>In addition, a "fetch" join allows associations or collections of
+    values to be initialized along with their parent objects, using a single
+    select. This is particularly useful in the case of a collection. It
+    effectively overrides the fetching options in the associations and collection
+    mapping metadata. See the Performance chapter of the Hibernate reference guide
+    for more information.</para>
+
+    <programlisting>select cat from Cat as cat 
+    inner join fetch cat.mate
+    left join fetch cat.kittens</programlisting>
+
+    <para>A fetch join does not usually need to assign an alias, because the
+    associated objects should not be used in the <literal>where</literal>
+    clause (or any other clause). Also, the associated objects are not
+    returned directly in the query results. Instead, they may be accessed via
+    the parent object. The only reason we might need an alias is if we are
+    recursively join fetching a further collection:</para>
+
+    <programlisting>select cat from Cat as cat 
+    inner join fetch cat.mate
+    left join fetch cat.kittens child
+    left join fetch child.kittens</programlisting>
+
+    <para>Note that the <literal>fetch</literal> construct may not be used in
+    queries called using <literal>scroll()</literal> or
+    <literal>iterate()</literal>. Nor should <literal>fetch</literal> be used
+    together with <literal>setMaxResults()</literal> or
+    <literal>setFirstResult()</literal>. It is possible to create a cartesian
+    product by join fetching more than one collection in a query (as in the example
+    above), be careful the result of this product isn't bigger than you expect.
+    Join fetching multiple collection roles also sometimes gives unexpected results for
+    bag mappings, so be careful about how you formulate your queries in this case.</para>
+
+    <para>
+      TODO: The last statement is useless and typical developer thinking, please elaborate.
+        The word "sometimes" should never appear in any technical documentation.
+    </para>
+
+    <para>If you are using property-level lazy fetching (with bytecode
+    instrumentation), it is possible to force Hibernate to fetch the lazy
+    properties immediately (in the first query) using <literal>fetch all
+    properties</literal>. This is Hibernate specific option:</para>
+
+    <programlisting>select doc from Document doc fetch all properties order by doc.name</programlisting>
+
+    <programlisting>select doc from Document doc fetch all properties where lower(doc.name) like '%cats%'</programlisting>
+  </sect1>
+
+  <sect1 id="queryhql-select">
+    <title>The select clause</title>
+
+    <para>The <literal>select</literal> clause picks which objects and
+    properties to return in the query result set. Consider:</para>
+
+    <programlisting>select mate 
+from Cat as cat 
+    inner join cat.mate as mate</programlisting>
+
+    <para>The query will select <literal>mate</literal>s of other
+    <literal>Cat</literal>s. Actually, you may express this query more
+    compactly as:</para>
+
+    <programlisting>select cat.mate from Cat cat</programlisting>
+
+    <para>Queries may return properties of any value type including properties
+    of component type:</para>
+
+    <programlisting>select cat.name from DomesticCat cat
+where cat.name like 'fri%'</programlisting>
+
+    <programlisting>select cust.name.firstName from Customer as cust</programlisting>
+
+    <para>Queries may return multiple objects and/or properties as an array of
+    type <literal>Object[]</literal>,</para>
+
+    <programlisting>select mother, offspr, mate.name 
+from DomesticCat as mother
+    inner join mother.mate as mate
+    left outer join mother.kittens as offspr</programlisting>
+
+    <para>or as a <literal>List</literal> (HQL specific feature)</para>
+
+    <programlisting>select new list(mother, offspr, mate.name)
+from DomesticCat as mother
+    inner join mother.mate as mate
+    left outer join mother.kittens as offspr</programlisting>
+
+    <para>or as an actual typesafe Java object,</para>
+
+    <programlisting>select new Family(mother, mate, offspr)
+from DomesticCat as mother
+    join mother.mate as mate
+    left join mother.kittens as offspr</programlisting>
+
+    <para>assuming that the class <literal>Family</literal> has an appropriate
+    constructor.</para>
+
+    <para>You may assign aliases to selected expressions using
+    <literal>as</literal>:</para>
+
+    <programlisting>select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n
+from Cat cat</programlisting>
+
+    <para>This is most useful when used together with <literal>select new
+    map</literal> (HQL specific feature):</para>
+
+    <programlisting>select new map( max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n )
+from Cat cat</programlisting>
+
+    <para>This query returns a <literal>Map</literal> from aliases to selected
+    values.</para>
+  </sect1>
+
+  <sect1 id="queryhql-aggregation">
+    <title>Aggregate functions</title>
+
+    <para>HQL queries may even return the results of aggregate functions on
+    properties:</para>
+
+    <programlisting>select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
+from Cat cat</programlisting>
+
+    <para>The supported aggregate functions are</para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
+        <para><literal>avg(...), avg(distinct ...), sum(...), sum(distinct
+        ...), min(...), max(...)</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>count(*)</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>count(...), count(distinct ...),
+        count(all...)</literal></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>You may use arithmetic operators, concatenation, and recognized SQL
+    functions in the select clause (dpending on configured dialect, HQL specific feature):</para>
+
+    <programlisting>select cat.weight + sum(kitten.weight) 
+from Cat cat 
+    join cat.kittens kitten
+group by cat.id, cat.weight</programlisting>
+
+    <programlisting>select firstName||' '||initial||' '||upper(lastName) from Person</programlisting>
+
+    <para>The <literal>distinct</literal> and <literal>all</literal> keywords
+    may be used and have the same semantics as in SQL.</para>
+
+    <programlisting>select distinct cat.name from Cat cat
+
+select count(distinct cat.name), count(cat) from Cat cat</programlisting>
+  </sect1>
+
+  <sect1 id="queryhql-polymorphism">
+    <title>Polymorphic queries</title>
+
+    <para>A query like:</para>
+
+    <programlisting>select cat from Cat as cat</programlisting>
+
+    <para>returns instances not only of <literal>Cat</literal>, but also of
+    subclasses like <literal>DomesticCat</literal>. Hibernate queries may name
+    <emphasis>any</emphasis> Java class or interface in the
+    <literal>from</literal> clause (portable EJB-QL queries should only name
+    mapped entities). The query will return instances of all persistent
+    classes that extend that class or implement the interface. The following
+    query would return all persistent objects:</para>
+
+    <programlisting>from java.lang.Object o // HQL only</programlisting>
+
+    <para>The interface <literal>Named</literal> might be implemented by
+    various persistent classes:</para>
+
+    <programlisting>from Named n, Named m where n.name = m.name // HQL only</programlisting>
+
+    <para>Note that these last two queries will require more than one SQL
+    <literal>SELECT</literal>. This means that the <literal>order by</literal>
+    clause does not correctly order the whole result set. (It also means you
+    can't call these queries using <literal>Query.scroll()</literal>.)</para>
+  </sect1>
+
+  <sect1 id="queryhql-where">
+    <title>The where clause</title>
+
+    <para>The <literal>where</literal> clause allows you to narrow the list of
+    instances returned. If no alias exists, you may refer to properties by
+    name:</para>
+
+    <programlisting>select cat from Cat cat where cat.name='Fritz'</programlisting>
+
+    <para>returns instances of <literal>Cat</literal> named 'Fritz'.</para>
+
+    <programlisting>select foo 
+from Foo foo, Bar bar
+where foo.startDate = bar.date</programlisting>
+
+    <para>will return all instances of <literal>Foo</literal> for which there
+    exists an instance of <literal>bar</literal> with a
+    <literal>date</literal> property equal to the <literal>startDate</literal>
+    property of the <literal>Foo</literal>. Compound path expressions make the
+    <literal>where</literal> clause extremely powerful. Consider:</para>
+
+    <programlisting>select cat from Cat cat where cat.mate.name is not null</programlisting>
+
+    <para>This query translates to an SQL query with a table (inner) join. If
+    you were to write something like</para>
+
+    <programlisting>select foo from Foo foo  
+where foo.bar.baz.customer.address.city is not null</programlisting>
+
+    <para>you would end up with a query that would require four table joins in
+    SQL.</para>
+
+    <para>The <literal>=</literal> operator may be used to compare not only
+    properties, but also instances:</para>
+
+    <programlisting>select cat, rival from Cat cat, Cat rival where cat.mate = rival.mate</programlisting>
+
+    <programlisting>select cat, mate 
+from Cat cat, Cat mate
+where cat.mate = mate</programlisting>
+
+    <para>The special property (lowercase) <literal>id</literal> may be used
+    to reference the unique identifier of an object. (You may also use its
+    mapped identifer property name.). Note that this keyword is specific to HQL.</para>
+
+    <programlisting>select cat from Cat as cat where cat.id = 123
+
+select cat from Cat as cat where cat.mate.id = 69</programlisting>
+
+    <para>The second query is efficient. No table join is required!</para>
+
+    <para>Properties of composite identifiers may also be used. Suppose
+    <literal>Person</literal> has a composite identifier consisting of
+    <literal>country</literal> and <literal>medicareNumber</literal>.</para>
+
+    <programlisting>select person from bank.Person person
+where person.id.country = 'AU' 
+    and person.id.medicareNumber = 123456</programlisting>
+
+    <programlisting>select account from bank.Account account
+where account.owner.id.country = 'AU' 
+    and account.owner.id.medicareNumber = 123456</programlisting>
+
+    <para>Once again, the second query requires no table join.</para>
+
+    <para>Likewise, the special property <literal>class</literal> accesses the
+    discriminator value of an instance in the case of polymorphic persistence.
+    A Java class name embedded in the where clause will be translated to its
+    discriminator value. Once again, this is specific to HQL.</para>
+
+    <programlisting>select cat from Cat cat where cat.class = DomesticCat</programlisting>
+
+    <para>You may also specify properties of components or composite user
+    types (and of components of components, etc). Never try to use a
+    path-expression that ends in a property of component type (as opposed to a
+    property of a component). For example, if <literal>store.owner</literal>
+    is an entity with a component <literal>address</literal></para>
+
+    <programlisting>store.owner.address.city    // okay
+store.owner.address         // error!</programlisting>
+
+    <para>An "any" type has the special properties <literal>id</literal> and
+    <literal>class</literal>, allowing us to express a join in the following
+    way (where <literal>AuditLog.item</literal> is a property mapped with
+    <literal>&lt;any&gt;</literal>). <literal>Any</literal> is specific to
+    Hibernate</para>
+
+    <programlisting>from AuditLog log, Payment payment 
+where log.item.class = 'Payment' and log.item.id = payment.id</programlisting>
+
+    <para>Notice that <literal>log.item.class</literal> and
+    <literal>payment.class</literal> would refer to the values of completely
+    different database columns in the above query.</para>
+  </sect1>
+
+  <sect1 id="queryhql-expressions">
+    <title>Expressions</title>
+
+    <para>Expressions allowed in the <literal>where</literal> clause include
+    most of the kind of things you could write in SQL:</para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
+        <para>mathematical operators <literal>+, -, *, /</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;,
+        !=, like</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>logical operations <literal>and, or, not</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>Parentheses <literal>( )</literal>, indicating grouping</para>
+      </listitem>
+
+      <listitem>
+        <para><literal>in</literal>, <literal>not in</literal>,
+        <literal>between</literal>, <literal>is null</literal>, <literal>is
+        not null</literal>, <literal>is empty</literal>, <literal>is not
+        empty</literal>, <literal>member of</literal> and <literal>not member
+        of</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>"Simple" case, <literal>case ... when ... then ... else ...
+        end</literal>, and "searched" case, <literal>case when ... then ...
+        else ... end (specific to HQL)</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>string concatenation <literal>...||...</literal> or
+        <literal>concat(...,...) (use concat() for portable EJB-QL
+        queries)</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>current_date()</literal>,
+        <literal>current_time()</literal>,
+        <literal>current_timestamp()</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>second(...)</literal>, <literal>minute(...)</literal>,
+        <literal>hour(...)</literal>, <literal>day(...)</literal>,
+        <literal>month(...)</literal>, <literal>year(...)</literal>, (specific
+        to HQL)</para>
+      </listitem>
+
+      <listitem>
+        <para>Any function or operator defined by EJB-QL 3.0:
+        <literal>substring(), trim(), lower(), upper(), length(), locate(),
+        abs(), sqrt(), bit_length()</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>coalesce()</literal> and
+        <literal>nullif()</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>cast(... as ...)</literal>, where the second argument
+        is the name of a Hibernate type, and <literal>extract(... from
+        ...)</literal> if ANSI <literal>cast()</literal> and
+        <literal>extract()</literal> is supported by the underlying
+        database</para>
+      </listitem>
+
+      <listitem>
+        <para>Any database-supported SQL scalar function like
+        <literal>sign()</literal>, <literal>trunc()</literal>,
+        <literal>rtrim()</literal>, <literal>sin()</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>JDBC IN parameters <literal>?</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>named parameters <literal>:name</literal>,
+        <literal>:start_date</literal>, <literal>:x1</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>SQL literals <literal>'foo'</literal>, <literal>69</literal>,
+        <literal>'1970-01-01 10:00:01.0'</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>Java <literal>public static final</literal> constants
+        <literal>eg.Color.TABBY</literal></para>
+      </listitem>
+    </itemizedlist>
+
+    <para><literal>in</literal> and <literal>between</literal> may be used as
+    follows:</para>
+
+    <programlisting>select cat from DomesticCat cat where cat.name between 'A' and 'B'</programlisting>
+
+    <programlisting>select cat from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )</programlisting>
+
+    <para>and the negated forms may be written</para>
+
+    <programlisting>select cat from DomesticCat cat where cat.name not between 'A' and 'B'</programlisting>
+
+    <programlisting>select cat from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )</programlisting>
+
+    <para>Likewise, <literal>is null</literal> and <literal>is not
+    null</literal> may be used to test for null values.</para>
+
+    <para>Booleans may be easily used in expressions by declaring HQL query
+    substitutions in Hibernate configuration:</para>
+
+    <programlisting>hibernate.query.substitutions true 1, false 0</programlisting>
+
+    <para>This will replace the keywords <literal>true</literal> and
+    <literal>false</literal> with the literals <literal>1</literal> and
+    <literal>0</literal> in the translated SQL from this HQL:</para>
+
+    <programlisting>select cat from Cat cat where cat.alive = true</programlisting>
+
+    <para>You may test the size of a collection with the special property
+    <literal>size</literal>, or the special <literal>size()</literal> function
+    (HQL specific feature).</para>
+
+    <programlisting>select cat from Cat cat where cat.kittens.size &gt; 0</programlisting>
+
+    <programlisting>select cat from Cat cat where size(cat.kittens) &gt; 0</programlisting>
+
+    <para>For indexed collections, you may refer to the minimum and maximum
+    indices using <literal>minindex</literal> and <literal>maxindex</literal>
+    functions. Similarly, you may refer to the minimum and maximum elements of
+    a collection of basic type using the <literal>minelement</literal> and
+    <literal>maxelement</literal> functions. These are HQL specific
+    features.</para>
+
+    <programlisting>select cal from Calendar cal where maxelement(cal.holidays) &gt; current date</programlisting>
+
+    <programlisting>select order from Order order where maxindex(order.items) &gt; 100</programlisting>
+
+    <programlisting>select order from Order order where minelement(order.items) &gt; 10000</programlisting>
+
+    <para>The SQL functions <literal>any, some, all, exists, in</literal> are
+    supported when passed the element or index set of a collection
+    (<literal>elements</literal> and <literal>indices</literal> functions) or
+    the result of a subquery (see below). While subqueries are supported by
+    EJB-QL, <literal>elements</literal> and <literal>indices</literal> are
+    specific HQL features.</para>
+
+    <programlisting>select mother from Cat as mother, Cat as kit
+where kit in elements(foo.kittens)</programlisting>
+
+    <programlisting>select p from NameList list, Person p
+where p.name = some elements(list.names)</programlisting>
+
+    <programlisting>select cat from Cat cat where exists elements(cat.kittens)</programlisting>
+
+    <programlisting>select cat from Player p where 3 &gt; all elements(p.scores)</programlisting>
+
+    <programlisting>select cat from Show show where 'fizard' in indices(show.acts)</programlisting>
+
+    <para>Note that these constructs - <literal>size</literal>,
+    <literal>elements</literal>, <literal>indices</literal>,
+    <literal>minindex</literal>, <literal>maxindex</literal>,
+    <literal>minelement</literal>, <literal>maxelement</literal> - may only be
+    used in the where clause in Hibernate3.</para>
+
+    <para>In HQL, elements of indexed collections (arrays, lists, maps) may be
+    referred to by index (in a where clause only):</para>
+
+    <programlisting>select order from Order order where order.items[0].id = 1234</programlisting>
+
+    <programlisting>select person from Person person, Calendar calendar
+where calendar.holidays['national day'] = person.birthDay
+    and person.nationality.calendar = calendar</programlisting>
+
+    <programlisting>select item from Item item, Order order
+where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11</programlisting>
+
+    <programlisting>select item from Item item, Order order
+where order.items[ maxindex(order.items) ] = item and order.id = 11</programlisting>
+
+    <para>The expression inside <literal>[]</literal> may even be an
+    arithmetic expression.</para>
+
+    <programlisting>select item from Item item, Order order
+where order.items[ size(order.items) - 1 ] = item</programlisting>
+
+    <para>HQL also provides the built-in <literal>index()</literal> function,
+    for elements of a one-to-many association or collection of values.</para>
+
+    <programlisting>select item, index(item) from Order order 
+    join order.items item
+where index(item) &lt; 5</programlisting>
+
+    <para>Scalar SQL functions supported by the underlying database may be
+    used</para>
+
+    <programlisting>select cat from DomesticCat cat where upper(cat.name) like 'FRI%'</programlisting>
+
+    <para>If you are not yet convinced by all this, think how much longer and
+    less readable the following query would be in SQL:</para>
+
+    <programlisting>select cust
+from Product prod,
+    Store store
+    inner join store.customers cust
+where prod.name = 'widget'
+    and store.location.name in ( 'Melbourne', 'Sydney' )
+    and prod = all elements(cust.currentOrder.lineItems)</programlisting>
+
+    <para><emphasis>Hint:</emphasis> something like</para>
+
+    <programlisting>SELECT cust.name, cust.address, cust.phone, cust.id, cust.current_order
+FROM customers cust,
+    stores store,
+    locations loc,
+    store_customers sc,
+    product prod
+WHERE prod.name = 'widget'
+    AND store.loc_id = loc.id
+    AND loc.name IN ( 'Melbourne', 'Sydney' )
+    AND sc.store_id = store.id
+    AND sc.cust_id = cust.id
+    AND prod.id = ALL(
+        SELECT item.prod_id
+        FROM line_items item, orders o
+        WHERE item.order_id = o.id
+            AND cust.current_order = o.id
+    )</programlisting>
+  </sect1>
+
+  <sect1 id="queryhql-ordering">
+    <title>The order by clause</title>
+
+    <para>The list returned by a query may be ordered by any property of a
+    returned class or components:</para>
+
+    <programlisting>select cat from DomesticCat cat
+order by cat.name asc, cat.weight desc, cat.birthdate</programlisting>
+
+    <para>The optional <literal>asc</literal> or <literal>desc</literal>
+    indicate ascending or descending order respectively.</para>
+  </sect1>
+
+  <sect1 id="queryhql-grouping">
+    <title>The group by clause</title>
+
+    <para>A query that returns aggregate values may be grouped by any property
+    of a returned class or components:</para>
+
+    <programlisting>select cat.color, sum(cat.weight), count(cat) 
+from Cat cat
+group by cat.color</programlisting>
+
+    <programlisting>select foo.id, avg(name), max(name) 
+from Foo foo join foo.names name
+group by foo.id</programlisting>
+
+    <para>A <literal>having</literal> clause is also allowed.</para>
+
+    <programlisting>select cat.color, sum(cat.weight), count(cat) 
+from Cat cat
+group by cat.color 
+having cat.color in (eg.Color.TABBY, eg.Color.BLACK)</programlisting>
+
+    <para>SQL functions and aggregate functions are allowed in the
+    <literal>having</literal> and <literal>order by</literal> clauses, if
+    supported by the underlying database (eg. not in MySQL).</para>
+
+    <programlisting>select cat
+from Cat cat
+    join cat.kittens kitten
+group by cat
+having avg(kitten.weight) &gt; 100
+order by count(kitten) asc, sum(kitten.weight) desc</programlisting>
+
+    <para>Note that neither the <literal>group by</literal> clause nor the
+    <literal>order by</literal> clause may contain arithmetic
+    expressions.</para>
+  </sect1>
+
+  <sect1 id="queryhql-subqueries">
+    <title>Subqueries</title>
+
+    <para>For databases that support subselects, EJB-QL supports subqueries
+    within queries. A subquery must be surrounded by parentheses (often by an
+    SQL aggregate function call). Even correlated subqueries (subqueries that
+    refer to an alias in the outer query) are allowed.</para>
+
+    <programlisting>select fatcat from Cat as fatcat 
+where fatcat.weight &gt; ( 
+    select avg(cat.weight) from DomesticCat cat 
+)</programlisting>
+
+    <programlisting>select cat from DomesticCat as cat 
+where cat.name = some ( 
+    select name.nickName from Name as name 
+)</programlisting>
+
+    <programlisting>select cat from Cat as cat 
+where not exists ( 
+    from Cat as mate where mate.mate = cat 
+)</programlisting>
+
+    <programlisting>select cat from DomesticCat as cat 
+where cat.name not in ( 
+    select name.nickName from Name as name 
+)</programlisting>
+
+    <para>For subqueries with more than one expression in the select list, you
+    can use a tuple constructor:</para>
+
+    <programlisting>select cat from Cat as cat 
+where not ( cat.name, cat.color ) in ( 
+    select cat.name, cat.color from DomesticCat cat 
+)</programlisting>
+
+    <para>Note that on some databases (but not Oracle or HSQLDB), you can use
+    tuple constructors in other contexts, for example when querying components
+    or composite user types:</para>
+
+    <programlisting>select cat from Person where name = ('Gavin', 'A', 'King')</programlisting>
+
+    <para>Which is equivalent to the more verbose:</para>
+
+    <programlisting>select cat from Person where name.first = 'Gavin' and name.initial = 'A' and name.last = 'King')</programlisting>
+
+    <para>There are two good reasons you might not want to do this kind of
+    thing: first, it is not completely portable between database platforms;
+    second, the query is now dependent upon the ordering of properties in the
+    mapping document.</para>
+  </sect1>
+
+  <sect1 id="queryhql-examples">
+    <title>EJB-QL examples</title>
+
+    <para>Hibernate queries can be quite powerful and complex. In fact, the
+    power of the query language is one of Hibernate's main selling points (and
+    now EJB-QL). Here are some example queries very similar to queries that I
+    used on a recent project. Note that most queries you will write are much
+    simpler than these!</para>
+
+    <para>The following query returns the order id, number of items and total
+    value of the order for all unpaid orders for a particular customer and
+    given minimum total value, ordering the results by total value. In
+    determining the prices, it uses the current catalog. The resulting SQL
+    query, against the <literal>ORDER</literal>,
+    <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>,
+    <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four
+    inner joins and an (uncorrelated) subselect.</para>
+
+    <programlisting>select order.id, sum(price.amount), count(item)
+from Order as order
+    join order.lineItems as item
+    join item.product as product,
+    Catalog as catalog
+    join catalog.prices as price
+where order.paid = false
+    and order.customer = :customer
+    and price.product = product
+    and catalog.effectiveDate &lt; sysdate
+    and catalog.effectiveDate &gt;= all (
+        select cat.effectiveDate 
+        from Catalog as cat
+        where cat.effectiveDate &lt; sysdate
+    )
+group by order
+having sum(price.amount) &gt; :minAmount
+order by sum(price.amount) desc</programlisting>
+
+    <para>What a monster! Actually, in real life, I'm not very keen on
+    subqueries, so my query was really more like this:</para>
+
+    <programlisting>select order.id, sum(price.amount), count(item)
+from Order as order
+    join order.lineItems as item
+    join item.product as product,
+    Catalog as catalog
+    join catalog.prices as price
+where order.paid = false
+    and order.customer = :customer
+    and price.product = product
+    and catalog = :currentCatalog
+group by order
+having sum(price.amount) &gt; :minAmount
+order by sum(price.amount) desc</programlisting>
+
+    <para>The next query counts the number of payments in each status,
+    excluding all payments in the <literal>AWAITING_APPROVAL</literal> status
+    where the most recent status change was made by the current user. It
+    translates to an SQL query with two inner joins and a correlated subselect
+    against the <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>
+    and <literal>PAYMENT_STATUS_CHANGE</literal> tables.</para>
+
+    <programlisting>select count(payment), status.name 
+from Payment as payment 
+    join payment.currentStatus as status
+    join payment.statusChanges as statusChange
+where payment.status.name &lt;&gt; PaymentStatus.AWAITING_APPROVAL
+    or (
+        statusChange.timeStamp = ( 
+            select max(change.timeStamp) 
+            from PaymentStatusChange change 
+            where change.payment = payment
+        )
+        and statusChange.user &lt;&gt; :currentUser
+    )
+group by status.name, status.sortOrder
+order by status.sortOrder</programlisting>
+
+    <para>If I would have mapped the <literal>statusChanges</literal>
+    collection as a list, instead of a set, the query would have been much
+    simpler to write.</para>
+
+    <programlisting>select count(payment), status.name 
+from Payment as payment
+    join payment.currentStatus as status
+where payment.status.name &lt;&gt; PaymentStatus.AWAITING_APPROVAL
+    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user &lt;&gt; :currentUser
+group by status.name, status.sortOrder
+order by status.sortOrder</programlisting>
+
+    <para>However the query would have been HQL specific.</para>
+
+    <para>The next query uses the MS SQL Server <literal>isNull()</literal>
+    function to return all the accounts and unpaid payments for the
+    organization to which the current user belongs. It translates to an SQL
+    query with three inner joins, an outer join and a subselect against the
+    <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>,
+    <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>,
+    <literal>ORGANIZATION</literal> and <literal>ORG_USER</literal>
+    tables.</para>
+
+    <programlisting>select account, payment
+from Account as account
+    join account.holder.users as user
+    left outer join account.payments as payment
+where :currentUser = user
+    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)
+order by account.type.sortOrder, account.accountNumber, payment.dueDate</programlisting>
+  </sect1>
+
+  <sect1 id="queryhql-bulk">
+    <title>Bulk UPDATE &amp; DELETE Statements</title>
+
+    <para>Hibernate now supports UPDATE and DELETE statements in HQL/EJB-QL. See <xref
+    linkend="batch-direct" /> for details.</para>
+  </sect1>
+
+  <sect1 id="queryhql-tipstricks">
+    <title>Tips &amp; Tricks</title>
+
+    <para>To order a result by the size of a collection, use the following
+    query:</para>
+
+    <programlisting>select usr.id, usr.name
+from User as usr 
+    left join usr.messages as msg
+group by usr.id, usr.name
+order by count(msg)</programlisting>
+
+    <para>If your database supports subselects, you can place a condition upon
+    selection size in the where clause of your query:</para>
+
+    <programlisting>from User usr where size(usr.messages) &gt;= 1</programlisting>
+
+    <para>If your database doesn't support subselects, use the following
+    query:</para>
+
+    <programlisting>select usr.id, usr.name
+from User usr.name
+    join usr.messages msg
+group by usr.id, usr.name
+having count(msg) &gt;= 1</programlisting>
+
+    <para>As this solution can't return a <literal>User</literal> with zero
+    messages because of the inner join, the following form is also
+    useful:</para>
+
+    <programlisting>select usr.id, usr.name
+from User as usr
+    left join usr.messages as msg
+group by usr.id, usr.name
+having count(msg) = 0</programlisting>
+  </sect1>
+</chapter>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<!--
+  
+-->
+
+<hibernate-mapping package="org.hibernate.ejb.test.ops">
+
+    <class name="Node" polymorphism="explicit">
+        <id name="name">
+            <generator class="assigned"/>
+        </id>
+        <property name="description"/>
+        <many-to-one name="parent"/>
+        <set name="children"
+             inverse="true"
+             cascade="persist,merge">
+            <key column="parent"/>
+            <one-to-many class="Node"/>
+        </set>
+    </class>
+
+    <class name="NumberedNode" polymorphism="explicit">
+        <id name="id" unsaved-value="0">
+            <generator class="native"/>
+        </id>
+        <property name="name">
+            <column name="name" index="iname" not-null="true"/>
+        </property>
+        <property name="description"/>
+        <many-to-one name="parent" class="NumberedNode"/>
+        <set name="children"
+             inverse="true"
+             cascade="persist,merge">
+            <key column="parent"/>
+            <one-to-many class="NumberedNode"/>
+        </set>
+    </class>
+
+</hibernate-mapping>
+

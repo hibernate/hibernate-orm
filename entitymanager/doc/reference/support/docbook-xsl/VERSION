@@ -1,0 +1,84 @@
+<?xml version='1.0'?> <!-- -*- nxml -*- -->
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:fm="http://freshmeat.net/projects/freshmeat-submit/"
+		xmlns:sf="http://sourceforge.net/"
+		exclude-result-prefixes="fm sf"
+                version='1.0'>
+
+<xsl:param name="VERSION" select="string(document('')//fm:Version[1])"/>
+<xsl:param name="sf-relid" select="0"/>
+<xsl:strip-space elements="fm:*"/>
+
+<fm:project>
+  <fm:Project>DocBook</fm:Project>
+  <fm:Branch>XSL Stylesheets</fm:Branch>
+  <fm:Version>1.65.1</fm:Version>
+<!--
+  <fm:License>MIT/X Consortium License</fm:License>
+-->
+  <fm:Release-Focus>
+  <!-- initial freshmeat announcement -->
+  <!-- documentation -->
+  <!-- code cleanup -->
+  <!-- Minor feature enhancements -->
+  <!-- major feature enhancements -->
+  Minor bugfixes
+  <!-- major bugfixes -->
+  <!-- minor security fixes -->
+  <!-- major security fixes -->
+  </fm:Release-Focus>
+  <fm:Home-Page-URL>http://sourceforge.net/projects/docbook/</fm:Home-Page-URL>
+  <fm:Gzipped-Tar-URL>http://prdownloads.sourceforge.net/docbook/docbook-xsl-{VERSION}.tar.gz?download</fm:Gzipped-Tar-URL>
+  <fm:Zipped-Tar-URL>http://prdownloads.sourceforge.net/docbook/docbook-xsl-{VERSION}.zip?download</fm:Zipped-Tar-URL>
+  <fm:Changelog-URL>http://sourceforge.net/project/shownotes.php?release_id={SFRELID}</fm:Changelog-URL>
+  <fm:CVS-URL>http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/docbook/xsl/</fm:CVS-URL>
+  <fm:Mailing-List-URL>http://lists.oasis-open.org/archives/docbook-apps/</fm:Mailing-List-URL>
+  <fm:Changes>Small bug fixes. Fixed CA localization.
+</fm:Changes>
+</fm:project>
+
+<xsl:template match="/" priority="-100">
+  <xsl:if test="$sf-relid = 0">
+    <xsl:message terminate="yes">
+      <xsl:text>You must specify the sf-relid as a parameter.</xsl:text>
+    </xsl:message>
+  </xsl:if>
+
+  <xsl:apply-templates select="//fm:project"/>
+</xsl:template>
+
+<xsl:template match="fm:project">
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates/>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="fm:Changes" mode="text"/>
+</xsl:template>
+
+<xsl:template match="fm:Changes"/>
+
+<xsl:template match="fm:Gzipped-Tar-URL|fm:Zipped-Tar-URL">
+  <xsl:value-of select="local-name(.)"/>
+  <xsl:text>: </xsl:text>
+  <xsl:value-of select="substring-before(., '{VERSION}')"/>
+  <xsl:value-of select="$VERSION"/>
+  <xsl:value-of select="substring-after(., '{VERSION}')"/>
+  <xsl:text>&#10;</xsl:text>
+</xsl:template>
+
+<xsl:template match="fm:Changelog-URL">
+  <xsl:value-of select="local-name(.)"/>
+  <xsl:text>: </xsl:text>
+  <xsl:value-of select="substring-before(., '{SFRELID}')"/>
+  <xsl:value-of select="$sf-relid"/>
+  <xsl:value-of select="substring-after(., '{SFRELID}')"/>
+  <xsl:text>&#10;</xsl:text>
+</xsl:template>
+
+<xsl:template match="fm:*">
+  <xsl:value-of select="local-name(.)"/>
+  <xsl:text>: </xsl:text>
+  <xsl:value-of select="normalize-space(.)"/>
+  <xsl:text>&#10;</xsl:text>
+</xsl:template>
+
+</xsl:stylesheet>

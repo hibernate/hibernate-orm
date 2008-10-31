@@ -1,0 +1,23 @@
+<refentry id="table.footnote.number.format">
+<refmeta>
+<refentrytitle>table.footnote.number.format</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.footnote.number.format</refname>
+<refpurpose>Identifies the format used for footnote numbers in tables</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.footnote.number.format.frag'>
+<xsl:param name="table.footnote.number.format" select="'a'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>table.footnote.number.format</parameter> specifies the format
+to use for footnote numeration (1, i, I, a, or A) in tables.</para>
+
+</refsect1>
+</refentry>

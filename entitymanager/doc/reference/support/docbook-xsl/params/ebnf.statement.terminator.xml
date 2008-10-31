@@ -1,0 +1,27 @@
+<refentry id="ebnf.statement.terminator">
+<refmeta>
+<refentrytitle>ebnf.statement.terminator</refentrytitle>
+<refmiscinfo role="type">rtf</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ebnf.statement.terminator</refname>
+<refpurpose>Punctuation that ends an EBNF statement.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ebnf.statement.terminator.frag'>
+<xsl:param condition="html" name="ebnf.statement.terminator"/>
+<xsl:param condition="fo" name="ebnf.statement.terminator"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>ebnf.statement.terminator</parameter> parameter determines what
+text is used to terminate each <sgmltag>production</sgmltag>
+in <sgmltag>productionset</sgmltag>.</para>
+
+<para>Some notations end each statement with a period.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,36 @@
+<refentry id="symbol.font.family">
+<refmeta>
+<refentrytitle>symbol.font.family</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>symbol.font.family</refname>
+<refpurpose>The font families to be searched for symbols outside
+    of the body font</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='symbol.font.family.frag'>
+<xsl:param name="symbol.font.family" select="'Symbol,ZapfDingbats'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>A typical body or title font does not contain all
+the character glyphs that DocBook supports.  This parameter
+specifies additional fonts that should be searched for
+special characters not in the normal font.
+These symbol font names are automatically appended
+to the body or title font family name when fonts
+are specified in a 
+<sgmltag class="attribute">font-family</sgmltag>
+property in the FO output.
+</para>
+<para>The symbol font names should be entered as a
+comma-separated list.  The default value is
+<literal>Symbol,ZapfDingbats</literal>.
+</para>
+
+</refsect1>
+</refentry>

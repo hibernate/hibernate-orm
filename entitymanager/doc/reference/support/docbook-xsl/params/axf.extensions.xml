@@ -1,0 +1,25 @@
+<refentry id="axf.extensions">
+<refmeta>
+<refentrytitle>axf.extensions</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>axf.extensions</refname>
+<refpurpose>Enable XSL Formatter extensions?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='axf.extensions.frag'>
+<xsl:param name="axf.extensions" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero,
+<ulink url="http://www.antennahouse.com/">XSL Formatter</ulink>
+extensions will be used. XSL Formatter extensions consists of PDF bookmarks,
+document information and better index processing.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
+                 version="1.0"
+        >
+    <package>org.hibernate.ejb.test.pack.various</package>
+    <entity class="Airplane" metadata-complete="true" access="PROPERTY">
+        <attributes>
+            <id name="serialNumber"/>
+        </attributes>
+    </entity>
+</entity-mappings>

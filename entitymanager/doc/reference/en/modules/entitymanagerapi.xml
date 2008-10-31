@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="objectstate">
+  <title>Working with objects</title>
+
+  <section>
+    <title>Entity states</title>
+
+    <para>Like in Hibernate (comparable terms in parantheses), an entity
+    instance is in one of the following states:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>New (transient): an entity is new if it has just been
+        instantiated using the new operator, and it is not associated with a
+        persistence context. It has no persistent representation in the
+        database and no identifier value has been assigned.</para>
+      </listitem>
+
+      <listitem>
+        <para>Managed (persistent): a managed entity instance is an instance
+        with a persistent identity that is currently associated with a
+        persistence context.</para>
+      </listitem>
+
+      <listitem>
+        <para>Detached: the entity instance is an instance with a persistent
+        identity that is no longer associated with a persistence context,
+        usually because the persistence context was closed or the instance was
+        evicted from the context.</para>
+      </listitem>
+
+      <listitem>
+        <para>Removed: a removed entity instance is an instance with a
+        persistent identity, associated with a persistence context, but
+        scheduled for removal from the database.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The <classname>EntityManager</classname> API allows you to change
+    the state of an entity, or in other words, to load and store objects. You
+    will find persistence with EJB3 easier to understand if you think about
+    object state management, not managing of SQL statements.</para>
+  </section>
+
+  <section>
+    <title>Making objects persistent</title>
+
+    <para>Once you've created a new entity instance (using the common
+    <literal>new</literal> operator) it is in <literal>new</literal> state.
+    You can make it persistent by associating it to an entity manager:</para>
+
+    <programlisting>DomesticCat fritz = new DomesticCat();
+fritz.setColor(Color.GINGER);
+fritz.setSex('M');
+fritz.setName("Fritz");
+em.persist(fritz);</programlisting>
+
+    <para>If the <literal>DomesticCat</literal> entity type has a generated
+    identifier, the value is associated to the instance when
+    <code>persist()</code> is called. If the identifier is not automatically
+    generated, the application-assigned (usually natural) key value has to be
+    set on the instance before <code>persist()</code> is called.</para>
+  </section>
+
+  <section>
+    <title>Loading an object</title>
+
+    <para>Load an entity instance by its identifier value with the entity
+    manager's <code>find()</code> method:</para>
+
+    <programlisting>cat = em.find(Cat.class, catId);
+
+// You may need to wrap the primitive identifiers
+long catId = 1234;
+em.find( Cat.class, new Long(catId) );</programlisting>
+
+    <para>In some cases, you don't really want to load the object state, but
+    just having a reference to it (ie a proxy). You can get this reference
+    using the <literal>getReference()</literal> method. This is especially
+    useful to link a child to its parent wo having to load the parent.</para>
+
+    <programlisting>child = new Child();
+child.SetName("Henry");
+Parent parent = em.getReference(Parent.class, parentId); //no query to the DB
+child.setParent(parent);
+em.persist(child);</programlisting>
+
+    <para>You can reload an entity instance and it's collections at any time
+    using the <code>em.refresh()</code> operation. This is useful when
+    database triggers are used to initialize some of the properties of the
+    entity. Note that only the entity instance and its collections are
+    refreshed unless you specify <literal>REFRESH</literal> as a cascade style
+    of any associations:</para>
+
+    <programlisting>em.persist(cat);
+em.flush(); // force the SQL insert and triggers to run
+em.refresh(cat); //re-read the state (after the trigger executes)</programlisting>
+  </section>
+
+  <section>
+    <title>Querying objects</title>
+
+    <para>If you don't know the identifier values of the objects you are
+    looking for, you need a query. The Hibernate EntityManager implementation
+    supports an easy-to-use but powerful object-oriented query language
+    (EJB3-QL) which has been inspired by HQL (and vice-versa). Both query
+    languages are portable across databases, the use entity and property names
+    as identifiers (instead of table and column names). You may also express
+    your query in the native SQL of your database, with optional support from
+    EJB3 for result set conversion into Java business objects.</para>
+
+    <section>
+      <title>Executing queries</title>
+
+      <para>EJB3QL and SQL queries are represented by an instance of
+      <classname>javax.persistence.Query</classname>. This interface offers
+      methods for parameter binding, result set handling, and for execution of
+      the query. Queries are always created using the current entity
+      manager:</para>
+
+      <programlisting>List cats = em.createQuery(
+    "select cat from Cat as cat where cat.birthdate &lt; ?1")
+    .setParameter(1, date, TemporalType.DATE)
+    .getResultList();
+
+List mothers = em.createQuery(
+    "select mother from Cat as cat join cat.mother as mother where cat.name = ?1")
+    .setParameter(1, name)
+    .getResultList();
+
+List kittens = em.createQuery(
+    "from Cat as cat where cat.mother = ?1")
+    .setEntity(1, pk)
+    .getResultList();
+
+Cat mother = (Cat) em.createQuery(
+    "select cat.mother from Cat as cat where cat = ?1")
+    .setParameter(1, izi)
+    .getSingleResult();</programlisting>
+
+      <para>A query is usually executed by invoking
+      <methodname>getResultList()</methodname>. This method loads the
+      resulting instances of the query completly into memory. Entity instances
+      retrieved by a query are in persistent state. The
+      <methodname>getSingleResult() </methodname>method offers a shortcut if
+      you know your query will only return a single object.</para>
+
+      <section>
+        <title>Projection</title>
+
+        <para>An EJB3QL query queries can return tuples of objects if
+        projection is used. Each result tuple is returned as an object
+        array:</para>
+
+        <programlisting>Iterator kittensAndMothers = sess.createQuery(
+            "select kitten, mother from Cat kitten join kitten.mother mother")
+            .getResultList()
+            .iterator();
+
+while ( kittensAndMothers.hasNext() ) {
+    Object[] tuple = (Object[]) kittensAndMothers.next();
+    Cat kitten = (Cat) tuple[0];
+    Cat mother = (Cat) tuple[1];
+    ....
+}</programlisting>
+      </section>
+
+      <section>
+        <title>Scalar results</title>
+
+        <para>Queries may specify a particular property of an entity in the
+        select clause, instead of an entity alias. You may call SQL aggregate
+        functions as well. Returned non-transactional objects or aggregation
+        results are considered "scalar" results and are not entities in
+        persistent state (in other words, they are considered "read
+        only"):</para>
+
+        <programlisting>Iterator results = em.createQuery(
+        "select cat.color, min(cat.birthdate), count(cat) from Cat cat " +
+        "group by cat.color")
+        .getResultList()
+        .iterator();
+
+while ( results.hasNext() ) {
+    Object[] row = results.next();
+    Color type = (Color) row[0];
+    Date oldest = (Date) row[1];
+    Integer count = (Integer) row[2];
+    .....
+}</programlisting>
+      </section>
+
+      <section>
+        <title>Bind parameters</title>
+
+        <para>Both named and positional query parameters are supported, the
+        <literal>Query</literal> API offers several methods to bind arguments.
+        The EJB3 specification numbers positional parameters from one. Named
+        parameters are identifiers of the form <literal>:paramname</literal>
+        in the query string. Named parameters should be prefered, they are
+        more robust and easier to read and understand:</para>
+
+        <programlisting>// Named parameter (preferred)
+Query q = em.createQuery("select cat from DomesticCat cat where cat.name = :name");
+q.setParameter("name", "Fritz");
+List cats = q.getResultList();
+
+// Positional parameter
+Query q = em.createQuery("select cat from DomesticCat cat where cat.name = ?1");
+q.setParameter(1, "Izi");
+List cats = q.getResultList();
+
+// Named parameter list
+List names = new ArrayList();
+names.add("Izi");
+names.add("Fritz");
+Query q = em.createQuery("select cat from DomesticCat cat where cat.name in (:namesList)");
+q.setParameter("namesList", names);
+List cats = q.list();</programlisting>
+      </section>
+
+      <section>
+        <title>Pagination</title>
+
+        <para>If you need to specify bounds upon your result set (the maximum
+        number of rows you want to retrieve and/or the first row you want to
+        retrieve), use the following methods:</para>
+
+        <programlisting>Query q = em.createQuery("select cat from DomesticCat cat");
+q.setFirstResult(20);
+q.setMaxResults(10);
+List cats = q.getResultList(); //return cats from the 20th position to 29th</programlisting>
+
+        <para>Hibernate knows how to translate this limit query into the
+        native SQL of your DBMS.</para>
+      </section>
+
+      <section>
+        <title>Externalizing named queries</title>
+
+        <para>You may also define named queries through annotations:</para>
+
+        <programlisting>@javax.persistence.NamedQuery(name="eg.DomesticCat.by.name.and.minimum.weight", 
+  query="select cat from eg.DomesticCat as cat  where cat.name = ?1 and cat.weight &gt; ?2")</programlisting>
+
+        <para>Parameters are bound programatically to the named query, before
+        it is executed:</para>
+
+        <programlisting>Query q = em.createNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+q.setString(1, name);
+q.setInt(2, minWeight);
+List cats = q.getResultList();</programlisting>
+
+        <para>Note that the actual program code is independent of the query
+        language that is used, you may also define native SQL queries in
+        metadata, or use Hibernate's native facilities by placing them in XML
+        mapping files.</para>
+      </section>
+
+      <section>
+        <title>Native queries</title>
+
+        <para>You may express a query in SQL, using
+        <methodname>createNativeQuery()</methodname> and let Hibernate take
+        care mapping from JDBC result sets to business objects. Use the
+        <literal>@SqlResultSetMapping</literal> (please see the Hibernate
+        Annotations reference documentation on how to map a SQL resultset
+        mapping) or the entity mapping (if the column names of the query
+        result are the same as the names declared in the entity mapping;
+        remember that all entity columns have to be returned for this
+        mechanism to work):</para>
+
+        <programlisting>@SqlResultSetMapping(name="getItem", entities = 
+        @EntityResult(entityClass=org.hibernate.ejb.test.Item.class, fields= {
+            @FieldResult(name="name", column="itemname"),
+            @FieldResult(name="descr", column="itemdescription")
+        })
+)
+
+Query q = em.createNativeQuery("select name as itemname, descr as itemdescription from Item", "getItem");
+item = (Item) q.getSingleResult(); //from a resultset
+
+Query q = em.createNativeQuery("select * from Item", Item.class);
+item = (Item) q.getSingleResult(); //from a class columns names match the mapping</programlisting>
+
+        <note>
+          <para>For more information about scalar support in named queries,
+          please refers to the Hibenate Annotations documentation</para>
+        </note>
+      </section>
+
+      <section>
+        <title>Query hints</title>
+
+        <para>Query hints (for performance optimization, usually) are
+        implementation specific. Hints are declared using the
+        <methodname>query.setHint(String name, Object value)</methodname>
+        method, or through the <literal>@Named(Native)Query(hints)</literal>
+        annotation Note that these are not SQL query hints! The Hibernate EJB3
+        implementation offers the following query hints:</para>
+
+        <table>
+          <title>Hibernate query hints</title>
+
+          <tgroup cols="2">
+            <thead>
+              <colspec colname="C1" colwidth="1*" />
+
+              <colspec colname="c2" colwidth="3*" />
+
+              <row>
+                <entry align="center">Hint</entry>
+
+                <entry align="center">Description</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>org.hibernate.timeout</entry>
+
+                <entry>Query timeout in seconds ( eg. new Integer(10)
+                )</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.fetchSize</entry>
+
+                <entry>Number of rows fetched by the JDBC driver per roundtrip
+                ( eg. new Integer(50) )</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.comment</entry>
+
+                <entry>Add a comment to the SQL query, useful for the DBA (
+                e.g. new String("fetch all orders in 1 statement") )</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.cacheable</entry>
+
+                <entry>Whether or not a query is cacheable ( eg. new
+                Boolean(true) ), defaults to false</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.cacheMode</entry>
+
+                <entry>Override the cache mode for this query ( eg.
+                CacheMode.REFRESH )</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.cacheRegion</entry>
+
+                <entry>Cache region of this query ( eg. new
+                String("regionName") )</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.readOnly</entry>
+
+                <entry>Entities retrieved by this query will be loaded in a
+                read-only mode where Hibernate will never dirty-check them or
+                make changes persistent ( eg. new Boolean(true) ), default to
+                false</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.flushMode</entry>
+
+                <entry>Flush mode used for this query</entry>
+              </row>
+
+              <row>
+                <entry>org.hibernate.cacheMode</entry>
+
+                <entry>Cache mode used for this query</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+
+        <para>The value object accept both the native type or its string
+        equivalent (eg. <literal>CaheMode.REFRESH</literal> or
+        <quote><literal>REFRESH</literal></quote>). Please refer to the
+        Hibernate reference documentation for more information.</para>
+      </section>
+    </section>
+  </section>
+
+  <section>
+    <title>Modifying persistent objects</title>
+
+    <para>Transactional managed instances (ie. objects loaded, saved, created
+    or queried by the entity manager) may be manipulated by the application
+    and any changes to persistent state will be persisted when the Entity
+    manager is flushed (discussed later in this chapter). There is no need to
+    call a particular method to make your modifications persistent. A
+    straightforward wayt to update the state of an entity instance is to
+    <methodname>find()</methodname> it, and then manipulate it directly, while
+    the persistence context is open:</para>
+
+    <programlisting>Cat cat = em.find( Cat.class, new Long(69) );
+cat.setName("PK");
+em.flush();  // changes to cat are automatically detected and persisted</programlisting>
+
+    <para>Sometimes this programming model is inefficient since it would
+    require both an SQL SELECT (to load an object) and an SQL UPDATE (to
+    persist its updated state) in the same session. Therefore Hibernate offers
+    an alternate approach, using detached instances.</para>
+  </section>
+
+  <section>
+    <title>Modifying detached objects</title>
+
+    <para>Many applications need to retrieve an object in one transaction,
+    send it to the presentation layer for manipulation, and later save the
+    changes in a new transaction. There can be significant user think and
+    waiting time between both transactions. Applications that use this kind of
+    approach in a high-concurrency environment usually use versioned data to
+    ensure isolation for the "long" unit of work.</para>
+
+    <para>The EJB3 specifications supports this development model by providing
+    for persistence of modifications made to detached instances using the
+    <methodname>EntityManager.merge()</methodname> method:</para>
+
+    <programlisting>// in the first entity manager
+Cat cat = firstEntityManager.find(Cat.class, catId);
+Cat potentialMate = new Cat();
+firstEntityManager.persist(potentialMate);
+
+// in a higher layer of the application
+cat.setMate(potentialMate);
+
+// later, in a new entity manager
+secondEntityManager.merge(cat);  // update cat
+secondEntityManager.merge(mate); // update mate</programlisting>
+
+    <para>The <literal>merge()</literal> method merges modifications made to
+    the detached instance into the corresponding managed instance, if any,
+    without consideration of the state of the persistence context. In other
+    words, the merged objects state overrides the persistent entity state in
+    the persistence context, if one is already present. The application should
+    individually <methodname>merge()</methodname> detached instances reachable
+    from the given detached instance if and only if it wants their state also
+    to be persistent. This can be cascaded to associated entities and
+    collections, using transitive persistence, see <xref
+    linkend="objectstate-transitive" />.</para>
+  </section>
+
+  <section>
+    <title>Automatic state detection</title>
+
+    <para>The merge operation is clever enough to automatically detect whether
+    the merging of the detached instance has to result in an insert or update.
+    In other words, you don't have to worry about passing a new instance (and
+    not a detached instance) to <literal>merge()</literal>, the entity manager
+    will figure this out for you:</para>
+
+    <programlisting>// In the first entity manager
+Cat cat = firstEntityManager.find(Cat.class, catID);
+
+// In a higher layer of the application, detached
+Cat mate = new Cat();
+cat.setMate(mate);
+
+// Later, in a new entity manager
+secondEntityManager.merge(cat);   // update existing state
+secondEntityManager.merge(mate);  // save the new instance</programlisting>
+
+    <para>The usage and semantics of <literal>merge()</literal> seems to be
+    confusing for new users. Firstly, as long as you are not trying to use
+    object state loaded in one entity manager in another new entity manager,
+    you should not need to use <methodname>merge()</methodname> at all. Some
+    whole applications will never use this method.</para>
+
+    <para>Usually <methodname>merge()</methodname> is used in the following
+    scenario:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>the application loads an object in the first entity
+        manager</para>
+      </listitem>
+
+      <listitem>
+        <para>the object is passed up to the presentation layer</para>
+      </listitem>
+
+      <listitem>
+        <para>some modifications are made to the object</para>
+      </listitem>
+
+      <listitem>
+        <para>the object is passed back down to the business logic
+        layer</para>
+      </listitem>
+
+      <listitem>
+        <para>the application persists these modifications by calling
+        <methodname>merge()</methodname> in a second entity manager</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Here is the exact semantic of
+    <methodname>merge()</methodname>:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>if there is a managed instance with the same identifier
+        currently associated with the persistence context, copy the state of
+        the given object onto the managed instance</para>
+      </listitem>
+
+      <listitem>
+        <para>if there is no managed instance currently associated with the
+        persistence context, try to load it from the database, or create a new
+        managed instance</para>
+      </listitem>
+
+      <listitem>
+        <para>the managed instance is returned</para>
+      </listitem>
+
+      <listitem>
+        <para>the given instance does not become associated with the
+        persistence context, it remains detached and is usually
+        discarded</para>
+      </listitem>
+    </itemizedlist>
+
+    <note>
+      <title>Merging vs. saveOrUpdate/saveOrUpdateCopy</title>
+
+      <para>Merging in EJB3 is similar to the
+      <literal>saveOrUpdateCopy()</literal> method in native Hibernate.
+      However, it is not the same as the <literal>saveOrUpdate()</literal>
+      method, the given instance is not reattached with the persistence
+      context, but a managed instance is returned by the
+      <methodname>merge()</methodname> method.</para>
+    </note>
+  </section>
+
+  <section>
+    <title>Deleting managed objects</title>
+
+    <para><methodname>EntityManager.remove()</methodname> will remove an
+    objects state from the database. Of course, your application might still
+    hold a reference to a deleted object. You can think of
+    <methodname>remove()</methodname> as making a persistent instance new (aka
+    transient) again. It is not detached, and a merge would result in an
+    insertion.</para>
+  </section>
+
+  <section>
+    <title>Flush the persistence context</title>
+
+    <section>
+      <title>In a transaction</title>
+
+      <para>From time to time the entity manager will execute the SQL DML
+      statements needed to synchronize the data store with the state of
+      objects held in memory. This process, flush, occurs by default (this is
+      Hibernate specific and not defined by the specification) at the
+      following points:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>before query execution*</para>
+        </listitem>
+
+        <listitem>
+          <para>from
+          <methodname>javax.persistence.EntityTransaction.commit()*</methodname></para>
+        </listitem>
+
+        <listitem>
+          <para>when <methodname>EntityManager.flush()</methodname> is
+          called*</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>(*) if a transaction is active</para>
+
+      <para>The SQL statements are issued in the following order</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>all entity insertions, in the same order the corresponding
+          objects were saved using
+          <methodname>EntityManager.persist()</methodname></para>
+        </listitem>
+
+        <listitem>
+          <para>all entity updates</para>
+        </listitem>
+
+        <listitem>
+          <para>all collection deletions</para>
+        </listitem>
+
+        <listitem>
+          <para>all collection element deletions, updates and
+          insertions</para>
+        </listitem>
+
+        <listitem>
+          <para>all collection insertions</para>
+        </listitem>
+
+        <listitem>
+          <para>all entity deletions, in the same order the corresponding
+          objects were deleted using
+          <methodname>EntityManager.remove()</methodname></para>
+        </listitem>
+      </itemizedlist>
+
+      <para>(Exception: entity instances using application-assigned
+      identifiers are inserted when they are saved.)</para>
+
+      <para>Except when you explicity <methodname>flush()</methodname>, there
+      are absolutely no guarantees about when the entity manager executes the
+      JDBC calls, only the order in which they are executed. However,
+      Hibernate does guarantee that the
+      <methodname>Query.getResultList()</methodname>/<methodname>Query.getSingleResult()</methodname>
+      will never return stale data; nor will they return wrong data if
+      executed in an active transaction.</para>
+
+      <para>It is possible to change the default behavior so that flush occurs
+      less frequently. The <classname>FlushModeType</classname> for an entity
+      manager defines two different modes: only flush at commit time or flush
+      automatically using the explained routine unless
+      <methodname>flush()</methodname> is called explicitly.</para>
+
+      <programlisting>em = emf.createEntityManager();
+Transaction tx = em.getTransaction().begin();
+em.setFlushMode(FlushModeType.COMMIT); // allow queries to return stale state
+
+Cat izi = em.find(Cat.class, id);
+izi.setName(iznizi);
+
+// might return stale data
+em.createQuery("from Cat as cat left outer join cat.kittens kitten").getResultList();
+
+// change to izi is not flushed!
+...
+em.getTransaction().commit(); // flush occurs</programlisting>
+
+      <para>During flush, an exception might happen (e.g. if a DML operation
+      violates a constraint). TODO: Add link to exception handling.</para>
+
+      <para>Hibernate provides more flush modes than the one described in the
+      EJB3 specification. Please refer to the Hibernate core reference
+      documentation for more informations.</para>
+    </section>
+
+    <section>
+      <title>Outside a transaction</title>
+
+      <para>In an <literal>EXTENDED</literal> persistence context, all read
+      only operations of the entity manager can be executed outside a
+      transaction (<literal>find()</literal>,
+      <literal>getReference()</literal>, <literal>refresh()</literal>, and
+      read queries). Some modifications operations can be executed outside a
+      transaction, but they are queued until the persistence context join a
+      transaction. This is the case of <literal>persist()</literal>,
+      <literal><literal>merge()</literal></literal>,
+      <literal>remove()</literal>. Some operations cannot be called outside a
+      transaction: <literal>flush()</literal>, <literal>lock()</literal>, and
+      update/delete queries.</para>
+    </section>
+  </section>
+
+  <section id="objectstate-transitive" revision="1"
+           xreflabel="Transitive persistence">
+    <title>Transitive persistence</title>
+
+    <para>It is quite cumbersome to save, delete, or reattach individual
+    objects, especially if you deal with a graph of associated objects. A
+    common case is a parent/child relationship. Consider the following
+    example:</para>
+
+    <para>If the children in a parent/child relationship would be value typed
+    (e.g. a collection of addresses or strings), their lifecycle would depend
+    on the parent and no further action would be required for convenient
+    "cascading" of state changes. When the parent is persisted, the
+    value-typed child objects are persisted as well, when the parent is
+    removed, the children will be removed, etc. This even works for operations
+    such as the removal of a child from the collection; Hibernate will detect
+    this and, since value-typed objects can't have shared references, remove
+    the child from the database.</para>
+
+    <para>Now consider the same scenario with parent and child objects being
+    entities, not value-types (e.g. categories and items, or parent and child
+    cats). Entities have their own lifecycle, support shared references (so
+    removing an entity from the collection does not mean it can be deleted),
+    and there is by default no cascading of state from one entity to any other
+    associated entities. The EJB3 specification does not require persistence
+    by reachability. It supports a more flexible model of transitive
+    persistence, as first seen in Hibernate.</para>
+
+    <para>For each basic operation of the entity manager - including
+    <methodname>persist()</methodname>, <methodname>merge()</methodname>,
+    <methodname>remove()</methodname>, <methodname>refresh()</methodname> -
+    there is a corresponding cascade style. Respectively, the cascade styles
+    are named PERSIST, MERGE, REMOVE, REFRESH. If you want an operation to be
+    cascaded to associated entity (or collection of entities), you must
+    indicate that in the association annotation:</para>
+
+    <programlisting>@OneToOne(cascade=CascadeType.PERSIST)</programlisting>
+
+    <para>Cascading options can be combined:</para>
+
+    <programlisting>@OneToOne(cascade= { CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.REFRESH } )</programlisting>
+
+    <para>You may even use CascadeType.ALL to specify that all operations
+    should be cascaded for a particular association. Remember that by default,
+    no operation is cascaded.</para>
+
+    <para>Hibernate offers more native cascading options, please refer to the
+    Hibernate Annotations manual and the Hibernate reference guide for more
+    informations.</para>
+
+    <para>Recommendations:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>It doesn't usually make sense to enable cascade on a
+        <literal>@ManyToOne</literal> or <literal>@ManyToMany</literal>
+        association. Cascade is often useful for <literal>@OneToOne</literal>
+        and <literal>@OneToMany</literal> associations.</para>
+      </listitem>
+
+      <listitem>
+        <para>If the child object's lifespan is bounded by the lifespan of the
+        parent object, make the parent a full lifecycle object by specifying
+        <literal>CascadeType.ALL</literal> and
+        <literal>org.hibernate.annotations.CascadeType.DELETE_ORPHAN</literal>
+        (please refer to the Hibernate reference guide for the semantics of
+        orphan delete)</para>
+      </listitem>
+
+      <listitem>
+        <para>Otherwise, you might not need cascade at all. But if you think
+        that you will often be working with the parent and children together
+        in the same transaction, and you want to save yourself some typing,
+        consider using <code>cascade={PERSIST, MERGE}</code>. These options
+        can even make sense for a many-to-many association.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section>
+    <title>Locking</title>
+
+    <para>The default locking system in EJB3 is mostly based on optimistic
+    locking (ie using a version column to check any concurrency issues). EJB3
+    has defined an additional mechanism to increase the concurrency
+    guaranties. You can apply a lock on a given entity (and it's associated
+    entities if <literal>LOCK</literal> is cascaded) through the
+    <methodname>lock(Object entity)</methodname> method. Depending on the
+    concurrency guaranties you requires, you choose a lock mode:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><literal>LockMode.READ</literal> prevents dirty-reads and non
+        repeatable read on a given entity.</para>
+      </listitem>
+
+      <listitem>
+        <para><literal>LockMode.WRITE</literal> prevents dirty-reads and non
+        repeatable read on a given entity and force an increase of the version
+        number if any.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+</chapter>

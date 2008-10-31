@@ -1,0 +1,29 @@
+<refentry id="header.content.properties">
+<refmeta>
+<refentrytitle>header.content.properties</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>header.content.properties</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='header.content.properties.frag'>
+<xsl:attribute-set name="header.content.properties">
+  <xsl:attribute name="font-family">
+    <xsl:value-of select="$body.fontset"/>
+  </xsl:attribute>
+  <xsl:attribute name="margin-left">
+    <xsl:value-of select="$title.margin.left"/>
+  </xsl:attribute>
+</xsl:attribute-set>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Properties of page header content.</para>
+
+</refsect1>
+</refentry>

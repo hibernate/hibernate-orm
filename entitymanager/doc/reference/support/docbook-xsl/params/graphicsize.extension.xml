@@ -1,0 +1,25 @@
+<refentry id="graphicsize.extension">
+<refmeta>
+<refentrytitle>graphicsize.extension</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>graphicsize.extension</refname>
+<refpurpose>Enable the getWidth()/getDepth() extension functions</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='graphicsize.extension.frag'>
+<xsl:param name="graphicsize.extension" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero (and if <parameter>use.extensions</parameter> is non-zero
+and if you're using a processor that supports extension functions), the
+<function>getWidth</function> and <function>getDepth</function> functions
+will be used to extract image sizes from graphics.</para>
+
+</refsect1>
+</refentry>

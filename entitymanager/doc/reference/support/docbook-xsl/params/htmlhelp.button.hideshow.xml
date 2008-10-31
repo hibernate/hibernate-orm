@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.hideshow">
+<refmeta>
+<refentrytitle>htmlhelp.button.hideshow</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.hideshow</refname>
+<refpurpose>Should be Hide/Show button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.hideshow.frag'>
+<xsl:param name="htmlhelp.button.hideshow" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Hide/Show button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

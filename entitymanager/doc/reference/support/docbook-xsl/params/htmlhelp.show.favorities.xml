@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.show.favorities">
+<refmeta>
+<refentrytitle>htmlhelp.show.favorities</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.show.favorities</refname>
+<refpurpose>Should be favorities tab shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.show.favorities.frag'>
+<xsl:param name="htmlhelp.show.favorities" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want favorities tab shown in your help, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

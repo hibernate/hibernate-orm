@@ -1,0 +1,22 @@
+<refentry id="column.count.index">
+<refmeta>
+<refentrytitle>column.count.index</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.count.index</refname>
+<refpurpose>Number of columns on index pages</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.count.index.frag'>
+<xsl:param name="column.count.index" select="2"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Number of columns on index pages.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="column.gap.lot">
+<refmeta>
+<refentrytitle>column.gap.lot</refentrytitle>
+<refmiscinfo role="type">length</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.gap.lot</refname>
+<refpurpose>Gap between columns on a 'List-of-Titles' page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.gap.lot.frag'>
+<xsl:param name="column.gap.lot" select="'12pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies the gap between columns on 'List-of-Titles' pages (if
+<parameter>column.count.lot</parameter> is greater than one).</para>
+
+</refsect1>
+</refentry>

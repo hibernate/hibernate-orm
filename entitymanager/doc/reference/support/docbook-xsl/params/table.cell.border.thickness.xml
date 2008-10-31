@@ -1,0 +1,22 @@
+<refentry id="table.cell.border.thickness">
+<refmeta>
+<refentrytitle>table.cell.border.thickness</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.cell.border.thickness</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.cell.border.thickness.frag'>
+<xsl:param name="table.cell.border.thickness" select="'0.5pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

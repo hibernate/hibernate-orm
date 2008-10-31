@@ -1,0 +1,31 @@
+<refentry id="xref.label-title.separator">
+<refmeta>
+<refentrytitle>xref.label-title.separator</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>xref.label-title.separator</refname>
+<refpurpose>Punctuation or space separating label from title in xref</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='xref.label-title.separator.frag'><xsl:param name="xref.label-title.separator">: </xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>
+This parameter allows you to control the punctuation of certain
+types of generated cross reference text.
+When cross reference text is generated for an 
+<sgmltag class="element">xref</sgmltag> or 
+<sgmltag class="element">olink</sgmltag> element
+using an <sgmltag class="attribute">xrefstyle</sgmltag> attribute
+that makes use of the <literal>select:</literal> feature,
+and the selected components include both label and title,
+then the value of this parameter is inserted between
+label and title in the output.  
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
+"../support/docbook-dtd/docbookx.dtd" [
+<!ENTITY architecture SYSTEM "modules/architecture.xml">
+<!ENTITY configuration SYSTEM "modules/configuration.xml">
+<!ENTITY entitymanagerapi SYSTEM "modules/entitymanagerapi.xml">
+<!ENTITY transactions SYSTEM "modules/transactions.xml">
+<!ENTITY listeners SYSTEM "modules/listeners.xml">
+<!ENTITY batch SYSTEM "modules/batch.xml">
+<!ENTITY query-ejbql SYSTEM "modules/query_ejbql.xml">
+<!ENTITY native SYSTEM "modules/query_native.xml">
+]>
+<book lang="en">
+  <bookinfo>
+    <title>Hibernate EntityManager</title>
+
+    <subtitle>User guide</subtitle>
+
+    <releaseinfo>3.4.0.GA</releaseinfo>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="images/hibernate_logo_a.png" format="png" />
+      </imageobject>
+    </mediaobject>
+  </bookinfo>
+
+  <toc></toc>
+
+  <preface>
+    <title>Introducing EJB3 Persistence</title>
+
+    <para>The EJB3 specification recognizes the interest and the success of
+    the transparent object/relational mapping paradigm. The EJB3 specification
+    standardizes the basic APIs and the metadata needed for any
+    object/relational persistence mechanism. <emphasis>Hibernate
+    EntityManager</emphasis> implements the programming interfaces and
+    lifecycle rules as defined by the EJB3 persistence specification. Together
+    with <emphasis>Hibernate Annotations</emphasis>, this wrapper implements a
+    complete (and standalone) EJB3 persistence solution on top of the mature
+    Hibernate core. You may use a combination of all three together,
+    annotations without EJB3 programming interfaces and lifecycle, or even
+    pure native Hibernate, depending on the business and technical needs of
+    your project. You can at all times fall back to Hibernate native APIs, or
+    if required, even to native JDBC and SQL.</para>
+  </preface>
+
+  &architecture;
+
+  &configuration;
+
+  &entitymanagerapi;
+
+  &transactions;
+
+  &listeners;
+
+  &batch;
+
+  &query-ejbql;
+
+  &native;
+</book>

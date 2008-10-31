@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.button.stop">
+<refmeta>
+<refentrytitle>htmlhelp.button.stop</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.button.stop</refname>
+<refpurpose>Should be Stop button shown?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.button.stop.frag'>
+<xsl:param name="htmlhelp.button.stop" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If you want Stop button shown on toolbar, turn this
+parameter to 1.</para>
+
+</refsect1>
+</refentry>

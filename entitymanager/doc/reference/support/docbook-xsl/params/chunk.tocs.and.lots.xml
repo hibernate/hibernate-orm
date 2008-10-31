@@ -1,0 +1,27 @@
+<refentry id="chunk.tocs.and.lots">
+<refmeta>
+<refentrytitle>chunk.tocs.and.lots</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>chunk.tocs.and.lots</refname>
+<refpurpose>Should ToC and LoTs be in separate chunks?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chunk.tocs.and.lots.frag'>
+<xsl:param name="chunk.tocs.and.lots" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, ToC and LoT (List of Examples, List of Figures, etc.)
+will be put in a separate chunk. At the moment, this chunk is not in the
+normal forward/backward navigation list. Instead, a new link is added to the
+navigation footer.</para>
+
+<para>This feature is still somewhat experimental. Feedback welcome.</para>
+
+</refsect1>
+</refentry>

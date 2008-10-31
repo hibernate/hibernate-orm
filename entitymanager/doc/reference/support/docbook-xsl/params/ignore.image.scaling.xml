@@ -1,0 +1,23 @@
+<refentry id="ignore.image.scaling">
+<refmeta>
+<refentrytitle>ignore.image.scaling</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ignore.image.scaling</refname>
+<refpurpose>Tell the stylesheets to ignore the author's image scaling attributes</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ignore.image.scaling.frag'>
+<xsl:param name="ignore.image.scaling" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the scaling attributes on graphics and media objects are
+ignored.</para>
+
+</refsect1>
+</refentry>

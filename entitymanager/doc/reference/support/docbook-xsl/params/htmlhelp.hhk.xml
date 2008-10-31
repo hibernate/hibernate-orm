@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.hhk">
+<refmeta>
+<refentrytitle>htmlhelp.hhk</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.hhk</refname>
+<refpurpose>Filename of index file.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.hhk.frag'>
+<xsl:param name="htmlhelp.hhk" select="'index.hhk'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Change this parameter if you want different name of index file
+than index.hhk.</para>
+
+</refsect1>
+</refentry>

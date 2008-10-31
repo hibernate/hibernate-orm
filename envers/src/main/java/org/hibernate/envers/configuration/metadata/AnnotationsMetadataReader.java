@@ -30,11 +30,11 @@ import javax.persistence.Version;
 import org.hibernate.envers.SecondaryAuditTable;
 import org.hibernate.envers.*;
 import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.tools.reflection.YClass;
-import org.hibernate.envers.tools.reflection.YProperty;
-import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -44,7 +44,7 @@ import org.hibernate.mapping.PersistentClass;
  */
 public final class AnnotationsMetadataReader {
     private final GlobalConfiguration globalCfg;
-    private final YReflectionManager reflectionManager;
+    private final ReflectionManager reflectionManager;
     private final PersistentClass pc;
 
     /**
@@ -53,7 +53,7 @@ public final class AnnotationsMetadataReader {
      */
     private final PersistentClassVersioningData versioningData;
 
-    public AnnotationsMetadataReader(GlobalConfiguration globalCfg, YReflectionManager reflectionManager,
+    public AnnotationsMetadataReader(GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
                                      PersistentClass pc) {
         this.globalCfg = globalCfg;
         this.reflectionManager = reflectionManager;
@@ -62,21 +62,21 @@ public final class AnnotationsMetadataReader {
         versioningData = new PersistentClassVersioningData();
     }
 
-    private void addPropertyVersioned(YProperty property) {
+    private void addPropertyVersioned(XProperty property) {
         Audited ver = property.getAnnotation(Audited.class);
         if (ver != null) {
             versioningData.propertyStoreInfo.propertyStores.put(property.getName(), ver.modStore());
         }
     }
 
-    private void addPropertyMapKey(YProperty property) {
+    private void addPropertyMapKey(XProperty property) {
         MapKey mapKey = property.getAnnotation(MapKey.class);
         if (mapKey != null) {
             versioningData.mapKeys.put(property.getName(), mapKey.name());
         }
     }
 
-    private void addPropertyUnversioned(YProperty property) {
+    private void addPropertyUnversioned(XProperty property) {
         // check if a property is declared as unversioned to exclude it
         // useful if a class is versioned but some properties should be excluded
         NotAudited unVer = property.getAnnotation(NotAudited.class);
@@ -94,15 +94,15 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addPropertyJoinTables(YProperty property) {
+    private void addPropertyJoinTables(XProperty property) {
         AuditJoinTable joinTable = property.getAnnotation(AuditJoinTable.class);
         if (joinTable != null) {
             versioningData.versionsJoinTables.put(property.getName(), joinTable);
         }
     }
 
-    private void addFromProperties(Iterable<YProperty> properties) {
-        for (YProperty property : properties) {
+    private void addFromProperties(Iterable<XProperty> properties) {
+        for (XProperty property : properties) {
             addPropertyVersioned(property);
             addPropertyUnversioned(property);
             addPropertyJoinTables(property);
@@ -110,8 +110,8 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addPropertiesFromClass(YClass clazz)  {
-        YClass superclazz = clazz.getSuperclass();
+    private void addPropertiesFromClass(XClass clazz)  {
+        XClass superclazz = clazz.getSuperclass();
         if (!"java.lang.Object".equals(superclazz.getName())) {
             addPropertiesFromClass(superclazz);
         }
@@ -120,7 +120,7 @@ public final class AnnotationsMetadataReader {
         addFromProperties(clazz.getDeclaredProperties("property"));
     }
 
-    private void addDefaultVersioned(YClass clazz) {
+    private void addDefaultVersioned(XClass clazz) {
         Audited defaultVersioned = clazz.getAnnotation(Audited.class);
 
         if (defaultVersioned != null) {
@@ -128,7 +128,7 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addVersionsTable(YClass clazz) {
+    private void addVersionsTable(XClass clazz) {
         AuditTable versionsTable = clazz.getAnnotation(AuditTable.class);
         if (versionsTable != null) {
             versioningData.versionsTable = versionsTable;
@@ -137,7 +137,7 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addVersionsSecondaryTables(YClass clazz) {
+    private void addVersionsSecondaryTables(XClass clazz) {
         // Getting information on secondary tables
         SecondaryAuditTable secondaryVersionsTable1 = clazz.getAnnotation(SecondaryAuditTable.class);
         if (secondaryVersionsTable1 != null) {
@@ -160,7 +160,7 @@ public final class AnnotationsMetadataReader {
         }
 
         try {
-            YClass clazz = reflectionManager.classForName(pc.getClassName(), this.getClass());
+            XClass clazz = reflectionManager.classForName(pc.getClassName(), this.getClass());
 
             addDefaultVersioned(clazz);
             addPropertiesFromClass(clazz);

@@ -44,9 +44,9 @@ import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.graph.GraphTopologicalSort;
-import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 
@@ -54,7 +54,7 @@ import org.hibernate.mapping.PersistentClass;
  * @author Adam Warski (adam at warski dot org)
  */
 public class EntitiesConfigurator {
-    public EntitiesConfigurations configure(Configuration cfg, YReflectionManager reflectionManager,
+    public EntitiesConfigurations configure(Configuration cfg, ReflectionManager reflectionManager,
                                             GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
         AuditMetadataGenerator versionsMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,

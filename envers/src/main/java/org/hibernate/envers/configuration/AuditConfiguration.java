@@ -31,9 +31,10 @@ import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.synchronization.AuditSyncManager;
-import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -74,7 +75,7 @@ public class AuditConfiguration {
     public AuditConfiguration(Configuration cfg) {
         Properties properties = cfg.getProperties();
 
-        YReflectionManager reflectionManager = YReflectionManager.get(cfg);
+        ReflectionManager reflectionManager = ((AnnotationConfiguration) cfg).getReflectionManager();
         RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration();
         RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
         verEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());

@@ -36,11 +36,11 @@ import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.tools.MutableBoolean;
-import org.hibernate.envers.tools.reflection.YClass;
-import org.hibernate.envers.tools.reflection.YProperty;
-import org.hibernate.envers.tools.reflection.YReflectionManager;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 
@@ -92,10 +92,10 @@ public class RevisionInfoConfiguration {
         return rev_rel_mapping;
     }
 
-    private void searchForRevisionInfoCfgInProperties(YClass clazz, YReflectionManager reflectionManager,
+    private void searchForRevisionInfoCfgInProperties(XClass clazz, ReflectionManager reflectionManager,
                                     MutableBoolean revisionNumberFound, MutableBoolean revisionTimestampFound,
                                     String accessType) {
-        for (YProperty property : clazz.getDeclaredProperties(accessType)) {
+        for (XProperty property : clazz.getDeclaredProperties(accessType)) {
             RevisionNumber revisionNumber = property.getAnnotation(RevisionNumber.class);
             RevisionTimestamp revisionTimestamp = property.getAnnotation(RevisionTimestamp.class);
 
@@ -104,7 +104,7 @@ public class RevisionInfoConfiguration {
                     throw new MappingException("Only one property may be annotated with @RevisionNumber!");
                 }
 
-                YClass revisionNumberClass = property.getType();
+                XClass revisionNumberClass = property.getType();
                 if (reflectionManager.equals(revisionNumberClass, Integer.class) ||
                         reflectionManager.equals(revisionNumberClass, Integer.TYPE)) {
                     revisionInfoIdName = property.getName();
@@ -127,7 +127,7 @@ public class RevisionInfoConfiguration {
                     throw new MappingException("Only one property may be annotated with @RevisionTimestamp!");
                 }
 
-                YClass revisionTimestampClass = property.getType();
+                XClass revisionTimestampClass = property.getType();
                 if (reflectionManager.equals(revisionTimestampClass, Long.class) ||
                         reflectionManager.equals(revisionTimestampClass, Long.TYPE)) {
                     revisionInfoTimestampName = property.getName();
@@ -140,9 +140,9 @@ public class RevisionInfoConfiguration {
         }
     }
 
-    private void searchForRevisionInfoCfg(YClass clazz, YReflectionManager reflectionManager,
+    private void searchForRevisionInfoCfg(XClass clazz, ReflectionManager reflectionManager,
                                           MutableBoolean revisionNumberFound, MutableBoolean revisionTimestampFound) {
-        YClass superclazz = clazz.getSuperclass();
+        XClass superclazz = clazz.getSuperclass();
         if (!"java.lang.Object".equals(superclazz.getName())) {
             searchForRevisionInfoCfg(superclazz, reflectionManager, revisionNumberFound, revisionTimestampFound);
         }
@@ -154,7 +154,7 @@ public class RevisionInfoConfiguration {
     }
 
     @SuppressWarnings({"unchecked"})
-    public RevisionInfoConfigurationResult configure(Configuration cfg, YReflectionManager reflectionManager) {
+    public RevisionInfoConfigurationResult configure(Configuration cfg, ReflectionManager reflectionManager) {
         Iterator<PersistentClass> classes = (Iterator<PersistentClass>) cfg.getClassMappings();
         boolean revisionEntityFound = false;
         RevisionInfoGenerator revisionInfoGenerator = null;
@@ -163,7 +163,7 @@ public class RevisionInfoConfiguration {
 
         while (classes.hasNext()) {
             PersistentClass pc = classes.next();
-            YClass clazz;
+            XClass clazz;
             try {
                 clazz = reflectionManager.classForName(pc.getClassName(), this.getClass());
             } catch (ClassNotFoundException e) {

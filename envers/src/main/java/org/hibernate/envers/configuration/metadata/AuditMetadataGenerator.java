@@ -40,8 +40,6 @@ import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.tools.StringTools;
-import org.hibernate.envers.tools.log.YLog;
-import org.hibernate.envers.tools.log.YLogManager;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -54,6 +52,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -74,7 +74,7 @@ public final class AuditMetadataGenerator {
     // Map entity name -> (join descriptor -> element describing the "versioned" join)
     private final Map<String, Map<Join, Element>> entitiesJoins;
 
-    private YLog log = YLogManager.getLogManager().getLog(AuditMetadataGenerator.class);
+    private Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
 
     public AuditMetadataGenerator(Configuration cfg, GlobalConfiguration globalCfg,
                                      AuditEntitiesConfiguration verEntCfg,

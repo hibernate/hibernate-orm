@@ -381,27 +381,27 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
-	@RequiresDialect(HSQLDialect.class)
-	public void testOrderByOnSuperclassProperty() {
-		OrganisationUser user = new OrganisationUser();
-		user.setFirstName( "Emmanuel" );
-		user.setLastName( "Bernard" );
-		user.setIdPerson( new Long(1) );
-		user.setSomeText( "SomeText" );
-		Organisation org = new Organisation();
-		org.setIdOrganisation( new Long(1) );
-		org.setName( "S Diego Zoo" );
-		user.setOrganisation( org );
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( user );
-		s.persist( org );
-		s.flush();
-		s.clear();
-		s.createQuery( "select org from Organisation org left join fetch org.organisationUsers" ).list();
-		s.getTransaction().rollback();
-		s.close();
-	}
+// HHH-3577    
+//	public void testOrderByOnSuperclassProperty() {
+//		OrganisationUser user = new OrganisationUser();
+//		user.setFirstName( "Emmanuel" );
+//		user.setLastName( "Bernard" );
+//		user.setIdPerson( new Long(1) );
+//		user.setSomeText( "SomeText" );
+//		Organisation org = new Organisation();
+//		org.setIdOrganisation( new Long(1) );
+//		org.setName( "S Diego Zoo" );
+//		user.setOrganisation( org );
+//		Session s = openSession();
+//		s.getTransaction().begin();
+//		s.persist( user );
+//		s.persist( org );
+//		s.flush();
+//		s.clear();
+//		s.createQuery( "select org from Organisation org left join fetch org.organisationUsers" ).list();
+//		s.getTransaction().rollback();
+//		s.close();
+//	}
 
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getMappings()

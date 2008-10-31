@@ -265,7 +265,8 @@ public class ManyToManyTest extends TestCase {
 	 * 
 	 * @throws Exception in case the test fails.
 	 * 
-	 * This fails test fails for other databases (except HSQL) due to missing alias in order by clause:
+	 * This test only works against databases which allow a mixed usage of
+     * table names and table aliases. The generated SQL for this test is:
 	 * 
 	 * 	   select
 	 *         contractor0_.EMPLOYER_ID as EMPLOYER1_1_,
@@ -285,53 +286,53 @@ public class ManyToManyTest extends TestCase {
 	 * 
 	 * 
 	 */
-	@RequiresDialect(HSQLDialect.class)
-	public void testOrderByContractor() throws Exception {
-			
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		
-		// create some test entities
-		Employer employer = new Employer();
-		Contractor contractor1 = new Contractor();
-		contractor1.setName( "Emmanuel" );
-		contractor1.setHourlyRate(100.0f);
-		Contractor contractor2 = new Contractor();
-		contractor2.setName( "Hardy" );
-		contractor2.setHourlyRate(99.99f);
-		s.persist( contractor1 );
-		s.persist( contractor2 );
-		
-		// add contractors to employer
-		List setOfContractors = new ArrayList();
-		setOfContractors.add( contractor1 );
-		setOfContractors.add( contractor2 );
-		employer.setContractors( setOfContractors );
-		
-		// add employer to contractors
-		Collection employerListContractor1 = new ArrayList();
-		employerListContractor1.add( employer );
-		contractor1.setEmployers( employerListContractor1 );
-		
-		Collection employerListContractor2 = new ArrayList();
-		employerListContractor2.add( employer );
-		contractor2.setEmployers( employerListContractor2 );
-
-		s.flush();
-		s.clear();
-
-		// assertions
-		employer = (Employer) s.get( Employer.class, employer.getId() );
-		assertNotNull( employer );
-		assertNotNull( employer.getContractors() );
-		assertEquals( 2, employer.getContractors().size() );
-		Contractor firstContractorFromDb = (Contractor) employer.getContractors().iterator().next();
-		assertEquals( contractor2.getName(), firstContractorFromDb.getName() );
-		tx.rollback();
-		s.close();
-	}	
+// HHH-3577
+//	public void testOrderByContractor() throws Exception {
+//
+//		Session s;
+//		Transaction tx;
+//		s = openSession();
+//		tx = s.beginTransaction();
+//
+//		// create some test entities
+//		Employer employer = new Employer();
+//		Contractor contractor1 = new Contractor();
+//		contractor1.setName( "Emmanuel" );
+//		contractor1.setHourlyRate(100.0f);
+//		Contractor contractor2 = new Contractor();
+//		contractor2.setName( "Hardy" );
+//		contractor2.setHourlyRate(99.99f);
+//		s.persist( contractor1 );
+//		s.persist( contractor2 );
+//
+//		// add contractors to employer
+//		List setOfContractors = new ArrayList();
+//		setOfContractors.add( contractor1 );
+//		setOfContractors.add( contractor2 );
+//		employer.setContractors( setOfContractors );
+//
+//		// add employer to contractors
+//		Collection employerListContractor1 = new ArrayList();
+//		employerListContractor1.add( employer );
+//		contractor1.setEmployers( employerListContractor1 );
+//
+//		Collection employerListContractor2 = new ArrayList();
+//		employerListContractor2.add( employer );
+//		contractor2.setEmployers( employerListContractor2 );
+//
+//		s.flush();
+//		s.clear();
+//
+//		// assertions
+//		employer = (Employer) s.get( Employer.class, employer.getId() );
+//		assertNotNull( employer );
+//		assertNotNull( employer.getContractors() );
+//		assertEquals( 2, employer.getContractors().size() );
+//		Contractor firstContractorFromDb = (Contractor) employer.getContractors().iterator().next();
+//		assertEquals( contractor2.getName(), firstContractorFromDb.getName() );
+//		tx.rollback();
+//		s.close();
+//	}
 
 	public void testRemoveInBetween() throws Exception {
 		Session s;

@@ -39,7 +39,6 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
-import org.hibernate.envers.entity.VersionsInheritanceEntityPersister;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.log.YLog;
 import org.hibernate.envers.tools.log.YLogManager;
@@ -240,10 +239,6 @@ public final class AuditMetadataGenerator {
         }
     }
 
-    private void addPersisterHack(Element class_mapping) {
-        class_mapping.addAttribute("persister", VersionsInheritanceEntityPersister.class.getName() );
-    }
-
     @SuppressWarnings({"unchecked"})
     public void generateFirstPass(PersistentClass pc, PersistentClassVersioningData versioningData,
                                   EntityXmlMappingData xmlMappingData) {
@@ -281,9 +276,6 @@ public final class AuditMetadataGenerator {
                     Element discriminator_element = class_mapping.addElement("discriminator");
                     MetadataTools.addColumns(discriminator_element, pc.getDiscriminator().getColumnIterator());
                     discriminator_element.addAttribute("type", pc.getDiscriminator().getType().getName());
-
-                    // If so, there is some inheritance scheme -> using the persister hack.
-                    addPersisterHack(class_mapping);
                 }
 
                 // Adding the id mapping
@@ -297,8 +289,6 @@ public final class AuditMetadataGenerator {
                 String extendsEntityName = verEntCfg.getVersionsEntityName(pc.getSuperclass().getEntityName());
                 class_mapping = MetadataTools.createSubclassEntity(xmlMappingData.getMainXmlMapping(), versionsEntityName,
                         versionsTableName, schema, catalog, extendsEntityName, pc.getDiscriminatorValue());
-
-                addPersisterHack(class_mapping);
 
                 // The id and revision type is already mapped in the parent
 

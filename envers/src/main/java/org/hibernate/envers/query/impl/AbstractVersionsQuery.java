@@ -84,6 +84,8 @@ public abstract class AbstractVersionsQuery implements AuditQuery {
 
         qb.build(querySb, queryParamValues);
 
+        System.out.println("QUERY: " + querySb.toString());
+
         Query query = versionsReader.getSession().createQuery(querySb.toString());
         for (Map.Entry<String, Object> paramValue : queryParamValues.entrySet()) {
             query.setParameter(paramValue.getKey(), paramValue.getValue());

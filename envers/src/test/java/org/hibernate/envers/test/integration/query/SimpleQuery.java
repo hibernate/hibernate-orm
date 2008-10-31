@@ -240,4 +240,33 @@ public class SimpleQuery extends AbstractEntityTest {
         assert result.get(1).equals(RevisionType.MOD);
         assert result.get(2).equals(RevisionType.DEL);
     }
+
+    @Test
+    public void testEmptyRevisionOfEntityQuery() {
+        List result = getVersionsReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
+                .getResultList();
+
+        assert result.size() == 7;
+    }
+
+    @Test
+    public void testEmptyConjunctionRevisionOfEntityQuery() {
+        List result = getVersionsReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
+                .add(AuditRestrictions.conjunction())
+                .getResultList();
+
+        assert result.size() == 7;
+    }
+
+    @Test
+    public void testEmptyDisjunctionRevisionOfEntityQuery() {
+        List result = getVersionsReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
+                .add(AuditRestrictions.disjunction())
+                .getResultList();
+
+        assert result.size() == 0;
+    }
 }

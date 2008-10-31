@@ -48,8 +48,12 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
     public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         Parameters orParameters = parameters.addSubParameters(Parameters.OR);
 
-        for (AuditCriterion criterion : criterions) {
-            criterion.addToQuery(verCfg, entityName, qb, orParameters);
+        if (criterions.size() == 0) {
+            orParameters.addWhere("0", false, "=", "1", false);
+        } else {
+            for (AuditCriterion criterion : criterions) {
+                criterion.addToQuery(verCfg, entityName, qb, orParameters);
+            }
         }
     }
 }

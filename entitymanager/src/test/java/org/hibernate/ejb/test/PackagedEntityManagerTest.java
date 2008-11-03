@@ -354,13 +354,4 @@ public class PackagedEntityManagerTest extends TestCase {
 		em.getTransaction().rollback();
 		em.close();
 	}
-
-	public PackagedEntityManagerTest() {
-		super();
-	}
-
-	public PackagedEntityManagerTest(String arg0) {
-		super( arg0 );
-	}
-
 }

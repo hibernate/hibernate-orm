@@ -93,5 +93,5 @@
 			<param name="extension" value="par"/>
 			<param name="jarname" value="explodedpar"/>
 		</antcall>
-	</target>
+	</target>	
 </project>

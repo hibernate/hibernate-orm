@@ -24,14 +24,14 @@
 package org.hibernate.envers.entities.mapper;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.tools.Tools;
 
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
@@ -41,31 +41,36 @@ import org.hibernate.property.Getter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
-    protected Map<String, PropertyMapper> properties;
+    protected final Map<PropertyData, PropertyMapper> properties;
+    private final Map<String, PropertyData> propertyDatas;
 
     public MultiPropertyMapper() {
-        properties = new HashMap<String, PropertyMapper>();
+        properties = Tools.newHashMap();
+        propertyDatas = Tools.newHashMap();
     }
 
-    public void add(String propertyName, ModificationStore modStore) {
+    public void add(PropertyData propertyData) {
         SinglePropertyMapper single = new SinglePropertyMapper();
-        single.add(propertyName,  modStore);
-        properties.put(propertyName, single);
+        single.add(propertyData);
+        properties.put(propertyData, single);
+        propertyDatas.put(propertyData.getName(), propertyData);
     }
 
-    public CompositeMapperBuilder addComposite(String propertyName) {
-        if (properties.get(propertyName) != null) {
-            throw new MappingException("Mapping for " + propertyName + " already added!");
+    public CompositeMapperBuilder addComposite(PropertyData propertyData) {
+        if (properties.get(propertyData) != null) {
+            throw new MappingException("Mapping for " + propertyData.getName() + " already added!");
         }
 
-        MapPropertyMapper mapperBuilder = new MapPropertyMapper(propertyName);
-        properties.put(propertyName, mapperBuilder);
+        MapPropertyMapper mapperBuilder = new MapPropertyMapper(propertyData);
+        properties.put(propertyData, mapperBuilder);
+        propertyDatas.put(propertyData.getName(), propertyData);
 
         return mapperBuilder;
     }
 
-    public void addComposite(String propertyName, PropertyMapper propertyMapper) {
-        properties.put(propertyName, propertyMapper);
+    public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {
+        properties.put(propertyData, propertyMapper);
+        propertyDatas.put(propertyData.getName(), propertyData);
     }
 
     private Object getAtIndexOrNull(Object[] array, int index) { return array == null ? null : array[index]; }
@@ -75,8 +80,8 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         for (int i=0; i<propertyNames.length; i++) {
             String propertyName = propertyNames[i];
 
-            if (properties.containsKey(propertyName)) {
-                ret |= properties.get(propertyName).mapToMapFromEntity(data,
+            if (propertyDatas.containsKey(propertyName)) {
+                ret |= properties.get(propertyDatas.get(propertyName)).mapToMapFromEntity(data,
                         getAtIndexOrNull(newState, i),
                         getAtIndexOrNull(oldState, i));
             }
@@ -87,17 +92,17 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
     public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
         boolean ret = false;
-        for (String propertyName : properties.keySet()) {
+        for (PropertyData propertyData : properties.keySet()) {
             Getter getter;
             if (newObj != null) {
-                getter = ReflectionTools.getGetter(newObj.getClass(), propertyName);
+                getter = ReflectionTools.getGetter(newObj.getClass(), propertyData);
             } else if (oldObj != null) {
-                getter = ReflectionTools.getGetter(oldObj.getClass(), propertyName);
+                getter = ReflectionTools.getGetter(oldObj.getClass(), propertyData);
             } else {
                 return false;
             }
 
-            ret |= properties.get(propertyName).mapToMapFromEntity(data,
+            ret |= properties.get(propertyData).mapToMapFromEntity(data,
                     newObj == null ? null : getter.get(newObj),
                     oldObj == null ? null : getter.get(oldObj));
         }
@@ -105,9 +110,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         return ret;
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
-        for (String propertyName : properties.keySet()) {
-            properties.get(propertyName).mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+                                   AuditReaderImplementor versionsReader, Number revision) {
+        for (PropertyMapper mapper : properties.values()) {
+            mapper.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
         }
     }
 
@@ -115,7 +121,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
                                                                                     PersistentCollection newColl,
                                                                                     Serializable oldColl,
                                                                                     Serializable id) {
-        PropertyMapper mapper = properties.get(referencingPropertyName);
+        PropertyMapper mapper = properties.get(propertyDatas.get(referencingPropertyName));
         if (mapper != null) {
             return mapper.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
         } else {

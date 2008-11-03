@@ -37,7 +37,7 @@ public class RevisionVersionsOrder implements AuditOrder {
     }
 
     public Pair<String, Boolean> getData(AuditConfiguration verCfg) {
-        String revisionPropPath = verCfg.getVerEntCfg().getRevisionPropPath();
+        String revisionPropPath = verCfg.getAuditEntCfg().getRevisionPropPath();
         return Pair.make(revisionPropPath, asc);
     }
 }

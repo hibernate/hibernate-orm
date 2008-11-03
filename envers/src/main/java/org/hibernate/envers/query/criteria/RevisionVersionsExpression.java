@@ -40,6 +40,6 @@ public class RevisionVersionsExpression implements AuditCriterion {
     }
 
     public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        parameters.addWhereWithParam(verCfg.getVerEntCfg().getRevisionPropPath(), op, value);
+        parameters.addWhereWithParam(verCfg.getAuditEntCfg().getRevisionPropPath(), op, value);
     }
 }

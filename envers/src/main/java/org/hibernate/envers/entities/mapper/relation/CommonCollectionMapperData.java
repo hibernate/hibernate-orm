@@ -25,6 +25,7 @@ package org.hibernate.envers.entities.mapper.relation;
 
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.entities.PropertyData;
 
 /**
  * Data that is used by all collection mappers, regardless of the type.  
@@ -33,16 +34,16 @@ import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerato
 public final class CommonCollectionMapperData {
     private final AuditEntitiesConfiguration verEntCfg;
     private final String versionsMiddleEntityName;
-    private final String collectionReferencingPropertyName;
+    private final PropertyData collectionReferencingPropertyData;
     private final MiddleIdData referencingIdData;
     private final RelationQueryGenerator queryGenerator;
 
     public CommonCollectionMapperData(AuditEntitiesConfiguration verEntCfg, String versionsMiddleEntityName,
-                                      String collectionReferencingPropertyName, MiddleIdData referencingIdData,
+                                      PropertyData collectionReferencingPropertyData, MiddleIdData referencingIdData,
                                       RelationQueryGenerator queryGenerator) {
         this.verEntCfg = verEntCfg;
         this.versionsMiddleEntityName = versionsMiddleEntityName;
-        this.collectionReferencingPropertyName = collectionReferencingPropertyName;
+        this.collectionReferencingPropertyData = collectionReferencingPropertyData;
         this.referencingIdData = referencingIdData;
         this.queryGenerator = queryGenerator;
     }
@@ -55,8 +56,8 @@ public final class CommonCollectionMapperData {
         return versionsMiddleEntityName;
     }
 
-    public String getCollectionReferencingPropertyName() {
-        return collectionReferencingPropertyName;
+    public PropertyData getCollectionReferencingPropertyData() {
+        return collectionReferencingPropertyData;
     }
 
     public MiddleIdData getReferencingIdData() {

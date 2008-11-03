@@ -59,7 +59,7 @@ public class EntitiesAtRevisionQuery extends AbstractVersionsQuery {
 
         QueryBuilder maxRevQb = qb.newSubQueryBuilder(versionsEntityName, "e2");
 
-        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 
         String revisionPropertyPath = verEntCfg.getRevisionPropPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();

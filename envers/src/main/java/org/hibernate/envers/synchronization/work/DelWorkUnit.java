@@ -48,7 +48,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.DEL);
 
-        session.save(verCfg.getVerEntCfg().getVersionsEntityName(getEntityName()), data);
+        session.save(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), data);
 
         setPerformed(data);
     }

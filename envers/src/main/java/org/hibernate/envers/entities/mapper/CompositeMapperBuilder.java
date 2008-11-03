@@ -23,10 +23,12 @@
  */
 package org.hibernate.envers.entities.mapper;
 
+import org.hibernate.envers.entities.PropertyData;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public interface CompositeMapperBuilder extends SimpleMapperBuilder {    
-    public CompositeMapperBuilder addComposite(String propertyName);
-    public void addComposite(String propertyName, PropertyMapper propertyMapper);
+    public CompositeMapperBuilder addComposite(PropertyData propertyData);
+    public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper);
 }

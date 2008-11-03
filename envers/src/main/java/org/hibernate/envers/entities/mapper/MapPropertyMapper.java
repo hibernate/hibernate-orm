@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -43,29 +43,29 @@ import org.hibernate.util.ReflectHelper;
  * @author Adam Warski (adam at warski dot org)
  */
 public class MapPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
-    private String propertyName;
+    private PropertyData propertyData;
     private ExtendedPropertyMapper delegate;
 
-    public MapPropertyMapper(String propertyName) {
-        this.propertyName = propertyName;
+    public MapPropertyMapper(PropertyData propertyData) {
+        this.propertyData = propertyData;
         this.delegate = new MultiPropertyMapper();
     }
 
-    public void add(String propertyName, ModificationStore modStore) {
-        delegate.add(propertyName, modStore);
+    public void add(PropertyData propertyData) {
+        delegate.add(propertyData);
     }
 
-    public CompositeMapperBuilder addComposite(String propertyName) {
-        return delegate.addComposite(propertyName);
+    public CompositeMapperBuilder addComposite(PropertyData propertyData) {
+        return delegate.addComposite(propertyData);
     }
 
-    public void addComposite(String propertyName, PropertyMapper propertyMapper) {
-        delegate.addComposite(propertyName, propertyMapper);
+    public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {
+        delegate.addComposite(propertyData, propertyMapper);
     }
 
     public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
         Map<String, Object> newData = new HashMap<String, Object>();
-        data.put(propertyName, newData);
+        data.put(propertyData.getName(), newData);
 
         return delegate.mapToMapFromEntity(newData, newObj, oldObj);
     }
@@ -75,13 +75,13 @@ public class MapPropertyMapper implements PropertyMapper, CompositeMapperBuilder
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyName);
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyName);
+        Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyData);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 
         try {
             Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
             setter.set(obj, subObj, null);
-            delegate.mapToEntityFromMap(verCfg, subObj, (Map) data.get(propertyName), primaryKey, versionsReader, revision);
+            delegate.mapToEntityFromMap(verCfg, subObj, (Map) data.get(propertyData.getName()), primaryKey, versionsReader, revision);
         } catch (Exception e) {
             throw new AuditException(e);
         }

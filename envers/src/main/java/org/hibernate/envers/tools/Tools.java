@@ -23,11 +23,7 @@
  */
 package org.hibernate.envers.tools;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -35,6 +31,14 @@ import java.util.Map;
 public class Tools {
     public static <K,V> Map<K,V> newHashMap() {
         return new HashMap<K,V>();
+    }
+
+    public static <E> Set<E> newHashSet() {
+        return new HashSet<E>();
+    }
+
+    public static <K,V> Map<K,V> newLinkedHashMap() {
+        return new LinkedHashMap<K,V>();
     }
 
     public static boolean objectsEqual(Object obj1, Object obj2) {

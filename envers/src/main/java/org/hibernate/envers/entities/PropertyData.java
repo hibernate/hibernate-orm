@@ -21,28 +21,50 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.configuration.metadata;
-
-import java.util.Map;
+package org.hibernate.envers.entities;
 
 import org.hibernate.envers.ModificationStore;
 
 /**
+ * Holds information on a property that is audited.
  * @author Adam Warski (adam at warski dot org)
-*/
-public class PropertyStoreInfo {
-    // Not null if the whole class is versioned
-    public ModificationStore defaultStore;
+ */
+public class PropertyData {
+    private final String name;
+    private final String accessType;
+    private final ModificationStore store;
 
-    // Maps property names to their stores defined in per-field versioned annotations
-    public Map<String, ModificationStore> propertyStores;
-
-    public PropertyStoreInfo(Map<String, ModificationStore> propertyStores) {
-        this.propertyStores = propertyStores;
+    /**
+     * Copies the given property data, except the name.
+     * @param newName New name.
+     * @param propertyData Property data to copy the rest of properties from.
+     */
+    public PropertyData(String newName, PropertyData propertyData) {
+        this.name = newName;
+        this.accessType = propertyData.accessType;
+        this.store = propertyData.store;
     }
 
-    public PropertyStoreInfo(ModificationStore defaultStore, Map<String, ModificationStore> propertyStores) {
-        this.defaultStore = defaultStore;
-        this.propertyStores = propertyStores;
+    /**
+     * @param name Name of the property.
+     * @param accessType Accessor type for this property.
+     * @param store How this property should be stored.
+     */
+    public PropertyData(String name, String accessType, ModificationStore store) {
+        this.name = name;
+        this.accessType = accessType;
+        this.store = store;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAccessType() {
+        return accessType;
+    }
+
+    public ModificationStore getStore() {
+        return store;
     }
 }

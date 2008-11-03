@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -42,37 +42,38 @@ import org.hibernate.property.Setter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
-    private String propertyName;
+    private PropertyData propertyData;
 
     public SinglePropertyMapper() { }
 
-    public void add(String propertyName, ModificationStore modStore) {
-        if (this.propertyName != null) {
+    public void add(PropertyData propertyData) {
+        if (this.propertyData != null) {
             throw new AuditException("Only one property can be added!");
         }
 
-        this.propertyName = propertyName;
+        this.propertyData = propertyData;
     }
 
     public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
-        data.put(propertyName, newObj);
+        data.put(propertyData.getName(), newObj);
 
         return !Tools.objectsEqual(newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+                                   AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyName);
-        setter.set(obj, data.get(propertyName), null);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
+        setter.set(obj, data.get(propertyData.getName()), null);
     }
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
+                                                                     PersistentCollection newColl,
+                                                                     Serializable oldColl,
+                                                                     Serializable id) {
         return null;
     }
 

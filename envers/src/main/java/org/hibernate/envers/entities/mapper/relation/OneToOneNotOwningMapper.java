@@ -31,6 +31,7 @@ import javax.persistence.NoResultException;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditRestrictions;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -46,12 +47,13 @@ import org.hibernate.property.Setter;
 public class OneToOneNotOwningMapper implements PropertyMapper {
     private String owningReferencePropertyName;
     private String owningEntityName;
-    private String propertyName;
+    private PropertyData propertyData;
 
-    public OneToOneNotOwningMapper(String owningReferencePropertyName, String owningEntityName, String propertyName) {
+    public OneToOneNotOwningMapper(String owningReferencePropertyName, String owningEntityName,
+                                   PropertyData propertyData) {
         this.owningReferencePropertyName = owningReferencePropertyName;
         this.owningEntityName = owningEntityName;
-        this.propertyName = propertyName;
+        this.propertyData = propertyData;
     }
 
     public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
@@ -77,7 +79,7 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
                     ", " + owningReferencePropertyName + ")");
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyName);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
         setter.set(obj, value, null);
     }
 

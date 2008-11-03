@@ -39,6 +39,6 @@ public class IdentifierEqVersionsExpression implements AuditCriterion {
 
     public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         verCfg.getEntCfg().get(entityName).getIdMapper()
-                .addIdEqualsToQuery(parameters, id, verCfg.getVerEntCfg().getOriginalIdPropName(), true);
+                .addIdEqualsToQuery(parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), true);
     }
 }

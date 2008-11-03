@@ -58,7 +58,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 
     @SuppressWarnings({"unchecked"})
     public void perform(Session session, Object revisionData) {
-        AuditEntitiesConfiguration entitiesCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
 
         for (PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges) {
             // Setting the revision number

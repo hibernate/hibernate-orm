@@ -30,6 +30,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.*;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
@@ -49,16 +50,16 @@ import org.hibernate.mapping.PersistentClass;
  */
 public class RevisionInfoConfiguration {
     private String revisionInfoEntityName;
-    private String revisionInfoIdName;
-    private String revisionInfoTimestampName;
+    private PropertyData revisionInfoIdData;
+    private PropertyData revisionInfoTimestampData;
     private String revisionInfoTimestampType;
 
     private String revisionPropType;
 
     public RevisionInfoConfiguration() {
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
-        revisionInfoIdName = "id";
-        revisionInfoTimestampName = "timestamp";
+        revisionInfoIdData = new PropertyData("id", "field", null);
+        revisionInfoTimestampData = new PropertyData("timestamp", "field", null);
         revisionInfoTimestampType = "long";
 
         revisionPropType = "integer";
@@ -72,11 +73,11 @@ public class RevisionInfoConfiguration {
         class_mapping.addAttribute("name", revisionInfoEntityName);
         class_mapping.addAttribute("table", "_revisions_info");
 
-        Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdName,
+        Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
                 revisionPropType);
         MetadataTools.addColumn(idProperty, "revision_id", null);
 
-        Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampName,
+        Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
                 revisionInfoTimestampType, true, false);
         MetadataTools.addColumn(timestampProperty, "revision_timestamp", null);
 
@@ -107,11 +108,11 @@ public class RevisionInfoConfiguration {
                 XClass revisionNumberClass = property.getType();
                 if (reflectionManager.equals(revisionNumberClass, Integer.class) ||
                         reflectionManager.equals(revisionNumberClass, Integer.TYPE)) {
-                    revisionInfoIdName = property.getName();
+                    revisionInfoIdData = new PropertyData(property.getName(), accessType, null);
                     revisionNumberFound.set();
                 } else if (reflectionManager.equals(revisionNumberClass, Long.class) ||
                         reflectionManager.equals(revisionNumberClass, Long.TYPE)) {
-                    revisionInfoIdName = property.getName();
+                    revisionInfoIdData = new PropertyData(property.getName(), accessType, null);
                     revisionNumberFound.set();
 
                     // The default is integer
@@ -130,7 +131,7 @@ public class RevisionInfoConfiguration {
                 XClass revisionTimestampClass = property.getType();
                 if (reflectionManager.equals(revisionTimestampClass, Long.class) ||
                         reflectionManager.equals(revisionTimestampClass, Long.TYPE)) {
-                    revisionInfoTimestampName = property.getName();
+                    revisionInfoTimestampData = new PropertyData(property.getName(), accessType, null);
                     revisionTimestampFound.set();
                 } else {
                     throw new MappingException("The field annotated with @RevisionTimestamp must be of type " +
@@ -178,7 +179,7 @@ public class RevisionInfoConfiguration {
 
                 // Checking if custom revision entity isn't versioned
                 if (clazz.getAnnotation(Audited.class) != null) {
-                    throw new MappingException("An entity annotated with @RevisionEntity cannot be versioned!");
+                    throw new MappingException("An entity annotated with @RevisionEntity cannot be audited!");
                 }
 
                 revisionEntityFound = true;
@@ -202,7 +203,7 @@ public class RevisionInfoConfiguration {
 
                 revisionInfoClass = pc.getMappedClass();
                 revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                        revisionEntity.value(), revisionInfoTimestampName);
+                        revisionEntity.value(), revisionInfoTimestampData);
             }
         }
 
@@ -212,15 +213,16 @@ public class RevisionInfoConfiguration {
         if (revisionInfoGenerator == null) {
             revisionInfoClass = DefaultRevisionEntity.class;
             revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                    RevisionListener.class, revisionInfoTimestampName);
+                    RevisionListener.class, revisionInfoTimestampData);
             revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
         }
 
         return new RevisionInfoConfigurationResult(
                 revisionInfoGenerator, revisionInfoXmlMapping,
-                new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdName, revisionInfoTimestampName),
+                new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
+                        revisionInfoTimestampData.getName()),
                 generateRevisionInfoRelationMapping(),
-                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdName), revisionInfoEntityName);
+                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName);
     }
 }
 

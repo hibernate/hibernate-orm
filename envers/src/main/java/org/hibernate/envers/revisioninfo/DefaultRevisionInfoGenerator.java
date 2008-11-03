@@ -24,6 +24,7 @@
 package org.hibernate.envers.revisioninfo;
 
 import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.MappingException;
@@ -41,11 +42,11 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 
     public DefaultRevisionInfoGenerator(String revisionInfoEntityName, Class<?> revisionInfoClass,
                                        Class<? extends RevisionListener> listenerClass,
-                                       String revisionInfoTimestampName) {
+                                       PropertyData revisionInfoTimestampData) {
         this.revisionInfoEntityName = revisionInfoEntityName;
         this.revisionInfoClass = revisionInfoClass;
 
-        revisionTimestampSetter = ReflectionTools.getSetter(revisionInfoClass, revisionInfoTimestampName);
+        revisionTimestampSetter = ReflectionTools.getSetter(revisionInfoClass, revisionInfoTimestampData);
 
         if (!listenerClass.equals(RevisionListener.class)) {
             // This is not the default value.

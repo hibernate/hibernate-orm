@@ -49,28 +49,28 @@ import org.hibernate.util.StringHelper;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class BasicMetadataGenerator {
-    boolean addBasic(Element parent, String name, Value value, CompositeMapperBuilder mapper,
-                     ModificationStore store, String entityName, boolean insertable, boolean key) {
+    boolean addBasic(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData, Value value,
+                     CompositeMapperBuilder mapper, String entityName, boolean insertable, boolean key) {
         Type type = value.getType();
 
         if (type instanceof ComponentType) {
-            addComponent(parent, name, value, mapper, entityName, key);
+            addComponent(parent, persistentPropertyAuditingData, value, mapper, entityName, key);
             return true;
         } else {
-            return addBasicNoComponent(parent, name, value, mapper, store, insertable, key);
+            return addBasicNoComponent(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
         }
     }
 
-    boolean addBasicNoComponent(Element parent, String name, Value value, SimpleMapperBuilder mapper,
-                                ModificationStore store, boolean insertable, boolean key) {
+    boolean addBasicNoComponent(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+                                Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
         Type type = value.getType();
 
         if (type instanceof ImmutableType || type instanceof MutableType) {
-            addSimpleValue(parent, name, value, mapper, store, insertable, key);
+            addSimpleValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
         } else if (type instanceof CustomType || type instanceof CompositeCustomType) {
-            addCustomValue(parent, name, value, mapper, store, insertable, key);
+            addCustomValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
         } else if ("org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
-            addSimpleValue(parent, name, value, mapper, store, insertable, key);
+            addSimpleValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
         } else {
             return false;
         }
@@ -79,25 +79,25 @@ public final class BasicMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addSimpleValue(Element parent, String name, Value value, SimpleMapperBuilder mapper,
-                                ModificationStore store, boolean insertable, boolean key) {
+    private void addSimpleValue(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+                                Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
         if (parent != null) {
-            Element prop_mapping = MetadataTools.addProperty(parent, name,
+            Element prop_mapping = MetadataTools.addProperty(parent, persistentPropertyAuditingData.getName(),
                     value.getType().getName(), insertable, key);
             MetadataTools.addColumns(prop_mapping, (Iterator<Column>) value.getColumnIterator());
         }
 
         // A null mapper means that we only want to add xml mappings
         if (mapper != null) {
-            mapper.add(name, store);
+            mapper.add(persistentPropertyAuditingData.getPropertyData());
         }
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addCustomValue(Element parent, String name, Value value, SimpleMapperBuilder mapper,
-                                ModificationStore store, boolean insertable, boolean key) {
+    private void addCustomValue(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+                                Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
         if (parent != null) {
-            Element prop_mapping = MetadataTools.addProperty(parent, name,
+            Element prop_mapping = MetadataTools.addProperty(parent, persistentPropertyAuditingData.getName(),
                     null, insertable, key);
 
             //CustomType propertyType = (CustomType) value.getType();
@@ -120,7 +120,7 @@ public final class BasicMetadataGenerator {
         }
 
         if (mapper != null) {
-            mapper.add(name, store);
+            mapper.add(persistentPropertyAuditingData.getPropertyData());
         }
     }
 
@@ -131,8 +131,8 @@ public final class BasicMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addComponent(Element parent, String name, Value value, CompositeMapperBuilder mapper,
-                              String entityName, boolean key) {
+    private void addComponent(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+                              Value value, CompositeMapperBuilder mapper, String entityName, boolean key) {
         Element component_mapping = null;
         Component prop_component = (Component) value;
 
@@ -157,18 +157,19 @@ public final class BasicMetadataGenerator {
             */
 
             component_mapping = parent.addElement("component");
-            component_mapping.addAttribute("name", name);
+            component_mapping.addAttribute("name", persistentPropertyAuditingData.getName());
 
             addComponentClassName(component_mapping, prop_component);
         }
 
-        CompositeMapperBuilder componentMapper = mapper.addComposite(name);
+        CompositeMapperBuilder componentMapper = mapper.addComposite(persistentPropertyAuditingData.getPropertyData());
 
         Iterator<Property> properties = (Iterator<Property>) prop_component.getPropertyIterator();
         while (properties.hasNext()) {
             Property property = properties.next();
-            addBasic(component_mapping, property.getName(), property.getValue(), componentMapper,
-                    ModificationStore.FULL, entityName, property.isInsertable(), key);
+            addBasic(component_mapping,
+                    new PersistentPropertyAuditingData(property.getName(), property.getPropertyAccessorName(), ModificationStore.FULL),
+                    property.getValue(), componentMapper, entityName, property.isInsertable(), key);
         }
     }
 }

@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
@@ -39,28 +39,28 @@ import org.hibernate.property.Setter;
  */
 public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
     private String beanPropertyName;
-    private String propertyName;
+    private PropertyData propertyData;
 
     public SingleIdMapper() {
     }
 
-    public SingleIdMapper(String beanPropertyName, String propertyName) {
+    public SingleIdMapper(String beanPropertyName, PropertyData propertyData) {
         this.beanPropertyName = beanPropertyName;
-        this.propertyName = propertyName;
+        this.propertyData = propertyData;
     }
 
-    public SingleIdMapper(String propertyName) {
-        this.beanPropertyName = propertyName;
-        this.propertyName = propertyName;
+    public SingleIdMapper(PropertyData propertyData) {
+        this.beanPropertyName = propertyData.getName();
+        this.propertyData = propertyData;
     }
 
-    public void add(String propertyName, ModificationStore modStore) {
-        if (this.propertyName != null) {
+    public void add(PropertyData propertyData) {
+        if (this.propertyData != null) {
             throw new AuditException("Only one property can be added!");
         }
 
-        this.propertyName = propertyName;
-        this.beanPropertyName = propertyName;
+        this.propertyData = propertyData;
+        this.beanPropertyName = propertyData.getName();
     }
 
     public void mapToEntityFromMap(Object obj, Map data) {
@@ -68,8 +68,8 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return;
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), beanPropertyName);
-        setter.set(obj, data.get(propertyName), null);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), beanPropertyName, propertyData.getAccessType());
+        setter.set(obj, data.get(propertyData.getName()), null);
     }
 
     public Object mapToIdFromMap(Map data) {
@@ -77,7 +77,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return null;
         }
 
-        return data.get(propertyName);
+        return data.get(propertyData.getName());
     }
 
     public Object mapToIdFromEntity(Object data) {
@@ -85,22 +85,22 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return null;
         }
 
-        Getter getter = ReflectionTools.getGetter(data.getClass(), beanPropertyName);
+        Getter getter = ReflectionTools.getGetter(data.getClass(), beanPropertyName, propertyData.getAccessType());
         return getter.get(data);
     }
 
     public void mapToMapFromId(Map<String, Object> data, Object obj) {
         if (data != null) {
-            data.put(propertyName, obj);
+            data.put(propertyData.getName(), obj);
         }
     }
 
     public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
         if (obj == null) {
-            data.put(propertyName, null);
+            data.put(propertyData.getName(), null);
         } else {
-            Getter getter = ReflectionTools.getGetter(obj.getClass(), beanPropertyName);
-            data.put(propertyName, getter.get(obj));
+            Getter getter = ReflectionTools.getGetter(obj.getClass(), beanPropertyName, propertyData.getAccessType());
+            data.put(propertyData.getName(), getter.get(obj));
         }
     }
 
@@ -109,19 +109,20 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(objFrom.getClass(), beanPropertyName);
-        Setter setter = ReflectionTools.getSetter(objTo.getClass(), beanPropertyName);
+        Getter getter = ReflectionTools.getGetter(objFrom.getClass(), beanPropertyName, propertyData.getAccessType());
+        Setter setter = ReflectionTools.getSetter(objTo.getClass(), beanPropertyName, propertyData.getAccessType());
         setter.set(objTo, getter.get(objFrom), null);
     }
 
     public IdMapper prefixMappedProperties(String prefix) {
-        return new SingleIdMapper(propertyName, prefix + propertyName);
+        return new SingleIdMapper(propertyData.getName(),
+                new PropertyData(prefix + propertyData.getName(), propertyData));
     }
 
     public List<QueryParameterData> mapToQueryParametersFromId(Object obj) {
         List<QueryParameterData> ret = new ArrayList<QueryParameterData>();
 
-        ret.add(new QueryParameterData(propertyName, obj));
+        ret.add(new QueryParameterData(propertyData.getName(), obj));
 
         return ret;
     }

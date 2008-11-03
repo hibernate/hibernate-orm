@@ -29,12 +29,9 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
 import org.hibernate.envers.tools.Pair;
 import static org.hibernate.envers.tools.Pair.make;
+import org.hibernate.envers.entities.PropertyData;
 
-import org.hibernate.property.BasicPropertyAccessor;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.property.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -49,8 +46,6 @@ public class ReflectionTools {
                 ConcurrentReferenceHashMap.ReferenceType.SOFT,
                 ConcurrentReferenceHashMap.ReferenceType.SOFT);
 
-    private static final PropertyAccessor BASIC_PROPERTY_ACCESSOR = new BasicPropertyAccessor();
-
     public static Class<?> loadClass(String name) {
         try {
             return Thread.currentThread().getContextClassLoader().loadClass(name);
@@ -59,11 +54,19 @@ public class ReflectionTools {
         }
     }
 
-    public static Getter getGetter(Class cls, String propertyName) {
+    private static PropertyAccessor getAccessor(String accessorType) {
+        return PropertyAccessorFactory.getPropertyAccessor(accessorType);
+    }
+
+    public static Getter getGetter(Class cls, PropertyData propertyData) {
+        return getGetter(cls, propertyData.getName(), propertyData.getAccessType());
+    }
+
+    public static Getter getGetter(Class cls, String propertyName, String accessorType) {
         Pair<Class, String> key = make(cls, propertyName);
         Getter value = getterCache.get(key);
         if (value == null) {
-            value = ReflectHelper.getGetter(cls, propertyName);
+            value = getAccessor(accessorType).getGetter(cls, propertyName);
             // It's ok if two getters are generated concurrently
             getterCache.put(key, value);
         }
@@ -71,11 +74,15 @@ public class ReflectionTools {
         return value;
     }
 
-    public static Setter getSetter(Class cls, String propertyName) {
+    public static Setter getSetter(Class cls, PropertyData propertyData) {
+        return getSetter(cls, propertyData.getName(), propertyData.getAccessType());
+    }
+
+    public static Setter getSetter(Class cls, String propertyName, String accessorType) {
         Pair<Class, String> key = make(cls, propertyName);
         Setter value = setterCache.get(key);
         if (value == null) {
-            value = BASIC_PROPERTY_ACCESSOR.getSetter(cls, propertyName);
+            value = getAccessor(accessorType).getSetter(cls, propertyName);
             // It's ok if two setters are generated concurrently
             setterCache.put(key, value);
         }

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -57,8 +58,10 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
     public IdMapper prefixMappedProperties(String prefix) {
         MultipleIdMapper ret = new MultipleIdMapper(compositeIdClass);
 
-        for (String propertyName : ids.keySet()) {
-            ret.ids.put(propertyName, new SingleIdMapper(propertyName, prefix + propertyName));
+        for (PropertyData propertyData : ids.keySet()) {
+            String propertyName = propertyData.getName();
+            ret.ids.put(propertyData, new SingleIdMapper(propertyName,
+                    new PropertyData(prefix + propertyName, propertyData)));
         }
 
         return ret;

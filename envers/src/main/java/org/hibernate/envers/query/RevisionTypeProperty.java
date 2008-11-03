@@ -42,6 +42,6 @@ public class RevisionTypeProperty implements AuditProjection {
     }
 
     public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
-        return Triple.make(null, verCfg.getVerEntCfg().getRevisionTypePropName(), false);
+        return Triple.make(null, verCfg.getAuditEntCfg().getRevisionTypePropName(), false);
     }
 }

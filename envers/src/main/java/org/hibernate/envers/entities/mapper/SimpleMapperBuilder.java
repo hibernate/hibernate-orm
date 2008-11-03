@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.entities.mapper;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public interface SimpleMapperBuilder {    
-    public void add(String propertyName, ModificationStore modStore);
+    public void add(PropertyData propertyData);
 }

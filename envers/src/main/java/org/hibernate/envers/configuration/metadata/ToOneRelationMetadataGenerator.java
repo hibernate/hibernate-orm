@@ -26,6 +26,7 @@ package org.hibernate.envers.configuration.metadata;
 import org.dom4j.Element;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.OneToOneNotOwningMapper;
@@ -48,7 +49,8 @@ public final class ToOneRelationMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    void addToOne(Element parent, String name, Value value, CompositeMapperBuilder mapper, String entityName) {
+    void addToOne(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData, Value value,
+                  CompositeMapperBuilder mapper, String entityName) {
         String referencedEntityName = ((ToOne) value).getReferencedEntityName();
 
         EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
@@ -58,28 +60,31 @@ public final class ToOneRelationMetadataGenerator {
 
         IdMappingData idMapping = configuration.getIdMappingData();
 
-        String lastPropertyPrefix = name + "_";
+        String lastPropertyPrefix = persistentPropertyAuditingData.getName() + "_";
 
         // Generating the id mapper for the relation
         IdMapper relMapper = idMapping.getIdMapper().prefixMappedProperties(lastPropertyPrefix);
 
         // Storing information about this relation
-        mainGenerator.getEntitiesConfigurations().get(entityName).addToOneRelation(name, referencedEntityName, relMapper);
+        mainGenerator.getEntitiesConfigurations().get(entityName).addToOneRelation(
+                persistentPropertyAuditingData.getName(), referencedEntityName, relMapper);
 
         // Adding an element to the mapping corresponding to the references entity id's
         Element properties = (Element) idMapping.getXmlRelationMapping().clone();
-        properties.addAttribute("name", name);
+        properties.addAttribute("name", persistentPropertyAuditingData.getName());
 
         MetadataTools.prefixNamesInPropertyElement(properties, lastPropertyPrefix,
                 MetadataTools.getColumnNameIterator(value.getColumnIterator()), false);
         parent.add(properties);
 
         // Adding mapper for the id
-        mapper.addComposite(name, new ToOneIdMapper(relMapper, name, referencedEntityName));
+        PropertyData propertyData = persistentPropertyAuditingData.getPropertyData();
+        mapper.addComposite(propertyData, new ToOneIdMapper(relMapper, propertyData, referencedEntityName));
     }
 
     @SuppressWarnings({"unchecked"})
-    void addOneToOneNotOwning(String name, Value value, CompositeMapperBuilder mapper, String entityName) {
+    void addOneToOneNotOwning(PersistentPropertyAuditingData persistentPropertyAuditingData, Value value,
+                              CompositeMapperBuilder mapper, String entityName) {
         OneToOne propertyValue = (OneToOne) value;
 
         String owningReferencePropertyName = propertyValue.getReferencedPropertyName(); // mappedBy
@@ -102,11 +107,13 @@ public final class ToOneRelationMetadataGenerator {
         IdMapper ownedIdMapper = ownedIdMapping.getIdMapper().prefixMappedProperties(lastPropertyPrefix);
 
         // Storing information about this relation
-        mainGenerator.getEntitiesConfigurations().get(entityName).addToOneNotOwningRelation(name, owningReferencePropertyName,
+        mainGenerator.getEntitiesConfigurations().get(entityName).addToOneNotOwningRelation(
+                persistentPropertyAuditingData.getName(), owningReferencePropertyName,
                 referencedEntityName, ownedIdMapper);
 
         // Adding mapper for the id
-        mapper.addComposite(name, new OneToOneNotOwningMapper(owningReferencePropertyName,
-                referencedEntityName, name));
+        PropertyData propertyData = persistentPropertyAuditingData.getPropertyData();
+        mapper.addComposite(propertyData, new OneToOneNotOwningMapper(owningReferencePropertyName,
+                referencedEntityName, propertyData));
     }
 }

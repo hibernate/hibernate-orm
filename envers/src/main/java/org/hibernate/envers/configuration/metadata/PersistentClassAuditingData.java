@@ -21,43 +21,52 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.entities.mapper.id;
+package org.hibernate.envers.configuration.metadata;
 
 import java.util.Map;
 
-import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.tools.Tools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- */
-public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
-    protected Map<PropertyData, SingleIdMapper> ids;
-    protected String compositeIdClass;
-
-    protected AbstractCompositeIdMapper(String compositeIdClass) {
-        ids = Tools.newLinkedHashMap();
-        
-        this.compositeIdClass = compositeIdClass;
+ * @author Sebastian Komander
+*/
+public class PersistentClassAuditingData {
+    public PersistentClassAuditingData() {
+        properties = Tools.newHashMap();
+        secondaryTableDictionary = Tools.newHashMap();
     }
 
-    public void add(PropertyData propertyData) {
-        ids.put(propertyData, new SingleIdMapper(propertyData));
+    private Map<String, PersistentPropertyAuditingData> properties;
+    private AuditTable auditTable;
+    private Map<String, String> secondaryTableDictionary;
+
+    public Map<String, PersistentPropertyAuditingData> getProperties() {
+        return properties;
     }
 
-    public Object mapToIdFromMap(Map data) {
-        Object ret;
-        try {
-            ret = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass).newInstance();
-        } catch (Exception e) {
-            throw new AuditException(e);
-        }
+    public PersistentPropertyAuditingData getPropertyAuditingData(String propertyName) {
+        return properties.get(propertyName);
+    }
 
-        for (SingleIdMapper mapper : ids.values()) {
-            mapper.mapToEntityFromMap(ret, data);
-        }
+    public Map<String, String> getSecondaryTableDictionary() {
+        return secondaryTableDictionary;
+    }
 
-        return ret;
+    public AuditTable getAuditTable() {
+        return auditTable;
+    }
+
+    public void setAuditTable(AuditTable auditTable) {
+        this.auditTable = auditTable;
+    }
+
+    public boolean isAudited() {
+        if (properties.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

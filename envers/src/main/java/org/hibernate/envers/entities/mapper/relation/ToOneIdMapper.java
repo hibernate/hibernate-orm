@@ -33,6 +33,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
@@ -45,18 +46,18 @@ import org.hibernate.property.Setter;
  */
 public class ToOneIdMapper implements PropertyMapper {
     private final IdMapper delegate;
-    private final String propertyName;
+    private final PropertyData propertyData;
     private final String referencedEntityName;
 
-    public ToOneIdMapper(IdMapper delegate, String propertyName, String referencedEntityName) {
+    public ToOneIdMapper(IdMapper delegate, PropertyData propertyData, String referencedEntityName) {
         this.delegate = delegate;
-        this.propertyName = propertyName;
+        this.propertyData = propertyData;
         this.referencedEntityName = referencedEntityName;
     }
 
     public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
         HashMap<String, Object> newData = new HashMap<String, Object>();
-        data.put(propertyName, newData);
+        data.put(propertyData.getName(), newData);
 
         delegate.mapToMapFromEntity(newData, newObj);
 
@@ -69,7 +70,7 @@ public class ToOneIdMapper implements PropertyMapper {
             return;
         }
 
-        Object entityId = delegate.mapToIdFromMap((Map) data.get(propertyName));
+        Object entityId = delegate.mapToIdFromMap((Map) data.get(propertyData.getName()));
         Object value;
         if (entityId == null) {
             value = null;
@@ -84,7 +85,7 @@ public class ToOneIdMapper implements PropertyMapper {
             }
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyName);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
         setter.set(obj, value, null);
     }
 

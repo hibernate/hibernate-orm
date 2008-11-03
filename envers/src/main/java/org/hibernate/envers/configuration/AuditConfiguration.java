@@ -41,18 +41,18 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
  */
 public class AuditConfiguration {
     private final GlobalConfiguration globalCfg;
-    private final AuditEntitiesConfiguration verEntCfg;
-    private final AuditSyncManager versionsSyncManager;
+    private final AuditEntitiesConfiguration auditEntCfg;
+    private final AuditSyncManager auditSyncManager;
     private final EntitiesConfigurations entCfg;
     private final RevisionInfoQueryCreator revisionInfoQueryCreator;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
 
-    public AuditEntitiesConfiguration getVerEntCfg() {
-        return verEntCfg;
+    public AuditEntitiesConfiguration getAuditEntCfg() {
+        return auditEntCfg;
     }
 
     public AuditSyncManager getSyncManager() {
-        return versionsSyncManager;
+        return auditSyncManager;
     }
 
     public GlobalConfiguration getGlobalCfg() {
@@ -78,12 +78,12 @@ public class AuditConfiguration {
         ReflectionManager reflectionManager = ((AnnotationConfiguration) cfg).getReflectionManager();
         RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration();
         RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
-        verEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
+        auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
         globalCfg = new GlobalConfiguration(properties);
-        versionsSyncManager = new AuditSyncManager(revInfoCfgResult.getRevisionInfoGenerator());
+        auditSyncManager = new AuditSyncManager(revInfoCfgResult.getRevisionInfoGenerator());
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, verEntCfg,
+        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg,
                 revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
     }
 

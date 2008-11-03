@@ -73,7 +73,7 @@ public abstract class AbstractVersionsQuery implements AuditQuery {
         entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
 
         entityName = cls.getName();
-        versionsEntityName = verCfg.getVerEntCfg().getVersionsEntityName(entityName);
+        versionsEntityName = verCfg.getAuditEntCfg().getVersionsEntityName(entityName);
 
         qb = new QueryBuilder(versionsEntityName, "e");
     }
@@ -83,8 +83,6 @@ public abstract class AbstractVersionsQuery implements AuditQuery {
         Map<String, Object> queryParamValues = new HashMap<String, Object>();
 
         qb.build(querySb, queryParamValues);
-
-        System.out.println("QUERY: " + querySb.toString());
 
         Query query = versionsReader.getSession().createQuery(querySb.toString());
         for (Map.Entry<String, Object> paramValue : queryParamValues.entrySet()) {

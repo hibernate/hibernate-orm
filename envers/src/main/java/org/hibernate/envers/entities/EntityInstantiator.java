@@ -67,7 +67,7 @@ public class EntityInstantiator {
 
         // First mapping the primary key
         IdMapper idMapper = verCfg.getEntCfg().get(entityName).getIdMapper();
-        Map originalId = (Map) versionsEntity.get(verCfg.getVerEntCfg().getOriginalIdPropName());
+        Map originalId = (Map) versionsEntity.get(verCfg.getAuditEntCfg().getOriginalIdPropName());
 
         Object primaryKey = idMapper.mapToIdFromMap(originalId);
 

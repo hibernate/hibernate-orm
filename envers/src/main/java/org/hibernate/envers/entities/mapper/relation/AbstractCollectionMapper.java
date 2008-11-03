@@ -101,7 +101,8 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
                                                                      PersistentCollection newColl,
                                                                      Serializable oldColl, Serializable id) {
-        if (!commonCollectionMapperData.getCollectionReferencingPropertyName().equals(referencingPropertyName)) {
+        if (!commonCollectionMapperData.getCollectionReferencingPropertyData().getName()
+                .equals(referencingPropertyName)) {
             return null;
         }
 
@@ -138,7 +139,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
         Setter setter = ReflectionTools.getSetter(obj.getClass(),
-                commonCollectionMapperData.getCollectionReferencingPropertyName());
+                commonCollectionMapperData.getCollectionReferencingPropertyData());
         try {
             setter.set(obj, proxyConstructor.newInstance(getInitializor(verCfg, versionsReader, primaryKey, revision)), null);
         } catch (InstantiationException e) {

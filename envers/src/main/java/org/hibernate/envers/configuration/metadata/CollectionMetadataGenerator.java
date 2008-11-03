@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.configuration.metadata;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +36,6 @@ import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
@@ -91,8 +89,7 @@ public final class CollectionMetadataGenerator {
     private final CompositeMapperBuilder currentMapper;
     private final String referencingEntityName;
     private final EntityXmlMappingData xmlMappingData;
-    private final AuditJoinTable joinTable;
-    private final String mapKey;
+    private final PersistentPropertyAuditingData persistentPropertyAuditingData;
 
     private final EntityConfiguration referencingEntityConfiguration;
     /**
@@ -102,29 +99,28 @@ public final class CollectionMetadataGenerator {
 
     /**
      * @param mainGenerator Main generator, giving access to configuration and the basic mapper.
-     * @param propertyName Name of the property that references the collection in the referencing entity.
      * @param propertyValue Value of the collection, as mapped by Hibernate.
      * @param currentMapper Mapper, to which the appropriate {@link org.hibernate.envers.entities.mapper.PropertyMapper}
      * will be added.
      * @param referencingEntityName Name of the entity that owns this collection.
      * @param xmlMappingData In case this collection requires a middle table, additional mapping documents will
      * be created using this object.
-     * @param joinTable User data for the middle (join) table. <code>null</code> if the user didn't specify it.
-     * @param mapKey The value of the name() property of the MapKey annotation on this property. Null, if this
-     * property isn't annotated with this annotation.
+     * @param persistentPropertyAuditingData Property auditing (meta-)data. Among other things, holds the name of the
+     * property that references the collection in the referencing entity, the user data for middle (join)
+     * table and the value of the <code>@MapKey</code> annotation, if there was one. 
      */
-    public CollectionMetadataGenerator(AuditMetadataGenerator mainGenerator, String propertyName,
+    public CollectionMetadataGenerator(AuditMetadataGenerator mainGenerator,
                                        Collection propertyValue, CompositeMapperBuilder currentMapper,
                                        String referencingEntityName, EntityXmlMappingData xmlMappingData,
-                                       AuditJoinTable joinTable, String mapKey) {
+                                       PersistentPropertyAuditingData persistentPropertyAuditingData) {
         this.mainGenerator = mainGenerator;
-        this.propertyName = propertyName;
         this.propertyValue = propertyValue;
         this.currentMapper = currentMapper;
         this.referencingEntityName = referencingEntityName;
         this.xmlMappingData = xmlMappingData;
-        this.joinTable = joinTable == null ? getDefaultVersionsJoinTable() : joinTable;
-        this.mapKey = mapKey;
+        this.persistentPropertyAuditingData = persistentPropertyAuditingData;
+
+        this.propertyName = persistentPropertyAuditingData.getName();
 
         referencingEntityConfiguration = mainGenerator.getEntitiesConfigurations().get(referencingEntityName);
         if (referencingEntityConfiguration == null) {
@@ -192,7 +188,8 @@ public final class CollectionMetadataGenerator {
 
         // Creating common mapper data.
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-                mainGenerator.getVerEntCfg(), referencedEntityName, propertyName,
+                mainGenerator.getVerEntCfg(), referencedEntityName,
+                persistentPropertyAuditingData.getPropertyData(),
                 referencingIdData, queryGenerator);
 
         // Checking the type of the collection and adding an appropriate mapper.
@@ -238,9 +235,9 @@ public final class CollectionMetadataGenerator {
         // Generating the name of the middle table
         String versionsMiddleTableName;
         String versionsMiddleEntityName;
-        if (!StringTools.isEmpty(joinTable.name())) {
-            versionsMiddleTableName = joinTable.name();
-            versionsMiddleEntityName = joinTable.name();
+        if (!StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().name())) {
+            versionsMiddleTableName = persistentPropertyAuditingData.getJoinTable().name();
+            versionsMiddleEntityName = persistentPropertyAuditingData.getJoinTable().name();
         } else {
             String middleTableName = getMiddleTableName(propertyValue, referencingEntityName);
             versionsMiddleTableName = mainGenerator.getVerEntCfg().getVersionsTableName(null, middleTableName);
@@ -304,7 +301,7 @@ public final class CollectionMetadataGenerator {
         // Generating the element mapping.
         // ******
         MiddleComponentData elementComponentData = addValueToMiddleTable(propertyValue.getElement(), middleEntityXml,
-                queryGeneratorBuilder, referencedPrefix, joinTable.inverseJoinColumns());
+                queryGeneratorBuilder, referencedPrefix, persistentPropertyAuditingData.getJoinTable().inverseJoinColumns());
 
         // ******
         // Generating the index mapping, if an index exists.
@@ -319,7 +316,9 @@ public final class CollectionMetadataGenerator {
 
         // Creating common data
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-                mainGenerator.getVerEntCfg(), versionsMiddleEntityName, propertyName, referencingIdData, queryGenerator);
+                mainGenerator.getVerEntCfg(), versionsMiddleEntityName,
+                persistentPropertyAuditingData.getPropertyData(),
+                referencingIdData, queryGenerator);
 
         // Checking the type of the collection and adding an appropriate mapper.
         addMapper(commonCollectionMapperData, elementComponentData, indexComponentData);
@@ -333,6 +332,7 @@ public final class CollectionMetadataGenerator {
     private MiddleComponentData addIndex(Element middleEntityXml, QueryGeneratorBuilder queryGeneratorBuilder) {
         if (propertyValue instanceof IndexedCollection) {
             IndexedCollection indexedValue = (IndexedCollection) propertyValue;
+            String mapKey = persistentPropertyAuditingData.getMapKey();
             if (mapKey == null) {
                 // This entity doesn't specify a javax.persistence.MapKey. Mapping it to the middle entity.
                 return addValueToMiddleTable(indexedValue.getIndex(), middleEntityXml,
@@ -347,7 +347,8 @@ public final class CollectionMetadataGenerator {
                             referencedIdMapping.getIdMapper()), currentIndex);
                 } else {
                     // The key of the map is a property of the entity.
-                    return new MiddleComponentData(new MiddleMapKeyPropertyComponentMapper(mapKey), currentIndex);
+                    return new MiddleComponentData(new MiddleMapKeyPropertyComponentMapper(mapKey,
+                            persistentPropertyAuditingData.getAccessType()), currentIndex);
                 }
             }
         } else {
@@ -399,8 +400,9 @@ public final class CollectionMetadataGenerator {
                     queryGeneratorBuilder.getCurrentIndex());
         } else {
             // Last but one parameter: collection components are always insertable
-            boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(xmlMapping, prefix, value, null,
-                    ModificationStore.FULL, true, true);
+            boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(xmlMapping,
+                    new PersistentPropertyAuditingData(prefix, "field", ModificationStore.FULL), value, null,
+                    true, true);
 
             if (mapped) {
                 // Simple values are always stored in the first item of the array returned by the query generator.
@@ -417,25 +419,31 @@ public final class CollectionMetadataGenerator {
                            MiddleComponentData indexComponentData) {
         Type type = propertyValue.getType();
         if (type instanceof SortedSetType) {
-            currentMapper.addComposite(propertyName, new BasicCollectionMapper<Set>(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new BasicCollectionMapper<Set>(commonCollectionMapperData,
                     TreeSet.class, SortedSetProxy.class, elementComponentData));
         } else if (type instanceof SetType) {
-            currentMapper.addComposite(propertyName, new BasicCollectionMapper<Set>(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new BasicCollectionMapper<Set>(commonCollectionMapperData,
                     HashSet.class, SetProxy.class, elementComponentData));
         } else if (type instanceof SortedMapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
-            currentMapper.addComposite(propertyName, new MapCollectionMapper<Map>(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new MapCollectionMapper<Map>(commonCollectionMapperData,
                     TreeMap.class, SortedMapProxy.class, elementComponentData, indexComponentData));
         } else if (type instanceof MapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
-            currentMapper.addComposite(propertyName, new MapCollectionMapper<Map>(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new MapCollectionMapper<Map>(commonCollectionMapperData,
                     HashMap.class, MapProxy.class, elementComponentData, indexComponentData));
         } else if (type instanceof BagType) {
-            currentMapper.addComposite(propertyName, new BasicCollectionMapper<List>(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new BasicCollectionMapper<List>(commonCollectionMapperData,
                     ArrayList.class, ListProxy.class, elementComponentData));
         } else if (type instanceof ListType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
-            currentMapper.addComposite(propertyName, new ListCollectionMapper(commonCollectionMapperData,
+            currentMapper.addComposite(persistentPropertyAuditingData.getPropertyData(),
+                    new ListCollectionMapper(commonCollectionMapperData,
                     elementComponentData, indexComponentData));
         } else {
             mainGenerator.throwUnsupportedTypeException(type, referencingEntityName, propertyName);
@@ -454,8 +462,10 @@ public final class CollectionMetadataGenerator {
     }
 
     private Element createMiddleEntityXml(String versionsMiddleTableName, String versionsMiddleEntityName) {
-        String schema = StringTools.isEmpty(joinTable.schema()) ? propertyValue.getCollectionTable().getSchema() : joinTable.schema();
-        String catalog = StringTools.isEmpty(joinTable.catalog()) ? propertyValue.getCollectionTable().getCatalog() : joinTable.catalog();
+        String schema = StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().schema()) ?
+                propertyValue.getCollectionTable().getSchema() : persistentPropertyAuditingData.getJoinTable().schema();
+        String catalog = StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().catalog()) ?
+                propertyValue.getCollectionTable().getCatalog() : persistentPropertyAuditingData.getJoinTable().catalog();
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
                 versionsMiddleEntityName, versionsMiddleTableName, schema, catalog, null);
@@ -472,16 +482,6 @@ public final class CollectionMetadataGenerator {
 
         // All other properties should also be part of the primary key of the middle entity.
         return middleEntityXmlId;
-    }
-
-    private AuditJoinTable getDefaultVersionsJoinTable() {
-        return new AuditJoinTable() {
-            public String name() { return ""; }
-            public String schema() { return ""; }
-            public String catalog() { return ""; }
-            public JoinColumn[] inverseJoinColumns() { return new JoinColumn[0]; }
-            public Class<? extends Annotation> annotationType() { return this.getClass(); }
-        };
     }
 
     @SuppressWarnings({"unchecked"})

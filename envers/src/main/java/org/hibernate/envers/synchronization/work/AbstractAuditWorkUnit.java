@@ -51,7 +51,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
     }
 
     protected void fillDataWithId(Map<String, Object> data, Object revision, RevisionType revisionType) {
-        AuditEntitiesConfiguration entitiesCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
 
         Map<String, Object> originalId = new HashMap<String, Object>();
         originalId.put(entitiesCfg.getRevisionPropName(), revision);
@@ -79,7 +79,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
     public void undo(Session session) {
         if (isPerformed()) {
-            session.delete(verCfg.getVerEntCfg().getVersionsEntityName(getEntityName()), performedData);
+            session.delete(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), performedData);
             session.flush();
         }
     }

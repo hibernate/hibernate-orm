@@ -24,6 +24,7 @@
 package org.hibernate.envers.revisioninfo;
 
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.entities.PropertyData;
 
 import org.hibernate.property.Getter;
 
@@ -33,8 +34,8 @@ import org.hibernate.property.Getter;
  */
 public class RevisionInfoNumberReader {
     private final Getter revisionIdGetter;
-    public RevisionInfoNumberReader(Class<?> revisionInfoClass, String revisionInfoIdName) {
-        revisionIdGetter = ReflectionTools.getGetter(revisionInfoClass, revisionInfoIdName);
+    public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData) {
+        revisionIdGetter = ReflectionTools.getGetter(revisionInfoClass, revisionInfoIdData);
     }
 
     public Number getRevisionNumber(Object revision) {

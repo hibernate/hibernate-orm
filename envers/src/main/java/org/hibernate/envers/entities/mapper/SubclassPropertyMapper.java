@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
@@ -80,15 +80,15 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         }
     }
 
-    public CompositeMapperBuilder addComposite(String propertyName) {
-        return main.addComposite(propertyName);
+    public CompositeMapperBuilder addComposite(PropertyData propertyData) {
+        return main.addComposite(propertyData);
     }
 
-    public void addComposite(String propertyName, PropertyMapper propertyMapper) {
-        main.addComposite(propertyName, propertyMapper);
+    public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {
+        main.addComposite(propertyData, propertyMapper);
     }
 
-    public void add(String propertyName, ModificationStore modStore) {
-        main.add(propertyName, modStore);
+    public void add(PropertyData propertyData) {
+        main.add(propertyData);
     }
 }

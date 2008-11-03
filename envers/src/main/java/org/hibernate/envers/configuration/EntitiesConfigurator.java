@@ -39,7 +39,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.hibernate.envers.configuration.metadata.AnnotationsMetadataReader;
 import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
-import org.hibernate.envers.configuration.metadata.PersistentClassVersioningData;
+import org.hibernate.envers.configuration.metadata.PersistentClassAuditingData;
 import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.tools.StringTools;
@@ -64,8 +64,8 @@ public class EntitiesConfigurator {
         // Sorting the persistent class topologically - superclass always before subclass
         Iterator<PersistentClass> classes = GraphTopologicalSort.sort(new PersistentClassGraphDefiner(cfg)).iterator();
 
-        Map<PersistentClass, PersistentClassVersioningData> pcDatas =
-                new HashMap<PersistentClass, PersistentClassVersioningData>();
+        Map<PersistentClass, PersistentClassAuditingData> pcDatas =
+                new HashMap<PersistentClass, PersistentClassAuditingData>();
         Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<PersistentClass, EntityXmlMappingData>();
 
         // First pass
@@ -74,23 +74,23 @@ public class EntitiesConfigurator {
             // Collecting information from annotations on the persistent class pc
             AnnotationsMetadataReader annotationsMetadataReader =
                     new AnnotationsMetadataReader(globalCfg, reflectionManager, pc);
-            PersistentClassVersioningData versioningData = annotationsMetadataReader.getVersioningData();
+            PersistentClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
-            if (versioningData.isVersioned()) {
-                pcDatas.put(pc, versioningData);
+            if (auditData.isAudited()) {
+                pcDatas.put(pc, auditData);
 
-                if (!StringTools.isEmpty(versioningData.versionsTable.value())) {
-                    verEntCfg.addCustomVersionsTableName(pc.getEntityName(), versioningData.versionsTable.value());
+                if (!StringTools.isEmpty(auditData.getAuditTable().value())) {
+                    verEntCfg.addCustomVersionsTableName(pc.getEntityName(), auditData.getAuditTable().value());
                 }
 
                 EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
-                versionsMetaGen.generateFirstPass(pc, versioningData, xmlMappingData);
+                versionsMetaGen.generateFirstPass(pc, auditData, xmlMappingData);
                 xmlMappings.put(pc, xmlMappingData);
             }
         }
 
         // Second pass
-        for (Map.Entry<PersistentClass, PersistentClassVersioningData> pcDatasEntry : pcDatas.entrySet()) {
+        for (Map.Entry<PersistentClass, PersistentClassAuditingData> pcDatasEntry : pcDatas.entrySet()) {
             EntityXmlMappingData xmlMappingData = xmlMappings.get(pcDatasEntry.getKey());
 
             versionsMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);

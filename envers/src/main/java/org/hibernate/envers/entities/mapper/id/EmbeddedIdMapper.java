@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.envers.entities.PropertyData;
 
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
@@ -39,12 +40,12 @@ import org.hibernate.util.ReflectHelper;
  * @author Adam Warski (adam at warski dot org)
  */
 public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-    private String idPropertyName;
+    private PropertyData idPropertyData;
 
-    public EmbeddedIdMapper(String idPropertyName, String compositeIdClass) {
+    public EmbeddedIdMapper(PropertyData idPropertyData, String compositeIdClass) {
         super(compositeIdClass);
         
-        this.idPropertyName = idPropertyName;
+        this.idPropertyData = idPropertyData;
     }
 
     public void mapToMapFromId(Map<String, Object> data, Object obj) {
@@ -58,7 +59,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyName);
+        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
         mapToMapFromId(data, getter.get(obj));
     }
 
@@ -67,8 +68,8 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyName);
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyName);
+        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyData);
 
         try {
             Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
@@ -83,10 +84,12 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
     }
 
     public IdMapper prefixMappedProperties(String prefix) {
-        EmbeddedIdMapper ret = new EmbeddedIdMapper(idPropertyName, compositeIdClass);
+        EmbeddedIdMapper ret = new EmbeddedIdMapper(idPropertyData, compositeIdClass);
 
-        for (String propertyName : ids.keySet()) {
-            ret.ids.put(propertyName, new SingleIdMapper(propertyName, prefix + propertyName));
+        for (PropertyData propertyData : ids.keySet()) {
+            String propertyName = propertyData.getName();
+            ret.ids.put(propertyData, new SingleIdMapper(propertyName,
+                    new PropertyData(prefix + propertyName, propertyData)));
         }
 
         return ret;
@@ -97,7 +100,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
             return null;
         }
 
-        Getter getter = ReflectionTools.getGetter(data.getClass(), idPropertyName);
+        Getter getter = ReflectionTools.getGetter(data.getClass(), idPropertyData);
         return getter.get(data);
     }
 

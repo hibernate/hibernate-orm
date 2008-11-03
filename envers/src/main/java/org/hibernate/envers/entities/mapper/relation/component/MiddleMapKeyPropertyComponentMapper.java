@@ -35,17 +35,19 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
  * so <code>mapToMapFromObject</code> is empty.
  * @author Adam Warski (adam at warski dot org)
  */
-public final class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMapper {
+public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMapper {
     private final String propertyName;
+    private final String accessType;
 
-    public MiddleMapKeyPropertyComponentMapper(String propertyName) {
+    public MiddleMapKeyPropertyComponentMapper(String propertyName, String accessType) {
         this.propertyName = propertyName;
+        this.accessType = accessType;
     }
 
     public Object mapToObjectFromFullMap(EntityInstantiator entityInstantiator, Map<String, Object> data,
                                          Object dataObject, Number revision) {
         // dataObject is not null, as this mapper can only be used in an index.
-        return ReflectionTools.getGetter(dataObject.getClass(), propertyName).get(dataObject);
+        return ReflectionTools.getGetter(dataObject.getClass(), propertyName, accessType).get(dataObject);
     }
 
     public void mapToMapFromObject(Map<String, Object> data, Object obj) {

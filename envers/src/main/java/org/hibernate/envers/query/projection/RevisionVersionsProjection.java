@@ -45,7 +45,7 @@ public class RevisionVersionsProjection implements AuditProjection {
     }
 
     public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
-        String revisionPropPath = verCfg.getVerEntCfg().getRevisionPropPath();
+        String revisionPropPath = verCfg.getAuditEntCfg().getRevisionPropPath();
 
         switch (type) {
             case MAX: return Triple.make("max", revisionPropPath, false);

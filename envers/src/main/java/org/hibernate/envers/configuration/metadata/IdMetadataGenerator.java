@@ -29,6 +29,7 @@ import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.envers.entities.mapper.id.EmbeddedIdMapper;
 import org.hibernate.envers.entities.mapper.id.MultipleIdMapper;
@@ -61,8 +62,9 @@ public final class IdMetadataGenerator {
             if (!"_identifierMapper".equals(property.getName())) {
                 if (propertyType instanceof ImmutableType) {
                     // Last but one parameter: ids are always insertable
-                    mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(parent, property.getName(),
-                            property.getValue(), mapper, ModificationStore.FULL, true, key);
+                    mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(parent,
+                            getIdPersistentPropertyAuditingData(property),
+                            property.getValue(), mapper, true, key);
                 } else {
                     throw new MappingException("Type not supported: " + propertyType.getClass().getName());
                 }
@@ -94,7 +96,7 @@ public final class IdMetadataGenerator {
 
             Component id_component = (Component) id_prop.getValue();
 
-            mapper = new EmbeddedIdMapper(id_prop.getName(), id_component.getComponentClassName());
+            mapper = new EmbeddedIdMapper(getIdPropertyData(id_prop), id_component.getComponentClassName());
             addIdProperties(rel_id_mapping, (Iterator<Property>) id_component.getPropertyIterator(), mapper, false);
 
             // null mapper - the mapping where already added the first time, now we only want to generate the xml
@@ -105,12 +107,14 @@ public final class IdMetadataGenerator {
             mapper = new SingleIdMapper();
 
             // Last but one parameter: ids are always insertable
-            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(rel_id_mapping, id_prop.getName(),
-                    id_prop.getValue(), mapper, ModificationStore.FULL, true, false);
+            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(rel_id_mapping,
+                    getIdPersistentPropertyAuditingData(id_prop),
+                    id_prop.getValue(), mapper, true, false);
 
             // null mapper - the mapping where already added the first time, now we only want to generate the xml
-            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(orig_id_mapping, id_prop.getName(),
-                    id_prop.getValue(), null, ModificationStore.FULL, true, true);
+            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(orig_id_mapping,
+                    getIdPersistentPropertyAuditingData(id_prop),
+                    id_prop.getValue(), null, true, true);
         }
 
         orig_id_mapping.addAttribute("name", mainGenerator.getVerEntCfg().getOriginalIdPropName());
@@ -119,5 +123,14 @@ public final class IdMetadataGenerator {
         mainGenerator.addRevisionInfoRelation(orig_id_mapping);
 
         return new IdMappingData(mapper, orig_id_mapping, rel_id_mapping);
+    }
+
+    private PropertyData getIdPropertyData(Property property) {
+        return new PropertyData(property.getName(), property.getPropertyAccessorName(), ModificationStore.FULL);
+    }
+
+    private PersistentPropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
+        return new PersistentPropertyAuditingData(property.getName(), property.getPropertyAccessorName(),
+                ModificationStore.FULL);
     }
 }

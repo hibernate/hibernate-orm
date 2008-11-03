@@ -54,7 +54,7 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
     }
 
     private Number getRevisionNumber(Map versionsEntity) {
-        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 
         String originalId = verEntCfg.getOriginalIdPropName();
         String revisionPropertyName = verEntCfg.getRevisionPropName();
@@ -71,7 +71,7 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
 
     @SuppressWarnings({"unchecked"})
     public List list() throws AuditException {
-        AuditEntitiesConfiguration verEntCfg = verCfg.getVerEntCfg();
+        AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 
         /*
         The query that should be executed in the versions table:
@@ -97,8 +97,8 @@ public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
         }
 
         if (!selectEntitiesOnly) {
-            qb.addFrom(verCfg.getVerEntCfg().getRevisionInfoEntityName(), "r");
-            qb.getRootParameters().addWhere(verCfg.getVerEntCfg().getRevisionPropPath(), true, "=", "r.id", false);
+            qb.addFrom(verCfg.getAuditEntCfg().getRevisionInfoEntityName(), "r");
+            qb.getRootParameters().addWhere(verCfg.getAuditEntCfg().getRevisionPropPath(), true, "=", "r.id", false);
         }
 
         List<Object> queryResult = buildAndExecuteQuery();

@@ -56,6 +56,7 @@
         <module>connection-proxool</module>
         <module>commons-annotations</module>
         <module>annotations</module>
+        <module>entitymanager</module>
         <module>envers</module>
         <module>jmx</module>
         <module>testing</module>

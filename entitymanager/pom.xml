@@ -104,10 +104,36 @@
             <testResource>
                 <filtering>true</filtering>
                 <directory>src/test/resources</directory>
+               <includes>
+                    <include>*.properties</include>
+                </includes>
             </testResource>
         </testResources>
 
         <plugins>
+	      <plugin>
+	        <artifactId>maven-antrun-plugin</artifactId>
+	        <executions>
+	          <execution>
+		        <id>package-tests</id>
+	            <phase>process-test-classes</phase>
+	            <configuration>
+		        	<tasks>
+	                    <property name="package.dir" value="${basedir}/target/test-packages"/>
+	                    <property name="package.tmp.dir" value="${basedir}/target/tmp"/>
+	                    <property name="classes.dir" value="${project.build.directory}/test-classes"/>	
+                        <property name="testresources.dir" value="${basedir}/src/test/resources"/>					
+	                	<ant antfile="${basedir}/build.xml">
+	                  		<target name="package"/>
+	                	</ant>
+					</tasks>
+	            </configuration>
+	            <goals>
+	              <goal>run</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	      </plugin>	
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -128,9 +154,23 @@
                     </execution>
                 </executions>
             </plugin>
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-surefire-plugin</artifactId>
+	        <configuration>
+	          <additionalClasspathElements>
+              	<additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/defaultpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/explicitpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/externaljar.jar</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/overridenpar.jar</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/space par.par</additionalClasspathElement>
+	          </additionalClasspathElements>
+	        </configuration>
+	      </plugin>
         </plugins>
     </build>
-
 
     <profiles>
        <profile>

@@ -1,14 +1,31 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3CR3//EN"
-"../support/docbook-dtd/docbookx.dtd" [
-<!ENTITY architecture SYSTEM "modules/architecture.xml">
-<!ENTITY configuration SYSTEM "modules/configuration.xml">
-<!ENTITY entitymanagerapi SYSTEM "modules/entitymanagerapi.xml">
-<!ENTITY transactions SYSTEM "modules/transactions.xml">
-<!ENTITY listeners SYSTEM "modules/listeners.xml">
-<!ENTITY batch SYSTEM "modules/batch.xml">
-<!ENTITY query-ejbql SYSTEM "modules/query_ejbql.xml">
-<!ENTITY native SYSTEM "modules/query_native.xml">
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+        <!ENTITY versionNumber "3.4.0.GA">
+        <!ENTITY copyrightYear "2004">
+        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
 ]>
 <book lang="en">
   <bookinfo>
@@ -16,7 +33,7 @@
 
     <subtitle>User guide</subtitle>
 
-    <releaseinfo>3.4.0.GA</releaseinfo>
+    <releaseinfo>&versionNumber;</releaseinfo>
 
     <mediaobject>
       <imageobject>
@@ -25,7 +42,7 @@
     </mediaobject>
   </bookinfo>
 
-  <toc></toc>
+  <toc/>
 
   <preface>
     <title>Introducing EJB3 Persistence</title>
@@ -45,19 +62,13 @@
     if required, even to native JDBC and SQL.</para>
   </preface>
 
-  &architecture;
+  <xi:include href="modules/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/entitymanagerapi.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/listeners.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/batch.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/query_ejbql.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="modules/query_native.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  &configuration;
-
-  &entitymanagerapi;
-
-  &transactions;
-
-  &listeners;
-
-  &batch;
-
-  &query-ejbql;
-
-  &native;
 </book>

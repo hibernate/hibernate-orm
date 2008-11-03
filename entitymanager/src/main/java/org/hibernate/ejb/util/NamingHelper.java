@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.util;
 
 import javax.naming.Context;

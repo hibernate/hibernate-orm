@@ -29,7 +29,6 @@
 	
 	<target name="packexploded">
 		<property name="extension" value="jar"/>
-		<!-- property name="jarname"/ -->
 		<mkdir dir="${package.dir}/${jarname}.${extension}"/>
 		<copy todir="${package.dir}/${jarname}.${extension}">
 			<fileset dir="${classes.dir}">
@@ -73,7 +72,6 @@
 		</antcall>
 		
 		<!-- nested jar -->
-		<!--
 		<jar destfile="${package.dir}/nestedjar.ear">
 			<fileset dir="${package.dir}">
 				<include name="defaultpar.par"/>
@@ -95,6 +93,5 @@
 			<param name="extension" value="par"/>
 			<param name="jarname" value="explodedpar"/>
 		</antcall>
-	-->
 	</target>
 </project>

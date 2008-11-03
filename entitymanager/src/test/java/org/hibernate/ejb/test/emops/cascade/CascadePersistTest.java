@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.emops.cascade;
 
 import javax.persistence.EntityManager;

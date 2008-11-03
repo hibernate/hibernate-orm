@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.association;
 
 import javax.persistence.EntityManager;

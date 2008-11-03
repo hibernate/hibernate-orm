@@ -15,7 +15,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
  * Object used by JBoss EJB 3 for persistence.xml parsing
  *
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
- * @version $Revision$
+ * @version $Revision: 11329 $
  */
 public class PersistenceMetadata {
 

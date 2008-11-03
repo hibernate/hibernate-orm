@@ -131,7 +131,7 @@ public class PersistTest extends EJB3TestCase {
 		tx = s.beginTransaction();
 		try {
 			s.persist( dupe );
-			assertFalse( true );
+			fail();
 		}
 		catch (PersistentObjectException poe) {
 			//verify that an exception is thrown!
@@ -146,7 +146,7 @@ public class PersistTest extends EJB3TestCase {
 		tx = s.beginTransaction();
 		try {
 			s.persist( nondupe );
-			assertFalse( true );
+			fail();
 		}
 		catch (PersistentObjectException poe) {
 			//verify that an exception is thrown!

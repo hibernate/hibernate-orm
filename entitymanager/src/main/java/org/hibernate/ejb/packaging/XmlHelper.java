@@ -11,7 +11,7 @@ import org.w3c.dom.NodeList;
  * A utility class to cover up the rough bits of xml parsing
  *
  * @author <a href="mailto:chris@kimptoc.net">Chris Kimpton</a>
- * @version $Revision$
+ * @version $Revision: 11282 $
  */
 public final class XmlHelper {
 	private XmlHelper() {

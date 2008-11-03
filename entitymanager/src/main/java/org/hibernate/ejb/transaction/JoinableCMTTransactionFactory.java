@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.transaction;
 
 import org.hibernate.HibernateException;

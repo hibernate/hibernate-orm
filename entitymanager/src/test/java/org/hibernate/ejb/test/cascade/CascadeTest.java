@@ -1,4 +1,4 @@
-//$Id: FetchTest.java 9796 2006-04-26 06:46:52Z epbernard $
+//$Id$
 package org.hibernate.ejb.test.cascade;
 
 import javax.persistence.EntityManager;

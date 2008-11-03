@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.xml;
 
 import javax.persistence.Column;

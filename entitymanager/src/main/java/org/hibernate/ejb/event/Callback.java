@@ -19,7 +19,7 @@ import org.hibernate.util.ReflectHelper;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
- * @version $Revision$
+ * @version $Revision: 11282 $
  */
 public abstract class Callback implements Serializable {
 	transient protected Method callbackMethod;

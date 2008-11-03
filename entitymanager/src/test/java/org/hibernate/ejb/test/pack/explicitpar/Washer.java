@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.pack.explicitpar;
 
 import javax.persistence.Entity;

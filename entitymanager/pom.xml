@@ -159,13 +159,17 @@
 	        <artifactId>maven-surefire-plugin</artifactId>
 	        <configuration>
 	          <additionalClasspathElements>
-              	<additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par</additionalClasspathElement>
+              	<additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par</additionalClasspathElement>
 				<additionalClasspathElement>${basedir}/target/test-packages/defaultpar.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par</additionalClasspathElement>
 				<additionalClasspathElement>${basedir}/target/test-packages/explicitpar.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/explodedpar.par</additionalClasspathElement>
 				<additionalClasspathElement>${basedir}/target/test-packages/externaljar.jar</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/nesteddir.ear</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/nestedjar.ear</additionalClasspathElement>
 				<additionalClasspathElement>${basedir}/target/test-packages/overridenpar.jar</additionalClasspathElement>
 				<additionalClasspathElement>${basedir}/target/test-packages/space par.par</additionalClasspathElement>
+				<additionalClasspathElement>${basedir}/target/test-packages/war.war</additionalClasspathElement>                              
 	          </additionalClasspathElements>
 	        </configuration>
 	      </plugin>

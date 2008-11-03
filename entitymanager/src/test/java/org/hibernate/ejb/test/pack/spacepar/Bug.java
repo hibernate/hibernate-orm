@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.pack.spacepar;
 
 import javax.persistence.Entity;

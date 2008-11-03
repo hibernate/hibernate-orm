@@ -1,4 +1,4 @@
-//$Id: Mouse.java 11282 2007-03-14 22:05:59Z epbernard $
+//$Id$
 package org.hibernate.ejb.test.pack.war;
 
 import javax.persistence.ExcludeDefaultListeners;

@@ -11,7 +11,7 @@ import org.hibernate.event.PostLoadEventListener;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
- * @version $Revision$
+ * @version $Revision: 11282 $
  */
 public class EJB3PostLoadEventListener implements PostLoadEventListener, CallbackHandlerConsumer {
 	EntityCallbackHandler callbackHandler;

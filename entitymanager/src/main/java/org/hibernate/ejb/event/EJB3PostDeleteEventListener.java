@@ -11,7 +11,7 @@ import org.hibernate.event.PostDeleteEventListener;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
- * @version $Revision$
+ * @version $Revision: 11282 $
  */
 public class EJB3PostDeleteEventListener implements PostDeleteEventListener, CallbackHandlerConsumer {
 	EntityCallbackHandler callbackHandler;

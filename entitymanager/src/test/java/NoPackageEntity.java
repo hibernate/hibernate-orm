@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 
 /**
  * @author Emmanuel Bernard

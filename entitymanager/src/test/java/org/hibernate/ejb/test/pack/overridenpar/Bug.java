@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb.test.pack.overridenpar;
 
 import javax.persistence.Entity;

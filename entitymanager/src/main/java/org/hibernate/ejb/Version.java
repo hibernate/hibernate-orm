@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 package org.hibernate.ejb;
 
 import org.slf4j.Logger;

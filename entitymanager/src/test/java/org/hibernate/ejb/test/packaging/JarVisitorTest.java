@@ -36,6 +36,8 @@ public class JarVisitorTest extends TestCase {
 	
 	private static final Logger log = LoggerFactory.getLogger(JarVisitorTest.class);
 
+    private static final String jarFileBase = "file:./target/test-packages";
+
 	public void testHttp() throws Exception {
 		URL url = JarVisitorFactory.getJarURLFromURLEntry(
 				new URL(
@@ -58,8 +60,7 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	public void testInputStreamZippedJar() throws Exception {
-		String jarFileName = "file:./build/testresources/defaultpar.par";
-		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
+		String jarFileName = jarFileBase + "/defaultpar.par";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new InputStreamZippedJarVisitor( new URL( jarFileName ), filters, "" );
 		assertEquals( "defaultpar", jarVisitor.getUnqualifiedJarName() );
@@ -78,8 +79,7 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	public void testNestedJarProtocol() throws Exception {
-		String jarFileName = "jar:file:./build/testresources/nestedjar.ear!/defaultpar.par";
-		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
+		String jarFileName = jarFileBase + "/nestedjar.ear!/defaultpar.par";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
 		//TODO should we fix the name here to reach defaultpar rather than nestedjar ??
@@ -97,7 +97,7 @@ public class JarVisitorTest extends TestCase {
 			localEntry.getInputStream().close();
 		}
 
-		jarFileName = "jar:file:./build/testresources/nesteddir.ear!/defaultpar.par";
+		jarFileName = jarFileBase + "/nesteddir.ear!/defaultpar.par";
 		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
 		filters = getFilters();
 		jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
@@ -118,8 +118,7 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	public void testJarProtocol() throws Exception {
-		String jarFileName = "jar:file:./build/testresources/war.war!/WEB-INF/classes";
-		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
+		String jarFileName = jarFileBase + "/war.war!/WEB-INF/classes";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
 		assertEquals( "war", jarVisitor.getUnqualifiedJarName() );
@@ -138,8 +137,7 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	public void testZippedJar() throws Exception {
-		String jarFileName = "file:./build/testresources/defaultpar.par";
-		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
+		String jarFileName = jarFileBase + "/defaultpar.par";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new FileZippedJarVisitor( new URL( jarFileName ), filters, "" );
 		assertEquals( "defaultpar", jarVisitor.getUnqualifiedJarName() );
@@ -159,8 +157,7 @@ public class JarVisitorTest extends TestCase {
 
 
 	public void testExplodedJar() throws Exception {
-		String jarFileName = "./build/testresources/explodedpar.par";
-		//JarVisitor jarVisitor = new ExplodedJarVisitor( jarFileName, true, true );
+		String jarFileName = jarFileBase + "/explodedpar.par";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new ExplodedJarVisitor( jarFileName, filters );
 		assertEquals( "explodedpar", jarVisitor.getUnqualifiedJarName() );

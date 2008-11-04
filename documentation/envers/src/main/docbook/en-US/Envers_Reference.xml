@@ -51,7 +51,12 @@
     <xi:include href="content/example.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/revisionlog.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/schema.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/tables.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/source.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/exceptions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/migration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/links.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
 </book>
 

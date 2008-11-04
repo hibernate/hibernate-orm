@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="source">
+    <title>Building from source and testing</title>
+
+    <para>
+        Envers, as a module of Hibernate, uses a standard Maven2 build. So all the usual
+        build targets (compile, test, install) will work.
+    </para>
+
+    <para>
+        You can check out the source code
+        <ulink url="http://anonsvn.jboss.org/repos/hibernate/core/trunk/">from SVN</ulink>,
+        or browse it using
+        <ulink url="http://fisheye.jboss.org/browse/Hibernate">FishEye</ulink>.
+    </para>
+
+    <para>
+        The tests use, by default, use a H2 in-memory database. The configuration
+        file can be found in <literal>src/test/resources/hibernate.test.cfg.xml</literal>.
+    </para>
+
+    <para>
+        The tests use TestNG, and can be found in the
+        <literal>org.hibernate.envers.test.integration</literal> package
+        (or rather, in subpackages of this package).
+        The tests aren't unit tests, as they don't test individual classes, but the behaviour
+        and interaction of many classes, hence the name of package.
+    </para>
+
+    <para>
+        A test normally consists of an entity (or two entities) that will be audited and extends the
+        <literal>AbstractEntityTest</literal> class, which has one abstract method:
+        <literal>configure(Ejb3Configuration)</literal>. The role of this method is to add the entities
+        that will be used in the test to the configuration.
+    </para>
+
+    <para>
+        The test data is in most cases created in the "initData" method (which is called once before
+        the tests from this class are executed), which normally creates a couple of revisions,
+        by persisting and updating entities. The tests first check if the revisions, in which
+        entities where modified are correct (the testRevisionCounts method), and if the historic
+        data is correct (the testHistoryOfXxx methods).
+    </para>
+
+    <para>
+        The results of the tests can be found in the "doc/report" directory.
+    </para>
+
+</chapter>
+

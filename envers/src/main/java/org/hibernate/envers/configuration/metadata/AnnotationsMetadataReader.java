@@ -32,6 +32,7 @@ import javax.persistence.JoinColumn;
 
 import org.hibernate.envers.SecondaryAuditTable;
 import org.hibernate.envers.*;
+import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 
@@ -41,6 +42,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.jboss.envers.*;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
@@ -79,6 +81,13 @@ public final class AnnotationsMetadataReader {
         fieldPersistentProperties = Tools.newHashSet();
     }
 
+    private ModificationStore translateModStore(org.jboss.envers.ModificationStore store) {
+        switch (store) {
+            case FULL:  return ModificationStore.FULL;
+            default:    throw new AssertionError("Illegal modification store: " + store + "!");
+        }
+    }
+
     /**
      * Checks if a property is audited and if yes, sets its modification store on the supplied property data.
      * @param property Property to check.
@@ -111,9 +120,13 @@ public final class AnnotationsMetadataReader {
         }
 
         // Checking if this property is explicitly audited or if all properties are.
-        Audited ver = property.getAnnotation(Audited.class);
-        if (ver != null) {
-            propertyData.setStore(ver.modStore());
+        Audited aud = property.getAnnotation(Audited.class);
+        Versioned ver = property.getAnnotation(Versioned.class);
+        if (aud != null) {
+            propertyData.setStore(aud.modStore());
+            return true;
+        } else if (ver != null) {
+            propertyData.setStore(translateModStore(ver.modStore()));
             return true;
         } else {
             if (defaultStore != null) {
@@ -173,6 +186,11 @@ public final class AnnotationsMetadataReader {
 
         if (defaultAudited != null) {
             defaultStore = defaultAudited.modStore();
+        } else {
+            Versioned defaultVersioned = clazz.getAnnotation(Versioned.class);
+            if (defaultVersioned != null) {
+                defaultStore = translateModStore(defaultVersioned.modStore());
+            }
         }
     }
 

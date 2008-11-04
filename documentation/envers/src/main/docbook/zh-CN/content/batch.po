@@ -1,0 +1,608 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: batch.xml:29
+#, no-c-format
+msgid "Batch processing"
+msgstr "批量处理（Batch processing）"
+
+#. Tag: para
+#: batch.xml:31
+#, no-c-format
+msgid ""
+"A naive approach to inserting 100 000 rows in the database using Hibernate "
+"might look like this:"
+msgstr ""
+"使用Hibernate将 100 000 条记录插入到数据库的一个很自然的做法可能是这样的"
+
+#. Tag: programlisting
+#: batch.xml:36
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"for ( int i=0; i<100000; i++ ) {\n"
+"    Customer customer = new Customer(.....);\n"
+"    session.save(customer);\n"
+"}\n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:38
+#, no-c-format
+msgid ""
+"This would fall over with an <literal>OutOfMemoryException</literal> "
+"somewhere around the 50 000th row. That's because Hibernate caches all the "
+"newly inserted <literal>Customer</literal> instances in the session-level "
+"cache."
+msgstr ""
+"这段程序大概运行到 50 000 条记录左右会失败并抛出 <literal>内存溢出异常"
+"（OutOfMemoryException）</literal> 。 这是因为 Hibernate 把所有新插入的 "
+"<literal>客户（Customer）</literal>实例在 session级别的缓存区进行了缓存的缘"
+"故。"
+
+#. Tag: para
+#: batch.xml:44
+#, no-c-format
+msgid ""
+"In this chapter we'll show you how to avoid this problem. First, however, if "
+"you are doing batch processing, it is absolutely critical that you enable "
+"the use of JDBC batching, if you intend to achieve reasonable performance. "
+"Set the JDBC batch size to a reasonable number (say, 10-50):"
+msgstr ""
+"我们会在本章告诉你如何避免此类问题。首先，如果你要执行批量处理并且想要达到一"
+"个理想的性能， 那么使用JDBC的批量（batching）功能是至关重要。将JDBC的批量抓取"
+"数量（batch size）参数设置到一个合适值 （比如，10-50之间）："
+
+#. Tag: programlisting
+#: batch.xml:51
+#, no-c-format
+msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:53
+#, no-c-format
+msgid ""
+"Note that Hibernate disables insert batching at the JDBC level transparently "
+"if you use an <literal>identiy</literal> identifier generator."
+msgstr ""
+"注意,假若你使用了<literal>identiy</literal>标识符生成器,Hibernate在JDBC级别透"
+"明的关闭插入语句的批量执行。"
+
+#. Tag: para
+#: batch.xml:58
+#, no-c-format
+msgid ""
+"You also might like to do this kind of work in a process where interaction "
+"with the second-level cache is completely disabled:"
+msgstr "你也可能想在执行批量处理时关闭二级缓存："
+
+#. Tag: programlisting
+#: batch.xml:63
+#, no-c-format
+msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:65
+#, no-c-format
+msgid ""
+"However, this is not absolutely necessary, since we can explicitly set the "
+"<literal>CacheMode</literal> to disable interaction with the second-level "
+"cache."
+msgstr ""
+"但是，这不是绝对必须的，因为我们可以显式设置<literal>CacheMode</literal>来关"
+"闭与二级缓存的交互。"
+
+#. Tag: title
+#: batch.xml:71
+#, no-c-format
+msgid "Batch inserts"
+msgstr "批量插入（Batch inserts）"
+
+#. Tag: para
+#: batch.xml:73
+#, no-c-format
+msgid ""
+"When making new objects persistent, you must <literal>flush()</literal> and "
+"then <literal>clear()</literal> the session regularly, to control the size "
+"of the first-level cache."
+msgstr ""
+"如果要将很多对象持久化，你必须通过经常的调用 <literal>flush()</literal> 以及"
+"稍后调用 <literal>clear()</literal> 来控制第一级缓存的大小。"
+
+#. Tag: programlisting
+#: batch.xml:79
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"   \n"
+"for ( int i=0; i<100000; i++ ) {\n"
+"    Customer customer = new Customer(.....);\n"
+"    session.save(customer);\n"
+"    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
+"        //flush a batch of inserts and release memory:\n"
+"        session.flush();\n"
+"        session.clear();\n"
+"    }\n"
+"}\n"
+"   \n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: title
+#: batch.xml:84
+#, no-c-format
+msgid "Batch updates"
+msgstr "批量更新（Batch updates）"
+
+#. Tag: para
+#: batch.xml:86
+#, no-c-format
+msgid ""
+"For retrieving and updating data the same ideas apply. In addition, you need "
+"to use <literal>scroll()</literal> to take advantage of server-side cursors "
+"for queries that return many rows of data."
+msgstr ""
+"此方法同样适用于检索和更新数据。此外，在进行会返回很多行数据的查询时， 你需要"
+"使用 <literal>scroll()</literal> 方法以便充分利用服务器端游标所带来的好处。"
+
+#. Tag: programlisting
+#: batch.xml:92
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"   \n"
+"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+"    .setCacheMode(CacheMode.IGNORE)\n"
+"    .scroll(ScrollMode.FORWARD_ONLY);\n"
+"int count=0;\n"
+"while ( customers.next() ) {\n"
+"    Customer customer = (Customer) customers.get(0);\n"
+"    customer.updateStuff(...);\n"
+"    if ( ++count % 20 == 0 ) {\n"
+"        //flush a batch of updates and release memory:\n"
+"        session.flush();\n"
+"        session.clear();\n"
+"    }\n"
+"}\n"
+"   \n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: title
+#: batch.xml:97
+#, no-c-format
+msgid "The StatelessSession interface"
+msgstr "StatelessSession (无状态session)接口"
+
+#. Tag: para
+#: batch.xml:98
+#, no-c-format
+msgid ""
+"Alternatively, Hibernate provides a command-oriented API that may be used "
+"for streaming data to and from the database in the form of detached objects. "
+"A <literal>StatelessSession</literal> has no persistence context associated "
+"with it and does not provide many of the higher-level life cycle semantics. "
+"In particular, a stateless session does not implement a first-level cache "
+"nor interact with any second-level or query cache. It does not implement "
+"transactional write-behind or automatic dirty checking. Operations performed "
+"using a stateless session do not ever cascade to associated instances. "
+"Collections are ignored by a stateless session. Operations performed via a "
+"stateless session bypass Hibernate's event model and interceptors. Stateless "
+"sessions are vulnerable to data aliasing effects, due to the lack of a first-"
+"level cache. A stateless session is a lower-level abstraction, much closer "
+"to the underlying JDBC."
+msgstr ""
+"作为选择，Hibernate提供了基于命令的API，可以用detached object的形式把数据以流"
+"的方法加入到数据库，或从数据库输出。<literal>StatelessSession</literal>没有持"
+"久化上下文，也不提供多少高层的生命周期语义。特别是，无状态session不实现第一级"
+"cache,也不和第二级缓存，或者查询缓存交互。它不实现事务化写，也不实现脏数据检"
+"查。用stateless session进行的操作甚至不级联到关联实例。stateless session忽略"
+"集合类(Collections)。通过stateless session进行的操作不触发Hibernate的事件模型"
+"和拦截器。无状态session对数据的混淆现象免疫，因为它没有第一级缓存。无状态"
+"session是低层的抽象，和低层JDBC相当接近。"
+
+#. Tag: programlisting
+#: batch.xml:113
+#, no-c-format
+msgid ""
+"<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"   \n"
+"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+"    .scroll(ScrollMode.FORWARD_ONLY);\n"
+"while ( customers.next() ) {\n"
+"    Customer customer = (Customer) customers.get(0);\n"
+"    customer.updateStuff(...);\n"
+"    session.update(customer);\n"
+"}\n"
+"   \n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:115
+#, no-c-format
+msgid ""
+"Note that in this code example, the <literal>Customer</literal> instances "
+"returned by the query are immediately detached. They are never associated "
+"with any persistence context."
+msgstr ""
+"注意在上面的例子中，查询返回的<literal>Customer</literal>实例立即被脱管"
+"(detach)。它们与任何持久化上下文都没有关系。"
+
+#. Tag: para
+#: batch.xml:121
+#, no-c-format
+msgid ""
+"The <literal>insert(), update()</literal> and <literal>delete()</literal> "
+"operations defined by the <literal>StatelessSession</literal> interface are "
+"considered to be direct database row-level operations, which result in "
+"immediate execution of a SQL <literal>INSERT, UPDATE</literal> or "
+"<literal>DELETE</literal> respectively. Thus, they have very different "
+"semantics to the <literal>save(), saveOrUpdate()</literal> and "
+"<literal>delete()</literal> operations defined by the <literal>Session</"
+"literal> interface."
+msgstr ""
+"<literal>StatelessSession</literal> 接口定义的<literal>insert(), update()</"
+"literal> 和 <literal>delete()</literal>操作是直接的数据库行级别操作，其结果是"
+"立刻执行一条<literal>INSERT, UPDATE</literal> 或 <literal>DELETE</literal> 语"
+"句。因此，它们的语义和<literal>Session</literal> 接口定义的<literal>save(), "
+"saveOrUpdate()</literal> 和<literal>delete()</literal> 操作有很大的不同。"
+
+#. Tag: title
+#: batch.xml:134
+#, no-c-format
+msgid "DML-style operations"
+msgstr "DML(数据操作语言)风格的操作(DML-style operations)"
+
+#. Tag: para
+#: batch.xml:136
+#, fuzzy, no-c-format
+msgid ""
+"As already discussed, automatic and transparent object/relational mapping is "
+"concerned with the management of object state. This implies that the object "
+"state is available in memory, hence manipulating (using the SQL "
+"<literal>Data Manipulation Language</literal> (DML) statements: "
+"<literal>INSERT</literal>, <literal>UPDATE</literal>, <literal>DELETE</"
+"literal>) data directly in the database will not affect in-memory state. "
+"However, Hibernate provides methods for bulk SQL-style DML statement "
+"execution which are performed through the Hibernate Query Language (<link "
+"linkend=\"queryhql\">HQL</link>)."
+msgstr ""
+"hence manipulating (using the SQL <literal>Data Manipulation Language</"
+"literal> (DML) statements: <literal>INSERT</literal>, <literal>UPDATE</"
+"literal>, <literal>DELETE</literal>) data directly in the database will not "
+"affect in-memory state. However, Hibernate provides methods for bulk SQL-"
+"style DML statement execution which are performed through the Hibernate "
+"Query Language (<xref linkend=\"queryhql\">HQL</xref>). 就像已经讨论的那样，"
+"自动和透明的 对象/关系 映射（object/relational mapping）关注于管理对象的状"
+"态。 这就意味着对象的状态存在于内存，因此直接操作 (使用 SQL <literal>Data "
+"Manipulation Language</literal>(DML,数据操作语言）语句 ：<literal>INSERT</"
+"literal> ,<literal>UPDATE</literal> 和 <literal>DELETE</literal>) 数据库中的"
+"数据将不会影响内存中的对象状态和对象数据。 不过，Hibernate提供通过Hibernate查"
+"询语言（<xref linkend=\"queryhql\">HQL</xref>）来执行大批 量SQL风格的DML语句"
+"的方法。"
+
+#. Tag: para
+#: batch.xml:146
+#, no-c-format
+msgid ""
+"The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
+"literal> statements is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE "
+"where_conditions)?</literal>. Some points to note:"
+msgstr ""
+"<literal>UPDATE</literal> 和 <literal>DELETE</literal>语句的语法为： "
+"<literal>( UPDATE | DELETE ) FROM? EntityName (WHERE where_conditions)?</"
+"literal> 有几点说明："
+
+#. Tag: para
+#: batch.xml:154
+#, no-c-format
+msgid "In the from-clause, the FROM keyword is optional"
+msgstr "在FROM子句（from-clause）中，FROM关键字是可选的"
+
+#. Tag: para
+#: batch.xml:159
+#, no-c-format
+msgid ""
+"There can only be a single entity named in the from-clause; it can "
+"optionally be aliased. If the entity name is aliased, then any property "
+"references must be qualified using that alias; if the entity name is not "
+"aliased, then it is illegal for any property references to be qualified."
+msgstr ""
+"在FROM子句（from-clause）中只能有一个实体名，它可以是别名。如果实体名是别名，"
+"那么任何被引用的属性都必须加上此别名的前缀；如果不是别名，那么任何有前缀的属"
+"性引用都是非法的。"
+
+#. Tag: para
+#: batch.xml:167
+#, fuzzy, no-c-format
+msgid ""
+"No <link linkend=\"queryhql-joins-forms\">joins</link> (either implicit or "
+"explicit) can be specified in a bulk HQL query. Sub-queries may be used in "
+"the where-clause; the subqueries, themselves, may contain joins."
+msgstr ""
+"不能在大批量HQL语句中使用<xref linkend=\"queryhql-joins-forms\">连接(join)</"
+"xref>（显式或者隐式的都不行）。不过在WHERE子句中可以使用子查询。可以在where子"
+"句中使用子查询，子查询本身可以包含join。"
+
+#. Tag: para
+#: batch.xml:174
+#, no-c-format
+msgid "The where-clause is also optional."
+msgstr "整个WHERE子句是可选的。"
+
+#. Tag: para
+#: batch.xml:180
+#, no-c-format
+msgid ""
+"As an example, to execute an HQL <literal>UPDATE</literal>, use the "
+"<literal>Query.executeUpdate()</literal> method (the method is named for "
+"those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</"
+"literal>):"
+msgstr ""
+"举个例子，使用<literal>Query.executeUpdate()</literal>方法执行一个HQL "
+"<literal>UPDATE</literal>语句(： (方法命名是来源于JDBC's "
+"<literal>PreparedStatement.executeUpdate()</literal>):"
+
+#. Tag: programlisting
+#: batch.xml:186
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"\n"
+"String hqlUpdate = \"update Customer c set c.name = :newName where c.name = :"
+"oldName\";\n"
+"// or String hqlUpdate = \"update Customer set name = :newName where name = :"
+"oldName\";\n"
+"int updatedEntities = s.createQuery( hqlUpdate )\n"
+"        .setString( \"newName\", newName )\n"
+"        .setString( \"oldName\", oldName )\n"
+"        .executeUpdate();\n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:188
+#, fuzzy, no-c-format
+msgid ""
+"HQL <literal>UPDATE</literal> statements, by default do not effect the <link "
+"linkend=\"mapping-declaration-version\">version</link> or the <link linkend="
+"\"mapping-declaration-timestamp\">timestamp</link> property values for the "
+"affected entities; this is in keeping with the EJB3 specification. However, "
+"you can force Hibernate to properly reset the <literal>version</literal> or "
+"<literal>timestamp</literal> property values through the use of a "
+"<literal>versioned update</literal>. This is achieved by adding the "
+"<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
+"keyword."
+msgstr ""
+"HQL <literal>UPDATE</literal>语句，默认不会影响更新实体的<xref linkend="
+"\"mapping-declaration-version\">version</xref>或者<xref linkend=\"mapping-"
+"declaration-timestamp\">timestamp</xref>属性值。这和EJB3规范是一致的。但是，"
+"通过使用<literal>versioned update</literal>，你可以强制Hibernate正确的重置"
+"<literal>version</literal>或者<literal>timestamp</literal>属性值。这通过在"
+"<literal>UPDATE</literal>关键字后面增加<literal>VERSIONED</literal>关键字来实"
+"现的。"
+
+#. Tag: programlisting
+#: batch.xml:198
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"String hqlVersionedUpdate = \"update versioned Customer set name = :newName "
+"where name = :oldName\";\n"
+"int updatedEntities = s.createQuery( hqlUpdate )\n"
+"        .setString( \"newName\", newName )\n"
+"        .setString( \"oldName\", oldName )\n"
+"        .executeUpdate();\n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:200
+#, no-c-format
+msgid ""
+"Note that custom version types (<literal>org.hibernate.usertype."
+"UserVersionType</literal>) are not allowed in conjunction with a "
+"<literal>update versioned</literal> statement."
+msgstr ""
+"注意，自定义的版本类型(<literal>org.hibernate.usertype.UserVersionType</"
+"literal>)不允许和<literal>update versioned</literal>语句联用。"
+
+#. Tag: para
+#: batch.xml:205
+#, no-c-format
+msgid ""
+"To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
+"executeUpdate()</literal> method:"
+msgstr ""
+"执行一个HQL <literal>DELETE</literal>，同样使用 <literal>Query.executeUpdate"
+"()</literal> 方法:"
+
+#. Tag: programlisting
+#: batch.xml:210
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"\n"
+"String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+"// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+"int deletedEntities = s.createQuery( hqlDelete )\n"
+"        .setString( \"oldName\", oldName )\n"
+"        .executeUpdate();\n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: batch.xml:212
+#, no-c-format
+msgid ""
+"The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
+"()</literal> method indicate the number of entities effected by the "
+"operation. Consider this may or may not correlate to the number of rows "
+"effected in the database. An HQL bulk operation might result in multiple "
+"actual SQL statements being executed, for joined-subclass, for example. The "
+"returned number indicates the number of actual entities affected by the "
+"statement. Going back to the example of joined-subclass, a delete against "
+"one of the subclasses may actually result in deletes against not just the "
+"table to which that subclass is mapped, but also the \"root\" table and "
+"potentially joined-subclass tables further down the inheritence hierarchy."
+msgstr ""
+"由<literal>Query.executeUpdate()</literal>方法返回的<literal>整型</literal>值"
+"表明了受此操作影响的记录数量。 注意这个数值可能与数据库中被（最后一条SQL语"
+"句）影响了的“行”数有关，也可能没有。一个大批量HQL操作可能导致多条实际的SQL语"
+"句被执行， 举个例子，对joined-subclass映射方式的类进行的此类操作。这个返回值"
+"代表了实际被语句影响了的记录数量。在那个joined-subclass的例子中， 对一个子类"
+"的删除实际上可能不仅仅会删除子类映射到的表而且会影响“根”表，还有可能影响与之"
+"有继承关系的joined-subclass映射方式的子类的表。"
+
+#. Tag: para
+#: batch.xml:223
+#, no-c-format
+msgid ""
+"The pseudo-syntax for <literal>INSERT</literal> statements is: "
+"<literal>INSERT INTO EntityName properties_list select_statement</literal>. "
+"Some points to note:"
+msgstr ""
+"<literal>INSERT</literal>语句的伪码是: <literal>INSERT INTO EntityName "
+"properties_list select_statement</literal>. 要注意的是:"
+
+#. Tag: para
+#: batch.xml:231
+#, no-c-format
+msgid ""
+"Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
+"INTO ... VALUES ... form."
+msgstr ""
+"只支持INSERT INTO ... SELECT ...形式,不支持INSERT INTO ... VALUES ...形式."
+
+#. Tag: para
+#: batch.xml:234
+#, no-c-format
+msgid ""
+"The properties_list is analogous to the <literal>column speficiation</"
+"literal> in the SQL <literal>INSERT</literal> statement. For entities "
+"involved in mapped inheritence, only properties directly defined on that "
+"given class-level can be used in the properties_list. Superclass properties "
+"are not allowed; and subclass properties do not make sense. In other words, "
+"<literal>INSERT</literal> statements are inherently non-polymorphic."
+msgstr ""
+"properties_list和SQL <literal>INSERT</literal>语句中的<literal>字段定义"
+"(column speficiation)</literal>类似。对参与继承树映射的实体而言，只有直接定义"
+"在给定的类级别的属性才能直接在properties_list中使用。超类的属性不被支持；子类"
+"的属性无意义。换句话说，<literal>INSERT</literal>天生不支持多态。"
+
+#. Tag: para
+#: batch.xml:244
+#, no-c-format
+msgid ""
+"select_statement can be any valid HQL select query, with the caveat that the "
+"return types must match the types expected by the insert. Currently, this is "
+"checked during query compilation rather than allowing the check to relegate "
+"to the database. Note however that this might cause problems between "
+"Hibernate <literal>Type</literal>s which are <emphasis>equivalent</emphasis> "
+"as opposed to <emphasis>equal</emphasis>. This might cause issues with "
+"mismatches between a property defined as a <literal>org.hibernate.type."
+"DateType</literal> and a property defined as a <literal>org.hibernate.type."
+"TimestampType</literal>, even though the database might not make a "
+"distinction or might be able to handle the conversion."
+msgstr ""
+"select_statement可以是任何合法的HQL选择查询，不过要保证返回类型必须和要插入的"
+"类型完全匹配。目前，这一检查是在查询编译的时候进行的，而不是把它交给数据库。"
+"注意，在Hibernate<literal>Type</literal>间如果只是<emphasis>等价"
+"（equivalent）</emphasis>而非<emphasis>相等(equal)</emphasis>，会导致问题。定"
+"义为<literal>org.hibernate.type.DateType</literal>和<literal>org.hibernate."
+"type.TimestampType</literal>的两个属性可能会产生类型不匹配错误，虽然数据库级"
+"可能不加区分或者可以处理这种转换。"
+
+#. Tag: para
+#: batch.xml:256
+#, no-c-format
+msgid ""
+"For the id property, the insert statement gives you two options. You can "
+"either explicitly specify the id property in the properties_list (in which "
+"case its value is taken from the corresponding select expression) or omit it "
+"from the properties_list (in which case a generated value is used). This "
+"later option is only available when using id generators that operate in the "
+"database; attempting to use this option with any \"in memory\" type "
+"generators will cause an exception during parsing. Note that for the "
+"purposes of this discussion, in-database generators are considered to be "
+"<literal>org.hibernate.id.SequenceGenerator</literal> (and its subclasses) "
+"and any implementors of <literal>org.hibernate.id."
+"PostInsertIdentifierGenerator</literal>. The most notable exception here is "
+"<literal>org.hibernate.id.TableHiLoGenerator</literal>, which cannot be used "
+"because it does not expose a selectable way to get its values."
+msgstr ""
+"对id属性来说,insert语句给你两个选择。你可以明确地在properties_list表中指定id"
+"属性（这样它的值是从对应的select表达式中获得），或者在properties_list中省略它"
+"（此时使用生成指）。后一种选择只有当使用在数据库中生成值的id产生器时才能使"
+"用；如果是“内存”中计算的类型生成器，在解析时会抛出一个异常。注意，为了说明这"
+"一问题，数据库产生值的生成器是<literal>org.hibernate.id.SequenceGenerator</"
+"literal>（和它的子类），以及任何<literal>org.hibernate.id."
+"PostInsertIdentifierGenerator</literal>接口的实现。这儿最值得注意的意外是"
+"<literal>org.hibernate.id.TableHiLoGenerator</literal>，它不能在此使用，因为"
+"它没有得到其值的途径。"
+
+#. Tag: para
+#: batch.xml:271
+#, no-c-format
+msgid ""
+"For properties mapped as either <literal>version</literal> or "
+"<literal>timestamp</literal>, the insert statement gives you two options. "
+"You can either specify the property in the properties_list (in which case "
+"its value is taken from the corresponding select expressions) or omit it "
+"from the properties_list (in which case the <literal>seed value</literal> "
+"defined by the <literal>org.hibernate.type.VersionType</literal> is used)."
+msgstr ""
+"对映射为<literal>version</literal> 或 <literal>timestamp</literal>的属性来"
+"说，insert语句也给你两个选择，你可以在properties_list表中指定（此时其值从对应"
+"的select表达式中获得），或者在properties_list中省略它（此时，使用在"
+"<literal>org.hibernate.type.VersionType</literal> 中定义的<literal>seed value"
+"(种子值)</literal>）。"
+
+#. Tag: para
+#: batch.xml:281
+#, no-c-format
+msgid "An example HQL <literal>INSERT</literal> statement execution:"
+msgstr "执行HQL <literal>INSERT</literal>语句的例子如下："
+
+#. Tag: programlisting
+#: batch.xml:285
+#, no-c-format
+msgid ""
+"<![CDATA[Session session = sessionFactory.openSession();\n"
+"Transaction tx = session.beginTransaction();\n"
+"\n"
+"String hqlInsert = \"insert into DelinquentAccount (id, name) select c.id, c."
+"name from Customer c where ...\";\n"
+"int createdEntities = s.createQuery( hqlInsert )\n"
+"        .executeUpdate();\n"
+"tx.commit();\n"
+"session.close();]]>"
+msgstr ""

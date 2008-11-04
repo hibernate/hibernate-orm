@@ -1,0 +1,1899 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: collection_mapping.xml:5
+#, no-c-format
+msgid "Collection Mapping"
+msgstr "コレクションのマッピング"
+
+#. Tag: title
+#: collection_mapping.xml:8
+#, no-c-format
+msgid "Persistent collections"
+msgstr "コレクションの永続化"
+
+#. Tag: para
+#: collection_mapping.xml:10
+#, no-c-format
+msgid ""
+"Hibernate requires that persistent collection-valued fields be declared as "
+"an interface type, for example:"
+msgstr ""
+"コレクション型のフィールドを永続化するには、 そのコレクション型がインターフェ"
+"イス型である必要があります。 例えば、"
+
+#. Tag: programlisting
+#: collection_mapping.xml:15
+#, no-c-format
+msgid ""
+"<![CDATA[public class Product {\n"
+"    private String serialNumber;\n"
+"    private Set parts = new HashSet();\n"
+"    \n"
+"    public Set getParts() { return parts; }\n"
+"    void setParts(Set parts) { this.parts = parts; }\n"
+"    public String getSerialNumber() { return serialNumber; }\n"
+"    void setSerialNumber(String sn) { serialNumber = sn; }\n"
+"}]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:17
+#, no-c-format
+msgid ""
+"The actual interface might be <literal>java.util.Set</literal>, "
+"<literal>java.util.Collection</literal>, <literal>java.util.List</literal>, "
+"<literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, "
+"<literal>java.util.SortedMap</literal> or ... anything you like! (Where "
+"\"anything you like\" means you will have to write an implementation of "
+"<literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+msgstr ""
+"実在するインターフェイスには <literal>java.util.Set</literal>、 "
+"<literal>java.util.Collection</literal>、<literal>java.util.List</literal>、 "
+"<literal>java.util.Map</literal>、<literal>java.util.SortedSet</literal>、 "
+"<literal>java.util.SortedMap</literal> などがあります。 または、任意のイン"
+"ターフェイスが使えます！ （ただし、任意のインターフェイスを使用する場合は、 "
+"<literal>org.hibernate.usertype.UserCollectionType</literal> の実装クラスを作"
+"成する必要があります。）"
+
+#. Tag: para
+#: collection_mapping.xml:26
+#, no-c-format
+msgid ""
+"Notice how we initialized the instance variable with an instance of "
+"<literal>HashSet</literal>. This is the best way to initialize collection "
+"valued properties of newly instantiated (non-persistent) instances. When you "
+"make the instance persistent - by calling <literal>persist()</literal>, for "
+"example - Hibernate will actually replace the <literal>HashSet</literal> "
+"with an instance of Hibernate's own implementation of <literal>Set</"
+"literal>. Watch out for errors like this:"
+msgstr ""
+"<literal>HashSet</literal> のインスタンスを持つインスタンス変数が どのように"
+"初期化されるかに注目してみましょう。 これは新たに生成された（永続化されていな"
+"い）コレクション型のプロパティを 初期化する最適な方法です。 （例えば "
+"<literal>persist()</literal> により）インスタンスを永続化しようとしたとき、 "
+"Hibernateは <literal>HashSet</literal> をHibernate独自の <literal>Set</"
+"literal> の実装クラスに置き換えます。 このため、次のようなエラーには注意が必"
+"要です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:36
+#, no-c-format
+msgid ""
+"<![CDATA[Cat cat = new DomesticCat();\n"
+"Cat kitten = new DomesticCat();\n"
+"....\n"
+"Set kittens = new HashSet();\n"
+"kittens.add(kitten);\n"
+"cat.setKittens(kittens);\n"
+"session.persist(cat);\n"
+"kittens = cat.getKittens(); // Okay, kittens collection is a Set\n"
+"(HashSet) cat.getKittens(); // Error!]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:38
+#, no-c-format
+msgid ""
+"The persistent collections injected by Hibernate behave like "
+"<literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</"
+"literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, "
+"depending upon the interface type."
+msgstr ""
+"Hibernateにより注入された永続性コレクションは、インターフェイス型に応じて、 "
+"<literal>HashMap</literal> や <literal>HashSet</literal>、 <literal>TreeMap</"
+"literal>、 <literal>TreeSet</literal>、 <literal>ArrayList</literal> のように"
+"振舞います。"
+
+#. Tag: para
+#: collection_mapping.xml:45
+#, no-c-format
+msgid ""
+"Collections instances have the usual behavior of value types. They are "
+"automatically persisted when referenced by a persistent object and "
+"automatically deleted when unreferenced. If a collection is passed from one "
+"persistent object to another, its elements might be moved from one table to "
+"another. Two entities may not share a reference to the same collection "
+"instance. Due to the underlying relational model, collection-valued "
+"properties do not support null value semantics; Hibernate does not "
+"distinguish between a null collection reference and an empty collection."
+msgstr ""
+"コレクションインスタンスは、値型として普通に振舞います。 永続化オブジェクトに"
+"参照されたときに自動的に永続化され、 参照がなくなったときに自動的に削除されま"
+"す。 もしある永続化オブジェクトから別の永続化オブジェクトに渡されたら、 その"
+"要素は現在のテーブルから別のテーブルに移動するかもしれません。 ２つのエンティ"
+"ティが同じコレクションインスタンスを共有してはいけません。 リレーショナルモデ"
+"ルをベースにしているため、コレクション型のプロパティに null値を代入しても意味"
+"がありません。 つまりHibernateは参照先のないコレクションと空のコレクションを"
+"区別しません。"
+
+#. Tag: para
+#: collection_mapping.xml:56
+#, no-c-format
+msgid ""
+"You shouldn't have to worry much about any of this. Use persistent "
+"collections the same way you use ordinary Java collections. Just make sure "
+"you understand the semantics of bidirectional associations (discussed later)."
+msgstr ""
+"しかしそれほど心配しなくても構いません。 普段使っているJavaのコレクションと同"
+"じように、永続化コレクションを使ってください。 双方向関連の意味を理解すればよ"
+"いのです（これは後ほど説明します）。"
+
+#. Tag: title
+#: collection_mapping.xml:65
+#, no-c-format
+msgid "Collection mappings"
+msgstr "コレクションのマッピング"
+
+#. Tag: para
+#: collection_mapping.xml:67
+#, no-c-format
+msgid ""
+"The Hibernate mapping element used for mapping a collection depends upon the "
+"type of the interface. For example, a <literal>&lt;set&gt;</literal> element "
+"is used for mapping properties of type <literal>Set</literal>."
+msgstr ""
+"コレクションをマッピングするためのマッピング要素は、インターフェイスの型に依"
+"存します。 例えば、<literal>&lt;set&gt;</literal> 要素は <literal>Set</"
+"literal> 型を マッピングするために使います。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:73
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Product\">\n"
+"    <id name=\"serialNumber\" column=\"productSerialNumber\"/>\n"
+"    <set name=\"parts\">\n"
+"        <key column=\"productSerialNumber\" not-null=\"true\"/>\n"
+"        <one-to-many class=\"Part\"/>\n"
+"    </set>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:75
+#, no-c-format
+msgid ""
+"Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;"
+"list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</"
+"literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-"
+"array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> "
+"element is representative:"
+msgstr ""
+"マッピング要素には <literal>&lt;set&gt;</literal> の他に <literal>&lt;"
+"list&gt;</literal>、 <literal>&lt;map&gt;</literal>、<literal>&lt;bag&gt;</"
+"literal>、 <literal>&lt;array&gt;</literal>、<literal>&lt;primitive-array&gt;"
+"</literal> があります。 代表として、<literal>&lt;map&gt;</literal> 要素を下記"
+"に示します。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:100
+#, no-c-format
+msgid ""
+"<![CDATA[<map\n"
+"    name=\"propertyName\"\n"
+"    table=\"table_name\"\n"
+"    schema=\"schema_name\"\n"
+"    lazy=\"true|extra|false\"\n"
+"    inverse=\"true|false\"\n"
+"    cascade=\"all|none|save-update|delete|all-delete-orphan|delete-orphan\"\n"
+"    sort=\"unsorted|natural|comparatorClass\"\n"
+"    order-by=\"column_name asc|desc\"\n"
+"    where=\"arbitrary sql where condition\"\n"
+"    fetch=\"join|select|subselect\"\n"
+"    batch-size=\"N\"\n"
+"    access=\"field|property|ClassName\"\n"
+"    optimistic-lock=\"true|false\"\n"
+"    mutable=\"true|false\"\n"
+"    node=\"element-name|.\"\n"
+"    embed-xml=\"true|false\"\n"
+">\n"
+"\n"
+"    <key .... />\n"
+"    <map-key .... />\n"
+"    <element .... />\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:103
+#, no-c-format
+msgid "<literal>name</literal> the collection property name"
+msgstr "<literal>name</literal> コレクション型であるプロパティの名前"
+
+#. Tag: para
+#: collection_mapping.xml:108
+#, no-c-format
+msgid ""
+"<literal>table</literal> (optional - defaults to property name) the name of "
+"the collection table (not used for one-to-many associations)"
+msgstr ""
+"<literal>table</literal> （オプション - デフォルトはプロパティ名）コレクショ"
+"ンテーブルの名前 （一対多関連では使用しません）。"
+
+#. Tag: para
+#: collection_mapping.xml:114
+#, no-c-format
+msgid ""
+"<literal>schema</literal> (optional) the name of a table schema to override "
+"the schema declared on the root element"
+msgstr ""
+"<literal>schema</literal> （オプション）テーブルスキーマの名前。 ルート要素で"
+"宣言されているスキーマより優先されます。"
+
+#. Tag: para
+#: collection_mapping.xml:120
+#, no-c-format
+msgid ""
+"<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may "
+"be used to disable lazy fetching and specify that the association is always "
+"eagerly fetched, or to enable \"extra-lazy\" fetching where most operations "
+"do not initialize the collection (suitable for very large collections)"
+msgstr ""
+"<literal>lazy</literal> （オプション - デフォルトは <literal>true</"
+"literal>） 遅延フェッチを無効にし、関連を常に即時にフェッチにするために使用し"
+"ます。 または、「extra-lazy」フェッチを有効にするために使用します。 「extra-"
+"lazy」フェッチは、ほとんどの操作ではコレクションを初期化しません （非常に大き"
+"なコレクションに適しています）。"
+
+#. Tag: para
+#: collection_mapping.xml:129
+#, no-c-format
+msgid ""
+"<literal>inverse</literal> (optional - defaults to <literal>false</literal>) "
+"mark this collection as the \"inverse\" end of a bidirectional association"
+msgstr ""
+"<literal>inverse</literal> （オプション - デフォルトは <literal>false</"
+"literal>） このコレクションが双方向関連の「逆」側であるとマークします。"
+
+#. Tag: para
+#: collection_mapping.xml:135
+#, no-c-format
+msgid ""
+"<literal>cascade</literal> (optional - defaults to <literal>none</literal>) "
+"enable operations to cascade to child entities"
+msgstr ""
+"<literal>cascade</literal> （オプション - デフォルトは <literal>none</"
+"literal>） 子エンティティへのカスケード操作を有効にします。"
+
+#. Tag: para
+#: collection_mapping.xml:141
+#, no-c-format
+msgid ""
+"<literal>sort</literal> (optional) specify a sorted collection with "
+"<literal>natural</literal> sort order, or a given comparator class"
+msgstr ""
+"<literal>sort</literal> （オプション）コレクションを自然な順序でソートする場"
+"合は <literal>natural</literal> を指定します。 あるいはComparatorクラスを指定"
+"します。"
+
+#. Tag: para
+#: collection_mapping.xml:147
+#, no-c-format
+msgid ""
+"<literal>order-by</literal> (optional, JDK1.4 only) specify a table column "
+"(or columns) that define the iteration order of the <literal>Map</literal>, "
+"<literal>Set</literal> or bag, together with an optional <literal>asc</"
+"literal> or <literal>desc</literal>"
+msgstr ""
+"<literal>order-by</literal> （オプション、JDK1.4のみ） <literal>Map</"
+"literal>、<literal>Set</literal>、bagのイテレーション順序を定義する テーブル"
+"カラムを指定すると共に、 オプションとして <literal>asc</literal>、"
+"<literal>desc</literal> を指定します。"
+
+#. Tag: para
+#: collection_mapping.xml:154
+#, no-c-format
+msgid ""
+"<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</"
+"literal> condition to be used when retrieving or removing the collection "
+"(useful if the collection should contain only a subset of the available data)"
+msgstr ""
+"<literal>where</literal> （オプション）コレクションの検索や削除の際に使う 任"
+"意のSQLの<literal>WHERE</literal> 条件を指定します （利用可能なデータの一部分"
+"だけをコレクションが含むべきときに、これは有用です）。"
+
+#. Tag: para
+#: collection_mapping.xml:161
+#, no-c-format
+msgid ""
+"<literal>fetch</literal> (optional, defaults to <literal>select</literal>) "
+"Choose between outer-join fetching, fetching by sequential select, and "
+"fetching by sequential subselect."
+msgstr ""
+"<literal>fetch</literal>（オプション - デフォルトは <literal>select</"
+"literal>） 外部結合によるフェッチ、順次選択フェッチ（sequential select "
+"fetch）、 順次サブセレクトフェッチ（sequential subselect fetch）のどれかを選"
+"択してください。"
+
+#. Tag: para
+#: collection_mapping.xml:168
+#, no-c-format
+msgid ""
+"<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) "
+"specify a \"batch size\" for lazily fetching instances of this collection."
+msgstr ""
+"<literal>batch-size</literal> （オプション - デフォルトは <literal>1</"
+"literal>） コレクションのインスタンスの遅延フェッチのための「バッチサイズ」を"
+"指定します。"
+
+#. Tag: para
+#: collection_mapping.xml:174
+#, no-c-format
+msgid ""
+"<literal>access</literal> (optional - defaults to <literal>property</"
+"literal>): The strategy Hibernate should use for accessing the collection "
+"property value."
+msgstr ""
+"<literal>access</literal> （オプション - デフォルトは <literal>property</"
+"literal>） コレクション型プロパティの値にアクセスするために使用する戦略です。"
+
+#. Tag: para
+#: collection_mapping.xml:180
+#, no-c-format
+msgid ""
+"<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
+"literal>): Species that changes to the state of the collection results in "
+"increment of the owning entity's version. (For one to many associations, it "
+"is often reasonable to disable this setting.)"
+msgstr ""
+"<literal>optimistic-lock</literal>（オプション - デフォルトは <literal>true</"
+"literal>） コレクションの状態を変えることによって、 そのオーナーであるエン"
+"ティティのバージョンがインクリメントされるかを指定します。 （一対多関連では、"
+"ほとんどの場合において無効に設定するのが妥当です。）"
+
+#. Tag: para
+#: collection_mapping.xml:188
+#, no-c-format
+msgid ""
+"<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
+"A value of <literal>false</literal> specifies that the elements of the "
+"collection never change (a minor performance optimization in some cases)."
+msgstr ""
+"<literal>mutable</literal>（オプション - デフォルトは <literal>true</"
+"literal>） <literal>false</literal> 値は、コレクションの要素が変更されないこ"
+"とを表します （ある場合には、少しパフォーマンスを高めます）。"
+
+#. Tag: title
+#: collection_mapping.xml:198
+#, no-c-format
+msgid "Collection foreign keys"
+msgstr "コレクションの外部キー"
+
+#. Tag: para
+#: collection_mapping.xml:200
+#, no-c-format
+msgid ""
+"Collection instances are distinguished in the database by the foreign key of "
+"the entity that owns the collection. This foreign key is referred to as the "
+"<emphasis>collection key column</emphasis> (or columns) of the collection "
+"table. The collection key column is mapped by the <literal>&lt;key&gt;</"
+"literal> element."
+msgstr ""
+"コレクションのインスタンスは、データベース内では、 そのコレクションを所有する"
+"エンティティの外部キーによって識別されます。 この外部キーはコレクションテーブ"
+"ルの <emphasis>コレクションキーカラム</emphasis> と呼ばれます。 コレクション"
+"キーカラムは <literal>&lt;key&gt;</literal> 要素によりマッピングします。"
+
+#. Tag: para
+#: collection_mapping.xml:208
+#, no-c-format
+msgid ""
+"There may be a nullability constraint on the foreign key column. For most "
+"collections, this is implied. For unidirectional one to many associations, "
+"the foreign key column is nullable by default, so you might need to specify "
+"<literal>not-null=\"true\"</literal>."
+msgstr ""
+"外部キーカラムにはnull設定制約があるかもしれません。 ほとんどのコレクションに"
+"当てはまるでしょう。 単方向の一対多関連において、外部キーカラムはデフォルトで"
+"nullを許す設定になっています。 よって、<literal>not-null=\"true\"</literal> "
+"を指定する必要があるかもしれません。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:215
+#, no-c-format
+msgid "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:217
+#, no-c-format
+msgid ""
+"The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
+msgstr ""
+"外部キーの制約が <literal>ON DELETE CASCADE</literal> を使うかもしれません。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:221
+#, no-c-format
+msgid "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:223
+#, no-c-format
+msgid ""
+"See the previous chapter for a full definition of the <literal>&lt;key&gt;</"
+"literal> element."
+msgstr ""
+"<literal>&lt;key&gt;</literal> 要素のすべての定義については前の章を参照してく"
+"ださい。"
+
+#. Tag: title
+#: collection_mapping.xml:231
+#, no-c-format
+msgid "Collection elements"
+msgstr "コレクションの要素"
+
+#. Tag: para
+#: collection_mapping.xml:233
+#, no-c-format
+msgid ""
+"Collections may contain almost any other Hibernate type, including all basic "
+"types, custom types, components, and of course, references to other "
+"entities. This is an important distinction: an object in a collection might "
+"be handled with \"value\" semantics (its life cycle fully depends on the "
+"collection owner) or it might be a reference to another entity, with its own "
+"life cycle. In the latter case, only the \"link\" between the two objects is "
+"considered to be state held by the collection."
+msgstr ""
+"コレクションは他のHibernateの型のほとんど（すべての基本型、カスタム型、コン"
+"ポーネント、 他のエンティティへの参照）を格納することができます。 次の点は重"
+"要な違いになります。 コレクションに格納されたオブジェクトが「値」セマンティク"
+"スとして扱われるのか （ライフサイクルはコレクションのオーナーに完全に依存しま"
+"す）、 もしくはそれ自身のライフサイクルを持った別のエンティティへの参照である"
+"かのかという違いです。 後者は、2つのオブジェクト間の「リンク」をコレクション"
+"に保持していると見なしているだけです。"
+
+#. Tag: para
+#: collection_mapping.xml:242
+#, no-c-format
+msgid ""
+"The contained type is referred to as the <emphasis>collection element type</"
+"emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</"
+"literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of "
+"entity references, with <literal>&lt;one-to-many&gt;</literal> or "
+"<literal>&lt;many-to-many&gt;</literal>. The first two map elements with "
+"value semantics, the next two are used to map entity associations."
+msgstr ""
+"格納される型は <emphasis>コレクション要素型</emphasis> と呼ばれます。 コレク"
+"ション要素は、<literal>&lt;element&gt;</literal> または <literal>&lt;"
+"composite-element&gt;</literal> によりマッピングされ、エンティティへの参照の"
+"場合には <literal>&lt;one-to-many&gt;</literal> または <literal>&lt;many-to-"
+"many&gt;</literal> によりマッピングされます。 最初の二つは値として要素をマッ"
+"ピングし、次の二つはエンティティの関連をマッピングするのに使われます。"
+
+#. Tag: title
+#: collection_mapping.xml:254
+#, no-c-format
+msgid "Indexed collections"
+msgstr "インデックス付きのコレクション"
+
+#. Tag: para
+#: collection_mapping.xml:256
+#, no-c-format
+msgid ""
+"All collection mappings, except those with set and bag semantics, need an "
+"<emphasis>index column</emphasis> in the collection table - a column that "
+"maps to an array index, or <literal>List</literal> index, or <literal>Map</"
+"literal> key. The index of a <literal>Map</literal> may be of any basic "
+"type, mapped with <literal>&lt;map-key&gt;</literal>, it may be an entity "
+"reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it "
+"may be a composite type, mapped with <literal>&lt;composite-map-key&gt;</"
+"literal>. The index of an array or list is always of type <literal>integer</"
+"literal> and is mapped using the <literal>&lt;list-index&gt;</literal> "
+"element. The mapped column contains sequential integers (numbered from zero, "
+"by default)."
+msgstr ""
+"setとbagを除く全てのコレクションマッピングには、 コレクションテーブルの中に "
+"<emphasis>インデックス用のカラム</emphasis> が必要です。 そのカラムに、配列"
+"や <literal>List</literal> のインデックス、 もしくは <literal>Map</literal> "
+"のキーをマッピングします。 <literal>Map</literal> のインデックスは、 "
+"<literal>&lt;map-key&gt;</literal> によりマッピングされた基本型か、 "
+"<literal>&lt;map-key-many-to-many&gt;</literal> によりマッピングされたエン"
+"ティティの関連か、 あるいは <literal>&lt;composite-map-key&gt;</literal> によ"
+"りマッピングされたコンポジット型になります。 配列かリストのインデックスは、常"
+"に <literal>integer</literal> 型で、 <literal>&lt;list-index&gt;</literal> 要"
+"素によりマッピングします。 マッピングされたカラムにはシーケンシャルな整数を格"
+"納します（デフォルトでは0から番号が付けられます）。"
+
+#. Tag: sect2
+#: collection_mapping.xml:267
+#, no-c-format
+msgid ""
+"<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id="
+"\"index2\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<list-"
+"index \n"
+"        column=\"column_name\"\n"
+"        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout "
+"arearefs=\"index1\"> <para> <literal>column_name</literal> (required): The "
+"name of the column holding the collection index values. </para> </callout> "
+"<callout arearefs=\"index1\"> <para> <literal>base</literal> (optional, "
+"defaults to <literal>0</literal>): The value of the index column that "
+"corresponds to the first element of the list or array. </para> </callout> </"
+"calloutlist> </programlistingco> <programlistingco> <areaspec> <area id="
+"\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area "
+"id=\"mapkey3\" coords=\"4 45\"/> </areaspec> <programlisting><![CDATA[<map-"
+"key \n"
+"        column=\"column_name\"\n"
+"        formula=\"any SQL expression\"\n"
+"        type=\"type_name\"\n"
+"        node=\"@attribute-name\"\n"
+"        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs="
+"\"mapkey1\"> <para> <literal>column</literal> (optional): The name of the "
+"column holding the collection index values. </para> </callout> <callout "
+"arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): A SQL "
+"formula used to evaluate the key of the map. </para> </callout> <callout "
+"arearefs=\"mapkey3\"> <para> <literal>type</literal> (reguired): The type of "
+"the map keys. </para> </callout> </calloutlist> </programlistingco> "
+"<programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/"
+"> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3"
+"\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<map-key-many-to-"
+"many\n"
+"        column=\"column_name\"\n"
+"        formula=\"any SQL expression\"\n"
+"        class=\"ClassName\"\n"
+"/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> "
+"<para> <literal>column</literal> (optional): The name of the foreign key "
+"column for the collection index values. </para> </callout> <callout arearefs="
+"\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): A SQL "
+"formula used to evaluate the foreign key of the map key. </para> </callout> "
+"<callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> "
+"(required): The entity class used as the map key. </para> </callout> </"
+"calloutlist> </programlistingco>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:348
+#, no-c-format
+msgid ""
+"If your table doesn't have an index column, and you still wish to use "
+"<literal>List</literal> as the property type, you should map the property as "
+"a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its "
+"order when it is retrieved from the database, but it may be optionally "
+"sorted or ordered."
+msgstr ""
+"もしテーブルにインデックスカラムがなくても、プロパティ型として "
+"<literal>List</literal> を使いたければ、 Hibernateの <emphasis>&lt;bag&gt;</"
+"emphasis> としてプロパティをマッピングします。 bagはデータベースから復元され"
+"る時、順序を保持しません。 しかし、（メモリ上で）ソートしたり、（SQLで）順序"
+"付けしたり（order by）することもできます。"
+
+#. Tag: para
+#: collection_mapping.xml:357
+#, no-c-format
+msgid ""
+"There are quite a range of mappings that can be generated for collections, "
+"covering many common relational models. We suggest you experiment with the "
+"schema generation tool to get a feeling for how various mapping declarations "
+"translate to database tables."
+msgstr ""
+"多くの一般的なリレーショナルモデルをカバーしたために、 コレクションのために利"
+"用できるマッピングにはかなりの幅があります。 様々なマッピング宣言がどのように"
+"データベーステーブルに変換されるかを知るために、 スキーマ生成ツールを使ってみ"
+"ると良いでしょう。"
+
+#. Tag: title
+#: collection_mapping.xml:364
+#, no-c-format
+msgid "Collections of values and many-to-many associations"
+msgstr "値のコレクションと多対多関連"
+
+#. Tag: para
+#: collection_mapping.xml:366
+#, no-c-format
+msgid ""
+"Any collection of values or many-to-many association requires a dedicated "
+"<emphasis>collection table</emphasis> with a foreign key column or columns, "
+"<emphasis>collection element column</emphasis> or columns and possibly an "
+"index column or columns."
+msgstr ""
+"値のコレクションや多対多関連は、専用の <emphasis>コレクションテーブル</"
+"emphasis> が必要です。 このテーブルは、外部キーカラムと、 <emphasis>コレク"
+"ション要素のカラム</emphasis> と、 場合によってはインデックスカラムを持ちま"
+"す。"
+
+#. Tag: para
+#: collection_mapping.xml:373
+#, no-c-format
+msgid ""
+"For a collection of values, we use the <literal>&lt;element&gt;</literal> "
+"tag."
+msgstr ""
+"値のコレクションのために、<literal>&lt;element&gt;</literal>タグを使用しま"
+"す。"
+
+#. Tag: sect2
+#: collection_mapping.xml:375
+#, no-c-format
+msgid ""
+"<programlistingco> <areaspec> <area id=\"element1b\" coords=\"2 50\"/> <area "
+"id=\"element2b\" coords=\"3 50\"/> <area id=\"element3b\" coords=\"4 50\"/> "
+"</areaspec> <programlisting><![CDATA[<element\n"
+"        column=\"column_name\"\n"
+"        formula=\"any SQL expression\"\n"
+"        type=\"typename\"\n"
+"        length=\"L\"\n"
+"        precision=\"P\"\n"
+"        scale=\"S\"\n"
+"        not-null=\"true|false\"\n"
+"        unique=\"true|false\"\n"
+"        node=\"element-name\"\n"
+"/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> "
+"<literal>column</literal> (optional): The name of the column holding the "
+"collection element values. </para> </callout> <callout arearefs=\"element2b"
+"\"> <para> <literal>formula</literal> (optional): An SQL formula used to "
+"evaluate the element. </para> </callout> <callout arearefs=\"element3b\"> "
+"<para> <literal>type</literal> (required): The type of the collection "
+"element. </para> </callout> </calloutlist> </programlistingco> <para> A "
+"<emphasis>many-to-many association</emphasis> is specified using the "
+"<literal>&lt;many-to-many&gt;</literal> element. </para> <programlistingco> "
+"<areaspec> <area id=\"manytomany1\" coords=\"2 60\"/> <area id=\"manytomany2"
+"\" coords=\"3 60\"/> <area id=\"manytomany3\" coords=\"4 60\"/> <area id="
+"\"manytomany4\" coords=\"5 60\"/> <area id=\"manytomany5\" coords=\"6 60\"/> "
+"<area id=\"manytomany6\" coords=\"7 60\"/> <area id=\"manytomany7\" coords="
+"\"8 60\"/> <area id=\"manytomany8\" coords=\"9 60\"/> </areaspec> "
+"<programlisting><![CDATA[<many-to-many\n"
+"        column=\"column_name\"\n"
+"        formula=\"any SQL expression\"\n"
+"        class=\"ClassName\"\n"
+"        fetch=\"select|join\"\n"
+"        unique=\"true|false\"\n"
+"        not-found=\"ignore|exception\"\n"
+"        entity-name=\"EntityName\"\n"
+"        property-ref=\"propertyNameFromAssociatedClass\"\n"
+"        node=\"element-name\"\n"
+"        embed-xml=\"true|false\"\n"
+"    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> "
+"<para> <literal>column</literal> (optional): The name of the element foreign "
+"key column. </para> </callout> <callout arearefs=\"manytomany2\"> <para> "
+"<literal>formula</literal> (optional): An SQL formula used to evaluate the "
+"element foreign key value. </para> </callout> <callout arearefs=\"manytomany3"
+"\"> <para> <literal>class</literal> (required): The name of the associated "
+"class. </para> </callout> <callout arearefs=\"manytomany4\"> <para> "
+"<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
+"enables outer-join or sequential select fetching for this association. This "
+"is a special case; for full eager fetching (in a single <literal>SELECT</"
+"literal>) of an entity and its many-to-many relationships to other entities, "
+"you would enable <literal>join</literal> fetching not only of the collection "
+"itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</"
+"literal> nested element. </para> </callout> <callout arearefs=\"manytomany5"
+"\"> <para> <literal>unique</literal> (optional): Enable the DDL generation "
+"of a unique constraint for the foreign-key column. This makes the "
+"association multiplicity effectively one to many. </para> </callout> "
+"<callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> "
+"(optional - defaults to <literal>exception</literal>): Specifies how foreign "
+"keys that reference missing rows will be handled: <literal>ignore</literal> "
+"will treat a missing row as a null association. </para> </callout> <callout "
+"arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (optional): "
+"The entity name of the associated class, as an alternative to "
+"<literal>class</literal>. </para> </callout> <callout arearefs=\"manytomany8"
+"\"> <para> <literal>property-ref</literal>: (optional) The name of a "
+"property of the associated class that is joined to this foreign key. If not "
+"specified, the primary key of the associated class is used. </para> </"
+"callout> </calloutlist> </programlistingco>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:480
+#, no-c-format
+msgid "Some examples, first, a set of strings:"
+msgstr "以下にいくつか例を示します。 まずはStringのsetに関しての例です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:484
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"names\" table=\"person_names\">\n"
+"    <key column=\"person_id\"/>\n"
+"    <element column=\"person_name\" type=\"string\"/>\n"
+"</set>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:486
+#, no-c-format
+msgid ""
+"A bag containing integers (with an iteration order determined by the "
+"<literal>order-by</literal> attribute):"
+msgstr ""
+"整数値を含むbag（bagは <literal>order-by</literal> 属性によって反復順序が定義"
+"されています）"
+
+#. Tag: programlisting
+#: collection_mapping.xml:491
+#, no-c-format
+msgid ""
+"<![CDATA[<bag name=\"sizes\" \n"
+"        table=\"item_sizes\" \n"
+"        order-by=\"size asc\">\n"
+"    <key column=\"item_id\"/>\n"
+"    <element column=\"size\" type=\"integer\"/>\n"
+"</bag>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:493
+#, no-c-format
+msgid "An array of entities - in this case, a many to many association:"
+msgstr "エンティティの配列 - この場合、多対多の関連です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:497
+#, no-c-format
+msgid ""
+"<![CDATA[<array name=\"addresses\" \n"
+"        table=\"PersonAddress\" \n"
+"        cascade=\"persist\">\n"
+"    <key column=\"personId\"/>\n"
+"    <list-index column=\"sortOrder\"/>\n"
+"    <many-to-many column=\"addressId\" class=\"Address\"/>\n"
+"</array>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:499
+#, no-c-format
+msgid "A map from string indices to dates:"
+msgstr "文字列と日付のmap"
+
+#. Tag: programlisting
+#: collection_mapping.xml:503
+#, no-c-format
+msgid ""
+"<![CDATA[<map name=\"holidays\" \n"
+"        table=\"holidays\" \n"
+"        schema=\"dbo\" \n"
+"        order-by=\"hol_name asc\">\n"
+"    <key column=\"id\"/>\n"
+"    <map-key column=\"hol_name\" type=\"string\"/>\n"
+"    <element column=\"hol_date\" type=\"date\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:505
+#, no-c-format
+msgid "A list of components (discussed in the next chapter):"
+msgstr "コンポーネントのlist（次の章で詳しく説明します）"
+
+#. Tag: programlisting
+#: collection_mapping.xml:509
+#, no-c-format
+msgid ""
+"<![CDATA[<list name=\"carComponents\" \n"
+"        table=\"CarComponents\">\n"
+"    <key column=\"carId\"/>\n"
+"    <list-index column=\"sortOrder\"/>\n"
+"    <composite-element class=\"CarComponent\">\n"
+"        <property name=\"price\"/>\n"
+"        <property name=\"type\"/>\n"
+"        <property name=\"serialNumber\" column=\"serialNum\"/>\n"
+"    </composite-element>\n"
+"</list>]]>"
+msgstr ""
+
+#. Tag: title
+#: collection_mapping.xml:514
+#, no-c-format
+msgid "One-to-many associations"
+msgstr "一対多関連"
+
+#. Tag: para
+#: collection_mapping.xml:516
+#, no-c-format
+msgid ""
+"A <emphasis>one to many association</emphasis> links the tables of two "
+"classes via a foreign key, with no intervening collection table. This "
+"mapping loses certain semantics of normal Java collections:"
+msgstr ""
+"<emphasis>一対多関連</emphasis> は、コレクション･テーブルを介さず、 外部キー"
+"により2つのクラスのテーブルを関連付けます。 このマッピングは標準的なJavaのコ"
+"レクションのセマンティクスをいくつか失います。"
+
+#. Tag: para
+#: collection_mapping.xml:524
+#, no-c-format
+msgid ""
+"An instance of the contained entity class may not belong to more than one "
+"instance of the collection"
+msgstr ""
+"エンティティクラスのインスタンスは、 2つ以上のコレクションのインスタンスに属"
+"してはいけません。"
+
+#. Tag: para
+#: collection_mapping.xml:530
+#, no-c-format
+msgid ""
+"An instance of the contained entity class may not appear at more than one "
+"value of the collection index"
+msgstr ""
+"コレクションに含まれるエンティティクラスのインスタンスは、 コレクションイン"
+"デックスの値として2度以上現れてはいけません。"
+
+#. Tag: para
+#: collection_mapping.xml:537
+#, no-c-format
+msgid ""
+"An association from <literal>Product</literal> to <literal>Part</literal> "
+"requires existence of a foreign key column and possibly an index column to "
+"the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> "
+"tag indicates that this is a one to many association."
+msgstr ""
+"<literal>Product</literal> から <literal>Part</literal> への関連は、 "
+"<literal>Part</literal> テーブルへの外部キーカラムと、場合によってはインデッ"
+"クスカラムが必要です。 <literal>&lt;one-to-many&gt;</literal> タグは、これが"
+"一対多関連であることを表しています。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:550
+#, no-c-format
+msgid ""
+"<![CDATA[<one-to-many \n"
+"        class=\"ClassName\"\n"
+"        not-found=\"ignore|exception\"\n"
+"        entity-name=\"EntityName\"\n"
+"        node=\"element-name\"\n"
+"        embed-xml=\"true|false\"\n"
+"    />]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:553
+#, no-c-format
+msgid "<literal>class</literal> (required): The name of the associated class."
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
+
+#. Tag: para
+#: collection_mapping.xml:558
+#, no-c-format
+msgid ""
+"<literal>not-found</literal> (optional - defaults to <literal>exception</"
+"literal>): Specifies how cached identifiers that reference missing rows will "
+"be handled: <literal>ignore</literal> will treat a missing row as a null "
+"association."
+msgstr ""
+"<literal>not-found</literal> （オプション - デフォルトは <literal>exception</"
+"literal>）: 参照先の行がないキャッシュされた識別子をどのように扱うかを指定し"
+"ます。 <literal>ignore</literal> を指定すると、行がないことを関連がないものと"
+"して扱います。"
+
+#. Tag: para
+#: collection_mapping.xml:565
+#, no-c-format
+msgid ""
+"<literal>entity-name</literal> (optional): The entity name of the associated "
+"class, as an alternative to <literal>class</literal>."
+msgstr ""
+"<literal>entity-name</literal> （オプション）: <literal>class</literal> の代"
+"替である関連クラスのエンティティ名。 <literal>class</literal> の代わりに指定"
+"する、関連クラスのエンティティ名。"
+
+#. Tag: para
+#: collection_mapping.xml:573
+#, no-c-format
+msgid ""
+"Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need "
+"to declare any columns. Nor is it necessary to specify the <literal>table</"
+"literal> name anywhere."
+msgstr ""
+"<literal>&lt;one-to-many&gt;</literal> 要素はカラムを宣言する必要がないことに"
+"注意してください。 同様に <literal>テーブル</literal> 名を指定する必要もあり"
+"ません。"
+
+#. Tag: para
+#: collection_mapping.xml:579
+#, no-c-format
+msgid ""
+"<emphasis>Very important note:</emphasis> If the foreign key column of a "
+"<literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT "
+"NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping "
+"<literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional "
+"association</emphasis> with the collection mapping marked <literal>inverse="
+"\"true\"</literal>. See the discussion of bidirectional associations later "
+"in this chapter."
+msgstr ""
+"<emphasis>とても重要な注意:</emphasis> もし <literal>&lt;one-to-many&gt;</"
+"literal> 関連の外部キーカラムが <literal>NOT NULL</literal>と宣言された場"
+"合、 <literal>&lt;key&gt;</literal> マッピングに <literal>not-null=\"true\"</"
+"literal> を宣言するか、 コレクションマッピングに <literal>inverse=\"true\"</"
+"literal> を付けた上で、 <emphasis>双方向関連を使う</emphasis> 必要がありま"
+"す。 双方向関連についてはこの章の後のほうで説明します。"
+
+#. Tag: para
+#: collection_mapping.xml:588
+#, no-c-format
+msgid ""
+"This example shows a map of <literal>Part</literal> entities by name (where "
+"<literal>partName</literal> is a persistent property of <literal>Part</"
+"literal>). Notice the use of a formula-based index."
+msgstr ""
+"次の例は、名称（<literal>Part</literal> の永続的なプロパティである "
+"<literal>partName</literal>） による <literal>Part</literal> エンティティの"
+"mapを表しています。 formulaによるインデックスを使っていることに注意してくださ"
+"い。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:594
+#, no-c-format
+msgid ""
+"<![CDATA[<map name=\"parts\"\n"
+"        cascade=\"all\">\n"
+"    <key column=\"productId\" not-null=\"true\"/>\n"
+"    <map-key formula=\"partName\"/>\n"
+"    <one-to-many class=\"Part\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: title
+#: collection_mapping.xml:600
+#, no-c-format
+msgid "Advanced collection mappings"
+msgstr "高度なコレクション･マッピング"
+
+#. Tag: title
+#: collection_mapping.xml:603
+#, no-c-format
+msgid "Sorted collections"
+msgstr "ソートされたコレクション"
+
+#. Tag: para
+#: collection_mapping.xml:605
+#, no-c-format
+msgid ""
+"Hibernate supports collections implementing <literal>java.util.SortedMap</"
+"literal> and <literal>java.util.SortedSet</literal>. You must specify a "
+"comparator in the mapping file:"
+msgstr ""
+"Hibernateは <literal>java.util.SortedMap</literal> と <literal>java.util."
+"SortedSet</literal> を実装したコレクションをサポートしています。 開発者はマッ"
+"ピング定義ファイルにコンパレータを指定しなければなりません。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:610
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"aliases\" \n"
+"            table=\"person_aliases\" \n"
+"            sort=\"natural\">\n"
+"    <key column=\"person\"/>\n"
+"    <element column=\"name\" type=\"string\"/>\n"
+"</set>\n"
+"\n"
+"<map name=\"holidays\" sort=\"my.custom.HolidayComparator\">\n"
+"    <key column=\"year_id\"/>\n"
+"    <map-key column=\"hol_name\" type=\"string\"/>\n"
+"    <element column=\"hol_date\" type=\"date\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:612
+#, no-c-format
+msgid ""
+"Allowed values of the <literal>sort</literal> attribute are "
+"<literal>unsorted</literal>, <literal>natural</literal> and the name of a "
+"class implementing <literal>java.util.Comparator</literal>."
+msgstr ""
+"<literal>sort</literal> 属性に設定できる値は <literal>unsorted</literal> と "
+"<literal>natural</literal> および、<literal>java.util.Comparator</literal> を"
+"実装したクラスの名前です。"
+
+#. Tag: para
+#: collection_mapping.xml:618
+#, no-c-format
+msgid ""
+"Sorted collections actually behave like <literal>java.util.TreeSet</literal> "
+"or <literal>java.util.TreeMap</literal>."
+msgstr ""
+"ソートされたコレクションは実質的には <literal>java.util.TreeSet</literal> や "
+"<literal>java.util.TreeMap</literal> のように振舞います。"
+
+#. Tag: para
+#: collection_mapping.xml:623
+#, no-c-format
+msgid ""
+"If you want the database itself to order the collection elements use the "
+"<literal>order-by</literal> attribute of <literal>set</literal>, "
+"<literal>bag</literal> or <literal>map</literal> mappings. This solution is "
+"only available under JDK 1.4 or higher (it is implemented using "
+"<literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>). This "
+"performs the ordering in the SQL query, not in memory."
+msgstr ""
+"もしデータベース自身にコレクションの要素を並べさせたいなら、 <literal>set</"
+"literal> や <literal>bag</literal>、<literal>map</literal> の <literal>order-"
+"by</literal> 属性を使います。 この解決法はJDK1.4、もしくはそれ以上のバージョ"
+"ンで利用可能です （<literal>LinkedHashSet</literal> または "
+"<literal>LinkedHashMap</literal>を使って実装されています）。 整列はメモリ上で"
+"はなく、SQLクエリ内で実行されます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:632
+#, no-c-format
+msgid ""
+"<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower"
+"(name) asc\">\n"
+"    <key column=\"person\"/>\n"
+"    <element column=\"name\" type=\"string\"/>\n"
+"</set>\n"
+"\n"
+"<map name=\"holidays\" order-by=\"hol_date, hol_name\">\n"
+"    <key column=\"year_id\"/>\n"
+"    <map-key column=\"hol_name\" type=\"string\"/>\n"
+"    <element column=\"hol_date type=\"date\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:634
+#, no-c-format
+msgid ""
+"Note that the value of the <literal>order-by</literal> attribute is an SQL "
+"ordering, not a HQL ordering!"
+msgstr ""
+"<literal>order-by</literal> 属性の値がSQL命令であって、HQL命令ではないことに"
+"注意してください！"
+
+#. Tag: para
+#: collection_mapping.xml:639
+#, no-c-format
+msgid ""
+"Associations may even be sorted by some arbitrary criteria at runtime using "
+"a collection <literal>filter()</literal>."
+msgstr ""
+"関連は、コレクションの <literal>filter()</literal> を使うことで、 実行時に任"
+"意のcriteriaによってソートすることも可能です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:644
+#, no-c-format
+msgid ""
+"<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name"
+"\" ).list();]]>"
+msgstr ""
+
+#. Tag: title
+#: collection_mapping.xml:649
+#, no-c-format
+msgid "Bidirectional associations"
+msgstr "双方向関連"
+
+#. Tag: para
+#: collection_mapping.xml:651
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>bidirectional association</emphasis> allows navigation from both "
+"\"ends\" of the association. Two kinds of bidirectional association are "
+"supported:"
+msgstr ""
+"<emphasis>双方向関連</emphasis> は関連のどちら「側」からでもナビゲーションで"
+"きます。 2種類の双方向関連がサポートされています。 <placeholder-1/>"
+
+#. Tag: term
+#: collection_mapping.xml:658
+#, no-c-format
+msgid "one-to-many"
+msgstr "one-to-many"
+
+#. Tag: para
+#: collection_mapping.xml:660
+#, no-c-format
+msgid "set or bag valued at one end, single-valued at the other"
+msgstr "片側がsetかbag、もう片方が単一値です。"
+
+#. Tag: term
+#: collection_mapping.xml:666
+#, no-c-format
+msgid "many-to-many"
+msgstr "many-to-many"
+
+#. Tag: para
+#: collection_mapping.xml:668
+#, no-c-format
+msgid "set or bag valued at both ends"
+msgstr "両側がsetかbagです。"
+
+#. Tag: para
+#: collection_mapping.xml:677
+#, no-c-format
+msgid ""
+"You may specify a bidirectional many-to-many association simply by mapping "
+"two many-to-many associations to the same database table and declaring one "
+"end as <emphasis>inverse</emphasis> (which one is your choice, but it can "
+"not be an indexed collection)."
+msgstr ""
+"2つの多対多関連で同じデータベーステーブルをマッピングし、 片方を "
+"<emphasis>inverse</emphasis> として宣言することで、 双方向の多対多関連を指定"
+"することが出来ます （どちらをinverseに選んだとしても、そちら側にはインデック"
+"ス付きのコレクションは使えません）。"
+
+#. Tag: para
+#: collection_mapping.xml:684
+#, no-c-format
+msgid ""
+"Here's an example of a bidirectional many-to-many association; each category "
+"can have many items and each item can be in many categories:"
+msgstr ""
+"次に双方向の多対多関連の例を示します。 各カテゴリは多数のアイテムを持つことが"
+"でき、各アイテムは多くのカテゴリに属することが出来ます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:689
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Category\">\n"
+"    <id name=\"id\" column=\"CATEGORY_ID\"/>\n"
+"    ...\n"
+"    <bag name=\"items\" table=\"CATEGORY_ITEM\">\n"
+"        <key column=\"CATEGORY_ID\"/>\n"
+"        <many-to-many class=\"Item\" column=\"ITEM_ID\"/>\n"
+"    </bag>\n"
+"</class>\n"
+"\n"
+"<class name=\"Item\">\n"
+"    <id name=\"id\" column=\"ITEM_ID\"/>\n"
+"    ...\n"
+"\n"
+"    <!-- inverse end -->\n"
+"    <bag name=\"categories\" table=\"CATEGORY_ITEM\" inverse=\"true\">\n"
+"        <key column=\"ITEM_ID\"/>\n"
+"        <many-to-many class=\"Category\" column=\"CATEGORY_ID\"/>\n"
+"    </bag>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:691
+#, no-c-format
+msgid ""
+"Changes made only to the inverse end of the association are <emphasis>not</"
+"emphasis> persisted. This means that Hibernate has two representations in "
+"memory for every bidirectional association, one link from A to B and another "
+"link from B to A. This is easier to understand if you think about the Java "
+"object model and how we create a many-to-many relationship in Java:"
+msgstr ""
+"関連のinverse側にのみ行われた変更は永続化 <emphasis>されません</emphasis>。 "
+"これは、Hibernateは全ての双方向関連について、メモリ上に２つの表現を持っている"
+"という意味です。 つまり一つはAからBへのリンクで、もう一つはBからAへのリンクと"
+"いうことです。 Javaのオブジェクトモデルについて考え、Javaで双方向関係をどう"
+"やって作るかを考えれば、 これは理解しやすいです。下記に、Javaでの双方向関連を"
+"示します。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:699
+#, no-c-format
+msgid ""
+"<![CDATA[\n"
+"category.getItems().add(item);          // The category now \"knows\" about "
+"the relationship\n"
+"item.getCategories().add(category);     // The item now \"knows\" about the "
+"relationship\n"
+"\n"
+"session.persist(item);                   // The relationship won't be "
+"saved!\n"
+"session.persist(category);               // The relationship will be saved]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:701
+#, no-c-format
+msgid ""
+"The non-inverse side is used to save the in-memory representation to the "
+"database."
+msgstr ""
+"関連のinverseではない側は、メモリ上の表現をデータベースに保存するのに使われま"
+"す。"
+
+#. Tag: para
+#: collection_mapping.xml:705
+#, no-c-format
+msgid ""
+"You may define a bidirectional one-to-many association by mapping a one-to-"
+"many association to the same table column(s) as a many-to-one association "
+"and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgstr ""
+"双方向の一対多関連を定義するには、 一対多関連を多対一関連と同じテーブルのカラ"
+"ムにマッピングし、 多側に <literal>inverse=\"true\"</literal> と宣言します。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:711
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Parent\">\n"
+"    <id name=\"id\" column=\"parent_id\"/>\n"
+"    ....\n"
+"    <set name=\"children\" inverse=\"true\">\n"
+"        <key column=\"parent_id\"/>\n"
+"        <one-to-many class=\"Child\"/>\n"
+"    </set>\n"
+"</class>\n"
+"\n"
+"<class name=\"Child\">\n"
+"    <id name=\"id\" column=\"child_id\"/>\n"
+"    ....\n"
+"    <many-to-one name=\"parent\" \n"
+"        class=\"Parent\" \n"
+"        column=\"parent_id\"\n"
+"        not-null=\"true\"/>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:713
+#, no-c-format
+msgid ""
+"Mapping one end of an association with <literal>inverse=\"true\"</literal> "
+"doesn't affect the operation of cascades, these are orthogonal concepts!"
+msgstr ""
+"関連の片側に <literal>inverse=\"true\"</literal> を設定しても、 カスケード操"
+"作に影響を与えません。これらは直交した概念です！"
+
+#. Tag: title
+#: collection_mapping.xml:721
+#, no-c-format
+msgid "Bidirectional associations with indexed collections"
+msgstr "インデックス付きコレクションと双方向関連"
+
+#. Tag: para
+#: collection_mapping.xml:722
+#, no-c-format
+msgid ""
+"A bidirectional association where one end is represented as a <literal>&lt;"
+"list&gt;</literal> or <literal>&lt;map&gt;</literal> requires special "
+"consideration. If there is a property of the child class which maps to the "
+"index column, no problem, we can continue using <literal>inverse=\"true\"</"
+"literal> on the collection mapping:"
+msgstr ""
+"片側が <literal>&lt;list&gt;</literal> や <literal>&lt;map&gt;</literal> であ"
+"る 双方向関連は、特によく考える必要があります。 インデックスカラムにマップさ"
+"れる子クラスのプロパティがある場合は、問題ないです。 コレクションのマッピング"
+"で <literal>inverse=\"true\"</literal> を使い続けられます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:729
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Parent\">\n"
+"    <id name=\"id\" column=\"parent_id\"/>\n"
+"    ....\n"
+"    <map name=\"children\" inverse=\"true\">\n"
+"        <key column=\"parent_id\"/>\n"
+"        <map-key column=\"name\" \n"
+"            type=\"string\"/>\n"
+"        <one-to-many class=\"Child\"/>\n"
+"    </map>\n"
+"</class>\n"
+"\n"
+"<class name=\"Child\">\n"
+"    <id name=\"id\" column=\"child_id\"/>\n"
+"    ....\n"
+"    <property name=\"name\" \n"
+"        not-null=\"true\"/>\n"
+"    <many-to-one name=\"parent\" \n"
+"        class=\"Parent\" \n"
+"        column=\"parent_id\"\n"
+"        not-null=\"true\"/>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:731
+#, no-c-format
+msgid ""
+"But, if there is no such property on the child class, we can't think of the "
+"association as truly bidirectional (there is information available at one "
+"end of the association that is not available at the other end). In this "
+"case, we can't map the collection <literal>inverse=\"true\"</literal>. "
+"Instead, we could use the following mapping:"
+msgstr ""
+"しかし、子クラスにそのようなプロパティがない場合は、 関連を真に双方向であると"
+"考えることができません （関連の片側に利用できる情報がありますが、もう一方には"
+"ありません）。 この場合は、コレクションに <literal>inverse=\"true\"</"
+"literal> をマッピングできません。 代わりに、次のようなマッピングが使えます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:738
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"Parent\">\n"
+"    <id name=\"id\" column=\"parent_id\"/>\n"
+"    ....\n"
+"    <map name=\"children\">\n"
+"        <key column=\"parent_id\"\n"
+"            not-null=\"true\"/>\n"
+"        <map-key column=\"name\" \n"
+"            type=\"string\"/>\n"
+"        <one-to-many class=\"Child\"/>\n"
+"    </map>\n"
+"</class>\n"
+"\n"
+"<class name=\"Child\">\n"
+"    <id name=\"id\" column=\"child_id\"/>\n"
+"    ....\n"
+"    <many-to-one name=\"parent\" \n"
+"        class=\"Parent\" \n"
+"        column=\"parent_id\"\n"
+"        insert=\"false\"\n"
+"        update=\"false\"\n"
+"        not-null=\"true\"/>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:740
+#, no-c-format
+msgid ""
+"Note that in this mapping, the collection-valued end of the association is "
+"responsible for updates to the foreign key. TODO: Does this really result in "
+"some unnecessary update statements?"
+msgstr ""
+"注意： このマッピングでは、関連のコレクション値の側は、 外部キーをアップデー"
+"トする責任があります。"
+
+#. Tag: title
+#: collection_mapping.xml:748
+#, no-c-format
+msgid "Ternary associations"
+msgstr "3項関連"
+
+#. Tag: para
+#: collection_mapping.xml:750
+#, no-c-format
+msgid ""
+"There are three possible approaches to mapping a ternary association. One is "
+"to use a <literal>Map</literal> with an association as its index:"
+msgstr ""
+"3項関連のマッピングには3つのアプローチがあります。 1つ目は関連をインデックス"
+"として <literal>Map</literal> を使用するアプローチです。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:755
+#, no-c-format
+msgid ""
+"<![CDATA[<map name=\"contracts\">\n"
+"    <key column=\"employer_id\" not-null=\"true\"/>\n"
+"    <map-key-many-to-many column=\"employee_id\" class=\"Employee\"/>\n"
+"    <one-to-many class=\"Contract\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: collection_mapping.xml:757
+#, no-c-format
+msgid ""
+"<![CDATA[<map name=\"connections\">\n"
+"    <key column=\"incoming_node_id\"/>\n"
+"    <map-key-many-to-many column=\"outgoing_node_id\" class=\"Node\"/>\n"
+"    <many-to-many column=\"connection_id\" class=\"Connection\"/>\n"
+"</map>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:759
+#, no-c-format
+msgid ""
+"A second approach is to simply remodel the association as an entity class. "
+"This is the approach we use most commonly."
+msgstr ""
+"2つ目は単純に関連をエンティティ･クラスとしてモデルを作り直すアプローチで、 頻"
+"繁に使われます。"
+
+#. Tag: para
+#: collection_mapping.xml:764
+#, no-c-format
+msgid ""
+"A final alternative is to use composite elements, which we will discuss "
+"later."
+msgstr ""
+"最後はcomposite要素を使うアプローチです。これに関する議論は後ほど行います。"
+
+#. Tag: literal
+#: collection_mapping.xml:771
+#, no-c-format
+msgid "Using an &lt;idbag&gt;"
+msgstr "<literal>&lt;idbag&gt;</literal>の使用"
+
+#. Tag: para
+#: collection_mapping.xml:773
+#, no-c-format
+msgid ""
+"If you've fully embraced our view that composite keys are a bad thing and "
+"that entities should have synthetic identifiers (surrogate keys), then you "
+"might find it a bit odd that the many to many associations and collections "
+"of values that we've shown so far all map to tables with composite keys! "
+"Now, this point is quite arguable; a pure association table doesn't seem to "
+"benefit much from a surrogate key (though a collection of composite values "
+"<emphasis>might</emphasis>). Nevertheless, Hibernate provides a feature that "
+"allows you to map many to many associations and collections of values to a "
+"table with a surrogate key."
+msgstr ""
+"複合キーは悪いもので、エンティティは人工の識別子(代理キー)を持つべきであると"
+"いう考え方からは、 多対多関連と値のコレクションを複合キーを用いたテーブルへ"
+"マッピングするのは少し奇妙に感じるかもしれません！ 確かにこの考え方には議論の"
+"余地があります。 純粋な関連テーブルは代理キーを使っても利益を得られないように"
+"思えるからです （合成値のコレクションは利益がある <emphasis>かも</emphasis> "
+"しれませんが）。 とはいえ、Hibernateは代理キーを持つテーブルへ多対多関連と値"
+"のコレクションを マッピングする機能も備えています。"
+
+#. Tag: para
+#: collection_mapping.xml:784
+#, no-c-format
+msgid ""
+"The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</"
+"literal> (or <literal>Collection</literal>) with bag semantics."
+msgstr ""
+"bagのセマンティックスを持った <literal>List</literal>（または "
+"<literal>Collection</literal>）を <literal>&lt;idbag&gt;</literal> 要素にマッ"
+"ピングできます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:789
+#, no-c-format
+msgid ""
+"<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
+"    <collection-id column=\"ID\" type=\"long\">\n"
+"        <generator class=\"sequence\"/>\n"
+"    </collection-id>\n"
+"    <key column=\"PERSON1\"/>\n"
+"    <many-to-many column=\"PERSON2\" class=\"Person\" fetch=\"join\"/>\n"
+"</idbag>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:791
+#, no-c-format
+msgid ""
+"As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id "
+"generator, just like an entity class! A different surrogate key is assigned "
+"to each collection row. Hibernate does not provide any mechanism to discover "
+"the surrogate key value of a particular row, however."
+msgstr ""
+"ご存知のように <literal>&lt;idbag&gt;</literal> はエンティティ･クラスのよう"
+"に 人工的なidジェネレータを持っています！ 異なる代理キーをそれぞれのコレク"
+"ションの列に割り当てます。 しかしながら、Hibernateはある行の代理キーの値を見"
+"つけ出す機構を持っていません。"
+
+#. Tag: para
+#: collection_mapping.xml:798
+#, no-c-format
+msgid ""
+"Note that the update performance of an <literal>&lt;idbag&gt;</literal> is "
+"<emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</"
+"literal>! Hibernate can locate individual rows efficiently and update or "
+"delete them individually, just like a list, map or set."
+msgstr ""
+"<literal>&lt;idbag&gt;</literal> を更新するパフォーマンスは 通常の "
+"<literal>&lt;bag&gt;</literal> よりも良いことに注目してください！ Hibernateは"
+"個々の行を効果的に見つけることができ、 listやmap、setのように個別にその行を更"
+"新、削除できます。"
+
+#. Tag: para
+#: collection_mapping.xml:805
+#, no-c-format
+msgid ""
+"In the current implementation, the <literal>native</literal> identifier "
+"generation strategy is not supported for <literal>&lt;idbag&gt;</literal> "
+"collection identifiers."
+msgstr ""
+"現在の実装では、<literal>native</literal> というid生成戦略を <literal>&lt;"
+"idbag&gt;</literal> コレクションの識別子に対して使えません。"
+
+#. Tag: title
+#: collection_mapping.xml:829
+#, no-c-format
+msgid "Collection examples"
+msgstr "コレクションの例"
+
+#. Tag: para
+#: collection_mapping.xml:831
+#, no-c-format
+msgid ""
+"The previous sections are pretty confusing. So lets look at an example. This "
+"class:"
+msgstr "これまでの節の説明では理解しにくいので、以下の例を見てください。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:836
+#, no-c-format
+msgid ""
+"<![CDATA[package eg;\n"
+"import java.util.Set;\n"
+"\n"
+"public class Parent {\n"
+"    private long id;\n"
+"    private Set children;\n"
+"\n"
+"    public long getId() { return id; }\n"
+"    private void setId(long id) { this.id=id; }\n"
+"\n"
+"    private Set getChildren() { return children; }\n"
+"    private void setChildren(Set children) { this.children=children; }\n"
+"\n"
+"    ....\n"
+"    ....\n"
+"}]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:838
+#, no-c-format
+msgid ""
+"has a collection of <literal>Child</literal> instances. If each child has at "
+"most one parent, the most natural mapping is a one-to-many association:"
+msgstr ""
+"このクラスは <literal>Child</literal> インスタンスのコレクションを持っていま"
+"す。 もし各々のchildが最大でも一つのparentを持っているならば、最も自然なマッ"
+"ピングは一対多関連です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:844
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class name=\"Parent\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <set name=\"children\">\n"
+"            <key column=\"parent_id\"/>\n"
+"            <one-to-many class=\"Child\"/>\n"
+"        </set>\n"
+"    </class>\n"
+"\n"
+"    <class name=\"Child\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <property name=\"name\"/>\n"
+"    </class>\n"
+"\n"
+"</hibernate-mapping>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:846
+#, no-c-format
+msgid "This maps to the following table definitions:"
+msgstr "これは以下のテーブル定義にマッピングします。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:850
+#, no-c-format
+msgid ""
+"<![CDATA[create table parent ( id bigint not null primary key )\n"
+"create table child ( id bigint not null primary key, name varchar(255), "
+"parent_id bigint )\n"
+"alter table child add constraint childfk0 (parent_id) references parent]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:852
+#, no-c-format
+msgid ""
+"If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-"
+"many association:"
+msgstr ""
+"もしparentが <emphasis>要求</emphasis> されるなら、双方向の一対多関連を使用し"
+"てください。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:857
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class name=\"Parent\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <set name=\"children\" inverse=\"true\">\n"
+"            <key column=\"parent_id\"/>\n"
+"            <one-to-many class=\"Child\"/>\n"
+"        </set>\n"
+"    </class>\n"
+"\n"
+"    <class name=\"Child\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <property name=\"name\"/>\n"
+"        <many-to-one name=\"parent\" class=\"Parent\" column=\"parent_id\" "
+"not-null=\"true\"/>\n"
+"    </class>\n"
+"\n"
+"</hibernate-mapping>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:859
+#, no-c-format
+msgid "Notice the <literal>NOT NULL</literal> constraint:"
+msgstr "<literal>NOT NULL</literal> 制約に注意してください。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:863
+#, no-c-format
+msgid ""
+"<![CDATA[create table parent ( id bigint not null primary key )\n"
+"create table child ( id bigint not null\n"
+"                     primary key,\n"
+"                     name varchar(255),\n"
+"                     parent_id bigint not null )\n"
+"alter table child add constraint childfk0 (parent_id) references parent]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:865
+#, no-c-format
+msgid ""
+"Alternatively, if you absolutely insist that this association should be "
+"unidirectional, you can declare the <literal>NOT NULL</literal> constraint "
+"on the <literal>&lt;key&gt;</literal> mapping:"
+msgstr ""
+"あるいは、もしこの関連は単方向であるべきと強く主張するのであれば、 "
+"<literal>&lt;key&gt;</literal> に <literal>NOT NULL</literal> 制約を宣言でき"
+"ます。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:871
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class name=\"Parent\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <set name=\"children\">\n"
+"            <key column=\"parent_id\" not-null=\"true\"/>\n"
+"            <one-to-many class=\"Child\"/>\n"
+"        </set>\n"
+"    </class>\n"
+"\n"
+"    <class name=\"Child\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <property name=\"name\"/>\n"
+"    </class>\n"
+"\n"
+"</hibernate-mapping>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:873
+#, no-c-format
+msgid ""
+"On the other hand, if a child might have multiple parents, a many-to-many "
+"association is appropriate:"
+msgstr "一方で、もしchildが複数のparentを持てるならば、多対多関連が妥当です。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:878
+#, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping>\n"
+"\n"
+"    <class name=\"Parent\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <set name=\"children\" table=\"childset\">\n"
+"            <key column=\"parent_id\"/>\n"
+"            <many-to-many class=\"Child\" column=\"child_id\"/>\n"
+"        </set>\n"
+"    </class>\n"
+"\n"
+"    <class name=\"Child\">\n"
+"        <id name=\"id\">\n"
+"            <generator class=\"sequence\"/>\n"
+"        </id>\n"
+"        <property name=\"name\"/>\n"
+"    </class>\n"
+"\n"
+"</hibernate-mapping>]]>"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:880
+#, no-c-format
+msgid "Table definitions:"
+msgstr "テーブル定義は以下のようになります。"
+
+#. Tag: programlisting
+#: collection_mapping.xml:884
+#, no-c-format
+msgid ""
+"<![CDATA[create table parent ( id bigint not null primary key )\n"
+"create table child ( id bigint not null primary key, name varchar(255) )\n"
+"create table childset ( parent_id bigint not null,\n"
+"                        child_id bigint not null,\n"
+"                        primary key ( parent_id, child_id ) )\n"
+"alter table childset add constraint childsetfk0 (parent_id) references "
+"parent\n"
+"alter table childset add constraint childsetfk1 (child_id) references child]]"
+">"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:886
+#, no-c-format
+msgid ""
+"For more examples and a complete walk-through a parent/child relationship "
+"mapping, see <xref linkend=\"example-parentchild\"/>."
+msgstr ""
+"parent/child関係のマッピングについてのより多くの例や完全な手順が必要であれ"
+"ば、 <xref linkend=\"example-parentchild\"/> をご覧ください。"
+
+#. Tag: para
+#: collection_mapping.xml:891
+#, no-c-format
+msgid ""
+"Even more exotic association mappings are possible, we will catalog all "
+"possibilities in the next chapter."
+msgstr "また、さらに特殊な関連マッピングも可能です。次の章で詳しく述べます。"
+
+#~ msgid ""
+#~ "<literal>column_name</literal> (required): The name of the column holding "
+#~ "the collection index values."
+#~ msgstr ""
+#~ "<literal>column_name</literal>（必須）:コレクションインデックスの値を保持"
+#~ "するカラムの名前。"
+
+#~ msgid ""
+#~ "<literal>base</literal> (optional, defaults to <literal>0</literal>): The "
+#~ "value of the index column that corresponds to the first element of the "
+#~ "list or array."
+#~ msgstr ""
+#~ "<literal>base</literal>（オプション、デフォルトは <literal>0</literal>）: "
+#~ "リストもしくは配列の最初の要素に該当するインデックスカラムの値。"
+
+#~ msgid ""
+#~ "<literal>column</literal> (optional): The name of the column holding the "
+#~ "collection index values."
+#~ msgstr ""
+#~ "<literal>column</literal>（オプション）: コレクションインデックスの値を保"
+#~ "持するカラムの名前。"
+
+#~ msgid ""
+#~ "<literal>formula</literal> (optional): A SQL formula used to evaluate the "
+#~ "key of the map."
+#~ msgstr ""
+#~ "<literal>formula</literal>（オプション）: Mapのキーを評価するのに使われる"
+#~ "SQL式。"
+
+#~ msgid "<literal>type</literal> (reguired): The type of the map keys."
+#~ msgstr "<literal>type</literal>（必須）: Mapのキーの型。"
+
+#~ msgid ""
+#~ "<literal>column</literal> (optional): The name of the foreign key column "
+#~ "for the collection index values."
+#~ msgstr ""
+#~ "<literal>column</literal> （オプション）: コレクションインデックスの値のた"
+#~ "めの外部キーカラムの名前。"
+
+#~ msgid ""
+#~ "<literal>formula</literal> (optional): A SQL formula used to evaluate the "
+#~ "foreign key of the map key."
+#~ msgstr ""
+#~ "<literal>formula</literal> （オプション）: Mapのキーのための外部キーを評価"
+#~ "するために使うSQL式。"
+
+#~ msgid ""
+#~ "<literal>class</literal> (required): The entity class used as the map key."
+#~ msgstr ""
+#~ "<literal>class</literal> （必須）: Mapのキーとして使われるエンティティクラ"
+#~ "ス。"
+
+#~ msgid ""
+#~ "<literal>column</literal> (optional): The name of the column holding the "
+#~ "collection element values."
+#~ msgstr ""
+#~ "<literal>column</literal> （オプション）: コレクションの要素の値を保持する"
+#~ "カラムの名前。"
+
+#~ msgid ""
+#~ "<literal>formula</literal> (optional): An SQL formula used to evaluate "
+#~ "the element."
+#~ msgstr ""
+#~ "<literal>formula</literal> （オプション）: 要素を評価するために使うSQL式。"
+
+#~ msgid ""
+#~ "<literal>type</literal> (required): The type of the collection element."
+#~ msgstr "<literal>type</literal> （必須）コレクションの要素の型。"
+
+#~ msgid ""
+#~ "A <emphasis>many-to-many association</emphasis> is specified using the "
+#~ "<literal>&lt;many-to-many&gt;</literal> element."
+#~ msgstr ""
+#~ "<emphasis>多対多関連</emphasis> は <literal>&lt;many-to-many&gt;</"
+#~ "literal> 要素で指定します。"
+
+#~ msgid ""
+#~ "<literal>column</literal> (optional): The name of the element foreign key "
+#~ "column."
+#~ msgstr ""
+#~ "<literal>column</literal> （オプション）: 外部キーカラムの要素の名前。"
+
+#~ msgid ""
+#~ "<literal>formula</literal> (optional): An SQL formula used to evaluate "
+#~ "the element foreign key value."
+#~ msgstr ""
+#~ "<literal>formula</literal> （オプション）: 外部キー値の要素を評価するため"
+#~ "に使うSQL式。"
+
+#~ msgid ""
+#~ "<literal>fetch</literal> (optional - defaults to <literal>join</"
+#~ "literal>): enables outer-join or sequential select fetching for this "
+#~ "association. This is a special case; for full eager fetching (in a single "
+#~ "<literal>SELECT</literal>) of an entity and its many-to-many "
+#~ "relationships to other entities, you would enable <literal>join</literal> "
+#~ "fetching not only of the collection itself, but also with this attribute "
+#~ "on the <literal>&lt;many-to-many&gt;</literal> nested element."
+#~ msgstr ""
+#~ "<literal>fetch</literal> (オプション - デフォルトは <literal>join</"
+#~ "literal>): 関連のために、外部結合か順次選択フェッチを有効にします。 これは"
+#~ "特殊なケースですが、エンティティと他のエンティティとの多対多関係を （１つ"
+#~ "の <literal>SELECT</literal> により）完全に即時にフェッチするためには、 そ"
+#~ "のコレクション自体だけでなく、 ネストした要素である <literal>&lt;many-to-"
+#~ "many&gt;</literal> のこの属性についても <literal>join</literal> フェッチを"
+#~ "有効する必要があります。"
+
+#~ msgid ""
+#~ "<literal>unique</literal> (optional): Enable the DDL generation of a "
+#~ "unique constraint for the foreign-key column. This makes the association "
+#~ "multiplicity effectively one to many."
+#~ msgstr ""
+#~ "<literal>unique</literal> （オプション）: 外部キーカラムのユニーク制約の"
+#~ "DDL生成を有効にします。 これは、関連の多重度を事実上一対多にします。"
+
+#~ msgid ""
+#~ "<literal>not-found</literal> (optional - defaults to <literal>exception</"
+#~ "literal>): Specifies how foreign keys that reference missing rows will be "
+#~ "handled: <literal>ignore</literal> will treat a missing row as a null "
+#~ "association."
+#~ msgstr ""
+#~ "<literal>not-found</literal> （オプション - デフォルトは "
+#~ "<literal>exception</literal>） 参照先の行がない外部キーをどのように扱うか"
+#~ "を指定します。 <literal>ignore</literal> にすると、行がないことを関連が無"
+#~ "いものとして扱います。"
+
+#~ msgid ""
+#~ "<literal>property-ref</literal>: (optional) The name of a property of the "
+#~ "associated class that is joined to this foreign key. If not specified, "
+#~ "the primary key of the associated class is used."
+#~ msgstr ""
+#~ "<literal>property-ref</literal>: （オプション） この外部キーに結合する関連"
+#~ "クラスのプロパティ名。 指定しなかった場合は、関連クラスの主キーを使いま"
+#~ "す。"

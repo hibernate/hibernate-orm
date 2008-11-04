@@ -1,0 +1,311 @@
+# SOME DESCRIPTIVE TITLE.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-xml2pot; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: events.xml:29
+#, no-c-format
+msgid "Interceptors and events"
+msgstr ""
+
+#. Tag: para
+#: events.xml:31
+#, no-c-format
+msgid "It is often useful for the application to react to certain events that occur inside Hibernate. This allows implementation of certain kinds of generic functionality, and extension of Hibernate functionality."
+msgstr ""
+
+#. Tag: title
+#: events.xml:38
+#, no-c-format
+msgid "Interceptors"
+msgstr ""
+
+#. Tag: para
+#: events.xml:40
+#, no-c-format
+msgid "The <literal>Interceptor</literal> interface provides callbacks from the session to the application allowing the application to inspect and/or manipulate properties of a persistent object before it is saved, updated, deleted or loaded. One possible use for this is to track auditing information. For example, the following <literal>Interceptor</literal> automatically sets the <literal>createTimestamp</literal> when an <literal>Auditable</literal> is created and updates the <literal>lastUpdateTimestamp</literal> property when an <literal>Auditable</literal> is updated."
+msgstr ""
+
+#. Tag: para
+#: events.xml:51
+#, no-c-format
+msgid "You may either implement <literal>Interceptor</literal> directly or (better) extend <literal>EmptyInterceptor</literal>."
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:56
+#, no-c-format
+msgid ""
+      "<![CDATA[package org.hibernate.test;\n"
+      "\n"
+      "import java.io.Serializable;\n"
+      "import java.util.Date;\n"
+      "import java.util.Iterator;\n"
+      "\n"
+      "import org.hibernate.EmptyInterceptor;\n"
+      "import org.hibernate.Transaction;\n"
+      "import org.hibernate.type.Type;\n"
+      "\n"
+      "public class AuditInterceptor extends EmptyInterceptor {\n"
+      "\n"
+      "    private int updates;\n"
+      "    private int creates;\n"
+      "    private int loads;\n"
+      "\n"
+      "    public void onDelete(Object entity,\n"
+      "                         Serializable id,\n"
+      "                         Object[] state,\n"
+      "                         String[] propertyNames,\n"
+      "                         Type[] types) {\n"
+      "        // do nothing\n"
+      "    }\n"
+      "\n"
+      "    public boolean onFlushDirty(Object entity,\n"
+      "                                Serializable id,\n"
+      "                                Object[] currentState,\n"
+      "                                Object[] previousState,\n"
+      "                                String[] propertyNames,\n"
+      "                                Type[] types) {\n"
+      "\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            updates++;\n"
+      "            for ( int i=0; i < propertyNames.length; i++ ) {\n"
+      "                if ( \"lastUpdateTimestamp\".equals( propertyNames[i] ) ) {\n"
+      "                    currentState[i] = new Date();\n"
+      "                    return true;\n"
+      "                }\n"
+      "            }\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public boolean onLoad(Object entity,\n"
+      "                          Serializable id,\n"
+      "                          Object[] state,\n"
+      "                          String[] propertyNames,\n"
+      "                          Type[] types) {\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            loads++;\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public boolean onSave(Object entity,\n"
+      "                          Serializable id,\n"
+      "                          Object[] state,\n"
+      "                          String[] propertyNames,\n"
+      "                          Type[] types) {\n"
+      "\n"
+      "        if ( entity instanceof Auditable ) {\n"
+      "            creates++;\n"
+      "            for ( int i=0; i<propertyNames.length; i++ ) {\n"
+      "                if ( \"createTimestamp\".equals( propertyNames[i] ) ) {\n"
+      "                    state[i] = new Date();\n"
+      "                    return true;\n"
+      "                }\n"
+      "            }\n"
+      "        }\n"
+      "        return false;\n"
+      "    }\n"
+      "\n"
+      "    public void afterTransactionCompletion(Transaction tx) {\n"
+      "        if ( tx.wasCommitted() ) {\n"
+      "            System.out.println(\"Creations: \" + creates + \", Updates: \" + updates, \"Loads: \" + loads);\n"
+      "        }\n"
+      "        updates=0;\n"
+      "        creates=0;\n"
+      "        loads=0;\n"
+      "    }\n"
+      "\n"
+      "}]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:58
+#, no-c-format
+msgid "Interceptors come in two flavors: <literal>Session</literal>-scoped and <literal>SessionFactory</literal>-scoped."
+msgstr ""
+
+#. Tag: para
+#: events.xml:63
+#, no-c-format
+msgid "A <literal>Session</literal>-scoped interceptor is specified when a session is opened using one of the overloaded SessionFactory.openSession() methods accepting an <literal>Interceptor</literal>."
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:69
+#, no-c-format
+msgid "<![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:71
+#, no-c-format
+msgid "A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal> object prior to building the <literal>SessionFactory</literal>. In this case, the supplied interceptor will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless a session is opened explicitly specifying the interceptor to use. <literal>SessionFactory</literal>-scoped interceptors must be thread safe, taking care to not store session-specific state since multiple sessions will use this interceptor (potentially) concurrently."
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:80
+#, no-c-format
+msgid "<![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]>"
+msgstr ""
+
+#. Tag: title
+#: events.xml:85
+#, no-c-format
+msgid "Event system"
+msgstr ""
+
+#. Tag: para
+#: events.xml:87
+#, no-c-format
+msgid "If you have to react to particular events in your persistence layer, you may also use the Hibernate3 <emphasis>event</emphasis> architecture. The event system can be used in addition or as a replacement for interceptors."
+msgstr ""
+
+#. Tag: para
+#: events.xml:93
+#, no-c-format
+msgid "Essentially all of the methods of the <literal>Session</literal> interface correlate to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal> package for the full list of defined event types). When a request is made of one of these methods, the Hibernate <literal>Session</literal> generates an appropriate event and passes it to the configured event listeners for that type. Out-of-the-box, these listeners implement the same processing in which those methods always resulted. However, you are free to implement a customization of one of the listener interfaces (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation of the <literal>LoadEventListener</literal> interface), in which case their implementation would be responsible for processing any <literal>load()</literal> requests made of the <literal>Session</literal>."
+msgstr ""
+
+#. Tag: para
+#: events.xml:108
+#, no-c-format
+msgid "The listeners should be considered effectively singletons; meaning, they are shared between requests, and thus should not save any state as instance variables."
+msgstr ""
+
+#. Tag: para
+#: events.xml:113
+#, no-c-format
+msgid "A custom listener should implement the appropriate interface for the event it wants to process and/or extend one of the convenience base classes (or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose). Custom listeners can either be registered programmatically through the <literal>Configuration</literal> object, or specified in the Hibernate configuration XML (declarative configuration through the properties file is not supported). Here's an example of a custom load event listener:"
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:123
+#, no-c-format
+msgid ""
+      "<![CDATA[public class MyLoadListener implements LoadEventListener {\n"
+      "    // this is the single method defined by the LoadEventListener interface\n"
+      "    public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)\n"
+      "            throws HibernateException {\n"
+      "        if ( !MySecurity.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {\n"
+      "            throw MySecurityException(\"Unauthorized access\");\n"
+      "        }\n"
+      "    }\n"
+      "}]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:125
+#, no-c-format
+msgid "You also need a configuration entry telling Hibernate to use the listener in addition to the default listener:"
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:130
+#, no-c-format
+msgid ""
+      "<![CDATA[<hibernate-configuration>\n"
+      "    <session-factory>\n"
+      "        ...\n"
+      "        <event type=\"load\">\n"
+      "            <listener class=\"com.eg.MyLoadListener\"/>\n"
+      "            <listener class=\"org.hibernate.event.def.DefaultLoadEventListener\"/>\n"
+      "        </event>\n"
+      "    </session-factory>\n"
+      "</hibernate-configuration>]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:132
+#, no-c-format
+msgid "Instead, you may register it programmatically:"
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:136
+#, no-c-format
+msgid ""
+      "<![CDATA[Configuration cfg = new Configuration();\n"
+      "LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };\n"
+      "cfg.EventListeners().setLoadEventListeners(stack);]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:138
+#, no-c-format
+msgid "Listeners registered declaratively cannot share instances. If the same class name is used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will result in a separate instance of that class. If you need the capability to share listener instances between listener types you must use the programmatic registration approach."
+msgstr ""
+
+#. Tag: para
+#: events.xml:146
+#, no-c-format
+msgid "Why implement an interface and define the specific type during configuration? Well, a listener implementation could implement multiple event listener interfaces. Having the type additionally defined during registration makes it easier to turn custom listeners on or off during configuration."
+msgstr ""
+
+#. Tag: title
+#: events.xml:156
+#, no-c-format
+msgid "Hibernate declarative security"
+msgstr ""
+
+#. Tag: para
+#: events.xml:157
+#, no-c-format
+msgid "Usually, declarative security in Hibernate applications is managed in a session facade layer. Now, Hibernate3 allows certain actions to be permissioned via JACC, and authorized via JAAS. This is optional functionality built on top of the event architecture."
+msgstr ""
+
+#. Tag: para
+#: events.xml:163
+#, no-c-format
+msgid "First, you must configure the appropriate event listeners, to enable the use of JAAS authorization."
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:168
+#, no-c-format
+msgid ""
+      "<![CDATA[<listener type=\"pre-delete\" class=\"org.hibernate.secure.JACCPreDeleteEventListener\"/>\n"
+      "<listener type=\"pre-update\" class=\"org.hibernate.secure.JACCPreUpdateEventListener\"/>\n"
+      "<listener type=\"pre-insert\" class=\"org.hibernate.secure.JACCPreInsertEventListener\"/>\n"
+      "<listener type=\"pre-load\" class=\"org.hibernate.secure.JACCPreLoadEventListener\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:170
+#, no-c-format
+msgid "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is just a shorthand for <literal>&lt;event type=\"...\"&gt;&lt;listener class=\"...\"/&gt;&lt;/event&gt;</literal> when there is exactly one listener for a particular event type."
+msgstr ""
+
+#. Tag: para
+#: events.xml:176
+#, no-c-format
+msgid "Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:"
+msgstr ""
+
+#. Tag: programlisting
+#: events.xml:180
+#, no-c-format
+msgid ""
+      "<![CDATA[<grant role=\"admin\" entity-name=\"User\" actions=\"insert,update,read\"/>\n"
+      "<grant role=\"su\" entity-name=\"User\" actions=\"*\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: events.xml:182
+#, no-c-format
+msgid "The role names are the roles understood by your JACC provider."
+msgstr ""
+

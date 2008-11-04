@@ -1,0 +1,429 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd"
+[
+ <!ATTLIST svg
+  xmlns:xlink CDATA #FIXED "http://www.w3.org/1999/xlink">
+]>
+<!-- Created with Sodipodi ("http://www.sodipodi.com/") -->
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="354.331"
+   height="336.614"
+   id="svg1">
+  <defs
+     id="defs3">
+    <linearGradient
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="0"
+       id="linearGradient127"
+       gradientUnits="objectBoundingBox"
+       spreadMethod="pad">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop128" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="1"
+         id="stop129" />
+    </linearGradient>
+    <linearGradient
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="0"
+       id="linearGradient130"
+       xlink:href="#linearGradient127"
+       gradientUnits="objectBoundingBox"
+       spreadMethod="pad" />
+    <radialGradient
+       cx="0.5"
+       cy="0.5"
+       fx="0.5"
+       fy="0.5"
+       r="0.5"
+       id="radialGradient131"
+       xlink:href="#linearGradient127"
+       gradientUnits="objectBoundingBox"
+       spreadMethod="pad" />
+  </defs>
+  <g
+     transform="matrix(0.823795,0,0,0.823795,0.120302,5.25349)"
+     style="font-size:12;"
+     id="g659">
+    <rect
+       width="212.257"
+       height="57.2441"
+       x="17.9576"
+       y="100.132"
+       style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect137" />
+    <rect
+       width="285.502"
+       height="118.523"
+       x="13.4238"
+       y="95.9309"
+       transform="matrix(0.743454,0,0,0.482981,6.46949,52.2178)"
+       style="fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect132" />
+  </g>
+  <rect
+     width="325.86"
+     height="63.6537"
+     x="17.4083"
+     y="15.194"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect136" />
+  <rect
+     width="325.86"
+     height="63.6537"
+     x="13.6713"
+     y="12.4966"
+     style="font-size:12;fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect126" />
+  <g
+     transform="matrix(1.14345,0,0,0.729078,-1.67818,105.325)"
+     style="font-size:12;"
+     id="g164">
+    <rect
+       width="285.502"
+       height="77.2688"
+       x="16.6979"
+       y="222.966"
+       style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect138" />
+    <rect
+       width="285.502"
+       height="77.2688"
+       x="14.7335"
+       y="221.002"
+       transform="translate(-1.30962,-1.30992)"
+       style="fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect133" />
+  </g>
+  <text
+     x="170.824753"
+     y="58.402939"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:18;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text183">
+    <tspan
+       x="170.824997"
+       y="58.402901"
+       id="tspan360">
+Application</tspan>
+  </text>
+  <text
+     x="178.076340"
+     y="364.281433"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:18;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text197">
+    <tspan
+       x="178.076004"
+       y="364.281006"
+       id="tspan421">
+Database</tspan>
+  </text>
+  <text
+     x="68.605331"
+     y="138.524582"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:16;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text216">
+    <tspan
+       x="68.605301"
+       y="138.524994"
+       id="tspan384">
+SessionFactory</tspan>
+  </text>
+  <rect
+     width="67.0014"
+     height="101.35"
+     x="196.927"
+     y="89.2389"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect387" />
+  <rect
+     width="67.0014"
+     height="101.35"
+     x="194.633"
+     y="86.4389"
+     style="font-size:12;fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect388" />
+  <text
+     x="249.108841"
+     y="173.885559"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:16;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text389">
+    <tspan
+       x="249.108994"
+       y="173.886002"
+       id="tspan392">
+Session</tspan>
+  </text>
+  <rect
+     width="73.0355"
+     height="101.35"
+     x="270.995"
+     y="90.0018"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect395" />
+  <rect
+     width="73.0355"
+     height="101.35"
+     x="267.869"
+     y="87.2018"
+     style="font-size:12;fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect396" />
+  <text
+     x="328.593658"
+     y="174.715622"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:16;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text397">
+    <tspan
+       x="328.593994"
+       y="174.716003"
+       id="tspan563">
+Transaction</tspan>
+  </text>
+  <g
+     transform="matrix(0.29544,0,0,0.397877,9.70533,103.96)"
+     style="font-size:12;"
+     id="g565">
+    <rect
+       width="285.502"
+       height="118.523"
+       x="16.6979"
+       y="99.2053"
+       style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect566" />
+    <rect
+       width="285.502"
+       height="118.523"
+       x="13.4238"
+       y="95.9309"
+       style="fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect567" />
+  </g>
+  <text
+     x="25.592752"
+     y="204.497803"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:10;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text568">
+    <tspan
+       x="25.592800"
+       y="204.498001"
+       id="tspan662">
+TransactionFactory</tspan>
+  </text>
+  <g
+     transform="matrix(0.298082,0,0,0.397877,99.6898,103.96)"
+     style="font-size:12;"
+     id="g573">
+    <rect
+       width="285.502"
+       height="118.523"
+       x="16.6979"
+       y="99.2053"
+       style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect574" />
+    <rect
+       width="285.502"
+       height="118.523"
+       x="13.4238"
+       y="95.9309"
+       style="fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect575" />
+  </g>
+  <text
+     x="134.030670"
+     y="205.532791"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:10;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+     id="text576">
+    <tspan
+       x="134.031006"
+       y="205.533005"
+       id="tspan664">
+ConnectionProvider</tspan>
+  </text>
+  <g
+     transform="matrix(1.14345,0,0,0.729078,-1.67818,38.9539)"
+     style="font-size:12;"
+     id="g587">
+    <rect
+       width="285.502"
+       height="77.2688"
+       x="16.6979"
+       y="222.966"
+       style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect588" />
+    <rect
+       width="285.502"
+       height="77.2688"
+       x="14.7335"
+       y="221.002"
+       transform="translate(-1.30962,-1.30992)"
+       style="fill:#d2d2d2;fill-rule:evenodd;stroke-width:1pt;"
+       id="rect589" />
+  </g>
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="25.6196"
+     y="206.028"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect594" />
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="24.4229"
+     y="204.135"
+     style="font-size:12;fill:#b3b3b3;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect595" />
+  <text
+     x="85.575645"
+     y="282.300354"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:18;font-weight:normal;stroke-width:1pt;font-family:Helvetica;text-anchor:middle;"
+     id="text596">
+    <tspan
+       x="85.575600"
+       y="282.299988"
+       id="tspan607">
+JNDI</tspan>
+  </text>
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="236.937"
+     y="206.791"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect610" />
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="235.741"
+     y="204.898"
+     style="font-size:12;fill:#b3b3b3;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect611" />
+  <text
+     x="342.093201"
+     y="283.226410"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:18;font-weight:normal;stroke-width:1pt;font-family:Helvetica;text-anchor:middle;"
+     id="text612">
+    <tspan
+       x="342.092987"
+       y="283.226013"
+       id="tspan621">
+JTA</tspan>
+  </text>
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="130.134"
+     y="206.791"
+     style="font-size:12;fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect616" />
+  <rect
+     width="90.951"
+     height="44.4829"
+     x="128.937"
+     y="204.898"
+     style="font-size:12;fill:#b3b3b3;fill-rule:evenodd;stroke-width:1pt;"
+     id="rect617" />
+  <text
+     x="212.445343"
+     y="283.226410"
+     transform="scale(0.823795,0.823795)"
+     style="font-size:18;font-weight:normal;stroke-width:1pt;font-family:Helvetica;text-anchor:middle;"
+     id="text618">
+    <tspan
+       x="212.445007"
+       y="283.226013"
+       id="tspan623">
+JDBC</tspan>
+  </text>
+  <g
+     transform="matrix(0.823795,0,0,0.823795,0.120302,6.19341)"
+     style="font-size:12;"
+     id="g637">
+    <g
+       transform="matrix(0.499515,0,0,0.415467,-0.237339,5.61339)"
+       id="g167">
+      <rect
+         width="199.065"
+         height="61.5532"
+         x="61.8805"
+         y="68.4288"
+         style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+         id="rect134" />
+      <rect
+         width="199.065"
+         height="61.5532"
+         x="59.2613"
+         y="65.8095"
+         style="fill:#e0e0e0;fill-rule:evenodd;stroke-width:1pt;"
+         id="rect135" />
+    </g>
+    <text
+       x="33.749969"
+       y="50.589706"
+       style="font-size:11;font-weight:normal;stroke-width:1pt;font-family:Helvetica;"
+       id="text188">
+      <tspan
+         x="33.750000"
+         y="50.589699"
+         id="tspan635">
+Transient Objects</tspan>
+    </text>
+  </g>
+  <g
+     transform="matrix(0.823795,0,0,0.823795,0.120302,5.25349)"
+     style="font-size:12;"
+     id="g644">
+    <g
+       transform="matrix(0.297486,0,0,0.516482,230.251,36.9178)"
+       id="g364">
+      <rect
+         width="199.065"
+         height="61.5532"
+         x="61.8805"
+         y="68.4288"
+         style="fill:#757575;fill-rule:evenodd;stroke-width:1pt;"
+         id="rect365" />
+      <rect
+         width="199.065"
+         height="61.5532"
+         x="59.2613"
+         y="65.8095"
+         style="fill:#e0e0e0;fill-rule:evenodd;stroke-width:1pt;"
+         id="rect366" />
+    </g>
+    <text
+       x="277.123230"
+       y="85.155571"
+       style="font-size:11;font-weight:normal;stroke-width:1pt;font-family:Helvetica;text-anchor:middle;"
+       id="text367">
+      <tspan
+         x="277.122986"
+         y="85.155602"
+         id="tspan631">
+Persistent</tspan>
+      <tspan
+         x="277.122986"
+         y="96.155602"
+         id="tspan633">
+Objects</tspan>
+    </text>
+  </g>
+</svg>

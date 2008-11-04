@@ -1,0 +1,773 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: query_criteria.xml:5
+#, no-c-format
+msgid "Criteria Queries"
+msgstr "Criteriaクエリ"
+
+#. Tag: para
+#: query_criteria.xml:7
+#, no-c-format
+msgid "Hibernate features an intuitive, extensible criteria query API."
+msgstr "Hibernateには、直感的で拡張可能なcriteriaクエリAPIが用意されています。"
+
+#. Tag: title
+#: query_criteria.xml:12
+#, no-c-format
+msgid "Creating a <literal>Criteria</literal> instance"
+msgstr "<literal>Criteria</literal> インスタンスの作成"
+
+#. Tag: para
+#: query_criteria.xml:14
+#, no-c-format
+msgid ""
+"The interface <literal>org.hibernate.Criteria</literal> represents a query "
+"against a particular persistent class. The <literal>Session</literal> is a "
+"factory for <literal>Criteria</literal> instances."
+msgstr ""
+"<literal>org.hibernate.Criteria</literal> インターフェイスは特定の永続性クラ"
+"スに対するクエリを表現します。 <literal>Session</literal> は "
+"<literal>Criteria</literal> インスタンスのファクトリです。"
+
+#. Tag: programlisting
+#: query_criteria.xml:20
+#, no-c-format
+msgid ""
+"<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
+"crit.setMaxResults(50);\n"
+"List cats = crit.list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:25
+#, no-c-format
+msgid "Narrowing the result set"
+msgstr "リザルトセットの絞込み"
+
+#. Tag: para
+#: query_criteria.xml:27
+#, no-c-format
+msgid ""
+"An individual query criterion is an instance of the interface <literal>org."
+"hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate."
+"criterion.Restrictions</literal> defines factory methods for obtaining "
+"certain built-in <literal>Criterion</literal> types."
+msgstr ""
+"<literal>org.hibernate.criterion.Criterion</literal> インターフェイスのインス"
+"タンスは、 個別のクエリクライテリオン（問い合わせの判定基準）を表します。 "
+"<literal>org.hibernate.criterion.Restrictions</literal> クラスは、ある組み込"
+"みの <literal>Criterion</literal> 型を取得するためのファクトリメソッドを持っ"
+"ています。"
+
+#. Tag: programlisting
+#: query_criteria.xml:35
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:37
+#, no-c-format
+msgid "Restrictions may be grouped logically."
+msgstr "Restriction（限定）は、論理的にグループ化できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:41
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .add( Restrictions.or(\n"
+"        Restrictions.eq( \"age\", new Integer(0) ),\n"
+"        Restrictions.isNull(\"age\")\n"
+"    ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:43
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk"
+"\" } ) )\n"
+"    .add( Restrictions.disjunction()\n"
+"        .add( Restrictions.isNull(\"age\") )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
+"        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
+"    ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:45
+#, no-c-format
+msgid ""
+"There are quite a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses), but one that is especially useful lets you specify SQL "
+"directly."
+msgstr ""
+"元々あるCriterion型（<literal>Restrictions</literal> のサブクラス） はかなり"
+"の範囲に及びますが、特に有用なのはSQLを直接指定できるものです。"
+
+#. Tag: programlisting
+#: query_criteria.xml:50
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", "
+"\"Fritz%\", Hibernate.STRING) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:52
+#, no-c-format
+msgid ""
+"The <literal>{alias}</literal> placeholder with be replaced by the row alias "
+"of the queried entity."
+msgstr ""
+"<literal>{alias}</literal> というプレースホルダは、 問い合わせを受けたエン"
+"ティティの行の別名によって置き換えられます。"
+
+#. Tag: para
+#: query_criteria.xml:57
+#, no-c-format
+msgid ""
+"An alternative approach to obtaining a criterion is to get it from a "
+"<literal>Property</literal> instance. You can create a <literal>Property</"
+"literal> by calling <literal>Property.forName()</literal>."
+msgstr ""
+"criterionを得る別の手段は、 <literal>Property</literal> インスタンスから取得"
+"することです。 <literal>Property.forName()</literal> を呼び出して、 "
+"<literal>Property</literal> インスタンスを作成できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:63
+#, no-c-format
+msgid ""
+"<![CDATA[\n"
+"Property age = Property.forName(\"age\");\n"
+"List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.disjunction()\n"
+"        .add( age.isNull() )\n"
+"        .add( age.eq( new Integer(0) ) )\n"
+"        .add( age.eq( new Integer(1) ) )\n"
+"        .add( age.eq( new Integer(2) ) )\n"
+"    ) )\n"
+"    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi\", "
+"\"Pk\" } ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:68
+#, no-c-format
+msgid "Ordering the results"
+msgstr "結果の整列"
+
+#. Tag: para
+#: query_criteria.xml:70
+#, no-c-format
+msgid ""
+"You may order the results using <literal>org.hibernate.criterion.Order</"
+"literal>."
+msgstr ""
+"<literal>org.hibernate.criterion.Order</literal> を使って結果を並び替えること"
+"ができます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:74
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"F%\")\n"
+"    .addOrder( Order.asc(\"name\") )\n"
+"    .addOrder( Order.desc(\"age\") )\n"
+"    .setMaxResults(50)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:76
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Property.forName(\"name\").like(\"F%\") )\n"
+"    .addOrder( Property.forName(\"name\").asc() )\n"
+"    .addOrder( Property.forName(\"age\").desc() )\n"
+"    .setMaxResults(50)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:81
+#, no-c-format
+msgid "Associations"
+msgstr "関連"
+
+#. Tag: para
+#: query_criteria.xml:83
+#, no-c-format
+msgid ""
+"You may easily specify constraints upon related entities by navigating "
+"associations using <literal>createCriteria()</literal>."
+msgstr ""
+"<literal>createCriteria()</literal> を使い、関連をナビゲートすることで、 容易"
+"に関係するエンティティに制約を指定できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:88
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"F%\") )\n"
+"    .createCriteria(\"kittens\")\n"
+"        .add( Restrictions.like(\"name\", \"F%\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:90
+#, no-c-format
+msgid ""
+"note that the second <literal>createCriteria()</literal> returns a new "
+"instance of <literal>Criteria</literal>, which refers to the elements of the "
+"<literal>kittens</literal> collection."
+msgstr ""
+"2番目の <literal>createCriteria()</literal> は、<literal>kittens</literal> コ"
+"レクションの要素を参照する新しい <literal>Criteria</literal> インスタンスを返"
+"すことに注意してください。"
+
+#. Tag: para
+#: query_criteria.xml:96
+#, no-c-format
+msgid "The following, alternate form is useful in certain circumstances."
+msgstr "以下のような方法も、状況により有用です。"
+
+#. Tag: programlisting
+#: query_criteria.xml:100
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .createAlias(\"kittens\", \"kt\")\n"
+"    .createAlias(\"mate\", \"mt\")\n"
+"    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:102
+#, no-c-format
+msgid ""
+"(<literal>createAlias()</literal> does not create a new instance of "
+"<literal>Criteria</literal>.)"
+msgstr ""
+"（<literal>createAlias()</literal> は新しい <literal>Criteria</literal> イン"
+"スタンスを作成しません。）"
+
+#. Tag: para
+#: query_criteria.xml:107
+#, no-c-format
+msgid ""
+"Note that the kittens collections held by the <literal>Cat</literal> "
+"instances returned by the previous two queries are <emphasis>not</emphasis> "
+"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
+"match the criteria, you must use a <literal>ResultTransformer</literal>."
+msgstr ""
+"前の2つのクエリによって返される <literal>Cat</literal> インスタンスによって保"
+"持されるkittensコレクションは、 criteriaによって事前にフィルタリング "
+"<emphasis>されない</emphasis> ことに注意してください。 もしcriteriaに適合する"
+"kittenを取得したいなら、 <literal>ResultTransformer</literal> を使わなければ"
+"なりません。"
+
+#. Tag: programlisting
+#: query_criteria.xml:114
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .createCriteria(\"kittens\", \"kt\")\n"
+"        .add( Restrictions.eq(\"name\", \"F%\") )\n"
+"    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
+"    .list();\n"
+"Iterator iter = cats.iterator();\n"
+"while ( iter.hasNext() ) {\n"
+"    Map map = (Map) iter.next();\n"
+"    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
+"    Cat kitten = (Cat) map.get(\"kt\");\n"
+"}]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:119
+#, no-c-format
+msgid "Dynamic association fetching"
+msgstr "関連の動的フェッチ"
+
+#. Tag: para
+#: query_criteria.xml:121
+#, no-c-format
+msgid ""
+"You may specify association fetching semantics at runtime using "
+"<literal>setFetchMode()</literal>."
+msgstr ""
+"<literal>setFetchMode()</literal> を使い、 実行時に関連の復元方法を指定しても"
+"よいです。"
+
+#. Tag: programlisting
+#: query_criteria.xml:126
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+"    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+"    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
+"    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:128
+#, no-c-format
+msgid ""
+"This query will fetch both <literal>mate</literal> and <literal>kittens</"
+"literal> by outer join. See <xref linkend=\"performance-fetching\"/> for "
+"more information."
+msgstr ""
+"このクエリは外部結合により <literal>mate</literal> と <literal>kittens</"
+"literal> の両方をフェッチします。 より多くの情報は <xref linkend="
+"\"performance-fetching\"/> を参照してください。"
+
+#. Tag: title
+#: query_criteria.xml:136
+#, no-c-format
+msgid "Example queries"
+msgstr "クエリの例"
+
+#. Tag: para
+#: query_criteria.xml:138
+#, no-c-format
+msgid ""
+"The class <literal>org.hibernate.criterion.Example</literal> allows you to "
+"construct a query criterion from a given instance."
+msgstr ""
+"<literal>org.hibernate.criterion.Example</literal> クラスは、 与えられたイン"
+"スタンスからクエリクライテリオンを構築できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:143
+#, no-c-format
+msgid ""
+"<![CDATA[Cat cat = new Cat();\n"
+"cat.setSex('F');\n"
+"cat.setColor(Color.BLACK);\n"
+"List results = session.createCriteria(Cat.class)\n"
+"    .add( Example.create(cat) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:145
+#, no-c-format
+msgid ""
+"Version properties, identifiers and associations are ignored. By default, "
+"null valued properties are excluded."
+msgstr ""
+"バージョンプロパティ、識別子、関連は無視されます。 デフォルトではnull値のプロ"
+"パティは除外されます。"
+
+#. Tag: para
+#: query_criteria.xml:150
+#, no-c-format
+msgid "You can adjust how the <literal>Example</literal> is applied."
+msgstr ""
+"どのように <literal>Example</literal> を適用するか 調整することができます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:154
+#, no-c-format
+msgid ""
+"<![CDATA[Example example = Example.create(cat)\n"
+"    .excludeZeroes()           //exclude zero valued properties\n"
+"    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
+"    .ignoreCase()              //perform case insensitive string "
+"comparisons\n"
+"    .enableLike();             //use like for string comparisons\n"
+"List results = session.createCriteria(Cat.class)\n"
+"    .add(example)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:156
+#, no-c-format
+msgid "You can even use examples to place criteria upon associated objects."
+msgstr ""
+"関連オブジェクトにcriteriaを指定するために、Exampleを使うことも可能です。"
+
+#. Tag: programlisting
+#: query_criteria.xml:160
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .add( Example.create(cat) )\n"
+"    .createCriteria(\"mate\")\n"
+"        .add( Example.create( cat.getMate() ) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:165
+#, no-c-format
+msgid "Projections, aggregation and grouping"
+msgstr "射影、集約、グループ化"
+
+#. Tag: para
+#: query_criteria.xml:166
+#, no-c-format
+msgid ""
+"The class <literal>org.hibernate.criterion.Projections</literal> is a "
+"factory for <literal>Projection</literal> instances. We apply a projection "
+"to a query by calling <literal>setProjection()</literal>."
+msgstr ""
+"<literal>org.hibernate.criterion.Projections</literal> クラスは "
+"<literal>Projection</literal> インスタンスのファクトリです。 "
+"<literal>setProjection()</literal> を呼び出すことで、 クエリに射影を適用しま"
+"す。"
+
+#. Tag: programlisting
+#: query_criteria.xml:172
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.rowCount() )\n"
+"    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:174
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount() )\n"
+"        .add( Projections.avg(\"weight\") )\n"
+"        .add( Projections.max(\"weight\") )\n"
+"        .add( Projections.groupProperty(\"color\") )\n"
+"    )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:176
+#, no-c-format
+msgid ""
+"There is no explicit \"group by\" necessary in a criteria query. Certain "
+"projection types are defined to be <emphasis>grouping projections</"
+"emphasis>, which also appear in the SQL <literal>group by</literal> clause."
+msgstr ""
+"必要であっても、criteriaクエリに「group by」を明示する必要はありません。 ある"
+"種のProjection型は <emphasis>グループ化射影</emphasis> として定義され、 SQL"
+"の <literal>group by</literal> 節にも現れます。"
+
+#. Tag: para
+#: query_criteria.xml:182
+#, no-c-format
+msgid ""
+"An alias may optionally be assigned to a projection, so that the projected "
+"value may be referred to in restrictions or orderings. Here are two "
+"different ways to do this:"
+msgstr ""
+"任意で射影に別名を付けられるため、射影される値はrestrictionやordering内から参"
+"照できます。 別名をつける２つの異なる方法を示します。"
+
+#. Tag: programlisting
+#: query_criteria.xml:188
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), "
+"\"colr\" ) )\n"
+"    .addOrder( Order.asc(\"colr\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:190
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
+"    .addOrder( Order.asc(\"colr\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:192
+#, no-c-format
+msgid ""
+"The <literal>alias()</literal> and <literal>as()</literal> methods simply "
+"wrap a projection instance in another, aliased, instance of "
+"<literal>Projection</literal>. As a shortcut, you can assign an alias when "
+"you add the projection to a projection list:"
+msgstr ""
+"<literal>alias()</literal> と <literal>as()</literal> メソッドは、 Projection"
+"インスタンスを別の名前の <literal>Projection</literal> インスタンスで ラップ"
+"するだけです。 ショートカットとして、射影を射影リストに追加する際に、別名をつ"
+"けられます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:199
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount(), \"catCountByColor\" )\n"
+"        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
+"        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
+"        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
+"    )\n"
+"    .addOrder( Order.desc(\"catCountByColor\") )\n"
+"    .addOrder( Order.desc(\"avgWeight\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:201
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
+"    .createAlias(\"kittens\", \"kit\")\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
+"        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
+"    )\n"
+"    .addOrder( Order.asc(\"catName\") )\n"
+"    .addOrder( Order.asc(\"kitName\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:203
+#, no-c-format
+msgid ""
+"You can also use <literal>Property.forName()</literal> to express "
+"projections:"
+msgstr "射影の式に <literal>Property.forName()</literal> も使用できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:207
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Property.forName(\"name\") )\n"
+"    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:209
+#, no-c-format
+msgid ""
+"<![CDATA[List results = session.createCriteria(Cat.class)\n"
+"    .setProjection( Projections.projectionList()\n"
+"        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
+"        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
+"        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
+"        .add( Property.forName(\"color\").group().as(\"color\" )\n"
+"    )\n"
+"    .addOrder( Order.desc(\"catCountByColor\") )\n"
+"    .addOrder( Order.desc(\"avgWeight\") )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:214
+#, no-c-format
+msgid "Detached queries and subqueries"
+msgstr "クエリおよびサブクエリの分離"
+
+#. Tag: para
+#: query_criteria.xml:215
+#, no-c-format
+msgid ""
+"The <literal>DetachedCriteria</literal> class lets you create a query "
+"outside the scope of a session, and then later execute it using some "
+"arbitrary <literal>Session</literal>."
+msgstr ""
+"<literal>DetachedCriteria</literal> クラスにより、 セッションスコープ外にクエ"
+"リを作成できます。 後で、任意の <literal>Session</literal> を使って、実行でき"
+"ます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:220
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
+"    .add( Property.forName(\"sex\").eq('F') );\n"
+"    \n"
+"Session session = ....;\n"
+"Transaction txn = session.beginTransaction();\n"
+"List results = query.getExecutableCriteria(session).setMaxResults(100).list"
+"();\n"
+"txn.commit();\n"
+"session.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:222
+#, no-c-format
+msgid ""
+"A <literal>DetachedCriteria</literal> may also be used to express a "
+"subquery. Criterion instances involving subqueries may be obtained via "
+"<literal>Subqueries</literal> or <literal>Property</literal>."
+msgstr ""
+"<literal>DetachedCriteria</literal> は、サブクエリを表現するためにも使えま"
+"す。 サブクエリを伴うCriterionインスタンスは、 <literal>Subqueries</literal> "
+"もしくは <literal>Property</literal> から得られます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:228
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
+"    .setProjection( Property.forName(\"weight\").avg() );\n"
+"session.createCriteria(Cat.class)\n"
+"    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: query_criteria.xml:230
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
+"    .setProjection( Property.forName(\"weight\") );\n"
+"session.createCriteria(Cat.class)\n"
+"    .add( Subqueries.geAll(\"weight\", weights) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:232
+#, no-c-format
+msgid "Even correlated subqueries are possible:"
+msgstr "相互関係があるサブクエリでさえも可能です。"
+
+#. Tag: programlisting
+#: query_criteria.xml:236
+#, no-c-format
+msgid ""
+"<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
+"class, \"cat2\")\n"
+"    .setProjection( Property.forName(\"weight\").avg() )\n"
+"    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
+"session.createCriteria(Cat.class, \"cat\")\n"
+"    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: query_criteria.xml:245
+#, no-c-format
+msgid "Queries by natural identifier"
+msgstr "自然識別子によるクエリ"
+
+#. Tag: para
+#: query_criteria.xml:247
+#, no-c-format
+msgid ""
+"For most queries, including criteria queries, the query cache is not very "
+"efficient, because query cache invalidation occurs too frequently. However, "
+"there is one special kind of query where we can optimize the cache "
+"invalidation algorithm: lookups by a constant natural key. In some "
+"applications, this kind of query occurs frequently. The criteria API "
+"provides special provision for this use case."
+msgstr ""
+"criteriaクエリを含むたいていのクエリにとって、 クエリキャッシュはあまり効率が"
+"よくないです。 なぜなら、クエリキャッシュが頻繁に無効になるためです。 しかし"
+"ながら、キャッシュを無効にするアルゴリズムを最適化できる 特別なクエリの種類が"
+"１つあります。 更新されない自然キーによる検索です。 いくつかのアプリケーショ"
+"ンでは、この種類のクエリが頻繁に現れます。 このような使われ方のために、"
+"criteria APIは特別な対策を提供します。"
+
+#. Tag: para
+#: query_criteria.xml:255
+#, no-c-format
+msgid ""
+"First, you should map the natural key of your entity using <literal>&lt;"
+"natural-id&gt;</literal>, and enable use of the second-level cache."
+msgstr ""
+"最初に、<literal>&lt;natural-id&gt;</literal> を使って、 エンティティの自然"
+"キーをマップしてください。 そして、二次キャッシュを有効にします。"
+
+#. Tag: programlisting
+#: query_criteria.xml:260
+#, no-c-format
+msgid ""
+"<![CDATA[<class name=\"User\">\n"
+"    <cache usage=\"read-write\"/>\n"
+"    <id name=\"id\">\n"
+"        <generator class=\"increment\"/>\n"
+"    </id>\n"
+"    <natural-id>\n"
+"        <property name=\"name\"/>\n"
+"        <property name=\"org\"/>\n"
+"    </natural-id>\n"
+"    <property name=\"password\"/>\n"
+"</class>]]>"
+msgstr ""
+
+#. Tag: para
+#: query_criteria.xml:262
+#, no-c-format
+msgid ""
+"Note that this functionality is not intended for use with entities with "
+"<emphasis>mutable</emphasis> natural keys."
+msgstr ""
+"注意： <emphasis>変更される</emphasis> 自然キーを持つエンティティに この機能"
+"を使うのは、意図されていない使い方です。"
+
+#. Tag: para
+#: query_criteria.xml:267
+#, no-c-format
+msgid "Next, enable the Hibernate query cache."
+msgstr "次に、Hibernateクエリキャッシュを有効にします。"
+
+#. Tag: para
+#: query_criteria.xml:271
+#, no-c-format
+msgid ""
+"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
+"the more efficient cache algorithm."
+msgstr ""
+"これで、<literal>Restrictions.naturalId()</literal> により、 より効率的な"
+"キャッシュアルゴリズムを使用できます。"
+
+#. Tag: programlisting
+#: query_criteria.xml:276
+#, no-c-format
+msgid ""
+"<![CDATA[session.createCriteria(User.class)\n"
+"    .add( Restrictions.naturalId()\n"
+"        .set(\"name\", \"gavin\")\n"
+"        .set(\"org\", \"hb\") \n"
+"    ).setCacheable(true)\n"
+"    .uniqueResult();]]>"
+msgstr ""

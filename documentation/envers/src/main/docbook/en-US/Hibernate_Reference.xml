@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+        <!ENTITY versionNumber "3.3.0.GA">
+        <!ENTITY copyrightYear "2004">
+        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
+]>
+
+<book>
+
+    <bookinfo>
+        <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
+        <subtitle>Hibernate Reference Documentation</subtitle>
+        <releaseinfo>&versionNumber;</releaseinfo>
+        <productnumber>&versionNumber;</productnumber>
+        <issuenum>1</issuenum>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+        <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<!-- include translators... -->
+    </bookinfo>
+
+    <toc/>
+
+    <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/architecture.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/basic_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/collection_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/association_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/component_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/inheritance_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/session_api.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/events.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/batch.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/query_hql.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/query_criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/query_sql.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/filters.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/xml.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/performance.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/toolset_guide.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/example_parentchild.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/example_weblog.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/example_mappings.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+    <xi:include href="content/best_practices.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+</book>
+

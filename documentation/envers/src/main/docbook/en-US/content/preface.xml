@@ -29,56 +29,104 @@
     <title>Preface</title>
 
     <para>
-        The Envers project aims to enable easy auditing of persistent classes. All that you
-        have to do is annotate your persistent class or some of its properties, that you
-        want to audit, with <literal>@Audited</literal>. For each audited entity, a table
-        will be created, which will hold the history of changes made to the entity. You
-        can then retrieve and query historical data without much effort.
+        Working with object-oriented software and a relational database can be cumbersome
+        and time consuming in today's enterprise environments. Hibernate is an object/relational
+        mapping tool for Java environments. The term object/relational mapping (ORM) refers to
+        the technique of mapping a data representation from an object model to a relational
+        data model with a SQL-based schema.
     </para>
 
     <para>
-        Similarly to Subversion, the library has a concept of revisions. Basically, one
-        transaction is one revision (unless the transaction didn't modify any audited entities).
-        As the revisions are global, having a revision number, you can query for various
-        entities at that revision, retrieving a (partial) view of the database at that
-        revision. You can find a revision number having a date, and the other way round,
-        you can get the date at which a revision was commited.
+        Hibernate not only takes care of the mapping from Java classes to
+        database tables (and from Java data types to SQL data types), but also provides data
+        query and retrieval facilities and can significantly reduce development time otherwise
+        spent with manual data handling in SQL and JDBC.
     </para>
 
     <para>
-        The library works with Hibernate and Hibernate Annotations or Entity Manager.
-        For the auditing to work properly, the entities must have immutable unique
-        identifiers (primary keys). You can use Envers wherever Hibernate works:
-        standalone, inside JBoss AS, with JBoss Seam or Spring.
+        Hibernates goal is to relieve the developer from 95 percent of common data persistence
+        related programming tasks. Hibernate may not be the best solution for data-centric
+        applications that only use stored-procedures to implement the business logic in the
+        database, it is most useful with object-oriented domain models and business logic in
+        the Java-based middle-tier. However, Hibernate can certainly help you to remove or
+        encapsulate vendor-specific SQL code and will help with the common task of result set
+        translation from a tabular representation to a graph of objects.
     </para>
 
     <para>
-        Some of the features:
+        If you are new to Hibernate and Object/Relational Mapping or even Java,
+        please follow these steps:
     </para>
 
     <orderedlist>
         <listitem>
             <para>
-                versioning of all mappings defined by the JPA specification, except joined and
-                table-per-class inheritance
+                Read <xref linkend="tutorial"/> for a tutorial with step-by-step
+                instructions. The source code for the tutorial is included in the
+                distribution in the <literal>doc/reference/tutorial/</literal>
+                directory.
             </para>
         </listitem>
         <listitem>
             <para>
-                versioning of some Hibernate mappings, which extend JPA, like custom types and
-                collections/maps of "simple" types (Strings, Integers, etc.)
-                (see <xref linkend="exceptions"/> for one exception)
+                Read <xref linkend="architecture"/> to understand the environments where
+                Hibernate can be used.
             </para>
         </listitem>
         <listitem>
             <para>
-                logging data for each revision using a "revision entity"
+                Have a look at the <literal>eg/</literal> directory in the Hibernate
+                distribution, it contains a simple standalone application. Copy your
+                JDBC driver to the <literal>lib/</literal> directory and edit
+                <literal>etc/hibernate.properties</literal>, specifying correct values for
+                your database. From a command prompt in the distribution directory,
+                type <literal>ant eg</literal> (using Ant), or under Windows, type
+                <literal>build eg</literal>.
             </para>
         </listitem>
         <listitem>
             <para>
-                querying historical data
+                Use this reference documentation as your primary source of information.
+                Consider reading <emphasis>Java Persistence with Hibernate</emphasis>
+                (http://www.manning.com/bauer2) if you need more help with application
+                design or if you prefer a step-by-step tutorial. Also visit
+                http://caveatemptor.hibernate.org and download the example application
+                for Java Persistence with Hibernate.
             </para>
         </listitem>
-    </orderedlist>
+        <listitem>
+            <para>
+                FAQs are answered on the Hibernate website.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Third party demos, examples, and tutorials are linked on the Hibernate
+                website.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                The Community Area on the Hibernate website is a good resource for
+                design patterns and various integration solutions (Tomcat, JBoss AS,
+                Struts, EJB, etc.).
+            </para>
+        </listitem>
+     </orderedlist>
+
+     <para>
+         If you have questions, use the user forum linked on the Hibernate website. We also
+         provide a JIRA issue trackings system for bug reports and feature requests. If you
+         are interested in the development of Hibernate, join the developer mailing list. If
+         you are interested in translating this documentation into your language, contact us
+         on the developer mailing list.
+     </para>
+
+     <para>
+         Commercial development support, production support, and training for Hibernate is
+         available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/).
+         Hibernate is a Professional Open Source project and a critical component of the
+         JBoss Enterprise Middleware System (JEMS) suite of products.
+     </para>
+
 </preface>

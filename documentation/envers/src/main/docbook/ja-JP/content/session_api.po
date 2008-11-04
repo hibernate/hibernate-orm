@@ -1,0 +1,2218 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: session_api.xml:5
+#, no-c-format
+msgid "Working with objects"
+msgstr "オブジェクトを扱う"
+
+#. Tag: para
+#: session_api.xml:7
+#, no-c-format
+msgid ""
+"Hibernate is a full object/relational mapping solution that not only shields "
+"the developer from the details of the underlying database management system, "
+"but also offers <emphasis>state management</emphasis> of objects. This is, "
+"contrary to the management of SQL <literal>statements</literal> in common "
+"JDBC/SQL persistence layers, a very natural object-oriented view of "
+"persistence in Java applications."
+msgstr ""
+"Hibernate は完全なオブジェクト/リレーショナルマッピングソリューションであ"
+"り、 データベース管理システムの詳細を開発者から隠蔽するだけでなく、 オブジェ"
+"クトの <emphasis>状態管理</emphasis> も行います。 これは、JDBC/SQL永続層と同"
+"じようなSQL <literal>文</literal> の管理とは異なり、 Javaアプリケーションにお"
+"ける永続化に対する、とても自然なオブジェクト指向の考え方を提供します。"
+
+#. Tag: para
+#: session_api.xml:16
+#, no-c-format
+msgid ""
+"In other words, Hibernate application developers should always think about "
+"the <emphasis>state</emphasis> of their objects, and not necessarily about "
+"the execution of SQL statements. This part is taken care of by Hibernate and "
+"is only relevant for the application developer when tuning the performance "
+"of the system."
+msgstr ""
+"言いかえれば、Hibernateを用いるアプリケーション開発者は、オブジェクトの "
+"<emphasis>状態</emphasis> については 常に意識すべきであり、SQL文の実行につい"
+"ては必ずしもそうではありません。 この部分は、通常、Hibernateが処理し、システ"
+"ムのパフォーマンスをチューニングするときにだけ、 問題になってきます。"
+
+#. Tag: title
+#: session_api.xml:24
+#, no-c-format
+msgid "Hibernate object states"
+msgstr "Hibernateにおけるオブジェクトの状態"
+
+#. Tag: para
+#: session_api.xml:26
+#, no-c-format
+msgid "Hibernate defines and supports the following object states:"
+msgstr "Hibernateは次のようなオブジェクトの状態を定義し、サポートしています。"
+
+#. Tag: para
+#: session_api.xml:32
+#, no-c-format
+msgid ""
+"<emphasis>Transient</emphasis> - an object is transient if it has just been "
+"instantiated using the <literal>new</literal> operator, and it is not "
+"associated with a Hibernate <literal>Session</literal>. It has no persistent "
+"representation in the database and no identifier value has been assigned. "
+"Transient instances will be destroyed by the garbage collector if the "
+"application doesn't hold a reference anymore. Use the Hibernate "
+"<literal>Session</literal> to make an object persistent (and let Hibernate "
+"take care of the SQL statements that need to be executed for this "
+"transition)."
+msgstr ""
+"<emphasis> 一時的(Transient) </emphasis> - <literal>new</literal> 演算子を"
+"使って インスタンス化されただけで、 Hibernateの <literal>Session</literal> に"
+"関連付けられていないオブジェクトは、 一時的(transient)です。 それは、データ"
+"ベースに永続的な表現を持たず、識別子となる値は割り当てられていません。 一時的"
+"なインスタンスは、アプリケーションがその参照をどこにも保持しない場合に、 ガ"
+"ベージコレクタによって破棄されます。 オブジェクトを永続的(persistent)な状態に"
+"するためには、Hibernateの <literal>Session</literal> を使いましょう。 （この"
+"状態遷移に必要となるSQL文の発行は、Hibernateに任せましょう。）"
+
+#. Tag: para
+#: session_api.xml:44
+#, no-c-format
+msgid ""
+"<emphasis>Persistent</emphasis> - a persistent instance has a representation "
+"in the database and an identifier value. It might just have been saved or "
+"loaded, however, it is by definition in the scope of a <literal>Session</"
+"literal>. Hibernate will detect any changes made to an object in persistent "
+"state and synchronize the state with the database when the unit of work "
+"completes. Developers don't execute manual <literal>UPDATE</literal> "
+"statements, or <literal>DELETE</literal> statements when an object should be "
+"made transient."
+msgstr ""
+"<emphasis>永続的(Persistent)</emphasis> - 永続的なインスタンスはデータベース"
+"に 永続的な表現を持ち、識別子となる値を持っています。 それは、セーブされた"
+"り、ロードされたりするかもしれませんが、 定義上は、 <literal>Session</"
+"literal> のスコープの中に存在しています。 Hibernateは、作業単位（Unit of "
+"work）が完了したときに、 永続状態のオブジェクトに加えられた変更を検出し、 オ"
+"ブジェクトの状態とデータベースを同期します。 オブジェクトを一時的(transient)"
+"にするときは、開発者は、手作業で <literal>UPDATE</literal> 文や "
+"<literal>DELETE</literal> 文を実行しません。"
+
+#. Tag: para
+#: session_api.xml:55
+#, no-c-format
+msgid ""
+"<emphasis>Detached</emphasis> - a detached instance is an object that has "
+"been persistent, but its <literal>Session</literal> has been closed. The "
+"reference to the object is still valid, of course, and the detached instance "
+"might even be modified in this state. A detached instance can be reattached "
+"to a new <literal>Session</literal> at a later point in time, making it (and "
+"all the modifications) persistent again. This feature enables a programming "
+"model for long running units of work that require user think-time. We call "
+"them <emphasis>application transactions</emphasis>, i.e. a unit of work from "
+"the point of view of the user."
+msgstr ""
+"<emphasis>分離(Detached)</emphasis> - 分離されたインスタンスとは、永続化され"
+"ているが、 それと関連付いていた <literal>Session</literal> がクローズされてい"
+"るオブジェクトのことです。 そのオブジェクトへの参照は、依然として有効です。 "
+"そして、もちろん、分離された状態にあるオブジェクトは、修正することさえできま"
+"す。 分離されたインスタンスは、もう一度永続化したい（そして、すべての変更を永"
+"続化したい）ときに、 新しい <literal>Session</literal> に再追加できます。 こ"
+"の機能は、ユーザが考える時間を必要とするような、長期間に及ぶ作業単位に対する "
+"プログラミングモデルを可能にします。 我々は、これを <emphasis>アプリケーショ"
+"ンのトランザクション（application transactions）</emphasis> と呼んでいます。 "
+"すなわち、ユーザから見た作業単位だということです。"
+
+#. Tag: para
+#: session_api.xml:69
+#, no-c-format
+msgid ""
+"We'll now discuss the states and state transitions (and the Hibernate "
+"methods that trigger a transition) in more detail."
+msgstr ""
+"これから、状態と状態遷移（そして、遷移のきっかけとなるHibernateのメソッド）に"
+"ついて 、詳細に述べます。"
+
+#. Tag: title
+#: session_api.xml:77
+#, no-c-format
+msgid "Making objects persistent"
+msgstr "オブジェクトを永続状態にする"
+
+#. Tag: para
+#: session_api.xml:79
+#, no-c-format
+msgid ""
+"Newly instantiated instances of a a persistent class are considered "
+"<emphasis>transient</emphasis> by Hibernate. We can make a transient "
+"instance <emphasis>persistent</emphasis> by associating it with a session:"
+msgstr ""
+"新しくインスタンス化された永続クラスのインスタンスは、 Hibernateでは "
+"<emphasis>一時的(transient)</emphasis> と見なされます。 以下のように、セッ"
+"ションと関連づけることで、一時的なインスタンスを <emphasis>永続状態"
+"(persistent)</emphasis> にできます。"
+
+#. Tag: programlisting
+#: session_api.xml:86
+#, no-c-format
+msgid ""
+"<![CDATA[DomesticCat fritz = new DomesticCat();\n"
+"fritz.setColor(Color.GINGER);\n"
+"fritz.setSex('M');\n"
+"fritz.setName(\"Fritz\");\n"
+"Long generatedId = (Long) sess.save(fritz);]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:88
+#, no-c-format
+msgid ""
+"If <literal>Cat</literal> has a generated identifier, the identifier is "
+"generated and assigned to the <literal>cat</literal> when <literal>save()</"
+"literal> is called. If <literal>Cat</literal> has an <literal>assigned</"
+"literal> identifier, or a composite key, the identifier should be assigned "
+"to the <literal>cat</literal> instance before calling <literal>save()</"
+"literal>. You may also use <literal>persist()</literal> instead of "
+"<literal>save()</literal>, with the semantics defined in the EJB3 early "
+"draft."
+msgstr ""
+"<literal>Cat</literal> クラスの識別子が自動生成されるのであれば、 "
+"<literal>save()</literal> が呼ばれるときに、 識別子が生成され、 "
+"<literal>cat</literal> インスタンスに割り当てられます。 <literal>Cat</"
+"literal> の識別子が他から割り当てられる（ <literal>assigned</literal> 識別子"
+"を持つ）か、複合キーであるなら、 <literal>save()</literal> を呼び出す前に、識"
+"別子を割り当てなければなりません。 <literal>save()</literal> の代わりに、"
+"EJB3 の初期ドラフトで定義された <literal>persist()</literal> を使うことも可能"
+"です。"
+
+#. Tag: para
+#: session_api.xml:100
+#, no-c-format
+msgid ""
+"<literal>persist()</literal> makes a transient instance persistent. However, "
+"it doesn't guarantee that the identifier value will be assigned to the "
+"persistent instance immediately, the assignment might happen at flush time. "
+"<literal>persist()</literal> also guarantees that it will not execute an "
+"<literal>INSERT</literal> statement if it is called outside of transaction "
+"boundaries. This is useful in long-running conversations with an extended "
+"Session/persistence context."
+msgstr ""
+"<literal>persist()</literal> makes a transient instance persistent. However, "
+"it doesn't guarantee that the identifier value will be assigned to the "
+"persistent instance immediately, the assignment might happen at flush time. "
+"<literal>persist()</literal> also guarantees that it will not execute an "
+"<literal>INSERT</literal> statement if it is called outside of transaction "
+"boundaries. This is useful in long-running conversations with an extended "
+"Session/persistence context."
+
+#. Tag: para
+#: session_api.xml:111
+#, no-c-format
+msgid ""
+"<literal>save()</literal> does guarantee to return an identifier. If an "
+"INSERT has to be executed to get the identifier ( e.g. \"identity\" "
+"generator, not \"sequence\"), this INSERT happens immediately, no matter if "
+"you are inside or outside of a transaction. This is problematic in a long-"
+"running conversation with an extended Session/persistence context."
+msgstr ""
+"<literal>save()</literal> does guarantee to return an identifier. If an "
+"INSERT has to be executed to get the identifier ( e.g. \"identity\" "
+"generator, not \"sequence\"), this INSERT happens immediately, no matter if "
+"you are inside or outside of a transaction. This is problematic in a long-"
+"running conversation with an extended Session/persistence context."
+
+#. Tag: para
+#: session_api.xml:121
+#, no-c-format
+msgid ""
+"Alternatively, you may assign the identifier using an overloaded version of "
+"<literal>save()</literal>."
+msgstr ""
+"代わりに、識別子を引数にとる <literal>save()</literal> メソッドを使って、 識"
+"別子を割り当てることもできます。"
+
+#. Tag: programlisting
+#: session_api.xml:126
+#, no-c-format
+msgid ""
+"<![CDATA[DomesticCat pk = new DomesticCat();\n"
+"pk.setColor(Color.TABBY);\n"
+"pk.setSex('F');\n"
+"pk.setName(\"PK\");\n"
+"pk.setKittens( new HashSet() );\n"
+"pk.addKitten(fritz);\n"
+"sess.save( pk, new Long(1234) );]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:128
+#, no-c-format
+msgid ""
+"If the object you make persistent has associated objects (e.g. the "
+"<literal>kittens</literal> collection in the previous example), these "
+"objects may be made persistent in any order you like unless you have a "
+"<literal>NOT NULL</literal> constraint upon a foreign key column. There is "
+"never a risk of violating foreign key constraints. However, you might "
+"violate a <literal>NOT NULL</literal> constraint if you <literal>save()</"
+"literal> the objects in the wrong order."
+msgstr ""
+"永続化するオブジェクトが関連オブジェクトを持っている場合 （例えば、前の例にお"
+"ける <literal>kittens</literal> コレクションのように）、 外部キーカラムに、 "
+"<literal>NOT NULL</literal> 制約をつけない限りは、 これらの一連のオブジェクト"
+"をどんな順番で永続化してもかまいません。 外部キー制約を違反する恐れはありませ"
+"ん。 しかし、 <literal>NOT NULL</literal> 制約がある場合、間違った順番でオブ"
+"ジェクトを <literal>save()</literal> してしまうと、 制約に違反するかもしれま"
+"せん。"
+
+#. Tag: para
+#: session_api.xml:138
+#, no-c-format
+msgid ""
+"Usually you don't bother with this detail, as you'll very likely use "
+"Hibernate's <emphasis>transitive persistence</emphasis> feature to save the "
+"associated objects automatically. Then, even <literal>NOT NULL</literal> "
+"constraint violations don't occur - Hibernate will take care of everything. "
+"Transitive persistence is discussed later in this chapter."
+msgstr ""
+"関連するオブジェクトを自動的に保存する、 Hibernateの <emphasis>遷移的な永続化"
+"(transitive persistence)</emphasis> 機能を 使うつもりならば、そのような詳細を"
+"気にする必要はありません。 そして、 <literal>NOT NULL</literal> 制約の違反す"
+"ら起こりません。 Hibernateがすべて面倒をみてくれます。遷移的な永続化は、この"
+"章の後半に書かれています。"
+
+#. Tag: title
+#: session_api.xml:149
+#, no-c-format
+msgid "Loading an object"
+msgstr "オブジェクトのロード"
+
+#. Tag: para
+#: session_api.xml:151
+#, no-c-format
+msgid ""
+"The <literal>load()</literal> methods of <literal>Session</literal> gives "
+"you a way to retrieve a persistent instance if you already know its "
+"identifier. <literal>load()</literal> takes a class object and will load the "
+"state into a newly instantiated instance of that class, in persistent state."
+msgstr ""
+"永続化されたインスタンスの識別子があらかじめ分かっているなら、 "
+"<literal>Session</literal> の <literal>load()</literal> メソッドを使って、復"
+"元できます。 <literal>load()</literal> は、Class オブジェクトを引数にとり、 "
+"そのクラスのインスタンスを新たに生成し、状態をロードします。 そのインスタンス"
+"の状態は、永続(persistent)状態です。"
+
+#. Tag: programlisting
+#: session_api.xml:158
+#, no-c-format
+msgid "<![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:160
+#, no-c-format
+msgid ""
+"<![CDATA[// you need to wrap primitive identifiers\n"
+"long id = 1234;\n"
+"DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long"
+"(id) );]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:162
+#, no-c-format
+msgid "Alternatively, you can load state into a given instance:"
+msgstr ""
+"あるいは、以下のように、既存のインスタンスに状態をロードすることもできます。"
+
+#. Tag: programlisting
+#: session_api.xml:166
+#, no-c-format
+msgid ""
+"<![CDATA[Cat cat = new DomesticCat();\n"
+"// load pk's state into cat\n"
+"sess.load( cat, new Long(pkId) );\n"
+"Set kittens = cat.getKittens();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:168
+#, no-c-format
+msgid ""
+"Note that <literal>load()</literal> will throw an unrecoverable exception if "
+"there is no matching database row. If the class is mapped with a proxy, "
+"<literal>load()</literal> just returns an uninitialized proxy and does not "
+"actually hit the database until you invoke a method of the proxy. This "
+"behaviour is very useful if you wish to create an association to an object "
+"without actually loading it from the database. It also allows multiple "
+"instances to be loaded as a batch if <literal>batch-size</literal> is "
+"defined for the class mapping."
+msgstr ""
+"DBに該当する行が無い場合、 <literal>load()</literal> は回復不可能な例外を 投"
+"げることに注意しましょう。 そのクラスがプロキシを使ってマッピングされている場"
+"合、 <literal>load()</literal> は初期化されていないプロキシを返し、プロキシの"
+"メソッドが呼ばれるまで実際には データベースにアクセスしません。 もし、実際に"
+"データベースからロードせずに、オブジェクトに対する関連を作りたい場合、 この振"
+"る舞いはとても役立ちます。 <literal>batch-size</literal> がクラスマッピングに"
+"定義されているならば、 複数のインスタンスを一括でロードすることが可能です。"
+
+#. Tag: para
+#: session_api.xml:179
+#, no-c-format
+msgid ""
+"If you are not certain that a matching row exists, you should use the "
+"<literal>get()</literal> method, which hits the database immediately and "
+"returns null if there is no matching row."
+msgstr ""
+"該当する行が存在することを確信できない場合は、 <literal>get()</literal> メ"
+"ソッドを使うべきです。 それは、データベースにすぐにアクセスし、該当する行が無"
+"い場合はnullを返します。"
+
+#. Tag: programlisting
+#: session_api.xml:185
+#, no-c-format
+msgid ""
+"<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);\n"
+"if (cat==null) {\n"
+"    cat = new Cat();\n"
+"    sess.save(cat, id);\n"
+"}\n"
+"return cat;]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:187
+#, no-c-format
+msgid ""
+"You may even load an object using an SQL <literal>SELECT ... FOR UPDATE</"
+"literal>, using a <literal>LockMode</literal>. See the API documentation for "
+"more information."
+msgstr ""
+"<literal>LockMode</literal> を使えば、 <literal>SELECT ... FOR UPDATE</"
+"literal>というSQLを 使ってオブジェクトをロードすることができます。 詳細な情報"
+"は、APIドキュメントを参照してください。"
+
+#. Tag: programlisting
+#: session_api.xml:192
+#, no-c-format
+msgid "<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:194
+#, no-c-format
+msgid ""
+"Note that any associated instances or contained collections are "
+"<emphasis>not</emphasis> selected <literal>FOR UPDATE</literal>, unless you "
+"decide to specify <literal>lock</literal> or <literal>all</literal> as a "
+"cascade style for the association."
+msgstr ""
+"関連に対するカスケード方法として <literal>lock</literal> や <literal>all</"
+"literal> を 指定しない限り、関連するインスタンスや含まれるコレクションは "
+"<literal>FOR UPDATE</literal> で復元 <emphasis>されない</emphasis> ことに注意"
+"しましょう。"
+
+#. Tag: para
+#: session_api.xml:201
+#, no-c-format
+msgid ""
+"It is possible to re-load an object and all its collections at any time, "
+"using the <literal>refresh()</literal> method. This is useful when database "
+"triggers are used to initialize some of the properties of the object."
+msgstr ""
+"<literal>refresh()</literal> メソッドを使うことで、どんなときでも、オブジェク"
+"トやそのコレクションを リロードすることができます。 データベースのトリガが"
+"テーブルを更新した際に、 そのテーブルに対応するオブジェクトのプロパティを同期"
+"する場合、このメソッドが役に立ちます。"
+
+#. Tag: programlisting
+#: session_api.xml:207
+#, no-c-format
+msgid ""
+"<![CDATA[sess.save(cat);\n"
+"sess.flush(); //force the SQL INSERT\n"
+"sess.refresh(cat); //re-read the state (after the trigger executes)]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:209
+#, no-c-format
+msgid ""
+"An important question usually appears at this point: How much does Hibernate "
+"load from the database and how many SQL <literal>SELECT</literal>s will it "
+"use? This depends on the <emphasis>fetching strategy</emphasis> and is "
+"explained in <xref linkend=\"performance-fetching\"/>."
+msgstr ""
+"大切な問題は、いつも次の点に関するものです。それは、Hibernateがデータベースか"
+"ら、 どのくらいの量を復元するのかと、どのくらいの数のSQLの <literal>SELECT</"
+"literal> 文が使われるのかです。 これは、 <emphasis>フェッチの戦略</emphasis> "
+"によります。これについては、<xref linkend=\"performance-fetching\"/> で説明し"
+"ています。"
+
+#. Tag: title
+#: session_api.xml:219
+#, no-c-format
+msgid "Querying"
+msgstr "クエリ"
+
+#. Tag: para
+#: session_api.xml:221
+#, no-c-format
+msgid ""
+"If you don't know the identifiers of the objects you are looking for, you "
+"need a query. Hibernate supports an easy-to-use but powerful object oriented "
+"query language (HQL). For programmatic query creation, Hibernate supports a "
+"sophisticated Criteria and Example query feature (QBC and QBE). You may also "
+"express your query in the native SQL of your database, with optional support "
+"from Hibernate for result set conversion into objects."
+msgstr ""
+"探したいオブジェクトの識別子が分からない場合は、クエリが必要になります。 "
+"Hibernateは使いやすくて強力なオブジェクト指向のクエリ言語 (HQL)をサポートして"
+"います。 プログラムによってクエリが作成できるように、Hibernateは洗練された"
+"CriteriaとExampleクエリ機能(QBCとQBE）を サポートしています。ResultSetをオブ"
+"ジェクトに変換するHibernateのオプション機能を使うことで、 データベースのネイ"
+"ティブなSQLでクエリを表現することもできます。"
+
+#. Tag: title
+#: session_api.xml:231
+#, no-c-format
+msgid "Executing queries"
+msgstr "クエリの実行"
+
+#. Tag: para
+#: session_api.xml:233
+#, no-c-format
+msgid ""
+"HQL and native SQL queries are represented with an instance of <literal>org."
+"hibernate.Query</literal>. This interface offers methods for parameter "
+"binding, result set handling, and for the execution of the actual query. You "
+"always obtain a <literal>Query</literal> using the current <literal>Session</"
+"literal>:"
+msgstr ""
+"HQLやネイティブなSQLクエリは、 <literal>org.hibernate.Query</literal> のイン"
+"スタンスとして表現されます。 このインタフェースは、パラメータバインディングや"
+"ResultSetのハンドリングや クエリの実行を行うメソッドを用意しています。 通"
+"常、 <literal>Query</literal> は、以下に示すように、 その時点の "
+"<literal>Session</literal> を使って取得します。"
+
+#. Tag: programlisting
+#: session_api.xml:240
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = session.createQuery(\n"
+"    \"from Cat as cat where cat.birthdate < ?\")\n"
+"    .setDate(0, date)\n"
+"    .list();\n"
+"\n"
+"List mothers = session.createQuery(\n"
+"    \"select mother from Cat as cat join cat.mother as mother where cat.name "
+"= ?\")\n"
+"    .setString(0, name)\n"
+"    .list();\n"
+"\n"
+"List kittens = session.createQuery(\n"
+"    \"from Cat as cat where cat.mother = ?\")\n"
+"    .setEntity(0, pk)\n"
+"    .list();\n"
+"\n"
+"Cat mother = (Cat) session.createQuery(\n"
+"    \"select cat.mother from Cat as cat where cat = ?\")\n"
+"    .setEntity(0, izi)\n"
+"    .uniqueResult();]]\n"
+"\n"
+"Query mothersWithKittens = (Cat) session.createQuery(\n"
+"    \"select mother from Cat as mother left join fetch mother.kittens\");\n"
+"Set uniqueMothers = new HashSet(mothersWithKittens.list());]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:242
+#, no-c-format
+msgid ""
+"A query is usually executed by invoking <literal>list()</literal>, the "
+"result of the query will be loaded completely into a collection in memory. "
+"Entity instances retrieved by a query are in persistent state. The "
+"<literal>uniqueResult()</literal> method offers a shortcut if you know your "
+"query will only return a single object. Note that queries that make use of "
+"eager fetching of collections usually return duplicates of the root objects "
+"(but with their collections initialized). You can filter these duplicates "
+"simply through a <literal>Set</literal>."
+msgstr ""
+"クエリは、普通、 <literal>list()</literal> を呼び出すことによって実行されま"
+"す。 クエリの結果は、メモリ上にあるコレクションにすべてロードされます。 クエ"
+"リによって復元されたエンティティのインスタンスは、永続状態です。 もし、クエリ"
+"がたった1個のインスタンスを返すと分かっているなら、 <literal>uniqueResult()</"
+"literal> メソッドが手っ取り早い方法です。 即時フェッチを利用したクエリの場"
+"合、ふつう、得られたコレクションには、 ルートのオブジェクトが重複して含まれて"
+"います （しかし、ルートが持つコレクションは初期化(ロード）されています）。 こ"
+"の重複は <literal>Set</literal> を使って取り除くことができます。"
+
+#. Tag: title
+#: session_api.xml:254
+#, no-c-format
+msgid "Iterating results"
+msgstr "結果をイテレートする"
+
+#. Tag: para
+#: session_api.xml:256
+#, no-c-format
+msgid ""
+"Occasionally, you might be able to achieve better performance by executing "
+"the query using the <literal>iterate()</literal> method. This will only "
+"usually be the case if you expect that the actual entity instances returned "
+"by the query will already be in the session or second-level cache. If they "
+"are not already cached, <literal>iterate()</literal> will be slower than "
+"<literal>list()</literal> and might require many database hits for a simple "
+"query, usually <emphasis>1</emphasis> for the initial select which only "
+"returns identifiers, and <emphasis>n</emphasis> additional selects to "
+"initialize the actual instances."
+msgstr ""
+"時々、 <literal>iterate()</literal> メソッドを使ってクエリを実行することで、 "
+"より良いパフォーマンスを得ることができます。 これは、通常、クエリによって得ら"
+"れた実際のエンティティのインスタンスが、 すでにセッションまたは二次キャッシュ"
+"に存在することが期待できる場合だけです。 それらが、まだキャッシュされていない"
+"なら、 <literal>iterate()</literal> は、 <literal>list()</literal> よりも遅"
+"く、簡単なクエリに対しても多くのデータベースアクセスを 必要とします。そのアク"
+"セスとは、識別子だけを取得するための最初のselect１回と、 実際のインスタンスを"
+"初期化するために後から行うn回のselectのことです。"
+
+#. Tag: programlisting
+#: session_api.xml:268
+#, no-c-format
+msgid ""
+"<![CDATA[// fetch ids\n"
+"Iterator iter = sess.createQuery(\"from eg.Qux q order by q.likeliness\")."
+"iterate();\n"
+"while ( iter.hasNext() ) {\n"
+"    Qux qux = (Qux) iter.next();  // fetch the object\n"
+"    // something we couldnt express in the query\n"
+"    if ( qux.calculateComplicatedAlgorithm() ) {\n"
+"        // delete the current instance\n"
+"        iter.remove();\n"
+"        // dont need to process the rest\n"
+"        break;\n"
+"    }\n"
+"}]]>"
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:272
+#, no-c-format
+msgid "Queries that return tuples"
+msgstr "オブジェクトの組（tuple）を返すクエリ"
+
+#. Tag: para
+#: session_api.xml:274
+#, no-c-format
+msgid ""
+"Hibernate queries sometimes return tuples of objects, in which case each "
+"tuple is returned as an array:"
+msgstr ""
+"Hibernateのクエリでは、時々、オブジェクトの組を返すことがあります。 その場合"
+"は、各タプルは配列として返されます。"
+
+#. Tag: programlisting
+#: session_api.xml:279
+#, no-c-format
+msgid ""
+"<![CDATA[Iterator kittensAndMothers = sess.createQuery(\n"
+"            \"select kitten, mother from Cat kitten join kitten.mother mother"
+"\")\n"
+"            .list()\n"
+"            .iterator();\n"
+"\n"
+"while ( kittensAndMothers.hasNext() ) {\n"
+"    Object[] tuple = (Object[]) kittensAndMothers.next();\n"
+"    Cat kitten = (Cat) tuple[0];\n"
+"    Cat mother = (Cat) tuple[1];\n"
+"    ....\n"
+"}]]>"
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:284
+#, no-c-format
+msgid "Scalar results"
+msgstr "スカラーの結果"
+
+#. Tag: para
+#: session_api.xml:286
+#, no-c-format
+msgid ""
+"Queries may specify a property of a class in the <literal>select</literal> "
+"clause. They may even call SQL aggregate functions. Properties or aggregates "
+"are considered \"scalar\" results (and not entities in persistent state)."
+msgstr ""
+"クエリでは、 <literal>select</literal> 節でクラスのプロパティを指定できま"
+"す。 SQLの集合関数を呼ぶこともできます。プロパティや集合関数は、 （永続状態の"
+"エンティティではなく）「スカラー値」であると見なされます。"
+
+#. Tag: programlisting
+#: session_api.xml:292
+#, no-c-format
+msgid ""
+"<![CDATA[Iterator results = sess.createQuery(\n"
+"        \"select cat.color, min(cat.birthdate), count(cat) from Cat cat \" "
+"+\n"
+"        \"group by cat.color\")\n"
+"        .list()\n"
+"        .iterator();\n"
+"\n"
+"while ( results.hasNext() ) {\n"
+"    Object[] row = (Object[]) results.next();\n"
+"    Color type = (Color) row[0];\n"
+"    Date oldest = (Date) row[1];\n"
+"    Integer count = (Integer) row[2];\n"
+"    .....\n"
+"}]]>"
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:297
+#, no-c-format
+msgid "Bind parameters"
+msgstr "パラメータのバインド"
+
+#. Tag: para
+#: session_api.xml:299
+#, no-c-format
+msgid ""
+"Methods on <literal>Query</literal> are provided for binding values to named "
+"parameters or JDBC-style <literal>?</literal> parameters. <emphasis>Contrary "
+"to JDBC, Hibernate numbers parameters from zero.</emphasis> Named parameters "
+"are identifiers of the form <literal>:name</literal> in the query string. "
+"The advantages of named parameters are:"
+msgstr ""
+"<literal>Query</literal> は、名前付きのパラメータやJDBCスタイルの <literal>?"
+"</literal> パラメータに値をバインドするためのメソッドを持っています。 "
+"<emphasis>JDBCとは違い、Hibernateはパラメータにゼロから番号を振っていきます。"
+"</emphasis> 名前付きのパラメータとは、クエリ文字列のなかにある <literal>:"
+"name</literal> 形式の識別子です。 名前付きパラメータの利点は次の通りです。"
+
+#. Tag: para
+#: session_api.xml:309
+#, no-c-format
+msgid ""
+"named parameters are insensitive to the order they occur in the query string"
+msgstr "名前付きパラメータは、クエリ文字列に登場する順番と無関係です"
+
+#. Tag: para
+#: session_api.xml:315
+#, no-c-format
+msgid "they may occur multiple times in the same query"
+msgstr "同じクエリ内に複数回登場することができます"
+
+#. Tag: para
+#: session_api.xml:320
+#, no-c-format
+msgid "they are self-documenting"
+msgstr "自分自身を説明します"
+
+#. Tag: programlisting
+#: session_api.xml:326
+#, no-c-format
+msgid ""
+"<![CDATA[//named parameter (preferred)\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = :name"
+"\");\n"
+"q.setString(\"name\", \"Fritz\");\n"
+"Iterator cats = q.iterate();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:328
+#, no-c-format
+msgid ""
+"<![CDATA[//positional parameter\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = ?\");\n"
+"q.setString(0, \"Izi\");\n"
+"Iterator cats = q.iterate();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:330
+#, no-c-format
+msgid ""
+"<![CDATA[//named parameter list\n"
+"List names = new ArrayList();\n"
+"names.add(\"Izi\");\n"
+"names.add(\"Fritz\");\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name in (:"
+"namesList)\");\n"
+"q.setParameterList(\"namesList\", names);\n"
+"List cats = q.list();]]>"
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:335
+#, no-c-format
+msgid "Pagination"
+msgstr "ページ分け"
+
+#. Tag: para
+#: session_api.xml:337
+#, no-c-format
+msgid ""
+"If you need to specify bounds upon your result set (the maximum number of "
+"rows you want to retrieve and / or the first row you want to retrieve) you "
+"should use methods of the <literal>Query</literal> interface:"
+msgstr ""
+"ResultSetに制限（復元したい最大行数や復元したい最初の行）を加える必要があれ"
+"ば、 以下のように、 <literal>Query</literal> インターフェイスのメソッドを使い"
+"ます。"
+
+#. Tag: programlisting
+#: session_api.xml:343
+#, no-c-format
+msgid ""
+"<![CDATA[Query q = sess.createQuery(\"from DomesticCat cat\");\n"
+"q.setFirstResult(20);\n"
+"q.setMaxResults(10);\n"
+"List cats = q.list();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:345
+#, no-c-format
+msgid ""
+"Hibernate knows how to translate this limit query into the native SQL of "
+"your DBMS."
+msgstr ""
+"制限付きのクエリをDBMSのネイティブなSQLに変換する方法を、Hibernateは知ってい"
+"ます。"
+
+#. Tag: title
+#: session_api.xml:353
+#, no-c-format
+msgid "Scrollable iteration"
+msgstr "スクロール可能なイテレーション"
+
+#. Tag: para
+#: session_api.xml:355
+#, no-c-format
+msgid ""
+"If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the "
+"<literal>Query</literal> interface may be used to obtain a "
+"<literal>ScrollableResults</literal> object, which allows flexible "
+"navigation of the query results."
+msgstr ""
+"JDBCドライバがスクロール可能な <literal>ResultSet</literal> をサポートしてい"
+"れば、 <literal>Query</literal> インターフェイスを使って、 "
+"<literal>ScrollableResults</literal> オブジェクトを 取得できます。それを使う"
+"と、クエリの結果に対して柔軟にナビゲーションできます。"
+
+#. Tag: programlisting
+#: session_api.xml:362
+#, no-c-format
+msgid ""
+"<![CDATA[Query q = sess.createQuery(\"select cat.name, cat from DomesticCat "
+"cat \" +\n"
+"                            \"order by cat.name\");\n"
+"ScrollableResults cats = q.scroll();\n"
+"if ( cats.first() ) {\n"
+"\n"
+"    // find the first name on each page of an alphabetical list of cats by "
+"name\n"
+"    firstNamesOfPages = new ArrayList();\n"
+"    do {\n"
+"        String name = cats.getString(0);\n"
+"        firstNamesOfPages.add(name);\n"
+"    }\n"
+"    while ( cats.scroll(PAGE_SIZE) );\n"
+"\n"
+"    // Now get the first page of cats\n"
+"    pageOfCats = new ArrayList();\n"
+"    cats.beforeFirst();\n"
+"    int i=0;\n"
+"    while( ( PAGE_SIZE > i++ ) && cats.next() ) pageOfCats.add( cats.get"
+"(1) );\n"
+"\n"
+"}\n"
+"cats.close()]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:364
+#, no-c-format
+msgid ""
+"Note that an open database connection (and cursor) is required for this "
+"functionality, use <literal>setMaxResult()</literal>/<literal>setFirstResult"
+"()</literal> if you need offline pagination functionality."
+msgstr ""
+"この機能にはオープン状態のデータベースコネクションが必要であることに注意して"
+"ください。 もし、オフラインのページ分け機能が必要であれば、 "
+"<literal>setMaxResult()</literal> / <literal>setFirstResult()</literal> を使"
+"いましょう。"
+
+#. Tag: title
+#: session_api.xml:373
+#, no-c-format
+msgid "Externalizing named queries"
+msgstr "名前付きクエリの外出し"
+
+#. Tag: para
+#: session_api.xml:375
+#, no-c-format
+msgid ""
+"You may also define named queries in the mapping document. (Remember to use "
+"a <literal>CDATA</literal> section if your query contains characters that "
+"could be interpreted as markup.)"
+msgstr ""
+"マッピングドキュメントに名前付きのクエリを定義することができます。 （マーク"
+"アップと解釈される文字がクエリに含まれるなら、 <literal>CDATA</literal> セク"
+"ションを 使うことを忘れないようにしましょう。）"
+
+#. Tag: programlisting
+#: session_api.xml:381
+#, no-c-format
+msgid ""
+"<![CDATA[<query name=\"ByNameAndMaximumWeight\"><![CDATA[\n"
+"    from eg.DomesticCat as cat\n"
+"        where cat.name = ?\n"
+"        and cat.weight > ?\n"
+"] ]></query>]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:383
+#, no-c-format
+msgid "Parameter binding and executing is done programatically:"
+msgstr ""
+"パラメータのバインディングと実行は、以下のようなプログラムで行われます。"
+
+#. Tag: programlisting
+#: session_api.xml:387
+#, no-c-format
+msgid ""
+"<![CDATA[Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
+"q.setString(0, name);\n"
+"q.setInt(1, minWeight);\n"
+"List cats = q.list();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:389
+#, no-c-format
+msgid ""
+"Note that the actual program code is independent of the query language that "
+"is used, you may also define native SQL queries in metadata, or migrate "
+"existing queries to Hibernate by placing them in mapping files."
+msgstr ""
+"実際のプログラムコードは、使われるクエリ言語に依存していないことに注意しま"
+"しょう。 メタデータには、ネイティブSQLクエリを定義することもできます。 また、"
+"既存のクエリをマッピングファイルに移すことで、 Hibernateに移行することもでき"
+"ます。"
+
+#. Tag: para
+#: session_api.xml:395
+#, no-c-format
+msgid ""
+"Also note that a query declaration inside a <literal>&lt;hibernate-"
+"mapping&gt;</literal> element requires a global unique name for the query, "
+"while a query declaration inside a <literal>&lt;class&gt;</literal> element "
+"is made unique automatically by prepending the fully qualified name of the "
+"class, for example <literal>eg.Cat.ByNameAndMaximumWeight</literal>."
+msgstr ""
+"<literal>&lt;hibernate-mapping&gt;</literal> の中のクエリ定義は、クエリに対す"
+"る ユニークな名前が必要なことにも注意してください。それに対して、 "
+"<literal>&lt;class&gt;</literal> の中の クエリ定義は、クラスの完全限定名が前"
+"に付けられるので、自動的にユニークな名前になります。 例： <literal>eg.Cat."
+"ByNameAndMaximumWeight</literal>"
+
+#. Tag: title
+#: session_api.xml:408
+#, no-c-format
+msgid "Filtering collections"
+msgstr "コレクションのフィルタリング"
+
+#. Tag: para
+#: session_api.xml:409
+#, no-c-format
+msgid ""
+"A collection <emphasis>filter</emphasis> is a special type of query that may "
+"be applied to a persistent collection or array. The query string may refer "
+"to <literal>this</literal>, meaning the current collection element."
+msgstr ""
+"コレクション <emphasis>フィルタ</emphasis> は、永続化されているコレクションや"
+"配列に適用される 特殊なタイプのクエリです。そのクエリ文字列では、コレクション"
+"のその時点での要素を意味する <literal>this</literal> を使います。"
+
+#. Tag: programlisting
+#: session_api.xml:415
+#, no-c-format
+msgid ""
+"<![CDATA[Collection blackKittens = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"where this.color = ?\")\n"
+"    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )\n"
+"    .list()\n"
+");]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:417
+#, no-c-format
+msgid ""
+"The returned collection is considered a bag, and it's a copy of the given "
+"collection. The original collection is not modified (this is contrary to the "
+"implication of the name \"filter\", but consistent with expected behavior)."
+msgstr ""
+"返されるコレクションはBagとみなされます。そして、それはもとのコレクションのコ"
+"ピーになります。 元のコレクションは修正されません（これは、\"filter\"という名"
+"前の意味とは異なりますが、 期待される動きとは一致しています）。"
+
+#. Tag: para
+#: session_api.xml:423
+#, no-c-format
+msgid ""
+"Observe that filters do not require a <literal>from</literal> clause (though "
+"they may have one if required). Filters are not limited to returning the "
+"collection elements themselves."
+msgstr ""
+"フィルタには <literal>from</literal> 節が不要であることに気づくでしょう（必要"
+"なら、持つことも可能ですが）。 フィルタは、コレクションの要素自体を返して構い"
+"ません。"
+
+#. Tag: programlisting
+#: session_api.xml:428
+#, no-c-format
+msgid ""
+"<![CDATA[Collection blackKittenMates = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"select this.mate where this.color = eg.Color.BLACK.intValue\")\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:430
+#, no-c-format
+msgid ""
+"Even an empty filter query is useful, e.g. to load a subset of elements in a "
+"huge collection:"
+msgstr ""
+"クエリを含まないフィルタも役に立ちます。 例えば、非常に大きなコレクションの部"
+"分集合をロードするために使えます。"
+
+#. Tag: programlisting
+#: session_api.xml:435
+#, no-c-format
+msgid ""
+"<![CDATA[Collection tenKittens = session.createFilter(\n"
+"    mother.getKittens(), \"\")\n"
+"    .setFirstResult(0).setMaxResults(10)\n"
+"    .list();]]>"
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:440
+#, no-c-format
+msgid "Criteria queries"
+msgstr "クライテリアのクエリ"
+
+#. Tag: para
+#: session_api.xml:442
+#, no-c-format
+msgid ""
+"HQL is extremely powerful but some developers prefer to build queries "
+"dynamically, using an object-oriented API, rather than building query "
+"strings. Hibernate provides an intuitive <literal>Criteria</literal> query "
+"API for these cases:"
+msgstr ""
+"HQLは非常に強力ですが、クエリ文字列を作るよりも、オブジェクト指向のAPIを使っ"
+"て 動的にクエリを作る方を好む開発者もいます。 こういった場合のために、"
+"Hibernateは直感的な <literal>Criteria</literal> クエリAPIを提供しています。"
+
+#. Tag: programlisting
+#: session_api.xml:448
+#, no-c-format
+msgid ""
+"<![CDATA[Criteria crit = session.createCriteria(Cat.class);\n"
+"crit.add( Restrictions.eq( \"color\", eg.Color.BLACK ) );\n"
+"crit.setMaxResults(10);\n"
+"List cats = crit.list();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:450
+#, no-c-format
+msgid ""
+"The <literal>Criteria</literal> and the associated <literal>Example</"
+"literal> API are discussed in more detail in <xref linkend=\"querycriteria\"/"
+">."
+msgstr ""
+"<literal>Criteria</literal> と <literal>Example</literal> APIの詳細は、 "
+"<xref linkend=\"querycriteria\"/> に述べられています。"
+
+#. Tag: title
+#: session_api.xml:458
+#, no-c-format
+msgid "Queries in native SQL"
+msgstr "ネイティブSQLのクエリ"
+
+#. Tag: para
+#: session_api.xml:460
+#, no-c-format
+msgid ""
+"You may express a query in SQL, using <literal>createSQLQuery()</literal> "
+"and let Hibernate take care of the mapping from result sets to objects. Note "
+"that you may at any time call <literal>session.connection()</literal> and "
+"use the JDBC <literal>Connection</literal> directly. If you chose to use the "
+"Hibernate API, you must enclose SQL aliases in braces:"
+msgstr ""
+"<literal>createSQLQuery()</literal> を使って、SQLでクエリを表現することもでき"
+"ます。 そして、Hibernateに、ResultSet からオブジェクトへのマッピングをまかせ"
+"ます。 <literal>session.connection()</literal> を呼べばどんなときでも、直接、"
+"JDBC <literal>Connection</literal> を使用できることを覚えておきましょう。 も"
+"し、Hibernate APIを使うのであれば、下記のようにSQLの別名を括弧でくくらなけれ"
+"ばなりません。"
+
+#. Tag: programlisting
+#: session_api.xml:468
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = session.createSQLQuery(\"SELECT {cat.*} FROM CAT {cat} "
+"WHERE ROWNUM<10\")\n"
+"    .addEntity(\"cat\", Cat.class)\n"
+".list();]]>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:470
+#, no-c-format
+msgid ""
+"<![CDATA[List cats = session.createSQLQuery(\n"
+"    \"SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, \" +\n"
+"           \"{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... \" "
+"+\n"
+"    \"FROM CAT {cat} WHERE ROWNUM<10\")\n"
+"    .addEntity(\"cat\", Cat.class)\n"
+".list()]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:472
+#, no-c-format
+msgid ""
+"SQL queries may contain named and positional parameters, just like Hibernate "
+"queries. More information about native SQL queries in Hibernate can be found "
+"in <xref linkend=\"querysql\"/>."
+msgstr ""
+"SQLクエリは、Hibernateクエリと同じように、名前付きのパラメータと位置パラメー"
+"タを持つことができます。 HibernateにおけるネイティブなSQLクエリの詳細について"
+"は、 <xref linkend=\"querysql\"/> を参照してください。"
+
+#. Tag: title
+#: session_api.xml:483
+#, no-c-format
+msgid "Modifying persistent objects"
+msgstr "永続オブジェクトの修正"
+
+#. Tag: para
+#: session_api.xml:485
+#, no-c-format
+msgid ""
+"<emphasis>Transactional persistent instances</emphasis> (ie. objects loaded, "
+"saved, created or queried by the <literal>Session</literal>) may be "
+"manipulated by the application and any changes to persistent state will be "
+"persisted when the <literal>Session</literal> is <emphasis>flushed</"
+"emphasis> (discussed later in this chapter). There is no need to call a "
+"particular method (like <literal>update()</literal>, which has a different "
+"purpose) to make your modifications persistent. So the most straightforward "
+"way to update the state of an object is to <literal>load()</literal> it, and "
+"then manipulate it directly, while the <literal>Session</literal> is open:"
+msgstr ""
+"<emphasis>処理中の永続インスタンス</emphasis> （例： <literal>Session</"
+"literal> によって、 ロード、セーブ、作成、クエリされたオブジェクト）は、アプ"
+"リケーションに操作されます。 その際に変更された永続状態は、 "
+"<literal>Session</literal> が <emphasis>フラッシュ</emphasis> されるときに、"
+"永続化されます（これは、この章の後半で述べています）。 変更を永続化するため"
+"に、特殊なメソッド（ <literal>update()</literal> のようなもの。これは、別の目"
+"的で使用します）を 呼ぶ必要はありません。 オブジェクトの状態を更新する一番簡"
+"単な方法は、オブジェクトを <literal>load()</literal> し、 <literal>Session</"
+"literal> をオープンにしている間に、直接操作することです。"
+
+#. Tag: programlisting
+#: session_api.xml:496
+#, no-c-format
+msgid ""
+"<![CDATA[DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long"
+"(69) );\n"
+"cat.setName(\"PK\");\n"
+"sess.flush();  // changes to cat are automatically detected and persisted]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:498
+#, no-c-format
+msgid ""
+"Sometimes this programming model is inefficient since it would require both "
+"an SQL <literal>SELECT</literal> (to load an object) and an SQL "
+"<literal>UPDATE</literal> (to persist its updated state) in the same "
+"session. Therefore Hibernate offers an alternate approach, using detached "
+"instances."
+msgstr ""
+"（オブジェクトをロードするための）SQLの <literal>SELECT</literal> と（更新さ"
+"れた状態を永続化するための） SQLの <literal>UPDATE</literal> が同じセッション"
+"で必要となるので、このプログラミングモデルは、 効率が悪くなる場合がありま"
+"す。 そのため、Hibernateは別の方法を用意しています。それは、インスタンスを分"
+"離する（detached）方法です。"
+
+#. Tag: emphasis
+#: session_api.xml:506
+#, fuzzy, no-c-format
+msgid ""
+"Note that Hibernate does not offer its own API for direct execution of "
+"<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
+"is a <emphasis>state management</emphasis> service, you don't have to think "
+"in <emphasis>statements</emphasis> to use it. JDBC is a perfect API for "
+"executing SQL statements, you can get a JDBC <literal>Connection</literal> "
+"at any time by calling <literal>session.connection()</literal>. Furthermore, "
+"the notion of mass operations conflicts with object/relational mapping for "
+"online transaction processing-oriented applications. Future versions of "
+"Hibernate may however provide special mass operation functions. See <xref "
+"linkend=\"batch\"/> for some possible batch operation tricks."
+msgstr ""
+"Hibernateは、 <placeholder-1/> 文や <placeholder-2/> 文を直接実行するAPIを用"
+"意していません。 Hibernateは、 <placeholder-3/> サービスであり、使われるSQL "
+"<placeholder-4/> のことを開発者が考える必要はありません。 JDBCはSQL文を実行す"
+"る完璧なAPIであり、 <placeholder-5/> を呼ぶことで いつでも、JDBC "
+"<placeholder-6/> を開発者は取得できます。 さらに、大量のデータ操作の考え方"
+"は、オンライントランザクション処理向きアプリケーションの オブジェクト/リレー"
+"ショナルマッピングと衝突します。 しかし、Hibernateの今後のバージョンでは、大"
+"量データを処理する特別な機能を提供するかもしれません。 バッチ操作に利用できる"
+"いくつかの工夫については、 <xref linkend=\"batch\"/> を参照してください。"
+
+#. Tag: title
+#: session_api.xml:521
+#, no-c-format
+msgid "Modifying detached objects"
+msgstr "分離オブジェクトの修正"
+
+#. Tag: para
+#: session_api.xml:523
+#, no-c-format
+msgid ""
+"Many applications need to retrieve an object in one transaction, send it to "
+"the UI layer for manipulation, then save the changes in a new transaction. "
+"Applications that use this kind of approach in a high-concurrency "
+"environment usually use versioned data to ensure isolation for the \"long\" "
+"unit of work."
+msgstr ""
+"多くのアプリケーションでは次のことが必要になります。 それは、あるトランザク"
+"ションでオブジェクトを復元し、操作するためにそれをUI層に送り、 その後に、新し"
+"いトランザクションで変更をセーブするといったことです。 並行性の高い環境で、こ"
+"のタイプのアプローチを使うアプリケーションでは、 \"期間の長い\" 作業単位の隔"
+"離性を保証するために、バージョンデータが通常使われます。"
+
+#. Tag: para
+#: session_api.xml:530
+#, no-c-format
+msgid ""
+"Hibernate supports this model by providing for reattachment of detached "
+"instances using the <literal>Session.update()</literal> or <literal>Session."
+"merge()</literal> methods:"
+msgstr ""
+"Hibernateは、 <literal>Session.update()</literal> や <literal>Session.merge()"
+"</literal> メソッドを 使って、分離インスタンスを再追加することで、このモデル"
+"に対応します。"
+
+#. Tag: programlisting
+#: session_api.xml:536
+#, no-c-format
+msgid ""
+"<![CDATA[// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catId);\n"
+"Cat potentialMate = new Cat();\n"
+"firstSession.save(potentialMate);\n"
+"\n"
+"// in a higher layer of the application\n"
+"cat.setMate(potentialMate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.update(cat);  // update cat\n"
+"secondSession.update(mate); // update mate]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:538
+#, no-c-format
+msgid ""
+"If the <literal>Cat</literal> with identifier <literal>catId</literal> had "
+"already been loaded by <literal>secondSession</literal> when the application "
+"tried to reattach it, an exception would have been thrown."
+msgstr ""
+"識別子<literal>catId</literal> を持つ <literal>Cat</literal> が、既に "
+"<literal>secondSession</literal> でロードされていた場合は、再追加しようとした"
+"ときに、例外が投げられます。"
+
+#. Tag: para
+#: session_api.xml:544
+#, no-c-format
+msgid ""
+"Use <literal>update()</literal> if you are sure that the session does not "
+"contain an already persistent instance with the same identifier, and "
+"<literal>merge()</literal> if you want to merge your modifications at any "
+"time without consideration of the state of the session. In other words, "
+"<literal>update()</literal> is usually the first method you would call in a "
+"fresh session, ensuring that reattachment of your detached instances is the "
+"first operation that is executed."
+msgstr ""
+"同じ識別子を持つ永続インスタンスをセッションが既に保持していないことを 確信で"
+"きるなら <literal>update()</literal> を使いましょう。 そして、セッションの状"
+"態を考えずに、どんな場合でも変更をマージしたい場合は、 <literal>merge()</"
+"literal> を使いましょう。 すなわち、分離オブジェクトの再追加操作が、最初に実"
+"行されることを確実にするために、 通常は <literal>update()</literal> が新しい"
+"セッションのなかで最初に呼ばれるメソッドになります。"
+
+#. Tag: para
+#: session_api.xml:553
+#, no-c-format
+msgid ""
+"The application should individually <literal>update()</literal> detached "
+"instances reachable from the given detached instance if and <emphasis>only</"
+"emphasis> if it wants their state also updated. This can be automated of "
+"course, using <emphasis>transitive persistence</emphasis>, see <xref linkend="
+"\"objectstate-transitive\"/>."
+msgstr ""
+"分離インスタンスから到達可能な、分離インスタンスをアプリケーションは個別に "
+"<literal>update()</literal> すべきです。それは、その状態を更新したい場合に "
+"<emphasis>限り</emphasis> ます。 <emphasis>遷移的な永続化</emphasis> を使え"
+"ば、もちろん自動化できます。 <xref linkend=\"objectstate-transitive\"/> を参"
+"照してください。"
+
+#. Tag: para
+#: session_api.xml:560
+#, no-c-format
+msgid ""
+"The <literal>lock()</literal> method also allows an application to "
+"reassociate an object with a new session. However, the detached instance has "
+"to be unmodified!"
+msgstr ""
+"メソッドでもまた、新しいセッションにオブジェクトを再関連付けできます。 しか"
+"し、分離インスタンスは無修正でなければなりません。"
+
+#. Tag: programlisting
+#: session_api.xml:565
+#, no-c-format
+msgid ""
+"<![CDATA[//just reassociate:\n"
+"sess.lock(fritz, LockMode.NONE);\n"
+"//do a version check, then reassociate:\n"
+"sess.lock(izi, LockMode.READ);\n"
+"//do a version check, using SELECT ... FOR UPDATE, then reassociate:\n"
+"sess.lock(pk, LockMode.UPGRADE);]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:567
+#, no-c-format
+msgid ""
+"Note that <literal>lock()</literal> can be used with various "
+"<literal>LockMode</literal>s, see the API documentation and the chapter on "
+"transaction handling for more information. Reattachment is not the only "
+"usecase for <literal>lock()</literal>."
+msgstr ""
+"<literal>lock()</literal> は、さまざまな <literal>LockMode</literal> とともに"
+"使うことができます。 詳細は、APIドキュメントとトランザクション処理の章を参照"
+"してください。 再追加のときにだけ、 <literal>lock()</literal> が使われるわけ"
+"ではありません。"
+
+#. Tag: para
+#: session_api.xml:574
+#, no-c-format
+msgid ""
+"Other models for long units of work are discussed in <xref linkend="
+"\"transactions-optimistic\"/>."
+msgstr ""
+"期間の長い作業単位の、その他のモデルは、<xref linked=\"transactions-"
+"optimistic\"/> で述べています。"
+
+#. Tag: title
+#: session_api.xml:581
+#, no-c-format
+msgid "Automatic state detection"
+msgstr "自動的な状態検出"
+
+#. Tag: para
+#: session_api.xml:583
+#, no-c-format
+msgid ""
+"Hibernate users have requested a general purpose method that either saves a "
+"transient instance by generating a new identifier or updates/reattaches the "
+"detached instances associated with its current identifier. The "
+"<literal>saveOrUpdate()</literal> method implements this functionality."
+msgstr ""
+"Hibernateのユーザは次の2つのケースのどちらにも使える汎用的なメソッドを要求し"
+"ていました。 それは、新しい識別子を生成して一時的なインスタンスをセーブするこ"
+"とと、 その時点の識別子と関連づいている分離インスタンスを更新/再追加すること"
+"のできるメソッドです。 <literal>saveOrUpdate()</literal> はこのような機能を実"
+"現したメソッドです。"
+
+#. Tag: programlisting
+#: session_api.xml:590
+#, no-c-format
+msgid ""
+"<![CDATA[// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catID);\n"
+"\n"
+"// in a higher tier of the application\n"
+"Cat mate = new Cat();\n"
+"cat.setMate(mate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.saveOrUpdate(cat);   // update existing state (cat has a non-"
+"null id)\n"
+"secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null "
+"id)]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:592
+#, no-c-format
+msgid ""
+"The usage and semantics of <literal>saveOrUpdate()</literal> seems to be "
+"confusing for new users. Firstly, so long as you are not trying to use "
+"instances from one session in another new session, you should not need to "
+"use <literal>update()</literal>, <literal>saveOrUpdate()</literal>, or "
+"<literal>merge()</literal>. Some whole applications will never use either of "
+"these methods."
+msgstr ""
+"<literal>saveOrUpdate()</literal> の使用方法と意味は、 新しいユーザにとって混"
+"乱を招くかもしれません。 まず第一に、あるセッションで使用したインスタンスを別"
+"の新しいセッションで使おうとしない限り、 <literal>update()</literal> や "
+"<literal>saveOrUpdate()</literal> や <literal>merge()</literal> を使う必要は"
+"ありません。 アプリケーション全体を通じて、これらのメソッドを全く使わないこと"
+"もあります。"
+
+#. Tag: para
+#: session_api.xml:600
+#, no-c-format
+msgid ""
+"Usually <literal>update()</literal> or <literal>saveOrUpdate()</literal> are "
+"used in the following scenario:"
+msgstr ""
+"通常、 <literal>update()</literal> や <literal>saveOrUpdate()</literal> は次"
+"のシナリオで 使われます。"
+
+#. Tag: para
+#: session_api.xml:607
+#, no-c-format
+msgid "the application loads an object in the first session"
+msgstr "アプリケーションが最初のセッションでオブジェクトをロードします。"
+
+#. Tag: para
+#: session_api.xml:612
+#, no-c-format
+msgid "the object is passed up to the UI tier"
+msgstr "オブジェクトがUI層に送られます。"
+
+#. Tag: para
+#: session_api.xml:617
+#, no-c-format
+msgid "some modifications are made to the object"
+msgstr "オブジェクトに対して変更が加えられます。"
+
+#. Tag: para
+#: session_api.xml:622
+#, no-c-format
+msgid "the object is passed back down to the business logic tier"
+msgstr "オブジェクトがビジネスロジック層に送られます。"
+
+#. Tag: para
+#: session_api.xml:627
+#, no-c-format
+msgid ""
+"the application persists these modifications by calling <literal>update()</"
+"literal> in a second session"
+msgstr ""
+"アプリケーションは、2番目のセッションで <literal>update()</literal> を呼ぶこ"
+"とで、これらの変更を永続化します。"
+
+#. Tag: para
+#: session_api.xml:634
+#, no-c-format
+msgid "<literal>saveOrUpdate()</literal> does the following:"
+msgstr "<literal>saveOrUpdate()</literal> は以下のことを行います。"
+
+#. Tag: para
+#: session_api.xml:640
+#, no-c-format
+msgid "if the object is already persistent in this session, do nothing"
+msgstr ""
+"オブジェクトがこのセッションで、すでに永続化されていれば、何もしません。"
+
+#. Tag: para
+#: session_api.xml:645
+#, no-c-format
+msgid ""
+"if another object associated with the session has the same identifier, throw "
+"an exception"
+msgstr ""
+"そのセッションに関連づいている別のオブジェクトが同じ識別子を持っているなら、 "
+"例外を投げます。"
+
+#. Tag: para
+#: session_api.xml:651
+#, no-c-format
+msgid "if the object has no identifier property, <literal>save()</literal> it"
+msgstr ""
+"オブジェクトの識別子が値を持たないならば、 <literal>save()</literal> します。"
+
+#. Tag: para
+#: session_api.xml:656
+#, no-c-format
+msgid ""
+"if the object's identifier has the value assigned to a newly instantiated "
+"object, <literal>save()</literal> it"
+msgstr ""
+"オブジェクトの識別子が値を持ち、その値が新たにインスタンス化されたオブジェク"
+"トのための値である場合、 そのオブジェクトを <literal>save()</literal> しま"
+"す。"
+
+#. Tag: para
+#: session_api.xml:662
+#, no-c-format
+msgid ""
+"if the object is versioned (by a <literal>&lt;version&gt;</literal> or "
+"<literal>&lt;timestamp&gt;</literal>), and the version property value is the "
+"same value assigned to a newly instantiated object, <literal>save()</"
+"literal> it"
+msgstr ""
+"オブジェクトが（ <literal>&lt;version&gt;</literal> や <literal>&lt;"
+"timestamp&gt;</literal> によって） バージョンづけされていて、バージョンのプロ"
+"パティが値を持ち、 その値が新しくインスタンス化されたオブジェクトのための値で"
+"ある場合、 そのオブジェクトを <literal>save()</literal> します。"
+
+#. Tag: para
+#: session_api.xml:670
+#, no-c-format
+msgid "otherwise <literal>update()</literal> the object"
+msgstr ""
+"そうでない場合は、そのオブジェクトを <literal>update()</literal> します。"
+
+#. Tag: para
+#: session_api.xml:676
+#, no-c-format
+msgid "and <literal>merge()</literal> is very different:"
+msgstr "そして、 <literal>merge()</literal> は以下のようにとても異なります。"
+
+#. Tag: para
+#: session_api.xml:682
+#, no-c-format
+msgid ""
+"if there is a persistent instance with the same identifier currently "
+"associated with the session, copy the state of the given object onto the "
+"persistent instance"
+msgstr ""
+"同じ識別子を持つ永続化インスタンスがその時点でセッションと関連付いているなら"
+"ば、 引数で受け取ったオブジェクトの状態を永続化インスタンスにコピーします。"
+
+#. Tag: para
+#: session_api.xml:689
+#, no-c-format
+msgid ""
+"if there is no persistent instance currently associated with the session, "
+"try to load it from the database, or create a new persistent instance"
+msgstr ""
+"永続化インスタンスがその時点でセッションに関連付いていないなら、 データベース"
+"からそれをロードするか、あるいは、新しい永続化インスタンスを作成します。"
+
+#. Tag: para
+#: session_api.xml:695
+#, no-c-format
+msgid "the persistent instance is returned"
+msgstr "永続化インスタンスが返されます。"
+
+#. Tag: para
+#: session_api.xml:700
+#, no-c-format
+msgid ""
+"the given instance does not become associated with the session, it remains "
+"detached"
+msgstr ""
+"引数として与えたインスタンスはセッションと関連を持ちません。 それは、分離状態"
+"のままです。"
+
+#. Tag: title
+#: session_api.xml:710
+#, no-c-format
+msgid "Deleting persistent objects"
+msgstr "永続オブジェクトの削除"
+
+#. Tag: para
+#: session_api.xml:712
+#, no-c-format
+msgid ""
+"<literal>Session.delete()</literal> will remove an object's state from the "
+"database. Of course, your application might still hold a reference to a "
+"deleted object. It's best to think of <literal>delete()</literal> as making "
+"a persistent instance transient."
+msgstr ""
+"<literal>Session.delete()</literal> はオブジェクトの状態をデータベースから削"
+"除します。 もちろん、削除したオブジェクトをアプリケーションが保持したままでも"
+"よいです。 そのため、 <literal>delete()</literal> は永続インスタンスを一時的"
+"にするものと考えるのが一番です。"
+
+#. Tag: programlisting
+#: session_api.xml:719
+#, no-c-format
+msgid "<![CDATA[sess.delete(cat);]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:721
+#, no-c-format
+msgid ""
+"You may delete objects in any order you like, without risk of foreign key "
+"constraint violations. It is still possible to violate a <literal>NOT NULL</"
+"literal> constraint on a foreign key column by deleting objects in the wrong "
+"order, e.g. if you delete the parent, but forget to delete the children."
+msgstr ""
+"外部キー制約に違反するリスクもなく、好きな順番でオブジェクトを削除することが"
+"できます。 ただし、間違った順番でオブジェクトを削除すると、外部キーカラムの "
+"<literal>NOT NULL</literal> 制約に違反する可能性があります。 例えば、親オブ"
+"ジェクトを削除したときに、子供オブジェクトを削除し忘れた場合です。"
+
+#. Tag: title
+#: session_api.xml:732
+#, no-c-format
+msgid "Replicating object between two different datastores"
+msgstr "異なる二つのデータストア間でのオブジェクトのレプリケーション"
+
+#. Tag: para
+#: session_api.xml:734
+#, no-c-format
+msgid ""
+"It is occasionally useful to be able to take a graph of persistent instances "
+"and make them persistent in a different datastore, without regenerating "
+"identifier values."
+msgstr ""
+"永続インスタンスのグラフを別のデータストアに永続化する場合に、 識別子の値を再"
+"生成せずにすむと便利な場合があります。"
+
+#. Tag: programlisting
+#: session_api.xml:740
+#, no-c-format
+msgid ""
+"<![CDATA[//retrieve a cat from one database\n"
+"Session session1 = factory1.openSession();\n"
+"Transaction tx1 = session1.beginTransaction();\n"
+"Cat cat = session1.get(Cat.class, catId);\n"
+"tx1.commit();\n"
+"session1.close();\n"
+"\n"
+"//reconcile with a second database\n"
+"Session session2 = factory2.openSession();\n"
+"Transaction tx2 = session2.beginTransaction();\n"
+"session2.replicate(cat, ReplicationMode.LATEST_VERSION);\n"
+"tx2.commit();\n"
+"session2.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:742
+#, no-c-format
+msgid ""
+"The <literal>ReplicationMode</literal> determines how <literal>replicate()</"
+"literal> will deal with conflicts with existing rows in the database."
+msgstr ""
+"レプリケーション先のデータベースに行が既にある場合、 <literal>replicate()</"
+"literal> が衝突をどのように扱うかを <literal>ReplicationMode</literal> で指定"
+"します。"
+
+#. Tag: para
+#: session_api.xml:749
+#, no-c-format
+msgid ""
+"<literal>ReplicationMode.IGNORE</literal> - ignore the object when there is "
+"an existing database row with the same identifier"
+msgstr ""
+"<literal>ReplicationMode.IGNORE</literal> - 同じ識別子を持つ行がデータベース"
+"に存在するなら、 そのオブジェクトを無視します。"
+
+#. Tag: para
+#: session_api.xml:755
+#, no-c-format
+msgid ""
+"<literal>ReplicationMode.OVERWRITE</literal> - overwrite any existing "
+"database row with the same identifier"
+msgstr ""
+"<literal>ReplicationMode.OVERWRITE</literal> - 同じ識別子を持つ既存の行を す"
+"べて上書きします。"
+
+#. Tag: para
+#: session_api.xml:761
+#, no-c-format
+msgid ""
+"<literal>ReplicationMode.EXCEPTION</literal> - throw an exception if there "
+"is an existing database row with the same identifier"
+msgstr ""
+"<literal>ReplicationMode.EXCEPTION</literal> - 同じ識別子を持つ行がデータベー"
+"スに存在するなら、 例外を投げます。"
+
+#. Tag: para
+#: session_api.xml:767
+#, no-c-format
+msgid ""
+"<literal>ReplicationMode.LATEST_VERSION</literal> - overwrite the row if its "
+"version number is earlier than the version number of the object, or ignore "
+"the object otherwise"
+msgstr ""
+"<literal>ReplicationMode.LATEST_VERSION</literal> - 行に保存されているバー"
+"ジョン番号が、 引数のオブジェクトのバージョン番号より古いならば、その行を上書"
+"きします。"
+
+#. Tag: para
+#: session_api.xml:775
+#, no-c-format
+msgid ""
+"Usecases for this feature include reconciling data entered into different "
+"database instances, upgrading system configuration information during "
+"product upgrades, rolling back changes made during non-ACID transactions and "
+"more."
+msgstr ""
+"次のようなケースで、この機能を使用します。 異なるデータベースインスタンスに入"
+"れられたデータの同期、 製品更新時におけるシステム設定情報の更新、非ACIDトラン"
+"ザクションのなかで加えられた変更のロールバックなどです。"
+
+#. Tag: title
+#: session_api.xml:784
+#, no-c-format
+msgid "Flushing the Session"
+msgstr "セッションのフラッシュ"
+
+#. Tag: para
+#: session_api.xml:786
+#, no-c-format
+msgid ""
+"From time to time the <literal>Session</literal> will execute the SQL "
+"statements needed to synchronize the JDBC connection's state with the state "
+"of objects held in memory. This process, <emphasis>flush</emphasis>, occurs "
+"by default at the following points"
+msgstr ""
+"JDBCコネクションの状態とメモリ上のオブジェクトの状態を同期させるために必要な "
+"SQL文を <literal>Session</literal> が実行することがときどきあります。 この処"
+"理 <emphasis>flush</emphasis> は、デフォルトでは次のときに起こります。"
+
+#. Tag: para
+#: session_api.xml:795
+#, no-c-format
+msgid "before some query executions"
+msgstr "クエリを実行する前"
+
+#. Tag: para
+#: session_api.xml:800
+#, no-c-format
+msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
+msgstr "<literal>org.hibernate.Transaction.commit()</literal> を実行したとき"
+
+#. Tag: para
+#: session_api.xml:805
+#, no-c-format
+msgid "from <literal>Session.flush()</literal>"
+msgstr "<literal>Session.flush()</literal> を実行したとき"
+
+#. Tag: para
+#: session_api.xml:811
+#, no-c-format
+msgid "The SQL statements are issued in the following order"
+msgstr "SQL文は以下の順番で発行されます。"
+
+#. Tag: para
+#: session_api.xml:817
+#, no-c-format
+msgid ""
+"all entity insertions, in the same order the corresponding objects were "
+"saved using <literal>Session.save()</literal>"
+msgstr ""
+"すべてのエンティティの挿入。これは、 <literal>Session.save()</literal> を使っ"
+"てセーブした オブジェクトの順に実行していきます。"
+
+#. Tag: para
+#: session_api.xml:823
+#, no-c-format
+msgid "all entity updates"
+msgstr "すべてのエンティティの更新"
+
+#. Tag: para
+#: session_api.xml:828
+#, no-c-format
+msgid "all collection deletions"
+msgstr "すべてのコレクションの削除"
+
+#. Tag: para
+#: session_api.xml:833
+#, no-c-format
+msgid "all collection element deletions, updates and insertions"
+msgstr "すべてのコレクションの要素に対する削除、更新、挿入"
+
+#. Tag: para
+#: session_api.xml:838
+#, no-c-format
+msgid "all collection insertions"
+msgstr "すべてのコレクションの挿入"
+
+#. Tag: para
+#: session_api.xml:843
+#, no-c-format
+msgid ""
+"all entity deletions, in the same order the corresponding objects were "
+"deleted using <literal>Session.delete()</literal>"
+msgstr ""
+"すべてのエンティティの削除。これは、<literal>Session.delete()</literal> を"
+"使って 削除したオブジェクトの順に実行していきます。"
+
+#. Tag: para
+#: session_api.xml:850
+#, no-c-format
+msgid ""
+"(An exception is that objects using <literal>native</literal> ID generation "
+"are inserted when they are saved.)"
+msgstr ""
+"(１つ例外があります。 <literal>native</literal> ID 生成を使ったオブジェクト"
+"は、 それらがセーブされたときに挿入されます。）"
+
+#. Tag: para
+#: session_api.xml:855
+#, no-c-format
+msgid ""
+"Except when you explicity <literal>flush()</literal>, there are absolutely "
+"no guarantees about <emphasis>when</emphasis> the <literal>Session</literal> "
+"executes the JDBC calls, only the <emphasis>order</emphasis> in which they "
+"are executed. However, Hibernate does guarantee that the <literal>Query.list"
+"(..)</literal> will never return stale data; nor will they return the wrong "
+"data."
+msgstr ""
+"明示的に <literal>flush()</literal> するときを除いて、 <emphasis>いつ</"
+"emphasis><literal>Session</literal> がJDBCをコールするのかについて 絶対的な保"
+"証はありません。ただし、それらが実行される <emphasis>順番</emphasis> だけは "
+"保証されます。 また、Hibernate は、 <literal>Query.list(..)</literal> が古い"
+"データや間違ったデータ返さないことを 保証しています。"
+
+#. Tag: para
+#: session_api.xml:863
+#, no-c-format
+msgid ""
+"It is possible to change the default behavior so that flush occurs less "
+"frequently. The <literal>FlushMode</literal> class defines three different "
+"modes: only flush at commit time (and only when the Hibernate "
+"<literal>Transaction</literal> API is used), flush automatically using the "
+"explained routine, or never flush unless <literal>flush()</literal> is "
+"called explicitly. The last mode is useful for long running units of work, "
+"where a <literal>Session</literal> is kept open and disconnected for a long "
+"time (see <xref linkend=\"transactions-optimistic-longsession\"/>)."
+msgstr ""
+"フラッシュが頻繁に起こらないようにデフォルトの振る舞いを変えることができま"
+"す。 <literal>FlushMode</literal> クラスは3つの異なるモードを定義します。 そ"
+"れは、コミット時にだけフラッシュするモード （Hibernateの "
+"<literal>Transaction</literal> APIが使われる場合だけです）、 説明のあった処理"
+"順に基づいて自動でフラッシュするモード、 <literal>flush()</literal> が明示的"
+"に呼ばれない限りフラッシュしないモードの３つです。 最後のモードは、作業単位が"
+"長期間に及ぶ場合に役に立ちます ( <xref linkend=\"transactions-optimistic-"
+"longsession\"/> を参照してください)。"
+
+#. Tag: programlisting
+#: session_api.xml:873
+#, no-c-format
+msgid ""
+"<![CDATA[sess = sf.openSession();\n"
+"Transaction tx = sess.beginTransaction();\n"
+"sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale state\n"
+"\n"
+"Cat izi = (Cat) sess.load(Cat.class, id);\n"
+"izi.setName(iznizi);\n"
+"\n"
+"// might return stale data\n"
+"sess.find(\"from Cat as cat left outer join cat.kittens kitten\");\n"
+"\n"
+"// change to izi is not flushed!\n"
+"...\n"
+"tx.commit(); // flush occurs\n"
+"sess.close();]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:875
+#, no-c-format
+msgid ""
+"During flush, an exception might occur (e.g. if a DML operation violates a "
+"constraint). Since handling exceptions involves some understanding of "
+"Hibernate's transactional behavior, we discuss it in <xref linkend="
+"\"transactions\"/>."
+msgstr ""
+"フラッシュのとき、例外が発生するかもしれません。 （例えば、DML操作が制約を違"
+"反するような場合です。） 例外処理を理解するためには、Hibernateのトランザク"
+"ションの振る舞いを理解する必要があるため、 <xref linkend=\"transactions\"/> "
+"で説明します。"
+
+#. Tag: title
+#: session_api.xml:884
+#, no-c-format
+msgid "Transitive persistence"
+msgstr "連鎖的な永続化"
+
+#. Tag: para
+#: session_api.xml:886
+#, no-c-format
+msgid ""
+"It is quite cumbersome to save, delete, or reattach individual objects, "
+"especially if you deal with a graph of associated objects. A common case is "
+"a parent/child relationship. Consider the following example:"
+msgstr ""
+"個々のオブジェクトをセーブしたり、削除したり、再追加したりすることは かなり面"
+"倒です。特に、関連するオブジェクトを扱うような場合には際立ちます。 よくあるの"
+"は、親子関係を扱うケースです。 以下の例を考えてみましょう。"
+
+#. Tag: para
+#: session_api.xml:892
+#, no-c-format
+msgid ""
+"If the children in a parent/child relationship would be value typed (e.g. a "
+"collection of addresses or strings), their life cycle would depend on the "
+"parent and no further action would be required for convenient \"cascading\" "
+"of state changes. When the parent is saved, the value-typed child objects "
+"are saved as well, when the parent is deleted, the children will be deleted, "
+"etc. This even works for operations such as the removal of a child from the "
+"collection; Hibernate will detect this and, since value-typed objects can't "
+"have shared references, delete the child from the database."
+msgstr ""
+"もし、親子関係の子が値型なら（例えば、住所や文字列のコレクション）、 それらの"
+"ライフサイクルは親に依存しており、便利な状態変化の\"カスケード\"を使うため"
+"に、 追加の作業は必要はありません。 親がセーブされたとき、値型の子オブジェク"
+"トも同じようにセーブされますし、 親が削除されたときは、子も削除されます。その"
+"他の操作も同じです。 コレクションから1つの子を削除するような操作でもうまくい"
+"きます。 すなわち、Hibernateはこの削除操作を検出すると、 値型のオブジェクトは"
+"参照を共有できないので、データベースからその子供を削除します。"
+
+#. Tag: para
+#: session_api.xml:903
+#, no-c-format
+msgid ""
+"Now consider the same scenario with parent and child objects being entities, "
+"not value-types (e.g. categories and items, or parent and child cats). "
+"Entities have their own life cycle, support shared references (so removing "
+"an entity from the collection does not mean it can be deleted), and there is "
+"by default no cascading of state from one entity to any other associated "
+"entities. Hibernate does not implement <emphasis>persistence by "
+"reachability</emphasis> by default."
+msgstr ""
+"ここで、親と子が値型でなくエンティティであるとして同じシナリオを考えてみま"
+"しょう。 （例えば、カテゴリーと品目の関係や親と子の猫の関係です。） エンティ"
+"ティは、それ自身がライフサイクルを持ち、参照の共有をサポートします。 （そのた"
+"め、コレクションからエンティティを削除することは、 エンティティ自身の削除を意"
+"味しません。） また、エンティティは、デフォルトでは、関連する他のエンティティ"
+"へ 状態をカスケードすることはありません。 Hibernateは <emphasis>到達可能性に"
+"よる永続化</emphasis> をデフォルトでは実行しません。"
+
+#. Tag: para
+#: session_api.xml:912
+#, no-c-format
+msgid ""
+"For each basic operation of the Hibernate session - including "
+"<literal>persist(), merge(), saveOrUpdate(), delete(), lock(), refresh(), "
+"evict(), replicate()</literal> - there is a corresponding cascade style. "
+"Respectively, the cascade styles are named <literal>create, merge, save-"
+"update, delete, lock, refresh, evict, replicate</literal>. If you want an "
+"operation to be cascaded along an association, you must indicate that in the "
+"mapping document. For example:"
+msgstr ""
+"HibernateのSessionの基本操作（ <literal>persist(), merge(), saveOrUpdate(), "
+"delete(), lock(), refresh(), evict(), replicate()</literal> が含まれます）に"
+"対して、 それぞれに対応するカスケードスタイルがあります。 それぞれのカスケー"
+"ドスタイルには、 <literal>create, merge, save-update, delete, lock, refresh, "
+"evict, replicate</literal> という名前がついています。 もし、関連に沿ってカス"
+"ケードさせたい操作があるなら、マッピングファイルにそう指定しなければなりませ"
+"ん。 例えば、以下のようにします。"
+
+#. Tag: programlisting
+#: session_api.xml:921
+#, no-c-format
+msgid "<![CDATA[<one-to-one name=\"person\" cascade=\"persist\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:923
+#, no-c-format
+msgid "Cascade styles my be combined:"
+msgstr "カスケードスタイルは、組み合わせることができます。"
+
+#. Tag: programlisting
+#: session_api.xml:927
+#, no-c-format
+msgid ""
+"<![CDATA[<one-to-one name=\"person\" cascade=\"persist,delete,lock\"/>]]>"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:929
+#, no-c-format
+msgid ""
+"You may even use <literal>cascade=\"all\"</literal> to specify that "
+"<emphasis>all</emphasis> operations should be cascaded along the "
+"association. The default <literal>cascade=\"none\"</literal> specifies that "
+"no operations are to be cascaded."
+msgstr ""
+"<emphasis>すべての</emphasis> 操作を関連に沿ってカスケードするよう指定すると"
+"きは、 <literal>cascade=\"all\"</literal> を使います。 デフォルトの "
+"<literal>cascade=\"none\"</literal> は、どの操作もカスケードしないことを意味"
+"します。"
+
+#. Tag: para
+#: session_api.xml:935
+#, no-c-format
+msgid ""
+"A special cascade style, <literal>delete-orphan</literal>, applies only to "
+"one-to-many associations, and indicates that the <literal>delete()</literal> "
+"operation should be applied to any child object that is removed from the "
+"association."
+msgstr ""
+"特殊なカスケードスタイル <literal>delete-orphan</literal> は、一対多関連にだ"
+"け 適用できます。 これは、関連から削除された子供のオブジェクトに対して、 "
+"<literal>delete()</literal> 操作が適用されることを意味します。"
+
+#. Tag: para
+#: session_api.xml:942
+#, no-c-format
+msgid "Recommendations:"
+msgstr "おすすめ："
+
+#. Tag: para
+#: session_api.xml:948
+#, no-c-format
+msgid ""
+"It doesn't usually make sense to enable cascade on a <literal>&lt;many-to-"
+"one&gt;</literal> or <literal>&lt;many-to-many&gt;</literal> association. "
+"Cascade is often useful for <literal>&lt;one-to-one&gt;</literal> and "
+"<literal>&lt;one-to-many&gt;</literal> associations."
+msgstr ""
+"普通、 <literal>&lt;many-to-one&gt;</literal> や <literal>&lt;many-to-"
+"many&gt;</literal> 関連に対しては、 カスケードを設定する意味はありません。 "
+"<literal>&lt;one-to-one&gt;</literal> と <literal>&lt;one-to-many&gt;</"
+"literal> 関連に対しては、 カスケードが役に立つことがあります。"
+
+#. Tag: para
+#: session_api.xml:956
+#, no-c-format
+msgid ""
+"If the child object's lifespan is bounded by the lifespan of the parent "
+"object, make it a <emphasis>life cycle object</emphasis> by specifying "
+"<literal>cascade=\"all,delete-orphan\"</literal>."
+msgstr ""
+"子供オブジェクトの寿命が親オブジェクトの寿命に制限を受けるならば、 "
+"<literal>cascade=\"all,delete-orphan\"</literal> を指定し、 子供オブジェクト"
+"を <emphasis>ライフサイクルオブジェクト</emphasis> にします。"
+
+#. Tag: para
+#: session_api.xml:963
+#, no-c-format
+msgid ""
+"Otherwise, you might not need cascade at all. But if you think that you will "
+"often be working with the parent and children together in the same "
+"transaction, and you want to save yourself some typing, consider using "
+"<literal>cascade=\"persist,merge,save-update\"</literal>."
+msgstr ""
+". それ以外の場合は、カスケードはほとんど必要ないでしょう。 しかし、同じトラン"
+"ザクションのなかで親と子が一緒に動作することが多いと思い、 いくらかのコードを"
+"書く手間を省きたいのであれば、 <literal>cascade=\"persist,merge,save-update"
+"\"</literal> を使うことを考えましょう。"
+
+#. Tag: para
+#: session_api.xml:971
+#, no-c-format
+msgid ""
+"Mapping an association (either a single valued association, or a collection) "
+"with <literal>cascade=\"all\"</literal> marks the association as a "
+"<emphasis>parent/child</emphasis> style relationship where save/update/"
+"delete of the parent results in save/update/delete of the child or children."
+msgstr ""
+"<literal>cascade=\"all\"</literal> でマッピングした関連（単値関連やコレクショ"
+"ン）は、 <emphasis>親子</emphasis> スタイルの関連とマークされます。 それは、"
+"親のセーブ/更新/削除が、子のセーブ/更新/削除を引き起こす関係のことです。"
+
+#. Tag: para
+#: session_api.xml:977
+#, no-c-format
+msgid ""
+"Futhermore, a mere reference to a child from a persistent parent will result "
+"in save/update of the child. This metaphor is incomplete, however. A child "
+"which becomes unreferenced by its parent is <emphasis>not</emphasis> "
+"automatically deleted, except in the case of a <literal>&lt;one-to-many&gt;</"
+"literal> association mapped with <literal>cascade=\"delete-orphan\"</"
+"literal>. The precise semantics of cascading operations for a parent/child "
+"relationship are as follows:"
+msgstr ""
+"さらに、永続化された親が子を単に参照しているだけで、子のセーブ/更新を引き起こ"
+"します。 しかし、このメタファーは不完全です。親から参照されなくなった子は、自"
+"動的に削除 <emphasis>されません</emphasis> 。 ただし、 <literal>cascade="
+"\"delete-orphan\"</literal> でマッピングされた <literal>&lt;one-to-many&gt;</"
+"literal> 関連を 除いてです。 親子関係のカスケード操作の正確な意味は以下のよう"
+"になります。"
+
+#. Tag: para
+#: session_api.xml:988
+#, no-c-format
+msgid ""
+"If a parent is passed to <literal>persist()</literal>, all children are "
+"passed to <literal>persist()</literal>"
+msgstr ""
+"親が <literal>persist()</literal> に渡されたならば、 すべての子は "
+"<literal>persist()</literal> に渡されます。"
+
+#. Tag: para
+#: session_api.xml:994
+#, no-c-format
+msgid ""
+"If a parent is passed to <literal>merge()</literal>, all children are passed "
+"to <literal>merge()</literal>"
+msgstr ""
+"<literal>merge()</literal> に渡されたならば、 すべての子は <literal>merge()</"
+"literal> に渡されます。"
+
+#. Tag: para
+#: session_api.xml:1000
+#, no-c-format
+msgid ""
+"If a parent is passed to <literal>save()</literal>, <literal>update()</"
+"literal> or <literal>saveOrUpdate()</literal>, all children are passed to "
+"<literal>saveOrUpdate()</literal>"
+msgstr ""
+"親が <literal>save()</literal> 、 <literal>update()</literal> 、 "
+"<literal>saveOrUpdate()</literal> に渡されたならば、すべての子は "
+"<literal>saveOrUpdate()</literal> に渡されます。"
+
+#. Tag: para
+#: session_api.xml:1006
+#, no-c-format
+msgid ""
+"If a transient or detached child becomes referenced by a persistent parent, "
+"it is passed to <literal>saveOrUpdate()</literal>"
+msgstr ""
+"一時的または分離状態の子が、永続化された親に参照されたならば、 "
+"<literal>saveOrUpdate()</literal> に渡されます。"
+
+#. Tag: para
+#: session_api.xml:1012
+#, no-c-format
+msgid ""
+"If a parent is deleted, all children are passed to <literal>delete()</"
+"literal>"
+msgstr ""
+"親が削除されたならば、すべての子は、 <literal>delete()</literal> に渡されま"
+"す。"
+
+#. Tag: para
+#: session_api.xml:1017
+#, no-c-format
+msgid ""
+"If a child is dereferenced by a persistent parent, <emphasis>nothing special "
+"happens</emphasis> - the application should explicitly delete the child if "
+"necessary - unless <literal>cascade=\"delete-orphan\"</literal>, in which "
+"case the \"orphaned\" child is deleted."
+msgstr ""
+"子が永続化された親から参照されなくなったときは、 <emphasis>特に何も起こりませ"
+"ん</emphasis> 。 よって、アプリケーションが必要であれば、明示的に削除する必要"
+"があります。 ただし、 <literal>cascade=\"delete-orphan\"</literal> の場合を除"
+"きます。 この場合、「親のない」子は削除されます。"
+
+#. Tag: para
+#: session_api.xml:1026
+#, no-c-format
+msgid ""
+"Finally, note that cascading of operations can be applied to an object graph "
+"at <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All "
+"operations, if enabled, are cascaded to associated entities reachable when "
+"the operation is executed. However, <literal>save-upate</literal> and "
+"<literal>delete-orphan</literal> are transitive for all associated entities "
+"reachable during flush of the <literal>Session</literal>."
+msgstr ""
+"最後に、操作のカスケードがオブジェクトグラフに適用されるのは、 <emphasis>コー"
+"ルした時</emphasis> あるいは、 <emphasis>flushした時</emphasis> であることに"
+"注意してください。 すべての操作は、その操作が実行されたときに、到達可能な関連"
+"するエンティティに対して カスケードが可能ならカスケードします。 しかし、 "
+"<literal>save-upate</literal> と <literal>delete-orphan</literal> は、 "
+"<literal>Session</literal> がflushしている間に、 すべての到達可能な関連するエ"
+"ンティティに伝播します。"
+
+#. Tag: title
+#: session_api.xml:1038
+#, no-c-format
+msgid "Using metadata"
+msgstr "メタデータの使用"
+
+#. Tag: para
+#: session_api.xml:1040
+#, no-c-format
+msgid ""
+"Hibernate requires a very rich meta-level model of all entity and value "
+"types. From time to time, this model is very useful to the application "
+"itself. For example, the application might use Hibernate's metadata to "
+"implement a \"smart\" deep-copy algorithm that understands which objects "
+"should be copied (eg. mutable value types) and which should not (eg. "
+"immutable value types and, possibly, associated entities)."
+msgstr ""
+"Hibernateは、すべてのエンティティと値型の非常にリッチなメタレベルのモデルを必"
+"要とします。 ときどき、このモデルはアプリケーションにとってとても役に立ちま"
+"す。 例えば、アプリケーションは、Hibernateのメタデータを使って、\"賢い\" "
+"ディープコピーアルゴリズムを 実装できるかもしません。そのアルゴリズムとは、ど"
+"のオブジェクトがコピーされるべきか（例：可変の値型）や どのオブジェクトはコ"
+"ピーされないべきか（例：不変な値型や可能なら関連するエンティティ）を 判断でき"
+"るものです。"
+
+#. Tag: para
+#: session_api.xml:1047
+#, no-c-format
+msgid ""
+"Hibernate exposes metadata via the <literal>ClassMetadata</literal> and "
+"<literal>CollectionMetadata</literal> interfaces and the <literal>Type</"
+"literal> hierarchy. Instances of the metadata interfaces may be obtained "
+"from the <literal>SessionFactory</literal>."
+msgstr ""
+"Hibernateは<literal>ClassMetadata</literal> と<literal>CollectionMetadata</"
+"literal> インタフェースと <literal>Type</literal> 階層を通してメタデータを公"
+"開します。 メタデータインターフェイスのインスタンスは、 "
+"<literal>SessionFactory</literal> から得られます。"
+
+#. Tag: programlisting
+#: session_api.xml:1054
+#, no-c-format
+msgid ""
+"<![CDATA[Cat fritz = ......;\n"
+"ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);\n"
+"\n"
+"Object[] propertyValues = catMeta.getPropertyValues(fritz);\n"
+"String[] propertyNames = catMeta.getPropertyNames();\n"
+"Type[] propertyTypes = catMeta.getPropertyTypes();\n"
+"\n"
+"// get a Map of all properties which are not collections or associations\n"
+"Map namedValues = new HashMap();\n"
+"for ( int i=0; i<propertyNames.length; i++ ) {\n"
+"    if ( !propertyTypes[i].isEntityType() && !propertyTypes[i]."
+"isCollectionType() ) {\n"
+"        namedValues.put( propertyNames[i], propertyValues[i] );\n"
+"    }\n"
+"}]]>"
+msgstr ""
+
+#~ msgid "UPDATE"
+#~ msgstr "UPDATE"
+
+#~ msgid "DELETE"
+#~ msgstr "DELETE"
+
+#~ msgid "state management"
+#~ msgstr "状態管理"
+
+#~ msgid "statements"
+#~ msgstr "文"
+
+#~ msgid "Connection"
+#~ msgstr "session.connection()"
+
+#~ msgid "session.connection()"
+#~ msgstr "Connection"

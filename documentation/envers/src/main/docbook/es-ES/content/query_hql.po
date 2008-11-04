@@ -1,0 +1,2230 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+#: index.docbook:5
+msgid "HQL: The Hibernate Query Language"
+msgstr "HQL: El Lenguaje de Consulta de Hibernate"
+
+#: index.docbook:7
+msgid ""
+"Hibernate is equipped with an extremely powerful query language that (quite "
+"intentionally) looks very much like SQL. But don't be fooled by the syntax; "
+"HQL is fully object-oriented, understanding notions like inheritence, "
+"polymorphism and association."
+msgstr ""
+"Hibernate est&#x00e1; equipado con un lenguaje de consulta extremadamente "
+"potente que (intencionalmente en absoluto) se parece much&#x00ed;simo a SQL. "
+"Pero no te enga&#x00f1;es por la sintaxis; HQL es completamente orientado a "
+"objetos, entendiendo nociones como herencia, polimorfismo y asociaci&#x00f3;"
+"n."
+
+#: index.docbook:14
+msgid "Case Sensitivity"
+msgstr "Sensibilidad a May&#x00fa;sculas"
+
+#: index.docbook:16
+msgid ""
+"Queries are case-insensitive, except for names of Java classes and "
+"properties. So <literal>SeLeCT</literal> is the same as <literal>sELEct</"
+"literal> is the same as <literal>SELECT</literal> but <literal>org.hibernate."
+"eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal> and "
+"<literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
+msgstr ""
+"Las consultas son insensibles a may&#x00fa;sculas, excepto para nombres de "
+"clases Java y propiedades. De modo que <literal>SeLeCT</literal> es lo mismo "
+"que <literal>sELEct</literal> e igual a <literal>SELECT</literal>, pero "
+"<literal>org.hibernate.eg.FOO</literal> no lo es a <literal>org.hibernate.eg."
+"Foo</literal> y <literal>foo.barSet</literal> no es igual a <literal>foo."
+"BARSET</literal>."
+
+#: index.docbook:27
+msgid ""
+"This manual uses lowercase HQL keywords. Some users find queries with "
+"uppercase keywords more readable, but we find this convention ugly when "
+"embedded in Java code."
+msgstr ""
+"Este manual usa palabras clave HQL en min&#x00fa;sculas. Algunos usuarios "
+"encuentran las consultas con palabras clave en may&#x00fa;sculas m&#x00e1;s "
+"le&#x00ed;bles, pero encontramos esta convenci&#x00f3;n fea cuando se encaja "
+"en c&#x00f3;digo Java."
+
+#: index.docbook:35
+msgid "The from clause"
+msgstr "La cl&#x00e1;usula from"
+
+#: index.docbook:37
+msgid "The simplest possible Hibernate query is of the form:"
+msgstr "La consulta m&#x00e1;s simple posible de Hibernate es de la forma:"
+
+#: index.docbook:41
+msgid "<![CDATA[from eg.Cat]]>"
+msgstr "<![CDATA[from eg.Cat]]>"
+
+#: index.docbook:43
+msgid ""
+"which simply returns all instances of the class <literal>eg.Cat</literal>. "
+"We don't usually need to qualify the class name, since <literal>auto-import</"
+"literal> is the default. So we almost always just write:"
+msgstr ""
+"que simplemente devuelve todas las instancias de la clase <literal>eg.Cat</"
+"literal>. Usualmente no necesitamos cualificar el nombre de la clase, ya que "
+"<literal>auto-import</literal> est&#x00e1; por defecto. De modo que casi "
+"siempre escribimos solamente:"
+
+#: index.docbook:49
+msgid "<![CDATA[from Cat]]>"
+msgstr "<![CDATA[from Cat]]>"
+
+#: index.docbook:51
+msgid ""
+"Most of the time, you will need to assign an <emphasis>alias</emphasis>, "
+"since you will want to refer to the <literal>Cat</literal> in other parts of "
+"the query."
+msgstr ""
+"La mayor&#x00ed;a del tiempo, necesitar&#x00e1;s asignar un <emphasis>alias</"
+"emphasis>, ya que querr&#x00e1;s referirte al <literal>Cat</literal> en "
+"otras partes de la consulta."
+
+#: index.docbook:57, index.docbook:372
+msgid "<![CDATA[from Cat as cat]]>"
+msgstr "<![CDATA[from Cat as cat]]>"
+
+#: index.docbook:59
+msgid ""
+"This query assigns the alias <literal>cat</literal> to <literal>Cat</"
+"literal> instances, so we could use that alias later in the query. The "
+"<literal>as</literal> keyword is optional; we could also write:"
+msgstr ""
+"Esta consulta asigna el alias <literal>cat</literal> a las instancias de "
+"<literal>Cat</literal>, de modo que podr&#x00ed;amos usar ese alias luego en "
+"la consulta. La palabra clave <literal>as</literal> es opcional; "
+"tambi&#x00e9;n podr&#x00ed;amos escribir:"
+
+#: index.docbook:65
+msgid "<![CDATA[from Cat cat]]>"
+msgstr "<![CDATA[from Cat cat]]>"
+
+#: index.docbook:67
+msgid ""
+"Multiple classes may appear, resulting in a cartesian product or \"cross\" "
+"join."
+msgstr ""
+"Pueden aparecer m&#x00fa;ltiples clases, resultando en un producto "
+"cartesiano o uni&#x00f3;n \"cruzada\" (cross join)."
+
+#: index.docbook:71
+msgid "<![CDATA[from Formula, Parameter]]>"
+msgstr "<![CDATA[from Formula, Parameter]]>"
+
+#: index.docbook:72
+msgid "<![CDATA[from Formula as form, Parameter as param]]>"
+msgstr "<![CDATA[from Formula as form, Parameter as param]]>"
+
+#: index.docbook:74
+msgid ""
+"It is considered good practice to name query aliases using an initial "
+"lowercase, consistent with Java naming standards for local variables (eg. "
+"<literal>domesticCat</literal>)."
+msgstr ""
+"Se considera buena pr&#x00e1;ctica el nombrar los alias de consulta usando "
+"una inicial en min&#x00fa;sculas, consistente con los est&#x00e1;ndares de "
+"nombrado de Java para variables locales (por ejemplo, <literal>domesticCat</"
+"literal>)."
+
+#: index.docbook:83
+msgid "Associations and joins"
+msgstr "Asociaciones y uniones (joins)"
+
+#: index.docbook:85
+msgid ""
+"We may also assign aliases to associated entities, or even to elements of a "
+"collection of values, using a <literal>join</literal>."
+msgstr ""
+"Podemos tambi&#x00e9;n asignar aliases a entidades asociadas, e incluso a "
+"elementos de una colecci&#x00f3;n de valores, usando una <literal>join</"
+"literal>."
+
+#: index.docbook:90
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join cat.mate as mate\n"
+"    left outer join cat.kittens as kitten]]>"
+msgstr ""
+"<![CDATA[from Cat as cat \n"
+"    inner join cat.mate as mate\n"
+"    left outer join cat.kittens as kitten]]>"
+
+#: index.docbook:92
+msgid "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
+msgstr "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
+
+#: index.docbook:94
+msgid "<![CDATA[from Formula form full join form.parameter param]]>"
+msgstr "<![CDATA[from Formula form full join form.parameter param]]>"
+
+#: index.docbook:96
+msgid "The supported join types are borrowed from ANSI SQL"
+msgstr "Los tipos de join soportados son prestados de ANSI SQL"
+
+#: index.docbook:103
+msgid "inner join"
+msgstr "inner join"
+
+#: index.docbook:108
+msgid "left outer join"
+msgstr "left outer join"
+
+#: index.docbook:113
+msgid "right outer join"
+msgstr "right outer join"
+
+#: index.docbook:117
+msgid "<literal>full join</literal> (not usually useful)"
+msgstr "<literal>full join</literal> (no &#x00fa;til usualmente)"
+
+#: index.docbook:123
+msgid ""
+"The <literal>inner join</literal>, <literal>left outer join</literal> and "
+"<literal>right outer join</literal> constructs may be abbreviated."
+msgstr ""
+"Las construcciones <literal>inner join</literal>, <literal>left outer join</"
+"literal> y <literal>right outer join</literal> pueden ser abreviadas."
+
+#: index.docbook:128
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    join cat.mate as mate\n"
+"    left join cat.kittens as kitten]]>"
+msgstr ""
+"<![CDATA[from Cat as cat \n"
+"    join cat.mate as mate\n"
+"    left join cat.kittens as kitten]]>"
+
+#: index.docbook:130
+msgid ""
+"You may supply extra join conditions using the HQL <literal>with</literal> "
+"keyword."
+msgstr ""
+"Puedes proveer condiciones de uni&#x00f3;n extra usando la palabra clave "
+"<literal>with</literal> de HQL."
+
+#: index.docbook:135
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    left join cat.kittens as kitten\n"
+"        with kitten.bodyWeight > 10.0]]>"
+msgstr ""
+"<![CDATA[from Cat as cat \n"
+"    left join cat.kittens as kitten \n"
+"        with kitten.bodyWeight > 10.0]]>"
+
+#: index.docbook:137
+msgid ""
+"In addition, a \"fetch\" join allows associations or collections of values "
+"to be initialized along with their parent objects, using a single select. "
+"This is particularly useful in the case of a collection. It effectively "
+"overrides the outer join and lazy declarations of the mapping file for "
+"associations and collections. See <xref linkend=\"performance-fetching\"/> "
+"for more information."
+msgstr ""
+"En adici&#x00f3;n, un \"fetch\" join permite a las asociaciones o "
+"colecciones de valores ser inicializadas junto a sus objetos padres, usando "
+"una sola selecci&#x00f3;n. Esto es particularmente &#x00fa;til en el case de "
+"una colecci&#x00f3;n. Efectivamente sobrescribe el outer join y las "
+"declaraciones perezosas (lazy) del fichero de mapeo para asociaciones y "
+"colecciones. Ver <xref linkend=\"performance-fetching\"/> para m&#x00e1;s "
+"informaci&#x00f3;n."
+
+#: index.docbook:145
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens]]>"
+msgstr ""
+"<![CDATA[from Cat as cat \n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens]]>"
+
+#: index.docbook:147
+msgid ""
+"A fetch join does not usually need to assign an alias, because the "
+"associated objects should not be used in the <literal>where</literal> clause "
+"(or any other clause). Also, the associated objects are not returned "
+"directly in the query results. Instead, they may be accessed via the parent "
+"object. The only reason we might need an alias is if we are recursively join "
+"fetching a further collection:"
+msgstr ""
+"Usualmente a un fetch join no se necesita asign&#x00e1;rsele un alias, "
+"porque los objetos asociados no deben ser usados en la cl&#x00e1;usula "
+"<literal>where</literal> (ni en cualquier otra cl&#x00e1;usula). Adem&#x00e1;"
+"s, los objetos asociados no son devueltos directamente en los resultados de "
+"consulta. En cambio, pueden ser accedidos v&#x00ed;a el objeto padre. La "
+"&#x00fa;nica raz&#x00f3;n por la que necesitar&#x00ed;amos un alias es "
+"estamos uniendo recursivamente otra colecci&#x00f3;n:"
+
+#: index.docbook:155
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens child\n"
+"    left join fetch child.kittens]]>"
+msgstr ""
+"<![CDATA[from Cat as cat \n"
+"    inner join fetch cat.mate\n"
+"    left join fetch cat.kittens child\n"
+"    left join fetch child.kittens]]>"
+
+#: index.docbook:157
+msgid ""
+"Note that the <literal>fetch</literal> construct may not be used in queries "
+"called using <literal>iterate()</literal> (though <literal>scroll()</"
+"literal> can be used). Nor should <literal>fetch</literal> be used together "
+"with <literal>setMaxResults()</literal> or <literal>setFirstResult()</"
+"literal> as these operations are based on the result rows, which usually "
+"contain duplicates for eager collection fetching, hence, the number of rows "
+"is not what you'd expect. Nor may <literal>fetch</literal> be used together "
+"with an ad hoc <literal>with</literal> condition. It is possible to create a "
+"cartesian product by join fetching more than one collection in a query, so "
+"take care in this case. Join fetching multiple collection roles also "
+"sometimes gives unexpected results for bag mappings, so be careful about how "
+"you formulate your queries in this case. Finally, note that <literal>full "
+"join fetch</literal> and <literal>right join fetch</literal> are not "
+"meaningful."
+msgstr ""
+"Nota que la construcci&#x00f3;n <literal>fetch</literal> no puede usarse en "
+"consultas llamadas usando <literal>scroll()</literal> o <literal>iterate()</"
+"literal>. Ni debe usarse <literal>fetch</literal> junto con "
+"<literal>setMaxResults()</literal> o <literal>setFirstResult()</literal>. "
+"Tampoco puede usarse <literal>fetch</literal> junto a una condici&#x00f3;n "
+"<literal>with</literal> ad hoc. Es posible crear un producto cartesiano "
+"trayendo por join m&#x00e1;s de una colecci&#x00f3;n en una colecci&#x00f3;"
+"n, as&#x00ed; que ten cuidado en este caso. Traer por join m&#x00fa;ltiples "
+"roles de colecci&#x00f3;n tambi&#x00e9;n da a veces resultados inesperados "
+"para mapeos de bag, as&#x00ed; que s&#x00e9; cuidadoso sobre c&#x00f3;mo "
+"formular tus consultas en este caso. Finalmente, nota que <literal>full join "
+"fetch</literal> y <literal>right join fetch</literal> no son significativos."
+
+#: index.docbook:172
+msgid ""
+"If you are using property-level lazy fetching (with bytecode "
+"instrumentation), it is possible to force Hibernate to fetch the lazy "
+"properties immediately (in the first query) using <literal>fetch all "
+"properties</literal>."
+msgstr ""
+"Si est&#x00e1;s usando recuperaci&#x00f3;n perezosa a nivel de propiedad "
+"(con instrumentaci&#x00f3;n de bytecode), es posible forzar a Hibernate a "
+"traer las propiedades perezosas inmediatamente (en la primera consulta) "
+"usando <literal>fetch all properties</literal>."
+
+#: index.docbook:178
+msgid "<![CDATA[from Document fetch all properties order by name]]>"
+msgstr "<![CDATA[from Document fetch all properties order by name]]>"
+
+#: index.docbook:179
+msgid ""
+"<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%"
+"cats%']]>"
+msgstr ""
+"<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%"
+"cats%']]>"
+
+#: index.docbook:184
+msgid "Forms of join syntax"
+msgstr "UNTRANSLATED!!! Forms of join syntax"
+
+#: index.docbook:186
+msgid ""
+"HQL supports two forms of association joining: <literal>implicit</literal> "
+"and <literal>explicit</literal>."
+msgstr ""
+"HQL supports two forms of association joining: <literal>implicit</literal> "
+"and <literal>explicit</literal>."
+
+#: index.docbook:190
+msgid ""
+"The queries shown in the previous section all use the <literal>explicit</"
+"literal> form where the join keyword is explicitly used in the from clause. "
+"This is the recommended form."
+msgstr ""
+"The queries shown in the previous section all use the <literal>explicit</"
+"literal> form where the join keyword is explicitly used in the from clause. "
+"This is the recommended form."
+
+#: index.docbook:195
+msgid ""
+"The <literal>implicit</literal> form does not use the join keyword. Instead, "
+"the associations are \"dereferenced\" using dot-notation. <literal>implicit</"
+"literal> joins can appear in any of the HQL clauses. <literal>implicit</"
+"literal> join result in inner joins in the resulting SQL statement."
+msgstr ""
+"The <literal>implicit</literal> form does not use the join keyword. Instead, "
+"the associations are \"dereferenced\" using dot-notation. <literal>implicit</"
+"literal> joins can appear in any of the HQL clauses. <literal>implicit</"
+"literal> join result in inner joins in the resulting SQL statement."
+
+#: index.docbook:202
+msgid "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+msgstr "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+
+#: index.docbook:206
+msgid "Refering to identifier property"
+msgstr "Refering to identifier property"
+
+#: index.docbook:208
+msgid ""
+"There are, generally speaking, 2 ways to refer to an entity's identifier "
+"property:"
+msgstr ""
+"There are, generally speaking, 2 ways to refer to an entity's identifier "
+"property:"
+
+#: index.docbook:213
+msgid ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the identifier property of an entity <emphasis>provided that "
+"entity does not define a non-identifier property named id</emphasis>."
+msgstr ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the identifier property of an entity <emphasis>provided that "
+"entity does not define a non-identifier property named id</emphasis>."
+
+#: index.docbook:220
+msgid ""
+"If the entity defines a named identifier property, you may use that property "
+"name."
+msgstr ""
+"If the entity defines a named identifier property, you may use that property "
+"name."
+
+#: index.docbook:226
+msgid ""
+"References to composite identifier properties follow the same naming rules. "
+"If the entity has a non-identifier property named id, the composite "
+"identifier property can only be referenced by its defined named; otherwise, "
+"the special <literal>id</literal> property can be used to rerference the "
+"identifier property."
+msgstr ""
+"References to composite identifier properties follow the same naming rules. "
+"If the entity has a non-identifier property named id, the composite "
+"identifier property can only be referenced by its defined named; otherwise, "
+"the special <literal>id</literal> property can be used to rerference the "
+"identifier property."
+
+#: index.docbook:233
+msgid ""
+"Note: this has changed significantly starting in version 3.2.2. In previous "
+"versions, <literal>id</literal> <emphasis>always</emphasis> referred to the "
+"identifier property no matter what its actual name. A ramification of that "
+"decision was that non-identifier properties named <literal>id</literal> "
+"could never be referenced in Hibernate queries."
+msgstr ""
+"Note: this has changed significantly starting in version 3.2.2. In previous "
+"versions, <literal>id</literal> <emphasis>always</emphasis> referred to the "
+"identifier property no matter what its actual name. A ramification of that "
+"decision was that non-identifier properties named <literal>id</literal> "
+"could never be referenced in Hibernate queries."
+
+#: index.docbook:242
+msgid "The select clause"
+msgstr "La cl&#x00e1;usula select"
+
+#: index.docbook:244
+msgid ""
+"The <literal>select</literal> clause picks which objects and properties to "
+"return in the query result set. Consider:"
+msgstr ""
+"La cl&#x00e1;usula <literal>select</literal> escoge qu&#x00e9; objetos y "
+"propiedades devolver in el conjunto resultado de la consulta. Considera:"
+
+#: index.docbook:249
+msgid ""
+"<![CDATA[select mate\n"
+"from Cat as cat\n"
+"    inner join cat.mate as mate]]>"
+msgstr ""
+"<![CDATA[select mate \n"
+"from Cat as cat \n"
+"    inner join cat.mate as mate]]>"
+
+#: index.docbook:251
+msgid ""
+"The query will select <literal>mate</literal>s of other <literal>Cat</"
+"literal>s. Actually, you may express this query more compactly as:"
+msgstr ""
+"La consulta seleccionar&#x00e1; <literal>mate</literal>s de otros "
+"<literal>Cat</literal>s. Realmente, puedes expresar esta consulta en un "
+"forma m&#x00e1;s compacta como:"
+
+#: index.docbook:256
+msgid "<![CDATA[select cat.mate from Cat cat]]>"
+msgstr "<![CDATA[select cat.mate from Cat cat]]>"
+
+#: index.docbook:258
+msgid ""
+"Queries may return properties of any value type including properties of "
+"component type:"
+msgstr ""
+"Las consultas pueden devolver propiedades de cualquier tipo de valor "
+"incluyendo propiedades de tipo componente:"
+
+#: index.docbook:262
+msgid ""
+"<![CDATA[select cat.name from DomesticCat cat\n"
+"where cat.name like 'fri%']]>"
+msgstr ""
+"<![CDATA[select cat.name from DomesticCat cat\n"
+"where cat.name like 'fri%']]>"
+
+#: index.docbook:264
+msgid "<![CDATA[select cust.name.firstName from Customer as cust]]>"
+msgstr "<![CDATA[select cust.name.firstName from Customer as cust]]>"
+
+#: index.docbook:266
+msgid ""
+"Queries may return multiple objects and/or properties as an array of type "
+"<literal>Object[]</literal>,"
+msgstr ""
+"Las consultas pueden devolver m&#x00fa;ltiples objetos y/o propiedades como "
+"un array de tipo <literal>Object[]</literal>,"
+
+#: index.docbook:271
+msgid ""
+"<![CDATA[select mother, offspr, mate.name\n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+msgstr ""
+"<![CDATA[select mother, offspr, mate.name \n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+
+#: index.docbook:273
+msgid "or as a <literal>List</literal>,"
+msgstr "o como una <literal>List</literal>,"
+
+#: index.docbook:277
+msgid ""
+"<![CDATA[select new list(mother, offspr, mate.name)\n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+msgstr ""
+"<![CDATA[select new list(mother, offspr, mate.name)\n"
+"from DomesticCat as mother\n"
+"    inner join mother.mate as mate\n"
+"    left outer join mother.kittens as offspr]]>"
+
+#: index.docbook:279
+msgid "or as an actual typesafe Java object,"
+msgstr "o como un objeto real Java de tipo seguro,"
+
+#: index.docbook:283
+msgid ""
+"<![CDATA[select new Family(mother, mate, offspr)\n"
+"from DomesticCat as mother\n"
+"    join mother.mate as mate\n"
+"    left join mother.kittens as offspr]]>"
+msgstr ""
+"<![CDATA[select new Family(mother, mate, offspr)\n"
+"from DomesticCat as mother\n"
+"    join mother.mate as mate\n"
+"    left join mother.kittens as offspr]]>"
+
+#: index.docbook:285
+msgid ""
+"assuming that the class <literal>Family</literal> has an appropriate "
+"constructor."
+msgstr ""
+"asumiendo que la clase <literal>Family</literal> tiene un constructor "
+"apropiado."
+
+#: index.docbook:289
+msgid ""
+"You may assign aliases to selected expressions using <literal>as</literal>:"
+msgstr ""
+"Puedes asignar aliases para seleccionar expresiones usando <literal>as</"
+"literal>:"
+
+#: index.docbook:293
+msgid ""
+"<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as "
+"n\n"
+"from Cat cat]]>"
+msgstr ""
+"<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as "
+"n\n"
+"from Cat cat]]>"
+
+#: index.docbook:295
+msgid ""
+"This is most useful when used together with <literal>select new map</"
+"literal>:"
+msgstr ""
+"Esto es lo m&#x00e1;s &#x00fa;til cuando se usa junto con <literal>select "
+"new map</literal>:"
+
+#: index.docbook:299
+msgid ""
+"<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, "
+"count(*) as n )\n"
+"from Cat cat]]>"
+msgstr ""
+"<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, "
+"count(*) as n )\n"
+"from Cat cat]]>"
+
+#: index.docbook:301
+msgid ""
+"This query returns a <literal>Map</literal> from aliases to selected values."
+msgstr ""
+"Esta consulta devuelve un <literal>Map</literal> de aliases a valores "
+"seleccionados."
+
+#: index.docbook:308
+msgid "Aggregate functions"
+msgstr "Funciones de agregaci&#x00f3;n"
+
+#: index.docbook:310
+msgid ""
+"HQL queries may even return the results of aggregate functions on properties:"
+msgstr ""
+"Las consultas HQL pueden incluso devolver resultados de funciones de "
+"agregaci&#x00f3;n sobre propiedades:"
+
+#: index.docbook:314
+msgid ""
+"<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count"
+"(cat)\n"
+"from Cat cat]]>"
+msgstr ""
+"<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count"
+"(cat)\n"
+"from Cat cat]]>"
+
+#: index.docbook:325
+msgid "The supported aggregate functions are"
+msgstr "Las funciones de agregaci&#x00f3;n soportadas son"
+
+#: index.docbook:332
+msgid "avg(...), sum(...), min(...), max(...)"
+msgstr "avg(...), sum(...), min(...), max(...)"
+
+#: index.docbook:337
+msgid "count(*)"
+msgstr "count(*)"
+
+#: index.docbook:342
+msgid "count(...), count(distinct ...), count(all...)"
+msgstr "count(...), count(distinct ...), count(all...)"
+
+#: index.docbook:347
+msgid ""
+"You may use arithmetic operators, concatenation, and recognized SQL "
+"functions in the select clause:"
+msgstr ""
+"Puedes usar operadores aritm&#x00e9;ticos, concatenaci&#x00f3;n, y funciones "
+"SQL reconocidas en la cl&#x00e1;usula select:"
+
+#: index.docbook:352
+msgid ""
+"<![CDATA[select cat.weight + sum(kitten.weight)\n"
+"from Cat cat\n"
+"    join cat.kittens kitten\n"
+"group by cat.id, cat.weight]]>"
+msgstr ""
+"<![CDATA[select cat.weight + sum(kitten.weight) \n"
+"from Cat cat \n"
+"    join cat.kittens kitten\n"
+"group by cat.id, cat.weight]]>"
+
+#: index.docbook:354
+msgid ""
+"<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+msgstr ""
+"<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+
+#: index.docbook:356
+msgid ""
+"The <literal>distinct</literal> and <literal>all</literal> keywords may be "
+"used and have the same semantics as in SQL."
+msgstr ""
+"Las palabras clave <literal>distinct</literal> y <literal>all</literal> "
+"pueden ser usadas y tienen las misma sem&#x00e1;ntica que en SQL."
+
+#: index.docbook:361
+msgid ""
+"<![CDATA[select distinct cat.name from Cat cat\n"
+"\n"
+"select count(distinct cat.name), count(cat) from Cat cat]]>"
+msgstr ""
+"<![CDATA[select distinct cat.name from Cat cat\n"
+"\n"
+"select count(distinct cat.name), count(cat) from Cat cat]]>"
+
+#: index.docbook:366
+msgid "Polymorphic queries"
+msgstr "Consultas polim&#x00f3;rficas"
+
+#: index.docbook:368
+msgid "A query like:"
+msgstr "Una consulta como:"
+
+#: index.docbook:374
+msgid ""
+"returns instances not only of <literal>Cat</literal>, but also of subclasses "
+"like <literal>DomesticCat</literal>. Hibernate queries may name "
+"<emphasis>any</emphasis> Java class or interface in the <literal>from</"
+"literal> clause. The query will return instances of all persistent classes "
+"that extend that class or implement the interface. The following query would "
+"return all persistent objects:"
+msgstr ""
+"devuelve instancias no s&#x00f3;lo de <literal>Cat</literal>, sino "
+"tambi&#x00e9;n de subclases como <literal>DomesticCat</literal>. Las "
+"consultas de Hibernate pueden mencionar <emphasis>cualquier</emphasis> clase "
+"o interface Java en la cl&#x00e1;usula <literal>from</literal>. La consulta "
+"devolver&#x00e1; instancias de todas las clases persistentes que extiendan "
+"esa clase o implementen la interface. La siguiente consulta devolver&#x00ed;"
+"a todos los objetos persistentes."
+
+#: index.docbook:382
+msgid "<![CDATA[from java.lang.Object o]]>"
+msgstr "<![CDATA[from java.lang.Object o]]>"
+
+#: index.docbook:384
+msgid ""
+"The interface <literal>Named</literal> might be implemented by various "
+"persistent classes:"
+msgstr ""
+"La interface <literal>Named</literal> podr&#x00ed;a ser implementada por "
+"varias clases persistentes:"
+
+#: index.docbook:389
+msgid "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+msgstr "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+
+#: index.docbook:391
+msgid ""
+"Note that these last two queries will require more than one SQL "
+"<literal>SELECT</literal>. This means that the <literal>order by</literal> "
+"clause does not correctly order the whole result set. (It also means you "
+"can't call these queries using <literal>Query.scroll()</literal>.)"
+msgstr ""
+"Nota que estas dos &#x00fa;ltimas consultas requerir&#x00e1;n m&#x00e1;s de "
+"un <literal>SELECT</literal> SQL. Esto significa que la cl&#x00e1;usula "
+"<literal>order by</literal> no ordenar&#x00e1; correctamente todo el "
+"conjunto resultado. (Significa adem&#x00e1;s que no puedes llamar estas "
+"consulta usando <literal>Query.scroll()</literal>.)"
+
+#: index.docbook:400
+msgid "The where clause"
+msgstr "La cl&#x00e1;usula where"
+
+#: index.docbook:402
+msgid ""
+"The <literal>where</literal> clause allows you to narrow the list of "
+"instances returned. If no alias exists, you may refer to properties by name:"
+msgstr ""
+"La cl&#x00e1;usula where te permite estrechar la lista de instancias "
+"devueltas. Si no existe ning&#x00fa;n alias. puedes referirte a las "
+"propiedades por nombre:"
+
+#: index.docbook:407
+msgid "<![CDATA[from Cat where name='Fritz']]>"
+msgstr "<![CDATA[from Cat where name='Fritz']]>"
+
+#: index.docbook:409
+msgid "If there is an alias, use a qualified property name:"
+msgstr "Si existe un alias, usan un nombre cualificado de propiedad:"
+
+#: index.docbook:413
+msgid "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
+msgstr "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
+
+#: index.docbook:415
+msgid "returns instances of <literal>Cat</literal> named 'Fritz'."
+msgstr "devuelve las instancias de <literal>Cat</literal> llamadas 'Fritz'."
+
+#: index.docbook:419
+msgid ""
+"<![CDATA[select foo\n"
+"from Foo foo, Bar bar\n"
+"where foo.startDate = bar.date]]>"
+msgstr ""
+"<![CDATA[select foo \n"
+"from Foo foo, Bar bar\n"
+"where foo.startDate = bar.date]]>"
+
+#: index.docbook:421
+msgid ""
+"will return all instances of <literal>Foo</literal> for which there exists "
+"an instance of <literal>bar</literal> with a <literal>date</literal> "
+"property equal to the <literal>startDate</literal> property of the "
+"<literal>Foo</literal>. Compound path expressions make the <literal>where</"
+"literal> clause extremely powerful. Consider:"
+msgstr ""
+"devolver&#x00e1; todas las instancias de <literal>Foo</literal> para las "
+"cuales exista una instancia de <literal>bar</literal> con una propiedad "
+"<literal>date</literal> igual a la propiedad <literal>startDate</literal> "
+"del <literal>Foo</literal>. Las expresiones de ruta compuestas hacen la "
+"cl&#x00e1;usula <literal>where</literal> extremadamente potente. Considera:"
+
+#: index.docbook:430
+msgid "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
+msgstr "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
+
+#: index.docbook:432
+msgid ""
+"This query translates to an SQL query with a table (inner) join. If you were "
+"to write something like"
+msgstr ""
+"Esta consulta se traduce en una consulta SQL con una uni&#x00f3;n de tabla "
+"(interna). Si fueses a escribir algo como"
+
+#: index.docbook:437
+msgid ""
+"<![CDATA[from Foo foo\n"
+"where foo.bar.baz.customer.address.city is not null]]>"
+msgstr ""
+"<![CDATA[from Foo foo  \n"
+"where foo.bar.baz.customer.address.city is not null]]>"
+
+#: index.docbook:439
+msgid ""
+"you would end up with a query that would require four table joins in SQL."
+msgstr ""
+"terminar&#x00ed;as con una consulta que requerir&#x00ed;a cuatro uniones de "
+"tablas en SQL."
+
+#: index.docbook:443
+msgid ""
+"The <literal>=</literal> operator may be used to compare not only "
+"properties, but also instances:"
+msgstr ""
+"El operador <literal>=</literal> puede ser usado para comparar no s&#x00f3;"
+"lo propiedades, sino tambi&#x00e9;n instancias:"
+
+#: index.docbook:448
+msgid "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
+msgstr "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
+
+#: index.docbook:450
+msgid ""
+"<![CDATA[select cat, mate\n"
+"from Cat cat, Cat mate\n"
+"where cat.mate = mate]]>"
+msgstr ""
+"<![CDATA[select cat, mate \n"
+"from Cat cat, Cat mate\n"
+"where cat.mate = mate]]>"
+
+#: index.docbook:452
+msgid ""
+"The special property (lowercase) <literal>id</literal> may be used to "
+"reference the unique identifier of an object. See <xref linkend=\"queryhql-"
+"identifier-property\"/> for more information."
+msgstr ""
+"La propiedad especial (en min&#x00fa;sculas) <literal>id</literal> puede ser "
+"usada para referenciar el identificador &#x00fa;nico de un objeto. "
+"(Tambi&#x00e9;n puedes usar su nombre de propiedad.)"
+
+#: index.docbook:458
+msgid ""
+"<![CDATA[from Cat as cat where cat.id = 123\n"
+"\n"
+"from Cat as cat where cat.mate.id = 69]]>"
+msgstr ""
+"<![CDATA[from Cat as cat where cat.id = 123\n"
+"\n"
+"from Cat as cat where cat.mate.id = 69]]>"
+
+#: index.docbook:460
+msgid "The second query is efficient. No table join is required!"
+msgstr ""
+"La segunda consulta es eficiente. &#x00a1;No se requiere ninguna uni&#x00f3;"
+"n de tablas!"
+
+#: index.docbook:464
+msgid ""
+"Properties of composite identifiers may also be used. Suppose "
+"<literal>Person</literal> has a composite identifier consisting of "
+"<literal>country</literal> and <literal>medicareNumber</literal>. Again, see "
+"<xref linkend=\"queryhql-identifier-property\"/> for more information "
+"regarding referencing identifier properties."
+msgstr ""
+"Tambi&#x00e9;n pueden ser usadas las propiedades de identificadores "
+"compuestos. Sup&#x00f3;n que <literal>Person</literal> tiene un "
+"identificador compuesto consistente en <literal>country</literal> y "
+"<literal>medicareNumber</literal>."
+
+#: index.docbook:471
+msgid ""
+"<![CDATA[from bank.Person person\n"
+"where person.id.country = 'AU'\n"
+"    and person.id.medicareNumber = 123456]]>"
+msgstr ""
+"<![CDATA[from bank.Person person\n"
+"where person.id.country = 'AU' \n"
+"    and person.id.medicareNumber = 123456]]>"
+
+#: index.docbook:473
+msgid ""
+"<![CDATA[from bank.Account account\n"
+"where account.owner.id.country = 'AU'\n"
+"    and account.owner.id.medicareNumber = 123456]]>"
+msgstr ""
+"<![CDATA[from bank.Account account\n"
+"where account.owner.id.country = 'AU' \n"
+"    and account.owner.id.medicareNumber = 123456]]>"
+
+#: index.docbook:475
+msgid "Once again, the second query requires no table join."
+msgstr ""
+"Una vez m&#x00e1;s, la segunda consulta no requiere ninguna uni&#x00f3;n de "
+"tablas."
+
+#: index.docbook:479
+msgid ""
+"Likewise, the special property <literal>class</literal> accesses the "
+"discriminator value of an instance in the case of polymorphic persistence. A "
+"Java class name embedded in the where clause will be translated to its "
+"discriminator value."
+msgstr ""
+"Asimismo, la propiedad especial <literal>class</literal> acccede al valor "
+"discriminador de una instancia en el caso de persistencia polim&#x00f3;"
+"rfica. Un nombre de clase Java embebido en la cl&#x00e1;usula where "
+"ser&#x00e1; traducido a su valor discriminador."
+
+#: index.docbook:485
+msgid "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+msgstr "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+
+#: index.docbook:487
+msgid ""
+"You may also use components or composite user types, or properties of said "
+"component types. See <xref linkend=\"queryhql-components\"/> for more "
+"details."
+msgstr ""
+"You may also use components or composite user types, or properties of said "
+"component types. See <xref linkend=\"queryhql-components\"/> for more "
+"details."
+
+#: index.docbook:492
+msgid ""
+"An \"any\" type has the special properties <literal>id</literal> and "
+"<literal>class</literal>, allowing us to express a join in the following way "
+"(where <literal>AuditLog.item</literal> is a property mapped with "
+"<literal>&lt;any&gt;</literal>)."
+msgstr ""
+"Un tipo \"any\" tiene las propiedades especiales <literal>id</literal> y "
+"<literal>class</literal>, permit&#x00e9;ndonos expresar un join en la "
+"siguiente forma (donde <literal>AuditLog.item</literal> es una propiedad "
+"mapeada con <literal>&lt;any&gt;</literal>)."
+
+#: index.docbook:498
+msgid ""
+"<![CDATA[from AuditLog log, Payment payment\n"
+"where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+msgstr ""
+"<![CDATA[from AuditLog log, Payment payment \n"
+"where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+
+#: index.docbook:500
+msgid ""
+"Notice that <literal>log.item.class</literal> and <literal>payment.class</"
+"literal> would refer to the values of completely different database columns "
+"in the above query."
+msgstr ""
+"Nota que <literal>log.item.class</literal> y <literal>payment.class</"
+"literal> har&#x00ed;an referencia a los valores de columnas de base de datos "
+"completamente diferentes en la consulta anterior."
+
+#: index.docbook:508
+msgid "Expressions"
+msgstr "Expresiones"
+
+#: index.docbook:510
+msgid ""
+"Expressions allowed in the <literal>where</literal> clause include most of "
+"the kind of things you could write in SQL:"
+msgstr ""
+"Las expresiones permitidas en la cl&#x00e1;usula <literal>where</literal> "
+"incluyen la mayor&#x00ed;a del tipo de cosas que podr&#x00ed;as escribir en "
+"SQL:"
+
+#: index.docbook:517
+msgid "mathematical operators <literal>+, -, *, /</literal>"
+msgstr "operadores matem&#x00e1;ticos <literal>+, -, *, /</literal>"
+
+#: index.docbook:522
+msgid ""
+"binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</"
+"literal>"
+msgstr ""
+"operadores de comparaci&#x00f3;n binarios <literal>=, &gt;=, &lt;=, &lt;"
+"&gt;, !=, like</literal>"
+
+#: index.docbook:527
+msgid "logical operations <literal>and, or, not</literal>"
+msgstr "operadores l&#x00f3;gicos <literal>and, or, not</literal>"
+
+#: index.docbook:532
+msgid "Parentheses <literal>( )</literal>, indicating grouping"
+msgstr "Par&#x00e9;ntesis <literal>( )</literal>, indicando agrupaci&#x00f3;n"
+
+#: index.docbook:537
+msgid ""
+"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
+"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
+"<literal>is empty</literal>, <literal>is not empty</literal>, "
+"<literal>member of</literal> and <literal>not member of</literal>"
+msgstr ""
+"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
+"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
+"<literal>is empty</literal>, <literal>is not empty</literal>, "
+"<literal>member of</literal> y <literal>not member of</literal>"
+
+#: index.docbook:550
+msgid ""
+"\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
+"and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgstr ""
+"Caso \"simple\", <literal>case ... when ... then ... else ... end</literal>, "
+"y caso \"buscado\", <literal>case when ... then ... else ... end</literal>"
+
+#: index.docbook:556
+msgid ""
+"string concatenation <literal>...||...</literal> or <literal>concat(...,...)"
+"</literal>"
+msgstr ""
+"concatenaci&#x00f3;n de cadenas <literal>...||...</literal> o <literal>concat"
+"(...,...)</literal>"
+
+#: index.docbook:561
+msgid ""
+"<literal>current_date()</literal>, <literal>current_time()</literal>, "
+"<literal>current_timestamp()</literal>"
+msgstr ""
+"<literal>current_date()</literal>, <literal>current_time()</literal>, "
+"<literal>current_timestamp()</literal>"
+
+#: index.docbook:567
+msgid ""
+"<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
+"(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
+"<literal>year(...)</literal>,"
+msgstr ""
+"<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
+"(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
+"<literal>year(...)</literal>,"
+
+#: index.docbook:574
+msgid ""
+"Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim"
+"(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()"
+"</literal>"
+msgstr ""
+"Cualquier funci&#x00f3;n u operador definido por EJB-QL 3.0: "
+"<literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), "
+"sqrt(), bit_length(), mod()</literal>"
+
+#: index.docbook:580
+msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
+msgstr "<literal>coalesce()</literal> y <literal>nullif()</literal>"
+
+#: index.docbook:585
+msgid ""
+"<literal>str()</literal> for converting numeric or temporal values to a "
+"readable string"
+msgstr ""
+"<literal>str()</literal> para convertir valores num&#x00e9;ricos o "
+"temporales a una cadena legible."
+
+#: index.docbook:591
+msgid ""
+"<literal>cast(... as ...)</literal>, where the second argument is the name "
+"of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI "
+"<literal>cast()</literal> and <literal>extract()</literal> is supported by "
+"the underlying database"
+msgstr ""
+"<literal>cast(... as ...)</literal>, donde el segundo argumento es el nombre "
+"de un tipo Hibernate , y <literal>extract(... from ...)</literal> si "
+"<literal>cast()</literal> y <literal>extract()</literal> fuesen soportados "
+"por la base de datos subyacente."
+
+#: index.docbook:599
+msgid ""
+"the HQL <literal>index()</literal> function, that applies to aliases of a "
+"joined indexed collection"
+msgstr ""
+"la funci&#x00f3;n <literal>index()</literal> de HQL, que se aplica a alias "
+"de una colecci&#x00f3;n indexada unida."
+
+#: index.docbook:605
+msgid ""
+"HQL functions that take collection-valued path expressions: <literal>size(), "
+"minelement(), maxelement(), minindex(), maxindex()</literal>, along with the "
+"special <literal>elements()</literal> and <literal>indices</literal> "
+"functions which may be quantified using <literal>some, all, exists, any, in</"
+"literal>."
+msgstr ""
+"funciones de HQL que tomen expresiones de ruta valuadas en colecciones: "
+"<literal>size(), minelement(), maxelement(), minindex(), maxindex()</"
+"literal>, junto a las funciones especiales <literal>elements()</literal> and "
+"<literal>indices</literal> que pueden ser cuantificadas usando "
+"<literal>some, all, exists, any, in</literal>."
+
+#: index.docbook:613
+msgid ""
+"Any database-supported SQL scalar function like <literal>sign()</literal>, "
+"<literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</"
+"literal>"
+msgstr ""
+"Cualquier funci&#x00f3;n escalar SQL soportada por la base de datos como "
+"<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</"
+"literal>, <literal>sin()</literal>"
+
+#: index.docbook:619
+msgid "JDBC-style positional parameters <literal>?</literal>"
+msgstr "par&#x00e1;metros posicionales JDBC <literal>?</literal>"
+
+#: index.docbook:624
+msgid ""
+"named parameters <literal>:name</literal>, <literal>:start_date</literal>, "
+"<literal>:x1</literal>"
+msgstr ""
+"par&#x00e1;metros con nombre <literal>:name</literal>, <literal>:start_date</"
+"literal>, <literal>:x1</literal>"
+
+#: index.docbook:629
+msgid ""
+"SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
+"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgstr ""
+"literales SQL <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
+"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+
+#: index.docbook:635
+msgid ""
+"Java <literal>public static final</literal> constants <literal>eg.Color."
+"TABBY</literal>"
+msgstr ""
+"constantes Java <literal>public static final</literal> <literal>eg.Color."
+"TABBY</literal>"
+
+#: index.docbook:641
+msgid ""
+"<literal>in</literal> and <literal>between</literal> may be used as follows:"
+msgstr ""
+"<literal>in</literal> y <literal>between</literal> pueden usarse como sigue:"
+
+#: index.docbook:645
+msgid "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+msgstr "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
+
+#: index.docbook:647
+msgid ""
+"<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+msgstr ""
+"<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+
+#: index.docbook:649
+msgid "and the negated forms may be written"
+msgstr "y pueden escribirse las formas negadas"
+
+#: index.docbook:653
+msgid "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
+msgstr ""
+"<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
+
+#: index.docbook:655
+msgid ""
+"<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]"
+">"
+msgstr ""
+"<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]"
+">"
+
+#: index.docbook:657
+msgid ""
+"Likewise, <literal>is null</literal> and <literal>is not null</literal> may "
+"be used to test for null values."
+msgstr ""
+"Asimismo, <literal>is null</literal> y <literal>is not null</literal> pueden "
+"ser usadas para comprobar valores nulos."
+
+#: index.docbook:662
+msgid ""
+"Booleans may be easily used in expressions by declaring HQL query "
+"substitutions in Hibernate configuration:"
+msgstr ""
+"Los booleanos pueden ser f&#x00e1;cilmente usados en expresiones declarando "
+"substituciones de consulta HQL en la configuraci&#x00f3;n de Hibernate:"
+
+#: index.docbook:667
+msgid ""
+"<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</"
+"property>]]>"
+msgstr ""
+"<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</"
+"property>]]>"
+
+#: index.docbook:669
+msgid ""
+"This will replace the keywords <literal>true</literal> and <literal>false</"
+"literal> with the literals <literal>1</literal> and <literal>0</literal> in "
+"the translated SQL from this HQL:"
+msgstr ""
+"Esto remplazar&#x00e1; las palabras clave <literal>true</literal> y "
+"<literal>false</literal> con los literales <literal>1</literal> y "
+"<literal>0</literal> en el SQL traducido de este HQL:"
+
+#: index.docbook:674
+msgid "<![CDATA[from Cat cat where cat.alive = true]]>"
+msgstr "<![CDATA[from Cat cat where cat.alive = true]]>"
+
+#: index.docbook:676
+msgid ""
+"You may test the size of a collection with the special property "
+"<literal>size</literal>, or the special <literal>size()</literal> function."
+msgstr ""
+"Puedes comprobar el tama&#x00f1;o de una colecci&#x00f3;n con la propiedad "
+"especial <literal>size</literal>, o la funci&#x00f3;n especial <literal>size"
+"()</literal>."
+
+#: index.docbook:681
+msgid "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
+msgstr "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
+
+#: index.docbook:683
+msgid "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+msgstr "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+
+#: index.docbook:685
+msgid ""
+"For indexed collections, you may refer to the minimum and maximum indices "
+"using <literal>minindex</literal> and <literal>maxindex</literal> functions. "
+"Similarly, you may refer to the minimum and maximum elements of a collection "
+"of basic type using the <literal>minelement</literal> and "
+"<literal>maxelement</literal> functions."
+msgstr ""
+"Para colecciones indexadas, puedes referirte a los &#x00ed;ndices m&#x00e1;"
+"ximo y m&#x00ed;nimo usando las funciones <literal>minindex</literal> y "
+"<literal>maxindex</literal>. Similarmente, puedes referirte a los elementos "
+"m&#x00e1;ximo y m&#x00ed;nimo de una colecci&#x00f3;n de tipo b&#x00e1;sico "
+"usando las funciones <literal>minelement</literal> y <literal>maxelement</"
+"literal>."
+
+#: index.docbook:693
+msgid ""
+"<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+msgstr ""
+"<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
+
+#: index.docbook:695
+msgid "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
+msgstr "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
+
+#: index.docbook:697
+msgid "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+msgstr "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+
+#: index.docbook:699
+msgid ""
+"The SQL functions <literal>any, some, all, exists, in</literal> are "
+"supported when passed the element or index set of a collection "
+"(<literal>elements</literal> and <literal>indices</literal> functions) or "
+"the result of a subquery (see below)."
+msgstr ""
+"Las funciones SQL <literal>any, some, all, exists, in</literal> est&#x00e1;n "
+"soportadas cuando se les pasa el conjunto de elementos o &#x00ed;ndices de "
+"una colecci&#x00f3;n (funciones <literal>elements</literal> y "
+"<literal>indices</literal>) o el resultado de una subconsulta (ver debajo)."
+
+#: index.docbook:705
+msgid ""
+"<![CDATA[select mother from Cat as mother, Cat as kit\n"
+"where kit in elements(foo.kittens)]]>"
+msgstr ""
+"<![CDATA[select mother from Cat as mother, Cat as kit\n"
+"where kit in elements(foo.kittens)]]>"
+
+#: index.docbook:707
+msgid ""
+"<![CDATA[select p from NameList list, Person p\n"
+"where p.name = some elements(list.names)]]>"
+msgstr ""
+"<![CDATA[select p from NameList list, Person p\n"
+"where p.name = some elements(list.names)]]>"
+
+#: index.docbook:709
+msgid "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
+msgstr "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
+
+#: index.docbook:711
+msgid "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
+msgstr "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
+
+#: index.docbook:713
+msgid "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
+msgstr "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
+
+#: index.docbook:715
+msgid ""
+"Note that these constructs - <literal>size</literal>, <literal>elements</"
+"literal>, <literal>indices</literal>, <literal>minindex</literal>, "
+"<literal>maxindex</literal>, <literal>minelement</literal>, "
+"<literal>maxelement</literal> - may only be used in the where clause in "
+"Hibernate3."
+msgstr ""
+"Nota que estas construcciones - <literal>size</literal>, <literal>elements</"
+"literal>, <literal>indices</literal>, <literal>minindex</literal>, "
+"<literal>maxindex</literal>, <literal>minelement</literal>, "
+"<literal>maxelement</literal> - pueden ser usadas solamente en la cl&#x00e1;"
+"usula where en Hibernate3."
+
+#: index.docbook:722
+msgid ""
+"Elements of indexed collections (arrays, lists, maps) may be referred to by "
+"index (in a where clause only):"
+msgstr ""
+"Los elementos de colecciones indexadas (arrays, listas, mapas) pueden ser "
+"referidos por &#x00ed;ndice (en una cl&#x00e1;usula where solamente):"
+
+#: index.docbook:727
+msgid "<![CDATA[from Order order where order.items[0].id = 1234]]>"
+msgstr "<![CDATA[from Order order where order.items[0].id = 1234]]>"
+
+#: index.docbook:729
+msgid ""
+"<![CDATA[select person from Person person, Calendar calendar\n"
+"where calendar.holidays['national day'] = person.birthDay\n"
+"    and person.nationality.calendar = calendar]]>"
+msgstr ""
+"<![CDATA[select person from Person person, Calendar calendar\n"
+"where calendar.holidays['national day'] = person.birthDay\n"
+"    and person.nationality.calendar = calendar]]>"
+
+#: index.docbook:731
+msgid ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]"
+">"
+msgstr ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]"
+">"
+
+#: index.docbook:733
+msgid ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+msgstr ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+
+#: index.docbook:735
+msgid ""
+"The expression inside <literal>[]</literal> may even be an arithmetic "
+"expression."
+msgstr ""
+"La expresi&#x00f3;n dentro de <literal>[]</literal> puede incluso ser una "
+"expresi&#x00f3;n aritm&#x00e9;tica."
+
+#: index.docbook:739
+msgid ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ size(order.items) - 1 ] = item]]>"
+msgstr ""
+"<![CDATA[select item from Item item, Order order\n"
+"where order.items[ size(order.items) - 1 ] = item]]>"
+
+#: index.docbook:741
+msgid ""
+"HQL also provides the built-in <literal>index()</literal> function, for "
+"elements of a one-to-many association or collection of values."
+msgstr ""
+"HQL provee adem&#x00e1;s el funci&#x00f3;n prefabricada <literal>index()</"
+"literal>, para elementos de una asociaci&#x00f3;n uno-a-muchos o "
+"colecci&#x00f3;n de valores."
+
+#: index.docbook:746
+msgid ""
+"<![CDATA[select item, index(item) from Order order\n"
+"    join order.items item\n"
+"where index(item) < 5]]>"
+msgstr ""
+"<![CDATA[select item, index(item) from Order order \n"
+"    join order.items item\n"
+"where index(item) < 5]]>"
+
+#: index.docbook:748
+msgid "Scalar SQL functions supported by the underlying database may be used"
+msgstr ""
+"Pueden usarse las funciones SQL escalares soportadas por la base de datos "
+"subyacente"
+
+#: index.docbook:752
+msgid "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+msgstr "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+
+#: index.docbook:754
+msgid ""
+"If you are not yet convinced by all this, think how much longer and less "
+"readable the following query would be in SQL:"
+msgstr ""
+"Si a&#x00fa;n no est&#x00e1;s convencido de todo esto, piensa cu&#x00e1;nto "
+"m&#x00e1;s largo y menos le&#x00ed;ble ser&#x00ed;a la siguiente consulta en "
+"SQL:"
+
+#: index.docbook:759
+msgid ""
+"<![CDATA[select cust\n"
+"from Product prod,\n"
+"    Store store\n"
+"    inner join store.customers cust\n"
+"where prod.name = 'widget'\n"
+"    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
+"    and prod = all elements(cust.currentOrder.lineItems)]]>"
+msgstr ""
+"<![CDATA[select cust\n"
+"from Product prod,\n"
+"    Store store\n"
+"    inner join store.customers cust\n"
+"where prod.name = 'widget'\n"
+"    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
+"    and prod = all elements(cust.currentOrder.lineItems)]]>"
+
+#: index.docbook:761
+msgid "<emphasis>Hint:</emphasis> something like"
+msgstr "<emphasis>Ayuda:</emphasis> algo como"
+
+#: index.docbook:765
+msgid ""
+"<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust."
+"current_order\n"
+"FROM customers cust,\n"
+"    stores store,\n"
+"    locations loc,\n"
+"    store_customers sc,\n"
+"    product prod\n"
+"WHERE prod.name = 'widget'\n"
+"    AND store.loc_id = loc.id\n"
+"    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
+"    AND sc.store_id = store.id\n"
+"    AND sc.cust_id = cust.id\n"
+"    AND prod.id = ALL(\n"
+"        SELECT item.prod_id\n"
+"        FROM line_items item, orders o\n"
+"        WHERE item.order_id = o.id\n"
+"            AND cust.current_order = o.id\n"
+"    )]]>"
+msgstr ""
+"<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust."
+"current_order\n"
+"FROM customers cust,\n"
+"    stores store,\n"
+"    locations loc,\n"
+"    store_customers sc,\n"
+"    product prod\n"
+"WHERE prod.name = 'widget'\n"
+"    AND store.loc_id = loc.id\n"
+"    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
+"    AND sc.store_id = store.id\n"
+"    AND sc.cust_id = cust.id\n"
+"    AND prod.id = ALL(\n"
+"        SELECT item.prod_id\n"
+"        FROM line_items item, orders o\n"
+"        WHERE item.order_id = o.id\n"
+"            AND cust.current_order = o.id\n"
+"    )]]>"
+
+#: index.docbook:770
+msgid "The order by clause"
+msgstr "La cl&#x00e1;usula order by"
+
+#: index.docbook:772
+msgid ""
+"The list returned by a query may be ordered by any property of a returned "
+"class or components:"
+msgstr ""
+"La lista devuelta por una consulta puede ser ordenada por cualquier "
+"propiedad de una clase devuelta o componentes:"
+
+#: index.docbook:776
+msgid ""
+"<![CDATA[from DomesticCat cat\n"
+"order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+msgstr ""
+"<![CDATA[from DomesticCat cat\n"
+"order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+
+#: index.docbook:778
+msgid ""
+"The optional <literal>asc</literal> or <literal>desc</literal> indicate "
+"ascending or descending order respectively."
+msgstr ""
+"Los <literal>asc</literal> o <literal>desc</literal> opcionales indican "
+"ordenamiento ascendente o descendente respectivamente."
+
+#: index.docbook:785
+msgid "The group by clause"
+msgstr "La cl&#x00e1;usula group by"
+
+#: index.docbook:787
+msgid ""
+"A query that returns aggregate values may be grouped by any property of a "
+"returned class or components:"
+msgstr ""
+"Una consulta que devuelve valores agregados puede ser agrupada por cualquier "
+"propiedad de una clase devuelta o componentes:"
+
+#: index.docbook:791
+msgid ""
+"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+"from Cat cat\n"
+"group by cat.color]]>"
+msgstr ""
+"<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
+"from Cat cat\n"
+"group by cat.color]]>"
+
+#: index.docbook:793
+msgid ""
+"<![CDATA[select foo.id, avg(name), max(name)\n"
+"from Foo foo join foo.names name\n"
+"group by foo.id]]>"
+msgstr ""
+"<![CDATA[select foo.id, avg(name), max(name) \n"
+"from Foo foo join foo.names name\n"
+"group by foo.id]]>"
+
+#: index.docbook:795
+msgid "A <literal>having</literal> clause is also allowed."
+msgstr ""
+"Se permite tambi&#x00e9;n una cl&#x00e1;usula <literal>having</literal>."
+
+#: index.docbook:799
+msgid ""
+"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
+"from Cat cat\n"
+"group by cat.color\n"
+"having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
+msgstr ""
+"<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
+"from Cat cat\n"
+"group by cat.color \n"
+"having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
+
+#: index.docbook:801
+msgid ""
+"SQL functions and aggregate functions are allowed in the <literal>having</"
+"literal> and <literal>order by</literal> clauses, if supported by the "
+"underlying database (eg. not in MySQL)."
+msgstr ""
+"Las funciones y funciones de agregaci&#x00f3;n SQL est&#x00e1;n permitidas "
+"en las cl&#x00e1;usulas <literal>having</literal> y <literal>order by</"
+"literal>, si est&#x00e1;n soportadas por la base de datos subyacente (por "
+"ejemplo, no en MySQL)."
+
+#: index.docbook:807
+msgid ""
+"<![CDATA[select cat\n"
+"from Cat cat\n"
+"    join cat.kittens kitten\n"
+"group by cat.id, cat.name, cat.other, cat.properties\n"
+"having avg(kitten.weight) > 100\n"
+"order by count(kitten) asc, sum(kitten.weight) desc]]>"
+msgstr ""
+"<![CDATA[select cat\n"
+"from Cat cat\n"
+"    join cat.kittens kitten\n"
+"group by cat\n"
+"having avg(kitten.weight) > 100\n"
+"order by count(kitten) asc, sum(kitten.weight) desc]]>"
+
+#: index.docbook:809
+msgid ""
+"Note that neither the <literal>group by</literal> clause nor the "
+"<literal>order by</literal> clause may contain arithmetic expressions. Also "
+"note that Hibernate currently does not expand a grouped entity, so you can't "
+"write <literal>group by cat</literal> if all properties of <literal>cat</"
+"literal> are non-aggregated. You have to list all non-aggregated properties "
+"explicitly."
+msgstr ""
+"Nota que ni la cl&#x00e1;usula <literal>group by</literal> ni la cl&#x00e1;"
+"usula <literal>order by</literal> pueden contener expresiones aritm&#x00e9;"
+"ticas."
+
+#: index.docbook:821
+msgid "Subqueries"
+msgstr "Subconsultas"
+
+#: index.docbook:823
+msgid ""
+"For databases that support subselects, Hibernate supports subqueries within "
+"queries. A subquery must be surrounded by parentheses (often by an SQL "
+"aggregate function call). Even correlated subqueries (subqueries that refer "
+"to an alias in the outer query) are allowed."
+msgstr ""
+"Para bases de datos que soportan subconsultas, Hibernate soporta "
+"subconsultas dentro de consultas. Una subconsulta debe ser encerrada entre "
+"par&#x00e9;ntesis (frecuentemente por una llamada a una funci&#x00f3;n de "
+"agregaci&#x00f3;n SQL). Incluso se permiten subconsultas correlacionadas "
+"(subconsultas que hacen referencia a un alias en la consulta exterior)."
+
+#: index.docbook:829
+msgid ""
+"<![CDATA[from Cat as fatcat\n"
+"where fatcat.weight > (\n"
+"    select avg(cat.weight) from DomesticCat cat\n"
+")]]>"
+msgstr ""
+"<![CDATA[from Cat as fatcat\n"
+"                                      where fatcat.weight > (\n"
+"                select avg(cat.weight) from DomesticCat cat\n"
+"                )]]>"
+
+#: index.docbook:831
+msgid ""
+"<![CDATA[from DomesticCat as cat\n"
+"where cat.name = some (\n"
+"    select name.nickName from Name as name\n"
+")]]>"
+msgstr ""
+"<![CDATA[from DomesticCat as cat\n"
+"                                      where cat.name = some (\n"
+"                                      select name.nickName from Name as "
+"name\n"
+"                                      )]]>"
+
+#: index.docbook:833
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"where not exists (\n"
+"    from Cat as mate where mate.mate = cat\n"
+")]]>"
+msgstr ""
+"<![CDATA[from Cat as cat\n"
+"                                      where not exists (\n"
+"                                      from Cat as mate where mate.mate = "
+"cat\n"
+"                                      )]]>"
+
+#: index.docbook:835
+msgid ""
+"<![CDATA[from DomesticCat as cat\n"
+"where cat.name not in (\n"
+"    select name.nickName from Name as name\n"
+")]]>"
+msgstr ""
+"<![CDATA[from DomesticCat as cat\n"
+"                                      where cat.name not in (\n"
+"                                      select name.nickName from Name as "
+"name\n"
+"                                      )]]>"
+
+#: index.docbook:837
+msgid ""
+"<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
+"from Cat as cat]]>"
+msgstr ""
+"<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
+"                                        from Cat as cat]]>"
+
+#: index.docbook:839
+msgid "Note that HQL subqueries may occur only in the select or where clauses."
+msgstr ""
+"Note that HQL subqueries may occur only in the select or where clauses."
+
+#: index.docbook:843
+msgid ""
+"Note that subqueries can also utilize <literal>row value constructor</"
+"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+msgstr ""
+"Note that subqueries can also utilize <literal>row value constructor</"
+"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+
+#: index.docbook:851
+msgid "HQL examples"
+msgstr "Ejemplos de HQL"
+
+#: index.docbook:853
+msgid ""
+"Hibernate queries can be quite powerful and complex. In fact, the power of "
+"the query language is one of Hibernate's main selling points. Here are some "
+"example queries very similar to queries that I used on a recent project. "
+"Note that most queries you will write are much simpler than these!"
+msgstr ""
+"Las consultas de Hibernate pueden ser abolutamente potentes y complejas, De "
+"hecho, el poder del lenguaje de consulta es uno de los puntos principales de "
+"venta de Hibernate. He aqu&#x00ed; algunos consultas de ejemplo muy "
+"similares a consultas que he usado en un proyecto reciente. &#x00a1;Nota que "
+"la mayor&#x00ed;a de las consultas que escribir&#x00e1;s som mucho m&#x00e1;"
+"s simples que estas!"
+
+#: index.docbook:859
+msgid ""
+"The following query returns the order id, number of items and total value of "
+"the order for all unpaid orders for a particular customer and given minimum "
+"total value, ordering the results by total value. In determining the prices, "
+"it uses the current catalog. The resulting SQL query, against the "
+"<literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</"
+"literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has "
+"four inner joins and an (uncorrelated) subselect."
+msgstr ""
+"La siguiente consulta devuelve el order id, n&#x00fa;mero de items y valor "
+"total de la orden para todas las ordenes inpagas de un cliente en particular "
+"y valor total m&#x00ed;nimo dados, ordenando los resultados por valor total. "
+"Al determinar los precios, usa el cat&#x00e1;logo actual. La consulta SQL "
+"resultante, contra las tablas <literal>ORDER</literal>, <literal>ORDER_LINE</"
+"literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and "
+"<literal>PRICE</literal> tiene cuatro joins interiores y una subselect (no "
+"correlacionada)."
+
+#: index.docbook:868
+msgid ""
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog.effectiveDate < sysdate\n"
+"    and catalog.effectiveDate >= all (\n"
+"        select cat.effectiveDate\n"
+"        from Catalog as cat\n"
+"        where cat.effectiveDate < sysdate\n"
+"    )\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
+msgstr ""
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog.effectiveDate < sysdate\n"
+"    and catalog.effectiveDate >= all (\n"
+"        select cat.effectiveDate \n"
+"        from Catalog as cat\n"
+"        where cat.effectiveDate < sysdate\n"
+"    )\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
+
+#: index.docbook:870
+msgid ""
+"What a monster! Actually, in real life, I'm not very keen on subqueries, so "
+"my query was really more like this:"
+msgstr ""
+"&#x00a1;Qu&#x00e9; monstruo! Realmente, en la vida real, no estoy muy "
+"afilado en subconsultas, de modo que mi consulta fue realmente algo como "
+"esto:"
+
+#: index.docbook:875
+msgid ""
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog = :currentCatalog\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
+msgstr ""
+"<![CDATA[select order.id, sum(price.amount), count(item)\n"
+"from Order as order\n"
+"    join order.lineItems as item\n"
+"    join item.product as product,\n"
+"    Catalog as catalog\n"
+"    join catalog.prices as price\n"
+"where order.paid = false\n"
+"    and order.customer = :customer\n"
+"    and price.product = product\n"
+"    and catalog = :currentCatalog\n"
+"group by order\n"
+"having sum(price.amount) > :minAmount\n"
+"order by sum(price.amount) desc]]>"
+
+#: index.docbook:877
+msgid ""
+"The next query counts the number of payments in each status, excluding all "
+"payments in the <literal>AWAITING_APPROVAL</literal> status where the most "
+"recent status change was made by the current user. It translates to an SQL "
+"query with two inner joins and a correlated subselect against the "
+"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and "
+"<literal>PAYMENT_STATUS_CHANGE</literal> tables."
+msgstr ""
+"La pr&#x00f3;xima consulta cuenta el n&#x00fa;mero de pagos en cada estado, "
+"excluyendo todos los pagos en el estado <literal>AWAITING_APPROVAL</literal> "
+"donde el estado m&#x00e1;s reciente fue hecho por el usuario actual. Se "
+"traduce en una consulta SQL con dos joins interiores y una subselect "
+"correlacionada contra las tablas <literal>PAYMENT</literal>, "
+"<literal>PAYMENT_STATUS</literal> y <literal>PAYMENT_STATUS_CHANGE</literal>."
+
+#: index.docbook:885
+msgid ""
+"<![CDATA[select count(payment), status.name\n"
+"from Payment as payment\n"
+"    join payment.currentStatus as status\n"
+"    join payment.statusChanges as statusChange\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or (\n"
+"        statusChange.timeStamp = (\n"
+"            select max(change.timeStamp)\n"
+"            from PaymentStatusChange change\n"
+"            where change.payment = payment\n"
+"        )\n"
+"        and statusChange.user <> :currentUser\n"
+"    )\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+msgstr ""
+"<![CDATA[select count(payment), status.name \n"
+"from Payment as payment \n"
+"    join payment.currentStatus as status\n"
+"    join payment.statusChanges as statusChange\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or (\n"
+"        statusChange.timeStamp = ( \n"
+"            select max(change.timeStamp) \n"
+"            from PaymentStatusChange change \n"
+"            where change.payment = payment\n"
+"        )\n"
+"        and statusChange.user <> :currentUser\n"
+"    )\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+
+#: index.docbook:887
+msgid ""
+"If I would have mapped the <literal>statusChanges</literal> collection as a "
+"list, instead of a set, the query would have been much simpler to write."
+msgstr ""
+"Si hubiese mapeado la colecci&#x00f3;n <literal>statusChanges</literal> como "
+"una lista, en vez de un conjunto, la consulta habr&#x00ed;a sido mucho "
+"m&#x00e1;s simple de escribir."
+
+#: index.docbook:892
+msgid ""
+"<![CDATA[select count(payment), status.name\n"
+"from Payment as payment\n"
+"    join payment.currentStatus as status\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :"
+"currentUser\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+msgstr ""
+"<![CDATA[select count(payment), status.name \n"
+"from Payment as payment\n"
+"    join payment.currentStatus as status\n"
+"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
+"    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :"
+"currentUser\n"
+"group by status.name, status.sortOrder\n"
+"order by status.sortOrder]]>"
+
+#: index.docbook:894
+msgid ""
+"The next query uses the MS SQL Server <literal>isNull()</literal> function "
+"to return all the accounts and unpaid payments for the organization to which "
+"the current user belongs. It translates to an SQL query with three inner "
+"joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, "
+"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, "
+"<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and "
+"<literal>ORG_USER</literal> tables."
+msgstr ""
+"La pr&#x00f3;xima consulta usa la funci&#x00f3;n <literal>isNull()</literal> "
+"de MS SQL Server para devolver todas las cuentas y pagos inpagos de la "
+"organizaci&#x00f3;n a la que pertenece el usuario actual. Se traduce en una "
+"consulta SQL con tres joins interiores, un join exterior y una subconsulta "
+"contra las tablas <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, "
+"<literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, "
+"<literal>ORGANIZATION</literal> y <literal>ORG_USER</literal>."
+
+#: index.docbook:903
+msgid ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser in elements(account.holder.users)\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser in elements(account.holder.users)\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+
+#: index.docbook:905
+msgid ""
+"For some databases, we would need to do away with the (correlated) subselect."
+msgstr ""
+"Para algunas bases de datos, necesitar&#x00ed;amos eliminar la subselect "
+"(correlacionada)."
+
+#: index.docbook:909
+msgid ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    join account.holder.users as user\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser = user\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+msgstr ""
+"<![CDATA[select account, payment\n"
+"from Account as account\n"
+"    join account.holder.users as user\n"
+"    left outer join account.payments as payment\n"
+"where :currentUser = user\n"
+"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
+"PaymentStatus.UNPAID)\n"
+"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+
+#: index.docbook:914
+msgid "Bulk update and delete"
+msgstr "Sentencias UPDATE y DELETE masivas"
+
+#: index.docbook:916
+msgid ""
+"HQL now supports <literal>update</literal>, <literal>delete</literal> and "
+"<literal>insert ... select ...</literal> statements. See <xref linkend="
+"\"batch-direct\"/> for details."
+msgstr ""
+"HQL soporta ahora sentencias UPDATE y DELETE en HQL. Ver <xref linkend="
+"\"batch-direct\"/> para detalles."
+
+#: index.docbook:924
+msgid "Tips &amp; Tricks"
+msgstr "Consejos y Trucos"
+
+#: index.docbook:926
+msgid ""
+"You can count the number of query results without actually returning them:"
+msgstr ""
+"Puedes contar el n&#x00fa;mero de resultados de una consulta sin devolverlos "
+"realmente:"
+
+#: index.docbook:930
+msgid ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue()]]>"
+msgstr ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue()]]>"
+
+#: index.docbook:932
+msgid "To order a result by the size of a collection, use the following query:"
+msgstr ""
+"Para ordenar un resultado por el tama&#x00f1;o de una colecci&#x00f3;n, usa "
+"la siguiente consulta:"
+
+#: index.docbook:936
+msgid ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr\n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"order by count(msg)]]>"
+msgstr ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr \n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"order by count(msg)]]>"
+
+#: index.docbook:938
+msgid ""
+"If your database supports subselects, you can place a condition upon "
+"selection size in the where clause of your query:"
+msgstr ""
+"Si tu base de datos soporta subselects, puedes colocar una condici&#x00f3;n "
+"sobre el tama&#x00f1;o de selecci&#x00f3;n en la cl&#x00e1;usula where de tu "
+"consulta:"
+
+#: index.docbook:943
+msgid "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
+msgstr "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
+
+#: index.docbook:945
+msgid "If your database doesn't support subselects, use the following query:"
+msgstr "Si tu base de datos no soporta subselects, usa la siguiente consulta:"
+
+#: index.docbook:949
+msgid ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User usr.name\n"
+"    join usr.messages msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) >= 1]]>"
+msgstr ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User usr.name\n"
+"    join usr.messages msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) >= 1]]>"
+
+#: index.docbook:951
+msgid ""
+"As this solution can't return a <literal>User</literal> with zero messages "
+"because of the inner join, the following form is also useful:"
+msgstr ""
+"Como esta soluci&#x00f3;n no puede devolver un <literal>User</literal> con "
+"cero mensajes debido a la uni&#x00f3;n interior, la siguiente forma es "
+"tambi&#x00e9;n &#x00fa;til:"
+
+#: index.docbook:956
+msgid ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr\n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) = 0]]>"
+msgstr ""
+"<![CDATA[select usr.id, usr.name\n"
+"from User as usr\n"
+"    left join usr.messages as msg\n"
+"group by usr.id, usr.name\n"
+"having count(msg) = 0]]>"
+
+#: index.docbook:958
+msgid "Properties of a JavaBean can be bound to named query parameters:"
+msgstr ""
+"Las propiedades de un JavaBean pueden ser ligadas al par&#x00e1;metros de "
+"consulta con nombre:"
+
+#: index.docbook:962
+msgid ""
+"<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name "
+"and foo.size=:size\");\n"
+"q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
+"List foos = q.list();]]>"
+msgstr ""
+"<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name "
+"and foo.size=:size\");\n"
+"q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
+"List foos = q.list();]]>"
+
+#: index.docbook:964
+msgid ""
+"Collections are pageable by using the <literal>Query</literal> interface "
+"with a filter:"
+msgstr ""
+"Las colecciones son paginables usando la interface <literal>Query</literal> "
+"con un filtro:"
+
+#: index.docbook:968
+msgid ""
+"<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial "
+"filter\n"
+"q.setMaxResults(PAGE_SIZE);\n"
+"q.setFirstResult(PAGE_SIZE * pageNumber);\n"
+"List page = q.list();]]>"
+msgstr ""
+"<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial "
+"filter\n"
+"q.setMaxResults(PAGE_SIZE);\n"
+"q.setFirstResult(PAGE_SIZE * pageNumber);\n"
+"List page = q.list();]]>"
+
+#: index.docbook:970
+msgid "Collection elements may be ordered or grouped using a query filter:"
+msgstr ""
+"Los elementos de colecci&#x00f3;n pueden ser ordenados o agrupados usando un "
+"filtro de consulta:"
+
+#: index.docbook:974
+msgid ""
+"<![CDATA[Collection orderedCollection = s.filter( collection, \"order by "
+"this.amount\" );\n"
+"Collection counts = s.filter( collection, \"select this.type, count(this) "
+"group by this.type\" );]]>"
+msgstr ""
+"<![CDATA[Collection orderedCollection = s.filter( collection, \"order by "
+"this.amount\" );\n"
+"Collection counts = s.filter( collection, \"select this.type, count(this) "
+"group by this.type\" );]]>"
+
+#: index.docbook:976
+msgid "You can find the size of a collection without initializing it:"
+msgstr ""
+"Puedes hallar el tama&#x00f1;o de una colecci&#x00f3;n sin inicializarla:"
+
+#: index.docbook:980
+msgid ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue();]]>"
+msgstr ""
+"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
+"iterate().next() ).intValue();]]>"
+
+#: index.docbook:985
+msgid "Components"
+msgstr "UNTRANSLATED! Components"
+
+#: index.docbook:987
+msgid ""
+"Components might be used in just about every way that simple value types can "
+"be used in HQL queries. They can appear in the <literal>select</literal> "
+"clause:"
+msgstr ""
+"Components might be used in just about every way that simple value types can "
+"be used in HQL queries. They can appear in the <literal>select</literal> "
+"clause:"
+
+#: index.docbook:992, index.docbook:1038
+msgid "<![CDATA[select p.name from Person p]]>"
+msgstr "<![CDATA[select p.name from Person p]]>"
+
+#: index.docbook:993
+msgid "<![CDATA[select p.name.first from Person p]]>"
+msgstr "<![CDATA[select p.name.first from Person p]]>"
+
+#: index.docbook:995
+msgid ""
+"where the Person's name property is a component. Components can also be used "
+"in the <literal>where</literal> clause:"
+msgstr ""
+"where the Person's name property is a component. Components can also be used "
+"in the <literal>where</literal> clause:"
+
+#: index.docbook:1000
+msgid "<![CDATA[from Person p where p.name = :name]]>"
+msgstr "<![CDATA[from Person p where p.name = :name]]>"
+
+#: index.docbook:1001
+msgid "<![CDATA[from Person p where p.name.first = :firstName]]>"
+msgstr "<![CDATA[from Person p where p.name.first = :firstName]]>"
+
+#: index.docbook:1003
+msgid "Components can also be used in the <literal>order by</literal> clause:"
+msgstr "Components can also be used in the <literal>order by</literal> clause:"
+
+#: index.docbook:1007
+msgid "<![CDATA[from Person p order by p.name]]>"
+msgstr "<![CDATA[from Person p order by p.name]]>"
+
+#: index.docbook:1008
+msgid "<![CDATA[from Person p order by p.name.first]]>"
+msgstr "<![CDATA[from Person p order by p.name.first]]>"
+
+#: index.docbook:1010
+msgid ""
+"Another common use of components is in <link linkend=\"queryhql-tuple\">row "
+"value constructors</link>."
+msgstr ""
+"Another common use of components is in <link linkend=\"queryhql-tuple\">row "
+"value constructors</link>."
+
+#: index.docbook:1016
+msgid "Row value constructor syntax"
+msgstr "Row value constructor syntax"
+
+#: index.docbook:1018
+msgid ""
+"HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
+"syntax (sometimes called <literal>tuple</literal> syntax), even though the "
+"underlying database may not support that notion. Here we are generally "
+"referring to multi-valued comparisons, typically associated with components. "
+"Consider an entity Person which defines a name component:"
+msgstr ""
+"HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
+"syntax (sometimes called <literal>tuple</literal> syntax), even though the "
+"underlying database may not support that notion. Here we are generally "
+"referring to multi-valued comparisons, typically associated with components. "
+"Consider an entity Person which defines a name component:"
+
+#: index.docbook:1025
+msgid ""
+"<![CDATA[from Person p where p.name.first='John' and p.name."
+"last='Jingleheimer-Schmidt']]>"
+msgstr ""
+"<![CDATA[from Person p where p.name.first='John' and p.name."
+"last='Jingleheimer-Schmidt']]>"
+
+#: index.docbook:1027
+msgid ""
+"That's valid syntax, although a little verbose. It be nice to make this a "
+"bit more concise and use <literal>row value constructor</literal> syntax:"
+msgstr ""
+"That's valid syntax, although a little verbose. It be nice to make this a "
+"bit more concise and use <literal>row value constructor</literal> syntax:"
+
+#: index.docbook:1032
+msgid "<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
+msgstr ""
+"<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
+
+#: index.docbook:1034
+msgid ""
+"It can also be useful to specify this in the <literal>select</literal> "
+"clause:"
+msgstr ""
+"It can also be useful to specify this in the <literal>select</literal> "
+"clause:"
+
+#: index.docbook:1040
+msgid ""
+"Another time using <literal>row value constructor</literal> syntax can be "
+"beneficial is when using subqueries needing to compare against multiple "
+"values:"
+msgstr ""
+"Another time using <literal>row value constructor</literal> syntax can be "
+"beneficial is when using subqueries needing to compare against multiple "
+"values:"
+
+#: index.docbook:1045
+msgid ""
+"<![CDATA[from Cat as cat\n"
+"where not ( cat.name, cat.color ) in (\n"
+"    select cat.name, cat.color from DomesticCat cat\n"
+")]]>"
+msgstr ""
+"<![CDATA[from Cat as cat\n"
+"                                          where not ( cat.name, cat.color ) "
+"in (\n"
+"                                          select cat.name, cat.color from "
+"DomesticCat cat\n"
+"                                          )]]>"
+
+#: index.docbook:1047
+msgid ""
+"One thing to consider when deciding if you want to use this syntax is that "
+"the query will be dependent upon the ordering of the component sub-"
+"properties in the metadata."
+msgstr ""
+"One thing to consider when deciding if you want to use this syntax is that "
+"the query will be dependent upon the ordering of the component sub-"
+"properties in the metadata."
+
+msgid "ROLES_OF_TRANSLATORS"
+msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+msgid "CREDIT_FOR_TRANSLATORS"
+msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

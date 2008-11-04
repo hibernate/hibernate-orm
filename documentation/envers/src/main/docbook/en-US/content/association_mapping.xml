@@ -1,0 +1,650 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="associations">
+
+    <title>Association Mappings</title>
+
+    <sect1 id="assoc-intro" revision="1">
+        <title>Introduction</title>
+        
+        <para>
+            Association mappings are the often most difficult thing to get right. In
+            this section we'll go through the canonical cases one by one, starting
+            with unidirectional mappings, and then considering the bidirectional cases.
+            We'll use <literal>Person</literal> and <literal>Address</literal> in all
+            the examples.
+        </para>
+        
+        <para>
+        	We'll classify associations by whether or not they map to an intervening
+        	join table, and by multiplicity.
+        </para>
+        
+        <para>
+        	Nullable foreign keys are not considered good practice in traditional data
+        	modelling, so all our examples use not null foreign keys. This is not a
+        	requirement of Hibernate, and the mappings will all work if you drop the
+        	nullability constraints.
+        </para>
+        
+    </sect1>
+
+    <sect1 id="assoc-unidirectional" revision="1">
+        <title>Unidirectional associations</title>
+        
+        <sect2 id="assoc-unidirectional-m21">
+        <title>many to one</title>
+        
+        <para>
+            A <emphasis>unidirectional many-to-one association</emphasis> is the most 
+            common kind of unidirectional association.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-121">
+        <title>one to one</title>
+        
+        <para>
+            A <emphasis>unidirectional one-to-one association on a foreign key</emphasis>
+            is almost identical. The only difference is the column unique constraint.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId" 
+        unique="true"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        <para>
+            A <emphasis>unidirectional one-to-one association on a primary key</emphasis>
+            usually uses a special id generator. (Notice that we've reversed the direction
+            of the association in this example.)
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+</class>
+
+<class name="Address">
+    <id name="id" column="personId">
+        <generator class="foreign">
+            <param name="property">person</param>
+        </generator>
+    </id>
+    <one-to-one name="person" constrained="true"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( personId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+        <sect2 id="assoc-unidirectional-12m">
+        <title>one to many</title>
+        
+        <para>
+            A <emphasis>unidirectional one-to-many association on a foreign key</emphasis> 
+            is a very unusual case, and is not really recommended.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses">
+        <key column="personId" 
+            not-null="true"/>
+        <one-to-many class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( addressId bigint not null primary key, personId bigint not null )
+        ]]></programlisting>
+        
+        <para>
+            We think it's better to use a join table for this kind of association.
+        </para>
+        
+        </sect2>
+    
+    </sect1>
+
+    <sect1 id="assoc-unidirectional-join" revision="1">
+        <title>Unidirectional associations with join tables</title>
+        
+        <sect2 id="assoc-unidirectional-join-12m">
+        <title>one to many</title>
+        
+        <para>
+            A <emphasis>unidirectional one-to-many association on a join table</emphasis> 
+            is much preferred. Notice that by specifying <literal>unique="true"</literal>,
+            we have changed the multiplicity from many-to-many to one-to-many.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            unique="true"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId not null, addressId bigint not null primary key )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-m21">
+        <title>many to one</title>
+        
+        <para>
+            A <emphasis>unidirectional many-to-one association on a join table</emphasis> 
+            is quite common when the association is optional.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-121">
+        <title>one to one</title>
+        
+        <para>
+            A <emphasis>unidirectional one-to-one association on a join table</emphasis> 
+            is extremely unusual, but possible.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" 
+            unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+        <sect2 id="assoc-unidirectional-join-m2m">
+        <title>many to many</title>
+        
+        <para>
+            Finally, we have a <emphasis>unidirectional many-to-many association</emphasis>.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+    </sect1>
+
+    <sect1 id="assoc-bidirectional" revision="1">
+        <title>Bidirectional associations</title>
+        
+        <sect2 id="assoc-bidirectional-m21" revision="2">
+        <title>one to many / many to one</title>
+        
+        <para>
+            A <emphasis>bidirectional many-to-one association</emphasis> is the
+            most common kind of association. (This is the standard parent/child
+            relationship.)
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <set name="people" inverse="true">
+        <key column="addressId"/>
+        <one-to-many class="Person"/>
+    </set>
+</class>]]></programlisting>
+
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, addressId bigint not null )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+
+        <para>
+            If you use a <literal>List</literal> (or other indexed collection) you need
+            to set the <literal>key</literal> column of the foreign key to <literal>not null</literal>,
+            and let Hibernate manage the association from the collections side to maintain the index
+            of each element (making the other side virtually inverse by setting
+            <literal>update="false"</literal> and <literal>insert="false"</literal>):
+        </para>
+
+        <programlisting><![CDATA[<class name="Person">
+   <id name="id"/>
+   ...
+   <many-to-one name="address"
+      column="addressId"
+      not-null="true"
+      insert="false"
+      update="false"/>
+</class>
+
+<class name="Address">
+   <id name="id"/>
+   ...
+   <list name="people">
+      <key column="addressId" not-null="true"/>
+      <list-index column="peopleIdx"/>
+      <one-to-many class="Person"/>
+   </list>
+</class>]]></programlisting>
+
+            <para>
+                It is important that you define <literal>not-null="true"</literal> on the
+                <literal>&lt;key&gt;</literal> element of the collection mapping if the
+                underlying foreign key column is <literal>NOT NULL</literal>. Don't only
+                declare <literal>not-null="true"</literal> on a possible nested
+                <literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</literal>
+                element.
+            </para>
+
+        </sect2>
+        
+        <sect2 id="assoc-bidirectional-121">
+        <title>one to one</title>
+        
+        <para>
+            A <emphasis>bidirectional one-to-one association on a foreign key</emphasis>
+            is quite common.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <many-to-one name="address" 
+        column="addressId" 
+        unique="true"
+        not-null="true"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+   <one-to-one name="person" 
+        property-ref="address"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key, addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        <para>
+            A <emphasis>bidirectional one-to-one association on a primary key</emphasis>
+            uses the special id generator.
+        </para>
+        
+       <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <one-to-one name="address"/>
+</class>
+
+<class name="Address">
+    <id name="id" column="personId">
+        <generator class="foreign">
+            <param name="property">person</param>
+        </generator>
+    </id>
+    <one-to-one name="person" 
+        constrained="true"/>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table Address ( personId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+    </sect1>
+
+    <sect1 id="assoc-bidirectional-join" revision="1">
+        <title>Bidirectional associations with join tables</title>
+        
+        <sect2 id="assoc-bidirectional-join-12m">
+        <title>one to many / many to one</title>
+        
+        <para>
+            A <emphasis>bidirectional one-to-many association on a join table</emphasis>.
+            Note that the <literal>inverse="true"</literal> can go on either end of the
+            association, on the collection, or on the join.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" 
+        table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            unique="true"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        inverse="true" 
+        optional="true">
+        <key column="addressId"/>
+        <many-to-one name="person"
+            column="personId"
+            not-null="true"/>
+    </join>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, addressId bigint not null primary key )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+
+         <sect2 id="assoc-bidirectional-join-121">
+        <title>one to one</title>
+        
+        <para>
+            A <emphasis>bidirectional one-to-one association on a join table</emphasis> 
+            is extremely unusual, but possible.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true">
+        <key column="personId" 
+            unique="true"/>
+        <many-to-one name="address"
+            column="addressId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <join table="PersonAddress" 
+        optional="true"
+        inverse="true">
+        <key column="addressId" 
+            unique="true"/>
+        <many-to-one name="person"
+            column="personId" 
+            not-null="true"
+            unique="true"/>
+    </join>
+</class>]]></programlisting>
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null primary key, addressId bigint not null unique )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+
+        </sect2>
+        
+        <sect2 id="assoc-bidirectional-join-m2m" revision="1">
+        <title>many to many</title>
+        
+        <para>
+            Finally, we have a <emphasis>bidirectional many-to-many association</emphasis>.
+        </para>
+        
+        <programlisting><![CDATA[<class name="Person">
+    <id name="id" column="personId">
+        <generator class="native"/>
+    </id>
+    <set name="addresses" table="PersonAddress">
+        <key column="personId"/>
+        <many-to-many column="addressId"
+            class="Address"/>
+    </set>
+</class>
+
+<class name="Address">
+    <id name="id" column="addressId">
+        <generator class="native"/>
+    </id>
+    <set name="people" inverse="true" table="PersonAddress">
+        <key column="addressId"/>
+        <many-to-many column="personId"
+            class="Person"/>
+    </set>
+</class>]]></programlisting>
+
+        <programlisting><![CDATA[
+create table Person ( personId bigint not null primary key )
+create table PersonAddress ( personId bigint not null, addressId bigint not null, primary key (personId, addressId) )
+create table Address ( addressId bigint not null primary key )
+        ]]></programlisting>
+        
+        </sect2>
+        
+    </sect1>
+    
+    <sect1 id="assoc-complex">
+        <title>More complex association mappings</title>
+        
+        <para>
+            More complex association joins are <emphasis>extremely</emphasis> rare. 
+            Hibernate makes it possible to handle more complex situations using
+            SQL fragments embedded in the mapping document. For example, if a table
+            with historical account information data defines 
+            <literal>accountNumber</literal>, <literal>effectiveEndDate</literal> 
+            and <literal>effectiveStartDate</literal>columns, mapped as follows:
+        </para>
+        
+        <programlisting><![CDATA[<properties name="currentAccountKey">
+    <property name="accountNumber" type="string" not-null="true"/>
+    <property name="currentAccount" type="boolean">
+        <formula>case when effectiveEndDate is null then 1 else 0 end</formula>
+    </property>
+</properties>
+<property name="effectiveEndDate" type="date"/>
+<property name="effectiveStateDate" type="date" not-null="true"/>]]></programlisting>
+
+        <para>
+            Then we can map an association to the <emphasis>current</emphasis> instance 
+            (the one with null <literal>effectiveEndDate</literal>) using:
+        </para>
+        
+        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
+        property-ref="currentAccountKey"
+        class="AccountInfo">
+    <column name="accountNumber"/>
+    <formula>'1'</formula>
+</many-to-one>]]></programlisting>
+
+        <para>
+            In a more complex example, imagine that the association between 
+            <literal>Employee</literal> and <literal>Organization</literal> is maintained
+            in an <literal>Employment</literal> table full of historical employment data.
+            Then an association to the employee's <emphasis>most recent</emphasis> employer
+            (the one with the most recent <literal>startDate</literal>) might be mapped this way:
+        </para>
+        
+        <programlisting><![CDATA[<join>
+    <key column="employeeId"/>
+    <subselect>
+        select employeeId, orgId 
+        from Employments 
+        group by orgId 
+        having startDate = max(startDate)
+    </subselect>
+    <many-to-one name="mostRecentEmployer" 
+            class="Organization" 
+            column="orgId"/>
+</join>]]></programlisting>
+
+        <para>
+            You can get quite creative with this functionality, but it is usually more practical 
+            to handle these kinds of cases using HQL or a criteria query.
+        </para>
+
+    </sect1>
+
+
+</chapter>
+

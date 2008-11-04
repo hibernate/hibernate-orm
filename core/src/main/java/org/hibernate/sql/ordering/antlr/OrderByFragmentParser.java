@@ -133,7 +133,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		}
 
 		if ( replacements == null || replacements.length == 0 ) {
-			return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, Template.TEMPLATE + "." + ident );
+			return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, Template.TEMPLATE + "." + text );
 		}
 		else if ( replacements.length == 1 ) {
 			return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, Template.TEMPLATE + "." + replacements[0] );

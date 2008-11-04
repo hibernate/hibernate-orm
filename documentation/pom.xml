@@ -19,6 +19,7 @@
     <modules>
         <module>releasenotes</module>
         <module>manual</module>
+        <module>envers</module>
 <!--
         <module>jbosscache2</module>
 -->

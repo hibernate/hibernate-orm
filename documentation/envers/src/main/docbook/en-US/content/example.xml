@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="example">
+
+    <title>Short example</title>
+
+    <para>
+        For example, using the entities defined above, the following code will generate
+        revision number 1, which will contain two new <literal>Person</literal> and
+        two new <literal>Address</literal> entities:
+    </para>
+
+    <programlisting>entityManager.getTransaction().begin();
+
+Address address1 = new Address("Privet Drive", 4);
+Person person1 = new Person("Harry", "Potter", address1);
+
+Address address2 = new Address("Grimmauld Place", 12);
+Person person2 = new Person("Hermione", "Granger", address2);
+
+entityManager.persist(address1);
+entityManager.persist(address2);
+entityManager.persist(person1);
+entityManager.persist(person2);
+
+entityManager.getTransaction().commit();</programlisting>
+
+    <para>
+        Now we change some entities. This will generate revision number 2, which will contain
+        modifications of one person entity and two address entities (as the collection of
+        persons living at <literal>address2</literal> and <literal>address1</literal> changes):
+    </para>
+
+    <programlisting>entityManager.getTransaction().begin();
+
+Address address1 = entityManager.find(Address.class, address1.getId());
+Person person2 = entityManager.find(Person.class, person2.getId());
+
+// Changing the address's house number
+address1.setHouseNumber(5)
+
+// And moving Hermione to Harry
+person2.setAddress(address1);
+
+entityManager.getTransaction().commit();</programlisting>
+
+    <para>
+        We can retrieve the old versions (the audit) easily:
+    </para>
+
+    <programlisting>AuditReader reader = AuditReaderFactory.get(entityManager);
+
+Person person2_rev1 = reader.find(Person.class, person2.getId(), 1);
+assert person2_rev1.getAddress().equals(new Address("Grimmauld Place", 12));
+
+Address address1_rev1 = reader.find(Address.class, address1.getId(), 1);
+assert address1_rev1.getPersons().getSize() == 1;
+
+// and so on</programlisting>
+
+</chapter>

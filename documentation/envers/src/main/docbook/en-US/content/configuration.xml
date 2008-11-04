@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Middleware LLC.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="configuration">
+
+    <title>Configuration</title>
+
+    <para>
+        To start working with Envers, all configuration that you must do is add the event
+        listeners to persistence.xml, as described in the <xref linkend="quickstart"/>.
+    </para>
+
+    <para>
+        However, as Envers generates some tables, it is possible to set the prefix and suffix
+        that is added to the entity name to create a versions table for an entity, as well
+        as set the names of the fields that are generated.
+    </para>
+
+    <para>
+        In more detail, here are the properites that you can set:
+    </para>
+
+    <table frame="topbot">
+        <title>Envers Configuration Properties</title>
+        <tgroup cols="2">
+            <colspec colname="c1" colwidth="1*"/>
+            <colspec colname="c2" colwidth="1*"/>
+            <colspec colname="c2" colwidth="1*"/>
+            <thead>
+                <row>
+                    <entry>Property name</entry>
+                    <entry>Default value</entry>
+                    <entry>Description</entry>
+                </row>
+            </thead>
+            <tbody>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.auditTablePrefix</property>
+                    </entry>
+                    <entry>
+
+                    </entry>
+                    <entry>
+                        String that will be prepended to the name of an audited entity to create
+                        the name of the entity, that will hold audit information.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.auditTableSuffix</property>
+                    </entry>
+                    <entry>
+                        _audit
+                    </entry>
+                    <entry>
+                        String that will be appended to the name of an audited entity to create
+                        the name of the entity, that will hold audit information. If you
+                        audit an entity with a table name Person, in the default setting Envers
+                        will generate a <literal>Person_audit</literal> table to store historical data.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.revisionFieldName</property>
+                    </entry>
+                    <entry>
+                        REV
+                    </entry>
+                    <entry>
+                        Name of a field in the audit entity that will hold the revision number.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.revisionTypeFieldName</property>
+                    </entry>
+                    <entry>
+                        REVTYPE
+                    </entry>
+                    <entry>
+                        Name of a field in the aduit entity that will hold the type of the
+                        revision (currently, this can be: add, mod, del).
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.revisionOnCollectionChange</property>
+                    </entry>
+                    <entry>
+                        true
+                    </entry>
+                    <entry>
+                        Should a revision be generated when a not-owned relation field changes
+                        (this can be either a collection in a one-to-many relation, or the field
+                        using "mappedBy" attribute in a one-to-one relation).
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.warnOnUnsupportedTypes</property>
+                    </entry>
+                    <entry>
+                        false
+                    </entry>
+                    <entry>
+                        TODO: remove
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.doNotAuditOptimisticLockingField</property>
+                    </entry>
+                    <entry>
+                        true
+                    </entry>
+                    <entry>
+                        When true, properties to be used for optimistic locking, annotated with
+                        <literal>@Version</literal>, will be automatically not audited
+                        (their history won't be stored; it normally doesn't make sense to store it).
+                    </entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </table>
+
+    <para>
+        To change the name of the revision table and its fields (the table, in which the
+        numbers of revisions and their timestamps are stored), you can use the
+        <literal>@RevisionEntity</literal> annotation.
+        For more information, see <xref linkend="revisionlog"/>.
+    </para>
+
+    <para>
+        To set the value of any of the properties described above, simply add an entry to
+        your <literal>persistence.xml</literal>. For example:
+    </para>
+
+    <programlisting>&lt;persistence-unit ...&gt;
+&lt;provider&gt;org.hibernate.ejb.HibernatePersistence&lt;/provider&gt;
+&lt;class&gt;...&lt;/class&gt;
+&lt;properties&gt;
+   &lt;property name="hibernate.dialect" ... /&gt;
+   &lt;!-- other hibernate properties --&gt;
+
+   &lt;property name="hibernate.ejb.event.post-insert"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+   &lt;property name="hibernate.ejb.event.post-update"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+   &lt;property name="hibernate.ejb.event.post-delete"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+   &lt;property name="hibernate.ejb.event.pre-collection-update"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+   &lt;property name="hibernate.ejb.event.pre-collection-remove"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+   &lt;property name="hibernate.ejb.event.post-collection-recreate"
+             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+
+   &lt;property name="org.hibernate.envers.versionsTableSuffix" value="_V" /&gt;
+   &lt;property name="org.hibernate.envers.revisionFieldName" value="ver_rev" /&gt;
+   &lt;!-- other envers properties --&gt;
+&lt;/properties&gt;
+&lt;/persistence-unit&gt;</programlisting>
+
+    <para>
+        You can also set the name of the versions table on a per-entity basis, using the
+        <literal>@AuditTable</literal> annotation (see also in the javadoc). It may be tedious to add this
+        annotation to every audited entity, so if possible, it's better to use a prefix/suffix.
+    </para>
+
+    <para>
+        If you have a mapping with secondary tables, version tables for them will be generated in
+        the same way (by adding the prefix and suffix). If you wish to overwrite this behaviour,
+        you can use the <literal>@SecondaryAuditTable</literal> and
+        <literal>@SecondaryAuditTables</literal> annotations.
+    </para>
+
+    <para>
+        If you want to audit a relation mapped with <literal>@OneToMany+@JoinColumn</literal>,
+        please see <xref linkend="exceptions"/> for a description of the additional
+        <literal>@AuditJoinTable</literal>  annotation that you'll probably want to use.
+    </para>
+</chapter>

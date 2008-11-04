@@ -129,18 +129,6 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 					// resolve this...
 					return;
 				}
-				else if ( result == UNKNOWN ) {
-					final SQLFunction sqlFunction = getSessionFactoryHelper().findSQLFunction( getText() );
-					if ( sqlFunction != null ) {
-						String text = sqlFunction.render( Collections.EMPTY_LIST, getSessionFactoryHelper().getFactory() );
-						if ( text.endsWith( "()" ) ) {
-							text = text.substring( 0, text.length() - 2 );
-						}
-						setText( text );
-						setDataType( sqlFunction.getReturnType( null, getSessionFactoryHelper().getFactory() ) );
-						setResolved();
-					}
-				}
 			}
 
 			// if we are still not resolved, we might represent a constant.

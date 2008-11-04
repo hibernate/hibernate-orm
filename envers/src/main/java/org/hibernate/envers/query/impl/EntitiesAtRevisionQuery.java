@@ -36,7 +36,7 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class EntitiesAtRevisionQuery extends AbstractVersionsQuery {
+public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     private final Number revision;
 
     public EntitiesAtRevisionQuery(AuditConfiguration verCfg,

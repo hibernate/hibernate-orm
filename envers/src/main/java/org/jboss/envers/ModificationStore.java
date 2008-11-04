@@ -21,20 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.reader;
 
-import org.hibernate.envers.AuditReader;
-
-import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
-import org.jboss.envers.VersionsReader;
+package org.jboss.envers;
 
 /**
- * An interface exposed by a VersionsReader to library-facing classes.
+ * @see org.hibernate.envers.ModificationStore
+ * @deprecated
  * @author Adam Warski (adam at warski dot org)
  */
-public interface AuditReaderImplementor extends AuditReader, VersionsReader {
-    SessionImplementor getSessionImplementor();
-    Session getSession();
-    FirstLevelCache getFirstLevelCache();
+public enum ModificationStore {
+    FULL
 }

@@ -26,7 +26,7 @@ package org.hibernate.envers;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.envers.exception.NotVersionedException;
+import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
 
@@ -43,11 +43,11 @@ public interface AuditReader {
      * if not all properties are versioned) or null, if an entity with that id didn't exist at that
      * revision.
      * @throws IllegalArgumentException If cls or primaryKey is null or revision is less or equal to 0.
-     * @throws NotVersionedException When entities of the given class are not versioned.
+     * @throws NotAuditedException When entities of the given class are not audited.
      * @throws IllegalStateException If the associated entity manager is closed.
      */
     <T> T find(Class<T> cls, Object primaryKey, Number revision) throws
-            IllegalArgumentException, NotVersionedException, IllegalStateException;
+            IllegalArgumentException, NotAuditedException, IllegalStateException;
 
     /**
      * Get a list of revision numbers, at which an entity was modified.
@@ -55,12 +55,12 @@ public interface AuditReader {
      * @param primaryKey Primary key of the entity.
      * @return A list of revision numbers, at which the entity was modified, sorted in ascending order (so older
      * revisions come first).
-     * @throws NotVersionedException When entities of the given class are not versioned.
+     * @throws NotAuditedException When entities of the given class are not audited.
      * @throws IllegalArgumentException If cls or primaryKey is null.
      * @throws IllegalStateException If the associated entity manager is closed.
      */
     List<Number> getRevisions(Class<?> cls, Object primaryKey)
-            throws IllegalArgumentException, NotVersionedException, IllegalStateException;
+            throws IllegalArgumentException, NotAuditedException, IllegalStateException;
 
     /**
      * Get the date, at which a revision was created.
@@ -102,7 +102,7 @@ public interface AuditReader {
 
     /**
      *
-     * @return A query creator, associated with this VersionsReader instance, with which queries can be
+     * @return A query creator, associated with this AuditReader instance, with which queries can be
      * created and later executed. Shouldn't be used after the associated Session or EntityManager
      * is closed.
      */

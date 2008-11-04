@@ -29,8 +29,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When applied to a class, indicates that all of its properties should be versioned.
- * When applied to a field, indicates that this field should be versioned.
+ * When applied to a class, indicates that all of its properties should be audited.
+ * When applied to a field, indicates that this field should be audited.
  * @author Adam Warski (adam at warski dot org)
  */
 @Retention(RetentionPolicy.RUNTIME)

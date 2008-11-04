@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.exception;
 
-import org.hibernate.HibernateException;
+import org.jboss.envers.exception.VersionsException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditException extends HibernateException {
+public class AuditException extends VersionsException {
     public AuditException(String message) {
         super(message);
     }

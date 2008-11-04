@@ -21,20 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.reader;
 
-import org.hibernate.envers.AuditReader;
+package org.jboss.envers.exception;
 
-import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
-import org.jboss.envers.VersionsReader;
+import org.hibernate.HibernateException;
 
 /**
- * An interface exposed by a VersionsReader to library-facing classes.
+ * @see org.hibernate.envers.exception.AuditException
+ * @deprecated
  * @author Adam Warski (adam at warski dot org)
  */
-public interface AuditReaderImplementor extends AuditReader, VersionsReader {
-    SessionImplementor getSessionImplementor();
-    Session getSession();
-    FirstLevelCache getFirstLevelCache();
+public class VersionsException extends HibernateException {
+    public VersionsException(String message) {
+        super(message);
+    }
+
+    public VersionsException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public VersionsException(Throwable cause) {
+        super(cause);
+    }
 }

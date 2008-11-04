@@ -50,7 +50,7 @@ import org.hibernate.Query;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractVersionsQuery implements AuditQuery {
+public abstract class AbstractAuditQuery implements AuditQuery {
     protected EntityInstantiator entityInstantiator;
     protected List<AuditCriterion> criterions;
 
@@ -64,7 +64,7 @@ public abstract class AbstractVersionsQuery implements AuditQuery {
     protected final AuditConfiguration verCfg;
     private final AuditReaderImplementor versionsReader;
 
-    protected AbstractVersionsQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+    protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                     Class<?> cls) {
         this.verCfg = verCfg;
         this.versionsReader = versionsReader;

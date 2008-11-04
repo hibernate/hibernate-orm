@@ -25,7 +25,7 @@ package org.hibernate.envers.test.integration.basic;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.exception.NotVersionedException;
+import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -58,12 +58,12 @@ public class NotVersioned extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test(expectedExceptions = NotVersionedException.class)
+    @Test(expectedExceptions = NotAuditedException.class)
     public void testRevisionsCounts() {
         getVersionsReader().getRevisions(BasicTestEntity3.class, id1);
     }
 
-    @Test(expectedExceptions = NotVersionedException.class)
+    @Test(expectedExceptions = NotAuditedException.class)
     public void testHistoryOfId1() {
         getVersionsReader().find(BasicTestEntity3.class, id1, 1);
     }

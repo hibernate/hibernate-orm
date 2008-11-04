@@ -34,12 +34,12 @@ import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditQueryCreator {
-    private final AuditConfiguration verCfg;
-    private final AuditReaderImplementor versionsReaderImplementor;
+    private final AuditConfiguration auditCfg;
+    private final AuditReaderImplementor auditReaderImplementor;
 
-    public AuditQueryCreator(AuditConfiguration verCfg, AuditReaderImplementor versionsReaderImplementor) {
-        this.verCfg = verCfg;
-        this.versionsReaderImplementor = versionsReaderImplementor;
+    public AuditQueryCreator(AuditConfiguration auditCfg, AuditReaderImplementor auditReaderImplementor) {
+        this.auditCfg = auditCfg;
+        this.auditReaderImplementor = auditReaderImplementor;
     }
 
     /**
@@ -54,7 +54,7 @@ public class AuditQueryCreator {
     public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
-        return new EntitiesAtRevisionQuery(verCfg, versionsReaderImplementor, c, revision);
+        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
     }
 
     /**
@@ -78,6 +78,6 @@ public class AuditQueryCreator {
      * unless an order or projection is added.
      */
     public AuditQuery forRevisionsOfEntity(Class<?> c, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
-        return new RevisionsOfEntityQuery(verCfg, versionsReaderImplementor, c, selectEntitiesOnly,selectDeletedEntities);
+        return new RevisionsOfEntityQuery(auditCfg, auditReaderImplementor, c, selectEntitiesOnly,selectDeletedEntities);
     }
 }

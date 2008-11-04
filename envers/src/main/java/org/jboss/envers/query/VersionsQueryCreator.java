@@ -21,20 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.exception;
+
+package org.jboss.envers.query;
+
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.AuditQueryCreator;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
+ * @link AuditQueryCreator
+ * @deprecated
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotVersionedException extends AuditException {
-    private final String entityName;
-
-    public NotVersionedException(String entityName, String message) {
-        super(message);
-        this.entityName = entityName;        
-    }
-
-    public String getEntityName() {
-        return entityName;
+public class VersionsQueryCreator extends AuditQueryCreator {
+    public VersionsQueryCreator(AuditConfiguration verCfg, AuditReaderImplementor versionsReaderImplementor) {
+        super(verCfg, versionsReaderImplementor);
     }
 }

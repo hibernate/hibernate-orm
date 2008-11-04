@@ -21,20 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.reader;
 
-import org.hibernate.envers.AuditReader;
+package org.jboss.envers.exception;
 
-import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
-import org.jboss.envers.VersionsReader;
+import java.util.Date;
 
 /**
- * An interface exposed by a VersionsReader to library-facing classes.
+ * @see org.hibernate.envers.exception.RevisionDoesNotExistException
+ * @deprecated
  * @author Adam Warski (adam at warski dot org)
  */
-public interface AuditReaderImplementor extends AuditReader, VersionsReader {
-    SessionImplementor getSessionImplementor();
-    Session getSession();
-    FirstLevelCache getFirstLevelCache();
+public class RevisionDoesNotExistException extends VersionsException {
+    private Number revision;
+    private Date date;
+
+    public RevisionDoesNotExistException(Number revision) {
+        super("Revision " + revision + " does not exist.");
+        this.revision = revision;
+    }
+
+    public RevisionDoesNotExistException(Date date) {
+        super("There is no revision before or at " + date + ".");
+        this.date = date;
+    }
+
+    public Number getRevision() {
+        return revision;
+    }
+
+    public Date getDate() {
+        return date;
+    }
 }

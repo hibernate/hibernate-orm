@@ -39,7 +39,7 @@ import org.hibernate.proxy.HibernateProxy;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionsOfEntityQuery extends AbstractVersionsQuery {
+public class RevisionsOfEntityQuery extends AbstractAuditQuery {
     private final boolean selectEntitiesOnly;
     private final boolean selectDeletedEntities;
 

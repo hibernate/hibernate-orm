@@ -28,25 +28,12 @@ import java.util.Date;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionDoesNotExistException extends AuditException {
-    private Number revision;
-    private Date date;
-
+public class RevisionDoesNotExistException extends org.jboss.envers.exception.RevisionDoesNotExistException {
     public RevisionDoesNotExistException(Number revision) {
-        super("Revision " + revision + " does not exist.");
-        this.revision = revision;
+        super(revision);
     }
 
     public RevisionDoesNotExistException(Date date) {
-        super("There is no revision before or at " + date + ".");
-        this.date = date;
-    }
-
-    public Number getRevision() {
-        return revision;
-    }
-
-    public Date getDate() {
-        return date;
+        super(date);
     }
 }

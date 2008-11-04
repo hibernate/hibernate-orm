@@ -28,11 +28,10 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.exception.NotVersionedException;
+import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.query.AuditRestrictions;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
@@ -41,6 +40,7 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
+import org.jboss.envers.query.VersionsQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -80,7 +80,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
     @SuppressWarnings({"unchecked"})
     public <T> T find(Class<T> cls, Object primaryKey, Number revision) throws
-            IllegalArgumentException, NotVersionedException, IllegalStateException {
+            IllegalArgumentException, NotAuditedException, IllegalStateException {
         checkNotNull(cls, "Entity class");
         checkNotNull(primaryKey, "Primary key");
         checkNotNull(revision, "Entity revision");
@@ -90,7 +90,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         String entityName = cls.getName();
 
         if (!verCfg.getEntCfg().isVersioned(entityName)) {
-            throw new NotVersionedException(entityName, entityName + " is not versioned!");
+            throw new NotAuditedException(entityName, entityName + " is not versioned!");
         }
 
         if (firstLevelCache.contains(entityName, revision, primaryKey)) {
@@ -113,7 +113,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
     @SuppressWarnings({"unchecked"})
     public List<Number> getRevisions(Class<?> cls, Object primaryKey)
-            throws IllegalArgumentException, NotVersionedException, IllegalStateException {
+            throws IllegalArgumentException, NotAuditedException, IllegalStateException {
         // todo: if a class is not versioned from the beginning, there's a missing ADD rev - what then?
         checkNotNull(cls, "Entity class");
         checkNotNull(primaryKey, "Primary key");
@@ -122,7 +122,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         String entityName = cls.getName();
 
         if (!verCfg.getEntCfg().isVersioned(entityName)) {
-            throw new NotVersionedException(entityName, entityName + " is not versioned!");
+            throw new NotAuditedException(entityName, entityName + " is not versioned!");
         }
 
         return createQuery().forRevisionsOfEntity(cls, false, true)
@@ -191,7 +191,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
     }
 
-    public AuditQueryCreator createQuery() {
-        return new AuditQueryCreator(verCfg, this);
+    public VersionsQueryCreator createQuery() {
+        return new VersionsQueryCreator(verCfg, this);
     }
 }

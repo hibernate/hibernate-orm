@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers;
+
+package org.jboss.envers;
 
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.event.AuditEventListener;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;
 import static org.hibernate.envers.tools.ArraysTools.arrayIncludesInstanceOf;
 
@@ -34,23 +34,26 @@ import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostInsertEventListener;
+import org.jboss.envers.exception.VersionsException;
 
 /**
+ * @see org.hibernate.envers.AuditReaderFactory
+ * @deprecated
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditReaderFactory {
-    private AuditReaderFactory() { }
+public class VersionsReaderFactory {
+    private VersionsReaderFactory() { }
 
     /**
      * Create a versions reader associated with an open session.
      * <b>WARNING:</b> Using Envers with Hibernate (not with Hibernate Entity Manager/JPA) is experimental,
-     * if possible, use {@link AuditReaderFactory#get(javax.persistence.EntityManager)}.
+     * if possible, use {@link VersionsReaderFactory#get(javax.persistence.EntityManager)}.
      * @param session An open session.
      * @return A versions reader associated with the given sesison. It shouldn't be used
      * after the session is closed.
-     * @throws AuditException When the given required listeners aren't installed.
+     * @throws org.hibernate.envers.exception.AuditException When the given required listeners aren't installed.
      */
-    public static AuditReader get(Session session) throws AuditException {
+    public static VersionsReader get(Session session) throws VersionsException {
         SessionImplementor sessionImpl = (SessionImplementor) session;
 
         EventListeners listeners = sessionImpl.getListeners();
@@ -65,7 +68,7 @@ public class AuditReaderFactory {
             }
         }
 
-        throw new AuditException("You need to install the org.hibernate.envers.event.AuditEventListener " +
+        throw new VersionsException("You need install the org.hibernate.envers.event.VersionsEventListener " +
                 "class as post insert, update and delete event listener.");
     }
 
@@ -74,10 +77,10 @@ public class AuditReaderFactory {
      * @param entityManager An open entity manager.
      * @return A versions reader associated with the given entity manager. It shouldn't be used
      * after the entity manager is closed.
-     * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
+     * @throws org.hibernate.envers.exception.AuditException When the given entity manager is not based on Hibernate, or if the required
      * listeners aren't installed.
      */
-    public static AuditReader get(EntityManager entityManager) throws AuditException {
+    public static VersionsReader get(EntityManager entityManager) throws VersionsException {
         if (entityManager.getDelegate() instanceof Session) {
             return get((Session) entityManager.getDelegate());
         }
@@ -88,6 +91,6 @@ public class AuditReaderFactory {
             }
         }
 
-        throw new AuditException("Hibernate EntityManager not present!");
+        throw new VersionsException("Hibernate EntityManager not present!");
     }
 }

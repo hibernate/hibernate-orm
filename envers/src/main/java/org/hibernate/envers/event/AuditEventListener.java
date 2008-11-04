@@ -60,7 +60,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class VersionsEventListener implements PostInsertEventListener, PostUpdateEventListener,
+public class AuditEventListener implements PostInsertEventListener, PostUpdateEventListener,
         PostDeleteEventListener, PreCollectionUpdateEventListener, PreCollectionRemoveEventListener,
         PostCollectionRecreateEventListener, Initializable {
     private AuditConfiguration verCfg;

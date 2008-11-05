@@ -110,10 +110,10 @@ public class BasicJoinColumnSet extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4).equals(getVersionsReader().getRevisions(SetJoinColumnRefCollEntity.class, coll1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(SetJoinColumnRefCollEntity.class, coll1_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str2_id));
     }
 
     @Test
@@ -121,10 +121,10 @@ public class BasicJoinColumnSet extends AbstractEntityTest {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
         StrTestEntity str2 = getEntityManager().find(StrTestEntity.class, str2_id);
 
-        SetJoinColumnRefCollEntity rev1 = getVersionsReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 1);
-        SetJoinColumnRefCollEntity rev2 = getVersionsReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 2);
-        SetJoinColumnRefCollEntity rev3 = getVersionsReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 3);
-        SetJoinColumnRefCollEntity rev4 = getVersionsReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 4);
+        SetJoinColumnRefCollEntity rev1 = getAuditReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 1);
+        SetJoinColumnRefCollEntity rev2 = getAuditReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 2);
+        SetJoinColumnRefCollEntity rev3 = getAuditReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 3);
+        SetJoinColumnRefCollEntity rev4 = getAuditReader().find(SetJoinColumnRefCollEntity.class, coll1_id, 4);
 
         assert rev1.getCollection().equals(TestTools.makeSet(str1));
         assert rev2.getCollection().equals(TestTools.makeSet(str1, str2));

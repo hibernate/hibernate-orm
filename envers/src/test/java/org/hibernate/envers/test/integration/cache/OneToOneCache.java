@@ -88,16 +88,16 @@ public class OneToOneCache extends AbstractEntityTest {
 
     @Test
     public void testCacheReferenceAccessAfterFindRev1() {
-        BiRefEdEntity ed1_rev1 = getVersionsReader().find(BiRefEdEntity.class, ed1_id, 1);
-        BiRefIngEntity ing1_rev1 = getVersionsReader().find(BiRefIngEntity.class, ing1_id, 1);
+        BiRefEdEntity ed1_rev1 = getAuditReader().find(BiRefEdEntity.class, ed1_id, 1);
+        BiRefIngEntity ing1_rev1 = getAuditReader().find(BiRefIngEntity.class, ing1_id, 1);
 
         assert ing1_rev1.getReference() == ed1_rev1;
     }
 
     @Test
     public void testCacheReferenceAccessAfterFindRev2() {
-        BiRefEdEntity ed2_rev2 = getVersionsReader().find(BiRefEdEntity.class, ed2_id, 2);
-        BiRefIngEntity ing1_rev2 = getVersionsReader().find(BiRefIngEntity.class, ing1_id, 2);
+        BiRefEdEntity ed2_rev2 = getAuditReader().find(BiRefEdEntity.class, ed2_id, 2);
+        BiRefIngEntity ing1_rev2 = getAuditReader().find(BiRefIngEntity.class, ing1_id, 2);
 
         assert ing1_rev2.getReference() == ed2_rev2;
     }

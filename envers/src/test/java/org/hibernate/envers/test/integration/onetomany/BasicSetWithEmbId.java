@@ -103,11 +103,11 @@ public class BasicSetWithEmbId extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(SetRefEdEmbIdEntity.class, ed1_id));
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(SetRefEdEmbIdEntity.class, ed2_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(SetRefEdEmbIdEntity.class, ed1_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(SetRefEdEmbIdEntity.class, ed2_id));
 
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SetRefIngEmbIdEntity.class, ing1_id));
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(SetRefIngEmbIdEntity.class, ing2_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SetRefIngEmbIdEntity.class, ing1_id));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(SetRefIngEmbIdEntity.class, ing2_id));
     }
 
     private <T> Set<T> makeSet(T... objects) {
@@ -122,9 +122,9 @@ public class BasicSetWithEmbId extends AbstractEntityTest {
         SetRefIngEmbIdEntity ing1 = getEntityManager().find(SetRefIngEmbIdEntity.class, ing1_id);
         SetRefIngEmbIdEntity ing2 = getEntityManager().find(SetRefIngEmbIdEntity.class, ing2_id);
 
-        SetRefEdEmbIdEntity rev1 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed1_id, 1);
-        SetRefEdEmbIdEntity rev2 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed1_id, 2);
-        SetRefEdEmbIdEntity rev3 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed1_id, 3);
+        SetRefEdEmbIdEntity rev1 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed1_id, 1);
+        SetRefEdEmbIdEntity rev2 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed1_id, 2);
+        SetRefEdEmbIdEntity rev3 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed1_id, 3);
 
         assert rev1.getReffering().equals(makeSet(ing1, ing2));
         assert rev2.getReffering().equals(makeSet(ing2));
@@ -136,9 +136,9 @@ public class BasicSetWithEmbId extends AbstractEntityTest {
         SetRefIngEmbIdEntity ing1 = getEntityManager().find(SetRefIngEmbIdEntity.class, ing1_id);
         SetRefIngEmbIdEntity ing2 = getEntityManager().find(SetRefIngEmbIdEntity.class, ing2_id);
 
-        SetRefEdEmbIdEntity rev1 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed2_id, 1);
-        SetRefEdEmbIdEntity rev2 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed2_id, 2);
-        SetRefEdEmbIdEntity rev3 = getVersionsReader().find(SetRefEdEmbIdEntity.class, ed2_id, 3);
+        SetRefEdEmbIdEntity rev1 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed2_id, 1);
+        SetRefEdEmbIdEntity rev2 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed2_id, 2);
+        SetRefEdEmbIdEntity rev3 = getAuditReader().find(SetRefEdEmbIdEntity.class, ed2_id, 3);
 
         assert rev1.getReffering().equals(Collections.EMPTY_SET);
         assert rev2.getReffering().equals(makeSet(ing1));
@@ -150,9 +150,9 @@ public class BasicSetWithEmbId extends AbstractEntityTest {
         SetRefEdEmbIdEntity ed1 = getEntityManager().find(SetRefEdEmbIdEntity.class, ed1_id);
         SetRefEdEmbIdEntity ed2 = getEntityManager().find(SetRefEdEmbIdEntity.class, ed2_id);
 
-        SetRefIngEmbIdEntity rev1 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing1_id, 1);
-        SetRefIngEmbIdEntity rev2 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing1_id, 2);
-        SetRefIngEmbIdEntity rev3 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing1_id, 3);
+        SetRefIngEmbIdEntity rev1 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing1_id, 1);
+        SetRefIngEmbIdEntity rev2 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing1_id, 2);
+        SetRefIngEmbIdEntity rev3 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing1_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed2);
@@ -164,9 +164,9 @@ public class BasicSetWithEmbId extends AbstractEntityTest {
         SetRefEdEmbIdEntity ed1 = getEntityManager().find(SetRefEdEmbIdEntity.class, ed1_id);
         SetRefEdEmbIdEntity ed2 = getEntityManager().find(SetRefEdEmbIdEntity.class, ed2_id);
 
-        SetRefIngEmbIdEntity rev1 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing2_id, 1);
-        SetRefIngEmbIdEntity rev2 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing2_id, 2);
-        SetRefIngEmbIdEntity rev3 = getVersionsReader().find(SetRefIngEmbIdEntity.class, ing2_id, 3);
+        SetRefIngEmbIdEntity rev1 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing2_id, 1);
+        SetRefIngEmbIdEntity rev2 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing2_id, 2);
+        SetRefIngEmbIdEntity rev3 = getAuditReader().find(SetRefIngEmbIdEntity.class, ing2_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed1);

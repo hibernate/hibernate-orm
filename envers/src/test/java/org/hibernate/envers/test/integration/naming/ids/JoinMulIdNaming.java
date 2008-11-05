@@ -82,25 +82,25 @@ public class JoinMulIdNaming extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinMulIdNamingRefEdEntity.class, ed_id1));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinMulIdNamingRefEdEntity.class, ed_id2));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinMulIdNamingRefIngEntity.class, ing_id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinMulIdNamingRefEdEntity.class, ed_id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinMulIdNamingRefEdEntity.class, ed_id2));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinMulIdNamingRefIngEntity.class, ing_id1));
     }
 
     @Test
     public void testHistoryOfEdId1() {
         JoinMulIdNamingRefEdEntity ver1 = new JoinMulIdNamingRefEdEntity(ed_id1, "data1");
 
-        assert getVersionsReader().find(JoinMulIdNamingRefEdEntity.class, ed_id1, 1).equals(ver1);
-        assert getVersionsReader().find(JoinMulIdNamingRefEdEntity.class, ed_id1, 2).equals(ver1);
+        assert getAuditReader().find(JoinMulIdNamingRefEdEntity.class, ed_id1, 1).equals(ver1);
+        assert getAuditReader().find(JoinMulIdNamingRefEdEntity.class, ed_id1, 2).equals(ver1);
     }
 
     @Test
     public void testHistoryOfEdId2() {
         JoinMulIdNamingRefEdEntity ver1 = new JoinMulIdNamingRefEdEntity(ed_id2, "data2");
 
-        assert getVersionsReader().find(JoinMulIdNamingRefEdEntity.class, ed_id2, 1).equals(ver1);
-        assert getVersionsReader().find(JoinMulIdNamingRefEdEntity.class, ed_id2, 2).equals(ver1);
+        assert getAuditReader().find(JoinMulIdNamingRefEdEntity.class, ed_id2, 1).equals(ver1);
+        assert getAuditReader().find(JoinMulIdNamingRefEdEntity.class, ed_id2, 2).equals(ver1);
     }
 
     @Test
@@ -108,12 +108,12 @@ public class JoinMulIdNaming extends AbstractEntityTest {
         JoinMulIdNamingRefIngEntity ver1 = new JoinMulIdNamingRefIngEntity(ing_id1, "x", null);
         JoinMulIdNamingRefIngEntity ver2 = new JoinMulIdNamingRefIngEntity(ing_id1, "y", null);
 
-        assert getVersionsReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 1).equals(ver1);
-        assert getVersionsReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 2).equals(ver2);
+        assert getAuditReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 1).equals(ver1);
+        assert getAuditReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 2).equals(ver2);
 
-        assert getVersionsReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 1).getReference().equals(
+        assert getAuditReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 1).getReference().equals(
                 new JoinMulIdNamingRefEdEntity(ed_id1, "data1"));
-        assert getVersionsReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 2).getReference().equals(
+        assert getAuditReader().find(JoinMulIdNamingRefIngEntity.class, ing_id1, 2).getReference().equals(
                 new JoinMulIdNamingRefEdEntity(ed_id2, "data2"));
     }
 

@@ -102,20 +102,20 @@ public class BasicList extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(ListRefEdEntity.class, ed1_id));
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(ListRefEdEntity.class, ed2_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ListRefEdEntity.class, ed1_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ListRefEdEntity.class, ed2_id));
 
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(ListRefIngEntity.class, ing1_id));
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(ListRefIngEntity.class, ing2_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ListRefIngEntity.class, ing1_id));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ListRefIngEntity.class, ing2_id));
     }
     @Test
     public void testHistoryOfEdId1() {
         ListRefIngEntity ing1 = getEntityManager().find(ListRefIngEntity.class, ing1_id);
         ListRefIngEntity ing2 = getEntityManager().find(ListRefIngEntity.class, ing2_id);
 
-        ListRefEdEntity rev1 = getVersionsReader().find(ListRefEdEntity.class, ed1_id, 1);
-        ListRefEdEntity rev2 = getVersionsReader().find(ListRefEdEntity.class, ed1_id, 2);
-        ListRefEdEntity rev3 = getVersionsReader().find(ListRefEdEntity.class, ed1_id, 3);
+        ListRefEdEntity rev1 = getAuditReader().find(ListRefEdEntity.class, ed1_id, 1);
+        ListRefEdEntity rev2 = getAuditReader().find(ListRefEdEntity.class, ed1_id, 2);
+        ListRefEdEntity rev3 = getAuditReader().find(ListRefEdEntity.class, ed1_id, 3);
 
         assert TestTools.checkList(rev1.getReffering(), ing1, ing2);
         assert TestTools.checkList(rev2.getReffering(), ing2);
@@ -127,9 +127,9 @@ public class BasicList extends AbstractEntityTest {
         ListRefIngEntity ing1 = getEntityManager().find(ListRefIngEntity.class, ing1_id);
         ListRefIngEntity ing2 = getEntityManager().find(ListRefIngEntity.class, ing2_id);
 
-        ListRefEdEntity rev1 = getVersionsReader().find(ListRefEdEntity.class, ed2_id, 1);
-        ListRefEdEntity rev2 = getVersionsReader().find(ListRefEdEntity.class, ed2_id, 2);
-        ListRefEdEntity rev3 = getVersionsReader().find(ListRefEdEntity.class, ed2_id, 3);
+        ListRefEdEntity rev1 = getAuditReader().find(ListRefEdEntity.class, ed2_id, 1);
+        ListRefEdEntity rev2 = getAuditReader().find(ListRefEdEntity.class, ed2_id, 2);
+        ListRefEdEntity rev3 = getAuditReader().find(ListRefEdEntity.class, ed2_id, 3);
 
         assert TestTools.checkList(rev1.getReffering());
         assert TestTools.checkList(rev2.getReffering(), ing1);
@@ -141,9 +141,9 @@ public class BasicList extends AbstractEntityTest {
         ListRefEdEntity ed1 = getEntityManager().find(ListRefEdEntity.class, ed1_id);
         ListRefEdEntity ed2 = getEntityManager().find(ListRefEdEntity.class, ed2_id);
 
-        ListRefIngEntity rev1 = getVersionsReader().find(ListRefIngEntity.class, ing1_id, 1);
-        ListRefIngEntity rev2 = getVersionsReader().find(ListRefIngEntity.class, ing1_id, 2);
-        ListRefIngEntity rev3 = getVersionsReader().find(ListRefIngEntity.class, ing1_id, 3);
+        ListRefIngEntity rev1 = getAuditReader().find(ListRefIngEntity.class, ing1_id, 1);
+        ListRefIngEntity rev2 = getAuditReader().find(ListRefIngEntity.class, ing1_id, 2);
+        ListRefIngEntity rev3 = getAuditReader().find(ListRefIngEntity.class, ing1_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed2);
@@ -155,9 +155,9 @@ public class BasicList extends AbstractEntityTest {
         ListRefEdEntity ed1 = getEntityManager().find(ListRefEdEntity.class, ed1_id);
         ListRefEdEntity ed2 = getEntityManager().find(ListRefEdEntity.class, ed2_id);
 
-        ListRefIngEntity rev1 = getVersionsReader().find(ListRefIngEntity.class, ing2_id, 1);
-        ListRefIngEntity rev2 = getVersionsReader().find(ListRefIngEntity.class, ing2_id, 2);
-        ListRefIngEntity rev3 = getVersionsReader().find(ListRefIngEntity.class, ing2_id, 3);
+        ListRefIngEntity rev1 = getAuditReader().find(ListRefIngEntity.class, ing2_id, 1);
+        ListRefIngEntity rev2 = getAuditReader().find(ListRefIngEntity.class, ing2_id, 2);
+        ListRefIngEntity rev3 = getAuditReader().find(ListRefIngEntity.class, ing2_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed1);

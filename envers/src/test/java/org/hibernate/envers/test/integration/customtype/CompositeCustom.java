@@ -84,14 +84,14 @@ public class CompositeCustom extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(CompositeCustomTypeEntity.class, ccte_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(CompositeCustomTypeEntity.class, ccte_id));
     }
 
     @Test
     public void testHistoryOfCcte() {
-        CompositeCustomTypeEntity rev1 = getVersionsReader().find(CompositeCustomTypeEntity.class, ccte_id, 1);
-        CompositeCustomTypeEntity rev2 = getVersionsReader().find(CompositeCustomTypeEntity.class, ccte_id, 2);
-        CompositeCustomTypeEntity rev3 = getVersionsReader().find(CompositeCustomTypeEntity.class, ccte_id, 3);
+        CompositeCustomTypeEntity rev1 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 1);
+        CompositeCustomTypeEntity rev2 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 2);
+        CompositeCustomTypeEntity rev3 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 3);
 
         assert rev1.getComponent().equals(new Component("a", 1));
         assert rev2.getComponent().equals(new Component("b", 1));

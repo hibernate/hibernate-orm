@@ -62,7 +62,7 @@ public class Enums extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(EnumTestEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(EnumTestEntity.class, id1));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class Enums extends AbstractEntityTest {
         EnumTestEntity ver1 = new EnumTestEntity(id1, EnumTestEntity.E1.X, EnumTestEntity.E2.A);
         EnumTestEntity ver2 = new EnumTestEntity(id1, EnumTestEntity.E1.Y, EnumTestEntity.E2.B);
 
-        assert getVersionsReader().find(EnumTestEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(EnumTestEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(EnumTestEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(EnumTestEntity.class, id1, 2).equals(ver2);
     }
 }

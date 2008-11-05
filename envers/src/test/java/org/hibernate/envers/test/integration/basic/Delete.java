@@ -97,11 +97,11 @@ public class Delete extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 4).equals(getVersionsReader().getRevisions(BasicTestEntity2.class, id1));
+        assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(BasicTestEntity2.class, id1));
 
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(BasicTestEntity2.class, id2));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(BasicTestEntity2.class, id2));
 
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(BasicTestEntity2.class, id3));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(BasicTestEntity2.class, id3));
     }
 
     @Test
@@ -109,29 +109,29 @@ public class Delete extends AbstractEntityTest {
         BasicTestEntity2 ver1 = new BasicTestEntity2(id1, "x", null);
         BasicTestEntity2 ver2 = new BasicTestEntity2(id1, "x2", null);
 
-        assert getVersionsReader().find(BasicTestEntity2.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity2.class, id1, 2).equals(ver2);
-        assert getVersionsReader().find(BasicTestEntity2.class, id1, 3).equals(ver2);
-        assert getVersionsReader().find(BasicTestEntity2.class, id1, 4) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity2.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity2.class, id1, 3).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity2.class, id1, 4) == null;
     }
 
     @Test
     public void testHistoryOfId2() {
         BasicTestEntity2 ver1 = new BasicTestEntity2(id2, "y", null);
 
-        assert getVersionsReader().find(BasicTestEntity2.class, id2, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity2.class, id2, 2).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity2.class, id2, 3) == null;
-        assert getVersionsReader().find(BasicTestEntity2.class, id2, 4) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id2, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity2.class, id2, 2).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity2.class, id2, 3) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id2, 4) == null;
     }
 
     @Test
     public void testHistoryOfId3() {
         BasicTestEntity2 ver1 = new BasicTestEntity2(id3, "z", null);
 
-        assert getVersionsReader().find(BasicTestEntity2.class, id3, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity2.class, id3, 2) == null;
-        assert getVersionsReader().find(BasicTestEntity2.class, id3, 3) == null;
-        assert getVersionsReader().find(BasicTestEntity2.class, id3, 4) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id3, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity2.class, id3, 2) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id3, 3) == null;
+        assert getAuditReader().find(BasicTestEntity2.class, id3, 4) == null;
     }
 }

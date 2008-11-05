@@ -60,7 +60,7 @@ public class GlobalVersioned extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(BasicTestEntity4.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(BasicTestEntity4.class, id1));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class GlobalVersioned extends AbstractEntityTest {
         BasicTestEntity4 ver1 = new BasicTestEntity4(id1, "x", "y");
         BasicTestEntity4 ver2 = new BasicTestEntity4(id1, "a", "b");
 
-        assert getVersionsReader().find(BasicTestEntity4.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity4.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity4.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity4.class, id1, 2).equals(ver2);
     }
 }

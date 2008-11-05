@@ -60,7 +60,7 @@ public class FieldAccessType extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(FieldAccessTypeEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(FieldAccessTypeEntity.class, id1));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class FieldAccessType extends AbstractEntityTest {
         FieldAccessTypeEntity ver1 = new FieldAccessTypeEntity(id1, "data");
         FieldAccessTypeEntity ver2 = new FieldAccessTypeEntity(id1, "data2");
 
-        assert getVersionsReader().find(FieldAccessTypeEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(FieldAccessTypeEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(FieldAccessTypeEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(FieldAccessTypeEntity.class, id1, 2).equals(ver2);
     }
 }

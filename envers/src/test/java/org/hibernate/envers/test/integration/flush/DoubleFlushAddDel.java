@@ -66,11 +66,11 @@ public class DoubleFlushAddDel extends AbstractFlushTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList().equals(getVersionsReader().getRevisions(StrTestEntity.class, id));
+        assert Arrays.asList().equals(getAuditReader().getRevisions(StrTestEntity.class, id));
     }
 
     @Test
     public void testHistoryOfId() {
-        assert getVersionsReader().find(StrTestEntity.class, id, 1) == null;
+        assert getAuditReader().find(StrTestEntity.class, id, 1) == null;
     }
 }

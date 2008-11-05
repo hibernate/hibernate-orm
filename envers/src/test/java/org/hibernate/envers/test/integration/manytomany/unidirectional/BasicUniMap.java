@@ -110,10 +110,10 @@ public class BasicUniMap extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4).equals(getVersionsReader().getRevisions(MapUniEntity.class, coll1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(MapUniEntity.class, coll1_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str2_id));
     }
 
     @Test
@@ -121,10 +121,10 @@ public class BasicUniMap extends AbstractEntityTest {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
         StrTestEntity str2 = getEntityManager().find(StrTestEntity.class, str2_id);
 
-        MapUniEntity rev1 = getVersionsReader().find(MapUniEntity.class, coll1_id, 1);
-        MapUniEntity rev2 = getVersionsReader().find(MapUniEntity.class, coll1_id, 2);
-        MapUniEntity rev3 = getVersionsReader().find(MapUniEntity.class, coll1_id, 3);
-        MapUniEntity rev4 = getVersionsReader().find(MapUniEntity.class, coll1_id, 4);
+        MapUniEntity rev1 = getAuditReader().find(MapUniEntity.class, coll1_id, 1);
+        MapUniEntity rev2 = getAuditReader().find(MapUniEntity.class, coll1_id, 2);
+        MapUniEntity rev3 = getAuditReader().find(MapUniEntity.class, coll1_id, 3);
+        MapUniEntity rev4 = getAuditReader().find(MapUniEntity.class, coll1_id, 4);
 
         assert rev1.getMap().equals(TestTools.makeMap("1", str1));
         assert rev2.getMap().equals(TestTools.makeMap("1", str1, "2", str2));

@@ -72,7 +72,7 @@ public class BasicSecondary extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SecondaryTestEntity.class, id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SecondaryTestEntity.class, id));
     }
 
     @Test
@@ -80,8 +80,8 @@ public class BasicSecondary extends AbstractEntityTest {
         SecondaryTestEntity ver1 = new SecondaryTestEntity(id, "a", "1");
         SecondaryTestEntity ver2 = new SecondaryTestEntity(id, "b", "2");
 
-        assert getVersionsReader().find(SecondaryTestEntity.class, id, 1).equals(ver1);
-        assert getVersionsReader().find(SecondaryTestEntity.class, id, 2).equals(ver2);
+        assert getAuditReader().find(SecondaryTestEntity.class, id, 1).equals(ver1);
+        assert getAuditReader().find(SecondaryTestEntity.class, id, 2).equals(ver2);
     }
 
     @SuppressWarnings({"unchecked"})

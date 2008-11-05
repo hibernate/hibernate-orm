@@ -40,7 +40,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 public abstract class AbstractEntityTest {
     private EntityManagerFactory emf;
     private EntityManager entityManager;
-    private AuditReader versionsReader;
+    private AuditReader auditReader;
     private Ejb3Configuration cfg;
 
     public abstract void configure(Ejb3Configuration cfg);
@@ -52,7 +52,7 @@ public abstract class AbstractEntityTest {
         }
         
         entityManager = emf.createEntityManager();
-        versionsReader = AuditReaderFactory.get(entityManager);
+        auditReader = AuditReaderFactory.get(entityManager);
     }
 
     @BeforeClass
@@ -69,8 +69,8 @@ public abstract class AbstractEntityTest {
         return entityManager;
     }
 
-    public AuditReader getVersionsReader() {
-        return versionsReader;
+    public AuditReader getAuditReader() {
+        return auditReader;
     }
 
     public Ejb3Configuration getCfg() {

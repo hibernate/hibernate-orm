@@ -71,7 +71,7 @@ public class MulIdSecondary extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SecondaryMulIdTestEntity.class, id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SecondaryMulIdTestEntity.class, id));
     }
 
     @Test
@@ -79,8 +79,8 @@ public class MulIdSecondary extends AbstractEntityTest {
         SecondaryMulIdTestEntity ver1 = new SecondaryMulIdTestEntity(id, "a", "1");
         SecondaryMulIdTestEntity ver2 = new SecondaryMulIdTestEntity(id, "b", "2");
 
-        assert getVersionsReader().find(SecondaryMulIdTestEntity.class, id, 1).equals(ver1);
-        assert getVersionsReader().find(SecondaryMulIdTestEntity.class, id, 2).equals(ver2);
+        assert getAuditReader().find(SecondaryMulIdTestEntity.class, id, 1).equals(ver1);
+        assert getAuditReader().find(SecondaryMulIdTestEntity.class, id, 2).equals(ver2);
     }
 
     @SuppressWarnings({"unchecked"})

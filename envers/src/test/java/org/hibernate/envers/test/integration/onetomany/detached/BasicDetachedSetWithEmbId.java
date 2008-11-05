@@ -109,10 +109,10 @@ public class BasicDetachedSetWithEmbId extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4).equals(getVersionsReader().getRevisions(SetRefCollEntityEmbId.class, coll1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(SetRefCollEntityEmbId.class, coll1_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(EmbIdTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(EmbIdTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(EmbIdTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(EmbIdTestEntity.class, str2_id));
     }
 
     @Test
@@ -120,10 +120,10 @@ public class BasicDetachedSetWithEmbId extends AbstractEntityTest {
         EmbIdTestEntity str1 = getEntityManager().find(EmbIdTestEntity.class, str1_id);
         EmbIdTestEntity str2 = getEntityManager().find(EmbIdTestEntity.class, str2_id);
 
-        SetRefCollEntityEmbId rev1 = getVersionsReader().find(SetRefCollEntityEmbId.class, coll1_id, 1);
-        SetRefCollEntityEmbId rev2 = getVersionsReader().find(SetRefCollEntityEmbId.class, coll1_id, 2);
-        SetRefCollEntityEmbId rev3 = getVersionsReader().find(SetRefCollEntityEmbId.class, coll1_id, 3);
-        SetRefCollEntityEmbId rev4 = getVersionsReader().find(SetRefCollEntityEmbId.class, coll1_id, 4);
+        SetRefCollEntityEmbId rev1 = getAuditReader().find(SetRefCollEntityEmbId.class, coll1_id, 1);
+        SetRefCollEntityEmbId rev2 = getAuditReader().find(SetRefCollEntityEmbId.class, coll1_id, 2);
+        SetRefCollEntityEmbId rev3 = getAuditReader().find(SetRefCollEntityEmbId.class, coll1_id, 3);
+        SetRefCollEntityEmbId rev4 = getAuditReader().find(SetRefCollEntityEmbId.class, coll1_id, 4);
 
         assert rev1.getCollection().equals(TestTools.makeSet(str1));
         assert rev2.getCollection().equals(TestTools.makeSet(str1, str2));

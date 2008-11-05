@@ -61,7 +61,7 @@ public class MappedSubclassing extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SubclassEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SubclassEntity.class, id1));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class MappedSubclassing extends AbstractEntityTest {
         SubclassEntity ver1 = new SubclassEntity(id1, "x");
         SubclassEntity ver2 = new SubclassEntity(id1, "y");
 
-        assert getVersionsReader().find(SubclassEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(SubclassEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(SubclassEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(SubclassEntity.class, id1, 2).equals(ver2);
     }
 }

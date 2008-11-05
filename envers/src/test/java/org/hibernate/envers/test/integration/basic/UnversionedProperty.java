@@ -64,7 +64,7 @@ public class UnversionedProperty extends AbstractEntityTest {
 
      @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(UnversionedEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(UnversionedEntity.class, id1));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class UnversionedProperty extends AbstractEntityTest {
         UnversionedEntity rev1 = new UnversionedEntity(id1, "a1", null);
         UnversionedEntity rev2 = new UnversionedEntity(id1, "a2", null);
 
-        assert getVersionsReader().find(UnversionedEntity.class, id1, 1).equals(rev1);
-        assert getVersionsReader().find(UnversionedEntity.class, id1, 2).equals(rev2);
+        assert getAuditReader().find(UnversionedEntity.class, id1, 1).equals(rev1);
+        assert getAuditReader().find(UnversionedEntity.class, id1, 2).equals(rev2);
     }
 }

@@ -60,7 +60,7 @@ public class Dates extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(DateTestEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(DateTestEntity.class, id1));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class Dates extends AbstractEntityTest {
         DateTestEntity ver1 = new DateTestEntity(id1, new Date(12345000));
         DateTestEntity ver2 = new DateTestEntity(id1, new Date(45678000));
 
-        assert getVersionsReader().find(DateTestEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(DateTestEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(DateTestEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(DateTestEntity.class, id1, 2).equals(ver2);
     }
 }

@@ -64,8 +64,8 @@ public class SameIds extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SameIdTestEntity1.class, 1));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SameIdTestEntity2.class, 1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SameIdTestEntity1.class, 1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SameIdTestEntity2.class, 1));
     }
 
     @Test
@@ -73,8 +73,8 @@ public class SameIds extends AbstractEntityTest {
         SameIdTestEntity1 ver1 = new SameIdTestEntity1(1, "str1");
         SameIdTestEntity1 ver2 = new SameIdTestEntity1(1, "str2");
 
-        assert getVersionsReader().find(SameIdTestEntity1.class, 1, 1).equals(ver1);
-        assert getVersionsReader().find(SameIdTestEntity1.class, 1, 2).equals(ver2);
+        assert getAuditReader().find(SameIdTestEntity1.class, 1, 1).equals(ver1);
+        assert getAuditReader().find(SameIdTestEntity1.class, 1, 2).equals(ver2);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class SameIds extends AbstractEntityTest {
         SameIdTestEntity2 ver1 = new SameIdTestEntity2(1, "str1");
         SameIdTestEntity2 ver2 = new SameIdTestEntity2(1, "str2");
 
-        assert getVersionsReader().find(SameIdTestEntity2.class, 1, 1).equals(ver1);
-        assert getVersionsReader().find(SameIdTestEntity2.class, 1, 2).equals(ver2);
+        assert getAuditReader().find(SameIdTestEntity2.class, 1, 1).equals(ver1);
+        assert getAuditReader().find(SameIdTestEntity2.class, 1, 2).equals(ver2);
     }
 }

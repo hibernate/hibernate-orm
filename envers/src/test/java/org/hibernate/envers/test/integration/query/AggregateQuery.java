@@ -81,19 +81,19 @@ public class AggregateQuery extends AbstractEntityTest {
 
     @Test
     public void testEntitiesAvgMaxQuery() {
-        Object[] ver1 = (Object[]) getVersionsReader().createQuery()
+        Object[] ver1 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 1)
                 .addProjection("max", "number")
                 .addProjection("avg", "number")
                 .getSingleResult();
 
-        Object[] ver2 = (Object[]) getVersionsReader().createQuery()
+        Object[] ver2 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 2)
                 .addProjection("max", "number")
                 .addProjection("avg", "number")
                 .getSingleResult();
 
-        Object[] ver3 = (Object[]) getVersionsReader().createQuery()
+        Object[] ver3 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 3)
                 .addProjection("max", "number")
                 .addProjection("avg", "number")

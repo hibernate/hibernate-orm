@@ -64,7 +64,7 @@ public class LongRevNumber extends AbstractEntityTest {
 
     @Test
     public void testFindRevision() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
 
         assert vr.findRevision(LongRevNumberRevEntity.class, 1l).getCustomId() == 1l;
         assert vr.findRevision(LongRevNumberRevEntity.class, 2l).getCustomId() == 2l;
@@ -72,7 +72,7 @@ public class LongRevNumber extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1l, 2l).equals(getVersionsReader().getRevisions(StrTestEntity.class, id));
+        assert Arrays.asList(1l, 2l).equals(getAuditReader().getRevisions(StrTestEntity.class, id));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class LongRevNumber extends AbstractEntityTest {
         StrTestEntity ver1 = new StrTestEntity("x", id);
         StrTestEntity ver2 = new StrTestEntity("y", id);
 
-        assert getVersionsReader().find(StrTestEntity.class, id, 1l).equals(ver1);
-        assert getVersionsReader().find(StrTestEntity.class, id, 2l).equals(ver2);
+        assert getAuditReader().find(StrTestEntity.class, id, 1l).equals(ver1);
+        assert getAuditReader().find(StrTestEntity.class, id, 2l).equals(ver2);
     }
 }

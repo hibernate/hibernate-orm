@@ -90,21 +90,21 @@ public class OrderByLimitQuery extends AbstractEntityTest {
 
     @Test
     public void testEntitiesOrderLimitByQueryRev1() {
-        List res_0_to_1 = getVersionsReader().createQuery()
+        List res_0_to_1 = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 1)
                 .addOrder("number", false)
                 .setFirstResult(0)
                 .setMaxResults(2)
                 .getResultList();
 
-        List res_2_to_3 = getVersionsReader().createQuery()
+        List res_2_to_3 = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 1)
                 .addOrder("number", false)
                 .setFirstResult(2)
                 .setMaxResults(2)
                 .getResultList();
 
-        List res_empty = getVersionsReader().createQuery()
+        List res_empty = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 1)
                 .addOrder("number", false)
                 .setFirstResult(4)
@@ -118,21 +118,21 @@ public class OrderByLimitQuery extends AbstractEntityTest {
 
     @Test
     public void testEntitiesOrderLimitByQueryRev2() {
-        List res_0_to_1 = getVersionsReader().createQuery()
+        List res_0_to_1 = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 2)
                 .addOrder("number", false)
                 .setFirstResult(0)
                 .setMaxResults(2)
                 .getResultList();
 
-        List res_2_to_3 = getVersionsReader().createQuery()
+        List res_2_to_3 = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 2)
                 .addOrder("number", false)
                 .setFirstResult(2)
                 .setMaxResults(2)
                 .getResultList();
 
-        List res_4 = getVersionsReader().createQuery()
+        List res_4 = getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 2)
                 .addOrder("number", false)
                 .setFirstResult(4)

@@ -71,7 +71,7 @@ public class EmbIdSecondary extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SecondaryEmbIdTestEntity.class, id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SecondaryEmbIdTestEntity.class, id));
     }
 
     @Test
@@ -79,8 +79,8 @@ public class EmbIdSecondary extends AbstractEntityTest {
         SecondaryEmbIdTestEntity ver1 = new SecondaryEmbIdTestEntity(id, "a", "1");
         SecondaryEmbIdTestEntity ver2 = new SecondaryEmbIdTestEntity(id, "b", "2");
 
-        assert getVersionsReader().find(SecondaryEmbIdTestEntity.class, id, 1).equals(ver1);
-        assert getVersionsReader().find(SecondaryEmbIdTestEntity.class, id, 2).equals(ver2);
+        assert getAuditReader().find(SecondaryEmbIdTestEntity.class, id, 1).equals(ver1);
+        assert getAuditReader().find(SecondaryEmbIdTestEntity.class, id, 2).equals(ver2);
     }
 
     @SuppressWarnings({"unchecked"})

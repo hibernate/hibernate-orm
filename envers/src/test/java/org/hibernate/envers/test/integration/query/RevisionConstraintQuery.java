@@ -100,7 +100,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     
     @Test
     public void testRevisionsLtQuery() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.distinct())
                 .add(RevisionProperty.lt(3))
@@ -111,7 +111,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionsGeQuery() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.distinct())
                 .add(RevisionProperty.ge(2))
@@ -122,7 +122,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionsLeWithPropertyQuery() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(RevisionProperty.le(3))
@@ -134,7 +134,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionsGtWithPropertyQuery() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(RevisionProperty.gt(1))
@@ -146,7 +146,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionProjectionQuery() {
-        Object[] result = (Object[]) getVersionsReader().createQuery()
+        Object[] result = (Object[]) getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.max())
                 .addProjection(RevisionProperty.count())
@@ -163,7 +163,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionOrderQuery() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(AuditRestrictions.idEq(id1))
@@ -176,7 +176,7 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     @Test
     public void testRevisionCountQuery() {
         // The query shouldn't be ordered as always, otherwise - we get an exception.
-        Object result = getVersionsReader().createQuery()
+        Object result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.count())
                 .add(AuditRestrictions.idEq(id1))

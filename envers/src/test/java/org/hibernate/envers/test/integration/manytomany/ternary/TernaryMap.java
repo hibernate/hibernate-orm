@@ -150,14 +150,14 @@ public class TernaryMap extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 4).equals(getVersionsReader().getRevisions(TernaryMapEntity.class, map1_id));
-        assert Arrays.asList(1, 2, 3, 4).equals(getVersionsReader().getRevisions(TernaryMapEntity.class, map2_id));
+        assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(TernaryMapEntity.class, map1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(TernaryMapEntity.class, map2_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str2_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(IntTestEntity.class, int1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(IntTestEntity.class, int2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(IntTestEntity.class, int1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(IntTestEntity.class, int2_id));
     }
 
     @Test
@@ -168,10 +168,10 @@ public class TernaryMap extends AbstractEntityTest {
         IntTestEntity int1 = getEntityManager().find(IntTestEntity.class, int1_id);
         IntTestEntity int2 = getEntityManager().find(IntTestEntity.class, int2_id);
 
-        TernaryMapEntity rev1 = getVersionsReader().find(TernaryMapEntity.class, map1_id, 1);
-        TernaryMapEntity rev2 = getVersionsReader().find(TernaryMapEntity.class, map1_id, 2);
-        TernaryMapEntity rev3 = getVersionsReader().find(TernaryMapEntity.class, map1_id, 3);
-        TernaryMapEntity rev4 = getVersionsReader().find(TernaryMapEntity.class, map1_id, 4);
+        TernaryMapEntity rev1 = getAuditReader().find(TernaryMapEntity.class, map1_id, 1);
+        TernaryMapEntity rev2 = getAuditReader().find(TernaryMapEntity.class, map1_id, 2);
+        TernaryMapEntity rev3 = getAuditReader().find(TernaryMapEntity.class, map1_id, 3);
+        TernaryMapEntity rev4 = getAuditReader().find(TernaryMapEntity.class, map1_id, 4);
 
         assert rev1.getMap().equals(TestTools.makeMap(int1, str1));
         assert rev2.getMap().equals(TestTools.makeMap(int1, str2));
@@ -187,10 +187,10 @@ public class TernaryMap extends AbstractEntityTest {
         IntTestEntity int1 = getEntityManager().find(IntTestEntity.class, int1_id);
         IntTestEntity int2 = getEntityManager().find(IntTestEntity.class, int2_id);
 
-        TernaryMapEntity rev1 = getVersionsReader().find(TernaryMapEntity.class, map2_id, 1);
-        TernaryMapEntity rev2 = getVersionsReader().find(TernaryMapEntity.class, map2_id, 2);
-        TernaryMapEntity rev3 = getVersionsReader().find(TernaryMapEntity.class, map2_id, 3);
-        TernaryMapEntity rev4 = getVersionsReader().find(TernaryMapEntity.class, map2_id, 4);
+        TernaryMapEntity rev1 = getAuditReader().find(TernaryMapEntity.class, map2_id, 1);
+        TernaryMapEntity rev2 = getAuditReader().find(TernaryMapEntity.class, map2_id, 2);
+        TernaryMapEntity rev3 = getAuditReader().find(TernaryMapEntity.class, map2_id, 3);
+        TernaryMapEntity rev4 = getAuditReader().find(TernaryMapEntity.class, map2_id, 4);
 
         assert rev1.getMap().equals(TestTools.makeMap());
         assert rev2.getMap().equals(TestTools.makeMap(int1, str1, int2, str1));

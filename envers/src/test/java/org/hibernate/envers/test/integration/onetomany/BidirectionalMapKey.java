@@ -90,10 +90,10 @@ public class BidirectionalMapKey extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(RefEdMapKeyEntity.class, ed_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(RefEdMapKeyEntity.class, ed_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(RefIngMapKeyEntity.class, ing1_id));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(RefIngMapKeyEntity.class, ing2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(RefIngMapKeyEntity.class, ing1_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(RefIngMapKeyEntity.class, ing2_id));
     }
 
     @Test
@@ -101,8 +101,8 @@ public class BidirectionalMapKey extends AbstractEntityTest {
         RefIngMapKeyEntity ing1 = getEntityManager().find(RefIngMapKeyEntity.class, ing1_id);
         RefIngMapKeyEntity ing2 = getEntityManager().find(RefIngMapKeyEntity.class, ing2_id);
 
-        RefEdMapKeyEntity rev1 = getVersionsReader().find(RefEdMapKeyEntity.class, ed_id, 1);
-        RefEdMapKeyEntity rev2 = getVersionsReader().find(RefEdMapKeyEntity.class, ed_id, 2);
+        RefEdMapKeyEntity rev1 = getAuditReader().find(RefEdMapKeyEntity.class, ed_id, 1);
+        RefEdMapKeyEntity rev2 = getAuditReader().find(RefEdMapKeyEntity.class, ed_id, 2);
 
         assert rev1.getIdmap().equals(TestTools.makeMap("a", ing1));
         assert rev2.getIdmap().equals(TestTools.makeMap("a", ing1, "b", ing2));

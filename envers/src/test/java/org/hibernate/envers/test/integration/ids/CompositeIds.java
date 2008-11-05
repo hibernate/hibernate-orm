@@ -119,13 +119,13 @@ public class CompositeIds extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 3, 4).equals(getVersionsReader().getRevisions(EmbIdTestEntity.class, id1));
+        assert Arrays.asList(1, 3, 4).equals(getAuditReader().getRevisions(EmbIdTestEntity.class, id1));
 
-        assert Arrays.asList(2, 3, 4, 5).equals(getVersionsReader().getRevisions(EmbIdTestEntity.class, id2));
+        assert Arrays.asList(2, 3, 4, 5).equals(getAuditReader().getRevisions(EmbIdTestEntity.class, id2));
 
-        assert Arrays.asList(1, 3, 4).equals(getVersionsReader().getRevisions(MulIdTestEntity.class, id3));
+        assert Arrays.asList(1, 3, 4).equals(getAuditReader().getRevisions(MulIdTestEntity.class, id3));
 
-        assert Arrays.asList(2, 3).equals(getVersionsReader().getRevisions(MulIdTestEntity.class, id4));
+        assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(MulIdTestEntity.class, id4));
     }
 
     @Test
@@ -133,11 +133,11 @@ public class CompositeIds extends AbstractEntityTest {
         EmbIdTestEntity ver1 = new EmbIdTestEntity(id1, "x");
         EmbIdTestEntity ver2 = new EmbIdTestEntity(id1, "x2");
 
-        assert getVersionsReader().find(EmbIdTestEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id1, 2).equals(ver1);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id1, 3).equals(ver2);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id1, 4) == null;
-        assert getVersionsReader().find(EmbIdTestEntity.class, id1, 5) == null;
+        assert getAuditReader().find(EmbIdTestEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(EmbIdTestEntity.class, id1, 2).equals(ver1);
+        assert getAuditReader().find(EmbIdTestEntity.class, id1, 3).equals(ver2);
+        assert getAuditReader().find(EmbIdTestEntity.class, id1, 4) == null;
+        assert getAuditReader().find(EmbIdTestEntity.class, id1, 5) == null;
     }
 
     @Test
@@ -146,11 +146,11 @@ public class CompositeIds extends AbstractEntityTest {
         EmbIdTestEntity ver2 = new EmbIdTestEntity(id2, "y2");
         EmbIdTestEntity ver3 = new EmbIdTestEntity(id2, "y3");
 
-        assert getVersionsReader().find(EmbIdTestEntity.class, id2, 1) == null;
-        assert getVersionsReader().find(EmbIdTestEntity.class, id2, 2).equals(ver1);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id2, 3).equals(ver2);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id2, 4).equals(ver3);
-        assert getVersionsReader().find(EmbIdTestEntity.class, id2, 5) == null;
+        assert getAuditReader().find(EmbIdTestEntity.class, id2, 1) == null;
+        assert getAuditReader().find(EmbIdTestEntity.class, id2, 2).equals(ver1);
+        assert getAuditReader().find(EmbIdTestEntity.class, id2, 3).equals(ver2);
+        assert getAuditReader().find(EmbIdTestEntity.class, id2, 4).equals(ver3);
+        assert getAuditReader().find(EmbIdTestEntity.class, id2, 5) == null;
     }
 
     @Test
@@ -158,11 +158,11 @@ public class CompositeIds extends AbstractEntityTest {
         MulIdTestEntity ver1 = new MulIdTestEntity(id3.getId1(), id3.getId2(), "a");
         MulIdTestEntity ver2 = new MulIdTestEntity(id3.getId1(), id3.getId2(), "a2");
 
-        assert getVersionsReader().find(MulIdTestEntity.class, id3, 1).equals(ver1);
-        assert getVersionsReader().find(MulIdTestEntity.class, id3, 2).equals(ver1);
-        assert getVersionsReader().find(MulIdTestEntity.class, id3, 3).equals(ver2);
-        assert getVersionsReader().find(MulIdTestEntity.class, id3, 4) == null;
-        assert getVersionsReader().find(MulIdTestEntity.class, id3, 5) == null;
+        assert getAuditReader().find(MulIdTestEntity.class, id3, 1).equals(ver1);
+        assert getAuditReader().find(MulIdTestEntity.class, id3, 2).equals(ver1);
+        assert getAuditReader().find(MulIdTestEntity.class, id3, 3).equals(ver2);
+        assert getAuditReader().find(MulIdTestEntity.class, id3, 4) == null;
+        assert getAuditReader().find(MulIdTestEntity.class, id3, 5) == null;
     }
 
     @Test
@@ -170,10 +170,10 @@ public class CompositeIds extends AbstractEntityTest {
         MulIdTestEntity ver1 = new MulIdTestEntity(id4.getId1(), id4.getId2(), "b");
         MulIdTestEntity ver2 = new MulIdTestEntity(id4.getId1(), id4.getId2(), "b2");
 
-        assert getVersionsReader().find(MulIdTestEntity.class, id4, 1) == null;
-        assert getVersionsReader().find(MulIdTestEntity.class, id4, 2).equals(ver1);
-        assert getVersionsReader().find(MulIdTestEntity.class, id4, 3).equals(ver2);
-        assert getVersionsReader().find(MulIdTestEntity.class, id4, 4).equals(ver2);
-        assert getVersionsReader().find(MulIdTestEntity.class, id4, 5).equals(ver2);
+        assert getAuditReader().find(MulIdTestEntity.class, id4, 1) == null;
+        assert getAuditReader().find(MulIdTestEntity.class, id4, 2).equals(ver1);
+        assert getAuditReader().find(MulIdTestEntity.class, id4, 3).equals(ver2);
+        assert getAuditReader().find(MulIdTestEntity.class, id4, 4).equals(ver2);
+        assert getAuditReader().find(MulIdTestEntity.class, id4, 5).equals(ver2);
     }
 }

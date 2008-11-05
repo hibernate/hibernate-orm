@@ -87,11 +87,11 @@ public class ManyOperationsInTransaction extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(BasicTestEntity1.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id1));
 
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(BasicTestEntity1.class, id2));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id2));
 
-        assert Arrays.asList(2, 3).equals(getVersionsReader().getRevisions(BasicTestEntity1.class, id3));
+        assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id3));
     }
 
     @Test
@@ -99,9 +99,9 @@ public class ManyOperationsInTransaction extends AbstractEntityTest {
         BasicTestEntity1 ver1 = new BasicTestEntity1(id1, "x", 1);
         BasicTestEntity1 ver2 = new BasicTestEntity1(id1, "x2", 1);
 
-        assert getVersionsReader().find(BasicTestEntity1.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity1.class, id1, 2).equals(ver2);
-        assert getVersionsReader().find(BasicTestEntity1.class, id1, 3).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity1.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity1.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity1.class, id1, 3).equals(ver2);
     }
 
     @Test
@@ -110,9 +110,9 @@ public class ManyOperationsInTransaction extends AbstractEntityTest {
         BasicTestEntity1 ver2 = new BasicTestEntity1(id2, "y", 21);
         BasicTestEntity1 ver3 = new BasicTestEntity1(id2, "y3", 22);
 
-        assert getVersionsReader().find(BasicTestEntity1.class, id2, 1).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity1.class, id2, 2).equals(ver2);
-        assert getVersionsReader().find(BasicTestEntity1.class, id2, 3).equals(ver3);
+        assert getAuditReader().find(BasicTestEntity1.class, id2, 1).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity1.class, id2, 2).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity1.class, id2, 3).equals(ver3);
     }
 
     @Test
@@ -120,8 +120,8 @@ public class ManyOperationsInTransaction extends AbstractEntityTest {
         BasicTestEntity1 ver1 = new BasicTestEntity1(id3, "z", 300);
         BasicTestEntity1 ver2 = new BasicTestEntity1(id3, "z3", 300);
 
-        assert getVersionsReader().find(BasicTestEntity1.class, id3, 1) == null;
-        assert getVersionsReader().find(BasicTestEntity1.class, id3, 2).equals(ver1);
-        assert getVersionsReader().find(BasicTestEntity1.class, id3, 3).equals(ver2);
+        assert getAuditReader().find(BasicTestEntity1.class, id3, 1) == null;
+        assert getAuditReader().find(BasicTestEntity1.class, id3, 2).equals(ver1);
+        assert getAuditReader().find(BasicTestEntity1.class, id3, 3).equals(ver2);
     }
 }

@@ -104,11 +104,11 @@ public class BasicCollection extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(CollectionRefEdEntity.class, ed1_id));
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(CollectionRefEdEntity.class, ed2_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(CollectionRefEdEntity.class, ed1_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(CollectionRefEdEntity.class, ed2_id));
 
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(CollectionRefIngEntity.class, ing1_id));
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(CollectionRefIngEntity.class, ing2_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(CollectionRefIngEntity.class, ing1_id));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(CollectionRefIngEntity.class, ing2_id));
     }
 
     private <T> Set<T> makeSet(T... objects) {
@@ -123,9 +123,9 @@ public class BasicCollection extends AbstractEntityTest {
         CollectionRefIngEntity ing1 = getEntityManager().find(CollectionRefIngEntity.class, ing1_id);
         CollectionRefIngEntity ing2 = getEntityManager().find(CollectionRefIngEntity.class, ing2_id);
 
-        CollectionRefEdEntity rev1 = getVersionsReader().find(CollectionRefEdEntity.class, ed1_id, 1);
-        CollectionRefEdEntity rev2 = getVersionsReader().find(CollectionRefEdEntity.class, ed1_id, 2);
-        CollectionRefEdEntity rev3 = getVersionsReader().find(CollectionRefEdEntity.class, ed1_id, 3);
+        CollectionRefEdEntity rev1 = getAuditReader().find(CollectionRefEdEntity.class, ed1_id, 1);
+        CollectionRefEdEntity rev2 = getAuditReader().find(CollectionRefEdEntity.class, ed1_id, 2);
+        CollectionRefEdEntity rev3 = getAuditReader().find(CollectionRefEdEntity.class, ed1_id, 3);
 
         assert rev1.getReffering().containsAll(makeSet(ing1, ing2));
         assert rev1.getReffering().size() == 2;
@@ -142,9 +142,9 @@ public class BasicCollection extends AbstractEntityTest {
         CollectionRefIngEntity ing1 = getEntityManager().find(CollectionRefIngEntity.class, ing1_id);
         CollectionRefIngEntity ing2 = getEntityManager().find(CollectionRefIngEntity.class, ing2_id);
 
-        CollectionRefEdEntity rev1 = getVersionsReader().find(CollectionRefEdEntity.class, ed2_id, 1);
-        CollectionRefEdEntity rev2 = getVersionsReader().find(CollectionRefEdEntity.class, ed2_id, 2);
-        CollectionRefEdEntity rev3 = getVersionsReader().find(CollectionRefEdEntity.class, ed2_id, 3);
+        CollectionRefEdEntity rev1 = getAuditReader().find(CollectionRefEdEntity.class, ed2_id, 1);
+        CollectionRefEdEntity rev2 = getAuditReader().find(CollectionRefEdEntity.class, ed2_id, 2);
+        CollectionRefEdEntity rev3 = getAuditReader().find(CollectionRefEdEntity.class, ed2_id, 3);
 
         assert rev1.getReffering().containsAll(Collections.EMPTY_SET);
         assert rev1.getReffering().size() == 0;
@@ -162,9 +162,9 @@ public class BasicCollection extends AbstractEntityTest {
         CollectionRefEdEntity ed1 = getEntityManager().find(CollectionRefEdEntity.class, ed1_id);
         CollectionRefEdEntity ed2 = getEntityManager().find(CollectionRefEdEntity.class, ed2_id);
 
-        CollectionRefIngEntity rev1 = getVersionsReader().find(CollectionRefIngEntity.class, ing1_id, 1);
-        CollectionRefIngEntity rev2 = getVersionsReader().find(CollectionRefIngEntity.class, ing1_id, 2);
-        CollectionRefIngEntity rev3 = getVersionsReader().find(CollectionRefIngEntity.class, ing1_id, 3);
+        CollectionRefIngEntity rev1 = getAuditReader().find(CollectionRefIngEntity.class, ing1_id, 1);
+        CollectionRefIngEntity rev2 = getAuditReader().find(CollectionRefIngEntity.class, ing1_id, 2);
+        CollectionRefIngEntity rev3 = getAuditReader().find(CollectionRefIngEntity.class, ing1_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed2);
@@ -176,9 +176,9 @@ public class BasicCollection extends AbstractEntityTest {
         CollectionRefEdEntity ed1 = getEntityManager().find(CollectionRefEdEntity.class, ed1_id);
         CollectionRefEdEntity ed2 = getEntityManager().find(CollectionRefEdEntity.class, ed2_id);
 
-        CollectionRefIngEntity rev1 = getVersionsReader().find(CollectionRefIngEntity.class, ing2_id, 1);
-        CollectionRefIngEntity rev2 = getVersionsReader().find(CollectionRefIngEntity.class, ing2_id, 2);
-        CollectionRefIngEntity rev3 = getVersionsReader().find(CollectionRefIngEntity.class, ing2_id, 3);
+        CollectionRefIngEntity rev1 = getAuditReader().find(CollectionRefIngEntity.class, ing2_id, 1);
+        CollectionRefIngEntity rev2 = getAuditReader().find(CollectionRefIngEntity.class, ing2_id, 2);
+        CollectionRefIngEntity rev3 = getAuditReader().find(CollectionRefIngEntity.class, ing2_id, 3);
 
         assert rev1.getReference().equals(ed1);
         assert rev2.getReference().equals(ed1);

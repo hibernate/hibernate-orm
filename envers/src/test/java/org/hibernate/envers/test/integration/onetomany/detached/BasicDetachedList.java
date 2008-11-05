@@ -110,10 +110,10 @@ public class BasicDetachedList extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4).equals(getVersionsReader().getRevisions(ListRefCollEntity.class, coll1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(ListRefCollEntity.class, coll1_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str2_id));
     }
 
     @Test
@@ -121,10 +121,10 @@ public class BasicDetachedList extends AbstractEntityTest {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
         StrTestEntity str2 = getEntityManager().find(StrTestEntity.class, str2_id);
 
-        ListRefCollEntity rev1 = getVersionsReader().find(ListRefCollEntity.class, coll1_id, 1);
-        ListRefCollEntity rev2 = getVersionsReader().find(ListRefCollEntity.class, coll1_id, 2);
-        ListRefCollEntity rev3 = getVersionsReader().find(ListRefCollEntity.class, coll1_id, 3);
-        ListRefCollEntity rev4 = getVersionsReader().find(ListRefCollEntity.class, coll1_id, 4);
+        ListRefCollEntity rev1 = getAuditReader().find(ListRefCollEntity.class, coll1_id, 1);
+        ListRefCollEntity rev2 = getAuditReader().find(ListRefCollEntity.class, coll1_id, 2);
+        ListRefCollEntity rev3 = getAuditReader().find(ListRefCollEntity.class, coll1_id, 3);
+        ListRefCollEntity rev4 = getAuditReader().find(ListRefCollEntity.class, coll1_id, 4);
 
         assert TestTools.checkList(rev1.getCollection(), str1);
         assert TestTools.checkList(rev2.getCollection(), str1, str2);

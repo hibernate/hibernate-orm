@@ -73,20 +73,20 @@ public class DeletedEntities extends AbstractEntityTest {
 
     @Test
     public void testProjectionsInEntitiesAtRevision() {
-        assert getVersionsReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 1)
+        assert getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 1)
             .getResultList().size() == 2;
-        assert getVersionsReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 2)
+        assert getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 2)
             .getResultList().size() == 1;
 
-        assert (Long) getVersionsReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 1)
+        assert (Long) getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 1)
             .addProjection("count", "originalId.id").getResultList().get(0) == 2;
-        assert (Long) getVersionsReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 2)
+        assert (Long) getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 2)
             .addProjection("count", "originalId.id").getResultList().get(0) == 1;
     }
 
     @Test
     public void testRevisionsOfEntityWithoutDelete() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, false)
                 .add(AuditRestrictions.idEq(id2))
                 .getResultList();

@@ -72,7 +72,7 @@ public class NamingSecondary extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(SecondaryNamingTestEntity.class, id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(SecondaryNamingTestEntity.class, id));
     }
 
     @Test
@@ -80,8 +80,8 @@ public class NamingSecondary extends AbstractEntityTest {
         SecondaryNamingTestEntity ver1 = new SecondaryNamingTestEntity(id, "a", "1");
         SecondaryNamingTestEntity ver2 = new SecondaryNamingTestEntity(id, "b", "2");
 
-        assert getVersionsReader().find(SecondaryNamingTestEntity.class, id, 1).equals(ver1);
-        assert getVersionsReader().find(SecondaryNamingTestEntity.class, id, 2).equals(ver2);
+        assert getAuditReader().find(SecondaryNamingTestEntity.class, id, 1).equals(ver1);
+        assert getAuditReader().find(SecondaryNamingTestEntity.class, id, 2).equals(ver2);
     }
 
     @SuppressWarnings({"unchecked"})

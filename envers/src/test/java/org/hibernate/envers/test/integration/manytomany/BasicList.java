@@ -132,11 +132,11 @@ public class BasicList extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 4).equals(getVersionsReader().getRevisions(ListOwnedEntity.class, ed1_id));
-        assert Arrays.asList(1, 2, 3, 5).equals(getVersionsReader().getRevisions(ListOwnedEntity.class, ed2_id));
+        assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(ListOwnedEntity.class, ed1_id));
+        assert Arrays.asList(1, 2, 3, 5).equals(getAuditReader().getRevisions(ListOwnedEntity.class, ed2_id));
 
-        assert Arrays.asList(1, 2, 3, 4, 5).equals(getVersionsReader().getRevisions(ListOwningEntity.class, ing1_id));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(ListOwningEntity.class, ing2_id));
+        assert Arrays.asList(1, 2, 3, 4, 5).equals(getAuditReader().getRevisions(ListOwningEntity.class, ing1_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ListOwningEntity.class, ing2_id));
     }
 
     @Test
@@ -144,11 +144,11 @@ public class BasicList extends AbstractEntityTest {
         ListOwningEntity ing1 = getEntityManager().find(ListOwningEntity.class, ing1_id);
         ListOwningEntity ing2 = getEntityManager().find(ListOwningEntity.class, ing2_id);
 
-        ListOwnedEntity rev1 = getVersionsReader().find(ListOwnedEntity.class, ed1_id, 1);
-        ListOwnedEntity rev2 = getVersionsReader().find(ListOwnedEntity.class, ed1_id, 2);
-        ListOwnedEntity rev3 = getVersionsReader().find(ListOwnedEntity.class, ed1_id, 3);
-        ListOwnedEntity rev4 = getVersionsReader().find(ListOwnedEntity.class, ed1_id, 4);
-        ListOwnedEntity rev5 = getVersionsReader().find(ListOwnedEntity.class, ed1_id, 5);
+        ListOwnedEntity rev1 = getAuditReader().find(ListOwnedEntity.class, ed1_id, 1);
+        ListOwnedEntity rev2 = getAuditReader().find(ListOwnedEntity.class, ed1_id, 2);
+        ListOwnedEntity rev3 = getAuditReader().find(ListOwnedEntity.class, ed1_id, 3);
+        ListOwnedEntity rev4 = getAuditReader().find(ListOwnedEntity.class, ed1_id, 4);
+        ListOwnedEntity rev5 = getAuditReader().find(ListOwnedEntity.class, ed1_id, 5);
 
         assert rev1.getReferencing().equals(Collections.EMPTY_LIST);
         assert TestTools.checkList(rev2.getReferencing(), ing1, ing2);
@@ -162,11 +162,11 @@ public class BasicList extends AbstractEntityTest {
         ListOwningEntity ing1 = getEntityManager().find(ListOwningEntity.class, ing1_id);
         ListOwningEntity ing2 = getEntityManager().find(ListOwningEntity.class, ing2_id);
 
-        ListOwnedEntity rev1 = getVersionsReader().find(ListOwnedEntity.class, ed2_id, 1);
-        ListOwnedEntity rev2 = getVersionsReader().find(ListOwnedEntity.class, ed2_id, 2);
-        ListOwnedEntity rev3 = getVersionsReader().find(ListOwnedEntity.class, ed2_id, 3);
-        ListOwnedEntity rev4 = getVersionsReader().find(ListOwnedEntity.class, ed2_id, 4);
-        ListOwnedEntity rev5 = getVersionsReader().find(ListOwnedEntity.class, ed2_id, 5);
+        ListOwnedEntity rev1 = getAuditReader().find(ListOwnedEntity.class, ed2_id, 1);
+        ListOwnedEntity rev2 = getAuditReader().find(ListOwnedEntity.class, ed2_id, 2);
+        ListOwnedEntity rev3 = getAuditReader().find(ListOwnedEntity.class, ed2_id, 3);
+        ListOwnedEntity rev4 = getAuditReader().find(ListOwnedEntity.class, ed2_id, 4);
+        ListOwnedEntity rev5 = getAuditReader().find(ListOwnedEntity.class, ed2_id, 5);
 
         assert rev1.getReferencing().equals(Collections.EMPTY_LIST);
         assert TestTools.checkList(rev2.getReferencing(), ing2);
@@ -180,11 +180,11 @@ public class BasicList extends AbstractEntityTest {
         ListOwnedEntity ed1 = getEntityManager().find(ListOwnedEntity.class, ed1_id);
         ListOwnedEntity ed2 = getEntityManager().find(ListOwnedEntity.class, ed2_id);
 
-        ListOwningEntity rev1 = getVersionsReader().find(ListOwningEntity.class, ing1_id, 1);
-        ListOwningEntity rev2 = getVersionsReader().find(ListOwningEntity.class, ing1_id, 2);
-        ListOwningEntity rev3 = getVersionsReader().find(ListOwningEntity.class, ing1_id, 3);
-        ListOwningEntity rev4 = getVersionsReader().find(ListOwningEntity.class, ing1_id, 4);
-        ListOwningEntity rev5 = getVersionsReader().find(ListOwningEntity.class, ing1_id, 5);
+        ListOwningEntity rev1 = getAuditReader().find(ListOwningEntity.class, ing1_id, 1);
+        ListOwningEntity rev2 = getAuditReader().find(ListOwningEntity.class, ing1_id, 2);
+        ListOwningEntity rev3 = getAuditReader().find(ListOwningEntity.class, ing1_id, 3);
+        ListOwningEntity rev4 = getAuditReader().find(ListOwningEntity.class, ing1_id, 4);
+        ListOwningEntity rev5 = getAuditReader().find(ListOwningEntity.class, ing1_id, 5);
 
         assert rev1.getReferences().equals(Collections.EMPTY_LIST);
         assert TestTools.checkList(rev2.getReferences(), ed1);
@@ -198,11 +198,11 @@ public class BasicList extends AbstractEntityTest {
         ListOwnedEntity ed1 = getEntityManager().find(ListOwnedEntity.class, ed1_id);
         ListOwnedEntity ed2 = getEntityManager().find(ListOwnedEntity.class, ed2_id);
 
-        ListOwningEntity rev1 = getVersionsReader().find(ListOwningEntity.class, ing2_id, 1);
-        ListOwningEntity rev2 = getVersionsReader().find(ListOwningEntity.class, ing2_id, 2);
-        ListOwningEntity rev3 = getVersionsReader().find(ListOwningEntity.class, ing2_id, 3);
-        ListOwningEntity rev4 = getVersionsReader().find(ListOwningEntity.class, ing2_id, 4);
-        ListOwningEntity rev5 = getVersionsReader().find(ListOwningEntity.class, ing2_id, 5);
+        ListOwningEntity rev1 = getAuditReader().find(ListOwningEntity.class, ing2_id, 1);
+        ListOwningEntity rev2 = getAuditReader().find(ListOwningEntity.class, ing2_id, 2);
+        ListOwningEntity rev3 = getAuditReader().find(ListOwningEntity.class, ing2_id, 3);
+        ListOwningEntity rev4 = getAuditReader().find(ListOwningEntity.class, ing2_id, 4);
+        ListOwningEntity rev5 = getAuditReader().find(ListOwningEntity.class, ing2_id, 5);
 
         assert rev1.getReferences().equals(Collections.EMPTY_LIST);
         assert TestTools.checkList(rev2.getReferences(), ed1, ed2);

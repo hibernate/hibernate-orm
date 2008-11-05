@@ -106,10 +106,10 @@ public class DoubleDetachedSet extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(DoubleSetRefCollEntity.class, coll1_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(DoubleSetRefCollEntity.class, coll1_id));
 
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str2_id));
     }
 
     @Test
@@ -117,9 +117,9 @@ public class DoubleDetachedSet extends AbstractEntityTest {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
         StrTestEntity str2 = getEntityManager().find(StrTestEntity.class, str2_id);
 
-        DoubleSetRefCollEntity rev1 = getVersionsReader().find(DoubleSetRefCollEntity.class, coll1_id, 1);
-        DoubleSetRefCollEntity rev2 = getVersionsReader().find(DoubleSetRefCollEntity.class, coll1_id, 2);
-        DoubleSetRefCollEntity rev3 = getVersionsReader().find(DoubleSetRefCollEntity.class, coll1_id, 3);
+        DoubleSetRefCollEntity rev1 = getAuditReader().find(DoubleSetRefCollEntity.class, coll1_id, 1);
+        DoubleSetRefCollEntity rev2 = getAuditReader().find(DoubleSetRefCollEntity.class, coll1_id, 2);
+        DoubleSetRefCollEntity rev3 = getAuditReader().find(DoubleSetRefCollEntity.class, coll1_id, 3);
 
         assert rev1.getCollection().equals(TestTools.makeSet(str1));
         assert rev2.getCollection().equals(TestTools.makeSet(str1, str2));

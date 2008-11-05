@@ -101,7 +101,7 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
 
     @Test
     public void testMaximizeWithIdEq() {
-        List revs_id1 = getVersionsReader().createQuery()
+        List revs_id1 = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(AuditRestrictions.maximizeProperty("number")
@@ -113,7 +113,7 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
 
     @Test
     public void testMinimizeWithPropertyEq() {
-        List result = getVersionsReader().createQuery()
+        List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .addProjection(RevisionProperty.revisionNumber())
                 .add(AuditRestrictions.minimizeProperty("number")

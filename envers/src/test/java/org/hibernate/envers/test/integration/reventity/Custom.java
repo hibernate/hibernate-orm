@@ -80,25 +80,25 @@ public class Custom extends AbstractEntityTest {
 
     @Test(expectedExceptions = RevisionDoesNotExistException.class)
     public void testTimestamps1() {
-        getVersionsReader().getRevisionNumberForDate(new Date(timestamp1));
+        getAuditReader().getRevisionNumberForDate(new Date(timestamp1));
     }
 
     @Test
     public void testTimestamps() {
-        assert getVersionsReader().getRevisionNumberForDate(new Date(timestamp2)).intValue() == 1;
-        assert getVersionsReader().getRevisionNumberForDate(new Date(timestamp3)).intValue() == 2;
+        assert getAuditReader().getRevisionNumberForDate(new Date(timestamp2)).intValue() == 1;
+        assert getAuditReader().getRevisionNumberForDate(new Date(timestamp3)).intValue() == 2;
     }
 
     @Test
     public void testDatesForRevisions() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(1)).intValue() == 1;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(2)).intValue() == 2;
     }
 
     @Test
     public void testRevisionsForDates() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
 
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2))).getTime() <= timestamp2;
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2)).intValue()+1).getTime() > timestamp2;
@@ -108,7 +108,7 @@ public class Custom extends AbstractEntityTest {
 
     @Test
     public void testFindRevision() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
 
         long rev1Timestamp = vr.findRevision(CustomRevEntity.class, 1).getCustomTimestamp();
         assert rev1Timestamp > timestamp1;
@@ -121,7 +121,7 @@ public class Custom extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(StrTestEntity.class, id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(StrTestEntity.class, id));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class Custom extends AbstractEntityTest {
         StrTestEntity ver1 = new StrTestEntity("x", id);
         StrTestEntity ver2 = new StrTestEntity("y", id);
 
-        assert getVersionsReader().find(StrTestEntity.class, id, 1).equals(ver1);
-        assert getVersionsReader().find(StrTestEntity.class, id, 2).equals(ver2);
+        assert getAuditReader().find(StrTestEntity.class, id, 1).equals(ver1);
+        assert getAuditReader().find(StrTestEntity.class, id, 2).equals(ver2);
     }
 }

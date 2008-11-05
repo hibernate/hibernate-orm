@@ -61,7 +61,7 @@ public class Lobs extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(LobTestEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(LobTestEntity.class, id1));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class Lobs extends AbstractEntityTest {
         LobTestEntity ver1 = new LobTestEntity(id1, "abc", new byte[] { 0, 1, 2 }, new char[] { 'x', 'y', 'z' });
         LobTestEntity ver2 = new LobTestEntity(id1, "def", new byte[] { 3, 4, 5 }, new char[] { 'h', 'i', 'j' });
 
-        assert getVersionsReader().find(LobTestEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(LobTestEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(LobTestEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(LobTestEntity.class, id1, 2).equals(ver2);
     }
 }

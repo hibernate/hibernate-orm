@@ -107,11 +107,11 @@ public class Components extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(ComponentTestEntity.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id1));
 
-        assert Arrays.asList(1, 2, 4).equals(getVersionsReader().getRevisions(ComponentTestEntity.class, id2));
+        assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id2));
 
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(ComponentTestEntity.class, id3));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id3));
     }
 
     @Test
@@ -119,10 +119,10 @@ public class Components extends AbstractEntityTest {
         ComponentTestEntity ver1 = new ComponentTestEntity(id1, new Component1("a", "b"), null);
         ComponentTestEntity ver2 = new ComponentTestEntity(id1, new Component1("a'", "b'"), null);
 
-        assert getVersionsReader().find(ComponentTestEntity.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(ComponentTestEntity.class, id1, 2).equals(ver2);
-        assert getVersionsReader().find(ComponentTestEntity.class, id1, 3).equals(ver2);
-        assert getVersionsReader().find(ComponentTestEntity.class, id1, 4).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(ComponentTestEntity.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id1, 3).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id1, 4).equals(ver2);
     }
 
     @Test
@@ -130,10 +130,10 @@ public class Components extends AbstractEntityTest {
         ComponentTestEntity ver1 = new ComponentTestEntity(id2, new Component1("a2", "b2"), null);
         ComponentTestEntity ver2 = new ComponentTestEntity(id2, new Component1("a2'", "b2"), null);
 
-        assert getVersionsReader().find(ComponentTestEntity.class, id2, 1).equals(ver1);
-        assert getVersionsReader().find(ComponentTestEntity.class, id2, 2).equals(ver2);
-        assert getVersionsReader().find(ComponentTestEntity.class, id2, 3).equals(ver2);
-        assert getVersionsReader().find(ComponentTestEntity.class, id2, 4) == null;
+        assert getAuditReader().find(ComponentTestEntity.class, id2, 1).equals(ver1);
+        assert getAuditReader().find(ComponentTestEntity.class, id2, 2).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id2, 3).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id2, 4) == null;
     }
 
     @Test
@@ -141,9 +141,9 @@ public class Components extends AbstractEntityTest {
         ComponentTestEntity ver1 = new ComponentTestEntity(id3, new Component1("a3", "b3"), null);
         ComponentTestEntity ver2 = new ComponentTestEntity(id3, new Component1("a3", "b3'"), null);
 
-        assert getVersionsReader().find(ComponentTestEntity.class, id3, 1).equals(ver1);
-        assert getVersionsReader().find(ComponentTestEntity.class, id3, 2).equals(ver1);
-        assert getVersionsReader().find(ComponentTestEntity.class, id3, 3).equals(ver2);
-        assert getVersionsReader().find(ComponentTestEntity.class, id3, 4).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id3, 1).equals(ver1);
+        assert getAuditReader().find(ComponentTestEntity.class, id3, 2).equals(ver1);
+        assert getAuditReader().find(ComponentTestEntity.class, id3, 3).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id3, 4).equals(ver2);
     }
 }

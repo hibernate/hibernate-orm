@@ -81,9 +81,9 @@ public class BasicNaming extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(NamingTestEntity1.class, id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(NamingTestEntity1.class, id1));
 
-        assert Arrays.asList(1, 3).equals(getVersionsReader().getRevisions(NamingTestEntity1.class, id2));
+        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(NamingTestEntity1.class, id2));
     }
 
     @Test
@@ -91,9 +91,9 @@ public class BasicNaming extends AbstractEntityTest {
         NamingTestEntity1 ver1 = new NamingTestEntity1(id1, "data1");
         NamingTestEntity1 ver2 = new NamingTestEntity1(id1, "data1'");
 
-        assert getVersionsReader().find(NamingTestEntity1.class, id1, 1).equals(ver1);
-        assert getVersionsReader().find(NamingTestEntity1.class, id1, 2).equals(ver2);
-        assert getVersionsReader().find(NamingTestEntity1.class, id1, 3).equals(ver2);
+        assert getAuditReader().find(NamingTestEntity1.class, id1, 1).equals(ver1);
+        assert getAuditReader().find(NamingTestEntity1.class, id1, 2).equals(ver2);
+        assert getAuditReader().find(NamingTestEntity1.class, id1, 3).equals(ver2);
     }
 
     @Test
@@ -101,9 +101,9 @@ public class BasicNaming extends AbstractEntityTest {
         NamingTestEntity1 ver1 = new NamingTestEntity1(id2, "data2");
         NamingTestEntity1 ver2 = new NamingTestEntity1(id2, "data2'");
 
-        assert getVersionsReader().find(NamingTestEntity1.class, id2, 1).equals(ver1);
-        assert getVersionsReader().find(NamingTestEntity1.class, id2, 2).equals(ver1);
-        assert getVersionsReader().find(NamingTestEntity1.class, id2, 3).equals(ver2);
+        assert getAuditReader().find(NamingTestEntity1.class, id2, 1).equals(ver1);
+        assert getAuditReader().find(NamingTestEntity1.class, id2, 2).equals(ver1);
+        assert getAuditReader().find(NamingTestEntity1.class, id2, 3).equals(ver2);
     }
 
     @Test

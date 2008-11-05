@@ -81,16 +81,16 @@ public class VersionsJoinTableNaming extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(VersionsJoinTableTestEntity.class, uni1_id));
-        assert Arrays.asList(1).equals(getVersionsReader().getRevisions(StrTestEntity.class, str1_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(VersionsJoinTableTestEntity.class, uni1_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(StrTestEntity.class, str1_id));
     }
 
     @Test
     public void testHistoryOfUniId1() {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
 
-        VersionsJoinTableTestEntity rev1 = getVersionsReader().find(VersionsJoinTableTestEntity.class, uni1_id, 1);
-        VersionsJoinTableTestEntity rev2 = getVersionsReader().find(VersionsJoinTableTestEntity.class, uni1_id, 2);
+        VersionsJoinTableTestEntity rev1 = getAuditReader().find(VersionsJoinTableTestEntity.class, uni1_id, 1);
+        VersionsJoinTableTestEntity rev2 = getAuditReader().find(VersionsJoinTableTestEntity.class, uni1_id, 2);
 
         assert rev1.getCollection().equals(TestTools.makeSet());
         assert rev2.getCollection().equals(TestTools.makeSet(str1));

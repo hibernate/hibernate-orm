@@ -89,7 +89,7 @@ public class IdMapKey extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(IdMapKeyEntity.class, imke_id));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IdMapKeyEntity.class, imke_id));
     }
 
     @Test
@@ -97,8 +97,8 @@ public class IdMapKey extends AbstractEntityTest {
         StrTestEntity ste1 = getEntityManager().find(StrTestEntity.class, ste1_id);
         StrTestEntity ste2 = getEntityManager().find(StrTestEntity.class, ste2_id);
 
-        IdMapKeyEntity rev1 = getVersionsReader().find(IdMapKeyEntity.class, imke_id, 1);
-        IdMapKeyEntity rev2 = getVersionsReader().find(IdMapKeyEntity.class, imke_id, 2);
+        IdMapKeyEntity rev1 = getAuditReader().find(IdMapKeyEntity.class, imke_id, 1);
+        IdMapKeyEntity rev2 = getAuditReader().find(IdMapKeyEntity.class, imke_id, 2);
 
         assert rev1.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1));
         assert rev2.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1, ste2.getId(), ste2));

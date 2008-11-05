@@ -84,25 +84,25 @@ public class JoinNaming extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinNamingRefEdEntity.class, ed_id1));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinNamingRefEdEntity.class, ed_id2));
-        assert Arrays.asList(1, 2).equals(getVersionsReader().getRevisions(JoinNamingRefIngEntity.class, ing_id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinNamingRefEdEntity.class, ed_id1));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinNamingRefEdEntity.class, ed_id2));
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(JoinNamingRefIngEntity.class, ing_id1));
     }
 
     @Test
     public void testHistoryOfEdId1() {
         JoinNamingRefEdEntity ver1 = new JoinNamingRefEdEntity(ed_id1, "data1");
 
-        assert getVersionsReader().find(JoinNamingRefEdEntity.class, ed_id1, 1).equals(ver1);
-        assert getVersionsReader().find(JoinNamingRefEdEntity.class, ed_id1, 2).equals(ver1);
+        assert getAuditReader().find(JoinNamingRefEdEntity.class, ed_id1, 1).equals(ver1);
+        assert getAuditReader().find(JoinNamingRefEdEntity.class, ed_id1, 2).equals(ver1);
     }
 
     @Test
     public void testHistoryOfEdId2() {
         JoinNamingRefEdEntity ver1 = new JoinNamingRefEdEntity(ed_id2, "data2");
 
-        assert getVersionsReader().find(JoinNamingRefEdEntity.class, ed_id2, 1).equals(ver1);
-        assert getVersionsReader().find(JoinNamingRefEdEntity.class, ed_id2, 2).equals(ver1);
+        assert getAuditReader().find(JoinNamingRefEdEntity.class, ed_id2, 1).equals(ver1);
+        assert getAuditReader().find(JoinNamingRefEdEntity.class, ed_id2, 2).equals(ver1);
     }
 
     @Test
@@ -110,12 +110,12 @@ public class JoinNaming extends AbstractEntityTest {
         JoinNamingRefIngEntity ver1 = new JoinNamingRefIngEntity(ing_id1, "x", null);
         JoinNamingRefIngEntity ver2 = new JoinNamingRefIngEntity(ing_id1, "y", null);
 
-        assert getVersionsReader().find(JoinNamingRefIngEntity.class, ing_id1, 1).equals(ver1);
-        assert getVersionsReader().find(JoinNamingRefIngEntity.class, ing_id1, 2).equals(ver2);
+        assert getAuditReader().find(JoinNamingRefIngEntity.class, ing_id1, 1).equals(ver1);
+        assert getAuditReader().find(JoinNamingRefIngEntity.class, ing_id1, 2).equals(ver2);
 
-        assert getVersionsReader().find(JoinNamingRefIngEntity.class, ing_id1, 1).getReference().equals(
+        assert getAuditReader().find(JoinNamingRefIngEntity.class, ing_id1, 1).getReference().equals(
                 new JoinNamingRefEdEntity(ed_id1, "data1"));
-        assert getVersionsReader().find(JoinNamingRefIngEntity.class, ing_id1, 2).getReference().equals(
+        assert getAuditReader().find(JoinNamingRefIngEntity.class, ing_id1, 2).getReference().equals(
                 new JoinNamingRefEdEntity(ed_id2, "data2"));
     }
 

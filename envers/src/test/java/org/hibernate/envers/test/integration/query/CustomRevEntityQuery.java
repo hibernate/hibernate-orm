@@ -77,7 +77,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionsOfId1Query() {
-        List<Object[]> result = getVersionsReader().createQuery()
+        List<Object[]> result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .add(AuditRestrictions.idEq(id1))
                 .getResultList();
@@ -93,7 +93,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
 
     @Test
     public void testRevisionsOfId2Query() {
-        List<Object[]> result = getVersionsReader().createQuery()
+        List<Object[]> result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
                 .add(AuditRestrictions.idEq(id2))
                 .getResultList();

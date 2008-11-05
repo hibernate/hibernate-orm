@@ -87,17 +87,17 @@ public class PolymorphicCollection extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(ReferencedEntity.class, ed_id1));
-        assert Arrays.asList(2).equals(getVersionsReader().getRevisions(ParentIngEntity.class, p_id));
-        assert Arrays.asList(3).equals(getVersionsReader().getRevisions(ChildIngEntity.class, c_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ReferencedEntity.class, ed_id1));
+        assert Arrays.asList(2).equals(getAuditReader().getRevisions(ParentIngEntity.class, p_id));
+        assert Arrays.asList(3).equals(getAuditReader().getRevisions(ChildIngEntity.class, c_id));
     }
 
     @Test
     public void testHistoryOfReferencedCollection() {      
-        assert getVersionsReader().find(ReferencedEntity.class, ed_id1, 1).getReferencing().size() == 0;
-        assert getVersionsReader().find(ReferencedEntity.class, ed_id1, 2).getReferencing().equals(
+        assert getAuditReader().find(ReferencedEntity.class, ed_id1, 1).getReferencing().size() == 0;
+        assert getAuditReader().find(ReferencedEntity.class, ed_id1, 2).getReferencing().equals(
                 TestTools.makeSet(new ParentIngEntity(p_id, "x")));
-        assert getVersionsReader().find(ReferencedEntity.class, ed_id1, 3).getReferencing().equals(
+        assert getAuditReader().find(ReferencedEntity.class, ed_id1, 3).getReferencing().equals(
                 TestTools.makeSet(new ParentIngEntity(p_id, "x"), new ChildIngEntity(c_id, "y", 1l)));
     }
 }

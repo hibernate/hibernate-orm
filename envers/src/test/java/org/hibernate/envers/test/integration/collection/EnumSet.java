@@ -89,14 +89,14 @@ public class EnumSet extends AbstractEntityTest {
 
     @Test
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getVersionsReader().getRevisions(EnumSetEntity.class, sse1_id));
+        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(EnumSetEntity.class, sse1_id));
     }
 
     @Test
     public void testHistoryOfSse1() {
-        EnumSetEntity rev1 = getVersionsReader().find(EnumSetEntity.class, sse1_id, 1);
-        EnumSetEntity rev2 = getVersionsReader().find(EnumSetEntity.class, sse1_id, 2);
-        EnumSetEntity rev3 = getVersionsReader().find(EnumSetEntity.class, sse1_id, 3);
+        EnumSetEntity rev1 = getAuditReader().find(EnumSetEntity.class, sse1_id, 1);
+        EnumSetEntity rev2 = getAuditReader().find(EnumSetEntity.class, sse1_id, 2);
+        EnumSetEntity rev3 = getAuditReader().find(EnumSetEntity.class, sse1_id, 3);
 
         assert rev1.getEnums1().equals(TestTools.makeSet(E1.X));
         assert rev2.getEnums1().equals(TestTools.makeSet(E1.X, E1.Y));

@@ -87,19 +87,19 @@ public class RevisionForDate extends AbstractEntityTest {
 
     @Test(expectedExceptions = RevisionDoesNotExistException.class)
     public void testTimestamps1() {
-        getVersionsReader().getRevisionNumberForDate(new Date(timestamp1));
+        getAuditReader().getRevisionNumberForDate(new Date(timestamp1));
     }
 
     @Test
     public void testTimestamps() {
-        assert getVersionsReader().getRevisionNumberForDate(new Date(timestamp2)).intValue() == 1;
-        assert getVersionsReader().getRevisionNumberForDate(new Date(timestamp3)).intValue() == 2;
-        assert getVersionsReader().getRevisionNumberForDate(new Date(timestamp4)).intValue() == 3;
+        assert getAuditReader().getRevisionNumberForDate(new Date(timestamp2)).intValue() == 1;
+        assert getAuditReader().getRevisionNumberForDate(new Date(timestamp3)).intValue() == 2;
+        assert getAuditReader().getRevisionNumberForDate(new Date(timestamp4)).intValue() == 3;
     }
 
     @Test
     public void testDatesForRevisions() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(1)).intValue() == 1;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(2)).intValue() == 2;
         assert vr.getRevisionNumberForDate(vr.getRevisionDate(3)).intValue() == 3;
@@ -107,7 +107,7 @@ public class RevisionForDate extends AbstractEntityTest {
 
     @Test
     public void testRevisionsForDates() {
-        AuditReader vr = getVersionsReader();
+        AuditReader vr = getAuditReader();
 
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2))).getTime() <= timestamp2;
         assert vr.getRevisionDate(vr.getRevisionNumberForDate(new Date(timestamp2)).intValue()+1).getTime() > timestamp2;

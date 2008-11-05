@@ -60,11 +60,11 @@ public class NotVersioned extends AbstractEntityTest {
 
     @Test(expectedExceptions = NotAuditedException.class)
     public void testRevisionsCounts() {
-        getVersionsReader().getRevisions(BasicTestEntity3.class, id1);
+        getAuditReader().getRevisions(BasicTestEntity3.class, id1);
     }
 
     @Test(expectedExceptions = NotAuditedException.class)
     public void testHistoryOfId1() {
-        getVersionsReader().find(BasicTestEntity3.class, id1, 1);
+        getAuditReader().find(BasicTestEntity3.class, id1, 1);
     }
 }

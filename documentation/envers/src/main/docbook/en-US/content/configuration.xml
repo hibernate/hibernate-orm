@@ -75,7 +75,7 @@
                         <property>org.hibernate.envers.auditTableSuffix</property>
                     </entry>
                     <entry>
-                        _audit
+                        _AUD
                     </entry>
                     <entry>
                         String that will be appended to the name of an audited entity to create
@@ -122,17 +122,6 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.warnOnUnsupportedTypes</property>
-                    </entry>
-                    <entry>
-                        false
-                    </entry>
-                    <entry>
-                        TODO: remove
-                    </entry>
-                </row>
-                <row>
-                    <entry>
                         <property>org.hibernate.envers.doNotAuditOptimisticLockingField</property>
                     </entry>
                     <entry>
@@ -168,17 +157,17 @@
    &lt;!-- other hibernate properties --&gt;
 
    &lt;property name="hibernate.ejb.event.post-insert"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-update"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-delete"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.pre-collection-update"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.pre-collection-remove"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-collection-recreate"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
 
    &lt;property name="org.hibernate.envers.versionsTableSuffix" value="_V" /&gt;
    &lt;property name="org.hibernate.envers.revisionFieldName" value="ver_rev" /&gt;

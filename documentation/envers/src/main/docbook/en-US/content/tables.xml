@@ -30,7 +30,7 @@
 
     <para>
         For each audited entity (that is, for each entity containing at least one audited field), an audit
-        table is created. By default, the audit table's name is created by adding a "_audit" suffix to
+        table is created. By default, the audit table's name is created by adding a "_AUD" suffix to
         the original name, but this can be overriden by specifing a different suffix/prefix
         (see <xref linkend="configuration"/>) or on a per-entity basis using the
         <literal>@AuditTable</literal> annotation.

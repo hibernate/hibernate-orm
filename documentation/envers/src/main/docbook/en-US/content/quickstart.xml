@@ -41,17 +41,17 @@
    &lt;!-- other hibernate properties --&gt;
 
    &lt;property name="hibernate.ejb.event.post-insert"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-update"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-delete"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.pre-collection-update"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.pre-collection-remove"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
    &lt;property name="hibernate.ejb.event.post-collection-recreate"
-             value="org.hibernate.envers.event.VersionsEventListener" /&gt;
+             value="org.hibernate.envers.event.AuditEventListener" /&gt;
 &lt;/properties&gt;
 &lt;/persistence-unit&gt;</programlisting>
 

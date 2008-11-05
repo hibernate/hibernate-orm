@@ -31,10 +31,37 @@
     <para>
         Some useful links:
     </para>
+
     <orderedlist>
         <listitem>
             <para>
-
+                <ulink url="http://hibernate.org">Hibernate</ulink>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="http://www.jboss.com/index.html?module=bb&amp;op=viewforum&amp;f=283">Forum</ulink>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="http://anonsvn.jboss.org/repos/hibernate/core/trunk/envers/">Anonymous SVN</ulink>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH">JIRA issue tracker</ulink>
+                (when adding issues concerning Envers, be sure to select the "envers" component!)
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="irc://irc.freenode.net:6667/envers">IRC channel</ulink>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="http://www.jboss.org/feeds/view/envers">Blog</ulink>
             </para>
         </listitem>
     </orderedlist>

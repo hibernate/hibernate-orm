@@ -59,6 +59,7 @@ public class MetadataTools {
 
         prop_mapping.addAttribute("name", name);
         prop_mapping.addAttribute("insert", Boolean.toString(insertable));
+        prop_mapping.addAttribute("update", "false");
 
         if (type != null) {
             prop_mapping.addAttribute("type", type);

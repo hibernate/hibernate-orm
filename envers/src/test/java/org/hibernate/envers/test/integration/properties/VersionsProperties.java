@@ -41,9 +41,8 @@ public class VersionsProperties extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(PropertiesTestEntity.class);
 
-        cfg.setProperty("org.hibernate.envers.versionsTablePrefix", "VP_");
-        cfg.setProperty("org.hibernate.envers.versionsTableSuffix", "_VS");
-        cfg.setProperty("org.hibernate.envers.idFieldName", "ver_id");
+        cfg.setProperty("org.hibernate.envers.auditTablePrefix", "VP_");
+        cfg.setProperty("org.hibernate.envers.auditTableSuffix", "_VS");
         cfg.setProperty("org.hibernate.envers.revisionFieldName", "ver_rev");
         cfg.setProperty("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
     }

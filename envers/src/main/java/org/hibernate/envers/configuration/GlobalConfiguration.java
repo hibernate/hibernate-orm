@@ -33,9 +33,6 @@ public class GlobalConfiguration {
     // Should a revision be generated when a not-owned relation field changes
     private final boolean generateRevisionsForCollections;
 
-    // Should a warning, instead of an error and an exception, be logged, when an unsupported type is versioned
-    private final boolean warnOnUnsupportedTypes;
-
     // Should the optimistic locking property of an entity be considered unversioned
     private final boolean unversionedOptimisticLockingField;
 
@@ -52,12 +49,8 @@ public class GlobalConfiguration {
                 "true");
         generateRevisionsForCollections = Boolean.parseBoolean(generateRevisionsForCollectionsStr);
 
-        String warnOnUnsupportedTypesStr = properties.getProperty("org.hibernate.envers.warnOnUnsupportedTypes",
-                "false");
-        warnOnUnsupportedTypes = Boolean.parseBoolean(warnOnUnsupportedTypesStr);
-
-        String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.hibernate.envers.unversionedOptimisticLockingField",
-                "false");
+        String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.hibernate.envers.doNotAuditOptimisticLockingField",
+                "true");
         unversionedOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
 
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
@@ -66,10 +59,6 @@ public class GlobalConfiguration {
 
     public boolean isGenerateRevisionsForCollections() {
         return generateRevisionsForCollections;
-    }
-
-    public boolean isWarnOnUnsupportedTypes() {
-        return warnOnUnsupportedTypes;
     }
 
     public boolean isUnversionedOptimisticLockingField() {

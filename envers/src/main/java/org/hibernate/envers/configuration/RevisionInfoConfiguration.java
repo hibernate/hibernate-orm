@@ -71,15 +71,15 @@ public class RevisionInfoConfiguration {
         Element class_mapping = MetadataTools.createEntity(document, null, null, null, null, null);
 
         class_mapping.addAttribute("name", revisionInfoEntityName);
-        class_mapping.addAttribute("table", "_revisions_info");
+        class_mapping.addAttribute("table", "REVINFO");
 
         Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
                 revisionPropType);
-        MetadataTools.addColumn(idProperty, "revision_id", null);
+        MetadataTools.addColumn(idProperty, "REV", null);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
                 revisionInfoTimestampType, true, false);
-        MetadataTools.addColumn(timestampProperty, "revision_timestamp", null);
+        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null);
 
         return document;
     }

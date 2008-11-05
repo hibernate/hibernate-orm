@@ -87,8 +87,8 @@ public class BasicSecondary extends AbstractEntityTest {
     @SuppressWarnings({"unchecked"})
     @Test
     public void testTableNames() {
-        assert "secondary_versions".equals(((Iterator<Join>)
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.secondary.SecondaryTestEntity_versions")
+        assert "secondary_AUD".equals(((Iterator<Join>)
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.secondary.SecondaryTestEntity_AUD")
                         .getJoinIterator())
                 .next().getTable().getName());
     }

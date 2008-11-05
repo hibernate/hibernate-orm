@@ -87,7 +87,7 @@ public class EmbIdSecondary extends AbstractEntityTest {
     @Test
     public void testTableNames() {
         assert "sec_embid_versions".equals(((Iterator<Join>)
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.secondary.ids.SecondaryEmbIdTestEntity_versions")
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.secondary.ids.SecondaryEmbIdTestEntity_AUD")
                         .getJoinIterator())
                 .next().getTable().getName());
     }

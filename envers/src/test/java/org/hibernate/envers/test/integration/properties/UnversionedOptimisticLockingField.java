@@ -44,7 +44,7 @@ public class UnversionedOptimisticLockingField extends AbstractEntityTest {
 	public void configure(Ejb3Configuration cfg) {
 		cfg.addAnnotatedClass(UnversionedOptimisticLockingFieldEntity.class);
 
-		cfg.setProperty("org.hibernate.envers.unversionedOptimisticLockingField", "true");
+		cfg.setProperty("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
 	}
 
 	@BeforeClass(dependsOnMethods = "init")
@@ -82,7 +82,7 @@ public class UnversionedOptimisticLockingField extends AbstractEntityTest {
 	
 	@Test
 	public void testMapping() {
-		PersistentClass pc = getCfg().getClassMapping(UnversionedOptimisticLockingFieldEntity.class.getName() + "_versions");
+		PersistentClass pc = getCfg().getClassMapping(UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD");
 		Iterator pi = pc.getPropertyIterator();
 		while(pi.hasNext()) {
 			Property p = (Property) pi.next();

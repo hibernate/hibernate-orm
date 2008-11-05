@@ -121,7 +121,7 @@ public class JoinMulIdNaming extends AbstractEntityTest {
     @Test
     public void testJoinColumnNames() {
         Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_versions")
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD")
                 .getProperty("reference").getColumnIterator();
 
         boolean id1Found = false;

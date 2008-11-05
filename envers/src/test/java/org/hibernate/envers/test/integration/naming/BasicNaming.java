@@ -109,7 +109,7 @@ public class BasicNaming extends AbstractEntityTest {
     @Test
     public void testTableName() {
         assert "naming_test_entity_1_versions".equals(
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.NamingTestEntity1_versions")
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.NamingTestEntity1_AUD")
                         .getTable().getName());
     }
 }

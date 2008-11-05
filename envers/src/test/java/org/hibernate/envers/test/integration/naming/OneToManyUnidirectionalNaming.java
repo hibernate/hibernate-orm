@@ -99,7 +99,7 @@ public class OneToManyUnidirectionalNaming extends AbstractEntityTest {
         assert "data1".equals(rev2.getData());
     }
 
-    private final static String MIDDLE_VERSIONS_ENTITY_NAME = "UNI_NAMING_TEST_versions";
+    private final static String MIDDLE_VERSIONS_ENTITY_NAME = "UNI_NAMING_TEST_AUD";
     @Test
     public void testTableName() {
         assert MIDDLE_VERSIONS_ENTITY_NAME.equals(

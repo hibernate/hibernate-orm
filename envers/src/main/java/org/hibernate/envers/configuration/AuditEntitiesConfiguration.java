@@ -50,14 +50,14 @@ public class AuditEntitiesConfiguration {
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
 
-        versionsTablePrefix = properties.getProperty("org.hibernate.envers.versionsTablePrefix", "");
-        versionsTableSuffix = properties.getProperty("org.hibernate.envers.versionsTableSuffix", "_versions");
+        versionsTablePrefix = properties.getProperty("org.hibernate.envers.auditTablePrefix", "");
+        versionsTableSuffix = properties.getProperty("org.hibernate.envers.auditTableSuffix", "_AUD");
 
         originalIdPropName = "originalId";
 
-        revisionPropName = properties.getProperty("org.hibernate.envers.revisionFieldName", "_revision");
+        revisionPropName = properties.getProperty("org.hibernate.envers.revisionFieldName", "REV");
 
-        revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "_revision_type");
+        revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "REVTYPE");
         revisionTypePropType = "byte";
 
         customVersionsTablesNames = new HashMap<String, String>();

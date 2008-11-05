@@ -123,7 +123,7 @@ public class JoinNaming extends AbstractEntityTest {
     @Test
     public void testJoinColumnName() {
         Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_versions")
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD")
                 .getProperty("reference").getColumnIterator();
 
         while (columns.hasNext()) {

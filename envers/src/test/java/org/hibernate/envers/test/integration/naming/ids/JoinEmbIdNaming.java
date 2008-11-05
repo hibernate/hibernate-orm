@@ -121,7 +121,7 @@ public class JoinEmbIdNaming extends AbstractEntityTest {
     @Test
     public void testJoinColumnNames() {
         Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_versions")
+                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD")
                 .getProperty("reference").getColumnIterator();
 
         boolean xxFound = false;

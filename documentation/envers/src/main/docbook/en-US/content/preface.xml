@@ -46,7 +46,7 @@
     </para>
 
     <para>
-        The library works with Hibernate and Hibernate Annotations or Entity Manager.
+        The library works with Hibernate and requires Hibernate Annotations or Entity Manager.
         For the auditing to work properly, the entities must have immutable unique
         identifiers (primary keys). You can use Envers wherever Hibernate works:
         standalone, inside JBoss AS, with JBoss Seam or Spring.
@@ -59,15 +59,15 @@
     <orderedlist>
         <listitem>
             <para>
-                versioning of all mappings defined by the JPA specification, except joined and
+                auditing of all mappings defined by the JPA specification, except joined and
                 table-per-class inheritance
             </para>
         </listitem>
         <listitem>
             <para>
-                versioning of some Hibernate mappings, which extend JPA, like custom types and
+                auditing of Hibernate mappings, which extend JPA, like custom types and
                 collections/maps of "simple" types (Strings, Integers, etc.)
-                (see <xref linkend="exceptions"/> for one exception)
+                (see also <xref linkend="exceptions"/>)
             </para>
         </listitem>
         <listitem>

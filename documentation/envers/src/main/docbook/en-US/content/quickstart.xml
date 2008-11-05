@@ -29,7 +29,8 @@
     <title>Quickstart</title>
 
     <para>
-        When configuring your persistence unit (the persistence.xml file), add the following event
+        When configuring your Hibernate (<literal>persistence.xml</literal> if you are using JPA,
+        <literal>hibernate.cfg.xml</literal> or other if you are using Hibernate directly), add the following event
         listeners: (this will allow Envers to check if any audited entities were modified)
     </para>
 
@@ -57,7 +58,7 @@
 
     <para>
         Then, annotate your persistent class with <literal>@Audited</literal> - this will make all
-        properties versioned. For example:
+        properties audited. For example:
     </para>
 
     <programlisting>import org.hibernate.envers.Audited;
@@ -112,7 +113,7 @@ public class Address {
         And that's it! You create, modify and delete the entites as always. If you look
         at the generated schema, you will notice that it is unchanged by adding auditing
         for the Address and Person entities. Also, the data they hold is the same. There are,
-        however, two new tables - <literal>Address_audit</literal> and <literal>Person_audit</literal>,
+        however, two new tables - <literal>Address_AUD</literal> and <literal>Person_AUD</literal>,
         which store the historical data, whenever you commit a transaction.
     </para>
 
@@ -123,8 +124,8 @@ public class Address {
     </para>
 
     <para>
-        You can access the audit of an entity using the <literal>AuditReader</literal> interface, which you
-        can obtain when having an open EntityManager. See also the javadocs.
+        You can access the audit (history) of an entity using the <literal>AuditReader</literal> interface, which you
+        can obtain when having an open EntityManager.
     </para>
 
     <programlisting>AuditReader reader = AuditReaderFactory.get(entityManager);

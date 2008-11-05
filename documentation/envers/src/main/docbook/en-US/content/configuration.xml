@@ -35,8 +35,8 @@
     </para>
 
     <para>
-        However, as Envers generates some tables, it is possible to set the prefix and suffix
-        that is added to the entity name to create a versions table for an entity, as well
+        However, as Envers generates some entities, and maps them to tables, it is possible to set the prefix and suffix
+        that is added to the entity name to create an audit table for an entity, as well
         as set the names of the fields that are generated.
     </para>
 
@@ -81,7 +81,7 @@
                         String that will be appended to the name of an audited entity to create
                         the name of the entity, that will hold audit information. If you
                         audit an entity with a table name Person, in the default setting Envers
-                        will generate a <literal>Person_audit</literal> table to store historical data.
+                        will generate a <literal>Person_AUD</literal> table to store historical data.
                     </entry>
                 </row>
                 <row>
@@ -103,7 +103,7 @@
                         REVTYPE
                     </entry>
                     <entry>
-                        Name of a field in the aduit entity that will hold the type of the
+                        Name of a field in the audit entity that will hold the type of the
                         revision (currently, this can be: add, mod, del).
                     </entry>
                 </row>
@@ -176,13 +176,13 @@
 &lt;/persistence-unit&gt;</programlisting>
 
     <para>
-        You can also set the name of the versions table on a per-entity basis, using the
-        <literal>@AuditTable</literal> annotation (see also in the javadoc). It may be tedious to add this
+        You can also set the name of the audit table on a per-entity basis, using the
+        <literal>@AuditTable</literal> annotation. It may be tedious to add this
         annotation to every audited entity, so if possible, it's better to use a prefix/suffix.
     </para>
 
     <para>
-        If you have a mapping with secondary tables, version tables for them will be generated in
+        If you have a mapping with secondary tables, audit tables for them will be generated in
         the same way (by adding the prefix and suffix). If you wish to overwrite this behaviour,
         you can use the <literal>@SecondaryAuditTable</literal> and
         <literal>@SecondaryAuditTables</literal> annotations.

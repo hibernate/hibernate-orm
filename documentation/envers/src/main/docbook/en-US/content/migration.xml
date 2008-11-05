@@ -39,6 +39,18 @@
         with Oracle and other databases, which don't allow tables and field names to start with "_".
     </para>
 
+    <sect1 id="migrations-code">
+
+        <title>Changes to code</title>
+
+        <para>
+            Public API changes involve changing "versioning" to "auditing". So, <literal>@Versioned</literal>
+            became <literal>@Audited</literal>; <literal>@VersionsTable</literal> became <literal>@AuditTable</literal>
+            and so on.
+        </para>
+
+    </sect1>
+
     <sect1 id="migrations-configuration">
 
         <title>Changes to configuration</title>
@@ -85,6 +97,9 @@
             The <literal>org.hibernate.envers.doNotAuditOptimisticLockingField</literal> property is
             now by default <literal>true</literal>, instead of <literal>false</literal>. You probably
             never would want to audit the optimistic locking field.
+            Also, the <literal>org.hibernate.envers.warnOnUnsupportedTypes</literal> configuraiton
+            option was removed. In case you are using some unsupported types, use the <literal>@NotAudited</literal>
+            annotation.
         </para>
 
         <para>
@@ -134,18 +149,6 @@ public class ExampleRevEntity {
 
     // Getters, setters, equals, hashCode ...
 }]]></programlisting>
-
-    </sect1>
-
-    <sect1 id="migrations-code">
-
-        <title>Changes to code</title>
-
-        <para>
-            Public API changes involve only changing "versioning" to "auditing". So, <literal>@Versioned</literal>
-            became <literal>@Audited</literal>; <literal>@VersionsTable</literal> became <literal>@AuditTable</literal>
-            and so on.
-        </para>
 
     </sect1>
 </chapter>
